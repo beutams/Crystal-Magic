@@ -1,0 +1,56 @@
+using UnityEngine;
+
+namespace CrystalMagic.Core {
+    /// <summary>
+    /// 城镇状态
+    /// </summary>
+    public class TownState : GameState
+    {
+        public override void OnEnter()
+        {
+            Debug.Log("[TownState] Entered Town");
+            
+            // 可以在这里访问 StateData（如果是从读档进入）
+            if (StateData is LoadGameContext context)
+            {
+                Debug.Log($"[TownState] Loaded from slot: {context.SlotName}");
+            }
+        }
+
+        public override void OnExit()
+        {
+            Debug.Log("[TownState] Exited Town");
+        }
+
+        public override void OnUpdate()
+        {
+        }
+
+        /// <summary>
+        /// 从城镇进入地牢（带转场）
+        /// </summary>
+        public void GoToDungeon(object data = null)
+        {
+            TransitionData transData = new TransitionData
+            {
+                TargetSceneName = "Dungeon",
+                TargetStateType = typeof(DungeonState),
+                TargetStateData = data
+            };
+            GameFlowComponent.Instance.SetState<TransitionState>(transData);
+        }
+
+        /// <summary>
+        /// 返回主菜单（带转场）
+        /// </summary>
+        public void GoToMainMenu()
+        {
+            TransitionData transData = new TransitionData
+            {
+                TargetSceneName = "MainMenu",
+                TargetStateType = typeof(MainMenuState)
+            };
+            GameFlowComponent.Instance.SetState<TransitionState>(transData);
+        }
+    }
+}

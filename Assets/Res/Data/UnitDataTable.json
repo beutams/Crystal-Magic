@@ -1,0 +1,51 @@
+{
+  "Rows": [
+    {
+      "Name": "Player",
+      "Description": "玩家角色",
+      "PrefabPath": "",
+      "BaseMaxHealth": 100.0,
+      "BaseMaxMp": 50.0,
+      "BaseMoveSpeed": 5.0,
+      "BaseMaxAcceleration": 30.0,
+      "BaseAttackPower": 10.0,
+      "BaseDefense": 5.0,
+      "BaseSkillRange": 0.0,
+      "States": [
+        {
+          "StateType": "IdleState",
+          "Transitions": [
+            {
+              "TargetStateType": "MoveState",
+              "Conditions": [
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitVelocitySource",
+                  "CompareType": "GreaterThan",
+                  "CompareValue": 0.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "StateType": "MoveState",
+          "Transitions": [
+            {
+              "TargetStateType": "IdleState",
+              "Conditions": [
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitVelocitySource",
+                  "CompareType": "LessThan",
+                  "CompareValue": 0.1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "Id": 1
+    }
+  ]
+}
