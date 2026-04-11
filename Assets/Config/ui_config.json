@@ -1,0 +1,26 @@
+{
+    "groups": [
+        {
+            "groupType": 0,
+            "groupName": "Default",
+            "order": -10000,
+            "uiNames": [
+                "MainMenuUI"
+            ]
+        },
+        {
+            "groupType": 1,
+            "groupName": "Tip",
+            "order": 0,
+            "uiNames": []
+        },
+        {
+            "groupType": 2,
+            "groupName": "Top",
+            "order": 10000,
+            "uiNames": [
+                "TransitionUI"
+            ]
+        }
+    ]
+}

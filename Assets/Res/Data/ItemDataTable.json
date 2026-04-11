@@ -1,0 +1,14 @@
+﻿{
+    "Rows": [
+        {
+            "Id": 1,
+            "Name": "测试",
+            "Description": "测试道具",
+            "ItemType": 2,
+            "Rarity": 0,
+            "MaxStack": 0,
+            "SellPrice": 0,
+            "IconPath": ""
+        }
+    ]
+}

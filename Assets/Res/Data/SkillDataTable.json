@@ -1,0 +1,82 @@
+﻿{
+  "Rows": [
+    {
+      "Name": "火球",
+      "Description": "发射一团火球，造成爆炸伤害",
+      "SkillType": 0,
+      "MpCost": 100,
+      "WindupDuration": 0.2,
+      "RecoveryDuration": 0.1,
+      "CanMoveWhileCasting": true,
+      "MoveSpeedMultiplier": 0.5,
+      "IconPath": "",
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnProjectileEffectData, Assembly-CSharp",
+          "Projectile": null,
+          "Speed": 0.0,
+          "MaxRange": 0.0,
+          "SpawnOffset": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "PiercingCount": 0,
+          "HomingStrength": 0.0,
+          "OnCollisionEffects": null,
+          "OnDestoryEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+              "Radius": 5.0,
+              "SectorAngleDegrees": 360.0,
+              "ForwardYawOffsetDegrees": 0.0,
+              "CenterOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "MaxTargetCount": 0,
+              "LineOfSightRequired": false,
+              "OnAfterSearch": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+                  "DamageCoefficient": 0.0,
+                  "FlatDamageBonus": 0.0,
+                  "DamageTypeId": 0,
+                  "AllowCritical": true,
+                  "CriticalBonus": 0.0,
+                  "KnockbackForce": 0.0,
+                  "HitStunSeconds": 0.0,
+                  "DamageVarianceSeed": 0
+                }
+              ]
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
+              "VfxPath": null,
+              "Duration": 0.0,
+              "Scale": 1.0,
+              "SpawnOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "FollowCaster": false,
+              "AlignToCasterForward": false
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": null,
+              "Volume": 1.0,
+              "Pitch": 1.0,
+              "SpatialBlend": 0.0,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false
+            }
+          ]
+        }
+      ],
+      "Id": 1
+    }
+  ]
+}

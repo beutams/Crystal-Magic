@@ -1,0 +1,32 @@
+﻿{
+    "Components": [
+        {
+            "TypeName": "RectTransform",
+            "Namespace": "UnityEngine"
+        },
+        {
+            "TypeName": "Image",
+            "Namespace": "UnityEngine.UI"
+        },
+        {
+            "TypeName": "Button",
+            "Namespace": "UnityEngine.UI"
+        },
+        {
+            "TypeName": "Slider",
+            "Namespace": "UnityEngine.UI"
+        },
+        {
+            "TypeName": "Toggle",
+            "Namespace": "UnityEngine.UI"
+        },
+        {
+            "TypeName": "InputField",
+            "Namespace": "UnityEngine.UI"
+        },
+        {
+            "TypeName": "TextMeshProUGUI",
+            "Namespace": "TMPro"
+        }
+    ]
+}
