@@ -11,11 +11,10 @@ namespace CrystalMagic.Editor.UI
     /// Project 视图右键 Prefab → Assets/Tools/Generate UIData
     /// 命名：路径各段净化后以 _ 连接；同名兄弟追加 _1/_2...
     /// 查找：唯一名用 Find(path)，同名兄弟用 FindAt(parent, name, index)
-    /// 输出：Assets/Scripts/UI/Generated/{PrefabName}Data.cs
+    /// 输出：Assets/Scripts/UI/{PrefabName}/{PrefabName}Data.cs（与对应 UI 的 MVC 同目录）
     /// </summary>
     public static class UIDataGenerator
     {
-        public const string OutputDir = "Assets/Scripts/UI/Generated";
 
         private struct Entry
         {
@@ -61,10 +60,11 @@ namespace CrystalMagic.Editor.UI
                 Debug.LogWarning($"[UIDataGenerator] {prefab.name} has no children, generating empty UIData");
             }
 
-            if (!Directory.Exists(OutputDir))
-                Directory.CreateDirectory(OutputDir);
+            string outputDir = Path.Combine("Assets/Scripts/UI", prefab.name);
+            if (!Directory.Exists(outputDir))
+                Directory.CreateDirectory(outputDir);
 
-            string filePath = $"{OutputDir}/{className}.cs";
+            string filePath = Path.Combine(outputDir, $"{className}.cs");
             File.WriteAllText(filePath, BuildCode(className, entries), Encoding.UTF8);
             Debug.Log($"[UIDataGenerator] Generated {filePath}  ({entries.Count} fields)");
 

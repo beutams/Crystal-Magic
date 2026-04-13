@@ -10,12 +10,10 @@ namespace CrystalMagic.Editor.UI
     /// Project 视图右键 Prefab → Assets/Tools/Generate UI Class
     /// - 同步生成 UIData（始终覆盖）
     /// - 若 UI 类文件已存在则跳过，不覆盖
-    /// 输出：Assets/Scripts/UI/{PrefabName}.cs
+    /// 输出：Assets/Scripts/UI/{PrefabName}/{PrefabName}.cs（与 UIData 同目录）
     /// </summary>
     public static class UIClassGenerator
     {
-        private const string OutputDir = "Assets/Scripts/UI";
-
         [MenuItem("Assets/Tools/Generate UI Class", false, 801)]
         private static void Generate()
         {
@@ -25,7 +23,8 @@ namespace CrystalMagic.Editor.UI
             string className = prefab.name;
             string dataClassName = UIDataGenerator.GenerateForPrefab(prefab);
 
-            string filePath = $"{OutputDir}/{className}.cs";
+            string outputDir = Path.Combine("Assets/Scripts/UI", prefab.name);
+            string filePath = Path.Combine(outputDir, $"{className}.cs");
 
             if (File.Exists(filePath))
             {
@@ -34,8 +33,8 @@ namespace CrystalMagic.Editor.UI
                 return;
             }
 
-            if (!Directory.Exists(OutputDir))
-                Directory.CreateDirectory(OutputDir);
+            if (!Directory.Exists(outputDir))
+                Directory.CreateDirectory(outputDir);
 
             File.WriteAllText(filePath, BuildCode(className, dataClassName), Encoding.UTF8);
             AssetDatabase.Refresh();
