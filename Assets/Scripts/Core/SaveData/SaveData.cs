@@ -13,29 +13,24 @@ namespace CrystalMagic.Core {
     {
         // ========== 元数据 ==========
         public string SaveName;                    // 存档名称
-        public int SaveVersion = 1;                // 存档版本（用于迁移）
-        public int ContentVersion = 1;             // 内容版本（与游戏版本对齐）
         public long SaveTimestamp;                 // 存档时间戳
         public string GameVersion;                 // 游戏版本号
 
         // ========== 全局数据（跨城镇和地牢） ==========
         /// <summary>
         /// 玩家全局成就和进度数据
-        /// 见框架设计文档第 8 章
         /// </summary>
         public GlobalData Global;
 
         // ========== 城镇数据 ==========
         /// <summary>
         /// 城镇状态数据
-        /// 包含：仓库、货币、角色数据（装备、技能、背包）
         /// </summary>
         public TownData Town;
 
-        // ========== 地牢数据（当局可选保存） ==========
+/*        // ========== 地牢数据（当局可选保存） ==========
         /// <summary>
-        /// 当局地牢数据（仅地牢内有效）
-        /// 包含：地牢层数、种子、玩家位置、怪物位置、角色当前状态
+        /// 当局地牢数据
         /// </summary>
         public DungeonRunData DungeonRun;
 
@@ -43,14 +38,10 @@ namespace CrystalMagic.Core {
         {
             Global = new GlobalData();
             Town = new TownData();
-        }
+        }*/
     }
-
-    // ========== 全局数据 ==========
-
     /// <summary>
-    /// 全局数据 - 成就和进度
-    /// 跨城镇和地牢持久化
+    /// 全局数据
     /// </summary>
     [System.Serializable]
     public class GlobalData
@@ -59,16 +50,9 @@ namespace CrystalMagic.Core {
         /// 玩家全局成就数据
         /// </summary>
         public AchievementData Achievements;
-
-        /// <summary>
-        /// 玩家进度统计
-        /// </summary>
-        public PlayerProgressData Progress;
-
         public GlobalData()
         {
             Achievements = new AchievementData();
-            Progress = new PlayerProgressData();
         }
     }
 
@@ -78,83 +62,56 @@ namespace CrystalMagic.Core {
     [System.Serializable]
     public class AchievementData
     {
-        public int MaxFloorReached;            // 最深到达层数
-        public int TotalRunCount;              // 总游玩局数
-        public int TotalDeathCount;            // 总死亡次数
-        public Dictionary<int, int> BossKillCounts = new(); // Boss 击杀统计 {BossId: Count}
         public long TotalPlayTimeSeconds;      // 总游玩时间（秒）
     }
 
+    #region 城镇数据
     /// <summary>
-    /// 玩家进度数据
-    /// </summary>
-    [System.Serializable]
-    public class PlayerProgressData
-    {
-        // TODO: 补充玩家进度相关字段
-        // 如：解锁的技能、装备、角色等
-    }
-
-    // ========== 城镇数据 ==========
-
-    /// <summary>
-    /// 城镇数据 - 仓库、货币、角色信息
-    /// 见框架设计文档第 4 章
+    /// 城镇数据
     /// </summary>
     [System.Serializable]
     public class TownData
     {
         /// <summary>
-        /// 仓库数据 - 无限容量
+        /// 仓库数据
         /// </summary>
         public StashData Stash;
-
         /// <summary>
         /// 仓库货币
         /// </summary>
         public long StashMoney;
-
         /// <summary>
-        /// 角色数据（城镇状态）
-        /// 包含：装备、技能配置、背包
+        /// 角色数据
         /// </summary>
         public CharacterData Character;
-
         public TownData()
         {
             Stash = new StashData();
             Character = new CharacterData();
+            StashMoney = 0;
         }
     }
 
     /// <summary>
     /// 角色数据
-    /// 在城镇和地牢中都有对应实例
     /// </summary>
     [System.Serializable]
     public class CharacterData
     {
         /// <summary>
-        /// 角色装备系统（法杖 + 4增益槽）
-        /// 见游戏设计文档第 5 章
+        /// 角色装备系统
         /// </summary>
         public EquipmentData Equipment;
-
         /// <summary>
-        /// 技能配置 - 包含5组技能链
-        /// 见游戏设计文档第 6 章
+        /// 技能配置
         /// </summary>
         public SkillCData Skills;
-
         /// <summary>
-        /// 角色背包 - 城镇中持有
-        /// 进地牢时创建快照
+        /// 角色背包
         /// </summary>
         public List<InventoryItemData> BackpackItems = new();
-
         /// <summary>
-        /// 角色位置和朝向
-        /// 在城镇时可能为固定值，在地牢时实时保存
+        /// 角色位置
         /// </summary>
         public PositionData Position;
 
@@ -165,69 +122,6 @@ namespace CrystalMagic.Core {
             Position = new PositionData();
         }
     }
-
-    /// <summary>
-    /// 仓库数据 - 无限容量存储
-    /// 见框架设计文档第 4 章
-    /// </summary>
-    [System.Serializable]
-    public class StashData
-    {
-        /// <summary>
-        /// 物品列表（堆叠后）
-        /// 包括：道具、技能石、材料等
-        /// </summary>
-        public List<InventoryItemData> Items = new();
-    }
-
-    // ========== 地牢数据 ==========
-
-    /// <summary>
-    /// 地牢当局数据
-    /// 仅当处于地牢时存在，回城后可清空
-    /// 见框架设计文档第 1.3 节 RunSession
-    /// </summary>
-    [System.Serializable]
-    public class DungeonRunData
-    {
-        // ========== 地牢基本信息 ==========
-        public string RunId;                   // 本局唯一 Id（调试用）
-        public long RunTimestamp;              // 本局开始时间
-        public int CurrentFloor;               // 当前层数
-        public int Seed;                       // 地牢种子（用于重现地图）
-
-        // ========== 玩家当前状态 ==========
-        /// <summary>
-        /// 玩家在地牢中的角色状态
-        /// 包含：装备、技能、背包、位置等
-        /// </summary>
-        public CharacterData Character;
-
-        /// <summary>
-        /// 当局货币
-        /// 见游戏设计文档第 3.5 节
-        /// </summary>
-        public long RunMoney;
-
-        // ========== 地牢环境数据 ==========
-        /// <summary>
-        /// 怪物位置和状态列表
-        /// TODO: 等待 AI 系统确定怪物状态结构
-        /// </summary>
-        public List<MonsterStateData> Monsters = new();
-
-        /// <summary>
-        /// 物品掉落位置
-        /// TODO: 等待物理系统确定物品状态结构
-        /// </summary>
-        public List<ItemDropData> ItemDrops = new();
-
-        // TODO: 已探索房间列表
-        // TODO: 宝箱状态
-        // TODO: 传送点
-        // TODO: Boss 房状态
-    }
-
     /// <summary>
     /// 位置和朝向数据
     /// </summary>
@@ -236,13 +130,52 @@ namespace CrystalMagic.Core {
     {
         public float X;                        // X 坐标
         public float Y;                        // Y 坐标
-        public float Z;                        // Z 坐标
         public float Rotation;                 // 朝向角度
+    }
+    /// <summary>
+    /// 仓库数据
+    /// </summary>
+    [System.Serializable]
+    public class StashData
+    {
+        /// <summary>
+        /// 物品列表
+        /// </summary>
+        public List<InventoryItemData> Items = new();
+    }
+    #endregion
+
+    #region 战斗数据
+    /// <summary>
+    /// 地牢当局数据
+    /// </summary>
+    [System.Serializable]
+    public class DungeonRunData
+    {
+        public string RunId;                   // 本局唯一 Id（调试用）
+        public long RunTimestamp;              // 本局开始时间
+        public int CurrentFloor;               // 当前层数
+        public int Seed;                       // 地牢种子（用于重现地图）
+        /// <summary>
+        /// 玩家在地牢中的角色状态
+        /// </summary>
+        public CharacterData Character;
+        /// <summary>
+        /// 当局货币
+        /// </summary>
+        public long RunMoney;
+        /// <summary>
+        /// 怪物位置和状态列表
+        /// </summary>
+        public List<MonsterStateData> Monsters = new();
+        /// <summary>
+        /// 物品掉落位置
+        /// </summary>
+        public List<ItemDropData> ItemDrops = new();
     }
 
     /// <summary>
     /// 怪物状态数据
-    /// TODO: 补充具体怪物状态字段
     /// </summary>
     [System.Serializable]
     public class MonsterStateData
@@ -251,10 +184,8 @@ namespace CrystalMagic.Core {
         public int MonsterDefId;               // 怪物配置 Id
         public float X;                        // X 坐标
         public float Y;                        // Y 坐标
-        public float Z;                        // Z 坐标
         public float HP;                       // 当前 HP
         public float MaxHP;                    // 最大 HP
-        // TODO: 补充：状态、Buff、仇恨列表等
     }
 
     /// <summary>
@@ -269,9 +200,9 @@ namespace CrystalMagic.Core {
         public float Y;                        // Y 坐标
         public float Z;                        // Z 坐标
     }
+    #endregion
 
-    // ========== 基础数据类型 ==========
-
+    #region 基础数据
     /// <summary>
     /// 装备系统数据（包括法杖 + 4个增益槽）
     /// 见游戏设计文档第 5 章
@@ -343,4 +274,5 @@ namespace CrystalMagic.Core {
     {
         public int EffectId;
     }
+    #endregion
 }

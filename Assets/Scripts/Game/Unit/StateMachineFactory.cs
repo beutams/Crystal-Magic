@@ -11,19 +11,9 @@ using UnityEngine;
 public class StateMachineFactory
 {
     private readonly Dictionary<string, Func<AUnitState>> _stateFactories = new();
-
-    // ════════════════════════════════════════════════
-    //  注册接口（供 StateMachineRegistry 调用）
-    // ════════════════════════════════════════════════
-
     /// <summary>注册 AUnitState 子类，要求有无参构造。</summary>
     public void RegisterState<T>() where T : AUnitState, new()
         => _stateFactories[typeof(T).Name] = static () => new T();
-
-    // ════════════════════════════════════════════════
-    //  创建接口（供 UnitStateMachineSystem 调用）
-    // ════════════════════════════════════════════════
-
     public AUnitState CreateState(string typeName)
     {
         if (!_stateFactories.TryGetValue(typeName, out var factory))
@@ -33,10 +23,5 @@ public class StateMachineFactory
         }
         return factory();
     }
-
-    // ════════════════════════════════════════════════
-    //  统计（调试用）
-    // ════════════════════════════════════════════════
-
     public int StateCount => _stateFactories.Count;
 }

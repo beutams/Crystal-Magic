@@ -17,20 +17,13 @@ partial class UnitStateMachineSystem : SystemBase
     private StateMachineFactory _factory;
     private ComparatorFactory   _comparatorFactory;
 
-    // ════════════════════════════════════════════════
-    //  生命周期
-    // ════════════════════════════════════════════════
-
     protected override void OnCreate()
     {
         base.OnCreate();
         _factory           = new StateMachineFactory();
         _comparatorFactory = new ComparatorFactory();
         StateMachineRegistry.RegisterAll(_factory, _comparatorFactory);
-        Debug.Log($"[StateMachine] 工厂注册完成 —— " +
-                  $"状态: {_factory.StateCount}  " +
-                  $"ISource: {_comparatorFactory.SourceCount}  " +
-                  $"ICompareType: {_comparatorFactory.CompareCount}");
+        Debug.Log($"[StateMachine] 工厂注册完成 —— " + $"状态: {_factory.StateCount}  " + $"ISource: {_comparatorFactory.SourceCount}  " + $"ICompareType: {_comparatorFactory.CompareCount}");
     }
 
     protected override void OnUpdate()
@@ -50,11 +43,6 @@ partial class UnitStateMachineSystem : SystemBase
             sm.CurrentState.OnUpdate(dt);
         }
     }
-
-    // ════════════════════════════════════════════════
-    //  构建状态机图
-    // ════════════════════════════════════════════════
-
     private void TryBuild(UnitStateMachineComponent sm, Entity entity)
     {
         if (string.IsNullOrEmpty(sm.UnitName))
@@ -83,14 +71,6 @@ partial class UnitStateMachineSystem : SystemBase
             AUnitState state = _factory.CreateState(cfg.StateType);
             if (state != null) stateMap[cfg.StateType] = state;
         }
-
-        if (stateMap.Count == 0)
-        {
-            Debug.LogError($"[StateMachine] {sm.UnitName} 无法实例化任何状态，" +
-                           "请检查类名或重新生成 StateMachineRegistry");
-            return;
-        }
-
         // Step 2：注入 Entity / EntityManager
         foreach (var state in stateMap.Values)
             state.OnInitialize(entity, EntityManager);

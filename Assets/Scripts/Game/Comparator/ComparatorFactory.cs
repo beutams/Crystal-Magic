@@ -11,11 +11,6 @@ public class ComparatorFactory
 {
     private readonly Dictionary<string, Func<ISource>>             _sourceFactories  = new();
     private readonly Dictionary<string, Func<float, ICompareType>> _compareFactories = new();
-
-    // ════════════════════════════════════════════════
-    //  注册接口
-    // ════════════════════════════════════════════════
-
     /// <summary>注册 ISource 实现，要求有无参构造。</summary>
     public void RegisterSource<T>() where T : ISource, new()
         => _sourceFactories[typeof(T).Name] = static () => new T();
@@ -27,11 +22,6 @@ public class ComparatorFactory
     /// </summary>
     public void RegisterCompareType<T>(Func<float, T> factory) where T : ICompareType
         => _compareFactories[typeof(T).Name] = v => factory(v);
-
-    // ════════════════════════════════════════════════
-    //  创建接口
-    // ════════════════════════════════════════════════
-
     public ISource CreateSource(string typeName)
     {
         if (!_sourceFactories.TryGetValue(typeName, out var factory))
