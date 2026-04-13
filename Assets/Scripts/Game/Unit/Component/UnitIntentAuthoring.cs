@@ -21,6 +21,8 @@ public class UnitIntentAuthoring : MonoBehaviour
 /// </summary>
 public struct UnitIntentComponent : IComponentData
 {
-    /// <summary>移动方向（归一化，float2.zero 表示无移动意图）</summary>
+    /// <summary>移动方向</summary>
     public float2 MoveDirection;
+    /// <summary>想要释放技能</summary>
+    public bool WantToCast;
 }
