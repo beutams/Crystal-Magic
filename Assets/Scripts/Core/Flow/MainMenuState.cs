@@ -1,4 +1,3 @@
-using CrystalMagic.UI;
 using UnityEngine;
 
 namespace CrystalMagic.Core {
@@ -8,8 +7,8 @@ namespace CrystalMagic.Core {
     public class MainMenuState : GameState
     {
         private MainMenuUI _mainMenuUI;
-        private MainMenuUIController _mainMenuController;
         private GameObject _cameraGo;
+        private bool _eventsBound;
 
         public override void OnEnter()
         {
@@ -26,26 +25,17 @@ namespace CrystalMagic.Core {
             SceneCamera sceneCamera = _cameraGo.AddComponent<SceneCamera>();
 
             // 从对象池加载并显示 MainMenu UI
-            GameObject uiInstance = PoolComponent.Instance.Get(AssetPathHelper.GetUIAsset("MainMenuUI"));
+            BindEvents();
+            _mainMenuUI = UIComponent.Instance.Open<MainMenuUI>();
 
-            if (uiInstance != null)
+            if (_mainMenuUI != null)
             {
-                _mainMenuUI = uiInstance.GetComponent<MainMenuUI>();
-
-                if (_mainMenuUI != null)
-                {
-                    BindController();
-                    UIComponent.Instance.ShowUI(_mainMenuUI);
-                    Debug.Log("[MainMenuState] MainMenu UI loaded and displayed");
-                }
-                else
-                {
-                    Debug.LogError("[MainMenuState] MainMenu prefab missing MainMenuUI component");
-                }
+                Debug.Log("[MainMenuState] MainMenu UI loaded and displayed");
             }
             else
             {
-                Debug.LogError("[MainMenuState] Failed to get MainMenu from pool");
+                UnbindEvents();
+                Debug.LogError("[MainMenuState] Failed to open MainMenu UI");
             }
         }
 
@@ -53,12 +43,11 @@ namespace CrystalMagic.Core {
         {
             Debug.Log("[MainMenuState] Exited MainMenu");
 
-            DisposeController();
+            UnbindEvents();
 
             if (_mainMenuUI != null)
             {
-                UIComponent.Instance.CloseUI(_mainMenuUI);
-                PoolComponent.Instance.Release(_mainMenuUI.gameObject);
+                UIComponent.Instance.ReleaseUI(_mainMenuUI);
                 _mainMenuUI = null;
             }
 
@@ -95,26 +84,28 @@ namespace CrystalMagic.Core {
             GameFlowComponent.Instance.SetState<LoadGameState>(slotName);
         }
 
-        private void BindController()
+        private void BindEvents()
         {
-            _mainMenuController = new MainMenuUIController(_mainMenuUI);
+            if (_eventsBound)
+                return;
+
             EventComponent.Instance.Subscribe<MainMenuStartRequestedEvent>(HandleStartGameRequested);
             EventComponent.Instance.Subscribe<MainMenuLoadRequestedEvent>(HandleLoadGameRequested);
             EventComponent.Instance.Subscribe<MainMenuConfigRequestedEvent>(HandleConfigOpenRequested);
             EventComponent.Instance.Subscribe<MainMenuExitRequestedEvent>(HandleExitGameRequested);
+            _eventsBound = true;
         }
 
-        private void DisposeController()
+        private void UnbindEvents()
         {
-            if (_mainMenuController == null)
+            if (!_eventsBound)
                 return;
 
             EventComponent.Instance.Unsubscribe<MainMenuStartRequestedEvent>(HandleStartGameRequested);
             EventComponent.Instance.Unsubscribe<MainMenuLoadRequestedEvent>(HandleLoadGameRequested);
             EventComponent.Instance.Unsubscribe<MainMenuConfigRequestedEvent>(HandleConfigOpenRequested);
             EventComponent.Instance.Unsubscribe<MainMenuExitRequestedEvent>(HandleExitGameRequested);
-            _mainMenuController.Dispose();
-            _mainMenuController = null;
+            _eventsBound = false;
         }
 
         private void HandleStartGameRequested(MainMenuStartRequestedEvent gameEvent)

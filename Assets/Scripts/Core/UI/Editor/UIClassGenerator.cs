@@ -24,28 +24,33 @@ namespace CrystalMagic.Editor.UI
             string dataClassName = UIDataGenerator.GenerateForPrefab(prefab);
 
             string outputDir = Path.Combine("Assets/Scripts/UI", prefab.name);
-            string filePath = Path.Combine(outputDir, $"{className}.cs");
-
-            if (File.Exists(filePath))
-            {
-                Debug.Log($"[UIClassGenerator] {filePath} already exists, skipped");
-                AssetDatabase.Refresh();
-                return;
-            }
-
             if (!Directory.Exists(outputDir))
                 Directory.CreateDirectory(outputDir);
 
-            File.WriteAllText(filePath, BuildCode(className, dataClassName), Encoding.UTF8);
+            WriteIfMissing(Path.Combine(outputDir, $"{className}.cs"), BuildViewCode(className, dataClassName));
+            WriteIfMissing(Path.Combine(outputDir, $"{className}Controller.cs"), BuildControllerCode(className));
+            WriteIfMissing(Path.Combine(outputDir, $"{className}Model.cs"), BuildModelCode(className));
             AssetDatabase.Refresh();
-            Debug.Log($"[UIClassGenerator] Generated {filePath}");
+            Debug.Log($"[UIClassGenerator] Generated MVC files for {className}");
         }
 
         [MenuItem("Assets/Tools/Generate UI Class", true)]
         private static bool Validate() => UIDataGenerator.IsPrefabSelected();
 
         // ─────────────────────────────────────────
-        private static string BuildCode(string className, string dataClassName)
+        private static void WriteIfMissing(string filePath, string content)
+        {
+            if (File.Exists(filePath))
+            {
+                Debug.Log($"[UIClassGenerator] {filePath} already exists, skipped");
+                return;
+            }
+
+            File.WriteAllText(filePath, content, Encoding.UTF8);
+            Debug.Log($"[UIClassGenerator] Generated {filePath}");
+        }
+
+        private static string BuildViewCode(string className, string dataClassName)
         {
             StringBuilder sb = new();
             sb.AppendLine("using CrystalMagic.Core;");
@@ -66,6 +71,43 @@ namespace CrystalMagic.Editor.UI
             sb.AppendLine("    }");
             sb.AppendLine("}");
 
+            return sb.ToString();
+        }
+
+        private static string BuildControllerCode(string className)
+        {
+            StringBuilder sb = new();
+            sb.AppendLine("namespace CrystalMagic.UI");
+            sb.AppendLine("{");
+            sb.AppendLine($"    public sealed class {className}Controller : UIControllerBase<{className}, {className}Model>");
+            sb.AppendLine("    {");
+            sb.AppendLine($"        public {className}Controller({className} view, {className}Model model)");
+            sb.AppendLine("            : base(view, model)");
+            sb.AppendLine("        {");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+            sb.AppendLine("        protected override void OnOpen()");
+            sb.AppendLine("        {");
+            sb.AppendLine("            BindModelChanged(Model, RefreshView);");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+            sb.AppendLine("        private void RefreshView()");
+            sb.AppendLine("        {");
+            sb.AppendLine("        }");
+            sb.AppendLine("    }");
+            sb.AppendLine("}");
+            return sb.ToString();
+        }
+
+        private static string BuildModelCode(string className)
+        {
+            StringBuilder sb = new();
+            sb.AppendLine("namespace CrystalMagic.UI");
+            sb.AppendLine("{");
+            sb.AppendLine($"    public sealed class {className}Model : UIModelBase");
+            sb.AppendLine("    {");
+            sb.AppendLine("    }");
+            sb.AppendLine("}");
             return sb.ToString();
         }
     }

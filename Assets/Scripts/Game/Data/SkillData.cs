@@ -33,12 +33,21 @@ namespace CrystalMagic.Game.Data
 
         /// <summary>前摇时间（秒）</summary>
         public float WindupDuration;
+        public float ChantDuration;
 
         /// <summary>后摇时间（秒）</summary>
         public float RecoveryDuration;
 
         /// <summary>施法过程中是否允许移动</summary>
-        public bool CanMoveWhileCasting;
+        public bool CanMoveDuringWindup;
+        public bool CanMoveDuringCasting;
+        public bool CanMoveDuringRecovery;
+
+        public bool CanMoveWhileCasting
+        {
+            get => CanMoveDuringCasting;
+            set => CanMoveDuringCasting = value;
+        }
 
         /// <summary>施法移动速度倍率（1 = 不降速）</summary>
         public float MoveSpeedMultiplier;

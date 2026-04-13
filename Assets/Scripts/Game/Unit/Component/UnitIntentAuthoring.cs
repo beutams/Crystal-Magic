@@ -10,6 +10,7 @@ public class UnitIntentAuthoring : MonoBehaviour
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             AddComponent(entity, new UnitIntentComponent());
+            AddComponent(entity, new UnitCastComponent());
         }
     }
 }
@@ -25,4 +26,27 @@ public struct UnitIntentComponent : IComponentData
     public float2 MoveDirection;
     /// <summary>想要释放技能</summary>
     public bool WantToCast;
+    public bool HasCastTarget;
+    public float2 CastTargetPosition;
+}
+
+public enum SkillCastPhase : byte
+{
+    None = 0,
+    Windup = 1,
+    Chanting = 2,
+    Recovery = 3,
+}
+
+public struct UnitCastComponent : IComponentData
+{
+    public bool IsCasting;
+    public bool ForceInterrupt;
+    public bool HasLockedTarget;
+    public float2 LockedTargetPosition;
+    public int CurrentChainIndex;
+    public int CurrentSkillIndex;
+    public int CurrentSkillId;
+    public SkillCastPhase Phase;
+    public float PhaseElapsed;
 }

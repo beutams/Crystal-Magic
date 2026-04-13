@@ -1,34 +1,30 @@
-using System;
 using CrystalMagic.Core;
 namespace CrystalMagic.UI
 {
     /// <summary>
     /// 主菜单
     /// </summary>
-    public sealed class MainMenuUIController : IDisposable
+    public sealed class MainMenuUIController : UIControllerBase<MainMenuUI, MainMenuUIModel>
     {
-        private readonly MainMenuUI _view;
-        private bool _disposed;
-
-        public MainMenuUIController(MainMenuUI view)
+        public MainMenuUIController(MainMenuUI view, MainMenuUIModel model)
+            : base(view, model)
         {
-            _view = view ?? throw new ArgumentNullException(nameof(view));
-            _view.StartRequested += OnStartRequested;
-            _view.LoadRequested += OnLoadRequested;
-            _view.ConfigRequested += OnConfigRequested;
-            _view.ExitRequested += OnExitRequested;
         }
 
-        public void Dispose()
+        protected override void OnOpen()
         {
-            if (_disposed)
-                return;
-            _disposed = true;
+            View.StartRequested += OnStartRequested;
+            View.LoadRequested += OnLoadRequested;
+            View.ConfigRequested += OnConfigRequested;
+            View.ExitRequested += OnExitRequested;
+        }
 
-            _view.StartRequested -= OnStartRequested;
-            _view.LoadRequested -= OnLoadRequested;
-            _view.ConfigRequested -= OnConfigRequested;
-            _view.ExitRequested -= OnExitRequested;
+        protected override void OnClose()
+        {
+            View.StartRequested -= OnStartRequested;
+            View.LoadRequested -= OnLoadRequested;
+            View.ConfigRequested -= OnConfigRequested;
+            View.ExitRequested -= OnExitRequested;
         }
 
         private void OnStartRequested()

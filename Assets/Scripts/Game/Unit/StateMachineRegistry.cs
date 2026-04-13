@@ -7,11 +7,15 @@ public static class StateMachineRegistry
     public static void RegisterAll(StateMachineFactory factory, ComparatorFactory comparatorFactory)
     {
         // ── AUnitState 子类 ──────────────────────────────────────────
+        factory.RegisterState<CastState>();
         factory.RegisterState<IdleState>();
         factory.RegisterState<MoveState>();
 
         // ── ISource 实现 ─────────────────────────────────────────────
+        comparatorFactory.RegisterSource<UnitCanStartCastSource>();
+        comparatorFactory.RegisterSource<UnitIsCastingSource>();
         comparatorFactory.RegisterSource<UnitVelocitySource>();
+        comparatorFactory.RegisterSource<UnitWantToCastSource>();
 
         // ── ICompareType 实现 ────────────────────────────────────────
         comparatorFactory.RegisterCompareType<Equal>(v => new Equal { value = v });

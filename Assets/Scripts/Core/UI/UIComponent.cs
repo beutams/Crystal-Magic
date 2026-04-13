@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using CrystalMagic.UI;
 using UnityEngine;
 
 namespace CrystalMagic.Core {
@@ -13,6 +15,8 @@ namespace CrystalMagic.Core {
 
         private Dictionary<string, UIGroup> _groups = new();
         private Dictionary<string, string> _uiNameToGroupName = new();
+        private Dictionary<UIBase, UIMvcContext> _mvcContexts = new();
+        private Dictionary<string, Type> _typeCache = new();
         private UIGroupConfig _config;
 
         public override int Priority => 15;
@@ -145,7 +149,10 @@ namespace CrystalMagic.Core {
         /// </summary>
         public void ShowUI(UIBase panel)
         {
-            string groupName = GetGroupNameByUIName(panel.name);
+            if (panel == null)
+                return;
+
+            string groupName = GetGroupNameByUIName(panel.GetType().Name);
             if (string.IsNullOrEmpty(groupName))
                 groupName = DefaultGroupName;
 
@@ -157,10 +164,44 @@ namespace CrystalMagic.Core {
         /// </summary>
         public void ShowUI(string groupName, UIBase panel)
         {
+            if (panel == null)
+                return;
+
             if (_groups.TryGetValue(groupName, out UIGroup group))
             {
+                GetOrCreateMvcContext(panel);
                 group.ShowUI(panel);
+                OpenMvcContext(panel);
             }
+        }
+
+        public T Open<T>() where T : UIBase
+        {
+            return Open(typeof(T).Name) as T;
+        }
+
+        public UIBase Open(string uiName)
+        {
+            if (string.IsNullOrEmpty(uiName))
+                return null;
+
+            GameObject uiInstance = PoolComponent.Instance.Get(AssetPathHelper.GetUIAsset(uiName));
+            if (uiInstance == null)
+            {
+                Debug.LogError($"[UIComponent] Failed to open UI: {uiName}");
+                return null;
+            }
+
+            UIBase panel = uiInstance.GetComponent<UIBase>();
+            if (panel == null)
+            {
+                Debug.LogError($"[UIComponent] UI prefab '{uiName}' missing UIBase component");
+                PoolComponent.Instance.Release(uiInstance);
+                return null;
+            }
+
+            ShowUI(panel);
+            return panel;
         }
 
         /// <summary>
@@ -168,7 +209,10 @@ namespace CrystalMagic.Core {
         /// </summary>
         public void CloseUI(UIBase panel)
         {
-            string groupName = GetGroupNameByUIName(panel.name);
+            if (panel == null)
+                return;
+
+            string groupName = GetGroupNameByUIName(panel.GetType().Name);
             if (string.IsNullOrEmpty(groupName))
                 groupName = DefaultGroupName;
 
@@ -180,10 +224,24 @@ namespace CrystalMagic.Core {
         /// </summary>
         public void CloseUI(string groupName, UIBase panel)
         {
+            if (panel == null)
+                return;
+
             if (_groups.TryGetValue(groupName, out UIGroup group))
             {
                 group.CloseUI(panel);
+                CloseMvcContext(panel);
             }
+        }
+
+        public void ReleaseUI(UIBase panel)
+        {
+            if (panel == null)
+                return;
+
+            CloseUI(panel);
+            DisconnectMvc(panel);
+            PoolComponent.Instance.Release(panel.gameObject);
         }
 
         /// <summary>
@@ -207,11 +265,148 @@ namespace CrystalMagic.Core {
             return null;
         }
 
+        private void OpenMvcContext(UIBase panel)
+        {
+            UIMvcContext context = GetOrCreateMvcContext(panel);
+            context?.Open();
+        }
+
+        private void CloseMvcContext(UIBase panel)
+        {
+            if (_mvcContexts.TryGetValue(panel, out UIMvcContext context))
+            {
+                context.Close();
+            }
+        }
+
+        private UIMvcContext GetOrCreateMvcContext(UIBase panel)
+        {
+            if (panel == null)
+                return null;
+
+            if (_mvcContexts.TryGetValue(panel, out UIMvcContext existingContext))
+                return existingContext;
+
+            panel.EnsureInitialized();
+
+            Type viewType = panel.GetType();
+            Type modelType = ResolveType($"CrystalMagic.UI.{viewType.Name}Model", typeof(UIModelBase))
+                ?? ResolveType($"{viewType.Name}Model", typeof(UIModelBase));
+            Type controllerType = ResolveType($"CrystalMagic.UI.{viewType.Name}Controller", typeof(UIControllerBase))
+                ?? ResolveType($"{viewType.Name}Controller", typeof(UIControllerBase));
+
+            if (controllerType == null)
+                return null;
+
+            modelType ??= typeof(EmptyUIModel);
+
+            try
+            {
+                UIModelBase model = Activator.CreateInstance(modelType) as UIModelBase;
+                UIControllerBase controller = Activator.CreateInstance(controllerType, panel, model) as UIControllerBase;
+
+                if (model == null || controller == null)
+                {
+                    Debug.LogError($"[UIComponent] Failed to create MVC context for {viewType.Name}");
+                    return null;
+                }
+
+                UIMvcContext context = new UIMvcContext(model, controller);
+                _mvcContexts[panel] = context;
+                return context;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[UIComponent] Failed to bind MVC for {viewType.Name}: {ex.Message}\n{ex.StackTrace}");
+                return null;
+            }
+        }
+
+        private void DisconnectMvc(UIBase panel)
+        {
+            if (!_mvcContexts.TryGetValue(panel, out UIMvcContext context))
+                return;
+
+            context.Dispose();
+            _mvcContexts.Remove(panel);
+        }
+
+        private Type ResolveType(string typeName, Type requiredBaseType)
+        {
+            if (string.IsNullOrEmpty(typeName))
+                return null;
+
+            if (_typeCache.TryGetValue(typeName, out Type cachedType))
+                return cachedType;
+
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                Type type = assembly.GetType(typeName);
+                if (type != null && requiredBaseType.IsAssignableFrom(type))
+                {
+                    _typeCache[typeName] = type;
+                    return type;
+                }
+
+                try
+                {
+                    foreach (Type candidate in assembly.GetTypes())
+                    {
+                        if (candidate.Name == typeName && requiredBaseType.IsAssignableFrom(candidate))
+                        {
+                            _typeCache[typeName] = candidate;
+                            return candidate;
+                        }
+                    }
+                }
+                catch
+                {
+                }
+            }
+
+            return null;
+        }
+
         public override void Cleanup()
         {
+            foreach (UIMvcContext context in _mvcContexts.Values)
+            {
+                context.Dispose();
+            }
+
+            _mvcContexts.Clear();
             _groups.Clear();
             _uiNameToGroupName.Clear();
+            _typeCache.Clear();
             base.Cleanup();
+        }
+
+        private sealed class UIMvcContext : IDisposable
+        {
+            private readonly UIModelBase _model;
+            private readonly UIControllerBase _controller;
+
+            public UIMvcContext(UIModelBase model, UIControllerBase controller)
+            {
+                _model = model;
+                _controller = controller;
+            }
+
+            public void Open()
+            {
+                _controller?.Open();
+            }
+
+            public void Close()
+            {
+                _controller?.Close();
+            }
+
+            public void Dispose()
+            {
+                _controller?.Dispose();
+                _model?.Dispose();
+            }
         }
     }
 }
