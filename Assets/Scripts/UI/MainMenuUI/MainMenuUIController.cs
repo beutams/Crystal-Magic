@@ -1,7 +1,5 @@
 using System;
 using CrystalMagic.Core;
-using UnityEngine;
-
 namespace CrystalMagic.UI
 {
     /// <summary>
@@ -35,29 +33,22 @@ namespace CrystalMagic.UI
 
         private void OnStartRequested()
         {
-            SaveDataComponent.Instance.Save();
-            GetMainMenuState()?.GoToTown();
+            EventComponent.Instance.Publish(new MainMenuStartRequestedEvent());
         }
 
         private void OnLoadRequested()
         {
-            GetMainMenuState()?.StartLoadGame();
+            EventComponent.Instance.Publish(new MainMenuLoadRequestedEvent("autosave"));
         }
 
         private void OnConfigRequested()
         {
-            Debug.Log("[MainMenuUI] Config clicked");
+            EventComponent.Instance.Publish(new MainMenuConfigRequestedEvent());
         }
 
         private void OnExitRequested()
         {
-            Application.Quit();
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#endif
+            EventComponent.Instance.Publish(new MainMenuExitRequestedEvent());
         }
-
-        private static MainMenuState GetMainMenuState()
-            => GameFlowComponent.Instance.GetCurrentState() as MainMenuState;
     }
 }
