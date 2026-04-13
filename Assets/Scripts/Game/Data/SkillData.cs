@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data.Effects;
 using UnityEngine;
@@ -44,6 +45,9 @@ namespace CrystalMagic.Game.Data
 
         /// <summary>图标资源路径（相对 Resources/）</summary>
         public string IconPath;
+
+        /// <summary>技能释放条件（所有条件通过才可释放）</summary>
+        public List<ConditionConfig> Conditions = new();
 
         /// <summary>
         /// 效果链，按执行顺序排列

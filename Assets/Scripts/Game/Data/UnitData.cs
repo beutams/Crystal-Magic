@@ -53,22 +53,6 @@ namespace CrystalMagic.Game.Data
     public class UnitTransitionConfig
     {
         public string TargetStateType = "";
-        public List<UnitConditionConfig> Conditions = new();
-    }
-
-    /// <summary>
-    /// 单个转换条件
-    /// </summary>
-    [System.Serializable]
-    public class UnitConditionConfig
-    {
-        /// <summary>Necessary = 必须满足；Unallowed = 不能满足</summary>
-        public ConditionType ConditionType = ConditionType.Necessary;
-        /// <summary>ISource 实现类名称</summary>
-        public string SourceType = "";
-        /// <summary>ICompareType 实现类名称（GreaterThan / LessThan / Equal / IsTrue / IsFalse）</summary>
-        public string CompareType = "";
-        /// <summary>比较阈值（GreaterThan / LessThan / Equal 有效）</summary>
-        public float CompareValue;
+        public List<ConditionConfig> Conditions = new();
     }
 }
