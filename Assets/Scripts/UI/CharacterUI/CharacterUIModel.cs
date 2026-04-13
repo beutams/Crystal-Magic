@@ -1,9 +1,6 @@
-using System;
-
-public sealed class CharacterUIModel : IDisposable
+namespace CrystalMagic.UI
 {
-    public void Dispose()
+    public sealed class CharacterUIModel : UIModelBase
     {
-        throw new NotImplementedException();
     }
 }

@@ -90,6 +90,7 @@ namespace CrystalMagic.Core {
         /// 技能配置
         /// </summary>
         public SkillCData Skills;
+        public int SelectedSkillChainIndex;
         /// <summary>
         /// 角色背包
         /// </summary>
@@ -103,6 +104,7 @@ namespace CrystalMagic.Core {
         {
             Equipment = new EquipmentData();
             Skills = new SkillCData();
+            SelectedSkillChainIndex = 0;
             Position = new PositionData();
         }
     }

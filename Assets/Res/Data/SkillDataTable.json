@@ -6,8 +6,11 @@
       "SkillType": 0,
       "MpCost": 100,
       "WindupDuration": 0.2,
+      "ChantDuration": 0.0,
       "RecoveryDuration": 0.1,
-      "CanMoveWhileCasting": true,
+      "CanMoveDuringWindup": false,
+      "CanMoveDuringCasting": true,
+      "CanMoveDuringRecovery": false,
       "MoveSpeedMultiplier": 0.5,
       "IconPath": "",
       "EffectChain": [

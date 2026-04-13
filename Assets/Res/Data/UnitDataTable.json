@@ -16,6 +16,23 @@
           "StateType": "IdleState",
           "Transitions": [
             {
+              "TargetStateType": "CastState",
+              "Conditions": [
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitWantToCastSource",
+                  "CompareType": "IsTrue",
+                  "CompareValue": 0.0
+                },
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitCanStartCastSource",
+                  "CompareType": "IsTrue",
+                  "CompareValue": 0.0
+                }
+              ]
+            },
+            {
               "TargetStateType": "MoveState",
               "Conditions": [
                 {
@@ -32,8 +49,64 @@
           "StateType": "MoveState",
           "Transitions": [
             {
+              "TargetStateType": "CastState",
+              "Conditions": [
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitWantToCastSource",
+                  "CompareType": "IsTrue",
+                  "CompareValue": 0.0
+                },
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitCanStartCastSource",
+                  "CompareType": "IsTrue",
+                  "CompareValue": 0.0
+                }
+              ]
+            },
+            {
               "TargetStateType": "IdleState",
               "Conditions": [
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitVelocitySource",
+                  "CompareType": "LessThan",
+                  "CompareValue": 0.1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "StateType": "CastState",
+          "Transitions": [
+            {
+              "TargetStateType": "MoveState",
+              "Conditions": [
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitIsCastingSource",
+                  "CompareType": "IsFalse",
+                  "CompareValue": 0.0
+                },
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitVelocitySource",
+                  "CompareType": "GreaterThan",
+                  "CompareValue": 0.0
+                }
+              ]
+            },
+            {
+              "TargetStateType": "IdleState",
+              "Conditions": [
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitIsCastingSource",
+                  "CompareType": "IsFalse",
+                  "CompareValue": 0.0
+                },
                 {
                   "ConditionType": 0,
                   "SourceType": "UnitVelocitySource",

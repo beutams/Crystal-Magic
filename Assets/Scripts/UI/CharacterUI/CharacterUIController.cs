@@ -1,9 +1,19 @@
-using System;
-
-public sealed class CharacterUIController : IDisposable
+namespace CrystalMagic.UI
 {
-    public void Dispose()
+    public sealed class CharacterUIController : UIControllerBase<CharacterUI, CharacterUIModel>
     {
-        throw new NotImplementedException();
+        public CharacterUIController(CharacterUI view, CharacterUIModel model)
+            : base(view, model)
+        {
+        }
+
+        protected override void OnOpen()
+        {
+            BindModelChanged(Model, RefreshView);
+        }
+
+        private void RefreshView()
+        {
+        }
     }
 }
