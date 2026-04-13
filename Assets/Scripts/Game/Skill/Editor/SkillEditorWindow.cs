@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using Newtonsoft.Json;
@@ -68,6 +69,14 @@ namespace CrystalMagic.Editor.Skill
         private readonly Dictionary<string, int>  _nestedTypeIndices = new();
         // 每个效果条目的折叠状态，key = 条目路径，true = 展开
         private readonly Dictionary<string, bool> _effectFoldStates  = new();
+        // 条件列表的折叠状态
+        private readonly Dictionary<string, bool> _condFoldStates    = new();
+
+        // ===== 条件相关反射类型 =====
+        private string[] _sourceTypeNames  = Array.Empty<string>();
+        private string[] _compareTypeNames = Array.Empty<string>();
+        private readonly Dictionary<string, int> _condAddSrcIdx = new();
+        private readonly Dictionary<string, int> _condAddCmpIdx = new();
 
         // ===== 颜色 =====
         private static readonly Color SelectedColor = new(0.27f, 0.52f, 0.85f, 0.85f);
@@ -97,7 +106,27 @@ namespace CrystalMagic.Editor.Skill
             w.Show();
         }
 
-        private void OnEnable() => LoadData();
+        private void OnEnable()
+        {
+            LoadData();
+            RefreshTypeArrays();
+        }
+
+        private void RefreshTypeArrays()
+        {
+            _sourceTypeNames  = CollectTypeNames(typeof(ISource));
+            _compareTypeNames = CollectTypeNames(typeof(ICompareType));
+        }
+
+        private static string[] CollectTypeNames(Type baseType)
+        {
+            return AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(a => { try { return a.GetTypes(); } catch { return Array.Empty<Type>(); } })
+                .Where(t => !t.IsAbstract && !t.IsInterface && baseType.IsAssignableFrom(t))
+                .Select(t => t.Name)
+                .OrderBy(n => n)
+                .ToArray();
+        }
 
         // ─────────────────────────────────────────
         //  加载 / 保存
@@ -328,6 +357,11 @@ namespace CrystalMagic.Editor.Skill
             if (EditorGUI.EndChangeCheck())
                 _isDirty = true;
 
+            // ── 释放条件 ──────────────────────────────────
+            DrawSectionHeader("释放条件");
+            skill.Conditions ??= new List<ConditionConfig>();
+            DrawConditionList(skill.Conditions, "_skill_cond_");
+
             // ── 效果链 ────────────────────────────────────
             DrawSectionHeader("效果链");
             DrawEffectChain(skill);
@@ -463,7 +497,14 @@ namespace CrystalMagic.Editor.Skill
             {
                 EditorGUI.indentLevel++;
                 GUILayout.Space(2);
-                foreach (FieldInfo field in effectType.GetFields(BindingFlags.Public | BindingFlags.Instance))
+
+                // 效果释放条件（来自基类 EffectData.Conditions）
+                effect.Conditions ??= new List<ConditionConfig>();
+                DrawConditionList(effect.Conditions, $"{entryKey}_cond_");
+                GUILayout.Space(4);
+
+                // 子类字段
+                foreach (FieldInfo field in effectType.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
                 {
                     EditorGUI.BeginChangeCheck();
                     object oldVal = field.GetValue(effect);
@@ -530,6 +571,130 @@ namespace CrystalMagic.Editor.Skill
 
             EditorGUILayout.LabelField(label, $"[{t.Name}] {value}");
             return value;
+        }
+
+        // ─────────────────────────────────────────
+        //  条件列表绘制（Skill / Effect 共用）
+        // ─────────────────────────────────────────
+
+        private void DrawConditionList(List<ConditionConfig> conditions, string keyPrefix)
+        {
+            string foldKey = keyPrefix + "_fold";
+            if (!_condFoldStates.TryGetValue(foldKey, out bool foldOpen))
+                foldOpen = true;
+
+            EditorGUILayout.BeginHorizontal();
+            foldOpen = EditorGUILayout.Foldout(foldOpen, $"条件 ({conditions.Count})", true);
+            _condFoldStates[foldKey] = foldOpen;
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndHorizontal();
+
+            if (!foldOpen) return;
+
+            EditorGUI.indentLevel++;
+
+            // 添加行
+            DrawAddConditionRow(conditions, keyPrefix);
+
+            // 条件列表
+            int removeCond = -1;
+            for (int ci = 0; ci < conditions.Count; ci++)
+            {
+                if (!DrawConditionRow(conditions[ci]))
+                    removeCond = ci;
+            }
+            if (removeCond >= 0)
+            {
+                conditions.RemoveAt(removeCond);
+                _isDirty = true;
+            }
+
+            EditorGUI.indentLevel--;
+        }
+
+        private void DrawAddConditionRow(List<ConditionConfig> conditions, string keyPrefix)
+        {
+            string srcKey = keyPrefix + "src";
+            string cmpKey = keyPrefix + "cmp";
+            if (!_condAddSrcIdx.ContainsKey(srcKey)) _condAddSrcIdx[srcKey] = 0;
+            if (!_condAddCmpIdx.ContainsKey(cmpKey)) _condAddCmpIdx[cmpKey] = 0;
+
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Space(16);
+
+            if (_sourceTypeNames.Length > 0)
+                _condAddSrcIdx[srcKey] = EditorGUILayout.Popup(
+                    _condAddSrcIdx[srcKey], _sourceTypeNames, GUILayout.Width(130));
+            else
+                GUILayout.Label("（无 ISource）", EditorStyles.miniLabel, GUILayout.Width(80));
+
+            if (_compareTypeNames.Length > 0)
+                _condAddCmpIdx[cmpKey] = EditorGUILayout.Popup(
+                    _condAddCmpIdx[cmpKey], _compareTypeNames, GUILayout.Width(100));
+
+            if (GUILayout.Button("＋ 条件", GUILayout.Width(60)))
+            {
+                string srcType = _sourceTypeNames.Length > 0 ? _sourceTypeNames[_condAddSrcIdx[srcKey]] : "";
+                string cmpType = _compareTypeNames.Length > 0 ? _compareTypeNames[_condAddCmpIdx[cmpKey]] : "";
+                conditions.Add(new ConditionConfig
+                {
+                    SourceType    = srcType,
+                    CompareType   = cmpType,
+                    ConditionType = ConditionType.Necessary,
+                });
+                _isDirty = true;
+            }
+            EditorGUILayout.EndHorizontal();
+        }
+
+        /// <summary>绘制一行条件。返回 false 表示删除。</summary>
+        private bool DrawConditionRow(ConditionConfig cond)
+        {
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Space(16);
+
+            EditorGUI.BeginChangeCheck();
+
+            cond.ConditionType = (ConditionType)EditorGUILayout.EnumPopup(
+                cond.ConditionType, GUILayout.Width(88));
+
+            if (_sourceTypeNames.Length > 0)
+            {
+                int idx = Mathf.Max(0, Array.IndexOf(_sourceTypeNames, cond.SourceType));
+                idx             = EditorGUILayout.Popup(idx, _sourceTypeNames, GUILayout.Width(130));
+                cond.SourceType = _sourceTypeNames[idx];
+            }
+            else
+            {
+                cond.SourceType = EditorGUILayout.TextField(cond.SourceType, GUILayout.Width(130));
+            }
+
+            if (_compareTypeNames.Length > 0)
+            {
+                int idx = Mathf.Max(0, Array.IndexOf(_compareTypeNames, cond.CompareType));
+                idx              = EditorGUILayout.Popup(idx, _compareTypeNames, GUILayout.Width(100));
+                cond.CompareType = _compareTypeNames[idx];
+            }
+            else
+            {
+                cond.CompareType = EditorGUILayout.TextField(cond.CompareType, GUILayout.Width(100));
+            }
+
+            bool needsValue = cond.CompareType is "GreaterThan" or "LessThan" or "Equal";
+            if (needsValue)
+                cond.CompareValue = EditorGUILayout.FloatField(cond.CompareValue, GUILayout.Width(60));
+            else
+                GUILayout.Space(64);
+
+            if (EditorGUI.EndChangeCheck()) _isDirty = true;
+
+            GUILayout.FlexibleSpace();
+            GUI.color = new Color(1f, 0.5f, 0.5f);
+            bool remove = GUILayout.Button("×", GUILayout.Width(24));
+            GUI.color = Color.white;
+            EditorGUILayout.EndHorizontal();
+
+            return !remove;
         }
 
         // ─────────────────────────────────────────

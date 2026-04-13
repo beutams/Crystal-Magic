@@ -582,7 +582,7 @@ namespace CrystalMagic.Editor.Data
             {
                 string srcType = _sourceTypeNames.Length > 0 ? _sourceTypeNames[_condAddSrcIdx[srcKey]] : "";
                 string cmpType = _compareTypeNames.Length > 0 ? _compareTypeNames[_condAddCmpIdx[cmpKey]] : "";
-                unit.States[si].Transitions[ti].Conditions.Add(new UnitConditionConfig
+                unit.States[si].Transitions[ti].Conditions.Add(new ConditionConfig
                 {
                     SourceType    = srcType,
                     CompareType   = cmpType,
@@ -596,7 +596,7 @@ namespace CrystalMagic.Editor.Data
         /// <summary>
         /// 绘制一行条件。返回 false 表示删除。
         /// </summary>
-        private bool DrawConditionRow(UnitConditionConfig cond)
+        private bool DrawConditionRow(ConditionConfig cond)
         {
             EditorGUILayout.BeginHorizontal();
             GUILayout.Space(16);

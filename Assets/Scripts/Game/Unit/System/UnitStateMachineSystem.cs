@@ -7,7 +7,7 @@ using UnityEngine;
 // ══════════════════════════════════════════════════════════════════════════════
 //  UnitStateMachineSystem
 //  职责：
-//    1. OnCreate  — 创建 StateMachineFactory，调用 StateMachineRegistry.RegisterAll
+//    1. OnCreate  — 创建 StateMachineFactory + ComparatorFactory，调用 Registry
 //    2. OnUpdate  — 首帧为 Entity 构建状态机图；后续帧累加时间并调用 OnUpdate
 //  执行顺序：先于 UnitStateTransitionSystem（先 Update 再检测出口条件）
 // ══════════════════════════════════════════════════════════════════════════════
@@ -15,6 +15,7 @@ using UnityEngine;
 partial class UnitStateMachineSystem : SystemBase
 {
     private StateMachineFactory _factory;
+    private ComparatorFactory   _comparatorFactory;
 
     // ════════════════════════════════════════════════
     //  生命周期
@@ -23,9 +24,13 @@ partial class UnitStateMachineSystem : SystemBase
     protected override void OnCreate()
     {
         base.OnCreate();
-        _factory = new StateMachineFactory();
-        StateMachineRegistry.RegisterAll(_factory);
-        Debug.Log($"[StateMachine] 工厂注册完成 —— " + $"状态: {_factory.StateCount}  ISource: {_factory.SourceCount}  ICompareType: {_factory.CompareCount}");
+        _factory           = new StateMachineFactory();
+        _comparatorFactory = new ComparatorFactory();
+        StateMachineRegistry.RegisterAll(_factory, _comparatorFactory);
+        Debug.Log($"[StateMachine] 工厂注册完成 —— " +
+                  $"状态: {_factory.StateCount}  " +
+                  $"ISource: {_comparatorFactory.SourceCount}  " +
+                  $"ICompareType: {_comparatorFactory.CompareCount}");
     }
 
     protected override void OnUpdate()
@@ -38,7 +43,7 @@ partial class UnitStateMachineSystem : SystemBase
             if (sm.CurrentState == null)
             {
                 TryBuild(sm, entity);
-                continue; // 构建帧不执行 OnUpdate，等下一帧
+                continue;
             }
 
             sm.StateTime += dt;
@@ -91,20 +96,21 @@ partial class UnitStateMachineSystem : SystemBase
             state.OnInitialize(entity, EntityManager);
 
         // Step 3：组装 transitions 字典
-            foreach (var cfg in data.States)
-            {
-                if (!stateMap.TryGetValue(cfg.StateType, out var src)) continue;
-                src.transitions = new Dictionary<AUnitState, Comparator>(cfg.Transitions.Count);
+        foreach (var cfg in data.States)
+        {
+            if (!stateMap.TryGetValue(cfg.StateType, out var src)) continue;
+            src.transitions = new Dictionary<AUnitState, Comparator>(cfg.Transitions.Count);
 
-                foreach (var transCfg in cfg.Transitions)
+            foreach (var transCfg in cfg.Transitions)
+            {
+                if (!stateMap.TryGetValue(transCfg.TargetStateType, out var dst))
                 {
-                    if (!stateMap.TryGetValue(transCfg.TargetStateType, out var dst))
-                    {
-                        Debug.LogWarning($"[StateMachine] [{sm.UnitName}] 找不到目标状态: {transCfg.TargetStateType}");
-                        continue;
-                    }
-                    src.transitions[dst] = BuildComparator(transCfg, entity);
+                    Debug.LogWarning($"[StateMachine] [{sm.UnitName}] 找不到目标状态: {transCfg.TargetStateType}");
+                    continue;
                 }
+                src.transitions[dst] = _comparatorFactory.BuildComparator(
+                    transCfg.Conditions, entity, EntityManager);
+            }
         }
 
         // Step 4：进入初始状态
@@ -124,46 +130,5 @@ partial class UnitStateMachineSystem : SystemBase
 
         Debug.Log($"[StateMachine] [{sm.UnitName}] 构建完成，" +
                   $"初始: {data.States[0].StateType}，共 {stateMap.Count} 个状态");
-    }
-
-    // ════════════════════════════════════════════════
-    //  Comparator / Condition 组装（委托给 Factory 创建具体对象）
-    // ════════════════════════════════════════════════
-
-    private Comparator BuildComparator(UnitTransitionConfig transCfg, Entity entity)
-    {
-        var conditions = new List<Condition>(transCfg.Conditions.Count);
-        foreach (var condCfg in transCfg.Conditions)
-        {
-            var cond = BuildCondition(condCfg, entity);
-            if (cond != null) conditions.Add(cond);
-        }
-        return new Comparator { conditions = conditions.ToArray() };
-    }
-
-    private Condition BuildCondition(UnitConditionConfig cfg, Entity entity)
-    {
-        ISource source = _factory.CreateSource(cfg.SourceType);
-        if (source == null)
-        {
-            Debug.LogWarning($"[StateMachine] 未注册 ISource: {cfg.SourceType}，跳过该条件");
-            return null;
-        }
-
-        source.Init(entity, EntityManager);
-
-        ICompareType compareType = _factory.CreateCompareType(cfg.CompareType, cfg.CompareValue);
-        if (compareType == null)
-        {
-            Debug.LogWarning($"[StateMachine] 未注册 ICompareType: {cfg.CompareType}，跳过该条件");
-            return null;
-        }
-
-        return new RuntimeCondition
-        {
-            source      = source,
-            compareType = compareType,
-            type        = cfg.ConditionType,
-        };
     }
 }

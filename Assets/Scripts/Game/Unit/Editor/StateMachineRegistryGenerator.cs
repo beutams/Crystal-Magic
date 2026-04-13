@@ -75,7 +75,7 @@ namespace CrystalMagic.Editor
 
             sb.AppendLine("public static class StateMachineRegistry");
             sb.AppendLine("{");
-            sb.AppendLine("    public static void RegisterAll(StateMachineFactory factory)");
+            sb.AppendLine("    public static void RegisterAll(StateMachineFactory factory, ComparatorFactory comparatorFactory)");
             sb.AppendLine("    {");
 
             // ── AUnitState 子类 ──────────────────────────────────────────
@@ -94,7 +94,7 @@ namespace CrystalMagic.Editor
                 sb.AppendLine("        // （当前无 ISource 实现类）");
             else
                 foreach (var t in sources)
-                    sb.AppendLine($"        factory.RegisterSource<{t.Name}>();");
+                    sb.AppendLine($"        comparatorFactory.RegisterSource<{t.Name}>();");
 
             sb.AppendLine();
 
@@ -114,8 +114,8 @@ namespace CrystalMagic.Editor
                     bool hasValueField = valueField != null && valueField.FieldType == typeof(float);
 
                     string line = hasValueField
-                        ? $"        factory.RegisterCompareType<{t.Name}>(v => new {t.Name} {{ value = v }});"
-                        : $"        factory.RegisterCompareType<{t.Name}>(_ => new {t.Name}());";
+                        ? $"        comparatorFactory.RegisterCompareType<{t.Name}>(v => new {t.Name} {{ value = v }});"
+                        : $"        comparatorFactory.RegisterCompareType<{t.Name}>(_ => new {t.Name}());";
                     sb.AppendLine(line);
                 }
             }

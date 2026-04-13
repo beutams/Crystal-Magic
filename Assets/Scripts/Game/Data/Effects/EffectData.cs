@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace CrystalMagic.Game.Data.Effects
 {
     /// <summary>
@@ -7,6 +9,8 @@ namespace CrystalMagic.Game.Data.Effects
     [System.Serializable]
     public abstract class EffectData
     {
-
+        /// <summary>效果释放条件（所有条件通过才执行该效果）</summary>
+        public List<ConditionConfig> Conditions = new();
     }
 }
+
