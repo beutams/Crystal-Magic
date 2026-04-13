@@ -1,15 +1,11 @@
 using System;
 using CrystalMagic.Core;
-using CrystalMagic.UI;
-using UnityEngine;
 
 /// <summary>
 /// 主菜单
 /// </summary>
 public class MainMenuUI : UIBase<MainMenuUIData>
 {
-    private MainMenuUIController _controller;
-
     public event Action StartRequested;
     public event Action LoadRequested;
     public event Action ConfigRequested;
@@ -27,7 +23,6 @@ public class MainMenuUI : UIBase<MainMenuUIData>
         UI.Config.Button.onClick.AddListener(OnConfigButton);
         UI.Exit.Button.onClick.AddListener(OnExitButton);
 
-        _controller = new MainMenuUIController(this);
     }
 
     public override void OnClose()
@@ -37,8 +32,6 @@ public class MainMenuUI : UIBase<MainMenuUIData>
         UI.Config.Button.onClick.RemoveListener(OnConfigButton);
         UI.Exit.Button.onClick.RemoveListener(OnExitButton);
 
-        _controller?.Dispose();
-        _controller = null;
     }
 
     private void OnStartButton() => StartRequested?.Invoke();

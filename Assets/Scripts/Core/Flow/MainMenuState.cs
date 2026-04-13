@@ -1,3 +1,4 @@
+using CrystalMagic.UI;
 using UnityEngine;
 
 namespace CrystalMagic.Core {
@@ -6,7 +7,8 @@ namespace CrystalMagic.Core {
     /// </summary>
     public class MainMenuState : GameState
     {
-        private UIBase _mainMenuUI;
+        private MainMenuUI _mainMenuUI;
+        private MainMenuUIController _mainMenuController;
         private GameObject _cameraGo;
 
         public override void OnEnter()
@@ -28,16 +30,17 @@ namespace CrystalMagic.Core {
 
             if (uiInstance != null)
             {
-                _mainMenuUI = uiInstance.GetComponent<UIBase>();
+                _mainMenuUI = uiInstance.GetComponent<MainMenuUI>();
 
                 if (_mainMenuUI != null)
                 {
+                    BindController();
                     UIComponent.Instance.ShowUI(_mainMenuUI);
                     Debug.Log("[MainMenuState] MainMenu UI loaded and displayed");
                 }
                 else
                 {
-                    Debug.LogError("[MainMenuState] MainMenu prefab missing UIBase component");
+                    Debug.LogError("[MainMenuState] MainMenu prefab missing MainMenuUI component");
                 }
             }
             else
@@ -50,10 +53,13 @@ namespace CrystalMagic.Core {
         {
             Debug.Log("[MainMenuState] Exited MainMenu");
 
+            DisposeController();
+
             if (_mainMenuUI != null)
             {
                 UIComponent.Instance.CloseUI(_mainMenuUI);
                 PoolComponent.Instance.Release(_mainMenuUI.gameObject);
+                _mainMenuUI = null;
             }
 
             if (_cameraGo != null)
@@ -87,6 +93,53 @@ namespace CrystalMagic.Core {
         public void StartLoadGame(string slotName = "autosave")
         {
             GameFlowComponent.Instance.SetState<LoadGameState>(slotName);
+        }
+
+        private void BindController()
+        {
+            _mainMenuController = new MainMenuUIController(_mainMenuUI);
+            EventComponent.Instance.Subscribe<MainMenuStartRequestedEvent>(HandleStartGameRequested);
+            EventComponent.Instance.Subscribe<MainMenuLoadRequestedEvent>(HandleLoadGameRequested);
+            EventComponent.Instance.Subscribe<MainMenuConfigRequestedEvent>(HandleConfigOpenRequested);
+            EventComponent.Instance.Subscribe<MainMenuExitRequestedEvent>(HandleExitGameRequested);
+        }
+
+        private void DisposeController()
+        {
+            if (_mainMenuController == null)
+                return;
+
+            EventComponent.Instance.Unsubscribe<MainMenuStartRequestedEvent>(HandleStartGameRequested);
+            EventComponent.Instance.Unsubscribe<MainMenuLoadRequestedEvent>(HandleLoadGameRequested);
+            EventComponent.Instance.Unsubscribe<MainMenuConfigRequestedEvent>(HandleConfigOpenRequested);
+            EventComponent.Instance.Unsubscribe<MainMenuExitRequestedEvent>(HandleExitGameRequested);
+            _mainMenuController.Dispose();
+            _mainMenuController = null;
+        }
+
+        private void HandleStartGameRequested(MainMenuStartRequestedEvent gameEvent)
+        {
+            SaveDataComponent.Instance.Save();
+            GoToTown();
+        }
+
+        private void HandleLoadGameRequested(MainMenuLoadRequestedEvent gameEvent)
+        {
+            string slotName = string.IsNullOrEmpty(gameEvent.SlotName) ? "autosave" : gameEvent.SlotName;
+            StartLoadGame(slotName);
+        }
+
+        private void HandleConfigOpenRequested(MainMenuConfigRequestedEvent gameEvent)
+        {
+            Debug.Log("[MainMenuState] Config clicked");
+        }
+
+        private void HandleExitGameRequested(MainMenuExitRequestedEvent gameEvent)
+        {
+            Application.Quit();
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#endif
         }
     }
 }
