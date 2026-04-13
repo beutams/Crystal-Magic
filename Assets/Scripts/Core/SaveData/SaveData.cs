@@ -46,22 +46,6 @@ namespace CrystalMagic.Core {
     [System.Serializable]
     public class GlobalData
     {
-        /// <summary>
-        /// 玩家全局成就数据
-        /// </summary>
-        public AchievementData Achievements;
-        public GlobalData()
-        {
-            Achievements = new AchievementData();
-        }
-    }
-
-    /// <summary>
-    /// 成就数据
-    /// </summary>
-    [System.Serializable]
-    public class AchievementData
-    {
         public long TotalPlayTimeSeconds;      // 总游玩时间（秒）
     }
 
@@ -237,8 +221,7 @@ namespace CrystalMagic.Core {
     }
 
     /// <summary>
-    /// 技能数据 - 包含5组技能链
-    /// 见游戏设计文档第 6 章
+    /// 技能数据
     /// </summary>
     [System.Serializable]
     public class SkillCData

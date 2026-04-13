@@ -26,8 +26,6 @@ namespace CrystalMagic.Core {
             {
                 SaveData = saveData,
                 SlotName = slotName,
-                HasDungeonRun = saveData.DungeonRun != null,
-                DungeonFloor = saveData.DungeonRun?.CurrentFloor ?? 0
             };
 
             string targetSceneName;

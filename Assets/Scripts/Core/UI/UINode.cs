@@ -21,6 +21,8 @@ namespace CrystalMagic.Core {
         public InputField InputField;
         public TextMeshProUGUI TextMeshProUGUI;
 
+        public ButtonPlus ButtonPlus;
+
         public static UINode From(GameObject go)
         {
             if (go == null) return null;
@@ -32,6 +34,7 @@ namespace CrystalMagic.Core {
             node.Toggle = go.GetComponent<Toggle>();
             node.InputField = go.GetComponent<InputField>();
             node.TextMeshProUGUI = go.GetComponent<TextMeshProUGUI>();
+            node.ButtonPlus = go.GetComponent<ButtonPlus>();
             return node;
         }
     }

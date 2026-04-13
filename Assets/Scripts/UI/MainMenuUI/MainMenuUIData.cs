@@ -1,5 +1,5 @@
 // AUTO-GENERATED — DO NOT EDIT MANUALLY
-// Right-click Prefab → Assets/Tools/Generate UIData to regenerate
+// 输出目录：Assets/Scripts/UI/{Prefab名}/ — 右键 Prefab → Assets/Tools/Generate UIData 重新生成
 
 using UnityEngine;
 using CrystalMagic.Core;

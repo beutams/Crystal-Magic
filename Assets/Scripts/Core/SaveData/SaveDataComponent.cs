@@ -5,13 +5,6 @@ using UnityEngine;
 namespace CrystalMagic.Core {
     /// <summary>
     /// 存档系统组件
-    /// 职责：
-    /// - 管理所有存档的序列化/反序列化
-    /// - 处理版本迁移
-    /// - 提供简洁的 Save/Load API
-    /// - 与 RunSession、结算系统集成
-    /// 
-    /// 对应框架设计文档第 8 章
     /// </summary>
     public class SaveDataComponent : GameComponent<SaveDataComponent>
     {
@@ -80,8 +73,6 @@ namespace CrystalMagic.Core {
 
                 // 填充元数据
                 _currentSaveData.SaveName = slotName;
-                _currentSaveData.SaveVersion = CURRENT_SAVE_VERSION;
-                _currentSaveData.ContentVersion = CURRENT_CONTENT_VERSION;
                 _currentSaveData.SaveTimestamp = DateTime.Now.Ticks;
                 _currentSaveData.GameVersion = Application.version;
 
@@ -141,15 +132,6 @@ namespace CrystalMagic.Core {
                 {
                     OnLoadFailed?.Invoke($"Failed to parse save file: {slotName}");
                     return false;
-                }
-
-                if (data.SaveVersion < CURRENT_SAVE_VERSION)
-                {
-                    if (!MigrateSaveVersion(data))
-                    {
-                        OnLoadFailed?.Invoke($"Failed to migrate save version: {slotName}");
-                        return false;
-                    }
                 }
 
                 _currentSaveData = data;
@@ -213,8 +195,6 @@ namespace CrystalMagic.Core {
                                 SaveName = data.SaveName,
                                 Timestamp = data.SaveTimestamp,
                                 GameVersion = data.GameVersion,
-                                MaxFloor = data.Global?.Achievements.MaxFloorReached ?? 0,
-                                TotalRuns = data.Global?.Achievements.TotalRunCount ?? 0
                             });
                             count++;
                         }
@@ -314,31 +294,6 @@ namespace CrystalMagic.Core {
                 data.Town = new TownData();
             }
         }
-
-        /// <summary>
-        /// 版本迁移
-        /// </summary>
-        private bool MigrateSaveVersion(SaveData oldData)
-        {
-            try
-            {
-                if (oldData.SaveVersion < 1)
-                {
-                    // TODO: 补充具体迁移逻辑
-                    Debug.Log($"[SaveDataComponent] Migrating save from v{oldData.SaveVersion} to v{CURRENT_SAVE_VERSION}");
-                }
-
-                oldData.SaveVersion = CURRENT_SAVE_VERSION;
-                oldData.ContentVersion = CURRENT_CONTENT_VERSION;
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[SaveDataComponent] Migration failed: {ex.Message}");
-                return false;
-            }
-        }
-
         /// <summary>
         /// 创建备份文件
         /// </summary>
@@ -423,7 +378,7 @@ namespace CrystalMagic.Core {
         /// </summary>
         public bool ShouldEnterDungeon()
         {
-            return HasDungeonRun && SaveData.DungeonRun != null;
+            return HasDungeonRun;
         }
 
         /// <summary>
