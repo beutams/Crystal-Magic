@@ -13,7 +13,7 @@ namespace CrystalMagic.Core {
             // 可以在这里访问 StateData（如果是从读档进入）
             if (StateData is LoadGameContext context)
             {
-                Debug.Log($"[TownState] Loaded from slot: {context.SlotName}");
+                Debug.Log($"[TownState] Loaded from slot index: {context.SaveIndex}");
             }
         }
 

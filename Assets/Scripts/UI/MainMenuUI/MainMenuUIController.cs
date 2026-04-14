@@ -29,17 +29,17 @@ namespace CrystalMagic.UI
 
         private void OnStartRequested()
         {
-            EventComponent.Instance.Publish(new MainMenuStartRequestedEvent());
+            EventComponent.Instance.Publish(new MainMenuStartRequestedEvent(0));
         }
 
         private void OnLoadRequested()
         {
-            EventComponent.Instance.Publish(new MainMenuLoadRequestedEvent("autosave"));
+            EventComponent.Instance.Publish(new MainMenuLoadRequestedEvent(0));
         }
 
         private void OnConfigRequested()
         {
-            EventComponent.Instance.Publish(new MainMenuConfigRequestedEvent());
+            
         }
 
         private void OnExitRequested()

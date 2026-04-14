@@ -47,20 +47,24 @@ namespace CrystalMagic.Editor.UI
         /// </summary>
         public static string GenerateForPrefab(GameObject prefab)
         {
+            string className = prefab.name + "Data";
+            string outputDir = Path.Combine("Assets/Scripts/UI", prefab.name);
+            return GenerateForTransform(prefab.transform, className, outputDir);
+        }
+
+        public static string GenerateForTransform(Transform root, string className, string outputDir)
+        {
             List<Entry> entries = new();
             Dictionary<string, int> dupCounter = new();
             HashSet<string> seenFields = new();
 
-            CollectChildren(prefab.transform, "", "", entries, dupCounter, seenFields);
-
-            string className = prefab.name + "Data";
+            CollectChildren(root, "", "", entries, dupCounter, seenFields);
 
             if (entries.Count == 0)
             {
-                Debug.LogWarning($"[UIDataGenerator] {prefab.name} has no children, generating empty UIData");
+                Debug.LogWarning($"[UIDataGenerator] {root.name} has no children, generating empty UIData");
             }
 
-            string outputDir = Path.Combine("Assets/Scripts/UI", prefab.name);
             if (!Directory.Exists(outputDir))
                 Directory.CreateDirectory(outputDir);
 
@@ -161,6 +165,11 @@ namespace CrystalMagic.Editor.UI
         // ─────────────────────────────────────────
         //  净化单段名称为合法 C# 标识符
         // ─────────────────────────────────────────
+        public static string SanitizeTypeName(string raw)
+        {
+            return SanitizeSegment(raw);
+        }
+
         private static string SanitizeSegment(string raw)
         {
             StringBuilder sb = new();
