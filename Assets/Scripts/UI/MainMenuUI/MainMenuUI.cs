@@ -18,19 +18,19 @@ public class MainMenuUI : UIBase<MainMenuUIData>
 
     public override void OnOpen()
     {
-        UI.Start.Button.onClick.AddListener(OnStartButton);
-        UI.Load.Button.onClick.AddListener(OnLoadButton);
-        UI.Config.Button.onClick.AddListener(OnConfigButton);
-        UI.Exit.Button.onClick.AddListener(OnExitButton);
+        UI.Start.ButtonPlus.onClick.AddListener(OnStartButton);
+        UI.Load.ButtonPlus.onClick.AddListener(OnLoadButton);
+        UI.Config.ButtonPlus.onClick.AddListener(OnConfigButton);
+        UI.Exit.ButtonPlus.onClick.AddListener(OnExitButton);
 
     }
 
     public override void OnClose()
     {
-        UI.Start.Button.onClick.RemoveListener(OnStartButton);
-        UI.Load.Button.onClick.RemoveListener(OnLoadButton);
-        UI.Config.Button.onClick.RemoveListener(OnConfigButton);
-        UI.Exit.Button.onClick.RemoveListener(OnExitButton);
+        UI.Start.ButtonPlus.onClick.RemoveListener(OnStartButton);
+        UI.Load.ButtonPlus.onClick.RemoveListener(OnLoadButton);
+        UI.Config.ButtonPlus.onClick.RemoveListener(OnConfigButton);
+        UI.Exit.ButtonPlus.onClick.RemoveListener(OnExitButton);
 
     }
 

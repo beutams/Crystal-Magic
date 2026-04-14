@@ -1,20 +1,22 @@
+﻿using CrystalMagic.Core;
+
+using CrystalMagic.UI;
 using System;
 using System.Collections.Generic;
-using CrystalMagic.Core;
-using CrystalMagic.UI;
 using UnityEngine;
 
-public class SaveUI : UIBase<SaveUIData>
+public class LoadUI : UIBase<LoadUIData>
 {
-    private readonly List<SaveUI_SaveItemView> _itemViews = new();
-    private SaveUIModel _model;
+    private readonly List<LoadUI_SaveItemView> _itemViews = new();
+    private LoadUIModel _model;
     private bool _isOpened;
     private bool _isModelEventSubscribed;
 
     public event Action BackClicked;
     public event Action<int> SaveItemClicked;
     public event Action<int> SaveItemDeleteClicked;
-    public void BindModel(SaveUIModel model)
+
+    public void BindModel(LoadUIModel model)
     {
         if (_model == model)
             return;
@@ -67,9 +69,9 @@ public class SaveUI : UIBase<SaveUIData>
     {
         _itemViews.Clear();
 
-        for (int i = 0; i < UI.Content.GameObject.transform.childCount; i++)
+        for (int i = 0; i < UI.ScrollView_Viewport_Content.GameObject.transform.childCount; i++)
         {
-            SaveUI_SaveItemView itemView = UI.Content.GameObject.transform.GetChild(i).GetComponent<SaveUI_SaveItemView>();
+            LoadUI_SaveItemView itemView = UI.ScrollView_Viewport_Content.GameObject.transform.GetChild(i).GetComponent<LoadUI_SaveItemView>();
             itemView.Rebind();
             itemView.Clicked -= HandleItemClicked;
             itemView.DeleteClicked -= HandleItemDeleteClicked;
@@ -89,11 +91,11 @@ public class SaveUI : UIBase<SaveUIData>
 
         while (_itemViews.Count < slotCount)
         {
-            GameObject clone = Instantiate(UI.SaveItem.GameObject, UI.Content.GameObject.transform);
-            clone.name = UI.SaveItem.GameObject.name;
+            GameObject clone = Instantiate(UI.ScrollView_Viewport_Content_SaveItem.GameObject, UI.ScrollView_Viewport_Content.GameObject.transform);
+            clone.name = UI.ScrollView_Viewport_Content_SaveItem.GameObject.name;
             clone.SetActive(true);
 
-            SaveUI_SaveItemView itemView = clone.GetComponent<SaveUI_SaveItemView>();
+            LoadUI_SaveItemView itemView = clone.GetComponent<LoadUI_SaveItemView>();
             itemView.Rebind();
             itemView.Clicked += HandleItemClicked;
             itemView.DeleteClicked += HandleItemDeleteClicked;
@@ -118,7 +120,7 @@ public class SaveUI : UIBase<SaveUIData>
 
     private void OnSaveRecordsChanged(CommonGameEvent gameEvent)
     {
-        SaveUIModel eventModel = gameEvent.GetData<SaveUIModel>();
+        LoadUIModel eventModel = gameEvent.GetData<LoadUIModel>();
         if (eventModel != _model)
             return;
 
@@ -130,7 +132,7 @@ public class SaveUI : UIBase<SaveUIData>
         if (_isModelEventSubscribed || _model == null)
             return;
 
-        EventComponent.Instance.Subscribe(new CommonGameEvent(SaveUIModel.SaveRecordsChangedEventName), OnSaveRecordsChanged);
+        EventComponent.Instance.Subscribe(new CommonGameEvent(LoadUIModel.SaveRecordsChangedEventName), OnSaveRecordsChanged);
         _isModelEventSubscribed = true;
     }
 
@@ -139,7 +141,7 @@ public class SaveUI : UIBase<SaveUIData>
         if (!_isModelEventSubscribed)
             return;
 
-        EventComponent.Instance.Unsubscribe(new CommonGameEvent(SaveUIModel.SaveRecordsChangedEventName), OnSaveRecordsChanged);
+        EventComponent.Instance.Unsubscribe(new CommonGameEvent(LoadUIModel.SaveRecordsChangedEventName), OnSaveRecordsChanged);
         _isModelEventSubscribed = false;
     }
 }

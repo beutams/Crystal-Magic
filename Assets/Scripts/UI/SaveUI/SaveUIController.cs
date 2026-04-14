@@ -26,12 +26,37 @@ namespace CrystalMagic.UI
 
         private void OnSaveItemClicked(int slotIndex)
         {
+            CloseOpenedTip();
+
+            SaveRecord record = Model.SaveRecords != null && slotIndex >= 0 && slotIndex < Model.SaveRecords.Length
+                ? Model.SaveRecords[slotIndex]
+                : null;
+
+            string content = record == null ? "是否创建新存档？" : "是否覆盖该存档？";
+            ConfirmUIOpenData openData = new(
+                "保存",
+                content,
+                () => EventComponent.Instance.Publish(new MainMenuStartRequestedEvent(slotIndex)),
+                null);
+
+            UIComponent.Instance.OpenChild<ConfirmUI>(View, openData);
         }
 
         private void OnSaveItemDeleteClicked(int slotIndex)
         {
             SaveDataComponent.Instance.DeleteSlot(slotIndex);
             Model.SetSaveRecords(SaveDataComponent.Instance.GetAllSaveRecords());
+        }
+
+        private void CloseOpenedTip()
+        {
+            foreach (UIBase child in UIComponent.Instance.GetChildren(View))
+            {
+                if (child is ConfirmUI)
+                {
+                    UIComponent.Instance.ReleaseUI(child);
+                }
+            }
         }
     }
 }

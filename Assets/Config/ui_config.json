@@ -5,7 +5,10 @@
             "groupName": "Default",
             "order": -10000,
             "uiNames": [
-                "MainMenuUI"
+                "MainMenuUI",
+                "LoadUI",
+                "SaveUI",
+                "ConfirmUI"
             ]
         },
         {

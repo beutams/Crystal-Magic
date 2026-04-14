@@ -29,12 +29,12 @@ namespace CrystalMagic.UI
 
         private void OnStartRequested()
         {
-            EventComponent.Instance.Publish(new MainMenuStartRequestedEvent(0));
+            UIComponent.Instance.OpenChild<SaveUI>(View);
         }
 
         private void OnLoadRequested()
         {
-            EventComponent.Instance.Publish(new MainMenuLoadRequestedEvent(0));
+            UIComponent.Instance.OpenChild<LoadUI>(View);
         }
 
         private void OnConfigRequested()
