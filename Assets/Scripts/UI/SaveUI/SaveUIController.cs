@@ -11,16 +11,12 @@ namespace CrystalMagic.UI
 
         protected override void OnOpen()
         {
-            BindModelChanged(Model, RefreshView);
+            View.BindModel(Model);
             Bindings.Bind(() => View.BackClicked += OnBackClicked, () => View.BackClicked -= OnBackClicked);
             Bindings.Bind(() => View.SaveItemClicked += OnSaveItemClicked, () => View.SaveItemClicked -= OnSaveItemClicked);
+            Bindings.Bind(() => View.SaveItemDeleteClicked += OnSaveItemDeleteClicked, () => View.SaveItemDeleteClicked -= OnSaveItemDeleteClicked);
 
             Model.SetSaveRecords(SaveDataComponent.Instance.GetAllSaveRecords());
-        }
-
-        private void RefreshView()
-        {
-            View.RenderSlots(Model.SaveRecords, Model.SlotCountValue);
         }
 
         private void OnBackClicked()
@@ -30,6 +26,12 @@ namespace CrystalMagic.UI
 
         private void OnSaveItemClicked(int slotIndex)
         {
+        }
+
+        private void OnSaveItemDeleteClicked(int slotIndex)
+        {
+            SaveDataComponent.Instance.DeleteSlot(slotIndex);
+            Model.SetSaveRecords(SaveDataComponent.Instance.GetAllSaveRecords());
         }
     }
 }

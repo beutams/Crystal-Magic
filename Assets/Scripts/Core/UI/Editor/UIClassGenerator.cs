@@ -88,11 +88,6 @@ namespace CrystalMagic.Editor.UI
             sb.AppendLine();
             sb.AppendLine("        protected override void OnOpen()");
             sb.AppendLine("        {");
-            sb.AppendLine("            BindModelChanged(Model, RefreshView);");
-            sb.AppendLine("        }");
-            sb.AppendLine();
-            sb.AppendLine("        private void RefreshView()");
-            sb.AppendLine("        {");
             sb.AppendLine("        }");
             sb.AppendLine("    }");
             sb.AppendLine("}");
