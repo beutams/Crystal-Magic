@@ -1,19 +1,15 @@
 using UnityEngine;
 
 namespace CrystalMagic.Core {
-    /// <summary>
-    /// 读档流程状态
-    /// 职责：读取存档数据，根据内容通过 TransitionState 进入城镇或地牢
-    /// data 传入 string slotName
-    /// </summary>
+
     public class LoadGameState : GameState
     {
         public override void OnEnter()
         {
-            string slotName = StateData as string ?? "autosave";
-            Debug.Log($"[LoadGameState] Loading slot: {slotName}");
+            int saveIndex = StateData is int index ? index : 0;
+            Debug.Log($"[LoadGameState] Loading slot index: {saveIndex}");
 
-            bool success = SaveDataComponent.Instance.LoadFromSlot(slotName);
+            bool success = SaveDataComponent.Instance.LoadFromSlot(saveIndex);
             SaveData saveData = SaveDataComponent.Instance.GetCurrentSaveData();
 
             if (!success || saveData == null)
@@ -25,7 +21,7 @@ namespace CrystalMagic.Core {
             LoadGameContext context = new LoadGameContext
             {
                 SaveData = saveData,
-                SlotName = slotName,
+                SaveIndex = saveIndex,
             };
 
             string targetSceneName;
@@ -33,14 +29,14 @@ namespace CrystalMagic.Core {
 
             if (context.ShouldEnterDungeon())
             {
-                Debug.Log($"[LoadGameState] → Dungeon (Floor: {context.DungeonFloor})");
-                targetSceneName = "Dungeon";
+                Debug.Log($"[LoadGameState] 鈫?Dungeon (Floor: {context.DungeonFloor})");
+                targetSceneName = "Game";
                 targetStateType = typeof(DungeonState);
             }
             else
             {
-                Debug.Log("[LoadGameState] → Town");
-                targetSceneName = "Town";
+                Debug.Log("[LoadGameState] 鈫?Town");
+                targetSceneName = "Game";
                 targetStateType = typeof(TownState);
             }
 

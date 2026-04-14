@@ -12,7 +12,7 @@ namespace CrystalMagic.Core {
     public class SaveData
     {
         // ========== 元数据 ==========
-        public string SaveName;                    // 存档名称
+        public int SaveIndex;                    // 存档名称
         public long SaveTimestamp;                 // 存档时间戳
         public string GameVersion;                 // 游戏版本号
 
