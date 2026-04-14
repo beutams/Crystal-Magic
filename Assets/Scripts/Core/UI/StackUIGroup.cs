@@ -16,16 +16,14 @@ namespace CrystalMagic.Core {
             {
                 // 对旧栈顶调用 OnCovered
                 UIBase oldTop = _panels.Last.Value;
-                oldTop.OnCovered();
-                oldTop.gameObject.SetActive(false);
+                UIComponent.Instance?.CoverPanelTree(oldTop);
 
                 // 移除旧节点
                 _panels.Remove(node);
 
                 // 再压栈
                 _panels.AddLast(panel);
-                panel.gameObject.SetActive(true);
-                panel.OnUncovered();
+                UIComponent.Instance?.UncoverPanelTree(panel);
             }
             else if (node == null)
             {
@@ -33,14 +31,12 @@ namespace CrystalMagic.Core {
                 if (_panels.Count > 0)
                 {
                     UIBase oldTop = _panels.Last.Value;
-                    oldTop.OnCovered();
-                    oldTop.gameObject.SetActive(false);
+                    UIComponent.Instance?.CoverPanelTree(oldTop);
                 }
 
                 SetupPanelOnAdd(panel);
                 _panels.AddLast(panel);
-                panel.gameObject.SetActive(true);
-                panel.OnOpen();
+                UIComponent.Instance?.OpenRootPanel(panel);
             }
 
             RefreshSortingOrders();
@@ -54,15 +50,13 @@ namespace CrystalMagic.Core {
 
             bool isTop = node == _panels.Last;
 
-            panel.OnClose();
+            UIComponent.Instance?.CloseRootPanel(panel);
             _panels.Remove(node);
-            panel.gameObject.SetActive(false);
 
             if (isTop && _panels.Count > 0)
             {
                 UIBase newTop = _panels.Last.Value;
-                newTop.gameObject.SetActive(true);
-                newTop.OnUncovered();
+                UIComponent.Instance?.UncoverPanelTree(newTop);
             }
 
             RefreshSortingOrders();

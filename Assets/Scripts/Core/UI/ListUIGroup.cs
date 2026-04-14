@@ -15,8 +15,7 @@ namespace CrystalMagic.Core {
 
             SetupPanelOnAdd(panel);
             _panels.AddLast(panel);
-            panel.gameObject.SetActive(true);
-            panel.OnOpen();
+            UIComponent.Instance?.OpenRootPanel(panel);
             RefreshSortingOrders();
         }
 
@@ -27,8 +26,7 @@ namespace CrystalMagic.Core {
                 return;
 
             _panels.Remove(node);
-            panel.OnClose();
-            panel.gameObject.SetActive(false);
+            UIComponent.Instance?.CloseRootPanel(panel);
             RefreshSortingOrders();
         }
     }

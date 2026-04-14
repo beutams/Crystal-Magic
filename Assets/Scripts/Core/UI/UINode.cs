@@ -1,6 +1,7 @@
 // AUTO-GENERATED — DO NOT EDIT MANUALLY
 // Use Tools/UI/UINode Config → Generate UINode to regenerate
 
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -15,6 +16,7 @@ namespace CrystalMagic.Core {
         public GameObject GameObject;
         public RectTransform RectTransform;
         public Image Image;
+        [Obsolete("Use ButtonPlus instead.")]
         public Button Button;
         public Slider Slider;
         public Toggle Toggle;
@@ -29,7 +31,9 @@ namespace CrystalMagic.Core {
             var node = new UINode { GameObject = go };
             node.RectTransform = go.GetComponent<RectTransform>();
             node.Image = go.GetComponent<Image>();
+#pragma warning disable CS0618
             node.Button = go.GetComponent<Button>();
+#pragma warning restore CS0618
             node.Slider = go.GetComponent<Slider>();
             node.Toggle = go.GetComponent<Toggle>();
             node.InputField = go.GetComponent<InputField>();

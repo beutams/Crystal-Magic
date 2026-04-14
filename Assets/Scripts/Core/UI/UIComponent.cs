@@ -169,9 +169,14 @@ namespace CrystalMagic.Core {
 
             if (_groups.TryGetValue(groupName, out UIGroup group))
             {
-                GetOrCreateMvcContext(panel);
+                UIMvcContext context = GetOrCreateMvcContext(panel);
+                if (context != null)
+                {
+                    context.Detach();
+                    context.GroupName = groupName;
+                }
+
                 group.ShowUI(panel);
-                OpenMvcContext(panel);
             }
         }
 
@@ -180,7 +185,17 @@ namespace CrystalMagic.Core {
             return Open(typeof(T).Name) as T;
         }
 
+        public T Open<T>(object data) where T : UIBase
+        {
+            return Open(typeof(T).Name, data) as T;
+        }
+
         public UIBase Open(string uiName)
+        {
+            return Open(uiName, null);
+        }
+
+        public UIBase Open(string uiName, object data)
         {
             if (string.IsNullOrEmpty(uiName))
                 return null;
@@ -200,7 +215,76 @@ namespace CrystalMagic.Core {
                 return null;
             }
 
+            ApplyOpenData(GetOrCreateMvcContext(panel), data);
             ShowUI(panel);
+            return panel;
+        }
+
+        public T OpenChild<T>(UIBase parent) where T : UIBase
+        {
+            return OpenChild(typeof(T).Name, parent) as T;
+        }
+
+        public T OpenChild<T>(UIBase parent, object data) where T : UIBase
+        {
+            return OpenChild(typeof(T).Name, parent, data) as T;
+        }
+
+        public UIBase OpenChild(string uiName, UIBase parent)
+        {
+            return OpenChild(uiName, parent, null);
+        }
+
+        public UIBase OpenChild(string uiName, UIBase parent, object data)
+        {
+            if (parent == null)
+                return Open(uiName, data);
+
+            if (string.IsNullOrEmpty(uiName))
+                return null;
+
+            UIMvcContext parentContext = GetOrCreateMvcContext(parent);
+            if (parentContext == null)
+            {
+                Debug.LogError($"[UIComponent] Failed to open child UI '{uiName}', parent context missing");
+                return null;
+            }
+
+            string groupName = string.IsNullOrEmpty(parentContext.GroupName) ? DefaultGroupName : parentContext.GroupName;
+            if (!_groups.TryGetValue(groupName, out UIGroup group))
+            {
+                Debug.LogError($"[UIComponent] Failed to open child UI '{uiName}', group '{groupName}' missing");
+                return null;
+            }
+
+            GameObject uiInstance = PoolComponent.Instance.Get(AssetPathHelper.GetUIAsset(uiName));
+            if (uiInstance == null)
+            {
+                Debug.LogError($"[UIComponent] Failed to open child UI: {uiName}");
+                return null;
+            }
+
+            UIBase panel = uiInstance.GetComponent<UIBase>();
+            if (panel == null)
+            {
+                Debug.LogError($"[UIComponent] UI prefab '{uiName}' missing UIBase component");
+                PoolComponent.Instance.Release(uiInstance);
+                return null;
+            }
+
+            group.AttachPanel(panel);
+            UIMvcContext childContext = GetOrCreateMvcContext(panel);
+            if (childContext == null)
+            {
+                PoolComponent.Instance.Release(uiInstance);
+                return null;
+            }
+
+            childContext.GroupName = groupName;
+            childContext.AttachTo(parentContext);
+            ApplyOpenData(childContext, data);
+            OpenChildPanel(childContext, parent.gameObject.activeSelf);
+            RefreshGroupSortingOrders(group);
             return panel;
         }
 
@@ -211,6 +295,14 @@ namespace CrystalMagic.Core {
         {
             if (panel == null)
                 return;
+
+            if (_mvcContexts.TryGetValue(panel, out UIMvcContext context) && context.Parent != null)
+            {
+                string childGroupName = string.IsNullOrEmpty(context.GroupName) ? DefaultGroupName : context.GroupName;
+                ReleaseContextTree(context);
+                RefreshGroupSortingOrders(childGroupName);
+                return;
+            }
 
             string groupName = GetGroupNameByUIName(panel.GetType().Name);
             if (string.IsNullOrEmpty(groupName))
@@ -227,10 +319,17 @@ namespace CrystalMagic.Core {
             if (panel == null)
                 return;
 
+            if (_mvcContexts.TryGetValue(panel, out UIMvcContext context) && context.Parent != null)
+            {
+                string childGroupName = string.IsNullOrEmpty(context.GroupName) ? DefaultGroupName : context.GroupName;
+                ReleaseContextTree(context);
+                RefreshGroupSortingOrders(childGroupName);
+                return;
+            }
+
             if (_groups.TryGetValue(groupName, out UIGroup group))
             {
                 group.CloseUI(panel);
-                CloseMvcContext(panel);
             }
         }
 
@@ -238,6 +337,14 @@ namespace CrystalMagic.Core {
         {
             if (panel == null)
                 return;
+
+            if (_mvcContexts.TryGetValue(panel, out UIMvcContext context) && context.Parent != null)
+            {
+                string childGroupName = string.IsNullOrEmpty(context.GroupName) ? DefaultGroupName : context.GroupName;
+                ReleaseContextTree(context);
+                RefreshGroupSortingOrders(childGroupName);
+                return;
+            }
 
             CloseUI(panel);
             DisconnectMvc(panel);
@@ -265,18 +372,259 @@ namespace CrystalMagic.Core {
             return null;
         }
 
-        private void OpenMvcContext(UIBase panel)
+        public UIBase GetParent(UIBase child)
         {
-            UIMvcContext context = GetOrCreateMvcContext(panel);
-            context?.Open();
+            if (child == null)
+                return null;
+
+            return _mvcContexts.TryGetValue(child, out UIMvcContext context) ? context.Parent?.Panel : null;
         }
 
-        private void CloseMvcContext(UIBase panel)
+        public IReadOnlyList<UIBase> GetChildren(UIBase parent)
         {
-            if (_mvcContexts.TryGetValue(panel, out UIMvcContext context))
+            if (parent == null)
+                return Array.Empty<UIBase>();
+
+            if (!_mvcContexts.TryGetValue(parent, out UIMvcContext context) || context.Children.Count == 0)
+                return Array.Empty<UIBase>();
+
+            List<UIBase> children = new(context.Children.Count);
+            foreach (UIMvcContext childContext in context.Children)
             {
+                children.Add(childContext.Panel);
+            }
+
+            return children;
+        }
+
+        internal void OpenRootPanel(UIBase panel)
+        {
+            if (panel == null)
+                return;
+
+            UIMvcContext context = GetOrCreateMvcContext(panel);
+            if (context == null)
+            {
+                panel.gameObject.SetActive(true);
+                panel.OnOpen();
+                return;
+            }
+
+            OpenPanel(context);
+        }
+
+        internal void CloseRootPanel(UIBase panel)
+        {
+            if (panel == null)
+                return;
+
+            if (!_mvcContexts.TryGetValue(panel, out UIMvcContext context))
+            {
+                panel.OnClose();
+                panel.gameObject.SetActive(false);
+                return;
+            }
+
+            ReleaseChildContexts(context);
+            ClosePanel(context);
+        }
+
+        internal void CoverPanelTree(UIBase panel)
+        {
+            if (panel == null)
+                return;
+
+            if (!_mvcContexts.TryGetValue(panel, out UIMvcContext context))
+            {
+                panel.OnCovered();
+                panel.gameObject.SetActive(false);
+                return;
+            }
+
+            panel.OnCovered();
+            SetTreeActive(context, false);
+        }
+
+        internal void UncoverPanelTree(UIBase panel)
+        {
+            if (panel == null)
+                return;
+
+            if (!_mvcContexts.TryGetValue(panel, out UIMvcContext context))
+            {
+                panel.gameObject.SetActive(true);
+                panel.OnUncovered();
+                return;
+            }
+
+            SetTreeActive(context, true);
+            panel.OnUncovered();
+        }
+
+        internal void RefreshGroupSortingOrders(UIGroup group)
+        {
+            if (group == null)
+                return;
+
+            int order = group.BaseSortingOrder;
+            foreach (UIBase rootPanel in group.Panels)
+            {
+                if (_mvcContexts.TryGetValue(rootPanel, out UIMvcContext context))
+                {
+                    order = ApplyTreeOrder(context, order);
+                }
+                else if (rootPanel != null)
+                {
+                    rootPanel.Canvas.sortingOrder = order;
+                    order++;
+                }
+
+                order += 100;
+            }
+        }
+
+        private void RefreshGroupSortingOrders(string groupName)
+        {
+            if (_groups.TryGetValue(groupName, out UIGroup group))
+            {
+                RefreshGroupSortingOrders(group);
+            }
+        }
+
+        private void OpenChildPanel(UIMvcContext context, bool active)
+        {
+            if (context == null)
+                return;
+
+            OpenPanel(context);
+            if (!active)
+            {
+                SetTreeActive(context, false);
+            }
+        }
+
+        private void OpenPanel(UIMvcContext context)
+        {
+            if (context == null)
+                return;
+
+            context.Panel.gameObject.SetActive(true);
+            if (!context.IsOpen)
+            {
+                context.Panel.OnOpen();
+                context.Open();
+                return;
+            }
+
+            SetTreeActive(context, true);
+        }
+
+        private void ApplyOpenData(UIMvcContext context, object data)
+        {
+            if (context == null || data == null)
+                return;
+
+            if (TryApplyOpenData(context.Model, data))
+                return;
+
+            if (TryApplyOpenData(context.Controller, data))
+                return;
+
+            TryApplyOpenData(context.Panel, data);
+        }
+
+        private bool TryApplyOpenData(object target, object data)
+        {
+            if (target == null || data == null)
+                return false;
+
+            Type dataType = data.GetType();
+            Type receiverType = typeof(IUIOpenDataReceiver<>).MakeGenericType(dataType);
+            if (!receiverType.IsInstanceOfType(target))
+                return false;
+
+            receiverType.GetMethod(nameof(IUIOpenDataReceiver<object>.SetOpenData))?.Invoke(target, new[] { data });
+            return true;
+        }
+
+        private void ClosePanel(UIMvcContext context)
+        {
+            if (context == null)
+                return;
+
+            if (context.IsOpen)
+            {
+                context.Panel.OnClose();
                 context.Close();
             }
+
+            context.Panel.gameObject.SetActive(false);
+        }
+
+        private void ReleaseChildContexts(UIMvcContext context)
+        {
+            if (context == null || context.Children.Count == 0)
+                return;
+
+            List<UIMvcContext> children = new(context.Children);
+            foreach (UIMvcContext child in children)
+            {
+                ReleaseContextTree(child);
+            }
+        }
+
+        private void ReleaseContextTree(UIMvcContext context)
+        {
+            if (context == null)
+                return;
+
+            List<UIMvcContext> children = new(context.Children);
+            foreach (UIMvcContext child in children)
+            {
+                ReleaseContextTree(child);
+            }
+
+            context.Children.Clear();
+
+            if (context.IsOpen)
+            {
+                context.Panel.OnClose();
+                context.Close();
+            }
+
+            context.Panel.gameObject.SetActive(false);
+            context.Detach();
+            _mvcContexts.Remove(context.Panel);
+            context.Dispose();
+            PoolComponent.Instance.Release(context.Panel.gameObject);
+        }
+
+        private void SetTreeActive(UIMvcContext context, bool active)
+        {
+            if (context == null)
+                return;
+
+            context.Panel.gameObject.SetActive(active);
+            foreach (UIMvcContext child in context.Children)
+            {
+                SetTreeActive(child, active);
+            }
+        }
+
+        private int ApplyTreeOrder(UIMvcContext context, int order)
+        {
+            if (context == null)
+                return order;
+
+            context.Panel.Canvas.sortingOrder = order;
+            int nextOrder = order + 1;
+
+            foreach (UIMvcContext child in context.Children)
+            {
+                nextOrder = ApplyTreeOrder(child, nextOrder);
+            }
+
+            return nextOrder;
         }
 
         private UIMvcContext GetOrCreateMvcContext(UIBase panel)
@@ -295,23 +643,25 @@ namespace CrystalMagic.Core {
             Type controllerType = ResolveType($"CrystalMagic.UI.{viewType.Name}Controller", typeof(UIControllerBase))
                 ?? ResolveType($"{viewType.Name}Controller", typeof(UIControllerBase));
 
-            if (controllerType == null)
-                return null;
-
-            modelType ??= typeof(EmptyUIModel);
-
             try
             {
-                UIModelBase model = Activator.CreateInstance(modelType) as UIModelBase;
-                UIControllerBase controller = Activator.CreateInstance(controllerType, panel, model) as UIControllerBase;
+                UIModelBase model = null;
+                UIControllerBase controller = null;
 
-                if (model == null || controller == null)
+                if (controllerType != null)
                 {
-                    Debug.LogError($"[UIComponent] Failed to create MVC context for {viewType.Name}");
-                    return null;
+                    modelType ??= typeof(EmptyUIModel);
+                    model = Activator.CreateInstance(modelType) as UIModelBase;
+                    controller = Activator.CreateInstance(controllerType, panel, model) as UIControllerBase;
+
+                    if (model == null || controller == null)
+                    {
+                        Debug.LogError($"[UIComponent] Failed to create MVC context for {viewType.Name}");
+                        return null;
+                    }
                 }
 
-                UIMvcContext context = new UIMvcContext(model, controller);
+                UIMvcContext context = new UIMvcContext(panel, model, controller);
                 _mvcContexts[panel] = context;
                 return context;
             }
@@ -327,6 +677,7 @@ namespace CrystalMagic.Core {
             if (!_mvcContexts.TryGetValue(panel, out UIMvcContext context))
                 return;
 
+            context.Detach();
             context.Dispose();
             _mvcContexts.Remove(panel);
         }
@@ -386,24 +737,55 @@ namespace CrystalMagic.Core {
             private readonly UIModelBase _model;
             private readonly UIControllerBase _controller;
 
-            public UIMvcContext(UIModelBase model, UIControllerBase controller)
+            public UIMvcContext(UIBase panel, UIModelBase model, UIControllerBase controller)
             {
+                Panel = panel;
                 _model = model;
                 _controller = controller;
             }
 
+            public UIBase Panel { get; }
+            public UIModelBase Model => _model;
+            public UIControllerBase Controller => _controller;
+            public string GroupName { get; set; }
+            public UIMvcContext Parent { get; private set; }
+            public List<UIMvcContext> Children { get; } = new();
+            public bool IsOpen { get; private set; }
+
+            public void AttachTo(UIMvcContext parent)
+            {
+                if (Parent == parent)
+                    return;
+
+                Detach();
+                Parent = parent;
+                Parent?.Children.Add(this);
+            }
+
+            public void Detach()
+            {
+                if (Parent == null)
+                    return;
+
+                Parent.Children.Remove(this);
+                Parent = null;
+            }
+
             public void Open()
             {
+                IsOpen = true;
                 _controller?.Open();
             }
 
             public void Close()
             {
+                IsOpen = false;
                 _controller?.Close();
             }
 
             public void Dispose()
             {
+                Detach();
                 _controller?.Dispose();
                 _model?.Dispose();
             }

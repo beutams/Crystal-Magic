@@ -19,6 +19,7 @@ namespace CrystalMagic.Core {
 
         public string GroupName => _groupName;
         public int BaseSortingOrder => _baseSortingOrder;
+        internal IEnumerable<UIBase> Panels => _panels;
 
         protected virtual void Awake()
         {
@@ -98,10 +99,26 @@ namespace CrystalMagic.Core {
             panel.EnsureInitialized();
         }
 
+        internal void AttachPanel(UIBase panel)
+        {
+            SetupPanelOnAdd(panel);
+        }
+
         /// <summary>
         /// 刷新排序
         /// </summary>
         protected void RefreshSortingOrders()
+        {
+            if (UIComponent.Instance != null)
+            {
+                UIComponent.Instance.RefreshGroupSortingOrders(this);
+                return;
+            }
+
+            RefreshRootSortingOrders();
+        }
+
+        internal void RefreshRootSortingOrders()
         {
             int order = _baseSortingOrder;
             foreach (var panel in _panels)
