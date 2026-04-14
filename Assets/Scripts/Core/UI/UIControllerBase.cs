@@ -46,25 +46,6 @@ namespace CrystalMagic.UI
             return Bindings.Bind(property, handler, invokeImmediately);
         }
 
-        protected IDisposable BindModelChanged(UIModelBase model, Action handler, bool invokeImmediately = true)
-        {
-            if (model == null || handler == null)
-                return null;
-
-            if (invokeImmediately)
-                handler.Invoke();
-
-            void OnModelChanged()
-            {
-                handler.Invoke();
-            }
-
-            model.Changed += OnModelChanged;
-            IDisposable binding = new ModelChangedBinding(model, OnModelChanged);
-            Bindings.Add(binding);
-            return binding;
-        }
-
         public void Dispose()
         {
             if (_disposed)
@@ -76,28 +57,6 @@ namespace CrystalMagic.UI
             OnDispose();
             Bindings.Dispose();
             _disposed = true;
-        }
-
-        private sealed class ModelChangedBinding : IDisposable
-        {
-            private UIModelBase _model;
-            private Action _handler;
-
-            public ModelChangedBinding(UIModelBase model, Action handler)
-            {
-                _model = model;
-                _handler = handler;
-            }
-
-            public void Dispose()
-            {
-                if (_model == null || _handler == null)
-                    return;
-
-                _model.Changed -= _handler;
-                _model = null;
-                _handler = null;
-            }
         }
     }
 

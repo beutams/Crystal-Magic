@@ -4,6 +4,8 @@ namespace CrystalMagic.UI
 {
     public sealed class SaveUIModel : UIModelBase
     {
+        public const string SaveRecordsChangedEventName = "SaveUIModel.SaveRecordsChanged";
+
         private const int SlotCount = 20;
         private readonly SaveRecord[] _saveRecords = new SaveRecord[SlotCount];
 
@@ -28,7 +30,7 @@ namespace CrystalMagic.UI
                 }
             }
 
-            NotifyChanged();
+            EventComponent.Instance.Publish(new CommonGameEvent(SaveRecordsChangedEventName, this));
         }
     }
 }

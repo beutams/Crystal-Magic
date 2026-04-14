@@ -9,11 +9,6 @@ namespace CrystalMagic.UI
 
         protected override void OnOpen()
         {
-            BindModelChanged(Model, RefreshView);
-        }
-
-        private void RefreshView()
-        {
         }
     }
 }
