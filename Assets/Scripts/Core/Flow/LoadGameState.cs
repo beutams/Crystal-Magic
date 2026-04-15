@@ -26,25 +26,29 @@ namespace CrystalMagic.Core {
 
             string targetSceneName;
             System.Type targetStateType;
+            string[] requiredSubSceneNames;
 
             if (context.ShouldEnterDungeon())
             {
-                Debug.Log($"[LoadGameState] éˆ«?Dungeon (Floor: {context.DungeonFloor})");
+                Debug.Log($"[LoadGameState] éˆ?Dungeon (Floor: {context.DungeonFloor})");
                 targetSceneName = "Game";
                 targetStateType = typeof(DungeonState);
+                requiredSubSceneNames = null;
             }
             else
             {
-                Debug.Log("[LoadGameState] éˆ«?Town");
+                Debug.Log("[LoadGameState] éˆ?Town");
                 targetSceneName = "Game";
                 targetStateType = typeof(TownState);
+                requiredSubSceneNames = new[] { "TownSubScene" };
             }
 
             GameFlowComponent.Instance.SetState<TransitionState>(new TransitionData
             {
                 TargetSceneName = targetSceneName,
                 TargetStateType = targetStateType,
-                TargetStateData = context
+                TargetStateData = context,
+                RequiredSubSceneNames = requiredSubSceneNames,
             });
         }
 

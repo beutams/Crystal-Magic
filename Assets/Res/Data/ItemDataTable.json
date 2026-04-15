@@ -2,12 +2,52 @@
     "Rows": [
         {
             "Id": 1,
-            "Name": "测试",
-            "Description": "测试道具",
+            "Name": "火球",
+            "Description": "释放火球，触碰到之后造成范围伤害",
             "ItemType": 2,
-            "Rarity": 0,
-            "MaxStack": 0,
-            "SellPrice": 0,
+            "Rarity": 1,
+            "MaxStack": 99,
+            "SellPrice": 10,
+            "IconPath": ""
+        },
+        {
+            "Id": 2,
+            "Name": "火龙卷",
+            "Description": "目标位置释放持续一定时间的火龙卷，对范围内的单位造成伤害",
+            "ItemType": 2,
+            "Rarity": 1,
+            "MaxStack": 99,
+            "SellPrice": 10,
+            "IconPath": ""
+        },
+        {
+            "Id": 3,
+            "Name": "火焰冲击",
+            "Description": "持续释放直线形的火焰造成伤害",
+            "ItemType": 2,
+            "Rarity": 1,
+            "MaxStack": 99,
+            "SellPrice": 10,
+            "IconPath": ""
+        },
+        {
+            "Id": 4,
+            "Name": "燃烧",
+            "Description": "对范围内的单位造成燃烧效果",
+            "ItemType": 2,
+            "Rarity": 1,
+            "MaxStack": 99,
+            "SellPrice": 10,
+            "IconPath": ""
+        },
+        {
+            "Id": 5,
+            "Name": "压缩魔力",
+            "Description": "下个技能的MP消耗减半",
+            "ItemType": 2,
+            "Rarity": 1,
+            "MaxStack": 99,
+            "SellPrice": 10,
             "IconPath": ""
         }
     ]

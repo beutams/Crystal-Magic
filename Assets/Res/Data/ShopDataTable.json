@@ -1,0 +1,39 @@
+﻿{
+    "Rows": [
+        {
+            "Id": 1,
+            "itemDataId": 1,
+            "Price": 25,
+            "Grade": 1,
+            "NPC": "SkillShop"
+        },
+        {
+            "Id": 2,
+            "itemDataId": 2,
+            "Price": 25,
+            "Grade": 1,
+            "NPC": "SkillShop"
+        },
+        {
+            "Id": 3,
+            "itemDataId": 3,
+            "Price": 25,
+            "Grade": 1,
+            "NPC": "SkillShop"
+        },
+        {
+            "Id": 4,
+            "itemDataId": 4,
+            "Price": 25,
+            "Grade": 1,
+            "NPC": "SkillShop"
+        },
+        {
+            "Id": 5,
+            "itemDataId": 5,
+            "Price": 25,
+            "Grade": 1,
+            "NPC": "SkillShop"
+        }
+    ]
+}

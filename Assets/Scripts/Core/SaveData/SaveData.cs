@@ -16,7 +16,7 @@ namespace CrystalMagic.Core {
         public long SaveTimestamp;                 // 存档时间戳
         public string GameVersion;                 // 游戏版本号
 
-        // ========== 全局数据（跨城镇和地牢） ==========
+        // ========== 全局数据 ==========
         /// <summary>
         /// 玩家全局成就和进度数据
         /// </summary>
@@ -27,18 +27,6 @@ namespace CrystalMagic.Core {
         /// 城镇状态数据
         /// </summary>
         public TownData Town;
-
-/*        // ========== 地牢数据（当局可选保存） ==========
-        /// <summary>
-        /// 当局地牢数据
-        /// </summary>
-        public DungeonRunData DungeonRun;
-
-        public SaveData()
-        {
-            Global = new GlobalData();
-            Town = new TownData();
-        }*/
     }
     /// <summary>
     /// 全局数据

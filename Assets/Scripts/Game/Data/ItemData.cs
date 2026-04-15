@@ -29,16 +29,16 @@ namespace CrystalMagic.Game.Data
         /// <summary>物品类型</summary>
         public ItemType ItemType;
 
-        /// <summary>稀有度：1=普通 2=精良 3=稀有 4=史诗 5=传说</summary>
+        /// <summary>稀有度</summary>
         public int Rarity;
 
         /// <summary>最大叠加数量</summary>
         public int MaxStack;
 
-        /// <summary>出售价格（0 表示不可出售）</summary>
+        /// <summary>出售价格</summary>
         public int SellPrice;
 
-        /// <summary>图标资源路径（相对 Resources/）</summary>
+        /// <summary>图标资源路径</summary>
         public string IconPath;
     }
 }
