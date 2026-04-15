@@ -3,7 +3,22 @@
     {
       "NPC": "SkillShop",
       "DisplayName": "技能商店",
-      "Interactions": [],
+      "Interactions": [
+        {
+          "Key": "OpenSkillShop",
+          "DisplayName": "OpenSkillShop",
+          "EnableExpression": "TRUE",
+          "Nodes": [
+            {
+              "UIName": "ShopUI",
+              "OpenData": "SkillShop",
+              "WaitUntilClosed": true,
+              "Type": "OpenUI",
+              "Guid": "56c5a199970a4107ad92170ede6a994b"
+            }
+          ]
+        }
+      ],
       "Id": 1
     }
   ]
