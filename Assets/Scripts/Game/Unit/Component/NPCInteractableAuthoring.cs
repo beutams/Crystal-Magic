@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class NPCInteractableAuthoring : MonoBehaviour
 {
+    public int npcDataId;
     public float interactRange = 2f;
 
     class NPCInteractableBaker : Baker<NPCInteractableAuthoring>
@@ -18,6 +19,7 @@ public class NPCInteractableAuthoring : MonoBehaviour
                 : Entity.Null;
             AddComponent(entity, new NPCInteractable
             {
+                npcDataId = authoring.npcDataId,
                 interact = interactEntity,
                 interactRangeSq = authoring.interactRange * authoring.interactRange,
                 promptVisibleScale = interact != null ? interact.localScale.x : 1f,
@@ -27,6 +29,7 @@ public class NPCInteractableAuthoring : MonoBehaviour
 }
 public struct NPCInteractable : IComponentData
 {
+    public int npcDataId;
     public Entity interact;
     public float interactRangeSq;
     public float promptVisibleScale;

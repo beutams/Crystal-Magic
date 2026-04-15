@@ -337,6 +337,12 @@ namespace CrystalMagic.Core
 
                 if (token.Type == TokenType.Identifier)
                 {
+                    if (TryParseBooleanLiteral(token.IdentifierValue, out bool boolValue))
+                    {
+                        stack.Push(boolValue ? 1d : 0d);
+                        continue;
+                    }
+
                     stack.Push(values.TryGetValue(token.IdentifierValue, out double value) ? value : 0d);
                     continue;
                 }
@@ -424,6 +430,24 @@ namespace CrystalMagic.Core
         private static bool ToBool(double value)
         {
             return Math.Abs(value) > 0.000001d;
+        }
+
+        private static bool TryParseBooleanLiteral(string value, out bool boolValue)
+        {
+            if (string.Equals(value, "TRUE", StringComparison.OrdinalIgnoreCase))
+            {
+                boolValue = true;
+                return true;
+            }
+
+            if (string.Equals(value, "FALSE", StringComparison.OrdinalIgnoreCase))
+            {
+                boolValue = false;
+                return true;
+            }
+
+            boolValue = false;
+            return false;
         }
 
         private enum TokenType
