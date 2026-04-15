@@ -41,10 +41,17 @@ public class ButtonPlus : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
         if (!_canClickInDuration && _clickRoutine != null)
             return;
 
+        if (_clickRoutine != null)
+        {
+            StopCoroutine(_clickRoutine);
+            _clickRoutine = null;
+        }
+
         onClick?.Invoke();
 
-        if (_clickRoutine != null)
-            StopCoroutine(_clickRoutine);
+        if (!this || !isActiveAndEnabled)
+            return;
+
         _clickRoutine = StartCoroutine(ClickStateRoutine());
     }
 

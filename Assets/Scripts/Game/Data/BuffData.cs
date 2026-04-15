@@ -14,7 +14,6 @@ namespace CrystalMagic.Game.Data
     public abstract class BuffData : DataRow
     {
         public string Name;
-        public float  Duration;
         public bool   CanStack;
         public int    MaxStacks = 1;
         public abstract BuffCategory Category { get; }

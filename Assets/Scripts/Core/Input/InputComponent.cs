@@ -24,6 +24,7 @@ namespace CrystalMagic.Core {
         /// </summary>
         public event Action OnMouseClick;
         public event Action<bool> OnCastInput;
+        public event Action OnInteract;
         #endregion
 
         #region 调用
@@ -34,6 +35,7 @@ namespace CrystalMagic.Core {
 
             _controls.Town.Move.performed += HandleMove;
             _controls.Town.Move.canceled += HandleMoveCanceled;
+            _controls.Town.Interact.performed += HandleInteract;
             _controls.Town.Click.performed += HandleClick;
             _controls.Town.Click.canceled += HandleClickCanceled;
             _controls.Town.Enable();
@@ -45,6 +47,7 @@ namespace CrystalMagic.Core {
             {
                 _controls.Town.Move.performed -= HandleMove;
                 _controls.Town.Move.canceled -= HandleMoveCanceled;
+                _controls.Town.Interact.performed -= HandleInteract;
                 _controls.Town.Click.performed -= HandleClick;
                 _controls.Town.Click.canceled -= HandleClickCanceled;
 
@@ -59,6 +62,8 @@ namespace CrystalMagic.Core {
             => OnMove?.Invoke(ctx.ReadValue<Vector2>());
         private void HandleMoveCanceled(InputAction.CallbackContext ctx)
             => OnMove?.Invoke(Vector2.zero);
+        private void HandleInteract(InputAction.CallbackContext ctx)
+            => OnInteract?.Invoke();
         private void HandleClick(InputAction.CallbackContext ctx)
         {
             OnMouseClick?.Invoke();

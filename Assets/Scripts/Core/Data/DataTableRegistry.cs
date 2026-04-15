@@ -1,6 +1,6 @@
-// AUTO-GENERATED — DO NOT EDIT MANUALLY
+﻿// AUTO-GENERATED — DO NOT EDIT MANUALLY
 // Use menu: Crystal Magic / Generate Data Registry
-// Generated: 2026-04-08 11:15:34
+// Generated: 2026-04-15 13:35:06
 
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
@@ -11,10 +11,11 @@ namespace CrystalMagic.Core
     {
         public static void RegisterAll(DataComponent component)
         {
+            component.LoadTable<EffectBuffData>("EffectBuffDataTable");
             component.LoadTable<ItemData>("ItemDataTable");
             component.LoadTable<PropertyBuffData>("PropertyBuffDataTable");
+            component.LoadTable<ShopData>("ShopDataTable");
             component.LoadTable<SkillData>("SkillDataTable");
-            component.LoadTable<EffectBuffData>("TickEffectBuffDataTable");
             component.LoadTable<UnitData>("UnitDataTable");
         }
     }

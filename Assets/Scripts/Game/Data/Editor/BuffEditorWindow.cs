@@ -346,7 +346,6 @@ namespace CrystalMagic.Editor.Data
             DrawSectionHeader("基础信息");
             buff.Id        = EditorGUILayout.IntField("Id", buff.Id);
             buff.Name      = EditorGUILayout.TextField("名称", buff.Name ?? "");
-            buff.Duration  = EditorGUILayout.FloatField("持续时间 (s)", buff.Duration);
             buff.CanStack  = EditorGUILayout.Toggle("可叠层", buff.CanStack);
             using (new EditorGUI.DisabledScope(!buff.CanStack))
                 buff.MaxStacks = EditorGUILayout.IntField("最大叠层数", buff.MaxStacks);
