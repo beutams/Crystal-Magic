@@ -21,6 +21,7 @@ namespace CrystalMagic.Core {
         /// 玩家全局成就和进度数据
         /// </summary>
         public GlobalData Global;
+        public SaveVariableData Variables = new();
 
         // ========== 城镇数据 ==========
         /// <summary>

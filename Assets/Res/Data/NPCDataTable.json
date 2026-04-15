@@ -1,0 +1,10 @@
+﻿{
+  "Rows": [
+    {
+      "NPC": "SkillShop",
+      "DisplayName": "技能商店",
+      "Interactions": [],
+      "Id": 1
+    }
+  ]
+}

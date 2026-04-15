@@ -13,6 +13,7 @@ namespace CrystalMagic.Core
         {
             component.LoadTable<EffectBuffData>("EffectBuffDataTable");
             component.LoadTable<ItemData>("ItemDataTable");
+            component.LoadTable<NPCData>("NPCDataTable");
             component.LoadTable<PropertyBuffData>("PropertyBuffDataTable");
             component.LoadTable<ShopData>("ShopDataTable");
             component.LoadTable<SkillData>("SkillDataTable");

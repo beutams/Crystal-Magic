@@ -121,6 +121,8 @@ namespace CrystalMagic.Core {
                     return false;
                 }
 
+                EnsureSaveDataValid(data);
+
                 _currentSaveData = data;
                 _currentSaveIndex = data.SaveIndex;
 
@@ -252,6 +254,11 @@ namespace CrystalMagic.Core {
             if (data.Global == null)
             {
                 data.Global = new GlobalData();
+            }
+
+            if (data.Variables == null)
+            {
+                data.Variables = new SaveVariableData();
             }
 
             if (data.Town == null)
