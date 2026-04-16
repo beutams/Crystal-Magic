@@ -16,7 +16,15 @@ public class CharacterUIData : UIData
     public UINode Skill_SkillChain_Viewport_Content_SkillItem_Skill;
     public UINode Skill_SkillChain_Viewport_Content_SkillItem_Effect;
     public UINode Equip;
-    public UINode Inventory;
+    public UINode Equip_Weapen;
+    public UINode Equip_Equip1;
+    public UINode Equip_Equip2;
+    public UINode Equip_Equip3;
+    public UINode Equip_Equip4;
+    public UINode InventoryView;
+    public UINode InventoryView_Viewport;
+    public UINode InventoryView_Viewport_Content;
+    public UINode InventoryView_Viewport_Content_InventoryItem;
 
     public override void Bind(Transform root)
     {
@@ -30,6 +38,14 @@ public class CharacterUIData : UIData
         Skill_SkillChain_Viewport_Content_SkillItem_Skill = UINode.From(Find(root, "Skill/SkillChain/Viewport/Content/SkillItem/Skill"));
         Skill_SkillChain_Viewport_Content_SkillItem_Effect = UINode.From(Find(root, "Skill/SkillChain/Viewport/Content/SkillItem/Effect"));
         Equip = UINode.From(Find(root, "Equip"));
-        Inventory = UINode.From(Find(root, "Inventory"));
+        Equip_Weapen = UINode.From(Find(root, "Equip/Weapen"));
+        Equip_Equip1 = UINode.From(Find(root, "Equip/Equip1"));
+        Equip_Equip2 = UINode.From(Find(root, "Equip/Equip2"));
+        Equip_Equip3 = UINode.From(Find(root, "Equip/Equip3"));
+        Equip_Equip4 = UINode.From(Find(root, "Equip/Equip4"));
+        InventoryView = UINode.From(Find(root, "InventoryView"));
+        InventoryView_Viewport = UINode.From(Find(root, "InventoryView/Viewport"));
+        InventoryView_Viewport_Content = UINode.From(Find(root, "InventoryView/Viewport/Content"));
+        InventoryView_Viewport_Content_InventoryItem = UINode.From(Find(root, "InventoryView/Viewport/Content/InventoryItem"));
     }
 }

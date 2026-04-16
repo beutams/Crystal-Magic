@@ -8,6 +8,15 @@ namespace CrystalMagic.Core {
     /// </summary>
     public class SaveDataComponent : GameComponent<SaveDataComponent>
     {
+        public const string SaveDataChangedEventName = "SaveData.Changed";
+        public const string GlobalDataChangedEventName = "SaveData.Global.Changed";
+        public const string TownDataChangedEventName = "SaveData.Town.Changed";
+        public const string StashDataChangedEventName = "SaveData.Town.Stash.Changed";
+        public const string CharacterDataChangedEventName = "SaveData.Town.Character.Changed";
+        public const string BackpackDataChangedEventName = "SaveData.Town.Character.Backpack.Changed";
+        public const string EquipmentDataChangedEventName = "SaveData.Town.Character.Equipment.Changed";
+        public const string SkillDataChangedEventName = "SaveData.Town.Character.Skill.Changed";
+
         public override int Priority => 18;
 
         private const string SAVE_FOLDER = "SaveData";
@@ -127,6 +136,7 @@ namespace CrystalMagic.Core {
                 _currentSaveIndex = data.SaveIndex;
 
                 OnLoadSuccess?.Invoke(data);
+                PublishAllDataChangedEvents();
                 Debug.Log($"[SaveDataComponent] Game loaded from slot index: {index}");
                 return true;
             }
@@ -219,12 +229,136 @@ namespace CrystalMagic.Core {
 
         public SaveData GetCurrentSaveData()
         {
+            EnsureCurrentSaveDataValid();
             return _currentSaveData;
+        }
+
+        public GlobalData GetGlobalData()
+        {
+            EnsureCurrentSaveDataValid();
+            return _currentSaveData.Global;
+        }
+
+        public TownData GetTownData()
+        {
+            EnsureCurrentSaveDataValid();
+            return _currentSaveData.Town;
+        }
+
+        public StashData GetStashData()
+        {
+            EnsureCurrentSaveDataValid();
+            return _currentSaveData.Town.Stash;
+        }
+
+        public CharacterData GetCharacterData()
+        {
+            EnsureCurrentSaveDataValid();
+            return _currentSaveData.Town.Character;
+        }
+
+        public EquipmentData GetEquipmentData()
+        {
+            EnsureCurrentSaveDataValid();
+            return _currentSaveData.Town.Character.Equipment;
+        }
+
+        public SkillCData GetSkillData()
+        {
+            EnsureCurrentSaveDataValid();
+            return _currentSaveData.Town.Character.Skills;
+        }
+
+        public BackpackData GetBackpackData()
+        {
+            EnsureCurrentSaveDataValid();
+            return _currentSaveData.Town.Character.Backpack;
+        }
+
+        public void SetVariable(string key, double value)
+        {
+            EnsureCurrentSaveDataValid();
+            _currentSaveData.Variables.Set(key, value);
+        }
+
+        public double GetVariable(string key, double defaultValue = 0d)
+        {
+            EnsureCurrentSaveDataValid();
+            return _currentSaveData.Variables.Get(key, defaultValue);
+        }
+
+        public bool ContainsVariable(string key)
+        {
+            EnsureCurrentSaveDataValid();
+            return _currentSaveData.Variables.Contains(key);
+        }
+
+        public bool Check(string expression)
+        {
+            EnsureCurrentSaveDataValid();
+            return _currentSaveData.Variables.Check(expression);
+        }
+
+        public void NotifySaveDataChanged()
+        {
+            EnsureCurrentSaveDataValid();
+            EventComponent.Instance.Publish(new CommonGameEvent(SaveDataChangedEventName, _currentSaveData));
+        }
+
+        public void NotifyGlobalDataChanged()
+        {
+            EnsureCurrentSaveDataValid();
+            EventComponent.Instance.Publish(new CommonGameEvent(GlobalDataChangedEventName, _currentSaveData.Global));
+            NotifySaveDataChanged();
+        }
+
+        public void NotifyTownDataChanged()
+        {
+            EnsureCurrentSaveDataValid();
+            EventComponent.Instance.Publish(new CommonGameEvent(TownDataChangedEventName, _currentSaveData.Town));
+            NotifySaveDataChanged();
+        }
+
+        public void NotifyStashDataChanged()
+        {
+            EnsureCurrentSaveDataValid();
+            EventComponent.Instance.Publish(new CommonGameEvent(StashDataChangedEventName, _currentSaveData.Town.Stash));
+            NotifyTownDataChanged();
+        }
+
+        public void NotifyCharacterDataChanged()
+        {
+            EnsureCurrentSaveDataValid();
+            EventComponent.Instance.Publish(new CommonGameEvent(CharacterDataChangedEventName, _currentSaveData.Town.Character));
+            NotifyTownDataChanged();
+        }
+
+        public void NotifyBackpackDataChanged()
+        {
+            EnsureCurrentSaveDataValid();
+            EventComponent.Instance.Publish(new CommonGameEvent(BackpackDataChangedEventName, _currentSaveData.Town.Character.Backpack));
+            NotifyCharacterDataChanged();
+        }
+
+        public void NotifyEquipmentDataChanged()
+        {
+            EnsureCurrentSaveDataValid();
+            EventComponent.Instance.Publish(new CommonGameEvent(EquipmentDataChangedEventName, _currentSaveData.Town.Character.Equipment));
+            NotifyCharacterDataChanged();
+        }
+
+        public void NotifySkillDataChanged()
+        {
+            EnsureCurrentSaveDataValid();
+            EventComponent.Instance.Publish(new CommonGameEvent(SkillDataChangedEventName, _currentSaveData.Town.Character.Skills));
+            NotifyCharacterDataChanged();
         }
 
         public SaveData CreateNewSaveData()
         {
-            return new SaveData();
+            SaveData data = new SaveData();
+            EnsureSaveDataValid(data);
+            return data;
         }
 
         private string GetSaveFolderPath()
@@ -265,6 +399,64 @@ namespace CrystalMagic.Core {
             {
                 data.Town = new TownData();
             }
+
+            if (data.Town.Stash == null)
+            {
+                data.Town.Stash = new StashData();
+            }
+            else if (data.Town.Stash.Items == null)
+            {
+                data.Town.Stash.Items = new List<InventoryItemData>();
+            }
+
+            if (data.Town.Character == null)
+            {
+                data.Town.Character = new CharacterData();
+            }
+
+            if (data.Town.Character.Equipment == null)
+            {
+                data.Town.Character.Equipment = new EquipmentData();
+            }
+
+            if (data.Town.Character.Skills == null)
+            {
+                data.Town.Character.Skills = new SkillCData();
+            }
+            else if (data.Town.Character.Skills.Chains == null || data.Town.Character.Skills.Chains.Length != 5)
+            {
+                data.Town.Character.Skills = new SkillCData();
+            }
+
+            if (data.Town.Character.Backpack == null)
+            {
+                data.Town.Character.Backpack = new BackpackData();
+            }
+            else if (data.Town.Character.Backpack.Items == null)
+            {
+                data.Town.Character.Backpack.Items = new List<InventoryItemData>();
+            }
+
+            data.Town.Character.MigrateLegacyData();
+        }
+
+        private void EnsureCurrentSaveDataValid()
+        {
+            _currentSaveData ??= new SaveData();
+            EnsureSaveDataValid(_currentSaveData);
+        }
+
+        private void PublishAllDataChangedEvents()
+        {
+            EnsureCurrentSaveDataValid();
+            EventComponent.Instance.Publish(new CommonGameEvent(GlobalDataChangedEventName, _currentSaveData.Global));
+            EventComponent.Instance.Publish(new CommonGameEvent(TownDataChangedEventName, _currentSaveData.Town));
+            EventComponent.Instance.Publish(new CommonGameEvent(StashDataChangedEventName, _currentSaveData.Town.Stash));
+            EventComponent.Instance.Publish(new CommonGameEvent(CharacterDataChangedEventName, _currentSaveData.Town.Character));
+            EventComponent.Instance.Publish(new CommonGameEvent(BackpackDataChangedEventName, _currentSaveData.Town.Character.Backpack));
+            EventComponent.Instance.Publish(new CommonGameEvent(EquipmentDataChangedEventName, _currentSaveData.Town.Character.Equipment));
+            EventComponent.Instance.Publish(new CommonGameEvent(SkillDataChangedEventName, _currentSaveData.Town.Character.Skills));
+            EventComponent.Instance.Publish(new CommonGameEvent(SaveDataChangedEventName, _currentSaveData));
         }
 
         private void CreateBackup(string savePath)

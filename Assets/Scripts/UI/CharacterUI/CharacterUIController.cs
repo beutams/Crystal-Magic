@@ -9,6 +9,8 @@ namespace CrystalMagic.UI
 
         protected override void OnOpen()
         {
+            View.BindModel(Model);
+            Model.Refresh();
         }
     }
 }

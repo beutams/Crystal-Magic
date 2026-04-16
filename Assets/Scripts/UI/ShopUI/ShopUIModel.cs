@@ -57,8 +57,8 @@ namespace CrystalMagic.UI
         {
             System.Array.Clear(_inventoryItems, 0, _inventoryItems.Length);
 
-            SaveData currentSaveData = SaveDataComponent.Instance.GetCurrentSaveData();
-            List<InventoryItemData> backpackItems = currentSaveData?.Town?.Character?.BackpackItems;
+            BackpackData backpackData = SaveDataComponent.Instance.GetBackpackData();
+            List<InventoryItemData> backpackItems = backpackData?.Items;
             if (backpackItems == null)
                 return;
 

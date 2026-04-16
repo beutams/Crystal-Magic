@@ -6,6 +6,7 @@ using Unity.Transforms;
 using UnityEngine;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
+using System.Collections.Generic;
 
 public struct NPCInteractionState : IComponentData
 {
@@ -210,38 +211,44 @@ partial class NPCInteractionConsumeSystem : SystemBase
         }
 
         NPCInteractable interactable = EntityManager.GetComponentData<NPCInteractable>(target);
-        if (interactable.npcDataId <= 0)
+        if (interactable.NPC.Length == 0)
         {
-            Debug.LogWarning("[NPCInteraction] NPCInteractable is missing npcDataId.");
+            Debug.LogWarning("[NPCInteraction] NPCInteractable is missing NPC.");
             return;
         }
 
-        NPCData npcData = DataComponent.Instance?.Get<NPCData>(interactable.npcDataId);
+        string npcName = interactable.NPC.ToString();
+        NPCData npcData = DataComponent.Instance?.Find<NPCData>(data => string.Equals(data.NPC, npcName, StringComparison.Ordinal));
         if (npcData == null)
         {
-            Debug.LogWarning($"[NPCInteraction] NPCData not found for id {interactable.npcDataId}.");
+            Debug.LogWarning($"[NPCInteraction] NPCData not found for NPC '{npcName}'.");
             return;
         }
 
-        SaveVariableData variables = SaveDataComponent.Instance?.GetCurrentSaveData()?.Variables ?? new SaveVariableData();
-        NPCInteractionData interaction = SelectInteraction(npcData, variables);
+        NPCInteractionData interaction = SelectInteraction(npcData);
         if (interaction == null)
         {
             Debug.Log($"[NPCInteraction] No enabled interaction found for NPC '{npcData.NPC}'.");
             return;
         }
 
-        _session = new NPCInteractionSession(target, interactable.npcDataId, npcData, interaction);
+        if (interaction.GetEntryNode() == null)
+        {
+            Debug.LogWarning($"[NPCInteraction] Interaction '{interaction.Key}' on NPC '{npcData.NPC}' is missing an entry node.");
+            return;
+        }
+
+        _session = new NPCInteractionSession(target, npcData, interaction);
         EventComponent.Instance?.Publish(new NPCInteractionStartedEvent(target, npcData, interaction));
         AdvanceSessionUntilBlocked(0f);
     }
 
-    private NPCInteractionData SelectInteraction(NPCData npcData, SaveVariableData variables)
+    private NPCInteractionData SelectInteraction(NPCData npcData)
     {
         NPCInteractionData selected = null;
         int enabledCount = 0;
 
-        foreach (NPCInteractionData interaction in npcData.GetEnabledInteractions(variables))
+        foreach (NPCInteractionData interaction in npcData.GetEnabledInteractions())
         {
             if (selected == null)
             {
@@ -285,7 +292,8 @@ partial class NPCInteractionConsumeSystem : SystemBase
         int maxSteps = _session.Interaction?.Nodes?.Count + 1 ?? 1;
         for (int i = 0; i < maxSteps; i++)
         {
-            if (_session.NodeIndex >= _session.NodeCount)
+            NPCInteractionNodeData currentNode = _session.GetCurrentNode();
+            if (currentNode == null)
             {
                 FinishSession(wasCancelled: false);
                 return;
@@ -293,12 +301,11 @@ partial class NPCInteractionConsumeSystem : SystemBase
 
             if (_session.CurrentRunner == null)
             {
-                NPCInteractionNodeData currentNode = _session.GetCurrentNode();
                 _session.CurrentRunner = CreateRunner(currentNode);
                 if (_session.CurrentRunner == null)
                 {
                     Debug.LogWarning($"[NPCInteraction] Unsupported node type '{currentNode?.Type}'. Skipped.");
-                    _session.NodeIndex++;
+                    _session.CurrentNodeGuid = ResolveNextNodeGuid(_session, currentNode, null);
                     continue;
                 }
 
@@ -306,8 +313,8 @@ partial class NPCInteractionConsumeSystem : SystemBase
                     _session.Target,
                     _session.NpcData,
                     _session.Interaction,
-                    _session.NodeIndex,
                     currentNode));
+                _session.SelectedNextNodeGuid = null;
                 _session.CurrentRunner.Enter(_session);
             }
 
@@ -319,7 +326,8 @@ partial class NPCInteractionConsumeSystem : SystemBase
 
             _session.CurrentRunner.Exit(_session);
             _session.CurrentRunner = null;
-            _session.NodeIndex++;
+            _session.CurrentNodeGuid = ResolveNextNodeGuid(_session, currentNode, _session.SelectedNextNodeGuid);
+            _session.SelectedNextNodeGuid = null;
         }
 
         Debug.LogWarning("[NPCInteraction] Interaction advanced too many nodes in one frame and was stopped defensively.");
@@ -330,6 +338,7 @@ partial class NPCInteractionConsumeSystem : SystemBase
         return node switch
         {
             NPCDialogueInteractionNodeData dialogue => new NPCDialogueInteractionNodeRunner(dialogue),
+            NPCSelectInteractionNodeData select => new NPCSelectInteractionNodeRunner(select),
             NPCOpenUIInteractionNodeData openUI => new NPCOpenUIInteractionNodeRunner(openUI),
             NPCMoveInteractionNodeData move => new NPCMoveInteractionNodeRunner(move),
             _ => null,
@@ -358,27 +367,26 @@ partial class NPCInteractionConsumeSystem : SystemBase
 
     private sealed class NPCInteractionSession
     {
-        public NPCInteractionSession(Entity target, int npcDataId, NPCData npcData, NPCInteractionData interaction)
+        public NPCInteractionSession(Entity target, NPCData npcData, NPCInteractionData interaction)
         {
             Target = target;
-            NpcDataId = npcDataId;
             NpcData = npcData;
             Interaction = interaction;
+            CurrentNodeGuid = interaction?.EntryNodeGuid;
             IsActive = true;
         }
 
         public Entity Target { get; }
-        public int NpcDataId { get; }
         public NPCData NpcData { get; }
         public NPCInteractionData Interaction { get; }
-        public int NodeIndex { get; set; }
+        public string CurrentNodeGuid { get; set; }
+        public string SelectedNextNodeGuid { get; set; }
         public NPCInteractionNodeRunner CurrentRunner { get; set; }
         public bool IsActive { get; private set; }
-        public int NodeCount => Interaction?.Nodes?.Count ?? 0;
 
         public NPCInteractionNodeData GetCurrentNode()
         {
-            return NodeIndex >= 0 && NodeIndex < NodeCount ? Interaction.Nodes[NodeIndex] : null;
+            return Interaction?.GetNode(CurrentNodeGuid);
         }
 
         public bool IsTargetValid(EntityManager entityManager)
@@ -522,6 +530,71 @@ partial class NPCInteractionConsumeSystem : SystemBase
             return _completed;
         }
     }
+
+    private static string ResolveNextNodeGuid(NPCInteractionSession session, NPCInteractionNodeData currentNode, string selectedNextNodeGuid)
+    {
+        if (!string.IsNullOrWhiteSpace(selectedNextNodeGuid))
+        {
+            return selectedNextNodeGuid;
+        }
+
+        if (currentNode?.Branches != null)
+        {
+            for (int i = 0; i < currentNode.Branches.Count; i++)
+            {
+                NPCInteractionBranchData branch = currentNode.Branches[i];
+                if (branch != null && branch.IsEnabled())
+                {
+                    return branch.NextNodeGuid;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private sealed class NPCSelectInteractionNodeRunner : NPCInteractionNodeRunner
+    {
+        private readonly NPCSelectInteractionNodeData _node;
+        private bool _completed;
+
+        public NPCSelectInteractionNodeRunner(NPCSelectInteractionNodeData node)
+        {
+            _node = node;
+        }
+
+        public override void Enter(NPCInteractionSession session)
+        {
+            List<NPCSelectOptionData> enabledOptions = new List<NPCSelectOptionData>();
+            if (_node.Options != null)
+            {
+                for (int i = 0; i < _node.Options.Count; i++)
+                {
+                    NPCSelectOptionData option = _node.Options[i];
+                    if (option != null && option.IsEnabled())
+                    {
+                        enabledOptions.Add(option);
+                    }
+                }
+            }
+
+            EventComponent.Instance?.Publish(new NPCInteractionSelectRequestedEvent(
+                session.Target,
+                session.NpcData,
+                session.Interaction,
+                _node,
+                enabledOptions));
+
+            Debug.Log("[NPCInteraction] Select node reached, but InteractionSelectUI is not implemented yet.");
+            session.SelectedNextNodeGuid = null;
+            _completed = true;
+        }
+
+        public override bool IsCompleted(NPCInteractionSession session)
+        {
+            return _completed;
+        }
+    }
 }
 
 public readonly struct NPCInteractionStartedEvent : IGameEvent
@@ -540,20 +613,41 @@ public readonly struct NPCInteractionStartedEvent : IGameEvent
 
 public readonly struct NPCInteractionNodeStartedEvent : IGameEvent
 {
-    public NPCInteractionNodeStartedEvent(Entity target, NPCData npcData, NPCInteractionData interaction, int nodeIndex, NPCInteractionNodeData node)
+    public NPCInteractionNodeStartedEvent(Entity target, NPCData npcData, NPCInteractionData interaction, NPCInteractionNodeData node)
     {
         Target = target;
         NpcData = npcData;
         Interaction = interaction;
-        NodeIndex = nodeIndex;
         Node = node;
     }
 
     public Entity Target { get; }
     public NPCData NpcData { get; }
     public NPCInteractionData Interaction { get; }
-    public int NodeIndex { get; }
     public NPCInteractionNodeData Node { get; }
+}
+
+public readonly struct NPCInteractionSelectRequestedEvent : IGameEvent
+{
+    public NPCInteractionSelectRequestedEvent(
+        Entity target,
+        NPCData npcData,
+        NPCInteractionData interaction,
+        NPCSelectInteractionNodeData node,
+        IReadOnlyList<NPCSelectOptionData> options)
+    {
+        Target = target;
+        NpcData = npcData;
+        Interaction = interaction;
+        Node = node;
+        Options = options;
+    }
+
+    public Entity Target { get; }
+    public NPCData NpcData { get; }
+    public NPCInteractionData Interaction { get; }
+    public NPCSelectInteractionNodeData Node { get; }
+    public IReadOnlyList<NPCSelectOptionData> Options { get; }
 }
 
 public readonly struct NPCInteractionFinishedEvent : IGameEvent

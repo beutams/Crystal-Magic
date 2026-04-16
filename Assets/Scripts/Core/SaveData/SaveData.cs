@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 using CrystalMagic.Game.Data;
 
 namespace CrystalMagic.Core {
@@ -71,6 +72,12 @@ namespace CrystalMagic.Core {
     [System.Serializable]
     public class CharacterData
     {
+        [SerializeField]
+        [FormerlySerializedAs("SelectedSkillChainIndex")]
+        private int _legacySelectedSkillChainIndex = -1;
+        [SerializeField]
+        [FormerlySerializedAs("BackpackItems")]
+        private List<InventoryItemData> _legacyBackpackItems;
         /// <summary>
         /// 角色装备系统
         /// </summary>
@@ -79,33 +86,40 @@ namespace CrystalMagic.Core {
         /// 技能配置
         /// </summary>
         public SkillCData Skills;
-        public int SelectedSkillChainIndex;
         /// <summary>
         /// 角色背包
         /// </summary>
-        public List<InventoryItemData> BackpackItems = new();
-        /// <summary>
-        /// 角色位置
-        /// </summary>
-        public PositionData Position;
+        public BackpackData Backpack;
 
         public CharacterData()
         {
             Equipment = new EquipmentData();
             Skills = new SkillCData();
-            SelectedSkillChainIndex = 0;
-            Position = new PositionData();
+            Backpack = new BackpackData();
         }
-    }
-    /// <summary>
-    /// 位置和朝向数据
-    /// </summary>
-    [System.Serializable]
-    public class PositionData
-    {
-        public float X;                        // X 坐标
-        public float Y;                        // Y 坐标
-        public float Rotation;                 // 朝向角度
+
+        public void MigrateLegacyData()
+        {
+            if (_legacySelectedSkillChainIndex >= 0)
+            {
+                Skills ??= new SkillCData();
+                Skills.SelectedSkillChainIndex = _legacySelectedSkillChainIndex;
+                _legacySelectedSkillChainIndex = -1;
+            }
+
+            if (_legacyBackpackItems != null && _legacyBackpackItems.Count > 0)
+            {
+                Backpack ??= new BackpackData();
+                Backpack.Items ??= new List<InventoryItemData>();
+
+                if (Backpack.Items.Count == 0)
+                {
+                    Backpack.Items.AddRange(_legacyBackpackItems);
+                }
+
+                _legacyBackpackItems = null;
+            }
+        }
     }
     /// <summary>
     /// 仓库数据
@@ -116,6 +130,12 @@ namespace CrystalMagic.Core {
         /// <summary>
         /// 物品列表
         /// </summary>
+        public List<InventoryItemData> Items = new();
+    }
+
+    [System.Serializable]
+    public class BackpackData
+    {
         public List<InventoryItemData> Items = new();
     }
     #endregion
@@ -217,10 +237,12 @@ namespace CrystalMagic.Core {
     [System.Serializable]
     public class SkillCData
     {
+        public int SelectedSkillChainIndex;
         public SkillChainData[] Chains = new SkillChainData[5];
 
         public SkillCData()
         {
+            SelectedSkillChainIndex = 0;
             for (int i = 0; i < 5; i++)
             {
                 Chains[i] = new SkillChainData { Index = i };

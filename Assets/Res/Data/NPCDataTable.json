@@ -6,20 +6,45 @@
       "Interactions": [
         {
           "Key": "OpenSkillShop",
-          "DisplayName": "OpenSkillShop",
-          "EnableExpression": "TRUE",
+          "DisplayName": "技能商店",
+          "EnableExpression": "",
+          "EntryNodeGuid": "14dfb732e88441b099f7fe7cb07fe71f",
           "Nodes": [
             {
               "UIName": "ShopUI",
               "OpenData": "SkillShop",
               "WaitUntilClosed": true,
               "Type": "OpenUI",
-              "Guid": "56c5a199970a4107ad92170ede6a994b"
+              "Guid": "14dfb732e88441b099f7fe7cb07fe71f",
+              "Branches": []
             }
           ]
         }
       ],
       "Id": 1
+    },
+    {
+      "NPC": "Stash",
+      "DisplayName": "仓库",
+      "Interactions": [
+        {
+          "Key": "Stash",
+          "DisplayName": "仓库",
+          "EnableExpression": "",
+          "EntryNodeGuid": "e1683275aaa04ce5a827d9fd8e45c10b",
+          "Nodes": [
+            {
+              "UIName": "StashUI",
+              "OpenData": "",
+              "WaitUntilClosed": true,
+              "Type": "OpenUI",
+              "Guid": "e1683275aaa04ce5a827d9fd8e45c10b",
+              "Branches": []
+            }
+          ]
+        }
+      ],
+      "Id": 2
     }
   ]
 }

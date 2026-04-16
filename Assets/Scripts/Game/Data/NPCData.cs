@@ -16,12 +16,12 @@ namespace CrystalMagic.Game.Data
 
         public List<NPCInteractionData> Interactions = new();
 
-        public IEnumerable<NPCInteractionData> GetEnabledInteractions(SaveVariableData variables)
+        public IEnumerable<NPCInteractionData> GetEnabledInteractions()
         {
             for (int i = 0; i < Interactions.Count; i++)
             {
                 NPCInteractionData interaction = Interactions[i];
-                if (interaction != null && interaction.IsEnabled(variables))
+                if (interaction != null && interaction.IsEnabled())
                 {
                     yield return interaction;
                 }
@@ -38,19 +38,61 @@ namespace CrystalMagic.Game.Data
 
         public string EnableExpression;
 
+        public string EntryNodeGuid;
+
         public List<NPCInteractionNodeData> Nodes = new();
 
-        // Legacy field kept for one-time migration into Nodes.
-        public string ContentKey;
-
-        public bool IsEnabled(SaveVariableData variables)
+        public bool IsEnabled()
         {
             if (string.IsNullOrWhiteSpace(EnableExpression))
             {
                 return true;
             }
 
-            return variables != null && variables.Check(EnableExpression);
+            return SaveDataComponent.Instance != null && SaveDataComponent.Instance.Check(EnableExpression);
+        }
+
+        public NPCInteractionNodeData GetEntryNode()
+        {
+            return GetNode(EntryNodeGuid);
+        }
+
+        public NPCInteractionNodeData GetNode(string guid)
+        {
+            if (string.IsNullOrWhiteSpace(guid) || Nodes == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < Nodes.Count; i++)
+            {
+                NPCInteractionNodeData node = Nodes[i];
+                if (node != null && string.Equals(node.Guid, guid, StringComparison.Ordinal))
+                {
+                    return node;
+                }
+            }
+
+            return null;
+        }
+
+        public int GetNodeIndex(string guid)
+        {
+            if (string.IsNullOrWhiteSpace(guid) || Nodes == null)
+            {
+                return -1;
+            }
+
+            for (int i = 0; i < Nodes.Count; i++)
+            {
+                NPCInteractionNodeData node = Nodes[i];
+                if (node != null && string.Equals(node.Guid, guid, StringComparison.Ordinal))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
         }
     }
 
@@ -61,11 +103,32 @@ namespace CrystalMagic.Game.Data
         public string Type;
 
         public string Guid;
+
+        public List<NPCInteractionBranchData> Branches = new();
+    }
+
+    [Serializable]
+    public sealed class NPCInteractionBranchData
+    {
+        public string CheckExpression;
+
+        public string NextNodeGuid;
+
+        public bool IsEnabled()
+        {
+            if (string.IsNullOrWhiteSpace(CheckExpression))
+            {
+                return true;
+            }
+
+            return SaveDataComponent.Instance != null && SaveDataComponent.Instance.Check(CheckExpression);
+        }
     }
 
     public static class NPCInteractionNodeTypes
     {
         public const string Dialogue = "Dialogue";
+        public const string Select = "Select";
         public const string OpenUI = "OpenUI";
         public const string Move = "Move";
     }
@@ -113,11 +176,43 @@ namespace CrystalMagic.Game.Data
         }
     }
 
+    [Serializable]
+    public sealed class NPCSelectInteractionNodeData : NPCInteractionNodeData
+    {
+        public List<NPCSelectOptionData> Options = new();
+
+        public NPCSelectInteractionNodeData()
+        {
+            Type = NPCInteractionNodeTypes.Select;
+        }
+    }
+
+    [Serializable]
+    public sealed class NPCSelectOptionData
+    {
+        public string DisplayName;
+
+        public string EnableExpression;
+
+        public string NextNodeGuid;
+
+        public bool IsEnabled()
+        {
+            if (string.IsNullOrWhiteSpace(EnableExpression))
+            {
+                return true;
+            }
+
+            return SaveDataComponent.Instance != null && SaveDataComponent.Instance.Check(EnableExpression);
+        }
+    }
+
     public static class NPCInteractionNodeDataRegistry
     {
         private static readonly string[] s_typeOrder =
         {
             NPCInteractionNodeTypes.Dialogue,
+            NPCInteractionNodeTypes.Select,
             NPCInteractionNodeTypes.OpenUI,
             NPCInteractionNodeTypes.Move,
         };
@@ -125,6 +220,7 @@ namespace CrystalMagic.Game.Data
         private static readonly Dictionary<string, Type> s_typeMap = new(StringComparer.Ordinal)
         {
             { NPCInteractionNodeTypes.Dialogue, typeof(NPCDialogueInteractionNodeData) },
+            { NPCInteractionNodeTypes.Select, typeof(NPCSelectInteractionNodeData) },
             { NPCInteractionNodeTypes.OpenUI, typeof(NPCOpenUIInteractionNodeData) },
             { NPCInteractionNodeTypes.Move, typeof(NPCMoveInteractionNodeData) },
         };
@@ -141,6 +237,7 @@ namespace CrystalMagic.Game.Data
             return typeName switch
             {
                 NPCInteractionNodeTypes.Dialogue => "Dialogue",
+                NPCInteractionNodeTypes.Select => "Select",
                 NPCInteractionNodeTypes.OpenUI => "Open UI",
                 NPCInteractionNodeTypes.Move => "Move",
                 _ => typeName ?? "Unknown",
@@ -193,6 +290,7 @@ namespace CrystalMagic.Game.Data
             return node switch
             {
                 NPCDialogueInteractionNodeData dialogue => $"{GetDisplayName(dialogue.Type)} | {(string.IsNullOrWhiteSpace(dialogue.ContentKey) ? "Empty" : dialogue.ContentKey)}",
+                NPCSelectInteractionNodeData select => $"{GetDisplayName(select.Type)} | {select.Options?.Count ?? 0} option(s)",
                 NPCOpenUIInteractionNodeData openUI => $"{GetDisplayName(openUI.Type)} | {(string.IsNullOrWhiteSpace(openUI.UIName) ? "Empty" : openUI.UIName)}",
                 NPCMoveInteractionNodeData move => $"{GetDisplayName(move.Type)} | {(string.IsNullOrWhiteSpace(move.TargetMarker) ? "Empty" : move.TargetMarker)}",
                 _ => GetDisplayName(ResolveTypeName(node)),
