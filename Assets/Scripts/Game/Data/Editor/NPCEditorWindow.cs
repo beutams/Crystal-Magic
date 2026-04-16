@@ -13,6 +13,7 @@ namespace CrystalMagic.Editor.Data
     {
         private const string DataPath = "Assets/Res/Data/NPCDataTable.json";
         private const float ListPanelWidth = 220f;
+        private const float InsertFieldWidth = 30f;
         private const float LabelWidth = 150f;
         private const float GraphNodeWidth = 460f;
         private const float GraphNodeGap = 28f;
@@ -27,6 +28,7 @@ namespace CrystalMagic.Editor.Data
         private int _selectedIndex = -1;
         private Vector2 _listScrollPos;
         private Vector2 _detailScrollPos;
+        private readonly Dictionary<NPCData, string> _insertTexts = new();
 
         private static JsonSerializerSettings JsonSettings => new()
         {
@@ -117,19 +119,60 @@ namespace CrystalMagic.Editor.Data
         {
             EditorGUILayout.BeginVertical(GUILayout.Width(ListPanelWidth));
             _listScrollPos = EditorGUILayout.BeginScrollView(_listScrollPos);
+            Event evt = Event.current;
+            NPCData moveRow = null;
+            int moveToIndex = -1;
 
             for (int i = 0; i < _rows.Count; i++)
             {
                 NPCData row = _rows[i];
+                EditorGUILayout.BeginHorizontal();
+                string insertText = _insertTexts.TryGetValue(row, out string currentInsertText) ? currentInsertText : string.Empty;
+                string controlName = $"insert_{row.GetHashCode()}";
+                GUI.SetNextControlName(controlName);
+                string newInsertText = EditorGUILayout.TextField(insertText, GUILayout.Width(InsertFieldWidth));
+                if (newInsertText != insertText)
+                {
+                    if (string.IsNullOrWhiteSpace(newInsertText))
+                    {
+                        _insertTexts.Remove(row);
+                    }
+                    else
+                    {
+                        _insertTexts[row] = newInsertText;
+                    }
+                }
+
+                bool isFocused = GUI.GetNameOfFocusedControl() == controlName;
+                bool submitByEnter = isFocused && evt.type == EventType.KeyDown &&
+                    (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter);
+                bool submitByBlur = !isFocused && !string.IsNullOrWhiteSpace(newInsertText) && newInsertText == insertText;
+                if ((submitByEnter || submitByBlur) && int.TryParse(newInsertText, out int insertTo))
+                {
+                    moveRow = row;
+                    moveToIndex = Mathf.Clamp(insertTo - 1, 0, _rows.Count - 1);
+                    _insertTexts.Remove(row);
+                    if (submitByEnter)
+                    {
+                        evt.Use();
+                        GUI.FocusControl(null);
+                    }
+                }
+
                 string label = $"{row.Id}  {GetListName(row)}";
                 bool selected = i == _selectedIndex;
                 if (GUILayout.Toggle(selected, label, "Button"))
                 {
                     _selectedIndex = i;
                 }
+                EditorGUILayout.EndHorizontal();
             }
 
             EditorGUILayout.EndScrollView();
+            if (moveRow != null)
+            {
+                MoveRowToInsertIndex(_rows.IndexOf(moveRow), moveToIndex);
+            }
             EditorGUILayout.EndVertical();
         }
 
@@ -162,7 +205,8 @@ namespace CrystalMagic.Editor.Data
 
             EditorGUILayout.LabelField("Basic", EditorStyles.boldLabel);
             EditorGUI.BeginChangeCheck();
-            row.Id = EditorGUILayout.IntField("Id", row.Id);
+            using (new EditorGUI.DisabledScope(true))
+                EditorGUILayout.IntField("Id", row.Id);
             row.NPC = EditorGUILayout.TextField("NPC", row.NPC ?? string.Empty);
             row.DisplayName = EditorGUILayout.TextField("Display Name", row.DisplayName ?? string.Empty);
             if (EditorGUI.EndChangeCheck())
@@ -344,6 +388,8 @@ namespace CrystalMagic.Editor.Data
                     }
                 }
 
+                NormalizeRowIds();
+                _insertTexts.Clear();
                 _statusText = $"Loaded {_rows.Count} row(s) | {DataPath}";
             }
             catch (Exception ex)
@@ -363,6 +409,7 @@ namespace CrystalMagic.Editor.Data
 
             try
             {
+                NormalizeRowIds();
                 string json = JsonConvert.SerializeObject(new TableWrapper { Rows = _rows }, JsonSettings);
                 File.WriteAllText(DataPath, json, Encoding.UTF8);
                 AssetDatabase.Refresh();
@@ -378,16 +425,7 @@ namespace CrystalMagic.Editor.Data
 
         private void AddNpc()
         {
-            int maxId = 0;
-            for (int i = 0; i < _rows.Count; i++)
-            {
-                if (_rows[i].Id > maxId)
-                {
-                    maxId = _rows[i].Id;
-                }
-            }
-
-            int id = maxId + 1;
+            int id = _rows.Count + 1;
             _rows.Add(new NPCData
             {
                 Id = id,
@@ -395,6 +433,7 @@ namespace CrystalMagic.Editor.Data
                 DisplayName = $"NPC {id}",
                 Interactions = new List<NPCInteractionData>(),
             });
+            NormalizeRowIds();
             _selectedIndex = _rows.Count - 1;
             _isDirty = true;
         }
@@ -414,8 +453,43 @@ namespace CrystalMagic.Editor.Data
             }
 
             _rows.RemoveAt(_selectedIndex);
+            _insertTexts.Remove(row);
+            NormalizeRowIds();
             _selectedIndex = Mathf.Clamp(_selectedIndex, -1, _rows.Count - 1);
             _isDirty = true;
+        }
+
+        private void NormalizeRowIds()
+        {
+            for (int i = 0; i < _rows.Count; i++)
+            {
+                _rows[i].Id = i + 1;
+            }
+        }
+
+        private void MoveRowToInsertIndex(int fromIndex, int insertIndex)
+        {
+            if (fromIndex < 0 || fromIndex >= _rows.Count)
+            {
+                return;
+            }
+
+            insertIndex = Mathf.Clamp(insertIndex, 0, _rows.Count - 1);
+            if (fromIndex == insertIndex)
+            {
+                return;
+            }
+
+            NPCData row = _rows[fromIndex];
+            _rows.RemoveAt(fromIndex);
+
+            insertIndex = Mathf.Clamp(insertIndex, 0, _rows.Count);
+            _rows.Insert(insertIndex, row);
+            NormalizeRowIds();
+            _selectedIndex = insertIndex;
+            _isDirty = true;
+            GUI.FocusControl(null);
+            Repaint();
         }
 
         private void AddInteraction(NPCData row)

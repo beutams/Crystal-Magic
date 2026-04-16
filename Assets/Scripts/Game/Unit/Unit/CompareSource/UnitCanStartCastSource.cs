@@ -20,8 +20,9 @@ public class UnitCanStartCastSource : ISource
             return 0f;
 
         UnitIntentComponent intent = _em.GetComponentData<UnitIntentComponent>(_entity);
-        CharacterData characterData = SaveDataComponent.Instance?.GetCharacterData();
-        SkillData firstSkill = SkillChainResolver.GetFirstSkill(characterData);
+        SkillCData skillConfig = SaveDataComponent.Instance?.GetSkillData();
+        RuntimeSkillData runtimeSkillData = RuntimeDataComponent.Instance.GetSkillData();
+        SkillData firstSkill = SkillChainResolver.GetFirstSkill(skillConfig, runtimeSkillData);
         if (firstSkill == null)
             return 0f;
 

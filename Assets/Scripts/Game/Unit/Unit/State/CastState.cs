@@ -14,8 +14,9 @@ public class CastState : AUnitState
     {
         ResetCastState();
 
-        CharacterData characterData = SaveDataComponent.Instance?.GetCharacterData();
-        if (!SkillChainResolver.TryBuildSelectedChain(characterData, _skills, out int chainIndex))
+        SkillCData skillConfig = SaveDataComponent.Instance?.GetSkillData();
+        RuntimeSkillData runtimeSkillData = RuntimeDataComponent.Instance.GetSkillData();
+        if (!SkillChainResolver.TryBuildSelectedChain(skillConfig, runtimeSkillData, _skills, out int chainIndex))
             return;
 
         UnitIntentComponent intent = EntityManager.GetComponentData<UnitIntentComponent>(Entity);

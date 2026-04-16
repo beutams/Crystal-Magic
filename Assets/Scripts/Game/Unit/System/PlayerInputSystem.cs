@@ -32,7 +32,7 @@ partial struct PlayerInputSystem : ISystem
         {
             InputComponent.Instance.OnMove -= HandleMove;
             InputComponent.Instance.OnMouseWorldPosition -= HandleMouseWorldPosition;
-            InputComponent.Instance.OnCastInput -= HandleCastInput;
+            InputComponent.Instance.OnMousePress -= HandleMousePress;
         }
         if (_moveInput.IsCreated)
             _moveInput.Dispose();
@@ -50,7 +50,7 @@ partial struct PlayerInputSystem : ISystem
         {
             InputComponent.Instance.OnMove += HandleMove;
             InputComponent.Instance.OnMouseWorldPosition += HandleMouseWorldPosition;
-            InputComponent.Instance.OnCastInput += HandleCastInput;
+            InputComponent.Instance.OnMousePress += HandleMousePress;
             _subscribed = true;
         }
 
@@ -66,6 +66,8 @@ partial struct PlayerInputSystem : ISystem
             intent.ValueRW.HasCastTarget = hasCastTarget;
             intent.ValueRW.CastTargetPosition = castTarget;
         }
+
+        _wantToCast.Value = false;
     }
 
     private void HandleMove(Vector2 v)
@@ -82,8 +84,8 @@ partial struct PlayerInputSystem : ISystem
         _hasCastTarget.Value = true;
     }
 
-    private void HandleCastInput(bool isPressed)
+    private void HandleMousePress()
     {
-        _wantToCast.Value = isPressed;
+        _wantToCast.Value = true;
     }
 }

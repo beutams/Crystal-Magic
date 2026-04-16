@@ -11,20 +11,12 @@ namespace CrystalMagic.Core {
         public override int Priority => 5;
         private InputControls _controls;
         #region 事件
-        /// <summary>
-        /// WASD 移动输入。
-        /// </summary>
         public event Action<Vector2> OnMove;
-        /// <summary>
-        /// 鼠标在2D平面上的世界坐标。
-        /// </summary>
         public event Action<Vector3> OnMouseWorldPosition;
-        /// <summary>
-        /// 鼠标点击
-        /// </summary>
         public event Action OnMouseClick;
-        public event Action<bool> OnCastInput;
+        public event Action OnMousePress;
         public event Action OnInteract;
+        public event Action OnInventory;
         #endregion
 
         #region 调用
@@ -37,7 +29,8 @@ namespace CrystalMagic.Core {
             _controls.Town.Move.canceled += HandleMoveCanceled;
             _controls.Town.Interact.performed += HandleInteract;
             _controls.Town.Click.performed += HandleClick;
-            _controls.Town.Click.canceled += HandleClickCanceled;
+            _controls.Town.Inventory.performed += HandleInventory;
+
             _controls.Town.Enable();
         }
 
@@ -49,7 +42,7 @@ namespace CrystalMagic.Core {
                 _controls.Town.Move.canceled -= HandleMoveCanceled;
                 _controls.Town.Interact.performed -= HandleInteract;
                 _controls.Town.Click.performed -= HandleClick;
-                _controls.Town.Click.canceled -= HandleClickCanceled;
+                _controls.Town.Inventory.performed -= HandleInventory;
 
                 _controls.Town.Disable();
                 _controls.Dispose();
@@ -58,27 +51,18 @@ namespace CrystalMagic.Core {
 
             base.Cleanup();
         }
-        private void HandleMove(InputAction.CallbackContext ctx)
-            => OnMove?.Invoke(ctx.ReadValue<Vector2>());
-        private void HandleMoveCanceled(InputAction.CallbackContext ctx)
-            => OnMove?.Invoke(Vector2.zero);
-        private void HandleInteract(InputAction.CallbackContext ctx)
-            => OnInteract?.Invoke();
-        private void HandleClick(InputAction.CallbackContext ctx)
-        {
-            OnMouseClick?.Invoke();
-            OnCastInput?.Invoke(true);
-        }
-        private void HandleClickCanceled(InputAction.CallbackContext ctx)
-            => OnCastInput?.Invoke(false);
-
-
+        private void HandleMove(InputAction.CallbackContext ctx) => OnMove?.Invoke(ctx.ReadValue<Vector2>());
+        private void HandleMoveCanceled(InputAction.CallbackContext ctx) => OnMove?.Invoke(Vector2.zero);
+        private void HandleClick(InputAction.CallbackContext ctx) => OnMouseClick?.Invoke();
+        private void HandleInteract(InputAction.CallbackContext ctx) => OnInteract?.Invoke();
+        private void HandleInventory(InputAction.CallbackContext ctx) => OnInventory?.Invoke();
         #endregion
 
 
         private void Update()
         {
             UpdateWorldPosition();
+            UpdateMousePress();
         }
         private void UpdateWorldPosition()
         {
@@ -96,6 +80,14 @@ namespace CrystalMagic.Core {
             Vector3 worldPos = ray.GetPoint(enter);
             worldPos.z = 0f;
             OnMouseWorldPosition?.Invoke(worldPos);
+        }
+
+        private void UpdateMousePress()
+        {
+            if (_controls == null || !_controls.Town.Click.IsPressed())
+                return;
+
+            OnMousePress?.Invoke();
         }
     }
 }

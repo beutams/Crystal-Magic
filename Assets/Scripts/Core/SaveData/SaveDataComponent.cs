@@ -38,6 +38,7 @@ namespace CrystalMagic.Core {
             base.Initialize();
             EnsureSaveFolderExists();
             _currentSaveIndex = DEFAULT_SAVE_INDEX;
+            RuntimeDataComponent.Instance.Reset();
             Debug.Log("[SaveDataComponent] Initialized");
         }
 
@@ -135,6 +136,7 @@ namespace CrystalMagic.Core {
                 _currentSaveData = data;
                 _currentSaveIndex = data.SaveIndex;
 
+                RuntimeDataComponent.Instance.InitializeFromSave(data);
                 OnLoadSuccess?.Invoke(data);
                 PublishAllDataChangedEvents();
                 Debug.Log($"[SaveDataComponent] Game loaded from slot index: {index}");

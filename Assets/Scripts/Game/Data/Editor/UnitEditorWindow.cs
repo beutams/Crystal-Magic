@@ -20,6 +20,7 @@ namespace CrystalMagic.Editor.Data
         private const string DataPath       = "Assets/Res/Data/UnitDataTable.json";
         private const float  ListPanelWidth = 220f;
         private const float  ItemHeight     = 26f;
+        private const float  InsertFieldWidth = 30f;
         private const float  LabelWidth     = 140f;
 
         private static readonly string[] TabNames = { "属性", "AI" };
@@ -34,6 +35,7 @@ namespace CrystalMagic.Editor.Data
         private int     _selectedTab;
         private Vector2 _listScrollPos;
         private Vector2 _detailScrollPos;
+        private readonly Dictionary<UnitData, string> _insertTexts = new();
 
         // ─── AI 面板：反射到的类型名 ──────────────────
         private string[] _stateTypeNames   = Array.Empty<string>();
@@ -128,6 +130,8 @@ namespace CrystalMagic.Editor.Data
                 var    wrapper = JsonConvert.DeserializeObject<TableWrapper>(json, JsonSettings);
                 if (wrapper?.Rows != null) _rows = wrapper.Rows;
                 foreach (var r in _rows) r.States ??= new List<UnitStateConfig>();
+                NormalizeRowIds();
+                _insertTexts.Clear();
                 _statusText = $"已加载 {_rows.Count} 条  ·  {DataPath}";
             }
             catch (Exception ex)
@@ -144,6 +148,7 @@ namespace CrystalMagic.Editor.Data
 
             try
             {
+                NormalizeRowIds();
                 string json = JsonConvert.SerializeObject(new TableWrapper { Rows = _rows }, JsonSettings);
                 File.WriteAllText(DataPath, json, Encoding.UTF8);
                 AssetDatabase.Refresh();
@@ -162,8 +167,8 @@ namespace CrystalMagic.Editor.Data
         // ══════════════════════════════════════════════
         private void AddUnit()
         {
-            int maxId = _rows.Count > 0 ? _rows.Max(r => r.Id) : 0;
-            _rows.Add(new UnitData { Id = maxId + 1, Name = $"新单位 {maxId + 1}" });
+            _rows.Add(new UnitData { Id = _rows.Count + 1, Name = $"新单位 {_rows.Count + 1}" });
+            NormalizeRowIds();
             _selectedIndex = _rows.Count - 1;
             _isDirty = true;
             Repaint();
@@ -172,9 +177,39 @@ namespace CrystalMagic.Editor.Data
         private void DeleteSelected()
         {
             if (_selectedIndex < 0 || _selectedIndex >= _rows.Count) return;
+            UnitData removedRow = _rows[_selectedIndex];
             _rows.RemoveAt(_selectedIndex);
+            _insertTexts.Remove(removedRow);
+            NormalizeRowIds();
             _selectedIndex = Mathf.Clamp(_selectedIndex, -1, _rows.Count - 1);
             _isDirty = true;
+        }
+
+        private void NormalizeRowIds()
+        {
+            for (int i = 0; i < _rows.Count; i++)
+                _rows[i].Id = i + 1;
+        }
+
+        private void MoveRowToInsertIndex(int fromIndex, int insertIndex)
+        {
+            if (fromIndex < 0 || fromIndex >= _rows.Count)
+                return;
+
+            insertIndex = Mathf.Clamp(insertIndex, 0, _rows.Count - 1);
+            if (fromIndex == insertIndex)
+                return;
+
+            UnitData row = _rows[fromIndex];
+            _rows.RemoveAt(fromIndex);
+
+            insertIndex = Mathf.Clamp(insertIndex, 0, _rows.Count);
+            _rows.Insert(insertIndex, row);
+            NormalizeRowIds();
+            _selectedIndex = insertIndex;
+            _isDirty = true;
+            GUI.FocusControl(null);
+            Repaint();
         }
 
         // ══════════════════════════════════════════════
@@ -231,6 +266,8 @@ namespace CrystalMagic.Editor.Data
 
             _listScrollPos = EditorGUILayout.BeginScrollView(_listScrollPos, GUILayout.ExpandHeight(true));
             Event evt = Event.current;
+            UnitData moveRow = null;
+            int moveToIndex = -1;
 
             for (int i = 0; i < _rows.Count; i++)
             {
@@ -243,11 +280,40 @@ namespace CrystalMagic.Editor.Data
                     : i % 2 == 0 ? EvenRowColor : OddRowColor;
                 EditorGUI.DrawRect(itemRect, bg);
 
+                Rect insertRect = new Rect(itemRect.x + 6f, itemRect.y + 3f, InsertFieldWidth, itemRect.height - 6f);
+                string insertText = _insertTexts.TryGetValue(unit, out string currentInsertText) ? currentInsertText : string.Empty;
+                string controlName = $"insert_{unit.GetHashCode()}";
+                GUI.SetNextControlName(controlName);
+                string newInsertText = EditorGUI.TextField(insertRect, insertText);
+                if (newInsertText != insertText)
+                {
+                    if (string.IsNullOrWhiteSpace(newInsertText))
+                        _insertTexts.Remove(unit);
+                    else
+                        _insertTexts[unit] = newInsertText;
+                }
+
+                bool isFocused = GUI.GetNameOfFocusedControl() == controlName;
+                bool submitByEnter = isFocused && evt.type == EventType.KeyDown &&
+                    (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter);
+                bool submitByBlur = !isFocused && !string.IsNullOrWhiteSpace(newInsertText) && newInsertText == insertText;
+                if ((submitByEnter || submitByBlur) && int.TryParse(newInsertText, out int insertTo))
+                {
+                    moveRow = unit;
+                    moveToIndex = Mathf.Clamp(insertTo - 1, 0, _rows.Count - 1);
+                    _insertTexts.Remove(unit);
+                    if (submitByEnter)
+                    {
+                        evt.Use();
+                        GUI.FocusControl(null);
+                    }
+                }
+
                 string label = $"[{unit.Id}]  {(string.IsNullOrEmpty(unit.Name) ? "（未命名）" : unit.Name)}";
-                GUI.Label(new Rect(itemRect.x + 8, itemRect.y + 4, itemRect.width - 8, itemRect.height - 4),
+                GUI.Label(new Rect(insertRect.xMax + 8f, itemRect.y + 4, itemRect.width - insertRect.width - 8f, itemRect.height - 4),
                     label, isSelected ? EditorStyles.whiteLabel : EditorStyles.label);
 
-                if (evt.type == EventType.MouseDown && itemRect.Contains(evt.mousePosition))
+                if (evt.type == EventType.MouseDown && itemRect.Contains(evt.mousePosition) && !insertRect.Contains(evt.mousePosition))
                 {
                     _selectedIndex = i;
                     GUI.FocusControl(null);
@@ -258,6 +324,8 @@ namespace CrystalMagic.Editor.Data
             }
 
             EditorGUILayout.EndScrollView();
+            if (moveRow != null)
+                MoveRowToInsertIndex(_rows.IndexOf(moveRow), moveToIndex);
             EditorGUILayout.EndVertical();
         }
 
@@ -324,7 +392,8 @@ namespace CrystalMagic.Editor.Data
             EditorGUI.BeginChangeCheck();
 
             DrawSectionHeader("基础信息");
-            unit.Id          = EditorGUILayout.IntField("Id",     unit.Id);
+            using (new EditorGUI.DisabledScope(true))
+                EditorGUILayout.IntField("Id", unit.Id);
             unit.Name        = EditorGUILayout.TextField("名称",   unit.Name        ?? "");
             EditorGUILayout.LabelField("描述");
             unit.Description = EditorGUILayout.TextArea(unit.Description ?? "",

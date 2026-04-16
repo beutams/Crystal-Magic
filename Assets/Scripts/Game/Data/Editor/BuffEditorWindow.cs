@@ -22,6 +22,7 @@ namespace CrystalMagic.Editor.Data
         private const string DataPath       = "Assets/Res/Data/BuffDataTable.json";
         private const float  ListPanelWidth = 220f;
         private const float  ItemHeight     = 26f;
+        private const float  InsertFieldWidth = 30f;
         private const float  LabelWidth     = 180f;
 
         // ===== Buff 子类注册 =====
@@ -81,6 +82,7 @@ namespace CrystalMagic.Editor.Data
         private int     _addEffectTypeIndex;
         private Vector2 _listScrollPos;
         private Vector2 _detailScrollPos;
+        private readonly Dictionary<BuffData, string> _insertTexts = new();
 
         // 每个嵌套效果链的"待添加类型"选中索引，key = 字段路径
         private readonly Dictionary<string, int>  _nestedTypeIndices = new();
@@ -133,9 +135,11 @@ namespace CrystalMagic.Editor.Data
 
             try
             {
-                string json    = File.ReadAllText(DataPath);
+                string json    = UpgradeLegacyJson(File.ReadAllText(DataPath));
                 var    wrapper = JsonConvert.DeserializeObject<TableWrapper>(json, JsonSettings);
                 if (wrapper?.Rows != null) _rows = wrapper.Rows;
+                NormalizeRowIds();
+                _insertTexts.Clear();
                 _statusText = $"已加载 {_rows.Count} 条  ·  {DataPath}";
             }
             catch (Exception ex)
@@ -152,6 +156,7 @@ namespace CrystalMagic.Editor.Data
 
             try
             {
+                NormalizeRowIds();
                 string json = JsonConvert.SerializeObject(new TableWrapper { Rows = _rows }, JsonSettings);
                 File.WriteAllText(DataPath, json, Encoding.UTF8);
                 AssetDatabase.Refresh();
@@ -171,18 +176,16 @@ namespace CrystalMagic.Editor.Data
         // ─────────────────────────────────────────
         private void AddBuff()
         {
-            int maxId = 0;
-            foreach (BuffData r in _rows) if (r.Id > maxId) maxId = r.Id;
-
             BuffData newBuff = (BuffData)Activator.CreateInstance(KnownBuffTypes[_addBuffTypeIndex]);
-            newBuff.Id       = maxId + 1;
-            newBuff.Name     = $"新Buff {maxId + 1}";
+            newBuff.Id       = _rows.Count + 1;
+            newBuff.Name     = $"新Buff {_rows.Count + 1}";
             newBuff.MaxStacks = 1;
 
             if (newBuff is EffectBuffData te)
                 te.EffectChain = Array.Empty<EffectData>();
 
             _rows.Add(newBuff);
+            NormalizeRowIds();
             _selectedIndex = _rows.Count - 1;
             _isDirty       = true;
             Repaint();
@@ -191,9 +194,46 @@ namespace CrystalMagic.Editor.Data
         private void DeleteSelected()
         {
             if (_selectedIndex < 0 || _selectedIndex >= _rows.Count) return;
+            BuffData removedRow = _rows[_selectedIndex];
             _rows.RemoveAt(_selectedIndex);
+            _insertTexts.Remove(removedRow);
+            NormalizeRowIds();
             _selectedIndex = Mathf.Clamp(_selectedIndex, -1, _rows.Count - 1);
             _isDirty = true;
+        }
+
+        private static string UpgradeLegacyJson(string json)
+        {
+            return json.Replace(
+                "CrystalMagic.Game.Data.TickEffectBuffData, Assembly-CSharp",
+                "CrystalMagic.Game.Data.EffectBuffData, Assembly-CSharp");
+        }
+
+        private void NormalizeRowIds()
+        {
+            for (int i = 0; i < _rows.Count; i++)
+                _rows[i].Id = i + 1;
+        }
+
+        private void MoveRowToInsertIndex(int fromIndex, int insertIndex)
+        {
+            if (fromIndex < 0 || fromIndex >= _rows.Count)
+                return;
+
+            insertIndex = Mathf.Clamp(insertIndex, 0, _rows.Count - 1);
+            if (fromIndex == insertIndex)
+                return;
+
+            BuffData row = _rows[fromIndex];
+            _rows.RemoveAt(fromIndex);
+
+            insertIndex = Mathf.Clamp(insertIndex, 0, _rows.Count);
+            _rows.Insert(insertIndex, row);
+            NormalizeRowIds();
+            _selectedIndex = insertIndex;
+            _isDirty = true;
+            GUI.FocusControl(null);
+            Repaint();
         }
 
         // ─────────────────────────────────────────
@@ -259,6 +299,8 @@ namespace CrystalMagic.Editor.Data
 
             _listScrollPos = EditorGUILayout.BeginScrollView(_listScrollPos, GUILayout.ExpandHeight(true));
             Event evt = Event.current;
+            BuffData moveRow = null;
+            int moveToIndex = -1;
 
             for (int i = 0; i < _rows.Count; i++)
             {
@@ -272,18 +314,47 @@ namespace CrystalMagic.Editor.Data
                         : (i % 2 == 0 ? EvenRowColor : OddRowColor));
                 EditorGUI.DrawRect(itemRect, bg);
 
+                Rect insertRect = new Rect(itemRect.x + 6f, itemRect.y + 3f, InsertFieldWidth, itemRect.height - 6f);
+                string insertText = _insertTexts.TryGetValue(buff, out string currentInsertText) ? currentInsertText : string.Empty;
+                string controlName = $"insert_{buff.GetHashCode()}";
+                GUI.SetNextControlName(controlName);
+                string newInsertText = EditorGUI.TextField(insertRect, insertText);
+                if (newInsertText != insertText)
+                {
+                    if (string.IsNullOrWhiteSpace(newInsertText))
+                        _insertTexts.Remove(buff);
+                    else
+                        _insertTexts[buff] = newInsertText;
+                }
+
+                bool isFocused = GUI.GetNameOfFocusedControl() == controlName;
+                bool submitByEnter = isFocused && evt.type == EventType.KeyDown &&
+                    (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter);
+                bool submitByBlur = !isFocused && !string.IsNullOrWhiteSpace(newInsertText) && newInsertText == insertText;
+                if ((submitByEnter || submitByBlur) && int.TryParse(newInsertText, out int insertTo))
+                {
+                    moveRow = buff;
+                    moveToIndex = Mathf.Clamp(insertTo - 1, 0, _rows.Count - 1);
+                    _insertTexts.Remove(buff);
+                    if (submitByEnter)
+                    {
+                        evt.Use();
+                        GUI.FocusControl(null);
+                    }
+                }
+
                 // 左侧小色块表示 Buff 子类
                 int    typeIdx  = Array.IndexOf(KnownBuffTypes, buff.GetType());
                 Color  typeColor = typeIdx >= 0 ? BuffColors[typeIdx] : Color.gray;
-                EditorGUI.DrawRect(new Rect(itemRect.x, itemRect.y, 4f, itemRect.height), typeColor);
+                EditorGUI.DrawRect(new Rect(insertRect.xMax + 4f, itemRect.y, 4f, itemRect.height), typeColor);
 
                 string label = $"[{buff.Id}]  {(string.IsNullOrEmpty(buff.Name) ? "（未命名）" : buff.Name)}";
                 GUI.Label(
-                    new Rect(itemRect.x + 10, itemRect.y + 4, itemRect.width - 10, itemRect.height - 4),
+                    new Rect(insertRect.xMax + 14f, itemRect.y + 4, itemRect.width - insertRect.width - 14f, itemRect.height - 4),
                     label,
                     isSelected ? EditorStyles.whiteLabel : EditorStyles.label);
 
-                if (evt.type == EventType.MouseDown && itemRect.Contains(evt.mousePosition))
+                if (evt.type == EventType.MouseDown && itemRect.Contains(evt.mousePosition) && !insertRect.Contains(evt.mousePosition))
                 {
                     _selectedIndex = i;
                     GUI.FocusControl(null);
@@ -295,6 +366,8 @@ namespace CrystalMagic.Editor.Data
             }
 
             EditorGUILayout.EndScrollView();
+            if (moveRow != null)
+                MoveRowToInsertIndex(_rows.IndexOf(moveRow), moveToIndex);
             EditorGUILayout.EndVertical();
         }
 
@@ -344,7 +417,8 @@ namespace CrystalMagic.Editor.Data
 
             // ── 基础信息 ──────────────────────────────────
             DrawSectionHeader("基础信息");
-            buff.Id        = EditorGUILayout.IntField("Id", buff.Id);
+            using (new EditorGUI.DisabledScope(true))
+                EditorGUILayout.IntField("Id", buff.Id);
             buff.Name      = EditorGUILayout.TextField("名称", buff.Name ?? "");
             buff.CanStack  = EditorGUILayout.Toggle("可叠层", buff.CanStack);
             using (new EditorGUI.DisabledScope(!buff.CanStack))
