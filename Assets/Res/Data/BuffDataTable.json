@@ -1,48 +1,62 @@
-{
+﻿{
   "Rows": [
     {
       "$type": "CrystalMagic.Game.Data.PropertyBuffData, Assembly-CSharp",
-      "Id": 1,
+      "MoveSpeedFactor": 0.0,
+      "MoveSpeedBonus": 0.0,
+      "MaxHealthFactor": 0.0,
+      "MaxHealthBonus": 0.0,
+      "DefenseFactor": 0.0,
+      "DefenseBonus": 0.0,
+      "AttackPowerFactor": 0.0,
+      "AttackPowerBonus": 0.0,
+      "SkillRangeFactor": 0.0,
+      "SkillRangeBonus": 0.0,
+      "MaxMpFactor": 0.0,
+      "MaxMpBonus": 0.0,
       "Name": "移速提升20%",
-      "Duration": 10.0,
       "CanStack": false,
       "MaxStacks": 1,
-      "AttributeId": 0,
-      "ModType": 1,
-      "ModValue": 1.2
+      "Id": 1,
+      "Category": 0
     },
     {
       "$type": "CrystalMagic.Game.Data.PropertyBuffData, Assembly-CSharp",
-      "Id": 2,
+      "MoveSpeedFactor": 0.0,
+      "MoveSpeedBonus": 0.0,
+      "MaxHealthFactor": 0.0,
+      "MaxHealthBonus": 0.0,
+      "DefenseFactor": 0.0,
+      "DefenseBonus": 0.0,
+      "AttackPowerFactor": 0.0,
+      "AttackPowerBonus": 0.0,
+      "SkillRangeFactor": 0.0,
+      "SkillRangeBonus": 0.0,
+      "MaxMpFactor": 0.0,
+      "MaxMpBonus": 0.0,
       "Name": "攻击力+50",
-      "Duration": 15.0,
       "CanStack": true,
       "MaxStacks": 3,
-      "AttributeId": 1,
-      "ModType": 0,
-      "ModValue": 50.0
+      "Id": 2,
+      "Category": 0
     },
     {
-      "$type": "CrystalMagic.Game.Data.TickEffectBuffData, Assembly-CSharp",
-      "Id": 3,
-      "Name": "中毒",
-      "Duration": 8.0,
-      "CanStack": true,
-      "MaxStacks": 5,
-      "TickInterval": 1.0,
-      "EffectId": 101,
-      "AffectRadius": 0.0
-    },
-    {
-      "$type": "CrystalMagic.Game.Data.TickEffectBuffData, Assembly-CSharp",
-      "Id": 4,
+      "$type": "CrystalMagic.Game.Data.EffectBuffData, Assembly-CSharp",
+      "EffectChain": [],
       "Name": "燃烧",
-      "Duration": 5.0,
       "CanStack": false,
       "MaxStacks": 1,
-      "TickInterval": 0.5,
-      "EffectId": 102,
-      "AffectRadius": 2.0
+      "Id": 3,
+      "Category": 1
+    },
+    {
+      "$type": "CrystalMagic.Game.Data.EffectBuffData, Assembly-CSharp",
+      "EffectChain": [],
+      "Name": "中毒",
+      "CanStack": true,
+      "MaxStacks": 5,
+      "Id": 4,
+      "Category": 1
     }
   ]
 }

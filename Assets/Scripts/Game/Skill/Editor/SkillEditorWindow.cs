@@ -23,6 +23,7 @@ namespace CrystalMagic.Editor.Skill
         private const string DataPath       = "Assets/Res/Data/SkillDataTable.json";
         private const float  ListPanelWidth = 220f;
         private const float  ItemHeight     = 26f;
+        private const float  InsertFieldWidth = 30f;
         private const float  LabelWidth     = 150f;
 
         // ===== 效果类型注册 =====
@@ -64,6 +65,7 @@ namespace CrystalMagic.Editor.Skill
         private int     _addEffectTypeIndex;
         private Vector2 _listScrollPos;
         private Vector2 _detailScrollPos;
+        private readonly Dictionary<SkillData, string> _insertTexts = new();
 
         // 每个嵌套效果链的"待添加类型"选中索引，key = 字段路径
         private readonly Dictionary<string, int>  _nestedTypeIndices = new();
@@ -148,6 +150,8 @@ namespace CrystalMagic.Editor.Skill
                 string json = File.ReadAllText(DataPath);
                 var wrapper = JsonConvert.DeserializeObject<TableWrapper>(json, JsonSettings);
                 if (wrapper?.Rows != null) _rows = wrapper.Rows;
+                NormalizeRowIds();
+                _insertTexts.Clear();
                 _statusText = $"已加载 {_rows.Count} 条  ·  {DataPath}";
             }
             catch (Exception ex)
@@ -164,6 +168,7 @@ namespace CrystalMagic.Editor.Skill
 
             try
             {
+                NormalizeRowIds();
                 string json = JsonConvert.SerializeObject(new TableWrapper { Rows = _rows }, JsonSettings);
                 File.WriteAllText(DataPath, json, Encoding.UTF8);
                 AssetDatabase.Refresh();
@@ -183,16 +188,14 @@ namespace CrystalMagic.Editor.Skill
         // ─────────────────────────────────────────
         private void AddSkill()
         {
-            int maxId = 0;
-            foreach (SkillData r in _rows) if (r.Id > maxId) maxId = r.Id;
-
             _rows.Add(new SkillData
             {
-                Id                  = maxId + 1,
-                Name                = $"新技能 {maxId + 1}",
+                Id                  = _rows.Count + 1,
+                Name                = $"新技能 {_rows.Count + 1}",
                 MoveSpeedMultiplier = 1f,
                 EffectChain         = Array.Empty<EffectData>(),
             });
+            NormalizeRowIds();
             _selectedIndex = _rows.Count - 1;
             _isDirty       = true;
             Repaint();
@@ -201,9 +204,39 @@ namespace CrystalMagic.Editor.Skill
         private void DeleteSelected()
         {
             if (_selectedIndex < 0 || _selectedIndex >= _rows.Count) return;
+            SkillData removedRow = _rows[_selectedIndex];
             _rows.RemoveAt(_selectedIndex);
+            _insertTexts.Remove(removedRow);
+            NormalizeRowIds();
             _selectedIndex = Mathf.Clamp(_selectedIndex, -1, _rows.Count - 1);
             _isDirty = true;
+        }
+
+        private void NormalizeRowIds()
+        {
+            for (int i = 0; i < _rows.Count; i++)
+                _rows[i].Id = i + 1;
+        }
+
+        private void MoveRowToInsertIndex(int fromIndex, int insertIndex)
+        {
+            if (fromIndex < 0 || fromIndex >= _rows.Count)
+                return;
+
+            insertIndex = Mathf.Clamp(insertIndex, 0, _rows.Count - 1);
+            if (fromIndex == insertIndex)
+                return;
+
+            SkillData row = _rows[fromIndex];
+            _rows.RemoveAt(fromIndex);
+
+            insertIndex = Mathf.Clamp(insertIndex, 0, _rows.Count);
+            _rows.Insert(insertIndex, row);
+            NormalizeRowIds();
+            _selectedIndex = insertIndex;
+            _isDirty = true;
+            GUI.FocusControl(null);
+            Repaint();
         }
 
         // ─────────────────────────────────────────
@@ -266,6 +299,8 @@ namespace CrystalMagic.Editor.Skill
 
             _listScrollPos = EditorGUILayout.BeginScrollView(_listScrollPos, GUILayout.ExpandHeight(true));
             Event evt = Event.current;
+            SkillData moveRow = null;
+            int moveToIndex = -1;
 
             for (int i = 0; i < _rows.Count; i++)
             {
@@ -279,13 +314,42 @@ namespace CrystalMagic.Editor.Skill
                         : (i % 2 == 0 ? EvenRowColor : OddRowColor));
                 EditorGUI.DrawRect(itemRect, bg);
 
+                Rect insertRect = new Rect(itemRect.x + 6f, itemRect.y + 3f, InsertFieldWidth, itemRect.height - 6f);
+                string insertText = _insertTexts.TryGetValue(skill, out string currentInsertText) ? currentInsertText : string.Empty;
+                string controlName = $"insert_{skill.GetHashCode()}";
+                GUI.SetNextControlName(controlName);
+                string newInsertText = EditorGUI.TextField(insertRect, insertText);
+                if (newInsertText != insertText)
+                {
+                    if (string.IsNullOrWhiteSpace(newInsertText))
+                        _insertTexts.Remove(skill);
+                    else
+                        _insertTexts[skill] = newInsertText;
+                }
+
+                bool isFocused = GUI.GetNameOfFocusedControl() == controlName;
+                bool submitByEnter = isFocused && evt.type == EventType.KeyDown &&
+                    (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter);
+                bool submitByBlur = !isFocused && !string.IsNullOrWhiteSpace(newInsertText) && newInsertText == insertText;
+                if ((submitByEnter || submitByBlur) && int.TryParse(newInsertText, out int insertTo))
+                {
+                    moveRow = skill;
+                    moveToIndex = Mathf.Clamp(insertTo - 1, 0, _rows.Count - 1);
+                    _insertTexts.Remove(skill);
+                    if (submitByEnter)
+                    {
+                        evt.Use();
+                        GUI.FocusControl(null);
+                    }
+                }
+
                 string label = $"[{skill.Id}]  {(string.IsNullOrEmpty(skill.Name) ? "（未命名）" : skill.Name)}";
                 GUI.Label(
-                    new Rect(itemRect.x + 8, itemRect.y + 4, itemRect.width - 8, itemRect.height - 4),
+                    new Rect(insertRect.xMax + 8f, itemRect.y + 4, itemRect.width - insertRect.width - 8f, itemRect.height - 4),
                     label,
                     isSelected ? EditorStyles.whiteLabel : EditorStyles.label);
 
-                if (evt.type == EventType.MouseDown && itemRect.Contains(evt.mousePosition))
+                if (evt.type == EventType.MouseDown && itemRect.Contains(evt.mousePosition) && !insertRect.Contains(evt.mousePosition))
                 {
                     _selectedIndex = i;
                     GUI.FocusControl(null);
@@ -297,6 +361,8 @@ namespace CrystalMagic.Editor.Skill
             }
 
             EditorGUILayout.EndScrollView();
+            if (moveRow != null)
+                MoveRowToInsertIndex(_rows.IndexOf(moveRow), moveToIndex);
             EditorGUILayout.EndVertical();
         }
 
@@ -337,7 +403,8 @@ namespace CrystalMagic.Editor.Skill
 
             // ── 基础信息 ──────────────────────────────────
             DrawSectionHeader("基础信息");
-            skill.Id          = EditorGUILayout.IntField("Id", skill.Id);
+            using (new EditorGUI.DisabledScope(true))
+                EditorGUILayout.IntField("Id", skill.Id);
             skill.Name        = EditorGUILayout.TextField("名称", skill.Name ?? "");
             EditorGUILayout.LabelField("描述");
             skill.Description = EditorGUILayout.TextArea(skill.Description ?? "",

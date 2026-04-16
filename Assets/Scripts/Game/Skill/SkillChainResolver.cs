@@ -7,16 +7,15 @@ namespace CrystalMagic.Game.Skill
 {
     public static class SkillChainResolver
     {
-        public static bool TryBuildSelectedChain(CharacterData character, List<SkillData> skills, out int chainIndex)
+        public static bool TryBuildSelectedChain(SkillCData skillConfig, RuntimeSkillData runtimeSkillData, List<SkillData> skills, out int chainIndex)
         {
             skills?.Clear();
             chainIndex = -1;
 
-            SkillCData skillConfig = character?.Skills;
-            if (character == null || skillConfig?.Chains == null || skillConfig.Chains.Length == 0)
+            if (skillConfig?.Chains == null || skillConfig.Chains.Length == 0)
                 return false;
 
-            int selectedIndex = Mathf.Clamp(skillConfig.SelectedSkillChainIndex, 0, skillConfig.Chains.Length - 1);
+            int selectedIndex = Mathf.Clamp(runtimeSkillData?.CurrentSkillChainIndex ?? 0, 0, skillConfig.Chains.Length - 1);
             SkillChainData chain = skillConfig.Chains[selectedIndex];
             if (chain?.SkillStoneIds == null || chain.SkillStoneIds.Count == 0)
                 return false;
@@ -39,13 +38,12 @@ namespace CrystalMagic.Game.Skill
             return true;
         }
 
-        public static SkillData GetFirstSkill(CharacterData character)
+        public static SkillData GetFirstSkill(SkillCData skillConfig, RuntimeSkillData runtimeSkillData)
         {
-            SkillCData skillConfig = character?.Skills;
-            if (character == null || skillConfig?.Chains == null || skillConfig.Chains.Length == 0)
+            if (skillConfig?.Chains == null || skillConfig.Chains.Length == 0)
                 return null;
 
-            int selectedIndex = Mathf.Clamp(skillConfig.SelectedSkillChainIndex, 0, skillConfig.Chains.Length - 1);
+            int selectedIndex = Mathf.Clamp(runtimeSkillData?.CurrentSkillChainIndex ?? 0, 0, skillConfig.Chains.Length - 1);
             SkillChainData chain = skillConfig.Chains[selectedIndex];
             if (chain?.SkillStoneIds == null || chain.SkillStoneIds.Count == 0)
                 return null;

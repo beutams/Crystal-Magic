@@ -38,8 +38,10 @@ namespace CrystalMagic.Editor.Data
 
         // ===== 列宽 =====
         private const float DeleteBtnWidth = 24f;
+        private const float InsertColWidth = 36f;
         private const float RowHeight = 20f;
         private const float MinColWidth = 80f;
+        private readonly Dictionary<object, string> _insertTexts = new();
 
         // ===== JSON 包装（供反射序列化用）=====
         [Serializable]
@@ -96,6 +98,7 @@ namespace CrystalMagic.Editor.Data
         private void LoadTable(Type rowType)
         {
             _rows.Clear();
+            _insertTexts.Clear();
             _fields = null;
             _loadedType = null;
             _isDirty = false;
@@ -113,8 +116,17 @@ namespace CrystalMagic.Editor.Data
                     foreach (object r in rowList) _rows.Add(r);
             }
 
-            _fields = rowType.GetFields(BindingFlags.Public | BindingFlags.Instance);
             _loadedType = rowType;
+            NormalizeRowIds();
+            _fields = rowType.GetFields(BindingFlags.Public | BindingFlags.Instance);
+            Array.Sort(_fields, (a, b) =>
+            {
+                bool aIsId = a.Name == nameof(DataRow.Id);
+                bool bIsId = b.Name == nameof(DataRow.Id);
+                if (aIsId && !bIsId) return -1;
+                if (!aIsId && bIsId) return 1;
+                return a.MetadataToken.CompareTo(b.MetadataToken);
+            });
             _statusText = $"已加载 {_rows.Count} 条  ·  {path}";
         }
 
@@ -128,6 +140,7 @@ namespace CrystalMagic.Editor.Data
             string path = GetFilePath(_loadedType);
             string dir = Path.GetDirectoryName(path);
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+            NormalizeRowIds();
 
             // 构造 typed list 供 JsonUtility 序列化
             Type listType = typeof(List<>).MakeGenericType(_loadedType);
@@ -154,19 +167,6 @@ namespace CrystalMagic.Editor.Data
             if (_loadedType == null) return;
             object newRow = Activator.CreateInstance(_loadedType);
 
-            // Id 自动取最大值 + 1
-            FieldInfo idField = _loadedType.GetField("Id");
-            if (idField != null)
-            {
-                int maxId = 0;
-                foreach (object r in _rows)
-                {
-                    int id = (int)idField.GetValue(r);
-                    if (id > maxId) maxId = id;
-                }
-                idField.SetValue(newRow, maxId + 1);
-            }
-
             foreach (FieldInfo f in _loadedType.GetFields(BindingFlags.Public | BindingFlags.Instance))
             {
                 if (f.FieldType == typeof(int[]))
@@ -176,12 +176,39 @@ namespace CrystalMagic.Editor.Data
             }
 
             _rows.Add(newRow);
+            NormalizeRowIds();
             _isDirty = true;
         }
 
-        // ─────────────────────────────────────────
-        //  OnGUI
-        // ─────────────────────────────────────────
+        private void NormalizeRowIds()
+        {
+            if (_loadedType == null)
+                return;
+
+            FieldInfo idField = _loadedType.GetField(nameof(DataRow.Id), BindingFlags.Public | BindingFlags.Instance);
+            if (idField == null || idField.FieldType != typeof(int))
+                return;
+
+            for (int i = 0; i < _rows.Count; i++)
+            {
+                idField.SetValue(_rows[i], i + 1);
+            }
+        }
+
+        private void MoveRowToInsertIndex(int fromIndex, int insertIndex)
+        {
+            if (fromIndex < 0 || fromIndex >= _rows.Count)
+                return;
+
+            object row = _rows[fromIndex];
+            _rows.RemoveAt(fromIndex);
+
+            insertIndex = Mathf.Clamp(insertIndex, 0, _rows.Count);
+            _rows.Insert(insertIndex, row);
+            NormalizeRowIds();
+            _isDirty = true;
+        }
+
         private void OnGUI()
         {
             DrawToolbar();
@@ -242,21 +269,23 @@ namespace CrystalMagic.Editor.Data
         // ─────────────────────────────────────────
         private void DrawTable()
         {
-            float totalWidth = position.width - DeleteBtnWidth - 20f;
+            float totalWidth = position.width - InsertColWidth - DeleteBtnWidth - 24f;
             float colWidth = Mathf.Max(MinColWidth, totalWidth / _fields.Length);
 
-            // ── 表头 ──
             EditorGUILayout.BeginHorizontal(GUI.skin.box);
+            GUILayout.Label("To", GUILayout.Width(InsertColWidth));
             foreach (var f in _fields)
                 EditorGUILayout.LabelField(f.Name, EditorStyles.boldLabel,
                     GUILayout.Width(colWidth), GUILayout.Height(RowHeight));
-            GUILayout.Label("", GUILayout.Width(DeleteBtnWidth)); // 占位
+            GUILayout.Label("", GUILayout.Width(DeleteBtnWidth));
             EditorGUILayout.EndHorizontal();
 
-            // ── 数据行 ──
             _scrollPos = EditorGUILayout.BeginScrollView(_scrollPos);
 
             int deleteIndex = -1;
+            object moveRow = null;
+            int moveToIndex = -1;
+            Event evt = Event.current;
             for (int i = 0; i < _rows.Count; i++)
             {
                 object row = _rows[i];
@@ -266,62 +295,112 @@ namespace CrystalMagic.Editor.Data
                 Color bg = i % 2 == 0
                     ? new Color(0.22f, 0.22f, 0.22f)
                     : new Color(0.28f, 0.28f, 0.28f);
+                Rect rowRect = GUILayoutUtility.GetRect(
+                    InsertColWidth + (_fields.Length * colWidth) + DeleteBtnWidth,
+                    RowHeight,
+                    GUILayout.ExpandWidth(true));
 
-                EditorGUILayout.BeginHorizontal(MakeColorStyle(bg));
+                EditorGUI.DrawRect(rowRect, bg);
 
+                Rect insertRect = new Rect(rowRect.x, rowRect.y, InsertColWidth, rowRect.height);
+                _insertTexts.TryGetValue(row, out string insertText);
+                string controlName = $"insert_{row.GetHashCode()}";
+                GUI.SetNextControlName(controlName);
+                string editedInsertText = EditorGUI.TextField(insertRect, insertText ?? string.Empty);
+                if (!string.Equals(editedInsertText, insertText ?? string.Empty, StringComparison.Ordinal))
+                {
+                    if (string.IsNullOrWhiteSpace(editedInsertText))
+                    {
+                        _insertTexts.Remove(row);
+                    }
+                    else
+                    {
+                        _insertTexts[row] = editedInsertText;
+                    }
+                }
+
+                bool isFocused = GUI.GetNameOfFocusedControl() == controlName;
+                bool submitByEnter = isFocused && evt.type == EventType.KeyDown &&
+                    (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter);
+                bool submitByBlur = !isFocused && !string.IsNullOrWhiteSpace(editedInsertText) &&
+                    string.Equals(editedInsertText, insertText ?? string.Empty, StringComparison.Ordinal);
+                if ((submitByEnter || submitByBlur) &&
+                    int.TryParse(editedInsertText, NumberStyles.Integer, CultureInfo.InvariantCulture, out int targetIndex))
+                {
+                    moveRow = row;
+                    moveToIndex = Mathf.Clamp(targetIndex - 1, 0, _rows.Count - 1);
+                    _insertTexts.Remove(row);
+                    if (submitByEnter)
+                    {
+                        evt.Use();
+                        GUI.FocusControl(null);
+                    }
+                }
+
+                float currentX = rowRect.x + InsertColWidth;
                 foreach (var field in _fields)
                 {
                     object val = field.GetValue(row);
-                    object newVal = DrawField(field.FieldType, val, colWidth);
+                    Rect fieldRect = new Rect(currentX, rowRect.y, colWidth, rowRect.height);
+                    object newVal = DrawField(field, val, fieldRect);
                     if (!Equals(newVal, val))
                     {
                         field.SetValue(row, newVal);
                         _isDirty = true;
                     }
+
+                    currentX += colWidth;
                 }
 
-                // 删除按钮
+                Rect deleteRect = new Rect(rowRect.xMax - DeleteBtnWidth, rowRect.y, DeleteBtnWidth, rowRect.height);
                 GUI.color = new Color(1f, 0.4f, 0.4f);
-                if (GUILayout.Button("×", EditorStyles.miniButton, GUILayout.Width(DeleteBtnWidth)))
+                if (GUI.Button(deleteRect, "X", EditorStyles.miniButton))
                     deleteIndex = i;
                 GUI.color = Color.white;
-
-                EditorGUILayout.EndHorizontal();
             }
 
             EditorGUILayout.EndScrollView();
 
+            if (moveRow != null && moveToIndex >= 0)
+            {
+                MoveRowToInsertIndex(_rows.IndexOf(moveRow), moveToIndex);
+            }
+
             if (deleteIndex >= 0)
             {
+                object removedRow = _rows[deleteIndex];
                 _rows.RemoveAt(deleteIndex);
+                _insertTexts.Remove(removedRow);
+                NormalizeRowIds();
                 _isDirty = true;
             }
         }
 
-        // ─────────────────────────────────────────
-        //  字段编辑控件
-        // ─────────────────────────────────────────
-        private object DrawField(Type type, object value, float width)
+        private object DrawField(FieldInfo field, object value, Rect rect)
         {
-            var w = GUILayout.Width(width);
-            var h = GUILayout.Height(RowHeight);
+            Type type = field.FieldType;
+            if (field.Name == nameof(DataRow.Id) && type == typeof(int))
+            {
+                EditorGUI.LabelField(rect, value?.ToString() ?? "0");
+                return value;
+            }
 
             if (type == typeof(int))
-                return EditorGUILayout.IntField((int)(value ?? 0), w, h);
+                return EditorGUI.IntField(rect, (int)(value ?? 0));
             if (type == typeof(float))
-                return EditorGUILayout.FloatField((float)(value ?? 0f), w, h);
+                return EditorGUI.FloatField(rect, (float)(value ?? 0f));
             if (type == typeof(bool))
-                return EditorGUILayout.Toggle((bool)(value ?? false), w, h);
+                return EditorGUI.Toggle(rect, (bool)(value ?? false));
             if (type == typeof(string))
-                return EditorGUILayout.TextField((string)(value ?? ""), w, h);
+                return EditorGUI.TextField(rect, (string)(value ?? ""));
             if (type.IsEnum)
-                return EditorGUILayout.EnumPopup((Enum)value, w, h);
+                return EditorGUI.EnumPopup(rect, (Enum)value);
 
             if (type == typeof(int[]))
             {
                 int[] arr = (int[])value;
                 string joined = JoinIntArray(arr);
-                string edited = EditorGUILayout.DelayedTextField(joined, w, h);
+                string edited = EditorGUI.DelayedTextField(rect, joined);
                 if (!string.Equals(edited, joined, StringComparison.Ordinal))
                 {
                     if (TryParseIntArray(edited, out int[] parsed))
@@ -335,7 +414,7 @@ namespace CrystalMagic.Editor.Data
             {
                 float[] arr = (float[])value;
                 string joined = JoinFloatArray(arr);
-                string edited = EditorGUILayout.DelayedTextField(joined, w, h);
+                string edited = EditorGUI.DelayedTextField(rect, joined);
                 if (!string.Equals(edited, joined, StringComparison.Ordinal))
                 {
                     if (TryParseFloatArray(edited, out float[] parsed))
@@ -345,8 +424,7 @@ namespace CrystalMagic.Editor.Data
                 return value;
             }
 
-            // 不支持的类型只读显示
-            EditorGUILayout.LabelField(value?.ToString() ?? "—", w, h);
+            EditorGUI.LabelField(rect, value?.ToString() ?? "-");
             return value;
         }
 

@@ -100,13 +100,6 @@ namespace CrystalMagic.Core {
 
         public void MigrateLegacyData()
         {
-            if (_legacySelectedSkillChainIndex >= 0)
-            {
-                Skills ??= new SkillCData();
-                Skills.SelectedSkillChainIndex = _legacySelectedSkillChainIndex;
-                _legacySelectedSkillChainIndex = -1;
-            }
-
             if (_legacyBackpackItems != null && _legacyBackpackItems.Count > 0)
             {
                 Backpack ??= new BackpackData();
@@ -119,6 +112,13 @@ namespace CrystalMagic.Core {
 
                 _legacyBackpackItems = null;
             }
+        }
+
+        public int ConsumeLegacySelectedSkillChainIndex(int defaultValue = 0)
+        {
+            int selectedSkillChainIndex = _legacySelectedSkillChainIndex >= 0 ? _legacySelectedSkillChainIndex : defaultValue;
+            _legacySelectedSkillChainIndex = -1;
+            return selectedSkillChainIndex;
         }
     }
     /// <summary>
@@ -237,12 +237,10 @@ namespace CrystalMagic.Core {
     [System.Serializable]
     public class SkillCData
     {
-        public int SelectedSkillChainIndex;
         public SkillChainData[] Chains = new SkillChainData[5];
 
         public SkillCData()
         {
-            SelectedSkillChainIndex = 0;
             for (int i = 0; i < 5; i++)
             {
                 Chains[i] = new SkillChainData { Index = i };
