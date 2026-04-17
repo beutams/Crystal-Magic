@@ -30,14 +30,14 @@ namespace CrystalMagic.Core {
 
             if (context.ShouldEnterDungeon())
             {
-                Debug.Log($"[LoadGameState] �?Dungeon (Floor: {context.DungeonFloor})");
+                Debug.Log($"[LoadGameState] 进入 Dungeon，楼层 {context.DungeonFloor}");
                 targetSceneName = "Game";
                 targetStateType = typeof(DungeonState);
                 requiredSubSceneNames = null;
             }
             else
             {
-                Debug.Log("[LoadGameState] �?Town");
+                Debug.Log("[LoadGameState] 进入 Town");
                 targetSceneName = "Game";
                 targetStateType = typeof(TownState);
                 requiredSubSceneNames = new[] { "TownSubScene" };
