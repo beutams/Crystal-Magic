@@ -60,6 +60,7 @@ namespace CrystalMagic.Editor.Data
         private readonly Dictionary<string, int>  _transAddTargetIdx    = new();
         private readonly Dictionary<string, int>  _condAddSrcIdx        = new();
         private readonly Dictionary<string, int>  _condAddCmpIdx        = new();
+        private int _copySourceUnitIndex;
 
         // ─── 颜色 ─────────────────────────────────────
         private static readonly Color SelectedColor = new(0.27f, 0.52f, 0.85f, 0.85f);
@@ -167,6 +168,24 @@ namespace CrystalMagic.Editor.Data
             _rows.Add(row);
             NormalizeRowIds();
 
+            _isDirty = true;
+            return row;
+        }
+
+        private UnitData CreateUnitDataForPrefab(UnitPrefabEntry entry, UnitData source)
+        {
+            if (source == null)
+                return CreateUnitDataForPrefab(entry);
+
+            string json = JsonConvert.SerializeObject(source, JsonSettings);
+            UnitData row = JsonConvert.DeserializeObject<UnitData>(json, JsonSettings);
+            if (row == null)
+                return CreateUnitDataForPrefab(entry);
+
+            row.Name = entry.DisplayName;
+            row.PrefabPath = entry.AssetPath;
+            _rows.Add(row);
+            NormalizeRowIds();
             _isDirty = true;
             return row;
         }
@@ -487,6 +506,18 @@ namespace CrystalMagic.Editor.Data
             if (unit == null && GUILayout.Button("为当前 Prefab 创建 UnitData", GUILayout.Width(180)))
             {
                 unit = CreateUnitDataForPrefab(entry);
+            }
+
+            if (unit == null && _rows.Count > 0)
+            {
+                string[] options = _rows.Select(row => $"[{row.Id}] {row.Name}").ToArray();
+                _copySourceUnitIndex = Mathf.Clamp(_copySourceUnitIndex, 0, options.Length - 1);
+                _copySourceUnitIndex = EditorGUILayout.Popup("复制来源", _copySourceUnitIndex, options);
+
+                if (GUILayout.Button("复制已有 UnitData 生成", GUILayout.Width(180)))
+                {
+                    unit = CreateUnitDataForPrefab(entry, _rows[_copySourceUnitIndex]);
+                }
             }
         }
 

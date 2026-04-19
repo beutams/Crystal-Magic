@@ -100,6 +100,12 @@ namespace CrystalMagic.Editor.Data
             }
 
             GUI.enabled = _selectedIndex >= 0;
+            if (GUILayout.Button("Duplicate", EditorStyles.toolbarButton, GUILayout.Width(68f)))
+            {
+                DuplicateSelected();
+            }
+
+            GUI.enabled = _selectedIndex >= 0;
             if (GUILayout.Button("Delete", EditorStyles.toolbarButton, GUILayout.Width(52f)))
             {
                 DeleteSelected();
@@ -456,6 +462,31 @@ namespace CrystalMagic.Editor.Data
             _insertTexts.Remove(row);
             NormalizeRowIds();
             _selectedIndex = Mathf.Clamp(_selectedIndex, -1, _rows.Count - 1);
+            _isDirty = true;
+        }
+
+        private void DuplicateSelected()
+        {
+            if (_selectedIndex < 0 || _selectedIndex >= _rows.Count)
+            {
+                return;
+            }
+
+            NPCData source = _rows[_selectedIndex];
+            string json = JsonConvert.SerializeObject(source, JsonSettings);
+            NPCData copy = JsonConvert.DeserializeObject<NPCData>(json, JsonSettings);
+            if (copy == null)
+            {
+                return;
+            }
+
+            copy.Id = _rows.Count + 1;
+            copy.NPC = string.IsNullOrWhiteSpace(source.NPC) ? $"NPC_{copy.Id}" : $"{source.NPC}_Copy";
+            copy.DisplayName = string.IsNullOrWhiteSpace(source.DisplayName) ? $"NPC {copy.Id}" : $"{source.DisplayName}_Copy";
+            EnsureNpcValid(copy);
+            _rows.Add(copy);
+            NormalizeRowIds();
+            _selectedIndex = _rows.Count - 1;
             _isDirty = true;
         }
 
