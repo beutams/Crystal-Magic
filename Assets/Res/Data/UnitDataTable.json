@@ -225,7 +225,12 @@
       "BaseAttackPower": 0.0,
       "BaseSkillRange": 0.0,
       "BaseMaxMp": 0.0,
-      "States": [],
+      "States": [
+        {
+          "StateType": "IdleState",
+          "Transitions": []
+        }
+      ],
       "Id": 4
     },
     {
@@ -239,7 +244,12 @@
       "BaseAttackPower": 0.0,
       "BaseSkillRange": 0.0,
       "BaseMaxMp": 0.0,
-      "States": [],
+      "States": [
+        {
+          "StateType": "IdleState",
+          "Transitions": []
+        }
+      ],
       "Id": 5
     },
     {
@@ -253,7 +263,12 @@
       "BaseAttackPower": 0.0,
       "BaseSkillRange": 0.0,
       "BaseMaxMp": 0.0,
-      "States": [],
+      "States": [
+        {
+          "StateType": "IdleState",
+          "Transitions": []
+        }
+      ],
       "Id": 6
     },
     {
@@ -345,7 +360,12 @@
       "BaseAttackPower": 0.0,
       "BaseSkillRange": 0.0,
       "BaseMaxMp": 0.0,
-      "States": [],
+      "States": [
+        {
+          "StateType": "IdleState",
+          "Transitions": []
+        }
+      ],
       "Id": 8
     }
   ]

@@ -212,6 +212,24 @@ namespace CrystalMagic.Editor.Skill
             _isDirty = true;
         }
 
+        private void DuplicateSelected()
+        {
+            if (_selectedIndex < 0 || _selectedIndex >= _rows.Count) return;
+
+            SkillData source = _rows[_selectedIndex];
+            string json = JsonConvert.SerializeObject(source, JsonSettings);
+            SkillData copy = JsonConvert.DeserializeObject<SkillData>(json, JsonSettings);
+            if (copy == null) return;
+
+            copy.Id = _rows.Count + 1;
+            copy.Name = string.IsNullOrWhiteSpace(source.Name) ? $"鏂版妧鑳?{copy.Id}" : $"{source.Name}_Copy";
+            _rows.Add(copy);
+            NormalizeRowIds();
+            _selectedIndex = _rows.Count - 1;
+            _isDirty = true;
+            Repaint();
+        }
+
         private void NormalizeRowIds()
         {
             for (int i = 0; i < _rows.Count; i++)
@@ -269,6 +287,10 @@ namespace CrystalMagic.Editor.Skill
 
             if (GUILayout.Button("+ 新增", EditorStyles.toolbarButton, GUILayout.Width(52)))
                 AddSkill();
+
+            GUI.enabled = _selectedIndex >= 0;
+            if (GUILayout.Button("复制当前", EditorStyles.toolbarButton, GUILayout.Width(64)))
+                DuplicateSelected();
 
             GUI.enabled = _selectedIndex >= 0;
             GUI.color   = _selectedIndex >= 0 ? new Color(1f, 0.55f, 0.55f) : Color.white;

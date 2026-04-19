@@ -13,6 +13,7 @@ namespace CrystalMagic.Core {
     {
         private Dictionary<string, GameObjectPool> _pools = new();
         private Dictionary<int, string> _prefabInstanceToPoolName = new();
+        private Dictionary<int, string> _objectInstanceToPoolName = new();
         private Transform _poolContainer;
 
         public override int Priority => 12;
@@ -43,7 +44,13 @@ namespace CrystalMagic.Core {
                 }
             }
 
-            return pool.Get();
+            GameObject obj = pool.Get();
+            if (obj != null)
+            {
+                _objectInstanceToPoolName[obj.GetInstanceID()] = assetPath;
+            }
+
+            return obj;
         }
 
         /// <summary>
@@ -75,7 +82,13 @@ namespace CrystalMagic.Core {
                 Debug.Log($"[PoolComponent] Auto-created pool '{poolName}' from prefab '{prefab.name}' (Instance ID: {prefabInstanceId})");
             }
 
-            return pool.Get();
+            GameObject obj = pool.Get();
+            if (obj != null)
+            {
+                _objectInstanceToPoolName[obj.GetInstanceID()] = poolName;
+            }
+
+            return obj;
         }
 
         /// <summary>
@@ -96,6 +109,14 @@ namespace CrystalMagic.Core {
 
             // 归还到池中时设置为 inactive
             obj.SetActive(false);
+
+            int objectInstanceId = obj.GetInstanceID();
+            if (_objectInstanceToPoolName.TryGetValue(objectInstanceId, out string mappedPoolName)
+                && _pools.TryGetValue(mappedPoolName, out GameObjectPool mappedPool))
+            {
+                mappedPool.Return(obj);
+                return;
+            }
 
             string poolName = obj.name;
             if (_pools.TryGetValue(poolName, out GameObjectPool foundPool))
@@ -184,6 +205,7 @@ namespace CrystalMagic.Core {
             }
             _pools.Clear();
             _prefabInstanceToPoolName.Clear();
+            _objectInstanceToPoolName.Clear();
             Debug.Log("[PoolComponent] Cleared all pools");
         }
 
