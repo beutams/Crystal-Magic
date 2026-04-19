@@ -37,6 +37,11 @@ namespace CrystalMagic.Core {
             {
                 ApplyCameraToGroups(uiCamera);
             }
+
+            if (InputComponent.Instance != null)
+            {
+                InputComponent.Instance.OnEscape += HandleEscape;
+            }
         }
 
         private void LoadConfigFromPath()
@@ -720,6 +725,11 @@ namespace CrystalMagic.Core {
 
         public override void Cleanup()
         {
+            if (InputComponent.Instance != null)
+            {
+                InputComponent.Instance.OnEscape -= HandleEscape;
+            }
+
             foreach (UIMvcContext context in _mvcContexts.Values)
             {
                 context.Dispose();
@@ -730,6 +740,36 @@ namespace CrystalMagic.Core {
             _uiNameToGroupName.Clear();
             _typeCache.Clear();
             base.Cleanup();
+        }
+
+        private void HandleEscape()
+        {
+            UIBase panel = GetTopmostEscapeClosablePanel();
+            panel?.Close();
+        }
+
+        private UIBase GetTopmostEscapeClosablePanel()
+        {
+            UIBase selected = null;
+            int maxSortingOrder = int.MinValue;
+
+            foreach (UIMvcContext context in _mvcContexts.Values)
+            {
+                UIBase panel = context.Panel;
+                if (panel == null || !panel.gameObject.activeInHierarchy || !panel.CanCloseByEscape)
+                {
+                    continue;
+                }
+
+                int sortingOrder = panel.Canvas != null ? panel.Canvas.sortingOrder : int.MinValue;
+                if (selected == null || sortingOrder > maxSortingOrder)
+                {
+                    selected = panel;
+                    maxSortingOrder = sortingOrder;
+                }
+            }
+
+            return selected;
         }
 
         private sealed class UIMvcContext : IDisposable

@@ -575,6 +575,13 @@ namespace CrystalMagic.Editor.Data
                     move.WaitUntilArrived = EditorGUILayout.Toggle("Wait Until Arrived", move.WaitUntilArrived);
                     DrawBranchList(interaction, node);
                     break;
+                case NPCEnterDungeonInteractionNodeData enterDungeon:
+                    enterDungeon.DungeonFloor = Mathf.Max(1, EditorGUILayout.IntField("Dungeon Floor", enterDungeon.DungeonFloor));
+                    EditorGUILayout.HelpBox("This node immediately ends the current interaction and enters the dungeon flow.", MessageType.None);
+                    break;
+                case NPCEnterTrainingGroundInteractionNodeData:
+                    EditorGUILayout.HelpBox("This node immediately ends the current interaction and enters the training ground flow.", MessageType.None);
+                    break;
                 default:
                     EditorGUILayout.HelpBox($"Unknown node type: {node.Type}", MessageType.Warning);
                     break;
@@ -1207,6 +1214,12 @@ namespace CrystalMagic.Editor.Data
                 changed = true;
             }
 
+            if (node is NPCEnterDungeonInteractionNodeData enterDungeon && enterDungeon.DungeonFloor < 1)
+            {
+                enterDungeon.DungeonFloor = 1;
+                changed = true;
+            }
+
             if (node is NPCSelectInteractionNodeData select && select.Options == null)
             {
                 select.Options = new List<NPCSelectOptionData>();
@@ -1224,6 +1237,8 @@ namespace CrystalMagic.Editor.Data
                 NPCSelectInteractionNodeData => new Color(0.69f, 0.40f, 0.78f),
                 NPCOpenUIInteractionNodeData => new Color(0.43f, 0.51f, 0.84f),
                 NPCMoveInteractionNodeData => new Color(0.35f, 0.68f, 0.66f),
+                NPCEnterDungeonInteractionNodeData => new Color(0.79f, 0.30f, 0.33f),
+                NPCEnterTrainingGroundInteractionNodeData => new Color(0.30f, 0.56f, 0.81f),
                 _ => new Color(0.52f, 0.52f, 0.52f),
             };
         }

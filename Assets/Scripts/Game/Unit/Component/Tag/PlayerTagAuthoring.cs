@@ -13,7 +13,10 @@ public class PlayerTagAuthoring : MonoBehaviour
     }
 }
 
+public struct PlayerTag : IComponentData
+{
+}
+
 /// <summary>
-/// 玩家标记组件
+/// 鐜╁鏍囪缁勪欢
 /// </summary>
-public struct PlayerTag : IComponentData { }

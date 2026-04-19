@@ -166,6 +166,187 @@
         }
       ],
       "Id": 2
+    },
+    {
+      "Name": "PlayerTown",
+      "Description": "城镇中的玩家角色",
+      "PrefabPath": "Assets/Res/Unit/PlayerTown.prefab",
+      "BaseMoveSpeed": 10.0,
+      "BaseMaxAcceleration": 20.0,
+      "BaseMaxHealth": 0.0,
+      "BaseDefense": 0.0,
+      "BaseAttackPower": 0.0,
+      "BaseSkillRange": 0.0,
+      "BaseMaxMp": 0.0,
+      "States": [
+        {
+          "StateType": "IdleState",
+          "Transitions": [
+            {
+              "TargetStateType": "MoveState",
+              "Conditions": [
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitVelocitySource",
+                  "CompareType": "GreaterThan",
+                  "CompareValue": 0.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "StateType": "MoveState",
+          "Transitions": [
+            {
+              "TargetStateType": "IdleState",
+              "Conditions": [
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitVelocitySource",
+                  "CompareType": "LessThan",
+                  "CompareValue": 0.0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "Id": 3
+    },
+    {
+      "Name": "SkillShop",
+      "Description": "",
+      "PrefabPath": "Assets/Res/Unit/SkillShop.prefab",
+      "BaseMoveSpeed": 10.0,
+      "BaseMaxAcceleration": 10.0,
+      "BaseMaxHealth": 0.0,
+      "BaseDefense": 0.0,
+      "BaseAttackPower": 0.0,
+      "BaseSkillRange": 0.0,
+      "BaseMaxMp": 0.0,
+      "States": [],
+      "Id": 4
+    },
+    {
+      "Name": "Stash",
+      "Description": "",
+      "PrefabPath": "Assets/Res/Unit/Stash.prefab",
+      "BaseMoveSpeed": 10.0,
+      "BaseMaxAcceleration": 10.0,
+      "BaseMaxHealth": 0.0,
+      "BaseDefense": 0.0,
+      "BaseAttackPower": 0.0,
+      "BaseSkillRange": 0.0,
+      "BaseMaxMp": 0.0,
+      "States": [],
+      "Id": 5
+    },
+    {
+      "Name": "Training",
+      "Description": "",
+      "PrefabPath": "Assets/Res/Unit/Training.prefab",
+      "BaseMoveSpeed": 10.0,
+      "BaseMaxAcceleration": 10.0,
+      "BaseMaxHealth": 0.0,
+      "BaseDefense": 0.0,
+      "BaseAttackPower": 0.0,
+      "BaseSkillRange": 0.0,
+      "BaseMaxMp": 0.0,
+      "States": [],
+      "Id": 6
+    },
+    {
+      "Name": "PlayerDungeon",
+      "Description": "",
+      "PrefabPath": "Assets/Res/Unit/PlayerDungeon.prefab",
+      "BaseMoveSpeed": 10.0,
+      "BaseMaxAcceleration": 10.0,
+      "BaseMaxHealth": 100.0,
+      "BaseDefense": 0.0,
+      "BaseAttackPower": 10.0,
+      "BaseSkillRange": 0.0,
+      "BaseMaxMp": 100.0,
+      "States": [
+        {
+          "StateType": "IdleState",
+          "Transitions": [
+            {
+              "TargetStateType": "MoveState",
+              "Conditions": [
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitVelocitySource",
+                  "CompareType": "GreaterThan",
+                  "CompareValue": 0.0
+                }
+              ]
+            },
+            {
+              "TargetStateType": "CastState",
+              "Conditions": [
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitWantToCastSource",
+                  "CompareType": "IsTrue",
+                  "CompareValue": 0.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "StateType": "MoveState",
+          "Transitions": [
+            {
+              "TargetStateType": "IdleState",
+              "Conditions": [
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitVelocitySource",
+                  "CompareType": "LessThan",
+                  "CompareValue": 0.0
+                }
+              ]
+            },
+            {
+              "TargetStateType": "CastState",
+              "Conditions": [
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitWantToCastSource",
+                  "CompareType": "IsTrue",
+                  "CompareValue": 0.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "StateType": "CastState",
+          "Transitions": [
+            {
+              "TargetStateType": "IdleState",
+              "Conditions": []
+            }
+          ]
+        }
+      ],
+      "Id": 7
+    },
+    {
+      "Name": "Enemy",
+      "Description": "",
+      "PrefabPath": "Assets/Res/Unit/Enemy.prefab",
+      "BaseMoveSpeed": 10.0,
+      "BaseMaxAcceleration": 10.0,
+      "BaseMaxHealth": 100000.0,
+      "BaseDefense": 0.0,
+      "BaseAttackPower": 0.0,
+      "BaseSkillRange": 0.0,
+      "BaseMaxMp": 0.0,
+      "States": [],
+      "Id": 8
     }
   ]
 }

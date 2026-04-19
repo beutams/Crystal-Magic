@@ -22,25 +22,29 @@ namespace CrystalMagic.Core {
             {
                 SaveData = saveData,
                 SaveIndex = saveIndex,
+                Location = saveData.Location,
             };
 
             string targetSceneName;
             System.Type targetStateType;
-            string[] requiredSubSceneNames;
 
             if (context.ShouldEnterDungeon())
             {
-                Debug.Log($"[LoadGameState] �?Dungeon (Floor: {context.DungeonFloor})");
-                targetSceneName = "Game";
+                Debug.Log($"[LoadGameState] 进入 Dungeon，楼层 {context.DungeonFloor}");
+                targetSceneName = DungeonState.SceneName;
                 targetStateType = typeof(DungeonState);
-                requiredSubSceneNames = null;
+            }
+            else if (context.ShouldEnterTraining())
+            {
+                Debug.Log("[LoadGameState] Enter Training");
+                targetSceneName = TrainingState.SceneName;
+                targetStateType = typeof(TrainingState);
             }
             else
             {
-                Debug.Log("[LoadGameState] �?Town");
-                targetSceneName = "Game";
+                Debug.Log("[LoadGameState] 进入 Town");
+                targetSceneName = TownState.SceneName;
                 targetStateType = typeof(TownState);
-                requiredSubSceneNames = new[] { "TownSubScene" };
             }
 
             GameFlowComponent.Instance.SetState<TransitionState>(new TransitionData
@@ -48,7 +52,7 @@ namespace CrystalMagic.Core {
                 TargetSceneName = targetSceneName,
                 TargetStateType = targetStateType,
                 TargetStateData = context,
-                RequiredSubSceneNames = requiredSubSceneNames,
+                ForceReloadTargetScene = true,
             });
         }
 

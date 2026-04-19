@@ -259,6 +259,12 @@ namespace CrystalMagic.Core {
             return _currentSaveData.Town.Character;
         }
 
+        public SaveLocationData GetLocationData()
+        {
+            EnsureCurrentSaveDataValid();
+            return _currentSaveData.Location;
+        }
+
         public EquipmentData GetEquipmentData()
         {
             EnsureCurrentSaveDataValid();
@@ -299,6 +305,29 @@ namespace CrystalMagic.Core {
         {
             EnsureCurrentSaveDataValid();
             return _currentSaveData.Variables.Check(expression);
+        }
+
+        public void SetCurrentLocation(SaveAreaType areaType, int dungeonFloor = 1)
+        {
+            EnsureCurrentSaveDataValid();
+            _currentSaveData.Location.AreaType = areaType;
+            _currentSaveData.Location.DungeonFloor = Mathf.Max(1, dungeonFloor);
+        }
+
+        public LoadGameContext CreateLoadGameContext(SaveAreaType areaType, int dungeonFloor = 1)
+        {
+            EnsureCurrentSaveDataValid();
+
+            return new LoadGameContext
+            {
+                SaveData = _currentSaveData,
+                SaveIndex = GetCurrentSaveIndex(),
+                Location = new SaveLocationData
+                {
+                    AreaType = areaType,
+                    DungeonFloor = Mathf.Max(1, dungeonFloor),
+                },
+            };
         }
 
         public void NotifySaveDataChanged()
@@ -395,6 +424,15 @@ namespace CrystalMagic.Core {
             if (data.Variables == null)
             {
                 data.Variables = new SaveVariableData();
+            }
+
+            if (data.Location == null)
+            {
+                data.Location = new SaveLocationData();
+            }
+            else
+            {
+                data.Location.DungeonFloor = Mathf.Max(1, data.Location.DungeonFloor);
             }
 
             if (data.Town == null)
@@ -517,17 +555,24 @@ namespace CrystalMagic.Core {
     {
         public SaveData SaveData;
         public int SaveIndex;
-        public bool HasDungeonRun;
-        public int DungeonFloor;
+        public SaveLocationData Location;
+
+        public SaveAreaType AreaType => Location?.AreaType ?? SaveAreaType.Town;
+        public int DungeonFloor => Mathf.Max(1, Location?.DungeonFloor ?? 1);
 
         public bool ShouldEnterDungeon()
         {
-            return HasDungeonRun;
+            return AreaType == SaveAreaType.Dungeon;
+        }
+
+        public bool ShouldEnterTraining()
+        {
+            return AreaType == SaveAreaType.Training;
         }
 
         public bool ShouldEnterTown()
         {
-            return !ShouldEnterDungeon();
+            return AreaType == SaveAreaType.Town;
         }
     }
 }
