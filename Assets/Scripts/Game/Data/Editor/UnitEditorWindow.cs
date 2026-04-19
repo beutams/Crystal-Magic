@@ -6,6 +6,7 @@ using System.Text;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
+using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 
 namespace CrystalMagic.Editor.Data
@@ -18,15 +19,25 @@ namespace CrystalMagic.Editor.Data
     public class UnitEditorWindow : EditorWindow
     {
         private const string DataPath       = "Assets/Res/Data/UnitDataTable.json";
+        private const string UnitPrefabDirectory = "Assets/Res/Unit";
         private const float  ListPanelWidth = 220f;
         private const float  ItemHeight     = 26f;
         private const float  InsertFieldWidth = 30f;
         private const float  LabelWidth     = 140f;
 
+        private sealed class UnitPrefabEntry
+        {
+            public string AssetPath;
+            public GameObject Prefab;
+
+            public string DisplayName => Path.GetFileNameWithoutExtension(AssetPath);
+        }
+
         private static readonly string[] TabNames = { "属性", "AI" };
 
         // ─── 数据 ─────────────────────────────────────
         private List<UnitData> _rows = new();
+        private readonly List<UnitPrefabEntry> _prefabEntries = new();
         private bool   _isDirty;
         private string _statusText = "";
 
@@ -82,7 +93,97 @@ namespace CrystalMagic.Editor.Data
         private void OnEnable()
         {
             LoadData();
+            RefreshPrefabEntries();
             RefreshTypeArrays();
+        }
+
+        private void RefreshPrefabEntries()
+        {
+            _prefabEntries.Clear();
+
+            if (!AssetDatabase.IsValidFolder(UnitPrefabDirectory))
+            {
+                _selectedIndex = -1;
+                return;
+            }
+
+            string[] prefabGuids = AssetDatabase.FindAssets("t:Prefab", new[] { UnitPrefabDirectory });
+            foreach (string guid in prefabGuids)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                if (prefab == null)
+                {
+                    continue;
+                }
+
+                _prefabEntries.Add(new UnitPrefabEntry
+                {
+                    AssetPath = path,
+                    Prefab = prefab,
+                });
+            }
+
+            _prefabEntries.Sort((a, b) => string.Compare(a.DisplayName, b.DisplayName, StringComparison.Ordinal));
+            _selectedIndex = _prefabEntries.Count == 0 ? -1 : Mathf.Clamp(_selectedIndex, 0, _prefabEntries.Count - 1);
+        }
+
+        private bool TryGetSelectedPrefabEntry(out UnitPrefabEntry entry)
+        {
+            if (_selectedIndex >= 0 && _selectedIndex < _prefabEntries.Count)
+            {
+                entry = _prefabEntries[_selectedIndex];
+                return true;
+            }
+
+            entry = null;
+            return false;
+        }
+
+        private UnitData ResolveUnitData(UnitPrefabEntry entry)
+        {
+            if (entry == null)
+            {
+                return null;
+            }
+
+            UnitData byPath = _rows.FirstOrDefault(r => string.Equals(r.PrefabPath, entry.AssetPath, StringComparison.Ordinal));
+            if (byPath != null)
+            {
+                return byPath;
+            }
+
+            return _rows.FirstOrDefault(r => string.Equals(r.Name, entry.DisplayName, StringComparison.Ordinal));
+        }
+
+        private UnitData CreateUnitDataForPrefab(UnitPrefabEntry entry)
+        {
+            var row = new UnitData
+            {
+                Name = entry.DisplayName,
+                Description = "",
+                PrefabPath = entry.AssetPath,
+            };
+            _rows.Add(row);
+            NormalizeRowIds();
+
+            _isDirty = true;
+            return row;
+        }
+
+        private static bool HasAuthoring<T>(UnitPrefabEntry entry) where T : Component
+        {
+            return entry?.Prefab != null && entry.Prefab.GetComponent<T>() != null;
+        }
+
+        private static void MarkPrefabDirty(UnityEngine.Object target)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            EditorUtility.SetDirty(target);
         }
 
         // ══════════════════════════════════════════════
@@ -151,6 +252,7 @@ namespace CrystalMagic.Editor.Data
                 NormalizeRowIds();
                 string json = JsonConvert.SerializeObject(new TableWrapper { Rows = _rows }, JsonSettings);
                 File.WriteAllText(DataPath, json, Encoding.UTF8);
+                AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
                 _isDirty    = false;
                 _statusText = $"已保存 {_rows.Count} 条  ·  {DataPath}";
@@ -232,21 +334,17 @@ namespace CrystalMagic.Editor.Data
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            if (GUILayout.Button("加载", EditorStyles.toolbarButton, GUILayout.Width(44))) LoadData();
+            if (GUILayout.Button("加载", EditorStyles.toolbarButton, GUILayout.Width(44)))
+            {
+                LoadData();
+                RefreshPrefabEntries();
+            }
 
             GUI.enabled = _isDirty;
             if (GUILayout.Button(_isDirty ? "保存 *" : "保存", EditorStyles.toolbarButton, GUILayout.Width(52))) SaveData();
             GUI.enabled = true;
 
-            if (GUILayout.Button("＋ 新增", EditorStyles.toolbarButton, GUILayout.Width(60))) AddUnit();
-
-            GUI.enabled = _selectedIndex >= 0;
-            GUI.color   = _selectedIndex >= 0 ? DangerColor : Color.white;
-            if (GUILayout.Button("删除", EditorStyles.toolbarButton, GUILayout.Width(44)))
-                if (EditorUtility.DisplayDialog("删除单位", $"确认删除「{_rows[_selectedIndex].Name}」？", "删除", "取消"))
-                    DeleteSelected();
-            GUI.color   = Color.white;
-            GUI.enabled = true;
+            if (GUILayout.Button("刷新Prefab", EditorStyles.toolbarButton, GUILayout.Width(74))) RefreshPrefabEntries();
 
             GUILayout.FlexibleSpace();
             if (!string.IsNullOrEmpty(_statusText))
@@ -261,17 +359,16 @@ namespace CrystalMagic.Editor.Data
         {
             EditorGUILayout.BeginVertical(GUILayout.Width(ListPanelWidth), GUILayout.ExpandHeight(true));
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            GUILayout.Label($"单位列表 ({_rows.Count})", EditorStyles.boldLabel);
+            GUILayout.Label($"Prefab 列表 ({_prefabEntries.Count})", EditorStyles.boldLabel);
             EditorGUILayout.EndHorizontal();
 
             _listScrollPos = EditorGUILayout.BeginScrollView(_listScrollPos, GUILayout.ExpandHeight(true));
             Event evt = Event.current;
-            UnitData moveRow = null;
-            int moveToIndex = -1;
 
-            for (int i = 0; i < _rows.Count; i++)
+            for (int i = 0; i < _prefabEntries.Count; i++)
             {
-                UnitData unit       = _rows[i];
+                UnitPrefabEntry entry = _prefabEntries[i];
+                UnitData unitData = ResolveUnitData(entry);
                 bool     isSelected = i == _selectedIndex;
                 Rect     itemRect   = GUILayoutUtility.GetRect(ListPanelWidth, ItemHeight, GUILayout.ExpandWidth(true));
 
@@ -280,43 +377,16 @@ namespace CrystalMagic.Editor.Data
                     : i % 2 == 0 ? EvenRowColor : OddRowColor;
                 EditorGUI.DrawRect(itemRect, bg);
 
-                Rect insertRect = new Rect(itemRect.x + 6f, itemRect.y + 3f, InsertFieldWidth, itemRect.height - 6f);
-                string insertText = _insertTexts.TryGetValue(unit, out string currentInsertText) ? currentInsertText : string.Empty;
-                string controlName = $"insert_{unit.GetHashCode()}";
-                GUI.SetNextControlName(controlName);
-                string newInsertText = EditorGUI.TextField(insertRect, insertText);
-                if (newInsertText != insertText)
-                {
-                    if (string.IsNullOrWhiteSpace(newInsertText))
-                        _insertTexts.Remove(unit);
-                    else
-                        _insertTexts[unit] = newInsertText;
-                }
-
-                bool isFocused = GUI.GetNameOfFocusedControl() == controlName;
-                bool submitByEnter = isFocused && evt.type == EventType.KeyDown &&
-                    (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter);
-                bool submitByBlur = !isFocused && !string.IsNullOrWhiteSpace(newInsertText) && newInsertText == insertText;
-                if ((submitByEnter || submitByBlur) && int.TryParse(newInsertText, out int insertTo))
-                {
-                    moveRow = unit;
-                    moveToIndex = Mathf.Clamp(insertTo - 1, 0, _rows.Count - 1);
-                    _insertTexts.Remove(unit);
-                    if (submitByEnter)
-                    {
-                        evt.Use();
-                        GUI.FocusControl(null);
-                    }
-                }
-
-                string label = $"[{unit.Id}]  {(string.IsNullOrEmpty(unit.Name) ? "（未命名）" : unit.Name)}";
-                GUI.Label(new Rect(insertRect.xMax + 8f, itemRect.y + 4, itemRect.width - insertRect.width - 8f, itemRect.height - 4),
+                string bindingLabel = unitData == null
+                    ? "(未绑定 UnitData)"
+                    : $"[{unitData.Id}] {unitData.Name}";
+                string label = $"{entry.DisplayName}  {bindingLabel}";
+                GUI.Label(new Rect(itemRect.x + 8f, itemRect.y + 4f, itemRect.width - 16f, itemRect.height - 4f),
                     label, isSelected ? EditorStyles.whiteLabel : EditorStyles.label);
 
-                if (evt.type == EventType.MouseDown && itemRect.Contains(evt.mousePosition) && !insertRect.Contains(evt.mousePosition))
+                if (evt.type == EventType.MouseDown && itemRect.Contains(evt.mousePosition))
                 {
                     _selectedIndex = i;
-                    GUI.FocusControl(null);
                     evt.Use();
                     Repaint();
                 }
@@ -324,8 +394,6 @@ namespace CrystalMagic.Editor.Data
             }
 
             EditorGUILayout.EndScrollView();
-            if (moveRow != null)
-                MoveRowToInsertIndex(_rows.IndexOf(moveRow), moveToIndex);
             EditorGUILayout.EndVertical();
         }
 
@@ -342,25 +410,41 @@ namespace CrystalMagic.Editor.Data
         {
             EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
 
-            if (_selectedIndex < 0 || _selectedIndex >= _rows.Count)
+            if (!TryGetSelectedPrefabEntry(out UnitPrefabEntry entry))
             {
                 GUILayout.FlexibleSpace();
-                GUILayout.Label("← 从左侧选择一个单位", EditorStyles.centeredGreyMiniLabel);
+                GUILayout.Label("← 从左侧选择一个 Prefab", EditorStyles.centeredGreyMiniLabel);
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.EndVertical();
                 return;
             }
 
-            UnitData unit = _rows[_selectedIndex];
+            UnitData unit = ResolveUnitData(entry);
 
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            GUILayout.Label($"[{unit.Id}]  {unit.Name}", EditorStyles.boldLabel);
+            GUILayout.Label(entry.DisplayName, EditorStyles.boldLabel);
             EditorGUILayout.EndHorizontal();
+
+            _detailScrollPos = EditorGUILayout.BeginScrollView(_detailScrollPos);
+
+            DrawBindingPanel(entry, ref unit);
+
+            if (unit == null)
+            {
+                EditorGUILayout.HelpBox("当前 prefab 还没有匹配到 UnitData。会按 PrefabPath 自动绑定；如果还没有对应数据，可以直接创建一条。", MessageType.Info);
+                EditorGUILayout.EndScrollView();
+                EditorGUILayout.EndVertical();
+                return;
+            }
 
             GUILayout.Space(4);
             EditorGUILayout.BeginHorizontal();
             GUILayout.Space(8);
-            int newTab = GUILayout.Toolbar(_selectedTab, TabNames, GUILayout.Width(180), GUILayout.Height(24));
+            string[] tabs = HasAuthoring<UnitStateMachineAuthoring>(entry)
+                ? TabNames
+                : new[] { TabNames[0] };
+            _selectedTab = Mathf.Clamp(_selectedTab, 0, tabs.Length - 1);
+            int newTab = GUILayout.Toolbar(_selectedTab, tabs, GUILayout.Width(180), GUILayout.Height(24));
             if (newTab != _selectedTab) { _selectedTab = newTab; GUI.FocusControl(null); Repaint(); }
             EditorGUILayout.EndHorizontal();
 
@@ -369,13 +453,12 @@ namespace CrystalMagic.Editor.Data
             EditorGUI.DrawRect(lineRect, SectionLine);
             GUILayout.Space(4);
 
-            _detailScrollPos = EditorGUILayout.BeginScrollView(_detailScrollPos);
             float prev = EditorGUIUtility.labelWidth;
             EditorGUIUtility.labelWidth = LabelWidth;
 
             switch (_selectedTab)
             {
-                case 0: DrawAttributePanel(unit); break;
+                case 0: DrawAttributePanel(entry, unit); break;
                 case 1: DrawAIPanel(unit);        break;
             }
 
@@ -384,10 +467,93 @@ namespace CrystalMagic.Editor.Data
             EditorGUILayout.EndVertical();
         }
 
+        private void DrawBindingPanel(UnitPrefabEntry entry, ref UnitData unit)
+        {
+            DrawSectionHeader("Prefab 绑定");
+
+            using (new EditorGUI.DisabledScope(true))
+                EditorGUILayout.TextField("Prefab", entry.AssetPath);
+
+            if (unit != null)
+            {
+                EditorGUILayout.LabelField("绑定方式", "按 PrefabPath 自动匹配");
+                EditorGUILayout.LabelField("当前数据", $"[{unit.Id}] {unit.Name}");
+            }
+            else
+            {
+                EditorGUILayout.HelpBox("还没有与这个 PrefabPath 对应的 UnitData。", MessageType.Info);
+            }
+
+            if (unit == null && GUILayout.Button("为当前 Prefab 创建 UnitData", GUILayout.Width(180)))
+            {
+                unit = CreateUnitDataForPrefab(entry);
+            }
+        }
+
+        private void DrawNpcInteractableSection(UnitPrefabEntry entry)
+        {
+            NPCInteractableAuthoring npcAuthoring = entry.Prefab.GetComponent<NPCInteractableAuthoring>();
+            if (npcAuthoring == null)
+            {
+                return;
+            }
+
+            GUILayout.Space(8);
+            DrawSectionHeader("NPC 交互");
+
+            List<NPCData> npcRows = EditorComponents.Data.FindAll<NPCData>(_ => true)
+                .OrderBy(row => row.Id)
+                .ToList();
+
+            List<string> options = new() { "未绑定" };
+            int selectedIndex = 0;
+            for (int i = 0; i < npcRows.Count; i++)
+            {
+                NPCData row = npcRows[i];
+                options.Add($"[{row.Id}] {row.DisplayName} ({row.NPC})");
+                if (row.Id == npcAuthoring.NpcDataId)
+                {
+                    selectedIndex = i + 1;
+                }
+            }
+
+            int newIndex = EditorGUILayout.Popup("NPCData", selectedIndex, options.ToArray());
+            int newNpcId = newIndex == 0 ? 0 : npcRows[newIndex - 1].Id;
+            float newRange = EditorGUILayout.FloatField("交互范围", npcAuthoring.InteractRange);
+
+            if (newNpcId != npcAuthoring.NpcDataId || !Mathf.Approximately(newRange, npcAuthoring.InteractRange))
+            {
+                npcAuthoring.NpcDataId = newNpcId;
+                npcAuthoring.InteractRange = newRange;
+                MarkPrefabDirty(npcAuthoring);
+                _isDirty = true;
+            }
+        }
+
+        private void DrawFactionSection(UnitPrefabEntry entry)
+        {
+            UnitFactionAuthoring factionAuthoring = entry.Prefab.GetComponent<UnitFactionAuthoring>();
+            if (factionAuthoring == null)
+            {
+                return;
+            }
+
+            GUILayout.Space(8);
+            DrawSectionHeader("Faction");
+
+            UnitFactionType newFaction = (UnitFactionType)EditorGUILayout.EnumPopup("阵营", factionAuthoring.Faction);
+            if (newFaction != factionAuthoring.Faction)
+            {
+                factionAuthoring.Faction = newFaction;
+                MarkPrefabDirty(factionAuthoring);
+                _isDirty = true;
+            }
+        }
+
         // ══════════════════════════════════════════════
         //  属性面板
         // ══════════════════════════════════════════════
-        private void DrawAttributePanel(UnitData unit)
+        private void DrawAttributePanel(UnitPrefabEntry entry, UnitData unit)
         {
             EditorGUI.BeginChangeCheck();
 
@@ -398,26 +564,49 @@ namespace CrystalMagic.Editor.Data
             EditorGUILayout.LabelField("描述");
             unit.Description = EditorGUILayout.TextArea(unit.Description ?? "",
                 GUILayout.MinHeight(48), GUILayout.MaxHeight(80));
-            unit.PrefabPath  = EditorGUILayout.TextField("预制体路径", unit.PrefabPath ?? "");
+            using (new EditorGUI.DisabledScope(true))
+                EditorGUILayout.TextField("预制体路径", entry.AssetPath);
 
-            GUILayout.Space(8);
-            DrawSectionHeader("Move（移动）");
-            unit.BaseMoveSpeed       = EditorGUILayout.FloatField("最大速度",       unit.BaseMoveSpeed);
-            unit.BaseMaxAcceleration = EditorGUILayout.FloatField("最大加速度",     unit.BaseMaxAcceleration);
+            if (unit.PrefabPath != entry.AssetPath)
+            {
+                unit.PrefabPath = entry.AssetPath;
+                _isDirty = true;
+            }
 
-            GUILayout.Space(8);
-            DrawSectionHeader("Vitality（生存）");
-            unit.BaseMaxHealth   = EditorGUILayout.FloatField("最大生命值", unit.BaseMaxHealth);
-            unit.BaseDefense     = EditorGUILayout.FloatField("防御力",     unit.BaseDefense);
+            DrawFactionSection(entry);
 
-            GUILayout.Space(8);
-            DrawSectionHeader("Attack（攻击）");
-            unit.BaseAttackPower = EditorGUILayout.FloatField("攻击力",     unit.BaseAttackPower);
-            unit.BaseSkillRange  = EditorGUILayout.FloatField("技能范围",   unit.BaseSkillRange);
+            if (HasAuthoring<UnitMoveAuthoring>(entry))
+            {
+                GUILayout.Space(8);
+                DrawSectionHeader("Move（移动）");
+                unit.BaseMoveSpeed       = EditorGUILayout.FloatField("最大速度",       unit.BaseMoveSpeed);
+                unit.BaseMaxAcceleration = EditorGUILayout.FloatField("最大加速度",     unit.BaseMaxAcceleration);
+            }
 
-            GUILayout.Space(8);
-            DrawSectionHeader("Mana（法力）");
-            unit.BaseMaxMp       = EditorGUILayout.FloatField("最大魔力值", unit.BaseMaxMp);
+            if (HasAuthoring<UnitVitalityAuthoring>(entry))
+            {
+                GUILayout.Space(8);
+                DrawSectionHeader("Vitality（生存）");
+                unit.BaseMaxHealth = EditorGUILayout.FloatField("最大生命值", unit.BaseMaxHealth);
+                unit.BaseDefense   = EditorGUILayout.FloatField("防御力",     unit.BaseDefense);
+            }
+
+            if (HasAuthoring<UnitAttackAuthoring>(entry))
+            {
+                GUILayout.Space(8);
+                DrawSectionHeader("Attack（攻击）");
+                unit.BaseAttackPower = EditorGUILayout.FloatField("攻击力",   unit.BaseAttackPower);
+                unit.BaseSkillRange  = EditorGUILayout.FloatField("技能范围", unit.BaseSkillRange);
+            }
+
+            if (HasAuthoring<UnitManaAuthoring>(entry))
+            {
+                GUILayout.Space(8);
+                DrawSectionHeader("Mana（法力）");
+                unit.BaseMaxMp = EditorGUILayout.FloatField("最大魔力值", unit.BaseMaxMp);
+            }
+
+            DrawNpcInteractableSection(entry);
 
             if (EditorGUI.EndChangeCheck()) _isDirty = true;
         }

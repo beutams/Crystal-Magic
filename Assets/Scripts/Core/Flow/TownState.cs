@@ -6,9 +6,12 @@ namespace CrystalMagic.Core {
     /// </summary>
     public class TownState : GameState
     {
+        public const string SceneName = "TownScene";
+
         public override void OnEnter()
         {
             Debug.Log("[TownState] Entered Town");
+            SaveDataComponent.Instance?.SetCurrentLocation(SaveAreaType.Town);
             
             // 可以在这里访问 StateData（如果是从读档进入）
             if (StateData is LoadGameContext context)
@@ -33,11 +36,18 @@ namespace CrystalMagic.Core {
         {
             TransitionData transData = new TransitionData
             {
-                TargetSceneName = "Dungeon",
+                TargetSceneName = DungeonState.SceneName,
                 TargetStateType = typeof(DungeonState),
-                TargetStateData = data
+                TargetStateData = data ?? SaveDataComponent.Instance?.CreateLoadGameContext(SaveAreaType.Dungeon),
+                ForceReloadTargetScene = true,
             };
             GameFlowComponent.Instance.SetState<TransitionState>(transData);
+        }
+
+        public void GoToTrainingGround(object data = null)
+        {
+            object targetData = data ?? SaveDataComponent.Instance?.CreateLoadGameContext(SaveAreaType.Training);
+            GameFlowComponent.Instance.SetState<TransitionState>(TrainingState.CreateEnterTransitionData(targetData));
         }
 
         /// <summary>

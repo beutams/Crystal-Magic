@@ -1,21 +1,18 @@
-using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using Unity.Entities;
 using UnityEngine;
 
 public class UnitManaAuthoring : MonoBehaviour
 {
-    public string UnitName;
-
     class UnitManaBaker : Baker<UnitManaAuthoring>
     {
         public override void Bake(UnitManaAuthoring authoring)
         {
             float baseMp = 50f;
-            if (!string.IsNullOrEmpty(authoring.UnitName))
+            UnitData data = UnitAuthoringUtility.ResolveUnitData(authoring);
+            if (data != null)
             {
-                UnitData data = EditorComponents.Data.Find<UnitData>(r => r.Name == authoring.UnitName);
-                if (data != null) baseMp = data.BaseMaxMp;
+                baseMp = data.BaseMaxMp;
             }
 
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
@@ -30,9 +27,6 @@ public class UnitManaAuthoring : MonoBehaviour
     }
 }
 
-/// <summary>
-/// 法力组件——有此组件即为有蓝量的单位。
-/// </summary>
 public struct UnitManaComponent : IComponentData
 {
     public float BaseMaxMp;
@@ -42,3 +36,7 @@ public struct UnitManaComponent : IComponentData
 
     public float RealMaxMp => BaseMaxMp * MpFactor + MpBonus;
 }
+
+/// <summary>
+/// 娉曞姏缁勪欢鈥斺€旀湁姝ょ粍浠跺嵆涓烘湁钃濋噺鐨勫崟浣嶃€?
+/// </summary>

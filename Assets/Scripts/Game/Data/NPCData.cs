@@ -131,6 +131,8 @@ namespace CrystalMagic.Game.Data
         public const string Select = "Select";
         public const string OpenUI = "OpenUI";
         public const string Move = "Move";
+        public const string EnterDungeon = "EnterDungeon";
+        public const string EnterTrainingGround = "EnterTrainingGround";
     }
 
     [Serializable]
@@ -177,6 +179,26 @@ namespace CrystalMagic.Game.Data
     }
 
     [Serializable]
+    public sealed class NPCEnterDungeonInteractionNodeData : NPCInteractionNodeData
+    {
+        public int DungeonFloor = 1;
+
+        public NPCEnterDungeonInteractionNodeData()
+        {
+            Type = NPCInteractionNodeTypes.EnterDungeon;
+        }
+    }
+
+    [Serializable]
+    public sealed class NPCEnterTrainingGroundInteractionNodeData : NPCInteractionNodeData
+    {
+        public NPCEnterTrainingGroundInteractionNodeData()
+        {
+            Type = NPCInteractionNodeTypes.EnterTrainingGround;
+        }
+    }
+
+    [Serializable]
     public sealed class NPCSelectInteractionNodeData : NPCInteractionNodeData
     {
         public List<NPCSelectOptionData> Options = new();
@@ -215,6 +237,8 @@ namespace CrystalMagic.Game.Data
             NPCInteractionNodeTypes.Select,
             NPCInteractionNodeTypes.OpenUI,
             NPCInteractionNodeTypes.Move,
+            NPCInteractionNodeTypes.EnterDungeon,
+            NPCInteractionNodeTypes.EnterTrainingGround,
         };
 
         private static readonly Dictionary<string, Type> s_typeMap = new(StringComparer.Ordinal)
@@ -223,6 +247,8 @@ namespace CrystalMagic.Game.Data
             { NPCInteractionNodeTypes.Select, typeof(NPCSelectInteractionNodeData) },
             { NPCInteractionNodeTypes.OpenUI, typeof(NPCOpenUIInteractionNodeData) },
             { NPCInteractionNodeTypes.Move, typeof(NPCMoveInteractionNodeData) },
+            { NPCInteractionNodeTypes.EnterDungeon, typeof(NPCEnterDungeonInteractionNodeData) },
+            { NPCInteractionNodeTypes.EnterTrainingGround, typeof(NPCEnterTrainingGroundInteractionNodeData) },
         };
 
         public static IReadOnlyList<string> TypeOrder => s_typeOrder;
@@ -240,6 +266,8 @@ namespace CrystalMagic.Game.Data
                 NPCInteractionNodeTypes.Select => "Select",
                 NPCInteractionNodeTypes.OpenUI => "Open UI",
                 NPCInteractionNodeTypes.Move => "Move",
+                NPCInteractionNodeTypes.EnterDungeon => "Enter Dungeon",
+                NPCInteractionNodeTypes.EnterTrainingGround => "Enter Training Ground",
                 _ => typeName ?? "Unknown",
             };
         }
@@ -293,6 +321,8 @@ namespace CrystalMagic.Game.Data
                 NPCSelectInteractionNodeData select => $"{GetDisplayName(select.Type)} | {select.Options?.Count ?? 0} option(s)",
                 NPCOpenUIInteractionNodeData openUI => $"{GetDisplayName(openUI.Type)} | {(string.IsNullOrWhiteSpace(openUI.UIName) ? "Empty" : openUI.UIName)}",
                 NPCMoveInteractionNodeData move => $"{GetDisplayName(move.Type)} | {(string.IsNullOrWhiteSpace(move.TargetMarker) ? "Empty" : move.TargetMarker)}",
+                NPCEnterDungeonInteractionNodeData enterDungeon => $"{GetDisplayName(enterDungeon.Type)} | Floor {Math.Max(1, enterDungeon.DungeonFloor)}",
+                NPCEnterTrainingGroundInteractionNodeData enterTrainingGround => GetDisplayName(enterTrainingGround.Type),
                 _ => GetDisplayName(ResolveTypeName(node)),
             };
         }

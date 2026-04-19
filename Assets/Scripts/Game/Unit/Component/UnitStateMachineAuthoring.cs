@@ -1,45 +1,40 @@
 using System.Collections.Generic;
+using CrystalMagic.Game.Data;
 using Unity.Entities;
 using UnityEngine;
 
 public class UnitStateMachineAuthoring : MonoBehaviour
 {
-    [Tooltip("与 UnitDataTable.json 中 Name 字段一致，用于运行时查找状态机配置")]
-    public string UnitName;
+/*
+    [Tooltip("涓?UnitDataTable.json 涓?Name 瀛楁涓€鑷达紝鐢ㄤ簬杩愯鏃舵煡鎵剧姸鎬佹満閰嶇疆")]
 
+*/
     class UnitStateMachineBaker : Baker<UnitStateMachineAuthoring>
     {
         public override void Bake(UnitStateMachineAuthoring authoring)
         {
+            UnitData data = UnitAuthoringUtility.ResolveUnitData(authoring);
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             AddComponentObject(entity, new UnitStateMachineComponent
             {
-                UnitName = authoring.UnitName,
+                UnitDataId = data?.Id ?? 0,
+                UnitName = data?.Name ?? authoring.transform.root.name,
             });
         }
     }
 }
 
-/// <summary>
-/// 单位状态机托管组件（Managed IComponentData）
-/// currentState 为 null 表示尚未初始化，系统首帧会调用 Builder 构建。
-/// </summary>
 public class UnitStateMachineComponent : IComponentData
 {
-    /// <summary>对应 UnitData.Name，运行时初始化时用于查表</summary>
+    public int UnitDataId;
     public string UnitName;
-
-    /// <summary>当前执行的状态实例</summary>
     [System.NonSerialized] public AUnitState CurrentState;
-    /// <summary>上一个状态（可用于混合/回退）</summary>
     [System.NonSerialized] public AUnitState PreviousState;
-
-    /// <summary>Inspector 显示用（字段，由系统在切换时写入）</summary>
-    public string CurrentStateName  = "None";
+    public string CurrentStateName = "None";
     public string PreviousStateName = "None";
-    /// <summary>当前状态已持续的秒数</summary>
     public float StateTime;
-
-    /// <summary>类型名 → 实例 的缓存，供外部通过名称查找状态</summary>
     [System.NonSerialized] public Dictionary<string, AUnitState> StateInstances;
 }
+
+/// <summary>
+/// 鍗曚綅鐘舵€佹満鎵樼缁勪欢锛圡anaged IComponentData锛?/// currentState 涓?null 琛ㄧず灏氭湭鍒濆鍖栵紝绯荤粺棣栧抚浼氳皟鐢?Builder 鏋勫缓銆?/// </summary>

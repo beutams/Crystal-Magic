@@ -1,5 +1,3 @@
-using System;
-using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -8,144 +6,6 @@ using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using System.Collections.Generic;
 
-public struct NPCInteractionState : IComponentData
-{
-    public Entity CurrentTarget;
-}
-
-public struct NPCInteractionRequest : IComponentData
-{
-    public Entity Target;
-    public byte HasRequest;
-}
-
-[UpdateAfter(typeof(UnitMoveSystem))]
-partial struct NPCInteractPromptSystem : ISystem
-{
-    public void OnCreate(ref SystemState state)
-    {
-        state.RequireForUpdate<PlayerTag>();
-
-        Entity singletonEntity = state.EntityManager.CreateEntity();
-        state.EntityManager.AddComponentData(singletonEntity, new NPCInteractionState
-        {
-            CurrentTarget = Entity.Null,
-        });
-        state.EntityManager.AddComponentData(singletonEntity, new NPCInteractionRequest
-        {
-            Target = Entity.Null,
-            HasRequest = 0,
-        });
-    }
-
-    public void OnUpdate(ref SystemState state)
-    {
-        float3 playerPosition = float3.zero;
-        bool hasPlayer = false;
-
-        foreach ((RefRO<PlayerTag> _, RefRO<LocalTransform> transform) in
-            SystemAPI.Query<RefRO<PlayerTag>, RefRO<LocalTransform>>())
-        {
-            playerPosition = transform.ValueRO.Position;
-            hasPlayer = true;
-            break;
-        }
-
-        Entity nearestNpc = Entity.Null;
-        float nearestDistanceSq = float.MaxValue;
-
-        foreach ((RefRO<NPCTag> _, RefRO<NPCInteractable> interactable, RefRO<LocalTransform> transform, Entity entity) in
-            SystemAPI.Query<RefRO<NPCTag>, RefRO<NPCInteractable>, RefRO<LocalTransform>>().WithEntityAccess())
-        {
-            if (hasPlayer)
-            {
-                float distanceSq = math.distancesq(playerPosition, transform.ValueRO.Position);
-                if (distanceSq <= interactable.ValueRO.interactRangeSq && distanceSq < nearestDistanceSq)
-                {
-                    nearestDistanceSq = distanceSq;
-                    nearestNpc = entity;
-                }
-            }
-
-            SetPromptVisible(state.EntityManager, interactable.ValueRO, shouldShow: false);
-        }
-
-        if (nearestNpc != Entity.Null && state.EntityManager.HasComponent<NPCInteractable>(nearestNpc))
-        {
-            NPCInteractable interactable = state.EntityManager.GetComponentData<NPCInteractable>(nearestNpc);
-            SetPromptVisible(state.EntityManager, interactable, shouldShow: true);
-        }
-
-        RefRW<NPCInteractionState> interactionState = SystemAPI.GetSingletonRW<NPCInteractionState>();
-        interactionState.ValueRW.CurrentTarget = nearestNpc;
-    }
-
-    private static void SetPromptVisible(EntityManager entityManager, NPCInteractable interactable, bool shouldShow)
-    {
-        if (interactable.interact == Entity.Null)
-            return;
-
-        if (!entityManager.HasComponent<LocalTransform>(interactable.interact))
-            return;
-
-        LocalTransform interactTransform = entityManager.GetComponentData<LocalTransform>(interactable.interact);
-        interactTransform.Scale = shouldShow ? interactable.promptVisibleScale : 0f;
-        entityManager.SetComponentData(interactable.interact, interactTransform);
-    }
-}
-
-[UpdateAfter(typeof(NPCInteractPromptSystem))]
-partial struct NPCInteractInputSystem : ISystem
-{
-    private NativeReference<bool> _interactRequested;
-    private bool _subscribed;
-
-    public void OnCreate(ref SystemState state)
-    {
-        state.RequireForUpdate<NPCInteractionState>();
-        _interactRequested = new NativeReference<bool>(false, Allocator.Persistent);
-    }
-
-    public void OnDestroy(ref SystemState state)
-    {
-        if (_subscribed && InputComponent.Instance != null)
-        {
-            InputComponent.Instance.OnInteract -= HandleInteract;
-        }
-
-        if (_interactRequested.IsCreated)
-        {
-            _interactRequested.Dispose();
-        }
-    }
-
-    public void OnUpdate(ref SystemState state)
-    {
-        if (!_subscribed && InputComponent.Instance != null)
-        {
-            InputComponent.Instance.OnInteract += HandleInteract;
-            _subscribed = true;
-        }
-
-        if (!_interactRequested.Value)
-            return;
-
-        _interactRequested.Value = false;
-
-        Entity target = SystemAPI.GetSingleton<NPCInteractionState>().CurrentTarget;
-        if (target == Entity.Null)
-            return;
-
-        RefRW<NPCInteractionRequest> request = SystemAPI.GetSingletonRW<NPCInteractionRequest>();
-        request.ValueRW.Target = target;
-        request.ValueRW.HasRequest = 1;
-    }
-
-    private void HandleInteract()
-    {
-        _interactRequested.Value = true;
-    }
-}
 
 [UpdateAfter(typeof(NPCInteractInputSystem))]
 partial class NPCInteractionConsumeSystem : SystemBase
@@ -211,17 +71,16 @@ partial class NPCInteractionConsumeSystem : SystemBase
         }
 
         NPCInteractable interactable = EntityManager.GetComponentData<NPCInteractable>(target);
-        if (interactable.NPC.Length == 0)
+        if (interactable.NpcDataId <= 0)
         {
-            Debug.LogWarning("[NPCInteraction] NPCInteractable is missing NPC.");
+            Debug.LogWarning("[NPCInteraction] NPCInteractable is missing NpcDataId.");
             return;
         }
 
-        string npcName = interactable.NPC.ToString();
-        NPCData npcData = DataComponent.Instance?.Find<NPCData>(data => string.Equals(data.NPC, npcName, StringComparison.Ordinal));
+        NPCData npcData = DataComponent.Instance?.Get<NPCData>(interactable.NpcDataId);
         if (npcData == null)
         {
-            Debug.LogWarning($"[NPCInteraction] NPCData not found for NPC '{npcName}'.");
+            Debug.LogWarning($"[NPCInteraction] NPCData not found for Id '{interactable.NpcDataId}'.");
             return;
         }
 
@@ -319,6 +178,14 @@ partial class NPCInteractionConsumeSystem : SystemBase
             }
 
             _session.CurrentRunner.Update(_session, deltaTime);
+            if (_session.ShouldTerminateInteraction)
+            {
+                _session.CurrentRunner.Exit(_session);
+                _session.CurrentRunner = null;
+                FinishSession(wasCancelled: false);
+                return;
+            }
+
             if (!_session.CurrentRunner.IsCompleted(_session))
             {
                 return;
@@ -341,6 +208,8 @@ partial class NPCInteractionConsumeSystem : SystemBase
             NPCSelectInteractionNodeData select => new NPCSelectInteractionNodeRunner(select),
             NPCOpenUIInteractionNodeData openUI => new NPCOpenUIInteractionNodeRunner(openUI),
             NPCMoveInteractionNodeData move => new NPCMoveInteractionNodeRunner(move),
+            NPCEnterDungeonInteractionNodeData enterDungeon => new NPCEnterDungeonInteractionNodeRunner(enterDungeon),
+            NPCEnterTrainingGroundInteractionNodeData enterTrainingGround => new NPCEnterTrainingGroundInteractionNodeRunner(enterTrainingGround),
             _ => null,
         };
     }
@@ -383,6 +252,7 @@ partial class NPCInteractionConsumeSystem : SystemBase
         public string SelectedNextNodeGuid { get; set; }
         public NPCInteractionNodeRunner CurrentRunner { get; set; }
         public bool IsActive { get; private set; }
+        public bool ShouldTerminateInteraction { get; private set; }
 
         public NPCInteractionNodeData GetCurrentNode()
         {
@@ -404,6 +274,11 @@ partial class NPCInteractionConsumeSystem : SystemBase
             CurrentRunner?.Cancel(this);
             CurrentRunner = null;
             IsActive = false;
+        }
+
+        public void RequestTerminateInteraction()
+        {
+            ShouldTerminateInteraction = true;
         }
     }
 
@@ -531,6 +406,76 @@ partial class NPCInteractionConsumeSystem : SystemBase
         }
     }
 
+    private sealed class NPCEnterDungeonInteractionNodeRunner : NPCInteractionNodeRunner
+    {
+        private readonly NPCEnterDungeonInteractionNodeData _node;
+        private bool _completed;
+
+        public NPCEnterDungeonInteractionNodeRunner(NPCEnterDungeonInteractionNodeData node)
+        {
+            _node = node;
+        }
+
+        public override void Enter(NPCInteractionSession session)
+        {
+            session.RequestTerminateInteraction();
+            _completed = true;
+
+            if (GameFlowComponent.Instance == null)
+            {
+                Debug.LogWarning("[NPCInteraction] GameFlowComponent is not available for EnterDungeon node.");
+                return;
+            }
+
+            LoadGameContext context = SaveDataComponent.Instance?.CreateLoadGameContext(
+                SaveAreaType.Dungeon,
+                Mathf.Max(1, _node.DungeonFloor));
+
+            GameFlowComponent.Instance.SetState<TransitionState>(new TransitionData
+            {
+                TargetSceneName = DungeonState.SceneName,
+                TargetStateType = typeof(DungeonState),
+                TargetStateData = context,
+                ForceReloadTargetScene = true,
+            });
+        }
+
+        public override bool IsCompleted(NPCInteractionSession session)
+        {
+            return _completed;
+        }
+    }
+
+    private sealed class NPCEnterTrainingGroundInteractionNodeRunner : NPCInteractionNodeRunner
+    {
+        private bool _completed;
+
+        public NPCEnterTrainingGroundInteractionNodeRunner(NPCEnterTrainingGroundInteractionNodeData node)
+        {
+        }
+
+        public override void Enter(NPCInteractionSession session)
+        {
+            session.RequestTerminateInteraction();
+            _completed = true;
+
+            if (GameFlowComponent.Instance == null)
+            {
+                Debug.LogWarning("[NPCInteraction] GameFlowComponent is not available for EnterTrainingGround node.");
+                return;
+            }
+
+            LoadGameContext context = SaveDataComponent.Instance?.CreateLoadGameContext(SaveAreaType.Training);
+
+            GameFlowComponent.Instance.SetState<TransitionState>(TrainingState.CreateEnterTransitionData(context));
+        }
+
+        public override bool IsCompleted(NPCInteractionSession session)
+        {
+            return _completed;
+        }
+    }
+
     private static string ResolveNextNodeGuid(NPCInteractionSession session, NPCInteractionNodeData currentNode, string selectedNextNodeGuid)
     {
         if (!string.IsNullOrWhiteSpace(selectedNextNodeGuid))
@@ -597,71 +542,3 @@ partial class NPCInteractionConsumeSystem : SystemBase
     }
 }
 
-public readonly struct NPCInteractionStartedEvent : IGameEvent
-{
-    public NPCInteractionStartedEvent(Entity target, NPCData npcData, NPCInteractionData interaction)
-    {
-        Target = target;
-        NpcData = npcData;
-        Interaction = interaction;
-    }
-
-    public Entity Target { get; }
-    public NPCData NpcData { get; }
-    public NPCInteractionData Interaction { get; }
-}
-
-public readonly struct NPCInteractionNodeStartedEvent : IGameEvent
-{
-    public NPCInteractionNodeStartedEvent(Entity target, NPCData npcData, NPCInteractionData interaction, NPCInteractionNodeData node)
-    {
-        Target = target;
-        NpcData = npcData;
-        Interaction = interaction;
-        Node = node;
-    }
-
-    public Entity Target { get; }
-    public NPCData NpcData { get; }
-    public NPCInteractionData Interaction { get; }
-    public NPCInteractionNodeData Node { get; }
-}
-
-public readonly struct NPCInteractionSelectRequestedEvent : IGameEvent
-{
-    public NPCInteractionSelectRequestedEvent(
-        Entity target,
-        NPCData npcData,
-        NPCInteractionData interaction,
-        NPCSelectInteractionNodeData node,
-        IReadOnlyList<NPCSelectOptionData> options)
-    {
-        Target = target;
-        NpcData = npcData;
-        Interaction = interaction;
-        Node = node;
-        Options = options;
-    }
-
-    public Entity Target { get; }
-    public NPCData NpcData { get; }
-    public NPCInteractionData Interaction { get; }
-    public NPCSelectInteractionNodeData Node { get; }
-    public IReadOnlyList<NPCSelectOptionData> Options { get; }
-}
-
-public readonly struct NPCInteractionFinishedEvent : IGameEvent
-{
-    public NPCInteractionFinishedEvent(Entity target, NPCData npcData, NPCInteractionData interaction, bool wasCancelled)
-    {
-        Target = target;
-        NpcData = npcData;
-        Interaction = interaction;
-        WasCancelled = wasCancelled;
-    }
-
-    public Entity Target { get; }
-    public NPCData NpcData { get; }
-    public NPCInteractionData Interaction { get; }
-    public bool WasCancelled { get; }
-}

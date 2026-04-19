@@ -17,6 +17,7 @@ namespace CrystalMagic.Core {
         public event Action OnMousePress;
         public event Action OnInteract;
         public event Action OnInventory;
+        public event Action OnEscape;
         #endregion
 
         #region 调用
@@ -63,6 +64,7 @@ namespace CrystalMagic.Core {
         {
             UpdateWorldPosition();
             UpdateMousePress();
+            UpdateEscape();
         }
         private void UpdateWorldPosition()
         {
@@ -88,6 +90,14 @@ namespace CrystalMagic.Core {
                 return;
 
             OnMousePress?.Invoke();
+        }
+
+        private void UpdateEscape()
+        {
+            if (Keyboard.current == null || !Keyboard.current.escapeKey.wasPressedThisFrame)
+                return;
+
+            OnEscape?.Invoke();
         }
     }
 }

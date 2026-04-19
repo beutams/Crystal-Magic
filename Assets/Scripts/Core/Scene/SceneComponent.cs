@@ -1,21 +1,16 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Unity.Scenes;
+using System.Collections.Generic;
 
 namespace CrystalMagic.Core {
-    /// <summary>
-    /// 场景路由组件
-    /// 职责：场景加�?卸载
-    /// </summary>
+
     public class SceneComponent : GameComponent<SceneComponent>
     {
         private string _currentSceneName;
 
         public override int Priority => 20;
 
-        /// <summary>
-        /// 同步加载场景
-        /// </summary>
         public void LoadScene(string sceneName)
         {
             if (_currentSceneName == sceneName)
@@ -29,12 +24,9 @@ namespace CrystalMagic.Core {
             _currentSceneName = sceneName;
         }
 
-        /// <summary>
-        /// 异步加载场景协程
-        /// </summary>
-        public System.Collections.IEnumerator LoadSceneAsyncCoroutine(string sceneName, System.Action onComplete = null)
+        public System.Collections.IEnumerator LoadSceneAsyncCoroutine(string sceneName, System.Action onComplete = null, bool forceReload = false)
         {
-            if (_currentSceneName == sceneName)
+            if (!forceReload && _currentSceneName == sceneName)
             {
                 Debug.LogWarning($"Scene '{sceneName}' is already loaded");
                 onComplete?.Invoke();
@@ -52,6 +44,33 @@ namespace CrystalMagic.Core {
 
             _currentSceneName = sceneName;
             Debug.Log($"[SceneComponent] Scene loaded: {sceneName}");
+            onComplete?.Invoke();
+        }
+
+        public System.Collections.IEnumerator LoadAdditiveSceneAsyncCoroutine(string sceneName, System.Action onComplete = null)
+        {
+            if (string.IsNullOrWhiteSpace(sceneName))
+            {
+                onComplete?.Invoke();
+                yield break;
+            }
+
+            Scene loadedScene = SceneManager.GetSceneByName(sceneName);
+            if (loadedScene.IsValid() && loadedScene.isLoaded)
+            {
+                Debug.LogWarning($"[SceneComponent] Additive scene '{sceneName}' is already loaded");
+                onComplete?.Invoke();
+                yield break;
+            }
+
+            Debug.Log($"[SceneComponent] Loading additive scene async: {sceneName}");
+            AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
+            while (!asyncLoad.isDone)
+            {
+                yield return null;
+            }
+
+            Debug.Log($"[SceneComponent] Additive scene loaded: {sceneName}");
             onComplete?.Invoke();
         }
 
@@ -92,6 +111,36 @@ namespace CrystalMagic.Core {
         {
             SubScene targetSubScene = FindSubScene(subSceneName);
             return targetSubScene != null && targetSubScene.IsLoaded;
+        }
+
+        public void SetSubScenesActive(IReadOnlyList<string> activeSubSceneNames)
+        {
+            HashSet<string> activeNames = new();
+            if (activeSubSceneNames != null)
+            {
+                for (int i = 0; i < activeSubSceneNames.Count; i++)
+                {
+                    string subSceneName = activeSubSceneNames[i];
+                    if (!string.IsNullOrWhiteSpace(subSceneName))
+                    {
+                        activeNames.Add(subSceneName);
+                    }
+                }
+            }
+
+            SubScene[] subScenes = Object.FindObjectsOfType<SubScene>(true);
+            for (int i = 0; i < subScenes.Length; i++)
+            {
+                SubScene subScene = subScenes[i];
+                if (subScene == null || subScene.gameObject == null)
+                    continue;
+
+                bool shouldBeActive = activeNames.Contains(subScene.name) || activeNames.Contains(subScene.gameObject.name);
+                if (subScene.gameObject.activeSelf != shouldBeActive)
+                {
+                    subScene.gameObject.SetActive(shouldBeActive);
+                }
+            }
         }
 
         public string GetCurrentSceneName() => _currentSceneName;

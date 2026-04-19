@@ -1,11 +1,22 @@
-using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 
 public class NPCInteractableAuthoring : MonoBehaviour
 {
-    public string NPC;
-    public float interactRange = 2f;
+    [SerializeField, HideInInspector] private int _npcDataId;
+    [SerializeField, HideInInspector] private float _interactRange = 2f;
+
+    public int NpcDataId
+    {
+        get => _npcDataId;
+        set => _npcDataId = value;
+    }
+
+    public float InteractRange
+    {
+        get => _interactRange;
+        set => _interactRange = value;
+    }
 
     class NPCInteractableBaker : Baker<NPCInteractableAuthoring>
     {
@@ -18,17 +29,18 @@ public class NPCInteractableAuthoring : MonoBehaviour
                 : Entity.Null;
             AddComponent(entity, new NPCInteractable
             {
-                NPC = new FixedString64Bytes(authoring.NPC ?? string.Empty),
+                NpcDataId = authoring.NpcDataId,
                 interact = interactEntity,
-                interactRangeSq = authoring.interactRange * authoring.interactRange,
+                interactRangeSq = authoring.InteractRange * authoring.InteractRange,
                 promptVisibleScale = interact != null ? interact.localScale.x : 1f,
             });
         }
     }
 }
+
 public struct NPCInteractable : IComponentData
 {
-    public FixedString64Bytes NPC;
+    public int NpcDataId;
     public Entity interact;
     public float interactRangeSq;
     public float promptVisibleScale;

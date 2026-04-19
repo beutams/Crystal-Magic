@@ -12,11 +12,20 @@ EditorBuildSettings:
     path: Assets/Scenes/MainMenu.unity
     guid: 0c42c32152e13be438ad0d36dcea255c
   - enabled: 1
-    path: Assets/Scenes/Game.unity
-    guid: b2e5442c265fe4940aaef205684db7ae
+    path: Assets/Scenes/TownScene.unity
+    guid: 1b26f3298d9345fca4a4e6eac2d34101
+  - enabled: 1
+    path: Assets/Scenes/TrainingScene.unity
+    guid: 9e1c6b57f6a14d0aa126f7f1b2f455c2
+  - enabled: 1
+    path: Assets/Scenes/DungeonScene.unity
+    guid: 5d3e8a6402a84a12bb5b6ff61f0d55e7
   - enabled: 1
     path: Assets/Scenes/SubScene/TownSubScene.unity
     guid: dfa0b3869052fb24ab6f84eb156d5564
+  - enabled: 1
+    path: Assets/Scenes/SubScene/TrainingSubScene.unity
+    guid: e1b1dce31d5381b45a130c655c339e96
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

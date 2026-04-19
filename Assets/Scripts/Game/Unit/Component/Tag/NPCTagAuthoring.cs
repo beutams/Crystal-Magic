@@ -13,4 +13,7 @@ public class NPCTagAuthoring : MonoBehaviour
         }
     }
 }
-public struct NPCTag : IComponentData { }
+
+public struct NPCTag : IComponentData
+{
+}

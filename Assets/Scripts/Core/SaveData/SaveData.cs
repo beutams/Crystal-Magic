@@ -23,6 +23,7 @@ namespace CrystalMagic.Core {
         /// </summary>
         public GlobalData Global;
         public SaveVariableData Variables = new();
+        public SaveLocationData Location = new();
 
         // ========== 城镇数据 ==========
         /// <summary>
@@ -269,4 +270,18 @@ namespace CrystalMagic.Core {
         public int EffectId;
     }
     #endregion
+
+    public enum SaveAreaType
+    {
+        Town = 0,
+        Training = 1,
+        Dungeon = 2,
+    }
+
+    [System.Serializable]
+    public class SaveLocationData
+    {
+        public SaveAreaType AreaType = SaveAreaType.Town;
+        public int DungeonFloor = 1;
+    }
 }

@@ -126,6 +126,15 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""ESC"",
+                    ""type"": ""Button"",
+                    ""id"": ""6a992ad9-b172-43f9-bbbf-e2d27e2b8ba7"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -216,6 +225,17 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
                     ""action"": ""Inventory"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""33df67a0-bfcb-4e13-aaae-a51d75999514"",
+                    ""path"": ""<Keyboard>/escape"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ESC"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -228,6 +248,7 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         m_Town_Interact = m_Town.FindAction("Interact", throwIfNotFound: true);
         m_Town_Click = m_Town.FindAction("Click", throwIfNotFound: true);
         m_Town_Inventory = m_Town.FindAction("Inventory", throwIfNotFound: true);
+        m_Town_ESC = m_Town.FindAction("ESC", throwIfNotFound: true);
     }
 
     ~@InputControls()
@@ -312,6 +333,7 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_Town_Interact;
     private readonly InputAction m_Town_Click;
     private readonly InputAction m_Town_Inventory;
+    private readonly InputAction m_Town_ESC;
     /// <summary>
     /// Provides access to input actions defined in input action map "Town".
     /// </summary>
@@ -339,6 +361,10 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Town/Inventory".
         /// </summary>
         public InputAction @Inventory => m_Wrapper.m_Town_Inventory;
+        /// <summary>
+        /// Provides access to the underlying input action "Town/ESC".
+        /// </summary>
+        public InputAction @ESC => m_Wrapper.m_Town_ESC;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -377,6 +403,9 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
             @Inventory.started += instance.OnInventory;
             @Inventory.performed += instance.OnInventory;
             @Inventory.canceled += instance.OnInventory;
+            @ESC.started += instance.OnESC;
+            @ESC.performed += instance.OnESC;
+            @ESC.canceled += instance.OnESC;
         }
 
         /// <summary>
@@ -400,6 +429,9 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
             @Inventory.started -= instance.OnInventory;
             @Inventory.performed -= instance.OnInventory;
             @Inventory.canceled -= instance.OnInventory;
+            @ESC.started -= instance.OnESC;
+            @ESC.performed -= instance.OnESC;
+            @ESC.canceled -= instance.OnESC;
         }
 
         /// <summary>
@@ -468,5 +500,12 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnInventory(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ESC" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnESC(InputAction.CallbackContext context);
     }
 }

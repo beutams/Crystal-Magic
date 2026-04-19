@@ -27,8 +27,10 @@ namespace CrystalMagic.Core {
         {
             TransitionData transData = new TransitionData
             {
-                TargetSceneName = "Town",
-                TargetStateType = typeof(TownState)
+                TargetSceneName = TownState.SceneName,
+                TargetStateType = typeof(TownState),
+                TargetStateData = SaveDataComponent.Instance?.CreateLoadGameContext(SaveAreaType.Town),
+                ForceReloadTargetScene = true,
             };
             GameFlowComponent.Instance.SetState<TransitionState>(transData);
         }

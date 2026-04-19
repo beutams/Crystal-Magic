@@ -45,16 +45,18 @@ partial class UnitStateMachineSystem : SystemBase
     }
     private void TryBuild(UnitStateMachineComponent sm, Entity entity)
     {
-        if (string.IsNullOrEmpty(sm.UnitName))
+        if (sm.UnitDataId <= 0 && string.IsNullOrEmpty(sm.UnitName))
         {
-            Debug.LogWarning($"[StateMachine] Entity {entity} 的 UnitName 为空，跳过初始化");
+            Debug.LogWarning($"[StateMachine] Entity {entity} 的 UnitDataId 和 UnitName 都为空，跳过初始化");
             return;
         }
 
-        UnitData data = DataComponent.Instance?.Find<UnitData>(r => r.Name == sm.UnitName);
+        UnitData data = sm.UnitDataId > 0
+            ? DataComponent.Instance?.Get<UnitData>(sm.UnitDataId)
+            : DataComponent.Instance?.Find<UnitData>(r => r.Name == sm.UnitName);
         if (data == null)
         {
-            Debug.LogError($"[StateMachine] 找不到 UnitData: {sm.UnitName}，请检查 UnitDataTable.json");
+            Debug.LogError($"[StateMachine] 找不到 UnitData: Id={sm.UnitDataId}, Name={sm.UnitName}，请检查 UnitDataTable.json");
             return;
         }
 

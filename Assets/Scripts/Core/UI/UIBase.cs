@@ -10,6 +10,7 @@ namespace CrystalMagic.Core {
     {
         private Canvas _canvas;
         private bool _initialized = false;
+        [SerializeField] private bool _canCloseByEscape = true;
 
         public Canvas Canvas
         {
@@ -22,6 +23,7 @@ namespace CrystalMagic.Core {
         }
 
         public float EnqueueTime { get; set; }
+        public bool CanCloseByEscape => _canCloseByEscape;
 
         /// <summary>
         /// 刷新 Canvas 引用

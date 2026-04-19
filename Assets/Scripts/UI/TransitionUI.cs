@@ -9,24 +9,24 @@ public class TransitionUI : UIBase, ITransitionUI
 
     protected override void OnInit()
     {
-        // ��ȡ�򴴽� CanvasGroup
+        // 获取或创建 CanvasGroup
         _canvasGroup = GetComponent<CanvasGroup>();
         if (_canvasGroup == null)
         {
             _canvasGroup = gameObject.AddComponent<CanvasGroup>();
         }
-        
-        // ��ʼ״̬Ϊ͸��
+
+        // 初始状态为透明
         _canvasGroup.alpha = 0f;
     }
 
     /// <summary>
-    /// ��ʾת�����棨���룩
+    /// 显示转场界面（淡入）
     /// </summary>
     public IEnumerator Show()
     {
         float elapsed = 0f;
-        
+
         while (elapsed < _fadeDuration)
         {
             elapsed += Time.deltaTime;
@@ -34,17 +34,17 @@ public class TransitionUI : UIBase, ITransitionUI
             _canvasGroup.alpha = t;
             yield return null;
         }
-        
+
         _canvasGroup.alpha = 1f;
     }
 
     /// <summary>
-    /// ����ת�����棨������
+    /// 隐藏转场界面（淡出）
     /// </summary>
     public IEnumerator Hide()
     {
         float elapsed = 0f;
-        
+
         while (elapsed < _fadeDuration)
         {
             elapsed += Time.deltaTime;
@@ -52,7 +52,7 @@ public class TransitionUI : UIBase, ITransitionUI
             _canvasGroup.alpha = 1f - t;
             yield return null;
         }
-        
+
         _canvasGroup.alpha = 0f;
     }
 }

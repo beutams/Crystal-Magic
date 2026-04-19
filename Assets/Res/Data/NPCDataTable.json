@@ -45,6 +45,26 @@
         }
       ],
       "Id": 2
+    },
+    {
+      "NPC": "Training",
+      "DisplayName": "训练场",
+      "Interactions": [
+        {
+          "Key": "Training",
+          "DisplayName": "训练场",
+          "EnableExpression": "",
+          "EntryNodeGuid": "3d003138da8c4619980f4cf904066d0d",
+          "Nodes": [
+            {
+              "Type": "EnterTrainingGround",
+              "Guid": "3d003138da8c4619980f4cf904066d0d",
+              "Branches": []
+            }
+          ]
+        }
+      ],
+      "Id": 3
     }
   ]
 }
