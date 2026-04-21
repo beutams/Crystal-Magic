@@ -44,13 +44,3 @@ public struct UnitMoveComponent : IComponentData
     public float RealMoveSpeed => BaseMoveSpeed * SpeedFactor + SpeedBonus;
     public float RealMaxAcceleration => BaseMaxAcceleration * SpeedFactor + SpeedBonus;
 }
-
-/// <summary>
-/// 鍗曚綅绉诲姩缁勪欢鈥斺€旀湁姝ょ粍浠跺嵆涓哄彲绉诲姩鍗曚綅銆?
-///
-/// AccelInput锛氱姸鎬佹満姣忓抚鍐欏叆鐨勫姞閫熸柟鍚戯紙褰掍竴鍖栵級銆?
-/// MoveSystem 姣忓抚锛?
-///   targetVel = AccelInput * MaxSpeed
-///   Velocity  鈫?鍚?targetVel 浠?MaxAcceleration 閫艰繎
-///   PhysicsVelocity.Linear = Velocity
-/// </summary>

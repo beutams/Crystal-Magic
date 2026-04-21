@@ -45,7 +45,3 @@ public struct UnitVitalityComponent : IComponentData
     public float RealMaxHealth => BaseMaxHealth * HealthFactor + HealthBonus;
     public float RealDefense => BaseDefense * DefenseFactor + DefenseBonus;
 }
-
-/// <summary>
-/// 鐢熷懡 + 闃插尽缁勪欢鈥斺€旀湁姝ょ粍浠跺嵆涓哄彲鍙楀嚮鍗曚綅銆?
-/// </summary>

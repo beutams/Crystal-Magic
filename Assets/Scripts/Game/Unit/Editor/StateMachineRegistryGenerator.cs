@@ -21,9 +21,9 @@ namespace CrystalMagic.Editor
         [MenuItem("Tools/State Machine/Generate State Machine Registry")]
         public static void Generate()
         {
-            var states       = CollectTypes(typeof(AUnitState),   subclassOnly: true);
-            var sources      = CollectTypes(typeof(ISource),      subclassOnly: false);
-            var compareTypes = CollectTypes(typeof(ICompareType), subclassOnly: false);
+            var states       = RegistryGeneratorUtility.CollectTypes(typeof(AUnitState),   subclassOnly: true);
+            var sources      = RegistryGeneratorUtility.CollectTypes(typeof(ISource),      subclassOnly: false);
+            var compareTypes = RegistryGeneratorUtility.CollectTypes(typeof(ICompareType), subclassOnly: false);
 
             WriteRegistry(states, sources, compareTypes);
             AssetDatabase.Refresh();
@@ -124,9 +124,7 @@ namespace CrystalMagic.Editor
             sb.AppendLine("}");
 
             // 写文件
-            string dir = Path.GetDirectoryName(OutputPath);
-            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir!);
-            File.WriteAllText(OutputPath, sb.ToString(), Encoding.UTF8);
+            RegistryGeneratorUtility.WriteFile(OutputPath, sb.ToString());
         }
     }
 }

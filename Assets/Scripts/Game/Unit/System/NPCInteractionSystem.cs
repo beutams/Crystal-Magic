@@ -1,20 +1,22 @@
+using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
-using System.Collections.Generic;
-
 
 [UpdateAfter(typeof(NPCInteractInputSystem))]
 partial class NPCInteractionConsumeSystem : SystemBase
 {
+    private NPCInteractionNodeFactory _nodeFactory;
     private NPCInteractionSession _session;
 
     protected override void OnCreate()
     {
         base.OnCreate();
+        _nodeFactory = new NPCInteractionNodeFactory();
+        NPCInteractionNodeRegistry.RegisterAll(_nodeFactory);
         RequireForUpdate<NPCInteractionRequest>();
     }
 
@@ -160,7 +162,7 @@ partial class NPCInteractionConsumeSystem : SystemBase
 
             if (_session.CurrentRunner == null)
             {
-                _session.CurrentRunner = CreateRunner(currentNode);
+                _session.CurrentRunner = _nodeFactory.Create(currentNode);
                 if (_session.CurrentRunner == null)
                 {
                     Debug.LogWarning($"[NPCInteraction] Unsupported node type '{currentNode?.Type}'. Skipped.");
@@ -200,20 +202,6 @@ partial class NPCInteractionConsumeSystem : SystemBase
         Debug.LogWarning("[NPCInteraction] Interaction advanced too many nodes in one frame and was stopped defensively.");
     }
 
-    private NPCInteractionNodeRunner CreateRunner(NPCInteractionNodeData node)
-    {
-        return node switch
-        {
-            NPCDialogueInteractionNodeData dialogue => new NPCDialogueInteractionNodeRunner(dialogue),
-            NPCSelectInteractionNodeData select => new NPCSelectInteractionNodeRunner(select),
-            NPCOpenUIInteractionNodeData openUI => new NPCOpenUIInteractionNodeRunner(openUI),
-            NPCMoveInteractionNodeData move => new NPCMoveInteractionNodeRunner(move),
-            NPCEnterDungeonInteractionNodeData enterDungeon => new NPCEnterDungeonInteractionNodeRunner(enterDungeon),
-            NPCEnterTrainingGroundInteractionNodeData enterTrainingGround => new NPCEnterTrainingGroundInteractionNodeRunner(enterTrainingGround),
-            _ => null,
-        };
-    }
-
     private void FinishSession(bool wasCancelled)
     {
         if (_session == null)
@@ -232,248 +220,6 @@ partial class NPCInteractionConsumeSystem : SystemBase
             _session.Interaction,
             wasCancelled));
         _session = null;
-    }
-
-    private sealed class NPCInteractionSession
-    {
-        public NPCInteractionSession(Entity target, NPCData npcData, NPCInteractionData interaction)
-        {
-            Target = target;
-            NpcData = npcData;
-            Interaction = interaction;
-            CurrentNodeGuid = interaction?.EntryNodeGuid;
-            IsActive = true;
-        }
-
-        public Entity Target { get; }
-        public NPCData NpcData { get; }
-        public NPCInteractionData Interaction { get; }
-        public string CurrentNodeGuid { get; set; }
-        public string SelectedNextNodeGuid { get; set; }
-        public NPCInteractionNodeRunner CurrentRunner { get; set; }
-        public bool IsActive { get; private set; }
-        public bool ShouldTerminateInteraction { get; private set; }
-
-        public NPCInteractionNodeData GetCurrentNode()
-        {
-            return Interaction?.GetNode(CurrentNodeGuid);
-        }
-
-        public bool IsTargetValid(EntityManager entityManager)
-        {
-            return Target != Entity.Null && entityManager.Exists(Target);
-        }
-
-        public void Cancel()
-        {
-            if (!IsActive)
-            {
-                return;
-            }
-
-            CurrentRunner?.Cancel(this);
-            CurrentRunner = null;
-            IsActive = false;
-        }
-
-        public void RequestTerminateInteraction()
-        {
-            ShouldTerminateInteraction = true;
-        }
-    }
-
-    private abstract class NPCInteractionNodeRunner
-    {
-        public abstract void Enter(NPCInteractionSession session);
-        public virtual void Update(NPCInteractionSession session, float deltaTime) { }
-        public abstract bool IsCompleted(NPCInteractionSession session);
-        public virtual void Exit(NPCInteractionSession session) { }
-        public virtual void Cancel(NPCInteractionSession session) { }
-    }
-
-    private sealed class NPCDialogueInteractionNodeRunner : NPCInteractionNodeRunner
-    {
-        private readonly NPCDialogueInteractionNodeData _node;
-        private bool _completed;
-
-        public NPCDialogueInteractionNodeRunner(NPCDialogueInteractionNodeData node)
-        {
-            _node = node;
-        }
-
-        public override void Enter(NPCInteractionSession session)
-        {
-            Debug.Log($"[NPCInteraction] Dialogue node started. Speaker='{_node.Speaker}', ContentKey='{_node.ContentKey}'.");
-            _completed = true;
-        }
-
-        public override bool IsCompleted(NPCInteractionSession session)
-        {
-            return _completed;
-        }
-    }
-
-    private sealed class NPCOpenUIInteractionNodeRunner : NPCInteractionNodeRunner
-    {
-        private readonly NPCOpenUIInteractionNodeData _node;
-        private UIBase _openedPanel;
-        private bool _completed;
-
-        public NPCOpenUIInteractionNodeRunner(NPCOpenUIInteractionNodeData node)
-        {
-            _node = node;
-        }
-
-        public override void Enter(NPCInteractionSession session)
-        {
-            if (UIComponent.Instance == null)
-            {
-                Debug.LogWarning("[NPCInteraction] UIComponent is not available for OpenUI node.");
-                _completed = true;
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(_node.UIName))
-            {
-                Debug.LogWarning("[NPCInteraction] OpenUI node is missing UIName.");
-                _completed = true;
-                return;
-            }
-
-            _openedPanel = string.IsNullOrWhiteSpace(_node.OpenData)
-                ? UIComponent.Instance.Open(_node.UIName)
-                : UIComponent.Instance.Open(_node.UIName, _node.OpenData);
-
-            if (_openedPanel == null)
-            {
-                Debug.LogWarning($"[NPCInteraction] Failed to open UI '{_node.UIName}'.");
-                _completed = true;
-                return;
-            }
-
-            if (!_node.WaitUntilClosed)
-            {
-                _completed = true;
-            }
-        }
-
-        public override void Update(NPCInteractionSession session, float deltaTime)
-        {
-            if (_completed || !_node.WaitUntilClosed)
-            {
-                return;
-            }
-
-            if (_openedPanel == null || !_openedPanel.gameObject.activeInHierarchy)
-            {
-                _completed = true;
-            }
-        }
-
-        public override bool IsCompleted(NPCInteractionSession session)
-        {
-            return _completed;
-        }
-
-        public override void Cancel(NPCInteractionSession session)
-        {
-            if (_openedPanel != null && _openedPanel.gameObject.activeInHierarchy && _node.WaitUntilClosed && UIComponent.Instance != null)
-            {
-                UIComponent.Instance.ReleaseUI(_openedPanel);
-            }
-        }
-    }
-
-    private sealed class NPCMoveInteractionNodeRunner : NPCInteractionNodeRunner
-    {
-        private readonly NPCMoveInteractionNodeData _node;
-        private bool _completed;
-
-        public NPCMoveInteractionNodeRunner(NPCMoveInteractionNodeData node)
-        {
-            _node = node;
-        }
-
-        public override void Enter(NPCInteractionSession session)
-        {
-            Debug.Log($"[NPCInteraction] Move node started. TargetMarker='{_node.TargetMarker}', StopDistance={_node.StopDistance}.");
-            _completed = true;
-        }
-
-        public override bool IsCompleted(NPCInteractionSession session)
-        {
-            return _completed;
-        }
-    }
-
-    private sealed class NPCEnterDungeonInteractionNodeRunner : NPCInteractionNodeRunner
-    {
-        private readonly NPCEnterDungeonInteractionNodeData _node;
-        private bool _completed;
-
-        public NPCEnterDungeonInteractionNodeRunner(NPCEnterDungeonInteractionNodeData node)
-        {
-            _node = node;
-        }
-
-        public override void Enter(NPCInteractionSession session)
-        {
-            session.RequestTerminateInteraction();
-            _completed = true;
-
-            if (GameFlowComponent.Instance == null)
-            {
-                Debug.LogWarning("[NPCInteraction] GameFlowComponent is not available for EnterDungeon node.");
-                return;
-            }
-
-            LoadGameContext context = SaveDataComponent.Instance?.CreateLoadGameContext(
-                SaveAreaType.Dungeon,
-                Mathf.Max(1, _node.DungeonFloor));
-
-            GameFlowComponent.Instance.SetState<TransitionState>(new TransitionData
-            {
-                TargetSceneName = DungeonState.SceneName,
-                TargetStateType = typeof(DungeonState),
-                TargetStateData = context,
-                ForceReloadTargetScene = true,
-            });
-        }
-
-        public override bool IsCompleted(NPCInteractionSession session)
-        {
-            return _completed;
-        }
-    }
-
-    private sealed class NPCEnterTrainingGroundInteractionNodeRunner : NPCInteractionNodeRunner
-    {
-        private bool _completed;
-
-        public NPCEnterTrainingGroundInteractionNodeRunner(NPCEnterTrainingGroundInteractionNodeData node)
-        {
-        }
-
-        public override void Enter(NPCInteractionSession session)
-        {
-            session.RequestTerminateInteraction();
-            _completed = true;
-
-            if (GameFlowComponent.Instance == null)
-            {
-                Debug.LogWarning("[NPCInteraction] GameFlowComponent is not available for EnterTrainingGround node.");
-                return;
-            }
-
-            LoadGameContext context = SaveDataComponent.Instance?.CreateLoadGameContext(SaveAreaType.Training);
-
-            GameFlowComponent.Instance.SetState<TransitionState>(TrainingState.CreateEnterTransitionData(context));
-        }
-
-        public override bool IsCompleted(NPCInteractionSession session)
-        {
-            return _completed;
-        }
     }
 
     private static string ResolveNextNodeGuid(NPCInteractionSession session, NPCInteractionNodeData currentNode, string selectedNextNodeGuid)
@@ -498,47 +244,5 @@ partial class NPCInteractionConsumeSystem : SystemBase
         return null;
     }
 
-    private sealed class NPCSelectInteractionNodeRunner : NPCInteractionNodeRunner
-    {
-        private readonly NPCSelectInteractionNodeData _node;
-        private bool _completed;
-
-        public NPCSelectInteractionNodeRunner(NPCSelectInteractionNodeData node)
-        {
-            _node = node;
-        }
-
-        public override void Enter(NPCInteractionSession session)
-        {
-            List<NPCSelectOptionData> enabledOptions = new List<NPCSelectOptionData>();
-            if (_node.Options != null)
-            {
-                for (int i = 0; i < _node.Options.Count; i++)
-                {
-                    NPCSelectOptionData option = _node.Options[i];
-                    if (option != null && option.IsEnabled())
-                    {
-                        enabledOptions.Add(option);
-                    }
-                }
-            }
-
-            EventComponent.Instance?.Publish(new NPCInteractionSelectRequestedEvent(
-                session.Target,
-                session.NpcData,
-                session.Interaction,
-                _node,
-                enabledOptions));
-
-            Debug.Log("[NPCInteraction] Select node reached, but InteractionSelectUI is not implemented yet.");
-            session.SelectedNextNodeGuid = null;
-            _completed = true;
-        }
-
-        public override bool IsCompleted(NPCInteractionSession session)
-        {
-            return _completed;
-        }
-    }
 }
 

@@ -5,10 +5,6 @@ using UnityEngine;
 
 public class UnitStateMachineAuthoring : MonoBehaviour
 {
-/*
-    [Tooltip("涓?UnitDataTable.json 涓?Name 瀛楁涓€鑷达紝鐢ㄤ簬杩愯鏃舵煡鎵剧姸鎬佹満閰嶇疆")]
-
-*/
     class UnitStateMachineBaker : Baker<UnitStateMachineAuthoring>
     {
         public override void Bake(UnitStateMachineAuthoring authoring)
@@ -35,6 +31,3 @@ public class UnitStateMachineComponent : IComponentData
     public float StateTime;
     [System.NonSerialized] public Dictionary<string, AUnitState> StateInstances;
 }
-
-/// <summary>
-/// 鍗曚綅鐘舵€佹満鎵樼缁勪欢锛圡anaged IComponentData锛?/// currentState 涓?null 琛ㄧず灏氭湭鍒濆鍖栵紝绯荤粺棣栧抚浼氳皟鐢?Builder 鏋勫缓銆?/// </summary>

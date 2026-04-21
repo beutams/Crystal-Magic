@@ -36,7 +36,3 @@ public struct UnitManaComponent : IComponentData
 
     public float RealMaxMp => BaseMaxMp * MpFactor + MpBonus;
 }
-
-/// <summary>
-/// 娉曞姏缁勪欢鈥斺€旀湁姝ょ粍浠跺嵆涓烘湁钃濋噺鐨勫崟浣嶃€?
-/// </summary>
