@@ -1,4 +1,5 @@
 using CrystalMagic.Game.Data;
+using CrystalMagic.Core;
 
 namespace CrystalMagic.Game.Data.Effects
 {
@@ -10,6 +11,8 @@ namespace CrystalMagic.Game.Data.Effects
     {
         /// <summary>音频资源路径（相对 Resources/）</summary>
         public string AudioPath;
+
+        public AudioChannel Channel = AudioChannel.Unit;
 
         /// <summary>音量，0–1</summary>
         public float Volume = 1f;

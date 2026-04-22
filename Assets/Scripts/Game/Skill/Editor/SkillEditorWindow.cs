@@ -637,6 +637,15 @@ namespace CrystalMagic.Editor.Skill
                 return EditorGUILayout.EnumPopup(label, value as Enum ?? (Enum)Activator.CreateInstance(t));
             if (t == typeof(GameObject))
                 return EditorGUILayout.ObjectField(label, value as GameObject, typeof(GameObject), false);
+            if (t == typeof(List<ConditionConfig>))
+            {
+                List<ConditionConfig> conditions = value as List<ConditionConfig> ?? new List<ConditionConfig>();
+                EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
+                EditorGUI.indentLevel++;
+                DrawConditionList(conditions, $"{parentKey}/{label}");
+                EditorGUI.indentLevel--;
+                return conditions;
+            }
 
             // ── 嵌套效果链 ──────────────────────────────
             if (t == typeof(EffectData[]) ||

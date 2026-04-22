@@ -144,8 +144,13 @@ public class CastState : AUnitState
             return false;
 
         UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
+        _skillContent.EntityManager = EntityManager;
+        _skillContent.HasOriginEntity = true;
+        _skillContent.OriginEntity = Entity;
         _skillContent.HasPosition = cast.HasLockedTarget;
         _skillContent.Position = new Vector3(cast.LockedTargetPosition.x, cast.LockedTargetPosition.y, 0f);
+        _skillContent.HasTargetEntity = false;
+        _skillContent.TargetEntity = Unity.Entities.Entity.Null;
         _skillContent.HasTarget = false;
         _skillContent.Target = null;
         _skillContent.Origin = null;

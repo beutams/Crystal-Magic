@@ -1,5 +1,6 @@
 using UnityEngine;
 using CrystalMagic.Game.Data;
+using Newtonsoft.Json;
 
 namespace CrystalMagic.Game.Data.Effects
 {
@@ -25,15 +26,16 @@ namespace CrystalMagic.Game.Data.Effects
         public float Scale = 1f;
 
         /// <summary>穿透目标数量，0 = 不穿透</summary>
-        public int PiercingCount;
+        public bool CanPierce;
 
         /// <summary>追踪强度，0 = 直线飞行，>0 = 追踪目标</summary>
-        public float HomingStrength;
+        public bool TriggerDestroyEffectsOnMaxRange;
 
         [SerializeReference]
         public EffectData[] OnCollisionEffects;
         [SerializeReference]
-        public EffectData[] OnDestoryEffects;
+        [JsonProperty("OnDestoryEffects")]
+        public EffectData[] OnDestroyEffects;
 
         public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers)
         {
@@ -42,7 +44,7 @@ namespace CrystalMagic.Game.Data.Effects
             copy.MaxRange = ApplyModifierNonNegative(modifiers, SkillModifierChannel.ProjectileRange, MaxRange);
             copy.Scale = ApplyModifierNonNegative(modifiers, SkillModifierChannel.ProjectileScale, Scale);
             copy.OnCollisionEffects = CreateRuntimeCopies(OnCollisionEffects, modifiers);
-            copy.OnDestoryEffects = CreateRuntimeCopies(OnDestoryEffects, modifiers);
+            copy.OnDestroyEffects = CreateRuntimeCopies(OnDestroyEffects, modifiers);
             return copy;
         }
     }

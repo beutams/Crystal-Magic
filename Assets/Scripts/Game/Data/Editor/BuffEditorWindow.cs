@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using Newtonsoft.Json;
@@ -88,6 +89,11 @@ namespace CrystalMagic.Editor.Data
         private readonly Dictionary<string, int>  _nestedTypeIndices = new();
         // 每个效果条目的折叠状态，key = 条目路径，true = 展开
         private readonly Dictionary<string, bool> _effectFoldStates  = new();
+        private readonly Dictionary<string, bool> _condFoldStates = new();
+        private readonly Dictionary<string, int> _condAddSrcIdx = new();
+        private readonly Dictionary<string, int> _condAddCmpIdx = new();
+        private string[] _sourceTypeNames = Array.Empty<string>();
+        private string[] _compareTypeNames = Array.Empty<string>();
 
         // ===== 颜色 =====
         private static readonly Color SelectedColor = new(0.27f, 0.52f, 0.85f, 0.85f);
@@ -116,7 +122,27 @@ namespace CrystalMagic.Editor.Data
             w.Show();
         }
 
-        private void OnEnable() => LoadData();
+        private void OnEnable()
+        {
+            LoadData();
+            RefreshTypeArrays();
+        }
+
+        private void RefreshTypeArrays()
+        {
+            _sourceTypeNames = CollectTypeNames(typeof(ISource));
+            _compareTypeNames = CollectTypeNames(typeof(ICompareType));
+        }
+
+        private static string[] CollectTypeNames(Type baseType)
+        {
+            return AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(a => { try { return a.GetTypes(); } catch { return Array.Empty<Type>(); } })
+                .Where(t => !t.IsAbstract && !t.IsInterface && baseType.IsAssignableFrom(t))
+                .Select(t => t.Name)
+                .OrderBy(n => n)
+                .ToArray();
+        }
 
         // ─────────────────────────────────────────
         //  加载 / 保存
@@ -698,6 +724,15 @@ namespace CrystalMagic.Editor.Data
             }
             if (t.IsEnum)
                 return EditorGUILayout.EnumPopup(label, value as Enum ?? (Enum)Activator.CreateInstance(t));
+            if (t == typeof(List<ConditionConfig>))
+            {
+                List<ConditionConfig> conditions = value as List<ConditionConfig> ?? new List<ConditionConfig>();
+                EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
+                EditorGUI.indentLevel++;
+                DrawConditionList(conditions, $"{parentKey}/{label}");
+                EditorGUI.indentLevel--;
+                return conditions;
+            }
 
             // 嵌套效果链
             if (t == typeof(EffectData[]) ||
@@ -723,6 +758,116 @@ namespace CrystalMagic.Editor.Data
         // ─────────────────────────────────────────
         //  区块标题
         // ─────────────────────────────────────────
+        private void DrawConditionList(List<ConditionConfig> conditions, string keyPrefix)
+        {
+            string foldKey = keyPrefix + "_fold";
+            if (!_condFoldStates.TryGetValue(foldKey, out bool foldOpen))
+                foldOpen = true;
+
+            foldOpen = EditorGUILayout.Foldout(foldOpen, $"条件 ({conditions.Count})", true);
+            _condFoldStates[foldKey] = foldOpen;
+            if (!foldOpen)
+                return;
+
+            EditorGUI.indentLevel++;
+            DrawAddConditionRow(conditions, keyPrefix);
+
+            int removeAt = -1;
+            for (int i = 0; i < conditions.Count; i++)
+            {
+                if (!DrawConditionRow(conditions[i]))
+                    removeAt = i;
+            }
+
+            if (removeAt >= 0)
+            {
+                conditions.RemoveAt(removeAt);
+                _isDirty = true;
+            }
+
+            EditorGUI.indentLevel--;
+        }
+
+        private void DrawAddConditionRow(List<ConditionConfig> conditions, string keyPrefix)
+        {
+            string srcKey = keyPrefix + "src";
+            string cmpKey = keyPrefix + "cmp";
+            if (!_condAddSrcIdx.ContainsKey(srcKey)) _condAddSrcIdx[srcKey] = 0;
+            if (!_condAddCmpIdx.ContainsKey(cmpKey)) _condAddCmpIdx[cmpKey] = 0;
+
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Space(16);
+
+            if (_sourceTypeNames.Length > 0)
+                _condAddSrcIdx[srcKey] = EditorGUILayout.Popup(_condAddSrcIdx[srcKey], _sourceTypeNames, GUILayout.Width(130));
+            else
+                GUILayout.Label("无 ISource", EditorStyles.miniLabel, GUILayout.Width(80));
+
+            if (_compareTypeNames.Length > 0)
+                _condAddCmpIdx[cmpKey] = EditorGUILayout.Popup(_condAddCmpIdx[cmpKey], _compareTypeNames, GUILayout.Width(100));
+
+            if (GUILayout.Button("+ 条件", GUILayout.Width(60)))
+            {
+                conditions.Add(new ConditionConfig
+                {
+                    SourceType = _sourceTypeNames.Length > 0 ? _sourceTypeNames[_condAddSrcIdx[srcKey]] : "",
+                    CompareType = _compareTypeNames.Length > 0 ? _compareTypeNames[_condAddCmpIdx[cmpKey]] : "",
+                    ConditionType = ConditionType.Necessary,
+                });
+                _isDirty = true;
+            }
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private bool DrawConditionRow(ConditionConfig condition)
+        {
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Space(16);
+
+            EditorGUI.BeginChangeCheck();
+            condition.ConditionType = (ConditionType)EditorGUILayout.EnumPopup(condition.ConditionType, GUILayout.Width(88));
+
+            if (_sourceTypeNames.Length > 0)
+            {
+                int index = Mathf.Max(0, Array.IndexOf(_sourceTypeNames, condition.SourceType));
+                index = EditorGUILayout.Popup(index, _sourceTypeNames, GUILayout.Width(130));
+                condition.SourceType = _sourceTypeNames[index];
+            }
+            else
+            {
+                condition.SourceType = EditorGUILayout.TextField(condition.SourceType, GUILayout.Width(130));
+            }
+
+            if (_compareTypeNames.Length > 0)
+            {
+                int index = Mathf.Max(0, Array.IndexOf(_compareTypeNames, condition.CompareType));
+                index = EditorGUILayout.Popup(index, _compareTypeNames, GUILayout.Width(100));
+                condition.CompareType = _compareTypeNames[index];
+            }
+            else
+            {
+                condition.CompareType = EditorGUILayout.TextField(condition.CompareType, GUILayout.Width(100));
+            }
+
+            bool needsValue = condition.CompareType is "GreaterThan" or "LessThan" or "Equal";
+            if (needsValue)
+                condition.CompareValue = EditorGUILayout.FloatField(condition.CompareValue, GUILayout.Width(60));
+            else
+                GUILayout.Space(64);
+
+            if (EditorGUI.EndChangeCheck())
+                _isDirty = true;
+
+            GUILayout.FlexibleSpace();
+            GUI.color = new Color(1f, 0.5f, 0.5f);
+            bool keep = !GUILayout.Button("×", GUILayout.Width(24));
+            GUI.color = Color.white;
+            EditorGUILayout.EndHorizontal();
+
+            return keep;
+        }
+
         private static void DrawSectionHeader(string title)
         {
             GUILayout.Space(6);
