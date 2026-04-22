@@ -54,6 +54,25 @@ partial struct PlayerInputSystem : ISystem
             _subscribed = true;
         }
 
+        if (GameGateComponent.Instance != null && GameGateComponent.Instance.IsPlayerInputLocked)
+        {
+            _moveInput.Value = float2.zero;
+            _castTarget.Value = float2.zero;
+            _hasCastTarget.Value = false;
+            _wantToCast.Value = false;
+
+            foreach (var (_, intent) in
+                SystemAPI.Query<RefRO<PlayerTag>, RefRW<UnitIntentComponent>>())
+            {
+                intent.ValueRW.MoveDirection = float2.zero;
+                intent.ValueRW.WantToCast = false;
+                intent.ValueRW.HasCastTarget = false;
+                intent.ValueRW.CastTargetPosition = float2.zero;
+            }
+
+            return;
+        }
+
         float2 moveInput = _moveInput.Value;
         float2 castTarget = _castTarget.Value;
         bool hasCastTarget = _hasCastTarget.Value;

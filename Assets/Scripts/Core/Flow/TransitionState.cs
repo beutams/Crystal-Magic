@@ -4,6 +4,7 @@ using UnityEngine;
 namespace CrystalMagic.Core {
     public class TransitionState : GameState
     {
+        private const string TransitionLockReason = "Transition";
         private string _targetSceneName;
         private System.Type _targetStateType;
         private System.Action _onTransitionComplete;
@@ -39,6 +40,11 @@ namespace CrystalMagic.Core {
         private System.Collections.IEnumerator DoTransition()
         {
             _isTransitioning = true;
+            GameGateComponent gate = GameGateComponent.Instance;
+            gate?.Lock(GameGateType.Simulation, TransitionLockReason);
+            gate?.Lock(GameGateType.PlayerInput, TransitionLockReason);
+            gate?.Lock(GameGateType.UIInput, TransitionLockReason);
+
             TransitionComponent transition = TransitionComponent.Instance;
             SceneComponent scene = SceneComponent.Instance;
 
@@ -73,6 +79,10 @@ namespace CrystalMagic.Core {
 
             Debug.Log("[TransitionState] Hiding transition UI");
             yield return GameFlowComponent.Instance.StartCoroutine(transition.HideAsync());
+
+            gate?.Unlock(GameGateType.UIInput, TransitionLockReason);
+            gate?.Unlock(GameGateType.PlayerInput, TransitionLockReason);
+            gate?.Unlock(GameGateType.Simulation, TransitionLockReason);
 
             _onTransitionComplete?.Invoke();
         }

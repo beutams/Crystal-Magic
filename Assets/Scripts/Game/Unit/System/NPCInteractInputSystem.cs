@@ -35,6 +35,15 @@ partial struct NPCInteractInputSystem : ISystem
             _subscribed = true;
         }
 
+        if (GameGateComponent.Instance != null && GameGateComponent.Instance.IsPlayerInputLocked)
+        {
+            _interactRequested.Value = false;
+            RefRW<NPCInteractionRequest> lockedRequest = SystemAPI.GetSingletonRW<NPCInteractionRequest>();
+            lockedRequest.ValueRW.Target = Entity.Null;
+            lockedRequest.ValueRW.HasRequest = 0;
+            return;
+        }
+
         if (!_interactRequested.Value)
             return;
 

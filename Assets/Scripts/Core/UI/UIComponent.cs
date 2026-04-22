@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using CrystalMagic.UI;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace CrystalMagic.Core {
     /// <summary>
@@ -18,6 +19,7 @@ namespace CrystalMagic.Core {
         private Dictionary<UIBase, UIMvcContext> _mvcContexts = new();
         private Dictionary<string, Type> _typeCache = new();
         private UIGroupConfig _config;
+        private bool _uiInputLocked;
 
         public override int Priority => 15;
 
@@ -69,6 +71,8 @@ namespace CrystalMagic.Core {
 
         private void Update()
         {
+            RefreshUIInputLock();
+
             // 每帧更新所有分组
             foreach (var group in _groups.Values)
             {
@@ -182,6 +186,7 @@ namespace CrystalMagic.Core {
                 }
 
                 group.ShowUI(panel);
+                ApplyUIInputState();
             }
         }
 
@@ -290,6 +295,7 @@ namespace CrystalMagic.Core {
             ApplyOpenData(childContext, data);
             OpenChildPanel(childContext, parent.gameObject.activeSelf);
             RefreshGroupSortingOrders(group);
+            ApplyUIInputState();
             return panel;
         }
 
@@ -744,8 +750,36 @@ namespace CrystalMagic.Core {
 
         private void HandleEscape()
         {
+            if (GameGateComponent.Instance != null && GameGateComponent.Instance.IsUIInputLocked)
+                return;
+
             UIBase panel = GetTopmostEscapeClosablePanel();
             panel?.Close();
+        }
+
+        private void RefreshUIInputLock()
+        {
+            bool shouldLock = GameGateComponent.Instance != null && GameGateComponent.Instance.IsUIInputLocked;
+            if (_uiInputLocked == shouldLock)
+                return;
+
+            _uiInputLocked = shouldLock;
+            ApplyUIInputState();
+        }
+
+        private void ApplyUIInputState()
+        {
+            _uiInputLocked = GameGateComponent.Instance != null && GameGateComponent.Instance.IsUIInputLocked;
+            bool enableInput = !_uiInputLocked;
+            foreach (UIGroup group in _groups.Values)
+            {
+                if (group == null)
+                    continue;
+
+                GraphicRaycaster[] raycasters = group.GetComponentsInChildren<GraphicRaycaster>(true);
+                for (int i = 0; i < raycasters.Length; i++)
+                    raycasters[i].enabled = enableInput;
+            }
         }
 
         private UIBase GetTopmostEscapeClosablePanel()

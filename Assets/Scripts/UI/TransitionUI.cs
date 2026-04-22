@@ -29,7 +29,7 @@ public class TransitionUI : UIBase, ITransitionUI
 
         while (elapsed < _fadeDuration)
         {
-            elapsed += Time.deltaTime;
+            elapsed += Time.unscaledDeltaTime;
             float t = Mathf.Clamp01(elapsed / _fadeDuration);
             _canvasGroup.alpha = t;
             yield return null;
@@ -47,7 +47,7 @@ public class TransitionUI : UIBase, ITransitionUI
 
         while (elapsed < _fadeDuration)
         {
-            elapsed += Time.deltaTime;
+            elapsed += Time.unscaledDeltaTime;
             float t = Mathf.Clamp01(elapsed / _fadeDuration);
             _canvasGroup.alpha = 1f - t;
             yield return null;

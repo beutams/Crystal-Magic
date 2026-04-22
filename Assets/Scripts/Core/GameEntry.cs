@@ -28,6 +28,7 @@ namespace CrystalMagic.Core
         public SaveDataComponent SaveDataComponent { get; private set; }
         public AudioComponent AudioComponent { get; private set; }
         public InputComponent InputComponent { get; private set; }
+        public GameGateComponent GameGateComponent { get; private set; }
         public GameFlowComponent GameFlowComponent { get; private set; }
         private void Start()
         {
@@ -58,6 +59,7 @@ namespace CrystalMagic.Core
 
             // 手动注册各组件
             RegisterComponent(EventComponent.Instance);
+            RegisterComponent(GameGateComponent.Instance);
             RegisterComponent(ResourceComponent.Instance);
             RegisterComponent(PoolComponent.Instance);
             RegisterComponent(SceneComponent.Instance);
@@ -127,6 +129,8 @@ namespace CrystalMagic.Core
                 AudioComponent = audioComponent;
             else if (component is InputComponent inputComponent)
                 InputComponent = inputComponent;
+            else if (component is GameGateComponent gameGateComponent)
+                GameGateComponent = gameGateComponent;
             else if (component is GameFlowComponent gameFlowComponent)
                 GameFlowComponent = gameFlowComponent;
         }
