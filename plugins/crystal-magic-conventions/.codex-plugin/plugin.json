@@ -1,0 +1,34 @@
+{
+  "name": "crystal-magic-conventions",
+  "version": "0.1.0",
+  "description": "Project conventions for Crystal Magic Unity GameComponent, UI, ECS, pooling, input, and runtime factory code.",
+  "author": {
+    "name": "Crystal Magic Project"
+  },
+  "license": "UNLICENSED",
+  "keywords": [
+    "unity",
+    "crystal-magic",
+    "ecs",
+    "ui",
+    "game-component"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Crystal Magic Conventions",
+    "shortDescription": "Project coding rules for Crystal Magic",
+    "longDescription": "Shared Codex skills for Crystal Magic. Covers GameEntry component registration, ResourceComponent and PoolComponent object flow, InputComponent event routing, UI MVC refresh patterns, and ECS struct/Job/Burst file organization.",
+    "developerName": "Crystal Magic Project",
+    "category": "Development",
+    "capabilities": [
+      "Write",
+      "Review"
+    ],
+    "defaultPrompt": [
+      "Use Crystal Magic project conventions.",
+      "Review this change against Crystal Magic rules.",
+      "Create code that follows Crystal Magic ECS rules."
+    ],
+    "brandColor": "#3B82F6"
+  }
+}

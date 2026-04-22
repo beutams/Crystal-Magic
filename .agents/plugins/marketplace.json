@@ -1,0 +1,20 @@
+{
+  "name": "crystal-magic",
+  "interface": {
+    "displayName": "Crystal Magic"
+  },
+  "plugins": [
+    {
+      "name": "crystal-magic-conventions",
+      "source": {
+        "source": "local",
+        "path": "./plugins/crystal-magic-conventions"
+      },
+      "policy": {
+        "installation": "INSTALLED_BY_DEFAULT",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Development"
+    }
+  ]
+}

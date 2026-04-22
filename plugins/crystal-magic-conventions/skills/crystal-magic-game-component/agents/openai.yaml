@@ -1,0 +1,7 @@
+interface:
+  display_name: "Crystal Magic Conventions"
+  short_description: "Crystal Magic GameComponent, UI, ECS, and factory conventions"
+  default_prompt: "Use $crystal-magic-game-component to create or update Crystal Magic GameComponent, UI, ECS, or generated factory code with the project conventions."
+
+policy:
+  allow_implicit_invocation: true
