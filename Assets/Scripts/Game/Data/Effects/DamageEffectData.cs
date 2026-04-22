@@ -1,3 +1,5 @@
+using CrystalMagic.Game.Data;
+
 namespace CrystalMagic.Game.Data.Effects
 {
     /// <summary>
@@ -29,5 +31,16 @@ namespace CrystalMagic.Game.Data.Effects
 
         /// <summary>伤害浮动随机种子偏移</summary>
         public int DamageVarianceSeed;
+
+        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers)
+        {
+            DamageEffectData copy = (DamageEffectData)base.CreateRuntimeCopy(modifiers);
+            copy.DamageCoefficient = ApplyModifier(modifiers, SkillModifierChannel.Damage, DamageCoefficient);
+            copy.FlatDamageBonus = ApplyModifier(modifiers, SkillModifierChannel.FlatDamage, FlatDamageBonus);
+            copy.CriticalBonus = ApplyModifier(modifiers, SkillModifierChannel.CriticalBonus, CriticalBonus);
+            copy.KnockbackForce = ApplyModifierNonNegative(modifiers, SkillModifierChannel.KnockbackForce, KnockbackForce);
+            copy.HitStunSeconds = ApplyModifierNonNegative(modifiers, SkillModifierChannel.HitStunSeconds, HitStunSeconds);
+            return copy;
+        }
     }
 }

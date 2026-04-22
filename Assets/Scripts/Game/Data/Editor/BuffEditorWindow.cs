@@ -449,6 +449,8 @@ namespace CrystalMagic.Editor.Data
             if (EditorGUI.EndChangeCheck())
                 _isDirty = true;
 
+            DrawSkillModifierFields(buff);
+
             // ── 子类字段 ──────────────────────────────────
             if (buff is PropertyBuffData propBuff)
                 DrawPropertyBuffFields(propBuff);
@@ -500,6 +502,51 @@ namespace CrystalMagic.Editor.Data
         // ─────────────────────────────────────────
         //  EffectBuffData 字段
         // ─────────────────────────────────────────
+        private void DrawSkillModifierFields(BuffData buff)
+        {
+            DrawSectionHeader("技能修正");
+            buff.SkillModifiers ??= new List<SkillModifierEntry>();
+
+            int removeAt = -1;
+            for (int i = 0; i < buff.SkillModifiers.Count; i++)
+            {
+                SkillModifierEntry entry = buff.SkillModifiers[i];
+
+                EditorGUI.BeginChangeCheck();
+                EditorGUILayout.BeginHorizontal();
+                entry.Channel = (SkillModifierChannel)EditorGUILayout.EnumPopup(entry.Channel, GUILayout.MinWidth(180));
+
+                float prevWidth = EditorGUIUtility.labelWidth;
+                EditorGUIUtility.labelWidth = 46f;
+                entry.Factor = EditorGUILayout.FloatField("倍率", entry.Factor, GUILayout.MinWidth(90));
+                entry.Bonus = EditorGUILayout.FloatField("加值", entry.Bonus, GUILayout.MinWidth(90));
+                EditorGUIUtility.labelWidth = prevWidth;
+
+                if (GUILayout.Button("删除", GUILayout.Width(44)))
+                    removeAt = i;
+
+                EditorGUILayout.EndHorizontal();
+
+                if (EditorGUI.EndChangeCheck())
+                {
+                    buff.SkillModifiers[i] = entry;
+                    _isDirty = true;
+                }
+            }
+
+            if (GUILayout.Button("+ 添加技能修正", GUILayout.Width(120)))
+            {
+                buff.SkillModifiers.Add(new SkillModifierEntry());
+                _isDirty = true;
+            }
+
+            if (removeAt >= 0)
+            {
+                buff.SkillModifiers.RemoveAt(removeAt);
+                _isDirty = true;
+            }
+        }
+
         private void DrawEffectBuffFields(EffectBuffData buff)
         {
             DrawSectionHeader("效果链");

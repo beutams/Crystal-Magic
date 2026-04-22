@@ -29,7 +29,9 @@ public class UnitCanStartCastSource : ISource
         if (firstSkill.SkillType == SkillType.PositionSkill && !intent.HasCastTarget)
             return 0f;
 
+        SkillModifierSet modifiers = SkillResolver.CollectModifiers(_em, _entity);
+        ResolvedSkillData resolvedSkill = SkillResolver.Resolve(firstSkill, modifiers);
         UnitManaComponent mana = _em.GetComponentData<UnitManaComponent>(_entity);
-        return mana.CurrentMana >= firstSkill.MpCost ? 1f : 0f;
+        return resolvedSkill != null && mana.CurrentMana >= resolvedSkill.MpCost ? 1f : 0f;
     }
 }

@@ -1,3 +1,5 @@
+using CrystalMagic.Game.Data;
+
 namespace CrystalMagic.Game.Data.Effects
 {
     /// <summary>
@@ -35,5 +37,14 @@ namespace CrystalMagic.Game.Data.Effects
 
         /// <summary>重新施加时是否重置为满持续时间</summary>
         public bool RefreshDurationOnReapply;
+
+        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers)
+        {
+            PersistentEffectData copy = (PersistentEffectData)base.CreateRuntimeCopy(modifiers);
+            copy.TotalDuration = ApplyModifierNonNegative(modifiers, SkillModifierChannel.EffectDuration, TotalDuration);
+            copy.TickIntervalSeconds = ApplyModifierNonNegative(modifiers, SkillModifierChannel.TickInterval, TickIntervalSeconds);
+            copy.AffectRadius = ApplyModifierNonNegative(modifiers, SkillModifierChannel.AreaRadius, AffectRadius);
+            return copy;
+        }
     }
 }

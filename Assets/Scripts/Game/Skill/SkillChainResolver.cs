@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
+using CrystalMagic.Game.Data.Effects;
+using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace CrystalMagic.Game.Skill
@@ -60,6 +63,55 @@ namespace CrystalMagic.Game.Skill
             }
 
             return null;
+        }
+    }
+
+    public static class SkillResolver
+    {
+        public static ResolvedSkillData Resolve(SkillData skillData, SkillModifierSet modifiers)
+        {
+            if (skillData == null)
+                return null;
+
+            modifiers ??= new SkillModifierSet();
+
+            return new ResolvedSkillData
+            {
+                Source = skillData,
+                Id = skillData.Id,
+                Name = skillData.Name,
+                SkillType = skillData.SkillType,
+                MpCost = math.max(0, (int)math.round(modifiers.Apply(SkillModifierChannel.MpCost, skillData.MpCost))),
+                WindupDuration = math.max(0f, modifiers.Apply(SkillModifierChannel.WindupDuration, skillData.WindupDuration)),
+                ChantDuration = math.max(0f, modifiers.Apply(SkillModifierChannel.ChantDuration, skillData.ChantDuration)),
+                RecoveryDuration = math.max(0f, modifiers.Apply(SkillModifierChannel.RecoveryDuration, skillData.RecoveryDuration)),
+                CanMoveDuringWindup = skillData.CanMoveDuringWindup,
+                CanMoveDuringCasting = skillData.CanMoveDuringCasting,
+                CanMoveDuringRecovery = skillData.CanMoveDuringRecovery,
+                MoveSpeedMultiplier = math.max(0f, modifiers.Apply(SkillModifierChannel.MoveSpeedMultiplier, skillData.MoveSpeedMultiplier)),
+                EffectChain = EffectData.CreateRuntimeCopies(skillData.EffectChain, modifiers),
+            };
+        }
+
+        public static SkillModifierSet CollectModifiers(EntityManager entityManager, Entity entity)
+        {
+            SkillModifierSet modifiers = new();
+            if (!entityManager.HasBuffer<UnitBuffElement>(entity))
+                return modifiers;
+
+            DataComponent dataComponent = DataComponent.Instance;
+            if (dataComponent == null)
+                return modifiers;
+
+            DynamicBuffer<UnitBuffElement> buffs = entityManager.GetBuffer<UnitBuffElement>(entity);
+            for (int i = 0; i < buffs.Length; i++)
+            {
+                UnitBuffElement buffElement = buffs[i];
+                if (dataComponent.Get<BuffData>(buffElement.BuffId) is BuffData buffData)
+                    modifiers.Add(buffData.SkillModifiers, math.max(1, buffElement.StackCount));
+            }
+
+            return modifiers;
         }
     }
 }

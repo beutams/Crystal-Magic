@@ -11,7 +11,20 @@ namespace CrystalMagic.Game.Skill
             if (skillData == null || skillData.EffectChain == null)
                 return;
 
-            foreach (EffectData effectData in skillData.EffectChain)
+            ExecuteEffects(skillData.EffectChain, context);
+        }
+
+        public static void ExecuteSkill(ResolvedSkillData skillData, SkillContent context)
+        {
+            if (skillData == null || skillData.EffectChain == null)
+                return;
+
+            ExecuteEffects(skillData.EffectChain, context);
+        }
+
+        private static void ExecuteEffects(EffectData[] effects, SkillContent context)
+        {
+            foreach (EffectData effectData in effects)
             {
                 Effect effect = CreateEffect(effectData);
                 effect?.Execute(context);

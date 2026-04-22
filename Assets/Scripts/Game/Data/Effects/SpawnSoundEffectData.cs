@@ -1,3 +1,5 @@
+using CrystalMagic.Game.Data;
+
 namespace CrystalMagic.Game.Data.Effects
 {
     /// <summary>
@@ -23,5 +25,14 @@ namespace CrystalMagic.Game.Data.Effects
 
         /// <summary>是否跟随施法者移动</summary>
         public bool FollowCaster;
+
+        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers)
+        {
+            SpawnSoundEffectData copy = (SpawnSoundEffectData)base.CreateRuntimeCopy(modifiers);
+            copy.Volume = ApplyModifierNonNegative(modifiers, SkillModifierChannel.SoundVolume, Volume);
+            copy.Pitch = ApplyModifierNonNegative(modifiers, SkillModifierChannel.SoundPitch, Pitch);
+            copy.DelaySeconds = ApplyModifierNonNegative(modifiers, SkillModifierChannel.SoundDelay, DelaySeconds);
+            return copy;
+        }
     }
 }

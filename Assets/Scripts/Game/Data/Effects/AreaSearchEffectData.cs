@@ -1,4 +1,5 @@
 using UnityEngine;
+using CrystalMagic.Game.Data;
 
 namespace CrystalMagic.Game.Data.Effects
 {
@@ -27,5 +28,13 @@ namespace CrystalMagic.Game.Data.Effects
         public bool LineOfSightRequired;
 
         public EffectData[] OnAfterSearch;
+
+        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers)
+        {
+            AreaSearchEffectData copy = (AreaSearchEffectData)base.CreateRuntimeCopy(modifiers);
+            copy.Radius = ApplyModifierNonNegative(modifiers, SkillModifierChannel.AreaRadius, Radius);
+            copy.OnAfterSearch = CreateRuntimeCopies(OnAfterSearch, modifiers);
+            return copy;
+        }
     }
 }

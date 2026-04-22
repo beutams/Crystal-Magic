@@ -7,7 +7,8 @@ using UnityEngine;
 
 public class CastState : AUnitState
 {
-    private readonly List<SkillData> _skills = new();
+    private readonly List<SkillData> _skillConfigs = new();
+    private readonly List<ResolvedSkillData> _skills = new();
     private readonly SkillContent _skillContent = new();
 
     public override void OnEnter()
@@ -16,7 +17,18 @@ public class CastState : AUnitState
 
         SkillCData skillConfig = SaveDataComponent.Instance?.GetSkillData();
         RuntimeSkillData runtimeSkillData = RuntimeDataComponent.Instance.GetSkillData();
-        if (!SkillChainResolver.TryBuildSelectedChain(skillConfig, runtimeSkillData, _skills, out int chainIndex))
+        if (!SkillChainResolver.TryBuildSelectedChain(skillConfig, runtimeSkillData, _skillConfigs, out int chainIndex))
+            return;
+
+        SkillModifierSet modifiers = SkillResolver.CollectModifiers(EntityManager, Entity);
+        for (int i = 0; i < _skillConfigs.Count; i++)
+        {
+            ResolvedSkillData resolvedSkill = SkillResolver.Resolve(_skillConfigs[i], modifiers);
+            if (resolvedSkill != null)
+                _skills.Add(resolvedSkill);
+        }
+
+        if (_skills.Count == 0)
             return;
 
         UnitIntentComponent intent = EntityManager.GetComponentData<UnitIntentComponent>(Entity);
@@ -36,33 +48,21 @@ public class CastState : AUnitState
     public override void OnUpdate(float deltaTime)
     {
         UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
-        if (!cast.IsCasting)
+        if (cast.IsCasting)
         {
-            ApplyMovement(float2.zero);
-            return;
+            if (cast.ForceInterrupt || !TryGetCurrentSkill(cast.CurrentSkillIndex, out _))
+                InterruptCast(ref cast);
+            else
+                AdvanceCast(deltaTime, ref cast);
         }
 
-        if (cast.ForceInterrupt || !TryGetCurrentSkill(cast.CurrentSkillIndex, out SkillData skillData))
-        {
-            InterruptCast(ref cast);
-            EntityManager.SetComponentData(Entity, cast);
-            ApplyMovement(float2.zero);
-            return;
-        }
-
-        AdvanceCast(deltaTime, ref cast);
-
-        if (cast.IsCasting && TryGetCurrentSkill(cast.CurrentSkillIndex, out skillData))
-            ApplyMovement(GetMoveInput(skillData, cast.Phase));
-        else
-            ApplyMovement(float2.zero);
-
+        ApplyMovement(cast);
         EntityManager.SetComponentData(Entity, cast);
     }
 
     public override void OnExit()
     {
-        ApplyMovement(float2.zero);
+        ApplyMovement(default);
     }
 
     private void AdvanceCast(float deltaTime, ref UnitCastComponent cast)
@@ -72,7 +72,7 @@ public class CastState : AUnitState
 
         while (cast.IsCasting && remainingTime >= 0f && guard++ < 8)
         {
-            if (!TryGetCurrentSkill(cast.CurrentSkillIndex, out SkillData skillData))
+            if (!TryGetCurrentSkill(cast.CurrentSkillIndex, out ResolvedSkillData skillData))
             {
                 FinishCast(ref cast);
                 break;
@@ -98,7 +98,7 @@ public class CastState : AUnitState
         }
     }
 
-    private bool AdvancePhase(SkillData skillData, ref UnitCastComponent cast)
+    private bool AdvancePhase(ResolvedSkillData skillData, ref UnitCastComponent cast)
     {
         switch (cast.Phase)
         {
@@ -138,7 +138,7 @@ public class CastState : AUnitState
         }
     }
 
-    private bool TryExecuteSkill(SkillData skillData)
+    private bool TryExecuteSkill(ResolvedSkillData skillData)
     {
         if (!TryConsumeMana(skillData.MpCost))
             return false;
@@ -168,7 +168,7 @@ public class CastState : AUnitState
         return true;
     }
 
-    private float GetPhaseDuration(SkillData skillData, SkillCastPhase phase)
+    private float GetPhaseDuration(ResolvedSkillData skillData, SkillCastPhase phase)
     {
         return phase switch
         {
@@ -179,37 +179,29 @@ public class CastState : AUnitState
         };
     }
 
-    private float2 GetMoveInput(SkillData skillData, SkillCastPhase phase)
-    {
-        if (!EntityManager.HasComponent<UnitIntentComponent>(Entity))
-            return float2.zero;
-
-        bool canMove = phase switch
-        {
-            SkillCastPhase.Windup => skillData.CanMoveDuringWindup,
-            SkillCastPhase.Chanting => skillData.CanMoveDuringCasting,
-            SkillCastPhase.Recovery => skillData.CanMoveDuringRecovery,
-            _ => false,
-        };
-
-        if (!canMove)
-            return float2.zero;
-
-        UnitIntentComponent intent = EntityManager.GetComponentData<UnitIntentComponent>(Entity);
-        return intent.MoveDirection * skillData.MoveSpeedMultiplier;
-    }
-
-    private void ApplyMovement(float2 moveInput)
+    private void ApplyMovement(UnitCastComponent cast)
     {
         if (!EntityManager.HasComponent<UnitMoveComponent>(Entity))
             return;
 
         UnitMoveComponent move = EntityManager.GetComponentData<UnitMoveComponent>(Entity);
-        move.AccelInput = moveInput;
+        move.AccelInput = float2.zero;
+        move.StateSpeedFactor = 1f;
+
+        if (cast.IsCasting &&
+            TryGetCurrentSkill(cast.CurrentSkillIndex, out ResolvedSkillData skillData) &&
+            skillData.CanMoveWhileCasting &&
+            EntityManager.HasComponent<UnitIntentComponent>(Entity))
+        {
+            UnitIntentComponent intent = EntityManager.GetComponentData<UnitIntentComponent>(Entity);
+            move.AccelInput = intent.MoveDirection;
+            move.StateSpeedFactor = math.max(0f, skillData.MoveSpeedMultiplier);
+        }
+
         EntityManager.SetComponentData(Entity, move);
     }
 
-    private bool TryGetCurrentSkill(int skillIndex, out SkillData skillData)
+    private bool TryGetCurrentSkill(int skillIndex, out ResolvedSkillData skillData)
     {
         if (skillIndex >= 0 && skillIndex < _skills.Count)
         {
@@ -241,6 +233,7 @@ public class CastState : AUnitState
 
     private void ResetCastState()
     {
+        _skillConfigs.Clear();
         _skills.Clear();
 
         UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);

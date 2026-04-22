@@ -1,4 +1,5 @@
 using UnityEngine;
+using CrystalMagic.Game.Data;
 
 namespace CrystalMagic.Game.Data.Effects
 {
@@ -20,6 +21,9 @@ namespace CrystalMagic.Game.Data.Effects
         /// <summary>相对施法者的生成偏移</summary>
         public Vector3 SpawnOffset;
 
+        /// <summary>投射物缩放倍率，1 = 原始大小</summary>
+        public float Scale = 1f;
+
         /// <summary>穿透目标数量，0 = 不穿透</summary>
         public int PiercingCount;
 
@@ -30,5 +34,16 @@ namespace CrystalMagic.Game.Data.Effects
         public EffectData[] OnCollisionEffects;
         [SerializeReference]
         public EffectData[] OnDestoryEffects;
+
+        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers)
+        {
+            SpawnProjectileEffectData copy = (SpawnProjectileEffectData)base.CreateRuntimeCopy(modifiers);
+            copy.Speed = ApplyModifierNonNegative(modifiers, SkillModifierChannel.ProjectileSpeed, Speed);
+            copy.MaxRange = ApplyModifierNonNegative(modifiers, SkillModifierChannel.ProjectileRange, MaxRange);
+            copy.Scale = ApplyModifierNonNegative(modifiers, SkillModifierChannel.ProjectileScale, Scale);
+            copy.OnCollisionEffects = CreateRuntimeCopies(OnCollisionEffects, modifiers);
+            copy.OnDestoryEffects = CreateRuntimeCopies(OnDestoryEffects, modifiers);
+            return copy;
+        }
     }
 }

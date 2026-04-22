@@ -1,4 +1,5 @@
 using UnityEngine;
+using CrystalMagic.Game.Data;
 
 namespace CrystalMagic.Game.Data.Effects
 {
@@ -25,5 +26,13 @@ namespace CrystalMagic.Game.Data.Effects
 
         /// <summary>是否对齐施法者朝向</summary>
         public bool AlignToCasterForward;
+
+        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers)
+        {
+            SpawnVfxEffectData copy = (SpawnVfxEffectData)base.CreateRuntimeCopy(modifiers);
+            copy.Duration = ApplyModifierNonNegative(modifiers, SkillModifierChannel.EffectDuration, Duration);
+            copy.Scale = ApplyModifierNonNegative(modifiers, SkillModifierChannel.VfxScale, Scale);
+            return copy;
+        }
     }
 }

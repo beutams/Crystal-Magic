@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data.Effects;
 using UnityEngine;
@@ -16,6 +17,7 @@ namespace CrystalMagic.Game.Data
         public string Name;
         public bool   CanStack;
         public int    MaxStacks = 1;
+        public List<SkillModifierEntry> SkillModifiers = new();
         public abstract BuffCategory Category { get; }
     }
 
