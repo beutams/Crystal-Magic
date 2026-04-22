@@ -62,18 +62,18 @@ namespace CrystalMagic.Core {
                 }
             }
 
-            Debug.Log("[TransitionState] Hiding transition UI");
-            yield return GameFlowComponent.Instance.StartCoroutine(transition.HideAsync());
-
-            Debug.Log("[TransitionState] Transitioning to target state");
-
             object targetStateData = null;
             if (StateData is TransitionData transData)
             {
                 targetStateData = transData.TargetStateData;
             }
 
+            Debug.Log("[TransitionState] Transitioning to target state");
             GameFlowComponent.Instance.SetState(_targetStateType, targetStateData);
+
+            Debug.Log("[TransitionState] Hiding transition UI");
+            yield return GameFlowComponent.Instance.StartCoroutine(transition.HideAsync());
+
             _onTransitionComplete?.Invoke();
         }
 
