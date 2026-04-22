@@ -4,6 +4,7 @@ using UnityEngine;
 /// <summary>
 /// 待机状态——清零加速意图，MoveSystem 会自然减速到停。
 /// </summary>
+[FactoryKey("IdleState")]
 public class IdleState : AUnitState
 {
     public override void OnEnter()

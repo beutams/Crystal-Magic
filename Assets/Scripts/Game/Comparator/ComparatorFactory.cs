@@ -9,37 +9,44 @@ using UnityEngine;
 /// </summary>
 public class ComparatorFactory
 {
-    private readonly Dictionary<string, Func<ISource>>             _sourceFactories  = new();
-    private readonly Dictionary<string, Func<float, ICompareType>> _compareFactories = new();
+    private readonly GeneratedFactory<string, ISource> _sourceFactories = new(StringComparer.Ordinal);
+    private readonly GeneratedFactory<string, float, ICompareType> _compareFactories = new(StringComparer.Ordinal);
     /// <summary>注册 ISource 实现，要求有无参构造。</summary>
-    public void RegisterSource<T>() where T : ISource, new()
-        => _sourceFactories[typeof(T).Name] = static () => new T();
+    public void RegisterSource(string key, Func<ISource> factory)
+    {
+        _sourceFactories.Register(key, factory);
+    }
 
     /// <summary>
     /// 注册 ICompareType 实现。
     /// 带 value 字段传 <c>v => new T { value = v }</c>；
     /// 无 value 字段传 <c>_ => new T()</c>。
     /// </summary>
-    public void RegisterCompareType<T>(Func<float, T> factory) where T : ICompareType
-        => _compareFactories[typeof(T).Name] = v => factory(v);
+    public void RegisterCompareType(string key, Func<float, ICompareType> factory)
+    {
+        _compareFactories.Register(key, factory);
+    }
+
     public ISource CreateSource(string typeName)
     {
-        if (!_sourceFactories.TryGetValue(typeName, out var factory))
+        ISource source = _sourceFactories.Create(typeName);
+        if (source == null)
         {
             Debug.LogError($"[ComparatorFactory] 未注册 ISource: {typeName}");
             return null;
         }
-        return factory();
+        return source;
     }
 
     public ICompareType CreateCompareType(string typeName, float value)
     {
-        if (!_compareFactories.TryGetValue(typeName, out var factory))
+        ICompareType compareType = _compareFactories.Create(typeName, value);
+        if (compareType == null)
         {
             Debug.LogError($"[ComparatorFactory] 未注册 ICompareType: {typeName}");
             return null;
         }
-        return factory(value);
+        return compareType;
     }
 
     // ════════════════════════════════════════════════

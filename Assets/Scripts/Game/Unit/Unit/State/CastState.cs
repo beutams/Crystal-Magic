@@ -5,6 +5,7 @@ using CrystalMagic.Game.Skill;
 using Unity.Mathematics;
 using UnityEngine;
 
+[FactoryKey("CastState")]
 public class CastState : AUnitState
 {
     private readonly List<SkillData> _skillConfigs = new();

@@ -1,12 +1,22 @@
+using Unity.Burst;
 using Unity.Entities;
 
-partial class PlayerCastSystem : SystemBase
+[BurstCompile]
+partial struct PlayerCastSystem : ISystem
 {
-    protected override void OnUpdate()
+    [BurstCompile]
+    public void OnCreate(ref SystemState state)
     {
-        foreach(var (_,intent) in SystemAPI.Query<RefRO<PlayerTag>,RefRO<UnitIntentComponent>>())
+        state.RequireForUpdate<PlayerTag>();
+        state.RequireForUpdate<UnitIntentComponent>();
+    }
+
+    [BurstCompile]
+    public void OnUpdate(ref SystemState state)
+    {
+        foreach (var (_, intent) in SystemAPI.Query<RefRO<PlayerTag>, RefRO<UnitIntentComponent>>())
         {
-            if(intent.ValueRO.WantToCast)
+            if (intent.ValueRO.WantToCast)
             {
 
             }

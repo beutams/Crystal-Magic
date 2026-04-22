@@ -1,5 +1,6 @@
 using Unity.Entities;
 
+[FactoryKey("UnitWantToCastSource")]
 public class UnitWantToCastSource : ISource
 {
     private Entity _entity;

@@ -4,6 +4,7 @@ using Unity.Mathematics;
 /// 移动状态——从 UnitIntentComponent 读取移动方向，写入 UnitMoveComponent.AccelInput。
 /// MoveSystem 负责从加速度积分到速度。
 /// </summary>
+[FactoryKey("MoveState")]
 public class MoveState : AUnitState
 {
     public override void OnEnter() { }

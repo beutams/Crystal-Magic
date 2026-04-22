@@ -3,6 +3,7 @@ using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Skill;
 using Unity.Entities;
 
+[FactoryKey("UnitCanStartCastSource")]
 public class UnitCanStartCastSource : ISource
 {
     private Entity _entity;

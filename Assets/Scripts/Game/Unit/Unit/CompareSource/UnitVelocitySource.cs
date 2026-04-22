@@ -5,6 +5,7 @@ using Unity.Mathematics;
 /// 读取单位当前速度大小（Velocity 向量的模长）。
 /// 需要通过 Init 注入 Entity/EntityManager 后才能使用。
 /// </summary>
+[FactoryKey("UnitVelocitySource")]
 public class UnitVelocitySource : ISource
 {
     private Entity _entity;
