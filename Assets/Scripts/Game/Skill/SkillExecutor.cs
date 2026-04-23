@@ -39,6 +39,7 @@ namespace CrystalMagic.Game.Skill
             return effectData switch
             {
                 AreaSearchEffectData data => new AreaSearchEffect(data),
+                CameraShakeEffectData data => new CameraShakeEffect(data),
                 DamageEffectData data => new DamageEffect(data),
                 PersistentEffectData data => new PersistentEffect(data),
                 SpawnProjectileEffectData data => new SpawnProjectileEffect(data),

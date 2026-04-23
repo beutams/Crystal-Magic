@@ -35,6 +35,7 @@ namespace CrystalMagic.Editor.Skill
             typeof(SpawnProjectileEffectData),
             typeof(SpawnSoundEffectData),
             typeof(SpawnVfxEffectData),
+            typeof(CameraShakeEffectData),
         };
         private static readonly string[] KnownEffectNames =
         {
@@ -44,6 +45,7 @@ namespace CrystalMagic.Editor.Skill
             "创建投射物 (SpawnProjectile)",
             "生成音效 (SpawnSound)",
             "生成特效 (SpawnVfx)",
+            "Camera Shake (CameraShake)",
         };
         private static readonly Color[] EffectColors =
         {
@@ -53,6 +55,7 @@ namespace CrystalMagic.Editor.Skill
             new(0.55f, 0.38f, 0.10f),  // Projectile  — 橙
             new(0.38f, 0.18f, 0.55f),  // Sound       — 紫
             new(0.18f, 0.48f, 0.48f),  // Vfx         — 青
+            new(0.58f, 0.42f, 0.12f),  // CameraShake
         };
 
         // ===== 数据 =====

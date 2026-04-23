@@ -91,6 +91,10 @@ namespace CrystalMagic.Game.Data
         SoundVolume = 600,
         SoundPitch = 601,
         SoundDelay = 602,
+        CameraShakeAmplitude = 700,
+        CameraShakeDuration = 701,
+        CameraShakeFrequency = 702,
+        CameraShakeRadius = 703,
     }
 
     [System.Serializable]
