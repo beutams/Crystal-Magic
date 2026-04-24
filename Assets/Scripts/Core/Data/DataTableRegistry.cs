@@ -11,6 +11,7 @@ namespace CrystalMagic.Core
     {
         public static void RegisterAll(DataComponent component)
         {
+            component.LoadTable<BehaviorTreeData>("BehaviorTreeDataTable");
             component.LoadTable<EffectBuffData>("EffectBuffDataTable");
             component.LoadTable<ItemData>("ItemDataTable");
             component.LoadTable<NPCData>("NPCDataTable");

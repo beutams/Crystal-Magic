@@ -511,7 +511,7 @@ namespace CrystalMagic.Editor.Unit
                 foreach (var tr in sc.Transitions)
                 {
                     if (!_stateNodes.TryGetValue(tr.TargetStateType, out var dstNode)) continue;
-                    var edge = srcNode.OutputPort.ConnectTo(dstNode.InputPort);
+                    var edge = CreateTransitionEdge(srcNode, dstNode);
                     AddElement(edge);
                     EdgeToTransition[edge] = tr;
                 }
@@ -543,6 +543,7 @@ namespace CrystalMagic.Editor.Unit
 
             if (change.edgesToCreate != null)
             {
+                var replacementEdges = new List<Edge>();
                 foreach (var edge in change.edgesToCreate)
                 {
                     if (edge.output.node is not StateNode src ||
@@ -554,9 +555,14 @@ namespace CrystalMagic.Editor.Unit
 
                     var tr = new UnitTransitionConfig { TargetStateType = dst.StateType };
                     srcState.Transitions.Add(tr);
-                    EdgeToTransition[edge] = tr;
+                    Edge customEdge = edge is StateTransitionEdge
+                        ? edge
+                        : CreateTransitionEdge(src, dst);
+                    replacementEdges.Add(customEdge);
+                    EdgeToTransition[customEdge] = tr;
                     _window.MarkDirty();
                 }
+                change.edgesToCreate = replacementEdges;
             }
 
             if (change.elementsToRemove != null)
@@ -595,10 +601,46 @@ namespace CrystalMagic.Editor.Unit
             return change;
         }
 
+        private static StateTransitionEdge CreateTransitionEdge(StateNode srcNode, StateNode dstNode)
+        {
+            var edge = new StateTransitionEdge
+            {
+                output = srcNode.OutputPort,
+                input = dstNode.InputPort,
+            };
+
+            edge.output.Connect(edge);
+            edge.input.Connect(edge);
+            edge.MarkDirtyRepaint();
+            return edge;
+        }
+
         // ── Context menu ────────────────────────────────────
 
         public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
         {
+            StateNode contextNode = FindStateNode(evt.target as VisualElement);
+            if (contextNode != null)
+            {
+                bool addedConnectionAction = false;
+                foreach (var pair in _stateNodes)
+                {
+                    if (pair.Value == contextNode)
+                        continue;
+
+                    string targetStateType = pair.Key;
+                    bool exists = HasTransition(contextNode.StateType, targetStateType);
+                    evt.menu.AppendAction(
+                        $"Add Transition/{targetStateType}",
+                        _ => TryAddTransition(contextNode.StateType, targetStateType),
+                        _ => exists ? DropdownMenuAction.Status.Disabled : DropdownMenuAction.Status.Normal);
+                    addedConnectionAction = true;
+                }
+
+                if (addedConnectionAction)
+                    evt.menu.AppendSeparator();
+            }
+
             Vector2 graphPos = contentViewContainer.WorldToLocal(
                 this.LocalToWorld(evt.localMousePosition));
 
@@ -629,6 +671,51 @@ namespace CrystalMagic.Editor.Unit
 
             base.BuildContextualMenu(evt);
         }
+
+        private static StateNode FindStateNode(VisualElement element)
+        {
+            while (element != null)
+            {
+                if (element is StateNode node)
+                    return node;
+                element = element.parent;
+            }
+
+            return null;
+        }
+
+        private bool HasTransition(string sourceStateType, string targetStateType)
+        {
+            var unit = _window.SelectedUnit;
+            if (unit?.States == null)
+                return false;
+
+            var sourceState = unit.States.FirstOrDefault(s => s.StateType == sourceStateType);
+            return sourceState?.Transitions.Any(t => t.TargetStateType == targetStateType) == true;
+        }
+
+        private void TryAddTransition(string sourceStateType, string targetStateType)
+        {
+            var unit = _window.SelectedUnit;
+            if (unit?.States == null)
+                return;
+
+            if (!_stateNodes.TryGetValue(sourceStateType, out var srcNode) ||
+                !_stateNodes.TryGetValue(targetStateType, out var dstNode))
+                return;
+
+            var sourceState = unit.States.FirstOrDefault(s => s.StateType == sourceStateType);
+            if (sourceState == null || sourceState.Transitions.Any(t => t.TargetStateType == targetStateType))
+                return;
+
+            var transition = new UnitTransitionConfig { TargetStateType = targetStateType };
+            sourceState.Transitions.Add(transition);
+
+            var edge = CreateTransitionEdge(srcNode, dstNode);
+            AddElement(edge);
+            EdgeToTransition[edge] = transition;
+            _window.MarkDirty();
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -653,11 +740,18 @@ namespace CrystalMagic.Editor.Unit
                 Orientation.Horizontal, Direction.Input, Port.Capacity.Multi, typeof(bool));
             InputPort.portName = "进入";
             inputContainer.Add(InputPort);
+            InputPort.portName = string.Empty;
+            InputPort.style.display = DisplayStyle.None;
 
             OutputPort = Port.Create<Edge>(
                 Orientation.Horizontal, Direction.Output, Port.Capacity.Multi, typeof(bool));
             OutputPort.portName = "转出";
             outputContainer.Add(OutputPort);
+            OutputPort.portName = string.Empty;
+            OutputPort.style.display = DisplayStyle.None;
+
+            InputPort.style.minWidth = 12f;
+            OutputPort.style.minWidth = 12f;
 
             if (isInitial)
             {
@@ -666,6 +760,105 @@ namespace CrystalMagic.Editor.Unit
 
             RefreshExpandedState();
             RefreshPorts();
+        }
+
+        public override void SetPosition(Rect newPos)
+        {
+            base.SetPosition(newPos);
+            RefreshConnectedEdges();
+        }
+
+        private void RefreshConnectedEdges()
+        {
+            if (InputPort != null)
+            {
+                foreach (Edge edge in InputPort.connections)
+                    edge?.MarkDirtyRepaint();
+            }
+
+            if (OutputPort != null)
+            {
+                foreach (Edge edge in OutputPort.connections)
+                    edge?.MarkDirtyRepaint();
+            }
+        }
+    }
+
+    public sealed class StateTransitionEdge : Edge
+    {
+        private static readonly Color NormalColor = new(0.78f, 0.78f, 0.78f, 0.95f);
+        private static readonly Color SelectedColor = new(1f, 0.72f, 0.28f, 1f);
+
+        public StateTransitionEdge()
+        {
+            edgeControl.style.opacity = 0f;
+            generateVisualContent += OnGenerateVisualContent;
+        }
+
+        private void OnGenerateVisualContent(MeshGenerationContext context)
+        {
+            if (output?.node is not StateNode srcNode || input?.node is not StateNode dstNode)
+                return;
+
+            Vector2 fromCenter = this.WorldToLocal(srcNode.worldBound.center);
+            Vector2 toCenter = this.WorldToLocal(dstNode.worldBound.center);
+            Rect srcRect = new Rect(fromCenter - srcNode.worldBound.size * 0.5f, srcNode.worldBound.size);
+            Rect dstRect = new Rect(toCenter - dstNode.worldBound.size * 0.5f, dstNode.worldBound.size);
+            Vector2 from = GetRectEdgePoint(srcRect, toCenter);
+            Vector2 to = GetRectEdgePoint(dstRect, fromCenter);
+            Vector2 delta = to - from;
+            if (delta.sqrMagnitude < 0.01f)
+                return;
+
+            Vector2 direction = delta.normalized;
+            Vector2 normal = new Vector2(-direction.y, direction.x);
+            Color color = selected ? SelectedColor : NormalColor;
+
+            var painter = context.painter2D;
+            painter.lineWidth = 2.2f;
+            painter.strokeColor = color;
+            painter.fillColor = color;
+
+            painter.BeginPath();
+            painter.MoveTo(from);
+            painter.LineTo(to);
+            painter.Stroke();
+
+            float arrowLength = 14f;
+            float arrowWidth = 6f;
+            Vector2 arrowBase = to - direction * arrowLength;
+
+            painter.BeginPath();
+            painter.MoveTo(to);
+            painter.LineTo(arrowBase + normal * arrowWidth);
+            painter.LineTo(arrowBase - normal * arrowWidth);
+            painter.ClosePath();
+            painter.Fill();
+        }
+
+        private static Vector2 GetRectEdgePoint(Rect rect, Vector2 targetPoint)
+        {
+            Vector2 center = rect.center;
+            Vector2 delta = targetPoint - center;
+            if (delta.sqrMagnitude < 0.0001f)
+                return center;
+
+            float tx = float.PositiveInfinity;
+            float ty = float.PositiveInfinity;
+
+            if (Mathf.Abs(delta.x) > 0.0001f)
+                tx = delta.x > 0f ? (rect.xMax - center.x) / delta.x : (rect.xMin - center.x) / delta.x;
+            if (Mathf.Abs(delta.y) > 0.0001f)
+                ty = delta.y > 0f ? (rect.yMax - center.y) / delta.y : (rect.yMin - center.y) / delta.y;
+
+            float t = Mathf.Min(
+                tx > 0f ? tx : float.PositiveInfinity,
+                ty > 0f ? ty : float.PositiveInfinity);
+
+            if (float.IsInfinity(t))
+                return center;
+
+            return center + delta * t;
         }
     }
 }

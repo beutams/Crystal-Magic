@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 using CrystalMagic.Core;
+using CrystalMagic.Editor.Unit;
 using CrystalMagic.Game.Data;
 
 namespace CrystalMagic.Editor.Data
@@ -459,11 +460,9 @@ namespace CrystalMagic.Editor.Data
             GUILayout.Space(4);
             EditorGUILayout.BeginHorizontal();
             GUILayout.Space(8);
-            string[] tabs = HasAuthoring<UnitStateMachineAuthoring>(entry)
-                ? TabNames
-                : new[] { TabNames[0] };
+            string[] tabs = { "属性", "状态", "行为" };
             _selectedTab = Mathf.Clamp(_selectedTab, 0, tabs.Length - 1);
-            int newTab = GUILayout.Toolbar(_selectedTab, tabs, GUILayout.Width(180), GUILayout.Height(24));
+            int newTab = GUILayout.Toolbar(_selectedTab, tabs, GUILayout.Width(260), GUILayout.Height(24));
             if (newTab != _selectedTab) { _selectedTab = newTab; GUI.FocusControl(null); Repaint(); }
             EditorGUILayout.EndHorizontal();
 
@@ -478,7 +477,8 @@ namespace CrystalMagic.Editor.Data
             switch (_selectedTab)
             {
                 case 0: DrawAttributePanel(entry, unit); break;
-                case 1: DrawAIPanel(unit);        break;
+                case 1: DrawStatePreviewPanel(entry, unit); break;
+                case 2: DrawBehaviorPreviewPanel(entry); break;
             }
 
             EditorGUIUtility.labelWidth = prev;
@@ -640,6 +640,163 @@ namespace CrystalMagic.Editor.Data
             DrawNpcInteractableSection(entry);
 
             if (EditorGUI.EndChangeCheck()) _isDirty = true;
+        }
+
+        private void DrawStatePreviewPanel(UnitPrefabEntry entry, UnitData unit)
+        {
+            DrawSectionHeader("State");
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label("State Machine", EditorStyles.boldLabel);
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Open State Editor", GUILayout.Width(140f)))
+                StateMachineGraphWindow.Open();
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.HelpBox("State data is preview-only here. Edit it in the State Machine editor.", MessageType.Info);
+
+            if (!HasAuthoring<UnitStateMachineAuthoring>(entry))
+            {
+                EditorGUILayout.HelpBox("This prefab does not have UnitStateMachineAuthoring.", MessageType.Warning);
+                return;
+            }
+
+            List<UnitStateConfig> states = unit?.States ?? new List<UnitStateConfig>();
+            EditorGUILayout.LabelField("State Count", states.Count.ToString());
+            EditorGUILayout.LabelField("Initial State", states.Count > 0 ? states[0].StateType : "None");
+
+            if (states.Count == 0)
+            {
+                EditorGUILayout.HelpBox("No state config found on the bound UnitData.", MessageType.Info);
+                return;
+            }
+
+            GUILayout.Space(6f);
+            for (int stateIndex = 0; stateIndex < states.Count; stateIndex++)
+            {
+                UnitStateConfig state = states[stateIndex];
+                List<UnitTransitionConfig> transitions = state?.Transitions ?? new List<UnitTransitionConfig>();
+
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                EditorGUILayout.LabelField(stateIndex == 0 ? $"{state.StateType} (Default)" : state.StateType, EditorStyles.boldLabel);
+                EditorGUILayout.LabelField("Transitions", transitions.Count.ToString());
+
+                if (transitions.Count == 0)
+                {
+                    EditorGUILayout.LabelField("No outgoing transitions.", EditorStyles.miniLabel);
+                }
+                else
+                {
+                    for (int transitionIndex = 0; transitionIndex < transitions.Count; transitionIndex++)
+                    {
+                        UnitTransitionConfig transition = transitions[transitionIndex];
+                        EditorGUILayout.LabelField($"-> {transition.TargetStateType}");
+                        EditorGUILayout.LabelField(GetTransitionPreviewText(transition), EditorStyles.wordWrappedMiniLabel);
+                    }
+                }
+
+                EditorGUILayout.EndVertical();
+                GUILayout.Space(4f);
+            }
+        }
+
+        private void DrawBehaviorPreviewPanel(UnitPrefabEntry entry)
+        {
+            DrawSectionHeader("Behavior");
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label("Behavior Tree", EditorStyles.boldLabel);
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Open Behavior Editor", GUILayout.Width(150f)))
+                BehaviorTreeGraphWindow.Open();
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.HelpBox("Behavior data is preview-only here. Edit it in the Behavior Tree editor.", MessageType.Info);
+
+            UnitBehaviorTreeAuthoring authoring = entry.Prefab.GetComponent<UnitBehaviorTreeAuthoring>();
+            if (authoring == null)
+            {
+                EditorGUILayout.HelpBox("This prefab does not have UnitBehaviorTreeAuthoring.", MessageType.Warning);
+                return;
+            }
+
+            using (new EditorGUI.DisabledScope(true))
+            {
+                EditorGUILayout.IntField("BehaviorTreeId", authoring.BehaviorTreeId);
+                EditorGUILayout.FloatField("Tick Interval", authoring.TickInterval);
+                EditorGUILayout.Toggle("Enable On Start", authoring.EnableOnStart);
+            }
+
+            BehaviorTreeData tree = authoring.BehaviorTreeId > 0
+                ? EditorComponents.Data.Get<BehaviorTreeData>(authoring.BehaviorTreeId)
+                : null;
+
+            if (tree == null)
+            {
+                EditorGUILayout.HelpBox("BehaviorTreeData was not found for the current BehaviorTreeId.", MessageType.Warning);
+                return;
+            }
+
+            EditorGUILayout.LabelField("Tree", $"[{tree.Id}] {GetBehaviorTreePreviewName(tree)}");
+            if (!string.IsNullOrWhiteSpace(tree.Description))
+                EditorGUILayout.LabelField("Description", tree.Description, EditorStyles.wordWrappedLabel);
+
+            EditorGUILayout.LabelField("Node Count", tree.Nodes?.Count.ToString() ?? "0");
+
+            BehaviorNodeData rootNode = tree.GetRootNode();
+            EditorGUILayout.LabelField(
+                "Root",
+                rootNode != null ? BehaviorNodeDataRegistry.GetDisplayName(rootNode.Type) : "None");
+
+            if (tree.Nodes == null || tree.Nodes.Count == 0)
+            {
+                EditorGUILayout.HelpBox("This behavior tree has no nodes.", MessageType.Info);
+                return;
+            }
+
+            GUILayout.Space(6f);
+            for (int nodeIndex = 0; nodeIndex < tree.Nodes.Count; nodeIndex++)
+            {
+                BehaviorNodeData node = tree.Nodes[nodeIndex];
+                if (node == null)
+                    continue;
+
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                EditorGUILayout.LabelField(
+                    $"[{nodeIndex + 1}] {BehaviorNodeDataRegistry.GetDisplayName(node.Type)}",
+                    EditorStyles.boldLabel);
+                EditorGUILayout.LabelField(BehaviorNodeDataRegistry.GetSummary(node), EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.EndVertical();
+                GUILayout.Space(4f);
+            }
+        }
+
+        private static string GetTransitionPreviewText(UnitTransitionConfig transition)
+        {
+            List<ConditionConfig> conditions = transition?.Conditions ?? new List<ConditionConfig>();
+            if (conditions.Count == 0)
+                return "Always";
+
+            return string.Join(" | ", conditions.Select(GetConditionPreviewText));
+        }
+
+        private static string GetConditionPreviewText(ConditionConfig condition)
+        {
+            if (condition == null)
+                return "None";
+
+            string sourceType = string.IsNullOrWhiteSpace(condition.SourceType) ? "?" : condition.SourceType;
+            string compareType = string.IsNullOrWhiteSpace(condition.CompareType) ? "?" : condition.CompareType;
+            string valueText = compareType is "GreaterThan" or "LessThan" or "Equal"
+                ? $" {condition.CompareValue:0.##}"
+                : string.Empty;
+            return $"{condition.ConditionType}: {sourceType} {compareType}{valueText}";
+        }
+
+        private static string GetBehaviorTreePreviewName(BehaviorTreeData tree)
+        {
+            if (!string.IsNullOrWhiteSpace(tree?.Name))
+                return tree.Name;
+
+            return "Unnamed Tree";
         }
 
         // ══════════════════════════════════════════════
