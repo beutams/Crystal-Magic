@@ -584,6 +584,26 @@ namespace CrystalMagic.Editor.Data
         // ══════════════════════════════════════════════
         //  属性面板
         // ══════════════════════════════════════════════
+        private void DrawPerceptionSection(UnitPrefabEntry entry)
+        {
+            UnitPerceptionAuthoring perceptionAuthoring = entry.Prefab.GetComponent<UnitPerceptionAuthoring>();
+            if (perceptionAuthoring == null)
+            {
+                return;
+            }
+
+            GUILayout.Space(8);
+            DrawSectionHeader("Perception（感知）");
+
+            float newSearchRadius = EditorGUILayout.FloatField("搜索范围", perceptionAuthoring.SearchRadius);
+            if (!Mathf.Approximately(newSearchRadius, perceptionAuthoring.SearchRadius))
+            {
+                perceptionAuthoring.SearchRadius = newSearchRadius;
+                MarkPrefabDirty(perceptionAuthoring);
+                _isDirty = true;
+            }
+        }
+
         private void DrawAttributePanel(UnitPrefabEntry entry, UnitData unit)
         {
             EditorGUI.BeginChangeCheck();
@@ -637,6 +657,7 @@ namespace CrystalMagic.Editor.Data
                 unit.BaseMaxMp = EditorGUILayout.FloatField("最大魔力值", unit.BaseMaxMp);
             }
 
+            DrawPerceptionSection(entry);
             DrawNpcInteractableSection(entry);
 
             if (EditorGUI.EndChangeCheck()) _isDirty = true;
