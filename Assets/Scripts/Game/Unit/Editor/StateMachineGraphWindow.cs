@@ -44,7 +44,7 @@ namespace CrystalMagic.Editor.Unit
             NullValueHandling = NullValueHandling.Ignore,
         };
 
-        [MenuItem("Tools/State Machine/Visual Editor")]
+        [MenuItem("Tools/Data/State Machine Visual Editor")]
         public static void Open()
         {
             var w = GetWindow<StateMachineGraphWindow>("SM Graph");
@@ -788,6 +788,8 @@ namespace CrystalMagic.Editor.Unit
     {
         private static readonly Color NormalColor = new(0.78f, 0.78f, 0.78f, 0.95f);
         private static readonly Color SelectedColor = new(1f, 0.72f, 0.28f, 1f);
+        private const float BidirectionalOffset = 10f;
+        private const float HitDistance = 10f;
 
         public StateTransitionEdge()
         {
@@ -797,21 +799,13 @@ namespace CrystalMagic.Editor.Unit
 
         private void OnGenerateVisualContent(MeshGenerationContext context)
         {
-            if (output?.node is not StateNode srcNode || input?.node is not StateNode dstNode)
+            if (!TryGetSegment(out Vector2 from, out Vector2 to, out Vector2 normal))
                 return;
-
-            Vector2 fromCenter = this.WorldToLocal(srcNode.worldBound.center);
-            Vector2 toCenter = this.WorldToLocal(dstNode.worldBound.center);
-            Rect srcRect = new Rect(fromCenter - srcNode.worldBound.size * 0.5f, srcNode.worldBound.size);
-            Rect dstRect = new Rect(toCenter - dstNode.worldBound.size * 0.5f, dstNode.worldBound.size);
-            Vector2 from = GetRectEdgePoint(srcRect, toCenter);
-            Vector2 to = GetRectEdgePoint(dstRect, fromCenter);
             Vector2 delta = to - from;
             if (delta.sqrMagnitude < 0.01f)
                 return;
 
             Vector2 direction = delta.normalized;
-            Vector2 normal = new Vector2(-direction.y, direction.x);
             Color color = selected ? SelectedColor : NormalColor;
 
             var painter = context.painter2D;
@@ -834,6 +828,58 @@ namespace CrystalMagic.Editor.Unit
             painter.LineTo(arrowBase - normal * arrowWidth);
             painter.ClosePath();
             painter.Fill();
+        }
+
+        public override bool ContainsPoint(Vector2 localPoint)
+        {
+            if (!TryGetSegment(out Vector2 from, out Vector2 to, out _))
+                return base.ContainsPoint(localPoint);
+
+            return DistanceToSegment(localPoint, from, to) <= HitDistance;
+        }
+
+        private bool TryGetSegment(out Vector2 from, out Vector2 to, out Vector2 normal)
+        {
+            from = default;
+            to = default;
+            normal = default;
+
+            if (output?.node is not StateNode srcNode || input?.node is not StateNode dstNode)
+                return false;
+
+            Vector2 fromCenter = this.WorldToLocal(srcNode.worldBound.center);
+            Vector2 toCenter = this.WorldToLocal(dstNode.worldBound.center);
+            Rect srcRect = new Rect(fromCenter - srcNode.worldBound.size * 0.5f, srcNode.worldBound.size);
+            Rect dstRect = new Rect(toCenter - dstNode.worldBound.size * 0.5f, dstNode.worldBound.size);
+            from = GetRectEdgePoint(srcRect, toCenter);
+            to = GetRectEdgePoint(dstRect, fromCenter);
+
+            Vector2 delta = to - from;
+            if (delta.sqrMagnitude < 0.01f)
+                return false;
+
+            Vector2 direction = delta.normalized;
+            normal = new Vector2(-direction.y, direction.x);
+
+            float signedOffset = GetSignedOffset(srcNode, dstNode);
+            if (!Mathf.Approximately(signedOffset, 0f))
+            {
+                Vector2 offset = normal * signedOffset;
+                from += offset;
+                to += offset;
+            }
+
+            return true;
+        }
+
+        private float GetSignedOffset(StateNode srcNode, StateNode dstNode)
+        {
+            bool hasReverseEdge = dstNode.OutputPort != null &&
+                                  dstNode.OutputPort.connections.Any(edge => edge?.input?.node == srcNode);
+            if (!hasReverseEdge)
+                return 0f;
+
+            return BidirectionalOffset;
         }
 
         private static Vector2 GetRectEdgePoint(Rect rect, Vector2 targetPoint)
@@ -859,6 +905,18 @@ namespace CrystalMagic.Editor.Unit
                 return center;
 
             return center + delta * t;
+        }
+
+        private static float DistanceToSegment(Vector2 point, Vector2 start, Vector2 end)
+        {
+            Vector2 segment = end - start;
+            float lengthSq = segment.sqrMagnitude;
+            if (lengthSq < 0.0001f)
+                return Vector2.Distance(point, start);
+
+            float t = Mathf.Clamp01(Vector2.Dot(point - start, segment) / lengthSq);
+            Vector2 projection = start + segment * t;
+            return Vector2.Distance(point, projection);
         }
     }
 }

@@ -41,7 +41,7 @@ namespace CrystalMagic.Editor.Unit
             public List<BehaviorTreeData> Rows = new();
         }
 
-        [MenuItem("Tools/Behavior Tree/Visual Editor")]
+        [MenuItem("Tools/Data/Behavior Tree Visual Editor")]
         public static void Open()
         {
             BehaviorTreeGraphWindow window = GetWindow<BehaviorTreeGraphWindow>("Behavior Tree");

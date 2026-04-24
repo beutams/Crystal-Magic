@@ -8,6 +8,7 @@ using System.Reflection;
 namespace CrystalMagic.Game.Data
 {
     [Serializable]
+    [ReadOnlyData]
     public class NPCData : DataRow
     {
         public string NPC;

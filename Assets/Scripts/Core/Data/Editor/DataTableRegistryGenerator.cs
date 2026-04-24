@@ -19,7 +19,7 @@ namespace CrystalMagic.Editor.Data
         private const string OutputPath = "Assets/Scripts/Core/Data/DataTableRegistry.cs";
         private const string ResourcesDataPath = "Assets/Res/Data";
 
-        [MenuItem("Tools/Data/Generate Data Registry")]
+        [MenuItem("Tools/Registry/Data Table")]
         public static void Generate()
         {
             List<(Type type, string resourcePath)> found = FindTablesWithFiles();
