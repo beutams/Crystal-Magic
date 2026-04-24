@@ -196,7 +196,7 @@ namespace CrystalMagic.Editor.Data
             return entry?.Prefab != null && entry.Prefab.GetComponent<T>() != null;
         }
 
-        private static void MarkPrefabDirty(UnityEngine.Object target)
+        internal static void MarkPrefabDirty(UnityEngine.Object target)
         {
             if (target == null)
             {
@@ -204,6 +204,11 @@ namespace CrystalMagic.Editor.Data
             }
 
             EditorUtility.SetDirty(target);
+        }
+
+        internal void MarkDirty()
+        {
+            _isDirty = true;
         }
 
         // ══════════════════════════════════════════════
@@ -521,89 +526,9 @@ namespace CrystalMagic.Editor.Data
             }
         }
 
-        private void DrawNpcInteractableSection(UnitPrefabEntry entry)
-        {
-            NPCInteractableAuthoring npcAuthoring = entry.Prefab.GetComponent<NPCInteractableAuthoring>();
-            if (npcAuthoring == null)
-            {
-                return;
-            }
-
-            GUILayout.Space(8);
-            DrawSectionHeader("NPC 交互");
-
-            List<NPCData> npcRows = EditorComponents.Data.FindAll<NPCData>(_ => true)
-                .OrderBy(row => row.Id)
-                .ToList();
-
-            List<string> options = new() { "未绑定" };
-            int selectedIndex = 0;
-            for (int i = 0; i < npcRows.Count; i++)
-            {
-                NPCData row = npcRows[i];
-                options.Add($"[{row.Id}] {row.DisplayName} ({row.NPC})");
-                if (row.Id == npcAuthoring.NpcDataId)
-                {
-                    selectedIndex = i + 1;
-                }
-            }
-
-            int newIndex = EditorGUILayout.Popup("NPCData", selectedIndex, options.ToArray());
-            int newNpcId = newIndex == 0 ? 0 : npcRows[newIndex - 1].Id;
-            float newRange = EditorGUILayout.FloatField("交互范围", npcAuthoring.InteractRange);
-
-            if (newNpcId != npcAuthoring.NpcDataId || !Mathf.Approximately(newRange, npcAuthoring.InteractRange))
-            {
-                npcAuthoring.NpcDataId = newNpcId;
-                npcAuthoring.InteractRange = newRange;
-                MarkPrefabDirty(npcAuthoring);
-                _isDirty = true;
-            }
-        }
-
-        private void DrawFactionSection(UnitPrefabEntry entry)
-        {
-            UnitFactionAuthoring factionAuthoring = entry.Prefab.GetComponent<UnitFactionAuthoring>();
-            if (factionAuthoring == null)
-            {
-                return;
-            }
-
-            GUILayout.Space(8);
-            DrawSectionHeader("Faction");
-
-            UnitFactionType newFaction = (UnitFactionType)EditorGUILayout.EnumPopup("阵营", factionAuthoring.Faction);
-            if (newFaction != factionAuthoring.Faction)
-            {
-                factionAuthoring.Faction = newFaction;
-                MarkPrefabDirty(factionAuthoring);
-                _isDirty = true;
-            }
-        }
-
         // ══════════════════════════════════════════════
         //  属性面板
         // ══════════════════════════════════════════════
-        private void DrawPerceptionSection(UnitPrefabEntry entry)
-        {
-            UnitPerceptionAuthoring perceptionAuthoring = entry.Prefab.GetComponent<UnitPerceptionAuthoring>();
-            if (perceptionAuthoring == null)
-            {
-                return;
-            }
-
-            GUILayout.Space(8);
-            DrawSectionHeader("Perception（感知）");
-
-            float newSearchRadius = EditorGUILayout.FloatField("搜索范围", perceptionAuthoring.SearchRadius);
-            if (!Mathf.Approximately(newSearchRadius, perceptionAuthoring.SearchRadius))
-            {
-                perceptionAuthoring.SearchRadius = newSearchRadius;
-                MarkPrefabDirty(perceptionAuthoring);
-                _isDirty = true;
-            }
-        }
-
         private void DrawAttributePanel(UnitPrefabEntry entry, UnitData unit)
         {
             EditorGUI.BeginChangeCheck();
@@ -624,41 +549,18 @@ namespace CrystalMagic.Editor.Data
                 _isDirty = true;
             }
 
-            DrawFactionSection(entry);
-
-            if (HasAuthoring<UnitMoveAuthoring>(entry))
+            UnitEditorDrawerContext context = new(this, entry.Prefab, entry.AssetPath, entry.DisplayName, unit);
+            IReadOnlyList<IUnitEditorAttributeDrawer> drawers = UnitEditorAttributeDrawerFactory.GetDrawers();
+            for (int i = 0; i < drawers.Count; i++)
             {
-                GUILayout.Space(8);
-                DrawSectionHeader("Move（移动）");
-                unit.BaseMoveSpeed       = EditorGUILayout.FloatField("最大速度",       unit.BaseMoveSpeed);
-                unit.BaseMaxAcceleration = EditorGUILayout.FloatField("最大加速度",     unit.BaseMaxAcceleration);
-            }
+                IUnitEditorAttributeDrawer drawer = drawers[i];
+                if (!drawer.CanDraw(context))
+                {
+                    continue;
+                }
 
-            if (HasAuthoring<UnitVitalityAuthoring>(entry))
-            {
-                GUILayout.Space(8);
-                DrawSectionHeader("Vitality（生存）");
-                unit.BaseMaxHealth = EditorGUILayout.FloatField("最大生命值", unit.BaseMaxHealth);
-                unit.BaseDefense   = EditorGUILayout.FloatField("防御力",     unit.BaseDefense);
+                drawer.Draw(context);
             }
-
-            if (HasAuthoring<UnitAttackAuthoring>(entry))
-            {
-                GUILayout.Space(8);
-                DrawSectionHeader("Attack（攻击）");
-                unit.BaseAttackPower = EditorGUILayout.FloatField("攻击力",   unit.BaseAttackPower);
-                unit.BaseSkillRange  = EditorGUILayout.FloatField("技能范围", unit.BaseSkillRange);
-            }
-
-            if (HasAuthoring<UnitManaAuthoring>(entry))
-            {
-                GUILayout.Space(8);
-                DrawSectionHeader("Mana（法力）");
-                unit.BaseMaxMp = EditorGUILayout.FloatField("最大魔力值", unit.BaseMaxMp);
-            }
-
-            DrawPerceptionSection(entry);
-            DrawNpcInteractableSection(entry);
 
             if (EditorGUI.EndChangeCheck()) _isDirty = true;
         }
@@ -1119,7 +1021,7 @@ namespace CrystalMagic.Editor.Data
         // ══════════════════════════════════════════════
         //  工具方法
         // ══════════════════════════════════════════════
-        private static void DrawSectionHeader(string title)
+        internal static void DrawSectionHeader(string title)
         {
             GUILayout.Space(6);
             EditorGUILayout.LabelField(title, EditorStyles.boldLabel);
