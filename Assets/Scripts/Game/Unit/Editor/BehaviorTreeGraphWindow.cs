@@ -236,6 +236,16 @@ namespace CrystalMagic.Editor.Unit
             if (_graphView == null)
                 return;
 
+            BehaviorTreeData tree = SelectedTree;
+            if (tree == null)
+            {
+                EditorGUILayout.HelpBox("Select a behavior tree from the left list.", MessageType.Info);
+                return;
+            }
+
+            DrawTreeSettings(tree);
+            EditorGUILayout.Space(8f);
+
             BehaviorTreeNodeView selectedNode = _graphView.selection?.OfType<BehaviorTreeNodeView>().FirstOrDefault();
             if (selectedNode == null)
             {
@@ -244,8 +254,7 @@ namespace CrystalMagic.Editor.Unit
             }
 
             BehaviorNodeData node = selectedNode.NodeData;
-            BehaviorTreeData tree = SelectedTree;
-            if (node == null || tree == null)
+            if (node == null)
                 return;
 
             EditorGUILayout.LabelField(BehaviorNodeDataRegistry.GetDisplayName(node.Type), EditorStyles.boldLabel);
@@ -273,6 +282,26 @@ namespace CrystalMagic.Editor.Unit
             }
 
             DrawChildOrderEditor(tree, node);
+        }
+
+        private void DrawTreeSettings(BehaviorTreeData tree)
+        {
+            EditorGUILayout.LabelField("Behavior Tree", EditorStyles.boldLabel);
+            using (new EditorGUI.DisabledScope(true))
+                EditorGUILayout.IntField("Id", tree.Id);
+
+            EditorGUI.BeginChangeCheck();
+            tree.Name = EditorGUILayout.TextField("Name", tree.Name ?? string.Empty);
+            EditorGUILayout.LabelField("Description");
+            tree.Description = EditorGUILayout.TextArea(
+                tree.Description ?? string.Empty,
+                GUILayout.MinHeight(48f),
+                GUILayout.MaxHeight(96f));
+            if (EditorGUI.EndChangeCheck())
+            {
+                MarkDirty();
+                Repaint();
+            }
         }
 
         private void DrawChildOrderEditor(BehaviorTreeData tree, BehaviorNodeData node)
