@@ -8,6 +8,10 @@ public class UnitManaAuthoring : MonoBehaviour
     {
         public override void Bake(UnitManaAuthoring authoring)
         {
+            TextAsset unitDataAsset = UnitAuthoringUtility.GetUnitDataTableAsset();
+            if (unitDataAsset != null)
+                DependsOn(unitDataAsset);
+
             float baseMp = 50f;
             UnitData data = UnitAuthoringUtility.ResolveUnitData(authoring);
             if (data != null)

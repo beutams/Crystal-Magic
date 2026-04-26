@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System;
 using CrystalMagic.Core;
 using CrystalMagic.UI;
 using UnityEngine;
@@ -11,6 +12,11 @@ public class ShopUI : UIBase<ShopUIData>
     private ShopUIModel _model;
     private bool _isOpened;
     private bool _isModelEventSubscribed;
+    private Coroutine _commodityHoverCoroutine;
+    private ShopCommodityDisplayData _hoveredCommodity;
+
+    public event Action<ShopCommodityDisplayData> CommodityHoverReady;
+    public event Action CommodityHoverExited;
 
     public void BindModel(ShopUIModel model)
     {
@@ -40,6 +46,7 @@ public class ShopUI : UIBase<ShopUIData>
 
     public override void OnClose()
     {
+        CancelCommodityHover(true);
         UnsubscribeModelEvents();
         _isOpened = false;
     }
@@ -81,6 +88,7 @@ public class ShopUI : UIBase<ShopUIData>
         {
             ShopUI_CommodityItemView itemView = UI.ShopView_Viewport_Content.GameObject.transform.GetChild(i).GetComponent<ShopUI_CommodityItemView>();
             itemView.Rebind();
+            BindCommodityItemView(itemView);
 
             if (_commodityItemViews.Count < itemCount)
             {
@@ -101,6 +109,7 @@ public class ShopUI : UIBase<ShopUIData>
 
             ShopUI_CommodityItemView itemView = clone.GetComponent<ShopUI_CommodityItemView>();
             itemView.Rebind();
+            BindCommodityItemView(itemView);
             _commodityItemViews.Add(itemView);
         }
     }
@@ -162,5 +171,63 @@ public class ShopUI : UIBase<ShopUIData>
 
         EventComponent.Instance.Unsubscribe(new CommonGameEvent(ShopUIModel.DataChangedEventName), OnModelChanged);
         _isModelEventSubscribed = false;
+    }
+
+    private void BindCommodityItemView(ShopUI_CommodityItemView itemView)
+    {
+        if (itemView == null)
+            return;
+
+        itemView.HoverEntered -= HandleCommodityHoverEntered;
+        itemView.HoverExited -= HandleCommodityHoverExited;
+        itemView.HoverEntered += HandleCommodityHoverEntered;
+        itemView.HoverExited += HandleCommodityHoverExited;
+    }
+
+    private void HandleCommodityHoverEntered(ShopCommodityDisplayData data)
+    {
+        _hoveredCommodity = data;
+
+        if (_commodityHoverCoroutine != null)
+        {
+            StopCoroutine(_commodityHoverCoroutine);
+            _commodityHoverCoroutine = null;
+        }
+
+        CommodityHoverExited?.Invoke();
+        _commodityHoverCoroutine = StartCoroutine(CommodityHoverDelayRoutine(data));
+    }
+
+    private void HandleCommodityHoverExited(ShopCommodityDisplayData data)
+    {
+        if (!ReferenceEquals(_hoveredCommodity, data))
+            return;
+
+        CancelCommodityHover(true);
+    }
+
+    private System.Collections.IEnumerator CommodityHoverDelayRoutine(ShopCommodityDisplayData data)
+    {
+        yield return new WaitForSeconds(1f);
+        _commodityHoverCoroutine = null;
+
+        if (!ReferenceEquals(_hoveredCommodity, data))
+            yield break;
+
+        CommodityHoverReady?.Invoke(data);
+    }
+
+    private void CancelCommodityHover(bool closeInfo)
+    {
+        _hoveredCommodity = null;
+
+        if (_commodityHoverCoroutine != null)
+        {
+            StopCoroutine(_commodityHoverCoroutine);
+            _commodityHoverCoroutine = null;
+        }
+
+        if (closeInfo)
+            CommodityHoverExited?.Invoke();
     }
 }

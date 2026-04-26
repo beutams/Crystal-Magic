@@ -47,6 +47,7 @@ namespace CrystalMagic.UI
 
                 _skillItems.Add(new CharacterSkillDisplayData
                 {
+                    DisplayIndex = i + 1,
                     SkillId = skillId,
                     SkillIconPath = skillData != null ? skillData.IconPath : string.Empty,
                     EffectIconPath = effectIconPath,
@@ -127,6 +128,7 @@ namespace CrystalMagic.UI
 
     public sealed class CharacterSkillDisplayData
     {
+        public int DisplayIndex;
         public int SkillId;
         public string SkillIconPath;
         public string EffectIconPath;

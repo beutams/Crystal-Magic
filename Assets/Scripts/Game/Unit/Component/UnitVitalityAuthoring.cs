@@ -8,6 +8,10 @@ public class UnitVitalityAuthoring : MonoBehaviour
     {
         public override void Bake(UnitVitalityAuthoring authoring)
         {
+            TextAsset unitDataAsset = UnitAuthoringUtility.GetUnitDataTableAsset();
+            if (unitDataAsset != null)
+                DependsOn(unitDataAsset);
+
             float baseHealth  = 100f;
             float baseDefense = 0f;
             UnitData data = UnitAuthoringUtility.ResolveUnitData(authoring);

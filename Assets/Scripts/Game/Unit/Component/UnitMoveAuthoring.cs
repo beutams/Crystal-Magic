@@ -9,6 +9,10 @@ public class UnitMoveAuthoring : MonoBehaviour
     {
         public override void Bake(UnitMoveAuthoring authoring)
         {
+            TextAsset unitDataAsset = UnitAuthoringUtility.GetUnitDataTableAsset();
+            if (unitDataAsset != null)
+                DependsOn(unitDataAsset);
+
             float baseSpeed = 5f;
             float baseAccel = 30f;
             UnitData data = UnitAuthoringUtility.ResolveUnitData(authoring);

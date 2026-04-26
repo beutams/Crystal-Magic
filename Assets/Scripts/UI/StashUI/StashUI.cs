@@ -9,6 +9,11 @@ public class StashUI : UIBase<StashUIData>
     private bool _isOpened;
     private bool _isModelEventSubscribed;
 
+    public event System.Action AllCategoryRequested;
+    public event System.Action SkillCategoryRequested;
+    public event System.Action EquipCategoryRequested;
+    public event System.Action PropsCategoryRequested;
+
     public void BindModel(CrystalMagic.UI.StashUIModel model)
     {
         if (_model == model)
@@ -29,6 +34,10 @@ public class StashUI : UIBase<StashUIData>
     public override void OnOpen()
     {
         _isOpened = true;
+        UI.ButtonList_All.ButtonPlus.onClick.AddListener(OnAllCategoryButton);
+        UI.ButtonList_Skill.ButtonPlus.onClick.AddListener(OnSkillCategoryButton);
+        UI.ButtonList_Equip.ButtonPlus.onClick.AddListener(OnEquipCategoryButton);
+        UI.ButtonList_Props.ButtonPlus.onClick.AddListener(OnPropsCategoryButton);
         SubscribeModelEvents();
 
         if (_model != null)
@@ -37,14 +46,23 @@ public class StashUI : UIBase<StashUIData>
 
     public override void OnClose()
     {
+        UI.ButtonList_All.ButtonPlus.onClick.RemoveListener(OnAllCategoryButton);
+        UI.ButtonList_Skill.ButtonPlus.onClick.RemoveListener(OnSkillCategoryButton);
+        UI.ButtonList_Equip.ButtonPlus.onClick.RemoveListener(OnEquipCategoryButton);
+        UI.ButtonList_Props.ButtonPlus.onClick.RemoveListener(OnPropsCategoryButton);
         UnsubscribeModelEvents();
         _isOpened = false;
     }
 
     private void Render()
     {
+        if (_model == null)
+            return;
+
         RenderInventory(_model.InventoryItems, _model.InventorySlotCount);
         RenderStash(_model.StashItems);
+        UI.Coin_MoneyText.TextMeshProUGUI.text = _model.StashMoney.ToString();
+        RefreshCategorySelection();
     }
 
     private void RenderInventory(CrystalMagic.UI.StashInventoryDisplayData[] inventoryItems, int slotCount)
@@ -142,6 +160,35 @@ public class StashUI : UIBase<StashUIData>
 
         Render();
     }
+
+    private void RefreshCategorySelection()
+    {
+        SetCategorySelected(UI.ButtonList_All.GameObject, UI.ButtonList_All_Default.GameObject, UI.ButtonList_All_Select.GameObject, _model.Category == CrystalMagic.UI.StashCategory.All);
+        SetCategorySelected(UI.ButtonList_Skill.GameObject, UI.ButtonList_Skill_Default.GameObject, UI.ButtonList_Skill_Select.GameObject, _model.Category == CrystalMagic.UI.StashCategory.Skill);
+        SetCategorySelected(UI.ButtonList_Equip.GameObject, UI.ButtonList_Equip_Default.GameObject, UI.ButtonList_Equip_Select.GameObject, _model.Category == CrystalMagic.UI.StashCategory.Equip);
+        SetCategorySelected(UI.ButtonList_Props.GameObject, UI.ButtonList_Props_Default.GameObject, UI.ButtonList_Props_Select.GameObject, _model.Category == CrystalMagic.UI.StashCategory.Props);
+    }
+
+    private void SetCategorySelected(UnityEngine.GameObject buttonObject, UnityEngine.GameObject defaultObject, UnityEngine.GameObject selectedObject, bool selected)
+    {
+        UISelectableListItem selectable = buttonObject != null ? buttonObject.GetComponent<UISelectableListItem>() : null;
+        if (selectable != null)
+        {
+            selectable.SetSelected(selected);
+            return;
+        }
+
+        if (defaultObject != null)
+            defaultObject.SetActive(!selected);
+
+        if (selectedObject != null)
+            selectedObject.SetActive(selected);
+    }
+
+    private void OnAllCategoryButton() => AllCategoryRequested?.Invoke();
+    private void OnSkillCategoryButton() => SkillCategoryRequested?.Invoke();
+    private void OnEquipCategoryButton() => EquipCategoryRequested?.Invoke();
+    private void OnPropsCategoryButton() => PropsCategoryRequested?.Invoke();
 
     private void SubscribeModelEvents()
     {

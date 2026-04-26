@@ -18,6 +18,7 @@ namespace CrystalMagic.Core {
         public event Action OnInteract;
         public event Action OnInventory;
         public event Action OnEscape;
+        public event Action<int> OnSkillChainSelected;
         #endregion
 
         #region 调用
@@ -31,6 +32,7 @@ namespace CrystalMagic.Core {
             _controls.Town.Interact.performed += HandleInteract;
             _controls.Town.Click.performed += HandleClick;
             _controls.Town.Inventory.performed += HandleInventory;
+            _controls.Town.Skill.performed += HandleSkill;
 
             _controls.Town.Enable();
         }
@@ -44,6 +46,7 @@ namespace CrystalMagic.Core {
                 _controls.Town.Interact.performed -= HandleInteract;
                 _controls.Town.Click.performed -= HandleClick;
                 _controls.Town.Inventory.performed -= HandleInventory;
+                _controls.Town.Skill.performed -= HandleSkill;
 
                 _controls.Town.Disable();
                 _controls.Dispose();
@@ -57,6 +60,16 @@ namespace CrystalMagic.Core {
         private void HandleClick(InputAction.CallbackContext ctx) => OnMouseClick?.Invoke();
         private void HandleInteract(InputAction.CallbackContext ctx) => OnInteract?.Invoke();
         private void HandleInventory(InputAction.CallbackContext ctx) => OnInventory?.Invoke();
+        private void HandleSkill(InputAction.CallbackContext ctx)
+        {
+            int skillChainNumber = Mathf.RoundToInt(ctx.ReadValue<float>());
+            int skillChainIndex = skillChainNumber - 1;
+            if (skillChainIndex < 0 || skillChainIndex >= 5)
+                return;
+
+            RuntimeDataComponent.Instance.SetCurrentSkillChainIndex(skillChainIndex, SaveDataComponent.Instance?.GetSkillData());
+            OnSkillChainSelected?.Invoke(skillChainIndex);
+        }
         #endregion
 
 

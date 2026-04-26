@@ -19,6 +19,8 @@ namespace CrystalMagic.Core {
         private readonly List<ShakeInstance> _shakes = new();
         private Camera _shakeAppliedCamera;
         private Vector3 _lastShakeOffset;
+        private World _followQueryWorld;
+        private EntityQuery _playerFollowQuery;
 
         /// <summary>当前活跃的场景相机</summary>
         public Camera Current => _current != null ? _current.Camera : Camera.main;
@@ -59,7 +61,12 @@ namespace CrystalMagic.Core {
             RestoreShakeOffset();
 
             Camera camera = Current;
-            if (camera == null || _shakes.Count == 0)
+            if (camera == null)
+                return;
+
+            ApplyFollow(camera, Time.deltaTime);
+
+            if (_shakes.Count == 0)
                 return;
 
             Vector3 basePosition = camera.transform.position;
@@ -107,6 +114,56 @@ namespace CrystalMagic.Core {
             return offset;
         }
 
+        private void ApplyFollow(Camera camera, float deltaTime)
+        {
+            if (_current == null || !_current.FollowPlayerTag)
+                return;
+
+            if (!TryGetPlayerTargetPosition(out Vector3 targetPosition))
+                return;
+
+            Vector3 currentPosition = camera.transform.position;
+            Vector3 desiredPosition = _current.GetDesiredPosition(targetPosition, currentPosition);
+            float smooth = _current.FollowSmooth;
+            if (smooth <= 0f)
+            {
+                camera.transform.position = desiredPosition;
+                return;
+            }
+
+            float t = 1f - Mathf.Exp(-smooth * deltaTime);
+            camera.transform.position = Vector3.Lerp(currentPosition, desiredPosition, t);
+        }
+
+        private bool TryGetPlayerTargetPosition(out Vector3 targetPosition)
+        {
+            targetPosition = Vector3.zero;
+
+            World world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated)
+                return false;
+
+            if (_followQueryWorld != world)
+            {
+                _followQueryWorld = world;
+                _playerFollowQuery = world.EntityManager.CreateEntityQuery(
+                    ComponentType.ReadOnly<PlayerTag>(),
+                    ComponentType.ReadOnly<LocalToWorld>()
+                );
+            }
+
+            if (_playerFollowQuery.IsEmptyIgnoreFilter)
+                return false;
+
+            if (_playerFollowQuery.CalculateEntityCount() != 1)
+                return false;
+
+            LocalToWorld localToWorld = _playerFollowQuery.GetSingleton<LocalToWorld>();
+            float3 position = localToWorld.Position;
+            targetPosition = new Vector3(position.x, position.y, position.z);
+            return true;
+        }
+
         private static float GetDistanceAttenuation(Camera camera, Vector3 cameraPosition, ShakeInstance shake)
         {
             if (!shake.UseDistanceAttenuation || shake.Radius <= 0f)
@@ -134,6 +191,7 @@ namespace CrystalMagic.Core {
             RestoreShakeOffset();
             _shakes.Clear();
             _current = null;
+            _followQueryWorld = null;
             base.Cleanup();
         }
 

@@ -15,6 +15,8 @@ public class CharacterUIData : UIData
     public UINode Skill_SkillChain_Viewport_Content_SkillItem_Background;
     public UINode Skill_SkillChain_Viewport_Content_SkillItem_Skill;
     public UINode Skill_SkillChain_Viewport_Content_SkillItem_Effect;
+    public UINode Skill_SkillChain_Viewport_Content_SkillItem_Index;
+    public UINode Skill_SkillChain_Viewport_Content_SkillItem_Index_IndexNum;
     public UINode Equip;
     public UINode Equip_Weapen;
     public UINode Equip_Equip1;
@@ -25,6 +27,9 @@ public class CharacterUIData : UIData
     public UINode InventoryView_Viewport;
     public UINode InventoryView_Viewport_Content;
     public UINode InventoryView_Viewport_Content_InventoryItem;
+    public UINode InventoryView_Viewport_Content_InventoryItem_Icon;
+    public UINode InventoryView_Viewport_Content_InventoryItem_Count;
+    public UINode InventoryView_Viewport_Content_InventoryItem_Name;
 
     public override void Bind(Transform root)
     {
@@ -37,6 +42,8 @@ public class CharacterUIData : UIData
         Skill_SkillChain_Viewport_Content_SkillItem_Background = UINode.From(Find(root, "Skill/SkillChain/Viewport/Content/SkillItem/Background"));
         Skill_SkillChain_Viewport_Content_SkillItem_Skill = UINode.From(Find(root, "Skill/SkillChain/Viewport/Content/SkillItem/Skill"));
         Skill_SkillChain_Viewport_Content_SkillItem_Effect = UINode.From(Find(root, "Skill/SkillChain/Viewport/Content/SkillItem/Effect"));
+        Skill_SkillChain_Viewport_Content_SkillItem_Index = UINode.From(Find(root, "Skill/SkillChain/Viewport/Content/SkillItem/Index"));
+        Skill_SkillChain_Viewport_Content_SkillItem_Index_IndexNum = UINode.From(Find(root, "Skill/SkillChain/Viewport/Content/SkillItem/Index/IndexNum"));
         Equip = UINode.From(Find(root, "Equip"));
         Equip_Weapen = UINode.From(Find(root, "Equip/Weapen"));
         Equip_Equip1 = UINode.From(Find(root, "Equip/Equip1"));
@@ -47,5 +54,8 @@ public class CharacterUIData : UIData
         InventoryView_Viewport = UINode.From(Find(root, "InventoryView/Viewport"));
         InventoryView_Viewport_Content = UINode.From(Find(root, "InventoryView/Viewport/Content"));
         InventoryView_Viewport_Content_InventoryItem = UINode.From(Find(root, "InventoryView/Viewport/Content/InventoryItem"));
+        InventoryView_Viewport_Content_InventoryItem_Icon = UINode.From(Find(root, "InventoryView/Viewport/Content/InventoryItem/Icon"));
+        InventoryView_Viewport_Content_InventoryItem_Count = UINode.From(Find(root, "InventoryView/Viewport/Content/InventoryItem/Count"));
+        InventoryView_Viewport_Content_InventoryItem_Name = UINode.From(Find(root, "InventoryView/Viewport/Content/InventoryItem/Name"));
     }
 }

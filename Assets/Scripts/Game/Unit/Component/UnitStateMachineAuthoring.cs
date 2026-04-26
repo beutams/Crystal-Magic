@@ -9,6 +9,10 @@ public class UnitStateMachineAuthoring : MonoBehaviour
     {
         public override void Bake(UnitStateMachineAuthoring authoring)
         {
+            TextAsset unitDataAsset = UnitAuthoringUtility.GetUnitDataTableAsset();
+            if (unitDataAsset != null)
+                DependsOn(unitDataAsset);
+
             UnitData data = UnitAuthoringUtility.ResolveUnitData(authoring);
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             AddComponentObject(entity, new UnitStateMachineComponent

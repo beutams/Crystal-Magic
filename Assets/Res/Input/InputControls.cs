@@ -135,6 +135,24 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Skill"",
+                    ""type"": ""Value"",
+                    ""id"": ""f96b9221-1346-40aa-9f2c-774a8a8a6d68"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""Tab"",
+                    ""type"": ""Button"",
+                    ""id"": ""94cd6c66-bdf5-48b1-97c0-14107825ab66"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -236,6 +254,72 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
                     ""action"": ""ESC"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""8ded4410-a47b-464a-b79a-eb92eaaedafe"",
+                    ""path"": ""<Keyboard>/1"",
+                    ""interactions"": """",
+                    ""processors"": ""Scale"",
+                    ""groups"": """",
+                    ""action"": ""Skill"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""709e1c6d-63fe-4ab0-9f99-1b4ff3cd32ed"",
+                    ""path"": ""<Keyboard>/2"",
+                    ""interactions"": """",
+                    ""processors"": ""Scale(factor=2)"",
+                    ""groups"": """",
+                    ""action"": ""Skill"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""30fe37ae-81df-40b6-a0ed-3cd42a5b96ee"",
+                    ""path"": ""<Keyboard>/3"",
+                    ""interactions"": """",
+                    ""processors"": ""Scale(factor=3)"",
+                    ""groups"": """",
+                    ""action"": ""Skill"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""ca802a2b-3dcf-4721-ac28-f5d7c4da69c6"",
+                    ""path"": ""<Keyboard>/4"",
+                    ""interactions"": """",
+                    ""processors"": ""Scale(factor=4)"",
+                    ""groups"": """",
+                    ""action"": ""Skill"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""29b9566a-8fcc-4e4d-afa2-e84b6cec7e3f"",
+                    ""path"": ""<Keyboard>/5"",
+                    ""interactions"": """",
+                    ""processors"": ""Scale(factor=5)"",
+                    ""groups"": """",
+                    ""action"": ""Skill"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""460eb1d5-dea0-4166-bb0b-53df635d0ff8"",
+                    ""path"": ""<Keyboard>/tab"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Tab"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -249,6 +333,8 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         m_Town_Click = m_Town.FindAction("Click", throwIfNotFound: true);
         m_Town_Inventory = m_Town.FindAction("Inventory", throwIfNotFound: true);
         m_Town_ESC = m_Town.FindAction("ESC", throwIfNotFound: true);
+        m_Town_Skill = m_Town.FindAction("Skill", throwIfNotFound: true);
+        m_Town_Tab = m_Town.FindAction("Tab", throwIfNotFound: true);
     }
 
     ~@InputControls()
@@ -334,6 +420,8 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_Town_Click;
     private readonly InputAction m_Town_Inventory;
     private readonly InputAction m_Town_ESC;
+    private readonly InputAction m_Town_Skill;
+    private readonly InputAction m_Town_Tab;
     /// <summary>
     /// Provides access to input actions defined in input action map "Town".
     /// </summary>
@@ -365,6 +453,14 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Town/ESC".
         /// </summary>
         public InputAction @ESC => m_Wrapper.m_Town_ESC;
+        /// <summary>
+        /// Provides access to the underlying input action "Town/Skill".
+        /// </summary>
+        public InputAction @Skill => m_Wrapper.m_Town_Skill;
+        /// <summary>
+        /// Provides access to the underlying input action "Town/Tab".
+        /// </summary>
+        public InputAction @Tab => m_Wrapper.m_Town_Tab;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -406,6 +502,12 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
             @ESC.started += instance.OnESC;
             @ESC.performed += instance.OnESC;
             @ESC.canceled += instance.OnESC;
+            @Skill.started += instance.OnSkill;
+            @Skill.performed += instance.OnSkill;
+            @Skill.canceled += instance.OnSkill;
+            @Tab.started += instance.OnTab;
+            @Tab.performed += instance.OnTab;
+            @Tab.canceled += instance.OnTab;
         }
 
         /// <summary>
@@ -432,6 +534,12 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
             @ESC.started -= instance.OnESC;
             @ESC.performed -= instance.OnESC;
             @ESC.canceled -= instance.OnESC;
+            @Skill.started -= instance.OnSkill;
+            @Skill.performed -= instance.OnSkill;
+            @Skill.canceled -= instance.OnSkill;
+            @Tab.started -= instance.OnTab;
+            @Tab.performed -= instance.OnTab;
+            @Tab.canceled -= instance.OnTab;
         }
 
         /// <summary>
@@ -507,5 +615,19 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnESC(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Skill" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSkill(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Tab" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnTab(InputAction.CallbackContext context);
     }
 }

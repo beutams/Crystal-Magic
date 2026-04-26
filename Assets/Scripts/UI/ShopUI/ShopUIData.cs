@@ -11,7 +11,12 @@ public class ShopUIData : UIData
     public UINode ShopView_Viewport_Content;
     public UINode ShopView_Viewport_Content_CommodityItem;
     public UINode ShopView_Viewport_Content_CommodityItem_Icon;
-    public UINode ShopView_Viewport_Content_CommodityItem_Text;
+    public UINode ShopView_Viewport_Content_CommodityItem_Name;
+    public UINode ShopView_Viewport_Content_CommodityItem_Description;
+    public UINode ShopView_Viewport_Content_CommodityItem_Coin;
+    public UINode ShopView_Viewport_Content_CommodityItem_Price;
+    public UINode ShopView_Viewport_Content_CommodityItem_Select;
+    public UINode ShopView_Viewport_Content_CommodityItem_Active;
     public UINode InventoryView;
     public UINode InventoryView_Viewport;
     public UINode InventoryView_Viewport_Content;
@@ -27,7 +32,12 @@ public class ShopUIData : UIData
         ShopView_Viewport_Content = UINode.From(Find(root, "ShopView/Viewport/Content"));
         ShopView_Viewport_Content_CommodityItem = UINode.From(Find(root, "ShopView/Viewport/Content/CommodityItem"));
         ShopView_Viewport_Content_CommodityItem_Icon = UINode.From(Find(root, "ShopView/Viewport/Content/CommodityItem/Icon"));
-        ShopView_Viewport_Content_CommodityItem_Text = UINode.From(Find(root, "ShopView/Viewport/Content/CommodityItem/Text"));
+        ShopView_Viewport_Content_CommodityItem_Name = UINode.From(Find(root, "ShopView/Viewport/Content/CommodityItem/Name"));
+        ShopView_Viewport_Content_CommodityItem_Description = UINode.From(Find(root, "ShopView/Viewport/Content/CommodityItem/Description"));
+        ShopView_Viewport_Content_CommodityItem_Coin = UINode.From(Find(root, "ShopView/Viewport/Content/CommodityItem/Coin"));
+        ShopView_Viewport_Content_CommodityItem_Price = UINode.From(Find(root, "ShopView/Viewport/Content/CommodityItem/Price"));
+        ShopView_Viewport_Content_CommodityItem_Select = UINode.From(Find(root, "ShopView/Viewport/Content/CommodityItem/Select"));
+        ShopView_Viewport_Content_CommodityItem_Active = UINode.From(Find(root, "ShopView/Viewport/Content/CommodityItem/Active"));
         InventoryView = UINode.From(Find(root, "InventoryView"));
         InventoryView_Viewport = UINode.From(Find(root, "InventoryView/Viewport"));
         InventoryView_Viewport_Content = UINode.From(Find(root, "InventoryView/Viewport/Content"));

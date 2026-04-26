@@ -41,6 +41,22 @@ namespace CrystalMagic.Core
             NotifySkillDataChanged();
         }
 
+        public void SelectNextSkillChain(SkillCData skillConfig = null)
+        {
+            int skillChainCount = GetSkillChainCount(skillConfig);
+            if (skillChainCount <= 0)
+                return;
+
+            int nextIndex = (_skillData.CurrentSkillChainIndex + 1) % skillChainCount;
+            SetCurrentSkillChainIndex(nextIndex, skillConfig);
+        }
+
+        public int GetSkillChainCount(SkillCData skillConfig = null)
+        {
+            skillConfig ??= SaveDataComponent.Instance?.GetSkillData();
+            return skillConfig?.Chains != null ? skillConfig.Chains.Length : 0;
+        }
+
         public void NotifySkillDataChanged()
         {
             EventComponent.Instance.Publish(new CommonGameEvent(SkillRuntimeDataChangedEventName, _skillData));

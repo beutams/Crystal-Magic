@@ -8,6 +8,7 @@ public class CharacterUI : UIBase<CharacterUIData>
     private CrystalMagic.UI.CharacterUIModel _model;
     private bool _isOpened;
     private bool _isModelEventSubscribed;
+    public event System.Action ChangeSkillRequested;
 
     public void BindModel(CrystalMagic.UI.CharacterUIModel model)
     {
@@ -29,6 +30,7 @@ public class CharacterUI : UIBase<CharacterUIData>
     public override void OnOpen()
     {
         _isOpened = true;
+        UI.Skill_ChangeSkillBtn.ButtonPlus.onClick.AddListener(OnChangeSkillButton);
         SubscribeModelEvents();
 
         if (_model != null)
@@ -37,12 +39,16 @@ public class CharacterUI : UIBase<CharacterUIData>
 
     public override void OnClose()
     {
+        UI.Skill_ChangeSkillBtn.ButtonPlus.onClick.RemoveListener(OnChangeSkillButton);
         UnsubscribeModelEvents();
         _isOpened = false;
     }
 
     private void Render()
     {
+        if (_model == null)
+            return;
+
         RenderSkill(_model.SkillItems);
         RenderInventory(_model.InventoryItems, _model.InventorySlotCount);
         RenderEquip(_model.EquipItems);
@@ -83,10 +89,7 @@ public class CharacterUI : UIBase<CharacterUIData>
     private void RenderEquipSlot(UINode node, CrystalMagic.UI.CharacterEquipDisplayData data)
     {
         UnityEngine.Sprite icon = LoadIcon(data != null ? data.IconPath : string.Empty);
-        if (icon != null || data == null)
-        {
-            node.Image.sprite = icon;
-        }
+        node.Image.sprite = icon;
         node.Image.color = data != null ? UnityEngine.Color.white : new UnityEngine.Color(1f, 1f, 1f, 0.2f);
     }
 
@@ -161,6 +164,11 @@ public class CharacterUI : UIBase<CharacterUIData>
             return;
 
         Render();
+    }
+
+    private void OnChangeSkillButton()
+    {
+        ChangeSkillRequested?.Invoke();
     }
 
     private void SubscribeModelEvents()

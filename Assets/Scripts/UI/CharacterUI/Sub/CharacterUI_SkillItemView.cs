@@ -9,12 +9,14 @@ public class CharacterUI_SkillItemView : UISubView<CharacterUI_SkillItemData>
         if (data == null)
         {
             UI.Skill.Image.sprite = null;
-            UI.Effect.Image.sprite = null;
+            UI.Effect_EffectIcon.Image.sprite = null;
+            UI.Index_IndexNum.TextMeshProUGUI.text = string.Empty;
             return;
         }
 
+        UI.Index_IndexNum.TextMeshProUGUI.text = data.DisplayIndex.ToString();
         UI.Skill.Image.sprite = LoadIcon(data.SkillIconPath);
-        UI.Effect.Image.sprite = LoadIcon(data.EffectIconPath);
+        UI.Effect_EffectIcon.Image.sprite = LoadIcon(data.EffectIconPath);
     }
 
     private UnityEngine.Sprite LoadIcon(string iconPath)

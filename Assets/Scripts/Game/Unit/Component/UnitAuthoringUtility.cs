@@ -8,6 +8,12 @@ using UnityEditor;
 
 public static class UnitAuthoringUtility
 {
+    public static TextAsset GetUnitDataTableAsset()
+    {
+        string path = AssetPathHelper.GetDataAsset(typeof(UnitData).Name + "Table");
+        return EditorComponents.Resource.Load<TextAsset>(path);
+    }
+
     public static UnitData ResolveUnitData(Component component)
     {
         if (component == null)

@@ -10,8 +10,13 @@ namespace CrystalMagic.Core {
     public class SceneCamera : MonoBehaviour
     {
         [SerializeField] private bool _registerOnAwake = true;
+        [SerializeField] private bool _followPlayerTag = true;
+        [SerializeField] private Vector2 _followOffset = Vector2.zero;
+        [SerializeField, Min(0f)] private float _followSmooth = 0f;
 
         public Camera Camera { get; private set; }
+        public bool FollowPlayerTag => _followPlayerTag;
+        public float FollowSmooth => _followSmooth;
 
         private void Awake()
         {
@@ -23,6 +28,15 @@ namespace CrystalMagic.Core {
         private void OnDestroy()
         {
             CameraComponent.Instance?.Unregister(this);
+        }
+
+        public Vector3 GetDesiredPosition(Vector3 targetPosition, Vector3 currentCameraPosition)
+        {
+            return new Vector3(
+                targetPosition.x + _followOffset.x,
+                targetPosition.y + _followOffset.y,
+                currentCameraPosition.z
+            );
         }
     }
 }

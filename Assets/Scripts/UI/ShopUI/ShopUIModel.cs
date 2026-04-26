@@ -46,6 +46,7 @@ namespace CrystalMagic.UI
                     ShopDataId = shopData.Id,
                     ItemId = shopData.itemDataId,
                     Name = itemData != null ? itemData.Name : string.Empty,
+                    Description = itemData != null ? itemData.Description : string.Empty,
                     Price = shopData.Price,
                     Grade = shopData.Grade,
                     IconPath = itemData != null ? itemData.IconPath : string.Empty,
@@ -86,6 +87,7 @@ namespace CrystalMagic.UI
         public int ShopDataId;
         public int ItemId;
         public string Name;
+        public string Description;
         public int Price;
         public int Grade;
         public string IconPath;
