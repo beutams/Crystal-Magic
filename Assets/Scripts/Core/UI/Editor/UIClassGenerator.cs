@@ -14,10 +14,12 @@ namespace CrystalMagic.Editor.UI
     /// </summary>
     public static class UIClassGenerator
     {
-        [MenuItem("Assets/Tools/Generate UI Class", false, 801)]
-        private static void Generate()
+        private const string HierarchyMenuPath = "GameObject/Tools/Generate UI Class";
+
+        [MenuItem(HierarchyMenuPath, false, 801)]
+        private static void GenerateFromHierarchy()
         {
-            GameObject prefab = Selection.activeGameObject;
+            GameObject prefab = GetSelectedGameObject();
             if (prefab == null) return;
 
             string className = prefab.name;
@@ -34,8 +36,8 @@ namespace CrystalMagic.Editor.UI
             Debug.Log($"[UIClassGenerator] Generated MVC files for {className}");
         }
 
-        [MenuItem("Assets/Tools/Generate UI Class", true)]
-        private static bool Validate() => UIDataGenerator.IsPrefabSelected();
+        [MenuItem(HierarchyMenuPath, true)]
+        private static bool ValidateGenerateFromHierarchy() => GetSelectedGameObject() != null;
 
         // ─────────────────────────────────────────
         private static void WriteIfMissing(string filePath, string content)
@@ -104,6 +106,14 @@ namespace CrystalMagic.Editor.UI
             sb.AppendLine("    }");
             sb.AppendLine("}");
             return sb.ToString();
+        }
+
+        private static GameObject GetSelectedGameObject()
+        {
+            if (Selection.activeGameObject != null)
+                return Selection.activeGameObject;
+
+            return Selection.activeObject as GameObject;
         }
     }
 }

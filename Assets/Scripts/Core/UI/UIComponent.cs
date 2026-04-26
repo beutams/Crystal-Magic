@@ -21,6 +21,8 @@ namespace CrystalMagic.Core {
         private UIGroupConfig _config;
         private bool _uiInputLocked;
 
+        public event Action EscapeUnhandled;
+
         public override int Priority => 15;
 
         public override void Initialize()
@@ -754,7 +756,13 @@ namespace CrystalMagic.Core {
                 return;
 
             UIBase panel = GetTopmostEscapeClosablePanel();
-            panel?.Close();
+            if (panel != null)
+            {
+                panel.Close();
+                return;
+            }
+
+            EscapeUnhandled?.Invoke();
         }
 
         private void RefreshUIInputLock()

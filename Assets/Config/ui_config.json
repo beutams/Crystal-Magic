@@ -8,7 +8,9 @@
                 "MainMenuUI",
                 "LoadUI",
                 "SaveUI",
-                "ConfirmUI"
+                "ConfirmUI",
+                "GameSettingUI",
+                "GameSaveUI"
             ]
         },
         {

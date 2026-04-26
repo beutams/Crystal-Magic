@@ -8,6 +8,7 @@ namespace CrystalMagic.Core {
     {
         public const string SceneName = "TownScene";
         private CharacterUI _characterUI;
+        private GameSettingUI _gameSettingUI;
         private bool _inputBound;
 
         public override void OnEnter()
@@ -28,6 +29,7 @@ namespace CrystalMagic.Core {
             Debug.Log("[TownState] Exited Town");
             UnbindInput();
             ReleaseCharacterUI();
+            ReleaseGameSettingUI();
         }
 
         public override void OnUpdate()
@@ -40,15 +42,20 @@ namespace CrystalMagic.Core {
                 return;
 
             InputComponent.Instance.OnInventory += HandleInventory;
+            if (UIComponent.Instance != null)
+                UIComponent.Instance.EscapeUnhandled += HandleUnhandledEscape;
             _inputBound = true;
         }
 
         private void UnbindInput()
         {
-            if (!_inputBound || InputComponent.Instance == null)
+            if (!_inputBound)
                 return;
 
-            InputComponent.Instance.OnInventory -= HandleInventory;
+            if (InputComponent.Instance != null)
+                InputComponent.Instance.OnInventory -= HandleInventory;
+            if (UIComponent.Instance != null)
+                UIComponent.Instance.EscapeUnhandled -= HandleUnhandledEscape;
             _inputBound = false;
         }
 
@@ -76,6 +83,29 @@ namespace CrystalMagic.Core {
 
             UIComponent.Instance.ReleaseUI(_characterUI);
             _characterUI = null;
+        }
+
+        private void HandleUnhandledEscape()
+        {
+            if (_gameSettingUI == null)
+            {
+                _gameSettingUI = UIComponent.Instance.Open<GameSettingUI>();
+                return;
+            }
+
+            if (_gameSettingUI.gameObject.activeSelf)
+                return;
+
+            UIComponent.Instance.ShowUI(_gameSettingUI);
+        }
+
+        private void ReleaseGameSettingUI()
+        {
+            if (_gameSettingUI == null)
+                return;
+
+            UIComponent.Instance.ReleaseUI(_gameSettingUI);
+            _gameSettingUI = null;
         }
 
         /// <summary>

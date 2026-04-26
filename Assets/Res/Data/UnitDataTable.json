@@ -276,7 +276,7 @@
       "Description": "",
       "PrefabPath": "Assets/Res/Unit/PlayerDungeon.prefab",
       "BaseMoveSpeed": 10.0,
-      "BaseMaxAcceleration": 10.0,
+      "BaseMaxAcceleration": 10000.0,
       "BaseMaxHealth": 100.0,
       "BaseDefense": 0.0,
       "BaseAttackPower": 10.0,
