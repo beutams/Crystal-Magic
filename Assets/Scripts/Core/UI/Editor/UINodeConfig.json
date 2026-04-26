@@ -25,6 +25,10 @@
             "Namespace": "UnityEngine.UI"
         },
         {
+            "TypeName": "TMP_InputField",
+            "Namespace": "TMPro"
+        },
+        {
             "TypeName": "TextMeshProUGUI",
             "Namespace": "TMPro"
         }

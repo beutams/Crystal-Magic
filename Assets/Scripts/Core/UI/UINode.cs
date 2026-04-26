@@ -21,6 +21,7 @@ namespace CrystalMagic.Core {
         public Slider Slider;
         public Toggle Toggle;
         public InputField InputField;
+        public TMP_InputField TMP_InputField;
         public TextMeshProUGUI TextMeshProUGUI;
 
         public ButtonPlus ButtonPlus;
@@ -37,6 +38,7 @@ namespace CrystalMagic.Core {
             node.Slider = go.GetComponent<Slider>();
             node.Toggle = go.GetComponent<Toggle>();
             node.InputField = go.GetComponent<InputField>();
+            node.TMP_InputField = go.GetComponent<TMP_InputField>();
             node.TextMeshProUGUI = go.GetComponent<TextMeshProUGUI>();
             node.ButtonPlus = go.GetComponent<ButtonPlus>();
             return node;

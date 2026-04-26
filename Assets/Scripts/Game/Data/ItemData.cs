@@ -8,8 +8,9 @@ namespace CrystalMagic.Game.Data
         None = 0,
         Consumable = 1,
         SkillStone = 2,
-        Material = 3,
+        Weapon = 3,
         KeyItem = 4,
+        Accessory = 5,
     }
 
     /// <summary>
@@ -28,6 +29,7 @@ namespace CrystalMagic.Game.Data
 
         /// <summary>物品类型</summary>
         public ItemType ItemType;
+        public int ExtraId;
 
         /// <summary>稀有度</summary>
         public int Rarity;

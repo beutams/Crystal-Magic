@@ -16,7 +16,6 @@ public class ShopUIData : UIData
     public UINode ShopView_Viewport_Content_CommodityItem_Coin;
     public UINode ShopView_Viewport_Content_CommodityItem_Price;
     public UINode ShopView_Viewport_Content_CommodityItem_Select;
-    public UINode ShopView_Viewport_Content_CommodityItem_Active;
     public UINode InventoryView;
     public UINode InventoryView_Viewport;
     public UINode InventoryView_Viewport_Content;
@@ -24,6 +23,11 @@ public class ShopUIData : UIData
     public UINode InventoryView_Viewport_Content_InventoryItem_Icon;
     public UINode InventoryView_Viewport_Content_InventoryItem_Count;
     public UINode InventoryView_Viewport_Content_InventoryItem_Name;
+    public UINode Coin;
+    public UINode Coin_Money;
+    public UINode Coin_MoneyText;
+    public UINode Drag;
+    public UINode Drag_Icon;
 
     public override void Bind(Transform root)
     {
@@ -37,7 +41,6 @@ public class ShopUIData : UIData
         ShopView_Viewport_Content_CommodityItem_Coin = UINode.From(Find(root, "ShopView/Viewport/Content/CommodityItem/Coin"));
         ShopView_Viewport_Content_CommodityItem_Price = UINode.From(Find(root, "ShopView/Viewport/Content/CommodityItem/Price"));
         ShopView_Viewport_Content_CommodityItem_Select = UINode.From(Find(root, "ShopView/Viewport/Content/CommodityItem/Select"));
-        ShopView_Viewport_Content_CommodityItem_Active = UINode.From(Find(root, "ShopView/Viewport/Content/CommodityItem/Active"));
         InventoryView = UINode.From(Find(root, "InventoryView"));
         InventoryView_Viewport = UINode.From(Find(root, "InventoryView/Viewport"));
         InventoryView_Viewport_Content = UINode.From(Find(root, "InventoryView/Viewport/Content"));
@@ -45,5 +48,10 @@ public class ShopUIData : UIData
         InventoryView_Viewport_Content_InventoryItem_Icon = UINode.From(Find(root, "InventoryView/Viewport/Content/InventoryItem/Icon"));
         InventoryView_Viewport_Content_InventoryItem_Count = UINode.From(Find(root, "InventoryView/Viewport/Content/InventoryItem/Count"));
         InventoryView_Viewport_Content_InventoryItem_Name = UINode.From(Find(root, "InventoryView/Viewport/Content/InventoryItem/Name"));
+        Coin = UINode.From(Find(root, "Coin"));
+        Coin_Money = UINode.From(Find(root, "Coin/Money"));
+        Coin_MoneyText = UINode.From(Find(root, "Coin/MoneyText"));
+        Drag = UINode.From(Find(root, "Drag"));
+        Drag_Icon = UINode.From(Find(root, "Drag/Icon"));
     }
 }

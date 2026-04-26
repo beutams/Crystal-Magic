@@ -3,6 +3,8 @@ using System;
 using CrystalMagic.Core;
 using CrystalMagic.UI;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class ShopUI : UIBase<ShopUIData>
 {
@@ -14,8 +16,13 @@ public class ShopUI : UIBase<ShopUIData>
     private bool _isModelEventSubscribed;
     private Coroutine _commodityHoverCoroutine;
     private ShopCommodityDisplayData _hoveredCommodity;
+    private ShopCommodityDisplayData _draggedCommodity;
+    private ShopInventoryDisplayData _draggedInventoryItem;
+    private bool _dragRaycastDisabled;
 
     public event Action<ShopCommodityDisplayData> CommodityHoverReady;
+    public event Action<ShopCommodityDisplayData> CommodityBuyRequested;
+    public event Action<ShopInventoryDisplayData> InventorySellRequested;
     public event Action CommodityHoverExited;
 
     public void BindModel(ShopUIModel model)
@@ -39,6 +46,8 @@ public class ShopUI : UIBase<ShopUIData>
     {
         _isOpened = true;
         SubscribeModelEvents();
+        EnsureDragVisualInitialized();
+        SetDragVisible(false);
 
         if (_model != null)
             Render();
@@ -47,14 +56,21 @@ public class ShopUI : UIBase<ShopUIData>
     public override void OnClose()
     {
         CancelCommodityHover(true);
+        _draggedCommodity = null;
+        _draggedInventoryItem = null;
+        SetDragVisible(false);
         UnsubscribeModelEvents();
         _isOpened = false;
     }
 
     private void Render()
     {
+        if (_model == null)
+            return;
+
         RenderCommodities(_model.Commodities);
         RenderInventory(_model.InventoryItems, _model.InventorySlotCount);
+        RenderMoney(_model.Money);
     }
 
     private void RenderCommodities(IReadOnlyList<ShopCommodityDisplayData> commodities)
@@ -78,6 +94,12 @@ public class ShopUI : UIBase<ShopUIData>
             ShopInventoryDisplayData data = inventoryItems != null && i < inventoryItems.Length ? inventoryItems[i] : null;
             _inventoryItemViews[i].Render(data);
         }
+    }
+
+    private void RenderMoney(long money)
+    {
+        if (UI.Coin_MoneyText.TextMeshProUGUI != null)
+            UI.Coin_MoneyText.TextMeshProUGUI.text = money.ToString();
     }
 
     private void EnsureCommodityItemViews(int itemCount)
@@ -122,6 +144,7 @@ public class ShopUI : UIBase<ShopUIData>
         {
             ShopUI_InventoryItemView itemView = UI.InventoryView_Viewport_Content.GameObject.transform.GetChild(i).GetComponent<ShopUI_InventoryItemView>();
             itemView.Rebind();
+            BindInventoryItemView(itemView);
 
             if (_inventoryItemViews.Count < itemCount)
             {
@@ -142,6 +165,7 @@ public class ShopUI : UIBase<ShopUIData>
 
             ShopUI_InventoryItemView itemView = clone.GetComponent<ShopUI_InventoryItemView>();
             itemView.Rebind();
+            BindInventoryItemView(itemView);
             _inventoryItemViews.Add(itemView);
         }
     }
@@ -180,8 +204,29 @@ public class ShopUI : UIBase<ShopUIData>
 
         itemView.HoverEntered -= HandleCommodityHoverEntered;
         itemView.HoverExited -= HandleCommodityHoverExited;
+        itemView.DoubleClicked -= HandleCommodityDoubleClicked;
+        itemView.DragStarted -= HandleCommodityDragStarted;
+        itemView.Dragging -= HandleCommodityDragging;
+        itemView.DragEnded -= HandleCommodityDragEnded;
         itemView.HoverEntered += HandleCommodityHoverEntered;
         itemView.HoverExited += HandleCommodityHoverExited;
+        itemView.DoubleClicked += HandleCommodityDoubleClicked;
+        itemView.DragStarted += HandleCommodityDragStarted;
+        itemView.Dragging += HandleCommodityDragging;
+        itemView.DragEnded += HandleCommodityDragEnded;
+    }
+
+    private void BindInventoryItemView(ShopUI_InventoryItemView itemView)
+    {
+        if (itemView == null)
+            return;
+
+        itemView.DragStarted -= HandleInventoryDragStarted;
+        itemView.Dragging -= HandleInventoryDragging;
+        itemView.DragEnded -= HandleInventoryDragEnded;
+        itemView.DragStarted += HandleInventoryDragStarted;
+        itemView.Dragging += HandleInventoryDragging;
+        itemView.DragEnded += HandleInventoryDragEnded;
     }
 
     private void HandleCommodityHoverEntered(ShopCommodityDisplayData data)
@@ -204,6 +249,83 @@ public class ShopUI : UIBase<ShopUIData>
             return;
 
         CancelCommodityHover(true);
+    }
+
+    private void HandleCommodityDoubleClicked(ShopCommodityDisplayData data)
+    {
+        if (data == null)
+            return;
+
+        CancelCommodityHover(true);
+        CommodityBuyRequested?.Invoke(data);
+    }
+
+    private void HandleCommodityDragStarted(ShopCommodityDisplayData data, PointerEventData eventData)
+    {
+        if (data == null || eventData == null)
+            return;
+
+        CancelCommodityHover(true);
+        _draggedInventoryItem = null;
+        _draggedCommodity = data;
+        UI.Drag_Icon.Image.sprite = LoadIcon(data.IconPath);
+        SetDragVisible(true);
+        UpdateDragPosition(eventData);
+    }
+
+    private void HandleCommodityDragging(ShopCommodityDisplayData data, PointerEventData eventData)
+    {
+        if (eventData == null || !ReferenceEquals(_draggedCommodity, data))
+            return;
+
+        UpdateDragPosition(eventData);
+    }
+
+    private void HandleCommodityDragEnded(ShopCommodityDisplayData data, PointerEventData eventData)
+    {
+        bool shouldOpenBuyUI = data != null
+            && ReferenceEquals(_draggedCommodity, data)
+            && IsPointerOverInventory(eventData);
+
+        _draggedCommodity = null;
+        SetDragVisible(false);
+
+        if (shouldOpenBuyUI)
+            CommodityBuyRequested?.Invoke(data);
+    }
+
+    private void HandleInventoryDragStarted(ShopInventoryDisplayData data, PointerEventData eventData)
+    {
+        if (data == null || eventData == null)
+            return;
+
+        CancelCommodityHover(true);
+        _draggedCommodity = null;
+        _draggedInventoryItem = data;
+        UI.Drag_Icon.Image.sprite = LoadIcon(data.IconPath);
+        SetDragVisible(true);
+        UpdateDragPosition(eventData);
+    }
+
+    private void HandleInventoryDragging(ShopInventoryDisplayData data, PointerEventData eventData)
+    {
+        if (eventData == null || !ReferenceEquals(_draggedInventoryItem, data))
+            return;
+
+        UpdateDragPosition(eventData);
+    }
+
+    private void HandleInventoryDragEnded(ShopInventoryDisplayData data, PointerEventData eventData)
+    {
+        bool shouldOpenSellUI = data != null
+            && ReferenceEquals(_draggedInventoryItem, data)
+            && IsPointerOverShop(eventData);
+
+        _draggedInventoryItem = null;
+        SetDragVisible(false);
+
+        if (shouldOpenSellUI)
+            InventorySellRequested?.Invoke(data);
     }
 
     private System.Collections.IEnumerator CommodityHoverDelayRoutine(ShopCommodityDisplayData data)
@@ -229,5 +351,69 @@ public class ShopUI : UIBase<ShopUIData>
 
         if (closeInfo)
             CommodityHoverExited?.Invoke();
+    }
+
+    private void EnsureDragVisualInitialized()
+    {
+        if (_dragRaycastDisabled || UI.Drag.GameObject == null)
+            return;
+
+        Graphic[] graphics = UI.Drag.GameObject.GetComponentsInChildren<Graphic>(true);
+        for (int i = 0; i < graphics.Length; i++)
+            graphics[i].raycastTarget = false;
+
+        _dragRaycastDisabled = true;
+    }
+
+    private void SetDragVisible(bool visible)
+    {
+        if (UI.Drag.GameObject == null)
+            return;
+
+        if (UI.Drag.GameObject.activeSelf != visible)
+            UI.Drag.GameObject.SetActive(visible);
+    }
+
+    private void UpdateDragPosition(PointerEventData eventData)
+    {
+        if (eventData == null || UI.Drag.RectTransform == null)
+            return;
+
+        RectTransform parentRect = UI.Drag.RectTransform.parent as RectTransform;
+        if (parentRect == null)
+        {
+            UI.Drag.RectTransform.position = eventData.position;
+            return;
+        }
+
+        Camera eventCamera = eventData.pressEventCamera != null ? eventData.pressEventCamera : eventData.enterEventCamera;
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(parentRect, eventData.position, eventCamera, out Vector2 localPoint))
+            UI.Drag.RectTransform.anchoredPosition = localPoint;
+    }
+
+    private bool IsPointerOverInventory(PointerEventData eventData)
+    {
+        if (eventData == null || UI.InventoryView.RectTransform == null)
+            return false;
+
+        Camera eventCamera = eventData.pressEventCamera != null ? eventData.pressEventCamera : eventData.enterEventCamera;
+        return RectTransformUtility.RectangleContainsScreenPoint(UI.InventoryView.RectTransform, eventData.position, eventCamera);
+    }
+
+    private bool IsPointerOverShop(PointerEventData eventData)
+    {
+        if (eventData == null || UI.ShopView.RectTransform == null)
+            return false;
+
+        Camera eventCamera = eventData.pressEventCamera != null ? eventData.pressEventCamera : eventData.enterEventCamera;
+        return RectTransformUtility.RectangleContainsScreenPoint(UI.ShopView.RectTransform, eventData.position, eventCamera);
+    }
+
+    private Sprite LoadIcon(string iconPath)
+    {
+        if (string.IsNullOrEmpty(iconPath))
+            return null;
+
+        return ResourceComponent.Instance.Load<Sprite>(iconPath);
     }
 }

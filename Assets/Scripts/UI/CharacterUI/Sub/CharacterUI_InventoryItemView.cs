@@ -1,10 +1,20 @@
-﻿using CrystalMagic.Core;
+using CrystalMagic.Core;
+using System;
+using UnityEngine;
+using UnityEngine.EventSystems;
 
-public class CharacterUI_InventoryItemView : UISubView<CharacterUI_InventoryItemData>
+public class CharacterUI_InventoryItemView : UISubView<CharacterUI_InventoryItemData>, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
+    private CrystalMagic.UI.CharacterInventoryDisplayData _data;
+
+    public event Action<CrystalMagic.UI.CharacterInventoryDisplayData, PointerEventData> DragStarted;
+    public event Action<CrystalMagic.UI.CharacterInventoryDisplayData, PointerEventData> Dragging;
+    public event Action<CrystalMagic.UI.CharacterInventoryDisplayData, PointerEventData> DragEnded;
+
     public void Render(CrystalMagic.UI.CharacterInventoryDisplayData data)
     {
         Rebind();
+        _data = data;
 
         if (data == null)
         {
@@ -19,11 +29,35 @@ public class CharacterUI_InventoryItemView : UISubView<CharacterUI_InventoryItem
         UI.Name.TextMeshProUGUI.text = data.Name;
     }
 
-    private UnityEngine.Sprite LoadIcon(string iconPath)
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        if (_data == null || eventData == null)
+            return;
+
+        DragStarted?.Invoke(_data, eventData);
+    }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        if (_data == null || eventData == null)
+            return;
+
+        Dragging?.Invoke(_data, eventData);
+    }
+
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        if (_data == null || eventData == null)
+            return;
+
+        DragEnded?.Invoke(_data, eventData);
+    }
+
+    private Sprite LoadIcon(string iconPath)
     {
         if (string.IsNullOrEmpty(iconPath))
             return null;
 
-        return ResourceComponent.Instance.Load<UnityEngine.Sprite>(iconPath);
+        return ResourceComponent.Instance.Load<Sprite>(iconPath);
     }
 }

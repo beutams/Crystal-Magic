@@ -116,10 +116,12 @@
                 case StashCategory.Skill:
                     return itemType == CrystalMagic.Game.Data.ItemType.SkillStone;
                 case StashCategory.Equip:
-                    return itemType == CrystalMagic.Game.Data.ItemType.Material;
+                    return itemType == CrystalMagic.Game.Data.ItemType.Weapon
+                        || itemType == CrystalMagic.Game.Data.ItemType.Accessory;
                 case StashCategory.Props:
                     return itemType != CrystalMagic.Game.Data.ItemType.SkillStone
-                        && itemType != CrystalMagic.Game.Data.ItemType.Material;
+                        && itemType != CrystalMagic.Game.Data.ItemType.Weapon
+                        && itemType != CrystalMagic.Game.Data.ItemType.Accessory;
                 default:
                     return true;
             }

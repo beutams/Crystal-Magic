@@ -10,6 +10,19 @@ namespace CrystalMagic.Game.Skill
 {
     public static class SkillChainResolver
     {
+        public static SkillData GetSkillDataBySkillStoneItemId(int skillStoneItemId)
+        {
+            DataComponent dataComponent = DataComponent.Instance;
+            if (dataComponent == null)
+                return null;
+
+            ItemData skillStoneItemData = dataComponent.Get<ItemData>(skillStoneItemId);
+            if (skillStoneItemData == null || skillStoneItemData.ItemType != ItemType.SkillStone || skillStoneItemData.ExtraId <= 0)
+                return null;
+
+            return dataComponent.Get<SkillData>(skillStoneItemData.ExtraId);
+        }
+
         public static bool TryBuildSelectedChain(SkillCData skillConfig, RuntimeSkillData runtimeSkillData, List<SkillData> skills, out int chainIndex)
         {
             skills?.Clear();
@@ -23,13 +36,9 @@ namespace CrystalMagic.Game.Skill
             if (chain?.SkillStoneIds == null || chain.SkillStoneIds.Count == 0)
                 return false;
 
-            DataComponent dataComponent = DataComponent.Instance;
-            if (dataComponent == null)
-                return false;
-
-            foreach (int skillId in chain.SkillStoneIds)
+            foreach (int skillStoneItemId in chain.SkillStoneIds)
             {
-                SkillData skillData = dataComponent.Get<SkillData>(skillId);
+                SkillData skillData = GetSkillDataBySkillStoneItemId(skillStoneItemId);
                 if (skillData != null)
                     skills.Add(skillData);
             }
@@ -51,13 +60,9 @@ namespace CrystalMagic.Game.Skill
             if (chain?.SkillStoneIds == null || chain.SkillStoneIds.Count == 0)
                 return null;
 
-            DataComponent dataComponent = DataComponent.Instance;
-            if (dataComponent == null)
-                return null;
-
-            foreach (int skillId in chain.SkillStoneIds)
+            foreach (int skillStoneItemId in chain.SkillStoneIds)
             {
-                SkillData skillData = dataComponent.Get<SkillData>(skillId);
+                SkillData skillData = GetSkillDataBySkillStoneItemId(skillStoneItemId);
                 if (skillData != null)
                     return skillData;
             }

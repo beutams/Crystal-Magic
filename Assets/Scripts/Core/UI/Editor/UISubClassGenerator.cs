@@ -18,12 +18,36 @@ namespace CrystalMagic.Editor.UI
 
     public static class UISubClassGenerator
     {
-        private const string MenuPath = "GameObject/UI/Generate Sub UIView";
+        private const string ToolsMenuPath = "Tools/UI/Generate Sub UIView";
+        private const string HierarchyMenuPath = "GameObject/Tools/Generate Sub UIView";
         private const string PendingStageAssetKey = "CrystalMagic.UISub.PendingStageAsset";
         private const string PendingNodePathKey = "CrystalMagic.UISub.PendingNodePath";
         private const string PendingViewClassKey = "CrystalMagic.UISub.PendingViewClass";
 
-        [MenuItem(MenuPath, false, 20)]
+        [MenuItem(ToolsMenuPath, false, 20)]
+        private static void GenerateFromTools()
+        {
+            Generate();
+        }
+
+        [MenuItem(ToolsMenuPath, true)]
+        private static bool ValidateGenerateFromTools()
+        {
+            return ValidateGenerate();
+        }
+
+        [MenuItem(HierarchyMenuPath, false, 20)]
+        private static void GenerateFromHierarchy()
+        {
+            Generate();
+        }
+
+        [MenuItem(HierarchyMenuPath, true)]
+        private static bool ValidateGenerateFromHierarchy()
+        {
+            return ValidateGenerate();
+        }
+
         private static void Generate()
         {
             PrefabStage prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
@@ -56,7 +80,6 @@ namespace CrystalMagic.Editor.UI
             Debug.Log($"[UISubClassGenerator] Generated {viewClassName} and {dataClassName} for {selected.name}");
         }
 
-        [MenuItem(MenuPath, true)]
         private static bool ValidateGenerate()
         {
             PrefabStage prefabStage = PrefabStageUtility.GetCurrentPrefabStage();

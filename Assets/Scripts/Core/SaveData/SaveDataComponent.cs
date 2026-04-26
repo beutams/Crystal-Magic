@@ -24,6 +24,7 @@ namespace CrystalMagic.Core {
         private const int CURRENT_CONTENT_VERSION = 1;
         private const int MAX_SAVES = 20;
         private const int DEFAULT_SAVE_INDEX = 0;
+        private const long NEW_GAME_START_MONEY = 500;
 
         private SaveData _currentSaveData;
         private int _currentSaveIndex;
@@ -390,6 +391,18 @@ namespace CrystalMagic.Core {
             SaveData data = new SaveData();
             EnsureSaveDataValid(data);
             return data;
+        }
+
+        public bool CreateNewGameToSlot(int index)
+        {
+            SaveData data = CreateNewSaveData();
+            data.Town.StashMoney = NEW_GAME_START_MONEY;
+
+            _currentSaveData = data;
+            _currentSaveIndex = index;
+            RuntimeDataComponent.Instance.InitializeFromSave(data);
+
+            return SaveToSlot(index);
         }
 
         private string GetSaveFolderPath()

@@ -15,6 +15,8 @@ namespace CrystalMagic.Editor.UI
     /// </summary>
     public static class UIDataGenerator
     {
+        private const string ToolsMenuPath = "Tools/UI/Generate UIData";
+        private const string HierarchyMenuPath = "GameObject/Tools/Generate UIData";
 
         private struct Entry
         {
@@ -27,17 +29,23 @@ namespace CrystalMagic.Editor.UI
         }
 
         // ─────────────────────────────────────────
-        [MenuItem("Assets/Tools/Generate UIData", false, 800)]
-        private static void MenuGenerate()
+        [MenuItem(ToolsMenuPath, false, 800)]
+        private static void MenuGenerateFromTools()
         {
-            GameObject prefab = Selection.activeGameObject;
-            if (prefab == null) return;
-            GenerateForPrefab(prefab);
-            AssetDatabase.Refresh();
+            GenerateFromSelection();
         }
 
-        [MenuItem("Assets/Tools/Generate UIData", true)]
-        private static bool MenuValidate() => IsPrefabSelected();
+        [MenuItem(ToolsMenuPath, true)]
+        private static bool MenuValidateFromTools() => IsValidSelection();
+
+        [MenuItem(HierarchyMenuPath, false, 800)]
+        private static void MenuGenerateFromHierarchy()
+        {
+            GenerateFromSelection();
+        }
+
+        [MenuItem(HierarchyMenuPath, true)]
+        private static bool MenuValidateFromHierarchy() => IsValidSelection();
 
         // ─────────────────────────────────────────
         //  公共入口（供其他工具调用）
@@ -210,6 +218,29 @@ namespace CrystalMagic.Editor.UI
         {
             if (Selection.activeObject == null) return false;
             return AssetDatabase.GetAssetPath(Selection.activeObject).EndsWith(".prefab");
+        }
+
+        private static void GenerateFromSelection()
+        {
+            GameObject target = GetSelectedGameObject();
+            if (target == null)
+                return;
+
+            GenerateForPrefab(target);
+            AssetDatabase.Refresh();
+        }
+
+        private static bool IsValidSelection()
+        {
+            return GetSelectedGameObject() != null;
+        }
+
+        private static GameObject GetSelectedGameObject()
+        {
+            if (Selection.activeGameObject != null)
+                return Selection.activeGameObject;
+
+            return Selection.activeObject as GameObject;
         }
     }
 }

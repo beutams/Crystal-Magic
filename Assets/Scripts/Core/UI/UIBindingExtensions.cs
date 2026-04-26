@@ -92,5 +92,23 @@ namespace CrystalMagic.UI
                 property.Value = value;
             }
         }
+
+        public static IDisposable BindInputField(this UIBindingScope scope, UIProperty<string> property, TMP_InputField inputField, bool twoWay = false, bool invokeImmediately = true)
+        {
+            if (scope == null || property == null || inputField == null)
+                return null;
+
+            IDisposable binding = scope.Bind(property, value => inputField.SetTextWithoutNotify(value ?? string.Empty), invokeImmediately);
+            if (!twoWay)
+                return binding;
+
+            scope.Bind(() => inputField.onValueChanged.AddListener(OnValueChanged), () => inputField.onValueChanged.RemoveListener(OnValueChanged));
+            return binding;
+
+            void OnValueChanged(string value)
+            {
+                property.Value = value;
+            }
+        }
     }
 }

@@ -1,3 +1,5 @@
+using CrystalMagic.Game.Skill;
+
 namespace CrystalMagic.UI
 {
     public sealed class CharacterUIModel : UIModelBase
@@ -37,19 +39,21 @@ namespace CrystalMagic.UI
 
             for (int i = 0; i < chain.SkillStoneIds.Count; i++)
             {
-                int skillId = chain.SkillStoneIds[i];
-                CrystalMagic.Game.Data.SkillData skillData = CrystalMagic.Core.DataComponent.Instance.Get<CrystalMagic.Game.Data.SkillData>(skillId);
+                int skillStoneItemId = chain.SkillStoneIds[i];
+                CrystalMagic.Game.Data.SkillData skillData = SkillChainResolver.GetSkillDataBySkillStoneItemId(skillStoneItemId);
+                string skillIconPath = skillData != null ? skillData.IconPath : string.Empty;
                 string effectIconPath = string.Empty;
                 if (chain.Effects != null && i < chain.Effects.Length && chain.Effects[i] != null && chain.Effects[i].Count > 0)
                 {
-                    effectIconPath = skillData != null ? skillData.IconPath : string.Empty;
+                    effectIconPath = skillIconPath;
                 }
 
                 _skillItems.Add(new CharacterSkillDisplayData
                 {
                     DisplayIndex = i + 1,
-                    SkillId = skillId,
-                    SkillIconPath = skillData != null ? skillData.IconPath : string.Empty,
+                    SkillIndex = i,
+                    SkillId = skillData != null ? skillData.Id : 0,
+                    SkillIconPath = skillIconPath,
                     EffectIconPath = effectIconPath,
                 });
             }
@@ -73,8 +77,10 @@ namespace CrystalMagic.UI
                 CrystalMagic.Game.Data.ItemData itemData = CrystalMagic.Core.DataComponent.Instance.Get<CrystalMagic.Game.Data.ItemData>(inventoryItem.ItemId);
                 _inventoryItems[i] = new CharacterInventoryDisplayData
                 {
+                    SlotIndex = i,
                     ItemId = inventoryItem.ItemId,
                     Count = inventoryItem.Quantity,
+                    ItemType = itemData != null ? itemData.ItemType : inventoryItem.ItemType,
                     Name = itemData != null ? itemData.Name : string.Empty,
                     IconPath = itemData != null ? itemData.IconPath : string.Empty,
                 };
@@ -97,7 +103,9 @@ namespace CrystalMagic.UI
                 CrystalMagic.Game.Data.ItemData weaponData = CrystalMagic.Core.DataComponent.Instance.Get<CrystalMagic.Game.Data.ItemData>(equipment.StaffId);
                 _equipItems[0] = new CharacterEquipDisplayData
                 {
-                    Id = equipment.StaffId,
+                    SlotIndex = 0,
+                    ItemId = equipment.StaffId,
+                    ItemType = weaponData != null ? weaponData.ItemType : CrystalMagic.Game.Data.ItemType.None,
                     Name = weaponData != null ? weaponData.Name : string.Empty,
                     IconPath = weaponData != null ? weaponData.IconPath : string.Empty,
                 };
@@ -112,15 +120,24 @@ namespace CrystalMagic.UI
                 if (bonusId < 0)
                     continue;
 
+                CrystalMagic.Game.Data.ItemData itemData = CrystalMagic.Core.DataComponent.Instance.Get<CrystalMagic.Game.Data.ItemData>(bonusId);
                 CrystalMagic.Game.Data.PropertyBuffData propertyBuffData = CrystalMagic.Core.DataComponent.Instance.Get<CrystalMagic.Game.Data.PropertyBuffData>(bonusId);
                 CrystalMagic.Game.Data.EffectBuffData effectBuffData = CrystalMagic.Core.DataComponent.Instance.Get<CrystalMagic.Game.Data.EffectBuffData>(bonusId);
-                string bonusName = propertyBuffData != null ? propertyBuffData.Name : effectBuffData != null ? effectBuffData.Name : string.Empty;
+                string bonusName = itemData != null
+                    ? itemData.Name
+                    : propertyBuffData != null
+                        ? propertyBuffData.Name
+                        : effectBuffData != null
+                            ? effectBuffData.Name
+                            : string.Empty;
 
                 _equipItems[i + 1] = new CharacterEquipDisplayData
                 {
-                    Id = bonusId,
+                    SlotIndex = i + 1,
+                    ItemId = bonusId,
+                    ItemType = itemData != null ? itemData.ItemType : CrystalMagic.Game.Data.ItemType.None,
                     Name = bonusName,
-                    IconPath = string.Empty,
+                    IconPath = itemData != null ? itemData.IconPath : string.Empty,
                 };
             }
         }
@@ -129,6 +146,7 @@ namespace CrystalMagic.UI
     public sealed class CharacterSkillDisplayData
     {
         public int DisplayIndex;
+        public int SkillIndex;
         public int SkillId;
         public string SkillIconPath;
         public string EffectIconPath;
@@ -136,15 +154,19 @@ namespace CrystalMagic.UI
 
     public sealed class CharacterInventoryDisplayData
     {
+        public int SlotIndex;
         public int ItemId;
         public int Count;
+        public CrystalMagic.Game.Data.ItemType ItemType;
         public string Name;
         public string IconPath;
     }
 
     public sealed class CharacterEquipDisplayData
     {
-        public int Id;
+        public int SlotIndex;
+        public int ItemId;
+        public CrystalMagic.Game.Data.ItemType ItemType;
         public string Name;
         public string IconPath;
     }

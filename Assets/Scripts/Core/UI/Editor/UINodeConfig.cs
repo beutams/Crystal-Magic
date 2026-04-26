@@ -22,6 +22,7 @@ namespace CrystalMagic.Editor.UI
             new UINodeComponentEntry { TypeName = "Slider",           Namespace = "UnityEngine.UI" },
             new UINodeComponentEntry { TypeName = "Toggle",           Namespace = "UnityEngine.UI" },
             new UINodeComponentEntry { TypeName = "InputField",       Namespace = "UnityEngine.UI" },
+            new UINodeComponentEntry { TypeName = "TMP_InputField",   Namespace = "TMPro" },
             new UINodeComponentEntry { TypeName = "TextMeshProUGUI",  Namespace = "TMPro" },
         };
 

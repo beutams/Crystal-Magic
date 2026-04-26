@@ -1,14 +1,19 @@
 using CrystalMagic.Core;
 using CrystalMagic.UI;
 using System;
+using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class ShopUI_CommodityItemView : UISubView<ShopUI_CommodityItemData>, IPointerEnterHandler, IPointerExitHandler
+public class ShopUI_CommodityItemView : UISubView<ShopUI_CommodityItemData>, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
     private ShopCommodityDisplayData _data;
 
     public event Action<ShopCommodityDisplayData> HoverEntered;
     public event Action<ShopCommodityDisplayData> HoverExited;
+    public event Action<ShopCommodityDisplayData> DoubleClicked;
+    public event Action<ShopCommodityDisplayData, PointerEventData> DragStarted;
+    public event Action<ShopCommodityDisplayData, PointerEventData> Dragging;
+    public event Action<ShopCommodityDisplayData, PointerEventData> DragEnded;
 
     public void Render(ShopCommodityDisplayData data)
     {
@@ -46,11 +51,43 @@ public class ShopUI_CommodityItemView : UISubView<ShopUI_CommodityItemData>, IPo
         HoverExited?.Invoke(_data);
     }
 
-    private UnityEngine.Sprite LoadIcon(string iconPath)
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (_data == null || eventData == null || eventData.clickCount < 2)
+            return;
+
+        DoubleClicked?.Invoke(_data);
+    }
+
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        if (_data == null || eventData == null)
+            return;
+
+        DragStarted?.Invoke(_data, eventData);
+    }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        if (_data == null || eventData == null)
+            return;
+
+        Dragging?.Invoke(_data, eventData);
+    }
+
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        if (_data == null || eventData == null)
+            return;
+
+        DragEnded?.Invoke(_data, eventData);
+    }
+
+    private Sprite LoadIcon(string iconPath)
     {
         if (string.IsNullOrEmpty(iconPath))
             return null;
 
-        return ResourceComponent.Instance.Load<UnityEngine.Sprite>(iconPath);
+        return ResourceComponent.Instance.Load<Sprite>(iconPath);
     }
 }

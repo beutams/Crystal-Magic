@@ -59,8 +59,10 @@ namespace CrystalMagic.Core {
 
         private void HandleStartGameRequested(MainMenuStartRequestedEvent gameEvent)
         {
-            SaveDataComponent.Instance.SaveToSlot(gameEvent.Index);
-            StartLoadGame(gameEvent.Index);
+            if (SaveDataComponent.Instance.CreateNewGameToSlot(gameEvent.Index))
+            {
+                StartLoadGame(gameEvent.Index);
+            }
         }
 
         private void HandleLoadGameRequested(MainMenuLoadRequestedEvent gameEvent)

@@ -5,50 +5,77 @@
             "Name": "火球",
             "Description": "释放火球，触碰到之后造成范围伤害",
             "ItemType": 2,
+            "ExtraId": 1,
             "Rarity": 1,
             "MaxStack": 99,
-            "SellPrice": 10,
-            "IconPath": ""
+            "SellPrice": 50,
+            "IconPath": "Assets/Res/Sprites/Item/FireBall.png"
         },
         {
             "Id": 2,
             "Name": "火龙卷",
             "Description": "目标位置释放持续一定时间的火龙卷，对范围内的单位造成伤害",
             "ItemType": 2,
+            "ExtraId": 2,
             "Rarity": 1,
             "MaxStack": 99,
-            "SellPrice": 10,
-            "IconPath": ""
+            "SellPrice": 50,
+            "IconPath": "Assets/Res/Sprites/Item/FireTornado.png"
         },
         {
             "Id": 3,
             "Name": "火焰冲击",
             "Description": "持续释放直线形的火焰造成伤害",
             "ItemType": 2,
+            "ExtraId": 3,
             "Rarity": 1,
             "MaxStack": 99,
-            "SellPrice": 10,
-            "IconPath": ""
+            "SellPrice": 50,
+            "IconPath": "Assets/Res/Sprites/Item/FlameStream.png"
         },
         {
             "Id": 4,
             "Name": "燃烧",
             "Description": "对范围内的单位造成燃烧效果",
             "ItemType": 2,
+            "ExtraId": 4,
             "Rarity": 1,
             "MaxStack": 99,
-            "SellPrice": 10,
-            "IconPath": ""
+            "SellPrice": 50,
+            "IconPath": "Assets/Res/Sprites/Item/Fiery.png"
         },
         {
             "Id": 5,
             "Name": "压缩魔力",
             "Description": "下个技能的MP消耗减半",
             "ItemType": 2,
+            "ExtraId": 5,
             "Rarity": 1,
             "MaxStack": 99,
-            "SellPrice": 10,
-            "IconPath": ""
+            "SellPrice": 50,
+            "IconPath": "Assets/Res/Sprites/Item/Magical.png"
+        },
+        {
+            "Id": 6,
+            "Name": "通用法杖",
+            "Description": "通用法杖，没有什么特别的",
+            "ItemType": 3,
+            "ExtraId": 0,
+            "Rarity": 1,
+            "MaxStack": 1,
+            "SellPrice": 50,
+            "IconPath": "Assets/Res/Sprites/Item/Weapen.png"
+        },
+        {
+            "Id": 7,
+            "Name": "火焰增幅",
+            "Description": "通用加成，增加火焰技能的伤害",
+            "ItemType": 5,
+            "ExtraId": 0,
+            "Rarity": 1,
+            "MaxStack": 99,
+            "SellPrice": 50,
+            "IconPath": "Assets/Res/Sprites/Item/FireGem.png"
         }
     ]
 }

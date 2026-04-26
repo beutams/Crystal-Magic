@@ -13,11 +13,13 @@ namespace CrystalMagic.UI
 
         private string _npcName;
         private int _inventorySlotCount = 32;
+        private long _money;
 
         public IReadOnlyList<ShopCommodityDisplayData> Commodities => _commodities;
         public ShopInventoryDisplayData[] InventoryItems => _inventoryItems;
         public int InventorySlotCount => _inventorySlotCount;
         public string NpcName => _npcName;
+        public long Money => _money;
 
         public void SetOpenData(string data)
         {
@@ -28,6 +30,7 @@ namespace CrystalMagic.UI
         {
             RefreshCommodities();
             RefreshInventory();
+            RefreshMoney();
             EventComponent.Instance.Publish(new CommonGameEvent(DataChangedEventName, this));
         }
 
@@ -73,12 +76,21 @@ namespace CrystalMagic.UI
                 ItemData itemData = DataComponent.Instance.Get<ItemData>(inventoryItem.ItemId);
                 _inventoryItems[i] = new ShopInventoryDisplayData
                 {
+                    SlotIndex = i,
                     ItemId = inventoryItem.ItemId,
                     Count = inventoryItem.Quantity,
                     Name = itemData != null ? itemData.Name : string.Empty,
+                    Description = itemData != null ? itemData.Description : string.Empty,
+                    SellPrice = itemData != null ? itemData.SellPrice : 0,
                     IconPath = itemData != null ? itemData.IconPath : string.Empty,
                 };
             }
+        }
+
+        private void RefreshMoney()
+        {
+            TownData townData = SaveDataComponent.Instance.GetTownData();
+            _money = townData?.StashMoney ?? 0;
         }
     }
 
@@ -95,9 +107,12 @@ namespace CrystalMagic.UI
 
     public sealed class ShopInventoryDisplayData
     {
+        public int SlotIndex;
         public int ItemId;
         public int Count;
         public string Name;
+        public string Description;
+        public int SellPrice;
         public string IconPath;
     }
 }
