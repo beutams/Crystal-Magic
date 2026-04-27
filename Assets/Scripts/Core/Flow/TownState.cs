@@ -8,7 +8,7 @@ namespace CrystalMagic.Core {
     {
         public const string SceneName = "TownScene";
         private CharacterUI _characterUI;
-        private GameSettingUI _gameSettingUI;
+        private GameMenuUI _gameMenuUI;
         private bool _inputBound;
 
         public override void OnEnter()
@@ -29,7 +29,7 @@ namespace CrystalMagic.Core {
             Debug.Log("[TownState] Exited Town");
             UnbindInput();
             ReleaseCharacterUI();
-            ReleaseGameSettingUI();
+            ReleaseGameMenuUI();
         }
 
         public override void OnUpdate()
@@ -87,25 +87,25 @@ namespace CrystalMagic.Core {
 
         private void HandleUnhandledEscape()
         {
-            if (_gameSettingUI == null)
+            if (_gameMenuUI == null)
             {
-                _gameSettingUI = UIComponent.Instance.Open<GameSettingUI>();
+                _gameMenuUI = UIComponent.Instance.Open("GameSettingUI") as GameMenuUI;
                 return;
             }
 
-            if (_gameSettingUI.gameObject.activeSelf)
+            if (_gameMenuUI.gameObject.activeSelf)
                 return;
 
-            UIComponent.Instance.ShowUI(_gameSettingUI);
+            UIComponent.Instance.ShowUI(_gameMenuUI);
         }
 
-        private void ReleaseGameSettingUI()
+        private void ReleaseGameMenuUI()
         {
-            if (_gameSettingUI == null)
+            if (_gameMenuUI == null)
                 return;
 
-            UIComponent.Instance.ReleaseUI(_gameSettingUI);
-            _gameSettingUI = null;
+            UIComponent.Instance.ReleaseUI(_gameMenuUI);
+            _gameMenuUI = null;
         }
 
         /// <summary>

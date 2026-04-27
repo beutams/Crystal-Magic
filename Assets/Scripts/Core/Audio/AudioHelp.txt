@@ -1,0 +1,17 @@
+AudioComponent
+-内容
+    BGMMixerGroup
+    BGM用于播放和过度的两个AudioSource
+    BGM音量
+
+    SFX两个MixerGroup
+    SFX音效池，分为UI和unit
+    SFX音效池大小，缓存
+    音效音量
+-外部接口
+    PlayBGM(路径,音量，循环)
+        播放BGM
+    StopBGM(时间)
+    PlayUnit() 使用Unit音效池
+    PlayUnitFollowEntity() 跟随单位的音效
+    PlayUI() 使用UI音效池

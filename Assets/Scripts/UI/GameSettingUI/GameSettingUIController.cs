@@ -2,16 +2,18 @@
 {
     using CrystalMagic.Core;
 
-    public sealed class GameSettingUIController : UIControllerBase<GameSettingUI, GameSettingUIModel>
+    public sealed class GameMenuUIController : UIControllerBase<GameMenuUI, GameMenuUIModel>
     {
-        public GameSettingUIController(GameSettingUI view, GameSettingUIModel model)
+        public GameMenuUIController(GameMenuUI view, GameMenuUIModel model)
             : base(view, model)
         {
         }
 
         protected override void OnOpen()
         {
+            View.BindModel(Model);
             Bindings.Bind(() => View.SaveRequested += OnSaveRequested, () => View.SaveRequested -= OnSaveRequested);
+            Model.ReloadFromSettings();
         }
 
         private void OnSaveRequested()

@@ -15,8 +15,6 @@ namespace CrystalMagic.Core {
 
     /// <summary>
     /// 音频管理组件
-    /// - BGM：单通道，支持淡入淡出切换
-    /// - SFX：多通道，复用 AudioSource 池
     /// </summary>
     public class AudioComponent : GameComponent<AudioComponent>
     {
@@ -38,8 +36,7 @@ namespace CrystalMagic.Core {
         private readonly List<PooledAudioSource> _unitPool = new();
         private readonly List<PooledAudioSource> _uiPool = new();
         private readonly Dictionary<string, AudioClip> _clipCache = new();
-        private float _unitVolume = 1f;
-        private float _uiVolume = 1f;
+        private float _sfxVolume = 1f;
 
         // -------- 容器 --------
         private Transform _audioRoot;
@@ -164,19 +161,9 @@ namespace CrystalMagic.Core {
         }
 
         // ==================== SFX ====================
-
-        /// <summary>
-        /// 播放音效（从池中取空闲 AudioSource）
-        /// </summary>
-        public void PlaySFX(string assetPath, float volumeScale = 1f)
-        {
-            PlayUI(assetPath, volumeScale);
-        }
-
         public void SetSFXVolume(float volume)
         {
-            SetUnitVolume(volume);
-            SetUIVolume(volume);
+            SetSFXVolume(volume);
         }
 
         public void PlayUnit(string assetPath, Vector3 position, float volumeScale = 1f, float pitch = 1f, float spatialBlend = 1f, float delaySeconds = 0f)
@@ -198,16 +185,6 @@ namespace CrystalMagic.Core {
             PlayFromPool(_uiPool, AudioChannel.UI, assetPath, Vector3.zero, volumeScale, pitch, 0f, delaySeconds, false, Entity.Null, default, Vector3.zero);
         }
 
-        public void SetUnitVolume(float volume)
-        {
-            _unitVolume = Mathf.Clamp01(volume);
-        }
-
-        public void SetUIVolume(float volume)
-        {
-            _uiVolume = Mathf.Clamp01(volume);
-        }
-
         // ==================== 内部工具 ====================
 
         private void Update()
@@ -215,7 +192,21 @@ namespace CrystalMagic.Core {
             UpdatePool(_unitPool);
             UpdatePool(_uiPool);
         }
-
+        /// <summary>
+        /// 从指定音频池中取出一个空闲音源并开始播放，可选支持延迟播放与跟随实体。
+        /// </summary>
+        /// <param name="pool">这次要从哪个对象池里取音源，_unitPool 或 _uiPool</param>
+        /// <param name="channel">音频通道类型，决定用哪个 mixer、最大同时播放数、当前通道音量</param>
+        /// <param name="assetPath">音频资源路径，用来从 ResourceComponent 加载 AudioClip</param>
+        /// <param name="position">音源初始播放位置</param>
+        /// <param name="volumeScale"></param>
+        /// <param name="pitch">播放音调，1 是原速，越大越快，越小越慢</param>
+        /// <param name="spatialBlend">3D 空间混合值，0 是 2D，1 是完全 3D</param>
+        /// <param name="delaySeconds">延迟多少秒后再播放</param>
+        /// <param name="followEntity">是否跟随某个实体移动</param>
+        /// <param name="entity">要跟随的 ECS 实体</param>
+        /// <param name="entityManager">用来查询这个实体当前位置的 EntityManager</param>
+        /// <param name="followOffset">跟随时的位置偏移量</param>
         private void PlayFromPool(List<PooledAudioSource> pool, AudioChannel channel, string assetPath, Vector3 position, float volumeScale, float pitch, float spatialBlend, float delaySeconds, bool followEntity, Entity entity, EntityManager entityManager, Vector3 followOffset)
         {
             AudioClip clip = LoadClip(assetPath);
@@ -245,6 +236,8 @@ namespace CrystalMagic.Core {
             source.outputAudioMixerGroup = GetMixer(channel);
 
             pooled.InUse = true;
+            pooled.Channel = channel;
+            pooled.VolumeScale = Mathf.Clamp01(volumeScale);
             pooled.FollowEntity = followEntity;
             pooled.Entity = entity;
             pooled.EntityManager = entityManager;
@@ -320,11 +313,26 @@ namespace CrystalMagic.Core {
             pooled.Source.Stop();
             pooled.Source.clip = null;
             pooled.InUse = false;
+            pooled.Channel = AudioChannel.UI;
+            pooled.VolumeScale = 1f;
             pooled.FollowEntity = false;
             pooled.Entity = Entity.Null;
             pooled.EntityManager = default;
             pooled.FollowOffset = Vector3.zero;
             pooled.ReleaseTime = 0f;
+        }
+
+        private void RefreshPoolVolumes(List<PooledAudioSource> pool, AudioChannel channel)
+        {
+            float channelVolume = GetChannelVolume(channel);
+            for (int i = 0; i < pool.Count; i++)
+            {
+                PooledAudioSource pooled = pool[i];
+                if (!pooled.InUse || pooled.Channel != channel)
+                    continue;
+
+                pooled.Source.volume = channelVolume * pooled.VolumeScale;
+            }
         }
 
         private int GetMaxPlaying(AudioChannel channel)
@@ -341,8 +349,8 @@ namespace CrystalMagic.Core {
         {
             return channel switch
             {
-                AudioChannel.Unit => _unitVolume,
-                AudioChannel.UI => _uiVolume,
+                AudioChannel.Unit => _sfxVolume,
+                AudioChannel.UI => _sfxVolume,
                 _ => _bgmVolume,
             };
         }
@@ -434,6 +442,8 @@ namespace CrystalMagic.Core {
         {
             public AudioSource Source;
             public bool InUse;
+            public AudioChannel Channel;
+            public float VolumeScale = 1f;
             public bool FollowEntity;
             public Entity Entity;
             public EntityManager EntityManager;

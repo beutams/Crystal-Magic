@@ -1,6 +1,8 @@
 ﻿using CrystalMagic.Core;
 
-public class GameSettingUI : UIBase<GameSettingUIData>
+using CrystalMagic.UI;
+
+public class GameMenuUI : UIBase<GameMenuUIData, GameMenuUIModel>
 {
     public event System.Action SaveRequested;
 

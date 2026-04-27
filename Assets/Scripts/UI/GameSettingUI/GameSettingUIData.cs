@@ -4,7 +4,7 @@
 using UnityEngine;
 using CrystalMagic.Core;
 
-public class GameSettingUIData : UIData
+public class GameMenuUIData : UIData
 {
     public UINode Save;
     public UINode Save_TextTMP;

@@ -26,6 +26,7 @@ namespace CrystalMagic.Core
         public ConfigComponent ConfigComponent { get; private set; }
         public CameraComponent CameraComponent { get; private set; }
         public SaveDataComponent SaveDataComponent { get; private set; }
+        public GameSettingsComponent GameSettingsComponent { get; private set; }
         public AudioComponent AudioComponent { get; private set; }
         public InputComponent InputComponent { get; private set; }
         public GameGateComponent GameGateComponent { get; private set; }
@@ -69,6 +70,7 @@ namespace CrystalMagic.Core
             RegisterComponent(ConfigComponent.Instance);
             RegisterComponent(CameraComponent.Instance);
             RegisterComponent(SaveDataComponent.Instance);
+            RegisterComponent(GetOrCreateComponent<GameSettingsComponent>());
             RegisterComponent(AudioComponent.Instance);
             RegisterComponent(InputComponent.Instance);
             RegisterComponent(GameFlowComponent.Instance);
@@ -125,6 +127,8 @@ namespace CrystalMagic.Core
                 CameraComponent = cameraComponent;
             else if (component is SaveDataComponent saveDataComponent)
                 SaveDataComponent = saveDataComponent;
+            else if (component is GameSettingsComponent gameSettingsComponent)
+                GameSettingsComponent = gameSettingsComponent;
             else if (component is AudioComponent audioComponent)
                 AudioComponent = audioComponent;
             else if (component is InputComponent inputComponent)
@@ -133,6 +137,15 @@ namespace CrystalMagic.Core
                 GameGateComponent = gameGateComponent;
             else if (component is GameFlowComponent gameFlowComponent)
                 GameFlowComponent = gameFlowComponent;
+        }
+
+        private T GetOrCreateComponent<T>() where T : Component
+        {
+            T component = GetComponent<T>();
+            if (component == null)
+                component = gameObject.AddComponent<T>();
+
+            return component;
         }
 
         /// <summary>

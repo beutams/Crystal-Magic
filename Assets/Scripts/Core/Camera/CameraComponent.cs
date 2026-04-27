@@ -21,6 +21,7 @@ namespace CrystalMagic.Core {
         private Vector3 _lastShakeOffset;
         private World _followQueryWorld;
         private EntityQuery _playerFollowQuery;
+        private float _screenShakeScale = 1f;
 
         /// <summary>当前活跃的场景相机</summary>
         public Camera Current => _current != null ? _current.Camera : Camera.main;
@@ -39,8 +40,15 @@ namespace CrystalMagic.Core {
                 Debug.Log($"[CameraComponent] Unregistered: {cam.gameObject.name}");
             }
         }
+
+        public void SetScreenShakeScale(float scale)
+        {
+            _screenShakeScale = Mathf.Max(0f, scale);
+        }
+
         public void AddShake(Vector3 worldPosition, float duration, float amplitude, float frequency, bool useDistanceAttenuation, float radius)
         {
+            amplitude *= _screenShakeScale;
             if (duration <= 0f || amplitude <= 0f)
                 return;
 
