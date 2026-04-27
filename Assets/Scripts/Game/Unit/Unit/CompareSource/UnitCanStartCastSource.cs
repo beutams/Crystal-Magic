@@ -23,14 +23,15 @@ public class UnitCanStartCastSource : ISource
         UnitIntentComponent intent = _em.GetComponentData<UnitIntentComponent>(_entity);
         SkillCData skillConfig = SaveDataComponent.Instance?.GetSkillData();
         RuntimeSkillData runtimeSkillData = RuntimeDataComponent.Instance.GetSkillData();
-        SkillData firstSkill = SkillChainResolver.GetFirstSkill(skillConfig, runtimeSkillData);
+        SkillChainSlotData firstSlot = SkillChainResolver.GetFirstSlot(skillConfig, runtimeSkillData);
+        SkillData firstSkill = SkillChainResolver.GetSkillData(firstSlot);
         if (firstSkill == null)
             return 0f;
 
         if (firstSkill.SkillType == SkillType.PositionSkill && !intent.HasCastTarget)
             return 0f;
 
-        SkillModifierSet modifiers = SkillResolver.CollectModifiers(_em, _entity);
+        SkillModifierSet modifiers = SkillResolver.CollectModifiers(_em, _entity, firstSlot);
         ResolvedSkillData resolvedSkill = SkillResolver.Resolve(firstSkill, modifiers);
         UnitManaComponent mana = _em.GetComponentData<UnitManaComponent>(_entity);
         return resolvedSkill != null && mana.CurrentMana >= resolvedSkill.MpCost ? 1f : 0f;

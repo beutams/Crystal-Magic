@@ -34,19 +34,20 @@ namespace CrystalMagic.UI
 
             int selectedIndex = UnityEngine.Mathf.Clamp(runtimeSkillData.CurrentSkillChainIndex, 0, skillConfig.Chains.Length - 1);
             CrystalMagic.Core.SkillChainData chain = skillConfig.Chains[selectedIndex];
-            if (chain?.SkillStoneIds == null)
+            chain?.EnsureSlots();
+            if (chain?.Slots == null)
                 return;
 
-            for (int i = 0; i < chain.SkillStoneIds.Count; i++)
+            for (int i = 0; i < chain.Slots.Count; i++)
             {
-                int skillStoneItemId = chain.SkillStoneIds[i];
+                CrystalMagic.Core.SkillChainSlotData slot = chain.Slots[i];
+                int skillStoneItemId = slot?.SkillStoneItemId ?? 0;
                 CrystalMagic.Game.Data.SkillData skillData = SkillChainResolver.GetSkillDataBySkillStoneItemId(skillStoneItemId);
+                CrystalMagic.Game.Data.SkillEffectData skillEffectData = slot != null && slot.SkillEffectId > 0
+                    ? CrystalMagic.Core.DataComponent.Instance.Get<CrystalMagic.Game.Data.SkillEffectData>(slot.SkillEffectId)
+                    : null;
                 string skillIconPath = skillData != null ? skillData.IconPath : string.Empty;
-                string effectIconPath = string.Empty;
-                if (chain.Effects != null && i < chain.Effects.Length && chain.Effects[i] != null && chain.Effects[i].Count > 0)
-                {
-                    effectIconPath = skillIconPath;
-                }
+                string effectIconPath = skillEffectData != null ? skillEffectData.IconPath : string.Empty;
 
                 _skillItems.Add(new CharacterSkillDisplayData
                 {

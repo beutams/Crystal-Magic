@@ -23,9 +23,14 @@ namespace CrystalMagic.Game.Skill
             return dataComponent.Get<SkillData>(skillStoneItemData.ExtraId);
         }
 
-        public static bool TryBuildSelectedChain(SkillCData skillConfig, RuntimeSkillData runtimeSkillData, List<SkillData> skills, out int chainIndex)
+        public static SkillData GetSkillData(SkillChainSlotData slotData)
         {
-            skills?.Clear();
+            return slotData == null ? null : GetSkillDataBySkillStoneItemId(slotData.SkillStoneItemId);
+        }
+
+        public static bool TryBuildSelectedChain(SkillCData skillConfig, RuntimeSkillData runtimeSkillData, List<SkillChainSlotData> slots, out int chainIndex)
+        {
+            slots?.Clear();
             chainIndex = -1;
 
             if (skillConfig?.Chains == null || skillConfig.Chains.Length == 0)
@@ -33,42 +38,48 @@ namespace CrystalMagic.Game.Skill
 
             int selectedIndex = Mathf.Clamp(runtimeSkillData?.CurrentSkillChainIndex ?? 0, 0, skillConfig.Chains.Length - 1);
             SkillChainData chain = skillConfig.Chains[selectedIndex];
-            if (chain?.SkillStoneIds == null || chain.SkillStoneIds.Count == 0)
+            chain?.EnsureSlots();
+            if (chain?.Slots == null || chain.Slots.Count == 0)
                 return false;
 
-            foreach (int skillStoneItemId in chain.SkillStoneIds)
+            foreach (SkillChainSlotData slotData in chain.Slots)
             {
-                SkillData skillData = GetSkillDataBySkillStoneItemId(skillStoneItemId);
+                if (slotData == null || slotData.SkillStoneItemId <= 0)
+                    continue;
+
+                SkillData skillData = GetSkillData(slotData);
                 if (skillData != null)
-                    skills.Add(skillData);
+                    slots.Add(slotData);
             }
 
-            if (skills == null || skills.Count == 0)
+            if (slots == null || slots.Count == 0)
                 return false;
 
             chainIndex = selectedIndex;
             return true;
         }
 
-        public static SkillData GetFirstSkill(SkillCData skillConfig, RuntimeSkillData runtimeSkillData)
+        public static SkillChainSlotData GetFirstSlot(SkillCData skillConfig, RuntimeSkillData runtimeSkillData)
         {
             if (skillConfig?.Chains == null || skillConfig.Chains.Length == 0)
                 return null;
 
             int selectedIndex = Mathf.Clamp(runtimeSkillData?.CurrentSkillChainIndex ?? 0, 0, skillConfig.Chains.Length - 1);
             SkillChainData chain = skillConfig.Chains[selectedIndex];
-            if (chain?.SkillStoneIds == null || chain.SkillStoneIds.Count == 0)
+            chain?.EnsureSlots();
+            if (chain?.Slots == null || chain.Slots.Count == 0)
                 return null;
 
-            foreach (int skillStoneItemId in chain.SkillStoneIds)
+            foreach (SkillChainSlotData slotData in chain.Slots)
             {
-                SkillData skillData = GetSkillDataBySkillStoneItemId(skillStoneItemId);
+                SkillData skillData = GetSkillData(slotData);
                 if (skillData != null)
-                    return skillData;
+                    return slotData;
             }
 
             return null;
         }
+
     }
 
     public static class SkillResolver
@@ -98,22 +109,29 @@ namespace CrystalMagic.Game.Skill
             };
         }
 
-        public static SkillModifierSet CollectModifiers(EntityManager entityManager, Entity entity)
+        public static SkillModifierSet CollectModifiers(EntityManager entityManager, Entity entity, SkillChainSlotData slotData = null)
         {
             SkillModifierSet modifiers = new();
-            if (!entityManager.HasBuffer<UnitBuffElement>(entity))
-                return modifiers;
 
             DataComponent dataComponent = DataComponent.Instance;
             if (dataComponent == null)
                 return modifiers;
 
-            DynamicBuffer<UnitBuffElement> buffs = entityManager.GetBuffer<UnitBuffElement>(entity);
-            for (int i = 0; i < buffs.Length; i++)
+            if (entityManager.HasBuffer<UnitBuffElement>(entity))
             {
-                UnitBuffElement buffElement = buffs[i];
-                if (dataComponent.Get<BuffData>(buffElement.BuffId) is BuffData buffData)
-                    modifiers.Add(buffData.SkillModifiers, math.max(1, buffElement.StackCount));
+                DynamicBuffer<UnitBuffElement> buffs = entityManager.GetBuffer<UnitBuffElement>(entity);
+                for (int i = 0; i < buffs.Length; i++)
+                {
+                    UnitBuffElement buffElement = buffs[i];
+                    if (dataComponent.Get<BuffData>(buffElement.BuffId) is BuffData buffData)
+                        modifiers.Add(buffData.SkillModifiers, math.max(1, buffElement.StackCount));
+                }
+            }
+
+            if (slotData != null && slotData.SkillEffectId > 0)
+            {
+                if (dataComponent.Get<SkillEffectData>(slotData.SkillEffectId) is SkillEffectData skillEffectData)
+                    modifiers.Add(skillEffectData.Modifiers);
             }
 
             return modifiers;

@@ -1,0 +1,33 @@
+﻿{
+  "Rows": [
+    {
+      "Name": "增幅",
+      "Description": "使技能伤害增加50%，不过蓝耗也增加50%",
+      "Modifiers": [
+        {
+          "Channel": 0,
+          "Factor": 0.5,
+          "Bonus": 0.0
+        },
+        {
+          "Channel": 100,
+          "Factor": 0.5,
+          "Bonus": 0.0
+        }
+      ],
+      "Id": 1
+    },
+    {
+      "Name": "高速行动",
+      "Description": "行动速度加快100%",
+      "Modifiers": [
+        {
+          "Channel": 0,
+          "Factor": 0.0,
+          "Bonus": 0.0
+        }
+      ],
+      "Id": 2
+    }
+  ]
+}

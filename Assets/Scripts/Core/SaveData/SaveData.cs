@@ -247,6 +247,32 @@ namespace CrystalMagic.Core {
                 Chains[i] = new SkillChainData { Index = i };
             }
         }
+
+        public void EnsureValid()
+        {
+            if (Chains == null)
+            {
+                Chains = new SkillChainData[5];
+            }
+            else if (Chains.Length != 5)
+            {
+                SkillChainData[] resizedChains = new SkillChainData[5];
+                int copyCount = Math.Min(Chains.Length, resizedChains.Length);
+                for (int i = 0; i < copyCount; i++)
+                {
+                    resizedChains[i] = Chains[i];
+                }
+
+                Chains = resizedChains;
+            }
+
+            for (int i = 0; i < Chains.Length; i++)
+            {
+                Chains[i] ??= new SkillChainData();
+                Chains[i].Index = i;
+                Chains[i].EnsureSlots();
+            }
+        }
     }
 
     /// <summary>
@@ -256,18 +282,28 @@ namespace CrystalMagic.Core {
     public class SkillChainData
     {
         public int Index;                                        // 0-4 对应数字键 1-5
-        public List<int> SkillStoneIds = new();                 // 链上技能石 Id 列表（按顺序）
-        public List<SkillEffectData>[] Effects = new List<SkillEffectData>[0]; // 每颗石上的特效修饰
+        public List<SkillChainSlotData> Slots = new();
+
+        public void EnsureSlots()
+        {
+            Slots ??= new List<SkillChainSlotData>();
+
+            for (int i = 0; i < Slots.Count; i++)
+            {
+                Slots[i] ??= new SkillChainSlotData();
+            }
+        }
+
     }
 
     /// <summary>
-    /// 技能石特效数据
-    /// 不包含等级字段，特效由 Id 唯一确定
+    /// 单个技能链槽位
     /// </summary>
     [System.Serializable]
-    public class SkillEffectData
+    public class SkillChainSlotData
     {
-        public int EffectId;
+        public int SkillStoneItemId;
+        public int SkillEffectId;
     }
     #endregion
 

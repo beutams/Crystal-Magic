@@ -8,7 +8,7 @@ using UnityEngine;
 [FactoryKey("CastState")]
 public class CastState : AUnitState
 {
-    private readonly List<SkillData> _skillConfigs = new();
+    private readonly List<SkillChainSlotData> _skillSlots = new();
     private readonly List<ResolvedSkillData> _skills = new();
     private readonly SkillContent _skillContent = new();
 
@@ -18,13 +18,18 @@ public class CastState : AUnitState
 
         SkillCData skillConfig = SaveDataComponent.Instance?.GetSkillData();
         RuntimeSkillData runtimeSkillData = RuntimeDataComponent.Instance.GetSkillData();
-        if (!SkillChainResolver.TryBuildSelectedChain(skillConfig, runtimeSkillData, _skillConfigs, out int chainIndex))
+        if (!SkillChainResolver.TryBuildSelectedChain(skillConfig, runtimeSkillData, _skillSlots, out int chainIndex))
             return;
 
-        SkillModifierSet modifiers = SkillResolver.CollectModifiers(EntityManager, Entity);
-        for (int i = 0; i < _skillConfigs.Count; i++)
+        for (int i = 0; i < _skillSlots.Count; i++)
         {
-            ResolvedSkillData resolvedSkill = SkillResolver.Resolve(_skillConfigs[i], modifiers);
+            SkillChainSlotData slotData = _skillSlots[i];
+            SkillData skillData = SkillChainResolver.GetSkillData(slotData);
+            if (skillData == null)
+                continue;
+
+            SkillModifierSet modifiers = SkillResolver.CollectModifiers(EntityManager, Entity, slotData);
+            ResolvedSkillData resolvedSkill = SkillResolver.Resolve(skillData, modifiers);
             if (resolvedSkill != null)
                 _skills.Add(resolvedSkill);
         }
@@ -239,7 +244,7 @@ public class CastState : AUnitState
 
     private void ResetCastState()
     {
-        _skillConfigs.Clear();
+        _skillSlots.Clear();
         _skills.Clear();
 
         UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);

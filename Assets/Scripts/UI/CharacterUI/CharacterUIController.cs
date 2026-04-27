@@ -66,10 +66,12 @@ namespace CrystalMagic.UI
 
             int skillChainIndex = UnityEngine.Mathf.Clamp(runtimeSkillData.CurrentSkillChainIndex, 0, skillData.Chains.Length - 1);
             SkillChainData chain = skillData.Chains[skillChainIndex] ??= new SkillChainData { Index = skillChainIndex };
-            EnsureSkillChainCollections(chain);
-            int clampedInsertIndex = UnityEngine.Mathf.Clamp(insertIndex, 0, chain.SkillStoneIds.Count);
-            chain.SkillStoneIds.Insert(clampedInsertIndex, data.ItemId);
-            InsertSkillEffectAt(chain, clampedInsertIndex, new System.Collections.Generic.List<SkillEffectData>());
+            chain.EnsureSlots();
+            int clampedInsertIndex = UnityEngine.Mathf.Clamp(insertIndex, 0, chain.Slots.Count);
+            chain.Slots.Insert(clampedInsertIndex, new SkillChainSlotData
+            {
+                SkillStoneItemId = data.ItemId,
+            });
 
             SaveDataComponent.Instance.NotifyBackpackDataChanged();
             SaveDataComponent.Instance.NotifySkillDataChanged();
@@ -154,24 +156,21 @@ namespace CrystalMagic.UI
 
             int skillChainIndex = UnityEngine.Mathf.Clamp(runtimeSkillData.CurrentSkillChainIndex, 0, skillData.Chains.Length - 1);
             SkillChainData chain = skillData.Chains[skillChainIndex];
-            if (chain?.SkillStoneIds == null || data.SkillIndex < 0 || data.SkillIndex >= chain.SkillStoneIds.Count)
+            chain?.EnsureSlots();
+            if (chain?.Slots == null || data.SkillIndex < 0 || data.SkillIndex >= chain.Slots.Count)
                 return;
 
-            EnsureSkillChainCollections(chain);
             int sourceIndex = data.SkillIndex;
-            int targetIndex = UnityEngine.Mathf.Clamp(insertIndex, 0, chain.SkillStoneIds.Count);
+            int targetIndex = UnityEngine.Mathf.Clamp(insertIndex, 0, chain.Slots.Count);
             if (sourceIndex < targetIndex)
                 targetIndex--;
 
             if (targetIndex == sourceIndex)
                 return;
 
-            int skillId = chain.SkillStoneIds[sourceIndex];
-            System.Collections.Generic.List<SkillEffectData> effects = GetSkillEffectAt(chain, sourceIndex);
-            chain.SkillStoneIds.RemoveAt(sourceIndex);
-            RemoveSkillEffectAt(chain, sourceIndex);
-            chain.SkillStoneIds.Insert(targetIndex, skillId);
-            InsertSkillEffectAt(chain, targetIndex, effects);
+            SkillChainSlotData slotData = chain.Slots[sourceIndex];
+            chain.Slots.RemoveAt(sourceIndex);
+            chain.Slots.Insert(targetIndex, slotData);
             SaveDataComponent.Instance.NotifySkillDataChanged();
         }
 
@@ -188,13 +187,12 @@ namespace CrystalMagic.UI
 
             int skillChainIndex = UnityEngine.Mathf.Clamp(runtimeSkillData.CurrentSkillChainIndex, 0, skillData.Chains.Length - 1);
             SkillChainData chain = skillData.Chains[skillChainIndex];
-            if (chain?.SkillStoneIds == null || data.SkillIndex < 0 || data.SkillIndex >= chain.SkillStoneIds.Count)
+            chain?.EnsureSlots();
+            if (chain?.Slots == null || data.SkillIndex < 0 || data.SkillIndex >= chain.Slots.Count)
                 return;
 
-            EnsureSkillChainCollections(chain);
-            int skillId = chain.SkillStoneIds[data.SkillIndex];
-            chain.SkillStoneIds.RemoveAt(data.SkillIndex);
-            RemoveSkillEffectAt(chain, data.SkillIndex);
+            int skillId = chain.Slots[data.SkillIndex].SkillStoneItemId;
+            chain.Slots.RemoveAt(data.SkillIndex);
             AddItemToBackpack(backpackData, skillId, 1);
             SaveDataComponent.Instance.NotifyBackpackDataChanged();
             SaveDataComponent.Instance.NotifySkillDataChanged();
@@ -301,53 +299,5 @@ namespace CrystalMagic.UI
             }
         }
 
-        private void EnsureSkillChainCollections(SkillChainData chain)
-        {
-            chain.SkillStoneIds ??= new System.Collections.Generic.List<int>();
-
-            if (chain.Effects == null)
-            {
-                chain.Effects = new System.Collections.Generic.List<SkillEffectData>[chain.SkillStoneIds.Count];
-            }
-            else if (chain.Effects.Length != chain.SkillStoneIds.Count)
-            {
-                var effects = new System.Collections.Generic.List<SkillEffectData>[chain.SkillStoneIds.Count];
-                int copyCount = UnityEngine.Mathf.Min(chain.Effects.Length, effects.Length);
-                for (int i = 0; i < copyCount; i++)
-                    effects[i] = chain.Effects[i];
-                chain.Effects = effects;
-            }
-
-            for (int i = 0; i < chain.Effects.Length; i++)
-                chain.Effects[i] ??= new System.Collections.Generic.List<SkillEffectData>();
-        }
-
-        private System.Collections.Generic.List<SkillEffectData> GetSkillEffectAt(SkillChainData chain, int index)
-        {
-            if (chain?.Effects == null || index < 0 || index >= chain.Effects.Length)
-                return new System.Collections.Generic.List<SkillEffectData>();
-
-            return chain.Effects[index] ?? new System.Collections.Generic.List<SkillEffectData>();
-        }
-
-        private void InsertSkillEffectAt(SkillChainData chain, int index, System.Collections.Generic.List<SkillEffectData> effectData)
-        {
-            System.Collections.Generic.List<System.Collections.Generic.List<SkillEffectData>> effectList = new(chain.Effects);
-            effectList.Insert(UnityEngine.Mathf.Clamp(index, 0, effectList.Count), effectData ?? new System.Collections.Generic.List<SkillEffectData>());
-            chain.Effects = effectList.ToArray();
-        }
-
-        private void RemoveSkillEffectAt(SkillChainData chain, int index)
-        {
-            if (chain?.Effects == null)
-                return;
-
-            System.Collections.Generic.List<System.Collections.Generic.List<SkillEffectData>> effectList = new(chain.Effects);
-            if (index < 0 || index >= effectList.Count)
-                return;
-
-            effectList.RemoveAt(index);
-            chain.Effects = effectList.ToArray();
-        }
     }
 }

@@ -476,10 +476,8 @@ namespace CrystalMagic.Core {
             {
                 data.Town.Character.Skills = new SkillCData();
             }
-            else if (data.Town.Character.Skills.Chains == null || data.Town.Character.Skills.Chains.Length != 5)
-            {
-                data.Town.Character.Skills = new SkillCData();
-            }
+
+            data.Town.Character.Skills.EnsureValid();
 
             if (data.Town.Character.Backpack == null)
             {
