@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Audio;
+using UnityEngine.Serialization;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Entities;
@@ -29,10 +30,10 @@ namespace CrystalMagic.Core {
         // -------- SFX --------
         [SerializeField] private AudioMixerGroup _unitMixer;
         [SerializeField] private AudioMixerGroup _uiMixer;
-        [SerializeField] private int _unitPoolSize = 32;
-        [SerializeField] private int _uiPoolSize = 12;
-        [SerializeField] private int _maxUnitPlaying = 24;
-        [SerializeField] private int _maxUiPlaying = 8;
+        [SerializeField] private int _unitPoolSize = 8;
+        [SerializeField] private int _uiPoolSize = 8;
+        [SerializeField] private int _maxUnitPoolSize = 24;
+        [SerializeField] private int _maxUiPoolSize = 8;
         private readonly List<PooledAudioSource> _unitPool = new();
         private readonly List<PooledAudioSource> _uiPool = new();
         private readonly Dictionary<string, AudioClip> _clipCache = new();
@@ -61,8 +62,10 @@ namespace CrystalMagic.Core {
             _bgmFadeSource.loop = true;
             _bgmFadeSource.outputAudioMixerGroup = _bgmMixer;
 
-            CreatePool(_unitPool, _unitRoot, "UnitAudio", _unitPoolSize, _unitMixer);
-            CreatePool(_uiPool, _uiRoot, "UIAudio", _uiPoolSize, _uiMixer);
+            CreatePool(_unitPool, AudioChannel.Unit, _unitPoolSize);
+            CreatePool(_uiPool, AudioChannel.UI, _uiPoolSize);
+
+            EventComponent.Instance.Subscribe(new CommonGameEvent(GameSettingsComponent.SettingsChangedEventName), OnSettingsChanged);
         }
 
         // ==================== BGM ====================
@@ -153,7 +156,7 @@ namespace CrystalMagic.Core {
             _bgmSource.volume = _bgmVolume;
         }
 
-        public void SetBGMVolume(float volume)
+        private void ApplyBGMVolume(float volume)
         {
             _bgmVolume = Mathf.Clamp01(volume);
             if (_bgmSource.isPlaying)
@@ -161,9 +164,11 @@ namespace CrystalMagic.Core {
         }
 
         // ==================== SFX ====================
-        public void SetSFXVolume(float volume)
+        private void ApplySFXVolume(float volume)
         {
-            SetSFXVolume(volume);
+            _sfxVolume = Mathf.Clamp01(volume);
+            RefreshPoolVolumes(_unitPool, AudioChannel.Unit);
+            RefreshPoolVolumes(_uiPool, AudioChannel.UI);
         }
 
         public void PlayUnit(string assetPath, Vector3 position, float volumeScale = 1f, float pitch = 1f, float spatialBlend = 1f, float delaySeconds = 0f)
@@ -214,13 +219,13 @@ namespace CrystalMagic.Core {
                 return;
 
             UpdatePool(pool);
-            if (GetPlayingCount(pool) >= GetMaxPlaying(channel))
+            if (GetPlayingCount(pool) >= GetMaxPoolSize(channel))
                 return;
 
-            PooledAudioSource pooled = GetIdleSource(pool);
+            PooledAudioSource pooled = GetOrCreateAvailableSource(pool, channel);
             if (pooled == null)
             {
-                Debug.LogWarning($"[AudioComponent] {channel} audio pool exhausted");
+                Debug.LogWarning($"[AudioComponent] {channel} audio pool reached max size");
                 return;
             }
 
@@ -308,6 +313,18 @@ namespace CrystalMagic.Core {
             return null;
         }
 
+        private PooledAudioSource GetOrCreateAvailableSource(List<PooledAudioSource> pool, AudioChannel channel)
+        {
+            PooledAudioSource pooled = GetIdleSource(pool);
+            if (pooled != null)
+                return pooled;
+
+            if (pool.Count >= GetMaxPoolSize(channel))
+                return null;
+
+            return CreatePooledSource(pool, channel, pool.Count);
+        }
+
         private void ReleaseSource(PooledAudioSource pooled)
         {
             pooled.Source.Stop();
@@ -335,12 +352,12 @@ namespace CrystalMagic.Core {
             }
         }
 
-        private int GetMaxPlaying(AudioChannel channel)
+        private int GetMaxPoolSize(AudioChannel channel)
         {
             return channel switch
             {
-                AudioChannel.Unit => _maxUnitPlaying,
-                AudioChannel.UI => _maxUiPlaying,
+                AudioChannel.Unit => Mathf.Max(0, _maxUnitPoolSize),
+                AudioChannel.UI => Mathf.Max(0, _maxUiPoolSize),
                 _ => 1,
             };
         }
@@ -380,18 +397,28 @@ namespace CrystalMagic.Core {
             return clip;
         }
 
-        private void CreatePool(List<PooledAudioSource> pool, Transform parent, string sourceName, int poolSize, AudioMixerGroup mixer)
+        private void CreatePool(List<PooledAudioSource> pool, AudioChannel channel, int initialPoolSize)
         {
             pool.Clear();
-            int safePoolSize = Mathf.Max(0, poolSize);
+            int safePoolSize = Mathf.Clamp(initialPoolSize, 0, GetMaxPoolSize(channel));
             for (int i = 0; i < safePoolSize; i++)
             {
-                AudioSource source = CreateAudioSource($"{sourceName}_{i}", parent);
-                source.loop = false;
-                source.playOnAwake = false;
-                source.outputAudioMixerGroup = mixer;
-                pool.Add(new PooledAudioSource { Source = source });
+                CreatePooledSource(pool, channel, i);
             }
+        }
+
+        private PooledAudioSource CreatePooledSource(List<PooledAudioSource> pool, AudioChannel channel, int index)
+        {
+            string sourceName = channel == AudioChannel.Unit ? "UnitAudio" : "UIAudio";
+            Transform parent = channel == AudioChannel.Unit ? _unitRoot : _uiRoot;
+            AudioSource source = CreateAudioSource($"{sourceName}_{index}", parent);
+            source.loop = false;
+            source.playOnAwake = false;
+            source.outputAudioMixerGroup = GetMixer(channel);
+
+            PooledAudioSource pooled = new PooledAudioSource { Source = source };
+            pool.Add(pooled);
+            return pooled;
         }
 
         private Transform CreateChildRoot(string rootName)
@@ -417,6 +444,9 @@ namespace CrystalMagic.Core {
 
         public override void Cleanup()
         {
+            if (EventComponent.Instance != null)
+                EventComponent.Instance.Unsubscribe(new CommonGameEvent(GameSettingsComponent.SettingsChangedEventName), OnSettingsChanged);
+
             StopBGM();
             StopPool(_unitPool);
             StopPool(_uiPool);
@@ -436,6 +466,16 @@ namespace CrystalMagic.Core {
                 pool[i].Source.clip = null;
             }
             pool.Clear();
+        }
+
+        private void OnSettingsChanged(CommonGameEvent gameEvent)
+        {
+            GameSettingsData settings = gameEvent.GetData<GameSettingsData>();
+            if (settings == null)
+                return;
+
+            ApplyBGMVolume(settings.MasterVolume * settings.BgmVolume);
+            ApplySFXVolume(settings.MasterVolume * settings.UnitVolume);
         }
 
         private sealed class PooledAudioSource

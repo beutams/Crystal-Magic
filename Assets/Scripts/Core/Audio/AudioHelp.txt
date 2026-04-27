@@ -12,6 +12,11 @@ AudioComponent
     PlayBGM(路径,音量，循环)
         播放BGM
     StopBGM(时间)
+    SwitchBGM() 带淡入淡出
+
     PlayUnit() 使用Unit音效池
     PlayUnitFollowEntity() 跟随单位的音效
     PlayUI() 使用UI音效池
+-提示
+    LoadClip直接调用了ResourceComponent.Load<>(),在调用前需要确保是Assets开始的路径。
+    音量注册了对SettingComponent的监听，由SettingComponent改变而改变。

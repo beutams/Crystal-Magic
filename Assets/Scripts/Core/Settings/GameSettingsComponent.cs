@@ -21,7 +21,7 @@ namespace CrystalMagic.Core
 
             EnsureSettingsFolderExists();
             LoadSettingsOrCreateDefault();
-            ApplyCurrentSettings();
+            PublishSettingsChanged();
         }
 
         public GameSettingsData GetSettingsCopy()
@@ -33,7 +33,6 @@ namespace CrystalMagic.Core
         public void SetSettings(GameSettingsData settings, bool saveToDisk = false)
         {
             _settings = Sanitize(settings);
-            ApplyCurrentSettings();
             PublishSettingsChanged();
 
             if (saveToDisk)
@@ -46,7 +45,6 @@ namespace CrystalMagic.Core
                 return false;
 
             _settings = loadedSettings;
-            ApplyCurrentSettings();
             PublishSettingsChanged();
             return true;
         }
@@ -143,25 +141,13 @@ namespace CrystalMagic.Core
             }
         }
 
-        private void ApplyCurrentSettings()
+        private void PublishSettingsChanged()
         {
             EnsureSettingsValid();
 
-            float masterVolume = _settings.MasterVolume;
-            float sharedSfxVolume = _settings.UnitVolume;
-            if (AudioComponent.Instance != null)
-            {
-                AudioComponent.Instance.SetBGMVolume(masterVolume * _settings.BgmVolume);
-                AudioComponent.Instance.SetSFXVolume(masterVolume * sharedSfxVolume);
-                AudioComponent.Instance.SetSFXVolume(masterVolume * sharedSfxVolume);
-            }
-
             if (CameraComponent.Instance != null)
                 CameraComponent.Instance.SetScreenShakeScale(_settings.ScreenShakeScale);
-        }
 
-        private void PublishSettingsChanged()
-        {
             EventComponent.Instance.Publish(new CommonGameEvent(SettingsChangedEventName, _settings.Clone()));
         }
 
