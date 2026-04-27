@@ -3,6 +3,7 @@
     public sealed class StashUIModel : UIModelBase
     {
         public const string DataChangedEventName = "StashUIModel.DataChanged";
+        public override string ChangedEventName => DataChangedEventName;
 
         private readonly StashInventoryDisplayData[] _inventoryItems = new StashInventoryDisplayData[32];
         private readonly System.Collections.Generic.List<StashItemDisplayData> _stashItems = new();

@@ -9,6 +9,8 @@ namespace CrystalMagic.UI
 
     public abstract class UIModelBase : IDisposable
     {
+        public virtual string ChangedEventName => null;
+
         public virtual void Dispose()
         {
         }

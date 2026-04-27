@@ -5,6 +5,7 @@ namespace CrystalMagic.UI
     public sealed class SaveUIModel : UIModelBase
     {
         public const string SaveRecordsChangedEventName = "SaveUIModel.SaveRecordsChanged";
+        public override string ChangedEventName => SaveRecordsChangedEventName;
 
         private const int SlotCount = 20;
         private readonly SaveRecord[] _saveRecords = new SaveRecord[SlotCount];

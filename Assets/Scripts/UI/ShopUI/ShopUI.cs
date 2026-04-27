@@ -6,14 +6,11 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class ShopUI : UIBase<ShopUIData>
+public class ShopUI : UIBase<ShopUIData, ShopUIModel>
 {
     private readonly List<ShopUI_CommodityItemView> _commodityItemViews = new();
     private readonly List<ShopUI_InventoryItemView> _inventoryItemViews = new();
 
-    private ShopUIModel _model;
-    private bool _isOpened;
-    private bool _isModelEventSubscribed;
     private Coroutine _commodityHoverCoroutine;
     private ShopCommodityDisplayData _hoveredCommodity;
     private ShopCommodityDisplayData _draggedCommodity;
@@ -25,32 +22,11 @@ public class ShopUI : UIBase<ShopUIData>
     public event Action<ShopInventoryDisplayData> InventorySellRequested;
     public event Action CommodityHoverExited;
 
-    public void BindModel(ShopUIModel model)
-    {
-        if (_model == model)
-            return;
-
-        if (_model != null && _isOpened)
-            UnsubscribeModelEvents();
-
-        _model = model;
-
-        if (_model != null && _isOpened)
-        {
-            SubscribeModelEvents();
-            Render();
-        }
-    }
-
     public override void OnOpen()
     {
-        _isOpened = true;
-        SubscribeModelEvents();
         EnsureDragVisualInitialized();
         SetDragVisible(false);
-
-        if (_model != null)
-            Render();
+        base.OnOpen();
     }
 
     public override void OnClose()
@@ -59,18 +35,17 @@ public class ShopUI : UIBase<ShopUIData>
         _draggedCommodity = null;
         _draggedInventoryItem = null;
         SetDragVisible(false);
-        UnsubscribeModelEvents();
-        _isOpened = false;
+        base.OnClose();
     }
 
-    private void Render()
+    protected override void RefreshView()
     {
-        if (_model == null)
+        if (Model == null)
             return;
 
-        RenderCommodities(_model.Commodities);
-        RenderInventory(_model.InventoryItems, _model.InventorySlotCount);
-        RenderMoney(_model.Money);
+        RenderCommodities(Model.Commodities);
+        RenderInventory(Model.InventoryItems, Model.InventorySlotCount);
+        RenderMoney(Model.Money);
     }
 
     private void RenderCommodities(IReadOnlyList<ShopCommodityDisplayData> commodities)
@@ -168,33 +143,6 @@ public class ShopUI : UIBase<ShopUIData>
             BindInventoryItemView(itemView);
             _inventoryItemViews.Add(itemView);
         }
-    }
-
-    private void OnModelChanged(CommonGameEvent gameEvent)
-    {
-        ShopUIModel eventModel = gameEvent.GetData<ShopUIModel>();
-        if (eventModel != _model)
-            return;
-
-        Render();
-    }
-
-    private void SubscribeModelEvents()
-    {
-        if (_isModelEventSubscribed || _model == null)
-            return;
-
-        EventComponent.Instance.Subscribe(new CommonGameEvent(ShopUIModel.DataChangedEventName), OnModelChanged);
-        _isModelEventSubscribed = true;
-    }
-
-    private void UnsubscribeModelEvents()
-    {
-        if (!_isModelEventSubscribed)
-            return;
-
-        EventComponent.Instance.Unsubscribe(new CommonGameEvent(ShopUIModel.DataChangedEventName), OnModelChanged);
-        _isModelEventSubscribed = false;
     }
 
     private void BindCommodityItemView(ShopUI_CommodityItemView itemView)

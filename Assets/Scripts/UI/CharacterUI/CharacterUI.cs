@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class CharacterUI : UIBase<CharacterUIData>
+public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIModel>
 {
     private readonly List<CharacterUI_SkillItemView> _skillItemViews = new();
     private readonly List<CharacterUI_InventoryItemView> _inventoryItemViews = new();
@@ -14,9 +14,6 @@ public class CharacterUI : UIBase<CharacterUIData>
     private readonly CrystalMagic.UI.CharacterInventoryDisplayData[] _currentInventoryItems = new CrystalMagic.UI.CharacterInventoryDisplayData[32];
     private readonly CrystalMagic.UI.CharacterEquipDisplayData[] _currentEquipItems = new CrystalMagic.UI.CharacterEquipDisplayData[5];
 
-    private CrystalMagic.UI.CharacterUIModel _model;
-    private bool _isOpened;
-    private bool _isModelEventSubscribed;
     private bool _itemDragRaycastDisabled;
     private bool _skillDragRaycastDisabled;
     private CrystalMagic.UI.CharacterInventoryDisplayData _draggedInventoryItem;
@@ -31,36 +28,15 @@ public class CharacterUI : UIBase<CharacterUIData>
     public event Action<CrystalMagic.UI.CharacterSkillDisplayData, int> SkillReordered;
     public event Action<CrystalMagic.UI.CharacterSkillDisplayData> SkillReturnedToInventory;
 
-    public void BindModel(CrystalMagic.UI.CharacterUIModel model)
-    {
-        if (_model == model)
-            return;
-
-        if (_model != null && _isOpened)
-            UnsubscribeModelEvents();
-
-        _model = model;
-
-        if (_model != null && _isOpened)
-        {
-            SubscribeModelEvents();
-            Render();
-        }
-    }
-
     public override void OnOpen()
     {
-        _isOpened = true;
         UI.Skill_ChangeSkillBtn.ButtonPlus.onClick.AddListener(OnChangeSkillButton);
         EnsureEquipSlotHandlers();
         EnsureItemDragInitialized();
         EnsureSkillDragInitialized();
         SetItemDragVisible(false);
         SetSkillDragVisible(false);
-        SubscribeModelEvents();
-
-        if (_model != null)
-            Render();
+        base.OnOpen();
     }
 
     public override void OnClose()
@@ -71,18 +47,17 @@ public class CharacterUI : UIBase<CharacterUIData>
         _draggedSkillItem = null;
         SetItemDragVisible(false);
         SetSkillDragVisible(false);
-        UnsubscribeModelEvents();
-        _isOpened = false;
+        base.OnClose();
     }
 
-    private void Render()
+    protected override void RefreshView()
     {
-        if (_model == null)
+        if (Model == null)
             return;
 
-        RenderSkill(_model.SkillItems);
-        RenderInventory(_model.InventoryItems, _model.InventorySlotCount);
-        RenderEquip(_model.EquipItems);
+        RenderSkill(Model.SkillItems);
+        RenderInventory(Model.InventoryItems, Model.InventorySlotCount);
+        RenderEquip(Model.EquipItems);
     }
 
     private void RenderSkill(IReadOnlyList<CrystalMagic.UI.CharacterSkillDisplayData> skillItems)
@@ -564,36 +539,9 @@ public class CharacterUI : UIBase<CharacterUIData>
         return rectTransform != null && RectTransformUtility.RectangleContainsScreenPoint(rectTransform, screenPosition, eventCamera);
     }
 
-    private void OnModelChanged(CommonGameEvent gameEvent)
-    {
-        CrystalMagic.UI.CharacterUIModel eventModel = gameEvent.GetData<CrystalMagic.UI.CharacterUIModel>();
-        if (eventModel != _model)
-            return;
-
-        Render();
-    }
-
     private void OnChangeSkillButton()
     {
         ChangeSkillRequested?.Invoke();
-    }
-
-    private void SubscribeModelEvents()
-    {
-        if (_isModelEventSubscribed || _model == null)
-            return;
-
-        EventComponent.Instance.Subscribe(new CommonGameEvent(CrystalMagic.UI.CharacterUIModel.DataChangedEventName), OnModelChanged);
-        _isModelEventSubscribed = true;
-    }
-
-    private void UnsubscribeModelEvents()
-    {
-        if (!_isModelEventSubscribed)
-            return;
-
-        EventComponent.Instance.Unsubscribe(new CommonGameEvent(CrystalMagic.UI.CharacterUIModel.DataChangedEventName), OnModelChanged);
-        _isModelEventSubscribed = false;
     }
 
     private Sprite LoadIcon(string iconPath)

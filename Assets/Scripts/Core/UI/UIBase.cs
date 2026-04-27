@@ -1,3 +1,4 @@
+using CrystalMagic.UI;
 using UnityEngine;
 
 namespace CrystalMagic.Core {
@@ -115,6 +116,83 @@ namespace CrystalMagic.Core {
         {
             UI = new T();
             UI.Bind(transform);
+        }
+    }
+
+    public abstract class UIBase<T, TModel> : UIBase<T>
+        where T : UIData, new()
+        where TModel : UIModelBase
+    {
+        private TModel _model;
+        private bool _isOpened;
+        private bool _isModelEventSubscribed;
+        private string _modelChangedEventName;
+
+        protected TModel Model => _model;
+
+        public void BindModel(TModel model)
+        {
+            if (ReferenceEquals(_model, model))
+                return;
+
+            if (_isModelEventSubscribed)
+                UnsubscribeModelEvents();
+
+            _model = model;
+
+            if (_model != null && _isOpened)
+            {
+                SubscribeModelEvents();
+                RefreshView();
+            }
+        }
+
+        public override void OnOpen()
+        {
+            _isOpened = true;
+            SubscribeModelEvents();
+
+            if (_model != null)
+                RefreshView();
+        }
+
+        public override void OnClose()
+        {
+            UnsubscribeModelEvents();
+            _isOpened = false;
+        }
+
+        protected virtual void RefreshView()
+        {
+        }
+
+        private void OnModelChanged(CommonGameEvent gameEvent)
+        {
+            TModel eventModel = gameEvent.GetData<TModel>();
+            if (!ReferenceEquals(eventModel, _model))
+                return;
+
+            RefreshView();
+        }
+
+        private void SubscribeModelEvents()
+        {
+            if (_isModelEventSubscribed || _model == null || string.IsNullOrEmpty(_model.ChangedEventName))
+                return;
+
+            _modelChangedEventName = _model.ChangedEventName;
+            EventComponent.Instance.Subscribe(new CommonGameEvent(_modelChangedEventName), OnModelChanged);
+            _isModelEventSubscribed = true;
+        }
+
+        private void UnsubscribeModelEvents()
+        {
+            if (!_isModelEventSubscribed || string.IsNullOrEmpty(_modelChangedEventName))
+                return;
+
+            EventComponent.Instance.Unsubscribe(new CommonGameEvent(_modelChangedEventName), OnModelChanged);
+            _modelChangedEventName = null;
+            _isModelEventSubscribed = false;
         }
     }
 }

@@ -12,6 +12,7 @@ namespace CrystalMagic.UI
     public sealed class ShopItemInfoUIModel : UIModelBase, IUIOpenDataReceiver<ShopItemInfoUIOpenData>
     {
         public const string DataChangedEventName = "ShopItemInfoUIModel.DataChanged";
+        public override string ChangedEventName => DataChangedEventName;
 
         public string Name { get; private set; }
         public int HaveCount { get; private set; }

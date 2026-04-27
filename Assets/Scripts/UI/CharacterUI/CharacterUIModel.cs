@@ -5,6 +5,7 @@ namespace CrystalMagic.UI
     public sealed class CharacterUIModel : UIModelBase
     {
         public const string DataChangedEventName = "CharacterUIModel.DataChanged";
+        public override string ChangedEventName => DataChangedEventName;
 
         private readonly System.Collections.Generic.List<CharacterSkillDisplayData> _skillItems = new();
         private readonly CharacterInventoryDisplayData[] _inventoryItems = new CharacterInventoryDisplayData[32];

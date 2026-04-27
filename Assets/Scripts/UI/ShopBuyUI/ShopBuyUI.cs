@@ -3,47 +3,22 @@ using CrystalMagic.Core;
 using TMPro;
 using UnityEngine.UI;
 
-public class ShopBuyUI : UIBase<ShopBuyUIData>
+public class ShopBuyUI : UIBase<ShopBuyUIData, CrystalMagic.UI.ShopBuyUIModel>
 {
-    private CrystalMagic.UI.ShopBuyUIModel _model;
-    private bool _isOpened;
-    private bool _isModelEventSubscribed;
-
     public event Action AddRequested;
     public event Action ReduceRequested;
     public event Action<string> QuantityInputChanged;
     public event Action ConfirmRequested;
     public event Action CancelRequested;
 
-    public void BindModel(CrystalMagic.UI.ShopBuyUIModel model)
-    {
-        if (_model == model)
-            return;
-
-        if (_model != null && _isOpened)
-            UnsubscribeModelEvents();
-
-        _model = model;
-
-        if (_model != null && _isOpened)
-        {
-            SubscribeModelEvents();
-            Render();
-        }
-    }
-
     public override void OnOpen()
     {
-        _isOpened = true;
         UI.Add.ButtonPlus.onClick.AddListener(OnAddButton);
         UI.Reduce.ButtonPlus.onClick.AddListener(OnReduceButton);
         UI.Sure.ButtonPlus.onClick.AddListener(OnConfirmButton);
         UI.Cancel.ButtonPlus.onClick.AddListener(OnCancelButton);
         AddQuantityInputListener();
-        SubscribeModelEvents();
-
-        if (_model != null)
-            Render();
+        base.OnOpen();
     }
 
     public override void OnClose()
@@ -53,47 +28,19 @@ public class ShopBuyUI : UIBase<ShopBuyUIData>
         UI.Sure.ButtonPlus.onClick.RemoveListener(OnConfirmButton);
         UI.Cancel.ButtonPlus.onClick.RemoveListener(OnCancelButton);
         RemoveQuantityInputListener();
-        UnsubscribeModelEvents();
-        _isOpened = false;
+        base.OnClose();
     }
 
-    private void Render()
+    protected override void RefreshView()
     {
-        if (_model == null)
+        if (Model == null)
             return;
 
-        UI.IconBack_Icon.Image.sprite = LoadIcon(_model.IconPath);
-        UI.Name.TextMeshProUGUI.text = _model.Name;
-        UI.HaveCount.TextMeshProUGUI.text = _model.HaveCount.ToString();
-        UI.Description.TextMeshProUGUI.text = _model.Description;
-        SetQuantityInputText(_model.Quantity.ToString());
-    }
-
-    private void OnModelChanged(CommonGameEvent gameEvent)
-    {
-        CrystalMagic.UI.ShopBuyUIModel eventModel = gameEvent.GetData<CrystalMagic.UI.ShopBuyUIModel>();
-        if (eventModel != _model)
-            return;
-
-        Render();
-    }
-
-    private void SubscribeModelEvents()
-    {
-        if (_isModelEventSubscribed || _model == null)
-            return;
-
-        EventComponent.Instance.Subscribe(new CommonGameEvent(CrystalMagic.UI.ShopBuyUIModel.DataChangedEventName), OnModelChanged);
-        _isModelEventSubscribed = true;
-    }
-
-    private void UnsubscribeModelEvents()
-    {
-        if (!_isModelEventSubscribed)
-            return;
-
-        EventComponent.Instance.Unsubscribe(new CommonGameEvent(CrystalMagic.UI.ShopBuyUIModel.DataChangedEventName), OnModelChanged);
-        _isModelEventSubscribed = false;
+        UI.IconBack_Icon.Image.sprite = LoadIcon(Model.IconPath);
+        UI.Name.TextMeshProUGUI.text = Model.Name;
+        UI.HaveCount.TextMeshProUGUI.text = Model.HaveCount.ToString();
+        UI.Description.TextMeshProUGUI.text = Model.Description;
+        SetQuantityInputText(Model.Quantity.ToString());
     }
 
     private void OnAddButton() => AddRequested?.Invoke();
