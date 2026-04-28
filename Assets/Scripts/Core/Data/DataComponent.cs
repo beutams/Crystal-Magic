@@ -8,8 +8,6 @@ using Newtonsoft.Json.Linq;
 namespace CrystalMagic.Core {
     /// <summary>
     /// 配置表管理组件
-    /// 职责：加载、缓存、查询所有 JSON 配置表
-    /// JSON 文件放在 Assets/Res/Data/ 目录下
     /// </summary>
     public class DataComponent : GameComponent<DataComponent>
     {
@@ -22,11 +20,6 @@ namespace CrystalMagic.Core {
             base.Initialize();
             LoadAllTables();
         }
-
-        /// <summary>
-        /// 由 DataTableRegistry（自动生成）统一注册所有配置表
-        /// 执行菜单 Crystal Magic / Generate Data Registry 可重新生成
-        /// </summary>
         private void LoadAllTables()
         {
             DataTableRegistry.RegisterAll(this);
@@ -35,9 +28,6 @@ namespace CrystalMagic.Core {
         /// <summary>
         /// 加载配置表，传入表名即可（如 "ItemDataTable"）
         /// 路径由 AssetPathHelper.GetDataAsset 统一生成
-        /// 
-        /// 对于包含多态 DataRow 子类的表（如 BuffDataTable），
-        /// 会自动通过 Newtonsoft.Json 反序列化处理 $type 字段
         /// </summary>
         public DataTable<T> LoadTable<T>(string tableName) where T : DataRow
         {
@@ -119,7 +109,6 @@ namespace CrystalMagic.Core {
 
         /// <summary>
         /// 按条件查找第一个匹配行，找不到返回 null
-        /// 示例：DataComponent.Instance.Find&lt;UnitAttributeData&gt;(r => r.Name == "Player")
         /// </summary>
         public T Find<T>(Func<T, bool> predicate) where T : DataRow
         {

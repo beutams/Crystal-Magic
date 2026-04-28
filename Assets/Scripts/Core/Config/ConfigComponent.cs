@@ -6,15 +6,11 @@ using UnityEngine;
 namespace CrystalMagic.Core {
     /// <summary>
     /// 全局配置管理组件
-    /// 职责：按需加载、缓存各类配置对象
-    /// JSON 文件放在 Assets/Res/Config/ 目录下，文件名约定为 {TypeName}.json
-    /// 文件不存在时使用默认值并自动创建文件
     /// </summary>
     public class ConfigComponent : GameComponent<ConfigComponent>
     {
         private Dictionary<Type, object> _configs = new();
 
-        // ResourceComponent(5) 之后，DataComponent(10) 之前
         public override int Priority => 8;
 
         /// <summary>

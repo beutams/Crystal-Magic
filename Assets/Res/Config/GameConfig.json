@@ -1,0 +1,6 @@
+﻿{
+    "StartingGold": 500,
+    "InitialBackpackSize": 20,
+    "InitialStashSize": -1,
+    "MaxSaveSlots": 20
+}

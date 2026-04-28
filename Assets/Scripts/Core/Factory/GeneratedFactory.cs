@@ -6,10 +6,7 @@ public class GeneratedFactory<TKey, TValue>
 {
     private readonly Dictionary<TKey, Func<TValue>> _factories;
 
-    public GeneratedFactory()
-        : this(null)
-    {
-    }
+    public GeneratedFactory() : this(null){}
 
     public GeneratedFactory(IEqualityComparer<TKey> comparer)
     {

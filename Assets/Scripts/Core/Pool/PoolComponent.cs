@@ -4,10 +4,6 @@ using System.Collections.Generic;
 namespace CrystalMagic.Core {
     /// <summary>
     /// 对象池管理组件
-    /// 职责：通过完整路径或预制体获取/释放对象，支持自动创建对象池
-    /// 
-    /// 注意：使用 Get(GameObject prefab) 时，会根据预制体实例管理对象池，
-    /// 不同的预制体实例会创建不同的对象池，即使名字相同
     /// </summary>
     public class PoolComponent : GameComponent<PoolComponent>
     {
@@ -21,8 +17,6 @@ namespace CrystalMagic.Core {
         public override void Initialize()
         {
             base.Initialize();
-
-            // 创建池容器
             GameObject containerObj = new GameObject("[ObjectPoolContainer]");
             _poolContainer = containerObj.transform;
         }
@@ -178,14 +172,8 @@ namespace CrystalMagic.Core {
         /// </summary>
         private GameObject TryLoadPrefab(string assetPath)
         {
-            var resourceComponent = ResourceComponent.Instance;
-            if (resourceComponent == null)
-            {
-                Debug.LogError("[PoolComponent] ResourceComponent not available");
-                return null;
-            }
 
-            GameObject prefab = resourceComponent.Load<GameObject>(assetPath);
+            GameObject prefab = ResourceComponent.Instance.Load<GameObject>(assetPath);
 
             if (prefab != null)
                 return prefab;

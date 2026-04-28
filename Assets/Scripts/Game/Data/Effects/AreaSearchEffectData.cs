@@ -16,7 +16,7 @@ namespace CrystalMagic.Game.Data.Effects
         /// <summary>搜索中心相对施法者的偏移</summary>
         public Vector3 CenterOffset;
 
-        /// <summary>目标过滤条件，候选单位全部通过后才会执行 OnAfterSearch。</summary>
+        /// <summary>目标过滤条件</summary>
         public List<ConditionConfig> TargetConditions = new();
 
         public EffectData[] OnAfterSearch;

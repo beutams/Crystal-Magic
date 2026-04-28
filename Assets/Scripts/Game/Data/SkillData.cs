@@ -13,7 +13,6 @@ namespace CrystalMagic.Game.Data
 
     /// <summary>
     /// 技能配置表行
-    /// JSON：Assets/Res/Data/SkillDataTable.json
     /// </summary>
     [System.Serializable]
     [ReadOnlyData]
@@ -39,15 +38,7 @@ namespace CrystalMagic.Game.Data
         public float RecoveryDuration;
 
         /// <summary>施法过程中是否允许移动</summary>
-        public bool CanMoveDuringWindup;
-        public bool CanMoveDuringCasting;
-        public bool CanMoveDuringRecovery;
-
-        public bool CanMoveWhileCasting
-        {
-            get => CanMoveDuringCasting;
-            set => CanMoveDuringCasting = value;
-        }
+        public bool CanMoveWhileCasting;
 
         /// <summary>施法移动速度倍率（1 = 不降速）</summary>
         public float MoveSpeedMultiplier;
@@ -60,8 +51,6 @@ namespace CrystalMagic.Game.Data
 
         /// <summary>
         /// 效果链，按执行顺序排列
-        /// [SerializeReference] 支持多态子类（AreaSearchEffectData / DamageEffectData / PersistentEffectData 等）
-        /// 注意：JsonUtility 不识别此特性，编辑器序列化需使用 Newtonsoft.Json 或手写类型分发
         /// </summary>
         [SerializeReference]
         public EffectData[] EffectChain = System.Array.Empty<EffectData>();
@@ -158,16 +147,8 @@ namespace CrystalMagic.Game.Data
         public float WindupDuration;
         public float ChantDuration;
         public float RecoveryDuration;
-        public bool CanMoveDuringWindup;
-        public bool CanMoveDuringCasting;
-        public bool CanMoveDuringRecovery;
+        public bool CanMoveWhileCasting;
         public float MoveSpeedMultiplier;
         public EffectData[] EffectChain = System.Array.Empty<EffectData>();
-
-        public bool CanMoveWhileCasting
-        {
-            get => CanMoveDuringCasting;
-            set => CanMoveDuringCasting = value;
-        }
     }
 }

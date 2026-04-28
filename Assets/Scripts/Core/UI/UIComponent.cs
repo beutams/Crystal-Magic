@@ -12,7 +12,7 @@ namespace CrystalMagic.Core {
     public class UIComponent : GameComponent<UIComponent>
     {
         private const string DefaultGroupName = "Default";
-        private const string ConfigPath = "Assets/Config/ui_config.json";
+        private const string ConfigPath = "Assets/Res/Config/ui_config.json";
 
         private Dictionary<string, UIGroup> _groups = new();
         private Dictionary<string, string> _uiNameToGroupName = new();

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 
 /// <summary>
-/// 通用条件配置（可序列化，供 Skill / Effect / Unit 状态机等共用）
+/// 通用条件配置
 /// 运行时由 ComparatorFactory.BuildComparator 构建为 Comparator 实例
 /// </summary>
 [System.Serializable]

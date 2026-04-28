@@ -1,0 +1,17 @@
+SkillExecutor
+//CreateEffect还是死逻辑。
+//没有多态Skill
+-内容
+    输入应用过加成的实时技能数据，递归调用Skill的Excete
+SkillChainResolver
+-内容
+    辅助函数  获取SkillData,获取SkillChain
+SkillResolver
+-内容
+    计算施加加成后的技能数据，计算单位身上的所有技能修改器
+Skill
+//未实现多态
+Effect
+-内容
+    效果数据+执行函数
+    //没有Review具体的效果

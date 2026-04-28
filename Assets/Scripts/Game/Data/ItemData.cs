@@ -5,18 +5,16 @@ namespace CrystalMagic.Game.Data
     /// <summary>物品类型（与 ItemData 表一致）</summary>
     public enum ItemType
     {
-        None = 0,
-        Consumable = 1,
-        SkillStone = 2,
-        Weapon = 3,
-        KeyItem = 4,
-        Accessory = 5,
+        None = 0,  //普通道具
+        Consumable = 1, //消耗品
+        SkillStone = 2,  //技能石
+        Item = 3,  //普通物品
+        Weapon = 4,  //武器
+        Accessory = 5,  //饰品
     }
 
     /// <summary>
     /// 物品配置表行
-    /// 对应存档中 InventoryItemData.ItemId / ItemDropData.ItemId
-    /// JSON：Assets/Res/Data/ItemDataTable.json
     /// </summary>
     [System.Serializable]
     public class ItemData : DataRow

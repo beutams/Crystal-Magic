@@ -1,0 +1,6 @@
+GameFlowComponent
+-内容
+    流程状态机切换
+GameState
+-内容
+    状态基类

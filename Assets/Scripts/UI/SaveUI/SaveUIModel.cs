@@ -1,4 +1,5 @@
 using CrystalMagic.Core;
+using CrystalMagic.Game.Config;
 
 namespace CrystalMagic.UI
 {
@@ -7,14 +8,14 @@ namespace CrystalMagic.UI
         public const string SaveRecordsChangedEventName = "SaveUIModel.SaveRecordsChanged";
         public override string ChangedEventName => SaveRecordsChangedEventName;
 
-        private const int SlotCount = 20;
-        private readonly SaveRecord[] _saveRecords = new SaveRecord[SlotCount];
+        private SaveRecord[] _saveRecords = System.Array.Empty<SaveRecord>();
 
-        public int SlotCountValue => SlotCount;
+        public int SlotCountValue => _saveRecords.Length;
         public SaveRecord[] SaveRecords => _saveRecords;
 
         public void SetSaveRecords(System.Collections.Generic.IEnumerable<SaveRecord> records)
         {
+            EnsureSlotArray();
             System.Array.Clear(_saveRecords, 0, _saveRecords.Length);
 
             if (records != null)
@@ -24,7 +25,7 @@ namespace CrystalMagic.UI
                     if (record == null)
                         continue;
 
-                    if (record.SaveIndex < 0 || record.SaveIndex >= SlotCount)
+                    if (record.SaveIndex < 0 || record.SaveIndex >= _saveRecords.Length)
                         continue;
 
                     _saveRecords[record.SaveIndex] = record;
@@ -32,6 +33,16 @@ namespace CrystalMagic.UI
             }
 
             EventComponent.Instance.Publish(new CommonGameEvent(SaveRecordsChangedEventName, this));
+        }
+
+        private void EnsureSlotArray()
+        {
+            int slotCount = ConfigComponent.Instance != null
+                ? UnityEngine.Mathf.Max(1, ConfigComponent.Instance.Get<GameConfig>().MaxSaveSlots)
+                : 20;
+
+            if (_saveRecords.Length != slotCount)
+                _saveRecords = new SaveRecord[slotCount];
         }
     }
 }

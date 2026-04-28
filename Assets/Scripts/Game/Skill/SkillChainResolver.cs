@@ -101,9 +101,6 @@ namespace CrystalMagic.Game.Skill
                 WindupDuration = math.max(0f, modifiers.Apply(SkillModifierChannel.WindupDuration, skillData.WindupDuration)),
                 ChantDuration = math.max(0f, modifiers.Apply(SkillModifierChannel.ChantDuration, skillData.ChantDuration)),
                 RecoveryDuration = math.max(0f, modifiers.Apply(SkillModifierChannel.RecoveryDuration, skillData.RecoveryDuration)),
-                CanMoveDuringWindup = skillData.CanMoveDuringWindup,
-                CanMoveDuringCasting = skillData.CanMoveDuringCasting,
-                CanMoveDuringRecovery = skillData.CanMoveDuringRecovery,
                 MoveSpeedMultiplier = math.max(0f, modifiers.Apply(SkillModifierChannel.MoveSpeedMultiplier, skillData.MoveSpeedMultiplier)),
                 EffectChain = EffectData.CreateRuntimeCopies(skillData.EffectChain, modifiers),
             };

@@ -1,0 +1,22 @@
+PoolComponent
+-内容
+    每种对象一个GameObjectPool
+    prefab和pool的映射关系
+-接口
+    Get() 从池中取对象，如果没有就尝试从Resource找
+    Get(GameObject) 使用GameObject注册对象
+//UI创建对象也应该走这里
+//应该生成唯一的key,靠key来取
+    Release() 释放对象
+GameObjectPool
+-内容
+    一个对象池管理实例
+ObjectPool
+-内容
+    一个对象池实例
+IPoolable
+-内容
+    可池化对象
+-接口
+    OnGetFromPool 初始化函数，含有该接口的
+    OnReturnToPool 销毁函数

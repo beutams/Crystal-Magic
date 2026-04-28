@@ -3,12 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace CrystalMagic.Core {
-    /// <summary>
-    /// 閸忋劌鐪禍瀣╂閹崵鍤庣紒鍕
-    /// 閻劋绨憴锝堚偓锔鹃兇缂佺喖妫块惃鍕偓姘繆
-    /// 
-    /// 鐎电懓绨查妴濠冾攱閺嬫儼顔曠拋鈩冩瀮濡楋絻鈧顑?1.6 閼哄偊绱版禍瀣╂缁撅箑鐣鹃敍鍫Ｐ掗懓锔肩礆
-    /// </summary>
+
     public class EventComponent : GameComponent<EventComponent>
     {
         private Dictionary<System.Type, List<Delegate>> _subscribers = new();
@@ -16,9 +11,6 @@ namespace CrystalMagic.Core {
 
         public override int Priority => 10;
 
-        /// <summary>
-        /// 鐠併垽妲勬禍瀣╂
-        /// </summary>
         public void Subscribe<T>(Action<T> handler) where T : IGameEvent
         {
             if (handler == null)
@@ -41,9 +33,6 @@ namespace CrystalMagic.Core {
             AddCommonSubscriber(_commonEventSubscribers, gameEvent.EventName, handler);
         }
 
-        /// <summary>
-        /// 閸欐牗绉风拋銏ゆ娴滃娆?
-        /// </summary>
         public void Unsubscribe<T>(Action<T> handler) where T : IGameEvent
         {
             if (handler == null)
@@ -64,9 +53,6 @@ namespace CrystalMagic.Core {
             RemoveCommonSubscriber(_commonEventSubscribers, gameEvent.EventName, handler);
         }
 
-        /// <summary>
-        /// 閸欐垵绔锋禍瀣╂
-        /// </summary>
         public void Publish<T>(T gameEvent) where T : IGameEvent
         {
             System.Type eventType = typeof(T);
@@ -96,9 +82,6 @@ namespace CrystalMagic.Core {
             PublishCommonEvent(_commonEventSubscribers, gameEvent.EventName, gameEvent);
         }
 
-        /// <summary>
-        /// 濞撳懐鈹栭幍鈧張澶庮吂闂?
-        /// </summary>
         public override void Cleanup()
         {
             _subscribers.Clear();

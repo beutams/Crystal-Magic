@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using CrystalMagic.Game.Config;
 
 namespace CrystalMagic.Core {
     /// <summary>
@@ -22,9 +23,7 @@ namespace CrystalMagic.Core {
         private const string SAVE_FOLDER = "SaveData";
         private const int CURRENT_SAVE_VERSION = 1;
         private const int CURRENT_CONTENT_VERSION = 1;
-        private const int MAX_SAVES = 20;
         private const int DEFAULT_SAVE_INDEX = 0;
-        private const long NEW_GAME_START_MONEY = 500;
 
         private SaveData _currentSaveData;
         private int _currentSaveIndex;
@@ -174,7 +173,7 @@ namespace CrystalMagic.Core {
                     if (file.EndsWith(".backup.json", StringComparison.OrdinalIgnoreCase))
                         continue;
 
-                    if (count >= MAX_SAVES)
+                    if (count >= GetMaxSaveSlots())
                         break;
 
                     try
@@ -396,7 +395,8 @@ namespace CrystalMagic.Core {
         public bool CreateNewGameToSlot(int index)
         {
             SaveData data = CreateNewSaveData();
-            data.Town.StashMoney = NEW_GAME_START_MONEY;
+            GameConfig gameConfig = GetGameConfig();
+            data.Town.StashMoney = gameConfig.StartingGold;
 
             _currentSaveData = data;
             _currentSaveIndex = index;
@@ -462,6 +462,11 @@ namespace CrystalMagic.Core {
                 data.Town.Stash.Items = new List<InventoryItemData>();
             }
 
+            if (data.Town.Stash.Capacity == 0)
+            {
+                data.Town.Stash.Capacity = GetGameConfig().InitialStashSize;
+            }
+
             if (data.Town.Character == null)
             {
                 data.Town.Character = new CharacterData();
@@ -486,6 +491,11 @@ namespace CrystalMagic.Core {
             else if (data.Town.Character.Backpack.Items == null)
             {
                 data.Town.Character.Backpack.Items = new List<InventoryItemData>();
+            }
+
+            if (data.Town.Character.Backpack.Capacity <= 0)
+            {
+                data.Town.Character.Backpack.Capacity = Mathf.Max(1, GetGameConfig().InitialBackpackSize);
             }
 
             data.Town.Character.MigrateLegacyData();
@@ -532,6 +542,18 @@ namespace CrystalMagic.Core {
                 return _currentSaveData.SaveIndex;
 
             return _currentSaveIndex;
+        }
+
+        private GameConfig GetGameConfig()
+        {
+            return ConfigComponent.Instance != null
+                ? ConfigComponent.Instance.Get<GameConfig>()
+                : new GameConfig();
+        }
+
+        private int GetMaxSaveSlots()
+        {
+            return Mathf.Max(1, GetGameConfig().MaxSaveSlots);
         }
     }
 

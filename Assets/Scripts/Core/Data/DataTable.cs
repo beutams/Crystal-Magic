@@ -4,14 +4,11 @@ using UnityEngine;
 namespace CrystalMagic.Core {
     /// <summary>
     /// 配置表容器
-    /// 从 JSON 文件加载，以 Id 为键索引所有行
-    /// JSON 格式：{ "Rows": [ { "Id": 1001, ... }, ... ] }
     /// </summary>
     public class DataTable<T> where T : DataRow
     {
         private Dictionary<int, T> _dict = new();
 
-        // JsonUtility 不支持泛型数组根节点，用包装类中转
         [System.Serializable]
         private class TableWrapper
         {

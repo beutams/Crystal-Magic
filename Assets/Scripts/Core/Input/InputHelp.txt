@@ -1,0 +1,8 @@
+InputComponent
+-内容
+    连接InputSystem的所有输入事件
+    所有按键相关的都使用新版InputSystem。
+    通过事件的形式让外部订阅按键
+-接口
+    各种键盘事件。
+    鼠标位置，鼠标相应

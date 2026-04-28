@@ -10,6 +10,7 @@ namespace CrystalMagic.Core {
     {
         public override int Priority => 5;
         private InputControls _controls;
+
         #region 事件
         public event Action<Vector2> OnMove;
         public event Action<Vector3> OnMouseWorldPosition;

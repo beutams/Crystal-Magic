@@ -1,0 +1,27 @@
+各种DataRow的子类
+各种EffectData的子类
+一般都用作配置表
+BuffData
+-内容
+//待修改，SkillModifierEntry运行逻辑
+//待修改，ProperryBuff分类
+ItemData
+-内容
+    不同类别的物品通用数据
+NPCData
+-内容
+    基础内容+NPCInteractionData交互列表
+    使用表达式解析+自定义数据来判断该进入哪个节点
+-接口
+    GetEnabledInteractions()选出下一个可用的交互节点
+//NPCInteractionNodeTypes 难维护
+//不应该透过Registry调用factory
+SkillModifierSet
+-内容 
+    技能加成，用于修改技能以及特效的各项属性。
+UnitData
+//原本固定属性怎么还在
+EffectData
+-接口
+    CreateRuntimeCopy()创建运行时实例,覆盖后
+    应用Modifier，辅助函数

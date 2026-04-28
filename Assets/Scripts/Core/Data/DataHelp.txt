@@ -1,0 +1,22 @@
+DataComponent
+-内容
+    所有配置表
+    初始时LoadTable<T>()初始化加载全部配置表，注册器使用。
+-接口
+    Get<T>() 运行时获取表中数据，依据id
+    Find<T>() 传入查找条件查找匹配数据
+    FindAll<T>() 同理，查找全部
+DataTable 表类
+-内容
+    以多行DataRow组成的数据表
+    初始化的时候由json反序列化所有数据行
+    提供查找功能，但是接口主要提供给DataComponent
+DataRow
+-内容
+    含有ID主键，所有数据类继承该类。
+ReadOnlyDataAttribute
+-内容
+    含有该特性的DataRow类不显示在配置表编辑器。
+DataTableRegistry
+-内容
+    自动生成所有表的LoadTable函数，从而加载所有表

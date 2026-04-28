@@ -1,0 +1,23 @@
+ICompareType
+-内容
+    比较函数接口，实现具体的运算逻辑，可能会有一个目的比较值
+ISource
+-内容
+    比较内容接口，实现数据获取的逻辑，获取源比较值
+Condition
+-内容
+    一个条件，由比较内容+比较函数+比较目的值
+Comparator
+-内容
+    多个条件的组合
+-接口
+    GetResult() 获得条件组合的总结果
+ConditionConfig
+-内容
+    供数据存储使用的条件配置数据类
+    运行时转化成Comparator
+ComparatorFactory
+-内容
+    条件生成工厂类，自动由Registry注册构造函数
+-接口
+    BuildComparator 由List<ConditionConfig>生成Comparator

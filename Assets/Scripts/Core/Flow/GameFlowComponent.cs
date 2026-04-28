@@ -6,7 +6,6 @@ namespace CrystalMagic.Core
 {
     /// <summary>
     /// 游戏流程控制组件
-    /// 职责：管理游戏状态机的转移
     /// </summary>
     public class GameFlowComponent : GameComponent<GameFlowComponent>
     {
@@ -26,8 +25,7 @@ namespace CrystalMagic.Core
         }
 
         /// <summary>
-        /// 切换到指定状态（泛型版本），可传入数据
-        /// 数据会设置到新状态，在 OnEnter/Update/OnExit 中都可访问
+        /// 切换到指定状态
         /// </summary>
         public void SetState<T>(object data = null) where T : GameState, new()
         {
@@ -36,8 +34,7 @@ namespace CrystalMagic.Core
         }
 
         /// <summary>
-        /// 切换到指定状态，可传入数据
-        /// 数据会通过 SetData() 设置到新状态，在 OnEnter/Update/OnExit 中都可访问
+        /// 切换到指定状态
         /// </summary>
         private void SetState(GameState newState, object data = null)
         {

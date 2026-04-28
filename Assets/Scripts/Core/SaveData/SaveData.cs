@@ -128,6 +128,7 @@ namespace CrystalMagic.Core {
     [System.Serializable]
     public class StashData
     {
+        public int Capacity = -1;
         /// <summary>
         /// 物品列表
         /// </summary>
@@ -137,6 +138,7 @@ namespace CrystalMagic.Core {
     [System.Serializable]
     public class BackpackData
     {
+        public int Capacity;
         public List<InventoryItemData> Items = new();
     }
     #endregion

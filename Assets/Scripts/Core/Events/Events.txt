@@ -1,0 +1,13 @@
+EventComponent
+-内容
+    Dictionary<System.Type, List<Delegate>> 专用事件字典
+    Dictionary<string, List<Action<CommonGameEvent>>> 通用事件字典
+-接口
+    Subscribe<T>() 根据现有GameEvent注册事件
+    Subscribe() 注册通用事件。
+    Unsubscribe<T> 取消注册
+    Unsubscribe 取消注册
+    Publish<T> 发布事件
+    Publish 发布通用事件
+GameEvents 衍生类
+    专用事件
