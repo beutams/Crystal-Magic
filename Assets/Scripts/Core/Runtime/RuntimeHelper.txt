@@ -1,0 +1,2 @@
+RuntimeDataComponent
+//不根据存档初始化
