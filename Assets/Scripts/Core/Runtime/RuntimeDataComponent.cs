@@ -18,13 +18,9 @@ namespace CrystalMagic.Core
             _skillData.CurrentSkillChainIndex = 0;
         }
 
-        public void InitializeFromSave(SaveData saveData)
+        public void InitializeForGameRun()
         {
-            CharacterData characterData = saveData?.Town?.Character;
-            _skillData.CurrentSkillChainIndex = characterData != null
-                ? characterData.ConsumeLegacySelectedSkillChainIndex()
-                : 0;
-
+            Reset();
             NotifySkillDataChanged();
         }
 

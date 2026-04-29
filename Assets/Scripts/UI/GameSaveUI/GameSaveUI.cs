@@ -26,6 +26,7 @@ public class GameSaveUI : UIBase<GameSaveUIData, GameSaveUIModel>
     public override void OnClose()
     {
         UI.Back.ButtonPlus.onClick.RemoveListener(OnBackButtonClicked);
+        UISubViewBase.ReleaseAllToPool(_itemViews);
         base.OnClose();
     }
 
@@ -48,36 +49,24 @@ public class GameSaveUI : UIBase<GameSaveUIData, GameSaveUIModel>
 
     private void EnsureItemViews(int slotCount)
     {
-        _itemViews.Clear();
+        UI.ScrollView_Viewport_Content_SaveItem.GameObject.SetActive(false);
 
-        for (int i = 0; i < UI.ScrollView_Viewport_Content.GameObject.transform.childCount; i++)
+        while (_itemViews.Count > slotCount)
         {
-            SaveUI_SaveItemView itemView = UI.ScrollView_Viewport_Content.GameObject.transform.GetChild(i).GetComponent<SaveUI_SaveItemView>();
-            itemView.Rebind();
-            itemView.Clicked -= HandleItemClicked;
-            itemView.DeleteClicked -= HandleItemDeleteClicked;
-
-            if (_itemViews.Count < slotCount)
-            {
-                itemView.gameObject.SetActive(true);
-                itemView.Clicked += HandleItemClicked;
-                itemView.DeleteClicked += HandleItemDeleteClicked;
-                _itemViews.Add(itemView);
-            }
-            else
-            {
-                itemView.gameObject.SetActive(false);
-            }
+            int lastIndex = _itemViews.Count - 1;
+            SaveUI_SaveItemView itemView = _itemViews[lastIndex];
+            UISubViewBase.ReleaseToPool(itemView);
+            _itemViews.RemoveAt(lastIndex);
         }
 
         while (_itemViews.Count < slotCount)
         {
-            GameObject clone = Instantiate(UI.ScrollView_Viewport_Content_SaveItem.GameObject, UI.ScrollView_Viewport_Content.GameObject.transform);
-            clone.name = UI.ScrollView_Viewport_Content_SaveItem.GameObject.name;
-            clone.SetActive(true);
+            SaveUI_SaveItemView itemView = UISubViewBase.AcquireFromPool(UI.ScrollView_Viewport_Content_SaveItem.GameObject.GetComponent<SaveUI_SaveItemView>(), UI.ScrollView_Viewport_Content.GameObject.transform);
+            if (itemView == null)
+                break;
 
-            SaveUI_SaveItemView itemView = clone.GetComponent<SaveUI_SaveItemView>();
-            itemView.Rebind();
+            itemView.Clicked -= HandleItemClicked;
+            itemView.DeleteClicked -= HandleItemDeleteClicked;
             itemView.Clicked += HandleItemClicked;
             itemView.DeleteClicked += HandleItemDeleteClicked;
             _itemViews.Add(itemView);

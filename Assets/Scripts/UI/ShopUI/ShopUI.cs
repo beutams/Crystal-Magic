@@ -35,6 +35,8 @@ public class ShopUI : UIBase<ShopUIData, ShopUIModel>
         _draggedCommodity = null;
         _draggedInventoryItem = null;
         SetDragVisible(false);
+        UISubViewBase.ReleaseAllToPool(_commodityItemViews);
+        UISubViewBase.ReleaseAllToPool(_inventoryItemViews);
         base.OnClose();
     }
 
@@ -79,33 +81,22 @@ public class ShopUI : UIBase<ShopUIData, ShopUIModel>
 
     private void EnsureCommodityItemViews(int itemCount)
     {
-        _commodityItemViews.Clear();
+        UI.ShopView_Viewport_Content_CommodityItem.GameObject.SetActive(false);
 
-        for (int i = 0; i < UI.ShopView_Viewport_Content.GameObject.transform.childCount; i++)
+        while (_commodityItemViews.Count > itemCount)
         {
-            ShopUI_CommodityItemView itemView = UI.ShopView_Viewport_Content.GameObject.transform.GetChild(i).GetComponent<ShopUI_CommodityItemView>();
-            itemView.Rebind();
-            BindCommodityItemView(itemView);
-
-            if (_commodityItemViews.Count < itemCount)
-            {
-                itemView.gameObject.SetActive(true);
-                _commodityItemViews.Add(itemView);
-            }
-            else
-            {
-                itemView.gameObject.SetActive(false);
-            }
+            int lastIndex = _commodityItemViews.Count - 1;
+            ShopUI_CommodityItemView itemView = _commodityItemViews[lastIndex];
+            UISubViewBase.ReleaseToPool(itemView);
+            _commodityItemViews.RemoveAt(lastIndex);
         }
 
         while (_commodityItemViews.Count < itemCount)
         {
-            GameObject clone = Instantiate(UI.ShopView_Viewport_Content_CommodityItem.GameObject, UI.ShopView_Viewport_Content.GameObject.transform);
-            clone.name = UI.ShopView_Viewport_Content_CommodityItem.GameObject.name;
-            clone.SetActive(true);
+            ShopUI_CommodityItemView itemView = UISubViewBase.AcquireFromPool(UI.ShopView_Viewport_Content_CommodityItem.GameObject.GetComponent<ShopUI_CommodityItemView>(), UI.ShopView_Viewport_Content.GameObject.transform);
+            if (itemView == null)
+                break;
 
-            ShopUI_CommodityItemView itemView = clone.GetComponent<ShopUI_CommodityItemView>();
-            itemView.Rebind();
             BindCommodityItemView(itemView);
             _commodityItemViews.Add(itemView);
         }
@@ -113,33 +104,22 @@ public class ShopUI : UIBase<ShopUIData, ShopUIModel>
 
     private void EnsureInventoryItemViews(int itemCount)
     {
-        _inventoryItemViews.Clear();
+        UI.InventoryView_Viewport_Content_InventoryItem.GameObject.SetActive(false);
 
-        for (int i = 0; i < UI.InventoryView_Viewport_Content.GameObject.transform.childCount; i++)
+        while (_inventoryItemViews.Count > itemCount)
         {
-            ShopUI_InventoryItemView itemView = UI.InventoryView_Viewport_Content.GameObject.transform.GetChild(i).GetComponent<ShopUI_InventoryItemView>();
-            itemView.Rebind();
-            BindInventoryItemView(itemView);
-
-            if (_inventoryItemViews.Count < itemCount)
-            {
-                itemView.gameObject.SetActive(true);
-                _inventoryItemViews.Add(itemView);
-            }
-            else
-            {
-                itemView.gameObject.SetActive(false);
-            }
+            int lastIndex = _inventoryItemViews.Count - 1;
+            ShopUI_InventoryItemView itemView = _inventoryItemViews[lastIndex];
+            UISubViewBase.ReleaseToPool(itemView);
+            _inventoryItemViews.RemoveAt(lastIndex);
         }
 
         while (_inventoryItemViews.Count < itemCount)
         {
-            GameObject clone = Instantiate(UI.InventoryView_Viewport_Content_InventoryItem.GameObject, UI.InventoryView_Viewport_Content.GameObject.transform);
-            clone.name = UI.InventoryView_Viewport_Content_InventoryItem.GameObject.name;
-            clone.SetActive(true);
+            ShopUI_InventoryItemView itemView = UISubViewBase.AcquireFromPool(UI.InventoryView_Viewport_Content_InventoryItem.GameObject.GetComponent<ShopUI_InventoryItemView>(), UI.InventoryView_Viewport_Content.GameObject.transform);
+            if (itemView == null)
+                break;
 
-            ShopUI_InventoryItemView itemView = clone.GetComponent<ShopUI_InventoryItemView>();
-            itemView.Rebind();
             BindInventoryItemView(itemView);
             _inventoryItemViews.Add(itemView);
         }

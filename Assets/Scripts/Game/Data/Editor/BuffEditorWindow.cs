@@ -31,6 +31,7 @@ namespace CrystalMagic.Editor.Data
         {
             typeof(PropertyBuffData),
             typeof(EffectBuffData),
+            typeof(SkillModifierBuffData),
         };
         private static readonly string[] KnownBuffNames =
         {
@@ -44,6 +45,22 @@ namespace CrystalMagic.Editor.Data
         };
 
         // ===== Effect 子类注册（用于 EffectBuff 的 EffectChain）=====
+        private static string[] GetBuffTypeDisplayNames()
+        {
+            string[] displayNames = new string[KnownBuffTypes.Length];
+            for (int i = 0; i < displayNames.Length; i++)
+                displayNames[i] = i < KnownBuffNames.Length ? KnownBuffNames[i] : KnownBuffTypes[i].Name;
+
+            return displayNames;
+        }
+
+        private static Color GetBuffTypeColor(int typeIndex)
+        {
+            return typeIndex >= 0 && typeIndex < BuffColors.Length
+                ? BuffColors[typeIndex]
+                : Color.gray;
+        }
+
         private static readonly Type[]   KnownEffectTypes =
         {
             typeof(AreaSearchEffectData),
@@ -251,9 +268,69 @@ namespace CrystalMagic.Editor.Data
 
         private static string UpgradeLegacyJson(string json)
         {
-            return json.Replace(
+            string upgraded = json.Replace(
                 "CrystalMagic.Game.Data.TickEffectBuffData, Assembly-CSharp",
                 "CrystalMagic.Game.Data.EffectBuffData, Assembly-CSharp");
+
+            try
+            {
+                JObject root = JObject.Parse(upgraded);
+                if (root["Rows"] is not JArray rows)
+                    return upgraded;
+
+                foreach (JObject row in rows.OfType<JObject>())
+                {
+                    string rowType = row["$type"]?.ToString();
+                    if (!string.Equals(rowType, "CrystalMagic.Game.Data.PropertyBuffData, Assembly-CSharp", StringComparison.Ordinal))
+                        continue;
+
+                    if (row["PropertyModifiers"] is JArray)
+                        continue;
+
+                    JArray modifiers = new JArray();
+                    AddLegacyPropertyModifier(modifiers, row, "MoveSpeedFactor", "MoveSpeedBonus", PropertyModifierChannel.MoveSpeed);
+                    AddLegacyPropertyModifier(modifiers, row, "MaxHealthFactor", "MaxHealthBonus", PropertyModifierChannel.MaxHealth);
+                    AddLegacyPropertyModifier(modifiers, row, "DefenseFactor", "DefenseBonus", PropertyModifierChannel.Defense);
+                    AddLegacyPropertyModifier(modifiers, row, "AttackPowerFactor", "AttackPowerBonus", PropertyModifierChannel.AttackPower);
+                    AddLegacyPropertyModifier(modifiers, row, "SkillRangeFactor", "SkillRangeBonus", PropertyModifierChannel.SkillRange);
+                    AddLegacyPropertyModifier(modifiers, row, "MaxMpFactor", "MaxMpBonus", PropertyModifierChannel.MaxMp);
+
+                    row["PropertyModifiers"] = modifiers;
+                    row.Remove("MoveSpeedFactor");
+                    row.Remove("MoveSpeedBonus");
+                    row.Remove("MaxHealthFactor");
+                    row.Remove("MaxHealthBonus");
+                    row.Remove("DefenseFactor");
+                    row.Remove("DefenseBonus");
+                    row.Remove("AttackPowerFactor");
+                    row.Remove("AttackPowerBonus");
+                    row.Remove("SkillRangeFactor");
+                    row.Remove("SkillRangeBonus");
+                    row.Remove("MaxMpFactor");
+                    row.Remove("MaxMpBonus");
+                }
+
+                return root.ToString(Formatting.Indented);
+            }
+            catch
+            {
+                return upgraded;
+            }
+        }
+
+        private static void AddLegacyPropertyModifier(JArray modifiers, JObject row, string factorKey, string bonusKey, PropertyModifierChannel channel)
+        {
+            float factor = row[factorKey]?.Value<float>() ?? 0f;
+            float bonus = row[bonusKey]?.Value<float>() ?? 0f;
+            if (Mathf.Approximately(factor, 0f) && Mathf.Approximately(bonus, 0f))
+                return;
+
+            modifiers.Add(new JObject
+            {
+                ["Channel"] = JToken.FromObject(channel),
+                ["Factor"] = factor,
+                ["Bonus"] = bonus,
+            });
         }
 
         private void NormalizeRowIds()
@@ -312,7 +389,7 @@ namespace CrystalMagic.Editor.Data
             GUI.enabled = true;
 
             // 新增：先选子类类型，再点加号
-            _addBuffTypeIndex = EditorGUILayout.Popup(_addBuffTypeIndex, KnownBuffNames,
+            _addBuffTypeIndex = EditorGUILayout.Popup(_addBuffTypeIndex, GetBuffTypeDisplayNames(),
                 EditorStyles.toolbarPopup, GUILayout.Width(180));
             if (GUILayout.Button("＋ 新增", EditorStyles.toolbarButton, GUILayout.Width(52)))
                 AddBuff();
@@ -396,7 +473,7 @@ namespace CrystalMagic.Editor.Data
 
                 // 左侧小色块表示 Buff 子类
                 int    typeIdx  = Array.IndexOf(KnownBuffTypes, buff.GetType());
-                Color  typeColor = typeIdx >= 0 ? BuffColors[typeIdx] : Color.gray;
+                Color  typeColor = GetBuffTypeColor(typeIdx);
                 EditorGUI.DrawRect(new Rect(insertRect.xMax + 4f, itemRect.y, 4f, itemRect.height), typeColor);
 
                 string label = $"[{buff.Id}]  {(string.IsNullOrEmpty(buff.Name) ? "（未命名）" : buff.Name)}";
@@ -446,13 +523,13 @@ namespace CrystalMagic.Editor.Data
 
             BuffData buff    = _rows[_selectedIndex];
             int      typeIdx = Array.IndexOf(KnownBuffTypes, buff.GetType());
-            string   typeName = typeIdx >= 0 ? KnownBuffNames[typeIdx] : buff.GetType().Name;
+            string   typeName = typeIdx >= 0 ? GetBuffTypeDisplayNames()[typeIdx] : buff.GetType().Name;
 
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             if (typeIdx >= 0)
             {
                 Color prev = GUI.color;
-                GUI.color = BuffColors[typeIdx];
+            GUI.color = GetBuffTypeColor(typeIdx);
                 GUILayout.Label("■", GUILayout.Width(14));
                 GUI.color = prev;
             }
@@ -478,13 +555,14 @@ namespace CrystalMagic.Editor.Data
             if (EditorGUI.EndChangeCheck())
                 _isDirty = true;
 
-            DrawSkillModifierFields(buff);
 
             // ── 子类字段 ──────────────────────────────────
             if (buff is PropertyBuffData propBuff)
                 DrawPropertyBuffFields(propBuff);
             else if (buff is EffectBuffData effectBuff)
                 DrawEffectBuffFields(effectBuff);
+            else if (buff is SkillModifierBuffData skillModifierBuff)
+                DrawSkillModifierFields(skillModifierBuff);
 
             EditorGUIUtility.labelWidth = prevLabelWidth;
             EditorGUILayout.EndScrollView();
@@ -496,6 +574,49 @@ namespace CrystalMagic.Editor.Data
         // ─────────────────────────────────────────
         private void DrawPropertyBuffFields(PropertyBuffData buff)
         {
+            DrawSectionHeader("灞炴€т慨姝?");
+            buff.PropertyModifiers ??= new List<PropertyModifierEntry>();
+
+            int removeAt = -1;
+            for (int i = 0; i < buff.PropertyModifiers.Count; i++)
+            {
+                PropertyModifierEntry entry = buff.PropertyModifiers[i];
+
+                EditorGUI.BeginChangeCheck();
+                EditorGUILayout.BeginHorizontal();
+                entry.Channel = (PropertyModifierChannel)EditorGUILayout.EnumPopup(entry.Channel, GUILayout.MinWidth(180));
+
+                float prevWidth = EditorGUIUtility.labelWidth;
+                EditorGUIUtility.labelWidth = 46f;
+                entry.Factor = EditorGUILayout.FloatField("鍊嶇巼", entry.Factor, GUILayout.MinWidth(90));
+                entry.Bonus = EditorGUILayout.FloatField("鍔犲€?", entry.Bonus, GUILayout.MinWidth(90));
+                EditorGUIUtility.labelWidth = prevWidth;
+
+                if (GUILayout.Button("鍒犻櫎", GUILayout.Width(44)))
+                    removeAt = i;
+
+                EditorGUILayout.EndHorizontal();
+
+                if (EditorGUI.EndChangeCheck())
+                {
+                    buff.PropertyModifiers[i] = entry;
+                    _isDirty = true;
+                }
+            }
+
+            if (GUILayout.Button("+ 娣诲姞灞炴€т慨姝?", GUILayout.Width(120)))
+            {
+                buff.PropertyModifiers.Add(new PropertyModifierEntry());
+                _isDirty = true;
+            }
+
+            if (removeAt >= 0)
+            {
+                buff.PropertyModifiers.RemoveAt(removeAt);
+                _isDirty = true;
+            }
+
+#if false
             EditorGUI.BeginChangeCheck();
 
             DrawSectionHeader("Move（移动）");
@@ -514,6 +635,7 @@ namespace CrystalMagic.Editor.Data
 
             if (EditorGUI.EndChangeCheck())
                 _isDirty = true;
+#endif
         }
 
         private static void DrawAttributeRow(string attrName, ref float multiply, ref float add)
@@ -531,7 +653,7 @@ namespace CrystalMagic.Editor.Data
         // ─────────────────────────────────────────
         //  EffectBuffData 字段
         // ─────────────────────────────────────────
-        private void DrawSkillModifierFields(BuffData buff)
+        private void DrawSkillModifierFields(SkillModifierBuffData buff)
         {
             DrawSectionHeader("技能修正");
             buff.SkillModifiers ??= new List<SkillModifierEntry>();

@@ -123,14 +123,11 @@ namespace CrystalMagic.UI
                     continue;
 
                 CrystalMagic.Game.Data.ItemData itemData = CrystalMagic.Core.DataComponent.Instance.Get<CrystalMagic.Game.Data.ItemData>(bonusId);
-                CrystalMagic.Game.Data.PropertyBuffData propertyBuffData = CrystalMagic.Core.DataComponent.Instance.Get<CrystalMagic.Game.Data.PropertyBuffData>(bonusId);
-                CrystalMagic.Game.Data.EffectBuffData effectBuffData = CrystalMagic.Core.DataComponent.Instance.Get<CrystalMagic.Game.Data.EffectBuffData>(bonusId);
+                CrystalMagic.Game.Data.BuffData buffData = CrystalMagic.Core.DataComponent.Instance.Get<CrystalMagic.Game.Data.BuffData>(bonusId);
                 string bonusName = itemData != null
                     ? itemData.Name
-                    : propertyBuffData != null
-                        ? propertyBuffData.Name
-                        : effectBuffData != null
-                            ? effectBuffData.Name
+                    : buffData != null
+                        ? buffData.Name
                             : string.Empty;
 
                 _equipItems[i + 1] = new CharacterEquipDisplayData

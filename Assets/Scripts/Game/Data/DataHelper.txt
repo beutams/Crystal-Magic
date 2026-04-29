@@ -1,13 +1,17 @@
 各种DataRow的子类
 各种EffectData的子类
 一般都用作配置表
+BehaviorTreeData
+//没有review
 BuffData
 -内容
-//待修改，SkillModifierEntry运行逻辑
-//待修改，ProperryBuff分类
+    三种BUFF
+        属性 确定属性的加成对象和数值
+        技能效果 确定技能的加成对象和数值
+        技能 存储一个技能
+    PropertyModifierSet
+        运行时统计单位所有属性加成综合的辅助类
 ItemData
--内容
-    不同类别的物品通用数据
 NPCData
 -内容
     基础内容+NPCInteractionData交互列表

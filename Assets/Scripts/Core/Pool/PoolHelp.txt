@@ -5,8 +5,6 @@ PoolComponent
 -接口
     Get() 从池中取对象，如果没有就尝试从Resource找
     Get(GameObject) 使用GameObject注册对象
-//UI创建对象也应该走这里
-//应该生成唯一的key,靠key来取
     Release() 释放对象
 GameObjectPool
 -内容

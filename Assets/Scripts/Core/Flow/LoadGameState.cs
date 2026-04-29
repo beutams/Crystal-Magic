@@ -18,6 +18,8 @@ namespace CrystalMagic.Core {
                 return;
             }
 
+            RuntimeDataComponent.Instance.InitializeForGameRun();
+
             LoadGameContext context = new LoadGameContext
             {
                 SaveData = saveData,

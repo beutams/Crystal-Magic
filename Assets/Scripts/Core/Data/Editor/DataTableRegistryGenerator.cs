@@ -6,6 +6,7 @@ using System.Text;
 using UnityEditor;
 using UnityEngine;
 using CrystalMagic.Core;
+using CrystalMagic.Game.Data;
 
 namespace CrystalMagic.Editor.Data
 {
@@ -41,13 +42,17 @@ namespace CrystalMagic.Editor.Data
         {
             // 收集所有 DataRow 子类
             List<Type> rowTypes = new();
+            Type buffDataType = typeof(BuffData);
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
                 try
                 {
                     foreach (Type type in assembly.GetTypes())
                     {
-                        if (!type.IsAbstract && !type.IsInterface
+                        if (typeof(BuffData).IsAssignableFrom(type) && type != buffDataType)
+                            continue;
+
+                        if ((!type.IsAbstract || type == buffDataType) && !type.IsInterface
                             && typeof(DataRow).IsAssignableFrom(type)
                             && type != typeof(DataRow))
                         {

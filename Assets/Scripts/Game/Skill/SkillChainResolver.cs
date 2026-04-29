@@ -120,7 +120,7 @@ namespace CrystalMagic.Game.Skill
                 for (int i = 0; i < buffs.Length; i++)
                 {
                     UnitBuffElement buffElement = buffs[i];
-                    if (dataComponent.Get<BuffData>(buffElement.BuffId) is BuffData buffData)
+                    if (dataComponent.Get<BuffData>(buffElement.BuffId) is SkillModifierBuffData buffData)
                         modifiers.Add(buffData.SkillModifiers, math.max(1, buffElement.StackCount));
                 }
             }

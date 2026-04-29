@@ -47,6 +47,8 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         _draggedSkillItem = null;
         SetItemDragVisible(false);
         SetSkillDragVisible(false);
+        UISubViewBase.ReleaseAllToPool(_skillItemViews);
+        UISubViewBase.ReleaseAllToPool(_inventoryItemViews);
         base.OnClose();
     }
 
@@ -109,33 +111,22 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
 
     private void EnsureSkillItemViews(int itemCount)
     {
-        _skillItemViews.Clear();
+        UI.Skill_SkillChain_Viewport_Content_SkillItem.GameObject.SetActive(false);
 
-        for (int i = 0; i < UI.Skill_SkillChain_Viewport_Content.GameObject.transform.childCount; i++)
+        while (_skillItemViews.Count > itemCount)
         {
-            CharacterUI_SkillItemView itemView = UI.Skill_SkillChain_Viewport_Content.GameObject.transform.GetChild(i).GetComponent<CharacterUI_SkillItemView>();
-            itemView.Rebind();
-            BindSkillItemView(itemView);
-
-            if (_skillItemViews.Count < itemCount)
-            {
-                itemView.gameObject.SetActive(true);
-                _skillItemViews.Add(itemView);
-            }
-            else
-            {
-                itemView.gameObject.SetActive(false);
-            }
+            int lastIndex = _skillItemViews.Count - 1;
+            CharacterUI_SkillItemView itemView = _skillItemViews[lastIndex];
+            UISubViewBase.ReleaseToPool(itemView);
+            _skillItemViews.RemoveAt(lastIndex);
         }
 
         while (_skillItemViews.Count < itemCount)
         {
-            GameObject clone = Instantiate(UI.Skill_SkillChain_Viewport_Content_SkillItem.GameObject, UI.Skill_SkillChain_Viewport_Content.GameObject.transform);
-            clone.name = UI.Skill_SkillChain_Viewport_Content_SkillItem.GameObject.name;
-            clone.SetActive(true);
+            CharacterUI_SkillItemView itemView = UISubViewBase.AcquireFromPool(UI.Skill_SkillChain_Viewport_Content_SkillItem.GameObject.GetComponent<CharacterUI_SkillItemView>(), UI.Skill_SkillChain_Viewport_Content.GameObject.transform);
+            if (itemView == null)
+                break;
 
-            CharacterUI_SkillItemView itemView = clone.GetComponent<CharacterUI_SkillItemView>();
-            itemView.Rebind();
             BindSkillItemView(itemView);
             _skillItemViews.Add(itemView);
         }
@@ -143,33 +134,22 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
 
     private void EnsureInventoryItemViews(int itemCount)
     {
-        _inventoryItemViews.Clear();
+        UI.InventoryView_Viewport_Content_InventoryItem.GameObject.SetActive(false);
 
-        for (int i = 0; i < UI.InventoryView_Viewport_Content.GameObject.transform.childCount; i++)
+        while (_inventoryItemViews.Count > itemCount)
         {
-            CharacterUI_InventoryItemView itemView = UI.InventoryView_Viewport_Content.GameObject.transform.GetChild(i).GetComponent<CharacterUI_InventoryItemView>();
-            itemView.Rebind();
-            BindInventoryItemView(itemView);
-
-            if (_inventoryItemViews.Count < itemCount)
-            {
-                itemView.gameObject.SetActive(true);
-                _inventoryItemViews.Add(itemView);
-            }
-            else
-            {
-                itemView.gameObject.SetActive(false);
-            }
+            int lastIndex = _inventoryItemViews.Count - 1;
+            CharacterUI_InventoryItemView itemView = _inventoryItemViews[lastIndex];
+            UISubViewBase.ReleaseToPool(itemView);
+            _inventoryItemViews.RemoveAt(lastIndex);
         }
 
         while (_inventoryItemViews.Count < itemCount)
         {
-            GameObject clone = Instantiate(UI.InventoryView_Viewport_Content_InventoryItem.GameObject, UI.InventoryView_Viewport_Content.GameObject.transform);
-            clone.name = UI.InventoryView_Viewport_Content_InventoryItem.GameObject.name;
-            clone.SetActive(true);
+            CharacterUI_InventoryItemView itemView = UISubViewBase.AcquireFromPool(UI.InventoryView_Viewport_Content_InventoryItem.GameObject.GetComponent<CharacterUI_InventoryItemView>(), UI.InventoryView_Viewport_Content.GameObject.transform);
+            if (itemView == null)
+                break;
 
-            CharacterUI_InventoryItemView itemView = clone.GetComponent<CharacterUI_InventoryItemView>();
-            itemView.Rebind();
             BindInventoryItemView(itemView);
             _inventoryItemViews.Add(itemView);
         }

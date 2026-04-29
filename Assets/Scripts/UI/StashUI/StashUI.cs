@@ -25,6 +25,8 @@ public class StashUI : UIBase<StashUIData, CrystalMagic.UI.StashUIModel>
         UI.ButtonList_Skill.ButtonPlus.onClick.RemoveListener(OnSkillCategoryButton);
         UI.ButtonList_Equip.ButtonPlus.onClick.RemoveListener(OnEquipCategoryButton);
         UI.ButtonList_Props.ButtonPlus.onClick.RemoveListener(OnPropsCategoryButton);
+        UISubViewBase.ReleaseAllToPool(_inventoryItemViews);
+        UISubViewBase.ReleaseAllToPool(_stashItemViews);
         base.OnClose();
     }
 
@@ -64,64 +66,44 @@ public class StashUI : UIBase<StashUIData, CrystalMagic.UI.StashUIModel>
 
     private void EnsureInventoryItemViews(int itemCount)
     {
-        _inventoryItemViews.Clear();
+        UI.InventoryView_Viewport_Content_InventoryItem.GameObject.SetActive(false);
 
-        for (int i = 0; i < UI.InventoryView_Viewport_Content.GameObject.transform.childCount; i++)
+        while (_inventoryItemViews.Count > itemCount)
         {
-            StashUI_InventoryItemView itemView = UI.InventoryView_Viewport_Content.GameObject.transform.GetChild(i).GetComponent<StashUI_InventoryItemView>();
-            itemView.Rebind();
-
-            if (_inventoryItemViews.Count < itemCount)
-            {
-                itemView.gameObject.SetActive(true);
-                _inventoryItemViews.Add(itemView);
-            }
-            else
-            {
-                itemView.gameObject.SetActive(false);
-            }
+            int lastIndex = _inventoryItemViews.Count - 1;
+            StashUI_InventoryItemView itemView = _inventoryItemViews[lastIndex];
+            UISubViewBase.ReleaseToPool(itemView);
+            _inventoryItemViews.RemoveAt(lastIndex);
         }
 
         while (_inventoryItemViews.Count < itemCount)
         {
-            UnityEngine.GameObject clone = Instantiate(UI.InventoryView_Viewport_Content_InventoryItem.GameObject, UI.InventoryView_Viewport_Content.GameObject.transform);
-            clone.name = UI.InventoryView_Viewport_Content_InventoryItem.GameObject.name;
-            clone.SetActive(true);
+            StashUI_InventoryItemView itemView = UISubViewBase.AcquireFromPool(UI.InventoryView_Viewport_Content_InventoryItem.GameObject.GetComponent<StashUI_InventoryItemView>(), UI.InventoryView_Viewport_Content.GameObject.transform);
+            if (itemView == null)
+                break;
 
-            StashUI_InventoryItemView itemView = clone.GetComponent<StashUI_InventoryItemView>();
-            itemView.Rebind();
             _inventoryItemViews.Add(itemView);
         }
     }
 
     private void EnsureStashItemViews(int itemCount)
     {
-        _stashItemViews.Clear();
+        UI.StashView_Viewport_Content_StashItem.GameObject.SetActive(false);
 
-        for (int i = 0; i < UI.StashView_Viewport_Content.GameObject.transform.childCount; i++)
+        while (_stashItemViews.Count > itemCount)
         {
-            StashUI_StashItemView itemView = UI.StashView_Viewport_Content.GameObject.transform.GetChild(i).GetComponent<StashUI_StashItemView>();
-            itemView.Rebind();
-
-            if (_stashItemViews.Count < itemCount)
-            {
-                itemView.gameObject.SetActive(true);
-                _stashItemViews.Add(itemView);
-            }
-            else
-            {
-                itemView.gameObject.SetActive(false);
-            }
+            int lastIndex = _stashItemViews.Count - 1;
+            StashUI_StashItemView itemView = _stashItemViews[lastIndex];
+            UISubViewBase.ReleaseToPool(itemView);
+            _stashItemViews.RemoveAt(lastIndex);
         }
 
         while (_stashItemViews.Count < itemCount)
         {
-            UnityEngine.GameObject clone = Instantiate(UI.StashView_Viewport_Content_StashItem.GameObject, UI.StashView_Viewport_Content.GameObject.transform);
-            clone.name = UI.StashView_Viewport_Content_StashItem.GameObject.name;
-            clone.SetActive(true);
+            StashUI_StashItemView itemView = UISubViewBase.AcquireFromPool(UI.StashView_Viewport_Content_StashItem.GameObject.GetComponent<StashUI_StashItemView>(), UI.StashView_Viewport_Content.GameObject.transform);
+            if (itemView == null)
+                break;
 
-            StashUI_StashItemView itemView = clone.GetComponent<StashUI_StashItemView>();
-            itemView.Rebind();
             _stashItemViews.Add(itemView);
         }
     }
