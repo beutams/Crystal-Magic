@@ -5,6 +5,13 @@ using UnityEngine;
 using UnityEngine.UI;
 
 namespace CrystalMagic.Core {
+    public enum UILifetime
+    {
+        SceneScoped,
+        Persistent,
+        Manual,
+    }
+
     /// <summary>
     /// UI 管理组件
     /// 全局单例，负责分组创建、注册、路由和每帧更新
@@ -20,6 +27,8 @@ namespace CrystalMagic.Core {
         private Dictionary<string, Type> _typeCache = new();
         private UIGroupConfig _config;
         private bool _uiInputLocked;
+        private int _currentSceneScopeId;
+        private string _currentSceneName = string.Empty;
 
         public event Action EscapeUnhandled;
 
@@ -45,6 +54,11 @@ namespace CrystalMagic.Core {
             if (InputComponent.Instance != null)
             {
                 InputComponent.Instance.OnEscape += HandleEscape;
+            }
+
+            if (EventComponent.Instance != null)
+            {
+                EventComponent.Instance.Subscribe<UISceneScopeChangedEvent>(HandleSceneScopeChanged);
             }
         }
 
@@ -293,12 +307,32 @@ namespace CrystalMagic.Core {
             }
 
             childContext.GroupName = groupName;
+            childContext.Lifetime = parentContext.Lifetime;
+            childContext.SceneScopeId = parentContext.SceneScopeId;
+            childContext.SceneName = parentContext.SceneName;
             childContext.AttachTo(parentContext);
             ApplyOpenData(childContext, data);
             OpenChildPanel(childContext, parent.gameObject.activeSelf);
             RefreshGroupSortingOrders(group);
             ApplyUIInputState();
             return panel;
+        }
+
+        public void SetLifetime(UIBase panel, UILifetime lifetime)
+        {
+            UIMvcContext context = GetOrCreateMvcContext(panel);
+            if (context == null)
+                return;
+
+            context.Lifetime = lifetime;
+            if (lifetime == UILifetime.SceneScoped)
+            {
+                AssignContextToCurrentSceneScope(context);
+                return;
+            }
+
+            context.SceneScopeId = -1;
+            context.SceneName = string.Empty;
         }
 
         /// <summary>
@@ -408,6 +442,11 @@ namespace CrystalMagic.Core {
             }
 
             return children;
+        }
+
+        public bool IsManaged(UIBase panel)
+        {
+            return panel != null && _mvcContexts.ContainsKey(panel);
         }
 
         internal void OpenRootPanel(UIBase panel)
@@ -675,6 +714,7 @@ namespace CrystalMagic.Core {
                 }
 
                 UIMvcContext context = new UIMvcContext(panel, model, controller);
+                AssignContextToCurrentSceneScope(context);
                 _mvcContexts[panel] = context;
                 return context;
             }
@@ -733,6 +773,11 @@ namespace CrystalMagic.Core {
 
         public override void Cleanup()
         {
+            if (EventComponent.Instance != null)
+            {
+                EventComponent.Instance.Unsubscribe<UISceneScopeChangedEvent>(HandleSceneScopeChanged);
+            }
+
             if (InputComponent.Instance != null)
             {
                 InputComponent.Instance.OnEscape -= HandleEscape;
@@ -748,6 +793,57 @@ namespace CrystalMagic.Core {
             _uiNameToGroupName.Clear();
             _typeCache.Clear();
             base.Cleanup();
+        }
+
+        private void HandleSceneScopeChanged(UISceneScopeChangedEvent gameEvent)
+        {
+            int previousSceneScopeId = _currentSceneScopeId;
+            _currentSceneScopeId++;
+            _currentSceneName = gameEvent.SceneName ?? string.Empty;
+            ReleaseSceneScope(previousSceneScopeId);
+        }
+
+        private void AssignContextToCurrentSceneScope(UIMvcContext context)
+        {
+            if (context == null || context.Lifetime != UILifetime.SceneScoped)
+                return;
+
+            context.SceneScopeId = _currentSceneScopeId;
+            context.SceneName = _currentSceneName;
+        }
+
+        private void ReleaseSceneScope(int sceneScopeId)
+        {
+            if (sceneScopeId < 0)
+                return;
+
+            List<UIMvcContext> rootsToRelease = new();
+            HashSet<string> affectedGroupNames = new();
+            foreach (UIMvcContext context in new List<UIMvcContext>(_mvcContexts.Values))
+            {
+                if (context.Parent != null
+                    || context.Lifetime != UILifetime.SceneScoped
+                    || context.SceneScopeId != sceneScopeId)
+                {
+                    continue;
+                }
+
+                rootsToRelease.Add(context);
+                string groupName = string.IsNullOrEmpty(context.GroupName) ? DefaultGroupName : context.GroupName;
+                affectedGroupNames.Add(groupName);
+            }
+
+            for (int i = 0; i < rootsToRelease.Count; i++)
+            {
+                ReleaseContextTree(rootsToRelease[i]);
+            }
+
+            foreach (string groupName in affectedGroupNames)
+            {
+                RefreshGroupSortingOrders(groupName);
+            }
+
+            ApplyUIInputState();
         }
 
         private void HandleEscape()
@@ -833,6 +929,9 @@ namespace CrystalMagic.Core {
             public UIMvcContext Parent { get; private set; }
             public List<UIMvcContext> Children { get; } = new();
             public bool IsOpen { get; private set; }
+            public UILifetime Lifetime { get; set; } = UILifetime.SceneScoped;
+            public int SceneScopeId { get; set; } = -1;
+            public string SceneName { get; set; } = string.Empty;
 
             public void AttachTo(UIMvcContext parent)
             {

@@ -32,6 +32,7 @@ namespace CrystalMagic.Core {
                 _transitionPanel = uiInstance.GetComponent<UIBase>();
                 if (_transitionPanel != null)
                 {
+                    UIComponent.Instance?.SetLifetime(_transitionPanel, UILifetime.Persistent);
                     _transitionUI = _transitionPanel.GetComponent<ITransitionUI>();
                     if (_transitionUI == null)
                     {

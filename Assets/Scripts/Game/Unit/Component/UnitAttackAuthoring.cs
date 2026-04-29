@@ -14,7 +14,7 @@ public class UnitAttackAuthoring : MonoBehaviour
 
             float baseAttack = 10f;
             float baseRange  = 1f;
-            UnitData data = UnitAuthoringUtility.ResolveUnitData(authoring);
+            UnitAttackModuleData data = UnitAuthoringUtility.ResolveModuleData<UnitAttackModuleData>(authoring);
             if (data != null)
             {
                 baseAttack = data.BaseAttackPower;

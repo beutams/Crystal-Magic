@@ -13,7 +13,7 @@ public class UnitManaAuthoring : MonoBehaviour
                 DependsOn(unitDataAsset);
 
             float baseMp = 50f;
-            UnitData data = UnitAuthoringUtility.ResolveUnitData(authoring);
+            UnitManaModuleData data = UnitAuthoringUtility.ResolveModuleData<UnitManaModuleData>(authoring);
             if (data != null)
             {
                 baseMp = data.BaseMaxMp;

@@ -68,6 +68,8 @@ namespace CrystalMagic.Core {
                 }
             }
 
+            EventComponent.Instance?.Publish(new UISceneScopeChangedEvent(_targetSceneName));
+
             object targetStateData = null;
             if (StateData is TransitionData transData)
             {

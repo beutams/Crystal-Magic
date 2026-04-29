@@ -40,6 +40,11 @@ public static class UnitAuthoringUtility
         return EditorComponents.Data.Find<UnitData>(r => r.Name == fallbackName);
     }
 
+    public static T ResolveModuleData<T>(Component component) where T : UnitModuleData
+    {
+        return ResolveUnitData(component)?.GetModule<T>();
+    }
+
     private static string GetPrefabAssetPath(Component component)
     {
 #if UNITY_EDITOR

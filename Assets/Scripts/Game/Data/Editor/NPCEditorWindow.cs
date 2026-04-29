@@ -556,16 +556,18 @@ namespace CrystalMagic.Editor.Data
 
             EditorGUILayout.BeginVertical("box", GUILayout.Width(GraphNodeWidth));
 
+            string nodeTypeName = NPCInteractionNodeDataRegistry.ResolveTypeName(node);
+            string nodeDisplayName = NPCInteractionNodeDataRegistry.GetDisplayName(nodeTypeName);
             Rect headerRect = EditorGUILayout.GetControlRect(false, 22f);
             EditorGUI.DrawRect(headerRect, GetGraphNodeColor(node));
             GUI.Label(new Rect(headerRect.x + 8f, headerRect.y + 3f, headerRect.width - 16f, headerRect.height - 6f),
-                $"{NPCInteractionNodeDataRegistry.GetDisplayName(node.Type)}{(string.Equals(interaction.EntryNodeGuid, node.Guid, StringComparison.Ordinal) ? "  [ENTRY]" : string.Empty)}",
+                $"{nodeDisplayName}{(string.Equals(interaction.EntryNodeGuid, node.Guid, StringComparison.Ordinal) ? "  [ENTRY]" : string.Empty)}",
                 EditorStyles.whiteBoldLabel);
 
             EditorGUILayout.Space(2f);
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label("Type", GUILayout.Width(42f));
-            if (GUILayout.Button(NPCInteractionNodeDataRegistry.GetDisplayName(node.Type), EditorStyles.popup, GUILayout.Width(120f)))
+            if (GUILayout.Button(nodeDisplayName, EditorStyles.popup, GUILayout.Width(120f)))
             {
                 ShowChangeNodeTypeMenu(interaction, node.Guid);
             }
@@ -614,7 +616,7 @@ namespace CrystalMagic.Editor.Data
                     EditorGUILayout.HelpBox("This node immediately ends the current interaction and enters the training ground flow.", MessageType.None);
                     break;
                 default:
-                    EditorGUILayout.HelpBox($"Unknown node type: {node.Type}", MessageType.Warning);
+                    EditorGUILayout.HelpBox($"Unknown node type: {nodeTypeName}", MessageType.Warning);
                     break;
             }
 
@@ -856,7 +858,7 @@ namespace CrystalMagic.Editor.Data
                 }
 
                 guidOptions.Add(node.Guid);
-                displayOptions.Add($"{i + 1}. {NPCInteractionNodeDataRegistry.GetDisplayName(node.Type)}");
+                displayOptions.Add($"{i + 1}. {NPCInteractionNodeDataRegistry.GetDisplayName(NPCInteractionNodeDataRegistry.ResolveTypeName(node))}");
             }
 
             int selectedIndex = FindNodeReferenceIndex(guidOptions, currentGuid);
@@ -1135,7 +1137,7 @@ namespace CrystalMagic.Editor.Data
             {
                 if (interaction.Nodes[i] == null)
                 {
-                    interaction.Nodes[i] = NPCInteractionNodeDataRegistry.Create(NPCInteractionNodeTypes.Dialogue);
+                    interaction.Nodes[i] = NPCInteractionNodeDataRegistry.Create(null);
                     changed = true;
                 }
 
@@ -1223,13 +1225,6 @@ namespace CrystalMagic.Editor.Data
         private static bool EnsureNodeValid(NPCInteractionNodeData node)
         {
             bool changed = false;
-
-            string resolvedType = NPCInteractionNodeDataRegistry.ResolveTypeName(node);
-            if (node.Type != resolvedType)
-            {
-                node.Type = resolvedType;
-                changed = true;
-            }
 
             if (string.IsNullOrWhiteSpace(node.Guid))
             {

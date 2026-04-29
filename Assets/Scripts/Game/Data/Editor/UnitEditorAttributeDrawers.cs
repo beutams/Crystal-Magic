@@ -45,10 +45,16 @@ namespace CrystalMagic.Editor.Data
 
         public void Draw(UnitEditorDrawerContext context)
         {
+            UnitMoveModuleData module = context.GetOrCreateModule<UnitMoveModuleData>();
+            if (module == null)
+            {
+                return;
+            }
+
             GUILayout.Space(8f);
             UnitEditorWindow.DrawSectionHeader("Move（移动）");
-            context.Unit.BaseMoveSpeed = EditorGUILayout.FloatField("最大速度", context.Unit.BaseMoveSpeed);
-            context.Unit.BaseMaxAcceleration = EditorGUILayout.FloatField("最大加速度", context.Unit.BaseMaxAcceleration);
+            module.BaseMoveSpeed = EditorGUILayout.FloatField("最大速度", module.BaseMoveSpeed);
+            module.BaseMaxAcceleration = EditorGUILayout.FloatField("最大加速度", module.BaseMaxAcceleration);
         }
     }
 
@@ -62,10 +68,16 @@ namespace CrystalMagic.Editor.Data
 
         public void Draw(UnitEditorDrawerContext context)
         {
+            UnitVitalityModuleData module = context.GetOrCreateModule<UnitVitalityModuleData>();
+            if (module == null)
+            {
+                return;
+            }
+
             GUILayout.Space(8f);
             UnitEditorWindow.DrawSectionHeader("Vitality（生存）");
-            context.Unit.BaseMaxHealth = EditorGUILayout.FloatField("最大生命值", context.Unit.BaseMaxHealth);
-            context.Unit.BaseDefense = EditorGUILayout.FloatField("防御力", context.Unit.BaseDefense);
+            module.BaseMaxHealth = EditorGUILayout.FloatField("最大生命值", module.BaseMaxHealth);
+            module.BaseDefense = EditorGUILayout.FloatField("防御力", module.BaseDefense);
         }
     }
 
@@ -79,10 +91,16 @@ namespace CrystalMagic.Editor.Data
 
         public void Draw(UnitEditorDrawerContext context)
         {
+            UnitAttackModuleData module = context.GetOrCreateModule<UnitAttackModuleData>();
+            if (module == null)
+            {
+                return;
+            }
+
             GUILayout.Space(8f);
             UnitEditorWindow.DrawSectionHeader("Attack（攻击）");
-            context.Unit.BaseAttackPower = EditorGUILayout.FloatField("攻击力", context.Unit.BaseAttackPower);
-            context.Unit.BaseSkillRange = EditorGUILayout.FloatField("技能范围", context.Unit.BaseSkillRange);
+            module.BaseAttackPower = EditorGUILayout.FloatField("攻击力", module.BaseAttackPower);
+            module.BaseSkillRange = EditorGUILayout.FloatField("技能范围", module.BaseSkillRange);
         }
     }
 
@@ -96,9 +114,15 @@ namespace CrystalMagic.Editor.Data
 
         public void Draw(UnitEditorDrawerContext context)
         {
+            UnitManaModuleData module = context.GetOrCreateModule<UnitManaModuleData>();
+            if (module == null)
+            {
+                return;
+            }
+
             GUILayout.Space(8f);
             UnitEditorWindow.DrawSectionHeader("Mana（法力）");
-            context.Unit.BaseMaxMp = EditorGUILayout.FloatField("最大魔力值", context.Unit.BaseMaxMp);
+            module.BaseMaxMp = EditorGUILayout.FloatField("最大法力值", module.BaseMaxMp);
         }
     }
 

@@ -1,6 +1,10 @@
 各种DataRow的子类
 各种EffectData的子类
 一般都用作配置表
+EffectData
+-接口
+    CreateRuntimeCopy()创建运行时实例,覆盖后
+    应用Modifier，辅助函数
 BehaviorTreeData
 //没有review
 BuffData
@@ -14,18 +18,23 @@ BuffData
 ItemData
 NPCData
 -内容
-    基础内容+NPCInteractionData交互列表
+    基础内容+NPCInteractionData交互列表，每个是一个交互流程。
     使用表达式解析+自定义数据来判断该进入哪个节点
+    NPCInteractionData内有多个NPCInteractionNodeData，每个是一个交互节点
+    NPCInteractionNodeData内有NPCInteractionBranchData判断后续该执行哪个节点
 -接口
     GetEnabledInteractions()选出下一个可用的交互节点
-//NPCInteractionNodeTypes 难维护
-//不应该透过Registry调用factory
-SkillModifierSet
--内容 
-    技能加成，用于修改技能以及特效的各项属性。
+ShopData
+SkillData
+    SkillModifierSet
+    -内容 
+        辅助类，用来统计一个技能所有特效的总和
+        SkillModifierChannel确定作用于哪个轨道
+        //需要重构SkillModifierChannel，在技能落地的时候
+    ResolvedSkillData
+    -内容
+        运行时真实的SkillData
+SkillEffectData
 UnitData
-//原本固定属性怎么还在
-EffectData
--接口
-    CreateRuntimeCopy()创建运行时实例,覆盖后
-    应用Modifier，辅助函数
+    内含不同组件对应的数据设置UnitModuleData
+

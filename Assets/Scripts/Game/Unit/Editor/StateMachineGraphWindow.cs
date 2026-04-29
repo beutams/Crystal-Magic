@@ -23,7 +23,6 @@ namespace CrystalMagic.Editor.Unit
 
         private List<UnitData> _rows = new();
         private int _selectedUnitIndex = -1;
-        private bool _isDirty;
 
         private StateMachineGraphView _graphView;
         private Label _statusLabel;
@@ -42,6 +41,7 @@ namespace CrystalMagic.Editor.Unit
         {
             Formatting        = Formatting.Indented,
             NullValueHandling = NullValueHandling.Ignore,
+            TypeNameHandling  = TypeNameHandling.Auto,
         };
 
         [MenuItem("Tools/Data/State Machine Visual Editor")]
@@ -168,7 +168,6 @@ namespace CrystalMagic.Editor.Unit
         {
             _rows.Clear();
             _selectedUnitIndex = -1;
-            _isDirty = false;
 
             if (!File.Exists(DataPath)) { SetStatus($"未找到 {DataPath}"); return; }
 
@@ -177,7 +176,7 @@ namespace CrystalMagic.Editor.Unit
                 var wrapper = JsonConvert.DeserializeObject<TableWrapper>(
                     File.ReadAllText(DataPath), s_json);
                 if (wrapper?.Rows != null) _rows = wrapper.Rows;
-                foreach (var r in _rows) r.States ??= new List<UnitStateConfig>();
+                foreach (var row in _rows) row?.NormalizeModules();
                 SetStatus($"已加载 {_rows.Count} 条");
             }
             catch (Exception ex)
@@ -200,7 +199,6 @@ namespace CrystalMagic.Editor.Unit
                     JsonConvert.SerializeObject(new TableWrapper { Rows = _rows }, s_json),
                     Encoding.UTF8);
                 AssetDatabase.Refresh();
-                _isDirty = false;
                 SetStatus($"已保存 {_rows.Count} 条");
             }
             catch (Exception ex)
@@ -244,6 +242,30 @@ namespace CrystalMagic.Editor.Unit
             _selectedUnitIndex >= 0 && _selectedUnitIndex < _rows.Count
                 ? _rows[_selectedUnitIndex]
                 : null;
+
+        internal static UnitStateMachineModuleData GetStateModule(UnitData unit, bool create = false)
+        {
+            if (unit == null)
+            {
+                return null;
+            }
+
+            return create
+                ? unit.GetOrCreateModule<UnitStateMachineModuleData>()
+                : unit.GetModule<UnitStateMachineModuleData>();
+        }
+
+        internal static List<UnitStateConfig> GetStates(UnitData unit, bool create = false)
+        {
+            UnitStateMachineModuleData module = GetStateModule(unit, create);
+            if (module == null)
+            {
+                return null;
+            }
+
+            module.States ??= new List<UnitStateConfig>();
+            return module.States;
+        }
 
         internal void RebuildGraph()
         {
@@ -336,12 +358,14 @@ namespace CrystalMagic.Editor.Unit
 
             var unit = SelectedUnit;
             if (unit == null) return;
-            var sc = unit.States.FirstOrDefault(s => s.StateType == node.StateType);
+            List<UnitStateConfig> states = GetStates(unit);
+            if (states == null) return;
+            var sc = states.FirstOrDefault(s => s.StateType == node.StateType);
             if (sc == null) return;
 
             EditorGUILayout.LabelField("转出数", sc.Transitions.Count.ToString());
 
-            int inCount = unit.States.Sum(s => s.Transitions.Count(t => t.TargetStateType == node.StateType));
+            int inCount = states.Sum(s => s.Transitions.Count(t => t.TargetStateType == node.StateType));
             EditorGUILayout.LabelField("转入数", inCount.ToString());
         }
 
@@ -433,7 +457,6 @@ namespace CrystalMagic.Editor.Unit
 
         internal void MarkDirty()
         {
-            _isDirty = true;
             _detailImgui?.MarkDirtyRepaint();
             if (_statusLabel != null) _statusLabel.text = "未保存 *";
         }
@@ -490,11 +513,12 @@ namespace CrystalMagic.Editor.Unit
         public void BuildFromData(UnitData data, Dictionary<string, float[]> positions)
         {
             ClearAll();
-            if (data?.States == null) return;
+            List<UnitStateConfig> states = StateMachineGraphWindow.GetStates(data);
+            if (states == null) return;
 
-            for (int i = 0; i < data.States.Count; i++)
+            for (int i = 0; i < states.Count; i++)
             {
-                var sc = data.States[i];
+                var sc = states[i];
                 Vector2 pos = positions.TryGetValue(sc.StateType, out var arr) && arr is { Length: >= 2 }
                     ? new Vector2(arr[0], arr[1])
                     : new Vector2(80 + i * 260, 220);
@@ -505,7 +529,7 @@ namespace CrystalMagic.Editor.Unit
                 _stateNodes[sc.StateType] = node;
             }
 
-            foreach (var sc in data.States)
+            foreach (var sc in states)
             {
                 if (!_stateNodes.TryGetValue(sc.StateType, out var srcNode)) continue;
                 foreach (var tr in sc.Transitions)
@@ -540,6 +564,7 @@ namespace CrystalMagic.Editor.Unit
         {
             var unit = _window.SelectedUnit;
             if (unit == null) return change;
+            List<UnitStateConfig> states = StateMachineGraphWindow.GetStates(unit, create: true);
 
             if (change.edgesToCreate != null)
             {
@@ -550,7 +575,7 @@ namespace CrystalMagic.Editor.Unit
                         edge.input.node  is not StateNode dst)
                         continue;
 
-                    var srcState = unit.States.FirstOrDefault(s => s.StateType == src.StateType);
+                    var srcState = states.FirstOrDefault(s => s.StateType == src.StateType);
                     if (srcState == null) continue;
 
                     var tr = new UnitTransitionConfig { TargetStateType = dst.StateType };
@@ -575,7 +600,7 @@ namespace CrystalMagic.Editor.Unit
                         {
                             if (edge.output.node is StateNode src)
                             {
-                                var srcState = unit.States.FirstOrDefault(s => s.StateType == src.StateType);
+                                var srcState = states.FirstOrDefault(s => s.StateType == src.StateType);
                                 srcState?.Transitions.Remove(tr);
                             }
                             EdgeToTransition.Remove(edge);
@@ -584,8 +609,8 @@ namespace CrystalMagic.Editor.Unit
                         }
                         case StateNode node:
                         {
-                            unit.States.RemoveAll(s => s.StateType == node.StateType);
-                            foreach (var s in unit.States)
+                            states.RemoveAll(s => s.StateType == node.StateType);
+                            foreach (var s in states)
                                 s.Transitions.RemoveAll(t => t.TargetStateType == node.StateType);
                             _stateNodes.Remove(node.StateType);
                             _window.MarkDirty();
@@ -658,8 +683,9 @@ namespace CrystalMagic.Editor.Unit
                         var unit = _window.SelectedUnit;
                         if (unit == null) return;
 
-                        unit.States.Add(new UnitStateConfig { StateType = captured });
-                        var node = new StateNode(captured, unit.States.Count == 1);
+                        List<UnitStateConfig> states = StateMachineGraphWindow.GetStates(unit, create: true);
+                        states.Add(new UnitStateConfig { StateType = captured });
+                        var node = new StateNode(captured, states.Count == 1);
                         node.SetPosition(new Rect(capturedPos, Vector2.zero));
                         AddElement(node);
                         _stateNodes[captured] = node;
@@ -687,24 +713,26 @@ namespace CrystalMagic.Editor.Unit
         private bool HasTransition(string sourceStateType, string targetStateType)
         {
             var unit = _window.SelectedUnit;
-            if (unit?.States == null)
+            List<UnitStateConfig> states = StateMachineGraphWindow.GetStates(unit);
+            if (states == null)
                 return false;
 
-            var sourceState = unit.States.FirstOrDefault(s => s.StateType == sourceStateType);
+            var sourceState = states.FirstOrDefault(s => s.StateType == sourceStateType);
             return sourceState?.Transitions.Any(t => t.TargetStateType == targetStateType) == true;
         }
 
         private void TryAddTransition(string sourceStateType, string targetStateType)
         {
             var unit = _window.SelectedUnit;
-            if (unit?.States == null)
+            List<UnitStateConfig> states = StateMachineGraphWindow.GetStates(unit);
+            if (states == null)
                 return;
 
             if (!_stateNodes.TryGetValue(sourceStateType, out var srcNode) ||
                 !_stateNodes.TryGetValue(targetStateType, out var dstNode))
                 return;
 
-            var sourceState = unit.States.FirstOrDefault(s => s.StateType == sourceStateType);
+            var sourceState = states.FirstOrDefault(s => s.StateType == sourceStateType);
             if (sourceState == null || sourceState.Transitions.Any(t => t.TargetStateType == targetStateType))
                 return;
 

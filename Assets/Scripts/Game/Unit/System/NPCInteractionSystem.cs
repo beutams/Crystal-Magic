@@ -165,7 +165,7 @@ partial class NPCInteractionConsumeSystem : SystemBase
                 _session.CurrentRunner = _nodeFactory.Create(currentNode);
                 if (_session.CurrentRunner == null)
                 {
-                    Debug.LogWarning($"[NPCInteraction] Unsupported node type '{currentNode?.Type}'. Skipped.");
+                    Debug.LogWarning($"[NPCInteraction] Unsupported node type '{NPCInteractionNodeDataRegistry.ResolveTypeName(currentNode)}'. Skipped.");
                     _session.CurrentNodeGuid = ResolveNextNodeGuid(_session, currentNode, null);
                     continue;
                 }

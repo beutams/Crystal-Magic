@@ -28,8 +28,6 @@ namespace CrystalMagic.Core {
         {
             Debug.Log("[TownState] Exited Town");
             UnbindInput();
-            ReleaseCharacterUI();
-            ReleaseGameMenuUI();
         }
 
         public override void OnUpdate()
@@ -61,7 +59,7 @@ namespace CrystalMagic.Core {
 
         private void HandleInventory()
         {
-            if (_characterUI == null)
+            if (_characterUI == null || !UIComponent.Instance.IsManaged(_characterUI))
             {
                 _characterUI = UIComponent.Instance.Open<CharacterUI>();
                 return;
@@ -76,18 +74,9 @@ namespace CrystalMagic.Core {
             UIComponent.Instance.ShowUI(_characterUI);
         }
 
-        private void ReleaseCharacterUI()
-        {
-            if (_characterUI == null)
-                return;
-
-            UIComponent.Instance.ReleaseUI(_characterUI);
-            _characterUI = null;
-        }
-
         private void HandleUnhandledEscape()
         {
-            if (_gameMenuUI == null)
+            if (_gameMenuUI == null || !UIComponent.Instance.IsManaged(_gameMenuUI))
             {
                 _gameMenuUI = UIComponent.Instance.Open("GameSettingUI") as GameMenuUI;
                 return;
@@ -97,49 +86,6 @@ namespace CrystalMagic.Core {
                 return;
 
             UIComponent.Instance.ShowUI(_gameMenuUI);
-        }
-
-        private void ReleaseGameMenuUI()
-        {
-            if (_gameMenuUI == null)
-                return;
-
-            UIComponent.Instance.ReleaseUI(_gameMenuUI);
-            _gameMenuUI = null;
-        }
-
-        /// <summary>
-        /// 从城镇进入地牢（带转场）
-        /// </summary>
-        public void GoToDungeon(object data = null)
-        {
-            TransitionData transData = new TransitionData
-            {
-                TargetSceneName = DungeonState.SceneName,
-                TargetStateType = typeof(DungeonState),
-                TargetStateData = data ?? SaveDataComponent.Instance?.CreateLoadGameContext(SaveAreaType.Dungeon),
-                ForceReloadTargetScene = true,
-            };
-            GameFlowComponent.Instance.SetState<TransitionState>(transData);
-        }
-
-        public void GoToTrainingGround(object data = null)
-        {
-            object targetData = data ?? SaveDataComponent.Instance?.CreateLoadGameContext(SaveAreaType.Training);
-            GameFlowComponent.Instance.SetState<TransitionState>(TrainingState.CreateEnterTransitionData(targetData));
-        }
-
-        /// <summary>
-        /// 返回主菜单（带转场）
-        /// </summary>
-        public void GoToMainMenu()
-        {
-            TransitionData transData = new TransitionData
-            {
-                TargetSceneName = "MainMenu",
-                TargetStateType = typeof(MainMenuState)
-            };
-            GameFlowComponent.Instance.SetState<TransitionState>(transData);
         }
     }
 }

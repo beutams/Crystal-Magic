@@ -16,7 +16,6 @@ public sealed class NPCInteractionNodeDataFactory : GeneratedFactory<string, NPC
             return null;
         }
 
-        node.Type = typeName;
         if (assignGuid)
         {
             node.Guid = Guid.NewGuid().ToString("N");

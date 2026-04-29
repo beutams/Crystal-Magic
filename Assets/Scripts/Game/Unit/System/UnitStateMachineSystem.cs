@@ -4,34 +4,26 @@ using CrystalMagic.Game.Data;
 using Unity.Entities;
 using UnityEngine;
 
-// ══════════════════════════════════════════════════════════════════════════════
-//  UnitStateMachineSystem
-//  职责：
-//    1. OnCreate  — 创建 StateMachineFactory + ComparatorFactory，调用 Registry
-//    2. OnUpdate  — 首帧为 Entity 构建状态机图；后续帧累加时间并调用 OnUpdate
-//  执行顺序：先于 UnitStateTransitionSystem（先 Update 再检测出口条件）
-// ══════════════════════════════════════════════════════════════════════════════
 [UpdateBefore(typeof(UnitStateTransitionSystem))]
 partial class UnitStateMachineSystem : SystemBase
 {
     private StateMachineFactory _factory;
-    private ComparatorFactory   _comparatorFactory;
+    private ComparatorFactory _comparatorFactory;
 
     protected override void OnCreate()
     {
         base.OnCreate();
-        _factory           = new StateMachineFactory();
+        _factory = new StateMachineFactory();
         _comparatorFactory = new ComparatorFactory();
         StateMachineRegistry.RegisterAll(_factory, _comparatorFactory);
-        Debug.Log($"[StateMachine] 工厂注册完成 —— " + $"状态: {_factory.StateCount}  " + $"ISource: {_comparatorFactory.SourceCount}  " + $"ICompareType: {_comparatorFactory.CompareCount}");
+        Debug.Log($"[StateMachine] 工厂注册完成 - State: {_factory.StateCount}  ISource: {_comparatorFactory.SourceCount}  ICompareType: {_comparatorFactory.CompareCount}");
     }
 
     protected override void OnUpdate()
     {
         float dt = SystemAPI.Time.DeltaTime;
 
-        foreach (var (sm, entity) in
-                 SystemAPI.Query<UnitStateMachineComponent>().WithEntityAccess())
+        foreach (var (sm, entity) in SystemAPI.Query<UnitStateMachineComponent>().WithEntityAccess())
         {
             if (sm.CurrentState == null)
             {
@@ -43,6 +35,7 @@ partial class UnitStateMachineSystem : SystemBase
             sm.CurrentState.OnUpdate(dt);
         }
     }
+
     private void TryBuild(UnitStateMachineComponent sm, Entity entity)
     {
         if (sm.UnitDataId <= 0 && string.IsNullOrEmpty(sm.UnitName))
@@ -53,64 +46,71 @@ partial class UnitStateMachineSystem : SystemBase
 
         UnitData data = sm.UnitDataId > 0
             ? DataComponent.Instance?.Get<UnitData>(sm.UnitDataId)
-            : DataComponent.Instance?.Find<UnitData>(r => r.Name == sm.UnitName);
+            : DataComponent.Instance?.Find<UnitData>(row => row.Name == sm.UnitName);
         if (data == null)
         {
-            Debug.LogError($"[StateMachine] 找不到 UnitData: Id={sm.UnitDataId}, Name={sm.UnitName}，请检查 UnitDataTable.json");
+            Debug.LogError($"[StateMachine] 找不到 UnitData: Id={sm.UnitDataId}, Name={sm.UnitName}");
             return;
         }
 
-        if (data.States == null || data.States.Count == 0)
+        UnitStateMachineModuleData stateModule = data.GetModule<UnitStateMachineModuleData>();
+        List<UnitStateConfig> states = stateModule?.States;
+        if (states == null || states.Count == 0)
         {
             Debug.LogWarning($"[StateMachine] {sm.UnitName} 没有配置任何状态");
             return;
         }
 
-        // Step 1：实例化所有状态
-        var stateMap = new Dictionary<string, AUnitState>(data.States.Count);
-        foreach (var cfg in data.States)
+        var stateMap = new Dictionary<string, AUnitState>(states.Count);
+        foreach (UnitStateConfig config in states)
         {
-            AUnitState state = _factory.CreateState(cfg.StateType);
-            if (state != null) stateMap[cfg.StateType] = state;
-        }
-        // Step 2：注入 Entity / EntityManager
-        foreach (var state in stateMap.Values)
-            state.OnInitialize(entity, EntityManager);
-
-        // Step 3：组装 transitions 字典
-        foreach (var cfg in data.States)
-        {
-            if (!stateMap.TryGetValue(cfg.StateType, out var src)) continue;
-            src.transitions = new Dictionary<AUnitState, Comparator>(cfg.Transitions.Count);
-
-            foreach (var transCfg in cfg.Transitions)
+            AUnitState state = _factory.CreateState(config.StateType);
+            if (state != null)
             {
-                if (!stateMap.TryGetValue(transCfg.TargetStateType, out var dst))
-                {
-                    Debug.LogWarning($"[StateMachine] [{sm.UnitName}] 找不到目标状态: {transCfg.TargetStateType}");
-                    continue;
-                }
-                src.transitions[dst] = _comparatorFactory.BuildComparator(
-                    transCfg.Conditions, entity, EntityManager);
+                stateMap[config.StateType] = state;
             }
         }
 
-        // Step 4：进入初始状态
-        if (!stateMap.TryGetValue(data.States[0].StateType, out var initial))
+        foreach (AUnitState state in stateMap.Values)
+        {
+            state.OnInitialize(entity, EntityManager);
+        }
+
+        foreach (UnitStateConfig config in states)
+        {
+            if (!stateMap.TryGetValue(config.StateType, out AUnitState sourceState))
+            {
+                continue;
+            }
+
+            sourceState.transitions = new Dictionary<AUnitState, Comparator>(config.Transitions.Count);
+            foreach (UnitTransitionConfig transitionConfig in config.Transitions)
+            {
+                if (!stateMap.TryGetValue(transitionConfig.TargetStateType, out AUnitState targetState))
+                {
+                    Debug.LogWarning($"[StateMachine] [{sm.UnitName}] 找不到目标状态 {transitionConfig.TargetStateType}");
+                    continue;
+                }
+
+                sourceState.transitions[targetState] =
+                    _comparatorFactory.BuildComparator(transitionConfig.Conditions, entity, EntityManager);
+            }
+        }
+
+        if (!stateMap.TryGetValue(states[0].StateType, out AUnitState initialState))
         {
             Debug.LogError($"[StateMachine] [{sm.UnitName}] 初始状态实例缺失");
             return;
         }
 
-        sm.StateInstances    = stateMap;
-        sm.CurrentState      = initial;
-        sm.PreviousState     = null;
-        sm.StateTime         = 0f;
-        sm.CurrentStateName  = initial.GetType().Name;
+        sm.StateInstances = stateMap;
+        sm.CurrentState = initialState;
+        sm.PreviousState = null;
+        sm.StateTime = 0f;
+        sm.CurrentStateName = initialState.GetType().Name;
         sm.PreviousStateName = "None";
         sm.CurrentState.OnEnter();
 
-        Debug.Log($"[StateMachine] [{sm.UnitName}] 构建完成，" +
-                  $"初始: {data.States[0].StateType}，共 {stateMap.Count} 个状态");
+        Debug.Log($"[StateMachine] [{sm.UnitName}] 构建完成，初始: {states[0].StateType}，共 {stateMap.Count} 个状态");
     }
 }

@@ -21,6 +21,16 @@ namespace CrystalMagic.Editor.Data
         public string DisplayName { get; }
         public UnitData Unit { get; }
 
+        public T GetModule<T>() where T : UnitModuleData
+        {
+            return Unit?.GetModule<T>();
+        }
+
+        public T GetOrCreateModule<T>() where T : UnitModuleData, new()
+        {
+            return Unit?.GetOrCreateModule<T>();
+        }
+
         public bool HasAuthoring<T>() where T : Component
         {
             return GetAuthoring<T>() != null;

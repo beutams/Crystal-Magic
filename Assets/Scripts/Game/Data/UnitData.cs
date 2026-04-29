@@ -3,42 +3,101 @@ using CrystalMagic.Core;
 
 namespace CrystalMagic.Game.Data
 {
-    /// <summary>
-    /// 单位配置表行（合并原 UnitAttributeData）
-    /// JSON：Assets/Res/Data/UnitDataTable.json
-    /// Name 字段与 GameObject 名称对应，Baker 据此查找
-    /// </summary>
     [ReadOnlyData]
     [System.Serializable]
     public class UnitData : DataRow
     {
-        // ── 基础信息 ──────────────────────────────────
         public string Name;
         public string Description;
         public string PrefabPath;
+        public List<UnitModuleData> Modules = new();
 
-        // ── Move ─────────────────────────────────────
-        public float BaseMoveSpeed;
-        public float BaseMaxAcceleration;
+        public T GetModule<T>() where T : UnitModuleData
+        {
+            if (Modules == null)
+            {
+                return null;
+            }
 
-        // ── Vitality（Health + Defense）─────────────
-        public float BaseMaxHealth;
+            for (int i = 0; i < Modules.Count; i++)
+            {
+                if (Modules[i] is T module)
+                {
+                    return module;
+                }
+            }
+
+            return null;
+        }
+
+        public T GetOrCreateModule<T>() where T : UnitModuleData, new()
+        {
+            T module = GetModule<T>();
+            if (module != null)
+            {
+                return module;
+            }
+
+            Modules ??= new List<UnitModuleData>();
+            module = new T();
+            Modules.Add(module);
+            return module;
+        }
+
+        public void NormalizeModules()
+        {
+            Modules ??= new List<UnitModuleData>();
+
+            for (int i = 0; i < Modules.Count; i++)
+            {
+                switch (Modules[i])
+                {
+                    case UnitStateMachineModuleData stateMachine:
+                        stateMachine.States ??= new List<UnitStateConfig>();
+                        break;
+                }
+            }
+        }
+    }
+
+    [System.Serializable]
+    public abstract class UnitModuleData
+    {
+    }
+
+    [System.Serializable]
+    public sealed class UnitMoveModuleData : UnitModuleData
+    {
+        public float BaseMoveSpeed = 5f;
+        public float BaseMaxAcceleration = 30f;
+    }
+
+    [System.Serializable]
+    public sealed class UnitVitalityModuleData : UnitModuleData
+    {
+        public float BaseMaxHealth = 100f;
         public float BaseDefense;
+    }
 
-        // ── Attack ──────────────────────────────────
-        public float BaseAttackPower;
-        public float BaseSkillRange;
+    [System.Serializable]
+    public sealed class UnitAttackModuleData : UnitModuleData
+    {
+        public float BaseAttackPower = 10f;
+        public float BaseSkillRange = 1f;
+    }
 
-        // ── Mana ────────────────────────────────────
-        public float BaseMaxMp;
+    [System.Serializable]
+    public sealed class UnitManaModuleData : UnitModuleData
+    {
+        public float BaseMaxMp = 50f;
+    }
 
-        // ── AI / 状态机 ──────────────────────────────
+    [System.Serializable]
+    public sealed class UnitStateMachineModuleData : UnitModuleData
+    {
         public List<UnitStateConfig> States = new();
     }
-    /// <summary>
-    /// 单个状态的配置（可序列化，存于 UnitData.States）
-    /// StateType 对应 AUnitState 子类名称
-    /// </summary>
+
     [System.Serializable]
     public class UnitStateConfig
     {
@@ -46,9 +105,6 @@ namespace CrystalMagic.Game.Data
         public List<UnitTransitionConfig> Transitions = new();
     }
 
-    /// <summary>
-    /// 一条状态转换规则：从当前状态 → TargetStateType，满足所有 Conditions 时触发
-    /// </summary>
     [System.Serializable]
     public class UnitTransitionConfig
     {

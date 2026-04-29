@@ -14,7 +14,7 @@ public class UnitVitalityAuthoring : MonoBehaviour
 
             float baseHealth  = 100f;
             float baseDefense = 0f;
-            UnitData data = UnitAuthoringUtility.ResolveUnitData(authoring);
+            UnitVitalityModuleData data = UnitAuthoringUtility.ResolveModuleData<UnitVitalityModuleData>(authoring);
             if (data != null)
             {
                 baseHealth  = data.BaseMaxHealth;

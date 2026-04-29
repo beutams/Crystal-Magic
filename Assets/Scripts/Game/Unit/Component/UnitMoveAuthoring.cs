@@ -15,7 +15,7 @@ public class UnitMoveAuthoring : MonoBehaviour
 
             float baseSpeed = 5f;
             float baseAccel = 30f;
-            UnitData data = UnitAuthoringUtility.ResolveUnitData(authoring);
+            UnitMoveModuleData data = UnitAuthoringUtility.ResolveModuleData<UnitMoveModuleData>(authoring);
             if (data != null)
             {
                 baseSpeed = data.BaseMoveSpeed;
