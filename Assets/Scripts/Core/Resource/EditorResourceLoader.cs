@@ -4,12 +4,14 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
-namespace CrystalMagic.Core {
-    /// <summary>
-    /// 编辑器资源加载器
-    /// </summary>
+namespace CrystalMagic.Core
+{
     public class EditorResourceLoader : IResourceLoader
     {
+        public void Initialize()
+        {
+        }
+
         public T Load<T>(string path) where T : Object
         {
 #if UNITY_EDITOR
@@ -32,14 +34,12 @@ namespace CrystalMagic.Core {
 #endif
         }
 
-        public void Unload(Object resource)
+        public void Release(string path)
         {
-            
         }
 
-        public void UnloadAll()
+        public void ReleaseAll()
         {
-            
         }
     }
 }

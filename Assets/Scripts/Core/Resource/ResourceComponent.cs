@@ -1,22 +1,27 @@
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
 
-namespace CrystalMagic.Core {
-    /// <summary>
-    /// 资源管理组件
-    /// </summary>
+namespace CrystalMagic.Core
+{
     public class ResourceComponent : GameComponent<ResourceComponent>
     {
         [SerializeField] private ResourceLoadMode _loadMode = ResourceLoadMode.Editor;
+        [SerializeField] private string _assetBundleRootFolderName = "AssetBundles";
+        [SerializeField] private string _catalogBundleName = "catalog";
+        [SerializeField] private string _catalogAssetName = "BundleCatalogAsset";
 
         private IResourceLoader _loader;
         private readonly Dictionary<string, Object> _pathToResource = new();
-        private readonly Dictionary<Object, int> _resourceRefCounts = new();
-        private readonly Dictionary<string, Dictionary<Object, int>> _ownerResourceRefCounts = new();
+        private readonly Dictionary<int, HashSet<string>> _resourceInstanceToPaths = new();
+        private readonly Dictionary<string, int> _pathRefCounts = new();
+        private readonly Dictionary<string, Dictionary<string, int>> _ownerPathRefCounts = new();
 
         public override int Priority => 5;
 
         public ResourceLoadMode LoadMode => _loadMode;
+        public string AssetBundleRootFolderName => _assetBundleRootFolderName;
+        public string CatalogBundleName => _catalogBundleName;
+        public string CatalogAssetName => _catalogAssetName;
 
         public override void Initialize()
         {
@@ -24,9 +29,6 @@ namespace CrystalMagic.Core {
             InitializeLoader();
         }
 
-        /// <summary>
-        /// 初始化加载器
-        /// </summary>
         private void InitializeLoader()
         {
             switch (_loadMode)
@@ -37,56 +39,40 @@ namespace CrystalMagic.Core {
                     break;
 
                 case ResourceLoadMode.AssetBundle:
-                    // 后续实现
-                    _loader = new EditorResourceLoader();
-                    Debug.LogWarning("[ResourceComponent] AssetBundle mode not implemented yet, using EditorResourceLoader");
+                    _loader = new AssetBundleResourceLoader(_assetBundleRootFolderName, _catalogBundleName, _catalogAssetName);
+                    Debug.Log("[ResourceComponent] Using AssetBundleResourceLoader");
                     break;
 
                 default:
                     _loader = new EditorResourceLoader();
+                    Debug.LogWarning("[ResourceComponent] Unknown load mode, fallback to EditorResourceLoader");
                     break;
             }
+
+            _loader.Initialize();
         }
 
-        /// <summary>
-        /// 加载资源
-        /// </summary>
         public T Load<T>(string path) where T : Object
         {
             if (_loader == null || string.IsNullOrWhiteSpace(path))
                 return null;
 
-            if (_pathToResource.TryGetValue(path, out Object cachedResource))
-            {
-                if (cachedResource is not T typedCachedResource)
-                {
-                    Debug.LogError($"[ResourceComponent] Cached resource type mismatch for '{path}'. Requested '{typeof(T).Name}', cached '{cachedResource.GetType().Name}'.");
-                    return null;
-                }
-
-                AddReference(typedCachedResource);
-                return typedCachedResource;
-            }
-
             T resource = _loader.Load<T>(path);
-            if (resource != null)
-            {
-                TrackLoadedResource(path, resource);
-            }
+            if (resource == null)
+                return null;
 
+            TrackLoadedResource(path, resource);
+            AddPathReference(path);
             return resource;
         }
 
         public T Load<T>(string path, string ownerKey) where T : Object
         {
             T resource = Load<T>(path);
-            TrackOwnerReference(ownerKey, resource);
+            TrackOwnerReference(ownerKey, path);
             return resource;
         }
 
-        /// <summary>
-        /// 异步加载资源
-        /// </summary>
         public void LoadAsync<T>(string path, System.Action<T> onComplete) where T : Object
         {
             if (_loader == null || string.IsNullOrWhiteSpace(path))
@@ -95,26 +81,14 @@ namespace CrystalMagic.Core {
                 return;
             }
 
-            if (_pathToResource.TryGetValue(path, out Object cachedResource))
-            {
-                if (cachedResource is not T typedCachedResource)
-                {
-                    Debug.LogError($"[ResourceComponent] Cached resource type mismatch for '{path}'. Requested '{typeof(T).Name}', cached '{cachedResource.GetType().Name}'.");
-                    onComplete?.Invoke(null);
-                    return;
-                }
-
-                AddReference(typedCachedResource);
-                onComplete?.Invoke(typedCachedResource);
-                return;
-            }
-
             StartCoroutine(_loader.LoadAsync<T>(path, resource =>
             {
                 if (resource != null)
                 {
                     TrackLoadedResource(path, resource);
+                    AddPathReference(path);
                 }
+
                 onComplete?.Invoke(resource);
             }));
         }
@@ -123,69 +97,92 @@ namespace CrystalMagic.Core {
         {
             LoadAsync<T>(path, resource =>
             {
-                TrackOwnerReference(ownerKey, resource);
+                TrackOwnerReference(ownerKey, path);
                 onComplete?.Invoke(resource);
             });
         }
 
-        /// <summary>
-        /// 卸载资源
-        /// </summary>
         public void Unload(Object resource)
         {
-            if (resource == null || !_resourceRefCounts.TryGetValue(resource, out int refCount))
+            if (resource == null)
+                return;
+
+            if (!_resourceInstanceToPaths.TryGetValue(resource.GetInstanceID(), out HashSet<string> paths) || paths.Count == 0)
+                return;
+
+            foreach (string path in paths)
+            {
+                Unload(path);
+                return;
+            }
+        }
+
+        public void Unload(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path) || !_pathRefCounts.TryGetValue(path, out int refCount))
                 return;
 
             refCount--;
             if (refCount > 0)
             {
-                _resourceRefCounts[resource] = refCount;
+                _pathRefCounts[path] = refCount;
                 return;
             }
 
-            _loader?.Unload(resource);
-            _resourceRefCounts.Remove(resource);
-            RemoveResourcePaths(resource);
+            _pathRefCounts.Remove(path);
+            _loader?.Release(path);
+            RemoveTrackedResource(path);
         }
 
-        public void Unload(string path)
-        {
-            if (string.IsNullOrWhiteSpace(path) || !_pathToResource.TryGetValue(path, out Object resource))
-                return;
-
-            Unload(resource);
-        }
-
-        /// <summary>
-        /// 卸载所有资源
-        /// </summary>
         public void UnloadAll()
         {
-            _loader?.UnloadAll();
+            _loader?.ReleaseAll();
             _pathToResource.Clear();
-            _resourceRefCounts.Clear();
-            _ownerResourceRefCounts.Clear();
+            _resourceInstanceToPaths.Clear();
+            _pathRefCounts.Clear();
+            _ownerPathRefCounts.Clear();
         }
 
         public void ReleaseOwner(string ownerKey)
         {
             if (string.IsNullOrWhiteSpace(ownerKey)
-                || !_ownerResourceRefCounts.TryGetValue(ownerKey, out Dictionary<Object, int> ownedResources))
+                || !_ownerPathRefCounts.TryGetValue(ownerKey, out Dictionary<string, int> ownedPaths))
             {
                 return;
             }
 
-            List<KeyValuePair<Object, int>> ownedEntries = new(ownedResources);
-            _ownerResourceRefCounts.Remove(ownerKey);
+            List<KeyValuePair<string, int>> ownedEntries = new(ownedPaths);
+            _ownerPathRefCounts.Remove(ownerKey);
 
             for (int i = 0; i < ownedEntries.Count; i++)
             {
-                KeyValuePair<Object, int> entry = ownedEntries[i];
+                KeyValuePair<string, int> entry = ownedEntries[i];
                 for (int j = 0; j < entry.Value; j++)
                 {
                     Unload(entry.Key);
                 }
             }
+        }
+
+        public int GetReferenceCount(Object resource)
+        {
+            if (resource == null || !_resourceInstanceToPaths.TryGetValue(resource.GetInstanceID(), out HashSet<string> paths))
+                return 0;
+
+            int totalCount = 0;
+            foreach (string path in paths)
+            {
+                totalCount += GetReferenceCount(path);
+            }
+
+            return totalCount;
+        }
+
+        public int GetReferenceCount(string path)
+        {
+            return !string.IsNullOrWhiteSpace(path) && _pathRefCounts.TryGetValue(path, out int refCount)
+                ? refCount
+                : 0;
         }
 
         public override void Cleanup()
@@ -194,86 +191,79 @@ namespace CrystalMagic.Core {
             base.Cleanup();
         }
 
-        public int GetReferenceCount(Object resource)
-        {
-            return resource != null && _resourceRefCounts.TryGetValue(resource, out int refCount) ? refCount : 0;
-        }
-
-        public int GetReferenceCount(string path)
-        {
-            return !string.IsNullOrWhiteSpace(path)
-                && _pathToResource.TryGetValue(path, out Object resource)
-                ? GetReferenceCount(resource)
-                : 0;
-        }
-
         private void TrackLoadedResource(string path, Object resource)
         {
-            if (_pathToResource.TryGetValue(path, out Object existingResource))
+            if (_pathToResource.TryGetValue(path, out Object existingResource) && existingResource != resource)
             {
-                if (existingResource == resource)
-                {
-                    AddReference(resource);
-                    return;
-                }
-
-                Debug.LogWarning($"[ResourceComponent] Resource path '{path}' was remapped from '{existingResource.name}' to '{resource.name}'.");
+                RemovePathMapping(existingResource, path);
             }
 
             _pathToResource[path] = resource;
-            AddReference(resource);
+
+            int instanceId = resource.GetInstanceID();
+            if (!_resourceInstanceToPaths.TryGetValue(instanceId, out HashSet<string> paths))
+            {
+                paths = new HashSet<string>();
+                _resourceInstanceToPaths[instanceId] = paths;
+            }
+
+            paths.Add(path);
         }
 
-        private void AddReference(Object resource)
+        private void AddPathReference(string path)
         {
-            if (_resourceRefCounts.TryGetValue(resource, out int refCount))
+            if (_pathRefCounts.TryGetValue(path, out int refCount))
             {
-                _resourceRefCounts[resource] = refCount + 1;
+                _pathRefCounts[path] = refCount + 1;
                 return;
             }
 
-            _resourceRefCounts[resource] = 1;
+            _pathRefCounts[path] = 1;
         }
 
-        private void RemoveResourcePaths(Object resource)
+        private void TrackOwnerReference(string ownerKey, string path)
         {
-            List<string> pathsToRemove = null;
-            foreach (KeyValuePair<string, Object> pair in _pathToResource)
-            {
-                if (pair.Value != resource)
-                    continue;
-
-                pathsToRemove ??= new List<string>();
-                pathsToRemove.Add(pair.Key);
-            }
-
-            if (pathsToRemove == null)
+            if (string.IsNullOrWhiteSpace(ownerKey) || string.IsNullOrWhiteSpace(path))
                 return;
 
-            for (int i = 0; i < pathsToRemove.Count; i++)
+            if (!_ownerPathRefCounts.TryGetValue(ownerKey, out Dictionary<string, int> ownedPaths))
             {
-                _pathToResource.Remove(pathsToRemove[i]);
+                ownedPaths = new Dictionary<string, int>();
+                _ownerPathRefCounts[ownerKey] = ownedPaths;
             }
+
+            if (ownedPaths.TryGetValue(path, out int refCount))
+            {
+                ownedPaths[path] = refCount + 1;
+                return;
+            }
+
+            ownedPaths[path] = 1;
         }
 
-        private void TrackOwnerReference(string ownerKey, Object resource)
+        private void RemoveTrackedResource(string path)
         {
-            if (string.IsNullOrWhiteSpace(ownerKey) || resource == null)
+            if (string.IsNullOrWhiteSpace(path) || !_pathToResource.TryGetValue(path, out Object resource))
                 return;
 
-            if (!_ownerResourceRefCounts.TryGetValue(ownerKey, out Dictionary<Object, int> ownedResources))
-            {
-                ownedResources = new Dictionary<Object, int>();
-                _ownerResourceRefCounts[ownerKey] = ownedResources;
-            }
+            _pathToResource.Remove(path);
+            RemovePathMapping(resource, path);
+        }
 
-            if (ownedResources.TryGetValue(resource, out int refCount))
-            {
-                ownedResources[resource] = refCount + 1;
+        private void RemovePathMapping(Object resource, string path)
+        {
+            if (resource == null)
                 return;
-            }
 
-            ownedResources[resource] = 1;
+            int instanceId = resource.GetInstanceID();
+            if (!_resourceInstanceToPaths.TryGetValue(instanceId, out HashSet<string> paths))
+                return;
+
+            paths.Remove(path);
+            if (paths.Count == 0)
+            {
+                _resourceInstanceToPaths.Remove(instanceId);
+            }
         }
     }
 }
