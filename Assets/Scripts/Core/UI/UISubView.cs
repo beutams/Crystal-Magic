@@ -23,7 +23,10 @@ namespace CrystalMagic.Core
             if (templateView == null)
                 return null;
 
-            GameObject instance = PoolComponent.Instance.Get(templateView.gameObject);
+            string ownerKey = parent != null ? UIComponent.Instance.GetResourceOwnerKey(parent) : string.Empty;
+            GameObject instance = string.IsNullOrWhiteSpace(ownerKey)
+                ? PoolComponent.Instance.Get(templateView.gameObject)
+                : PoolComponent.Instance.Get(templateView.gameObject, ownerKey);
             if (instance == null)
                 return null;
 

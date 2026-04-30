@@ -17,9 +17,9 @@
             View.SkillCategoryRequested += OnSkillCategoryRequested;
             View.EquipCategoryRequested += OnEquipCategoryRequested;
             View.PropsCategoryRequested += OnPropsCategoryRequested;
-            CrystalMagic.Core.EventComponent.Instance.Subscribe(new CrystalMagic.Core.CommonGameEvent(CrystalMagic.Core.SaveDataComponent.StashDataChangedEventName), _refreshHandler);
-            CrystalMagic.Core.EventComponent.Instance.Subscribe(new CrystalMagic.Core.CommonGameEvent(CrystalMagic.Core.SaveDataComponent.BackpackDataChangedEventName), _refreshHandler);
-            CrystalMagic.Core.EventComponent.Instance.Subscribe(new CrystalMagic.Core.CommonGameEvent(CrystalMagic.Core.SaveDataComponent.TownDataChangedEventName), _refreshHandler);
+            BindEvent(new CrystalMagic.Core.CommonGameEvent(CrystalMagic.Core.SaveDataComponent.StashDataChangedEventName), _refreshHandler);
+            BindEvent(new CrystalMagic.Core.CommonGameEvent(CrystalMagic.Core.SaveDataComponent.BackpackDataChangedEventName), _refreshHandler);
+            BindEvent(new CrystalMagic.Core.CommonGameEvent(CrystalMagic.Core.SaveDataComponent.TownDataChangedEventName), _refreshHandler);
             Model.Refresh();
         }
 
@@ -29,9 +29,6 @@
             View.SkillCategoryRequested -= OnSkillCategoryRequested;
             View.EquipCategoryRequested -= OnEquipCategoryRequested;
             View.PropsCategoryRequested -= OnPropsCategoryRequested;
-            CrystalMagic.Core.EventComponent.Instance.Unsubscribe(new CrystalMagic.Core.CommonGameEvent(CrystalMagic.Core.SaveDataComponent.StashDataChangedEventName), _refreshHandler);
-            CrystalMagic.Core.EventComponent.Instance.Unsubscribe(new CrystalMagic.Core.CommonGameEvent(CrystalMagic.Core.SaveDataComponent.BackpackDataChangedEventName), _refreshHandler);
-            CrystalMagic.Core.EventComponent.Instance.Unsubscribe(new CrystalMagic.Core.CommonGameEvent(CrystalMagic.Core.SaveDataComponent.TownDataChangedEventName), _refreshHandler);
         }
 
         private void OnAllCategoryRequested() => Model.SetCategory(StashCategory.All);

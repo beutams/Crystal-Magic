@@ -10,6 +10,8 @@ namespace CrystalMagic.Core {
         private Dictionary<string, GameObjectPool> _pools = new();
         private Dictionary<int, string> _prefabInstanceToPoolName = new();
         private Dictionary<int, string> _objectInstanceToPoolName = new();
+        private Dictionary<int, string> _objectInstanceToOwnerKey = new();
+        private Dictionary<string, HashSet<GameObject>> _ownerObjects = new();
         private Dictionary<string, GameObject> _resourcePoolPrefabs = new();
         private Transform _poolContainer;
 
@@ -45,6 +47,13 @@ namespace CrystalMagic.Core {
                 _objectInstanceToPoolName[obj.GetInstanceID()] = assetPath;
             }
 
+            return obj;
+        }
+
+        public GameObject Get(string assetPath, string ownerKey)
+        {
+            GameObject obj = Get(assetPath);
+            TrackOwnerObject(ownerKey, obj);
             return obj;
         }
 
@@ -86,6 +95,13 @@ namespace CrystalMagic.Core {
             return obj;
         }
 
+        public GameObject Get(GameObject prefab, string ownerKey)
+        {
+            GameObject obj = Get(prefab);
+            TrackOwnerObject(ownerKey, obj);
+            return obj;
+        }
+
         /// <summary>
         /// 生成唯一的池名称
         /// </summary>
@@ -104,6 +120,7 @@ namespace CrystalMagic.Core {
 
             // 归还到池中时设置为 inactive
             obj.SetActive(false);
+            RemoveOwnerObject(obj);
 
             int objectInstanceId = obj.GetInstanceID();
             if (_objectInstanceToPoolName.TryGetValue(objectInstanceId, out string mappedPoolName)
@@ -132,6 +149,21 @@ namespace CrystalMagic.Core {
 
                 Debug.LogWarning($"[PoolComponent] Object '{poolName}' pool not found, destroying object");
                 Object.Destroy(obj);
+            }
+        }
+
+        public void ReleaseOwner(string ownerKey)
+        {
+            if (string.IsNullOrWhiteSpace(ownerKey) || !_ownerObjects.TryGetValue(ownerKey, out HashSet<GameObject> objects))
+                return;
+
+            GameObject[] snapshot = new GameObject[objects.Count];
+            objects.CopyTo(snapshot);
+            _ownerObjects.Remove(ownerKey);
+
+            for (int i = 0; i < snapshot.Length; i++)
+            {
+                Release(snapshot[i]);
             }
         }
 
@@ -207,6 +239,8 @@ namespace CrystalMagic.Core {
             _pools.Clear();
             _prefabInstanceToPoolName.Clear();
             _objectInstanceToPoolName.Clear();
+            _objectInstanceToOwnerKey.Clear();
+            _ownerObjects.Clear();
             _resourcePoolPrefabs.Clear();
             Debug.Log("[PoolComponent] Cleared all pools");
         }
@@ -219,6 +253,43 @@ namespace CrystalMagic.Core {
                 Object.Destroy(_poolContainer.gameObject);
             }
             base.Cleanup();
+        }
+
+        private void TrackOwnerObject(string ownerKey, GameObject obj)
+        {
+            if (string.IsNullOrWhiteSpace(ownerKey) || obj == null)
+                return;
+
+            int instanceId = obj.GetInstanceID();
+            _objectInstanceToOwnerKey[instanceId] = ownerKey;
+
+            if (!_ownerObjects.TryGetValue(ownerKey, out HashSet<GameObject> objects))
+            {
+                objects = new HashSet<GameObject>();
+                _ownerObjects[ownerKey] = objects;
+            }
+
+            objects.Add(obj);
+        }
+
+        private void RemoveOwnerObject(GameObject obj)
+        {
+            if (obj == null)
+                return;
+
+            int instanceId = obj.GetInstanceID();
+            if (!_objectInstanceToOwnerKey.TryGetValue(instanceId, out string ownerKey))
+                return;
+
+            _objectInstanceToOwnerKey.Remove(instanceId);
+            if (!_ownerObjects.TryGetValue(ownerKey, out HashSet<GameObject> objects))
+                return;
+
+            objects.Remove(obj);
+            if (objects.Count == 0)
+            {
+                _ownerObjects.Remove(ownerKey);
+            }
         }
     }
 }

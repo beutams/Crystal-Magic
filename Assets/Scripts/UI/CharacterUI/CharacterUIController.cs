@@ -23,10 +23,10 @@ namespace CrystalMagic.UI
             View.BonusEquipSwapped += OnBonusEquipSwapped;
             View.SkillReordered += OnSkillReordered;
             View.SkillReturnedToInventory += OnSkillReturnedToInventory;
-            EventComponent.Instance.Subscribe(new CommonGameEvent(RuntimeDataComponent.SkillRuntimeDataChangedEventName), _refreshHandler);
-            EventComponent.Instance.Subscribe(new CommonGameEvent(SaveDataComponent.SkillDataChangedEventName), _refreshHandler);
-            EventComponent.Instance.Subscribe(new CommonGameEvent(SaveDataComponent.BackpackDataChangedEventName), _refreshHandler);
-            EventComponent.Instance.Subscribe(new CommonGameEvent(SaveDataComponent.EquipmentDataChangedEventName), _refreshHandler);
+            BindEvent(new CommonGameEvent(RuntimeDataComponent.SkillRuntimeDataChangedEventName), _refreshHandler);
+            BindEvent(new CommonGameEvent(SaveDataComponent.SkillDataChangedEventName), _refreshHandler);
+            BindEvent(new CommonGameEvent(SaveDataComponent.BackpackDataChangedEventName), _refreshHandler);
+            BindEvent(new CommonGameEvent(SaveDataComponent.EquipmentDataChangedEventName), _refreshHandler);
             Model.Refresh();
         }
 
@@ -39,10 +39,6 @@ namespace CrystalMagic.UI
             View.BonusEquipSwapped -= OnBonusEquipSwapped;
             View.SkillReordered -= OnSkillReordered;
             View.SkillReturnedToInventory -= OnSkillReturnedToInventory;
-            EventComponent.Instance.Unsubscribe(new CommonGameEvent(RuntimeDataComponent.SkillRuntimeDataChangedEventName), _refreshHandler);
-            EventComponent.Instance.Unsubscribe(new CommonGameEvent(SaveDataComponent.SkillDataChangedEventName), _refreshHandler);
-            EventComponent.Instance.Unsubscribe(new CommonGameEvent(SaveDataComponent.BackpackDataChangedEventName), _refreshHandler);
-            EventComponent.Instance.Unsubscribe(new CommonGameEvent(SaveDataComponent.EquipmentDataChangedEventName), _refreshHandler);
         }
 
         private void OnChangeSkillRequested()

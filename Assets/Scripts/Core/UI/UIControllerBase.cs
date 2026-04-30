@@ -72,5 +72,49 @@ namespace CrystalMagic.UI
             View = view ?? throw new ArgumentNullException(nameof(view));
             Model = model ?? throw new ArgumentNullException(nameof(model));
         }
+
+        protected IDisposable BindEvent<T>(Action<T> handler) where T : IGameEvent
+        {
+            if (handler == null)
+                return null;
+
+            return Bindings.Bind(
+                () => SubscribeOwnedEvent(handler),
+                () => EventComponent.Instance.Unsubscribe(handler));
+        }
+
+        protected IDisposable BindEvent(CommonGameEvent gameEvent, Action<CommonGameEvent> handler)
+        {
+            if (string.IsNullOrEmpty(gameEvent.EventName) || handler == null)
+                return null;
+
+            return Bindings.Bind(
+                () => SubscribeOwnedEvent(gameEvent, handler),
+                () => EventComponent.Instance.Unsubscribe(gameEvent, handler));
+        }
+
+        private void SubscribeOwnedEvent<T>(Action<T> handler) where T : IGameEvent
+        {
+            string ownerKey = UIComponent.Instance.GetResourceOwnerKey(View);
+            if (string.IsNullOrWhiteSpace(ownerKey))
+            {
+                EventComponent.Instance.Subscribe(handler);
+                return;
+            }
+
+            EventComponent.Instance.Subscribe(ownerKey, handler);
+        }
+
+        private void SubscribeOwnedEvent(CommonGameEvent gameEvent, Action<CommonGameEvent> handler)
+        {
+            string ownerKey = UIComponent.Instance.GetResourceOwnerKey(View);
+            if (string.IsNullOrWhiteSpace(ownerKey))
+            {
+                EventComponent.Instance.Subscribe(gameEvent, handler);
+                return;
+            }
+
+            EventComponent.Instance.Subscribe(ownerKey, gameEvent, handler);
+        }
     }
 }

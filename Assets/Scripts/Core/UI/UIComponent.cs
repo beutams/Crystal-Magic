@@ -668,6 +668,8 @@ namespace CrystalMagic.Core {
             context.Detach();
             _mvcContexts.Remove(context.Panel);
             ResourceComponent.Instance.ReleaseOwner(context.ResourceOwnerKey);
+            EventComponent.Instance.ReleaseOwner(context.ResourceOwnerKey);
+            PoolComponent.Instance.ReleaseOwner(context.ResourceOwnerKey);
             context.Dispose();
             PoolComponent.Instance.Release(context.Panel.gameObject);
         }
@@ -753,6 +755,8 @@ namespace CrystalMagic.Core {
 
             context.Detach();
             ResourceComponent.Instance.ReleaseOwner(context.ResourceOwnerKey);
+            EventComponent.Instance.ReleaseOwner(context.ResourceOwnerKey);
+            PoolComponent.Instance.ReleaseOwner(context.ResourceOwnerKey);
             context.Dispose();
             _mvcContexts.Remove(panel);
         }

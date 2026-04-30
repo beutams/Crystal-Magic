@@ -20,8 +20,8 @@ namespace CrystalMagic.UI
             View.CommodityBuyRequested += OnCommodityBuyRequested;
             View.InventorySellRequested += OnInventorySellRequested;
             View.CommodityHoverExited += OnCommodityHoverExited;
-            CrystalMagic.Core.EventComponent.Instance.Subscribe(new CrystalMagic.Core.CommonGameEvent(CrystalMagic.Core.SaveDataComponent.BackpackDataChangedEventName), _refreshHandler);
-            CrystalMagic.Core.EventComponent.Instance.Subscribe(new CrystalMagic.Core.CommonGameEvent(CrystalMagic.Core.SaveDataComponent.TownDataChangedEventName), _refreshHandler);
+            BindEvent(new CrystalMagic.Core.CommonGameEvent(CrystalMagic.Core.SaveDataComponent.BackpackDataChangedEventName), _refreshHandler);
+            BindEvent(new CrystalMagic.Core.CommonGameEvent(CrystalMagic.Core.SaveDataComponent.TownDataChangedEventName), _refreshHandler);
             Model.Refresh();
         }
 
@@ -31,8 +31,6 @@ namespace CrystalMagic.UI
             View.CommodityBuyRequested -= OnCommodityBuyRequested;
             View.InventorySellRequested -= OnInventorySellRequested;
             View.CommodityHoverExited -= OnCommodityHoverExited;
-            CrystalMagic.Core.EventComponent.Instance.Unsubscribe(new CrystalMagic.Core.CommonGameEvent(CrystalMagic.Core.SaveDataComponent.BackpackDataChangedEventName), _refreshHandler);
-            CrystalMagic.Core.EventComponent.Instance.Unsubscribe(new CrystalMagic.Core.CommonGameEvent(CrystalMagic.Core.SaveDataComponent.TownDataChangedEventName), _refreshHandler);
             CloseItemInfoUI();
             CloseBuyUI();
             CloseSellUI();
