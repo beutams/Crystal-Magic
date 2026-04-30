@@ -11,7 +11,7 @@ namespace CrystalMagic.Editor
     /// </summary>
     public class UIConfigWindow : EditorWindow
     {
-        private const string ConfigPath = "Assets/Config/ui_config.json";
+        private const string ConfigPath = "Assets/Res/Config/ui_config.json";
         private const string DefaultConfigName = "ui_config.json";
 
         private UIGroupConfig _config;

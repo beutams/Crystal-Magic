@@ -10,6 +10,7 @@ namespace CrystalMagic.Core {
         private Dictionary<string, GameObjectPool> _pools = new();
         private Dictionary<int, string> _prefabInstanceToPoolName = new();
         private Dictionary<int, string> _objectInstanceToPoolName = new();
+        private Dictionary<string, GameObject> _resourcePoolPrefabs = new();
         private Transform _poolContainer;
 
         public override int Priority => 12;
@@ -143,6 +144,11 @@ namespace CrystalMagic.Core {
             {
                 pool.Clear();
                 _pools.Remove(poolName);
+                if (_resourcePoolPrefabs.TryGetValue(poolName, out GameObject prefab))
+                {
+                    ResourceComponent.Instance.Unload(prefab);
+                    _resourcePoolPrefabs.Remove(poolName);
+                }
                 Debug.Log($"[PoolComponent] Destroyed pool: {poolName}");
             }
         }
@@ -162,6 +168,7 @@ namespace CrystalMagic.Core {
 
             GameObjectPool pool = new GameObjectPool(prefab, initialSize: 0, maxSize: 10, _poolContainer);
             _pools[assetPath] = pool;
+            _resourcePoolPrefabs[assetPath] = prefab;
 
             Debug.Log($"[PoolComponent] Created pool '{assetPath}' from resource");
             return pool;
@@ -191,9 +198,16 @@ namespace CrystalMagic.Core {
             {
                 pool.Clear();
             }
+
+            foreach (GameObject prefab in _resourcePoolPrefabs.Values)
+            {
+                ResourceComponent.Instance.Unload(prefab);
+            }
+
             _pools.Clear();
             _prefabInstanceToPoolName.Clear();
             _objectInstanceToPoolName.Clear();
+            _resourcePoolPrefabs.Clear();
             Debug.Log("[PoolComponent] Cleared all pools");
         }
 

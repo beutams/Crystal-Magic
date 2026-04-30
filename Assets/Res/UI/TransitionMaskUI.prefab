@@ -116,7 +116,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _canCloseByEscape: 0
-  _fadeDuration: 0.5
+  _fadeDuration: 2
 --- !u!1 &8656310359772121369
 GameObject:
   m_ObjectHideFlags: 0

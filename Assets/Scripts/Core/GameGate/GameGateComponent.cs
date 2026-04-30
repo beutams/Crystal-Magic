@@ -35,9 +35,13 @@ namespace CrystalMagic.Core
 
             bool wasLocked = reasons.Count > 0;
             reasons.Add(reason);
+            bool isLocked = reasons.Count > 0;
 
             if (gateType == GameGateType.Simulation && !wasLocked)
                 ApplySimulationLock();
+
+            if (wasLocked != isLocked)
+                EventComponent.Instance.Publish(new GameGateChangedEvent(gateType, isLocked));
         }
 
         public void Unlock(GameGateType gateType, string reason)
@@ -48,6 +52,7 @@ namespace CrystalMagic.Core
             if (!_locks.TryGetValue(gateType, out HashSet<string> reasons))
                 return;
 
+            bool wasLocked = reasons.Count > 0;
             reasons.Remove(reason);
             if (reasons.Count > 0)
                 return;
@@ -55,6 +60,9 @@ namespace CrystalMagic.Core
             _locks.Remove(gateType);
             if (gateType == GameGateType.Simulation)
                 ReleaseSimulationLock();
+
+            if (wasLocked)
+                EventComponent.Instance.Publish(new GameGateChangedEvent(gateType, false));
         }
 
         public bool IsLocked(GameGateType gateType)

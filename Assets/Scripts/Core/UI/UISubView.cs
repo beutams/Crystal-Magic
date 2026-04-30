@@ -7,6 +7,17 @@ namespace CrystalMagic.Core
     {
         public abstract void Rebind();
 
+        protected TResource LoadManagedResource<TResource>(string path) where TResource : UnityEngine.Object
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return null;
+
+            string ownerKey = UIComponent.Instance.GetResourceOwnerKey(this);
+            return string.IsNullOrWhiteSpace(ownerKey)
+                ? ResourceComponent.Instance.Load<TResource>(path)
+                : ResourceComponent.Instance.Load<TResource>(path, ownerKey);
+        }
+
         public static TView AcquireFromPool<TView>(TView templateView, Transform parent) where TView : UISubViewBase
         {
             if (templateView == null)

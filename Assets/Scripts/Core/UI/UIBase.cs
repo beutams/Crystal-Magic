@@ -98,6 +98,17 @@ namespace CrystalMagic.Core {
                 UIComponent.Instance.CloseUI(this);
             }
         }
+
+        protected TResource LoadManagedResource<TResource>(string path) where TResource : UnityEngine.Object
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return null;
+
+            string ownerKey = UIComponent.Instance.GetResourceOwnerKey(this);
+            return string.IsNullOrWhiteSpace(ownerKey)
+                ? ResourceComponent.Instance.Load<TResource>(path)
+                : ResourceComponent.Instance.Load<TResource>(path, ownerKey);
+        }
     }
 
     /// <summary>

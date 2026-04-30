@@ -27,7 +27,7 @@ namespace CrystalMagic.Core {
     /// </summary>
     public static class UIConfigLoader
     {
-        private const string ConfigPath = "Assets/Config/ui_config.json";
+        private const string ConfigPath = "Assets/Res/Config/ui_config.json";
 
         /// <summary>
         /// 从 JSON 加载配置

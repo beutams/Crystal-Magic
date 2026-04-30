@@ -1,0 +1,4 @@
+GameGateComponent
+-内容
+    输入锁
+    当没有锁的时候就可以使用。

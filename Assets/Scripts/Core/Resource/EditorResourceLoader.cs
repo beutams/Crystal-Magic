@@ -7,7 +7,6 @@ using UnityEditor;
 namespace CrystalMagic.Core {
     /// <summary>
     /// 编辑器资源加载器
-    /// 在编辑器模式下直接从 Assets 加载资源
     /// </summary>
     public class EditorResourceLoader : IResourceLoader
     {
@@ -35,12 +34,12 @@ namespace CrystalMagic.Core {
 
         public void Unload(Object resource)
         {
-            // 编辑器模式下不需要卸载
+            
         }
 
         public void UnloadAll()
         {
-            // 编辑器模式下不需要卸载
+            
         }
     }
 }

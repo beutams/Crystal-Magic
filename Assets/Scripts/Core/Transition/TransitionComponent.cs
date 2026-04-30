@@ -2,10 +2,7 @@ using System.Collections;
 using UnityEngine;
 
 namespace CrystalMagic.Core {
-    /// <summary>
-    /// 杞満缁勪欢
-    /// 鑱岃矗锛氭墽琛岃浆鍦鸿繃绋嬶紝鍙戝竷闃舵浜嬩欢
-    /// </summary>
+
     public class TransitionComponent : GameComponent<TransitionComponent>
     {
         private const string TransitionLockReason = "Transition";
@@ -37,9 +34,9 @@ namespace CrystalMagic.Core {
             _isTransitioning = true;
 
             GameGateComponent gate = GameGateComponent.Instance;
-            gate?.Lock(GameGateType.Simulation, TransitionLockReason);
-            gate?.Lock(GameGateType.PlayerInput, TransitionLockReason);
-            gate?.Lock(GameGateType.UIInput, TransitionLockReason);
+            gate.Lock(GameGateType.Simulation, TransitionLockReason);
+            gate.Lock(GameGateType.PlayerInput, TransitionLockReason);
+            gate.Lock(GameGateType.UIInput, TransitionLockReason);
 
             StartCoroutine(FadeInAsync(_activeTransitionMaskUI, transitionData.TargetSceneName));
             return true;

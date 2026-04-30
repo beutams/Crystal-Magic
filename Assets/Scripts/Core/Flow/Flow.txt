@@ -1,6 +1,11 @@
 GameFlowComponent
 -内容
     流程状态机切换
+-接口
+    BeginTransition() 打开TransitionUI 并且通知Transition流程
 GameState
 -内容
     状态基类
+    TransitionState
+    -内容
+        打开TransitionUI

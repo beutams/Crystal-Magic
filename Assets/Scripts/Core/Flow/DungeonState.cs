@@ -67,6 +67,7 @@ namespace CrystalMagic.Core
                 TargetSceneName = SceneName,
                 TargetStateType = typeof(TrainingState),
                 TargetStateData = data,
+                TransitionUIName = "TransitionUI",
                 ForceReloadTargetScene = true,
             };
         }

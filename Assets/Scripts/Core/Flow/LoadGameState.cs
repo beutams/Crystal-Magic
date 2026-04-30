@@ -54,6 +54,7 @@ namespace CrystalMagic.Core {
                 TargetSceneName = targetSceneName,
                 TargetStateType = targetStateType,
                 TargetStateData = context,
+                TransitionUIName = "TransitionUI",
                 ForceReloadTargetScene = true,
             });
         }

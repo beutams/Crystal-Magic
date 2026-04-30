@@ -21,6 +21,17 @@ namespace CrystalMagic.Core {
         public int BaseSortingOrder => _baseSortingOrder;
         internal IEnumerable<UIBase> Panels => _panels;
 
+        public void ConfigureGroup(string groupName, int baseSortingOrder)
+        {
+            _groupName = groupName;
+            _baseSortingOrder = baseSortingOrder;
+
+            if (_canvas != null)
+            {
+                _canvas.sortingOrder = _baseSortingOrder;
+            }
+        }
+
         protected virtual void Awake()
         {
             // 获取或添加 Canvas
@@ -79,6 +90,7 @@ namespace CrystalMagic.Core {
                 panelCanvas = panel.gameObject.AddComponent<Canvas>();
             }
             panelCanvas.overrideSorting = true;
+            panelCanvas.worldCamera = CameraComponent.Instance.Current;
 
             // 添加 CanvasScaler
             CanvasScaler scaler = panel.GetComponent<CanvasScaler>();

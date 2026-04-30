@@ -1,0 +1,16 @@
+TransitionComponent
+-内容
+    进行转场计算
+    -流程
+        FadeInStarted 淡入开始时
+        。。。进行淡入
+        FadeInCompleted 淡入完成
+            -Flow进行状态切换
+        LoadStarted 加载开始
+            -SceneComponent异步加载场景
+        LoadCompleted 加载完成
+        FadeOutStarted 淡出开始
+            -Flow进行状态切换
+        。。。进行淡出
+        FadeOutCompleted 淡出完成
+            清理UI

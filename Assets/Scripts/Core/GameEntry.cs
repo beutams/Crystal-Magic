@@ -5,17 +5,12 @@ namespace CrystalMagic.Core
 {
     /// <summary>
     /// 游戏总入口管理器
-    /// 职责：
-    /// - 手动管理所有 IGameComponent
-    /// - 按优先级初始化所有组件
-    /// - 管理组件的生命周期
     /// </summary>
     public class GameEntry : Singleton<GameEntry>
     {
         private List<IGameComponent> _components = new();
         private bool _isInitialized = false;
 
-        // 手动声明各管理模块属性
         public EventComponent EventComponent { get; private set; }
         public ResourceComponent ResourceComponent { get; private set; }
         public PoolComponent PoolComponent { get; private set; }
@@ -46,7 +41,8 @@ namespace CrystalMagic.Core
                 GameFlowComponent.Instance.BeginTransition(new TransitionData
                 {
                     TargetSceneName = "MainMenu",
-                    TargetStateType = typeof(MainMenuState)
+                    TargetStateType = typeof(MainMenuState),
+                    TransitionUIName = "TransitionUI",
                 });
             }
         }
@@ -76,7 +72,7 @@ namespace CrystalMagic.Core
             RegisterComponent(ConfigComponent.Instance);
             RegisterComponent(CameraComponent.Instance);
             RegisterComponent(SaveDataComponent.Instance);
-            RegisterComponent(GetOrCreateComponent<GameSettingsComponent>());
+            RegisterComponent(GameSettingsComponent.Instance);
             RegisterComponent(AudioComponent.Instance);
             RegisterComponent(InputComponent.Instance);
             RegisterComponent(GameFlowComponent.Instance);
@@ -144,16 +140,6 @@ namespace CrystalMagic.Core
             else if (component is GameFlowComponent gameFlowComponent)
                 GameFlowComponent = gameFlowComponent;
         }
-
-        private T GetOrCreateComponent<T>() where T : Component
-        {
-            T component = GetComponent<T>();
-            if (component == null)
-                component = gameObject.AddComponent<T>();
-
-            return component;
-        }
-
         /// <summary>
         /// 清理所有组件
         /// </summary>

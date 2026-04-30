@@ -24,7 +24,8 @@
             "groupName": "Top",
             "order": 10000,
             "uiNames": [
-                "TransitionUI"
+                "TransitionUI",
+                "TransitionMaskUI"
             ]
         }
     ]

@@ -65,8 +65,7 @@ namespace CrystalMagic.Core
             _isTransitioning = true;
             OpenTransitionMaskUI(transitionData);
 
-            if (TransitionComponent.Instance == null ||
-                !TransitionComponent.Instance.BeginFadeIn(transitionData, _activeTransitionUI))
+            if (!TransitionComponent.Instance.BeginFadeIn(transitionData, _activeTransitionUI))
             {
                 Debug.LogError("[GameFlow] Failed to start transition fade-in.");
                 ReleaseTransitionMaskUI();
@@ -89,7 +88,7 @@ namespace CrystalMagic.Core
         {
             string oldName = oldState?.GetType().Name ?? "None";
             string newName = newState?.GetType().Name ?? "None";
-            Debug.Log($"[GameFlow] State changed: {oldName} 鈫?{newName}");
+            Debug.Log($"[GameFlow] State changed: {oldName} to {newName}");
         }
 
         public override void Cleanup()

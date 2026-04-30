@@ -58,6 +58,6 @@ public class CharacterUI_InventoryItemView : UISubView<CharacterUI_InventoryItem
         if (string.IsNullOrEmpty(iconPath))
             return null;
 
-        return ResourceComponent.Instance.Load<Sprite>(iconPath);
+        return LoadManagedResource<Sprite>(iconPath);
     }
 }

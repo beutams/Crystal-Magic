@@ -10,6 +10,8 @@ namespace CrystalMagic.Core {
     {
         public override int Priority => 5;
         private InputControls _controls;
+        private bool _playerInputLocked;
+        private bool _uiInputLocked;
 
         #region 事件
         public event Action<Vector2> OnMove;
@@ -36,10 +38,15 @@ namespace CrystalMagic.Core {
             _controls.Town.Skill.performed += HandleSkill;
 
             _controls.Town.Enable();
+            _playerInputLocked = GameGateComponent.Instance.IsPlayerInputLocked;
+            _uiInputLocked = GameGateComponent.Instance.IsUIInputLocked;
+            ApplyPlayerInputLockState();
+            EventComponent.Instance.Subscribe<GameGateChangedEvent>(HandleGameGateChanged);
         }
 
         public override void Cleanup()
         {
+            EventComponent.Instance.Unsubscribe<GameGateChangedEvent>(HandleGameGateChanged);
             if (_controls != null)
             {
                 _controls.Town.Move.performed -= HandleMove;
@@ -76,8 +83,11 @@ namespace CrystalMagic.Core {
 
         private void Update()
         {
-            UpdateWorldPosition();
-            UpdateMousePress();
+            if (!_playerInputLocked)
+            {
+                UpdateWorldPosition();
+                UpdateMousePress();
+            }
             UpdateEscape();
         }
         private void UpdateWorldPosition()
@@ -108,10 +118,41 @@ namespace CrystalMagic.Core {
 
         private void UpdateEscape()
         {
+            if (_uiInputLocked)
+                return;
+
             if (Keyboard.current == null || !Keyboard.current.escapeKey.wasPressedThisFrame)
                 return;
 
             OnEscape?.Invoke();
+        }
+
+        private void HandleGameGateChanged(GameGateChangedEvent gameEvent)
+        {
+            switch (gameEvent.GateType)
+            {
+                case GameGateType.PlayerInput:
+                    _playerInputLocked = gameEvent.IsLocked;
+                    ApplyPlayerInputLockState();
+                    break;
+                case GameGateType.UIInput:
+                    _uiInputLocked = gameEvent.IsLocked;
+                    break;
+            }
+        }
+
+        private void ApplyPlayerInputLockState()
+        {
+            if (_controls == null)
+                return;
+
+            if (_playerInputLocked)
+            {
+                _controls.Town.Disable();
+                return;
+            }
+
+            _controls.Town.Enable();
         }
     }
 }

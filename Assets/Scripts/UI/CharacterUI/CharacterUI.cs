@@ -529,7 +529,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         if (string.IsNullOrEmpty(iconPath))
             return null;
 
-        return ResourceComponent.Instance.Load<Sprite>(iconPath);
+        return LoadManagedResource<Sprite>(iconPath);
     }
 }
 

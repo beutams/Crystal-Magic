@@ -36,7 +36,7 @@ public class TransitionMaskUI : UIBase<TransitionMaskUIData>, ITransitionUI
         {
             elapsed += Time.unscaledDeltaTime;
             float t = Mathf.Clamp01(elapsed / _fadeDuration);
-            _canvasGroup.alpha = t;
+            _canvasGroup.alpha = 1f - Mathf.Pow(1f - t, 3f);
             yield return null;
         }
 
@@ -51,7 +51,7 @@ public class TransitionMaskUI : UIBase<TransitionMaskUIData>, ITransitionUI
         {
             elapsed += Time.unscaledDeltaTime;
             float t = Mathf.Clamp01(elapsed / _fadeDuration);
-            _canvasGroup.alpha = 1f - t;
+            _canvasGroup.alpha = 1f - Mathf.Pow(t, 3f);
             yield return null;
         }
 

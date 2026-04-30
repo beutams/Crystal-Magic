@@ -5,9 +5,7 @@ namespace CrystalMagic.Core {
     public class TransitionState : GameState
     {
         private TransitionData _transitionData;
-        private UIBase _transitionPanel;
-        private ITransitionLoadingUI _transitionUI;
-        private bool _eventsBound;
+        private TransitionUI _transitionUI;
 
         public override void OnEnter()
         {
@@ -19,9 +17,7 @@ namespace CrystalMagic.Core {
             }
 
             OpenTransitionUI();
-            BindEvents();
-            if (TransitionComponent.Instance == null ||
-                !TransitionComponent.Instance.BeginLoadAndFadeOut(_transitionData))
+            if (!TransitionComponent.Instance.BeginLoadAndFadeOut(_transitionData))
             {
                 Debug.LogError("[TransitionState] Failed to start transition load sequence.");
             }
@@ -29,7 +25,6 @@ namespace CrystalMagic.Core {
 
         public override void OnExit()
         {
-            UnbindEvents();
             CloseTransitionUI();
             _transitionData = null;
         }
@@ -40,58 +35,23 @@ namespace CrystalMagic.Core {
                 return;
 
             string transitionUIName = _transitionData.TransitionUIName;
-            _transitionPanel = UIComponent.Instance.Open(transitionUIName);
-            if (_transitionPanel == null)
+            _transitionUI = UIComponent.Instance.Open(transitionUIName) as TransitionUI;
+            if (_transitionUI == null)
             {
                 Debug.LogError($"[TransitionState] Failed to open transition UI: {transitionUIName}");
                 return;
             }
 
-            UIComponent.Instance.SetLifetime(_transitionPanel, UILifetime.Persistent);
-            _transitionUI = _transitionPanel.GetComponent<ITransitionLoadingUI>();
-            if (_transitionUI == null)
-            {
-                Debug.LogWarning($"[TransitionState] Transition UI '{transitionUIName}' missing ITransitionLoadingUI.");
-                return;
-            }
-
-            _transitionUI.BindTransitionData(_transitionData);
+            UIComponent.Instance.SetLifetime(_transitionUI, UILifetime.Persistent);
         }
 
         private void CloseTransitionUI()
         {
-            if (_transitionPanel == null || UIComponent.Instance == null)
+            if (_transitionUI == null || UIComponent.Instance == null)
                 return;
 
-            UIComponent.Instance.ReleaseUI(_transitionPanel);
-            _transitionPanel = null;
+            UIComponent.Instance.ReleaseUI(_transitionUI);
             _transitionUI = null;
-        }
-
-        private void BindEvents()
-        {
-            if (_eventsBound || EventComponent.Instance == null)
-                return;
-
-            EventComponent.Instance.Subscribe<TransitionPhaseChangedEvent>(HandleTransitionPhaseChanged);
-            _eventsBound = true;
-        }
-
-        private void UnbindEvents()
-        {
-            if (!_eventsBound || EventComponent.Instance == null)
-                return;
-
-            EventComponent.Instance.Unsubscribe<TransitionPhaseChangedEvent>(HandleTransitionPhaseChanged);
-            _eventsBound = false;
-        }
-
-        private void HandleTransitionPhaseChanged(TransitionPhaseChangedEvent gameEvent)
-        {
-            if (_transitionData == null || gameEvent.TargetSceneName != _transitionData.TargetSceneName)
-                return;
-
-            _transitionUI?.RefreshTransitionPhase(gameEvent.Phase, gameEvent.Progress);
         }
     }
     public class TransitionData

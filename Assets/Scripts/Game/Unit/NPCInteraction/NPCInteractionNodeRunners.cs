@@ -148,6 +148,7 @@ public sealed class NPCEnterDungeonInteractionNodeRunner : NPCInteractionNodeRun
             TargetSceneName = DungeonState.SceneName,
             TargetStateType = typeof(DungeonState),
             TargetStateData = context,
+            TransitionUIName = "TransitionUI",
             ForceReloadTargetScene = true,
         });
     }

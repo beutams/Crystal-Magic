@@ -58,6 +58,6 @@ public class CharacterUI_SkillItemView : UISubView<CharacterUI_SkillItemData>, I
         if (string.IsNullOrEmpty(iconPath))
             return null;
 
-        return ResourceComponent.Instance.Load<Sprite>(iconPath);
+        return LoadManagedResource<Sprite>(iconPath);
     }
 }

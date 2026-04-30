@@ -24,6 +24,6 @@ public class StashUI_StashItemView : UISubView<StashUI_StashItemData>
         if (string.IsNullOrEmpty(iconPath))
             return null;
 
-        return ResourceComponent.Instance.Load<UnityEngine.Sprite>(iconPath);
+        return LoadManagedResource<UnityEngine.Sprite>(iconPath);
     }
 }

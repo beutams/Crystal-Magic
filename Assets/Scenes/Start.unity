@@ -168,8 +168,8 @@ MonoBehaviour:
   _uiMixer: {fileID: 0}
   _unitPoolSize: 32
   _uiPoolSize: 12
-  _maxUnitPlaying: 24
-  _maxUiPlaying: 8
+  _maxUnitPoolSize: 24
+  _maxUiPoolSize: 8
 --- !u!1 &119299639
 GameObject:
   m_ObjectHideFlags: 0

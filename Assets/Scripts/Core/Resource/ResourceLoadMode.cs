@@ -5,12 +5,12 @@ namespace CrystalMagic.Core {
     public enum ResourceLoadMode
     {
         /// <summary>
-        /// 编辑器模式：直接从 Assets 加载
+        /// 编辑器模式
         /// </summary>
         Editor,
 
         /// <summary>
-        /// AB 包模式：从 AB 包加载（打包时）
+        /// AB 包模式
         /// </summary>
         AssetBundle
     }

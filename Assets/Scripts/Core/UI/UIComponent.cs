@@ -45,11 +45,7 @@ namespace CrystalMagic.Core {
             EnsureDefaultGroupExists();
 
             // 通过 CameraComponent 获取相机，它比 UIComponent(15) 优先级更高(13)，确保已初始化
-            Camera uiCamera = CameraComponent.Instance.Current;
-            if (uiCamera != null)
-            {
-                ApplyCameraToGroups(uiCamera);
-            }
+            RefreshUICamera(CameraComponent.Instance.Current);
 
             if (InputComponent.Instance != null)
             {
@@ -59,7 +55,11 @@ namespace CrystalMagic.Core {
             if (EventComponent.Instance != null)
             {
                 EventComponent.Instance.Subscribe<UISceneScopeChangedEvent>(HandleSceneScopeChanged);
+                EventComponent.Instance.Subscribe<GameGateChangedEvent>(HandleGameGateChanged);
             }
+
+            _uiInputLocked = GameGateComponent.Instance.IsUIInputLocked;
+            ApplyUIInputState();
         }
 
         private void LoadConfigFromPath()
@@ -77,18 +77,20 @@ namespace CrystalMagic.Core {
             #endif
         }
 
-        private void ApplyCameraToGroups(Camera camera)
+        public void RefreshUICamera(Camera camera)
         {
             foreach (var group in _groups.Values)
             {
-                group.GetComponent<Canvas>().worldCamera = camera;
+                Canvas[] canvases = group.GetComponentsInChildren<Canvas>(true);
+                for (int i = 0; i < canvases.Length; i++)
+                {
+                    canvases[i].worldCamera = camera;
+                }
             }
         }
 
         private void Update()
         {
-            RefreshUIInputLock();
-
             // 每帧更新所有分组
             foreach (var group in _groups.Values)
             {
@@ -131,6 +133,7 @@ namespace CrystalMagic.Core {
 
             if (group != null)
             {
+                group.ConfigureGroup(entry.groupName, entry.order);
                 RegisterGroup(entry.groupName, group, entry.uiNames);
             }
         }
@@ -147,6 +150,7 @@ namespace CrystalMagic.Core {
             groupObj.transform.SetParent(transform);
 
             StackUIGroup group = groupObj.AddComponent<StackUIGroup>();
+            group.ConfigureGroup(DefaultGroupName, 0);
             RegisterGroup(DefaultGroupName, group);
         }
 
@@ -449,6 +453,22 @@ namespace CrystalMagic.Core {
             return panel != null && _mvcContexts.ContainsKey(panel);
         }
 
+        public string GetResourceOwnerKey(Component component)
+        {
+            if (component == null)
+                return string.Empty;
+
+            UIBase panel = component.GetComponentInParent<UIBase>(true);
+            return GetResourceOwnerKey(panel);
+        }
+
+        public string GetResourceOwnerKey(UIBase panel)
+        {
+            return panel != null && _mvcContexts.TryGetValue(panel, out UIMvcContext context)
+                ? context.ResourceOwnerKey
+                : string.Empty;
+        }
+
         internal void OpenRootPanel(UIBase panel)
         {
             if (panel == null)
@@ -647,6 +667,7 @@ namespace CrystalMagic.Core {
             context.Panel.gameObject.SetActive(false);
             context.Detach();
             _mvcContexts.Remove(context.Panel);
+            ResourceComponent.Instance.ReleaseOwner(context.ResourceOwnerKey);
             context.Dispose();
             PoolComponent.Instance.Release(context.Panel.gameObject);
         }
@@ -731,6 +752,7 @@ namespace CrystalMagic.Core {
                 return;
 
             context.Detach();
+            ResourceComponent.Instance.ReleaseOwner(context.ResourceOwnerKey);
             context.Dispose();
             _mvcContexts.Remove(panel);
         }
@@ -776,6 +798,7 @@ namespace CrystalMagic.Core {
             if (EventComponent.Instance != null)
             {
                 EventComponent.Instance.Unsubscribe<UISceneScopeChangedEvent>(HandleSceneScopeChanged);
+                EventComponent.Instance.Unsubscribe<GameGateChangedEvent>(HandleGameGateChanged);
             }
 
             if (InputComponent.Instance != null)
@@ -848,7 +871,7 @@ namespace CrystalMagic.Core {
 
         private void HandleEscape()
         {
-            if (GameGateComponent.Instance != null && GameGateComponent.Instance.IsUIInputLocked)
+            if (_uiInputLocked)
                 return;
 
             UIBase panel = GetTopmostEscapeClosablePanel();
@@ -861,19 +884,8 @@ namespace CrystalMagic.Core {
             EscapeUnhandled?.Invoke();
         }
 
-        private void RefreshUIInputLock()
-        {
-            bool shouldLock = GameGateComponent.Instance != null && GameGateComponent.Instance.IsUIInputLocked;
-            if (_uiInputLocked == shouldLock)
-                return;
-
-            _uiInputLocked = shouldLock;
-            ApplyUIInputState();
-        }
-
         private void ApplyUIInputState()
         {
-            _uiInputLocked = GameGateComponent.Instance != null && GameGateComponent.Instance.IsUIInputLocked;
             bool enableInput = !_uiInputLocked;
             foreach (UIGroup group in _groups.Values)
             {
@@ -884,6 +896,15 @@ namespace CrystalMagic.Core {
                 for (int i = 0; i < raycasters.Length; i++)
                     raycasters[i].enabled = enableInput;
             }
+        }
+
+        private void HandleGameGateChanged(GameGateChangedEvent gameEvent)
+        {
+            if (gameEvent.GateType != GameGateType.UIInput || _uiInputLocked == gameEvent.IsLocked)
+                return;
+
+            _uiInputLocked = gameEvent.IsLocked;
+            ApplyUIInputState();
         }
 
         private UIBase GetTopmostEscapeClosablePanel()
@@ -920,12 +941,14 @@ namespace CrystalMagic.Core {
                 Panel = panel;
                 _model = model;
                 _controller = controller;
+                ResourceOwnerKey = $"UI:{panel.GetType().Name}:{panel.GetInstanceID()}";
             }
 
             public UIBase Panel { get; }
             public UIModelBase Model => _model;
             public UIControllerBase Controller => _controller;
             public string GroupName { get; set; }
+            public string ResourceOwnerKey { get; }
             public UIMvcContext Parent { get; private set; }
             public List<UIMvcContext> Children { get; } = new();
             public bool IsOpen { get; private set; }
