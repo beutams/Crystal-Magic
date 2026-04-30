@@ -2,27 +2,32 @@ using System.Collections;
 using CrystalMagic.Core;
 using UnityEngine;
 
-public class TransitionUI : UIBase, ITransitionUI
+public class TransitionMaskUI : UIBase<TransitionMaskUIData>, ITransitionUI
 {
     private CanvasGroup _canvasGroup;
     [SerializeField] private float _fadeDuration = 0.5f;
 
     protected override void OnInit()
     {
-        // 获取或创建 CanvasGroup
+        base.OnInit();
+
         _canvasGroup = GetComponent<CanvasGroup>();
         if (_canvasGroup == null)
         {
             _canvasGroup = gameObject.AddComponent<CanvasGroup>();
         }
 
-        // 初始状态为透明
         _canvasGroup.alpha = 0f;
     }
 
-    /// <summary>
-    /// 显示转场界面（淡入）
-    /// </summary>
+    public override void OnOpen()
+    {
+    }
+
+    public override void OnClose()
+    {
+    }
+
     public IEnumerator Show()
     {
         float elapsed = 0f;
@@ -38,9 +43,6 @@ public class TransitionUI : UIBase, ITransitionUI
         _canvasGroup.alpha = 1f;
     }
 
-    /// <summary>
-    /// 隐藏转场界面（淡出）
-    /// </summary>
     public IEnumerator Hide()
     {
         float elapsed = 0f;

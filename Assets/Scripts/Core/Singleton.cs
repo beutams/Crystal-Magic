@@ -10,6 +10,24 @@ namespace CrystalMagic.Core
         private static T _instance;
         private static readonly object _lockObject = new object();
 
+        protected bool InitializeSingletonInstance(T instance)
+        {
+            if (_instance == null)
+            {
+                _instance = instance;
+                DontDestroyOnLoad(gameObject);
+                return true;
+            }
+
+            if (_instance != instance)
+            {
+                Destroy(gameObject);
+                return false;
+            }
+
+            return true;
+        }
+
         public static T Instance
         {
             get
@@ -22,7 +40,7 @@ namespace CrystalMagic.Core
                     if (_instance != null)
                         return _instance;
 
-                    T[] instances = FindObjectsOfType<T>();
+                    T[] instances = FindObjectsByType<T>(FindObjectsSortMode.None);
 
                     if (instances.Length > 1)
                     {
@@ -46,17 +64,47 @@ namespace CrystalMagic.Core
             }
         }
 
+        public static bool TryGetInstance(out T instance)
+        {
+            if (_instance != null)
+            {
+                instance = _instance;
+                return true;
+            }
+
+            lock (_lockObject)
+            {
+                if (_instance != null)
+                {
+                    instance = _instance;
+                    return true;
+                }
+
+                T[] instances = FindObjectsByType<T>(FindObjectsSortMode.None);
+                if (instances.Length > 1)
+                {
+                    Debug.LogError($"[Singleton] Multiple instances of {typeof(T).Name} found! Expected 1, but found {instances.Length}");
+                    for (int i = 1; i < instances.Length; i++)
+                    {
+                        Destroy(instances[i].gameObject);
+                    }
+                }
+
+                if (instances.Length > 0)
+                {
+                    _instance = instances[0];
+                    instance = _instance;
+                    return true;
+                }
+
+                instance = null;
+                return false;
+            }
+        }
+
         protected virtual void Awake()
         {
-            if (_instance == null)
-            {
-                _instance = this as T;
-                DontDestroyOnLoad(gameObject);
-            }
-            else if (_instance != this)
-            {
-                Destroy(gameObject);
-            }
+            InitializeSingletonInstance(this as T);
         }
 
         protected virtual void OnDestroy()

@@ -16,9 +16,9 @@ partial struct NPCInteractInputSystem : ISystem
 
     public void OnDestroy(ref SystemState state)
     {
-        if (_subscribed && InputComponent.Instance != null)
+        if (_subscribed && InputComponent.TryGetInstance(out InputComponent inputComponent))
         {
-            InputComponent.Instance.OnInteract -= HandleInteract;
+            inputComponent.OnInteract -= HandleInteract;
         }
 
         if (_interactRequested.IsCreated)
@@ -29,13 +29,17 @@ partial struct NPCInteractInputSystem : ISystem
 
     public void OnUpdate(ref SystemState state)
     {
-        if (!_subscribed && InputComponent.Instance != null)
+        if (!_subscribed && InputComponent.TryGetInstance(out InputComponent inputComponent))
         {
-            InputComponent.Instance.OnInteract += HandleInteract;
+            inputComponent.OnInteract += HandleInteract;
             _subscribed = true;
         }
 
-        if (GameGateComponent.Instance != null && GameGateComponent.Instance.IsPlayerInputLocked)
+        bool playerInputLocked =
+            GameGateComponent.TryGetInstance(out GameGateComponent gameGateComponent) &&
+            gameGateComponent.IsPlayerInputLocked;
+
+        if (playerInputLocked)
         {
             _interactRequested.Value = false;
             RefRW<NPCInteractionRequest> lockedRequest = SystemAPI.GetSingletonRW<NPCInteractionRequest>();

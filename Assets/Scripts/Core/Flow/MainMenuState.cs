@@ -21,11 +21,7 @@ namespace CrystalMagic.Core {
         {
             Debug.Log("[MainMenuState] Exited MainMenu");
             UnbindEvents();
-            if (_mainMenuUI != null)
-            {
-                UIComponent.Instance.ReleaseUI(_mainMenuUI);
-                _mainMenuUI = null;
-            }
+            _mainMenuUI = null;
         }
         /// <summary>
         /// 从主菜单读档进入游戏（带转场）

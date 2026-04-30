@@ -31,13 +31,19 @@ namespace CrystalMagic.Core
         public InputComponent InputComponent { get; private set; }
         public GameGateComponent GameGateComponent { get; private set; }
         public GameFlowComponent GameFlowComponent { get; private set; }
+
+        protected override void Awake()
+        {
+            InitializeSingletonInstance(this);
+        }
+
         private void Start()
         {
             if (!_isInitialized)
             {
                 InitializeAllComponents();
                 // 初始化完成后，转场进入主菜单场景
-                GameFlowComponent.Instance.SetState<TransitionState>(new TransitionData
+                GameFlowComponent.Instance.BeginTransition(new TransitionData
                 {
                     TargetSceneName = "MainMenu",
                     TargetStateType = typeof(MainMenuState)

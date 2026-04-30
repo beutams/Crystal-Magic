@@ -143,7 +143,7 @@ public sealed class NPCEnterDungeonInteractionNodeRunner : NPCInteractionNodeRun
             SaveAreaType.Dungeon,
             Mathf.Max(1, _node.DungeonFloor));
 
-        GameFlowComponent.Instance.SetState<TransitionState>(new TransitionData
+        GameFlowComponent.Instance.BeginTransition(new TransitionData
         {
             TargetSceneName = DungeonState.SceneName,
             TargetStateType = typeof(DungeonState),
@@ -179,7 +179,7 @@ public sealed class NPCEnterTrainingGroundInteractionNodeRunner : NPCInteraction
 
         LoadGameContext context = SaveDataComponent.Instance?.CreateLoadGameContext(SaveAreaType.Training);
 
-        GameFlowComponent.Instance.SetState<TransitionState>(TrainingState.CreateEnterTransitionData(context));
+        GameFlowComponent.Instance.BeginTransition(TrainingState.CreateEnterTransitionData(context));
     }
 
     public override bool IsCompleted(NPCInteractionSession session)

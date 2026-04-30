@@ -4,95 +4,82 @@ using UnityEngine;
 
 namespace CrystalMagic.Core
 {
-    /// <summary>
-    /// 游戏流程控制组件
-    /// </summary>
     public class GameFlowComponent : GameComponent<GameFlowComponent>
     {
+        private const string DefaultTransitionMaskUIName = "TransitionMaskUI";
         private GameState _currentState;
-        private Dictionary<Type, GameState> _stateCache = new();
+        private TransitionData _activeTransitionData;
+        private UIBase _activeTransitionPanel;
+        private ITransitionUI _activeTransitionUI;
+        private bool _isTransitioning;
+        private readonly Dictionary<Type, GameState> _stateCache = new();
 
         public override int Priority => 30;
 
-        protected override void Awake()
+        public override void Initialize()
         {
-            base.Awake();
+            base.Initialize();
+            BindEvents();
         }
 
         private void Update()
         {
+            if (_isTransitioning)
+                return;
+
             _currentState?.OnUpdate();
         }
 
-        /// <summary>
-        /// 切换到指定状态
-        /// </summary>
         public void SetState<T>(object data = null) where T : GameState, new()
         {
-            GameState newState = GetOrCreateState<T>();
-            SetState(newState, data);
-        }
-
-        /// <summary>
-        /// 切换到指定状态
-        /// </summary>
-        private void SetState(GameState newState, object data = null)
-        {
-            if (_currentState == newState)
+            if (_isTransitioning)
                 return;
 
-            GameState oldState = _currentState;
-
-            // 退出旧状态
-            _currentState?.OnExit();
-
-            // 进入新状态：先设置数据，再调用 OnEnter
-            _currentState = newState;
-            _currentState.SetData(data);
-            _currentState.OnEnter();
-
-            OnStateChanged(oldState, newState);
+            GameState newState = GetOrCreateState<T>();
+            SetStateInternal(newState, data);
         }
 
-        /// <summary>
-        /// 通过 Type 切换到指定状态，由 TransitionState 内部使用
-        /// </summary>
         public void SetState(Type stateType, object data = null)
         {
-            if (!_stateCache.ContainsKey(stateType))
-            {
-                _stateCache[stateType] = Activator.CreateInstance(stateType) as GameState;
-            }
+            if (_isTransitioning || stateType == null)
+                return;
 
-            SetState(_stateCache[stateType], data);
+            SetStateInternal(GetOrCreateState(stateType), data);
         }
 
-        /// <summary>
-        /// 获取或创建状态实例
-        /// </summary>
-        private T GetOrCreateState<T>() where T : GameState, new()
+        public void BeginTransition(TransitionData transitionData)
         {
-            Type stateType = typeof(T);
-            
-            if (!_stateCache.ContainsKey(stateType))
+            if (_isTransitioning)
             {
-                _stateCache[stateType] = new T();
+                Debug.LogWarning("[GameFlow] Transition request ignored because a transition is already in progress.");
+                return;
             }
 
-            return (T)_stateCache[stateType];
+            if (transitionData == null)
+            {
+                Debug.LogError("[GameFlow] TransitionData is null.");
+                return;
+            }
+
+            _activeTransitionData = transitionData;
+            _isTransitioning = true;
+            OpenTransitionMaskUI(transitionData);
+
+            if (TransitionComponent.Instance == null ||
+                !TransitionComponent.Instance.BeginFadeIn(transitionData, _activeTransitionUI))
+            {
+                Debug.LogError("[GameFlow] Failed to start transition fade-in.");
+                ReleaseTransitionMaskUI();
+                _activeTransitionData = null;
+                _isTransitioning = false;
+            }
         }
 
-        /// <summary>
-        /// 检查当前是否在某个状态
-        /// </summary>
         public bool IsInState<T>() where T : GameState
         {
             return _currentState is T;
         }
 
-        /// <summary>
-        /// 获取当前状态
-        /// </summary>
         public GameState GetCurrentState()
         {
             return _currentState;
@@ -102,22 +89,171 @@ namespace CrystalMagic.Core
         {
             string oldName = oldState?.GetType().Name ?? "None";
             string newName = newState?.GetType().Name ?? "None";
-            Debug.Log($"[GameFlow] State changed: {oldName} → {newName}");
+            Debug.Log($"[GameFlow] State changed: {oldName} 鈫?{newName}");
         }
 
         public override void Cleanup()
         {
+            UnbindEvents();
+            ReleaseTransitionMaskUI();
+
             _currentState?.OnExit();
             _currentState = null;
-            
-            // 清理所有缓存的状态
-            foreach (var state in _stateCache.Values)
+            _activeTransitionData = null;
+            _isTransitioning = false;
+
+            foreach (GameState state in _stateCache.Values)
             {
                 state?.OnExit();
             }
+
             _stateCache.Clear();
-            
             base.Cleanup();
+        }
+
+        private void SetStateInternal(GameState newState, object data = null)
+        {
+            if (newState == null || _currentState == newState)
+                return;
+
+            GameState oldState = _currentState;
+            _currentState?.OnExit();
+
+            _currentState = newState;
+            _currentState.SetData(data);
+            _currentState.OnEnter();
+
+            OnStateChanged(oldState, newState);
+        }
+
+        private GameState GetOrCreateState(Type stateType)
+        {
+            if (stateType == null)
+                return null;
+
+            if (!_stateCache.TryGetValue(stateType, out GameState state) || state == null)
+            {
+                state = Activator.CreateInstance(stateType) as GameState;
+                _stateCache[stateType] = state;
+            }
+
+            return state;
+        }
+
+        private T GetOrCreateState<T>() where T : GameState, new()
+        {
+            Type stateType = typeof(T);
+            if (!_stateCache.ContainsKey(stateType))
+            {
+                _stateCache[stateType] = new T();
+            }
+
+            return (T)_stateCache[stateType];
+        }
+
+        private void BindEvents()
+        {
+            if (EventComponent.Instance == null)
+                return;
+
+            EventComponent.Instance.Subscribe<TransitionPhaseChangedEvent>(HandleTransitionPhaseChanged);
+        }
+
+        private void UnbindEvents()
+        {
+            if (EventComponent.Instance == null)
+                return;
+
+            EventComponent.Instance.Unsubscribe<TransitionPhaseChangedEvent>(HandleTransitionPhaseChanged);
+        }
+
+        private void HandleTransitionPhaseChanged(TransitionPhaseChangedEvent gameEvent)
+        {
+            if (_activeTransitionData == null || gameEvent.TargetSceneName != _activeTransitionData.TargetSceneName)
+                return;
+
+            switch (gameEvent.Phase)
+            {
+                case TransitionPhase.FadeInCompleted:
+                    EnterTransitionState();
+                    break;
+                case TransitionPhase.FadeOutStarted:
+                    EnterTargetState();
+                    break;
+                case TransitionPhase.FadeOutCompleted:
+                    CompleteTransition();
+                    break;
+            }
+        }
+
+        private void EnterTransitionState()
+        {
+            if (_currentState is TransitionState)
+                return;
+
+            GameState transitionState = GetOrCreateState(typeof(TransitionState));
+            if (transitionState == null)
+            {
+                Debug.LogError("[GameFlow] Failed to create TransitionState.");
+                return;
+            }
+
+            SetStateInternal(transitionState, _activeTransitionData);
+        }
+
+        private void EnterTargetState()
+        {
+            if (_activeTransitionData?.TargetStateType == null)
+                return;
+
+            GameState targetState = GetOrCreateState(_activeTransitionData.TargetStateType);
+            if (targetState == null || _currentState == targetState)
+                return;
+
+            SetStateInternal(targetState, _activeTransitionData.TargetStateData);
+        }
+
+        private void CompleteTransition()
+        {
+            System.Action onComplete = _activeTransitionData?.OnComplete;
+            ReleaseTransitionMaskUI();
+            _activeTransitionData = null;
+            _isTransitioning = false;
+            onComplete?.Invoke();
+        }
+
+        private void OpenTransitionMaskUI(TransitionData transitionData)
+        {
+            ReleaseTransitionMaskUI();
+
+            if (UIComponent.Instance == null)
+                return;
+
+            _activeTransitionPanel = UIComponent.Instance.Open(DefaultTransitionMaskUIName);
+            if (_activeTransitionPanel == null)
+            {
+                Debug.LogError($"[GameFlow] Failed to open transition mask UI: {DefaultTransitionMaskUIName}");
+                return;
+            }
+
+            UIComponent.Instance.SetLifetime(_activeTransitionPanel, UILifetime.Persistent);
+            _activeTransitionUI = _activeTransitionPanel.GetComponent<ITransitionUI>();
+            if (_activeTransitionUI == null)
+            {
+                Debug.LogError($"[GameFlow] Transition mask UI '{DefaultTransitionMaskUIName}' missing ITransitionUI.");
+                ReleaseTransitionMaskUI();
+            }
+        }
+
+        private void ReleaseTransitionMaskUI()
+        {
+            if (_activeTransitionPanel != null && UIComponent.Instance != null)
+            {
+                UIComponent.Instance.ReleaseUI(_activeTransitionPanel);
+            }
+
+            _activeTransitionPanel = null;
+            _activeTransitionUI = null;
         }
     }
 }

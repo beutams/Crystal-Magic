@@ -1,99 +1,133 @@
+using System.Collections;
 using UnityEngine;
 
 namespace CrystalMagic.Core {
     /// <summary>
-    /// 转场组件
-    /// 职责：通过 UI 框架管理转场 UI
+    /// 杞満缁勪欢
+    /// 鑱岃矗锛氭墽琛岃浆鍦鸿繃绋嬶紝鍙戝竷闃舵浜嬩欢
     /// </summary>
     public class TransitionComponent : GameComponent<TransitionComponent>
     {
-        private ITransitionUI _transitionUI;
-        private UIBase _transitionPanel;
+        private const string TransitionLockReason = "Transition";
+        private TransitionData _activeTransitionData;
+        private ITransitionUI _activeTransitionMaskUI;
+        private bool _isTransitioning;
+        private bool _loadSequenceStarted;
 
         public override int Priority => 25;
+        public bool IsTransitioning => _isTransitioning;
 
-        public override void Initialize()
+        public bool BeginFadeIn(TransitionData transitionData, ITransitionUI transitionMaskUI)
         {
-            base.Initialize();
-            
-            // 从对象池加载转场 UI 预制体
-            LoadTransitionUI();
+            if (_isTransitioning)
+            {
+                Debug.LogWarning("[TransitionComponent] Transition already in progress");
+                return false;
+            }
+
+            if (transitionData == null)
+            {
+                Debug.LogError("[TransitionComponent] TransitionData is null");
+                return false;
+            }
+
+            _activeTransitionData = transitionData;
+            _activeTransitionMaskUI = transitionMaskUI;
+            _loadSequenceStarted = false;
+            _isTransitioning = true;
+
+            GameGateComponent gate = GameGateComponent.Instance;
+            gate?.Lock(GameGateType.Simulation, TransitionLockReason);
+            gate?.Lock(GameGateType.PlayerInput, TransitionLockReason);
+            gate?.Lock(GameGateType.UIInput, TransitionLockReason);
+
+            StartCoroutine(FadeInAsync(_activeTransitionMaskUI, transitionData.TargetSceneName));
+            return true;
         }
 
-        /// <summary>
-        /// 加载转场 UI
-        /// </summary>
-        private void LoadTransitionUI()
+        public bool BeginLoadAndFadeOut(TransitionData transitionData)
         {
-            GameObject uiInstance = PoolComponent.Instance.Get(AssetPathHelper.GetUIAsset("TransitionUI"));
-            
-            if (uiInstance != null)
+            if (!_isTransitioning || _activeTransitionData == null)
             {
-                _transitionPanel = uiInstance.GetComponent<UIBase>();
-                if (_transitionPanel != null)
-                {
-                    UIComponent.Instance?.SetLifetime(_transitionPanel, UILifetime.Persistent);
-                    _transitionUI = _transitionPanel.GetComponent<ITransitionUI>();
-                    if (_transitionUI == null)
-                    {
-                        Debug.LogError("[TransitionComponent] TransitionUI prefab missing ITransitionUI component");
-                    }
-                }
-                else
-                {
-                    Debug.LogError("[TransitionComponent] TransitionUI prefab missing UIBase component");
-                }
+                Debug.LogWarning("[TransitionComponent] Load sequence requested without an active transition.");
+                return false;
             }
-            else
+
+            if (_loadSequenceStarted)
             {
-                Debug.LogError("[TransitionComponent] Failed to load TransitionUI prefab");
+                Debug.LogWarning("[TransitionComponent] Load sequence already started.");
+                return false;
+            }
+
+            if (transitionData == null || transitionData.TargetSceneName != _activeTransitionData.TargetSceneName)
+            {
+                Debug.LogWarning("[TransitionComponent] Load sequence requested with mismatched transition data.");
+                return false;
+            }
+
+            _loadSequenceStarted = true;
+            StartCoroutine(LoadAndFadeOutAsync(_activeTransitionData, _activeTransitionMaskUI));
+            return true;
+        }
+
+        private IEnumerator FadeInAsync(ITransitionUI transitionUI, string targetSceneName)
+        {
+            EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.FadeInStarted, targetSceneName));
+            if (transitionUI != null)
+            {
+                yield return StartCoroutine(transitionUI.Show());
+            }
+
+            EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.FadeInCompleted, targetSceneName));
+        }
+
+        private IEnumerator LoadAndFadeOutAsync(TransitionData transitionData, ITransitionUI transitionMaskUI)
+        {
+            EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.LoadStarted, transitionData.TargetSceneName));
+            EventComponent.Instance?.Publish(new UISceneScopeChangedEvent(transitionData.TargetSceneName));
+
+            yield return StartCoroutine(LoadSceneAsync(transitionData));
+
+            EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.LoadCompleted, transitionData.TargetSceneName, 1f));
+            yield return StartCoroutine(FadeOutAsync(transitionMaskUI, transitionData.TargetSceneName));
+
+            GameGateComponent gate = GameGateComponent.Instance;
+            gate?.Unlock(GameGateType.UIInput, TransitionLockReason);
+            gate?.Unlock(GameGateType.PlayerInput, TransitionLockReason);
+            gate?.Unlock(GameGateType.Simulation, TransitionLockReason);
+
+            _activeTransitionData = null;
+            _activeTransitionMaskUI = null;
+            _loadSequenceStarted = false;
+            _isTransitioning = false;
+        }
+
+        private IEnumerator LoadSceneAsync(TransitionData transitionData)
+        {
+            bool forceReloadTargetScene = transitionData.ForceReloadTargetScene;
+            yield return StartCoroutine(
+                SceneComponent.Instance.LoadSceneAsyncCoroutine(transitionData.TargetSceneName, forceReload: forceReloadTargetScene)
+            );
+
+            if (transitionData.RequiredSubSceneNames == null)
+                yield break;
+
+            SceneComponent.Instance.SetSubScenesActive(transitionData.RequiredSubSceneNames);
+            foreach (string subSceneName in transitionData.RequiredSubSceneNames)
+            {
+                yield return StartCoroutine(SceneComponent.Instance.WaitForSubSceneLoadedCoroutine(subSceneName));
             }
         }
 
-        /// <summary>
-        /// 显示转场界面（协程版本）
-        /// </summary>
-        public System.Collections.IEnumerator ShowAsync()
+        private IEnumerator FadeOutAsync(ITransitionUI transitionUI, string targetSceneName)
         {
-            if (_transitionUI != null)
+            EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.FadeOutStarted, targetSceneName));
+            if (transitionUI != null)
             {
-                // 先通过 UI 框架显示 UI
-                if (_transitionPanel != null)
-                {
-                    UIComponent.Instance.ShowUI(_transitionPanel);
-                }
-                
-                // 执行淡入效果
-                yield return StartCoroutine(_transitionUI.Show());
+                yield return StartCoroutine(transitionUI.Hide());
             }
-        }
 
-        /// <summary>
-        /// 隐藏转场界面（协程版本）
-        /// </summary>
-        public System.Collections.IEnumerator HideAsync()
-        {
-            if (_transitionUI != null)
-            {
-                // 执行淡出效果
-                yield return StartCoroutine(_transitionUI.Hide());
-                
-                // 再通过 UI 框架关闭 UI
-                if (_transitionPanel != null)
-                {
-                    UIComponent.Instance.CloseUI(_transitionPanel);
-                }
-            }
-        }
-
-        public override void Cleanup()
-        {
-            if (_transitionPanel != null)
-            {
-                UIComponent.Instance.CloseUI(_transitionPanel);
-                PoolComponent.Instance.Release(_transitionPanel.gameObject);
-            }
-            base.Cleanup();
+            EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.FadeOutCompleted, targetSceneName, 1f));
         }
     }
 }

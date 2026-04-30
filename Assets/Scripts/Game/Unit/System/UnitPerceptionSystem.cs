@@ -11,7 +11,11 @@ partial class UnitPerceptionSystem : SystemBase
 
     protected override void OnUpdate()
     {
-        if (GameGateComponent.Instance != null && GameGateComponent.Instance.IsSimulationLocked)
+        bool simulationLocked =
+            GameGateComponent.TryGetInstance(out GameGateComponent gameGateComponent) &&
+            gameGateComponent.IsSimulationLocked;
+
+        if (simulationLocked)
             return;
 
         UnitQuerySystem querySystem = UnitQuerySystem.Default;

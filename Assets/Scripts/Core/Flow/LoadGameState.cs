@@ -49,7 +49,7 @@ namespace CrystalMagic.Core {
                 targetStateType = typeof(TownState);
             }
 
-            GameFlowComponent.Instance.SetState<TransitionState>(new TransitionData
+            GameFlowComponent.Instance.BeginTransition(new TransitionData
             {
                 TargetSceneName = targetSceneName,
                 TargetStateType = targetStateType,

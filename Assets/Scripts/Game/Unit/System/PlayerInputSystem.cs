@@ -28,11 +28,11 @@ partial struct PlayerInputSystem : ISystem
 
     public void OnDestroy(ref SystemState state)
     {
-        if (_subscribed && InputComponent.Instance != null)
+        if (_subscribed && InputComponent.TryGetInstance(out InputComponent inputComponent))
         {
-            InputComponent.Instance.OnMove -= HandleMove;
-            InputComponent.Instance.OnMouseWorldPosition -= HandleMouseWorldPosition;
-            InputComponent.Instance.OnMousePress -= HandleMousePress;
+            inputComponent.OnMove -= HandleMove;
+            inputComponent.OnMouseWorldPosition -= HandleMouseWorldPosition;
+            inputComponent.OnMousePress -= HandleMousePress;
         }
         if (_moveInput.IsCreated)
             _moveInput.Dispose();
@@ -46,15 +46,19 @@ partial struct PlayerInputSystem : ISystem
 
     public void OnUpdate(ref SystemState state)
     {
-        if (!_subscribed && InputComponent.Instance != null)
+        if (!_subscribed && InputComponent.TryGetInstance(out InputComponent inputComponent))
         {
-            InputComponent.Instance.OnMove += HandleMove;
-            InputComponent.Instance.OnMouseWorldPosition += HandleMouseWorldPosition;
-            InputComponent.Instance.OnMousePress += HandleMousePress;
+            inputComponent.OnMove += HandleMove;
+            inputComponent.OnMouseWorldPosition += HandleMouseWorldPosition;
+            inputComponent.OnMousePress += HandleMousePress;
             _subscribed = true;
         }
 
-        if (GameGateComponent.Instance != null && GameGateComponent.Instance.IsPlayerInputLocked)
+        bool playerInputLocked =
+            GameGateComponent.TryGetInstance(out GameGateComponent gameGateComponent) &&
+            gameGateComponent.IsPlayerInputLocked;
+
+        if (playerInputLocked)
         {
             _moveInput.Value = float2.zero;
             _castTarget.Value = float2.zero;

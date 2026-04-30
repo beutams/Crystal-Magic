@@ -128,7 +128,7 @@ namespace CrystalMagic.Core {
                 }
             }
 
-            SubScene[] subScenes = Object.FindObjectsOfType<SubScene>(true);
+            SubScene[] subScenes = Object.FindObjectsByType<SubScene>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             for (int i = 0; i < subScenes.Length; i++)
             {
                 SubScene subScene = subScenes[i];
@@ -153,7 +153,7 @@ namespace CrystalMagic.Core {
 
         private SubScene FindSubScene(string subSceneName)
         {
-            SubScene[] subScenes = Object.FindObjectsOfType<SubScene>(true);
+            SubScene[] subScenes = Object.FindObjectsByType<SubScene>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             for (int i = 0; i < subScenes.Length; i++)
             {
                 SubScene subScene = subScenes[i];

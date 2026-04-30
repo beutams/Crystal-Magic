@@ -4,98 +4,102 @@ using UnityEngine;
 namespace CrystalMagic.Core {
     public class TransitionState : GameState
     {
-        private const string TransitionLockReason = "Transition";
-        private string _targetSceneName;
-        private System.Type _targetStateType;
-        private System.Action _onTransitionComplete;
-        private bool _isTransitioning = false;
+        private TransitionData _transitionData;
+        private UIBase _transitionPanel;
+        private ITransitionLoadingUI _transitionUI;
+        private bool _eventsBound;
 
         public override void OnEnter()
         {
-            if (StateData is TransitionData transData)
+            _transitionData = StateData as TransitionData;
+            if (_transitionData == null)
             {
-                _targetSceneName = transData.TargetSceneName;
-                _targetStateType = transData.TargetStateType;
-                _onTransitionComplete = transData.OnComplete;
-
-                Debug.Log($"[TransitionState] Starting transition to {_targetSceneName}");
-                GameFlowComponent.Instance.StartCoroutine(DoTransition());
+                Debug.LogError("[TransitionState] Invalid transition data");
+                return;
             }
-            else
+
+            OpenTransitionUI();
+            BindEvents();
+            if (TransitionComponent.Instance == null ||
+                !TransitionComponent.Instance.BeginLoadAndFadeOut(_transitionData))
             {
-                Debug.LogError("[TransitionState] Invalid transition data!");
+                Debug.LogError("[TransitionState] Failed to start transition load sequence.");
             }
         }
 
         public override void OnExit()
         {
-            Debug.Log("[TransitionState] Transition completed");
-            _isTransitioning = false;
+            UnbindEvents();
+            CloseTransitionUI();
+            _transitionData = null;
         }
 
-        public override void OnUpdate()
+        private void OpenTransitionUI()
         {
-        }
+            if (string.IsNullOrWhiteSpace(_transitionData?.TransitionUIName) || UIComponent.Instance == null)
+                return;
 
-        private System.Collections.IEnumerator DoTransition()
-        {
-            _isTransitioning = true;
-            GameGateComponent gate = GameGateComponent.Instance;
-            gate?.Lock(GameGateType.Simulation, TransitionLockReason);
-            gate?.Lock(GameGateType.PlayerInput, TransitionLockReason);
-            gate?.Lock(GameGateType.UIInput, TransitionLockReason);
-
-            TransitionComponent transition = TransitionComponent.Instance;
-            SceneComponent scene = SceneComponent.Instance;
-
-            Debug.Log("[TransitionState] Showing transition UI");
-            yield return GameFlowComponent.Instance.StartCoroutine(transition.ShowAsync());
-
-            Debug.Log($"[TransitionState] Loading scene: {_targetSceneName}");
-            bool forceReloadTargetScene = StateData is TransitionData transitionDataForReload && transitionDataForReload.ForceReloadTargetScene;
-            yield return GameFlowComponent.Instance.StartCoroutine(
-                scene.LoadSceneAsyncCoroutine(_targetSceneName, forceReload: forceReloadTargetScene)
-            );
-
-            if (StateData is TransitionData transitionDataWithSubScenes && transitionDataWithSubScenes.RequiredSubSceneNames != null)
+            string transitionUIName = _transitionData.TransitionUIName;
+            _transitionPanel = UIComponent.Instance.Open(transitionUIName);
+            if (_transitionPanel == null)
             {
-                scene.SetSubScenesActive(transitionDataWithSubScenes.RequiredSubSceneNames);
-                foreach (string subSceneName in transitionDataWithSubScenes.RequiredSubSceneNames)
-                {
-                    yield return GameFlowComponent.Instance.StartCoroutine(
-                        scene.WaitForSubSceneLoadedCoroutine(subSceneName)
-                    );
-                }
+                Debug.LogError($"[TransitionState] Failed to open transition UI: {transitionUIName}");
+                return;
             }
 
-            EventComponent.Instance?.Publish(new UISceneScopeChangedEvent(_targetSceneName));
-
-            object targetStateData = null;
-            if (StateData is TransitionData transData)
+            UIComponent.Instance.SetLifetime(_transitionPanel, UILifetime.Persistent);
+            _transitionUI = _transitionPanel.GetComponent<ITransitionLoadingUI>();
+            if (_transitionUI == null)
             {
-                targetStateData = transData.TargetStateData;
+                Debug.LogWarning($"[TransitionState] Transition UI '{transitionUIName}' missing ITransitionLoadingUI.");
+                return;
             }
 
-            Debug.Log("[TransitionState] Transitioning to target state");
-            GameFlowComponent.Instance.SetState(_targetStateType, targetStateData);
-
-            Debug.Log("[TransitionState] Hiding transition UI");
-            yield return GameFlowComponent.Instance.StartCoroutine(transition.HideAsync());
-
-            gate?.Unlock(GameGateType.UIInput, TransitionLockReason);
-            gate?.Unlock(GameGateType.PlayerInput, TransitionLockReason);
-            gate?.Unlock(GameGateType.Simulation, TransitionLockReason);
-
-            _onTransitionComplete?.Invoke();
+            _transitionUI.BindTransitionData(_transitionData);
         }
 
-        public bool IsTransitioning => _isTransitioning;
+        private void CloseTransitionUI()
+        {
+            if (_transitionPanel == null || UIComponent.Instance == null)
+                return;
+
+            UIComponent.Instance.ReleaseUI(_transitionPanel);
+            _transitionPanel = null;
+            _transitionUI = null;
+        }
+
+        private void BindEvents()
+        {
+            if (_eventsBound || EventComponent.Instance == null)
+                return;
+
+            EventComponent.Instance.Subscribe<TransitionPhaseChangedEvent>(HandleTransitionPhaseChanged);
+            _eventsBound = true;
+        }
+
+        private void UnbindEvents()
+        {
+            if (!_eventsBound || EventComponent.Instance == null)
+                return;
+
+            EventComponent.Instance.Unsubscribe<TransitionPhaseChangedEvent>(HandleTransitionPhaseChanged);
+            _eventsBound = false;
+        }
+
+        private void HandleTransitionPhaseChanged(TransitionPhaseChangedEvent gameEvent)
+        {
+            if (_transitionData == null || gameEvent.TargetSceneName != _transitionData.TargetSceneName)
+                return;
+
+            _transitionUI?.RefreshTransitionPhase(gameEvent.Phase, gameEvent.Progress);
+        }
     }
     public class TransitionData
     {
         public string TargetSceneName { get; set; }
         public System.Type TargetStateType { get; set; }
         public object TargetStateData { get; set; }
+        public string TransitionUIName { get; set; }
         public IReadOnlyList<string> RequiredSceneNames { get; set; }
         public IReadOnlyList<string> RequiredSubSceneNames { get; set; }
         public bool ForceReloadTargetScene { get; set; }

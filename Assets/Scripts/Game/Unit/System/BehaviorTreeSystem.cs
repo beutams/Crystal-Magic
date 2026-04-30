@@ -10,7 +10,9 @@ partial class BehaviorTreeSystem : SystemBase
 
     protected override void OnUpdate()
     {
-        bool simulationLocked = GameGateComponent.Instance != null && GameGateComponent.Instance.IsSimulationLocked;
+        bool simulationLocked =
+            GameGateComponent.TryGetInstance(out GameGateComponent gameGateComponent) &&
+            gameGateComponent.IsSimulationLocked;
         float deltaTime = SystemAPI.Time.DeltaTime;
 
         foreach (var (intent, perception, behaviorTree, entity) in
