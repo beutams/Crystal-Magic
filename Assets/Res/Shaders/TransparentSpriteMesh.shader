@@ -15,7 +15,7 @@ Shader "CrystalMagic/TransparentSpriteMesh"
         Tags
         {
             "RenderPipeline" = "UniversalPipeline"
-            "Queue" = "Transparent"
+            "Queue" = "Transparent-100"
             "RenderType" = "Transparent"
             "UniversalMaterialType" = "Unlit"
         }

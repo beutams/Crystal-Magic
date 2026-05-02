@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 namespace CrystalMagic.Core {
     /// <summary>
@@ -19,6 +20,10 @@ namespace CrystalMagic.Core {
     [System.Serializable]
     public class UIGroupConfig
     {
+        public int referenceResolutionWidth = 2560;
+        public int referenceResolutionHeight = 1440;
+        public CanvasScaler.ScreenMatchMode screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
+        public float planeDistance = 0.31f;
         public List<UIGroupEntry> groups = new();
     }
 

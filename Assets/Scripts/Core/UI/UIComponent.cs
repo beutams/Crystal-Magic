@@ -77,6 +77,24 @@ namespace CrystalMagic.Core {
             #endif
         }
 
+        private Vector2 GetGroupReferenceResolution()
+        {
+            if (_config == null)
+                return new Vector2(2560, 1440);
+
+            return new Vector2(_config.referenceResolutionWidth, _config.referenceResolutionHeight);
+        }
+
+        private CanvasScaler.ScreenMatchMode GetGroupScreenMatchMode()
+        {
+            return _config != null ? _config.screenMatchMode : CanvasScaler.ScreenMatchMode.Expand;
+        }
+
+        private float GetGroupPlaneDistance()
+        {
+            return _config != null ? Mathf.Max(0.01f, _config.planeDistance) : 1f;
+        }
+
         public void RefreshUICamera(Camera camera)
         {
             foreach (var group in _groups.Values)
@@ -114,8 +132,7 @@ namespace CrystalMagic.Core {
         /// </summary>
         private void CreateGroup(UIGroupEntry entry)
         {
-            GameObject groupObj = new GameObject(entry.groupName);
-            groupObj.transform.SetParent(transform);
+            GameObject groupObj = CreateGroupObject(entry.groupName);
 
             UIGroup group = null;
             switch (entry.groupType)
@@ -134,6 +151,7 @@ namespace CrystalMagic.Core {
             if (group != null)
             {
                 group.ConfigureGroup(entry.groupName, entry.order);
+                group.ConfigureCanvasSettings(GetGroupReferenceResolution(), GetGroupScreenMatchMode(), GetGroupPlaneDistance());
                 RegisterGroup(entry.groupName, group, entry.uiNames);
             }
         }
@@ -146,12 +164,27 @@ namespace CrystalMagic.Core {
             if (_groups.ContainsKey(DefaultGroupName))
                 return;
 
-            GameObject groupObj = new GameObject(DefaultGroupName);
-            groupObj.transform.SetParent(transform);
+            GameObject groupObj = CreateGroupObject(DefaultGroupName);
 
             StackUIGroup group = groupObj.AddComponent<StackUIGroup>();
             group.ConfigureGroup(DefaultGroupName, 0);
+            group.ConfigureCanvasSettings(GetGroupReferenceResolution(), GetGroupScreenMatchMode(), GetGroupPlaneDistance());
             RegisterGroup(DefaultGroupName, group);
+        }
+
+        private GameObject CreateGroupObject(string groupName)
+        {
+            GameObject groupObj = new GameObject(groupName, typeof(RectTransform));
+            RectTransform rectTransform = groupObj.GetComponent<RectTransform>();
+            rectTransform.SetParent(transform, false);
+            rectTransform.anchorMin = Vector2.zero;
+            rectTransform.anchorMax = Vector2.one;
+            rectTransform.offsetMin = Vector2.zero;
+            rectTransform.offsetMax = Vector2.zero;
+            rectTransform.anchoredPosition3D = Vector3.zero;
+            rectTransform.localScale = Vector3.one;
+            rectTransform.localRotation = Quaternion.identity;
+            return groupObj;
         }
 
         /// <summary>
@@ -650,6 +683,9 @@ namespace CrystalMagic.Core {
             if (context == null)
                 return;
 
+            bool removedFromGroup = context.Parent == null
+                && RemoveRootPanelFromGroup(context.Panel, context.GroupName);
+
             List<UIMvcContext> children = new(context.Children);
             foreach (UIMvcContext child in children)
             {
@@ -672,6 +708,11 @@ namespace CrystalMagic.Core {
             PoolComponent.Instance.ReleaseOwner(context.ResourceOwnerKey);
             context.Dispose();
             PoolComponent.Instance.Release(context.Panel.gameObject);
+
+            if (removedFromGroup)
+            {
+                RefreshGroupSortingOrders(context.GroupName);
+            }
         }
 
         private void SetTreeActive(UIMvcContext context, bool active)
@@ -871,6 +912,18 @@ namespace CrystalMagic.Core {
             }
 
             ApplyUIInputState();
+        }
+
+        private bool RemoveRootPanelFromGroup(UIBase panel, string groupName)
+        {
+            if (panel == null)
+                return false;
+
+            string resolvedGroupName = string.IsNullOrEmpty(groupName) ? DefaultGroupName : groupName;
+            if (!_groups.TryGetValue(resolvedGroupName, out UIGroup group))
+                return false;
+
+            return group.RemovePanelSilently(panel);
         }
 
         private void HandleEscape()

@@ -12,6 +12,9 @@ namespace CrystalMagic.Core {
 
         [SerializeField] protected string _groupName;
         [SerializeField] protected int _baseSortingOrder = 0;
+        [SerializeField] protected Vector2 _referenceResolution = new(2560, 1440);
+        [SerializeField] protected CanvasScaler.ScreenMatchMode _screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
+        [SerializeField] protected float _planeDistance = 1f;
 
         protected Canvas _canvas;
         protected CanvasScaler _canvasScaler;
@@ -32,6 +35,14 @@ namespace CrystalMagic.Core {
             }
         }
 
+        public void ConfigureCanvasSettings(Vector2 referenceResolution, CanvasScaler.ScreenMatchMode screenMatchMode, float planeDistance)
+        {
+            _referenceResolution = referenceResolution;
+            _screenMatchMode = screenMatchMode;
+            _planeDistance = planeDistance;
+            ApplyCanvasSettings();
+        }
+
         protected virtual void Awake()
         {
             // 获取或添加 Canvas
@@ -41,8 +52,7 @@ namespace CrystalMagic.Core {
                 _canvas = gameObject.AddComponent<Canvas>();
             }
 
-            _canvas.renderMode = RenderMode.ScreenSpaceCamera;
-            _canvas.sortingOrder = _baseSortingOrder;
+            ApplyCanvasSettings();
 
             // 设置 CanvasScaler
             _canvasScaler = GetComponent<CanvasScaler>();
@@ -50,8 +60,6 @@ namespace CrystalMagic.Core {
             {
                 _canvasScaler = gameObject.AddComponent<CanvasScaler>();
             }
-            _canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-
             // 设置 GraphicRaycaster
             _graphicRaycaster = GetComponent<GraphicRaycaster>();
             if (_graphicRaycaster == null)
@@ -81,7 +89,20 @@ namespace CrystalMagic.Core {
         /// </summary>
         protected void SetupPanelOnAdd(UIBase panel)
         {
-            panel.transform.SetParent(transform);
+            panel.transform.SetParent(transform, false);
+            panel.transform.localScale = Vector3.one;
+            panel.transform.localPosition = Vector3.zero;
+            panel.transform.localRotation = Quaternion.identity;
+
+            if (panel.transform is RectTransform rectTransform)
+            {
+                rectTransform.anchorMin = Vector2.zero;
+                rectTransform.anchorMax = Vector2.one;
+                rectTransform.offsetMin = Vector2.zero;
+                rectTransform.offsetMax = Vector2.zero;
+                rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                rectTransform.anchoredPosition3D = Vector3.zero;
+            }
 
             // 添加 Canvas
             Canvas panelCanvas = panel.GetComponent<Canvas>();
@@ -89,16 +110,17 @@ namespace CrystalMagic.Core {
             {
                 panelCanvas = panel.gameObject.AddComponent<Canvas>();
             }
+            panelCanvas.renderMode = RenderMode.ScreenSpaceCamera;
             panelCanvas.overrideSorting = true;
             panelCanvas.worldCamera = CameraComponent.Instance.Current;
+            panelCanvas.planeDistance = _planeDistance;
 
             // 添加 CanvasScaler
             CanvasScaler scaler = panel.GetComponent<CanvasScaler>();
-            if (scaler == null)
+            if (scaler != null)
             {
-                scaler = panel.gameObject.AddComponent<CanvasScaler>();
+                scaler.enabled = false;
             }
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
 
             // 添加 GraphicRaycaster
             GraphicRaycaster raycaster = panel.GetComponent<GraphicRaycaster>();
@@ -153,6 +175,16 @@ namespace CrystalMagic.Core {
             return null;
         }
 
+        internal bool RemovePanelSilently(UIBase panel)
+        {
+            LinkedListNode<UIBase> node = FindNode(panel);
+            if (node == null)
+                return false;
+
+            _panels.Remove(node);
+            return true;
+        }
+
         /// <summary>
         /// 每帧更新
         /// </summary>
@@ -162,6 +194,21 @@ namespace CrystalMagic.Core {
             {
                 panel.OnUpdate();
             }
+        }
+
+        private void ApplyCanvasSettings()
+        {
+            if (_canvas == null || _canvasScaler == null)
+                return;
+
+            _canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            _canvas.worldCamera = CameraComponent.Instance != null ? CameraComponent.Instance.Current : null;
+            _canvas.sortingOrder = _baseSortingOrder;
+            _canvas.planeDistance = _planeDistance;
+
+            _canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            _canvasScaler.referenceResolution = _referenceResolution;
+            _canvasScaler.screenMatchMode = _screenMatchMode;
         }
     }
 }

@@ -1,9 +1,13 @@
 {
+    "referenceResolutionWidth": 2560,
+    "referenceResolutionHeight": 1440,
+    "screenMatchMode": 1,
+    "planeDistance": 0.31,
     "groups": [
         {
             "groupType": 0,
             "groupName": "Default",
-            "order": -10000,
+            "order": 100,
             "uiNames": [
                 "MainMenuUI",
                 "LoadUI",

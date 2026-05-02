@@ -347,7 +347,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 5789166119428417417, guid: 1751044ccf914c44f818fc9de5d17f8b, type: 3}
       propertyPath: m_Name
-      value: Player
+      value: PlayerTown
       objectReference: {fileID: 0}
     - target: {fileID: 5817485185460318402, guid: 1751044ccf914c44f818fc9de5d17f8b, type: 3}
       propertyPath: m_LocalScale.x

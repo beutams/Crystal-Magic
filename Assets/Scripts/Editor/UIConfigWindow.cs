@@ -3,6 +3,7 @@ using UnityEditor;
 using System.Collections.Generic;
 using CrystalMagic.Core;
 using System.IO;
+using UnityEngine.UI;
 
 namespace CrystalMagic.Editor
 {
@@ -62,6 +63,51 @@ namespace CrystalMagic.Editor
 
             // 分组列表
             EditorGUILayout.LabelField("分组列表", EditorStyles.boldLabel);
+
+            EditorGUILayout.LabelField("Canvas 鍏ㄥ眬璁剧疆", EditorStyles.boldLabel);
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Reference Width", GUILayout.Width(120));
+            int newReferenceWidth = EditorGUILayout.IntField(_config.referenceResolutionWidth);
+            if (newReferenceWidth != _config.referenceResolutionWidth)
+            {
+                _config.referenceResolutionWidth = Mathf.Max(1, newReferenceWidth);
+                _isDirty = true;
+            }
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Reference Height", GUILayout.Width(120));
+            int newReferenceHeight = EditorGUILayout.IntField(_config.referenceResolutionHeight);
+            if (newReferenceHeight != _config.referenceResolutionHeight)
+            {
+                _config.referenceResolutionHeight = Mathf.Max(1, newReferenceHeight);
+                _isDirty = true;
+            }
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Screen Match", GUILayout.Width(120));
+            CanvasScaler.ScreenMatchMode newScreenMatchMode =
+                (CanvasScaler.ScreenMatchMode)EditorGUILayout.EnumPopup(_config.screenMatchMode);
+            if (newScreenMatchMode != _config.screenMatchMode)
+            {
+                _config.screenMatchMode = newScreenMatchMode;
+                _isDirty = true;
+            }
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Plane Distance", GUILayout.Width(120));
+            float newPlaneDistance = EditorGUILayout.FloatField(_config.planeDistance);
+            if (!Mathf.Approximately(newPlaneDistance, _config.planeDistance))
+            {
+                _config.planeDistance = Mathf.Max(0.01f, newPlaneDistance);
+                _isDirty = true;
+            }
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Space();
 
             _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
 
@@ -187,11 +233,15 @@ namespace CrystalMagic.Editor
         private void CreateNewConfig()
         {
             _config = new UIGroupConfig();
+            _config.referenceResolutionWidth = 2560;
+            _config.referenceResolutionHeight = 1440;
+            _config.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
+            _config.planeDistance = 0.31f;
             _config.groups.Add(new UIGroupEntry
             {
                 groupName = "Default",
                 groupType = UIGroupType.Stack,
-                order = 0,
+                order = 100,
                 uiNames = new List<string>()
             });
             _isDirty = true;

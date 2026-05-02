@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 
 namespace CrystalMagic.Core
@@ -98,8 +100,45 @@ namespace CrystalMagic.Core
                 }
 
                 DataTable<T> table = new DataTable<T>();
-                table.Load(textAsset.text);
+                if (!TryLoadWithNewtonsoft(textAsset.text, table))
+                {
+                    table.Load(textAsset.text);
+                }
                 return table;
+            }
+
+            private static bool TryLoadWithNewtonsoft<T>(string json, DataTable<T> table) where T : DataRow
+            {
+                try
+                {
+                    JObject jObject = JObject.Parse(json);
+                    JArray jArray = jObject["Rows"] as JArray;
+                    if (jArray == null)
+                        return false;
+
+                    JsonSerializerSettings settings = new JsonSerializerSettings
+                    {
+                        TypeNameHandling = TypeNameHandling.Auto,
+                        NullValueHandling = NullValueHandling.Ignore,
+                    };
+                    JsonSerializer serializer = JsonSerializer.Create(settings);
+
+                    foreach (JToken jRow in jArray)
+                    {
+                        T row = jRow.ToObject<T>(serializer);
+                        if (row != null)
+                        {
+                            table.Add(row);
+                        }
+                    }
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning($"[EditorComponents.Data] Newtonsoft.Json load failed: {ex.Message}");
+                    return false;
+                }
             }
         }
 
