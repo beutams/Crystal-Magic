@@ -441,6 +441,7 @@ namespace CrystalMagic.Editor.Skill
             DrawSectionHeader("施法属性");
             skill.MpCost           = EditorGUILayout.IntField("MP 消耗", skill.MpCost);
             skill.WindupDuration   = EditorGUILayout.FloatField("前摇 (s)", skill.WindupDuration);
+            skill.ChantDuration    = EditorGUILayout.FloatField("咏唱 (s)", skill.ChantDuration);
             skill.RecoveryDuration = EditorGUILayout.FloatField("后摇 (s)", skill.RecoveryDuration);
             skill.CanMoveWhileCasting = EditorGUILayout.Toggle("施法可移动", skill.CanMoveWhileCasting);
             using (new EditorGUI.DisabledScope(!skill.CanMoveWhileCasting))

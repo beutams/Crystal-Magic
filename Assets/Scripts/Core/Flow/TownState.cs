@@ -7,9 +7,11 @@ namespace CrystalMagic.Core {
     public class TownState : GameState
     {
         public const string SceneName = "TownScene";
+        private const string UIPlayerInputLockReason = "TownState.UIOpen";
         private CharacterUI _characterUI;
         private GameMenuUI _gameMenuUI;
         private bool _inputBound;
+        private bool _playerInputLockedByUI;
 
         public override void OnEnter()
         {
@@ -27,11 +29,13 @@ namespace CrystalMagic.Core {
         public override void OnExit()
         {
             Debug.Log("[TownState] Exited Town");
+            ReleaseUIInputLock();
             UnbindInput();
         }
 
         public override void OnUpdate()
         {
+            RefreshUIInputLock();
         }
 
         private void BindInput()
@@ -78,7 +82,7 @@ namespace CrystalMagic.Core {
         {
             if (_gameMenuUI == null || !UIComponent.Instance.IsManaged(_gameMenuUI))
             {
-                _gameMenuUI = UIComponent.Instance.Open("GameSettingUI") as GameMenuUI;
+                _gameMenuUI = UIComponent.Instance.Open<GameMenuUI>();
                 return;
             }
 
@@ -86,6 +90,31 @@ namespace CrystalMagic.Core {
                 return;
 
             UIComponent.Instance.ShowUI(_gameMenuUI);
+        }
+
+        private void RefreshUIInputLock()
+        {
+            bool shouldLock = UIComponent.Instance != null && UIComponent.Instance.HasActiveSceneScopedPanel(SceneName);
+            if (shouldLock == _playerInputLockedByUI)
+                return;
+
+            if (shouldLock)
+            {
+                GameGateComponent.Instance.Lock(GameGateType.PlayerInput, UIPlayerInputLockReason);
+                _playerInputLockedByUI = true;
+                return;
+            }
+
+            ReleaseUIInputLock();
+        }
+
+        private void ReleaseUIInputLock()
+        {
+            if (!_playerInputLockedByUI)
+                return;
+
+            GameGateComponent.Instance.Unlock(GameGateType.PlayerInput, UIPlayerInputLockReason);
+            _playerInputLockedByUI = false;
         }
     }
 }

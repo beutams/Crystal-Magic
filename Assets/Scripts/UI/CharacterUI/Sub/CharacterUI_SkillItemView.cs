@@ -3,10 +3,11 @@ using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class CharacterUI_SkillItemView : UISubView<CharacterUI_SkillItemData>, IBeginDragHandler, IDragHandler, IEndDragHandler
+public class CharacterUI_SkillItemView : UISubView<CharacterUI_SkillItemData>, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
 {
     private CrystalMagic.UI.CharacterSkillDisplayData _data;
 
+    public event Action<CrystalMagic.UI.CharacterSkillDisplayData> EffectClicked;
     public event Action<CrystalMagic.UI.CharacterSkillDisplayData, PointerEventData> DragStarted;
     public event Action<CrystalMagic.UI.CharacterSkillDisplayData, PointerEventData> Dragging;
     public event Action<CrystalMagic.UI.CharacterSkillDisplayData, PointerEventData> DragEnded;
@@ -51,6 +52,18 @@ public class CharacterUI_SkillItemView : UISubView<CharacterUI_SkillItemData>, I
             return;
 
         DragEnded?.Invoke(_data, eventData);
+    }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (_data == null || eventData == null || UI.Effect.RectTransform == null)
+            return;
+
+        Camera eventCamera = eventData.pressEventCamera != null ? eventData.pressEventCamera : eventData.enterEventCamera;
+        if (!RectTransformUtility.RectangleContainsScreenPoint(UI.Effect.RectTransform, eventData.position, eventCamera))
+            return;
+
+        EffectClicked?.Invoke(_data);
     }
 
     private Sprite LoadIcon(string iconPath)

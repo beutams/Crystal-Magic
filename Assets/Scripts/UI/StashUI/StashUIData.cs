@@ -40,6 +40,8 @@ public class StashUIData : UIData
     public UINode Coin;
     public UINode Coin_Money;
     public UINode Coin_MoneyText;
+    public UINode Drag;
+    public UINode Drag_Icon;
 
     public override void Bind(Transform root)
     {
@@ -77,5 +79,7 @@ public class StashUIData : UIData
         Coin = UINode.From(Find(root, "Coin"));
         Coin_Money = UINode.From(Find(root, "Coin/Money"));
         Coin_MoneyText = UINode.From(Find(root, "Coin/MoneyText"));
+        Drag = UINode.From(Find(root, "Drag"));
+        Drag_Icon = UINode.From(Find(root, "Drag/Icon"));
     }
 }

@@ -3,6 +3,7 @@
     {
       "Name": "增幅",
       "Description": "使技能伤害增加50%，不过蓝耗也增加50%",
+      "IconPath": "Assets/Res/Sprites/SkillEffect/Damage Increase.png",
       "Modifiers": [
         {
           "Channel": 0,
@@ -20,6 +21,7 @@
     {
       "Name": "高速行动",
       "Description": "行动速度加快100%",
+      "IconPath": "Assets/Res/Sprites/SkillEffect/Action Speed.png",
       "Modifiers": [
         {
           "Channel": 0,
@@ -28,6 +30,13 @@
         }
       ],
       "Id": 2
+    },
+    {
+      "Name": "高速咏唱",
+      "Description": "加快咏唱速度",
+      "IconPath": "Assets/Res/Sprites/SkillEffect/Chant Speed Up.png",
+      "Modifiers": [],
+      "Id": 3
     }
   ]
 }

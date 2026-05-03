@@ -4,88 +4,16 @@
       "Name": "火球",
       "Description": "发射一团火球，造成爆炸伤害",
       "SkillType": 0,
-      "MpCost": 100,
-      "WindupDuration": 0.2,
-      "ChantDuration": 0.0,
-      "RecoveryDuration": 0.1,
-      "CanMoveDuringWindup": false,
-      "CanMoveDuringCasting": true,
-      "CanMoveDuringRecovery": false,
+      "MpCost": 0,
+      "WindupDuration": 1.0,
+      "ChantDuration": 2.0,
+      "RecoveryDuration": 1.0,
+      "CanMoveWhileCasting": true,
       "MoveSpeedMultiplier": 0.5,
       "IconPath": "Assets/Res/Sprites/Item/FireBall.png",
       "Conditions": [],
-      "EffectChain": [
-        {
-          "$type": "CrystalMagic.Game.Data.Effects.SpawnProjectileEffectData, Assembly-CSharp",
-          "Projectile": null,
-          "Speed": 0.0,
-          "MaxRange": 0.0,
-          "SpawnOffset": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "Scale": 1.0,
-          "CanPierce": false,
-          "TriggerDestroyEffectsOnMaxRange": false,
-          "OnCollisionEffects": null,
-          "OnDestoryEffects": [
-            {
-              "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
-              "Radius": 5.0,
-              "CenterOffset": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "TargetConditions": [],
-              "OnAfterSearch": [
-                {
-                  "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
-                  "DamageCoefficient": 0.0,
-                  "FlatDamageBonus": 0.0,
-                  "DamageTypeId": 0,
-                  "AllowCritical": true,
-                  "CriticalBonus": 0.0,
-                  "KnockbackForce": 0.0,
-                  "HitStunSeconds": 0.0,
-                  "DamageVarianceSeed": 0,
-                  "Conditions": []
-                }
-              ],
-              "Conditions": []
-            },
-            {
-              "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
-              "VfxPath": null,
-              "Duration": 0.0,
-              "Scale": 1.0,
-              "SpawnOffset": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "FollowCaster": false,
-              "AlignToCasterForward": false,
-              "Conditions": []
-            },
-            {
-              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
-              "AudioPath": null,
-              "Channel": 1,
-              "Volume": 1.0,
-              "Pitch": 1.0,
-              "SpatialBlend": 0.0,
-              "DelaySeconds": 0.0,
-              "FollowCaster": false,
-              "Conditions": []
-            }
-          ],
-          "Conditions": []
-        }
-      ],
-      "Id": 1,
-      "CanMoveWhileCasting": true
+      "EffectChain": [],
+      "Id": 1
     },
     {
       "Name": "火龙卷",
@@ -95,15 +23,12 @@
       "WindupDuration": 0.0,
       "ChantDuration": 0.0,
       "RecoveryDuration": 0.0,
-      "CanMoveDuringWindup": false,
-      "CanMoveDuringCasting": false,
-      "CanMoveDuringRecovery": false,
+      "CanMoveWhileCasting": false,
       "MoveSpeedMultiplier": 1.0,
       "IconPath": "Assets/Res/Sprites/Item/FireTornado.png",
       "Conditions": [],
       "EffectChain": [],
-      "Id": 2,
-      "CanMoveWhileCasting": false
+      "Id": 2
     },
     {
       "Name": "火焰冲击",
@@ -113,15 +38,12 @@
       "WindupDuration": 0.0,
       "ChantDuration": 0.0,
       "RecoveryDuration": 0.0,
-      "CanMoveDuringWindup": false,
-      "CanMoveDuringCasting": false,
-      "CanMoveDuringRecovery": false,
+      "CanMoveWhileCasting": false,
       "MoveSpeedMultiplier": 1.0,
       "IconPath": "Assets/Res/Sprites/Item/FlameStream.png",
       "Conditions": [],
       "EffectChain": [],
-      "Id": 3,
-      "CanMoveWhileCasting": false
+      "Id": 3
     },
     {
       "Name": "燃烧",
@@ -131,33 +53,27 @@
       "WindupDuration": 0.0,
       "ChantDuration": 0.0,
       "RecoveryDuration": 0.0,
-      "CanMoveDuringWindup": false,
-      "CanMoveDuringCasting": false,
-      "CanMoveDuringRecovery": false,
+      "CanMoveWhileCasting": false,
       "MoveSpeedMultiplier": 1.0,
       "IconPath": "Assets/Res/Sprites/Item/Fiery.png",
       "Conditions": [],
       "EffectChain": [],
-      "Id": 4,
-      "CanMoveWhileCasting": false
+      "Id": 4
     },
     {
       "Name": "压缩魔力",
       "Description": "",
       "SkillType": 0,
       "MpCost": 0,
-      "WindupDuration": 0.0,
-      "ChantDuration": 0.0,
-      "RecoveryDuration": 0.0,
-      "CanMoveDuringWindup": false,
-      "CanMoveDuringCasting": false,
-      "CanMoveDuringRecovery": false,
+      "WindupDuration": 1.0,
+      "ChantDuration": 2.0,
+      "RecoveryDuration": 1.0,
+      "CanMoveWhileCasting": false,
       "MoveSpeedMultiplier": 1.0,
       "IconPath": "Assets/Res/Sprites/Item/Magical.png",
       "Conditions": [],
       "EffectChain": [],
-      "Id": 5,
-      "CanMoveWhileCasting": false
+      "Id": 5
     }
   ]
 }

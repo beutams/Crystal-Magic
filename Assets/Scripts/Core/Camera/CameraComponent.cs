@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -175,6 +174,7 @@ namespace CrystalMagic.Core {
             LocalToWorld localToWorld = _playerFollowQuery.GetSingleton<LocalToWorld>();
             float3 position = localToWorld.Position;
             targetPosition = new Vector3(position.x, position.y, position.z);
+
             return true;
         }
 

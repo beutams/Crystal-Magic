@@ -67,6 +67,12 @@ namespace CrystalMagic.UI
             CloseBuyUI();
             CloseSellUI();
 
+             if (!CanOpenBuyUI(data, out string tipMessage))
+            {
+                ShowTip(tipMessage);
+                return;
+            }
+
             _buyUI = CrystalMagic.Core.UIComponent.Instance.OpenChild<ShopBuyUI>(View, new CrystalMagic.UI.ShopBuyUIOpenData
             {
                 ItemId = data.ItemId,
@@ -143,6 +149,42 @@ namespace CrystalMagic.UI
             }
 
             return count;
+        }
+
+        private bool CanOpenBuyUI(ShopCommodityDisplayData data, out string tipMessage)
+        {
+            tipMessage = string.Empty;
+            if (data == null)
+            {
+                tipMessage = "该商品当前无法购买。";
+                return false;
+            }
+
+            if (data.Price <= 0)
+            {
+                tipMessage = "该商品当前无法购买。";
+                return false;
+            }
+
+            long money = CrystalMagic.Core.SaveDataComponent.Instance.GetTownData()?.StashMoney ?? 0;
+            if (money < data.Price)
+            {
+                tipMessage = "金币不足，无法购买。";
+                return false;
+            }
+
+            return true;
+        }
+
+        private void ShowTip(string message)
+        {
+            if (string.IsNullOrWhiteSpace(message))
+                return;
+
+            CrystalMagic.Core.UIComponent.Instance.Open<TipForm>(new TipFormOpenData
+            {
+                Info = message,
+            });
         }
     }
 }

@@ -1,10 +1,23 @@
 ﻿using CrystalMagic.Core;
 
-public class StashUI_StashItemView : UISubView<StashUI_StashItemData>
+using System;
+using CrystalMagic.UI;
+using UnityEngine;
+using UnityEngine.EventSystems;
+
+public class StashUI_StashItemView : UISubView<StashUI_StashItemData>, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
 {
+    private StashItemDisplayData _data;
+
+    public event Action<StashItemDisplayData> DoubleClicked;
+    public event Action<StashItemDisplayData, PointerEventData> DragStarted;
+    public event Action<StashItemDisplayData, PointerEventData> Dragging;
+    public event Action<StashItemDisplayData, PointerEventData> DragEnded;
+
     public void Render(CrystalMagic.UI.StashItemDisplayData data)
     {
         Rebind();
+        _data = data;
 
         if (data == null)
         {
@@ -19,11 +32,43 @@ public class StashUI_StashItemView : UISubView<StashUI_StashItemData>
         UI.Name.TextMeshProUGUI.text = data.Name;
     }
 
-    private UnityEngine.Sprite LoadIcon(string iconPath)
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        if (_data == null || eventData == null)
+            return;
+
+        DragStarted?.Invoke(_data, eventData);
+    }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        if (_data == null || eventData == null)
+            return;
+
+        Dragging?.Invoke(_data, eventData);
+    }
+
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        if (_data == null || eventData == null)
+            return;
+
+        DragEnded?.Invoke(_data, eventData);
+    }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (_data == null || eventData == null || eventData.clickCount < 2)
+            return;
+
+        DoubleClicked?.Invoke(_data);
+    }
+
+    private Sprite LoadIcon(string iconPath)
     {
         if (string.IsNullOrEmpty(iconPath))
             return null;
 
-        return LoadManagedResource<UnityEngine.Sprite>(iconPath);
+        return LoadManagedResource<Sprite>(iconPath);
     }
 }

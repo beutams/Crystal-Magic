@@ -9,7 +9,6 @@ using UnityEngine;
 public class CastState : AUnitState
 {
     private readonly List<SkillChainSlotData> _skillSlots = new();
-    private readonly List<ResolvedSkillData> _skills = new();
     private readonly SkillContent _skillContent = new();
 
     public override void OnEnter()
@@ -21,6 +20,9 @@ public class CastState : AUnitState
         if (!SkillChainResolver.TryBuildSelectedChain(skillConfig, runtimeSkillData, _skillSlots, out int chainIndex))
             return;
 
+        UnitIntentComponent intent = EntityManager.GetComponentData<UnitIntentComponent>(Entity);
+        UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
+
         for (int i = 0; i < _skillSlots.Count; i++)
         {
             SkillChainSlotData slotData = _skillSlots[i];
@@ -28,27 +30,30 @@ public class CastState : AUnitState
             if (skillData == null)
                 continue;
 
-            SkillModifierSet modifiers = SkillResolver.CollectModifiers(EntityManager, Entity, slotData);
-            ResolvedSkillData resolvedSkill = SkillResolver.Resolve(skillData, modifiers);
-            if (resolvedSkill != null)
-                _skills.Add(resolvedSkill);
+            cast.SkillIds.Add(skillData.Id);
+            cast.SkillEffectIds.Add(slotData?.SkillEffectId ?? 0);
         }
 
-        if (_skills.Count == 0)
+        if (cast.SkillIds.Length == 0)
+        {
+            EntityManager.SetComponentData(Entity, cast);
             return;
+        }
 
-        UnitIntentComponent intent = EntityManager.GetComponentData<UnitIntentComponent>(Entity);
-        UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
-        cast.IsCasting = true;
         cast.ForceInterrupt = false;
         cast.HasLockedTarget = intent.HasCastTarget;
         cast.LockedTargetPosition = intent.CastTargetPosition;
         cast.CurrentChainIndex = chainIndex;
-        cast.CurrentSkillIndex = 0;
-        cast.CurrentSkillId = _skills[0].Id;
-        cast.Phase = SkillCastPhase.Windup;
-        cast.PhaseElapsed = 0f;
+
+        if (!TryStartSkill(ref cast, 0, out _))
+        {
+            InterruptCast(ref cast, "CannotStartFirstSkill");
+            EntityManager.SetComponentData(Entity, cast);
+            return;
+        }
+
         EntityManager.SetComponentData(Entity, cast);
+        LogPhase("Start Windup", cast);
     }
 
     public override void OnUpdate(float deltaTime)
@@ -56,10 +61,18 @@ public class CastState : AUnitState
         UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
         if (cast.IsCasting)
         {
-            if (cast.ForceInterrupt || !TryGetCurrentSkill(cast.CurrentSkillIndex, out _))
-                InterruptCast(ref cast);
+            if (cast.ForceInterrupt)
+            {
+                InterruptCast(ref cast, "ForceInterrupt");
+            }
+            else if (!TryGetCurrentSkill(cast, out _))
+            {
+                InterruptCast(ref cast, "CurrentSkillMissing");
+            }
             else
+            {
                 AdvanceCast(deltaTime, ref cast);
+            }
         }
 
         ApplyMovement(cast);
@@ -78,7 +91,7 @@ public class CastState : AUnitState
 
         while (cast.IsCasting && remainingTime >= 0f && guard++ < 8)
         {
-            if (!TryGetCurrentSkill(cast.CurrentSkillIndex, out ResolvedSkillData skillData))
+            if (!TryGetCurrentSkill(cast, out ResolvedSkillData skillData))
             {
                 FinishCast(ref cast);
                 break;
@@ -111,31 +124,39 @@ public class CastState : AUnitState
             case SkillCastPhase.Windup:
                 cast.Phase = SkillCastPhase.Chanting;
                 cast.PhaseElapsed = 0f;
+                cast.PhaseDuration = GetPhaseDuration(skillData, SkillCastPhase.Chanting);
+                LogPhase("Start Chanting", cast);
                 return true;
 
             case SkillCastPhase.Chanting:
                 if (!TryExecuteSkill(skillData))
                 {
-                    InterruptCast(ref cast);
+                    InterruptCast(ref cast, "ExecuteFailed");
                     return false;
                 }
 
+                Debug.Log($"[CastState] Chanting Completed | Chain={cast.CurrentChainIndex} SkillIndex={cast.CurrentSkillIndex} SkillId={cast.CurrentSkillId}");
                 cast.Phase = SkillCastPhase.Recovery;
                 cast.PhaseElapsed = 0f;
+                cast.PhaseDuration = GetPhaseDuration(skillData, SkillCastPhase.Recovery);
+                LogPhase("Start Recovery", cast);
                 return true;
 
             case SkillCastPhase.Recovery:
                 int nextSkillIndex = cast.CurrentSkillIndex + 1;
-                if (nextSkillIndex >= _skills.Count)
+                if (nextSkillIndex >= cast.SkillIds.Length)
                 {
                     FinishCast(ref cast);
                     return false;
                 }
 
-                cast.CurrentSkillIndex = nextSkillIndex;
-                cast.CurrentSkillId = _skills[nextSkillIndex].Id;
-                cast.Phase = SkillCastPhase.Windup;
-                cast.PhaseElapsed = 0f;
+                if (!TryStartSkill(ref cast, nextSkillIndex, out _))
+                {
+                    InterruptCast(ref cast, "CannotStartNextSkill");
+                    return false;
+                }
+
+                LogPhase("Start Windup", cast);
                 return true;
 
             default:
@@ -146,9 +167,6 @@ public class CastState : AUnitState
 
     private bool TryExecuteSkill(ResolvedSkillData skillData)
     {
-        if (!TryConsumeMana(skillData.MpCost))
-            return false;
-
         UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
         _skillContent.EntityManager = EntityManager;
         _skillContent.HasOriginEntity = true;
@@ -162,6 +180,30 @@ public class CastState : AUnitState
         _skillContent.Origin = null;
 
         SkillExecutor.ExecuteSkill(skillData, _skillContent);
+        return true;
+    }
+
+    private bool TryStartSkill(ref UnitCastComponent cast, int skillIndex, out ResolvedSkillData skillData)
+    {
+        cast.CurrentSkillIndex = skillIndex;
+        cast.CurrentSkillId = skillIndex >= 0 && skillIndex < cast.SkillIds.Length
+            ? cast.SkillIds[skillIndex]
+            : 0;
+
+        if (!TryGetSkillByIndex(cast, skillIndex, out skillData))
+        {
+            return false;
+        }
+
+        if (!TryConsumeMana(skillData.MpCost))
+        {
+            return false;
+        }
+
+        cast.IsCasting = true;
+        cast.Phase = SkillCastPhase.Windup;
+        cast.PhaseElapsed = 0f;
+        cast.PhaseDuration = GetPhaseDuration(skillData, SkillCastPhase.Windup);
         return true;
     }
 
@@ -179,7 +221,7 @@ public class CastState : AUnitState
         return true;
     }
 
-    private float GetPhaseDuration(ResolvedSkillData skillData, SkillCastPhase phase)
+    private static float GetPhaseDuration(ResolvedSkillData skillData, SkillCastPhase phase)
     {
         return phase switch
         {
@@ -200,7 +242,7 @@ public class CastState : AUnitState
         move.StateSpeedFactor = 1f;
 
         if (cast.IsCasting &&
-            TryGetCurrentSkill(cast.CurrentSkillIndex, out ResolvedSkillData skillData) &&
+            TryGetCurrentSkill(cast, out ResolvedSkillData skillData) &&
             skillData.CanMoveWhileCasting &&
             EntityManager.HasComponent<UnitIntentComponent>(Entity))
         {
@@ -212,16 +254,41 @@ public class CastState : AUnitState
         EntityManager.SetComponentData(Entity, move);
     }
 
-    private bool TryGetCurrentSkill(int skillIndex, out ResolvedSkillData skillData)
+    private bool TryGetCurrentSkill(UnitCastComponent cast, out ResolvedSkillData skillData)
     {
-        if (skillIndex >= 0 && skillIndex < _skills.Count)
+        return TryGetSkillByIndex(cast, cast.CurrentSkillIndex, out skillData);
+    }
+
+    private bool TryGetSkillByIndex(UnitCastComponent cast, int skillIndex, out ResolvedSkillData skillData)
+    {
+        if (skillIndex < 0 || skillIndex >= cast.SkillIds.Length)
         {
-            skillData = _skills[skillIndex];
-            return skillData != null;
+            skillData = null;
+            return false;
         }
 
-        skillData = null;
-        return false;
+        DataComponent dataComponent = DataComponent.Instance;
+        if (dataComponent == null)
+        {
+            skillData = null;
+            return false;
+        }
+
+        SkillData baseSkill = dataComponent.Get<SkillData>(cast.SkillIds[skillIndex]);
+        if (baseSkill == null)
+        {
+            skillData = null;
+            return false;
+        }
+
+        int effectId = skillIndex < cast.SkillEffectIds.Length ? cast.SkillEffectIds[skillIndex] : 0;
+        SkillChainSlotData slotData = effectId > 0
+            ? new SkillChainSlotData { SkillEffectId = effectId }
+            : null;
+
+        SkillModifierSet modifiers = SkillResolver.CollectModifiers(EntityManager, Entity, slotData);
+        skillData = SkillResolver.Resolve(baseSkill, modifiers);
+        return skillData != null;
     }
 
     private void FinishCast(ref UnitCastComponent cast)
@@ -235,17 +302,24 @@ public class CastState : AUnitState
         cast.CurrentSkillId = 0;
         cast.Phase = SkillCastPhase.None;
         cast.PhaseElapsed = 0f;
+        cast.PhaseDuration = 0f;
+        cast.SkillIds = default;
+        cast.SkillEffectIds = default;
     }
 
-    private void InterruptCast(ref UnitCastComponent cast)
+    private void InterruptCast(ref UnitCastComponent cast, string reason)
     {
         FinishCast(ref cast);
+    }
+
+    private static void LogPhase(string phaseName, UnitCastComponent cast)
+    {
+        Debug.Log($"[CastState] {phaseName} | Chain={cast.CurrentChainIndex} SkillIndex={cast.CurrentSkillIndex} SkillId={cast.CurrentSkillId} Duration={cast.PhaseDuration}");
     }
 
     private void ResetCastState()
     {
         _skillSlots.Clear();
-        _skills.Clear();
 
         UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
         cast.IsCasting = false;
@@ -257,6 +331,10 @@ public class CastState : AUnitState
         cast.CurrentSkillId = 0;
         cast.Phase = SkillCastPhase.None;
         cast.PhaseElapsed = 0f;
+        cast.PhaseDuration = 0f;
+        cast.SkillIds = default;
+        cast.SkillEffectIds = default;
         EntityManager.SetComponentData(Entity, cast);
     }
+
 }

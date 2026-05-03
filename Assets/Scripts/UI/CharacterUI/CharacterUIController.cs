@@ -5,6 +5,7 @@ namespace CrystalMagic.UI
 {
     public sealed class CharacterUIController : UIControllerBase<CharacterUI, CharacterUIModel>
     {
+        private EffectSelectUI _effectSelectUI;
         private readonly System.Action<CrystalMagic.Core.CommonGameEvent> _refreshHandler;
 
         public CharacterUIController(CharacterUI view, CharacterUIModel model)
@@ -21,6 +22,7 @@ namespace CrystalMagic.UI
             View.InventoryEquipDropped += OnInventoryEquipDropped;
             View.EquipReturnedToInventory += OnEquipReturnedToInventory;
             View.BonusEquipSwapped += OnBonusEquipSwapped;
+            View.SkillEffectRequested += OnSkillEffectRequested;
             View.SkillReordered += OnSkillReordered;
             View.SkillReturnedToInventory += OnSkillReturnedToInventory;
             BindEvent(new CommonGameEvent(RuntimeDataComponent.SkillRuntimeDataChangedEventName), _refreshHandler);
@@ -37,8 +39,10 @@ namespace CrystalMagic.UI
             View.InventoryEquipDropped -= OnInventoryEquipDropped;
             View.EquipReturnedToInventory -= OnEquipReturnedToInventory;
             View.BonusEquipSwapped -= OnBonusEquipSwapped;
+            View.SkillEffectRequested -= OnSkillEffectRequested;
             View.SkillReordered -= OnSkillReordered;
             View.SkillReturnedToInventory -= OnSkillReturnedToInventory;
+            CloseEffectSelectUI();
         }
 
         private void OnChangeSkillRequested()
@@ -192,6 +196,39 @@ namespace CrystalMagic.UI
             AddItemToBackpack(backpackData, skillId, 1);
             SaveDataComponent.Instance.NotifyBackpackDataChanged();
             SaveDataComponent.Instance.NotifySkillDataChanged();
+        }
+
+        private void OnSkillEffectRequested(CharacterSkillDisplayData data)
+        {
+            if (data == null)
+                return;
+
+            SkillCData skillData = SaveDataComponent.Instance.GetSkillData();
+            RuntimeSkillData runtimeSkillData = RuntimeDataComponent.Instance.GetSkillData();
+            if (skillData?.Chains == null || runtimeSkillData == null)
+                return;
+
+            int skillChainIndex = UnityEngine.Mathf.Clamp(runtimeSkillData.CurrentSkillChainIndex, 0, skillData.Chains.Length - 1);
+            SkillChainData chain = skillData.Chains[skillChainIndex];
+            chain?.EnsureSlots();
+            if (chain?.Slots == null || data.SkillIndex < 0 || data.SkillIndex >= chain.Slots.Count)
+                return;
+
+            CloseEffectSelectUI();
+            _effectSelectUI = UIComponent.Instance.OpenChild<EffectSelectUI>(View, new EffectSelectUIOpenData
+            {
+                SkillSlotIndex = data.SkillIndex,
+                SelectedEffectId = chain.Slots[data.SkillIndex]?.SkillEffectId ?? 0,
+            });
+        }
+
+        private void CloseEffectSelectUI()
+        {
+            if (_effectSelectUI == null)
+                return;
+
+            _effectSelectUI.Close();
+            _effectSelectUI = null;
         }
 
         private bool IsEquippableItem(ItemType itemType)

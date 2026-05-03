@@ -95,6 +95,11 @@ namespace CrystalMagic.Core {
             return _config != null ? Mathf.Max(0.01f, _config.planeDistance) : 1f;
         }
 
+        public float GetHoverInfoDelaySeconds()
+        {
+            return _config != null ? Mathf.Max(0f, _config.hoverInfoDelaySeconds) : 2f;
+        }
+
         public void RefreshUICamera(Camera camera)
         {
             foreach (var group in _groups.Values)
@@ -500,6 +505,45 @@ namespace CrystalMagic.Core {
             return panel != null && _mvcContexts.TryGetValue(panel, out UIMvcContext context)
                 ? context.ResourceOwnerKey
                 : string.Empty;
+        }
+
+        public bool HasActiveSceneScopedPanel(string sceneName)
+        {
+            return HasActiveSceneScopedPanel(sceneName, null);
+        }
+
+        public bool HasActiveSceneScopedPanel(string sceneName, params string[] excludedUiNames)
+        {
+            if (string.IsNullOrEmpty(sceneName))
+                return false;
+
+            HashSet<string> excludedNames = null;
+            if (excludedUiNames != null && excludedUiNames.Length > 0)
+            {
+                excludedNames = new HashSet<string>(excludedUiNames, StringComparer.Ordinal);
+            }
+
+            foreach (UIMvcContext context in _mvcContexts.Values)
+            {
+                if (context == null
+                    || context.Lifetime != UILifetime.SceneScoped
+                    || context.SceneName != sceneName
+                    || !context.IsOpen
+                    || context.Panel == null
+                    || !context.Panel.gameObject.activeInHierarchy)
+                {
+                    continue;
+                }
+
+                if (excludedNames != null && excludedNames.Contains(context.Panel.GetType().Name))
+                {
+                    continue;
+                }
+
+                return true;
+            }
+
+            return false;
         }
 
         internal void OpenRootPanel(UIBase panel)

@@ -54,9 +54,12 @@
                 CrystalMagic.Game.Data.ItemData itemData = CrystalMagic.Core.DataComponent.Instance.Get<CrystalMagic.Game.Data.ItemData>(inventoryItem.ItemId);
                 _inventoryItems[i] = new StashInventoryDisplayData
                 {
+                    SlotIndex = i,
                     ItemId = inventoryItem.ItemId,
                     Count = inventoryItem.Quantity,
+                    ItemType = itemData != null ? itemData.ItemType : inventoryItem.ItemType,
                     Name = itemData != null ? itemData.Name : string.Empty,
+                    Description = itemData != null ? itemData.Description : string.Empty,
                     IconPath = itemData != null ? itemData.IconPath : string.Empty,
                 };
             }
@@ -71,21 +74,10 @@
             if (stashItems == null)
                 return;
 
-            System.Collections.Generic.List<CrystalMagic.Core.InventoryItemData> sortedItems = new(stashItems);
-            sortedItems.Sort((a, b) =>
+            System.Collections.Generic.List<StashItemDisplayData> displayItems = new();
+            for (int i = 0; i < stashItems.Count; i++)
             {
-                if (a == null && b == null)
-                    return 0;
-                if (a == null)
-                    return 1;
-                if (b == null)
-                    return -1;
-                return a.ItemId.CompareTo(b.ItemId);
-            });
-
-            for (int i = 0; i < sortedItems.Count; i++)
-            {
-                CrystalMagic.Core.InventoryItemData stashItem = sortedItems[i];
+                CrystalMagic.Core.InventoryItemData stashItem = stashItems[i];
                 if (stashItem == null)
                     continue;
 
@@ -94,15 +86,35 @@
                 if (!MatchesCategory(itemType))
                     continue;
 
-                _stashItems.Add(new StashItemDisplayData
+                displayItems.Add(new StashItemDisplayData
                 {
+                    SlotIndex = i,
                     ItemId = stashItem.ItemId,
                     Count = stashItem.Quantity,
                     ItemType = itemType,
                     Name = itemData != null ? itemData.Name : string.Empty,
+                    Description = itemData != null ? itemData.Description : string.Empty,
                     IconPath = itemData != null ? itemData.IconPath : string.Empty,
                 });
             }
+
+            displayItems.Sort((a, b) =>
+            {
+                if (a == null && b == null)
+                    return 0;
+                if (a == null)
+                    return 1;
+                if (b == null)
+                    return -1;
+
+                int itemCompare = a.ItemId.CompareTo(b.ItemId);
+                if (itemCompare != 0)
+                    return itemCompare;
+
+                return a.SlotIndex.CompareTo(b.SlotIndex);
+            });
+
+            _stashItems.AddRange(displayItems);
         }
 
         private void RefreshMoney()
@@ -139,18 +151,23 @@
 
     public sealed class StashInventoryDisplayData
     {
+        public int SlotIndex;
         public int ItemId;
         public int Count;
+        public CrystalMagic.Game.Data.ItemType ItemType;
         public string Name;
+        public string Description;
         public string IconPath;
     }
 
     public sealed class StashItemDisplayData
     {
+        public int SlotIndex;
         public int ItemId;
         public int Count;
         public CrystalMagic.Game.Data.ItemType ItemType;
         public string Name;
+        public string Description;
         public string IconPath;
     }
 }

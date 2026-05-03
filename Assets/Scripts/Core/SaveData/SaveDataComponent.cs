@@ -187,7 +187,7 @@ namespace CrystalMagic.Core {
                             SaveIndex = data.SaveIndex,
                             Timestamp = data.SaveTimestamp,
                             GameVersion = data.GameVersion,
-                            StashMoney = data.Town?.StashMoney ?? 0,
+                            StashMoney = GetPreviewStashMoney(data),
                         });
                         count++;
                     }
@@ -243,19 +243,20 @@ namespace CrystalMagic.Core {
         public TownData GetTownData()
         {
             EnsureCurrentSaveDataValid();
-            return _currentSaveData.Town;
+            return GetActiveTownDataInternal();
         }
 
         public StashData GetStashData()
         {
             EnsureCurrentSaveDataValid();
-            return _currentSaveData.Town.Stash;
+            TownData townData = GetActiveTownDataInternal();
+            return townData?.Stash;
         }
 
         public CharacterData GetCharacterData()
         {
             EnsureCurrentSaveDataValid();
-            return _currentSaveData.Town.Character;
+            return GetActiveCharacterDataInternal();
         }
 
         public SaveLocationData GetLocationData()
@@ -267,19 +268,133 @@ namespace CrystalMagic.Core {
         public EquipmentData GetEquipmentData()
         {
             EnsureCurrentSaveDataValid();
-            return _currentSaveData.Town.Character.Equipment;
+            return GetActiveCharacterDataInternal()?.Equipment;
         }
 
         public SkillCData GetSkillData()
         {
             EnsureCurrentSaveDataValid();
-            return _currentSaveData.Town.Character.Skills;
+            return GetActiveCharacterDataInternal()?.Skills;
         }
 
         public BackpackData GetBackpackData()
         {
             EnsureCurrentSaveDataValid();
-            return _currentSaveData.Town.Character.Backpack;
+            return GetActiveCharacterDataInternal()?.Backpack;
+        }
+
+        public TownData GetPersistentTownData()
+        {
+            EnsureCurrentSaveDataValid();
+            return _currentSaveData.Town;
+        }
+
+        public TownData GetTrainingSessionData()
+        {
+            EnsureCurrentSaveDataValid();
+            return _currentSaveData.Training;
+        }
+
+        public DungeonRunData GetDungeonRunData()
+        {
+            EnsureCurrentSaveDataValid();
+            return _currentSaveData.DungeonRun;
+        }
+
+        public void EnsureTrainingSessionExists()
+        {
+            EnsureCurrentSaveDataValid();
+            if (_currentSaveData.Training != null)
+                return;
+
+            _currentSaveData.Training = CloneTownData(_currentSaveData.Town);
+            EnsureTownDataValid(_currentSaveData.Training);
+        }
+
+        public void BeginTrainingSessionFromPersistent()
+        {
+            EnsureCurrentSaveDataValid();
+            _currentSaveData.Training = CloneTownData(_currentSaveData.Town);
+            EnsureTownDataValid(_currentSaveData.Training);
+            PublishAllDataChangedEvents();
+        }
+
+        public void CommitTrainingSessionToPersistent(bool clearSession = true)
+        {
+            EnsureCurrentSaveDataValid();
+            if (_currentSaveData.Training == null)
+                return;
+
+            _currentSaveData.Town = CloneTownData(_currentSaveData.Training);
+            EnsureTownDataValid(_currentSaveData.Town);
+
+            if (clearSession)
+                _currentSaveData.Training = null;
+
+            PublishAllDataChangedEvents();
+        }
+
+        public void ClearTrainingSession()
+        {
+            EnsureCurrentSaveDataValid();
+            if (_currentSaveData.Training == null)
+                return;
+
+            _currentSaveData.Training = null;
+            PublishAllDataChangedEvents();
+        }
+
+        public void EnsureDungeonRunExists(int dungeonFloor = 1)
+        {
+            EnsureCurrentSaveDataValid();
+            if (_currentSaveData.DungeonRun?.Character != null)
+            {
+                _currentSaveData.DungeonRun.CurrentFloor = Mathf.Max(1, dungeonFloor);
+                return;
+            }
+
+            _currentSaveData.DungeonRun = CreateDungeonRunFromPersistent(dungeonFloor);
+        }
+
+        public void BeginDungeonRunFromPersistent(int dungeonFloor = 1)
+        {
+            EnsureCurrentSaveDataValid();
+            _currentSaveData.DungeonRun = CreateDungeonRunFromPersistent(dungeonFloor);
+            PublishAllDataChangedEvents();
+        }
+
+        public void CommitDungeonRunToPersistent(bool clearRun = true)
+        {
+            EnsureCurrentSaveDataValid();
+            if (_currentSaveData.DungeonRun?.Character == null)
+                return;
+
+            _currentSaveData.Town.Character = CloneCharacterData(_currentSaveData.DungeonRun.Character);
+            EnsureCharacterDataValid(_currentSaveData.Town.Character);
+
+            if (clearRun)
+                _currentSaveData.DungeonRun = null;
+
+            PublishAllDataChangedEvents();
+        }
+
+        public void ApplyDungeonDeathAndCommit()
+        {
+            EnsureCurrentSaveDataValid();
+            EnsureDungeonRunExists(_currentSaveData.Location?.DungeonFloor ?? 1);
+
+            ClearBackpackAndEquipment(_currentSaveData.DungeonRun.Character);
+            CommitDungeonRunToPersistent();
+        }
+
+        public void ClearDungeonRun()
+        {
+            EnsureCurrentSaveDataValid();
+            if (_currentSaveData.DungeonRun == null)
+                return;
+
+            _currentSaveData.DungeonRun = null;
+            PublishAllDataChangedEvents();
         }
 
         public void SetVariable(string key, double value)
@@ -345,42 +460,42 @@ namespace CrystalMagic.Core {
         public void NotifyTownDataChanged()
         {
             EnsureCurrentSaveDataValid();
-            EventComponent.Instance.Publish(new CommonGameEvent(TownDataChangedEventName, _currentSaveData.Town));
+            EventComponent.Instance.Publish(new CommonGameEvent(TownDataChangedEventName, GetTownData()));
             NotifySaveDataChanged();
         }
 
         public void NotifyStashDataChanged()
         {
             EnsureCurrentSaveDataValid();
-            EventComponent.Instance.Publish(new CommonGameEvent(StashDataChangedEventName, _currentSaveData.Town.Stash));
+            EventComponent.Instance.Publish(new CommonGameEvent(StashDataChangedEventName, GetStashData()));
             NotifyTownDataChanged();
         }
 
         public void NotifyCharacterDataChanged()
         {
             EnsureCurrentSaveDataValid();
-            EventComponent.Instance.Publish(new CommonGameEvent(CharacterDataChangedEventName, _currentSaveData.Town.Character));
+            EventComponent.Instance.Publish(new CommonGameEvent(CharacterDataChangedEventName, GetCharacterData()));
             NotifyTownDataChanged();
         }
 
         public void NotifyBackpackDataChanged()
         {
             EnsureCurrentSaveDataValid();
-            EventComponent.Instance.Publish(new CommonGameEvent(BackpackDataChangedEventName, _currentSaveData.Town.Character.Backpack));
+            EventComponent.Instance.Publish(new CommonGameEvent(BackpackDataChangedEventName, GetBackpackData()));
             NotifyCharacterDataChanged();
         }
 
         public void NotifyEquipmentDataChanged()
         {
             EnsureCurrentSaveDataValid();
-            EventComponent.Instance.Publish(new CommonGameEvent(EquipmentDataChangedEventName, _currentSaveData.Town.Character.Equipment));
+            EventComponent.Instance.Publish(new CommonGameEvent(EquipmentDataChangedEventName, GetEquipmentData()));
             NotifyCharacterDataChanged();
         }
 
         public void NotifySkillDataChanged()
         {
             EnsureCurrentSaveDataValid();
-            EventComponent.Instance.Publish(new CommonGameEvent(SkillDataChangedEventName, _currentSaveData.Town.Character.Skills));
+            EventComponent.Instance.Publish(new CommonGameEvent(SkillDataChangedEventName, GetSkillData()));
             NotifyCharacterDataChanged();
         }
 
@@ -426,76 +541,166 @@ namespace CrystalMagic.Core {
 
         private void EnsureSaveDataValid(SaveData data)
         {
-            if (data.Global == null)
+            data.Global ??= new GlobalData();
+            data.Variables ??= new SaveVariableData();
+            data.Location ??= new SaveLocationData();
+            data.Location.DungeonFloor = Mathf.Max(1, data.Location.DungeonFloor);
+
+            data.Town ??= new TownData();
+            EnsureTownDataValid(data.Town);
+
+            if (data.Training != null)
             {
-                data.Global = new GlobalData();
+                EnsureTownDataValid(data.Training);
+            }
+            else if (data.Location.AreaType == SaveAreaType.Training)
+            {
+                data.Training = CloneTownData(data.Town);
+                EnsureTownDataValid(data.Training);
             }
 
-            if (data.Variables == null)
+            if (data.DungeonRun != null)
             {
-                data.Variables = new SaveVariableData();
+                EnsureDungeonRunDataValid(data.DungeonRun, data.Town.Character);
             }
+            else if (data.Location.AreaType == SaveAreaType.Dungeon)
+            {
+                data.DungeonRun = CreateDungeonRunFromPersistent(data.Town.Character, data.Location.DungeonFloor);
+            }
+        }
 
-            if (data.Location == null)
-            {
-                data.Location = new SaveLocationData();
-            }
-            else
-            {
-                data.Location.DungeonFloor = Mathf.Max(1, data.Location.DungeonFloor);
-            }
+        private void EnsureTownDataValid(TownData data)
+        {
+            if (data == null)
+                return;
 
-            if (data.Town == null)
-            {
-                data.Town = new TownData();
-            }
+            data.Stash ??= new StashData();
+            data.Character ??= new CharacterData();
+            EnsureStashDataValid(data.Stash);
+            EnsureCharacterDataValid(data.Character);
+        }
 
-            if (data.Town.Stash == null)
-            {
-                data.Town.Stash = new StashData();
-            }
-            else if (data.Town.Stash.Items == null)
-            {
-                data.Town.Stash.Items = new List<InventoryItemData>();
-            }
+        private void EnsureStashDataValid(StashData data)
+        {
+            if (data == null)
+                return;
 
-            if (data.Town.Stash.Capacity == 0)
-            {
-                data.Town.Stash.Capacity = GetGameConfig().InitialStashSize;
-            }
+            data.Items ??= new List<InventoryItemData>();
+            if (data.Capacity <= 0)
+                data.Capacity = GetGameConfig().InitialStashSize;
+        }
 
-            if (data.Town.Character == null)
-            {
-                data.Town.Character = new CharacterData();
-            }
+        private void EnsureCharacterDataValid(CharacterData data)
+        {
+            if (data == null)
+                return;
 
-            if (data.Town.Character.Equipment == null)
-            {
-                data.Town.Character.Equipment = new EquipmentData();
-            }
+            data.Equipment ??= new EquipmentData();
+            data.Skills ??= new SkillCData();
+            data.Skills.EnsureValid();
+            data.Backpack ??= new BackpackData();
+            data.Backpack.Items ??= new List<InventoryItemData>();
+            if (data.Backpack.Capacity <= 0)
+                data.Backpack.Capacity = Mathf.Max(1, GetGameConfig().InitialBackpackSize);
 
-            if (data.Town.Character.Skills == null)
-            {
-                data.Town.Character.Skills = new SkillCData();
-            }
+            data.MigrateLegacyData();
+        }
 
-            data.Town.Character.Skills.EnsureValid();
+        private void EnsureDungeonRunDataValid(DungeonRunData data, CharacterData fallbackCharacter = null)
+        {
+            if (data == null)
+                return;
 
-            if (data.Town.Character.Backpack == null)
-            {
-                data.Town.Character.Backpack = new BackpackData();
-            }
-            else if (data.Town.Character.Backpack.Items == null)
-            {
-                data.Town.Character.Backpack.Items = new List<InventoryItemData>();
-            }
+            data.CurrentFloor = Mathf.Max(1, data.CurrentFloor);
+            data.Character ??= CloneCharacterData(fallbackCharacter);
+            EnsureCharacterDataValid(data.Character);
+            data.Monsters ??= new List<MonsterStateData>();
+            data.ItemDrops ??= new List<ItemDropData>();
+        }
 
-            if (data.Town.Character.Backpack.Capacity <= 0)
-            {
-                data.Town.Character.Backpack.Capacity = Mathf.Max(1, GetGameConfig().InitialBackpackSize);
-            }
+        private TownData GetActiveTownDataInternal()
+        {
+            if (_currentSaveData == null)
+                return null;
 
-            data.Town.Character.MigrateLegacyData();
+            return _currentSaveData.Location?.AreaType == SaveAreaType.Training && _currentSaveData.Training != null
+                ? _currentSaveData.Training
+                : _currentSaveData.Town;
+        }
+
+        private CharacterData GetActiveCharacterDataInternal()
+        {
+            if (_currentSaveData == null)
+                return null;
+
+            return _currentSaveData.Location?.AreaType == SaveAreaType.Dungeon && _currentSaveData.DungeonRun?.Character != null
+                ? _currentSaveData.DungeonRun.Character
+                : GetActiveTownDataInternal()?.Character;
+        }
+
+        private long GetPreviewStashMoney(SaveData data)
+        {
+            if (data == null)
+                return 0;
+
+            return data.Location?.AreaType == SaveAreaType.Training && data.Training != null
+                ? data.Training.StashMoney
+                : data.Town?.StashMoney ?? 0;
+        }
+
+        private DungeonRunData CreateDungeonRunFromPersistent(int dungeonFloor)
+        {
+            return CreateDungeonRunFromPersistent(GetPersistentTownData()?.Character, dungeonFloor);
+        }
+
+        private DungeonRunData CreateDungeonRunFromPersistent(CharacterData sourceCharacter, int dungeonFloor)
+        {
+            DungeonRunData data = new DungeonRunData
+            {
+                RunId = Guid.NewGuid().ToString("N"),
+                RunTimestamp = DateTime.Now.Ticks,
+                CurrentFloor = Mathf.Max(1, dungeonFloor),
+                Character = CloneCharacterData(sourceCharacter),
+                Monsters = new List<MonsterStateData>(),
+                ItemDrops = new List<ItemDropData>(),
+            };
+            EnsureDungeonRunDataValid(data, sourceCharacter);
+            return data;
+        }
+
+        private void ClearBackpackAndEquipment(CharacterData data)
+        {
+            if (data == null)
+                return;
+
+            EnsureCharacterDataValid(data);
+            data.Backpack.Items.Clear();
+            data.Equipment = new EquipmentData();
+        }
+
+        private TownData CloneTownData(TownData source)
+        {
+            TownData clone = DeepClone(source);
+            clone ??= new TownData();
+            EnsureTownDataValid(clone);
+            return clone;
+        }
+
+        private CharacterData CloneCharacterData(CharacterData source)
+        {
+            CharacterData clone = DeepClone(source);
+            clone ??= new CharacterData();
+            EnsureCharacterDataValid(clone);
+            return clone;
+        }
+
+        private T DeepClone<T>(T source) where T : class
+        {
+            if (source == null)
+                return null;
+
+            string json = JsonUtility.ToJson(source);
+            return JsonUtility.FromJson<T>(json);
         }
 
         private void EnsureCurrentSaveDataValid()
@@ -508,12 +713,12 @@ namespace CrystalMagic.Core {
         {
             EnsureCurrentSaveDataValid();
             EventComponent.Instance.Publish(new CommonGameEvent(GlobalDataChangedEventName, _currentSaveData.Global));
-            EventComponent.Instance.Publish(new CommonGameEvent(TownDataChangedEventName, _currentSaveData.Town));
-            EventComponent.Instance.Publish(new CommonGameEvent(StashDataChangedEventName, _currentSaveData.Town.Stash));
-            EventComponent.Instance.Publish(new CommonGameEvent(CharacterDataChangedEventName, _currentSaveData.Town.Character));
-            EventComponent.Instance.Publish(new CommonGameEvent(BackpackDataChangedEventName, _currentSaveData.Town.Character.Backpack));
-            EventComponent.Instance.Publish(new CommonGameEvent(EquipmentDataChangedEventName, _currentSaveData.Town.Character.Equipment));
-            EventComponent.Instance.Publish(new CommonGameEvent(SkillDataChangedEventName, _currentSaveData.Town.Character.Skills));
+            EventComponent.Instance.Publish(new CommonGameEvent(TownDataChangedEventName, GetTownData()));
+            EventComponent.Instance.Publish(new CommonGameEvent(StashDataChangedEventName, GetStashData()));
+            EventComponent.Instance.Publish(new CommonGameEvent(CharacterDataChangedEventName, GetCharacterData()));
+            EventComponent.Instance.Publish(new CommonGameEvent(BackpackDataChangedEventName, GetBackpackData()));
+            EventComponent.Instance.Publish(new CommonGameEvent(EquipmentDataChangedEventName, GetEquipmentData()));
+            EventComponent.Instance.Publish(new CommonGameEvent(SkillDataChangedEventName, GetSkillData()));
             EventComponent.Instance.Publish(new CommonGameEvent(SaveDataChangedEventName, _currentSaveData));
         }
 

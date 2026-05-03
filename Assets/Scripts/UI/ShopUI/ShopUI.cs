@@ -258,7 +258,8 @@ public class ShopUI : UIBase<ShopUIData, ShopUIModel>
 
     private System.Collections.IEnumerator CommodityHoverDelayRoutine(ShopCommodityDisplayData data)
     {
-        yield return new WaitForSeconds(1f);
+        float delay = UIComponent.Instance != null ? UIComponent.Instance.GetHoverInfoDelaySeconds() : 2f;
+        yield return new WaitForSeconds(delay);
         _commodityHoverCoroutine = null;
 
         if (!ReferenceEquals(_hoveredCommodity, data))

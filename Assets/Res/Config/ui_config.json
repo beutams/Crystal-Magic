@@ -2,7 +2,8 @@
     "referenceResolutionWidth": 2560,
     "referenceResolutionHeight": 1440,
     "screenMatchMode": 1,
-    "planeDistance": 0.31,
+    "planeDistance": 0.3100000023841858,
+    "hoverInfoDelaySeconds": 2.0,
     "groups": [
         {
             "groupType": 0,
@@ -13,7 +14,7 @@
                 "LoadUI",
                 "SaveUI",
                 "ConfirmUI",
-                "GameSettingUI",
+                "GameMenuUI",
                 "GameSaveUI"
             ]
         },
@@ -21,7 +22,9 @@
             "groupType": 1,
             "groupName": "Tip",
             "order": 0,
-            "uiNames": []
+            "uiNames": [
+                "TipForm"
+            ]
         },
         {
             "groupType": 2,

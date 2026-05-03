@@ -30,6 +30,8 @@ namespace CrystalMagic.Core {
         /// 城镇状态数据
         /// </summary>
         public TownData Town;
+        public TownData Training;
+        public DungeonRunData DungeonRun;
     }
     /// <summary>
     /// 全局数据

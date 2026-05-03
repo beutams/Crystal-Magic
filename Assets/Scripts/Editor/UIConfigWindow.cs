@@ -107,6 +107,16 @@ namespace CrystalMagic.Editor
             }
             EditorGUILayout.EndHorizontal();
 
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Hover Info Delay", GUILayout.Width(120));
+            float newHoverInfoDelaySeconds = EditorGUILayout.FloatField(_config.hoverInfoDelaySeconds);
+            if (!Mathf.Approximately(newHoverInfoDelaySeconds, _config.hoverInfoDelaySeconds))
+            {
+                _config.hoverInfoDelaySeconds = Mathf.Max(0f, newHoverInfoDelaySeconds);
+                _isDirty = true;
+            }
+            EditorGUILayout.EndHorizontal();
+
             EditorGUILayout.Space();
 
             _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
@@ -237,6 +247,7 @@ namespace CrystalMagic.Editor
             _config.referenceResolutionHeight = 1440;
             _config.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
             _config.planeDistance = 0.31f;
+            _config.hoverInfoDelaySeconds = 2f;
             _config.groups.Add(new UIGroupEntry
             {
                 groupName = "Default",

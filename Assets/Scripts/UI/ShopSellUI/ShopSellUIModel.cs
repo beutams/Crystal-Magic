@@ -37,7 +37,7 @@ namespace CrystalMagic.UI
             Description = data != null ? data.Description : string.Empty;
             Price = data != null ? data.Price : 0;
             IconPath = data != null ? data.IconPath : string.Empty;
-            Quantity = 0;
+            Quantity = 1;
             RefreshRuntimeData();
         }
 
@@ -69,13 +69,21 @@ namespace CrystalMagic.UI
 
         private int ClampQuantity(int quantity)
         {
-            if (quantity < 0)
+            if (MaxSellCount <= 0)
                 return 0;
+
+            if (quantity < 1)
+                return 1;
 
             if (quantity > MaxSellCount)
                 return MaxSellCount;
 
             return quantity;
+        }
+
+        public int GetCurrentMaxSellCount()
+        {
+            return MaxSellCount;
         }
 
         private int GetSlotCount()

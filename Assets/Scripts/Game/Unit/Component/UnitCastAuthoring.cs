@@ -1,3 +1,4 @@
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
@@ -24,6 +25,9 @@ public enum SkillCastPhase : byte
 
 public struct UnitCastComponent : IComponentData
 {
+    public FixedList64Bytes<int> SkillIds;
+    public FixedList64Bytes<int> SkillEffectIds;
+
     /// <summary>
     /// 当前单位是否正在执行技能释放流程。
     /// </summary>
@@ -68,4 +72,5 @@ public struct UnitCastComponent : IComponentData
     /// 当前施法阶段已经经过的时间。
     /// </summary>
     public float PhaseElapsed;
+    public float PhaseDuration;
 }

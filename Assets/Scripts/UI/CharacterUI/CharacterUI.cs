@@ -25,6 +25,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
     public event Action<CrystalMagic.UI.CharacterInventoryDisplayData, int> InventoryEquipDropped;
     public event Action<int> EquipReturnedToInventory;
     public event Action<int, int> BonusEquipSwapped;
+    public event Action<CrystalMagic.UI.CharacterSkillDisplayData> SkillEffectRequested;
     public event Action<CrystalMagic.UI.CharacterSkillDisplayData, int> SkillReordered;
     public event Action<CrystalMagic.UI.CharacterSkillDisplayData> SkillReturnedToInventory;
 
@@ -176,9 +177,11 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         itemView.DragStarted -= HandleSkillDragStarted;
         itemView.Dragging -= HandleSkillDragging;
         itemView.DragEnded -= HandleSkillDragEnded;
+        itemView.EffectClicked -= HandleSkillEffectClicked;
         itemView.DragStarted += HandleSkillDragStarted;
         itemView.Dragging += HandleSkillDragging;
         itemView.DragEnded += HandleSkillDragEnded;
+        itemView.EffectClicked += HandleSkillEffectClicked;
     }
 
     private void EnsureEquipSlotHandlers()
@@ -348,6 +351,14 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
 
         _draggedSkillItem = null;
         SetSkillDragVisible(false);
+    }
+
+    private void HandleSkillEffectClicked(CrystalMagic.UI.CharacterSkillDisplayData data)
+    {
+        if (data == null)
+            return;
+
+        SkillEffectRequested?.Invoke(data);
     }
 
     private void EnsureItemDragInitialized()

@@ -1,4 +1,4 @@
-﻿namespace CrystalMagic.UI
+namespace CrystalMagic.UI
 {
     public sealed class EffectItemInfoUIController : UIControllerBase<EffectItemInfoUI, EffectItemInfoUIModel>
     {
@@ -9,6 +9,7 @@
 
         protected override void OnOpen()
         {
+            View.BindModel(Model);
         }
     }
 }
