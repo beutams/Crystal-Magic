@@ -8,6 +8,7 @@ namespace CrystalMagic.Core
         private const string UIPlayerInputLockReason = "BattleStateBase.UIOpen";
         private UIBase _battleUI;
         private CharacterUI _characterUI;
+        private PropertyUI _propertyUI;
         private GameMenuUI _gameMenuUI;
         private bool _inputBound;
         private bool _playerInputLockedByUI;
@@ -34,6 +35,7 @@ namespace CrystalMagic.Core
             UnbindInput();
             OnExitBattle();
             _characterUI = null;
+            _propertyUI = null;
             _battleUI = null;
         }
 
@@ -65,6 +67,7 @@ namespace CrystalMagic.Core
                 return;
 
             InputComponent.Instance.OnInventory += HandleInventory;
+            InputComponent.Instance.OnProperty += HandleProperty;
             if (UIComponent.Instance != null)
                 UIComponent.Instance.EscapeUnhandled += HandleUnhandledEscape;
             _inputBound = true;
@@ -76,7 +79,10 @@ namespace CrystalMagic.Core
                 return;
 
             if (InputComponent.Instance != null)
+            {
                 InputComponent.Instance.OnInventory -= HandleInventory;
+                InputComponent.Instance.OnProperty -= HandleProperty;
+            }
             if (UIComponent.Instance != null)
                 UIComponent.Instance.EscapeUnhandled -= HandleUnhandledEscape;
             _inputBound = false;
@@ -97,6 +103,23 @@ namespace CrystalMagic.Core
             }
 
             UIComponent.Instance.ShowUI(_characterUI);
+        }
+
+        private void HandleProperty()
+        {
+            if (_propertyUI == null || !UIComponent.Instance.IsManaged(_propertyUI))
+            {
+                _propertyUI = UIComponent.Instance.Open<PropertyUI>();
+                return;
+            }
+
+            if (_propertyUI.gameObject.activeSelf)
+            {
+                _propertyUI.Close();
+                return;
+            }
+
+            UIComponent.Instance.ShowUI(_propertyUI);
         }
 
         private void HandleUnhandledEscape()

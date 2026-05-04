@@ -84,12 +84,17 @@ namespace CrystalMagic.Game.Skill
 
     public static class SkillResolver
     {
-        public static ResolvedSkillData Resolve(SkillData skillData, SkillModifierSet modifiers)
+        public static ResolvedSkillData Resolve(SkillData skillData, SkillModifierSet modifiers, UnitAttackComponent? attackComponent = null, UnitElementComponent? elementComponent = null)
         {
             if (skillData == null)
                 return null;
 
             modifiers ??= new SkillModifierSet();
+            float actionSpeedBonus = attackComponent?.RealActionSpeedBonus ?? 0f;
+            float chantSpeedBonus = attackComponent?.RealChantSpeedBonus ?? 0f;
+            float actionSpeedMultiplier = math.clamp(modifiers.GetActionSpeedMultiplier() + actionSpeedBonus, 0.5f, 1f);
+            float chantSpeedMultiplier = math.clamp(modifiers.GetChantSpeedMultiplier() + chantSpeedBonus, 0f, 1f);
+            float moveSpeedMultiplier = math.min(1f, math.max(0f, skillData.MoveSpeedMultiplier) * modifiers.GetMoveSpeedMultiplier());
 
             return new ResolvedSkillData
             {
@@ -98,12 +103,21 @@ namespace CrystalMagic.Game.Skill
                 Name = skillData.Name,
                 SkillType = skillData.SkillType,
                 MpCost = math.max(0, (int)math.round(modifiers.Apply(SkillModifierChannel.MpCost, skillData.MpCost))),
-                WindupDuration = math.max(0f, modifiers.Apply(SkillModifierChannel.WindupDuration, skillData.WindupDuration)),
-                ChantDuration = math.max(0f, modifiers.Apply(SkillModifierChannel.ChantDuration, skillData.ChantDuration)),
-                RecoveryDuration = math.max(0f, modifiers.Apply(SkillModifierChannel.RecoveryDuration, skillData.RecoveryDuration)),
-                MoveSpeedMultiplier = math.max(0f, modifiers.Apply(SkillModifierChannel.MoveSpeedMultiplier, skillData.MoveSpeedMultiplier)),
-                EffectChain = EffectData.CreateRuntimeCopies(skillData.EffectChain, modifiers),
+                WindupDuration = math.max(0f, skillData.WindupDuration * actionSpeedMultiplier),
+                ChantDuration = math.max(0f, skillData.ChantDuration * chantSpeedMultiplier),
+                RecoveryDuration = math.max(0f, skillData.RecoveryDuration * actionSpeedMultiplier),
+                CanMoveWhileCasting = skillData.CanMoveWhileCasting,
+                MoveSpeedMultiplier = moveSpeedMultiplier,
+                EffectChain = EffectData.CreateRuntimeCopies(skillData.EffectChain, modifiers, effectData => GetElementPowerBonus(elementComponent, effectData)),
             };
+        }
+
+        private static float GetElementPowerBonus(UnitElementComponent? elementComponent, EffectData effectData)
+        {
+            if (!elementComponent.HasValue || effectData is not IElementalEffectData elementalEffect)
+                return 0f;
+
+            return elementComponent.Value.GetPowerBonus(elementalEffect.Element);
         }
 
         public static SkillModifierSet CollectModifiers(EntityManager entityManager, Entity entity, SkillChainSlotData slotData = null)
@@ -122,6 +136,17 @@ namespace CrystalMagic.Game.Skill
                     UnitBuffElement buffElement = buffs[i];
                     if (dataComponent.Get<BuffData>(buffElement.BuffId) is SkillModifierBuffData buffData)
                         modifiers.Add(buffData.SkillModifiers, math.max(1, buffElement.StackCount));
+                }
+            }
+
+            if (entityManager.HasBuffer<UnitPassiveBuffElement>(entity))
+            {
+                DynamicBuffer<UnitPassiveBuffElement> passiveBuffs = entityManager.GetBuffer<UnitPassiveBuffElement>(entity);
+                for (int i = 0; i < passiveBuffs.Length; i++)
+                {
+                    UnitPassiveBuffElement passiveBuff = passiveBuffs[i];
+                    if (dataComponent.Get<BuffData>(passiveBuff.BuffId) is SkillModifierBuffData buffData)
+                        modifiers.Add(buffData.SkillModifiers, math.max(1, passiveBuff.StackCount));
                 }
             }
 

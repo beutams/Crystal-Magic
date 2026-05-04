@@ -15,7 +15,8 @@
                 "SaveUI",
                 "ConfirmUI",
                 "GameMenuUI",
-                "GameSaveUI"
+                "GameSaveUI",
+                "PropertyUI"
             ]
         },
         {

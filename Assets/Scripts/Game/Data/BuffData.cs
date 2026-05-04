@@ -29,6 +29,14 @@ namespace CrystalMagic.Game.Data
         AttackPower = 3,
         SkillRange = 4,
         MaxMp = 5,
+        HealthRegen = 6,
+        MpRegen = 7,
+        ActionSpeed = 8,
+        ChantSpeed = 9,
+        WaterPower = 10,
+        FirePower = 11,
+        LightningPower = 12,
+        WindPower = 13,
     }
 
     [System.Serializable]

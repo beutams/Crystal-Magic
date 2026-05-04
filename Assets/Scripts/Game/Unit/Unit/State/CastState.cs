@@ -53,6 +53,7 @@ public class CastState : AUnitState
         }
 
         EntityManager.SetComponentData(Entity, cast);
+        EventComponent.Instance.Publish(new SkillCastLockChangedEvent(true));
         LogPhase("Start Windup", cast);
     }
 
@@ -287,12 +288,19 @@ public class CastState : AUnitState
             : null;
 
         SkillModifierSet modifiers = SkillResolver.CollectModifiers(EntityManager, Entity, slotData);
-        skillData = SkillResolver.Resolve(baseSkill, modifiers);
+        UnitAttackComponent? attack = EntityManager.HasComponent<UnitAttackComponent>(Entity)
+            ? EntityManager.GetComponentData<UnitAttackComponent>(Entity)
+            : null;
+        UnitElementComponent? element = EntityManager.HasComponent<UnitElementComponent>(Entity)
+            ? EntityManager.GetComponentData<UnitElementComponent>(Entity)
+            : null;
+        skillData = SkillResolver.Resolve(baseSkill, modifiers, attack, element);
         return skillData != null;
     }
 
     private void FinishCast(ref UnitCastComponent cast)
     {
+        bool wasCasting = cast.IsCasting;
         cast.IsCasting = false;
         cast.ForceInterrupt = false;
         cast.HasLockedTarget = false;
@@ -305,6 +313,11 @@ public class CastState : AUnitState
         cast.PhaseDuration = 0f;
         cast.SkillIds = default;
         cast.SkillEffectIds = default;
+
+        if (wasCasting)
+        {
+            EventComponent.Instance.Publish(new SkillCastLockChangedEvent(false));
+        }
     }
 
     private void InterruptCast(ref UnitCastComponent cast, string reason)

@@ -19,14 +19,12 @@ namespace CrystalMagic.Editor.Data
         {
             UnitFactionAuthoring factionAuthoring = context.GetAuthoring<UnitFactionAuthoring>();
             if (factionAuthoring == null)
-            {
                 return;
-            }
 
             GUILayout.Space(8f);
             UnitEditorWindow.DrawSectionHeader("Faction");
 
-            UnitFactionType newFaction = (UnitFactionType)EditorGUILayout.EnumPopup("阵营", factionAuthoring.Faction);
+            UnitFactionType newFaction = (UnitFactionType)EditorGUILayout.EnumPopup("Faction", factionAuthoring.Faction);
             if (newFaction != factionAuthoring.Faction)
             {
                 factionAuthoring.Faction = newFaction;
@@ -47,14 +45,12 @@ namespace CrystalMagic.Editor.Data
         {
             UnitMoveModuleData module = context.GetOrCreateModule<UnitMoveModuleData>();
             if (module == null)
-            {
                 return;
-            }
 
             GUILayout.Space(8f);
-            UnitEditorWindow.DrawSectionHeader("Move（移动）");
-            module.BaseMoveSpeed = EditorGUILayout.FloatField("最大速度", module.BaseMoveSpeed);
-            module.BaseMaxAcceleration = EditorGUILayout.FloatField("最大加速度", module.BaseMaxAcceleration);
+            UnitEditorWindow.DrawSectionHeader("Move");
+            module.BaseMoveSpeed = EditorGUILayout.FloatField("Base Move Speed", module.BaseMoveSpeed);
+            module.BaseMaxAcceleration = EditorGUILayout.FloatField("Base Max Acceleration", module.BaseMaxAcceleration);
         }
     }
 
@@ -70,14 +66,13 @@ namespace CrystalMagic.Editor.Data
         {
             UnitVitalityModuleData module = context.GetOrCreateModule<UnitVitalityModuleData>();
             if (module == null)
-            {
                 return;
-            }
 
             GUILayout.Space(8f);
-            UnitEditorWindow.DrawSectionHeader("Vitality（生存）");
-            module.BaseMaxHealth = EditorGUILayout.FloatField("最大生命值", module.BaseMaxHealth);
-            module.BaseDefense = EditorGUILayout.FloatField("防御力", module.BaseDefense);
+            UnitEditorWindow.DrawSectionHeader("Vitality");
+            module.BaseMaxHealth = EditorGUILayout.FloatField("Base Max Health", module.BaseMaxHealth);
+            module.BaseHealthRegenPerSecond = EditorGUILayout.FloatField("Base HP Regen / Sec", module.BaseHealthRegenPerSecond);
+            module.BaseDefense = EditorGUILayout.FloatField("Base Defense", module.BaseDefense);
         }
     }
 
@@ -93,14 +88,18 @@ namespace CrystalMagic.Editor.Data
         {
             UnitAttackModuleData module = context.GetOrCreateModule<UnitAttackModuleData>();
             if (module == null)
-            {
                 return;
-            }
 
             GUILayout.Space(8f);
-            UnitEditorWindow.DrawSectionHeader("Attack（攻击）");
-            module.BaseAttackPower = EditorGUILayout.FloatField("攻击力", module.BaseAttackPower);
-            module.BaseSkillRange = EditorGUILayout.FloatField("技能范围", module.BaseSkillRange);
+            UnitEditorWindow.DrawSectionHeader("Attack");
+            module.BaseAttackPower = EditorGUILayout.FloatField("Base Attack Power", module.BaseAttackPower);
+            module.BaseSkillRange = EditorGUILayout.FloatField("Base Skill Range", module.BaseSkillRange);
+            module.BaseActionSpeedBonus = EditorGUILayout.FloatField("Action Speed Bonus", module.BaseActionSpeedBonus);
+            module.BaseChantSpeedBonus = EditorGUILayout.FloatField("Chant Speed Bonus", module.BaseChantSpeedBonus);
+            module.BaseWaterPowerBonus = EditorGUILayout.FloatField("Water Power Bonus", module.BaseWaterPowerBonus);
+            module.BaseFirePowerBonus = EditorGUILayout.FloatField("Fire Power Bonus", module.BaseFirePowerBonus);
+            module.BaseLightningPowerBonus = EditorGUILayout.FloatField("Lightning Power Bonus", module.BaseLightningPowerBonus);
+            module.BaseWindPowerBonus = EditorGUILayout.FloatField("Wind Power Bonus", module.BaseWindPowerBonus);
         }
     }
 
@@ -116,13 +115,12 @@ namespace CrystalMagic.Editor.Data
         {
             UnitManaModuleData module = context.GetOrCreateModule<UnitManaModuleData>();
             if (module == null)
-            {
                 return;
-            }
 
             GUILayout.Space(8f);
-            UnitEditorWindow.DrawSectionHeader("Mana（法力）");
-            module.BaseMaxMp = EditorGUILayout.FloatField("最大法力值", module.BaseMaxMp);
+            UnitEditorWindow.DrawSectionHeader("Mana");
+            module.BaseMaxMp = EditorGUILayout.FloatField("Base Max MP", module.BaseMaxMp);
+            module.BaseMpRegenPerSecond = EditorGUILayout.FloatField("Base MP Regen / Sec", module.BaseMpRegenPerSecond);
         }
     }
 
@@ -138,14 +136,12 @@ namespace CrystalMagic.Editor.Data
         {
             UnitPerceptionAuthoring perceptionAuthoring = context.GetAuthoring<UnitPerceptionAuthoring>();
             if (perceptionAuthoring == null)
-            {
                 return;
-            }
 
             GUILayout.Space(8f);
-            UnitEditorWindow.DrawSectionHeader("Perception（感知）");
+            UnitEditorWindow.DrawSectionHeader("Perception");
 
-            float newSearchRadius = EditorGUILayout.FloatField("搜索范围", perceptionAuthoring.SearchRadius);
+            float newSearchRadius = EditorGUILayout.FloatField("Search Radius", perceptionAuthoring.SearchRadius);
             if (!Mathf.Approximately(newSearchRadius, perceptionAuthoring.SearchRadius))
             {
                 perceptionAuthoring.SearchRadius = newSearchRadius;
@@ -166,32 +162,28 @@ namespace CrystalMagic.Editor.Data
         {
             NPCInteractableAuthoring npcAuthoring = context.GetAuthoring<NPCInteractableAuthoring>();
             if (npcAuthoring == null)
-            {
                 return;
-            }
 
             GUILayout.Space(8f);
-            UnitEditorWindow.DrawSectionHeader("NPC 交互");
+            UnitEditorWindow.DrawSectionHeader("NPC Interaction");
 
             List<NPCData> npcRows = EditorComponents.Data.FindAll<NPCData>(_ => true)
                 .OrderBy(row => row.Id)
                 .ToList();
 
-            List<string> options = new() { "未绑定" };
+            List<string> options = new() { "Unbound" };
             int selectedIndex = 0;
             for (int i = 0; i < npcRows.Count; i++)
             {
                 NPCData row = npcRows[i];
                 options.Add($"[{row.Id}] {row.DisplayName} ({row.NPC})");
                 if (row.Id == npcAuthoring.NpcDataId)
-                {
                     selectedIndex = i + 1;
-                }
             }
 
-            int newIndex = EditorGUILayout.Popup("NPCData", selectedIndex, options.ToArray());
+            int newIndex = EditorGUILayout.Popup("NPC Data", selectedIndex, options.ToArray());
             int newNpcId = newIndex == 0 ? 0 : npcRows[newIndex - 1].Id;
-            float newRange = EditorGUILayout.FloatField("交互范围", npcAuthoring.InteractRange);
+            float newRange = EditorGUILayout.FloatField("Interact Range", npcAuthoring.InteractRange);
 
             if (newNpcId != npcAuthoring.NpcDataId || !Mathf.Approximately(newRange, npcAuthoring.InteractRange))
             {

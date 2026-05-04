@@ -22,6 +22,7 @@ Use this skill when adding or modifying a lifecycle-managed component in the Cry
 - Build UI with the project's MVC pattern: View subscribes to Model change events, and Model property changes trigger View refresh/render functions.
 - For new ECS code, prefer struct-based `IComponentData`, `ISystem`, `IJobEntity`, and `[BurstCompile]`; use class-based ECS only when required by managed data or APIs.
 - When modifying existing logic, do not leave transition residue or dead compatibility code behind; update all related code paths together so the final implementation is clean and complete.
+- Save newly created or edited text/code files as UTF-8 by default, and avoid introducing non-UTF-8 Chinese text into the repository.
 - When adding or updating this skill, also sync the same change into the project-local copy under `.agents/skills/` so the repository version stays up to date for other machines.
 
 ## Component Template

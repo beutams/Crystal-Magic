@@ -21,12 +21,12 @@ namespace CrystalMagic.Game.Data.Effects
 
         public EffectData[] OnAfterSearch;
 
-        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers)
+        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, float elementBonus = 0f, System.Func<EffectData, float> elementBonusResolver = null)
         {
-            AreaSearchEffectData copy = (AreaSearchEffectData)base.CreateRuntimeCopy(modifiers);
+            AreaSearchEffectData copy = (AreaSearchEffectData)base.CreateRuntimeCopy(modifiers, elementBonus, elementBonusResolver);
             copy.Radius = ApplyModifierNonNegative(modifiers, SkillModifierChannel.AreaRadius, Radius);
             copy.TargetConditions = TargetConditions == null ? new List<ConditionConfig>() : new List<ConditionConfig>(TargetConditions);
-            copy.OnAfterSearch = CreateRuntimeCopies(OnAfterSearch, modifiers);
+            copy.OnAfterSearch = CreateRuntimeCopies(OnAfterSearch, modifiers, elementBonusResolver);
             return copy;
         }
     }

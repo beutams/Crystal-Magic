@@ -24,8 +24,8 @@
       "IconPath": "Assets/Res/Sprites/SkillEffect/Action Speed.png",
       "Modifiers": [
         {
-          "Channel": 0,
-          "Factor": 0.0,
+          "Channel": 1,
+          "Factor": -0.5,
           "Bonus": 0.0
         }
       ],
@@ -35,7 +35,13 @@
       "Name": "高速咏唱",
       "Description": "加快咏唱速度",
       "IconPath": "Assets/Res/Sprites/SkillEffect/Chant Speed Up.png",
-      "Modifiers": [],
+      "Modifiers": [
+        {
+          "Channel": 2,
+          "Factor": -0.5,
+          "Bonus": 0.0
+        }
+      ],
       "Id": 3
     }
   ]

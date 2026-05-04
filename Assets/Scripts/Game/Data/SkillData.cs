@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data.Effects;
 using UnityEngine;
+using Unity.Mathematics;
 
 namespace CrystalMagic.Game.Data
 {
@@ -59,9 +60,9 @@ namespace CrystalMagic.Game.Data
     public enum SkillModifierChannel
     {
         MpCost = 0,
-        WindupDuration = 1,
-        ChantDuration = 2,
-        RecoveryDuration = 3,
+        ActionSpeed = 1,
+        ChantSpeed = 2,
+        Reserved = 3,
         MoveSpeedMultiplier = 4,
 
         Damage = 100,
@@ -69,6 +70,8 @@ namespace CrystalMagic.Game.Data
         CriticalBonus = 102,
         KnockbackForce = 103,
         HitStunSeconds = 104,
+        Heal = 105,
+        FlatHeal = 106,
 
         AreaRadius = 200,
         ProjectileSpeed = 300,
@@ -76,6 +79,7 @@ namespace CrystalMagic.Game.Data
         ProjectileScale = 302,
         EffectDuration = 400,
         TickInterval = 401,
+        BuffDuration = 402,
         VfxScale = 500,
         SoundVolume = 600,
         SoundPitch = 601,
@@ -134,6 +138,37 @@ namespace CrystalMagic.Game.Data
         public float Apply(SkillModifierChannel channel, float baseValue)
         {
             return baseValue * GetFactor(channel) + GetBonus(channel);
+        }
+
+        public float GetActionSpeedMultiplier()
+        {
+            return Apply(SkillModifierChannel.ActionSpeed, 1f);
+        }
+
+        public float GetChantSpeedMultiplier()
+        {
+            return Apply(SkillModifierChannel.ChantSpeed, 1f);
+        }
+
+        public float GetMoveSpeedMultiplier()
+        {
+            return math.max(0f, Apply(SkillModifierChannel.MoveSpeedMultiplier, 1f));
+        }
+
+        public void Add(SkillModifierSet other)
+        {
+            if (other == null)
+                return;
+
+            foreach (SkillModifierEntry entry in other._entries.Values)
+                Add(entry);
+        }
+
+        public SkillModifierSet Clone()
+        {
+            SkillModifierSet clone = new();
+            clone.Add(this);
+            return clone;
         }
     }
 

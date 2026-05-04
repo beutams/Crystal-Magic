@@ -76,6 +76,7 @@ namespace CrystalMagic.Game.Data
     public sealed class UnitVitalityModuleData : UnitModuleData
     {
         public float BaseMaxHealth = 100f;
+        public float BaseHealthRegenPerSecond;
         public float BaseDefense;
     }
 
@@ -84,12 +85,19 @@ namespace CrystalMagic.Game.Data
     {
         public float BaseAttackPower = 10f;
         public float BaseSkillRange = 1f;
+        public float BaseActionSpeedBonus;
+        public float BaseChantSpeedBonus;
+        public float BaseWaterPowerBonus;
+        public float BaseFirePowerBonus;
+        public float BaseLightningPowerBonus;
+        public float BaseWindPowerBonus;
     }
 
     [System.Serializable]
     public sealed class UnitManaModuleData : UnitModuleData
     {
         public float BaseMaxMp = 50f;
+        public float BaseMpRegenPerSecond;
     }
 
     [System.Serializable]

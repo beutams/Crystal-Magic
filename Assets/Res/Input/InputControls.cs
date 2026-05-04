@@ -153,6 +153,15 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Property"",
+                    ""type"": ""Button"",
+                    ""id"": ""eb68eb5f-fab9-48a3-8e14-b777cf609db5"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -320,6 +329,17 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
                     ""action"": ""Tab"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""c83455a9-ee26-4f7c-9f2d-525918bda642"",
+                    ""path"": ""<Keyboard>/i"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Property"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -335,6 +355,7 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         m_Town_ESC = m_Town.FindAction("ESC", throwIfNotFound: true);
         m_Town_Skill = m_Town.FindAction("Skill", throwIfNotFound: true);
         m_Town_Tab = m_Town.FindAction("Tab", throwIfNotFound: true);
+        m_Town_Property = m_Town.FindAction("Property", throwIfNotFound: true);
     }
 
     ~@InputControls()
@@ -422,6 +443,7 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_Town_ESC;
     private readonly InputAction m_Town_Skill;
     private readonly InputAction m_Town_Tab;
+    private readonly InputAction m_Town_Property;
     /// <summary>
     /// Provides access to input actions defined in input action map "Town".
     /// </summary>
@@ -461,6 +483,10 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Town/Tab".
         /// </summary>
         public InputAction @Tab => m_Wrapper.m_Town_Tab;
+        /// <summary>
+        /// Provides access to the underlying input action "Town/Property".
+        /// </summary>
+        public InputAction @Property => m_Wrapper.m_Town_Property;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -508,6 +534,9 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
             @Tab.started += instance.OnTab;
             @Tab.performed += instance.OnTab;
             @Tab.canceled += instance.OnTab;
+            @Property.started += instance.OnProperty;
+            @Property.performed += instance.OnProperty;
+            @Property.canceled += instance.OnProperty;
         }
 
         /// <summary>
@@ -540,6 +569,9 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
             @Tab.started -= instance.OnTab;
             @Tab.performed -= instance.OnTab;
             @Tab.canceled -= instance.OnTab;
+            @Property.started -= instance.OnProperty;
+            @Property.performed -= instance.OnProperty;
+            @Property.canceled -= instance.OnProperty;
         }
 
         /// <summary>
@@ -629,5 +661,12 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnTab(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Property" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnProperty(InputAction.CallbackContext context);
     }
 }

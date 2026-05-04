@@ -5,4 +5,14 @@ namespace CrystalMagic.Core {
 
     public interface IGameEvent { }
 
+    public readonly struct SkillCastLockChangedEvent : IGameEvent
+    {
+        public SkillCastLockChangedEvent(bool isLocked)
+        {
+            IsLocked = isLocked;
+        }
+
+        public bool IsLocked { get; }
+    }
+
 }

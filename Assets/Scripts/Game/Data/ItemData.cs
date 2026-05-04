@@ -27,6 +27,11 @@ namespace CrystalMagic.Game.Data
 
         /// <summary>物品类型</summary>
         public ItemType ItemType;
+        /// <summary>
+        /// 鍙€夌殑棰濆鍏宠仈 Id銆?
+        /// SkillStone -> SkillId
+        /// Weapon/Accessory -> BuffId
+        /// </summary>
         public int ExtraId;
 
         /// <summary>稀有度</summary>

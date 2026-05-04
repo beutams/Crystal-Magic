@@ -20,6 +20,7 @@ Use this skill when adding or modifying a lifecycle-managed component in the Cry
 - Route mouse and keyboard input through `InputComponent` events; external modules subscribe to those events instead of polling input directly.
 - Build UI with the project's MVC pattern: View subscribes to Model change events, and Model property changes trigger View refresh/render functions.
 - For new ECS code, prefer struct-based `IComponentData`, `ISystem`, `IJobEntity`, and `[BurstCompile]`; use class-based ECS only when required by managed data or APIs.
+- Save newly created or edited text/code files as UTF-8 by default, and avoid introducing non-UTF-8 Chinese text into the repository.
 
 ## Component Template
 

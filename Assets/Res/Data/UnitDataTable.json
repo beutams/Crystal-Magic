@@ -13,16 +13,24 @@
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
           "BaseMaxHealth": 100.0,
+          "BaseHealthRegenPerSecond": 0.0,
           "BaseDefense": 5.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
           "BaseAttackPower": 10.0,
-          "BaseSkillRange": 0.0
+          "BaseSkillRange": 0.0,
+          "BaseActionSpeedBonus": 0.0,
+          "BaseChantSpeedBonus": 0.0,
+          "BaseWaterPowerBonus": 0.0,
+          "BaseFirePowerBonus": 0.0,
+          "BaseLightningPowerBonus": 0.0,
+          "BaseWindPowerBonus": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-          "BaseMaxMp": 50.0
+          "BaseMaxMp": 50.0,
+          "BaseMpRegenPerSecond": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitStateMachineModuleData, Assembly-CSharp",
@@ -150,16 +158,24 @@
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
           "BaseMaxHealth": 0.0,
+          "BaseHealthRegenPerSecond": 0.0,
           "BaseDefense": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
           "BaseAttackPower": 0.0,
-          "BaseSkillRange": 0.0
+          "BaseSkillRange": 0.0,
+          "BaseActionSpeedBonus": 0.0,
+          "BaseChantSpeedBonus": 0.0,
+          "BaseWaterPowerBonus": 0.0,
+          "BaseFirePowerBonus": 0.0,
+          "BaseLightningPowerBonus": 0.0,
+          "BaseWindPowerBonus": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-          "BaseMaxMp": 0.0
+          "BaseMaxMp": 0.0,
+          "BaseMpRegenPerSecond": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitStateMachineModuleData, Assembly-CSharp",
@@ -214,16 +230,24 @@
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
           "BaseMaxHealth": 0.0,
+          "BaseHealthRegenPerSecond": 0.0,
           "BaseDefense": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
           "BaseAttackPower": 0.0,
-          "BaseSkillRange": 0.0
+          "BaseSkillRange": 0.0,
+          "BaseActionSpeedBonus": 0.0,
+          "BaseChantSpeedBonus": 0.0,
+          "BaseWaterPowerBonus": 0.0,
+          "BaseFirePowerBonus": 0.0,
+          "BaseLightningPowerBonus": 0.0,
+          "BaseWindPowerBonus": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-          "BaseMaxMp": 0.0
+          "BaseMaxMp": 0.0,
+          "BaseMpRegenPerSecond": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitStateMachineModuleData, Assembly-CSharp",
@@ -278,16 +302,24 @@
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
           "BaseMaxHealth": 0.0,
+          "BaseHealthRegenPerSecond": 0.0,
           "BaseDefense": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
           "BaseAttackPower": 0.0,
-          "BaseSkillRange": 0.0
+          "BaseSkillRange": 0.0,
+          "BaseActionSpeedBonus": 0.0,
+          "BaseChantSpeedBonus": 0.0,
+          "BaseWaterPowerBonus": 0.0,
+          "BaseFirePowerBonus": 0.0,
+          "BaseLightningPowerBonus": 0.0,
+          "BaseWindPowerBonus": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-          "BaseMaxMp": 0.0
+          "BaseMaxMp": 0.0,
+          "BaseMpRegenPerSecond": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitStateMachineModuleData, Assembly-CSharp",
@@ -314,16 +346,24 @@
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
           "BaseMaxHealth": 0.0,
+          "BaseHealthRegenPerSecond": 0.0,
           "BaseDefense": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
           "BaseAttackPower": 0.0,
-          "BaseSkillRange": 0.0
+          "BaseSkillRange": 0.0,
+          "BaseActionSpeedBonus": 0.0,
+          "BaseChantSpeedBonus": 0.0,
+          "BaseWaterPowerBonus": 0.0,
+          "BaseFirePowerBonus": 0.0,
+          "BaseLightningPowerBonus": 0.0,
+          "BaseWindPowerBonus": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-          "BaseMaxMp": 0.0
+          "BaseMaxMp": 0.0,
+          "BaseMpRegenPerSecond": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitStateMachineModuleData, Assembly-CSharp",
@@ -350,16 +390,24 @@
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
           "BaseMaxHealth": 0.0,
+          "BaseHealthRegenPerSecond": 0.0,
           "BaseDefense": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
           "BaseAttackPower": 0.0,
-          "BaseSkillRange": 0.0
+          "BaseSkillRange": 0.0,
+          "BaseActionSpeedBonus": 0.0,
+          "BaseChantSpeedBonus": 0.0,
+          "BaseWaterPowerBonus": 0.0,
+          "BaseFirePowerBonus": 0.0,
+          "BaseLightningPowerBonus": 0.0,
+          "BaseWindPowerBonus": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-          "BaseMaxMp": 0.0
+          "BaseMaxMp": 0.0,
+          "BaseMpRegenPerSecond": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitStateMachineModuleData, Assembly-CSharp",
@@ -386,16 +434,24 @@
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
           "BaseMaxHealth": 100.0,
+          "BaseHealthRegenPerSecond": 10.0,
           "BaseDefense": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
           "BaseAttackPower": 10.0,
-          "BaseSkillRange": 0.0
+          "BaseSkillRange": 0.0,
+          "BaseActionSpeedBonus": 0.0,
+          "BaseChantSpeedBonus": 0.0,
+          "BaseWaterPowerBonus": 0.0,
+          "BaseFirePowerBonus": 0.0,
+          "BaseLightningPowerBonus": 0.0,
+          "BaseWindPowerBonus": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-          "BaseMaxMp": 100.0
+          "BaseMaxMp": 100.0,
+          "BaseMpRegenPerSecond": 10.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitStateMachineModuleData, Assembly-CSharp",
@@ -523,16 +579,24 @@
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
           "BaseMaxHealth": 100000.0,
+          "BaseHealthRegenPerSecond": 100.0,
           "BaseDefense": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
           "BaseAttackPower": 0.0,
-          "BaseSkillRange": 0.0
+          "BaseSkillRange": 0.0,
+          "BaseActionSpeedBonus": 0.0,
+          "BaseChantSpeedBonus": 0.0,
+          "BaseWaterPowerBonus": 0.0,
+          "BaseFirePowerBonus": 0.0,
+          "BaseLightningPowerBonus": 0.0,
+          "BaseWindPowerBonus": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-          "BaseMaxMp": 0.0
+          "BaseMaxMp": 0.0,
+          "BaseMpRegenPerSecond": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitStateMachineModuleData, Assembly-CSharp",

@@ -35,6 +35,36 @@
       "MaxStacks": 5,
       "Id": 4,
       "Category": 1
+    },
+    {
+      "$type": "CrystalMagic.Game.Data.PropertyBuffData, Assembly-CSharp",
+      "PropertyModifiers": [
+        {
+          "Channel": 3,
+          "Factor": 0.0,
+          "Bonus": 10.0
+        }
+      ],
+      "Name": "通用法杖加成",
+      "CanStack": false,
+      "MaxStacks": 1,
+      "Id": 5,
+      "Category": 0
+    },
+    {
+      "$type": "CrystalMagic.Game.Data.PropertyBuffData, Assembly-CSharp",
+      "PropertyModifiers": [
+        {
+          "Channel": 11,
+          "Factor": 0.0,
+          "Bonus": 0.25
+        }
+      ],
+      "Name": "火焰增幅",
+      "CanStack": false,
+      "MaxStacks": 1,
+      "Id": 6,
+      "Category": 0
     }
   ]
 }

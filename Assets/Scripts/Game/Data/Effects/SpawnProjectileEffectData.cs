@@ -37,14 +37,14 @@ namespace CrystalMagic.Game.Data.Effects
         [JsonProperty("OnDestoryEffects")]
         public EffectData[] OnDestroyEffects;
 
-        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers)
+        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, float elementBonus = 0f, System.Func<EffectData, float> elementBonusResolver = null)
         {
-            SpawnProjectileEffectData copy = (SpawnProjectileEffectData)base.CreateRuntimeCopy(modifiers);
+            SpawnProjectileEffectData copy = (SpawnProjectileEffectData)base.CreateRuntimeCopy(modifiers, elementBonus, elementBonusResolver);
             copy.Speed = ApplyModifierNonNegative(modifiers, SkillModifierChannel.ProjectileSpeed, Speed);
             copy.MaxRange = ApplyModifierNonNegative(modifiers, SkillModifierChannel.ProjectileRange, MaxRange);
             copy.Scale = ApplyModifierNonNegative(modifiers, SkillModifierChannel.ProjectileScale, Scale);
-            copy.OnCollisionEffects = CreateRuntimeCopies(OnCollisionEffects, modifiers);
-            copy.OnDestroyEffects = CreateRuntimeCopies(OnDestroyEffects, modifiers);
+            copy.OnCollisionEffects = CreateRuntimeCopies(OnCollisionEffects, modifiers, elementBonusResolver);
+            copy.OnDestroyEffects = CreateRuntimeCopies(OnDestroyEffects, modifiers, elementBonusResolver);
             return copy;
         }
     }
