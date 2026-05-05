@@ -37,7 +37,12 @@ namespace CrystalMagic.Game.Skill.Effects
             for (int i = 0; i < _hits.Count; i++)
             {
                 UnitQueryHit hit = _hits[i];
-                if (!PassTargetConditions(Data.TargetConditions, hit.Entity, entityManager))
+                if (!PassTargetConditions(
+                        Data.TargetConditions,
+                        hit.Entity,
+                        entityManager,
+                        context.OriginEntity,
+                        context.HasOriginEntity))
                     continue;
 
                 Vector3 targetPosition = new(hit.Position.x, hit.Position.y, hit.Position.z);
@@ -68,12 +73,22 @@ namespace CrystalMagic.Game.Skill.Effects
             return false;
         }
 
-        private static bool PassTargetConditions(List<ConditionConfig> conditions, Entity target, EntityManager entityManager)
+        private static bool PassTargetConditions(
+            List<ConditionConfig> conditions,
+            Entity target,
+            EntityManager entityManager,
+            Entity originEntity,
+            bool hasOriginEntity)
         {
             if (conditions == null || conditions.Count == 0)
                 return true;
 
-            Comparator comparator = GetComparatorFactory().BuildComparator(conditions, target, entityManager);
+            Comparator comparator = GetComparatorFactory().BuildComparator(
+                conditions,
+                target,
+                entityManager,
+                originEntity,
+                hasOriginEntity);
             return comparator.GetResult();
         }
 

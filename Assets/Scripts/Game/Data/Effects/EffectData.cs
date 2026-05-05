@@ -14,19 +14,6 @@ namespace CrystalMagic.Game.Data.Effects
         Wind = 4,
     }
 
-    public enum ElementAffectMode
-    {
-        None = 0,
-        Magnitude = 1,
-        Duration = 2,
-        MagnitudeAndDuration = 3,
-    }
-
-    public interface IElementalEffectData
-    {
-        ElementType Element { get; }
-    }
-
     /// <summary>
     /// 效果配置数据基类
     /// 子类只存数据字段，不含任何执行逻辑
@@ -65,16 +52,6 @@ namespace CrystalMagic.Game.Data.Effects
             SkillModifierSet combined = modifiers?.Clone() ?? new SkillModifierSet();
             appendElementModifiers?.Invoke(math.max(-1f, elementBonus), combined);
             return combined;
-        }
-
-        protected static bool AffectsMagnitude(ElementAffectMode affectMode)
-        {
-            return affectMode == ElementAffectMode.Magnitude || affectMode == ElementAffectMode.MagnitudeAndDuration;
-        }
-
-        protected static bool AffectsDuration(ElementAffectMode affectMode)
-        {
-            return affectMode == ElementAffectMode.Duration || affectMode == ElementAffectMode.MagnitudeAndDuration;
         }
 
         protected static float ApplyModifier(SkillModifierSet modifiers, SkillModifierChannel channel, float value)

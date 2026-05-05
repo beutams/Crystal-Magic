@@ -19,6 +19,7 @@ namespace CrystalMagic.Core
         public sealed override void OnEnter()
         {
             OnEnterBattle();
+            UnitHealthBarComponent.Instance.SetBattleActive(true);
             OpenBattleUI();
             BindInput();
         }
@@ -31,6 +32,7 @@ namespace CrystalMagic.Core
 
         public sealed override void OnExit()
         {
+            UnitHealthBarComponent.Instance.SetBattleActive(false);
             ReleaseUIInputLock();
             UnbindInput();
             OnExitBattle();

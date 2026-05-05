@@ -37,26 +37,27 @@ public class ComparatorFactory
         }
         return compareType;
     }
-    public Comparator BuildComparator(List<ConditionConfig> configs, Entity entity, EntityManager em)
+    public Comparator BuildComparator(List<ConditionConfig> configs, Entity entity, EntityManager em, Entity originEntity = default, bool hasOriginEntity = false)
     {
         if (configs == null || configs.Count == 0)
             return new Comparator { conditions = Array.Empty<Condition>() };
 
+        SourceContext context = new(entity, em, originEntity, hasOriginEntity);
         var conditions = new List<Condition>(configs.Count);
         foreach (var cfg in configs)
         {
-            var cond = BuildCondition(cfg, entity, em);
+            var cond = BuildCondition(cfg, context);
             if (cond != null) conditions.Add(cond);
         }
         return new Comparator { conditions = conditions.ToArray() };
     }
 
-    private Condition BuildCondition(ConditionConfig cfg, Entity entity, EntityManager em)
+    private Condition BuildCondition(ConditionConfig cfg, in SourceContext context)
     {
         ISource source = CreateSource(cfg.SourceType);
         if (source == null) return null;
 
-        source.Init(entity, em);
+        source.Init(context);
 
         ICompareType compareType = CreateCompareType(cfg.CompareType, cfg.CompareValue);
         if (compareType == null) return null;

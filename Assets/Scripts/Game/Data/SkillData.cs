@@ -67,7 +67,6 @@ namespace CrystalMagic.Game.Data
 
         Damage = 100,
         FlatDamage = 101,
-        CriticalBonus = 102,
         KnockbackForce = 103,
         HitStunSeconds = 104,
         Heal = 105,

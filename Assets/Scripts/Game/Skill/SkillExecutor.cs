@@ -41,6 +41,8 @@ namespace CrystalMagic.Game.Skill
                 AreaSearchEffectData data => new AreaSearchEffect(data),
                 CameraShakeEffectData data => new CameraShakeEffect(data),
                 DamageEffectData data => new DamageEffect(data),
+                HitStunEffectData data => new HitStunEffect(data),
+                KnockbackEffectData data => new KnockbackEffect(data),
                 PersistentEffectData data => new PersistentEffect(data),
                 SpawnProjectileEffectData data => new SpawnProjectileEffect(data),
                 SpawnSoundEffectData data => new SpawnSoundEffect(data),

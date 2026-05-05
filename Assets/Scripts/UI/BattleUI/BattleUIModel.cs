@@ -16,11 +16,19 @@ namespace CrystalMagic.UI
         private Entity _cachedPlayerEntity = Entity.Null;
         private float _hpRatio = 1f;
         private float _mpRatio = 1f;
+        private float _currentHp;
+        private float _maxHp;
+        private float _currentMp;
+        private float _maxMp;
 
         public override string ChangedEventName => DataChangedEventName;
         public IReadOnlyList<BattleSkillDisplayData> SkillItems => _skillItems;
         public float HpRatio => _hpRatio;
         public float MpRatio => _mpRatio;
+        public float CurrentHp => _currentHp;
+        public float MaxHp => _maxHp;
+        public float CurrentMp => _currentMp;
+        public float MaxMp => _maxMp;
 
         public void Refresh()
         {
@@ -44,10 +52,18 @@ namespace CrystalMagic.UI
 
             float nextHpRatio = snapshot.HasHealth ? snapshot.HpRatio : 1f;
             float nextMpRatio = snapshot.HasMana ? snapshot.MpRatio : 1f;
+            float nextCurrentHp = snapshot.HasHealth ? snapshot.CurrentHealth : 0f;
+            float nextMaxHp = snapshot.HasHealth ? snapshot.MaxHealth : 0f;
+            float nextCurrentMp = snapshot.HasMana ? snapshot.CurrentMana : 0f;
+            float nextMaxMp = snapshot.HasMana ? snapshot.MaxMana : 0f;
 
             bool changed = !AreSkillItemsEqual(_skillItems, nextItems)
                 || !Mathf.Approximately(_hpRatio, nextHpRatio)
-                || !Mathf.Approximately(_mpRatio, nextMpRatio);
+                || !Mathf.Approximately(_mpRatio, nextMpRatio)
+                || !Mathf.Approximately(_currentHp, nextCurrentHp)
+                || !Mathf.Approximately(_maxHp, nextMaxHp)
+                || !Mathf.Approximately(_currentMp, nextCurrentMp)
+                || !Mathf.Approximately(_maxMp, nextMaxMp);
 
             if (!changed)
                 return;
@@ -56,6 +72,10 @@ namespace CrystalMagic.UI
             _skillItems.AddRange(nextItems);
             _hpRatio = nextHpRatio;
             _mpRatio = nextMpRatio;
+            _currentHp = nextCurrentHp;
+            _maxHp = nextMaxHp;
+            _currentMp = nextCurrentMp;
+            _maxMp = nextMaxMp;
 
             if (publishIfChanged)
                 PublishChanged();
@@ -141,6 +161,8 @@ namespace CrystalMagic.UI
                 UnitVitalityComponent vitality = entityManager.GetComponentData<UnitVitalityComponent>(player);
                 float maxHealth = Mathf.Max(vitality.RealMaxHealth, 0.0001f);
                 snapshot.HasHealth = true;
+                snapshot.CurrentHealth = vitality.CurrentHealth;
+                snapshot.MaxHealth = vitality.RealMaxHealth;
                 snapshot.HpRatio = Mathf.Clamp01(vitality.CurrentHealth / maxHealth);
             }
 
@@ -149,6 +171,8 @@ namespace CrystalMagic.UI
                 UnitManaComponent mana = entityManager.GetComponentData<UnitManaComponent>(player);
                 float maxMana = Mathf.Max(mana.RealMaxMp, 0.0001f);
                 snapshot.HasMana = true;
+                snapshot.CurrentMana = mana.CurrentMana;
+                snapshot.MaxMana = mana.RealMaxMp;
                 snapshot.MpRatio = Mathf.Clamp01(mana.CurrentMana / maxMana);
             }
 
@@ -251,8 +275,12 @@ namespace CrystalMagic.UI
         public float PhaseElapsed;
         public float PhaseDuration;
         public bool HasHealth;
+        public float CurrentHealth;
+        public float MaxHealth;
         public float HpRatio;
         public bool HasMana;
+        public float CurrentMana;
+        public float MaxMana;
         public float MpRatio;
     }
 }

@@ -61,10 +61,12 @@ namespace CrystalMagic.Editor.Data
                 : Color.gray;
         }
 
-        private static readonly Type[]   KnownEffectTypes =
+        private static readonly Type[] KnownEffectTypes =
         {
             typeof(AreaSearchEffectData),
             typeof(DamageEffectData),
+            typeof(KnockbackEffectData),
+            typeof(HitStunEffectData),
             typeof(PersistentEffectData),
             typeof(SpawnProjectileEffectData),
             typeof(SpawnSoundEffectData),
@@ -75,6 +77,8 @@ namespace CrystalMagic.Editor.Data
         {
             "范围搜索 (AreaSearch)",
             "伤害 (Damage)",
+            "击退 (Knockback)",
+            "硬直 (HitStun)",
             "持续效果 (Persistent)",
             "创建投射物 (SpawnProjectile)",
             "生成音效 (SpawnSound)",
@@ -83,13 +87,15 @@ namespace CrystalMagic.Editor.Data
         };
         private static readonly Color[] EffectColors =
         {
-            new(0.14f, 0.38f, 0.60f),  // AreaSearch  - 蓝
-            new(0.60f, 0.18f, 0.14f),  // Damage      - 红
-            new(0.14f, 0.50f, 0.24f),  // Persistent  - 绿
-            new(0.55f, 0.38f, 0.10f),  // Projectile  - 橙
-            new(0.38f, 0.18f, 0.55f),  // Sound       - 紫
-            new(0.18f, 0.48f, 0.48f),  // Vfx         - 青
-            new(0.58f, 0.42f, 0.12f),  // CameraShake
+            new(0.14f, 0.38f, 0.60f),
+            new(0.60f, 0.18f, 0.14f),
+            new(0.55f, 0.33f, 0.14f),
+            new(0.46f, 0.22f, 0.12f),
+            new(0.14f, 0.50f, 0.24f),
+            new(0.55f, 0.38f, 0.10f),
+            new(0.38f, 0.18f, 0.55f),
+            new(0.18f, 0.48f, 0.48f),
+            new(0.58f, 0.42f, 0.12f),
         };
 
         // ===== 鏁版嵁 =====
@@ -1005,3 +1011,4 @@ namespace CrystalMagic.Editor.Data
         }
     }
 }
+

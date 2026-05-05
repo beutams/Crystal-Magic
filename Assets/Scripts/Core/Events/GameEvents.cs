@@ -1,3 +1,5 @@
+using Unity.Entities;
+
 namespace CrystalMagic.Core {
     /// <summary>
     /// 事件接口定义
@@ -13,6 +15,20 @@ namespace CrystalMagic.Core {
         }
 
         public bool IsLocked { get; }
+    }
+
+    public readonly struct UnitDamagedEvent : IGameEvent
+    {
+        public UnitDamagedEvent(Entity targetEntity, float currentHealth, float maxHealth)
+        {
+            TargetEntity = targetEntity;
+            CurrentHealth = currentHealth;
+            MaxHealth = maxHealth;
+        }
+
+        public Entity TargetEntity { get; }
+        public float CurrentHealth { get; }
+        public float MaxHealth { get; }
     }
 
 }

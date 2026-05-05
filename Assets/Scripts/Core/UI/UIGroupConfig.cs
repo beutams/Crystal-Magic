@@ -25,6 +25,7 @@ namespace CrystalMagic.Core {
         public CanvasScaler.ScreenMatchMode screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
         public float planeDistance = 0.31f;
         public float hoverInfoDelaySeconds = 2f;
+        public float unitHealthBarShowSeconds = 3f;
         public List<UIGroupEntry> groups = new();
     }
 

@@ -12,7 +12,42 @@
       "MoveSpeedMultiplier": 0.5,
       "IconPath": "Assets/Res/Sprites/Item/FireBall.png",
       "Conditions": [],
-      "EffectChain": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+          "Radius": 5.0,
+          "CenterOffset": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitIsEnemySource",
+              "CompareType": "IsTrue",
+              "CompareValue": 0.0
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "DamageCoefficient": 50.0,
+              "FlatDamageBonus": 0.0,
+              "Element": 2,
+              "Conditions": [
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitIsEnemySource",
+                  "CompareType": "IsTrue",
+                  "CompareValue": 0.0
+                }
+              ]
+            }
+          ],
+          "Conditions": []
+        }
+      ],
       "Id": 1
     },
     {

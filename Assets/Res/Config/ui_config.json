@@ -4,6 +4,7 @@
     "screenMatchMode": 1,
     "planeDistance": 0.3100000023841858,
     "hoverInfoDelaySeconds": 2.0,
+    "unitHealthBarShowSeconds": 3.0,
     "groups": [
         {
             "groupType": 0,
@@ -17,6 +18,14 @@
                 "GameMenuUI",
                 "GameSaveUI",
                 "PropertyUI"
+            ]
+        },
+        {
+            "groupType": 2,
+            "groupName": "Bottom",
+            "order": 80,
+            "uiNames": [
+                "UnitHealthBarUI"
             ]
         },
         {

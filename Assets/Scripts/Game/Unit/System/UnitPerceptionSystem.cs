@@ -51,7 +51,9 @@ partial class UnitPerceptionSystem : SystemBase
                     continue;
                 if (!EntityManager.Exists(hit.Entity) || !EntityManager.HasComponent<UnitFactionComponent>(hit.Entity))
                     continue;
-                if (!IsEnemy(faction.ValueRO.Value, EntityManager.GetComponentData<UnitFactionComponent>(hit.Entity).Value))
+                if (!UnitFactionUtility.IsEnemy(
+                        faction.ValueRO.Value,
+                        EntityManager.GetComponentData<UnitFactionComponent>(hit.Entity).Value))
                     continue;
                 if (EntityManager.HasComponent<UnitVitalityComponent>(hit.Entity) &&
                     EntityManager.GetComponentData<UnitVitalityComponent>(hit.Entity).CurrentHealth <= 0f)
@@ -71,13 +73,5 @@ partial class UnitPerceptionSystem : SystemBase
 
             perception.ValueRW = perceptionValue;
         }
-    }
-
-    private static bool IsEnemy(UnitFactionType self, UnitFactionType other)
-    {
-        if (self == UnitFactionType.Enemy)
-            return other != UnitFactionType.Enemy;
-
-        return other == UnitFactionType.Enemy;
     }
 }

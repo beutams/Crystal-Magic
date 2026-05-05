@@ -117,6 +117,16 @@ namespace CrystalMagic.Editor
             }
             EditorGUILayout.EndHorizontal();
 
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Unit HealthBar Time", GUILayout.Width(120));
+            float newUnitHealthBarShowSeconds = EditorGUILayout.FloatField(_config.unitHealthBarShowSeconds);
+            if (!Mathf.Approximately(newUnitHealthBarShowSeconds, _config.unitHealthBarShowSeconds))
+            {
+                _config.unitHealthBarShowSeconds = Mathf.Max(0f, newUnitHealthBarShowSeconds);
+                _isDirty = true;
+            }
+            EditorGUILayout.EndHorizontal();
+
             EditorGUILayout.Space();
 
             _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
@@ -248,12 +258,32 @@ namespace CrystalMagic.Editor
             _config.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
             _config.planeDistance = 0.31f;
             _config.hoverInfoDelaySeconds = 2f;
+            _config.unitHealthBarShowSeconds = 3f;
             _config.groups.Add(new UIGroupEntry
             {
                 groupName = "Default",
                 groupType = UIGroupType.Stack,
                 order = 100,
-                uiNames = new List<string>()
+                uiNames = new List<string>
+                {
+                    "MainMenuUI",
+                    "LoadUI",
+                    "SaveUI",
+                    "ConfirmUI",
+                    "GameMenuUI",
+                    "GameSaveUI",
+                    "PropertyUI",
+                }
+            });
+            _config.groups.Add(new UIGroupEntry
+            {
+                groupName = "Bottom",
+                groupType = UIGroupType.List,
+                order = 80,
+                uiNames = new List<string>
+                {
+                    "UnitHealthBarUI",
+                }
             });
             _isDirty = true;
         }

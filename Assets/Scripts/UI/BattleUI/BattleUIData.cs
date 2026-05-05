@@ -23,11 +23,13 @@ public class BattleUIData : UIData
     public UINode SkillChain_Viewport_Content_SkillItem_Index_IndexNum;
     public UINode HP;
     public UINode HP_BarIcon;
+    public UINode HP_Value;
     public UINode HP_BarBackground;
     public UINode HP_BarMask;
     public UINode HP_BarMask_Bar;
     public UINode MP;
     public UINode MP_BarIcon;
+    public UINode MP_Value;
     public UINode MP_BarBackground;
     public UINode MP_BarMask;
     public UINode MP_BarMask_Bar;
@@ -51,11 +53,13 @@ public class BattleUIData : UIData
         SkillChain_Viewport_Content_SkillItem_Index_IndexNum = UINode.From(Find(root, "SkillChain/Viewport/Content/SkillItem/Index/IndexNum"));
         HP = UINode.From(Find(root, "HP"));
         HP_BarIcon = UINode.From(Find(root, "HP/BarIcon"));
+        HP_Value = UINode.From(Find(root, "HP/Value"));
         HP_BarBackground = UINode.From(Find(root, "HP/BarBackground"));
         HP_BarMask = UINode.From(Find(root, "HP/BarMask"));
         HP_BarMask_Bar = UINode.From(Find(root, "HP/BarMask/Bar"));
         MP = UINode.From(Find(root, "MP"));
         MP_BarIcon = UINode.From(Find(root, "MP/BarIcon"));
+        MP_Value = UINode.From(Find(root, "MP/Value"));
         MP_BarBackground = UINode.From(Find(root, "MP/BarBackground"));
         MP_BarMask = UINode.From(Find(root, "MP/BarMask"));
         MP_BarMask_Bar = UINode.From(Find(root, "MP/BarMask/Bar"));

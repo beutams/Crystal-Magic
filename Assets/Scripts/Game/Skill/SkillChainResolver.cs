@@ -114,10 +114,19 @@ namespace CrystalMagic.Game.Skill
 
         private static float GetElementPowerBonus(UnitElementComponent? elementComponent, EffectData effectData)
         {
-            if (!elementComponent.HasValue || effectData is not IElementalEffectData elementalEffect)
+            if (!elementComponent.HasValue || effectData == null)
                 return 0f;
 
-            return elementComponent.Value.GetPowerBonus(elementalEffect.Element);
+            ElementType element = effectData switch
+            {
+                DamageEffectData damageEffectData => damageEffectData.Element,
+                PersistentEffectData persistentEffectData => persistentEffectData.Element,
+                _ => ElementType.None,
+            };
+
+            return element == ElementType.None
+                ? 0f
+                : elementComponent.Value.GetPowerBonus(element);
         }
 
         public static SkillModifierSet CollectModifiers(EntityManager entityManager, Entity entity, SkillChainSlotData slotData = null)

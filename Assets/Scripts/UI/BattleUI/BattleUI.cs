@@ -34,7 +34,7 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
             return;
 
         RenderSkillChain(Model.SkillItems);
-        RenderVitalityAndMana(Model.HpRatio, Model.MpRatio);
+        RenderVitalityAndMana(Model.HpRatio, Model.MpRatio, Model.CurrentHp, Model.MaxHp, Model.CurrentMp, Model.MaxMp);
     }
 
     private void RenderSkillChain(IReadOnlyList<BattleSkillDisplayData> skillItems)
@@ -84,11 +84,13 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
             UI.SkillChain_Viewport_Content_SkillItem.GameObject.AddComponent<BattleUI_SkillItemView>();
     }
 
-    private void RenderVitalityAndMana(float hpRatio, float mpRatio)
+    private void RenderVitalityAndMana(float hpRatio, float mpRatio, float currentHp, float maxHp, float currentMp, float maxMp)
     {
         CacheBarWidths();
         SetMaskWidth(UI.HP_BarMask.RectTransform, hpRatio, _hpMaskBaseWidth);
         SetMaskWidth(UI.MP_BarMask.RectTransform, mpRatio, _mpMaskBaseWidth);
+        SetValueText(UI.HP_Value.TextMeshProUGUI, currentHp, maxHp);
+        SetValueText(UI.MP_Value.TextMeshProUGUI, currentMp, maxMp);
     }
 
     private void CacheBarWidths()
@@ -114,6 +116,21 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
             return;
 
         rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, baseWidth * Mathf.Clamp01(ratio));
+    }
+
+    private static void SetValueText(TMPro.TextMeshProUGUI text, float current, float max)
+    {
+        if (text == null)
+            return;
+
+        text.text = $"{FormatValue(current)}/{FormatValue(max)}";
+    }
+
+    private static string FormatValue(float value)
+    {
+        return Mathf.Approximately(value, Mathf.Round(value))
+            ? Mathf.RoundToInt(value).ToString()
+            : value.ToString("0.#");
     }
 }
 
