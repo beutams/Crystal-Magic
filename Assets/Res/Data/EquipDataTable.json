@@ -1,0 +1,30 @@
+﻿{
+  "Rows": [
+    {
+      "Properties": [
+        {
+          "Channel": 3,
+          "BaseBonus": 10.0
+        },
+        {
+          "Channel": 8,
+          "BaseBonus": -0.1
+        },
+        {
+          "Channel": 0,
+          "BaseBonus": -0.1
+        }
+      ],
+      "Id": 5
+    },
+    {
+      "Properties": [
+        {
+          "Channel": 11,
+          "BaseBonus": 0.25
+        }
+      ],
+      "Id": 6
+    }
+  ]
+}

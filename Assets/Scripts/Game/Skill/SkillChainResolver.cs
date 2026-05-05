@@ -139,17 +139,6 @@ namespace CrystalMagic.Game.Skill
                 }
             }
 
-            if (entityManager.HasBuffer<UnitPassiveBuffElement>(entity))
-            {
-                DynamicBuffer<UnitPassiveBuffElement> passiveBuffs = entityManager.GetBuffer<UnitPassiveBuffElement>(entity);
-                for (int i = 0; i < passiveBuffs.Length; i++)
-                {
-                    UnitPassiveBuffElement passiveBuff = passiveBuffs[i];
-                    if (dataComponent.Get<BuffData>(passiveBuff.BuffId) is SkillModifierBuffData buffData)
-                        modifiers.Add(buffData.SkillModifiers, math.max(1, passiveBuff.StackCount));
-                }
-            }
-
             if (slotData != null && slotData.SkillEffectId > 0)
             {
                 if (dataComponent.Get<SkillEffectData>(slotData.SkillEffectId) is SkillEffectData skillEffectData)

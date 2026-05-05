@@ -25,10 +25,12 @@ public class UnitManaAuthoring : MonoBehaviour
             AddComponent(entity, new UnitManaComponent
             {
                 BaseMaxMp = baseMp,
+                BaseMaxMpOffset = 0f,
                 MpFactor = 1f,
                 MpBonus = 0f,
                 CurrentMana = baseMp,
                 BaseMpRegenPerSecond = baseMpRegenPerSecond,
+                BaseMpRegenPerSecondOffset = 0f,
                 MpRegenFactor = 1f,
                 MpRegenBonus = 0f,
             });
@@ -39,13 +41,15 @@ public class UnitManaAuthoring : MonoBehaviour
 public struct UnitManaComponent : IComponentData
 {
     public float BaseMaxMp;
+    public float BaseMaxMpOffset;
     public float MpFactor;
     public float MpBonus;
     public float CurrentMana;
     public float BaseMpRegenPerSecond;
+    public float BaseMpRegenPerSecondOffset;
     public float MpRegenFactor;
     public float MpRegenBonus;
 
-    public float RealMaxMp => BaseMaxMp * MpFactor + MpBonus;
-    public float RealMpRegenPerSecond => BaseMpRegenPerSecond * MpRegenFactor + MpRegenBonus;
+    public float RealMaxMp => (BaseMaxMp + BaseMaxMpOffset) * MpFactor + MpBonus;
+    public float RealMpRegenPerSecond => (BaseMpRegenPerSecond + BaseMpRegenPerSecondOffset) * MpRegenFactor + MpRegenBonus;
 }

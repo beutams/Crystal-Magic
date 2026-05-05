@@ -27,13 +27,16 @@ public class UnitVitalityAuthoring : MonoBehaviour
             AddComponent(entity, new UnitVitalityComponent
             {
                 BaseMaxHealth = baseHealth,
+                BaseMaxHealthOffset = 0f,
                 HealthFactor = 1f,
                 HealthBonus = 0f,
                 CurrentHealth = baseHealth,
                 BaseHealthRegenPerSecond = baseHealthRegenPerSecond,
+                BaseHealthRegenPerSecondOffset = 0f,
                 HealthRegenFactor = 1f,
                 HealthRegenBonus = 0f,
                 BaseDefense = baseDefense,
+                BaseDefenseOffset = 0f,
                 DefenseFactor = 1f,
                 DefenseBonus = 0f,
             });
@@ -44,17 +47,20 @@ public class UnitVitalityAuthoring : MonoBehaviour
 public struct UnitVitalityComponent : IComponentData
 {
     public float BaseMaxHealth;
+    public float BaseMaxHealthOffset;
     public float HealthFactor;
     public float HealthBonus;
     public float CurrentHealth;
     public float BaseHealthRegenPerSecond;
+    public float BaseHealthRegenPerSecondOffset;
     public float HealthRegenFactor;
     public float HealthRegenBonus;
     public float BaseDefense;
+    public float BaseDefenseOffset;
     public float DefenseFactor;
     public float DefenseBonus;
 
-    public float RealMaxHealth => BaseMaxHealth * HealthFactor + HealthBonus;
-    public float RealHealthRegenPerSecond => BaseHealthRegenPerSecond * HealthRegenFactor + HealthRegenBonus;
-    public float RealDefense => BaseDefense * DefenseFactor + DefenseBonus;
+    public float RealMaxHealth => (BaseMaxHealth + BaseMaxHealthOffset) * HealthFactor + HealthBonus;
+    public float RealHealthRegenPerSecond => (BaseHealthRegenPerSecond + BaseHealthRegenPerSecondOffset) * HealthRegenFactor + HealthRegenBonus;
+    public float RealDefense => (BaseDefense + BaseDefenseOffset) * DefenseFactor + DefenseBonus;
 }

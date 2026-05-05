@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -26,7 +26,7 @@ namespace CrystalMagic.Editor.Data
         private const float  InsertFieldWidth = 30f;
         private const float  LabelWidth     = 180f;
 
-        // ===== Buff 子类注册 =====
+        // ===== Buff 瀛愮被娉ㄥ唽 =====
         private static readonly Type[]   KnownBuffTypes =
         {
             typeof(PropertyBuffData),
@@ -40,8 +40,8 @@ namespace CrystalMagic.Editor.Data
         };
         private static readonly Color[] BuffColors =
         {
-            new(0.14f, 0.50f, 0.24f),  // PropertyBuff — 绿
-            new(0.60f, 0.18f, 0.14f),  // EffectBuff   — 红
+            new(0.14f, 0.50f, 0.24f),  // PropertyBuff - 绿
+            new(0.60f, 0.18f, 0.14f),  // EffectBuff - 红
         };
 
         // ===== Effect 子类注册（用于 EffectBuff 的 EffectChain）=====
@@ -83,21 +83,21 @@ namespace CrystalMagic.Editor.Data
         };
         private static readonly Color[] EffectColors =
         {
-            new(0.14f, 0.38f, 0.60f),  // AreaSearch  — 蓝
-            new(0.60f, 0.18f, 0.14f),  // Damage      — 红
-            new(0.14f, 0.50f, 0.24f),  // Persistent  — 绿
-            new(0.55f, 0.38f, 0.10f),  // Projectile  — 橙
-            new(0.38f, 0.18f, 0.55f),  // Sound       — 紫
-            new(0.18f, 0.48f, 0.48f),  // Vfx         — 青
+            new(0.14f, 0.38f, 0.60f),  // AreaSearch  - 蓝
+            new(0.60f, 0.18f, 0.14f),  // Damage      - 红
+            new(0.14f, 0.50f, 0.24f),  // Persistent  - 绿
+            new(0.55f, 0.38f, 0.10f),  // Projectile  - 橙
+            new(0.38f, 0.18f, 0.55f),  // Sound       - 紫
+            new(0.18f, 0.48f, 0.48f),  // Vfx         - 青
             new(0.58f, 0.42f, 0.12f),  // CameraShake
         };
 
-        // ===== 数据 =====
+        // ===== 鏁版嵁 =====
         private List<BuffData> _rows = new();
         private bool   _isDirty;
         private string _statusText = "";
 
-        // ===== UI 状态 =====
+        // ===== UI 鐘舵€?=====
         private int     _selectedIndex     = -1;
         private int     _addBuffTypeIndex;
         private int     _addEffectTypeIndex;
@@ -105,7 +105,7 @@ namespace CrystalMagic.Editor.Data
         private Vector2 _detailScrollPos;
         private readonly Dictionary<BuffData, string> _insertTexts = new();
 
-        // 每个嵌套效果链的"待添加类型"选中索引，key = 字段路径
+        // 每个嵌套效果链的“待添加类型”选中索引，key = 字段路径
         private readonly Dictionary<string, int>  _nestedTypeIndices = new();
         // 每个效果条目的折叠状态，key = 条目路径，true = 展开
         private readonly Dictionary<string, bool> _effectFoldStates  = new();
@@ -115,7 +115,7 @@ namespace CrystalMagic.Editor.Data
         private string[] _sourceTypeNames = Array.Empty<string>();
         private string[] _compareTypeNames = Array.Empty<string>();
 
-        // ===== 颜色 =====
+        // ===== 棰滆壊 =====
         private static readonly Color SelectedColor = new(0.27f, 0.52f, 0.85f, 0.85f);
         private static readonly Color EvenRowColor  = new(0.22f, 0.22f, 0.22f, 1f);
         private static readonly Color OddRowColor   = new(0.25f, 0.25f, 0.25f, 1f);
@@ -123,7 +123,7 @@ namespace CrystalMagic.Editor.Data
         private static readonly Color SectionLine   = new(0.45f, 0.45f, 0.45f, 1f);
         private static readonly Color DividerColor  = new(0.15f, 0.15f, 0.15f, 1f);
 
-        // ===== JSON 设置 =====
+        // ===== JSON 璁剧疆 =====
         private static JsonSerializerSettings JsonSettings => new()
         {
             TypeNameHandling    = TypeNameHandling.Auto,
@@ -133,7 +133,7 @@ namespace CrystalMagic.Editor.Data
 
         private class TableWrapper { public List<BuffData> Rows = new(); }
 
-        // ─────────────────────────────────────────
+        // --------------------
         [MenuItem("Tools/Data/Buff Editor")]
         public static void Open()
         {
@@ -164,9 +164,9 @@ namespace CrystalMagic.Editor.Data
                 .ToArray();
         }
 
-        // ─────────────────────────────────────────
-        //  加载 / 保存
-        // ─────────────────────────────────────────
+        // --------------------
+        // 加载 / 保存
+        // --------------------
         private void LoadData()
         {
             _rows.Clear();
@@ -175,7 +175,7 @@ namespace CrystalMagic.Editor.Data
 
             if (!File.Exists(DataPath))
             {
-                _statusText = $"未找到文件：{DataPath}，将新建";
+                _statusText = $"未找到文件：{DataPath}，将自动新建";
                 return;
             }
 
@@ -186,7 +186,7 @@ namespace CrystalMagic.Editor.Data
                 if (wrapper?.Rows != null) _rows = wrapper.Rows;
                 NormalizeRowIds();
                 _insertTexts.Clear();
-                _statusText = $"已加载 {_rows.Count} 条  ·  {DataPath}";
+                _statusText = $"已加载 {_rows.Count} 条 · {DataPath}";
             }
             catch (Exception ex)
             {
@@ -207,7 +207,7 @@ namespace CrystalMagic.Editor.Data
                 File.WriteAllText(DataPath, json, Encoding.UTF8);
                 AssetDatabase.Refresh();
                 _isDirty    = false;
-                _statusText = $"已保存 {_rows.Count} 条  ·  {DataPath}";
+                _statusText = $"已保存 {_rows.Count} 条 · {DataPath}";
                 Debug.Log($"[BuffEditor] Saved {DataPath}");
             }
             catch (Exception ex)
@@ -217,14 +217,14 @@ namespace CrystalMagic.Editor.Data
             }
         }
 
-        // ─────────────────────────────────────────
-        //  新增 / 删除
-        // ─────────────────────────────────────────
+        // --------------------
+        // 新增 / 删除
+        // --------------------
         private void AddBuff()
         {
             BuffData newBuff = (BuffData)Activator.CreateInstance(KnownBuffTypes[_addBuffTypeIndex]);
             newBuff.Id       = _rows.Count + 1;
-            newBuff.Name     = $"新Buff {_rows.Count + 1}";
+            newBuff.Name     = $"新 Buff {_rows.Count + 1}";
             newBuff.MaxStacks = 1;
 
             if (newBuff is EffectBuffData te)
@@ -258,7 +258,7 @@ namespace CrystalMagic.Editor.Data
             if (copy == null) return;
 
             copy.Id = _rows.Count + 1;
-            copy.Name = string.IsNullOrWhiteSpace(source.Name) ? $"鏂癇uff {copy.Id}" : $"{source.Name}_Copy";
+            copy.Name = string.IsNullOrWhiteSpace(source.Name) ? $"复制 Buff {copy.Id}" : $"{source.Name}_Copy";
             _rows.Add(copy);
             NormalizeRowIds();
             _selectedIndex = _rows.Count - 1;
@@ -360,9 +360,9 @@ namespace CrystalMagic.Editor.Data
             Repaint();
         }
 
-        // ─────────────────────────────────────────
+        // --------------------
         //  OnGUI
-        // ─────────────────────────────────────────
+        // --------------------
         private void OnGUI()
         {
             DrawToolbar();
@@ -373,9 +373,9 @@ namespace CrystalMagic.Editor.Data
             EditorGUILayout.EndHorizontal();
         }
 
-        // ─────────────────────────────────────────
-        //  工具栏
-        // ─────────────────────────────────────────
+        // --------------------
+        // 工具栏
+        // --------------------
         private void DrawToolbar()
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
@@ -388,10 +388,10 @@ namespace CrystalMagic.Editor.Data
                 SaveData();
             GUI.enabled = true;
 
-            // 新增：先选子类类型，再点加号
+            // 先选择 Buff 子类，再执行新增
             _addBuffTypeIndex = EditorGUILayout.Popup(_addBuffTypeIndex, GetBuffTypeDisplayNames(),
                 EditorStyles.toolbarPopup, GUILayout.Width(180));
-            if (GUILayout.Button("＋ 新增", EditorStyles.toolbarButton, GUILayout.Width(52)))
+            if (GUILayout.Button("+ 新增", EditorStyles.toolbarButton, GUILayout.Width(52)))
                 AddBuff();
 
             GUI.enabled = _selectedIndex >= 0;
@@ -414,9 +414,9 @@ namespace CrystalMagic.Editor.Data
             EditorGUILayout.EndHorizontal();
         }
 
-        // ─────────────────────────────────────────
-        //  左侧列表
-        // ─────────────────────────────────────────
+        // --------------------
+        // 左侧列表
+        // --------------------
         private void DrawListPanel()
         {
             EditorGUILayout.BeginVertical(GUILayout.Width(ListPanelWidth), GUILayout.ExpandHeight(true));
@@ -471,7 +471,7 @@ namespace CrystalMagic.Editor.Data
                     }
                 }
 
-                // 左侧小色块表示 Buff 子类
+                // 左侧小色块用于标记 Buff 子类
                 int    typeIdx  = Array.IndexOf(KnownBuffTypes, buff.GetType());
                 Color  typeColor = GetBuffTypeColor(typeIdx);
                 EditorGUI.DrawRect(new Rect(insertRect.xMax + 4f, itemRect.y, 4f, itemRect.height), typeColor);
@@ -505,9 +505,9 @@ namespace CrystalMagic.Editor.Data
             EditorGUI.DrawRect(r, DividerColor);
         }
 
-        // ─────────────────────────────────────────
-        //  右侧详情
-        // ─────────────────────────────────────────
+        // --------------------
+        // 右侧详情
+        // --------------------
         private void DrawDetailPanel()
         {
             EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
@@ -529,11 +529,11 @@ namespace CrystalMagic.Editor.Data
             if (typeIdx >= 0)
             {
                 Color prev = GUI.color;
-            GUI.color = GetBuffTypeColor(typeIdx);
-                GUILayout.Label("■", GUILayout.Width(14));
+                GUI.color = GetBuffTypeColor(typeIdx);
+                GUILayout.Label("●", GUILayout.Width(14));
                 GUI.color = prev;
             }
-            GUILayout.Label($"[{buff.Id}]  {buff.Name}  —  {typeName}", EditorStyles.boldLabel);
+            GUILayout.Label($"[{buff.Id}]  {buff.Name}  ·  {typeName}", EditorStyles.boldLabel);
             EditorGUILayout.EndHorizontal();
 
             _detailScrollPos = EditorGUILayout.BeginScrollView(_detailScrollPos);
@@ -543,7 +543,7 @@ namespace CrystalMagic.Editor.Data
 
             EditorGUI.BeginChangeCheck();
 
-            // ── 基础信息 ──────────────────────────────────
+            // -------------------- 基础信息 --------------------
             DrawSectionHeader("基础信息");
             using (new EditorGUI.DisabledScope(true))
                 EditorGUILayout.IntField("Id", buff.Id);
@@ -556,7 +556,7 @@ namespace CrystalMagic.Editor.Data
                 _isDirty = true;
 
 
-            // ── 子类字段 ──────────────────────────────────
+            // -------------------- 子类字段 --------------------
             if (buff is PropertyBuffData propBuff)
                 DrawPropertyBuffFields(propBuff);
             else if (buff is EffectBuffData effectBuff)
@@ -569,12 +569,12 @@ namespace CrystalMagic.Editor.Data
             EditorGUILayout.EndVertical();
         }
 
-        // ─────────────────────────────────────────
-        //  PropertyBuffData 字段
-        // ─────────────────────────────────────────
+        // --------------------
+        // PropertyBuffData 字段
+        // --------------------
         private void DrawPropertyBuffFields(PropertyBuffData buff)
         {
-            DrawSectionHeader("灞炴€т慨姝?");
+            DrawSectionHeader("属性修饰");
             buff.PropertyModifiers ??= new List<PropertyModifierEntry>();
 
             int removeAt = -1;
@@ -588,11 +588,11 @@ namespace CrystalMagic.Editor.Data
 
                 float prevWidth = EditorGUIUtility.labelWidth;
                 EditorGUIUtility.labelWidth = 46f;
-                entry.Factor = EditorGUILayout.FloatField("鍊嶇巼", entry.Factor, GUILayout.MinWidth(90));
-                entry.Bonus = EditorGUILayout.FloatField("鍔犲€?", entry.Bonus, GUILayout.MinWidth(90));
+                entry.Factor = EditorGUILayout.FloatField("倍率", entry.Factor, GUILayout.MinWidth(90));
+                entry.Bonus = EditorGUILayout.FloatField("加值", entry.Bonus, GUILayout.MinWidth(90));
                 EditorGUIUtility.labelWidth = prevWidth;
 
-                if (GUILayout.Button("鍒犻櫎", GUILayout.Width(44)))
+                if (GUILayout.Button("删除", GUILayout.Width(44)))
                     removeAt = i;
 
                 EditorGUILayout.EndHorizontal();
@@ -604,7 +604,7 @@ namespace CrystalMagic.Editor.Data
                 }
             }
 
-            if (GUILayout.Button("+ 娣诲姞灞炴€т慨姝?", GUILayout.Width(120)))
+            if (GUILayout.Button("+ 添加属性修饰", GUILayout.Width(120)))
             {
                 buff.PropertyModifiers.Add(new PropertyModifierEntry());
                 _isDirty = true;
@@ -644,15 +644,15 @@ namespace CrystalMagic.Editor.Data
             EditorGUILayout.PrefixLabel(attrName);
             float prevWidth = EditorGUIUtility.labelWidth;
             EditorGUIUtility.labelWidth = 52f;
-            multiply = EditorGUILayout.FloatField("×倍率", multiply, GUILayout.ExpandWidth(true));
-            add      = EditorGUILayout.FloatField("+加值", add,      GUILayout.ExpandWidth(true));
+            multiply = EditorGUILayout.FloatField("倍率", multiply, GUILayout.ExpandWidth(true));
+            add      = EditorGUILayout.FloatField("加值", add,      GUILayout.ExpandWidth(true));
             EditorGUIUtility.labelWidth = prevWidth;
             EditorGUILayout.EndHorizontal();
         }
 
-        // ─────────────────────────────────────────
-        //  EffectBuffData 字段
-        // ─────────────────────────────────────────
+        // --------------------
+        // SkillModifierBuffData 字段
+        // --------------------
         private void DrawSkillModifierFields(SkillModifierBuffData buff)
         {
             DrawSectionHeader("技能修正");
@@ -705,16 +705,16 @@ namespace CrystalMagic.Editor.Data
             buff.EffectChain = DrawEffectChainInline("__buff_root__", buff.EffectChain, ref _addEffectTypeIndex);
         }
 
-        // ─────────────────────────────────────────
-        //  效果链（复用 SkillEditorWindow 同款逻辑）
-        // ─────────────────────────────────────────
+        // --------------------
+        // 效果链（复用 SkillEditorWindow 的同类逻辑）
+        // --------------------
         private EffectData[] DrawEffectChainInline(string stateKey, EffectData[] chain, ref int typeIndex)
         {
             chain ??= Array.Empty<EffectData>();
 
             EditorGUILayout.BeginHorizontal();
             typeIndex = EditorGUILayout.Popup(typeIndex, KnownEffectNames, GUILayout.Width(190));
-            if (GUILayout.Button("＋ 添加", GUILayout.Width(66)))
+            if (GUILayout.Button("+ 添加", GUILayout.Width(66)))
             {
                 var newEffect = (EffectData)Activator.CreateInstance(KnownEffectTypes[typeIndex]);
                 var list      = new List<EffectData>(chain) { newEffect };
@@ -826,9 +826,9 @@ namespace CrystalMagic.Editor.Data
             return deleted;
         }
 
-        // ─────────────────────────────────────────
-        //  字段控件（按类型分发）
-        // ─────────────────────────────────────────
+        // --------------------
+        // 字段控件（按类型分发）
+        // --------------------
         private object DrawField(Type t, string label, object value, string parentKey = "")
         {
             if (t == typeof(int))
@@ -880,9 +880,9 @@ namespace CrystalMagic.Editor.Data
             return value;
         }
 
-        // ─────────────────────────────────────────
-        //  区块标题
-        // ─────────────────────────────────────────
+        // --------------------
+        // 条件列表
+        // --------------------
         private void DrawConditionList(List<ConditionConfig> conditions, string keyPrefix)
         {
             string foldKey = keyPrefix + "_fold";

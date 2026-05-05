@@ -26,6 +26,7 @@ public class UnitMoveAuthoring : MonoBehaviour
             AddComponent(entity, new UnitMoveComponent
             {
                 BaseMoveSpeed       = baseSpeed,
+                BaseMoveSpeedOffset = 0f,
                 BaseMaxAcceleration = baseAccel,
                 SpeedFactor         = 1f,
                 SpeedBonus          = 0f,
@@ -43,6 +44,11 @@ public struct UnitMoveComponent : IComponentData
     /// 单位配置中的基础最大移动速度，不包含 Buff 或状态倍率。
     /// </summary>
     public float BaseMoveSpeed;
+
+    /// <summary>
+    /// 装备提供的基础移速加成，只做基础值加算。
+    /// </summary>
+    public float BaseMoveSpeedOffset;
 
     /// <summary>
     /// 单位配置中的基础加速度，决定当前速度追向目标速度的快慢。
@@ -77,7 +83,7 @@ public struct UnitMoveComponent : IComponentData
     /// <summary>
     /// 移动模拟实际使用的最终最大速度。
     /// </summary>
-    public float RealMoveSpeed => (BaseMoveSpeed * SpeedFactor + SpeedBonus) * StateSpeedFactor;
+    public float RealMoveSpeed => ((BaseMoveSpeed + BaseMoveSpeedOffset) * SpeedFactor + SpeedBonus) * StateSpeedFactor;
 
     /// <summary>
     /// 移动模拟实际使用的最终最大加速度。

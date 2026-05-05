@@ -1,14 +1,27 @@
-using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using Unity.Entities;
-using UnityEngine;
 
 [UpdateBefore(typeof(UnitBuffSystem))]
-partial class PlayerEquipmentPassiveBuffSystem : SystemBase
+partial class PlayerEquipmentPropertySystem : SystemBase
 {
-    private readonly Dictionary<int, int> _passiveBuffStacks = new();
-    private readonly List<UnitPassiveBuffElement> _resolvedPassiveBuffs = new();
+    private struct EquipmentPropertyTotals
+    {
+        public float MoveSpeed;
+        public float MaxHealth;
+        public float Defense;
+        public float AttackPower;
+        public float SkillRange;
+        public float MaxMp;
+        public float HealthRegen;
+        public float MpRegen;
+        public float ActionSpeed;
+        public float ChantSpeed;
+        public float WaterPower;
+        public float FirePower;
+        public float LightningPower;
+        public float WindPower;
+    }
 
     protected override void OnCreate()
     {
@@ -17,49 +30,31 @@ partial class PlayerEquipmentPassiveBuffSystem : SystemBase
 
     protected override void OnUpdate()
     {
-        if (SaveDataComponent.Instance == null || DataComponent.Instance == null)
-            return;
+        EquipmentPropertyTotals totals = BuildTotals(SaveDataComponent.Instance?.GetEquipmentData());
 
-        BuildPassiveBuffSnapshot(SaveDataComponent.Instance.GetEquipmentData());
-
-        foreach ((RefRO<PlayerTag> _, DynamicBuffer<UnitPassiveBuffElement> passiveBuffs) in
-            SystemAPI.Query<RefRO<PlayerTag>, DynamicBuffer<UnitPassiveBuffElement>>())
+        foreach ((RefRO<PlayerTag> _, Entity entity) in SystemAPI.Query<RefRO<PlayerTag>>().WithEntityAccess())
         {
-            if (AreEqual(passiveBuffs, _resolvedPassiveBuffs))
-                continue;
-
-            passiveBuffs.Clear();
-            for (int i = 0; i < _resolvedPassiveBuffs.Count; i++)
-                passiveBuffs.Add(_resolvedPassiveBuffs[i]);
+            ApplyOffsets(entity, totals);
         }
     }
 
-    private void BuildPassiveBuffSnapshot(EquipmentData equipmentData)
+    private static EquipmentPropertyTotals BuildTotals(EquipmentData equipmentData)
     {
-        _passiveBuffStacks.Clear();
-        _resolvedPassiveBuffs.Clear();
+        EquipmentPropertyTotals totals = default;
+        if (equipmentData == null || DataComponent.Instance == null)
+            return totals;
 
-        if (equipmentData == null)
-            return;
-
-        AddEquipmentBuff(equipmentData.StaffId);
+        AddEquipmentItem(ref totals, equipmentData.StaffId);
         if (equipmentData.BonusSlots != null)
         {
             for (int i = 0; i < equipmentData.BonusSlots.Length; i++)
-                AddEquipmentBuff(equipmentData.BonusSlots[i]);
+                AddEquipmentItem(ref totals, equipmentData.BonusSlots[i]);
         }
 
-        foreach (KeyValuePair<int, int> pair in _passiveBuffStacks)
-        {
-            _resolvedPassiveBuffs.Add(new UnitPassiveBuffElement
-            {
-                BuffId = pair.Key,
-                StackCount = pair.Value,
-            });
-        }
+        return totals;
     }
 
-    private void AddEquipmentBuff(int itemId)
+    private static void AddEquipmentItem(ref EquipmentPropertyTotals totals, int itemId)
     {
         if (itemId <= 0)
             return;
@@ -71,38 +66,108 @@ partial class PlayerEquipmentPassiveBuffSystem : SystemBase
         if (itemData.ItemType != ItemType.Weapon && itemData.ItemType != ItemType.Accessory)
             return;
 
-        int buffId = itemData.ExtraId;
-        if (buffId <= 0)
+        if (itemData.ExtraId <= 0)
             return;
 
-        BuffData buffData = DataComponent.Instance.Get<BuffData>(buffId);
-        if (buffData == null)
+        EquipData equipData = DataComponent.Instance.Get<EquipData>(itemData.ExtraId);
+        if (equipData?.Properties == null)
             return;
 
-        _passiveBuffStacks.TryGetValue(buffId, out int currentStacks);
-        int nextStacks = currentStacks + 1;
-
-        if (!buffData.CanStack)
-            nextStacks = currentStacks > 0 ? currentStacks : 1;
-        else
-            nextStacks = Mathf.Clamp(nextStacks, 1, Mathf.Max(1, buffData.MaxStacks));
-
-        _passiveBuffStacks[buffId] = nextStacks;
+        for (int i = 0; i < equipData.Properties.Count; i++)
+        {
+            EquipPropertyEntry entry = equipData.Properties[i];
+            switch (entry.Channel)
+            {
+                case PropertyModifierChannel.MoveSpeed:
+                    totals.MoveSpeed += entry.BaseBonus;
+                    break;
+                case PropertyModifierChannel.MaxHealth:
+                    totals.MaxHealth += entry.BaseBonus;
+                    break;
+                case PropertyModifierChannel.Defense:
+                    totals.Defense += entry.BaseBonus;
+                    break;
+                case PropertyModifierChannel.AttackPower:
+                    totals.AttackPower += entry.BaseBonus;
+                    break;
+                case PropertyModifierChannel.SkillRange:
+                    totals.SkillRange += entry.BaseBonus;
+                    break;
+                case PropertyModifierChannel.MaxMp:
+                    totals.MaxMp += entry.BaseBonus;
+                    break;
+                case PropertyModifierChannel.HealthRegen:
+                    totals.HealthRegen += entry.BaseBonus;
+                    break;
+                case PropertyModifierChannel.MpRegen:
+                    totals.MpRegen += entry.BaseBonus;
+                    break;
+                case PropertyModifierChannel.ActionSpeed:
+                    totals.ActionSpeed += entry.BaseBonus;
+                    break;
+                case PropertyModifierChannel.ChantSpeed:
+                    totals.ChantSpeed += entry.BaseBonus;
+                    break;
+                case PropertyModifierChannel.WaterPower:
+                    totals.WaterPower += entry.BaseBonus;
+                    break;
+                case PropertyModifierChannel.FirePower:
+                    totals.FirePower += entry.BaseBonus;
+                    break;
+                case PropertyModifierChannel.LightningPower:
+                    totals.LightningPower += entry.BaseBonus;
+                    break;
+                case PropertyModifierChannel.WindPower:
+                    totals.WindPower += entry.BaseBonus;
+                    break;
+            }
+        }
     }
 
-    private static bool AreEqual(DynamicBuffer<UnitPassiveBuffElement> current, List<UnitPassiveBuffElement> target)
+    private void ApplyOffsets(Entity entity, EquipmentPropertyTotals totals)
     {
-        if (current.Length != target.Count)
-            return false;
-
-        for (int i = 0; i < current.Length; i++)
+        if (EntityManager.HasComponent<UnitMoveComponent>(entity))
         {
-            UnitPassiveBuffElement a = current[i];
-            UnitPassiveBuffElement b = target[i];
-            if (a.BuffId != b.BuffId || a.StackCount != b.StackCount)
-                return false;
+            UnitMoveComponent move = EntityManager.GetComponentData<UnitMoveComponent>(entity);
+            move.BaseMoveSpeedOffset = totals.MoveSpeed;
+            EntityManager.SetComponentData(entity, move);
         }
 
-        return true;
+        if (EntityManager.HasComponent<UnitVitalityComponent>(entity))
+        {
+            UnitVitalityComponent vitality = EntityManager.GetComponentData<UnitVitalityComponent>(entity);
+            vitality.BaseMaxHealthOffset = totals.MaxHealth;
+            vitality.BaseHealthRegenPerSecondOffset = totals.HealthRegen;
+            vitality.BaseDefenseOffset = totals.Defense;
+            EntityManager.SetComponentData(entity, vitality);
+        }
+
+        if (EntityManager.HasComponent<UnitManaComponent>(entity))
+        {
+            UnitManaComponent mana = EntityManager.GetComponentData<UnitManaComponent>(entity);
+            mana.BaseMaxMpOffset = totals.MaxMp;
+            mana.BaseMpRegenPerSecondOffset = totals.MpRegen;
+            EntityManager.SetComponentData(entity, mana);
+        }
+
+        if (EntityManager.HasComponent<UnitAttackComponent>(entity))
+        {
+            UnitAttackComponent attack = EntityManager.GetComponentData<UnitAttackComponent>(entity);
+            attack.BaseAttackPowerOffset = totals.AttackPower;
+            attack.BaseSkillRangeOffset = totals.SkillRange;
+            attack.BaseActionSpeedBonusOffset = totals.ActionSpeed;
+            attack.BaseChantSpeedBonusOffset = totals.ChantSpeed;
+            EntityManager.SetComponentData(entity, attack);
+        }
+
+        if (EntityManager.HasComponent<UnitElementComponent>(entity))
+        {
+            UnitElementComponent element = EntityManager.GetComponentData<UnitElementComponent>(entity);
+            element.BaseWaterPowerBonusOffset = totals.WaterPower;
+            element.BaseFirePowerBonusOffset = totals.FirePower;
+            element.BaseLightningPowerBonusOffset = totals.LightningPower;
+            element.BaseWindPowerBonusOffset = totals.WindPower;
+            EntityManager.SetComponentData(entity, element);
+        }
     }
 }

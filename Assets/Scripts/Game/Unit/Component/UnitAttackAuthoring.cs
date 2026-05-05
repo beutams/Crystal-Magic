@@ -37,30 +37,38 @@ public class UnitAttackAuthoring : MonoBehaviour
             AddComponent(entity, new UnitAttackComponent
             {
                 BaseAttackPower = baseAttack,
+                BaseAttackPowerOffset = 0f,
                 AttackFactor    = 1f,
                 AttackBonus     = 0f,
                 BaseSkillRange  = baseRange,
+                BaseSkillRangeOffset = 0f,
                 RangeFactor     = 1f,
                 RangeBonus      = 0f,
                 BaseActionSpeedBonus = baseActionSpeedBonus,
+                BaseActionSpeedBonusOffset = 0f,
                 ActionSpeedFactor = 1f,
                 ActionSpeedBonus = 0f,
                 BaseChantSpeedBonus = baseChantSpeedBonus,
+                BaseChantSpeedBonusOffset = 0f,
                 ChantSpeedFactor = 1f,
                 ChantSpeedBonus = 0f,
             });
             AddComponent(entity, new UnitElementComponent
             {
                 BaseWaterPowerBonus = baseWaterPowerBonus,
+                BaseWaterPowerBonusOffset = 0f,
                 WaterPowerFactor = 1f,
                 WaterPowerBonus = 0f,
                 BaseFirePowerBonus = baseFirePowerBonus,
+                BaseFirePowerBonusOffset = 0f,
                 FirePowerFactor = 1f,
                 FirePowerBonus = 0f,
                 BaseLightningPowerBonus = baseLightningPowerBonus,
+                BaseLightningPowerBonusOffset = 0f,
                 LightningPowerFactor = 1f,
                 LightningPowerBonus = 0f,
                 BaseWindPowerBonus = baseWindPowerBonus,
+                BaseWindPowerBonusOffset = 0f,
                 WindPowerFactor = 1f,
                 WindPowerBonus = 0f,
             });
@@ -71,43 +79,51 @@ public class UnitAttackAuthoring : MonoBehaviour
 public struct UnitAttackComponent : IComponentData
 {
     public float BaseAttackPower;
+    public float BaseAttackPowerOffset;
     public float AttackFactor;
     public float AttackBonus;
     public float BaseSkillRange;
+    public float BaseSkillRangeOffset;
     public float RangeFactor;
     public float RangeBonus;
     public float BaseActionSpeedBonus;
+    public float BaseActionSpeedBonusOffset;
     public float ActionSpeedFactor;
     public float ActionSpeedBonus;
     public float BaseChantSpeedBonus;
+    public float BaseChantSpeedBonusOffset;
     public float ChantSpeedFactor;
     public float ChantSpeedBonus;
 
-    public float RealAttackPower => BaseAttackPower * AttackFactor + AttackBonus;
-    public float RealSkillRange => BaseSkillRange * RangeFactor + RangeBonus;
-    public float RealActionSpeedBonus => BaseActionSpeedBonus * ActionSpeedFactor + ActionSpeedBonus;
-    public float RealChantSpeedBonus => BaseChantSpeedBonus * ChantSpeedFactor + ChantSpeedBonus;
+    public float RealAttackPower => (BaseAttackPower + BaseAttackPowerOffset) * AttackFactor + AttackBonus;
+    public float RealSkillRange => (BaseSkillRange + BaseSkillRangeOffset) * RangeFactor + RangeBonus;
+    public float RealActionSpeedBonus => (BaseActionSpeedBonus + BaseActionSpeedBonusOffset) * ActionSpeedFactor + ActionSpeedBonus;
+    public float RealChantSpeedBonus => (BaseChantSpeedBonus + BaseChantSpeedBonusOffset) * ChantSpeedFactor + ChantSpeedBonus;
 }
 
 public struct UnitElementComponent : IComponentData
 {
     public float BaseWaterPowerBonus;
+    public float BaseWaterPowerBonusOffset;
     public float WaterPowerFactor;
     public float WaterPowerBonus;
     public float BaseFirePowerBonus;
+    public float BaseFirePowerBonusOffset;
     public float FirePowerFactor;
     public float FirePowerBonus;
     public float BaseLightningPowerBonus;
+    public float BaseLightningPowerBonusOffset;
     public float LightningPowerFactor;
     public float LightningPowerBonus;
     public float BaseWindPowerBonus;
+    public float BaseWindPowerBonusOffset;
     public float WindPowerFactor;
     public float WindPowerBonus;
 
-    public float RealWaterPowerBonus => BaseWaterPowerBonus * WaterPowerFactor + WaterPowerBonus;
-    public float RealFirePowerBonus => BaseFirePowerBonus * FirePowerFactor + FirePowerBonus;
-    public float RealLightningPowerBonus => BaseLightningPowerBonus * LightningPowerFactor + LightningPowerBonus;
-    public float RealWindPowerBonus => BaseWindPowerBonus * WindPowerFactor + WindPowerBonus;
+    public float RealWaterPowerBonus => (BaseWaterPowerBonus + BaseWaterPowerBonusOffset) * WaterPowerFactor + WaterPowerBonus;
+    public float RealFirePowerBonus => (BaseFirePowerBonus + BaseFirePowerBonusOffset) * FirePowerFactor + FirePowerBonus;
+    public float RealLightningPowerBonus => (BaseLightningPowerBonus + BaseLightningPowerBonusOffset) * LightningPowerFactor + LightningPowerBonus;
+    public float RealWindPowerBonus => (BaseWindPowerBonus + BaseWindPowerBonusOffset) * WindPowerFactor + WindPowerBonus;
 
     public float GetPowerBonus(CrystalMagic.Game.Data.Effects.ElementType elementType)
     {
