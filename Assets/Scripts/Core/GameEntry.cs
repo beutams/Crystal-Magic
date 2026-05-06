@@ -26,7 +26,6 @@ namespace CrystalMagic.Core
         public InputComponent InputComponent { get; private set; }
         public GameGateComponent GameGateComponent { get; private set; }
         public GameFlowComponent GameFlowComponent { get; private set; }
-        public UnitHealthBarComponent UnitHealthBarComponent { get; private set; }
 
         protected override void Awake()
         {
@@ -77,7 +76,6 @@ namespace CrystalMagic.Core
             RegisterComponent(AudioComponent.Instance);
             RegisterComponent(InputComponent.Instance);
             RegisterComponent(GameFlowComponent.Instance);
-            RegisterComponent(UnitHealthBarComponent.Instance);
 
             // 按优先级排序
             _components.Sort((a, b) => a.Priority.CompareTo(b.Priority));
@@ -141,8 +139,6 @@ namespace CrystalMagic.Core
                 GameGateComponent = gameGateComponent;
             else if (component is GameFlowComponent gameFlowComponent)
                 GameFlowComponent = gameFlowComponent;
-            else if (component is UnitHealthBarComponent unitHealthBarComponent)
-                UnitHealthBarComponent = unitHealthBarComponent;
         }
         /// <summary>
         /// 清理所有组件

@@ -10,6 +10,7 @@ namespace CrystalMagic.Core
         private CharacterUI _characterUI;
         private PropertyUI _propertyUI;
         private GameMenuUI _gameMenuUI;
+        private UnitHealthBarManager _unitHealthBarManager;
         private bool _inputBound;
         private bool _playerInputLockedByUI;
 
@@ -19,7 +20,8 @@ namespace CrystalMagic.Core
         public sealed override void OnEnter()
         {
             OnEnterBattle();
-            UnitHealthBarComponent.Instance.SetBattleActive(true);
+            _unitHealthBarManager ??= new UnitHealthBarManager();
+            _unitHealthBarManager.Initialize();
             OpenBattleUI();
             BindInput();
         }
@@ -27,12 +29,14 @@ namespace CrystalMagic.Core
         public sealed override void OnUpdate()
         {
             OnUpdateBattle();
+            _unitHealthBarManager?.Tick();
             RefreshUIInputLock();
         }
 
         public sealed override void OnExit()
         {
-            UnitHealthBarComponent.Instance.SetBattleActive(false);
+            _unitHealthBarManager?.Dispose();
+            _unitHealthBarManager = null;
             ReleaseUIInputLock();
             UnbindInput();
             OnExitBattle();

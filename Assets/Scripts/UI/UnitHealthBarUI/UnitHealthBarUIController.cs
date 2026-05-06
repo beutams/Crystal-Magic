@@ -9,6 +9,7 @@
 
         protected override void OnOpen()
         {
+            View.BindModel(Model);
         }
     }
 }

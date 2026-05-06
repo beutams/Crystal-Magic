@@ -29,11 +29,23 @@ namespace CrystalMagic.UI
             _opened = false;
         }
 
+        internal void Update()
+        {
+            if (_disposed || !_opened)
+                return;
+
+            OnUpdate();
+        }
+
         protected virtual void OnOpen()
         {
         }
 
         protected virtual void OnClose()
+        {
+        }
+
+        protected virtual void OnUpdate()
         {
         }
 

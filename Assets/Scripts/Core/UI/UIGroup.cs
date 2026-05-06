@@ -192,6 +192,7 @@ namespace CrystalMagic.Core {
         {
             foreach (var panel in _panels)
             {
+                UIComponent.Instance?.TickPanel(panel);
                 panel.OnUpdate();
             }
         }
