@@ -1,0 +1,15 @@
+
+all:dungeonmaker
+
+dungeonmaker: DungeonMaker.o SDL_Renderer.o main.o
+	g++ -o dungeonmaker DungeonMaker.o SDL_Renderer.o main.o `sdl-config --libs`
+
+DungeonMaker.o: DungeonMaker.cpp DungeonMaker.h
+	g++ -ggdb3 -Wall -c -o DungeonMaker.o DungeonMaker.cpp 
+
+SDL_Renderer.o: SDL_Renderer.cpp SDL_Renderer.h DungeonMaker.h
+	g++ -ggdb3 -Wall -c -o SDL_Renderer.o SDL_Renderer.cpp `sdl-config\
+--cflags`
+
+main.o: main.cpp DungeonMaker.h  SDL_Renderer.h
+	g++ -ggdb3 -Wall -c -o main.o main.cpp

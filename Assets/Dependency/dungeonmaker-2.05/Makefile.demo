@@ -1,0 +1,14 @@
+
+all:dungeonmaker
+
+dungeonmaker: DungeonMaker.o main.o
+	g++ -o dungeonmaker DungeonMaker.o main.o
+
+DungeonMaker.o: DungeonMaker.cpp DungeonMaker.h
+	g++ -ggdb3 -Wall -c -o DungeonMaker.o DungeonMaker.cpp 
+
+main.o: main.cpp DungeonMaker.h
+	g++ -ggdb3 -Wall -c -o main.o main.cpp
+
+clean:
+	rm *.o

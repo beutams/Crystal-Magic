@@ -1,0 +1,10 @@
+If you are fortunate enough to be running a *BSD system, simply copy over 
+the Makefile.bsd file to Makefile and run make install.  FreeBSD users can 
+simply install the port games/libdungeonmaker.
+
+For other operating systems, simply use the GNU build system:
+
+$ ./configure
+$ make
+# make install
+
