@@ -28,14 +28,6 @@ namespace CrystalMagic.Game.MapDemo.Editor
                     demo.ClearDemoMap();
             }
 
-            EditorGUILayout.Space();
-            string summary = demo.GetMetricsSummary();
-            MessageType messageType = demo.LastMetrics.总格子数 <= 0
-                ? MessageType.None
-                : demo.LastMetrics.适合远程作战
-                    ? MessageType.Info
-                    : MessageType.Warning;
-            EditorGUILayout.HelpBox(summary, messageType);
         }
     }
 }

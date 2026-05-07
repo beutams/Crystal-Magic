@@ -1,5 +1,3 @@
-using System;
-using System.Text;
 using UnityEngine;
 
 namespace CrystalMagic.Game.MapDemo
@@ -14,6 +12,7 @@ namespace CrystalMagic.Game.MapDemo
         [SerializeField] private bool _生成时随机种子 = true;
         [SerializeField, Min(0.25f)] private float _单格尺寸 = 1f;
         [SerializeField] private bool _运行时启动自动生成;
+        [SerializeField] private DungeonMakerTunnelingConfig _配置 = DungeonMakerTunnelingConfig.CreateDefault();
 
         [Header("预览")]
         [SerializeField] private Color _走廊颜色 = new(0.18f, 0.20f, 0.24f);
@@ -23,7 +22,6 @@ namespace CrystalMagic.Game.MapDemo
 
         [Header("最近结果")]
         [SerializeField] private int _最近生成种子;
-        [SerializeField] private TunnelingMapMetrics _最近指标结果;
 
         private DungeonMakerTunnelingResult _最近结果;
         private Transform _生成根节点;
@@ -32,34 +30,17 @@ namespace CrystalMagic.Game.MapDemo
 
         public int Seed => _随机种子;
         public int LastGeneratedSeed => _最近生成种子;
-        public TunnelingMapMetrics LastMetrics => _最近指标结果;
-
-        public string GetMetricsSummary()
-        {
-            if (_最近指标结果.总格子数 <= 0)
-                return "尚未生成地图。";
-
-            StringBuilder builder = new();
-            builder.AppendLine($"种子：{_最近生成种子}");
-            builder.AppendLine($"可通行：{_最近指标结果.可通行格子数}/{_最近指标结果.总格子数} ({_最近指标结果.可通行比例:P1})");
-            builder.AppendLine($"连通块数量：{_最近指标结果.连通块数量}");
-            builder.AppendLine($"最长视线：{_最近指标结果.最长视线} (横向 {_最近指标结果.最长水平视线} / 纵向 {_最近指标结果.最长垂直视线})");
-            builder.AppendLine($"最大开放矩形：{_最近指标结果.最大开放矩形宽度} x {_最近指标结果.最大开放矩形高度} = {_最近指标结果.最大开放矩形面积}");
-            builder.AppendLine($"死路：{_最近指标结果.死路数量} | 岔路：{_最近指标结果.岔路数量}");
-            builder.AppendLine($"适合远程作战：{(_最近指标结果.适合远程作战 ? "Yes" : "No")}");
-            return builder.ToString().TrimEnd();
-        }
+        public DungeonMakerTunnelingConfig Config => _配置;
 
         [ContextMenu("生成 DEMO 地图")]
         public void GenerateDemoMap()
         {
             if (_生成时随机种子)
-                _随机种子 = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+                _随机种子 = Random.Range(int.MinValue, int.MaxValue);
 
             ValidateParameters();
-            _最近结果 = DungeonMakerTunnelingGenerator.Generate(_随机种子);
+            _最近结果 = DungeonMakerTunnelingGenerator.Generate(_随机种子, _配置);
             _最近生成种子 = _最近结果.Seed;
-            _最近指标结果 = _最近结果.Metrics;
             RebuildVisuals();
         }
 
@@ -71,17 +52,13 @@ namespace CrystalMagic.Game.MapDemo
             _生成时随机种子 = true;
             GenerateDemoMap();
             _生成时随机种子 = originalRandomize;
-            if (!originalRandomize)
-                _随机种子 = _最近生成种子;
-            else
-                _随机种子 = originalSeed;
+            _随机种子 = originalRandomize ? originalSeed : _最近生成种子;
         }
 
         [ContextMenu("清空 DEMO 地图")]
         public void ClearDemoMap()
         {
             _最近结果 = null;
-            _最近指标结果 = default;
             _最近生成种子 = 0;
             DestroyGeneratedRoot();
             DestroyPreviewAssets();
@@ -106,6 +83,29 @@ namespace CrystalMagic.Game.MapDemo
         private void ValidateParameters()
         {
             _单格尺寸 = Mathf.Max(0.25f, _单格尺寸);
+            _配置 ??= DungeonMakerTunnelingConfig.CreateDefault();
+            _配置.DimX = Mathf.Max(3, _配置.DimX);
+            _配置.DimY = Mathf.Max(3, _配置.DimY);
+            _配置.MaxRoomSize = Mathf.Max(1, _配置.MaxRoomSize);
+            _配置.MinSmallRoomSize = Mathf.Clamp(_配置.MinSmallRoomSize, 1, _配置.MaxRoomSize);
+            _配置.MinMediumRoomSize = Mathf.Clamp(_配置.MinMediumRoomSize, _配置.MinSmallRoomSize, _配置.MaxRoomSize);
+            _配置.MinLargeRoomSize = Mathf.Clamp(_配置.MinLargeRoomSize, _配置.MinMediumRoomSize, _配置.MaxRoomSize);
+            _配置.RoomAspectRatio = Mathf.Max(0.01f, (float)_配置.RoomAspectRatio);
+            EnsureCollections();
+        }
+
+        private void EnsureCollections()
+        {
+            _配置.BabyDelayProbsTunneler ??= new();
+            _配置.BabyDelayProbsRoomie ??= new();
+            _配置.MaxAgesT ??= new();
+            _配置.RoomSizeProbS ??= new();
+            _配置.RoomSizeProbB ??= new();
+            _配置.JoinPref ??= new();
+            _配置.SizeUpProb ??= new();
+            _配置.SizeDownProb ??= new();
+            _配置.AnteRoomProb ??= new();
+            _配置.Tunnelers ??= System.Array.Empty<DungeonMakerTunnelerSeedData>();
         }
 
         private void RebuildVisuals()
@@ -204,7 +204,7 @@ namespace CrystalMagic.Game.MapDemo
             _预览纹理 = null;
         }
 
-        private static void DestroyPreviewObject(UnityEngine.Object target)
+        private static void DestroyPreviewObject(Object target)
         {
             if (target == null)
                 return;

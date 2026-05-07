@@ -1,50 +1,55 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using UnityEngine;
 
 namespace CrystalMagic.Game.MapDemo
 {
     public enum DungeonMakerSquareData : byte
     {
+        // 普通开放地块。
         OPEN = 0,
+        // 普通封闭地块。
         CLOSED = 1,
+        // 边界上的开放地块，通常用于入口/出口开口。
         G_OPEN = 2,
+        // 边界上的封闭地块。
         G_CLOSED = 3,
+        // 非连接节点用的开放地块。
         NJ_OPEN = 4,
+        // 非连接节点用的封闭地块。
         NJ_CLOSED = 5,
+        // 边界上的非连接节点开放地块。
         NJ_G_OPEN = 6,
+        // 边界上的非连接节点封闭地块。
         NJ_G_CLOSED = 7,
+        // Roomie 生成的房间内部地块。
         IR_OPEN = 8,
+        // Tunneler 挖出的隧道/走廊地块。
         IT_OPEN = 9,
+        // 前厅（anteroom）地块。
         IA_OPEN = 10,
+        // 水平门。
         H_DOOR = 11,
+        // 垂直门。
         V_DOOR = 12,
+        // 怪物标记 1。
         MOB1 = 13,
+        // 怪物标记 2。
         MOB2 = 14,
+        // 怪物标记 3。
         MOB3 = 15,
+        // 宝物标记 1。
         TREAS1 = 16,
+        // 宝物标记 2。
         TREAS2 = 17,
+        // 宝物标记 3。
         TREAS3 = 18,
+        // 柱子/障碍点。
         COLUMN = 19,
     }
-
-    [Serializable]
-    public struct TunnelingMapMetrics
-    {
-        public int 总格子数;
-        public int 可通行格子数;
-        public float 可通行比例;
-        public int 连通块数量;
-        public int 死路数量;
-        public int 岔路数量;
-        public int 最长水平视线;
-        public int 最长垂直视线;
-        public int 最长视线;
-        public int 最大开放矩形宽度;
-        public int 最大开放矩形高度;
-        public int 最大开放矩形面积;
-        public bool 适合远程作战;
-    }
-
+    // 生成完成后的只读结果对象。
+    // 只保留地图数组和显示坐标转换，不承担任何运行时生成职责。
     public sealed class DungeonMakerTunnelingResult
     {
         private readonly DungeonMakerSquareData[] _map;
@@ -53,14 +58,12 @@ namespace CrystalMagic.Game.MapDemo
             int sourceWidth,
             int sourceHeight,
             int seed,
-            DungeonMakerSquareData[] map,
-            TunnelingMapMetrics metrics)
+            DungeonMakerSquareData[] map)
         {
             SourceWidth = sourceWidth;
             SourceHeight = sourceHeight;
             Seed = seed;
             _map = map;
-            Metrics = metrics;
         }
 
         public int SourceWidth { get; }
@@ -68,7 +71,6 @@ namespace CrystalMagic.Game.MapDemo
         public int DisplayWidth => SourceHeight;
         public int DisplayHeight => SourceWidth;
         public int Seed { get; }
-        public TunnelingMapMetrics Metrics { get; }
 
         public DungeonMakerSquareData GetSourceTile(int x, int y)
         {
@@ -81,46 +83,81 @@ namespace CrystalMagic.Game.MapDemo
         }
     }
 
+    // 纯生成入口。外部只要给一个种子，就能得到一份完整地图结果。
     internal static class DungeonMakerTunnelingGenerator
     {
         public const int DefaultSeed = 1015776839;
+        public const int DefaultTimeoutMs = 3000;
 
-        public static DungeonMakerTunnelingResult Generate(int seed)
+        // 生成流程入口：
+        // 1. 创建运行时上下文
+        // 2. 执行代际 Builder 系统
+        // 3. 导出最终地图
+        public static DungeonMakerTunnelingResult Generate(int seed, DungeonMakerTunnelingConfig config = null, int timeoutMs = DefaultTimeoutMs)
         {
-            DungeonRuntime runtime = new(seed == 0 ? DefaultSeed : seed);
+            DungeonRuntime runtime = new(seed == 0 ? DefaultSeed : seed, config ?? DungeonMakerTunnelingConfig.CreateDefault(), timeoutMs);
             runtime.Generate();
             return runtime.BuildResult();
         }
 
+        // 真正的运行时生成上下文。
+        // 地图、Builder、随机数、配置和代际推进全部集中在这里。
         private sealed class DungeonRuntime
         {
+            internal enum TunnelerSpawnKind
+            {
+                Normal,
+                Redirect,
+                LastChance,
+            }
+
             private readonly MsRand _random;
             private readonly List<Builder> _builders = new();
             private readonly List<Room> _rooms = new();
-            private readonly DungeonConfig _config = DungeonConfig.CreateOriginal();
+            private readonly DungeonConfig _config;
+            private readonly Stopwatch _timeoutWatch = new();
+            private readonly int _timeoutMs;
 
+            // 一维地图数组，索引规则是 x * DimY + y。
             private DungeonMakerSquareData[] _map;
+            // 当前 iteration 是否真的改动过地图。
             private bool _changedThisIteration;
+            // 当前正在工作的代数。
             private int _activeGeneration;
+            // 已经生成出来的小/中/大房间数量。
             private int _currentSmallRooms;
             private int _currentMediumRooms;
             private int _currentLargeRooms;
+            private int _totalNormalTunnelersCreated;
+            private int _totalRedirectTunnelersCreated;
+            private int _totalLastChanceTunnelersCreated;
+            private int _totalRoomiesCreated;
+            private int _peakLiveBuilders;
 
-            public DungeonRuntime(int seed)
+            public DungeonRuntime(int seed, DungeonMakerTunnelingConfig config, int timeoutMs)
             {
                 Seed = seed;
                 _random = new MsRand(seed);
+                _config = DungeonConfig.From(config);
+                _timeoutMs = timeoutMs;
                 InitFromConfig();
             }
 
             public int Seed { get; }
 
+            // 主生成循环：
+            // - 当前代不停迭代，直到这一轮已经没人再改图
+            // - 然后推进代际
+            // - 所有 Builder 都耗尽时结束
             public void Generate()
             {
+                _timeoutWatch.Restart();
                 while (true)
                 {
+                    GuardTimeout();
                     while (MakeIteration())
                     {
+                        GuardTimeout();
                     }
 
                     if (!AdvanceGeneration())
@@ -131,30 +168,43 @@ namespace CrystalMagic.Game.MapDemo
                 {
                     while (true)
                     {
+                        GuardTimeout();
                         while (MakeIteration())
                         {
+                            GuardTimeout();
                         }
 
                         if (!AdvanceGeneration())
                             break;
                     }
                 }
+
+                _timeoutWatch.Stop();
             }
 
+            // 复制地图数据并导出结果，避免外部直接持有内部运行时数组。
             public DungeonMakerTunnelingResult BuildResult()
             {
                 DungeonMakerSquareData[] copiedMap = new DungeonMakerSquareData[_map.Length];
                 Array.Copy(_map, copiedMap, _map.Length);
-                TunnelingMapMetrics metrics = AnalyzeMetrics(copiedMap, _config.DimX, _config.DimY);
-                return new DungeonMakerTunnelingResult(_config.DimX, _config.DimY, Seed, copiedMap, metrics);
+                return new DungeonMakerTunnelingResult(_config.DimX, _config.DimY, Seed, copiedMap);
             }
 
+            // 按配置初始化地图：
+            // - 背景填充
+            // - 边界封口
+            // - 初始 Tunneler 投放
             private void InitFromConfig()
             {
                 _activeGeneration = 0;
                 _currentSmallRooms = 0;
                 _currentMediumRooms = 0;
                 _currentLargeRooms = 0;
+                _totalNormalTunnelersCreated = 0;
+                _totalRedirectTunnelersCreated = 0;
+                _totalLastChanceTunnelersCreated = 0;
+                _totalRoomiesCreated = 0;
+                _peakLiveBuilders = 0;
 
                 _map = new DungeonMakerSquareData[_config.DimX * _config.DimY];
                 for (int i = 0; i < _map.Length; i++)
@@ -164,37 +214,6 @@ namespace CrystalMagic.Game.MapDemo
                 SetRect(0, 0, 0, _config.DimY - 1, DungeonMakerSquareData.G_CLOSED);
                 SetRect(_config.DimX - 1, 0, _config.DimX - 1, _config.DimY - 1, DungeonMakerSquareData.G_CLOSED);
                 SetRect(0, _config.DimY - 1, _config.DimX - 1, _config.DimY - 1, DungeonMakerSquareData.G_CLOSED);
-
-                foreach (Direction opening in _config.Openings)
-                {
-                    switch (opening)
-                    {
-                        case Direction.NO:
-                            SetRect(0, _config.DimY / 2 - 1, 2, _config.DimY / 2 + 1, DungeonMakerSquareData.G_OPEN);
-                            break;
-                        case Direction.WE:
-                            SetRect(_config.DimX / 2 - 1, 0, _config.DimX / 2 + 1, 2, DungeonMakerSquareData.G_OPEN);
-                            break;
-                        case Direction.EA:
-                            SetRect(_config.DimX / 2 - 1, _config.DimY - 3, _config.DimX / 2 + 1, _config.DimY - 1, DungeonMakerSquareData.G_OPEN);
-                            break;
-                        case Direction.SO:
-                            SetRect(_config.DimX - 3, _config.DimY / 2 - 1, _config.DimX - 1, _config.DimY / 2 + 1, DungeonMakerSquareData.G_OPEN);
-                            break;
-                        case Direction.NW:
-                            SetRect(0, 0, 2, 2, DungeonMakerSquareData.G_OPEN);
-                            break;
-                        case Direction.NE:
-                            SetRect(0, _config.DimY - 3, 2, _config.DimY - 1, DungeonMakerSquareData.G_OPEN);
-                            break;
-                        case Direction.SW:
-                            SetRect(_config.DimX - 3, 0, _config.DimX - 1, 2, DungeonMakerSquareData.G_OPEN);
-                            break;
-                        case Direction.SE:
-                            SetRect(_config.DimX - 3, _config.DimY - 3, _config.DimX - 1, _config.DimY - 1, DungeonMakerSquareData.G_OPEN);
-                            break;
-                    }
-                }
 
                 foreach (TunnelerSeed seed in _config.Tunnelers)
                 {
@@ -212,16 +231,21 @@ namespace CrystalMagic.Game.MapDemo
                         seed.ChangeDirectionProb,
                         seed.MakeRoomsRightProb,
                         seed.MakeRoomsLeftProb,
-                        seed.JoinPreference);
+                        seed.JoinPreference,
+                        TunnelerSpawnKind.Normal);
                 }
             }
 
+            // 一次 iteration = 所有 Builder 各执行一次 StepAhead。
+            // 只要这轮里有人改了地图，就返回 true。
             private bool MakeIteration()
             {
+                GuardTimeout();
                 _changedThisIteration = false;
 
                 for (int i = 0; i < _builders.Count; i++)
                 {
+                    GuardTimeout();
                     Builder builder = _builders[i];
                     if (builder == null)
                         continue;
@@ -233,13 +257,19 @@ namespace CrystalMagic.Game.MapDemo
                 return _changedThisIteration;
             }
 
+            // 代际推进规则：
+            // - 当前代还有激活 Builder：不能切代
+            // - 当前代只剩休眠 Builder：快进到最近的激活时刻
+            // - 当前代彻底没人：activeGeneration++
             private bool AdvanceGeneration()
             {
+                GuardTimeout();
                 bool thereAreBuilders = false;
                 int highestNegativeAge = 0;
 
                 for (int i = 0; i < _builders.Count; i++)
                 {
+                    GuardTimeout();
                     Builder builder = _builders[i];
                     if (builder == null)
                         continue;
@@ -259,6 +289,11 @@ namespace CrystalMagic.Game.MapDemo
                 if (highestNegativeAge == 0)
                 {
                     _activeGeneration++;
+                    if (_activeGeneration > 0 && _activeGeneration % 5000 == 0)
+                    {
+                        UnityEngine.Debug.LogWarning(
+                            $"[DungeonMakerTunnelingGenerator] generation={_activeGeneration}, liveBuilders={CountLiveBuilders()}, peakBuilders={_peakLiveBuilders}, normalTunnelers={_totalNormalTunnelersCreated}, redirectTunnelers={_totalRedirectTunnelersCreated}, lastChanceTunnelers={_totalLastChanceTunnelersCreated}, roomies={_totalRoomiesCreated}");
+                    }
                     return thereAreBuilders;
                 }
 
@@ -272,6 +307,31 @@ namespace CrystalMagic.Game.MapDemo
                 return thereAreBuilders;
             }
 
+            internal void GuardTimeout()
+            {
+                if (_timeoutMs <= 0)
+                    return;
+
+                if (_timeoutWatch.ElapsedMilliseconds <= _timeoutMs)
+                    return;
+
+                throw new TimeoutException(
+                    $"DungeonMaker tunneling generation timed out after {_timeoutMs} ms (seed={Seed}, generation={_activeGeneration}, liveBuilders={CountLiveBuilders()}, peakBuilders={_peakLiveBuilders}, normalTunnelers={_totalNormalTunnelersCreated}, redirectTunnelers={_totalRedirectTunnelersCreated}, lastChanceTunnelers={_totalLastChanceTunnelersCreated}, roomies={_totalRoomiesCreated}).");
+            }
+
+            private int CountLiveBuilders()
+            {
+                int count = 0;
+                for (int i = 0; i < _builders.Count; i++)
+                {
+                    if (_builders[i] != null)
+                        count++;
+                }
+
+                return count;
+            }
+
+            // 创建一个新的 Tunneler，并加入 Builder 池。
             internal void CreateTunneler(
                 IntCoordinate location,
                 IntCoordinate forward,
@@ -286,8 +346,22 @@ namespace CrystalMagic.Game.MapDemo
                 int changeDirectionProb,
                 int makeRoomsRightProb,
                 int makeRoomsLeftProb,
-                int joinPreference)
+                int joinPreference,
+                TunnelerSpawnKind spawnKind = TunnelerSpawnKind.Normal)
             {
+                switch (spawnKind)
+                {
+                    case TunnelerSpawnKind.Redirect:
+                        _totalRedirectTunnelersCreated++;
+                        break;
+                    case TunnelerSpawnKind.LastChance:
+                        _totalLastChanceTunnelersCreated++;
+                        break;
+                    default:
+                        _totalNormalTunnelersCreated++;
+                        break;
+                }
+
                 AddBuilder(new Tunneler(
                     this,
                     location,
@@ -306,6 +380,7 @@ namespace CrystalMagic.Game.MapDemo
                     joinPreference));
             }
 
+            // 创建一个新的 Roomie，并加入 Builder 池。
             internal void CreateRoomie(
                 IntCoordinate location,
                 IntCoordinate forward,
@@ -316,9 +391,11 @@ namespace CrystalMagic.Game.MapDemo
                 RoomSize size,
                 int category)
             {
+                _totalRoomiesCreated++;
                 AddBuilder(new Roomie(this, location, forward, age, maxAge, generation, defaultWidth, size, category));
             }
 
+            // 优先复用空槽位，避免频繁收缩/扩容 Builder 列表。
             private void AddBuilder(Builder builder)
             {
                 for (int i = 0; i < _builders.Count; i++)
@@ -326,11 +403,15 @@ namespace CrystalMagic.Game.MapDemo
                     if (_builders[i] == null)
                     {
                         _builders[i] = builder;
+                        if (CountLiveBuilders() > _peakLiveBuilders)
+                            _peakLiveBuilders = CountLiveBuilders();
                         return;
                     }
                 }
 
                 _builders.Add(builder);
+                if (_builders.Count > _peakLiveBuilders)
+                    _peakLiveBuilders = _builders.Count;
             }
 
             public int ActiveGeneration => _activeGeneration;
@@ -346,6 +427,7 @@ namespace CrystalMagic.Game.MapDemo
             public int LastChanceGenDelay => _config.LastChanceGenerationalDelay;
             public TunnelerSeed LastChanceTunneler => _config.LastChanceTunneler;
 
+            // 读取“侧向房”的大小概率。
             public int GetRoomSizeProbS(int tunnelWidth, RoomSize roomSize)
             {
                 if (tunnelWidth >= _config.RoomSizeProbS.Count)
@@ -359,6 +441,7 @@ namespace CrystalMagic.Game.MapDemo
                 };
             }
 
+            // 读取“分叉房”的大小概率。
             public int GetRoomSizeProbB(int tunnelWidth, RoomSize roomSize)
             {
                 if (tunnelWidth >= _config.RoomSizeProbB.Count)
@@ -372,16 +455,19 @@ namespace CrystalMagic.Game.MapDemo
                 };
             }
 
+            // 读取 Roomie 子代延迟表。
             public int GetBabyDelayProbsForGenerationR(int generation)
             {
                 return generation is >= 0 and <= 10 ? _config.BabyDelayProbsRoomie[generation] : 0;
             }
 
+            // 读取 Tunneler 子代延迟表。
             public int GetBabyDelayProbsForGenerationT(int generation)
             {
                 return generation is >= 0 and <= 10 ? _config.BabyDelayProbsTunneler[generation] : 0;
             }
 
+            // 读取某一代 Tunneler 的寿命上限。
             public int GetMaxAgeT(int generation)
             {
                 return generation >= _config.MaxAgesT.Count
@@ -389,11 +475,13 @@ namespace CrystalMagic.Game.MapDemo
                     : _config.MaxAgesT[generation];
             }
 
+            // 读取当前隧道宽度下生成前厅的概率。
             public int GetAnteRoomProb(int tunnelWidth)
             {
                 return tunnelWidth >= _config.AnteRoomProb.Count ? 100 : _config.AnteRoomProb[tunnelWidth];
             }
 
+            // 读取当前代的变宽概率。
             public int GetSizeUpProb(int generation)
             {
                 return generation >= _config.SizeUpProb.Count
@@ -401,6 +489,7 @@ namespace CrystalMagic.Game.MapDemo
                     : _config.SizeUpProb[generation];
             }
 
+            // 读取当前代的变窄概率。
             public int GetSizeDownProb(int generation)
             {
                 return generation >= _config.SizeDownProb.Count
@@ -408,6 +497,7 @@ namespace CrystalMagic.Game.MapDemo
                     : _config.SizeDownProb[generation];
             }
 
+            // 读取房型的最小面积。
             public int GetMinRoomSize(RoomSize roomSize)
             {
                 return roomSize switch
@@ -418,6 +508,7 @@ namespace CrystalMagic.Game.MapDemo
                 };
             }
 
+            // 读取房型的最大面积上界。
             public int GetMaxRoomSize(RoomSize roomSize)
             {
                 return roomSize switch
@@ -428,6 +519,7 @@ namespace CrystalMagic.Game.MapDemo
                 };
             }
 
+            // 检查当前地图还需不需要这种大小的房间。
             public bool WantsMoreRoomsD(RoomSize roomSize)
             {
                 return roomSize switch
@@ -438,6 +530,7 @@ namespace CrystalMagic.Game.MapDemo
                 };
             }
 
+            // 记录某种房型已经成功生成了一间。
             public void BuiltRoomD(RoomSize roomSize)
             {
                 switch (roomSize)
@@ -454,49 +547,58 @@ namespace CrystalMagic.Game.MapDemo
                 }
             }
 
+            // 对子代参数做轻微随机扰动。
             public int Mutate(int input)
             {
                 int output = input - _config.Mutator + _random.Next(2 * _config.Mutator + 1);
                 return output < 0 ? 0 : output;
             }
 
+            // 返回 0~99。
             public int Next100()
             {
                 return _random.Next(100);
             }
 
+            // 返回 0~100。
             public int Next101()
             {
                 return _random.Next(101);
             }
 
+            // 50% 布尔随机。
             public bool CoinFlip()
             {
                 return _random.Next(2) == 0;
             }
 
+            // 读取地图格。
             public DungeonMakerSquareData GetMap(IntCoordinate position)
             {
                 return _map[position.X * _config.DimY + position.Y];
             }
 
+            // 读取地图格。
             public DungeonMakerSquareData GetMap(int x, int y)
             {
                 return _map[x * _config.DimY + y];
             }
 
+            // 写地图格，并标记本轮 iteration 已有改动。
             public void SetMap(IntCoordinate position, DungeonMakerSquareData value)
             {
                 _map[position.X * _config.DimY + position.Y] = value;
                 _changedThisIteration = true;
             }
 
+            // 写地图格，并标记本轮 iteration 已有改动。
             public void SetMap(int x, int y, DungeonMakerSquareData value)
             {
                 _map[x * _config.DimY + y] = value;
                 _changedThisIteration = true;
             }
 
+            // 批量写一个矩形区域。
             public void SetRect(int startX, int startY, int endX, int endY, DungeonMakerSquareData value)
             {
                 if (endX < startX || endY < startY)
@@ -509,200 +611,15 @@ namespace CrystalMagic.Game.MapDemo
                 }
             }
 
+            // 记录一个已经落进地图的房间。
             public void AddRoom(Room room)
             {
                 _rooms.Add(room);
             }
-
-            private static TunnelingMapMetrics AnalyzeMetrics(DungeonMakerSquareData[] map, int width, int height)
-            {
-                TunnelingMapMetrics metrics = new
-                TunnelingMapMetrics
-                {
-                    总格子数 = width * height,
-                };
-
-                int[] heights = new int[width];
-                for (int y = 0; y < height; y++)
-                {
-                    for (int x = 0; x < width; x++)
-                    {
-                        if (IsWalkable(map[x * height + y]))
-                        {
-                            metrics.可通行格子数++;
-                            heights[x] += 1;
-
-                            int neighbors = CountCardinalWalkableNeighbors(map, width, height, x, y);
-                            if (neighbors <= 1)
-                                metrics.死路数量++;
-                            else if (neighbors >= 3)
-                                metrics.岔路数量++;
-                        }
-                        else
-                        {
-                            heights[x] = 0;
-                        }
-                    }
-
-                    EvaluateLargestRectangleInHistogram(heights, ref metrics);
-                }
-
-                metrics.可通行比例 = metrics.总格子数 > 0
-                    ? (float)metrics.可通行格子数 / metrics.总格子数
-                    : 0f;
-                metrics.连通块数量 = CountComponents(map, width, height);
-                metrics.最长水平视线 = CalculateLongestHorizontalSightline(map, width, height);
-                metrics.最长垂直视线 = CalculateLongestVerticalSightline(map, width, height);
-                metrics.最长视线 = Math.Max(metrics.最长水平视线, metrics.最长垂直视线);
-                metrics.适合远程作战 =
-                    metrics.连通块数量 == 1 &&
-                    metrics.最长视线 >= 16 &&
-                    metrics.最大开放矩形宽度 >= 8 &&
-                    metrics.最大开放矩形高度 >= 6;
-
-                return metrics;
-            }
-
-            private static bool IsWalkable(DungeonMakerSquareData tile)
-            {
-                return tile is DungeonMakerSquareData.OPEN
-                    or DungeonMakerSquareData.G_OPEN
-                    or DungeonMakerSquareData.NJ_OPEN
-                    or DungeonMakerSquareData.NJ_G_OPEN
-                    or DungeonMakerSquareData.IR_OPEN
-                    or DungeonMakerSquareData.IT_OPEN
-                    or DungeonMakerSquareData.IA_OPEN
-                    or DungeonMakerSquareData.H_DOOR
-                    or DungeonMakerSquareData.V_DOOR;
-            }
-
-            private static int CountCardinalWalkableNeighbors(DungeonMakerSquareData[] map, int width, int height, int x, int y)
-            {
-                int count = 0;
-                if (x > 0 && IsWalkable(map[(x - 1) * height + y])) count++;
-                if (x < width - 1 && IsWalkable(map[(x + 1) * height + y])) count++;
-                if (y > 0 && IsWalkable(map[x * height + (y - 1)])) count++;
-                if (y < height - 1 && IsWalkable(map[x * height + (y + 1)])) count++;
-                return count;
-            }
-
-            private static int CountComponents(DungeonMakerSquareData[] map, int width, int height)
-            {
-                bool[] visited = new bool[map.Length];
-                Queue<IntCoordinate> queue = new();
-                int componentCount = 0;
-
-                for (int x = 0; x < width; x++)
-                {
-                    for (int y = 0; y < height; y++)
-                    {
-                        int index = x * height + y;
-                        if (visited[index] || !IsWalkable(map[index]))
-                            continue;
-
-                        componentCount++;
-                        visited[index] = true;
-                        queue.Enqueue(new IntCoordinate(x, y));
-
-                        while (queue.Count > 0)
-                        {
-                            IntCoordinate current = queue.Dequeue();
-                            TryEnqueue(current.X - 1, current.Y);
-                            TryEnqueue(current.X + 1, current.Y);
-                            TryEnqueue(current.X, current.Y - 1);
-                            TryEnqueue(current.X, current.Y + 1);
-                        }
-                    }
-                }
-
-                return componentCount;
-
-                void TryEnqueue(int x, int y)
-                {
-                    if (x < 0 || x >= width || y < 0 || y >= height)
-                        return;
-
-                    int index = x * height + y;
-                    if (visited[index] || !IsWalkable(map[index]))
-                        return;
-
-                    visited[index] = true;
-                    queue.Enqueue(new IntCoordinate(x, y));
-                }
-            }
-
-            private static int CalculateLongestHorizontalSightline(DungeonMakerSquareData[] map, int width, int height)
-            {
-                int longest = 0;
-                for (int y = 0; y < height; y++)
-                {
-                    int current = 0;
-                    for (int x = 0; x < width; x++)
-                    {
-                        if (IsWalkable(map[x * height + y]))
-                        {
-                            current++;
-                            if (current > longest)
-                                longest = current;
-                        }
-                        else
-                        {
-                            current = 0;
-                        }
-                    }
-                }
-
-                return longest;
-            }
-
-            private static int CalculateLongestVerticalSightline(DungeonMakerSquareData[] map, int width, int height)
-            {
-                int longest = 0;
-                for (int x = 0; x < width; x++)
-                {
-                    int current = 0;
-                    for (int y = 0; y < height; y++)
-                    {
-                        if (IsWalkable(map[x * height + y]))
-                        {
-                            current++;
-                            if (current > longest)
-                                longest = current;
-                        }
-                        else
-                        {
-                            current = 0;
-                        }
-                    }
-                }
-
-                return longest;
-            }
-
-            private static void EvaluateLargestRectangleInHistogram(int[] heights, ref TunnelingMapMetrics metrics)
-            {
-                Stack<int> stack = new();
-                for (int i = 0; i <= heights.Length; i++)
-                {
-                    int currentHeight = i == heights.Length ? 0 : heights[i];
-                    while (stack.Count > 0 && currentHeight < heights[stack.Peek()])
-                    {
-                        int height = heights[stack.Pop()];
-                        int width = stack.Count == 0 ? i : i - stack.Peek() - 1;
-                        int area = height * width;
-                        if (area > metrics.最大开放矩形面积)
-                        {
-                            metrics.最大开放矩形面积 = area;
-                            metrics.最大开放矩形宽度 = width;
-                            metrics.最大开放矩形高度 = height;
-                        }
-                    }
-
-                    stack.Push(i);
-                }
-            }
         }
 
+        // 所有施工者的共同基类。
+        // Generation/Age/Forward 等概念都在这里统一维护。
         private abstract class Builder
         {
             protected Builder(DungeonRuntime dungeon, IntCoordinate location, IntCoordinate forward, int age, int maxAge, int generation)
@@ -722,8 +639,10 @@ namespace CrystalMagic.Game.MapDemo
             public int MaxAge;
             public int Generation;
 
+            // 返回 true 表示自己继续存活，false 表示本轮后应从 Builder 池移除。
             public abstract bool StepAhead();
 
+            // 根据当前朝向推导出右手方向。
             protected static IntCoordinate GetRight(IntCoordinate heading)
             {
                 if (heading.X == 0)
@@ -732,14 +651,19 @@ namespace CrystalMagic.Game.MapDemo
                 return new IntCoordinate(0, -heading.X);
             }
 
+            // 向前探测可用空间：
+            // - frontFree：正前方还能走多远
+            // - leftFree / rightFree：这段前方空间里左右还能扩多少宽度
             protected int FrontFree(IntCoordinate position, IntCoordinate heading, ref int leftFree, ref int rightFree)
             {
+                Dungeon.GuardTimeout();
                 int frontFree = -1;
                 IntCoordinate right = GetRight(heading);
                 int checkDist = 0;
 
                 while (frontFree == -1)
                 {
+                    Dungeon.GuardTimeout();
                     checkDist++;
                     for (int i = -leftFree; i <= rightFree; i++)
                     {
@@ -765,6 +689,7 @@ namespace CrystalMagic.Game.MapDemo
                     bool done = false;
                     while (!done)
                     {
+                        Dungeon.GuardTimeout();
                         checkDist++;
                         for (int i = 1; i <= frontFree; i++)
                         {
@@ -790,6 +715,7 @@ namespace CrystalMagic.Game.MapDemo
                     done = false;
                     while (!done)
                     {
+                        Dungeon.GuardTimeout();
                         checkDist++;
                         for (int i = 1; i <= frontFree; i++)
                         {
@@ -816,16 +742,27 @@ namespace CrystalMagic.Game.MapDemo
             }
         }
 
+        // 隧道工：地图骨架的主力生成器。
+        // 它负责挖隧道、决定是否转向/分叉/插前厅，并派生 Roomie 或子 Tunneler。
         private sealed class Tunneler : Builder
         {
+            // 期望朝向，用于影响下次转向时更偏哪边。
             private IntCoordinate _intDirection;
+            // 单次向前挖多少格。
             private int _stepLength;
+            // 隧道半宽；实际宽度通常是 2 * width + 1。
             private int _tunnelWidth;
+            // 直行时双生分叉概率。
             private int _straightDoubleSpawnProb;
+            // 转向时双生分叉概率。
             private int _turnDoubleSpawnProb;
+            // 转向概率。
             private int _changeDirProb;
+            // 右侧造房概率。
             private int _makeRoomsRightProb;
+            // 左侧造房概率。
             private int _makeRoomsLeftProb;
+            // 接入已有区域的偏好。
             private int _joinPreference;
 
             public Tunneler(
@@ -857,17 +794,30 @@ namespace CrystalMagic.Game.MapDemo
                 _joinPreference = joinPreference;
             }
 
+            // Tunneler 的一次完整动作。
+            // 读这段时可以按下面几个阶段理解：
+            // 1. 代际/寿命检查
+            // 2. 前方空间探测
+            // 3. 计算房型和子代延迟
+            // 4. 收尾逻辑（接入、补救、终止）
+            // 5. 正常挖一段隧道
+            // 6. 决定是否转向、变宽、变窄、分叉、插前厅
+            // 7. 派生子 Tunneler / Roomie
             public override bool StepAhead()
             {
+                Dungeon.GuardTimeout();
+                // 只在轮到自己这一代时工作。
                 if (Generation != Dungeon.ActiveGeneration)
                     return true;
 
+                // 先增长年龄，再判断是否寿命耗尽。
                 Age++;
                 if (Age >= MaxAge)
                     return false;
                 if (Age < 0)
                     return true;
 
+                // 探测当前朝向下，前/左/右还有多少可用空间。
                 int leftFree = _tunnelWidth + 1;
                 int rightFree = _tunnelWidth + 1;
                 int frontFree = FrontFree(Location, Forward, ref leftFree, ref rightFree);
@@ -878,6 +828,7 @@ namespace CrystalMagic.Game.MapDemo
                 IntCoordinate left = -right;
                 IntCoordinate test;
 
+                // 根据当前隧道宽度，决定这次侧房/分叉房更倾向生成什么尺寸。
                 int probMS = Dungeon.GetRoomSizeProbS(_tunnelWidth, RoomSize.MEDIUM);
                 int probSS = Dungeon.GetRoomSizeProbS(_tunnelWidth, RoomSize.SMALL);
                 int probMB = Dungeon.GetRoomSizeProbB(_tunnelWidth, RoomSize.MEDIUM);
@@ -896,6 +847,7 @@ namespace CrystalMagic.Game.MapDemo
                         ? RoomSize.MEDIUM
                         : RoomSize.LARGE;
 
+                // 计算 Roomie 子代应该延迟到哪一代激活。
                 diceRoll = Dungeon.Next101();
                 int roomieGeneration = Generation;
                 int summedProbs = 0;
@@ -909,6 +861,7 @@ namespace CrystalMagic.Game.MapDemo
                     }
                 }
 
+                // 前方空间不足，或者自己快老死时，进入收尾逻辑。
                 if (frontFree < 2 * _stepLength || Age == MaxAge - 1)
                 {
                     bool guaranteedClosedAhead = false;
@@ -941,6 +894,7 @@ namespace CrystalMagic.Game.MapDemo
                         }
                     }
 
+                    // 优先尝试接入已有开放区域，而不是直接终止。
                     if (((Dungeon.Next101() <= _joinPreference) && (Age < MaxAge - 1 || frontFree <= Dungeon.TunnelJoinDist)) || frontFree < 5)
                     {
                         if (2 * _tunnelWidth + 1 == count)
@@ -997,18 +951,19 @@ namespace CrystalMagic.Game.MapDemo
                             return false;
                         }
 
+                        // 极细隧道撞到封闭尽头时，允许派一个 last-chance 子代做补救。
                         if (guaranteedClosedAhead && _tunnelWidth == 0)
                         {
                             int jP = Dungeon.Next101() / 10 * 10;
                             if (leftFree >= rightFree)
                             {
-                                if (CanSpawnLastChanceRedirect())
-                                    Dungeon.CreateTunneler(Location, -right, 0, MaxAge, Generation + 1, -right, 3, 0, 0, 0, 30, 20, 20, jP);
+                                if (CanSpawnGuaranteedClosedRedirect())
+                                    Dungeon.CreateTunneler(Location, -right, 0, MaxAge, Generation + 1, -right, 3, 0, 0, 0, 30, 20, 20, jP, DungeonRuntime.TunnelerSpawnKind.Redirect);
                             }
                             else
                             {
-                                if (CanSpawnLastChanceRedirect())
-                                    Dungeon.CreateTunneler(Location, right, 0, MaxAge, Generation + 1, right, 3, 0, 0, 0, 30, 20, 20, jP);
+                                if (CanSpawnGuaranteedClosedRedirect())
+                                    Dungeon.CreateTunneler(Location, right, 0, MaxAge, Generation + 1, right, 3, 0, 0, 0, 30, 20, 20, jP, DungeonRuntime.TunnelerSpawnKind.Redirect);
                             }
                             return false;
                         }
@@ -1045,6 +1000,7 @@ namespace CrystalMagic.Game.MapDemo
                                 }
                             }
 
+                            // 特殊情况：前方与侧边开放区平行接触时，继续向前打穿几格形成更自然的接入。
                             if (specialCase)
                             {
                                 BuildTunnel(frontFree, _tunnelWidth);
@@ -1056,6 +1012,7 @@ namespace CrystalMagic.Game.MapDemo
                                 bool rowAfterIsOk = true;
                                 while (contactInNextRow && rowAfterIsOk)
                                 {
+                                    Dungeon.GuardTimeout();
                                     for (int i = -_tunnelWidth; i <= _tunnelWidth; i++)
                                     {
                                         test = Location + fwd * Forward + i * right;
@@ -1220,8 +1177,10 @@ namespace CrystalMagic.Game.MapDemo
                     return false;
                 }
 
+                // 常规情况：向前挖一整段隧道。
                 BuildTunnel(_stepLength, _tunnelWidth);
 
+                // 隧道中段两侧可能额外长出侧房。
                 if (Dungeon.Next100() < _makeRoomsRightProb)
                 {
                     IntCoordinate spawnPoint = Location + (_stepLength / 2 + 1) * Forward + _tunnelWidth * right;
@@ -1240,8 +1199,10 @@ namespace CrystalMagic.Game.MapDemo
                     Dungeon.CreateRoomie(spawnPoint, left, -1, 2, roomieGeneration, defaultWidth, sideRoomSize, 0);
                 }
 
+                // 父 Tunneler 自己推进到这段隧道的尽头。
                 Location += _stepLength * Forward;
 
+                // 检查当前位置前方是否有条件插入前厅。
                 bool smallAnteRoomPossible = false;
                 bool largeAnteRoomPossible = false;
 
@@ -1386,8 +1347,10 @@ namespace CrystalMagic.Game.MapDemo
                     }
                 }
 
+                // 这里开始决定下一轮/子代的风格：转向、分叉、直行。
                 IntCoordinate oldForward = Forward;
                 bool goStraight = !changeDirection;
+                // 先处理“转向”这一支；否则默认直行。
                 if (changeDirection)
                 {
                     int freeRightLeft = _tunnelWidth + 1;
@@ -1492,6 +1455,7 @@ namespace CrystalMagic.Game.MapDemo
                             goStraight = true;
                         }
 
+                        // 转向成功时，还可能同时派生一个分支子代。
                         if (!goStraight)
                         {
                             diceRoll = Dungeon.Next100();
@@ -1558,6 +1522,7 @@ namespace CrystalMagic.Game.MapDemo
                     }
                 }
 
+                // 直行分支：自己走主路，左右可能分别派生子代或分叉房。
                 if (goStraight)
                 {
                     Location = spawnPointForward;
@@ -1630,6 +1595,7 @@ namespace CrystalMagic.Game.MapDemo
                 return true;
             }
 
+            // 按“变宽 / 变窄”规则修正子代隧道宽度和步长。
             private void AdjustChildTunnelParameters(bool sizeUpTunnel, bool sizeDownTunnel, ref int tunnelWidth, ref int stepLength)
             {
                 if (sizeUpTunnel)
@@ -1649,6 +1615,7 @@ namespace CrystalMagic.Game.MapDemo
                 }
             }
 
+            // 判断当前自身是不是已经处于“last chance”参数模板，避免无限套娃。
             private bool IsAlreadyLastChanceProfile()
             {
                 return _makeRoomsLeftProb == Dungeon.LastChanceTunneler.MakeRoomsLeftProb
@@ -1658,6 +1625,20 @@ namespace CrystalMagic.Game.MapDemo
                     && _turnDoubleSpawnProb == Dungeon.LastChanceTunneler.TurnDoubleSpawnProb;
             }
 
+            // guaranteedClosedAhead + tunnelWidth == 0 时的“转向补救 tunneler”防套娃判断。
+            // 这里必须对齐原版硬编码参数，避免 redirect baby 继续无穷地产生同类 redirect baby。
+            private bool CanSpawnGuaranteedClosedRedirect()
+            {
+                return _joinPreference != 100
+                    || _makeRoomsLeftProb != 20
+                    || _makeRoomsRightProb != 20
+                    || _changeDirProb != 30
+                    || _straightDoubleSpawnProb != 0
+                    || _turnDoubleSpawnProb != 0
+                    || _tunnelWidth != 0;
+            }
+
+            // 判断当前状态是否还有必要派生一个补救用的 last-chance tunneler。
             private bool CanSpawnLastChanceRedirect()
             {
                 return _joinPreference != 100
@@ -1669,6 +1650,7 @@ namespace CrystalMagic.Game.MapDemo
                     || _tunnelWidth != 0;
             }
 
+            // 用配置里的 last-chance 模板派生一个补救子代。
             private void SpawnLastChanceTunneler(IntCoordinate location, IntCoordinate forward, int generation, IntCoordinate intendedDirection, int joinPreference)
             {
                 TunnelerSeed seed = Dungeon.LastChanceTunneler;
@@ -1686,9 +1668,11 @@ namespace CrystalMagic.Game.MapDemo
                     seed.ChangeDirectionProb,
                     seed.MakeRoomsRightProb,
                     seed.MakeRoomsLeftProb,
-                    joinPreference);
+                    joinPreference,
+                    DungeonRuntime.TunnelerSpawnKind.LastChance);
             }
 
+            // 在当前位置前方 carve 一个前厅。
             private bool BuildAnteRoom(int length, int width)
             {
                 if (length < 3 || width < 1)
@@ -1718,6 +1702,7 @@ namespace CrystalMagic.Game.MapDemo
                 return true;
             }
 
+            // 在当前位置前方 carve 一段隧道。
             private bool BuildTunnel(int length, int width)
             {
                 if (length < 1 || width < 0)
@@ -1754,6 +1739,7 @@ namespace CrystalMagic.Game.MapDemo
                 return true;
             }
 
+            // 用于 join 判定：哪些地块可视为“已经开放的区域”。
             private static bool IsOpenLike(DungeonMakerSquareData tile)
             {
                 return tile is DungeonMakerSquareData.OPEN
@@ -1763,10 +1749,14 @@ namespace CrystalMagic.Game.MapDemo
             }
         }
 
+        // 房间工：只负责尝试一次房间放置，成功后立即退休。
         private sealed class Roomie : Builder
         {
+            // 默认从多宽的走廊上长房间。
             private readonly int _defaultWidth;
+            // 目标房型大小。
             private readonly RoomSize _size;
+            // 预留分类字段，当前 DEMO 里基本未使用。
             private readonly int _category;
 
             public Roomie(
@@ -1786,8 +1776,14 @@ namespace CrystalMagic.Game.MapDemo
                 _category = category;
             }
 
+            // Roomie 的工作流：
+            // 1. 检查该房型是否还需要
+            // 2. 逐步探测前方能容纳多大矩形
+            // 3. 按面积与长宽比约束修正尺寸
+            // 4. carve 房间并补门
             public override bool StepAhead()
             {
+                Dungeon.GuardTimeout();
                 if (!Dungeon.WantsMoreRoomsD(_size))
                     return false;
 
@@ -1836,6 +1832,7 @@ namespace CrystalMagic.Game.MapDemo
 
                     while (length * width > maxSize)
                     {
+                        Dungeon.GuardTimeout();
                         if (length > width)
                             length--;
                         else if (width > length)
@@ -1921,6 +1918,7 @@ namespace CrystalMagic.Game.MapDemo
                 return false;
             }
 
+            // sweepWidth 递增时，辅助重跑一次 FrontFree 探测。
             private int FrontFreeAtCurrentSweep(int sweepWidth)
             {
                 int leftFree = sweepWidth + 1;
@@ -1929,6 +1927,7 @@ namespace CrystalMagic.Game.MapDemo
             }
         }
 
+        // 简单房间记录，只保存内部格子和是否已正式落进地图。
         private sealed class Room
         {
             private readonly List<IntCoordinate> _inside = new();
@@ -1946,6 +1945,7 @@ namespace CrystalMagic.Game.MapDemo
             public bool InDungeon { get; private set; }
         }
 
+        // 三元权重，小/中/大三种结果共用的配置结构。
         private readonly struct TripleInt
         {
             public TripleInt(int small, int medium, int large)
@@ -1960,6 +1960,8 @@ namespace CrystalMagic.Game.MapDemo
             public int Large { get; }
         }
 
+        // 一份完整的 Tunneler 出生模板。
+        // 既可以作为初始施工队配置，也可以作为 last-chance 模板。
         private readonly struct TunnelerSeed
         {
             public TunnelerSeed(
@@ -2012,127 +2014,159 @@ namespace CrystalMagic.Game.MapDemo
 
         private sealed class DungeonConfig
         {
+            // 地图宽度（源坐标 X）。
             public int DimX;
+            // 地图高度（源坐标 Y）。
             public int DimY;
+            // 地图默认背景格类型，当前通常是 CLOSED。
             public DungeonMakerSquareData Background;
-            public Direction[] Openings;
+
+            // Tunneler 子代的代际延迟权重表。
             public List<int> BabyDelayProbsTunneler;
+            // Roomie 子代的代际延迟权重表。
             public List<int> BabyDelayProbsRoomie;
+            // 不同代 Tunneler 的最大寿命表。
             public List<int> MaxAgesT;
+
+            // 侧向房间的大中小概率表，索引通常对应 tunnel width。
             public List<TripleInt> RoomSizeProbS;
+            // 分叉房间的大中小概率表，索引通常对应 tunnel width。
             public List<TripleInt> RoomSizeProbB;
+
+            // 接入已有开放区域的偏好权重表。
             public List<int> JoinPref;
+            // 不同代数时隧道变宽的概率表。
             public List<int> SizeUpProb;
+            // 不同代数时隧道变窄的概率表。
             public List<int> SizeDownProb;
+            // 不同 tunnel width 下插入前厅的概率表。
             public List<int> AnteRoomProb;
+
+            // 子代参数扰动幅度。
             public int Mutator;
+            // 尝试接入已有通道时的探测距离。
             public int TunnelJoinDist;
+            // 受阻时继续尝试的耐心值。
             public int Patience;
+            // 变宽后子代默认额外延迟的代数。
             public int SizeUpGenDelay;
+            // 宽隧道里是否允许摆柱子。
             public bool ColumnsInTunnels;
+            // 房间允许的最小长宽比。
             public double RoomAspectRatio;
+            // 生成前厅后对子代代数做的加速修正。
             public int GenSpeedUpOnAnteRoom;
+
+            // 小房的最小面积。
             public int MinSmallRoomSize;
+            // 中房的最小面积。
             public int MinMediumRoomSize;
+            // 大房的最小面积。
             public int MinLargeRoomSize;
+            // 任意房间允许的最大面积上限。
             public int MaxRoomSize;
+
+            // 地图中小房数量上限。
             public int MaxSmallDungeonRooms;
+            // 地图中中房数量上限。
             public int MaxMediumDungeonRooms;
+            // 地图中大房数量上限。
             public int MaxLargeDungeonRooms;
+
+            // 额外 TunnelCrawler 后处理从哪一代开始；-1 表示关闭。
             public int TunnelCrawlerGeneration;
+            // 末路补救时生成的特殊 Tunneler 配置。
             public TunnelerSeed LastChanceTunneler;
+            // 末路补救子代默认延迟到第几代再激活。
             public int LastChanceGenerationalDelay;
+            // 初始投放到地图中的 Tunneler 种子列表。
             public TunnelerSeed[] Tunnelers;
 
             public static DungeonConfig CreateOriginal()
             {
+                return From(DungeonMakerTunnelingConfig.CreateDefault());
+            }
+
+            // 把 Inspector 可编辑配置转换成运行时使用的紧凑配置。
+            public static DungeonConfig From(DungeonMakerTunnelingConfig source)
+            {
                 return new DungeonConfig
                 {
-                    DimX = 80,
-                    DimY = 200,
-                    Background = DungeonMakerSquareData.CLOSED,
-                    Openings = new[] { Direction.WE },
-                    BabyDelayProbsTunneler = new List<int> { 0, 20, 30, 50, 0, 0, 0, 0, 0, 0, 0 },
-                    BabyDelayProbsRoomie = new List<int> { 0, 0, 0, 50, 50, 0, 0, 0, 0, 0, 0 },
-                    MaxAgesT = new List<int>
-                    {
-                        5, 12, 12, 15, 15, 15, 15, 15, 15, 20, 30,
-                        10, 15, 10, 10, 20, 10, 10, 15, 10, 10,
-                        20, 20, 20, 20, 10, 20, 10, 20, 5,
-                    },
-                    RoomSizeProbS = new List<TripleInt>
-                    {
-                        new(100, 0, 0),
-                        new(100, 0, 0),
-                        new(70, 30, 0),
-                        new(50, 50, 0),
-                        new(0, 50, 50),
-                        new(0, 0, 100),
-                    },
-                    RoomSizeProbB = new List<TripleInt>
-                    {
-                        new(100, 0, 0),
-                        new(50, 50, 0),
-                        new(0, 30, 70),
-                        new(0, 0, 100),
-                    },
-                    JoinPref = new List<int> { 0, 0, 10, 100, 100 },
-                    SizeUpProb = new List<int> { 0, 10, 10, 10, 20, 30, 40 },
-                    SizeDownProb = new List<int> { 0, 0, 20, 50, 60, 50, 60 },
-                    AnteRoomProb = new List<int> { 20, 20, 50, 0, 0, 100 },
-                    Mutator = 20,
-                    TunnelJoinDist = 18,
-                    Patience = 90,
-                    SizeUpGenDelay = 1,
-                    ColumnsInTunnels = false,
-                    RoomAspectRatio = 0.6,
-                    GenSpeedUpOnAnteRoom = 2,
-                    MinSmallRoomSize = 20,
-                    MinMediumRoomSize = 50,
-                    MinLargeRoomSize = 100,
-                    MaxRoomSize = 300,
-                    MaxSmallDungeonRooms = 100,
-                    MaxMediumDungeonRooms = 20,
-                    MaxLargeDungeonRooms = 2,
-                    TunnelCrawlerGeneration = -1,
-                    LastChanceTunneler = new TunnelerSeed(
-                        new IntCoordinate(0, 0),
-                        new IntCoordinate(0, 0),
-                        new IntCoordinate(0, 0),
-                        0,
-                        0,
-                        0,
-                        3,
-                        0,
-                        0,
-                        30,
-                        30,
-                        80,
-                        80,
-                        100),
-                    LastChanceGenerationalDelay = 4,
-                    Tunnelers = new[]
-                    {
-                        new TunnelerSeed(
-                            new IntCoordinate(40, 2),
-                            TransformDirection(Direction.EA),
-                            TransformDirection(Direction.EA),
-                            0,
-                            16,
-                            0,
-                            5,
-                            1,
-                            25,
-                            50,
-                            30,
-                            100,
-                            100,
-                            100),
-                    },
+                    DimX = source.DimX,
+                    DimY = source.DimY,
+                    Background = source.Background,
+                    BabyDelayProbsTunneler = new List<int>(source.BabyDelayProbsTunneler),
+                    BabyDelayProbsRoomie = new List<int>(source.BabyDelayProbsRoomie),
+                    MaxAgesT = new List<int>(source.MaxAgesT),
+                    RoomSizeProbS = ConvertTriples(source.RoomSizeProbS),
+                    RoomSizeProbB = ConvertTriples(source.RoomSizeProbB),
+                    JoinPref = new List<int>(source.JoinPref),
+                    SizeUpProb = new List<int>(source.SizeUpProb),
+                    SizeDownProb = new List<int>(source.SizeDownProb),
+                    AnteRoomProb = new List<int>(source.AnteRoomProb),
+                    Mutator = source.Mutator,
+                    TunnelJoinDist = source.TunnelJoinDist,
+                    Patience = source.Patience,
+                    SizeUpGenDelay = source.SizeUpGenDelay,
+                    ColumnsInTunnels = source.ColumnsInTunnels,
+                    RoomAspectRatio = source.RoomAspectRatio,
+                    GenSpeedUpOnAnteRoom = source.GenSpeedUpOnAnteRoom,
+                    MinSmallRoomSize = source.MinSmallRoomSize,
+                    MinMediumRoomSize = source.MinMediumRoomSize,
+                    MinLargeRoomSize = source.MinLargeRoomSize,
+                    MaxRoomSize = source.MaxRoomSize,
+                    MaxSmallDungeonRooms = source.MaxSmallDungeonRooms,
+                    MaxMediumDungeonRooms = source.MaxMediumDungeonRooms,
+                    MaxLargeDungeonRooms = source.MaxLargeDungeonRooms,
+                    TunnelCrawlerGeneration = source.TunnelCrawlerGeneration,
+                    LastChanceTunneler = ConvertSeed(source.LastChanceTunneler),
+                    LastChanceGenerationalDelay = source.LastChanceGenerationalDelay,
+                    Tunnelers = ConvertSeeds(source.Tunnelers),
                 };
+            }
+
+            private static List<TripleInt> ConvertTriples(List<DungeonMakerTripleInt> source)
+            {
+                List<TripleInt> result = new(source.Count);
+                foreach (DungeonMakerTripleInt triple in source)
+                    result.Add(new TripleInt(triple.Small, triple.Medium, triple.Large));
+                return result;
+            }
+
+            private static TunnelerSeed[] ConvertSeeds(DungeonMakerTunnelerSeedData[] source)
+            {
+                TunnelerSeed[] result = new TunnelerSeed[source.Length];
+                for (int i = 0; i < source.Length; i++)
+                    result[i] = ConvertSeed(source[i]);
+                return result;
+            }
+
+            private static TunnelerSeed ConvertSeed(DungeonMakerTunnelerSeedData source)
+            {
+                return new TunnelerSeed(
+                    new IntCoordinate(source.Location.x, source.Location.y),
+                    TransformDirection(ConvertDirection(source.Direction)),
+                    TransformDirection(ConvertDirection(source.IntendedDirection)),
+                    source.Age,
+                    source.MaxAge,
+                    source.Generation,
+                    source.StepLength,
+                    source.TunnelWidth,
+                    source.StraightDoubleSpawnProb,
+                    source.TurnDoubleSpawnProb,
+                    source.ChangeDirectionProb,
+                    source.MakeRoomsRightProb,
+                    source.MakeRoomsLeftProb,
+                    source.JoinPreference);
+            }
+
+            private static Direction ConvertDirection(DungeonMakerDirection source)
+            {
+                return (Direction)(int)source;
             }
         }
 
+        // 复刻原版 DungeonMaker 使用的 MSVC 风格随机数。
         private sealed class MsRand
         {
             private uint _state;
@@ -2142,6 +2176,7 @@ namespace CrystalMagic.Game.MapDemo
                 _state = unchecked((uint)seed);
             }
 
+            // 返回 [0, exclusiveMax)。
             public int Next(int exclusiveMax)
             {
                 if (exclusiveMax <= 1)
@@ -2152,6 +2187,7 @@ namespace CrystalMagic.Game.MapDemo
             }
         }
 
+        // 整个生成器都在用的整数坐标结构。
         private readonly struct IntCoordinate : IEquatable<IntCoordinate>
         {
             public IntCoordinate(int x, int y)
@@ -2209,26 +2245,39 @@ namespace CrystalMagic.Game.MapDemo
             }
         }
 
-        private enum Direction
+        public enum Direction
         {
+            // 向上。
             NO = 0,
+            // 向右。
             EA = 1,
+            // 向下。
             SO = 2,
+            // 向左。
             WE = 3,
+            // 右上对角。
             NE = 4,
+            // 右下对角。
             SE = 5,
+            // 左下对角。
             SW = 6,
+            // 左上对角。
             NW = 7,
+            // 无方向 / 空方向。
             XX = 8,
         }
 
         private enum RoomSize
         {
+            // 小房间。
             SMALL,
+            // 中房间。
             MEDIUM,
+            // 大房间。
             LARGE,
         }
 
+        // 把设计文件风格的方向枚举翻译成整数向量。
         private static IntCoordinate TransformDirection(Direction direction)
         {
             return direction switch
@@ -2246,3 +2295,4 @@ namespace CrystalMagic.Game.MapDemo
         }
     }
 }
+
