@@ -1,0 +1,52 @@
+UnitAuthoringUtility
+-内容
+    辅助函数
+-接口
+    GetUnitDataTableAsset 获取数据
+    ResolveUnitData ResolveModuleData 获取数据
+    GetPrefabAssetPath 编辑器阶段获取Prefab路径
+NPCInteractableAuthoring
+-内容
+    NPCDataID ID，用于读取该NPC交互数据
+    InteractRange 交互范围
+    Interact 交互图标
+NPCInteractionRequest
+-内容
+    表示发起一次交互请求，算是单例
+NPCInteractionState
+-内容
+    目前可以交互的NPC是谁，算是单例
+UnitAttackAuthoring
+-内容
+    AttackComponent
+        基础攻击力 基础加算 因子
+        基础技能范围 基础加算 因子
+        基础行动速度 基础加算 因子
+        基础咏唱速度 基础加算 因子
+    UnitElementComponent
+        四种元素属性伤害加成
+UnitBehaviorTreeAuthoring
+UnitBuffAuthoring
+-内容
+    IBufferElementData 
+        BuffId 剩余时间 叠加层数
+UnitCastAuthoring
+-内容
+UnitFactionAuthoring
+-内容
+    表示单位阵营
+UnitIntentAuthoring
+-内容
+    中转意图
+UnitManaAuthoring
+-内容
+    MaxMP CurrentMP 各种加成
+    MP恢复 各种加成
+UnitMoveAuthoring
+移动组件
+UnitPerceptionAuthoring
+索敌组件
+UnitStateMachineAuthoring
+状态机组件
+UnitVitalityAuthoring
+生命组件

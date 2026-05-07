@@ -32,7 +32,6 @@ public class NPCInteractableAuthoring : MonoBehaviour
                 NpcDataId = authoring.NpcDataId,
                 interact = interactEntity,
                 interactRangeSq = authoring.InteractRange * authoring.InteractRange,
-                promptVisibleScale = interact != null ? interact.localScale.x : 1f,
             });
         }
     }
@@ -43,5 +42,4 @@ public struct NPCInteractable : IComponentData
     public int NpcDataId;
     public Entity interact;
     public float interactRangeSq;
-    public float promptVisibleScale;
 }

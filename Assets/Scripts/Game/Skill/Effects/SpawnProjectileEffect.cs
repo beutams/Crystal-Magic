@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using CrystalMagic.Game.Data.Effects;
+using CrystalMagic.Core;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -25,17 +25,21 @@ namespace CrystalMagic.Game.Skill.Effects
                 return;
 
             Vector3 direction = GetProjectileDirection(context, spawnPosition);
-            Quaternion rotation = Quaternion.AngleAxis(Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg, Vector3.forward);
-            Vector3 finalPosition = spawnPosition + rotation * Data.SpawnOffset;
+            Quaternion rotation = Quaternion.FromToRotation(Vector3.right, direction);
+            Vector3 finalPosition = spawnPosition + direction * Data.SpawnOffsetDistance;
 
-            GameObject projectile = Object.Instantiate(Data.Projectile, finalPosition, rotation);
-            projectile.transform.localScale *= Data.Scale;
+            GameObject projectile = PoolComponent.Instance.Get(Data.Projectile);
+            projectile.transform.SetPositionAndRotation(finalPosition, rotation);
+            projectile.transform.localScale = Data.Projectile.transform.localScale * Data.Scale;
+            projectile.transform.right = direction;
+            PrepareProjectileVisual(projectile);
 
-            SkillProjectileRuntime runtime = projectile.GetComponent<SkillProjectileRuntime>();
-            if (runtime == null)
-                runtime = projectile.AddComponent<SkillProjectileRuntime>();
+            Flipbook4x4Runtime flipbook = projectile.GetComponent<Flipbook4x4Runtime>();
+            if (flipbook == null)
+                flipbook = projectile.AddComponent<Flipbook4x4Runtime>();
 
-            runtime.Initialize(Data, context, finalPosition, direction);
+            flipbook.Initialize(loop: true, destroyWhenFinished: false);
+            CreateProjectileEntity(context, projectile, finalPosition, direction);
         }
 
         private bool TryGetSpawnPosition(SkillContent context, out Vector3 position)
@@ -72,181 +76,48 @@ namespace CrystalMagic.Game.Skill.Effects
 
             return Vector3.right;
         }
-    }
 
-    public sealed class SkillProjectileRuntime : MonoBehaviour
-    {
-        private const float HitSearchRadius = 0.75f;
-
-        private readonly List<UnitQueryHit> _hits = new();
-        private readonly HashSet<Entity> _hitEntities = new();
-        private readonly HashSet<int> _hitObjects = new();
-        private SkillContent _context;
-        private EffectData[] _onCollisionEffects;
-        private EffectData[] _onDestroyEffects;
-        private Vector3 _direction;
-        private float _speed;
-        private float _maxRange;
-        private float _traveledDistance;
-        private bool _canPierce;
-        private bool _triggerDestroyEffectsOnMaxRange;
-        private bool _destroyed;
-
-        public void Initialize(SpawnProjectileEffectData data, SkillContent context, Vector3 startPosition, Vector3 direction)
+        private void CreateProjectileEntity(SkillContent context, GameObject visual, Vector3 startPosition, Vector3 direction)
         {
-            transform.position = startPosition;
-            _context = context.Clone();
-            _direction = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.right;
-            _speed = data.Speed;
-            _maxRange = data.MaxRange;
-            _canPierce = data.CanPierce;
-            _triggerDestroyEffectsOnMaxRange = data.TriggerDestroyEffectsOnMaxRange;
-            _onCollisionEffects = data.OnCollisionEffects;
-            _onDestroyEffects = data.OnDestroyEffects;
-            _traveledDistance = 0f;
-            _destroyed = false;
-            _hitEntities.Clear();
-            _hitObjects.Clear();
+            EntityManager entityManager = context.EntityManager;
+            Entity projectileEntity = entityManager.CreateEntity(typeof(LocalTransform), typeof(SkillProjectileComponent));
+            int registryId = SkillProjectileRegistry.Register(visual, context, Data.OnCollisionEffects, Data.OnDestroyEffects);
+
+            entityManager.SetComponentData(
+                projectileEntity,
+                LocalTransform.FromPositionRotationScale(
+                    startPosition,
+                    quaternion.identity,
+                    1f));
+
+            entityManager.SetComponentData(
+                projectileEntity,
+                new SkillProjectileComponent
+                {
+                    Direction = new float3(direction.x, direction.y, direction.z),
+                    Speed = Data.Speed,
+                    MaxRange = Data.MaxRange,
+                    TraveledDistance = 0f,
+                    HitRadius = 0.75f,
+                    RegistryId = registryId,
+                    CanPierce = Data.CanPierce ? (byte)1 : (byte)0,
+                    TriggerDestroyEffectsOnMaxRange = Data.TriggerDestroyEffectsOnMaxRange ? (byte)1 : (byte)0,
+                });
         }
 
-        private void Update()
+        private static void PrepareProjectileVisual(GameObject projectile)
         {
-            if (_destroyed)
-                return;
+            SkillProjectileRuntime legacyRuntime = projectile.GetComponent<SkillProjectileRuntime>();
+            if (legacyRuntime != null)
+                legacyRuntime.enabled = false;
 
-            float moveDistance = _speed * Time.deltaTime;
-            transform.position += _direction * moveDistance;
-            _traveledDistance += Mathf.Abs(moveDistance);
+            Collider[] colliders = projectile.GetComponentsInChildren<Collider>(true);
+            for (int i = 0; i < colliders.Length; i++)
+                colliders[i].enabled = false;
 
-            if (_maxRange > 0f && _traveledDistance >= _maxRange)
-                DestroyProjectile(_triggerDestroyEffectsOnMaxRange, null, transform.position);
-        }
-
-        private void OnTriggerEnter(Collider other)
-        {
-            HandleCollision(other.gameObject, other.ClosestPoint(transform.position));
-        }
-
-        private void OnCollisionEnter(Collision collision)
-        {
-            Vector3 hitPoint = collision.contactCount > 0
-                ? collision.GetContact(0).point
-                : collision.transform.position;
-            HandleCollision(collision.gameObject, hitPoint);
-        }
-
-        private void OnTriggerEnter2D(Collider2D other)
-        {
-            Vector2 point = other.ClosestPoint(transform.position);
-            HandleCollision(other.gameObject, new Vector3(point.x, point.y, transform.position.z));
-        }
-
-        private void OnCollisionEnter2D(Collision2D collision)
-        {
-            Vector2 point = collision.contactCount > 0
-                ? collision.GetContact(0).point
-                : collision.transform.position;
-            HandleCollision(collision.gameObject, new Vector3(point.x, point.y, transform.position.z));
-        }
-
-        private void HandleCollision(GameObject hitObject, Vector3 hitPoint)
-        {
-            if (_destroyed || hitObject == null)
-                return;
-
-            SkillContent hitContext = BuildHitContext(hitObject, hitPoint, out Entity hitEntity);
-            if (!RegisterHit(hitObject, hitEntity))
-                return;
-
-            SkillExecutor.ExecuteEffects(_onCollisionEffects, hitContext);
-
-            if (!_canPierce)
-                DestroyProjectile(triggerDestroyEffects: true, hitContext, hitPoint);
-        }
-
-        private SkillContent BuildHitContext(GameObject hitObject, Vector3 hitPoint, out Entity hitEntity)
-        {
-            SkillContent hitContext = _context.Clone();
-            hitContext.EntityManager = GetEntityManager();
-            hitContext.HasPosition = true;
-            hitContext.Position = hitPoint;
-            hitContext.HasTarget = true;
-            hitContext.Target = hitObject;
-
-            if (TryResolveHitEntity(hitPoint, out hitEntity))
-            {
-                hitContext.HasTargetEntity = true;
-                hitContext.TargetEntity = hitEntity;
-            }
-            else
-            {
-                hitContext.HasTargetEntity = false;
-                hitContext.TargetEntity = Entity.Null;
-            }
-
-            return hitContext;
-        }
-
-        private bool RegisterHit(GameObject hitObject, Entity hitEntity)
-        {
-            if (hitEntity != Entity.Null)
-                return _hitEntities.Add(hitEntity);
-
-            return _hitObjects.Add(hitObject.GetInstanceID());
-        }
-
-        private bool TryResolveHitEntity(Vector3 hitPoint, out Entity hitEntity)
-        {
-            hitEntity = Entity.Null;
-
-            UnitQuerySystem querySystem = UnitQuerySystem.Default;
-            if (querySystem == null)
-                return false;
-
-            querySystem.QueryCircle(new float3(hitPoint.x, hitPoint.y, hitPoint.z), HitSearchRadius, _hits);
-            float bestDistanceSq = float.MaxValue;
-            for (int i = 0; i < _hits.Count; i++)
-            {
-                UnitQueryHit hit = _hits[i];
-                if (_context.HasOriginEntity && hit.Entity == _context.OriginEntity)
-                    continue;
-
-                float2 diff = hit.Position.xy - new float2(hitPoint.x, hitPoint.y);
-                float distanceSq = math.lengthsq(diff);
-                if (distanceSq >= bestDistanceSq)
-                    continue;
-
-                bestDistanceSq = distanceSq;
-                hitEntity = hit.Entity;
-            }
-
-            return hitEntity != Entity.Null;
-        }
-
-        private void DestroyProjectile(bool triggerDestroyEffects, SkillContent destroyContext, Vector3 destroyPosition)
-        {
-            if (_destroyed)
-                return;
-
-            _destroyed = true;
-            if (triggerDestroyEffects)
-            {
-                SkillContent context = destroyContext?.Clone() ?? _context.Clone();
-                context.EntityManager = GetEntityManager();
-                context.HasPosition = true;
-                context.Position = destroyPosition;
-                SkillExecutor.ExecuteEffects(_onDestroyEffects, context);
-            }
-
-            Destroy(gameObject);
-        }
-
-        private static EntityManager GetEntityManager()
-        {
-            UnitQuerySystem querySystem = UnitQuerySystem.Default;
-            return querySystem != null
-                ? querySystem.QueryEntityManager
-                : World.DefaultGameObjectInjectionWorld.EntityManager;
+            Collider2D[] colliders2D = projectile.GetComponentsInChildren<Collider2D>(true);
+            for (int i = 0; i < colliders2D.Length; i++)
+                colliders2D[i].enabled = false;
         }
     }
 }

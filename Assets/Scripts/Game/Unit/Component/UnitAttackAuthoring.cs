@@ -55,22 +55,21 @@ public class UnitAttackAuthoring : MonoBehaviour
             });
             AddComponent(entity, new UnitElementComponent
             {
-                BaseWaterPowerBonus = baseWaterPowerBonus,
-                BaseWaterPowerBonusOffset = 0f,
-                WaterPowerFactor = 1f,
-                WaterPowerBonus = 0f,
-                BaseFirePowerBonus = baseFirePowerBonus,
-                BaseFirePowerBonusOffset = 0f,
-                FirePowerFactor = 1f,
-                FirePowerBonus = 0f,
-                BaseLightningPowerBonus = baseLightningPowerBonus,
-                BaseLightningPowerBonusOffset = 0f,
-                LightningPowerFactor = 1f,
-                LightningPowerBonus = 0f,
-                BaseWindPowerBonus = baseWindPowerBonus,
-                BaseWindPowerBonusOffset = 0f,
-                WindPowerFactor = 1f,
-                WindPowerBonus = 0f,
+                WaterPower = baseWaterPowerBonus,
+                EquipmentWaterPower = 0f,
+                FirePower = baseFirePowerBonus,
+                EquipmentFirePower = 0f,
+                LightningPower = baseLightningPowerBonus,
+                EquipmentLightningPower = 0f,
+                WindPower = baseWindPowerBonus,
+                EquipmentWindPower = 0f,
+            });
+            AddComponent(entity, new UnitElementBaseComponent
+            {
+                WaterPower = baseWaterPowerBonus,
+                FirePower = baseFirePowerBonus,
+                LightningPower = baseLightningPowerBonus,
+                WindPower = baseWindPowerBonus,
             });
         }
     }
@@ -82,14 +81,17 @@ public struct UnitAttackComponent : IComponentData
     public float BaseAttackPowerOffset;
     public float AttackFactor;
     public float AttackBonus;
+
     public float BaseSkillRange;
     public float BaseSkillRangeOffset;
     public float RangeFactor;
     public float RangeBonus;
+
     public float BaseActionSpeedBonus;
     public float BaseActionSpeedBonusOffset;
     public float ActionSpeedFactor;
     public float ActionSpeedBonus;
+
     public float BaseChantSpeedBonus;
     public float BaseChantSpeedBonusOffset;
     public float ChantSpeedFactor;
@@ -103,41 +105,32 @@ public struct UnitAttackComponent : IComponentData
 
 public struct UnitElementComponent : IComponentData
 {
-    public float BaseWaterPowerBonus;
-    public float BaseWaterPowerBonusOffset;
-    public float WaterPowerFactor;
-    public float WaterPowerBonus;
-    public float BaseFirePowerBonus;
-    public float BaseFirePowerBonusOffset;
-    public float FirePowerFactor;
-    public float FirePowerBonus;
-    public float BaseLightningPowerBonus;
-    public float BaseLightningPowerBonusOffset;
-    public float LightningPowerFactor;
-    public float LightningPowerBonus;
-    public float BaseWindPowerBonus;
-    public float BaseWindPowerBonusOffset;
-    public float WindPowerFactor;
-    public float WindPowerBonus;
-
-    public float RealWaterPowerBonus => (BaseWaterPowerBonus + BaseWaterPowerBonusOffset) * WaterPowerFactor + WaterPowerBonus;
-    public float RealFirePowerBonus => (BaseFirePowerBonus + BaseFirePowerBonusOffset) * FirePowerFactor + FirePowerBonus;
-    public float RealLightningPowerBonus => (BaseLightningPowerBonus + BaseLightningPowerBonusOffset) * LightningPowerFactor + LightningPowerBonus;
-    public float RealWindPowerBonus => (BaseWindPowerBonus + BaseWindPowerBonusOffset) * WindPowerFactor + WindPowerBonus;
+    public float WaterPower;
+    public float EquipmentWaterPower;
+    public float FirePower;
+    public float EquipmentFirePower;
+    public float LightningPower;
+    public float EquipmentLightningPower;
+    public float WindPower;
+    public float EquipmentWindPower;
 
     public float GetPowerBonus(CrystalMagic.Game.Data.Effects.ElementType elementType)
     {
         return elementType switch
         {
-            CrystalMagic.Game.Data.Effects.ElementType.Water => RealWaterPowerBonus,
-            CrystalMagic.Game.Data.Effects.ElementType.Fire => RealFirePowerBonus,
-            CrystalMagic.Game.Data.Effects.ElementType.Lightning => RealLightningPowerBonus,
-            CrystalMagic.Game.Data.Effects.ElementType.Wind => RealWindPowerBonus,
+            CrystalMagic.Game.Data.Effects.ElementType.Water => WaterPower,
+            CrystalMagic.Game.Data.Effects.ElementType.Fire => FirePower,
+            CrystalMagic.Game.Data.Effects.ElementType.Lightning => LightningPower,
+            CrystalMagic.Game.Data.Effects.ElementType.Wind => WindPower,
             _ => 0f,
         };
     }
 }
 
-/// <summary>
-/// 攻击组件——有此组件即为可攻击单位。
-/// </summary>
+public struct UnitElementBaseComponent : IComponentData
+{
+    public float WaterPower;
+    public float FirePower;
+    public float LightningPower;
+    public float WindPower;
+}

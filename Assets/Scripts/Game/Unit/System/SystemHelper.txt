@@ -1,0 +1,3 @@
+数值系统
+PlayerEquipmentPropertySystem
+-内容 将装备数值转换为基础数值

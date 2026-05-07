@@ -14,35 +14,49 @@
       "Conditions": [],
       "EffectChain": [
         {
-          "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
-          "Radius": 5.0,
-          "CenterOffset": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "TargetConditions": [
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnProjectileEffectData, Assembly-CSharp",
+          "Projectile": "Assets/Res/Projectile/FireBall.prefab",
+          "Speed": 10.0,
+          "MaxRange": 100.0,
+          "SpawnOffsetDistance": 1.0,
+          "Scale": 2.0,
+          "CanPierce": false,
+          "TriggerDestroyEffectsOnMaxRange": false,
+          "OnCollisionEffects": null,
+          "OnDestoryEffects": [
             {
-              "ConditionType": 0,
-              "SourceType": "UnitIsEnemySource",
-              "CompareType": "IsTrue",
-              "CompareValue": 0.0
-            }
-          ],
-          "OnAfterSearch": [
-            {
-              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
-              "DamageCoefficient": 50.0,
-              "FlatDamageBonus": 0.0,
-              "Element": 2,
-              "Conditions": [
+              "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+              "Radius": 3.0,
+              "CenterOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "TargetConditions": [
                 {
                   "ConditionType": 0,
                   "SourceType": "UnitIsEnemySource",
                   "CompareType": "IsTrue",
                   "CompareValue": 0.0
                 }
-              ]
+              ],
+              "OnAfterSearch": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+                  "DamageCoefficient": 10.0,
+                  "FlatDamageBonus": 0.0,
+                  "Element": 2,
+                  "Conditions": [
+                    {
+                      "ConditionType": 0,
+                      "SourceType": "UnitIsEnemySource",
+                      "CompareType": "IsTrue",
+                      "CompareValue": 0.0
+                    }
+                  ]
+                }
+              ],
+              "Conditions": []
             }
           ],
           "Conditions": []

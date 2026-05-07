@@ -73,14 +73,11 @@ partial class UnitBuffSystem : SystemBase
             if (EntityManager.HasComponent<UnitElementComponent>(entity))
             {
                 UnitElementComponent element = EntityManager.GetComponentData<UnitElementComponent>(entity);
-                element.WaterPowerFactor = modifiers.GetFactor(PropertyModifierChannel.WaterPower);
-                element.WaterPowerBonus = modifiers.GetBonus(PropertyModifierChannel.WaterPower);
-                element.FirePowerFactor = modifiers.GetFactor(PropertyModifierChannel.FirePower);
-                element.FirePowerBonus = modifiers.GetBonus(PropertyModifierChannel.FirePower);
-                element.LightningPowerFactor = modifiers.GetFactor(PropertyModifierChannel.LightningPower);
-                element.LightningPowerBonus = modifiers.GetBonus(PropertyModifierChannel.LightningPower);
-                element.WindPowerFactor = modifiers.GetFactor(PropertyModifierChannel.WindPower);
-                element.WindPowerBonus = modifiers.GetBonus(PropertyModifierChannel.WindPower);
+                UnitElementBaseComponent elementBase = EntityManager.GetComponentData<UnitElementBaseComponent>(entity);
+                element.WaterPower = elementBase.WaterPower + element.EquipmentWaterPower + modifiers.GetBonus(PropertyModifierChannel.WaterPower);
+                element.FirePower = elementBase.FirePower + element.EquipmentFirePower + modifiers.GetBonus(PropertyModifierChannel.FirePower);
+                element.LightningPower = elementBase.LightningPower + element.EquipmentLightningPower + modifiers.GetBonus(PropertyModifierChannel.LightningPower);
+                element.WindPower = elementBase.WindPower + element.EquipmentWindPower + modifiers.GetBonus(PropertyModifierChannel.WindPower);
                 EntityManager.SetComponentData(entity, element);
             }
 

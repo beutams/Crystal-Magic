@@ -26,21 +26,29 @@ namespace CrystalMagic.Game.Skill.Effects
 
             Quaternion rotation = GetSpawnRotation(context);
             Vector3 position = GetSpawnPosition(context, rotation);
-            GameObject vfx = Object.Instantiate(prefab, position, rotation);
-            vfx.transform.localScale *= Data.Scale;
+            GameObject vfx = PoolComponent.Instance.Get(prefab);
+            vfx.transform.SetPositionAndRotation(position, rotation);
+            vfx.transform.localScale = prefab.transform.localScale * Data.Scale;
+
+            Flipbook4x4Runtime flipbook = vfx.GetComponent<Flipbook4x4Runtime>();
+            if (flipbook == null)
+                flipbook = vfx.AddComponent<Flipbook4x4Runtime>();
+
+            bool loop = Data.FollowCaster;
+            bool destroyWhenFinished = !loop && Data.Duration <= 0f;
+            flipbook.Initialize(loop, destroyWhenFinished);
+
+            SkillVfxRuntime runtime = vfx.GetComponent<SkillVfxRuntime>();
+            if (runtime == null)
+                runtime = vfx.AddComponent<SkillVfxRuntime>();
 
             if (Data.FollowCaster && context.HasOriginEntity)
             {
-                SkillVfxRuntime runtime = vfx.GetComponent<SkillVfxRuntime>();
-                if (runtime == null)
-                    runtime = vfx.AddComponent<SkillVfxRuntime>();
-
                 runtime.Initialize(context.OriginEntity, context.EntityManager, Data.SpawnOffset, Data.AlignToCasterForward, Data.Duration);
                 return;
             }
 
-            if (Data.Duration > 0f)
-                Object.Destroy(vfx, Data.Duration);
+            runtime.Initialize(Entity.Null, context.EntityManager, Vector3.zero, false, Data.Duration);
         }
 
         private Vector3 GetSpawnPosition(SkillContent context, Quaternion rotation)
@@ -137,7 +145,7 @@ namespace CrystalMagic.Game.Skill.Effects
             RefreshTransform();
 
             if (_destroyTime > 0f && Time.time >= _destroyTime)
-                Destroy(gameObject);
+                PoolComponent.Instance.Release(gameObject);
         }
 
         private void RefreshTransform()

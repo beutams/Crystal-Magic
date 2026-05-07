@@ -20,7 +20,7 @@ namespace CrystalMagic.Game.Data.Effects
         public float MaxRange;
 
         /// <summary>相对施法者的生成偏移</summary>
-        public Vector3 SpawnOffset;
+        public float SpawnOffsetDistance;
 
         /// <summary>投射物缩放倍率，1 = 原始大小</summary>
         public float Scale = 1f;

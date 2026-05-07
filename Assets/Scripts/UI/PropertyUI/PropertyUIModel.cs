@@ -88,10 +88,10 @@ namespace CrystalMagic.UI
             if (entityManager.HasComponent<UnitElementComponent>(player))
             {
                 UnitElementComponent element = entityManager.GetComponentData<UnitElementComponent>(player);
-                snapshot.Water = element.RealWaterPowerBonus;
-                snapshot.Fire = element.RealFirePowerBonus;
-                snapshot.Lighting = element.RealLightningPowerBonus;
-                snapshot.Wind = element.RealWindPowerBonus;
+                snapshot.Water = element.WaterPower;
+                snapshot.Fire = element.FirePower;
+                snapshot.Lighting = element.LightningPower;
+                snapshot.Wind = element.WindPower;
             }
 
             return snapshot;

@@ -135,7 +135,7 @@ public struct NPCInteractPromptShowNearestJob : IJob
             return;
 
         LocalTransform interactTransform = LocalTransforms[interactable.interact];
-        interactTransform.Scale = interactable.promptVisibleScale;
+        interactTransform.Scale = 1f;
         LocalTransforms[interactable.interact] = interactTransform;
     }
 }
