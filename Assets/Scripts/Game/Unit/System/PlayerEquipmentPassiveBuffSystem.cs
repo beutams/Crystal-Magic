@@ -14,9 +14,43 @@ partial class PlayerEquipmentPropertySystem : SystemBase
     {
         PropertyModifierSet totals = BuildTotals(SaveDataComponent.Instance?.GetEquipmentData());
 
-        foreach ((RefRO<PlayerTag> _, Entity entity) in SystemAPI.Query<RefRO<PlayerTag>>().WithEntityAccess())
+        foreach ((RefRO<PlayerTag> _, RefRW<UnitMoveComponent> move) in SystemAPI.Query<RefRO<PlayerTag>, RefRW<UnitMoveComponent>>())
         {
-            ApplyOffsets(entity, totals);
+            move.ValueRW.BaseMoveSpeedOffset = totals.GetBonus(PropertyModifierChannel.MoveSpeed);
+        }
+
+        foreach ((RefRO<PlayerTag> _, RefRW<UnitVitalityComponent> vitality) in SystemAPI.Query<RefRO<PlayerTag>, RefRW<UnitVitalityComponent>>())
+        {
+            vitality.ValueRW.BaseMaxHealthOffset = totals.GetBonus(PropertyModifierChannel.MaxHealth);
+            vitality.ValueRW.BaseHealthRegenPerSecondOffset = totals.GetBonus(PropertyModifierChannel.HealthRegen);
+            vitality.ValueRW.BaseDefenseOffset = totals.GetBonus(PropertyModifierChannel.Defense);
+        }
+
+        foreach ((RefRO<PlayerTag> _, RefRW<UnitManaComponent> mana) in SystemAPI.Query<RefRO<PlayerTag>, RefRW<UnitManaComponent>>())
+        {
+            mana.ValueRW.BaseMaxMpOffset = totals.GetBonus(PropertyModifierChannel.MaxMp);
+            mana.ValueRW.BaseMpRegenPerSecondOffset = totals.GetBonus(PropertyModifierChannel.MpRegen);
+        }
+
+        foreach ((RefRO<PlayerTag> _, RefRW<UnitAttackComponent> attack) in SystemAPI.Query<RefRO<PlayerTag>, RefRW<UnitAttackComponent>>())
+        {
+            attack.ValueRW.BaseAttackPowerOffset = totals.GetBonus(PropertyModifierChannel.AttackPower);
+            attack.ValueRW.BaseSkillRangeOffset = totals.GetBonus(PropertyModifierChannel.SkillRange);
+            attack.ValueRW.BaseActionSpeedBonusOffset = totals.GetBonus(PropertyModifierChannel.ActionSpeed);
+            attack.ValueRW.BaseChantSpeedBonusOffset = totals.GetBonus(PropertyModifierChannel.ChantSpeed);
+        }
+
+        foreach ((RefRO<PlayerTag> _, RefRW<UnitElementComponent> element, RefRO<UnitElementBaseComponent> elementBase) in
+                 SystemAPI.Query<RefRO<PlayerTag>, RefRW<UnitElementComponent>, RefRO<UnitElementBaseComponent>>())
+        {
+            element.ValueRW.EquipmentWaterPower = totals.GetBonus(PropertyModifierChannel.WaterPower);
+            element.ValueRW.EquipmentFirePower = totals.GetBonus(PropertyModifierChannel.FirePower);
+            element.ValueRW.EquipmentLightningPower = totals.GetBonus(PropertyModifierChannel.LightningPower);
+            element.ValueRW.EquipmentWindPower = totals.GetBonus(PropertyModifierChannel.WindPower);
+            element.ValueRW.WaterPower = elementBase.ValueRO.WaterPower + element.ValueRO.EquipmentWaterPower;
+            element.ValueRW.FirePower = elementBase.ValueRO.FirePower + element.ValueRO.EquipmentFirePower;
+            element.ValueRW.LightningPower = elementBase.ValueRO.LightningPower + element.ValueRO.EquipmentLightningPower;
+            element.ValueRW.WindPower = elementBase.ValueRO.WindPower + element.ValueRO.EquipmentWindPower;
         }
     }
 
@@ -63,58 +97,6 @@ partial class PlayerEquipmentPropertySystem : SystemBase
                 Channel = entry.Channel,
                 Bonus = entry.BaseBonus,
             });
-        }
-    }
-
-    private void ApplyOffsets(Entity entity, PropertyModifierSet totals)
-    {
-        if (EntityManager.HasComponent<UnitMoveComponent>(entity))
-        {
-            UnitMoveComponent move = EntityManager.GetComponentData<UnitMoveComponent>(entity);
-            move.BaseMoveSpeedOffset = totals.GetBonus(PropertyModifierChannel.MoveSpeed);
-            EntityManager.SetComponentData(entity, move);
-        }
-
-        if (EntityManager.HasComponent<UnitVitalityComponent>(entity))
-        {
-            UnitVitalityComponent vitality = EntityManager.GetComponentData<UnitVitalityComponent>(entity);
-            vitality.BaseMaxHealthOffset = totals.GetBonus(PropertyModifierChannel.MaxHealth);
-            vitality.BaseHealthRegenPerSecondOffset = totals.GetBonus(PropertyModifierChannel.HealthRegen);
-            vitality.BaseDefenseOffset = totals.GetBonus(PropertyModifierChannel.Defense);
-            EntityManager.SetComponentData(entity, vitality);
-        }
-
-        if (EntityManager.HasComponent<UnitManaComponent>(entity))
-        {
-            UnitManaComponent mana = EntityManager.GetComponentData<UnitManaComponent>(entity);
-            mana.BaseMaxMpOffset = totals.GetBonus(PropertyModifierChannel.MaxMp);
-            mana.BaseMpRegenPerSecondOffset = totals.GetBonus(PropertyModifierChannel.MpRegen);
-            EntityManager.SetComponentData(entity, mana);
-        }
-
-        if (EntityManager.HasComponent<UnitAttackComponent>(entity))
-        {
-            UnitAttackComponent attack = EntityManager.GetComponentData<UnitAttackComponent>(entity);
-            attack.BaseAttackPowerOffset = totals.GetBonus(PropertyModifierChannel.AttackPower);
-            attack.BaseSkillRangeOffset = totals.GetBonus(PropertyModifierChannel.SkillRange);
-            attack.BaseActionSpeedBonusOffset = totals.GetBonus(PropertyModifierChannel.ActionSpeed);
-            attack.BaseChantSpeedBonusOffset = totals.GetBonus(PropertyModifierChannel.ChantSpeed);
-            EntityManager.SetComponentData(entity, attack);
-        }
-
-        if (EntityManager.HasComponent<UnitElementComponent>(entity))
-        {
-            UnitElementComponent element = EntityManager.GetComponentData<UnitElementComponent>(entity);
-            UnitElementBaseComponent elementBase = EntityManager.GetComponentData<UnitElementBaseComponent>(entity);
-            element.EquipmentWaterPower = totals.GetBonus(PropertyModifierChannel.WaterPower);
-            element.EquipmentFirePower = totals.GetBonus(PropertyModifierChannel.FirePower);
-            element.EquipmentLightningPower = totals.GetBonus(PropertyModifierChannel.LightningPower);
-            element.EquipmentWindPower = totals.GetBonus(PropertyModifierChannel.WindPower);
-            element.WaterPower = elementBase.WaterPower + element.EquipmentWaterPower;
-            element.FirePower = elementBase.FirePower + element.EquipmentFirePower;
-            element.LightningPower = elementBase.LightningPower + element.EquipmentLightningPower;
-            element.WindPower = elementBase.WindPower + element.EquipmentWindPower;
-            EntityManager.SetComponentData(entity, element);
         }
     }
 }

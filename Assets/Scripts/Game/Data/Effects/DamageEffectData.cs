@@ -56,16 +56,4 @@ namespace CrystalMagic.Game.Data.Effects
         }
     }
 
-    [System.Serializable]
-    public sealed class HitStunEffectData : EffectData
-    {
-        public float Duration;
-
-        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, float elementBonus = 0f, System.Func<EffectData, float> elementBonusResolver = null)
-        {
-            HitStunEffectData copy = (HitStunEffectData)base.CreateRuntimeCopy(modifiers, elementBonus, elementBonusResolver);
-            copy.Duration = ApplyModifierNonNegative(modifiers, SkillModifierChannel.HitStunSeconds, Duration);
-            return copy;
-        }
-    }
 }

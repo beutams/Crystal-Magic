@@ -13,16 +13,8 @@ public abstract class AUnitState
     /// <summary>所属 World 的 EntityManager，Builder 初始化后有效</summary>
     protected EntityManager EntityManager;
 
-    /// <summary>
-    /// 目标状态 → 转换条件映射。
-    /// key = 目标状态实例；value = 触发该转换的 Comparator（所有条件通过才切换）
-    /// </summary>
     [System.NonSerialized] public Dictionary<AUnitState, Comparator> transitions;
 
-    /// <summary>
-    /// Builder 构建完整状态机图后调用，将 Entity/EM 注入给所有状态实例。
-    /// 子类可 override 以初始化自身的 ISource 等依赖。
-    /// </summary>
     public virtual void OnInitialize(Entity entity, EntityManager em)
     {
         Entity        = entity;

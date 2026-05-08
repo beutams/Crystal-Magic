@@ -204,20 +204,17 @@ namespace CrystalMagic.Core {
 
     #region 基础数据
     /// <summary>
-    /// 装备系统数据（包括法杖 + 4个增益槽）
-    /// 见游戏设计文档第 5 章
+    /// 装备系统数据
     /// </summary>
     [System.Serializable]
     public class EquipmentData
     {
         public int StaffId;                    // 法杖 Id（0 表示未装备）
-        public int StaffLevel;                 // 法杖强化等级
         public int[] BonusSlots = new int[4]; // 增益 Id 数组，-1 表示空槽
 
         public EquipmentData()
         {
             StaffId = 0;
-            StaffLevel = 0;
             for (int i = 0; i < 4; i++)
             {
                 BonusSlots[i] = -1;

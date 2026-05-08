@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using Unity.Entities;
@@ -8,6 +9,7 @@ partial class UnitBuffSystem : SystemBase
     protected override void OnUpdate()
     {
         float dt = SystemAPI.Time.DeltaTime;
+        Dictionary<Entity, PropertyModifierSet> modifiersByEntity = new();
 
         foreach ((DynamicBuffer<UnitBuffElement> queryBuffer, Entity entity) in
             SystemAPI.Query<DynamicBuffer<UnitBuffElement>>().WithEntityAccess())
@@ -36,60 +38,71 @@ partial class UnitBuffSystem : SystemBase
                 modifiers.Add(propertyBuff.PropertyModifiers, buffElement.StackCount > 0 ? buffElement.StackCount : 1);
             }
 
-            if (EntityManager.HasComponent<UnitMoveComponent>(entity))
-            {
-                UnitMoveComponent move = EntityManager.GetComponentData<UnitMoveComponent>(entity);
-                move.SpeedFactor = modifiers.GetFactor(PropertyModifierChannel.MoveSpeed);
-                move.SpeedBonus = modifiers.GetBonus(PropertyModifierChannel.MoveSpeed);
-                EntityManager.SetComponentData(entity, move);
-            }
+            modifiersByEntity[entity] = modifiers;
+        }
 
-            if (EntityManager.HasComponent<UnitVitalityComponent>(entity))
-            {
-                UnitVitalityComponent vitality = EntityManager.GetComponentData<UnitVitalityComponent>(entity);
-                vitality.HealthFactor = modifiers.GetFactor(PropertyModifierChannel.MaxHealth);
-                vitality.HealthBonus = modifiers.GetBonus(PropertyModifierChannel.MaxHealth);
-                vitality.HealthRegenFactor = modifiers.GetFactor(PropertyModifierChannel.HealthRegen);
-                vitality.HealthRegenBonus = modifiers.GetBonus(PropertyModifierChannel.HealthRegen);
-                vitality.DefenseFactor = modifiers.GetFactor(PropertyModifierChannel.Defense);
-                vitality.DefenseBonus = modifiers.GetBonus(PropertyModifierChannel.Defense);
-                EntityManager.SetComponentData(entity, vitality);
-            }
+        foreach ((RefRW<UnitMoveComponent> move, Entity entity) in
+            SystemAPI.Query<RefRW<UnitMoveComponent>>().WithAll<UnitBuffElement>().WithEntityAccess())
+        {
+            if (!modifiersByEntity.TryGetValue(entity, out PropertyModifierSet modifiers))
+                continue;
 
-            if (EntityManager.HasComponent<UnitAttackComponent>(entity))
-            {
-                UnitAttackComponent attack = EntityManager.GetComponentData<UnitAttackComponent>(entity);
-                attack.AttackFactor = modifiers.GetFactor(PropertyModifierChannel.AttackPower);
-                attack.AttackBonus = modifiers.GetBonus(PropertyModifierChannel.AttackPower);
-                attack.RangeFactor = modifiers.GetFactor(PropertyModifierChannel.SkillRange);
-                attack.RangeBonus = modifiers.GetBonus(PropertyModifierChannel.SkillRange);
-                attack.ActionSpeedFactor = modifiers.GetFactor(PropertyModifierChannel.ActionSpeed);
-                attack.ActionSpeedBonus = modifiers.GetBonus(PropertyModifierChannel.ActionSpeed);
-                attack.ChantSpeedFactor = modifiers.GetFactor(PropertyModifierChannel.ChantSpeed);
-                attack.ChantSpeedBonus = modifiers.GetBonus(PropertyModifierChannel.ChantSpeed);
-                EntityManager.SetComponentData(entity, attack);
-            }
+            move.ValueRW.SpeedFactor = modifiers.GetFactor(PropertyModifierChannel.MoveSpeed);
+            move.ValueRW.SpeedBonus = modifiers.GetBonus(PropertyModifierChannel.MoveSpeed);
+        }
 
-            if (EntityManager.HasComponent<UnitElementComponent>(entity))
-            {
-                UnitElementComponent element = EntityManager.GetComponentData<UnitElementComponent>(entity);
-                UnitElementBaseComponent elementBase = EntityManager.GetComponentData<UnitElementBaseComponent>(entity);
-                element.WaterPower = elementBase.WaterPower + element.EquipmentWaterPower + modifiers.GetBonus(PropertyModifierChannel.WaterPower);
-                element.FirePower = elementBase.FirePower + element.EquipmentFirePower + modifiers.GetBonus(PropertyModifierChannel.FirePower);
-                element.LightningPower = elementBase.LightningPower + element.EquipmentLightningPower + modifiers.GetBonus(PropertyModifierChannel.LightningPower);
-                element.WindPower = elementBase.WindPower + element.EquipmentWindPower + modifiers.GetBonus(PropertyModifierChannel.WindPower);
-                EntityManager.SetComponentData(entity, element);
-            }
+        foreach ((RefRW<UnitVitalityComponent> vitality, Entity entity) in
+            SystemAPI.Query<RefRW<UnitVitalityComponent>>().WithAll<UnitBuffElement>().WithEntityAccess())
+        {
+            if (!modifiersByEntity.TryGetValue(entity, out PropertyModifierSet modifiers))
+                continue;
 
-            if (EntityManager.HasComponent<UnitManaComponent>(entity))
-            {
-                UnitManaComponent mana = EntityManager.GetComponentData<UnitManaComponent>(entity);
-                mana.MpFactor = modifiers.GetFactor(PropertyModifierChannel.MaxMp);
-                mana.MpBonus = modifiers.GetBonus(PropertyModifierChannel.MaxMp);
-                mana.MpRegenFactor = modifiers.GetFactor(PropertyModifierChannel.MpRegen);
-                mana.MpRegenBonus = modifiers.GetBonus(PropertyModifierChannel.MpRegen);
-                EntityManager.SetComponentData(entity, mana);
-            }
+            vitality.ValueRW.HealthFactor = modifiers.GetFactor(PropertyModifierChannel.MaxHealth);
+            vitality.ValueRW.HealthBonus = modifiers.GetBonus(PropertyModifierChannel.MaxHealth);
+            vitality.ValueRW.HealthRegenFactor = modifiers.GetFactor(PropertyModifierChannel.HealthRegen);
+            vitality.ValueRW.HealthRegenBonus = modifiers.GetBonus(PropertyModifierChannel.HealthRegen);
+            vitality.ValueRW.DefenseFactor = modifiers.GetFactor(PropertyModifierChannel.Defense);
+            vitality.ValueRW.DefenseBonus = modifiers.GetBonus(PropertyModifierChannel.Defense);
+        }
+
+        foreach ((RefRW<UnitAttackComponent> attack, Entity entity) in
+            SystemAPI.Query<RefRW<UnitAttackComponent>>().WithAll<UnitBuffElement>().WithEntityAccess())
+        {
+            if (!modifiersByEntity.TryGetValue(entity, out PropertyModifierSet modifiers))
+                continue;
+
+            attack.ValueRW.AttackFactor = modifiers.GetFactor(PropertyModifierChannel.AttackPower);
+            attack.ValueRW.AttackBonus = modifiers.GetBonus(PropertyModifierChannel.AttackPower);
+            attack.ValueRW.RangeFactor = modifiers.GetFactor(PropertyModifierChannel.SkillRange);
+            attack.ValueRW.RangeBonus = modifiers.GetBonus(PropertyModifierChannel.SkillRange);
+            attack.ValueRW.ActionSpeedFactor = modifiers.GetFactor(PropertyModifierChannel.ActionSpeed);
+            attack.ValueRW.ActionSpeedBonus = modifiers.GetBonus(PropertyModifierChannel.ActionSpeed);
+            attack.ValueRW.ChantSpeedFactor = modifiers.GetFactor(PropertyModifierChannel.ChantSpeed);
+            attack.ValueRW.ChantSpeedBonus = modifiers.GetBonus(PropertyModifierChannel.ChantSpeed);
+        }
+
+        foreach ((RefRW<UnitElementComponent> element, RefRO<UnitElementBaseComponent> elementBase, Entity entity) in
+            SystemAPI.Query<RefRW<UnitElementComponent>, RefRO<UnitElementBaseComponent>>().WithAll<UnitBuffElement>().WithEntityAccess())
+        {
+            if (!modifiersByEntity.TryGetValue(entity, out PropertyModifierSet modifiers))
+                continue;
+
+            element.ValueRW.WaterPower = elementBase.ValueRO.WaterPower + element.ValueRO.EquipmentWaterPower + modifiers.GetBonus(PropertyModifierChannel.WaterPower);
+            element.ValueRW.FirePower = elementBase.ValueRO.FirePower + element.ValueRO.EquipmentFirePower + modifiers.GetBonus(PropertyModifierChannel.FirePower);
+            element.ValueRW.LightningPower = elementBase.ValueRO.LightningPower + element.ValueRO.EquipmentLightningPower + modifiers.GetBonus(PropertyModifierChannel.LightningPower);
+            element.ValueRW.WindPower = elementBase.ValueRO.WindPower + element.ValueRO.EquipmentWindPower + modifiers.GetBonus(PropertyModifierChannel.WindPower);
+        }
+
+        foreach ((RefRW<UnitManaComponent> mana, Entity entity) in
+            SystemAPI.Query<RefRW<UnitManaComponent>>().WithAll<UnitBuffElement>().WithEntityAccess())
+        {
+            if (!modifiersByEntity.TryGetValue(entity, out PropertyModifierSet modifiers))
+                continue;
+
+            mana.ValueRW.MpFactor = modifiers.GetFactor(PropertyModifierChannel.MaxMp);
+            mana.ValueRW.MpBonus = modifiers.GetBonus(PropertyModifierChannel.MaxMp);
+            mana.ValueRW.MpRegenFactor = modifiers.GetFactor(PropertyModifierChannel.MpRegen);
+            mana.ValueRW.MpRegenBonus = modifiers.GetBonus(PropertyModifierChannel.MpRegen);
         }
     }
 }

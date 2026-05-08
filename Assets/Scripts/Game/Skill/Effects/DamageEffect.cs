@@ -94,43 +94,4 @@ namespace CrystalMagic.Game.Skill.Effects
             entityManager.SetComponentData(target, targetTransform);
         }
     }
-
-    public sealed class HitStunEffect : Effect
-    {
-        public new HitStunEffectData Data { get; }
-
-        public HitStunEffect(HitStunEffectData data) : base(data) => Data = data;
-
-        public override void Execute(SkillContent context)
-        {
-            if (Data == null || context == null || !context.HasTargetEntity)
-                return;
-
-            EntityManager entityManager = context.EntityManager;
-            Entity target = context.TargetEntity;
-            if (target == Entity.Null || !entityManager.Exists(target))
-                return;
-
-            if (entityManager.HasComponent<UnitHitStunComponent>(target))
-            {
-                UnitHitStunComponent hitStun = entityManager.GetComponentData<UnitHitStunComponent>(target);
-                hitStun.RemainingSeconds = math.max(hitStun.RemainingSeconds, Data.Duration);
-                entityManager.SetComponentData(target, hitStun);
-            }
-            else
-            {
-                entityManager.AddComponentData(target, new UnitHitStunComponent
-                {
-                    RemainingSeconds = Data.Duration,
-                });
-            }
-
-            if (entityManager.HasComponent<UnitCastComponent>(target))
-            {
-                UnitCastComponent cast = entityManager.GetComponentData<UnitCastComponent>(target);
-                cast.ForceInterrupt = true;
-                entityManager.SetComponentData(target, cast);
-            }
-        }
-    }
 }

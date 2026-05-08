@@ -4,7 +4,7 @@ using Unity.Mathematics;
 
 [BurstCompile]
 [UpdateAfter(typeof(UnitBuffSystem))]
-partial struct UnitResourceRegenSystem : ISystem
+partial struct UnitRecoverySystem : ISystem
 {
     [BurstCompile]
     public void OnUpdate(ref SystemState state)

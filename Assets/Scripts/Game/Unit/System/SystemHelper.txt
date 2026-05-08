@@ -1,3 +1,33 @@
 数值系统
-PlayerEquipmentPropertySystem
--内容 将装备数值转换为基础数值
+    PlayerEquipmentPropertySystem
+    -内容 将装备数值转换为基础数值，写入各个执行系统
+    UnitBuffSystem
+    -内容 将BUFF转换为基础数值，写入各个执行系统中
+    最终由各个执行系统计算真实数据
+状态机
+    UnitStateMachineBuildSystem
+    -内容 初始化构建状态机
+        初始使用工厂类生成所有状态。
+        初始使用工厂类生成所有状态转换。
+    UnitStateMachineSystem
+    -内容 执行状态执行逻辑
+        每帧对当前状态进行Update
+    UnitStateTransitionSystem
+    -内容 执行状态转换逻辑
+        每帧检测是否可以转换并执行
+执行系统
+    UnitMoveSystem
+    -内容
+        根据RealMoveSpeed进行加速移动
+    UnitRecoverySystem
+    -内容
+        自回复属性计算回复
+决策系统
+    UnitPerceptionSystem
+    -内容
+        自动索敌，根据索敌属性和空间系统确定应该锁定的敌人
+
+空间管理
+    UnitQuerySystem
+    -内容
+        使用四叉树组织单位，提供查询接口优化效率
