@@ -26,7 +26,12 @@
     UnitPerceptionSystem
     -内容
         自动索敌，根据索敌属性和空间系统确定应该锁定的敌人
-
+        //逻辑待优化
+    PlayerInputSystem
+    -内容
+        检查用户输入并转换成意图
+    BehaviorTreeInitSystem/BehaviorTreeSystem
+    -内容
 空间管理
     UnitQuerySystem
     -内容

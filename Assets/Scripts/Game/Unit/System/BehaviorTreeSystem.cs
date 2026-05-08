@@ -17,14 +17,12 @@ partial class BehaviorTreeSystem : SystemBase
 
         foreach (var (intent, perception, behaviorTree, entity) in
                  SystemAPI.Query<RefRW<UnitIntentComponent>, RefRO<UnitPerceptionComponent>, UnitBehaviorTreeComponent>()
-                     .WithAll<UnitAITag>()
                      .WithEntityAccess())
         {
             if (simulationLocked || behaviorTree == null || !behaviorTree.IsEnabled || !behaviorTree.IsInitialized || behaviorTree.Runtime == null)
             {
                 intent.ValueRW.MoveDirection = float2.zero;
                 intent.ValueRW.WantToCast = false;
-                intent.ValueRW.HasCastTarget = false;
                 intent.ValueRW.CastTargetPosition = float2.zero;
                 if (behaviorTree != null)
                 {
@@ -47,7 +45,6 @@ partial class BehaviorTreeSystem : SystemBase
 
             intent.ValueRW.MoveDirection = float2.zero;
             intent.ValueRW.WantToCast = false;
-            intent.ValueRW.HasCastTarget = false;
             intent.ValueRW.CastTargetPosition = float2.zero;
 
             _context.BeginTick(entity, EntityManager, perception.ValueRO, intent.ValueRO, behaviorTree.Blackboard);

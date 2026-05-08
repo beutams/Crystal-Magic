@@ -18,13 +18,13 @@ partial class UnitPerceptionSystem : SystemBase
         if (simulationLocked)
             return;
 
-        UnitQuerySystem querySystem = UnitQuerySystem.Default;
-        if (querySystem == null)
+        if (!SystemAPI.HasSingleton<UnitQuerySingleton>())
             return;
+
+        DynamicBuffer<UnitQueryEntry> queryEntries = SystemAPI.GetSingletonBuffer<UnitQueryEntry>(true);
 
         foreach (var (perception, faction, transform, entity) in
                  SystemAPI.Query<RefRW<UnitPerceptionComponent>, RefRO<UnitFactionComponent>, RefRO<LocalTransform>>()
-                     .WithAll<UnitAITag>()
                      .WithEntityAccess())
         {
             UnitPerceptionComponent perceptionValue = perception.ValueRW;
@@ -41,7 +41,7 @@ partial class UnitPerceptionSystem : SystemBase
             }
 
             float3 center = transform.ValueRO.Position;
-            querySystem.QueryCircle(center, radius, _hits);
+            UnitQueryUtility.QueryCircle(queryEntries, center, radius, _hits);
 
             float bestDistanceSq = float.MaxValue;
             for (int i = 0; i < _hits.Count; i++)
@@ -51,12 +51,9 @@ partial class UnitPerceptionSystem : SystemBase
                     continue;
                 if (!EntityManager.Exists(hit.Entity) || !EntityManager.HasComponent<UnitFactionComponent>(hit.Entity))
                     continue;
-                if (!UnitFactionUtility.IsEnemy(
-                        faction.ValueRO.Value,
-                        EntityManager.GetComponentData<UnitFactionComponent>(hit.Entity).Value))
+                if (!UnitFactionUtility.IsEnemy(faction.ValueRO.Value,EntityManager.GetComponentData<UnitFactionComponent>(hit.Entity).Value))
                     continue;
-                if (EntityManager.HasComponent<UnitVitalityComponent>(hit.Entity) &&
-                    EntityManager.GetComponentData<UnitVitalityComponent>(hit.Entity).CurrentHealth <= 0f)
+                if (EntityManager.HasComponent<UnitVitalityComponent>(hit.Entity) && EntityManager.GetComponentData<UnitVitalityComponent>(hit.Entity).CurrentHealth <= 0f)
                     continue;
 
                 float2 diff = hit.Position.xy - center.xy;

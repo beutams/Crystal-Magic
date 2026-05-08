@@ -47,12 +47,6 @@
                       "CompareType": "IsTrue",
                       "CompareValue": 0.0
                     },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitCanStartCastSource",
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    }
                   ]
                 },
                 {
@@ -80,12 +74,6 @@
                       "CompareType": "IsTrue",
                       "CompareValue": 0.0
                     },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitCanStartCastSource",
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    }
                   ]
                 },
                 {
@@ -479,12 +467,6 @@
                       "CompareType": "IsTrue",
                       "CompareValue": 0.0
                     },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitCanStartCastSource",
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    }
                   ]
                 }
               ]
@@ -512,12 +494,6 @@
                       "CompareType": "IsTrue",
                       "CompareValue": 0.0
                     },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitCanStartCastSource",
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    }
                   ]
                 }
               ]

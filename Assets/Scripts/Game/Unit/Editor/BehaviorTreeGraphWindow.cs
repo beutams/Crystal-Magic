@@ -267,8 +267,8 @@ namespace CrystalMagic.Editor.Unit
             EditorGUI.BeginChangeCheck();
             switch (node)
             {
-                case TargetInCastRangeBehaviorNodeData range:
-                    range.RangePadding = EditorGUILayout.FloatField("Range Padding", range.RangePadding);
+                case CheckConditionBehaviorNodeData condition:
+                    DrawConditionList(condition.Conditions);
                     break;
 
                 case MoveToTargetBehaviorNodeData move:
@@ -351,6 +351,37 @@ namespace CrystalMagic.Editor.Unit
                 GUI.enabled = true;
                 EditorGUILayout.EndHorizontal();
             }
+        }
+
+        private void DrawConditionList(List<ConditionConfig> conditions)
+        {
+            conditions ??= new List<ConditionConfig>();
+            EditorGUILayout.LabelField("Conditions", EditorStyles.boldLabel);
+
+            for (int i = 0; i < conditions.Count; i++)
+            {
+                ConditionConfig condition = conditions[i] ?? new ConditionConfig();
+                conditions[i] = condition;
+
+                EditorGUILayout.BeginVertical("box");
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField($"Condition {i + 1}", EditorStyles.boldLabel);
+                if (GUILayout.Button("Delete", GUILayout.Width(60f)))
+                {
+                    conditions.RemoveAt(i);
+                    GUIUtility.ExitGUI();
+                }
+                EditorGUILayout.EndHorizontal();
+
+                condition.ConditionType = (ConditionType)EditorGUILayout.EnumPopup("Condition Type", condition.ConditionType);
+                condition.SourceType = EditorGUILayout.TextField("Source Type", condition.SourceType ?? string.Empty);
+                condition.CompareType = EditorGUILayout.TextField("Compare Type", condition.CompareType ?? string.Empty);
+                condition.CompareValue = EditorGUILayout.FloatField("Compare Value", condition.CompareValue);
+                EditorGUILayout.EndVertical();
+            }
+
+            if (GUILayout.Button("Add Condition"))
+                conditions.Add(new ConditionConfig());
         }
 
         private void SwapChildren(BehaviorNodeData node, int fromIndex, int toIndex)
@@ -1097,11 +1128,9 @@ namespace CrystalMagic.Editor.Unit
                 RootBehaviorNodeData => new Color(0.24f, 0.45f, 0.70f, 1f),
                 SelectorBehaviorNodeData => new Color(0.24f, 0.52f, 0.34f, 1f),
                 SequenceBehaviorNodeData => new Color(0.18f, 0.45f, 0.28f, 1f),
-                HasTargetBehaviorNodeData => new Color(0.70f, 0.42f, 0.18f, 1f),
-                TargetInCastRangeBehaviorNodeData => new Color(0.70f, 0.50f, 0.18f, 1f),
+                CheckConditionBehaviorNodeData => new Color(0.70f, 0.46f, 0.18f, 1f),
                 MoveToTargetBehaviorNodeData => new Color(0.47f, 0.32f, 0.69f, 1f),
                 CastToTargetBehaviorNodeData => new Color(0.58f, 0.22f, 0.59f, 1f),
-                AcquireNearestEnemyBehaviorNodeData => new Color(0.26f, 0.56f, 0.56f, 1f),
                 IdleBehaviorNodeData => new Color(0.35f, 0.35f, 0.35f, 1f),
                 _ => new Color(0.25f, 0.25f, 0.25f, 1f),
             };

@@ -43,7 +43,6 @@ public sealed class BehaviorTreeContext
 
     public void SetCastTarget(float2 position)
     {
-        Intent.HasCastTarget = true;
         Intent.CastTargetPosition = position;
     }
 

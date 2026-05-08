@@ -134,11 +134,8 @@ namespace CrystalMagic.Game.Skill.Effects
         {
             hitEntity = Entity.Null;
 
-            UnitQuerySystem querySystem = UnitQuerySystem.Default;
-            if (querySystem == null)
+            if (!UnitQueryUtility.TryQueryCircle(GetEntityManager(), new float3(hitPoint.x, hitPoint.y, hitPoint.z), HitSearchRadius, _hits))
                 return false;
-
-            querySystem.QueryCircle(new float3(hitPoint.x, hitPoint.y, hitPoint.z), HitSearchRadius, _hits);
             float bestDistanceSq = float.MaxValue;
             for (int i = 0; i < _hits.Count; i++)
             {
@@ -178,10 +175,7 @@ namespace CrystalMagic.Game.Skill.Effects
 
         private static EntityManager GetEntityManager()
         {
-            UnitQuerySystem querySystem = UnitQuerySystem.Default;
-            return querySystem != null
-                ? querySystem.QueryEntityManager
-                : World.DefaultGameObjectInjectionWorld.EntityManager;
+            return World.DefaultGameObjectInjectionWorld.EntityManager;
         }
     }
 }

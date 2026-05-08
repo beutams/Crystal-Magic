@@ -22,18 +22,19 @@ namespace CrystalMagic.Game.Skill.Effects
 
         public override void Execute(SkillContent context)
         {
-            UnitQuerySystem querySystem = UnitQuerySystem.Default;
-            if (querySystem == null || Data == null)
+            if (Data == null)
                 return;
 
-            EntityManager entityManager = querySystem.QueryEntityManager;
+            EntityManager entityManager = GetEntityManager();
             if (!TryGetSearchCenter(context, entityManager, out float3 center))
                 return;
 
             Vector3 offset = Data.CenterOffset;
             center += new float3(offset.x, offset.y, offset.z);
 
-            querySystem.QueryCircle(center, Data.Radius, _hits);
+            if (!UnitQueryUtility.TryQueryCircle(entityManager, center, Data.Radius, _hits))
+                return;
+
             for (int i = 0; i < _hits.Count; i++)
             {
                 UnitQueryHit hit = _hits[i];
@@ -100,6 +101,11 @@ namespace CrystalMagic.Game.Skill.Effects
             _comparatorFactory = new ComparatorFactory();
             StateMachineRegistry.RegisterAll(new StateMachineFactory(), _comparatorFactory);
             return _comparatorFactory;
+        }
+
+        private static EntityManager GetEntityManager()
+        {
+            return World.DefaultGameObjectInjectionWorld.EntityManager;
         }
     }
 }

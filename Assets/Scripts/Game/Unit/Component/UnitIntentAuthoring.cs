@@ -16,8 +16,9 @@ public class UnitIntentAuthoring : MonoBehaviour
 
 public struct UnitIntentComponent : IComponentData
 {
+    //移动
     public float2 MoveDirection;
+    //技能释放
     public bool WantToCast;
-    public bool HasCastTarget;
     public float2 CastTargetPosition;
 }

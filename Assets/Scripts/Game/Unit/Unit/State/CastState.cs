@@ -41,7 +41,7 @@ public class CastState : AUnitState
         }
 
         cast.ForceInterrupt = false;
-        cast.HasLockedTarget = intent.HasCastTarget;
+        cast.HasLockedTarget = true;
         cast.LockedTargetPosition = intent.CastTargetPosition;
         cast.CurrentChainIndex = chainIndex;
 

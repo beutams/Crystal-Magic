@@ -13,7 +13,6 @@ partial struct PlayerInputSystem : ISystem
 {
     private NativeReference<float2> _moveInput;
     private NativeReference<float2> _castTarget;
-    private NativeReference<bool> _hasCastTarget;
     private NativeReference<bool> _wantToCast;
     private bool _subscribed;
 
@@ -21,7 +20,6 @@ partial struct PlayerInputSystem : ISystem
     {
         _moveInput = new NativeReference<float2>(float2.zero, Allocator.Persistent);
         _castTarget = new NativeReference<float2>(float2.zero, Allocator.Persistent);
-        _hasCastTarget = new NativeReference<bool>(false, Allocator.Persistent);
         _wantToCast = new NativeReference<bool>(false, Allocator.Persistent);
         state.RequireForUpdate<PlayerTag>();
     }
@@ -38,8 +36,6 @@ partial struct PlayerInputSystem : ISystem
             _moveInput.Dispose();
         if (_castTarget.IsCreated)
             _castTarget.Dispose();
-        if (_hasCastTarget.IsCreated)
-            _hasCastTarget.Dispose();
         if (_wantToCast.IsCreated)
             _wantToCast.Dispose();
     }
@@ -54,15 +50,12 @@ partial struct PlayerInputSystem : ISystem
             _subscribed = true;
         }
 
-        bool playerInputLocked =
-            GameGateComponent.TryGetInstance(out GameGateComponent gameGateComponent) &&
-            gameGateComponent.IsPlayerInputLocked;
+        bool playerInputLocked = GameGateComponent.TryGetInstance(out GameGateComponent gameGateComponent) && gameGateComponent.IsPlayerInputLocked;
 
         if (playerInputLocked)
         {
             _moveInput.Value = float2.zero;
             _castTarget.Value = float2.zero;
-            _hasCastTarget.Value = false;
             _wantToCast.Value = false;
 
             foreach (var (_, intent) in
@@ -70,7 +63,6 @@ partial struct PlayerInputSystem : ISystem
             {
                 intent.ValueRW.MoveDirection = float2.zero;
                 intent.ValueRW.WantToCast = false;
-                intent.ValueRW.HasCastTarget = false;
                 intent.ValueRW.CastTargetPosition = float2.zero;
             }
 
@@ -79,14 +71,12 @@ partial struct PlayerInputSystem : ISystem
 
         float2 moveInput = _moveInput.Value;
         float2 castTarget = _castTarget.Value;
-        bool hasCastTarget = _hasCastTarget.Value;
         bool wantToCast = _wantToCast.Value;
         foreach (var (_, intent) in
             SystemAPI.Query<RefRO<PlayerTag>, RefRW<UnitIntentComponent>>())
         {
             intent.ValueRW.MoveDirection = moveInput;
             intent.ValueRW.WantToCast = wantToCast;
-            intent.ValueRW.HasCastTarget = hasCastTarget;
             intent.ValueRW.CastTargetPosition = castTarget;
         }
 
@@ -104,7 +94,6 @@ partial struct PlayerInputSystem : ISystem
     private void HandleMouseWorldPosition(Vector3 v)
     {
         _castTarget.Value = new float2(v.x, v.y);
-        _hasCastTarget.Value = true;
     }
 
     private void HandleMousePress()

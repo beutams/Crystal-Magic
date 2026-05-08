@@ -9,7 +9,7 @@ partial class BehaviorTreeInitSystem : SystemBase
     protected override void OnUpdate()
     {
         foreach (UnitBehaviorTreeComponent behaviorTree in
-                 SystemAPI.Query<UnitBehaviorTreeComponent>().WithAll<UnitAITag>())
+                 SystemAPI.Query<UnitBehaviorTreeComponent>())
         {
             if (behaviorTree == null || behaviorTree.IsInitialized)
                 continue;

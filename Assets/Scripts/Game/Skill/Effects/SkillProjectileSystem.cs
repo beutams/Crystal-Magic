@@ -27,7 +27,10 @@ namespace CrystalMagic.Game.Skill.Effects
                 return;
 
             float deltaTime = SystemAPI.Time.DeltaTime;
-            UnitQuerySystem querySystem = UnitQuerySystem.Default;
+            if (!SystemAPI.HasSingleton<UnitQuerySingleton>())
+                return;
+
+            DynamicBuffer<UnitQueryEntry> queryEntries = SystemAPI.GetSingletonBuffer<UnitQueryEntry>(true);
 
             NativeArray<Entity> entities = _projectileQuery.ToEntityArray(Allocator.Temp);
             NativeArray<SkillProjectileComponent> projectiles = _projectileQuery.ToComponentDataArray<SkillProjectileComponent>(Allocator.Temp);
@@ -55,7 +58,7 @@ namespace CrystalMagic.Game.Skill.Effects
 
                     SyncVisual(state, transform.Position, projectile.Direction);
 
-                    if (TryFindHitEntity(querySystem, state, projectile, out Entity hitEntity, out float3 hitPosition))
+                    if (TryFindHitEntity(queryEntries, state, projectile, out Entity hitEntity, out float3 hitPosition))
                     {
                         SkillContent hitContext = BuildHitContext(state.Context, hitEntity, hitPosition);
                         SkillExecutor.ExecuteEffects(state.OnCollisionEffects, hitContext);
@@ -87,7 +90,7 @@ namespace CrystalMagic.Game.Skill.Effects
         }
 
         private bool TryFindHitEntity(
-            UnitQuerySystem querySystem,
+            DynamicBuffer<UnitQueryEntry> queryEntries,
             SkillProjectileRegistry.State state,
             SkillProjectileComponent projectile,
             out Entity hitEntity,
@@ -96,11 +99,8 @@ namespace CrystalMagic.Game.Skill.Effects
             hitEntity = Entity.Null;
             hitPosition = float3.zero;
 
-            if (querySystem == null)
-                return false;
-
             float3 projectilePosition = GetProjectilePosition(state);
-            querySystem.QueryCircle(projectilePosition, projectile.HitRadius, _hits);
+            UnitQueryUtility.QueryCircle(queryEntries, projectilePosition, projectile.HitRadius, _hits);
 
             float bestDistanceSq = float.MaxValue;
             for (int i = 0; i < _hits.Count; i++)

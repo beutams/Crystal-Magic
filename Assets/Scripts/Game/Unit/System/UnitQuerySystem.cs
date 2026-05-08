@@ -9,37 +9,84 @@ public struct UnitQueryHit
     public float3 Position;
 }
 
-partial class UnitQuerySystem : SystemBase
+public struct UnitQuerySingleton : IComponentData
 {
-    public static UnitQuerySystem Default =>
-        World.DefaultGameObjectInjectionWorld?.GetExistingSystemManaged<UnitQuerySystem>();
+}
 
-    public EntityManager QueryEntityManager => EntityManager;
+public struct UnitQueryEntry : IBufferElementData
+{
+    public Entity Entity;
+    public float3 Position;
+}
+
+[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateBefore(typeof(UnitPerceptionSystem))]
+[UpdateBefore(typeof(CrystalMagic.Game.Skill.Effects.SkillProjectileSystem))]
+partial class UnitQueryBuildSystem : SystemBase
+{
+    private Entity _singletonEntity;
+
+    protected override void OnCreate()
+    {
+        _singletonEntity = EntityManager.CreateEntity(typeof(UnitQuerySingleton));
+        EntityManager.AddBuffer<UnitQueryEntry>(_singletonEntity);
+    }
 
     protected override void OnUpdate()
     {
-    }
+        DynamicBuffer<UnitQueryEntry> entries = EntityManager.GetBuffer<UnitQueryEntry>(_singletonEntity);
+        entries.Clear();
 
-    public void QueryCircle(float3 center, float radius, List<UnitQueryHit> results)
-    {
-        results.Clear();
-
-        float radiusSq = radius * radius;
-        foreach (var (transform, entity) in
+        foreach ((RefRO<LocalTransform> transform, Entity entity) in
                  SystemAPI.Query<RefRO<LocalTransform>>()
                      .WithAll<UnitFactionComponent>()
                      .WithEntityAccess())
         {
-            float3 position = transform.ValueRO.Position;
-            float2 diff = position.xy - center.xy;
+            entries.Add(new UnitQueryEntry
+            {
+                Entity = entity,
+                Position = transform.ValueRO.Position,
+            });
+        }
+    }
+}
+
+public static class UnitQueryUtility
+{
+    public static void QueryCircle(DynamicBuffer<UnitQueryEntry> entries, float3 center, float radius, List<UnitQueryHit> results)
+    {
+        results.Clear();
+
+        float radiusSq = radius * radius;
+        for (int i = 0; i < entries.Length; i++)
+        {
+            UnitQueryEntry entry = entries[i];
+            float2 diff = entry.Position.xy - center.xy;
             if (math.lengthsq(diff) > radiusSq)
                 continue;
 
             results.Add(new UnitQueryHit
             {
-                Entity = entity,
-                Position = position,
+                Entity = entry.Entity,
+                Position = entry.Position,
             });
         }
+    }
+
+    public static bool TryQueryCircle(EntityManager entityManager, float3 center, float radius, List<UnitQueryHit> results)
+    {
+        EntityQuery singletonQuery = entityManager.CreateEntityQuery(
+            ComponentType.ReadOnly<UnitQuerySingleton>(),
+            ComponentType.ReadOnly<UnitQueryEntry>());
+        if (singletonQuery.IsEmptyIgnoreFilter)
+        {
+            results.Clear();
+            return false;
+        }
+
+        Entity singletonEntity = singletonQuery.GetSingletonEntity();
+        DynamicBuffer<UnitQueryEntry> entries = entityManager.GetBuffer<UnitQueryEntry>(singletonEntity, true);
+        QueryCircle(entries, center, radius, results);
+        return true;
     }
 }

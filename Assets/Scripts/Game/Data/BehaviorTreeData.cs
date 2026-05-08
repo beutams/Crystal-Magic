@@ -68,9 +68,7 @@ namespace CrystalMagic.Game.Data
         public const string Root = "Root";
         public const string Selector = "Selector";
         public const string Sequence = "Sequence";
-        public const string HasTarget = "HasTarget";
-        public const string AcquireNearestEnemy = "AcquireNearestEnemy";
-        public const string TargetInCastRange = "TargetInCastRange";
+        public const string CheckCondition = "CheckCondition";
         public const string MoveToTarget = "MoveToTarget";
         public const string CastToTarget = "CastToTarget";
         public const string Idle = "Idle";
@@ -107,34 +105,14 @@ namespace CrystalMagic.Game.Data
     }
 
     [Serializable]
-    [FactoryKey(BehaviorNodeTypes.HasTarget, 10, "Has Target")]
-    public sealed class HasTargetBehaviorNodeData : BehaviorNodeData
+    [FactoryKey(BehaviorNodeTypes.CheckCondition, 10, "Check Condition")]
+    public sealed class CheckConditionBehaviorNodeData : BehaviorNodeData
     {
-        public HasTargetBehaviorNodeData()
-        {
-            Type = BehaviorNodeTypes.HasTarget;
-        }
-    }
+        public List<ConditionConfig> Conditions = new();
 
-    [Serializable]
-    [FactoryKey(BehaviorNodeTypes.AcquireNearestEnemy, 11, "Acquire Nearest Enemy")]
-    public sealed class AcquireNearestEnemyBehaviorNodeData : BehaviorNodeData
-    {
-        public AcquireNearestEnemyBehaviorNodeData()
+        public CheckConditionBehaviorNodeData()
         {
-            Type = BehaviorNodeTypes.AcquireNearestEnemy;
-        }
-    }
-
-    [Serializable]
-    [FactoryKey(BehaviorNodeTypes.TargetInCastRange, 12, "Target In Cast Range")]
-    public sealed class TargetInCastRangeBehaviorNodeData : BehaviorNodeData
-    {
-        public float RangePadding = 0.1f;
-
-        public TargetInCastRangeBehaviorNodeData()
-        {
-            Type = BehaviorNodeTypes.TargetInCastRange;
+            Type = BehaviorNodeTypes.CheckCondition;
         }
     }
 
@@ -217,7 +195,7 @@ namespace CrystalMagic.Game.Data
         {
             return node switch
             {
-                TargetInCastRangeBehaviorNodeData range => $"{GetDisplayName(range.Type)} | Padding {range.RangePadding:0.##}",
+                CheckConditionBehaviorNodeData condition => $"{GetDisplayName(condition.Type)} | Conditions {condition.Conditions?.Count ?? 0}",
                 MoveToTargetBehaviorNodeData move => $"{GetDisplayName(move.Type)} | Stop {move.StopDistance:0.##}",
                 _ => GetDisplayName(ResolveTypeName(node)),
             };
