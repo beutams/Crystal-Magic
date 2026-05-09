@@ -257,9 +257,7 @@ namespace CrystalMagic.Game.Data
             foreach (FieldInfo field in GetSerializableFields(node.GetType()))
             {
                 object fieldValue = field.GetValue(node);
-                jObject[field.Name] = fieldValue != null
-                    ? JToken.FromObject(fieldValue, serializer)
-                    : JValue.CreateNull();
+                jObject[field.Name] = SerializeFieldValue(fieldValue, serializer);
             }
 
             jObject[nameof(BehaviorNodeData.Type)] = node.Type;
@@ -275,6 +273,28 @@ namespace CrystalMagic.Game.Data
                 for (int i = 0; i < fields.Length; i++)
                     yield return fields[i];
             }
+        }
+
+        private static JToken SerializeFieldValue(object fieldValue, JsonSerializer serializer)
+        {
+            if (fieldValue == null)
+                return JValue.CreateNull();
+
+            return fieldValue switch
+            {
+                Vector2 vector2 => new JObject
+                {
+                    ["x"] = vector2.x,
+                    ["y"] = vector2.y,
+                },
+                Vector3 vector3 => new JObject
+                {
+                    ["x"] = vector3.x,
+                    ["y"] = vector3.y,
+                    ["z"] = vector3.z,
+                },
+                _ => JToken.FromObject(fieldValue, serializer),
+            };
         }
     }
 }
