@@ -22,14 +22,16 @@ public sealed class BehaviorTreeContext
 {
     public Entity Entity;
     public EntityManager EntityManager;
+    public float DeltaTime;
     public UnitPerceptionComponent Perception;
     public UnitIntentComponent Intent;
     public BehaviorBlackboard Blackboard;
 
-    public void BeginTick(Entity entity, EntityManager entityManager, in UnitPerceptionComponent perception, in UnitIntentComponent intent, BehaviorBlackboard blackboard)
+    public void BeginTick(Entity entity, EntityManager entityManager, float deltaTime, in UnitPerceptionComponent perception, in UnitIntentComponent intent, BehaviorBlackboard blackboard)
     {
         Entity = entity;
         EntityManager = entityManager;
+        DeltaTime = deltaTime;
         Perception = perception;
         Intent = intent;
         Blackboard = blackboard;

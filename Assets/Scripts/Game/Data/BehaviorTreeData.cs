@@ -68,10 +68,31 @@ namespace CrystalMagic.Game.Data
         public const string Root = "Root";
         public const string Selector = "Selector";
         public const string Sequence = "Sequence";
+        public const string Parallel = "Parallel";
+        public const string Inverter = "Inverter";
+        public const string Succeeder = "Succeeder";
+        public const string Failer = "Failer";
+        public const string Repeater = "Repeater";
+        public const string UntilSuccess = "UntilSuccess";
+        public const string UntilFailure = "UntilFailure";
+        public const string Cooldown = "Cooldown";
+        public const string Timeout = "Timeout";
         public const string CheckCondition = "CheckCondition";
         public const string MoveToTarget = "MoveToTarget";
         public const string CastToTarget = "CastToTarget";
         public const string Idle = "Idle";
+    }
+
+    public enum ParallelSuccessPolicy
+    {
+        RequireAll = 0,
+        RequireAny = 1,
+    }
+
+    public enum ParallelFailurePolicy
+    {
+        RequireAny = 0,
+        RequireAll = 1,
     }
 
     [Serializable]
@@ -101,6 +122,105 @@ namespace CrystalMagic.Game.Data
         public SequenceBehaviorNodeData()
         {
             Type = BehaviorNodeTypes.Sequence;
+        }
+    }
+
+    [Serializable]
+    [FactoryKey(BehaviorNodeTypes.Parallel, 2, "Parallel")]
+    public sealed class ParallelBehaviorNodeData : BehaviorNodeData
+    {
+        public ParallelSuccessPolicy SuccessPolicy = ParallelSuccessPolicy.RequireAll;
+        public ParallelFailurePolicy FailurePolicy = ParallelFailurePolicy.RequireAny;
+
+        public ParallelBehaviorNodeData()
+        {
+            Type = BehaviorNodeTypes.Parallel;
+        }
+    }
+
+    [Serializable]
+    [FactoryKey(BehaviorNodeTypes.Inverter, 20, "Inverter")]
+    public sealed class InverterBehaviorNodeData : BehaviorNodeData
+    {
+        public InverterBehaviorNodeData()
+        {
+            Type = BehaviorNodeTypes.Inverter;
+        }
+    }
+
+    [Serializable]
+    [FactoryKey(BehaviorNodeTypes.Succeeder, 21, "Succeeder")]
+    public sealed class SucceederBehaviorNodeData : BehaviorNodeData
+    {
+        public SucceederBehaviorNodeData()
+        {
+            Type = BehaviorNodeTypes.Succeeder;
+        }
+    }
+
+    [Serializable]
+    [FactoryKey(BehaviorNodeTypes.Failer, 22, "Failer")]
+    public sealed class FailerBehaviorNodeData : BehaviorNodeData
+    {
+        public FailerBehaviorNodeData()
+        {
+            Type = BehaviorNodeTypes.Failer;
+        }
+    }
+
+    [Serializable]
+    [FactoryKey(BehaviorNodeTypes.Repeater, 23, "Repeater")]
+    public sealed class RepeaterBehaviorNodeData : BehaviorNodeData
+    {
+        public int RepeatCount = -1;
+
+        public RepeaterBehaviorNodeData()
+        {
+            Type = BehaviorNodeTypes.Repeater;
+        }
+    }
+
+    [Serializable]
+    [FactoryKey(BehaviorNodeTypes.UntilSuccess, 24, "Until Success")]
+    public sealed class UntilSuccessBehaviorNodeData : BehaviorNodeData
+    {
+        public UntilSuccessBehaviorNodeData()
+        {
+            Type = BehaviorNodeTypes.UntilSuccess;
+        }
+    }
+
+    [Serializable]
+    [FactoryKey(BehaviorNodeTypes.UntilFailure, 25, "Until Failure")]
+    public sealed class UntilFailureBehaviorNodeData : BehaviorNodeData
+    {
+        public UntilFailureBehaviorNodeData()
+        {
+            Type = BehaviorNodeTypes.UntilFailure;
+        }
+    }
+
+    [Serializable]
+    [FactoryKey(BehaviorNodeTypes.Cooldown, 26, "Cooldown")]
+    public sealed class CooldownBehaviorNodeData : BehaviorNodeData
+    {
+        public float CooldownSeconds = 1f;
+
+        public CooldownBehaviorNodeData()
+        {
+            Type = BehaviorNodeTypes.Cooldown;
+        }
+    }
+
+    [Serializable]
+    [FactoryKey(BehaviorNodeTypes.Timeout, 27, "Timeout")]
+    public sealed class TimeoutBehaviorNodeData : BehaviorNodeData
+    {
+        public float TimeoutSeconds = 1f;
+
+        public TimeoutBehaviorNodeData()
+        {
+            Type = BehaviorNodeTypes.Timeout;
         }
     }
 
@@ -195,6 +315,10 @@ namespace CrystalMagic.Game.Data
         {
             return node switch
             {
+                ParallelBehaviorNodeData parallel => $"{GetDisplayName(parallel.Type)} | {parallel.SuccessPolicy} / {parallel.FailurePolicy}",
+                RepeaterBehaviorNodeData repeater => $"{GetDisplayName(repeater.Type)} | Count {repeater.RepeatCount}",
+                CooldownBehaviorNodeData cooldown => $"{GetDisplayName(cooldown.Type)} | {cooldown.CooldownSeconds:0.##}s",
+                TimeoutBehaviorNodeData timeout => $"{GetDisplayName(timeout.Type)} | {timeout.TimeoutSeconds:0.##}s",
                 CheckConditionBehaviorNodeData condition => $"{GetDisplayName(condition.Type)} | Conditions {condition.Conditions?.Count ?? 0}",
                 MoveToTargetBehaviorNodeData move => $"{GetDisplayName(move.Type)} | Stop {move.StopDistance:0.##}",
                 _ => GetDisplayName(ResolveTypeName(node)),

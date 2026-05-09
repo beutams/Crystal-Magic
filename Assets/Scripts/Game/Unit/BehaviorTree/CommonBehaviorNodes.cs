@@ -94,6 +94,61 @@ public sealed class SequenceBehaviorNode : CompositeBehaviorNode
     }
 }
 
+[FactoryKey(BehaviorNodeTypes.Parallel, 2, "Parallel")]
+public sealed class ParallelBehaviorNode : CompositeBehaviorNode
+{
+    private readonly ParallelBehaviorNodeData _data;
+
+    public ParallelBehaviorNode(ParallelBehaviorNodeData data)
+        : base(data)
+    {
+        _data = data;
+    }
+
+    protected override BehaviorNodeStatus OnTick(BehaviorTreeContext context)
+    {
+        if (Children.Count == 0)
+            return BehaviorNodeStatus.Failure;
+
+        int successCount = 0;
+        int failureCount = 0;
+        int runningCount = 0;
+
+        for (int i = 0; i < Children.Count; i++)
+        {
+            BehaviorNodeStatus status = Children[i].Tick(context);
+            switch (status)
+            {
+                case BehaviorNodeStatus.Success:
+                    successCount++;
+                    break;
+                case BehaviorNodeStatus.Failure:
+                    failureCount++;
+                    break;
+                case BehaviorNodeStatus.Running:
+                    runningCount++;
+                    break;
+            }
+        }
+
+        if ((_data.FailurePolicy == ParallelFailurePolicy.RequireAny && failureCount > 0) ||
+            (_data.FailurePolicy == ParallelFailurePolicy.RequireAll && failureCount == Children.Count))
+        {
+            return BehaviorNodeStatus.Failure;
+        }
+
+        if ((_data.SuccessPolicy == ParallelSuccessPolicy.RequireAny && successCount > 0) ||
+            (_data.SuccessPolicy == ParallelSuccessPolicy.RequireAll && successCount == Children.Count))
+        {
+            return BehaviorNodeStatus.Success;
+        }
+
+        return runningCount > 0 || successCount > 0 || failureCount > 0
+            ? BehaviorNodeStatus.Running
+            : BehaviorNodeStatus.Failure;
+    }
+}
+
 [FactoryKey(BehaviorNodeTypes.CheckCondition, 10, "Check Condition")]
 public sealed class CheckConditionBehaviorNode : ABehaviorNode
 {

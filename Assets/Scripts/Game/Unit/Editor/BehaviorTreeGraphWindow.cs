@@ -313,6 +313,23 @@ namespace CrystalMagic.Editor.Unit
             EditorGUI.BeginChangeCheck();
             switch (node)
             {
+                case ParallelBehaviorNodeData parallel:
+                    parallel.SuccessPolicy = (ParallelSuccessPolicy)EditorGUILayout.EnumPopup("Success Policy", parallel.SuccessPolicy);
+                    parallel.FailurePolicy = (ParallelFailurePolicy)EditorGUILayout.EnumPopup("Failure Policy", parallel.FailurePolicy);
+                    break;
+
+                case RepeaterBehaviorNodeData repeater:
+                    repeater.RepeatCount = EditorGUILayout.IntField("Repeat Count", repeater.RepeatCount);
+                    break;
+
+                case CooldownBehaviorNodeData cooldown:
+                    cooldown.CooldownSeconds = EditorGUILayout.FloatField("Cooldown Seconds", cooldown.CooldownSeconds);
+                    break;
+
+                case TimeoutBehaviorNodeData timeout:
+                    timeout.TimeoutSeconds = EditorGUILayout.FloatField("Timeout Seconds", timeout.TimeoutSeconds);
+                    break;
+
                 case CheckConditionBehaviorNodeData condition:
                     DrawConditionList(condition.Conditions);
                     break;
@@ -1135,16 +1152,46 @@ namespace CrystalMagic.Editor.Unit
 
         public static bool SupportsChildren(BehaviorNodeData node)
         {
-            return node is RootBehaviorNodeData or SelectorBehaviorNodeData or SequenceBehaviorNodeData;
+            return node is RootBehaviorNodeData or SelectorBehaviorNodeData or SequenceBehaviorNodeData or ParallelBehaviorNodeData
+                or InverterBehaviorNodeData or SucceederBehaviorNodeData or FailerBehaviorNodeData
+                or RepeaterBehaviorNodeData or UntilSuccessBehaviorNodeData or UntilFailureBehaviorNodeData
+                or CooldownBehaviorNodeData or TimeoutBehaviorNodeData;
         }
 
         public static int GetMaxChildCount(BehaviorNodeData node)
         {
             if (node is RootBehaviorNodeData)
                 return 1;
-            if (node is SelectorBehaviorNodeData or SequenceBehaviorNodeData)
+            if (node is SelectorBehaviorNodeData or SequenceBehaviorNodeData or ParallelBehaviorNodeData)
                 return -1;
+            if (node is InverterBehaviorNodeData or SucceederBehaviorNodeData or FailerBehaviorNodeData
+                or RepeaterBehaviorNodeData or UntilSuccessBehaviorNodeData or UntilFailureBehaviorNodeData
+                or CooldownBehaviorNodeData or TimeoutBehaviorNodeData)
+                return 1;
             return 0;
+        }
+
+        private static string GetNodeCategory(string key)
+        {
+            return key switch
+            {
+                BehaviorNodeTypes.Root or
+                BehaviorNodeTypes.Selector or
+                BehaviorNodeTypes.Sequence or
+                BehaviorNodeTypes.Parallel => "Composite",
+
+                BehaviorNodeTypes.Inverter or
+                BehaviorNodeTypes.Succeeder or
+                BehaviorNodeTypes.Failer or
+                BehaviorNodeTypes.Repeater or
+                BehaviorNodeTypes.UntilSuccess or
+                BehaviorNodeTypes.UntilFailure or
+                BehaviorNodeTypes.Cooldown or
+                BehaviorNodeTypes.Timeout => "Decorator",
+
+                BehaviorNodeTypes.CheckCondition => "Condition",
+                _ => "Action",
+            };
         }
 
         private void ClearGraph()
@@ -1297,7 +1344,8 @@ namespace CrystalMagic.Editor.Unit
                     continue;
 
                 FactoryTypeInfo capturedTypeInfo = typeInfo;
-                evt.menu.AppendAction($"Add Node/{capturedTypeInfo.DisplayName}", _ =>
+                string category = GetNodeCategory(capturedTypeInfo.Key);
+                evt.menu.AppendAction($"Add Node/{category}/{capturedTypeInfo.DisplayName}", _ =>
                 {
                     BehaviorTreeData tree = _window.SelectedTree;
                     if (tree == null)
@@ -1420,6 +1468,15 @@ namespace CrystalMagic.Editor.Unit
                 RootBehaviorNodeData => new Color(0.24f, 0.45f, 0.70f, 1f),
                 SelectorBehaviorNodeData => new Color(0.24f, 0.52f, 0.34f, 1f),
                 SequenceBehaviorNodeData => new Color(0.18f, 0.45f, 0.28f, 1f),
+                ParallelBehaviorNodeData => new Color(0.17f, 0.40f, 0.52f, 1f),
+                InverterBehaviorNodeData => new Color(0.58f, 0.38f, 0.17f, 1f),
+                SucceederBehaviorNodeData => new Color(0.60f, 0.50f, 0.14f, 1f),
+                FailerBehaviorNodeData => new Color(0.56f, 0.24f, 0.20f, 1f),
+                RepeaterBehaviorNodeData => new Color(0.49f, 0.36f, 0.16f, 1f),
+                UntilSuccessBehaviorNodeData => new Color(0.46f, 0.42f, 0.16f, 1f),
+                UntilFailureBehaviorNodeData => new Color(0.52f, 0.30f, 0.16f, 1f),
+                CooldownBehaviorNodeData => new Color(0.36f, 0.24f, 0.58f, 1f),
+                TimeoutBehaviorNodeData => new Color(0.60f, 0.24f, 0.48f, 1f),
                 CheckConditionBehaviorNodeData => new Color(0.70f, 0.46f, 0.18f, 1f),
                 MoveToTargetBehaviorNodeData => new Color(0.47f, 0.32f, 0.69f, 1f),
                 CastToTargetBehaviorNodeData => new Color(0.58f, 0.22f, 0.59f, 1f),
@@ -1427,5 +1484,6 @@ namespace CrystalMagic.Editor.Unit
                 _ => new Color(0.25f, 0.25f, 0.25f, 1f),
             };
         }
+
     }
 }

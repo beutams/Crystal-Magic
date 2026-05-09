@@ -36,7 +36,7 @@ partial class BehaviorTreeSystem : SystemBase
             intent.ValueRW.WantToCast = false;
             intent.ValueRW.CastTargetPosition = float2.zero;
 
-            _context.BeginTick(entity, EntityManager, perception.ValueRO, intent.ValueRO, behaviorTree.Blackboard);
+            _context.BeginTick(entity, EntityManager, deltaTime, perception.ValueRO, intent.ValueRO, behaviorTree.Blackboard);
             BehaviorNodeStatus status = behaviorTree.Runtime.Tick(_context);
             intent.ValueRW = _context.Intent;
 

@@ -51,6 +51,25 @@ public abstract class CompositeBehaviorNode : ABehaviorNode
     }
 }
 
+public abstract class DecoratorBehaviorNode : ABehaviorNode
+{
+    protected DecoratorBehaviorNode(BehaviorNodeData data)
+        : base(data)
+    {
+    }
+
+    protected ABehaviorNode Child => Children.Count > 0 ? Children[0] : null;
+
+    public override void AddChild(ABehaviorNode child)
+    {
+        if (child == null)
+            return;
+
+        Children.Clear();
+        Children.Add(child);
+    }
+}
+
 public abstract class ActionBehaviorNode : ABehaviorNode
 {
     protected ActionBehaviorNode(BehaviorNodeData data)
