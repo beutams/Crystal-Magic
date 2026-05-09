@@ -19,7 +19,7 @@ partial class BehaviorTreeSystem : SystemBase
                  SystemAPI.Query<RefRW<UnitIntentComponent>, RefRO<UnitPerceptionComponent>, UnitBehaviorTreeComponent>()
                      .WithEntityAccess())
         {
-            if (simulationLocked || behaviorTree == null || !behaviorTree.IsEnabled || !behaviorTree.IsInitialized || behaviorTree.Runtime == null)
+            if (simulationLocked || behaviorTree == null || !behaviorTree.IsInitialized || behaviorTree.Runtime == null)
             {
                 intent.ValueRW.MoveDirection = float2.zero;
                 intent.ValueRW.WantToCast = false;
@@ -32,17 +32,6 @@ partial class BehaviorTreeSystem : SystemBase
                 continue;
             }
 
-            if (behaviorTree.TickInterval > 0f)
-            {
-                behaviorTree.TimeUntilNextTick -= deltaTime;
-                if (behaviorTree.TimeUntilNextTick > 0f)
-                {
-                    behaviorTree.CurrentNodeName = behaviorTree.Blackboard?.CurrentNodeName ?? "None";
-                    behaviorTree.LastStatus = behaviorTree.Blackboard?.LastStatus ?? "None";
-                    continue;
-                }
-            }
-
             intent.ValueRW.MoveDirection = float2.zero;
             intent.ValueRW.WantToCast = false;
             intent.ValueRW.CastTargetPosition = float2.zero;
@@ -53,8 +42,6 @@ partial class BehaviorTreeSystem : SystemBase
 
             behaviorTree.CurrentNodeName = behaviorTree.Blackboard?.CurrentNodeName ?? "None";
             behaviorTree.LastStatus = status.ToString();
-            if (behaviorTree.TickInterval > 0f)
-                behaviorTree.TimeUntilNextTick = behaviorTree.TickInterval;
         }
     }
 }

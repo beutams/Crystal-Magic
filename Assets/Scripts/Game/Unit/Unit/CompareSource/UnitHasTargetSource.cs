@@ -3,20 +3,26 @@ using Unity.Entities;
 [FactoryKey("UnitHasTargetSource")]
 public class UnitHasTargetSource : ISource
 {
-    private Entity _entity;
-    private EntityManager _em;
+    private SourceContext _context;
 
-    public void Init(Entity entity, EntityManager em)
+    public void Init(SourceContext context)
     {
-        _entity = entity;
-        _em = em;
+        _context = context;
+    }
+
+    public bool CanUse()
+    {
+        if (_context.HasRuntimeEntity)
+            return _context.EntityManager.HasComponent<UnitPerceptionComponent>(_context.Entity);
+
+        return _context.UnitPrefab != null && _context.UnitPrefab.GetComponent<UnitPerceptionAuthoring>() != null;
     }
 
     public float GetValue()
     {
-        if (!_em.HasComponent<UnitPerceptionComponent>(_entity))
+        if (!_context.HasRuntimeEntity || !_context.EntityManager.HasComponent<UnitPerceptionComponent>(_context.Entity))
             return 0f;
 
-        return _em.GetComponentData<UnitPerceptionComponent>(_entity).HasTarget ? 1f : 0f;
+        return _context.EntityManager.GetComponentData<UnitPerceptionComponent>(_context.Entity).HasTarget ? 1f : 0f;
     }
 }

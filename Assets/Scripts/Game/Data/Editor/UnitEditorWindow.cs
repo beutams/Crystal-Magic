@@ -603,14 +603,11 @@ namespace CrystalMagic.Editor.Data
 
             using (new EditorGUI.DisabledScope(true))
             {
-                EditorGUILayout.IntField("BehaviorTreeId", authoring.BehaviorTreeId);
-                EditorGUILayout.FloatField("Tick Interval", authoring.TickInterval);
-                EditorGUILayout.Toggle("Enable On Start", authoring.EnableOnStart);
+                EditorGUILayout.TextField("Unit Name", entry.DisplayName);
             }
 
-            BehaviorTreeData tree = authoring.BehaviorTreeId > 0
-                ? EditorComponents.Data.Get<BehaviorTreeData>(authoring.BehaviorTreeId)
-                : null;
+            BehaviorTreeData tree = EditorComponents.Data.Find<BehaviorTreeData>(
+                row => string.Equals(row.Name, entry.DisplayName, StringComparison.Ordinal));
             if (tree == null)
             {
                 EditorGUILayout.HelpBox("没有找到对应的 BehaviorTreeData。", MessageType.Warning);

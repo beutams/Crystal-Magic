@@ -19,16 +19,17 @@ partial class BehaviorTreeInitSystem : SystemBase
             behaviorTree.CurrentNodeName = "None";
             behaviorTree.LastStatus = "None";
 
-            if (behaviorTree.BehaviorTreeId <= 0)
+            if (string.IsNullOrWhiteSpace(behaviorTree.UnitName))
             {
                 behaviorTree.IsInitialized = true;
                 continue;
             }
 
-            BehaviorTreeData data = DataComponent.Instance?.Get<BehaviorTreeData>(behaviorTree.BehaviorTreeId);
+            BehaviorTreeData data = DataComponent.Instance?.Find<BehaviorTreeData>(
+                row => string.Equals(row.Name, behaviorTree.UnitName, System.StringComparison.Ordinal));
             if (data == null)
             {
-                Debug.LogWarning($"[BehaviorTreeInit] BehaviorTreeData not found: {behaviorTree.BehaviorTreeId}");
+                Debug.LogWarning($"[BehaviorTreeInit] BehaviorTreeData not found for unit: {behaviorTree.UnitName}");
                 behaviorTree.IsInitialized = true;
                 continue;
             }

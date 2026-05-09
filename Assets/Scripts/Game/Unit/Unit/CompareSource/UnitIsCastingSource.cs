@@ -3,20 +3,26 @@ using Unity.Entities;
 [FactoryKey("UnitIsCastingSource")]
 public class UnitIsCastingSource : ISource
 {
-    private Entity _entity;
-    private EntityManager _em;
+    private SourceContext _context;
 
-    public void Init(Entity entity, EntityManager em)
+    public void Init(SourceContext context)
     {
-        _entity = entity;
-        _em = em;
+        _context = context;
+    }
+
+    public bool CanUse()
+    {
+        if (_context.HasRuntimeEntity)
+            return _context.EntityManager.HasComponent<UnitCastComponent>(_context.Entity);
+
+        return _context.UnitPrefab != null && _context.UnitPrefab.GetComponent<UnitCastAuthoring>() != null;
     }
 
     public float GetValue()
     {
-        if (!_em.HasComponent<UnitCastComponent>(_entity))
+        if (!_context.HasRuntimeEntity || !_context.EntityManager.HasComponent<UnitCastComponent>(_context.Entity))
             return 0f;
 
-        return _em.GetComponentData<UnitCastComponent>(_entity).IsCasting ? 1f : 0f;
+        return _context.EntityManager.GetComponentData<UnitCastComponent>(_context.Entity).IsCasting ? 1f : 0f;
     }
 }

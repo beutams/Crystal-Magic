@@ -3,25 +3,40 @@ using Unity.Entities;
 [FactoryKey("UnitTargetCastRangeMarginSource")]
 public class UnitTargetCastRangeMarginSource : ISource
 {
-    private Entity _entity;
-    private EntityManager _em;
+    private SourceContext _context;
 
-    public void Init(Entity entity, EntityManager em)
+    public void Init(SourceContext context)
     {
-        _entity = entity;
-        _em = em;
+        _context = context;
+    }
+
+    public bool CanUse()
+    {
+        if (_context.HasRuntimeEntity)
+        {
+            return _context.EntityManager.HasComponent<UnitPerceptionComponent>(_context.Entity) &&
+                _context.EntityManager.HasComponent<UnitAttackComponent>(_context.Entity);
+        }
+
+        return _context.UnitPrefab != null &&
+            _context.UnitPrefab.GetComponent<UnitPerceptionAuthoring>() != null &&
+            _context.UnitPrefab.GetComponent<UnitAttackAuthoring>() != null;
     }
 
     public float GetValue()
     {
-        if (!_em.HasComponent<UnitPerceptionComponent>(_entity) || !_em.HasComponent<UnitAttackComponent>(_entity))
-            return float.MinValue;
+        if (!_context.HasRuntimeEntity ||
+            !_context.EntityManager.HasComponent<UnitPerceptionComponent>(_context.Entity) ||
+            !_context.EntityManager.HasComponent<UnitAttackComponent>(_context.Entity))
+        {
+            return 0f;
+        }
 
-        UnitPerceptionComponent perception = _em.GetComponentData<UnitPerceptionComponent>(_entity);
+        UnitPerceptionComponent perception = _context.EntityManager.GetComponentData<UnitPerceptionComponent>(_context.Entity);
         if (!perception.HasTarget)
-            return float.MinValue;
+            return 0f;
 
-        float castRange = _em.GetComponentData<UnitAttackComponent>(_entity).RealSkillRange;
+        float castRange = _context.EntityManager.GetComponentData<UnitAttackComponent>(_context.Entity).RealSkillRange;
         return castRange - perception.TargetDistance;
     }
 }

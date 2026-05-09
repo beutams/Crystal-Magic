@@ -8,51 +8,59 @@ using Unity.Mathematics;
 [FactoryKey("UnitVelocitySource")]
 public class UnitVelocitySource : ISource
 {
-    private Entity _entity;
-    private EntityManager _em;
+    private SourceContext _context;
 
-    public void Init(Entity entity, EntityManager em)
+    public void Init(SourceContext context)
     {
-        _entity = entity;
-        _em     = em;
+        _context = context;
+    }
+
+    public bool CanUse()
+    {
+        if (_context.HasRuntimeEntity)
+            return _context.EntityManager.HasComponent<UnitIntentComponent>(_context.Entity);
+
+        return _context.UnitPrefab != null && _context.UnitPrefab.GetComponent<UnitMoveAuthoring>() != null;
     }
 
     public float GetValue()
     {
-        if (!_em.HasComponent<UnitIntentComponent>(_entity)) return 0f;
-        return math.length(_em.GetComponentData<UnitIntentComponent>(_entity).MoveDirection);
+        if (!_context.HasRuntimeEntity || !_context.EntityManager.HasComponent<UnitIntentComponent>(_context.Entity))
+            return 0f;
+
+        return math.length(_context.EntityManager.GetComponentData<UnitIntentComponent>(_context.Entity).MoveDirection);
     }
 }
 
 [FactoryKey("UnitIsEnemySource")]
 public class UnitIsEnemySource : ISource
 {
-    private Entity _targetEntity;
-    private Entity _originEntity;
-    private EntityManager _em;
-    private bool _hasOriginEntity;
+    private SourceContext _context;
 
     public void Init(SourceContext context)
     {
-        _targetEntity = context.Entity;
-        _originEntity = context.OriginEntity;
-        _em = context.EntityManager;
-        _hasOriginEntity = context.HasOriginEntity;
+        _context = context;
+    }
+
+    public bool CanUse()
+    {
+        return _context.HasRuntimeEntity &&
+            _context.HasOriginEntity &&
+            _context.EntityManager.Exists(_context.OriginEntity) &&
+            _context.EntityManager.Exists(_context.Entity) &&
+            _context.EntityManager.HasComponent<UnitFactionComponent>(_context.OriginEntity) &&
+            _context.EntityManager.HasComponent<UnitFactionComponent>(_context.Entity);
     }
 
     public float GetValue()
     {
-        if (!_hasOriginEntity ||
-            !_em.Exists(_originEntity) ||
-            !_em.Exists(_targetEntity) ||
-            !_em.HasComponent<UnitFactionComponent>(_originEntity) ||
-            !_em.HasComponent<UnitFactionComponent>(_targetEntity))
+        if (!CanUse())
         {
             return 0f;
         }
 
-        UnitFactionType originFaction = _em.GetComponentData<UnitFactionComponent>(_originEntity).Value;
-        UnitFactionType targetFaction = _em.GetComponentData<UnitFactionComponent>(_targetEntity).Value;
+        UnitFactionType originFaction = _context.EntityManager.GetComponentData<UnitFactionComponent>(_context.OriginEntity).Value;
+        UnitFactionType targetFaction = _context.EntityManager.GetComponentData<UnitFactionComponent>(_context.Entity).Value;
         return UnitFactionUtility.IsEnemy(originFaction, targetFaction) ? 1f : 0f;
     }
 }

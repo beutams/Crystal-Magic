@@ -3,28 +3,36 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Reflection;
 using CrystalMagic.Game.Data;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
+using Unity.Entities;
 using UnityEngine;
 using UnityEngine.UIElements;
+using CrystalMagic.Core;
 
 namespace CrystalMagic.Editor.Unit
 {
     public class BehaviorTreeGraphWindow : EditorWindow
     {
         private const string DataPath = "Assets/Res/Data/BehaviorTreeDataTable.json";
+        private const string UnitPrefabDirectory = "Assets/Res/Unit";
         private const float ListPanelWidth = 240f;
+        private const float SourcePanelWidth = 280f;
         private const float InsertFieldWidth = 30f;
 
         private readonly List<BehaviorTreeData> _rows = new();
         private readonly Dictionary<BehaviorTreeData, string> _insertTexts = new();
+        private readonly List<UnitPrefabEntry> _previewPrefabEntries = new();
+        private readonly List<UnitPrefabEntry> _behaviorPrefabEntries = new();
         private int _selectedIndex = -1;
         private bool _isDirty;
         private string _statusText = string.Empty;
         private Vector2 _listScrollPos;
+        private Vector2 _sourceScrollPos;
 
         private BehaviorTreeGraphView _graphView;
         private IMGUIContainer _detailContainer;
@@ -40,6 +48,33 @@ namespace CrystalMagic.Editor.Unit
         {
             public List<BehaviorTreeData> Rows = new();
         }
+
+        private sealed class UnitPrefabEntry
+        {
+            public string AssetPath;
+            public GameObject Prefab;
+
+            public string DisplayName => Path.GetFileNameWithoutExtension(AssetPath);
+        }
+
+        private readonly struct SourcePreviewInfo
+        {
+            public SourcePreviewInfo(string key, string displayName, Type type, int order)
+            {
+                Key = key;
+                DisplayName = displayName;
+                Type = type;
+                Order = order;
+            }
+
+            public string Key { get; }
+            public string DisplayName { get; }
+            public Type Type { get; }
+            public int Order { get; }
+        }
+
+        private static IReadOnlyList<SourcePreviewInfo> SourcePreviewInfos => s_sourcePreviewInfos ??= CollectSourcePreviewInfos();
+        private static List<SourcePreviewInfo> s_sourcePreviewInfos;
 
         [MenuItem("Tools/Data/Behavior Tree Visual Editor")]
         public static void Open()
@@ -107,6 +142,17 @@ namespace CrystalMagic.Editor.Unit
                 }
             };
             body.Add(listPanel);
+            body.Add(CreateDivider());
+
+            var sourcePanel = new IMGUIContainer(DrawSourcePanel)
+            {
+                style =
+                {
+                    width = SourcePanelWidth,
+                    minWidth = SourcePanelWidth,
+                }
+            };
+            body.Add(sourcePanel);
             body.Add(CreateDivider());
 
             _graphView = new BehaviorTreeGraphView(this)
@@ -284,14 +330,79 @@ namespace CrystalMagic.Editor.Unit
             DrawChildOrderEditor(tree, node);
         }
 
+        private void DrawSourcePanel()
+        {
+            EditorGUILayout.BeginVertical();
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+            GUILayout.Label("Available Sources", EditorStyles.boldLabel);
+            EditorGUILayout.EndHorizontal();
+
+            BehaviorTreeData tree = SelectedTree;
+            if (tree == null)
+            {
+                EditorGUILayout.HelpBox("Select a behavior tree first.", MessageType.Info);
+                EditorGUILayout.EndVertical();
+                return;
+            }
+
+            RefreshPreviewPrefabs(tree);
+            if (_previewPrefabEntries.Count == 0)
+            {
+                EditorGUILayout.HelpBox("No unit prefab is bound to this behavior tree.", MessageType.Info);
+                EditorGUILayout.EndVertical();
+                return;
+            }
+
+            UnitPrefabEntry entry = _previewPrefabEntries[0];
+            UnitData unitData = ResolveUnitData(entry);
+            using (new EditorGUI.DisabledScope(true))
+            {
+                EditorGUILayout.TextField("Unit", entry.DisplayName);
+                EditorGUILayout.TextField("Prefab", entry.AssetPath ?? string.Empty);
+                EditorGUILayout.TextField("UnitData", unitData != null ? $"[{unitData.Id}] {unitData.Name}" : "None");
+            }
+
+            SourceContext previewContext = new(
+                Entity.Null,
+                default,
+                Entity.Null,
+                false,
+                entry.Prefab,
+                unitData,
+                false);
+
+            _sourceScrollPos = EditorGUILayout.BeginScrollView(_sourceScrollPos);
+            bool hasAnySource = false;
+            foreach (SourcePreviewInfo info in SourcePreviewInfos)
+            {
+                if (TryCreateAvailablePreviewSource(info, previewContext))
+                {
+                    hasAnySource = true;
+                    EditorGUILayout.BeginHorizontal("box");
+                    EditorGUILayout.LabelField(info.DisplayName, EditorStyles.boldLabel);
+                    GUILayout.FlexibleSpace();
+                    EditorGUILayout.SelectableLabel(info.Key, EditorStyles.miniLabel, GUILayout.Height(EditorGUIUtility.singleLineHeight));
+                    EditorGUILayout.EndHorizontal();
+                }
+            }
+
+            if (!hasAnySource)
+                EditorGUILayout.HelpBox("This unit does not expose any available sources.", MessageType.Info);
+
+            EditorGUILayout.EndScrollView();
+            EditorGUILayout.EndVertical();
+        }
+
         private void DrawTreeSettings(BehaviorTreeData tree)
         {
             EditorGUILayout.LabelField("Behavior Tree", EditorStyles.boldLabel);
             using (new EditorGUI.DisabledScope(true))
+            {
                 EditorGUILayout.IntField("Id", tree.Id);
+                EditorGUILayout.TextField("Name", tree.Name ?? string.Empty);
+            }
 
             EditorGUI.BeginChangeCheck();
-            tree.Name = EditorGUILayout.TextField("Name", tree.Name ?? string.Empty);
             EditorGUILayout.LabelField("Description");
             tree.Description = EditorGUILayout.TextArea(
                 tree.Description ?? string.Empty,
@@ -399,6 +510,7 @@ namespace CrystalMagic.Editor.Unit
 
         internal void RebuildGraph()
         {
+            RefreshPreviewPrefabs(SelectedTree);
             _graphView?.BuildFromData(SelectedTree);
             _detailContainer?.MarkDirtyRepaint();
         }
@@ -437,26 +549,35 @@ namespace CrystalMagic.Editor.Unit
             _selectedIndex = -1;
             _isDirty = false;
 
-            if (!File.Exists(DataPath))
-            {
-                _statusText = $"Missing file: {DataPath}. It will be created on save.";
-                UpdateStatus(_statusText);
-                return;
-            }
-
             try
             {
-                string json = File.ReadAllText(DataPath);
-                TableWrapper wrapper = JsonConvert.DeserializeObject<TableWrapper>(json, JsonSettings);
-                if (wrapper?.Rows != null)
-                    _rows.AddRange(wrapper.Rows);
+                if (File.Exists(DataPath))
+                {
+                    string json = File.ReadAllText(DataPath);
+                    TableWrapper wrapper = JsonConvert.DeserializeObject<TableWrapper>(json, JsonSettings);
+                    if (wrapper?.Rows != null)
+                        _rows.AddRange(wrapper.Rows);
+                }
 
                 for (int i = 0; i < _rows.Count; i++)
                     EnsureTreeValid(_rows[i]);
 
-                NormalizeRowIds();
+                EnsureStableTreeIds();
+                bool synced = SyncTreesWithPrefabs();
                 _selectedIndex = _rows.Count > 0 ? Mathf.Clamp(_selectedIndex, 0, _rows.Count - 1) : -1;
-                _statusText = $"Loaded {_rows.Count} tree(s) | {DataPath}";
+                if (synced)
+                {
+                    SaveDataInternal(updateStatus: false);
+                    _statusText = $"Loaded {_rows.Count} tree(s) and synchronized prefab bindings | {DataPath}";
+                }
+                else if (File.Exists(DataPath))
+                {
+                    _statusText = $"Loaded {_rows.Count} tree(s) | {DataPath}";
+                }
+                else
+                {
+                    _statusText = $"Created {_rows.Count} tree(s) from bound prefabs | {DataPath}";
+                }
                 UpdateStatus(_statusText);
                 RebuildGraph();
             }
@@ -470,6 +591,11 @@ namespace CrystalMagic.Editor.Unit
 
         private void SaveData()
         {
+            SaveDataInternal(updateStatus: true);
+        }
+
+        private void SaveDataInternal(bool updateStatus)
+        {
             SyncNodePositionsFromGraph();
 
             string directory = Path.GetDirectoryName(DataPath);
@@ -478,13 +604,16 @@ namespace CrystalMagic.Editor.Unit
 
             try
             {
-                NormalizeRowIds();
+                EnsureStableTreeIds();
                 string json = JsonConvert.SerializeObject(new TableWrapper { Rows = _rows }, JsonSettings);
                 File.WriteAllText(DataPath, json, Encoding.UTF8);
                 AssetDatabase.Refresh();
                 _isDirty = false;
-                _statusText = $"Saved {_rows.Count} tree(s) | {DataPath}";
-                UpdateStatus(_statusText);
+                if (updateStatus)
+                {
+                    _statusText = $"Saved {_rows.Count} tree(s) | {DataPath}";
+                    UpdateStatus(_statusText);
+                }
             }
             catch (Exception ex)
             {
@@ -496,10 +625,9 @@ namespace CrystalMagic.Editor.Unit
 
         private void AddTree()
         {
-            int id = _rows.Count + 1;
+            int id = GetNextTreeId();
             BehaviorTreeData tree = CreateDefaultTree(id, $"BehaviorTree_{id}");
             _rows.Add(tree);
-            NormalizeRowIds();
             _selectedIndex = _rows.Count - 1;
             MarkDirty();
             RebuildGraph();
@@ -516,10 +644,10 @@ namespace CrystalMagic.Editor.Unit
             if (copy == null)
                 return;
 
+            copy.Id = GetNextTreeId();
             copy.Name = $"{GetTreeName(selected)}_Copy";
             EnsureTreeValid(copy, regenerateGuids: true);
             _rows.Add(copy);
-            NormalizeRowIds();
             _selectedIndex = _rows.Count - 1;
             MarkDirty();
             RebuildGraph();
@@ -541,7 +669,6 @@ namespace CrystalMagic.Editor.Unit
 
             _rows.RemoveAt(_selectedIndex);
             _insertTexts.Remove(selected);
-            NormalizeRowIds();
             _selectedIndex = Mathf.Clamp(_selectedIndex, -1, _rows.Count - 1);
             MarkDirty();
             RebuildGraph();
@@ -585,10 +712,21 @@ namespace CrystalMagic.Editor.Unit
             };
         }
 
-        private void NormalizeRowIds()
+        private void EnsureStableTreeIds()
         {
+            HashSet<int> usedIds = new();
             for (int i = 0; i < _rows.Count; i++)
-                _rows[i].Id = i + 1;
+            {
+                BehaviorTreeData row = _rows[i];
+                if (row == null)
+                    continue;
+
+                if (row.Id <= 0 || !usedIds.Add(row.Id))
+                {
+                    row.Id = GetNextTreeId(usedIds);
+                    usedIds.Add(row.Id);
+                }
+            }
         }
 
         private void MoveRowToInsertIndex(int fromIndex, int insertIndex)
@@ -604,7 +742,6 @@ namespace CrystalMagic.Editor.Unit
             _rows.RemoveAt(fromIndex);
             insertIndex = Mathf.Clamp(insertIndex, 0, _rows.Count);
             _rows.Insert(insertIndex, row);
-            NormalizeRowIds();
             _selectedIndex = insertIndex;
             MarkDirty();
             RebuildGraph();
@@ -748,6 +885,161 @@ namespace CrystalMagic.Editor.Unit
                 return tree.Name;
 
             return "Unnamed Tree";
+        }
+
+        private void RefreshPreviewPrefabs(BehaviorTreeData tree)
+        {
+            _previewPrefabEntries.Clear();
+            if (tree == null || !AssetDatabase.IsValidFolder(UnitPrefabDirectory))
+                return;
+
+            for (int i = 0; i < _behaviorPrefabEntries.Count; i++)
+            {
+                UnitPrefabEntry entry = _behaviorPrefabEntries[i];
+                if (string.Equals(entry.DisplayName, tree.Name, StringComparison.Ordinal))
+                {
+                    _previewPrefabEntries.Add(entry);
+                }
+            }
+
+            _previewPrefabEntries.Sort((left, right) => string.Compare(left.DisplayName, right.DisplayName, StringComparison.Ordinal));
+        }
+
+        private UnitData ResolveUnitData(UnitPrefabEntry entry)
+        {
+            if (entry == null)
+                return null;
+
+            UnitData dataByPath = EditorComponents.Data.Find<UnitData>(row => string.Equals(row.PrefabPath, entry.AssetPath, StringComparison.Ordinal));
+            if (dataByPath != null)
+                return dataByPath;
+
+            return EditorComponents.Data.Find<UnitData>(row => string.Equals(row.Name, entry.DisplayName, StringComparison.Ordinal));
+        }
+
+        private bool SyncTreesWithPrefabs()
+        {
+            RefreshBehaviorPrefabEntries();
+
+            bool changed = false;
+            for (int i = 0; i < _behaviorPrefabEntries.Count; i++)
+            {
+                UnitPrefabEntry entry = _behaviorPrefabEntries[i];
+                BehaviorTreeData tree = _rows.FirstOrDefault(row =>
+                    row != null &&
+                    string.Equals(row.Name, entry.DisplayName, StringComparison.Ordinal));
+
+                if (tree == null)
+                {
+                    tree = CreateDefaultTree(GetNextTreeId(), entry.DisplayName);
+                    _rows.Add(tree);
+                    changed = true;
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(tree.Name))
+                {
+                    tree.Name = entry.DisplayName;
+                    changed = true;
+                }
+            }
+
+            if (changed)
+                _isDirty = true;
+
+            return changed;
+        }
+
+        private void RefreshBehaviorPrefabEntries()
+        {
+            _behaviorPrefabEntries.Clear();
+            if (!AssetDatabase.IsValidFolder(UnitPrefabDirectory))
+                return;
+
+            string[] prefabGuids = AssetDatabase.FindAssets("t:Prefab", new[] { UnitPrefabDirectory });
+            foreach (string guid in prefabGuids)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                if (prefab == null || prefab.GetComponent<UnitBehaviorTreeAuthoring>() == null)
+                    continue;
+
+                _behaviorPrefabEntries.Add(new UnitPrefabEntry
+                {
+                    AssetPath = path,
+                    Prefab = prefab,
+                });
+            }
+
+            _behaviorPrefabEntries.Sort((left, right) => string.Compare(left.DisplayName, right.DisplayName, StringComparison.Ordinal));
+        }
+
+        private int GetNextTreeId()
+        {
+            return GetNextTreeId(new HashSet<int>(_rows.Where(row => row != null && row.Id > 0).Select(row => row.Id)));
+        }
+
+        private static int GetNextTreeId(HashSet<int> usedIds)
+        {
+            int candidate = 1;
+            while (usedIds.Contains(candidate))
+                candidate++;
+            return candidate;
+        }
+
+        private static bool TryCreateAvailablePreviewSource(SourcePreviewInfo info, in SourceContext context)
+        {
+            if (info.Type == null)
+                return false;
+
+            if (Activator.CreateInstance(info.Type) is not ISource instance)
+                return false;
+
+            instance.Init(context);
+            return instance.CanUse();
+        }
+
+        private static List<SourcePreviewInfo> CollectSourcePreviewInfos()
+        {
+            var result = new List<SourcePreviewInfo>();
+            IEnumerable<Type> sourceTypes = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(static assembly =>
+                {
+                    try
+                    {
+                        return assembly.GetTypes();
+                    }
+                    catch (ReflectionTypeLoadException ex)
+                    {
+                        return ex.Types.Where(static type => type != null);
+                    }
+                })
+                .Where(static type =>
+                    type != null &&
+                    !type.IsAbstract &&
+                    typeof(ISource).IsAssignableFrom(type));
+
+            foreach (Type type in sourceTypes)
+            {
+                FactoryKeyAttribute key = type.GetCustomAttribute<FactoryKeyAttribute>();
+                if (key == null || string.IsNullOrWhiteSpace(key.Key))
+                    continue;
+
+                result.Add(new SourcePreviewInfo(
+                    key.Key,
+                    string.IsNullOrWhiteSpace(key.DisplayName) ? key.Key : key.DisplayName,
+                    type,
+                    key.Order));
+            }
+
+            result.Sort(static (left, right) =>
+            {
+                int orderCompare = left.Order.CompareTo(right.Order);
+                return orderCompare != 0
+                    ? orderCompare
+                    : string.Compare(left.DisplayName, right.DisplayName, StringComparison.Ordinal);
+            });
+            return result;
         }
     }
 
