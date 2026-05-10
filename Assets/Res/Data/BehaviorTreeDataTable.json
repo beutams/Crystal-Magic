@@ -13,17 +13,72 @@
             "y": 120.0
           },
           "ChildGuids": [
-            "7c6d04fcd6824e22a0c9e97051002b83"
+            "selector_enemy_root"
           ]
         },
         {
-          "Type": "Idle",
-          "Guid": "7c6d04fcd6824e22a0c9e97051002b83",
+          "Type": "Selector",
+          "Guid": "selector_enemy_root",
           "EditorPosition": {
             "x": 80.0,
-            "y": 238.0
+            "y": 240.0
           },
-          "ChildGuids": []
+          "ChildGuids": [
+            "sequence_enemy_cast",
+            "wander_enemy"
+          ]
+        },
+        {
+          "Type": "Sequence",
+          "Guid": "sequence_enemy_cast",
+          "EditorPosition": {
+            "x": -120.0,
+            "y": 380.0
+          },
+          "ChildGuids": [
+            "condition_enemy_has_target",
+            "cast_enemy_fireball"
+          ]
+        },
+        {
+          "Type": "CheckCondition",
+          "Guid": "condition_enemy_has_target",
+          "EditorPosition": {
+            "x": -240.0,
+            "y": 520.0
+          },
+          "ChildGuids": [],
+          "Conditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitHasTargetSource",
+              "CompareType": "IsTrue",
+              "CompareValue": 0.0
+            }
+          ]
+        },
+        {
+          "Type": "CastToTarget",
+          "Guid": "cast_enemy_fireball",
+          "EditorPosition": {
+            "x": 0.0,
+            "y": 520.0
+          },
+          "ChildGuids": [],
+          "SelectionMode": 1,
+          "SkillId": 0,
+          "SkillTagMask": 1
+        },
+        {
+          "Type": "Wander",
+          "Guid": "wander_enemy",
+          "EditorPosition": {
+            "x": 280.0,
+            "y": 380.0
+          },
+          "ChildGuids": [],
+          "MinDurationSeconds": 1.0,
+          "MaxDurationSeconds": 2.5
         }
       ],
       "Id": 1

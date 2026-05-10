@@ -39,7 +39,7 @@
               "StateType": "IdleState",
               "Transitions": [
                 {
-                  "TargetStateType": "CastState",
+                  "TargetStateType": "PlayerCastState",
                   "Conditions": [
                     {
                       "ConditionType": 0,
@@ -66,7 +66,7 @@
               "StateType": "MoveState",
               "Transitions": [
                 {
-                  "TargetStateType": "CastState",
+                  "TargetStateType": "PlayerCastState",
                   "Conditions": [
                     {
                       "ConditionType": 0,
@@ -90,7 +90,7 @@
               ]
             },
             {
-              "StateType": "CastState",
+              "StateType": "PlayerCastState",
               "Transitions": [
                 {
                   "TargetStateType": "MoveState",
@@ -459,7 +459,7 @@
                   ]
                 },
                 {
-                  "TargetStateType": "CastState",
+                  "TargetStateType": "PlayerCastState",
                   "Conditions": [
                     {
                       "ConditionType": 0,
@@ -486,7 +486,7 @@
                   ]
                 },
                 {
-                  "TargetStateType": "CastState",
+                  "TargetStateType": "PlayerCastState",
                   "Conditions": [
                     {
                       "ConditionType": 0,
@@ -499,7 +499,7 @@
               ]
             },
             {
-              "StateType": "CastState",
+              "StateType": "PlayerCastState",
               "Transitions": [
                 {
                   "TargetStateType": "IdleState",
@@ -549,37 +549,140 @@
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 10.0,
-          "BaseMaxAcceleration": 100.0
+          "BaseMoveSpeed": 6.0,
+          "BaseMaxAcceleration": 50.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 100000.0,
-          "BaseHealthRegenPerSecond": 100.0,
+          "BaseMaxHealth": 120.0,
+          "BaseHealthRegenPerSecond": 0.0,
           "BaseDefense": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-          "BaseAttackPower": 0.0,
-          "BaseSkillRange": 0.0,
+          "BaseAttackPower": 10.0,
+          "BaseSkillRange": 8.0,
           "BaseActionSpeedBonus": 0.0,
           "BaseChantSpeedBonus": 0.0,
           "BaseWaterPowerBonus": 0.0,
-          "BaseFirePowerBonus": 0.0,
+          "BaseFirePowerBonus": 0.1,
           "BaseLightningPowerBonus": 0.0,
           "BaseWindPowerBonus": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-          "BaseMaxMp": 0.0,
-          "BaseMpRegenPerSecond": 0.0
+          "BaseMaxMp": 100.0,
+          "BaseMpRegenPerSecond": 10.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitSkillModuleData, Assembly-CSharp",
+          "Skills": [
+            {
+              "SkillId": 1,
+              "SkillEffectId": 0,
+              "TagMask": 1,
+              "MinDistance": 0.0,
+              "MaxDistance": 8.0,
+              "CooldownSeconds": 4.0,
+              "Weight": 1
+            }
+          ]
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitStateMachineModuleData, Assembly-CSharp",
           "States": [
             {
               "StateType": "IdleState",
-              "Transitions": []
+              "Transitions": [
+                {
+                  "TargetStateType": "UnitCastState",
+                  "Conditions": [
+                    {
+                      "ConditionType": 0,
+                      "SourceType": "UnitWantToCastSource",
+                      "CompareType": "IsTrue",
+                      "CompareValue": 0.0
+                    }
+                  ]
+                },
+                {
+                  "TargetStateType": "MoveState",
+                  "Conditions": [
+                    {
+                      "ConditionType": 0,
+                      "SourceType": "UnitVelocitySource",
+                      "CompareType": "GreaterThan",
+                      "CompareValue": 0.0
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "StateType": "MoveState",
+              "Transitions": [
+                {
+                  "TargetStateType": "UnitCastState",
+                  "Conditions": [
+                    {
+                      "ConditionType": 0,
+                      "SourceType": "UnitWantToCastSource",
+                      "CompareType": "IsTrue",
+                      "CompareValue": 0.0
+                    }
+                  ]
+                },
+                {
+                  "TargetStateType": "IdleState",
+                  "Conditions": [
+                    {
+                      "ConditionType": 0,
+                      "SourceType": "UnitVelocitySource",
+                      "CompareType": "LessThan",
+                      "CompareValue": 0.1
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "StateType": "UnitCastState",
+              "Transitions": [
+                {
+                  "TargetStateType": "MoveState",
+                  "Conditions": [
+                    {
+                      "ConditionType": 0,
+                      "SourceType": "UnitIsCastingSource",
+                      "CompareType": "IsFalse",
+                      "CompareValue": 0.0
+                    },
+                    {
+                      "ConditionType": 0,
+                      "SourceType": "UnitVelocitySource",
+                      "CompareType": "GreaterThan",
+                      "CompareValue": 0.0
+                    }
+                  ]
+                },
+                {
+                  "TargetStateType": "IdleState",
+                  "Conditions": [
+                    {
+                      "ConditionType": 0,
+                      "SourceType": "UnitIsCastingSource",
+                      "CompareType": "IsFalse",
+                      "CompareValue": 0.0
+                    },
+                    {
+                      "ConditionType": 0,
+                      "SourceType": "UnitVelocitySource",
+                      "CompareType": "LessThan",
+                      "CompareValue": 0.1
+                    }
+                  ]
+                }
+              ]
             }
           ]
         }

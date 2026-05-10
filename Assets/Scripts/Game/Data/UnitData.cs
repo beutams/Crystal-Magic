@@ -55,6 +55,9 @@ namespace CrystalMagic.Game.Data
                     case UnitStateMachineModuleData stateMachine:
                         stateMachine.States ??= new List<UnitStateConfig>();
                         break;
+                    case UnitSkillModuleData skillModule:
+                        skillModule.Skills ??= new List<UnitSkillSlotData>();
+                        break;
                 }
             }
         }
@@ -98,6 +101,24 @@ namespace CrystalMagic.Game.Data
     {
         public float BaseMaxMp = 50f;
         public float BaseMpRegenPerSecond;
+    }
+
+    [System.Serializable]
+    public sealed class UnitSkillModuleData : UnitModuleData
+    {
+        public List<UnitSkillSlotData> Skills = new();
+    }
+
+    [System.Serializable]
+    public sealed class UnitSkillSlotData
+    {
+        public int SkillId;
+        public int SkillEffectId;
+        public int TagMask;
+        public float MinDistance;
+        public float MaxDistance = 99f;
+        public float CooldownSeconds;
+        public int Weight = 1;
     }
 
     [System.Serializable]

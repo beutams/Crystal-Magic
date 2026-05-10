@@ -7,7 +7,13 @@ using Unity.Mathematics;
 [FactoryKey("MoveState")]
 public class MoveState : AUnitState
 {
-    public override void OnEnter() { }
+    public override void OnEnter()
+    {
+        var intent = EntityManager.GetComponentData<UnitIntentComponent>(Entity);
+        var move = EntityManager.GetComponentData<UnitMoveComponent>(Entity);
+        move.AccelInput = intent.MoveDirection;
+        EntityManager.SetComponentData(Entity, move);
+    }
 
     public override void OnUpdate(float deltaTime)
     {

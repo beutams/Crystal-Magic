@@ -80,6 +80,7 @@ namespace CrystalMagic.Game.Data
         public const string CheckCondition = "CheckCondition";
         public const string MoveToTarget = "MoveToTarget";
         public const string CastToTarget = "CastToTarget";
+        public const string Wander = "Wander";
         public const string Idle = "Idle";
     }
 
@@ -252,6 +253,10 @@ namespace CrystalMagic.Game.Data
     [FactoryKey(BehaviorNodeTypes.CastToTarget, 14, "Cast To Target")]
     public sealed class CastToTargetBehaviorNodeData : BehaviorNodeData
     {
+        public UnitSkillSelectionMode SelectionMode = UnitSkillSelectionMode.RandomAll;
+        public int SkillId;
+        public int SkillTagMask;
+
         public CastToTargetBehaviorNodeData()
         {
             Type = BehaviorNodeTypes.CastToTarget;
@@ -259,7 +264,20 @@ namespace CrystalMagic.Game.Data
     }
 
     [Serializable]
-    [FactoryKey(BehaviorNodeTypes.Idle, 15, "Idle")]
+    [FactoryKey(BehaviorNodeTypes.Wander, 15, "Wander")]
+    public sealed class WanderBehaviorNodeData : BehaviorNodeData
+    {
+        public float MinDurationSeconds = 1f;
+        public float MaxDurationSeconds = 2f;
+
+        public WanderBehaviorNodeData()
+        {
+            Type = BehaviorNodeTypes.Wander;
+        }
+    }
+
+    [Serializable]
+    [FactoryKey(BehaviorNodeTypes.Idle, 16, "Idle")]
     public sealed class IdleBehaviorNodeData : BehaviorNodeData
     {
         public IdleBehaviorNodeData()
@@ -321,6 +339,8 @@ namespace CrystalMagic.Game.Data
                 TimeoutBehaviorNodeData timeout => $"{GetDisplayName(timeout.Type)} | {timeout.TimeoutSeconds:0.##}s",
                 CheckConditionBehaviorNodeData condition => $"{GetDisplayName(condition.Type)} | Conditions {condition.Conditions?.Count ?? 0}",
                 MoveToTargetBehaviorNodeData move => $"{GetDisplayName(move.Type)} | Stop {move.StopDistance:0.##}",
+                CastToTargetBehaviorNodeData cast => $"{GetDisplayName(cast.Type)} | {cast.SelectionMode}",
+                WanderBehaviorNodeData wander => $"{GetDisplayName(wander.Type)} | {wander.MinDurationSeconds:0.##}-{wander.MaxDurationSeconds:0.##}s",
                 _ => GetDisplayName(ResolveTypeName(node)),
             };
         }

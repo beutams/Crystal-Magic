@@ -9,6 +9,7 @@ public class PlayerTagAuthoring : MonoBehaviour
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             AddComponent<PlayerTag>(entity);
+            AddComponent<PlayerSkillComponent>(entity);
             AddBuffer<UnitBuffElement>(entity);
         }
     }

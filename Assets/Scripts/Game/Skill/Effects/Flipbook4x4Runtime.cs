@@ -20,7 +20,7 @@ namespace CrystalMagic.Game.Skill.Effects
         [SerializeField] private bool _loop = true;
         [SerializeField] private bool _destroyWhenFinished;
 
-        private readonly MaterialPropertyBlock _propertyBlock = new();
+        private MaterialPropertyBlock _propertyBlock;
         private Renderer[] _renderers;
         private float _startTime;
         private bool _initialized;
@@ -36,6 +36,7 @@ namespace CrystalMagic.Game.Skill.Effects
 
         private void Awake()
         {
+            _propertyBlock ??= new MaterialPropertyBlock();
             CacheRenderers();
             if (_startTime <= 0f)
                 RefreshStartTime();
@@ -72,6 +73,7 @@ namespace CrystalMagic.Game.Skill.Effects
 
         private void ApplyProperties()
         {
+            _propertyBlock ??= new MaterialPropertyBlock();
             CacheRenderers();
             if (_renderers == null || _renderers.Length == 0)
                 return;

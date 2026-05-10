@@ -120,6 +120,10 @@ namespace CrystalMagic.Core
                     {
                         TypeNameHandling = TypeNameHandling.Auto,
                         NullValueHandling = NullValueHandling.Ignore,
+                        Converters = new List<JsonConverter>
+                        {
+                            new UnityObjectPathJsonConverter(path => _loader.Load<UnityEngine.Object>(path)),
+                        },
                     };
                     JsonSerializer serializer = JsonSerializer.Create(settings);
 

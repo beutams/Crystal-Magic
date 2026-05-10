@@ -1,5 +1,4 @@
 using CrystalMagic.Game.Data.Effects;
-using CrystalMagic.Core;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -8,7 +7,7 @@ using UnityEngine;
 namespace CrystalMagic.Game.Skill.Effects
 {
     /// <summary>
-    /// 创建投射物效果，逻辑由投射物系统接入
+    /// Creates a projectile spawn request that will be materialized by the ECS spawn system.
     /// </summary>
     public sealed class SpawnProjectileEffect : Effect
     {
@@ -25,21 +24,8 @@ namespace CrystalMagic.Game.Skill.Effects
                 return;
 
             Vector3 direction = GetProjectileDirection(context, spawnPosition);
-            Quaternion rotation = Quaternion.FromToRotation(Vector3.right, direction);
             Vector3 finalPosition = spawnPosition + direction * Data.SpawnOffsetDistance;
-
-            GameObject projectile = PoolComponent.Instance.Get(Data.Projectile);
-            projectile.transform.SetPositionAndRotation(finalPosition, rotation);
-            projectile.transform.localScale = Data.Projectile.transform.localScale * Data.Scale;
-            projectile.transform.right = direction;
-            PrepareProjectileVisual(projectile);
-
-            Flipbook4x4Runtime flipbook = projectile.GetComponent<Flipbook4x4Runtime>();
-            if (flipbook == null)
-                flipbook = projectile.AddComponent<Flipbook4x4Runtime>();
-
-            flipbook.Initialize(loop: true, destroyWhenFinished: false);
-            CreateProjectileEntity(context, projectile, finalPosition, direction);
+            CreateProjectileSpawnRequest(context, finalPosition, direction);
         }
 
         private bool TryGetSpawnPosition(SkillContent context, out Vector3 position)
@@ -77,47 +63,34 @@ namespace CrystalMagic.Game.Skill.Effects
             return Vector3.right;
         }
 
-        private void CreateProjectileEntity(SkillContent context, GameObject visual, Vector3 startPosition, Vector3 direction)
+        private void CreateProjectileSpawnRequest(SkillContent context, Vector3 startPosition, Vector3 direction)
         {
             EntityManager entityManager = context.EntityManager;
-            Entity projectileEntity = entityManager.CreateEntity(typeof(LocalTransform), typeof(SkillProjectileComponent));
-            int registryId = SkillProjectileRegistry.Register(visual, context, Data.OnCollisionEffects, Data.OnDestroyEffects);
+            Entity requestEntity = entityManager.CreateEntity(typeof(SkillProjectileSpawnRequestComponent));
 
             entityManager.SetComponentData(
-                projectileEntity,
-                LocalTransform.FromPositionRotationScale(
-                    startPosition,
-                    quaternion.identity,
-                    1f));
-
-            entityManager.SetComponentData(
-                projectileEntity,
-                new SkillProjectileComponent
+                requestEntity,
+                new SkillProjectileSpawnRequestComponent
                 {
+                    StartPosition = new float3(startPosition.x, startPosition.y, startPosition.z),
                     Direction = new float3(direction.x, direction.y, direction.z),
                     Speed = Data.Speed,
                     MaxRange = Data.MaxRange,
-                    TraveledDistance = 0f,
-                    HitRadius = 0.75f,
-                    RegistryId = registryId,
+                    HitRadius = 0.75f * math.max(Data.Scale, 0.01f),
+                    ScaleMultiplier = math.max(Data.Scale, 0.01f),
                     CanPierce = Data.CanPierce ? (byte)1 : (byte)0,
                     TriggerDestroyEffectsOnMaxRange = Data.TriggerDestroyEffectsOnMaxRange ? (byte)1 : (byte)0,
                 });
-        }
 
-        private static void PrepareProjectileVisual(GameObject projectile)
-        {
-            SkillProjectileRuntime legacyRuntime = projectile.GetComponent<SkillProjectileRuntime>();
-            if (legacyRuntime != null)
-                legacyRuntime.enabled = false;
-
-            Collider[] colliders = projectile.GetComponentsInChildren<Collider>(true);
-            for (int i = 0; i < colliders.Length; i++)
-                colliders[i].enabled = false;
-
-            Collider2D[] colliders2D = projectile.GetComponentsInChildren<Collider2D>(true);
-            for (int i = 0; i < colliders2D.Length; i++)
-                colliders2D[i].enabled = false;
+            entityManager.AddComponentObject(
+                requestEntity,
+                new SkillProjectilePayloadComponent
+                {
+                    ProjectilePrefab = Data.Projectile,
+                    Context = context.Clone(),
+                    OnCollisionEffects = Data.OnCollisionEffects,
+                    OnDestroyEffects = Data.OnDestroyEffects,
+                });
         }
     }
 }
