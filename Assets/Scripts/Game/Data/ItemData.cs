@@ -22,8 +22,6 @@ namespace CrystalMagic.Game.Data
 
         /// <summary>
         /// 额外关联数据的 Id。
-        /// SkillStone -> SkillData.Id
-        /// Weapon / Accessory -> EquipData.Id
         /// </summary>
         public int ExtraId;
 
