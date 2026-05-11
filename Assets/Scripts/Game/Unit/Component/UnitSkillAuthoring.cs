@@ -72,6 +72,17 @@ public struct UnitSkillEntry
     public int Weight;
 }
 
+namespace CrystalMagic.Game.Data
+{
+    public enum UnitSkillSelectionMode : byte
+    {
+        None = 0,
+        RandomAll = 1,
+        RandomTagMask = 2,
+        ExactSkillId = 3,
+    }
+}
+
 public struct UnitSkillComponent : IComponentData
 {
     public FixedList512Bytes<UnitSkillEntry> Skills;

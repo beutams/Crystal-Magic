@@ -1,7 +1,7 @@
 using CrystalMagic.Core;
 using UnityEngine;
 
-namespace CrystalMagic.Game.Skill.Effects
+namespace CrystalMagic.Game.Skill
 {
     [DisallowMultipleComponent]
     public sealed class Flipbook4x4Runtime : MonoBehaviour
