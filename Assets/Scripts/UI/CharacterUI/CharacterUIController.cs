@@ -301,35 +301,7 @@ namespace CrystalMagic.UI
 
         private void AddItemToBackpack(BackpackData backpackData, int itemId, int quantity)
         {
-            if (backpackData?.Items == null || itemId <= 0 || quantity <= 0)
-                return;
-
-            ItemData itemData = DataComponent.Instance.Get<ItemData>(itemId);
-            int maxStack = itemData != null && itemData.MaxStack > 0 ? itemData.MaxStack : 1;
-            int remaining = quantity;
-
-            for (int i = 0; i < backpackData.Items.Count && remaining > 0; i++)
-            {
-                InventoryItemData inventoryItem = backpackData.Items[i];
-                if (inventoryItem == null || inventoryItem.ItemId != itemId || inventoryItem.Quantity >= maxStack)
-                    continue;
-
-                int addCount = UnityEngine.Mathf.Min(maxStack - inventoryItem.Quantity, remaining);
-                inventoryItem.Quantity += addCount;
-                remaining -= addCount;
-            }
-
-            while (remaining > 0)
-            {
-                int addCount = UnityEngine.Mathf.Min(maxStack, remaining);
-                backpackData.Items.Add(new InventoryItemData
-                {
-                    ItemId = itemId,
-                    Quantity = addCount,
-                    ItemType = itemData != null ? itemData.ItemType : ItemType.None,
-                });
-                remaining -= addCount;
-            }
+            InventoryUtility.AddItemToBackpack(backpackData, itemId, quantity);
         }
 
     }

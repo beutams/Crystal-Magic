@@ -15,7 +15,7 @@
       "EffectChain": [
         {
           "$type": "CrystalMagic.Game.Data.Effects.SpawnProjectileEffectData, Assembly-CSharp",
-          "Projectile": "Assets/Res/Projectile/FireBall.prefab",
+          "Projectile": "Assets/Res/Prefab/Projectile/FireBall.prefab",
           "Speed": 10.0,
           "MaxRange": 100.0,
           "SpawnOffsetDistance": 1.0,

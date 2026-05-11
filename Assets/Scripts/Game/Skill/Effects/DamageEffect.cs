@@ -34,6 +34,15 @@ namespace CrystalMagic.Game.Skill.Effects
 
             vitality.CurrentHealth = math.max(0f, vitality.CurrentHealth - damage);
             entityManager.SetComponentData(target, vitality);
+
+            if (vitality.CurrentHealth <= 0f)
+            {
+                if (!entityManager.HasComponent<DestroyEntityFlag>(target))
+                    entityManager.AddComponent<DestroyEntityFlag>(target);
+
+                entityManager.SetComponentEnabled<DestroyEntityFlag>(target, true);
+            }
+
             EventComponent.Instance.Publish(new UnitDamagedEvent(target, vitality.CurrentHealth, vitality.RealMaxHealth));
         }
 

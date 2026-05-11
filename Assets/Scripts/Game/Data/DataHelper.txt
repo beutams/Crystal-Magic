@@ -37,4 +37,6 @@ SkillData
 SkillEffectData
 UnitData
     内含不同组件对应的数据设置UnitModuleData
-
+    UnitModuleData
+        每个需要在Unit编辑器显示的Data都需要一个Moudle。
+        用于baker存取

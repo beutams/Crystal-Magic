@@ -1,3 +1,4 @@
+using CrystalMagic.Game.Data;
 using Unity.Entities;
 using UnityEngine;
 
@@ -10,22 +11,23 @@ public enum UnitFactionType
 
 public class UnitFactionAuthoring : MonoBehaviour
 {
-    [SerializeField] private UnitFactionType _faction = UnitFactionType.Friendly;
-
-    public UnitFactionType Faction
-    {
-        get => _faction;
-        set => _faction = value;
-    }
-
     class UnitFactionBaker : Baker<UnitFactionAuthoring>
     {
         public override void Bake(UnitFactionAuthoring authoring)
         {
+            TextAsset unitDataAsset = UnitAuthoringUtility.GetUnitDataTableAsset();
+            if (unitDataAsset != null)
+                DependsOn(unitDataAsset);
+
+            UnitFactionType faction = UnitFactionType.Friendly;
+            UnitFactionModuleData data = UnitAuthoringUtility.ResolveModuleData<UnitFactionModuleData>(authoring);
+            if (data != null)
+                faction = data.Faction;
+
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             AddComponent(entity, new UnitFactionComponent
             {
-                Value = authoring.Faction,
+                Value = faction,
             });
         }
     }

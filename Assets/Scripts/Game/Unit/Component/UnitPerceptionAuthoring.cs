@@ -1,25 +1,27 @@
+using CrystalMagic.Game.Data;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 
 public class UnitPerceptionAuthoring : MonoBehaviour
 {
-    [SerializeField] private float _searchRadius = 8f;
-
-    public float SearchRadius
-    {
-        get => _searchRadius;
-        set => _searchRadius = Mathf.Max(0f, value);
-    }
-
     class UnitPerceptionBaker : Baker<UnitPerceptionAuthoring>
     {
         public override void Bake(UnitPerceptionAuthoring authoring)
         {
+            TextAsset unitDataAsset = UnitAuthoringUtility.GetUnitDataTableAsset();
+            if (unitDataAsset != null)
+                DependsOn(unitDataAsset);
+
+            float searchRadius = 8f;
+            UnitPerceptionModuleData data = UnitAuthoringUtility.ResolveModuleData<UnitPerceptionModuleData>(authoring);
+            if (data != null)
+                searchRadius = Mathf.Max(0f, data.SearchRadius);
+
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             AddComponent(entity, new UnitPerceptionComponent
             {
-                SearchRadius = Mathf.Max(0f, authoring.SearchRadius),
+                SearchRadius = searchRadius,
                 HasTarget = false,
                 TargetEntity = Entity.Null,
                 TargetPosition = float2.zero,

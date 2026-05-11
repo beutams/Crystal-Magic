@@ -96,6 +96,12 @@ namespace CrystalMagic.Game.Data
         RequireAll = 1,
     }
 
+    public enum RepeaterExecutionMode
+    {
+        ImmediatePerTick = 0,
+        OncePerTick = 1,
+    }
+
     [Serializable]
     [FactoryKey(BehaviorNodeTypes.Root, -100, "Root")]
     public sealed class RootBehaviorNodeData : BehaviorNodeData
@@ -173,6 +179,7 @@ namespace CrystalMagic.Game.Data
     [FactoryKey(BehaviorNodeTypes.Repeater, 23, "Repeater")]
     public sealed class RepeaterBehaviorNodeData : BehaviorNodeData
     {
+        public RepeaterExecutionMode ExecutionMode = RepeaterExecutionMode.ImmediatePerTick;
         public int RepeatCount = -1;
 
         public RepeaterBehaviorNodeData()
@@ -334,7 +341,7 @@ namespace CrystalMagic.Game.Data
             return node switch
             {
                 ParallelBehaviorNodeData parallel => $"{GetDisplayName(parallel.Type)} | {parallel.SuccessPolicy} / {parallel.FailurePolicy}",
-                RepeaterBehaviorNodeData repeater => $"{GetDisplayName(repeater.Type)} | Count {repeater.RepeatCount}",
+                RepeaterBehaviorNodeData repeater => $"{GetDisplayName(repeater.Type)} | {repeater.ExecutionMode} | Count {repeater.RepeatCount}",
                 CooldownBehaviorNodeData cooldown => $"{GetDisplayName(cooldown.Type)} | {cooldown.CooldownSeconds:0.##}s",
                 TimeoutBehaviorNodeData timeout => $"{GetDisplayName(timeout.Type)} | {timeout.TimeoutSeconds:0.##}s",
                 CheckConditionBehaviorNodeData condition => $"{GetDisplayName(condition.Type)} | Conditions {condition.Conditions?.Count ?? 0}",

@@ -40,6 +40,9 @@ public class UnitVitalityAuthoring : MonoBehaviour
                 DefenseFactor = 1f,
                 DefenseBonus = 0f,
             });
+
+            AddComponent<DestroyEntityFlag>(entity);
+            SetComponentEnabled<DestroyEntityFlag>(entity, false);
         }
     }
 }

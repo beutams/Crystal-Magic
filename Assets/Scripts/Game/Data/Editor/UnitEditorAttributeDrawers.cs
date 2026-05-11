@@ -17,19 +17,14 @@ namespace CrystalMagic.Editor.Data
 
         public void Draw(UnitEditorDrawerContext context)
         {
-            UnitFactionAuthoring factionAuthoring = context.GetAuthoring<UnitFactionAuthoring>();
-            if (factionAuthoring == null)
+            UnitFactionModuleData module = context.GetOrCreateModule<UnitFactionModuleData>();
+            if (module == null)
                 return;
 
             GUILayout.Space(8f);
             UnitEditorWindow.DrawSectionHeader("Faction");
 
-            UnitFactionType newFaction = (UnitFactionType)EditorGUILayout.EnumPopup("Faction", factionAuthoring.Faction);
-            if (newFaction != factionAuthoring.Faction)
-            {
-                factionAuthoring.Faction = newFaction;
-                context.MarkPrefabDirty(factionAuthoring);
-            }
+            module.Faction = (UnitFactionType)EditorGUILayout.EnumPopup("Faction", module.Faction);
         }
     }
 
@@ -269,19 +264,52 @@ namespace CrystalMagic.Editor.Data
 
         public void Draw(UnitEditorDrawerContext context)
         {
-            UnitPerceptionAuthoring perceptionAuthoring = context.GetAuthoring<UnitPerceptionAuthoring>();
-            if (perceptionAuthoring == null)
+            UnitPerceptionModuleData module = context.GetOrCreateModule<UnitPerceptionModuleData>();
+            if (module == null)
                 return;
 
             GUILayout.Space(8f);
             UnitEditorWindow.DrawSectionHeader("Perception");
 
-            float newSearchRadius = EditorGUILayout.FloatField("Search Radius", perceptionAuthoring.SearchRadius);
-            if (!Mathf.Approximately(newSearchRadius, perceptionAuthoring.SearchRadius))
+            module.SearchRadius = Mathf.Max(0f, EditorGUILayout.FloatField("Search Radius", module.SearchRadius));
+        }
+    }
+
+    [FactoryKey("Drop", 55)]
+    public sealed class UnitDropAttributeDrawer : IUnitEditorAttributeDrawer
+    {
+        public bool CanDraw(UnitEditorDrawerContext context)
+        {
+            return context.HasAuthoring<UnitDropAuthoring>();
+        }
+
+        public void Draw(UnitEditorDrawerContext context)
+        {
+            GUILayout.Space(8f);
+            UnitEditorWindow.DrawSectionHeader("Drop");
+
+            UnitDropModuleData module = context.GetModule<UnitDropModuleData>();
+            List<DropData> dropRows = EditorComponents.Data.FindAll<DropData>(_ => true)
+                .OrderBy(row => row.Id)
+                .ToList();
+
+            List<string> options = new() { "None" };
+            int selectedIndex = 0;
+            for (int i = 0; i < dropRows.Count; i++)
             {
-                perceptionAuthoring.SearchRadius = newSearchRadius;
-                context.MarkPrefabDirty(perceptionAuthoring);
+                DropData row = dropRows[i];
+                options.Add($"[{row.Id}] {row.Name}");
+                if (module != null && row.Id == module.DropDataId)
+                    selectedIndex = i + 1;
             }
+
+            int newIndex = EditorGUILayout.Popup("Drop Data", selectedIndex, options.ToArray());
+            int newDropDataId = newIndex == 0 ? -1 : dropRows[newIndex - 1].Id;
+            if (module == null && newDropDataId > 0)
+                module = context.GetOrCreateModule<UnitDropModuleData>();
+
+            if (module != null)
+                module.DropDataId = newDropDataId;
         }
     }
 

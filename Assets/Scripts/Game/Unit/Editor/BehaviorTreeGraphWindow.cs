@@ -19,7 +19,7 @@ namespace CrystalMagic.Editor.Unit
     public class BehaviorTreeGraphWindow : EditorWindow
     {
         private const string DataPath = "Assets/Res/Data/BehaviorTreeDataTable.json";
-        private const string UnitPrefabDirectory = "Assets/Res/Unit";
+        private static string UnitPrefabDirectory => AssetPathHelper.GetUnitPrefabDirectory();
         private const float ListPanelWidth = 240f;
         private const float SourcePanelWidth = 280f;
         private const float InsertFieldWidth = 30f;
@@ -319,6 +319,7 @@ namespace CrystalMagic.Editor.Unit
                     break;
 
                 case RepeaterBehaviorNodeData repeater:
+                    repeater.ExecutionMode = (RepeaterExecutionMode)EditorGUILayout.EnumPopup("Execution Mode", repeater.ExecutionMode);
                     repeater.RepeatCount = EditorGUILayout.IntField("Repeat Count", repeater.RepeatCount);
                     break;
 

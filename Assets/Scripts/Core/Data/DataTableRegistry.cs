@@ -13,6 +13,7 @@ namespace CrystalMagic.Core
         {
             component.LoadTable<BehaviorTreeData>("BehaviorTreeDataTable");
             component.LoadTable<BuffData>("BuffDataTable");
+            component.LoadTable<DropData>("DropDataTable");
             component.LoadTable<EquipData>("EquipDataTable");
             component.LoadTable<ItemData>("ItemDataTable");
             component.LoadTable<NPCData>("NPCDataTable");

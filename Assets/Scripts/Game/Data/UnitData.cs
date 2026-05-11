@@ -104,6 +104,18 @@ namespace CrystalMagic.Game.Data
     }
 
     [System.Serializable]
+    public sealed class UnitFactionModuleData : UnitModuleData
+    {
+        public UnitFactionType Faction = UnitFactionType.Friendly;
+    }
+
+    [System.Serializable]
+    public sealed class UnitPerceptionModuleData : UnitModuleData
+    {
+        public float SearchRadius = 8f;
+    }
+
+    [System.Serializable]
     public sealed class UnitSkillModuleData : UnitModuleData
     {
         public List<UnitSkillSlotData> Skills = new();
@@ -139,5 +151,10 @@ namespace CrystalMagic.Game.Data
     {
         public string TargetStateType = "";
         public List<ConditionConfig> Conditions = new();
+    }
+    [System.Serializable]
+    public class UnitDropModuleData : UnitModuleData
+    {
+        public int DropDataId = -1;
     }
 }

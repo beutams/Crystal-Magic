@@ -1,11 +1,9 @@
-using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
+using CrystalMagic.Game.Unit;
 using Unity.Mathematics;
-using Unity.Rendering;
 using Unity.Transforms;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace CrystalMagic.Game.Skill.Effects
 {
@@ -15,7 +13,6 @@ namespace CrystalMagic.Game.Skill.Effects
     public partial class SkillProjectileSpawnSystem : SystemBase
     {
         private EntityQuery _requestQuery;
-        private readonly Dictionary<int, ProjectileRenderAsset> _renderAssetCache = new();
 
         protected override void OnCreate()
         {
@@ -40,14 +37,15 @@ namespace CrystalMagic.Game.Skill.Effects
                     SkillProjectileSpawnRequestComponent request = requests[i];
                     SkillProjectilePayloadComponent payload = EntityManager.GetComponentObject<SkillProjectilePayloadComponent>(requestEntity);
 
-                    if (!TryResolveRenderAsset(payload, out ProjectileRenderAsset renderAsset))
+                    if (!EntitySpawnRegistryUtility.TryInstantiateProjectile(EntityManager, request.ProjectileName, out Entity projectileEntity))
                     {
+                        Debug.LogError($"[SkillProjectileSpawnSystem] Missing projectile prefab in registry: {request.ProjectileName}");
                         if (EntityManager.Exists(requestEntity))
                             EntityManager.DestroyEntity(requestEntity);
                         continue;
                     }
 
-                    SpawnProjectile(request, payload, renderAsset);
+                    SpawnProjectile(projectileEntity, request, payload);
 
                     if (EntityManager.Exists(requestEntity))
                         EntityManager.DestroyEntity(requestEntity);
@@ -61,29 +59,25 @@ namespace CrystalMagic.Game.Skill.Effects
         }
 
         private void SpawnProjectile(
+            Entity projectileEntity,
             SkillProjectileSpawnRequestComponent request,
-            SkillProjectilePayloadComponent payload,
-            ProjectileRenderAsset renderAsset)
+            SkillProjectilePayloadComponent payload)
         {
-            Entity projectileEntity = EntityManager.CreateEntity();
             quaternion rotation = CreateRotation(request.Direction);
-            float scale = math.max(0.0001f, renderAsset.BaseUniformScale * request.ScaleMultiplier);
+            float prefabScale = 1f;
+            if (EntityManager.HasComponent<LocalTransform>(projectileEntity))
+                prefabScale = math.max(0.0001f, EntityManager.GetComponentData<LocalTransform>(projectileEntity).Scale);
 
-            EntityManager.AddComponentData(
+            float scale = math.max(0.0001f, prefabScale * request.ScaleMultiplier);
+
+            SetOrAddComponentData(
                 projectileEntity,
                 LocalTransform.FromPositionRotationScale(
                     request.StartPosition,
                     rotation,
                     scale));
 
-            RenderMeshUtility.AddComponents(
-                projectileEntity,
-                EntityManager,
-                renderAsset.RenderDescription,
-                renderAsset.RenderMeshArray,
-                MaterialMeshInfo.FromRenderMeshArrayIndices(0, 0));
-
-            EntityManager.AddComponentData(
+            SetOrAddComponentData(
                 projectileEntity,
                 new SkillProjectileComponent
                 {
@@ -97,64 +91,29 @@ namespace CrystalMagic.Game.Skill.Effects
                     TriggerDestroyEffectsOnMaxRange = request.TriggerDestroyEffectsOnMaxRange,
                 });
 
-            EntityManager.AddComponentData(
+            SetOrAddComponentData(
                 projectileEntity,
                 new SkillProjectileStartTimeProperty
                 {
                     Value = (float)SystemAPI.Time.ElapsedTime,
                 });
 
-            EntityManager.AddBuffer<SkillProjectileHitEntityElement>(projectileEntity);
-            EntityManager.AddComponentObject(
-                projectileEntity,
-                new SkillProjectilePayloadComponent
-                {
-                    ProjectilePrefab = payload.ProjectilePrefab,
-                    Context = payload.Context.Clone(),
-                    OnCollisionEffects = payload.OnCollisionEffects,
-                    OnDestroyEffects = payload.OnDestroyEffects,
-                });
+            if (!EntityManager.HasBuffer<SkillProjectileHitEntityElement>(projectileEntity))
+                EntityManager.AddBuffer<SkillProjectileHitEntityElement>(projectileEntity);
+            else
+                EntityManager.GetBuffer<SkillProjectileHitEntityElement>(projectileEntity).Clear();
+
+            EnsureDestroyFlagDisabled(projectileEntity);
+
+            ApplyPayloadComponent(projectileEntity, payload);
         }
 
-        private bool TryResolveRenderAsset(SkillProjectilePayloadComponent payload, out ProjectileRenderAsset asset)
+        private void EnsureDestroyFlagDisabled(Entity entity)
         {
-            asset = default;
-            if (payload?.ProjectilePrefab == null)
-                return false;
+            if (!EntityManager.HasComponent<DestroyEntityFlag>(entity))
+                EntityManager.AddComponent<DestroyEntityFlag>(entity);
 
-            int prefabId = payload.ProjectilePrefab.GetInstanceID();
-            if (_renderAssetCache.TryGetValue(prefabId, out asset))
-                return true;
-
-            MeshFilter meshFilter = payload.ProjectilePrefab.GetComponent<MeshFilter>();
-            MeshRenderer meshRenderer = payload.ProjectilePrefab.GetComponent<MeshRenderer>();
-            if (meshFilter == null || meshFilter.sharedMesh == null || meshRenderer == null || meshRenderer.sharedMaterial == null)
-            {
-                Debug.LogError($"[SkillProjectileSpawnSystem] Invalid projectile prefab: {payload.ProjectilePrefab.name}");
-                return false;
-            }
-
-            Material material = meshRenderer.sharedMaterial;
-            if (!material.enableInstancing)
-                material.enableInstancing = true;
-
-            asset = new ProjectileRenderAsset
-            {
-                RenderDescription = new RenderMeshDescription(meshRenderer),
-                RenderMeshArray = new RenderMeshArray(new[] { material }, new[] { meshFilter.sharedMesh }),
-                BaseUniformScale = ResolveUniformScale(payload.ProjectilePrefab.transform.localScale),
-            };
-
-            _renderAssetCache[prefabId] = asset;
-            return true;
-        }
-
-        private static float ResolveUniformScale(Vector3 localScale)
-        {
-            float x = math.abs(localScale.x);
-            float y = math.abs(localScale.y);
-            float z = math.abs(localScale.z);
-            return math.max(0.0001f, math.max(x, math.max(y, z)));
+            EntityManager.SetComponentEnabled<DestroyEntityFlag>(entity, false);
         }
 
         private static quaternion CreateRotation(float3 direction)
@@ -164,11 +123,34 @@ namespace CrystalMagic.Game.Skill.Effects
             return quaternion.RotateZ(angle);
         }
 
-        private struct ProjectileRenderAsset
+        private void SetOrAddComponentData<T>(Entity entity, T value)
+            where T : unmanaged, IComponentData
         {
-            public RenderMeshDescription RenderDescription;
-            public RenderMeshArray RenderMeshArray;
-            public float BaseUniformScale;
+            if (EntityManager.HasComponent<T>(entity))
+                EntityManager.SetComponentData(entity, value);
+            else
+                EntityManager.AddComponentData(entity, value);
+        }
+
+        private void ApplyPayloadComponent(Entity entity, SkillProjectilePayloadComponent payload)
+        {
+            if (EntityManager.HasComponent<SkillProjectilePayloadComponent>(entity))
+            {
+                SkillProjectilePayloadComponent existing = EntityManager.GetComponentObject<SkillProjectilePayloadComponent>(entity);
+                existing.Context = payload.Context.Clone();
+                existing.OnCollisionEffects = payload.OnCollisionEffects;
+                existing.OnDestroyEffects = payload.OnDestroyEffects;
+                return;
+            }
+
+            EntityManager.AddComponentObject(
+                entity,
+                new SkillProjectilePayloadComponent
+                {
+                    Context = payload.Context.Clone(),
+                    OnCollisionEffects = payload.OnCollisionEffects,
+                    OnDestroyEffects = payload.OnDestroyEffects,
+                });
         }
     }
 }

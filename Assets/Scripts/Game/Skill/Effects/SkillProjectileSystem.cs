@@ -150,7 +150,12 @@ namespace CrystalMagic.Game.Skill.Effects
             }
 
             if (EntityManager.Exists(entity))
-                EntityManager.DestroyEntity(entity);
+            {
+                if (!EntityManager.HasComponent<DestroyEntityFlag>(entity))
+                    EntityManager.AddComponent<DestroyEntityFlag>(entity);
+
+                EntityManager.SetComponentEnabled<DestroyEntityFlag>(entity, true);
+            }
         }
 
         private SkillContent BuildHitContext(SkillContent baseContext, Entity hitEntity, float3 hitPosition)

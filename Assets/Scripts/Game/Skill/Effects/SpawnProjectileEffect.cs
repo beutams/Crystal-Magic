@@ -1,4 +1,5 @@
 using CrystalMagic.Game.Data.Effects;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -72,6 +73,7 @@ namespace CrystalMagic.Game.Skill.Effects
                 requestEntity,
                 new SkillProjectileSpawnRequestComponent
                 {
+                    ProjectileName = new FixedString128Bytes(Data.Projectile.name),
                     StartPosition = new float3(startPosition.x, startPosition.y, startPosition.z),
                     Direction = new float3(direction.x, direction.y, direction.z),
                     Speed = Data.Speed,
@@ -86,7 +88,6 @@ namespace CrystalMagic.Game.Skill.Effects
                 requestEntity,
                 new SkillProjectilePayloadComponent
                 {
-                    ProjectilePrefab = Data.Projectile,
                     Context = context.Clone(),
                     OnCollisionEffects = Data.OnCollisionEffects,
                     OnDestroyEffects = Data.OnDestroyEffects,

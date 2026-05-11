@@ -91,6 +91,13 @@ public sealed class RepeaterBehaviorNode : DecoratorBehaviorNode
         if (_data.RepeatCount == 0)
             return BehaviorNodeStatus.Success;
 
+        return _data.ExecutionMode == RepeaterExecutionMode.OncePerTick
+            ? TickOncePerTick(context)
+            : TickImmediate(context);
+    }
+
+    private BehaviorNodeStatus TickImmediate(BehaviorTreeContext context)
+    {
         int maxIterations = _data.RepeatCount < 0
             ? DecoratorLoopGuard.MaxImmediateIterationsPerTick
             : Mathf.Max(0, _data.RepeatCount - _completedCount);
@@ -140,6 +147,38 @@ public sealed class RepeaterBehaviorNode : DecoratorBehaviorNode
         }
 
         return BehaviorNodeStatus.Running;
+    }
+
+    private BehaviorNodeStatus TickOncePerTick(BehaviorTreeContext context)
+    {
+        BehaviorNodeStatus status = Child.Tick(context);
+        switch (status)
+        {
+            case BehaviorNodeStatus.Running:
+                return BehaviorNodeStatus.Running;
+
+            case BehaviorNodeStatus.Failure:
+                Child.Reset();
+                _completedCount = 0;
+                return BehaviorNodeStatus.Failure;
+
+            case BehaviorNodeStatus.Success:
+                _completedCount++;
+                Child.Reset();
+
+                if (_data.RepeatCount >= 0 && _completedCount >= _data.RepeatCount)
+                {
+                    _completedCount = 0;
+                    return BehaviorNodeStatus.Success;
+                }
+
+                return BehaviorNodeStatus.Running;
+
+            default:
+                Child.Reset();
+                _completedCount = 0;
+                return BehaviorNodeStatus.Failure;
+        }
     }
 
     public override void Reset()

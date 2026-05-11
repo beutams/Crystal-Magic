@@ -114,32 +114,7 @@
 
         private void AddItem(System.Collections.Generic.List<CrystalMagic.Core.InventoryItemData> items, int itemId, int quantity, CrystalMagic.Game.Data.ItemType fallbackItemType)
         {
-            CrystalMagic.Game.Data.ItemData itemData = CrystalMagic.Core.DataComponent.Instance.Get<CrystalMagic.Game.Data.ItemData>(itemId);
-            int maxStack = itemData != null && itemData.MaxStack > 0 ? itemData.MaxStack : 1;
-            int remaining = quantity;
-
-            for (int i = 0; i < items.Count && remaining > 0; i++)
-            {
-                CrystalMagic.Core.InventoryItemData inventoryItem = items[i];
-                if (inventoryItem == null || inventoryItem.ItemId != itemId || inventoryItem.Quantity >= maxStack)
-                    continue;
-
-                int addCount = UnityEngine.Mathf.Min(maxStack - inventoryItem.Quantity, remaining);
-                inventoryItem.Quantity += addCount;
-                remaining -= addCount;
-            }
-
-            while (remaining > 0)
-            {
-                int addCount = UnityEngine.Mathf.Min(maxStack, remaining);
-                items.Add(new CrystalMagic.Core.InventoryItemData
-                {
-                    ItemId = itemId,
-                    Quantity = addCount,
-                    ItemType = itemData != null ? itemData.ItemType : fallbackItemType,
-                });
-                remaining -= addCount;
-            }
+            CrystalMagic.Core.InventoryUtility.AddItem(items, int.MaxValue, itemId, quantity, fallbackItemType);
         }
     }
 }

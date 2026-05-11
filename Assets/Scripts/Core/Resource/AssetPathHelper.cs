@@ -13,6 +13,10 @@ namespace CrystalMagic.Core {
         private const string UIPath = "UI";
         private const string DataPath = "Data";
         private const string ConfigPath = "Config";
+        private const string PrefabPath = "Prefab";
+        private const string UnitPrefabPath = "Unit";
+        private const string ProjectilePrefabPath = "Projectile";
+        private const string DropPrefabPath = "Drop";
         private const string PrefabExt = ".prefab";
         private const string JsonExt = ".json";
 
@@ -53,6 +57,36 @@ namespace CrystalMagic.Core {
         public static string GetDataAsset(string tableName)
         {
             return $"{ResRootPath}/{DataPath}/{tableName}{JsonExt}";
+        }
+
+        public static string GetUnitPrefabDirectory()
+        {
+            return $"{ResRootPath}/{PrefabPath}/{UnitPrefabPath}";
+        }
+
+        public static string GetProjectilePrefabDirectory()
+        {
+            return $"{ResRootPath}/{PrefabPath}/{ProjectilePrefabPath}";
+        }
+
+        public static string GetDropPrefabDirectory()
+        {
+            return $"{ResRootPath}/{PrefabPath}/{DropPrefabPath}";
+        }
+
+        public static string GetUnitPrefabAsset(string prefabName)
+        {
+            return $"{GetUnitPrefabDirectory()}/{prefabName}{PrefabExt}";
+        }
+
+        public static string GetProjectilePrefabAsset(string prefabName)
+        {
+            return $"{GetProjectilePrefabDirectory()}/{prefabName}{PrefabExt}";
+        }
+
+        public static string GetDropPrefabAsset(string prefabName)
+        {
+            return $"{GetDropPrefabDirectory()}/{prefabName}{PrefabExt}";
         }
 
         /// <summary>

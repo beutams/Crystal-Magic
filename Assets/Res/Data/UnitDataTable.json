@@ -166,6 +166,10 @@
           "BaseMpRegenPerSecond": 0.0
         },
         {
+          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+          "Faction": 0
+        },
+        {
           "$type": "CrystalMagic.Game.Data.UnitStateMachineModuleData, Assembly-CSharp",
           "States": [
             {
@@ -208,7 +212,7 @@
     {
       "Name": "PlayerTown",
       "Description": "城镇中的玩家角色",
-      "PrefabPath": "Assets/Res/Unit/PlayerTown.prefab",
+      "PrefabPath": "Assets/Res/Prefab/Unit/PlayerTown.prefab",
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
@@ -280,7 +284,7 @@
     {
       "Name": "SkillShop",
       "Description": "",
-      "PrefabPath": "Assets/Res/Unit/SkillShop.prefab",
+      "PrefabPath": "Assets/Res/Prefab/Unit/SkillShop.prefab",
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
@@ -324,7 +328,7 @@
     {
       "Name": "Stash",
       "Description": "",
-      "PrefabPath": "Assets/Res/Unit/Stash.prefab",
+      "PrefabPath": "Assets/Res/Prefab/Unit/Stash.prefab",
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
@@ -368,7 +372,7 @@
     {
       "Name": "Training",
       "Description": "",
-      "PrefabPath": "Assets/Res/Unit/Training.prefab",
+      "PrefabPath": "Assets/Res/Prefab/Unit/Training.prefab",
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
@@ -412,7 +416,7 @@
     {
       "Name": "PlayerDungeon",
       "Description": "",
-      "PrefabPath": "Assets/Res/Unit/PlayerDungeon.prefab",
+      "PrefabPath": "Assets/Res/Prefab/Unit/PlayerDungeon.prefab",
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
@@ -440,6 +444,10 @@
           "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
           "BaseMaxMp": 100.0,
           "BaseMpRegenPerSecond": 10.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+          "Faction": 0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitStateMachineModuleData, Assembly-CSharp",
@@ -545,7 +553,7 @@
     {
       "Name": "Enemy",
       "Description": "",
-      "PrefabPath": "Assets/Res/Unit/Enemy.prefab",
+      "PrefabPath": "Assets/Res/Prefab/Unit/Enemy.prefab",
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
@@ -573,6 +581,14 @@
           "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
           "BaseMaxMp": 100.0,
           "BaseMpRegenPerSecond": 10.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+          "Faction": 2
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
+          "SearchRadius": 8.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitSkillModuleData, Assembly-CSharp",
@@ -685,6 +701,10 @@
               ]
             }
           ]
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
+          "DropDataId": -1
         }
       ],
       "Id": 8
