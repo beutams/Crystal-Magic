@@ -21,7 +21,7 @@ public struct UnitQueryEntry : IBufferElementData
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateBefore(typeof(UnitPerceptionSystem))]
-[UpdateBefore(typeof(CrystalMagic.Game.Skill.Effects.SkillProjectileSystem))]
+[UpdateBefore(typeof(SkillProjectileSystem))]
 partial class UnitQueryBuildSystem : SystemBase
 {
     private Entity _singletonEntity;

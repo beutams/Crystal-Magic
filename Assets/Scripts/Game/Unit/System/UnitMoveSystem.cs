@@ -2,6 +2,7 @@ using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
+using Unity.Transforms;
 
 [BurstCompile]
 [UpdateAfter(typeof(UnitStateTransitionSystem))]
@@ -20,7 +21,7 @@ public partial struct UnitMoveJob : IJobEntity
 {
     public float DeltaTime;
 
-    public void Execute(ref UnitMoveComponent move, ref PhysicsVelocity physicsVelocity)
+    public void Execute(ref UnitMoveComponent move, ref PhysicsVelocity physicsVelocity, ref LocalTransform transform)
     {
         float maxSpeed = move.RealMoveSpeed;
         float maxAccel = move.RealMaxAcceleration;
@@ -44,5 +45,7 @@ public partial struct UnitMoveJob : IJobEntity
 
         physicsVelocity.Linear = new float3(move.Velocity.x, move.Velocity.y, 0f);
         physicsVelocity.Angular = float3.zero;
+        transform.Position.z = 0f;
+        transform.Rotation = quaternion.identity;
     }
 }

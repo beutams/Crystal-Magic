@@ -5,6 +5,15 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 
+public enum SkillAdvanceResult : byte
+{
+    None = 0,
+    Running = 1,
+    Completed = 2,
+    Interrupted = 3,
+    Failed = 4,
+}
+
 public static class SkillExecutionUtility
 {
     private static readonly SkillContent SkillContent = new();
@@ -30,7 +39,7 @@ public static class SkillExecutionUtility
         if (cast.SkillIds.Length == 0)
             return false;
 
-        if (!TryStartSkill(entityManager, entity, ref cast, 0, out _))
+        if (!TryStartSkillAtIndex(entityManager, entity, ref cast, 0, out _))
         {
             ResetCastState(ref cast);
             return false;
@@ -40,21 +49,21 @@ public static class SkillExecutionUtility
         return true;
     }
 
-    public static void AdvanceCast(EntityManager entityManager, Entity entity, float deltaTime, ref UnitCastComponent cast)
+    public static SkillAdvanceResult AdvanceCurrentSkill(EntityManager entityManager, Entity entity, float deltaTime, ref UnitCastComponent cast)
     {
         if (!cast.IsCasting)
-            return;
+            return SkillAdvanceResult.None;
 
         if (cast.ForceInterrupt)
         {
-            InterruptCast(ref cast);
-            return;
+            InterruptCurrentSkill(ref cast);
+            return SkillAdvanceResult.Interrupted;
         }
 
         if (!TryGetCurrentSkill(entityManager, entity, cast, out _))
         {
-            InterruptCast(ref cast);
-            return;
+            InterruptCurrentSkill(ref cast);
+            return SkillAdvanceResult.Failed;
         }
 
         float remainingTime = deltaTime;
@@ -64,8 +73,8 @@ public static class SkillExecutionUtility
         {
             if (!TryGetCurrentSkill(entityManager, entity, cast, out ResolvedSkillData skillData))
             {
-                FinishCast(ref cast);
-                break;
+                InterruptCurrentSkill(ref cast);
+                return SkillAdvanceResult.Failed;
             }
 
             float phaseDuration = GetPhaseDuration(skillData, cast.Phase);
@@ -74,18 +83,21 @@ public static class SkillExecutionUtility
             if (phaseRemaining > remainingTime && phaseRemaining > 0f)
             {
                 cast.PhaseElapsed += remainingTime;
-                break;
+                return SkillAdvanceResult.Running;
             }
 
             cast.PhaseElapsed = phaseDuration;
             remainingTime = math.max(remainingTime - phaseRemaining, 0f);
 
-            if (!AdvancePhase(entityManager, entity, skillData, ref cast))
-                break;
+            SkillAdvanceResult phaseResult = AdvancePhase(entityManager, entity, skillData, ref cast);
+            if (phaseResult != SkillAdvanceResult.Running)
+                return phaseResult;
 
             if (remainingTime <= 0f)
-                break;
+                return SkillAdvanceResult.Running;
         }
+
+        return cast.IsCasting ? SkillAdvanceResult.Running : SkillAdvanceResult.Completed;
     }
 
     public static void ApplyMovement(EntityManager entityManager, Entity entity, in UnitCastComponent cast)
@@ -116,7 +128,7 @@ public static class SkillExecutionUtility
         entityManager.SetComponentData(entity, move);
     }
 
-    private static bool AdvancePhase(EntityManager entityManager, Entity entity, ResolvedSkillData skillData, ref UnitCastComponent cast)
+    private static SkillAdvanceResult AdvancePhase(EntityManager entityManager, Entity entity, ResolvedSkillData skillData, ref UnitCastComponent cast)
     {
         switch (cast.Phase)
         {
@@ -125,13 +137,13 @@ public static class SkillExecutionUtility
                 cast.PhaseElapsed = 0f;
                 cast.PhaseDuration = GetPhaseDuration(skillData, SkillCastPhase.Chanting);
                 LogPhase("Start Chanting", cast);
-                return true;
+                return SkillAdvanceResult.Running;
 
             case SkillCastPhase.Chanting:
                 if (!TryExecuteSkill(entityManager, entity, cast, skillData))
                 {
-                    InterruptCast(ref cast);
-                    return false;
+                    InterruptCurrentSkill(ref cast);
+                    return SkillAdvanceResult.Failed;
                 }
 
                 Debug.Log($"[CastState] Chanting Completed | Chain={cast.CurrentChainIndex} SkillIndex={cast.CurrentSkillIndex} SkillId={cast.CurrentSkillId}");
@@ -139,28 +151,15 @@ public static class SkillExecutionUtility
                 cast.PhaseElapsed = 0f;
                 cast.PhaseDuration = GetPhaseDuration(skillData, SkillCastPhase.Recovery);
                 LogPhase("Start Recovery", cast);
-                return true;
+                return SkillAdvanceResult.Running;
 
             case SkillCastPhase.Recovery:
-                int nextSkillIndex = cast.CurrentSkillIndex + 1;
-                if (nextSkillIndex >= cast.SkillIds.Length)
-                {
-                    FinishCast(ref cast);
-                    return false;
-                }
-
-                if (!TryStartSkill(entityManager, entity, ref cast, nextSkillIndex, out _))
-                {
-                    InterruptCast(ref cast);
-                    return false;
-                }
-
-                LogPhase("Start Windup", cast);
-                return true;
+                CompleteCurrentSkill(ref cast);
+                return SkillAdvanceResult.Completed;
 
             default:
-                FinishCast(ref cast);
-                return false;
+                InterruptCurrentSkill(ref cast);
+                return SkillAdvanceResult.Failed;
         }
     }
 
@@ -181,7 +180,7 @@ public static class SkillExecutionUtility
         return true;
     }
 
-    private static bool TryStartSkill(EntityManager entityManager, Entity entity, ref UnitCastComponent cast, int skillIndex, out ResolvedSkillData skillData)
+    public static bool TryStartSkillAtIndex(EntityManager entityManager, Entity entity, ref UnitCastComponent cast, int skillIndex, out ResolvedSkillData skillData)
     {
         cast.CurrentSkillIndex = skillIndex;
         cast.CurrentSkillId = skillIndex >= 0 && skillIndex < cast.SkillIds.Length
@@ -269,14 +268,18 @@ public static class SkillExecutionUtility
         };
     }
 
-    private static void InterruptCast(ref UnitCastComponent cast)
+    private static void InterruptCurrentSkill(ref UnitCastComponent cast)
     {
-        FinishCast(ref cast);
+        CompleteCurrentSkill(ref cast);
     }
 
-    private static void FinishCast(ref UnitCastComponent cast)
+    private static void CompleteCurrentSkill(ref UnitCastComponent cast)
     {
-        ResetCastState(ref cast);
+        cast.IsCasting = false;
+        cast.ForceInterrupt = false;
+        cast.Phase = SkillCastPhase.None;
+        cast.PhaseElapsed = 0f;
+        cast.PhaseDuration = 0f;
     }
 
     public static void ResetCastState(ref UnitCastComponent cast)

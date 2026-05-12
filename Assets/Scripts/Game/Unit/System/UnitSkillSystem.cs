@@ -9,15 +9,10 @@ partial class UnitSkillSystem : SystemBase
     {
         float deltaTime = SystemAPI.Time.DeltaTime;
 
-        foreach (var (unitSkillRef, castRef, entity) in SystemAPI.Query<RefRW<UnitSkillComponent>, RefRW<UnitCastComponent>>().WithNone<PlayerTag>().WithEntityAccess())
+        foreach (RefRW<UnitSkillComponent> unitSkillRef in SystemAPI.Query<RefRW<UnitSkillComponent>>().WithNone<PlayerTag>())
         {
             UnitSkillComponent unitSkill = unitSkillRef.ValueRW;
             TickCooldowns(deltaTime, ref unitSkill);
-
-            if (unitSkill.HasPendingCast && !castRef.ValueRO.IsCasting)
-            {
-                TryStartPendingUnitSkill(entity, ref unitSkill, ref castRef.ValueRW);
-            }
 
             unitSkillRef.ValueRW = unitSkill;
         }
@@ -36,38 +31,4 @@ partial class UnitSkillSystem : SystemBase
         }
     }
 
-    private void TryStartPendingUnitSkill(Entity entity, ref UnitSkillComponent unitSkill, ref UnitCastComponent cast)
-    {
-        int skillIndex = unitSkill.PendingSkillIndex;
-        if (skillIndex < 0 || skillIndex >= unitSkill.Skills.Length)
-        {
-            unitSkill.ClearPending();
-            return;
-        }
-
-        UnitSkillEntry entry = unitSkill.Skills[skillIndex];
-        Unity.Collections.FixedList64Bytes<int> skillIds = default;
-        Unity.Collections.FixedList64Bytes<int> skillEffectIds = default;
-        skillIds.Add(entry.SkillId);
-        skillEffectIds.Add(entry.SkillEffectId);
-
-        bool started = SkillExecutionUtility.TryBeginCast(
-            EntityManager,
-            entity,
-            ref cast,
-            skillIds,
-            skillEffectIds,
-            -1,
-            unitSkill.HasLockedTarget,
-            unitSkill.LockedTargetPosition);
-
-        if (started)
-        {
-            entry.CooldownRemaining = math.max(0f, entry.CooldownSeconds);
-            unitSkill.Skills[skillIndex] = entry;
-        }
-
-        unitSkill.ClearPending();
-        unitSkill.ClearRequest();
-    }
 }
