@@ -76,6 +76,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "UseProp",
+                    "type": "Value",
+                    "id": "2a60ad94-4492-4415-acc0-d1a9890f0ea7",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
                 }
             ],
             "bindings": [
@@ -252,6 +261,39 @@
                     "processors": "",
                     "groups": "",
                     "action": "Property",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "7f0054a8-0051-4228-9853-084ff12cdbb8",
+                    "path": "<Keyboard>/z",
+                    "interactions": "",
+                    "processors": "Scale",
+                    "groups": "",
+                    "action": "UseProp",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "bcf215d3-cf88-4464-b71d-a10c7b880d39",
+                    "path": "<Keyboard>/x",
+                    "interactions": "",
+                    "processors": "Scale(factor=2)",
+                    "groups": "",
+                    "action": "UseProp",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "69fc7750-91a3-4958-a3ef-84698d78f47a",
+                    "path": "<Keyboard>/c",
+                    "interactions": "",
+                    "processors": "Scale(factor=3)",
+                    "groups": "",
+                    "action": "UseProp",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

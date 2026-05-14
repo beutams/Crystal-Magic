@@ -134,6 +134,7 @@ namespace CrystalMagic.Editor.Data
 
                 if (currentEvent.type == EventType.MouseDown && itemRect.Contains(currentEvent.mousePosition))
                 {
+                    CrystalMagic.Editor.EditorFocusUtility.ClearTextFocus();
                     _selectedIndex = i;
                     currentEvent.Use();
                     Repaint();
@@ -169,7 +170,8 @@ namespace CrystalMagic.Editor.Data
             _detailScrollPos = EditorGUILayout.BeginScrollView(_detailScrollPos);
 
             EditorGUI.BeginChangeCheck();
-            row.Id = EditorGUILayout.IntField("Id", row.Id);
+            using (new EditorGUI.DisabledScope(true))
+                EditorGUILayout.IntField("Id", row.Id);
             row.Name = EditorGUILayout.TextField("Name", row.Name ?? string.Empty);
             EditorGUILayout.LabelField("Description");
             row.Description = EditorGUILayout.TextArea(row.Description ?? string.Empty, GUILayout.MinHeight(48f), GUILayout.MaxHeight(80f));
@@ -225,7 +227,7 @@ namespace CrystalMagic.Editor.Data
 
         private void AddRow()
         {
-            int nextId = _rows.Count == 0 ? 1 : _rows.Max(row => row.Id) + 1;
+            int nextId = _rows.Count;
             DropData row = new DropData
             {
                 Id = nextId,
@@ -245,7 +247,7 @@ namespace CrystalMagic.Editor.Data
 
             string json = JsonConvert.SerializeObject(_rows[_selectedIndex], JsonSettings);
             DropData copy = JsonConvert.DeserializeObject<DropData>(json, JsonSettings) ?? new DropData();
-            copy.Id = _rows.Count == 0 ? 1 : _rows.Max(row => row.Id) + 1;
+            copy.Id = _rows.Count;
             copy.Name = $"{copy.Name} Copy";
             copy.EnsureValid();
             _rows.Add(copy);
@@ -286,6 +288,8 @@ namespace CrystalMagic.Editor.Data
                         row?.EnsureValid();
                 }
 
+                NormalizeRowIds();
+
                 _statusText = $"Loaded {_rows.Count} rows · {DataPath}";
             }
             catch (Exception ex)
@@ -306,6 +310,7 @@ namespace CrystalMagic.Editor.Data
 
             try
             {
+                NormalizeRowIds();
                 foreach (DropData row in _rows)
                     row?.EnsureValid();
 
@@ -326,7 +331,7 @@ namespace CrystalMagic.Editor.Data
         {
             List<ItemOption> options = new()
             {
-                new ItemOption { Id = 0, Label = "None" }
+                new ItemOption { Id = -1, Label = "None" }
             };
 
             foreach (ItemData row in EditorComponents.Data.FindAll<ItemData>(_ => true).OrderBy(row => row.Id))
@@ -356,6 +361,12 @@ namespace CrystalMagic.Editor.Data
             string[] labels = options.Select(option => option.Label).ToArray();
             int newIndex = EditorGUILayout.Popup(label, selectedIndex, labels);
             return newIndex >= 0 && newIndex < options.Count ? options[newIndex].Id : currentId;
+        }
+
+        private void NormalizeRowIds()
+        {
+            for (int i = 0; i < _rows.Count; i++)
+                _rows[i].Id = i;
         }
 
     }

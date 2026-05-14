@@ -1,0 +1,297 @@
+using CrystalMagic.Core;
+using CrystalMagic.Game.Config;
+using CrystalMagic.Game.Data;
+using CrystalMagic.Game.Skill;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Transforms;
+using UnityEngine;
+
+namespace CrystalMagic.Game
+{
+    public enum PropUseFailureReason
+    {
+        None = 0,
+        NotInBattleArea = 1,
+        SharedCooldownActive = 2,
+        PlayerNotFound = 3,
+        InvalidBackpackSlot = 4,
+        ItemNotFound = 5,
+        ItemNotUsable = 6,
+        MissingUseData = 7,
+        TargetMissing = 8,
+        ConsumeFailed = 9,
+    }
+
+    public struct PropUseRequestContext
+    {
+        public EntityManager EntityManager;
+        public Entity UserEntity;
+        public bool HasTargetEntity;
+        public Entity TargetEntity;
+        public bool HasTargetPosition;
+        public Vector3 TargetPosition;
+    }
+
+    public static class PropUseUtility
+    {
+        public static bool TryUseBackpackSlot(int slotIndex, out PropUseFailureReason failureReason)
+        {
+            if (!TryBuildDefaultContext(out PropUseRequestContext context, out failureReason))
+                return false;
+
+            return TryUseBackpackSlot(slotIndex, context, out failureReason);
+        }
+
+        public static bool TryUseBackpackSlot(int slotIndex, PropUseRequestContext context, out PropUseFailureReason failureReason)
+        {
+            failureReason = PropUseFailureReason.None;
+            if (!IsBattleArea())
+            {
+                failureReason = PropUseFailureReason.NotInBattleArea;
+                return false;
+            }
+
+            RuntimePropData runtimeItemData = RuntimeDataComponent.Instance.GetPropData();
+            if (runtimeItemData != null && runtimeItemData.SharedCooldownRemaining > 0f)
+            {
+                failureReason = PropUseFailureReason.SharedCooldownActive;
+                return false;
+            }
+
+            BackpackData backpackData = SaveDataComponent.Instance.GetBackpackData();
+            if (backpackData?.Items == null || slotIndex < 0 || slotIndex >= backpackData.Items.Count)
+            {
+                failureReason = PropUseFailureReason.InvalidBackpackSlot;
+                return false;
+            }
+
+            InventoryItemData inventoryItem = backpackData.Items[slotIndex];
+            if (inventoryItem == null || inventoryItem.ItemId < 0 || inventoryItem.Quantity <= 0)
+            {
+                failureReason = PropUseFailureReason.ItemNotFound;
+                return false;
+            }
+
+            return TryUseResolvedBackpackItem(backpackData, slotIndex, inventoryItem.ItemId, context, out failureReason);
+        }
+
+        public static bool TryUseBackpackItem(int itemId, out PropUseFailureReason failureReason)
+        {
+            if (!TryBuildDefaultContext(out PropUseRequestContext context, out failureReason))
+                return false;
+
+            return TryUseBackpackItem(itemId, context, out failureReason);
+        }
+
+        public static bool TryUseBackpackItem(int itemId, PropUseRequestContext context, out PropUseFailureReason failureReason)
+        {
+            failureReason = PropUseFailureReason.None;
+            BackpackData backpackData = SaveDataComponent.Instance.GetBackpackData();
+            int slotIndex = InventoryUtility.FindFirstItemSlot(backpackData, itemId);
+            if (slotIndex < 0)
+            {
+                failureReason = PropUseFailureReason.ItemNotFound;
+                return false;
+            }
+
+            return TryUseResolvedBackpackItem(backpackData, slotIndex, itemId, context, out failureReason);
+        }
+
+        public static bool TryBuildDefaultContext(out PropUseRequestContext context, out PropUseFailureReason failureReason)
+        {
+            context = default;
+            failureReason = PropUseFailureReason.None;
+
+            World world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated)
+            {
+                failureReason = PropUseFailureReason.PlayerNotFound;
+                return false;
+            }
+
+            EntityManager entityManager = world.EntityManager;
+            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<PlayerTag>());
+            using NativeArray<Entity> entities = query.ToEntityArray(Allocator.Temp);
+            if (entities.Length <= 0)
+            {
+                failureReason = PropUseFailureReason.PlayerNotFound;
+                return false;
+            }
+
+            Entity player = entities[0];
+            context = new PropUseRequestContext
+            {
+                EntityManager = entityManager,
+                UserEntity = player,
+            };
+
+            if (entityManager.HasComponent<UnitPerceptionComponent>(player))
+            {
+                UnitPerceptionComponent perception = entityManager.GetComponentData<UnitPerceptionComponent>(player);
+                if (perception.HasTarget && perception.TargetEntity != Entity.Null && entityManager.Exists(perception.TargetEntity))
+                {
+                    context.HasTargetEntity = true;
+                    context.TargetEntity = perception.TargetEntity;
+                    context.HasTargetPosition = true;
+                    context.TargetPosition = new Vector3(perception.TargetPosition.x, perception.TargetPosition.y, 0f);
+                }
+            }
+
+            return true;
+        }
+
+        private static bool TryUseResolvedBackpackItem(
+            BackpackData backpackData,
+            int slotIndex,
+            int itemId,
+            PropUseRequestContext context,
+            out PropUseFailureReason failureReason)
+        {
+            failureReason = PropUseFailureReason.None;
+
+            if (!IsBattleArea())
+            {
+                failureReason = PropUseFailureReason.NotInBattleArea;
+                return false;
+            }
+
+            RuntimePropData runtimeItemData = RuntimeDataComponent.Instance.GetPropData();
+            if (runtimeItemData != null && runtimeItemData.SharedCooldownRemaining > 0f)
+            {
+                failureReason = PropUseFailureReason.SharedCooldownActive;
+                return false;
+            }
+
+            ItemData itemData = DataComponent.Instance.Get<ItemData>(itemId);
+            if (itemData == null)
+            {
+                failureReason = PropUseFailureReason.ItemNotFound;
+                return false;
+            }
+
+            if (itemData.ItemType != ItemType.Prop || itemData.ExtraId < 0)
+            {
+                failureReason = PropUseFailureReason.ItemNotUsable;
+                return false;
+            }
+
+            PropData propData = DataComponent.Instance.Get<PropData>(itemData.ExtraId);
+            if (propData == null)
+            {
+                failureReason = PropUseFailureReason.MissingUseData;
+                return false;
+            }
+
+            if (!TryBuildSkillContent(propData, context, out SkillContent skillContent))
+            {
+                failureReason = PropUseFailureReason.TargetMissing;
+                return false;
+            }
+
+            if (!InventoryUtility.TryConsumeBackpackItem(backpackData, slotIndex, itemId, 1))
+            {
+                failureReason = PropUseFailureReason.ConsumeFailed;
+                return false;
+            }
+
+            SkillExecutor.ExecuteEffects(propData.EffectChain, skillContent);
+            SaveDataComponent.Instance.NotifyBackpackDataChanged();
+            RuntimeDataComponent.Instance.StartPropSharedCooldown(GetSharedCooldownSeconds());
+            return true;
+        }
+
+        private static bool TryBuildSkillContent(PropData propData, PropUseRequestContext context, out SkillContent skillContent)
+        {
+            skillContent = null;
+            if (context.UserEntity == Entity.Null || !context.EntityManager.Exists(context.UserEntity))
+                return false;
+
+            float3 userPosition = float3.zero;
+            if (context.EntityManager.HasComponent<LocalTransform>(context.UserEntity))
+                userPosition = context.EntityManager.GetComponentData<LocalTransform>(context.UserEntity).Position;
+
+            SkillContent content = new SkillContent
+            {
+                EntityManager = context.EntityManager,
+                HasOriginEntity = true,
+                OriginEntity = context.UserEntity,
+                HasPosition = true,
+                Position = new Vector3(userPosition.x, userPosition.y, userPosition.z),
+            };
+
+            switch (propData.TargetType)
+            {
+                case PropTargetType.Self:
+                    content.HasTargetEntity = true;
+                    content.TargetEntity = context.UserEntity;
+                    break;
+
+                case PropTargetType.CurrentTarget:
+                    if (!context.HasTargetEntity ||
+                        context.TargetEntity == Entity.Null ||
+                        !context.EntityManager.Exists(context.TargetEntity))
+                    {
+                        return false;
+                    }
+
+                    content.HasTargetEntity = true;
+                    content.TargetEntity = context.TargetEntity;
+                    if (context.EntityManager.HasComponent<LocalTransform>(context.TargetEntity))
+                    {
+                        float3 targetPosition = context.EntityManager.GetComponentData<LocalTransform>(context.TargetEntity).Position;
+                        content.HasPosition = true;
+                        content.Position = new Vector3(targetPosition.x, targetPosition.y, targetPosition.z);
+                    }
+                    break;
+
+                case PropTargetType.TargetPosition:
+                    if (context.HasTargetEntity &&
+                        context.TargetEntity != Entity.Null &&
+                        context.EntityManager.Exists(context.TargetEntity))
+                    {
+                        content.HasTargetEntity = true;
+                        content.TargetEntity = context.TargetEntity;
+                    }
+
+                    if (context.HasTargetPosition)
+                    {
+                        content.HasPosition = true;
+                        content.Position = context.TargetPosition;
+                    }
+                    else if (context.HasTargetEntity &&
+                             context.TargetEntity != Entity.Null &&
+                             context.EntityManager.Exists(context.TargetEntity) &&
+                             context.EntityManager.HasComponent<LocalTransform>(context.TargetEntity))
+                    {
+                        float3 targetPosition = context.EntityManager.GetComponentData<LocalTransform>(context.TargetEntity).Position;
+                        content.HasPosition = true;
+                        content.Position = new Vector3(targetPosition.x, targetPosition.y, targetPosition.z);
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                    break;
+            }
+
+            skillContent = content;
+            return true;
+        }
+
+        private static bool IsBattleArea()
+        {
+            SaveAreaType areaType = SaveDataComponent.Instance.GetLocationData()?.AreaType ?? SaveAreaType.Town;
+            return areaType == SaveAreaType.Training || areaType == SaveAreaType.Dungeon;
+        }
+
+        private static float GetSharedCooldownSeconds()
+        {
+            GameConfig config = ConfigComponent.Instance != null
+                ? ConfigComponent.Instance.Get<GameConfig>()
+                : new GameConfig();
+            return Mathf.Max(0f, config.BattlePropSharedCooldownSeconds);
+        }
+    }
+}

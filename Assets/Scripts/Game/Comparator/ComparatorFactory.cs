@@ -57,7 +57,16 @@ public class ComparatorFactory
         ISource source = CreateSource(cfg.SourceType);
         if (source == null) return null;
 
-        source.Init(context);
+        SourceContext sourceContext = new(
+            context.Entity,
+            context.EntityManager,
+            context.OriginEntity,
+            context.HasOriginEntity,
+            cfg.SourceParam,
+            context.UnitPrefab,
+            context.UnitData,
+            context.HasRuntimeEntity);
+        source.Init(sourceContext);
 
         ICompareType compareType = CreateCompareType(cfg.CompareType, cfg.CompareValue);
         if (compareType == null) return null;

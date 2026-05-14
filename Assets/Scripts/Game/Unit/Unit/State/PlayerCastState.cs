@@ -21,7 +21,7 @@ public class PlayerCastState : AUnitState
             return;
 
         Unity.Collections.FixedList64Bytes<int> skillIds = default;
-        Unity.Collections.FixedList64Bytes<int> skillEffectIds = default;
+        Unity.Collections.FixedList64Bytes<int> skillAdditionIds = default;
 
         for (int i = 0; i < _skillSlots.Count; i++)
         {
@@ -31,11 +31,11 @@ public class PlayerCastState : AUnitState
                 continue;
 
             if (skillIds.Length >= skillIds.Capacity ||
-                skillEffectIds.Length >= skillEffectIds.Capacity)
+                skillAdditionIds.Length >= skillAdditionIds.Capacity)
                 break;
 
             skillIds.Add(skillData.Id);
-            skillEffectIds.Add(slotData?.SkillEffectId ?? 0);
+            skillAdditionIds.Add(slotData?.SkillAdditionId ?? -1);
         }
 
         UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
@@ -52,7 +52,7 @@ public class PlayerCastState : AUnitState
                 Entity,
                 ref cast,
                 skillIds,
-                skillEffectIds,
+                skillAdditionIds,
                 chainIndex,
                 hasLockedTarget: true,
                 lockedTargetPosition: intent.CastTargetPosition))

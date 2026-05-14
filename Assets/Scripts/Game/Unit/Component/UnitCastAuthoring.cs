@@ -26,7 +26,7 @@ public enum SkillCastPhase : byte
 public struct UnitCastComponent : IComponentData
 {
     public FixedList64Bytes<int> SkillIds;
-    public FixedList64Bytes<int> SkillEffectIds;
+    public FixedList64Bytes<int> SkillAdditionIds;
 
     /// <summary>
     /// 当前单位是否正在执行技能释放流程。

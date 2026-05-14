@@ -12,6 +12,7 @@ namespace CrystalMagic.Game.Skill
         private static readonly int FrameCountId = Shader.PropertyToID("_FrameCount");
         private static readonly int GridXId = Shader.PropertyToID("_GridX");
         private static readonly int GridYId = Shader.PropertyToID("_GridY");
+        private static readonly int BaseMapId = Shader.PropertyToID("_BaseMap");
 
         [SerializeField, Min(1)] private int _gridX = 4;
         [SerializeField, Min(1)] private int _gridY = 4;
@@ -24,9 +25,12 @@ namespace CrystalMagic.Game.Skill
         private Renderer[] _renderers;
         private float _startTime;
         private bool _initialized;
+        private Texture _overrideTexture;
 
-        public void Initialize(bool loop, bool destroyWhenFinished)
+        public void Initialize(Texture overrideTexture, int frameCount, bool loop, bool destroyWhenFinished)
         {
+            _overrideTexture = overrideTexture;
+            _frameCount = Mathf.Clamp(frameCount, 1, 16);
             _loop = loop;
             _destroyWhenFinished = destroyWhenFinished;
             _initialized = true;
@@ -84,7 +88,9 @@ namespace CrystalMagic.Game.Skill
                 if (renderer == null)
                     continue;
 
-                renderer.GetPropertyBlock(_propertyBlock);
+                _propertyBlock.Clear();
+                if (_overrideTexture != null)
+                    _propertyBlock.SetTexture(BaseMapId, _overrideTexture);
                 _propertyBlock.SetFloat(StartTimeId, _startTime);
                 _propertyBlock.SetFloat(FpsId, _fps);
                 _propertyBlock.SetFloat(LoopId, _loop ? 1f : 0f);

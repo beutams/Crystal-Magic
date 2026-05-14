@@ -73,7 +73,7 @@ partial class NPCInteractionConsumeSystem : SystemBase
         }
 
         NPCInteractable interactable = EntityManager.GetComponentData<NPCInteractable>(target);
-        if (interactable.NpcDataId <= 0)
+        if (interactable.NpcDataId < 0)
         {
             Debug.LogWarning("[NPCInteraction] NPCInteractable is missing NpcDataId.");
             return;

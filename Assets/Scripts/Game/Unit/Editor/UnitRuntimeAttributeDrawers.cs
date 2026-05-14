@@ -76,8 +76,8 @@ namespace CrystalMagic.Editor.Unit
             UnitEditorWindow.DrawSectionHeader("Attack");
             EditorGUILayout.FloatField("Attack Power", attack.RealAttackPower);
             EditorGUILayout.FloatField("Skill Range", attack.RealSkillRange);
-            EditorGUILayout.FloatField("Action Speed", attack.RealActionSpeedBonus);
-            EditorGUILayout.FloatField("Chant Speed", attack.RealChantSpeedBonus);
+            EditorGUILayout.FloatField("Action Speed (-100~100)", attack.RealActionSpeedBonus);
+            EditorGUILayout.FloatField("Chant Speed (-100~100)", attack.RealChantSpeedBonus);
         }
     }
 

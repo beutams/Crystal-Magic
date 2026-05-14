@@ -30,7 +30,7 @@ partial class UnitDropOnDestroySystem : SystemBase
                      .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)
                      .WithEntityAccess())
         {
-            if (!destroyFlag.ValueRO || unitDrop.ValueRO.DropDataId <= 0)
+            if (!destroyFlag.ValueRO || unitDrop.ValueRO.DropDataId < 0)
                 continue;
 
             DropData dropData = DataComponent.Instance.Get<DropData>(unitDrop.ValueRO.DropDataId);
@@ -70,7 +70,7 @@ partial class UnitDropOnDestroySystem : SystemBase
         return entry.DropType switch
         {
             DropRewardType.Money => true,
-            _ => entry.ItemId > 0,
+            _ => entry.ItemId >= 0,
         };
     }
 

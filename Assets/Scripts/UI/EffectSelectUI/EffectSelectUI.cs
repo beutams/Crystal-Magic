@@ -8,11 +8,11 @@ public class EffectSelectUI : UIBase<EffectSelectUIData, EffectSelectUIModel>
 {
     private readonly List<EffectSelectUI_ItemView> _itemViews = new();
     private Coroutine _itemHoverCoroutine;
-    private EffectSelectEffectDisplayData _hoveredItem;
+    private EffectSelectAdditionDisplayData _hoveredItem;
 
-    public event Action<EffectSelectEffectDisplayData> ItemHoverReady;
+    public event Action<EffectSelectAdditionDisplayData> ItemHoverReady;
     public event Action ItemHoverExited;
-    public event Action<EffectSelectEffectDisplayData> ItemSelected;
+    public event Action<EffectSelectAdditionDisplayData> ItemSelected;
 
     protected override void OnInit()
     {
@@ -39,14 +39,14 @@ public class EffectSelectUI : UIBase<EffectSelectUIData, EffectSelectUIModel>
         RenderItems(Model.Items);
     }
 
-    private void RenderItems(IReadOnlyList<EffectSelectEffectDisplayData> items)
+    private void RenderItems(IReadOnlyList<EffectSelectAdditionDisplayData> items)
     {
         int itemCount = items != null ? items.Count : 0;
         EnsureItemViews(itemCount);
 
         for (int i = 0; i < _itemViews.Count; i++)
         {
-            EffectSelectEffectDisplayData data = items != null && i < items.Count ? items[i] : null;
+            EffectSelectAdditionDisplayData data = items != null && i < items.Count ? items[i] : null;
             _itemViews[i].Render(data);
         }
     }
@@ -89,7 +89,7 @@ public class EffectSelectUI : UIBase<EffectSelectUIData, EffectSelectUIModel>
         itemView.Clicked += HandleItemClicked;
     }
 
-    private void HandleItemHoverEntered(EffectSelectEffectDisplayData data)
+    private void HandleItemHoverEntered(EffectSelectAdditionDisplayData data)
     {
         if (data == null)
             return;
@@ -106,7 +106,7 @@ public class EffectSelectUI : UIBase<EffectSelectUIData, EffectSelectUIModel>
         _itemHoverCoroutine = StartCoroutine(ItemHoverDelayRoutine(data));
     }
 
-    private void HandleItemHoverExited(EffectSelectEffectDisplayData data)
+    private void HandleItemHoverExited(EffectSelectAdditionDisplayData data)
     {
         if (data == null)
             return;
@@ -117,7 +117,7 @@ public class EffectSelectUI : UIBase<EffectSelectUIData, EffectSelectUIModel>
         CancelItemHover(true);
     }
 
-    private void HandleItemClicked(EffectSelectEffectDisplayData data)
+    private void HandleItemClicked(EffectSelectAdditionDisplayData data)
     {
         if (data == null)
             return;
@@ -126,7 +126,7 @@ public class EffectSelectUI : UIBase<EffectSelectUIData, EffectSelectUIModel>
         ItemSelected?.Invoke(data);
     }
 
-    private System.Collections.IEnumerator ItemHoverDelayRoutine(EffectSelectEffectDisplayData data)
+    private System.Collections.IEnumerator ItemHoverDelayRoutine(EffectSelectAdditionDisplayData data)
     {
         float delay = UIComponent.Instance != null ? UIComponent.Instance.GetHoverInfoDelaySeconds() : 2f;
         yield return new WaitForSeconds(delay);

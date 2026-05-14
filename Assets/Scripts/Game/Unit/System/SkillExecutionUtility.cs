@@ -23,14 +23,14 @@ public static class SkillExecutionUtility
         Entity entity,
         ref UnitCastComponent cast,
         in Unity.Collections.FixedList64Bytes<int> skillIds,
-        in Unity.Collections.FixedList64Bytes<int> skillEffectIds,
+        in Unity.Collections.FixedList64Bytes<int> skillAdditionIds,
         int chainIndex,
         bool hasLockedTarget,
         float2 lockedTargetPosition)
     {
         ResetCastState(ref cast);
         cast.SkillIds = skillIds;
-        cast.SkillEffectIds = skillEffectIds;
+        cast.SkillAdditionIds = skillAdditionIds;
         cast.ForceInterrupt = false;
         cast.HasLockedTarget = hasLockedTarget;
         cast.LockedTargetPosition = lockedTargetPosition;
@@ -168,16 +168,43 @@ public static class SkillExecutionUtility
         SkillContent.EntityManager = entityManager;
         SkillContent.HasOriginEntity = true;
         SkillContent.OriginEntity = entity;
-        SkillContent.HasPosition = cast.HasLockedTarget;
-        SkillContent.Position = new Vector3(cast.LockedTargetPosition.x, cast.LockedTargetPosition.y, 0f);
+        SetSkillReleasePosition(entityManager, entity, cast, skillData);
         SkillContent.HasTargetEntity = false;
         SkillContent.TargetEntity = Entity.Null;
         SkillContent.HasTarget = false;
         SkillContent.Target = null;
         SkillContent.Origin = null;
+        SkillContent.RuntimeModifiers = new SkillModifierSet();
 
         SkillExecutor.ExecuteSkill(skillData, SkillContent);
         return true;
+    }
+
+    private static void SetSkillReleasePosition(EntityManager entityManager, Entity entity, in UnitCastComponent cast, ResolvedSkillData skillData)
+    {
+        switch (skillData?.SkillType)
+        {
+            case SkillType.SelfSkill:
+                if (entityManager.HasComponent<Unity.Transforms.LocalTransform>(entity))
+                {
+                    Unity.Transforms.LocalTransform transform = entityManager.GetComponentData<Unity.Transforms.LocalTransform>(entity);
+                    SkillContent.HasPosition = true;
+                    SkillContent.Position = transform.Position;
+                }
+                else
+                {
+                    SkillContent.HasPosition = false;
+                    SkillContent.Position = Vector3.zero;
+                }
+
+                break;
+
+            case SkillType.PositionSkill:
+            default:
+                SkillContent.HasPosition = cast.HasLockedTarget;
+                SkillContent.Position = new Vector3(cast.LockedTargetPosition.x, cast.LockedTargetPosition.y, 0f);
+                break;
+        }
     }
 
     public static bool TryStartSkillAtIndex(EntityManager entityManager, Entity entity, ref UnitCastComponent cast, int skillIndex, out ResolvedSkillData skillData)
@@ -185,7 +212,7 @@ public static class SkillExecutionUtility
         cast.CurrentSkillIndex = skillIndex;
         cast.CurrentSkillId = skillIndex >= 0 && skillIndex < cast.SkillIds.Length
             ? cast.SkillIds[skillIndex]
-            : 0;
+            : -1;
 
         if (!TryGetSkillByIndex(entityManager, entity, cast, skillIndex, out skillData))
             return false;
@@ -241,9 +268,9 @@ public static class SkillExecutionUtility
             return false;
         }
 
-        int effectId = skillIndex < cast.SkillEffectIds.Length ? cast.SkillEffectIds[skillIndex] : 0;
-        SkillChainSlotData slotData = effectId > 0
-            ? new SkillChainSlotData { SkillEffectId = effectId }
+        int additionId = skillIndex < cast.SkillAdditionIds.Length ? cast.SkillAdditionIds[skillIndex] : -1;
+        SkillChainSlotData slotData = additionId >= 0
+            ? new SkillChainSlotData { SkillAdditionId = additionId }
             : null;
 
         SkillModifierSet modifiers = SkillResolver.CollectModifiers(entityManager, entity, slotData);
@@ -290,12 +317,12 @@ public static class SkillExecutionUtility
         cast.LockedTargetPosition = float2.zero;
         cast.CurrentChainIndex = -1;
         cast.CurrentSkillIndex = -1;
-        cast.CurrentSkillId = 0;
+        cast.CurrentSkillId = -1;
         cast.Phase = SkillCastPhase.None;
         cast.PhaseElapsed = 0f;
         cast.PhaseDuration = 0f;
         cast.SkillIds = default;
-        cast.SkillEffectIds = default;
+        cast.SkillAdditionIds = default;
     }
 
     private static void LogPhase(string phaseName, in UnitCastComponent cast)

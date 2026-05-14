@@ -6,12 +6,14 @@ using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 using CrystalMagic.Game.Data;
+using CrystalMagic.Core;
 
 namespace CrystalMagic.Editor.Data
 {
     public class NPCEditorWindow : EditorWindow
     {
         private const string DataPath = "Assets/Res/Data/NPCDataTable.json";
+        private static string UnitPrefabDirectory => AssetPathHelper.GetUnitPrefabDirectory();
         private const float ListPanelWidth = 220f;
         private const float InsertFieldWidth = 30f;
         private const float LabelWidth = 150f;
@@ -161,7 +163,7 @@ namespace CrystalMagic.Editor.Data
                     if (submitByEnter)
                     {
                         evt.Use();
-                        GUI.FocusControl(null);
+                        CrystalMagic.Editor.EditorFocusUtility.ClearTextFocus();
                     }
                 }
 
@@ -169,6 +171,8 @@ namespace CrystalMagic.Editor.Data
                 bool selected = i == _selectedIndex;
                 if (GUILayout.Toggle(selected, label, "Button"))
                 {
+                    if (_selectedIndex != i)
+                        CrystalMagic.Editor.EditorFocusUtility.ClearTextFocus();
                     _selectedIndex = i;
                 }
                 EditorGUILayout.EndHorizontal();
@@ -415,12 +419,16 @@ namespace CrystalMagic.Editor.Data
 
             try
             {
-                NormalizeRowIds();
+                Dictionary<int, int> idRemap = NormalizeRowIds();
+                int linkedPrefabCount = SyncNpcAuthoringIds(idRemap);
                 string json = JsonConvert.SerializeObject(new TableWrapper { Rows = _rows }, JsonSettings);
                 File.WriteAllText(DataPath, json, Encoding.UTF8);
+                AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
                 _isDirty = false;
-                _statusText = $"Saved {_rows.Count} row(s) | {DataPath}";
+                _statusText = linkedPrefabCount > 0
+                    ? $"Saved {_rows.Count} row(s) | {DataPath} | Synced {linkedPrefabCount} prefab(s)"
+                    : $"Saved {_rows.Count} row(s) | {DataPath}";
             }
             catch (Exception ex)
             {
@@ -431,7 +439,7 @@ namespace CrystalMagic.Editor.Data
 
         private void AddNpc()
         {
-            int id = _rows.Count + 1;
+            int id = _rows.Count;
             _rows.Add(new NPCData
             {
                 Id = id,
@@ -480,7 +488,7 @@ namespace CrystalMagic.Editor.Data
                 return;
             }
 
-            copy.Id = _rows.Count + 1;
+            copy.Id = _rows.Count;
             copy.NPC = string.IsNullOrWhiteSpace(source.NPC) ? $"NPC_{copy.Id}" : $"{source.NPC}_Copy";
             copy.DisplayName = string.IsNullOrWhiteSpace(source.DisplayName) ? $"NPC {copy.Id}" : $"{source.DisplayName}_Copy";
             EnsureNpcValid(copy);
@@ -490,12 +498,18 @@ namespace CrystalMagic.Editor.Data
             _isDirty = true;
         }
 
-        private void NormalizeRowIds()
+        private Dictionary<int, int> NormalizeRowIds()
         {
+            Dictionary<int, int> idRemap = new Dictionary<int, int>();
             for (int i = 0; i < _rows.Count; i++)
             {
-                _rows[i].Id = i + 1;
+                int oldId = _rows[i].Id;
+                int newId = i;
+                idRemap[oldId] = newId;
+                _rows[i].Id = newId;
             }
+
+            return idRemap;
         }
 
         private void MoveRowToInsertIndex(int fromIndex, int insertIndex)
@@ -519,8 +533,39 @@ namespace CrystalMagic.Editor.Data
             NormalizeRowIds();
             _selectedIndex = insertIndex;
             _isDirty = true;
-            GUI.FocusControl(null);
+            CrystalMagic.Editor.EditorFocusUtility.ClearTextFocus();
             Repaint();
+        }
+
+        private int SyncNpcAuthoringIds(IReadOnlyDictionary<int, int> idRemap)
+        {
+            if (idRemap == null || idRemap.Count == 0 || !AssetDatabase.IsValidFolder(UnitPrefabDirectory))
+                return 0;
+
+            int updatedCount = 0;
+            string[] prefabGuids = AssetDatabase.FindAssets("t:Prefab", new[] { UnitPrefabDirectory });
+            for (int i = 0; i < prefabGuids.Length; i++)
+            {
+                string assetPath = AssetDatabase.GUIDToAssetPath(prefabGuids[i]);
+                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+                if (prefab == null)
+                    continue;
+
+                NPCInteractableAuthoring authoring = prefab.GetComponent<NPCInteractableAuthoring>();
+                if (authoring == null || authoring.NpcDataId < 0)
+                    continue;
+
+                int oldId = authoring.NpcDataId;
+                int newId = idRemap.TryGetValue(oldId, out int remappedId) ? remappedId : -1;
+                if (newId == oldId)
+                    continue;
+
+                authoring.NpcDataId = newId;
+                EditorUtility.SetDirty(authoring);
+                updatedCount++;
+            }
+
+            return updatedCount;
         }
 
         private void AddInteraction(NPCData row)

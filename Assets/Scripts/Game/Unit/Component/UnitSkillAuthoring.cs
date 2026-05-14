@@ -22,7 +22,7 @@ public class UnitSkillAuthoring : MonoBehaviour
             UnitSkillComponent component = new UnitSkillComponent
             {
                 RequestMode = UnitSkillSelectionMode.None,
-                RequestedSkillId = 0,
+                RequestedSkillId = -1,
                 RequestedTagMask = 0,
                 HasPendingCast = false,
                 PendingSkillIndex = -1,
@@ -35,7 +35,7 @@ public class UnitSkillAuthoring : MonoBehaviour
                 for (int i = 0; i < data.Skills.Count; i++)
                 {
                     UnitSkillSlotData slot = data.Skills[i];
-                    if (slot == null || slot.SkillId <= 0)
+                    if (slot == null || slot.SkillId < 0)
                         continue;
 
                     if (component.Skills.Length >= component.Skills.Capacity)
@@ -44,7 +44,7 @@ public class UnitSkillAuthoring : MonoBehaviour
                     component.Skills.Add(new UnitSkillEntry
                     {
                         SkillId = slot.SkillId,
-                        SkillEffectId = slot.SkillEffectId,
+                        SkillAdditionId = slot.SkillAdditionId,
                         TagMask = slot.TagMask,
                         MinDistance = math.max(0f, slot.MinDistance),
                         MaxDistance = math.max(slot.MinDistance, slot.MaxDistance),
@@ -63,7 +63,7 @@ public class UnitSkillAuthoring : MonoBehaviour
 public struct UnitSkillEntry
 {
     public int SkillId;
-    public int SkillEffectId;
+    public int SkillAdditionId;
     public int TagMask;
     public float MinDistance;
     public float MaxDistance;
@@ -105,7 +105,7 @@ public struct UnitSkillComponent : IComponentData
     public void ClearRequest()
     {
         RequestMode = UnitSkillSelectionMode.None;
-        RequestedSkillId = 0;
+        RequestedSkillId = -1;
         RequestedTagMask = 0;
     }
 }

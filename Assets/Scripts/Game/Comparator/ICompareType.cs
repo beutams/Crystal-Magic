@@ -5,6 +5,7 @@ public interface ICompareType
     public bool Compare(ISource obj);
 }
 [FactoryKey("GreaterThan")]
+[EditorLabel("大于")]
 [FactoryInputMember("value")]
 public struct GreaterThan : ICompareType
 {
@@ -16,6 +17,7 @@ public struct GreaterThan : ICompareType
     }
 }
 [FactoryKey("LessThan")]
+[EditorLabel("小于")]
 [FactoryInputMember("value")]
 public struct LessThan : ICompareType
 {
@@ -27,6 +29,7 @@ public struct LessThan : ICompareType
     }
 }
 [FactoryKey("Equal")]
+[EditorLabel("等于")]
 [FactoryInputMember("value")]
 public struct Equal : ICompareType
 {
@@ -38,6 +41,7 @@ public struct Equal : ICompareType
     }
 }
 [FactoryKey("IsTrue")]
+[EditorLabel("为真")]
 public struct IsTrue : ICompareType
 {
     public bool Compare(ISource obj)
@@ -46,6 +50,7 @@ public struct IsTrue : ICompareType
     }
 }
 [FactoryKey("IsFalse")]
+[EditorLabel("为假")]
 public struct IsFalse : ICompareType
 {
     public bool Compare(ISource obj)

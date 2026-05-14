@@ -89,8 +89,8 @@ namespace CrystalMagic.Editor.Data
             UnitEditorWindow.DrawSectionHeader("Attack");
             module.BaseAttackPower = EditorGUILayout.FloatField("Base Attack Power", module.BaseAttackPower);
             module.BaseSkillRange = EditorGUILayout.FloatField("Base Skill Range", module.BaseSkillRange);
-            module.BaseActionSpeedBonus = EditorGUILayout.FloatField("Action Speed Bonus", module.BaseActionSpeedBonus);
-            module.BaseChantSpeedBonus = EditorGUILayout.FloatField("Chant Speed Bonus", module.BaseChantSpeedBonus);
+            module.BaseActionSpeedBonus = EditorGUILayout.FloatField("Action Speed (-100~100)", module.BaseActionSpeedBonus);
+            module.BaseChantSpeedBonus = EditorGUILayout.FloatField("Chant Speed (-100~100)", module.BaseChantSpeedBonus);
             module.BaseWaterPowerBonus = EditorGUILayout.FloatField("Water Power Bonus", module.BaseWaterPowerBonus);
             module.BaseFirePowerBonus = EditorGUILayout.FloatField("Fire Power Bonus", module.BaseFirePowerBonus);
             module.BaseLightningPowerBonus = EditorGUILayout.FloatField("Lightning Power Bonus", module.BaseLightningPowerBonus);
@@ -171,7 +171,7 @@ namespace CrystalMagic.Editor.Data
                 EditorGUILayout.EndHorizontal();
 
                 slot.SkillId = DrawOptionPopup("Skill", slot.SkillId, skillOptions);
-                slot.SkillEffectId = DrawOptionPopup("Skill Effect", slot.SkillEffectId, effectOptions);
+                slot.SkillAdditionId = DrawOptionPopup("Skill Addition", slot.SkillAdditionId, effectOptions);
                 slot.TagMask = EditorGUILayout.IntField("Tag Mask", slot.TagMask);
                 slot.MinDistance = EditorGUILayout.FloatField("Min Distance", slot.MinDistance);
                 slot.MaxDistance = EditorGUILayout.FloatField("Max Distance", slot.MaxDistance);
@@ -189,7 +189,7 @@ namespace CrystalMagic.Editor.Data
         {
             List<SkillOption> options = new()
             {
-                new SkillOption { Id = 0, Label = "None" }
+                new SkillOption { Id = -1, Label = "None" }
             };
 
             foreach (SkillData row in EditorComponents.Data.FindAll<SkillData>(_ => true).OrderBy(row => row.Id))
@@ -208,7 +208,7 @@ namespace CrystalMagic.Editor.Data
         {
             List<SkillOption> options = new()
             {
-                new SkillOption { Id = 0, Label = "None" }
+                new SkillOption { Id = -1, Label = "None" }
             };
 
             foreach (SkillEffectData row in EditorComponents.Data.FindAll<SkillEffectData>(_ => true).OrderBy(row => row.Id))
@@ -243,7 +243,7 @@ namespace CrystalMagic.Editor.Data
         private static string BuildSlotHeader(int index, UnitSkillSlotData slot)
         {
             string label = $"Skill {index + 1}";
-            if (slot == null || slot.SkillId <= 0)
+            if (slot == null || slot.SkillId < 0)
                 return label;
 
             SkillData skill = EditorComponents.Data.Get<SkillData>(slot.SkillId);
@@ -305,7 +305,7 @@ namespace CrystalMagic.Editor.Data
 
             int newIndex = EditorGUILayout.Popup("Drop Data", selectedIndex, options.ToArray());
             int newDropDataId = newIndex == 0 ? -1 : dropRows[newIndex - 1].Id;
-            if (module == null && newDropDataId > 0)
+            if (module == null && newDropDataId >= 0)
                 module = context.GetOrCreateModule<UnitDropModuleData>();
 
             if (module != null)
@@ -345,7 +345,7 @@ namespace CrystalMagic.Editor.Data
             }
 
             int newIndex = EditorGUILayout.Popup("NPC Data", selectedIndex, options.ToArray());
-            int newNpcId = newIndex == 0 ? 0 : npcRows[newIndex - 1].Id;
+            int newNpcId = newIndex == 0 ? -1 : npcRows[newIndex - 1].Id;
             float newRange = EditorGUILayout.FloatField("Interact Range", npcAuthoring.InteractRange);
 
             if (newNpcId != npcAuthoring.NpcDataId || !Mathf.Approximately(newRange, npcAuthoring.InteractRange))

@@ -11,8 +11,9 @@ GameObject:
   - component: {fileID: 2612761355654333903}
   - component: {fileID: 8205542765457343932}
   - component: {fileID: 3102263466317617148}
+  - component: {fileID: 1957338809473482714}
   m_Layer: 0
-  m_Name: FireBall
+  m_Name: Projectile
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -86,3 +87,15 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &1957338809473482714
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7099561344832099384}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b9af1b3d7d34f84bff693d9f15bb26a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

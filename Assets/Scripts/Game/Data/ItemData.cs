@@ -5,12 +5,16 @@ namespace CrystalMagic.Game.Data
 {
     public enum ItemType
     {
+        [EditorLabel("无")]
         None = 0,
-        Consumable = 1,
-        SkillStone = 2,
-        Item = 3,
-        Weapon = 4,
-        Accessory = 5,
+        [EditorLabel("技能石")]
+        SkillStone = 1,
+        [EditorLabel("道具")]
+        Prop = 2,
+        [EditorLabel("魔法石")]
+        MagicStone = 3,
+        [EditorLabel("精灵")]
+        Spirit = 4,
     }
 
     [System.Serializable]
@@ -23,7 +27,7 @@ namespace CrystalMagic.Game.Data
         /// <summary>
         /// 额外关联数据的 Id。
         /// </summary>
-        public int ExtraId;
+        public int ExtraId = -1;
 
         public int Rarity;
         public int MaxStack;

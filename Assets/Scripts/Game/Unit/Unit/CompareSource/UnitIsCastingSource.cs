@@ -1,6 +1,7 @@
 using Unity.Entities;
 
 [FactoryKey("UnitIsCastingSource")]
+[EditorLabel("是否正在施法")]
 public class UnitIsCastingSource : ISource
 {
     private SourceContext _context;

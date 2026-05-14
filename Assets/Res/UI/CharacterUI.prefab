@@ -3085,7 +3085,7 @@ GameObject:
   - component: {fileID: 529269001850048504}
   - component: {fileID: 3002307342785946111}
   m_Layer: 0
-  m_Name: WeapenBorder
+  m_Name: MagicStoneBorder
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3237,7 +3237,7 @@ GameObject:
   - component: {fileID: 9194962052639407166}
   - component: {fileID: 8158343704004135583}
   m_Layer: 0
-  m_Name: Weapen
+  m_Name: MagicStone
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

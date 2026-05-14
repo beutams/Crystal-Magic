@@ -1,10 +1,10 @@
 ﻿{
     "Rows": [
         {
-            "Id": 1,
-            "Name": "火球",
-            "Description": "释放火球，触碰到之后造成范围伤害",
-            "ItemType": 2,
+            "Id": 0,
+            "Name": "蓄能",
+            "Description": "",
+            "ItemType": 1,
             "ExtraId": 1,
             "Rarity": 1,
             "MaxStack": 99,
@@ -12,10 +12,10 @@
             "IconPath": "Assets/Res/Sprites/Item/FireBall.png"
         },
         {
-            "Id": 2,
-            "Name": "火龙卷",
-            "Description": "目标位置释放持续一定时间的火龙卷，对范围内的单位造成伤害",
-            "ItemType": 2,
+            "Id": 1,
+            "Name": "火球",
+            "Description": "",
+            "ItemType": 1,
             "ExtraId": 2,
             "Rarity": 1,
             "MaxStack": 99,
@@ -23,10 +23,10 @@
             "IconPath": "Assets/Res/Sprites/Item/FireTornado.png"
         },
         {
-            "Id": 3,
+            "Id": 2,
             "Name": "火焰冲击",
-            "Description": "持续释放直线形的火焰造成伤害",
-            "ItemType": 2,
+            "Description": "",
+            "ItemType": 1,
             "ExtraId": 3,
             "Rarity": 1,
             "MaxStack": 99,
@@ -34,10 +34,10 @@
             "IconPath": "Assets/Res/Sprites/Item/FlameStream.png"
         },
         {
-            "Id": 4,
-            "Name": "燃烧",
-            "Description": "对范围内的单位造成燃烧效果",
-            "ItemType": 2,
+            "Id": 3,
+            "Name": "引爆",
+            "Description": "",
+            "ItemType": 1,
             "ExtraId": 4,
             "Rarity": 1,
             "MaxStack": 99,
@@ -45,10 +45,10 @@
             "IconPath": "Assets/Res/Sprites/Item/Fiery.png"
         },
         {
-            "Id": 5,
-            "Name": "压缩魔力",
-            "Description": "下个技能的MP消耗减半",
-            "ItemType": 2,
+            "Id": 4,
+            "Name": "水涡",
+            "Description": "",
+            "ItemType": 1,
             "ExtraId": 5,
             "Rarity": 1,
             "MaxStack": 99,
@@ -56,26 +56,235 @@
             "IconPath": "Assets/Res/Sprites/Item/Magical.png"
         },
         {
-            "Id": 6,
-            "Name": "通用法杖",
-            "Description": "通用法杖，没有什么特别的",
-            "ItemType": 4,
-            "ExtraId": 5,
-            "Rarity": 1,
-            "MaxStack": 1,
-            "SellPrice": 50,
-            "IconPath": "Assets/Res/Sprites/Item/Weapen.png"
-        },
-        {
-            "Id": 7,
-            "Name": "火焰增幅",
-            "Description": "通用加成，增加火焰技能的伤害",
-            "ItemType": 5,
+            "Id": 5,
+            "Name": "冰刺",
+            "Description": "",
+            "ItemType": 1,
             "ExtraId": 6,
             "Rarity": 1,
             "MaxStack": 99,
             "SellPrice": 50,
-            "IconPath": "Assets/Res/Sprites/Item/FireGem.png"
+            "IconPath": ""
+        },
+        {
+            "Id": 6,
+            "Name": "冻结",
+            "Description": "",
+            "ItemType": 1,
+            "ExtraId": 7,
+            "Rarity": 1,
+            "MaxStack": 99,
+            "SellPrice": 50,
+            "IconPath": ""
+        },
+        {
+            "Id": 7,
+            "Name": "雷击",
+            "Description": "",
+            "ItemType": 1,
+            "ExtraId": 8,
+            "Rarity": 1,
+            "MaxStack": 99,
+            "SellPrice": 50,
+            "IconPath": ""
+        },
+        {
+            "Id": 8,
+            "Name": "雷域",
+            "Description": "",
+            "ItemType": 1,
+            "ExtraId": 9,
+            "Rarity": 1,
+            "MaxStack": 99,
+            "SellPrice": 50,
+            "IconPath": ""
+        },
+        {
+            "Id": 9,
+            "Name": "雷爆",
+            "Description": "",
+            "ItemType": 1,
+            "ExtraId": 10,
+            "Rarity": 1,
+            "MaxStack": 99,
+            "SellPrice": 50,
+            "IconPath": ""
+        },
+        {
+            "Id": 10,
+            "Name": "加速",
+            "Description": "",
+            "ItemType": 1,
+            "ExtraId": 11,
+            "Rarity": 1,
+            "MaxStack": 99,
+            "SellPrice": 50,
+            "IconPath": ""
+        },
+        {
+            "Id": 11,
+            "Name": "回复",
+            "Description": "",
+            "ItemType": 1,
+            "ExtraId": 12,
+            "Rarity": 1,
+            "MaxStack": 99,
+            "SellPrice": 50,
+            "IconPath": ""
+        },
+        {
+            "Id": 12,
+            "Name": "屏障",
+            "Description": "",
+            "ItemType": 1,
+            "ExtraId": 13,
+            "Rarity": 1,
+            "MaxStack": 99,
+            "SellPrice": 50,
+            "IconPath": ""
+        },
+        {
+            "Id": 13,
+            "Name": "强化:魔力增幅",
+            "Description": "增加伤害和蓝量",
+            "ItemType": 3,
+            "ExtraId": 0,
+            "Rarity": 1,
+            "MaxStack": 1,
+            "SellPrice": 100,
+            "IconPath": ""
+        },
+        {
+            "Id": 14,
+            "Name": "强化:咏唱增幅",
+            "Description": "增加咏唱和行动速度",
+            "ItemType": 3,
+            "ExtraId": 1,
+            "Rarity": 1,
+            "MaxStack": 1,
+            "SellPrice": 100,
+            "IconPath": ""
+        },
+        {
+            "Id": 15,
+            "Name": "强化:防御增幅",
+            "Description": "增加血上限和防御",
+            "ItemType": 3,
+            "ExtraId": 2,
+            "Rarity": 1,
+            "MaxStack": 1,
+            "SellPrice": 100,
+            "IconPath": ""
+        },
+        {
+            "Id": 16,
+            "Name": "强化:移速增幅",
+            "Description": "增加移速",
+            "ItemType": 3,
+            "ExtraId": 3,
+            "Rarity": 1,
+            "MaxStack": 1,
+            "SellPrice": 100,
+            "IconPath": ""
+        },
+        {
+            "Id": 17,
+            "Name": "魔力增强",
+            "Description": "增加伤害",
+            "ItemType": 4,
+            "ExtraId": 101,
+            "Rarity": 1,
+            "MaxStack": 1,
+            "SellPrice": 100,
+            "IconPath": ""
+        },
+        {
+            "Id": 18,
+            "Name": "生命提升",
+            "Description": "增加最大生命MP",
+            "ItemType": 4,
+            "ExtraId": 102,
+            "Rarity": 1,
+            "MaxStack": 1,
+            "SellPrice": 100,
+            "IconPath": ""
+        },
+        {
+            "Id": 19,
+            "Name": "持续恢复",
+            "Description": "增加回血回蓝",
+            "ItemType": 4,
+            "ExtraId": 103,
+            "Rarity": 1,
+            "MaxStack": 1,
+            "SellPrice": 100,
+            "IconPath": ""
+        },
+        {
+            "Id": 20,
+            "Name": "火精灵",
+            "Description": "火属性提升",
+            "ItemType": 4,
+            "ExtraId": 104,
+            "Rarity": 1,
+            "MaxStack": 1,
+            "SellPrice": 100,
+            "IconPath": ""
+        },
+        {
+            "Id": 21,
+            "Name": "水精灵",
+            "Description": "水属性提升",
+            "ItemType": 4,
+            "ExtraId": 105,
+            "Rarity": 1,
+            "MaxStack": 1,
+            "SellPrice": 100,
+            "IconPath": ""
+        },
+        {
+            "Id": 22,
+            "Name": "电精灵",
+            "Description": "电属性提升",
+            "ItemType": 4,
+            "ExtraId": 106,
+            "Rarity": 1,
+            "MaxStack": 1,
+            "SellPrice": 100,
+            "IconPath": ""
+        },
+        {
+            "Id": 23,
+            "Name": "风精灵",
+            "Description": "风属性提升",
+            "ItemType": 4,
+            "ExtraId": 107,
+            "Rarity": 1,
+            "MaxStack": 1,
+            "SellPrice": 100,
+            "IconPath": ""
+        },
+        {
+            "Id": 24,
+            "Name": "小型HP回复",
+            "Description": "回血",
+            "ItemType": 2,
+            "ExtraId": 1,
+            "Rarity": 1,
+            "MaxStack": 10,
+            "SellPrice": 10,
+            "IconPath": ""
+        },
+        {
+            "Id": 25,
+            "Name": "小型MP回复",
+            "Description": "回蓝",
+            "ItemType": 2,
+            "ExtraId": 2,
+            "Rarity": 1,
+            "MaxStack": 10,
+            "SellPrice": 10,
+            "IconPath": ""
         }
     ]
 }

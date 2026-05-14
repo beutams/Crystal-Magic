@@ -5,6 +5,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 using CrystalMagic.Game.Skill;
+using CrystalMagic.Game.Unit;
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateAfter(typeof(SkillProjectileSpawnSystem))]
@@ -61,7 +62,7 @@ public partial class SkillProjectileSystem : SystemBase
 
                     if (projectile.CanPierce == 0)
                     {
-                        DestroyProjectile(entity, payload, hitPosition, true, hitContext);
+                        DestroyProjectile(entity, payload, projectile.Scale, hitPosition, transform.Rotation, true, hitContext);
                         continue;
                     }
                 }
@@ -71,7 +72,9 @@ public partial class SkillProjectileSystem : SystemBase
                     DestroyProjectile(
                         entity,
                         payload,
+                        projectile.Scale,
                         transform.Position,
+                        transform.Rotation,
                         projectile.TriggerDestroyEffectsOnMaxRange != 0,
                         null);
                 }
@@ -135,7 +138,9 @@ public partial class SkillProjectileSystem : SystemBase
     private void DestroyProjectile(
         Entity entity,
         SkillProjectilePayloadComponent payload,
+        float projectileScale,
         float3 destroyPosition,
+        quaternion destroyRotation,
         bool triggerDestroyEffects,
         SkillContent destroyContext)
     {
@@ -146,6 +151,7 @@ public partial class SkillProjectileSystem : SystemBase
             context.HasPosition = true;
             context.Position = new Vector3(destroyPosition.x, destroyPosition.y, destroyPosition.z);
             SkillExecutor.ExecuteEffects(payload.OnDestroyEffects, context);
+            SpawnDestroyVfx(payload, destroyPosition, destroyRotation, projectileScale);
         }
 
         if (EntityManager.Exists(entity))
@@ -155,6 +161,69 @@ public partial class SkillProjectileSystem : SystemBase
 
             EntityManager.SetComponentEnabled<DestroyEntityFlag>(entity, true);
         }
+    }
+
+    private void SpawnDestroyVfx(
+        SkillProjectilePayloadComponent payload,
+        float3 destroyPosition,
+        quaternion destroyRotation,
+        float projectileScale)
+    {
+        if (payload.DestroyTexture == null || payload.ProjectileName.Length == 0)
+            return;
+
+        if (!EntitySpawnRegistryUtility.TryInstantiateProjectile(EntityManager, payload.ProjectileName, out Entity vfxEntity))
+        {
+            Debug.LogWarning($"[SkillProjectileSystem] Missing projectile prefab in registry: {payload.ProjectileName}");
+            return;
+        }
+
+        SetOrAddComponentData(
+            vfxEntity,
+            LocalTransform.FromPositionRotationScale(
+                destroyPosition,
+                destroyRotation,
+                math.max(projectileScale, 0.0001f)));
+
+        SetOrAddComponentData(
+            vfxEntity,
+            new SkillProjectileStartTimeProperty
+            {
+                Value = (float)SystemAPI.Time.ElapsedTime,
+            });
+
+        SetOrAddComponentData(
+            vfxEntity,
+            new ProjectileDestroyVfxComponent
+            {
+                RemainingLifetime = ProjectileVisualUtility.GetAnimationLifetime(payload.ProjectileName, payload.DestroyFrameCount),
+            });
+
+        EnsureDestroyFlagDisabled(vfxEntity);
+        ProjectileVisualUtility.ApplyProjectileVisual(
+            EntityManager,
+            vfxEntity,
+            payload.ProjectileName,
+            payload.DestroyTexture,
+            false,
+            payload.DestroyFrameCount);
+    }
+
+    private void EnsureDestroyFlagDisabled(Entity entity)
+    {
+        if (!EntityManager.HasComponent<DestroyEntityFlag>(entity))
+            EntityManager.AddComponent<DestroyEntityFlag>(entity);
+
+        EntityManager.SetComponentEnabled<DestroyEntityFlag>(entity, false);
+    }
+
+    private void SetOrAddComponentData<T>(Entity entity, T value)
+        where T : unmanaged, IComponentData
+    {
+        if (EntityManager.HasComponent<T>(entity))
+            EntityManager.SetComponentData(entity, value);
+        else
+            EntityManager.AddComponentData(entity, value);
     }
 
     private SkillContent BuildHitContext(SkillContent baseContext, Entity hitEntity, float3 hitPosition)

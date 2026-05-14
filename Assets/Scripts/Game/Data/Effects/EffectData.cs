@@ -22,6 +22,7 @@ namespace CrystalMagic.Game.Data.Effects
     public abstract class EffectData
     {
         /// <summary>效果释放条件（所有条件通过才执行该效果）</summary>
+        [EditorLabel("生效条件")]
         public List<ConditionConfig> Conditions = new();
 
         public virtual EffectData CreateRuntimeCopy(SkillModifierSet modifiers, float elementBonus = 0f, Func<EffectData, float> elementBonusResolver = null)

@@ -17,7 +17,7 @@ namespace CrystalMagic.Game.Skill
                 return null;
 
             ItemData skillStoneItemData = dataComponent.Get<ItemData>(skillStoneItemId);
-            if (skillStoneItemData == null || skillStoneItemData.ItemType != ItemType.SkillStone || skillStoneItemData.ExtraId <= 0)
+            if (skillStoneItemData == null || skillStoneItemData.ItemType != ItemType.SkillStone || skillStoneItemData.ExtraId < 0)
                 return null;
 
             return dataComponent.Get<SkillData>(skillStoneItemData.ExtraId);
@@ -44,7 +44,7 @@ namespace CrystalMagic.Game.Skill
 
             foreach (SkillChainSlotData slotData in chain.Slots)
             {
-                if (slotData == null || slotData.SkillStoneItemId <= 0)
+                if (slotData == null || slotData.SkillStoneItemId < 0)
                     continue;
 
                 SkillData skillData = GetSkillData(slotData);
@@ -92,8 +92,12 @@ namespace CrystalMagic.Game.Skill
             modifiers ??= new SkillModifierSet();
             float actionSpeedBonus = attackComponent?.RealActionSpeedBonus ?? 0f;
             float chantSpeedBonus = attackComponent?.RealChantSpeedBonus ?? 0f;
-            float actionSpeedMultiplier = math.clamp(modifiers.GetActionSpeedMultiplier() + actionSpeedBonus, 0.5f, 1f);
-            float chantSpeedMultiplier = math.clamp(modifiers.GetChantSpeedMultiplier() + chantSpeedBonus, 0f, 1f);
+            float actionSpeedValue = modifiers.GetActionSpeedValue(actionSpeedBonus);
+            float chantSpeedValue = modifiers.GetChantSpeedValue(chantSpeedBonus);
+            float actionSpeedMultiplier = actionSpeedValue >= 0f
+                ? 1f / (1f + actionSpeedValue / 100f)
+                : 1f - actionSpeedValue / 100f;
+            float chantSpeedMultiplier = 1f - chantSpeedValue / 100f;
             float moveSpeedMultiplier = math.min(1f, math.max(0f, skillData.MoveSpeedMultiplier) * modifiers.GetMoveSpeedMultiplier());
 
             return new ResolvedSkillData
@@ -148,9 +152,9 @@ namespace CrystalMagic.Game.Skill
                 }
             }
 
-            if (slotData != null && slotData.SkillEffectId > 0)
+            if (slotData != null && slotData.SkillAdditionId >= 0)
             {
-                if (dataComponent.Get<SkillEffectData>(slotData.SkillEffectId) is SkillEffectData skillEffectData)
+                if (dataComponent.Get<SkillEffectData>(slotData.SkillAdditionId) is SkillEffectData skillEffectData)
                     modifiers.Add(skillEffectData.Modifiers);
             }
 

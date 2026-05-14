@@ -1,5 +1,6 @@
 using CrystalMagic.Game.Data;
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 
 public class UnitAttackAuthoring : MonoBehaviour
@@ -99,8 +100,12 @@ public struct UnitAttackComponent : IComponentData
 
     public float RealAttackPower => (BaseAttackPower + BaseAttackPowerOffset) * AttackFactor + AttackBonus;
     public float RealSkillRange => (BaseSkillRange + BaseSkillRangeOffset) * RangeFactor + RangeBonus;
-    public float RealActionSpeedBonus => (BaseActionSpeedBonus + BaseActionSpeedBonusOffset) * ActionSpeedFactor + ActionSpeedBonus;
-    public float RealChantSpeedBonus => (BaseChantSpeedBonus + BaseChantSpeedBonusOffset) * ChantSpeedFactor + ChantSpeedBonus;
+    public float RealActionSpeedBonus => math.clamp((BaseActionSpeedBonus + BaseActionSpeedBonusOffset) * ActionSpeedFactor + ActionSpeedBonus, -100f, 100f);
+    public float RealChantSpeedBonus => math.clamp((BaseChantSpeedBonus + BaseChantSpeedBonusOffset) * ChantSpeedFactor + ChantSpeedBonus, -100f, 100f);
+    public float ActionDurationMultiplier => RealActionSpeedBonus >= 0f
+        ? 1f / (1f + RealActionSpeedBonus / 100f)
+        : 1f - RealActionSpeedBonus / 100f;
+    public float ChantDurationMultiplier => 1f - RealChantSpeedBonus / 100f;
 }
 
 public struct UnitElementComponent : IComponentData

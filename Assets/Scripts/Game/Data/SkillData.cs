@@ -10,6 +10,7 @@ namespace CrystalMagic.Game.Data
     public enum SkillType
     {
         PositionSkill = 0,
+        SelfSkill = 1,
     }
 
     /// <summary>
@@ -59,33 +60,63 @@ namespace CrystalMagic.Game.Data
 
     public enum SkillModifierChannel
     {
+        [EditorLabel("法力消耗")]
         MpCost = 0,
+        [EditorLabel("动作速度")]
         ActionSpeed = 1,
+        [EditorLabel("吟唱速度")]
         ChantSpeed = 2,
+        [EditorLabel("保留")]
         Reserved = 3,
+        [EditorLabel("施法移动速度倍率")]
         MoveSpeedMultiplier = 4,
 
+        [EditorLabel("伤害倍率")]
         Damage = 100,
+        [EditorLabel("额外伤害")]
         FlatDamage = 101,
+        [EditorLabel("击退力度")]
         KnockbackForce = 103,
+        [EditorLabel("受击硬直")]
         HitStunSeconds = 104,
+        [EditorLabel("治疗倍率")]
         Heal = 105,
+        [EditorLabel("额外治疗")]
         FlatHeal = 106,
+        [EditorLabel("回蓝倍率")]
+        ManaRestore = 107,
+        [EditorLabel("额外回蓝")]
+        FlatManaRestore = 108,
 
+        [EditorLabel("范围半径")]
         AreaRadius = 200,
+        [EditorLabel("投射物速度")]
         ProjectileSpeed = 300,
+        [EditorLabel("投射物距离")]
         ProjectileRange = 301,
+        [EditorLabel("投射物缩放")]
         ProjectileScale = 302,
+        [EditorLabel("效果时长")]
         EffectDuration = 400,
+        [EditorLabel("触发间隔")]
         TickInterval = 401,
+        [EditorLabel("Buff 时长")]
         BuffDuration = 402,
+        [EditorLabel("特效缩放")]
         VfxScale = 500,
+        [EditorLabel("音量")]
         SoundVolume = 600,
+        [EditorLabel("音调")]
         SoundPitch = 601,
+        [EditorLabel("音效延迟")]
         SoundDelay = 602,
+        [EditorLabel("震屏振幅")]
         CameraShakeAmplitude = 700,
+        [EditorLabel("震屏时长")]
         CameraShakeDuration = 701,
+        [EditorLabel("震屏频率")]
         CameraShakeFrequency = 702,
+        [EditorLabel("震屏半径")]
         CameraShakeRadius = 703,
     }
 
@@ -139,14 +170,14 @@ namespace CrystalMagic.Game.Data
             return baseValue * GetFactor(channel) + GetBonus(channel);
         }
 
-        public float GetActionSpeedMultiplier()
+        public float GetActionSpeedValue(float baseValue)
         {
-            return Apply(SkillModifierChannel.ActionSpeed, 1f);
+            return math.clamp(Apply(SkillModifierChannel.ActionSpeed, baseValue), -100f, 100f);
         }
 
-        public float GetChantSpeedMultiplier()
+        public float GetChantSpeedValue(float baseValue)
         {
-            return Apply(SkillModifierChannel.ChantSpeed, 1f);
+            return math.clamp(Apply(SkillModifierChannel.ChantSpeed, baseValue), -100f, 100f);
         }
 
         public float GetMoveSpeedMultiplier()

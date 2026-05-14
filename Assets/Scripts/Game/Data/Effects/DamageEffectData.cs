@@ -1,20 +1,15 @@
 using CrystalMagic.Game.Data;
-using Newtonsoft.Json;
-
 namespace CrystalMagic.Game.Data.Effects
 {
     [System.Serializable]
     public sealed class DamageEffectData : EffectData
     {
+        [EditorLabel("伤害倍率")]
         public float DamageCoefficient;
+        [EditorLabel("额外伤害")]
         public float FlatDamageBonus;
+        [EditorLabel("元素类型")]
         public ElementType Element = ElementType.None;
-
-        [JsonProperty("DamageTypeId")]
-        private ElementType LegacyDamageTypeId
-        {
-            set => Element = value;
-        }
 
         public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, float elementBonus = 0f, System.Func<EffectData, float> elementBonusResolver = null)
         {
@@ -46,6 +41,7 @@ namespace CrystalMagic.Game.Data.Effects
     [System.Serializable]
     public sealed class KnockbackEffectData : EffectData
     {
+        [EditorLabel("击退力度")]
         public float Force;
 
         public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, float elementBonus = 0f, System.Func<EffectData, float> elementBonusResolver = null)

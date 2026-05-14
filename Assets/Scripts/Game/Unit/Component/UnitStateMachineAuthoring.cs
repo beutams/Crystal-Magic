@@ -17,7 +17,7 @@ public class UnitStateMachineAuthoring : MonoBehaviour
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             AddComponentObject(entity, new UnitStateMachineComponent
             {
-                UnitDataId = data?.Id ?? 0,
+                UnitDataId = data?.Id ?? -1,
                 UnitName = data?.Name ?? authoring.transform.root.name,
             });
         }

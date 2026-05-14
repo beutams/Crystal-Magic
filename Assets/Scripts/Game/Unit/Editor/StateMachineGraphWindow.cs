@@ -31,7 +31,9 @@ namespace CrystalMagic.Editor.Unit
 
         private string[] _stateTypeNames   = Array.Empty<string>();
         private string[] _sourceTypeNames  = Array.Empty<string>();
+        private string[] _sourceTypeDisplayNames = Array.Empty<string>();
         private string[] _compareTypeNames = Array.Empty<string>();
+        private string[] _compareTypeDisplayNames = Array.Empty<string>();
 
         private Dictionary<string, float[]> _nodePositions = new();
 
@@ -212,24 +214,17 @@ namespace CrystalMagic.Editor.Unit
 
         private void RefreshTypeArrays()
         {
-            _stateTypeNames   = Collect(typeof(AUnitState),   true);
-            _sourceTypeNames  = Collect(typeof(ISource),      false);
-            _compareTypeNames = Collect(typeof(ICompareType), false);
-        }
-
-        private static string[] Collect(Type baseType, bool subclass)
-        {
-            return AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(a =>
-                {
-                    try { return a.GetTypes(); }
-                    catch { return Array.Empty<Type>(); }
-                })
-                .Where(t => !t.IsAbstract && !t.IsInterface &&
-                            (subclass ? t.IsSubclassOf(baseType) : baseType.IsAssignableFrom(t)))
-                .Select(t => t.Name)
-                .OrderBy(n => n)
+            _stateTypeNames = EditorLabelUtility.CollectTypeEntries(typeof(AUnitState), true)
+                .Select(entry => entry.Key)
                 .ToArray();
+
+            EditorTypeDisplayEntry[] sourceEntries = EditorLabelUtility.CollectTypeEntries(typeof(ISource));
+            _sourceTypeNames = sourceEntries.Select(entry => entry.Key).ToArray();
+            _sourceTypeDisplayNames = sourceEntries.Select(entry => entry.DisplayName).ToArray();
+
+            EditorTypeDisplayEntry[] compareEntries = EditorLabelUtility.CollectTypeEntries(typeof(ICompareType));
+            _compareTypeNames = compareEntries.Select(entry => entry.Key).ToArray();
+            _compareTypeDisplayNames = compareEntries.Select(entry => entry.DisplayName).ToArray();
         }
 
         internal string[] StateTypeNames   => _stateTypeNames;
@@ -384,6 +379,7 @@ namespace CrystalMagic.Editor.Unit
                     ConditionType = ConditionType.Necessary,
                     SourceType    = _sourceTypeNames.Length  > 0 ? _sourceTypeNames[0]  : "",
                     CompareType   = _compareTypeNames.Length > 0 ? _compareTypeNames[0] : "",
+                    SourceParam   = -1,
                 });
                 MarkDirty();
             }
@@ -419,7 +415,7 @@ namespace CrystalMagic.Editor.Unit
             if (_sourceTypeNames.Length > 0)
             {
                 int idx = Mathf.Max(0, Array.IndexOf(_sourceTypeNames, c.SourceType));
-                idx            = EditorGUILayout.Popup("数据源", idx, _sourceTypeNames);
+                idx            = EditorGUILayout.Popup("数据源", idx, _sourceTypeDisplayNames);
                 c.SourceType   = _sourceTypeNames[idx];
             }
             else
@@ -427,10 +423,12 @@ namespace CrystalMagic.Editor.Unit
                 c.SourceType = EditorGUILayout.TextField("数据源", c.SourceType);
             }
 
+            c.SourceParam = EditorGUILayout.IntField("Source Param", c.SourceParam);
+
             if (_compareTypeNames.Length > 0)
             {
                 int idx = Mathf.Max(0, Array.IndexOf(_compareTypeNames, c.CompareType));
-                idx            = EditorGUILayout.Popup("比较", idx, _compareTypeNames);
+                idx            = EditorGUILayout.Popup("比较", idx, _compareTypeDisplayNames);
                 c.CompareType  = _compareTypeNames[idx];
             }
             else

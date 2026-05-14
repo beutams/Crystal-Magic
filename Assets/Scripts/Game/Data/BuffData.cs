@@ -23,19 +23,33 @@ namespace CrystalMagic.Game.Data
 
     public enum PropertyModifierChannel
     {
+        [EditorLabel("移速")]
         MoveSpeed = 0,
+        [EditorLabel("最大生命")]
         MaxHealth = 1,
+        [EditorLabel("防御")]
         Defense = 2,
+        [EditorLabel("攻击力")]
         AttackPower = 3,
+        [EditorLabel("技能距离")]
         SkillRange = 4,
+        [EditorLabel("最大法力")]
         MaxMp = 5,
+        [EditorLabel("生命回复")]
         HealthRegen = 6,
+        [EditorLabel("法力回复")]
         MpRegen = 7,
+        [EditorLabel("动作速度")]
         ActionSpeed = 8,
+        [EditorLabel("吟唱速度")]
         ChantSpeed = 9,
+        [EditorLabel("水元素强度")]
         WaterPower = 10,
+        [EditorLabel("火元素强度")]
         FirePower = 11,
+        [EditorLabel("雷元素强度")]
         LightningPower = 12,
+        [EditorLabel("风元素强度")]
         WindPower = 13,
     }
 

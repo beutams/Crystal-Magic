@@ -26,7 +26,7 @@ namespace CrystalMagic.UI
             CloseItemInfoUI();
         }
 
-        private void OnItemHovered(EffectSelectEffectDisplayData data)
+        private void OnItemHovered(EffectSelectAdditionDisplayData data)
         {
             if (data == null)
                 return;
@@ -45,7 +45,7 @@ namespace CrystalMagic.UI
             CloseItemInfoUI();
         }
 
-        private void OnItemSelected(EffectSelectEffectDisplayData data)
+        private void OnItemSelected(EffectSelectAdditionDisplayData data)
         {
             if (data == null)
                 return;
@@ -61,7 +61,7 @@ namespace CrystalMagic.UI
             if (chain?.Slots == null || Model.SkillSlotIndex < 0 || Model.SkillSlotIndex >= chain.Slots.Count)
                 return;
 
-            chain.Slots[Model.SkillSlotIndex].SkillEffectId = data.EffectId;
+            chain.Slots[Model.SkillSlotIndex].SkillAdditionId = data.AdditionId;
             CrystalMagic.Core.SaveDataComponent.Instance.NotifySkillDataChanged();
             View.Close();
         }

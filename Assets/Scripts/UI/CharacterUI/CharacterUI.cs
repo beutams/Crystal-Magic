@@ -24,8 +24,8 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
     public event Action<CrystalMagic.UI.CharacterInventoryDisplayData, int> InventorySkillStoneDropped;
     public event Action<CrystalMagic.UI.CharacterInventoryDisplayData, int> InventoryEquipDropped;
     public event Action<int> EquipReturnedToInventory;
-    public event Action<int, int> BonusEquipSwapped;
-    public event Action<CrystalMagic.UI.CharacterSkillDisplayData> SkillEffectRequested;
+    public event Action<int, int> SpiritEquipSwapped;
+    public event Action<CrystalMagic.UI.CharacterSkillDisplayData> SkillAdditionRequested;
     public event Action<CrystalMagic.UI.CharacterSkillDisplayData, int> SkillReordered;
     public event Action<CrystalMagic.UI.CharacterSkillDisplayData> SkillReturnedToInventory;
 
@@ -96,7 +96,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         for (int i = 0; i < _currentEquipItems.Length; i++)
             _currentEquipItems[i] = equipItems != null && i < equipItems.Length ? equipItems[i] : null;
 
-        RenderEquipSlot(UI.Equip_WeapenBorder_Weapen, _currentEquipItems[0]);
+        RenderEquipSlot(UI.Equip_MagicStoneBorder_MagicStone, _currentEquipItems[0]);
         RenderEquipSlot(UI.Equip_Equip1Border_Equip1, _currentEquipItems[1]);
         RenderEquipSlot(UI.Equip_Equip2Border_Equip2, _currentEquipItems[2]);
         RenderEquipSlot(UI.Equip_Equip3Border_Equip3, _currentEquipItems[3]);
@@ -177,16 +177,16 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         itemView.DragStarted -= HandleSkillDragStarted;
         itemView.Dragging -= HandleSkillDragging;
         itemView.DragEnded -= HandleSkillDragEnded;
-        itemView.EffectClicked -= HandleSkillEffectClicked;
+        itemView.AdditionClicked -= HandleSkillAdditionClicked;
         itemView.DragStarted += HandleSkillDragStarted;
         itemView.Dragging += HandleSkillDragging;
         itemView.DragEnded += HandleSkillDragEnded;
-        itemView.EffectClicked += HandleSkillEffectClicked;
+        itemView.AdditionClicked += HandleSkillAdditionClicked;
     }
 
     private void EnsureEquipSlotHandlers()
     {
-        BindEquipSlotHandler(0, UI.Equip_WeapenBorder.GameObject);
+        BindEquipSlotHandler(0, UI.Equip_MagicStoneBorder.GameObject);
         BindEquipSlotHandler(1, UI.Equip_Equip1Border.GameObject);
         BindEquipSlotHandler(2, UI.Equip_Equip2Border.GameObject);
         BindEquipSlotHandler(3, UI.Equip_Equip3Border.GameObject);
@@ -262,7 +262,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
             return;
 
         CrystalMagic.UI.CharacterEquipDisplayData data = _currentEquipItems[slotIndex];
-        if (data == null || data.ItemId <= 0 || data.ItemType == CrystalMagic.Game.Data.ItemType.None)
+        if (data == null || data.ItemId < 0 || data.ItemType == CrystalMagic.Game.Data.ItemType.None)
             return;
 
         _draggedInventoryItem = null;
@@ -284,7 +284,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
     private void HandleEquipDragEnded(int slotIndex, PointerEventData eventData)
     {
         int hoveredSlotIndex = -1;
-        bool shouldSwapBonusSlot = _draggedEquipItem != null
+        bool shouldSwapSpiritSlot = _draggedEquipItem != null
             && _draggedEquipItem.SlotIndex == slotIndex
             && TryGetHoveredEquipSlotIndex(eventData, out hoveredSlotIndex)
             && slotIndex >= 1
@@ -300,8 +300,8 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         _draggedEquipItem = null;
         SetItemDragVisible(false);
 
-        if (shouldSwapBonusSlot)
-            BonusEquipSwapped?.Invoke(slotIndex, hoveredSlotIndex);
+        if (shouldSwapSpiritSlot)
+            SpiritEquipSwapped?.Invoke(slotIndex, hoveredSlotIndex);
 
         if (shouldReturnToInventory)
             EquipReturnedToInventory?.Invoke(slotIndex);
@@ -316,7 +316,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         _draggedEquipItem = null;
         _draggedSkillItem = data;
         UI.SkillDrag_Skill.Image.sprite = LoadIcon(data.SkillIconPath);
-        UI.SkillDrag_Effect_EffectIcon.Image.sprite = LoadIcon(data.EffectIconPath);
+        UI.SkillDrag_Effect_EffectIcon.Image.sprite = LoadIcon(data.AdditionIconPath);
         UI.SkillDrag_Index_IndexNum.TextMeshProUGUI.text = data.DisplayIndex.ToString();
         SetSkillDragVisible(true);
         UpdateSkillDragPosition(eventData);
@@ -353,12 +353,12 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         SetSkillDragVisible(false);
     }
 
-    private void HandleSkillEffectClicked(CrystalMagic.UI.CharacterSkillDisplayData data)
+    private void HandleSkillAdditionClicked(CrystalMagic.UI.CharacterSkillDisplayData data)
     {
         if (data == null)
             return;
 
-        SkillEffectRequested?.Invoke(data);
+        SkillAdditionRequested?.Invoke(data);
     }
 
     private void EnsureItemDragInitialized()
@@ -492,7 +492,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
             return false;
 
         Camera eventCamera = eventData.pressEventCamera != null ? eventData.pressEventCamera : eventData.enterEventCamera;
-        if (Contains(UI.Equip_WeapenBorder.RectTransform, eventData.position, eventCamera))
+        if (Contains(UI.Equip_MagicStoneBorder.RectTransform, eventData.position, eventCamera))
         {
             slotIndex = 0;
             return true;

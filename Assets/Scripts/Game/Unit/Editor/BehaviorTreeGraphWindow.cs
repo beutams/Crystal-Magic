@@ -252,7 +252,7 @@ namespace CrystalMagic.Editor.Unit
                     if (submitByEnter)
                     {
                         evt.Use();
-                        GUI.FocusControl(null);
+                        CrystalMagic.Editor.EditorFocusUtility.ClearTextFocus();
                     }
                 }
 
@@ -262,6 +262,7 @@ namespace CrystalMagic.Editor.Unit
                 {
                     if (_selectedIndex != i)
                     {
+                        CrystalMagic.Editor.EditorFocusUtility.ClearTextFocus();
                         _selectedIndex = i;
                         RebuildGraph();
                     }
@@ -385,6 +386,7 @@ namespace CrystalMagic.Editor.Unit
                 default,
                 Entity.Null,
                 false,
+                -1,
                 entry.Prefab,
                 unitData,
                 false);
@@ -504,13 +506,14 @@ namespace CrystalMagic.Editor.Unit
 
                 condition.ConditionType = (ConditionType)EditorGUILayout.EnumPopup("Condition Type", condition.ConditionType);
                 condition.SourceType = EditorGUILayout.TextField("Source Type", condition.SourceType ?? string.Empty);
+                condition.SourceParam = EditorGUILayout.IntField("Source Param", condition.SourceParam);
                 condition.CompareType = EditorGUILayout.TextField("Compare Type", condition.CompareType ?? string.Empty);
                 condition.CompareValue = EditorGUILayout.FloatField("Compare Value", condition.CompareValue);
                 EditorGUILayout.EndVertical();
             }
 
             if (GUILayout.Button("Add Condition"))
-                conditions.Add(new ConditionConfig());
+                conditions.Add(new ConditionConfig { SourceParam = -1 });
         }
 
         private void SwapChildren(BehaviorNodeData node, int fromIndex, int toIndex)

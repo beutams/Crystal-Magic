@@ -8,6 +8,7 @@ public readonly struct SourceContext
         EntityManager entityManager,
         Entity originEntity,
         bool hasOriginEntity,
+        int sourceParam = -1,
         GameObject unitPrefab = null,
         CrystalMagic.Game.Data.UnitData unitData = null,
         bool hasRuntimeEntity = true)
@@ -16,6 +17,7 @@ public readonly struct SourceContext
         EntityManager = entityManager;
         OriginEntity = originEntity;
         HasOriginEntity = hasOriginEntity;
+        SourceParam = sourceParam;
         UnitPrefab = unitPrefab;
         UnitData = unitData;
         HasRuntimeEntity = hasRuntimeEntity;
@@ -28,6 +30,8 @@ public readonly struct SourceContext
     public Entity OriginEntity { get; }
 
     public bool HasOriginEntity { get; }
+
+    public int SourceParam { get; }
 
     public GameObject UnitPrefab { get; }
 

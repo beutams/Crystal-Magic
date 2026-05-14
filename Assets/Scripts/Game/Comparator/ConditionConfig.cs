@@ -11,6 +11,7 @@ public class ConditionConfig
     public ConditionType ConditionType = ConditionType.Necessary;
     /// <summary>ISource 实现类名称</summary>
     public string SourceType = "";
+    public int SourceParam = -1;
     /// <summary>ICompareType 实现类名称（GreaterThan / LessThan / Equal / IsTrue / IsFalse）</summary>
     public string CompareType = "";
     /// <summary>比较阈值（GreaterThan / LessThan / Equal 有效）</summary>

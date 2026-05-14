@@ -13,11 +13,19 @@ namespace CrystalMagic.Editor.Data
     public class EquipEditorWindow : EditorWindow
     {
         private const string DataPath = "Assets/Res/Data/EquipDataTable.json";
+        private const string ItemDataPath = "Assets/Res/Data/ItemDataTable.json";
         private const float ListPanelWidth = 260f;
         private const float LabelWidth = 160f;
 
+        private static readonly PropertyModifierChannel[] PropertyModifierChannels =
+            (PropertyModifierChannel[])System.Enum.GetValues(typeof(PropertyModifierChannel));
+
+        private static readonly string[] PropertyModifierChannelDisplayNames =
+            EditorLabelUtility.GetEnumDisplayNames<PropertyModifierChannel>();
+
         private readonly List<EquipData> _rows = new();
         private readonly List<ItemData> _equipItems = new();
+
         private bool _isDirty;
         private string _statusText = string.Empty;
         private int _selectedIndex = -1;
@@ -33,6 +41,11 @@ namespace CrystalMagic.Editor.Data
         private class TableWrapper
         {
             public List<EquipData> Rows = new();
+        }
+
+        private class ItemTableWrapper
+        {
+            public List<ItemData> Rows = new();
         }
 
         [MenuItem("Tools/Data/Equip Editor")]
@@ -52,6 +65,7 @@ namespace CrystalMagic.Editor.Data
         private void OnGUI()
         {
             DrawToolbar();
+
             EditorGUILayout.BeginHorizontal();
             DrawListPanel();
             DrawDivider();
@@ -63,34 +77,15 @@ namespace CrystalMagic.Editor.Data
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            if (GUILayout.Button("Load", EditorStyles.toolbarButton, GUILayout.Width(44f)))
+            if (GUILayout.Button("加载", EditorStyles.toolbarButton, GUILayout.Width(44f)))
             {
                 RefreshItemCache();
                 LoadData();
             }
 
             GUI.enabled = _isDirty;
-            if (GUILayout.Button(_isDirty ? "Save *" : "Save", EditorStyles.toolbarButton, GUILayout.Width(52f)))
-            {
+            if (GUILayout.Button(_isDirty ? "保存 *" : "保存", EditorStyles.toolbarButton, GUILayout.Width(56f)))
                 SaveData();
-            }
-            GUI.enabled = true;
-
-            if (GUILayout.Button("+ Add", EditorStyles.toolbarButton, GUILayout.Width(56f)))
-            {
-                AddEquip();
-            }
-
-            GUI.enabled = _selectedIndex >= 0;
-            if (GUILayout.Button("Duplicate", EditorStyles.toolbarButton, GUILayout.Width(70f)))
-            {
-                DuplicateSelected();
-            }
-
-            if (GUILayout.Button("Delete", EditorStyles.toolbarButton, GUILayout.Width(56f)))
-            {
-                DeleteSelected();
-            }
             GUI.enabled = true;
 
             GUILayout.FlexibleSpace();
@@ -104,7 +99,7 @@ namespace CrystalMagic.Editor.Data
         {
             EditorGUILayout.BeginVertical(GUILayout.Width(ListPanelWidth), GUILayout.ExpandHeight(true));
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            GUILayout.Label($"Equip 列表 ({_rows.Count})", EditorStyles.boldLabel);
+            GUILayout.Label($"装备列表 ({_rows.Count})", EditorStyles.boldLabel);
             EditorGUILayout.EndHorizontal();
 
             _listScrollPos = EditorGUILayout.BeginScrollView(_listScrollPos);
@@ -114,7 +109,11 @@ namespace CrystalMagic.Editor.Data
                 string label = $"[{row.Id}] {GetListName(row)}";
                 bool isSelected = i == _selectedIndex;
                 if (GUILayout.Toggle(isSelected, label, "Button"))
+                {
+                    if (_selectedIndex != i)
+                        CrystalMagic.Editor.EditorFocusUtility.ClearTextFocus();
                     _selectedIndex = i;
+                }
             }
 
             EditorGUILayout.EndScrollView();
@@ -134,7 +133,7 @@ namespace CrystalMagic.Editor.Data
             if (_selectedIndex < 0 || _selectedIndex >= _rows.Count)
             {
                 GUILayout.FlexibleSpace();
-                GUILayout.Label("← 从左侧选择一个 EquipData", EditorStyles.centeredGreyMiniLabel);
+                GUILayout.Label("从左侧选择一个 EquipData", EditorStyles.centeredGreyMiniLabel);
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.EndVertical();
                 return;
@@ -144,7 +143,7 @@ namespace CrystalMagic.Editor.Data
             row.Properties ??= new List<EquipPropertyEntry>();
 
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            GUILayout.Label($"[{row.Id}]  {GetListName(row)}", EditorStyles.boldLabel);
+            GUILayout.Label($"[{row.Id}] {GetListName(row)}", EditorStyles.boldLabel);
             EditorGUILayout.EndHorizontal();
 
             _detailScrollPos = EditorGUILayout.BeginScrollView(_detailScrollPos);
@@ -164,9 +163,22 @@ namespace CrystalMagic.Editor.Data
             {
                 EquipPropertyEntry entry = row.Properties[i];
                 EditorGUI.BeginChangeCheck();
+
                 EditorGUILayout.BeginHorizontal();
-                entry.Channel = (PropertyModifierChannel)EditorGUILayout.EnumPopup(entry.Channel, GUILayout.MinWidth(220f));
-                entry.BaseBonus = EditorGUILayout.FloatField("基础值", entry.BaseBonus, GUILayout.MinWidth(140f));
+                int propertyChannelIndex = System.Array.IndexOf(PropertyModifierChannels, entry.Channel);
+                propertyChannelIndex = EditorGUILayout.Popup(
+                    Mathf.Max(0, propertyChannelIndex),
+                    PropertyModifierChannelDisplayNames,
+                    GUILayout.MinWidth(220f));
+
+                entry.Channel = PropertyModifierChannels[propertyChannelIndex];
+
+                string valueLabel = IsSpeedPropertyChannel(entry.Channel) ? "基础值 (-100~100)" : "基础值";
+                float value = EditorGUILayout.FloatField(valueLabel, entry.BaseBonus, GUILayout.MinWidth(140f));
+                entry.BaseBonus = IsSpeedPropertyChannel(entry.Channel)
+                    ? Mathf.Clamp(value, -100f, 100f)
+                    : value;
+
                 if (GUILayout.Button("删除", GUILayout.Width(44f)))
                     removeAt = i;
                 EditorGUILayout.EndHorizontal();
@@ -195,11 +207,24 @@ namespace CrystalMagic.Editor.Data
             EditorGUILayout.EndVertical();
         }
 
+        private static bool IsSpeedPropertyChannel(PropertyModifierChannel channel)
+        {
+            return channel is PropertyModifierChannel.ActionSpeed or PropertyModifierChannel.ChantSpeed;
+        }
+
         private void RefreshItemCache()
         {
             _equipItems.Clear();
             _equipItems.AddRange(EditorComponents.Data.FindAll<ItemData>(item =>
-                item.ItemType == ItemType.Weapon || item.ItemType == ItemType.Accessory));
+                item.ItemType == ItemType.MagicStone || item.ItemType == ItemType.Spirit));
+            _equipItems.Sort((left, right) =>
+            {
+                int typeCompare = left.ItemType.CompareTo(right.ItemType);
+                if (typeCompare != 0)
+                    return typeCompare;
+
+                return left.Id.CompareTo(right.Id);
+            });
         }
 
         private void LoadData()
@@ -208,20 +233,19 @@ namespace CrystalMagic.Editor.Data
             _selectedIndex = -1;
             _isDirty = false;
 
-            if (!File.Exists(DataPath))
-            {
-                _statusText = $"未找到文件：{DataPath}，将自动新建";
-                return;
-            }
-
             try
             {
-                TableWrapper wrapper = JsonConvert.DeserializeObject<TableWrapper>(File.ReadAllText(DataPath), JsonSettings);
-                if (wrapper?.Rows != null)
-                    _rows.AddRange(wrapper.Rows);
+                if (File.Exists(DataPath))
+                {
+                    TableWrapper wrapper = JsonConvert.DeserializeObject<TableWrapper>(File.ReadAllText(DataPath), JsonSettings);
+                    if (wrapper?.Rows != null)
+                        _rows.AddRange(wrapper.Rows);
+                }
 
-                EnsureValidIds();
-                _statusText = $"已加载 {_rows.Count} 条 · {DataPath}";
+                SyncRowsWithEquipItems();
+                _statusText = File.Exists(DataPath)
+                    ? $"已加载 {_rows.Count} 条 · {DataPath}"
+                    : $"未找到文件：{DataPath}，已按装备列表生成默认数据";
             }
             catch (System.Exception ex)
             {
@@ -238,12 +262,16 @@ namespace CrystalMagic.Editor.Data
 
             try
             {
-                EnsureValidIds();
+                SyncRowsWithEquipItems();
+                int syncedItemCount = SyncLinkedItemExtraIdsFromEquipItems();
                 string json = JsonConvert.SerializeObject(new TableWrapper { Rows = _rows }, JsonSettings);
                 File.WriteAllText(DataPath, json, Encoding.UTF8);
                 AssetDatabase.Refresh();
+                RefreshItemCache();
                 _isDirty = false;
-                _statusText = $"已保存 {_rows.Count} 条 · {DataPath}";
+                _statusText = syncedItemCount > 0
+                    ? $"已保存 {_rows.Count} 条 · {DataPath} · 已同步 {syncedItemCount} 条 ItemData"
+                    : $"已保存 {_rows.Count} 条 · {DataPath}";
             }
             catch (System.Exception ex)
             {
@@ -252,83 +280,82 @@ namespace CrystalMagic.Editor.Data
             }
         }
 
-        private void AddEquip()
+        private void SyncRowsWithEquipItems()
         {
-            EquipData data = new()
+            Dictionary<int, EquipData> existingRows = _rows
+                .Where(row => row != null)
+                .GroupBy(row => row.Id)
+                .ToDictionary(group => group.Key, group => group.First());
+            List<EquipData> syncedRows = new();
+
+            for (int i = 0; i < _equipItems.Count; i++)
             {
-                Id = GetNextId(),
-                Properties = new List<EquipPropertyEntry>(),
-            };
-            _rows.Add(data);
-            _selectedIndex = _rows.Count - 1;
-            _isDirty = true;
-        }
-
-        private void DuplicateSelected()
-        {
-            if (_selectedIndex < 0 || _selectedIndex >= _rows.Count)
-                return;
-
-            string json = JsonConvert.SerializeObject(_rows[_selectedIndex], JsonSettings);
-            EquipData copy = JsonConvert.DeserializeObject<EquipData>(json, JsonSettings);
-            if (copy == null)
-                return;
-
-            copy.Id = GetNextId();
-            copy.Properties ??= new List<EquipPropertyEntry>();
-            _rows.Add(copy);
-            _selectedIndex = _rows.Count - 1;
-            _isDirty = true;
-        }
-
-        private void DeleteSelected()
-        {
-            if (_selectedIndex < 0 || _selectedIndex >= _rows.Count)
-                return;
-
-            EquipData selected = _rows[_selectedIndex];
-            string linkedItems = GetLinkedItemsLabel(selected.Id);
-            bool hasLinks = !string.IsNullOrEmpty(linkedItems) && linkedItems != "无";
-            string message = hasLinks
-                ? $"这条 EquipData 仍被以下装备引用：\n{linkedItems}\n\n确认继续删除吗？"
-                : "确认删除当前 EquipData 吗？";
-
-            if (!EditorUtility.DisplayDialog("删除 EquipData", message, "删除", "取消"))
-                return;
-
-            _rows.RemoveAt(_selectedIndex);
-            _selectedIndex = Mathf.Clamp(_selectedIndex, -1, _rows.Count - 1);
-            _isDirty = true;
-        }
-
-        private int GetNextId()
-        {
-            int maxId = 0;
-            for (int i = 0; i < _rows.Count; i++)
-                maxId = Mathf.Max(maxId, _rows[i].Id);
-            return maxId + 1;
-        }
-
-        private void EnsureValidIds()
-        {
-            HashSet<int> usedIds = new();
-            int nextId = 1;
-
-            for (int i = 0; i < _rows.Count; i++)
-            {
-                EquipData row = _rows[i];
-                row.Properties ??= new List<EquipPropertyEntry>();
-
-                if (row.Id <= 0 || usedIds.Contains(row.Id))
+                ItemData item = _equipItems[i];
+                if (item.ExtraId < 0)
                 {
-                    while (usedIds.Contains(nextId))
-                        nextId++;
-                    row.Id = nextId;
+                    Debug.LogWarning($"[EquipEditor] 装备物品 {item.Name} 的 ExtraId 为 -1，当前不会生成 EquipData。");
+                    continue;
                 }
 
-                usedIds.Add(row.Id);
-                _rows[i] = row;
+                if (!existingRows.TryGetValue(item.ExtraId, out EquipData row))
+                {
+                    row = new EquipData
+                    {
+                        Id = item.ExtraId,
+                        Properties = new List<EquipPropertyEntry>(),
+                    };
+                    _isDirty = true;
+                }
+
+                row.Properties ??= new List<EquipPropertyEntry>();
+                row.Id = item.ExtraId;
+                syncedRows.Add(row);
             }
+
+            _rows.Clear();
+            _rows.AddRange(syncedRows.OrderBy(row => row.Id));
+
+            if (_rows.Count == 0)
+                _selectedIndex = -1;
+            else
+                _selectedIndex = Mathf.Clamp(_selectedIndex, 0, _rows.Count - 1);
+        }
+
+        private int SyncLinkedItemExtraIdsFromEquipItems()
+        {
+            if (!File.Exists(ItemDataPath))
+                return 0;
+
+            ItemTableWrapper wrapper = JsonConvert.DeserializeObject<ItemTableWrapper>(File.ReadAllText(ItemDataPath), JsonSettings);
+            if (wrapper?.Rows == null || wrapper.Rows.Count == 0)
+                return 0;
+
+            Dictionary<int, int> equipItemIdToExtraId = _equipItems.ToDictionary(item => item.Id, item => item.ExtraId);
+            int updatedCount = 0;
+            foreach (ItemData item in wrapper.Rows)
+            {
+                if (item == null)
+                    continue;
+
+                if (item.ItemType != ItemType.MagicStone && item.ItemType != ItemType.Spirit)
+                    continue;
+
+                if (equipItemIdToExtraId.TryGetValue(item.Id, out int extraId))
+                {
+                    if (item.ExtraId == extraId)
+                        continue;
+
+                    item.ExtraId = extraId;
+                    updatedCount++;
+                }
+            }
+
+            if (updatedCount <= 0)
+                return 0;
+
+            string itemJson = JsonConvert.SerializeObject(wrapper, JsonSettings);
+            File.WriteAllText(ItemDataPath, itemJson, Encoding.UTF8);
+            return updatedCount;
         }
 
         private string GetListName(EquipData row)

@@ -153,7 +153,7 @@ public class BattleUI_SkillItemView : UISubView<BattleUI_SkillItemData>
         }
 
         UI.Skill.Image.sprite = LoadIcon(data.SkillIconPath);
-        UI.Effect_EffectIcon.Image.sprite = LoadIcon(data.EffectIconPath);
+        UI.Effect_EffectIcon.Image.sprite = LoadIcon(data.AdditionIconPath);
         UI.Index_IndexNum.TextMeshProUGUI.text = data.DisplayIndex.ToString();
         SetSelected(data.IsSelected, data.ShowChantProgress, data.ChantProgress);
     }

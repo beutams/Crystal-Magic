@@ -1,6 +1,7 @@
 using Unity.Entities;
 
 [FactoryKey("UnitHasTargetSource")]
+[EditorLabel("是否有目标")]
 public class UnitHasTargetSource : ISource
 {
     private SourceContext _context;

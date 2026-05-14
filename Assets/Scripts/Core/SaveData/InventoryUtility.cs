@@ -26,7 +26,7 @@ namespace CrystalMagic.Core
 
         public static int AddItem(List<InventoryItemData> items, int capacity, int itemId, int quantity, ItemType fallbackItemType)
         {
-            if (items == null || itemId <= 0 || quantity <= 0)
+            if (items == null || itemId < 0 || quantity <= 0)
                 return 0;
 
             ItemData itemData = DataComponent.Instance.Get<ItemData>(itemId);
@@ -63,7 +63,7 @@ namespace CrystalMagic.Core
 
         public static bool CanAddItem(List<InventoryItemData> items, int capacity, int itemId, int quantity)
         {
-            if (items == null || itemId <= 0 || quantity <= 0)
+            if (items == null || itemId < 0 || quantity <= 0)
                 return false;
 
             ItemData itemData = DataComponent.Instance.Get<ItemData>(itemId);
@@ -86,6 +86,37 @@ namespace CrystalMagic.Core
 
             int stacksNeeded = Mathf.CeilToInt((float)remaining / maxStack);
             return freeSlots >= stacksNeeded;
+        }
+
+        public static int FindFirstItemSlot(BackpackData backpackData, int itemId)
+        {
+            if (backpackData?.Items == null || itemId < 0)
+                return -1;
+
+            for (int i = 0; i < backpackData.Items.Count; i++)
+            {
+                InventoryItemData inventoryItem = backpackData.Items[i];
+                if (inventoryItem != null && inventoryItem.ItemId == itemId && inventoryItem.Quantity > 0)
+                    return i;
+            }
+
+            return -1;
+        }
+
+        public static bool TryConsumeBackpackItem(BackpackData backpackData, int slotIndex, int itemId, int count)
+        {
+            if (backpackData?.Items == null || count <= 0 || slotIndex < 0 || slotIndex >= backpackData.Items.Count)
+                return false;
+
+            InventoryItemData inventoryItem = backpackData.Items[slotIndex];
+            if (inventoryItem == null || inventoryItem.ItemId != itemId || inventoryItem.Quantity < count)
+                return false;
+
+            inventoryItem.Quantity -= count;
+            if (inventoryItem.Quantity <= 0)
+                backpackData.Items.RemoveAt(slotIndex);
+
+            return true;
         }
     }
 }

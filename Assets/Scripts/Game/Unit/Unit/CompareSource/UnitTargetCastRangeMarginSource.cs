@@ -1,6 +1,7 @@
 using Unity.Entities;
 
 [FactoryKey("UnitTargetCastRangeMarginSource")]
+[EditorLabel("施法距离余量")]
 public class UnitTargetCastRangeMarginSource : ISource
 {
     private SourceContext _context;

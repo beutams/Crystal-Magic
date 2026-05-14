@@ -11,14 +11,18 @@ namespace CrystalMagic.Game.Data.Effects
     public sealed class AreaSearchEffectData : EffectData
     {
         /// <summary>搜索半径（世界单位）</summary>
+        [EditorLabel("搜索半径")]
         public float Radius;
 
         /// <summary>搜索中心相对施法者的偏移</summary>
+        [EditorLabel("中心偏移")]
         public Vector3 CenterOffset;
 
         /// <summary>目标过滤条件</summary>
+        [EditorLabel("目标条件")]
         public List<ConditionConfig> TargetConditions = new();
 
+        [EditorLabel("搜索后效果")]
         public EffectData[] OnAfterSearch;
 
         public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, float elementBonus = 0f, System.Func<EffectData, float> elementBonusResolver = null)

@@ -60,11 +60,11 @@ partial class PlayerEquipmentPropertySystem : SystemBase
         if (equipmentData == null || DataComponent.Instance == null)
             return totals;
 
-        AddEquipmentItem(totals, equipmentData.StaffId);
-        if (equipmentData.BonusSlots != null)
+        AddEquipmentItem(totals, equipmentData.MagicStoneId);
+        if (equipmentData.SpiritSlots != null)
         {
-            for (int i = 0; i < equipmentData.BonusSlots.Length; i++)
-                AddEquipmentItem(totals, equipmentData.BonusSlots[i]);
+            for (int i = 0; i < equipmentData.SpiritSlots.Length; i++)
+                AddEquipmentItem(totals, equipmentData.SpiritSlots[i]);
         }
 
         return totals;
@@ -72,17 +72,17 @@ partial class PlayerEquipmentPropertySystem : SystemBase
 
     private static void AddEquipmentItem(PropertyModifierSet totals, int itemId)
     {
-        if (itemId <= 0)
+        if (itemId < 0)
             return;
 
         ItemData itemData = DataComponent.Instance.Get<ItemData>(itemId);
         if (itemData == null)
             return;
 
-        if (itemData.ItemType != ItemType.Weapon && itemData.ItemType != ItemType.Accessory)
+        if (itemData.ItemType != ItemType.MagicStone && itemData.ItemType != ItemType.Spirit)
             return;
 
-        if (itemData.ExtraId <= 0)
+        if (itemData.ExtraId < 0)
             return;
 
         EquipData equipData = DataComponent.Instance.Get<EquipData>(itemData.ExtraId);

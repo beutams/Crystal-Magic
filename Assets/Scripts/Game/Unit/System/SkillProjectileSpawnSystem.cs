@@ -104,6 +104,13 @@ public partial class SkillProjectileSpawnSystem : SystemBase
         EnsureDestroyFlagDisabled(projectileEntity);
 
         ApplyPayloadComponent(projectileEntity, payload);
+        ProjectileVisualUtility.ApplyProjectileVisual(
+            EntityManager,
+            projectileEntity,
+            request.ProjectileName,
+            payload.FlightTexture,
+            true,
+            payload.FlightFrameCount);
     }
 
     private void EnsureDestroyFlagDisabled(Entity entity)
@@ -135,7 +142,12 @@ public partial class SkillProjectileSpawnSystem : SystemBase
         if (EntityManager.HasComponent<SkillProjectilePayloadComponent>(entity))
         {
             SkillProjectilePayloadComponent existing = EntityManager.GetComponentObject<SkillProjectilePayloadComponent>(entity);
+            existing.ProjectileName = payload.ProjectileName;
             existing.Context = payload.Context.Clone();
+            existing.FlightTexture = payload.FlightTexture;
+            existing.FlightFrameCount = payload.FlightFrameCount;
+            existing.DestroyTexture = payload.DestroyTexture;
+            existing.DestroyFrameCount = payload.DestroyFrameCount;
             existing.OnCollisionEffects = payload.OnCollisionEffects;
             existing.OnDestroyEffects = payload.OnDestroyEffects;
             return;
@@ -145,7 +157,12 @@ public partial class SkillProjectileSpawnSystem : SystemBase
             entity,
             new SkillProjectilePayloadComponent
             {
+                ProjectileName = payload.ProjectileName,
                 Context = payload.Context.Clone(),
+                FlightTexture = payload.FlightTexture,
+                FlightFrameCount = payload.FlightFrameCount,
+                DestroyTexture = payload.DestroyTexture,
+                DestroyFrameCount = payload.DestroyFrameCount,
                 OnCollisionEffects = payload.OnCollisionEffects,
                 OnDestroyEffects = payload.OnDestroyEffects,
             });

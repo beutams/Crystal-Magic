@@ -29,6 +29,7 @@ namespace CrystalMagic.Core
         public sealed override void OnUpdate()
         {
             OnUpdateBattle();
+            RuntimeDataComponent.Instance?.TickPropSharedCooldown(Time.deltaTime);
             _unitHealthBarManager?.Tick();
             RefreshUIInputLock();
         }
@@ -176,16 +177,6 @@ namespace CrystalMagic.Core
 
         protected override void OnEnterBattle()
         {
-            SaveAreaType previousAreaType = SaveDataComponent.Instance.GetLocationData()?.AreaType ?? SaveAreaType.Town;
-            if (previousAreaType == SaveAreaType.Training)
-            {
-                SaveDataComponent.Instance.EnsureTrainingSessionExists();
-            }
-            else
-            {
-                SaveDataComponent.Instance.BeginTrainingSessionFromPersistent();
-            }
-
             Debug.Log("[TrainingState] Entered Training Ground");
             SaveDataComponent.Instance?.SetCurrentLocation(SaveAreaType.Training);
 
@@ -197,7 +188,6 @@ namespace CrystalMagic.Core
 
         protected override void OnExitBattle()
         {
-            SaveDataComponent.Instance.CommitTrainingSessionToPersistent();
             Debug.Log("[TrainingState] Exited Training Ground");
         }
 

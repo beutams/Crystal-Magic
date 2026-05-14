@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class NPCInteractableAuthoring : MonoBehaviour
 {
-    [SerializeField, HideInInspector] private int _npcDataId;
+    [SerializeField, HideInInspector] private int _npcDataId = -1;
     [SerializeField, HideInInspector] private float _interactRange = 2f;
 
     public int NpcDataId

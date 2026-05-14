@@ -17,6 +17,7 @@ namespace CrystalMagic.Core {
         private const string UnitPrefabPath = "Unit";
         private const string ProjectilePrefabPath = "Projectile";
         private const string DropPrefabPath = "Drop";
+        private const string VfxPrefabPath = "VFX";
         private const string PrefabExt = ".prefab";
         private const string JsonExt = ".json";
 
@@ -74,6 +75,11 @@ namespace CrystalMagic.Core {
             return $"{ResRootPath}/{PrefabPath}/{DropPrefabPath}";
         }
 
+        public static string GetVfxPrefabDirectory()
+        {
+            return $"{ResRootPath}/{PrefabPath}/{VfxPrefabPath}";
+        }
+
         public static string GetUnitPrefabAsset(string prefabName)
         {
             return $"{GetUnitPrefabDirectory()}/{prefabName}{PrefabExt}";
@@ -87,6 +93,11 @@ namespace CrystalMagic.Core {
         public static string GetDropPrefabAsset(string prefabName)
         {
             return $"{GetDropPrefabDirectory()}/{prefabName}{PrefabExt}";
+        }
+
+        public static string GetVfxPrefabAsset(string prefabName)
+        {
+            return $"{GetVfxPrefabDirectory()}/{prefabName}{PrefabExt}";
         }
 
         /// <summary>

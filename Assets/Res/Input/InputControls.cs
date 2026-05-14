@@ -162,6 +162,15 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""UseProp"",
+                    ""type"": ""Value"",
+                    ""id"": ""2a60ad94-4492-4415-acc0-d1a9890f0ea7"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 }
             ],
             ""bindings"": [
@@ -340,6 +349,39 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
                     ""action"": ""Property"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""7f0054a8-0051-4228-9853-084ff12cdbb8"",
+                    ""path"": ""<Keyboard>/z"",
+                    ""interactions"": """",
+                    ""processors"": ""Scale"",
+                    ""groups"": """",
+                    ""action"": ""UseProp"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""bcf215d3-cf88-4464-b71d-a10c7b880d39"",
+                    ""path"": ""<Keyboard>/x"",
+                    ""interactions"": """",
+                    ""processors"": ""Scale(factor=2)"",
+                    ""groups"": """",
+                    ""action"": ""UseProp"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""69fc7750-91a3-4958-a3ef-84698d78f47a"",
+                    ""path"": ""<Keyboard>/c"",
+                    ""interactions"": """",
+                    ""processors"": ""Scale(factor=3)"",
+                    ""groups"": """",
+                    ""action"": ""UseProp"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -356,6 +398,7 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         m_Town_Skill = m_Town.FindAction("Skill", throwIfNotFound: true);
         m_Town_Tab = m_Town.FindAction("Tab", throwIfNotFound: true);
         m_Town_Property = m_Town.FindAction("Property", throwIfNotFound: true);
+        m_Town_UseProp = m_Town.FindAction("UseProp", throwIfNotFound: true);
     }
 
     ~@InputControls()
@@ -444,6 +487,7 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_Town_Skill;
     private readonly InputAction m_Town_Tab;
     private readonly InputAction m_Town_Property;
+    private readonly InputAction m_Town_UseProp;
     /// <summary>
     /// Provides access to input actions defined in input action map "Town".
     /// </summary>
@@ -487,6 +531,10 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Town/Property".
         /// </summary>
         public InputAction @Property => m_Wrapper.m_Town_Property;
+        /// <summary>
+        /// Provides access to the underlying input action "Town/UseProp".
+        /// </summary>
+        public InputAction @UseProp => m_Wrapper.m_Town_UseProp;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -537,6 +585,9 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
             @Property.started += instance.OnProperty;
             @Property.performed += instance.OnProperty;
             @Property.canceled += instance.OnProperty;
+            @UseProp.started += instance.OnUseProp;
+            @UseProp.performed += instance.OnUseProp;
+            @UseProp.canceled += instance.OnUseProp;
         }
 
         /// <summary>
@@ -572,6 +623,9 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
             @Property.started -= instance.OnProperty;
             @Property.performed -= instance.OnProperty;
             @Property.canceled -= instance.OnProperty;
+            @UseProp.started -= instance.OnUseProp;
+            @UseProp.performed -= instance.OnUseProp;
+            @UseProp.canceled -= instance.OnUseProp;
         }
 
         /// <summary>
@@ -668,5 +722,12 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnProperty(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "UseProp" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnUseProp(InputAction.CallbackContext context);
     }
 }

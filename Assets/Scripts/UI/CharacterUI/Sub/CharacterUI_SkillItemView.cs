@@ -7,7 +7,7 @@ public class CharacterUI_SkillItemView : UISubView<CharacterUI_SkillItemData>, I
 {
     private CrystalMagic.UI.CharacterSkillDisplayData _data;
 
-    public event Action<CrystalMagic.UI.CharacterSkillDisplayData> EffectClicked;
+    public event Action<CrystalMagic.UI.CharacterSkillDisplayData> AdditionClicked;
     public event Action<CrystalMagic.UI.CharacterSkillDisplayData, PointerEventData> DragStarted;
     public event Action<CrystalMagic.UI.CharacterSkillDisplayData, PointerEventData> Dragging;
     public event Action<CrystalMagic.UI.CharacterSkillDisplayData, PointerEventData> DragEnded;
@@ -27,7 +27,7 @@ public class CharacterUI_SkillItemView : UISubView<CharacterUI_SkillItemData>, I
 
         UI.Index_IndexNum.TextMeshProUGUI.text = data.DisplayIndex.ToString();
         UI.Skill.Image.sprite = LoadIcon(data.SkillIconPath);
-        UI.Effect_EffectIcon.Image.sprite = LoadIcon(data.EffectIconPath);
+            UI.Effect_EffectIcon.Image.sprite = LoadIcon(data.AdditionIconPath);
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -63,7 +63,7 @@ public class CharacterUI_SkillItemView : UISubView<CharacterUI_SkillItemData>, I
         if (!RectTransformUtility.RectangleContainsScreenPoint(UI.Effect.RectTransform, eventData.position, eventCamera))
             return;
 
-        EffectClicked?.Invoke(_data);
+        AdditionClicked?.Invoke(_data);
     }
 
     private Sprite LoadIcon(string iconPath)

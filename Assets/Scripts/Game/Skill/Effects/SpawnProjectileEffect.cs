@@ -7,9 +7,6 @@ using UnityEngine;
 
 namespace CrystalMagic.Game.Skill.Effects
 {
-    /// <summary>
-    /// Creates a projectile spawn request that will be materialized by the ECS spawn system.
-    /// </summary>
     public sealed class SpawnProjectileEffect : Effect
     {
         public new SpawnProjectileEffectData Data { get; }
@@ -18,7 +15,7 @@ namespace CrystalMagic.Game.Skill.Effects
 
         public override void Execute(SkillContent context)
         {
-            if (Data == null || Data.Projectile == null || context == null)
+            if (Data == null || context == null)
                 return;
 
             if (!TryGetSpawnPosition(context, out Vector3 spawnPosition))
@@ -69,11 +66,13 @@ namespace CrystalMagic.Game.Skill.Effects
             EntityManager entityManager = context.EntityManager;
             Entity requestEntity = entityManager.CreateEntity(typeof(SkillProjectileSpawnRequestComponent));
 
+            FixedString128Bytes projectileName = new FixedString128Bytes(ProjectileVisualUtility.GenericProjectilePrefabName);
+
             entityManager.SetComponentData(
                 requestEntity,
                 new SkillProjectileSpawnRequestComponent
                 {
-                    ProjectileName = new FixedString128Bytes(Data.Projectile.name),
+                    ProjectileName = projectileName,
                     StartPosition = new float3(startPosition.x, startPosition.y, startPosition.z),
                     Direction = new float3(direction.x, direction.y, direction.z),
                     Speed = Data.Speed,
@@ -88,7 +87,12 @@ namespace CrystalMagic.Game.Skill.Effects
                 requestEntity,
                 new SkillProjectilePayloadComponent
                 {
+                    ProjectileName = projectileName,
                     Context = context.Clone(),
+                    FlightTexture = Data.FlightTexture,
+                    FlightFrameCount = math.clamp(Data.FlightFrameCount, 1, 16),
+                    DestroyTexture = Data.DestroyTexture,
+                    DestroyFrameCount = math.clamp(Data.DestroyFrameCount, 1, 16),
                     OnCollisionEffects = Data.OnCollisionEffects,
                     OnDestroyEffects = Data.OnDestroyEffects,
                 });

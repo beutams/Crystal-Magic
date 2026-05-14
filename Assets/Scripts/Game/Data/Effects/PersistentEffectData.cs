@@ -5,13 +5,18 @@ namespace CrystalMagic.Game.Data.Effects
     [System.Serializable]
     public sealed class PersistentEffectData : EffectData
     {
+        [EditorLabel("元素类型")]
         public ElementType Element = ElementType.None;
+        [EditorLabel("总时长")]
         public float TotalDuration;
+        [EditorLabel("触发间隔")]
         public float TickIntervalSeconds;
 
+        [EditorLabel("开始效果")]
         [UnityEngine.SerializeReference]
         public EffectData[] OnStartEffects = System.Array.Empty<EffectData>();
 
+        [EditorLabel("周期效果")]
         [UnityEngine.SerializeReference]
         public EffectData[] OnTickEffects = System.Array.Empty<EffectData>();
 

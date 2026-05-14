@@ -11,6 +11,7 @@ namespace CrystalMagic.Game.Skill.Effects
     /// </summary>
     public sealed class SpawnVfxEffect : Effect
     {
+        private const string GenericVfxPrefabName = "VFX";
         public new SpawnVfxEffectData Data { get; }
 
         public SpawnVfxEffect(SpawnVfxEffectData data) : base(data) => Data = data;
@@ -20,23 +21,22 @@ namespace CrystalMagic.Game.Skill.Effects
             if (Data == null || context == null)
                 return;
 
-            GameObject prefab = ResourceComponent.Instance.Load<GameObject>(Data.VfxPath);
-            if (prefab == null)
+            string vfxAssetPath = AssetPathHelper.GetVfxPrefabAsset(GenericVfxPrefabName);
+            GameObject vfx = PoolComponent.Instance.Get(vfxAssetPath);
+            if (vfx == null)
                 return;
 
             Quaternion rotation = GetSpawnRotation(context);
             Vector3 position = GetSpawnPosition(context, rotation);
-            GameObject vfx = PoolComponent.Instance.Get(prefab);
             vfx.transform.SetPositionAndRotation(position, rotation);
-            vfx.transform.localScale = prefab.transform.localScale * Data.Scale;
+            vfx.transform.localScale = Vector3.one * Data.Scale;
 
             Flipbook4x4Runtime flipbook = vfx.GetComponent<Flipbook4x4Runtime>();
             if (flipbook == null)
                 flipbook = vfx.AddComponent<Flipbook4x4Runtime>();
 
-            bool loop = Data.FollowCaster;
-            bool destroyWhenFinished = !loop && Data.Duration <= 0f;
-            flipbook.Initialize(loop, destroyWhenFinished);
+            bool destroyWhenFinished = !Data.Loop;
+            flipbook.Initialize(Data.VfxTexture, Data.FrameCount, Data.Loop, destroyWhenFinished);
 
             SkillVfxRuntime runtime = vfx.GetComponent<SkillVfxRuntime>();
             if (runtime == null)
@@ -44,11 +44,16 @@ namespace CrystalMagic.Game.Skill.Effects
 
             if (Data.FollowCaster && context.HasOriginEntity)
             {
-                runtime.Initialize(context.OriginEntity, context.EntityManager, Data.SpawnOffset, Data.AlignToCasterForward, Data.Duration);
+                runtime.Initialize(
+                    context.OriginEntity,
+                    context.EntityManager,
+                    Data.SpawnOffset,
+                    Data.AlignToCasterForward,
+                    Data.Loop ? Data.Duration : 0f);
                 return;
             }
 
-            runtime.Initialize(Entity.Null, context.EntityManager, Vector3.zero, false, Data.Duration);
+            runtime.Initialize(Entity.Null, context.EntityManager, Vector3.zero, false, Data.Loop ? Data.Duration : 0f);
         }
 
         private Vector3 GetSpawnPosition(SkillContent context, Quaternion rotation)

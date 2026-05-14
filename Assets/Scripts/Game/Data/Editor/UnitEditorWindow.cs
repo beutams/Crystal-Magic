@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -234,15 +234,15 @@ namespace CrystalMagic.Editor.Data
                 }
 
                 NormalizeRowIds();
-                _statusText = $"已加载 {_rows.Count} 条 - {DataPath}";
+                _statusText = $"Loaded {_rows.Count} rows - {DataPath}";
             }
             catch (Exception ex)
             {
                 _statusText = $"加载失败：{ex.Message}";
                 Debug.LogError($"[UnitEditor] Load error:\n{ex}");
             }
-        }
 
+        }
         private void SaveData()
         {
             string directory = Path.GetDirectoryName(DataPath);
@@ -253,6 +253,11 @@ namespace CrystalMagic.Editor.Data
 
             try
             {
+                RefreshPrefabEntries();
+                List<UnitData> saveRows = BuildSaveRowsFromPrefabs();
+                int removedCount = Mathf.Max(0, _rows.Count - saveRows.Count);
+                _rows = saveRows;
+
                 NormalizeRowIds();
                 foreach (UnitData row in _rows)
                 {
@@ -264,7 +269,9 @@ namespace CrystalMagic.Editor.Data
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
                 _isDirty = false;
-                _statusText = $"已保存 {_rows.Count} 条 - {DataPath}";
+                _statusText = removedCount > 0
+                    ? $"已保存 {_rows.Count} 条，清理 {removedCount} 条旧数据 - {DataPath}"
+                    : $"已保存 {_rows.Count} 条 - {DataPath}";
             }
             catch (Exception ex)
             {
@@ -273,11 +280,34 @@ namespace CrystalMagic.Editor.Data
             }
         }
 
+        private List<UnitData> BuildSaveRowsFromPrefabs()
+        {
+            List<UnitData> rows = new();
+            HashSet<UnitData> usedRows = new();
+
+            for (int i = 0; i < _prefabEntries.Count; i++)
+            {
+                UnitPrefabEntry entry = _prefabEntries[i];
+                UnitData row = ResolveUnitData(entry);
+                if (row == null || !usedRows.Add(row))
+                {
+                    continue;
+                }
+
+                row.Name = entry.DisplayName;
+                row.PrefabPath = entry.AssetPath;
+                row.NormalizeModules();
+                rows.Add(row);
+            }
+
+            return rows;
+        }
+
         private void NormalizeRowIds()
         {
             for (int i = 0; i < _rows.Count; i++)
             {
-                _rows[i].Id = i + 1;
+                _rows[i].Id = i;
             }
         }
 
@@ -349,6 +379,7 @@ namespace CrystalMagic.Editor.Data
 
                 if (currentEvent.type == EventType.MouseDown && itemRect.Contains(currentEvent.mousePosition))
                 {
+                    CrystalMagic.Editor.EditorFocusUtility.ClearTextFocus();
                     _selectedIndex = i;
                     currentEvent.Use();
                     Repaint();
@@ -409,7 +440,7 @@ namespace CrystalMagic.Editor.Data
             if (newTab != _selectedTab)
             {
                 _selectedTab = newTab;
-                GUI.FocusControl(null);
+                CrystalMagic.Editor.EditorFocusUtility.ClearTextFocus();
                 Repaint();
             }
             EditorGUILayout.EndHorizontal();
@@ -532,7 +563,7 @@ namespace CrystalMagic.Editor.Data
             }
             EditorGUILayout.EndHorizontal();
 
-            EditorGUILayout.HelpBox("这里仅预览状态数据，修改请到 State Machine 编辑器。", MessageType.Info);
+            EditorGUILayout.HelpBox("这里只预览状态数据，修改请到 State Machine 编辑器。", MessageType.Info);
 
             if (!HasAuthoring<UnitStateMachineAuthoring>(entry))
             {
@@ -592,7 +623,7 @@ namespace CrystalMagic.Editor.Data
             }
             EditorGUILayout.EndHorizontal();
 
-            EditorGUILayout.HelpBox("这里仅预览行为树数据，修改请到 Behavior Tree 编辑器。", MessageType.Info);
+            EditorGUILayout.HelpBox("这里只预览行为树数据，修改请到 Behavior Tree 编辑器。", MessageType.Info);
 
             UnitBehaviorTreeAuthoring authoring = entry.Prefab.GetComponent<UnitBehaviorTreeAuthoring>();
             if (authoring == null)
@@ -666,12 +697,19 @@ namespace CrystalMagic.Editor.Data
                 return "None";
             }
 
-            string sourceType = string.IsNullOrWhiteSpace(condition.SourceType) ? "?" : condition.SourceType;
-            string compareType = string.IsNullOrWhiteSpace(condition.CompareType) ? "?" : condition.CompareType;
-            string valueText = compareType is "GreaterThan" or "LessThan" or "Equal"
+            string sourceType = string.IsNullOrWhiteSpace(condition.SourceType)
+                ? "?"
+                : EditorLabelUtility.GetTypeDisplayName(condition.SourceType, typeof(ISource));
+            string compareType = string.IsNullOrWhiteSpace(condition.CompareType)
+                ? "?"
+                : EditorLabelUtility.GetTypeDisplayName(condition.CompareType, typeof(ICompareType));
+            string valueText = condition.CompareType is "GreaterThan" or "LessThan" or "Equal"
                 ? $" {condition.CompareValue:0.##}"
                 : string.Empty;
-            return $"{condition.ConditionType}: {sourceType} {compareType}{valueText}";
+            string sourceParamText = condition.SourceParam >= 0
+                ? $"({condition.SourceParam})"
+                : string.Empty;
+            return $"{condition.ConditionType}: {sourceType}{sourceParamText} {compareType}{valueText}";
         }
 
         private static string GetBehaviorTreePreviewName(BehaviorTreeData tree)

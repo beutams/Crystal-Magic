@@ -10,9 +10,10 @@ using UnityEngine;
 
 namespace CrystalMagic.Editor.Data
 {
-    public class SkillEffectEditorWindow : EditorWindow
+    public class SkillAdditionEditorWindow : EditorWindow
     {
         private const string DataPath = "Assets/Res/Data/SkillEffectDataTable.json";
+        private const string UnitDataPath = "Assets/Res/Data/UnitDataTable.json";
         private const float ListPanelWidth = 220f;
         private const float ItemHeight = 26f;
         private const float InsertFieldWidth = 30f;
@@ -45,10 +46,22 @@ namespace CrystalMagic.Editor.Data
             public List<SkillEffectData> Rows = new();
         }
 
-        [MenuItem("Tools/Data/Skill Effect Editor")]
+        private class UnitTableWrapper
+        {
+            public List<UnitData> Rows = new();
+        }
+
+        private static JsonSerializerSettings UnitJsonSettings => new()
+        {
+            Formatting = Formatting.Indented,
+            NullValueHandling = NullValueHandling.Ignore,
+            TypeNameHandling = TypeNameHandling.Auto,
+        };
+
+        [MenuItem("Tools/Data/Skill Addition Editor")]
         public static void Open()
         {
-            SkillEffectEditorWindow window = GetWindow<SkillEffectEditorWindow>("Skill Effect Editor");
+            SkillAdditionEditorWindow window = GetWindow<SkillAdditionEditorWindow>("Skill Addition Editor");
             window.minSize = new Vector2(920f, 560f);
             window.Show();
         }
@@ -84,7 +97,7 @@ namespace CrystalMagic.Editor.Data
             catch (Exception ex)
             {
                 _statusText = $"Load failed: {ex.Message}";
-                Debug.LogError($"[SkillEffectEditor] Load error:\n{ex}");
+                Debug.LogError($"[SkillAdditionEditor] Load error:\n{ex}");
             }
         }
 
@@ -96,17 +109,20 @@ namespace CrystalMagic.Editor.Data
 
             try
             {
-                NormalizeRowIds();
+                Dictionary<int, int> idRemap = NormalizeRowIds();
+                int linkedUnitCount = SyncUnitSkillAdditionIds(idRemap);
                 string json = JsonConvert.SerializeObject(new TableWrapper { Rows = _rows }, JsonSettings);
                 File.WriteAllText(DataPath, json, Encoding.UTF8);
                 AssetDatabase.Refresh();
                 _isDirty = false;
-                _statusText = $"Saved {_rows.Count} rows";
+                _statusText = linkedUnitCount > 0
+                    ? $"Saved {_rows.Count} rows | Synced {linkedUnitCount} unit skill addition reference(s)"
+                    : $"Saved {_rows.Count} rows";
             }
             catch (Exception ex)
             {
                 _statusText = $"Save failed: {ex.Message}";
-                Debug.LogError($"[SkillEffectEditor] Save error:\n{ex}");
+                Debug.LogError($"[SkillAdditionEditor] Save error:\n{ex}");
             }
         }
 
@@ -114,8 +130,8 @@ namespace CrystalMagic.Editor.Data
         {
             _rows.Add(new SkillEffectData
             {
-                Id = _rows.Count + 1,
-                Name = $"New Skill Effect {_rows.Count + 1}",
+                Id = _rows.Count,
+                Name = $"New Skill Effect {_rows.Count}",
                 Description = string.Empty,
                 IconPath = string.Empty,
                 Modifiers = new List<SkillModifierEntry>(),
@@ -151,7 +167,7 @@ namespace CrystalMagic.Editor.Data
             if (copy == null)
                 return;
 
-            copy.Id = _rows.Count + 1;
+            copy.Id = _rows.Count;
             copy.Name = string.IsNullOrWhiteSpace(source.Name) ? $"Skill Effect {copy.Id}" : $"{source.Name}_Copy";
             copy.Modifiers ??= new List<SkillModifierEntry>();
             _rows.Add(copy);
@@ -161,10 +177,18 @@ namespace CrystalMagic.Editor.Data
             Repaint();
         }
 
-        private void NormalizeRowIds()
+        private Dictionary<int, int> NormalizeRowIds()
         {
+            Dictionary<int, int> idRemap = new();
             for (int i = 0; i < _rows.Count; i++)
-                _rows[i].Id = i + 1;
+            {
+                int oldId = _rows[i].Id;
+                int newId = i;
+                idRemap[oldId] = newId;
+                _rows[i].Id = newId;
+            }
+
+            return idRemap;
         }
 
         private void MoveRowToInsertIndex(int fromIndex, int insertIndex)
@@ -183,7 +207,7 @@ namespace CrystalMagic.Editor.Data
             NormalizeRowIds();
             _selectedIndex = insertIndex;
             _isDirty = true;
-            GUI.FocusControl(null);
+            CrystalMagic.Editor.EditorFocusUtility.ClearTextFocus();
             Repaint();
         }
 
@@ -278,7 +302,7 @@ namespace CrystalMagic.Editor.Data
                     if (submitByEnter)
                     {
                         evt.Use();
-                        GUI.FocusControl(null);
+                        CrystalMagic.Editor.EditorFocusUtility.ClearTextFocus();
                     }
                 }
 
@@ -288,8 +312,9 @@ namespace CrystalMagic.Editor.Data
 
                 if (evt.type == EventType.MouseDown && itemRect.Contains(evt.mousePosition) && !insertRect.Contains(evt.mousePosition))
                 {
+                    if (_selectedIndex != i)
+                        CrystalMagic.Editor.EditorFocusUtility.ClearTextFocus();
                     _selectedIndex = i;
-                    GUI.FocusControl(null);
                     evt.Use();
                     Repaint();
                 }
@@ -394,6 +419,53 @@ namespace CrystalMagic.Editor.Data
                 row.Modifiers.RemoveAt(removeAt);
                 _isDirty = true;
             }
+        }
+
+        private int SyncUnitSkillAdditionIds(IReadOnlyDictionary<int, int> idRemap)
+        {
+            if (idRemap == null || idRemap.Count == 0 || !File.Exists(UnitDataPath))
+                return 0;
+
+            UnitTableWrapper wrapper = JsonConvert.DeserializeObject<UnitTableWrapper>(File.ReadAllText(UnitDataPath), UnitJsonSettings);
+            if (wrapper?.Rows == null || wrapper.Rows.Count == 0)
+                return 0;
+
+            int updatedCount = 0;
+            foreach (UnitData row in wrapper.Rows)
+            {
+                row?.NormalizeModules();
+                UnitSkillModuleData skillModule = row?.GetModule<UnitSkillModuleData>();
+                if (skillModule?.Skills == null)
+                    continue;
+
+                for (int i = 0; i < skillModule.Skills.Count; i++)
+                {
+                    UnitSkillSlotData slot = skillModule.Skills[i];
+                    if (slot == null || slot.SkillAdditionId < 0)
+                        continue;
+
+                    if (idRemap.TryGetValue(slot.SkillAdditionId, out int newId))
+                    {
+                        if (slot.SkillAdditionId == newId)
+                            continue;
+
+                        slot.SkillAdditionId = newId;
+                        updatedCount++;
+                    }
+                    else
+                    {
+                        slot.SkillAdditionId = -1;
+                        updatedCount++;
+                    }
+                }
+            }
+
+            if (updatedCount <= 0)
+                return 0;
+
+            string json = JsonConvert.SerializeObject(wrapper, UnitJsonSettings);
+            File.WriteAllText(UnitDataPath, json, Encoding.UTF8);
+            return updatedCount;
         }
 
         private static void DrawSectionHeader(string title)

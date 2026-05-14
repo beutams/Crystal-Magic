@@ -32,9 +32,9 @@ public class UnitCastState : AUnitState
 
         UnitSkillEntry entry = unitSkill.Skills[selectedIndex];
         Unity.Collections.FixedList64Bytes<int> skillIds = default;
-        Unity.Collections.FixedList64Bytes<int> skillEffectIds = default;
+        Unity.Collections.FixedList64Bytes<int> skillAdditionIds = default;
         skillIds.Add(entry.SkillId);
-        skillEffectIds.Add(entry.SkillEffectId);
+        skillAdditionIds.Add(entry.SkillAdditionId);
 
         SkillExecutionUtility.ResetCastState(ref cast);
         if (SkillExecutionUtility.TryBeginCast(
@@ -42,7 +42,7 @@ public class UnitCastState : AUnitState
                 Entity,
                 ref cast,
                 skillIds,
-                skillEffectIds,
+                skillAdditionIds,
                 -1,
                 hasLockedTarget: true,
                 lockedTargetPosition: intent.CastTargetPosition))
@@ -147,7 +147,7 @@ public class UnitCastState : AUnitState
 
     private bool CanUseSkill(UnitSkillComponent unitSkill, UnitSkillEntry entry, float targetDistance, out ResolvedSkillData resolvedSkill)
     {
-        if (entry.SkillId <= 0)
+        if (entry.SkillId < 0)
         {
             resolvedSkill = null;
             return false;
@@ -200,8 +200,8 @@ public class UnitCastState : AUnitState
         if (baseSkill == null)
             return false;
 
-        SkillChainSlotData slotData = entry.SkillEffectId > 0
-            ? new SkillChainSlotData { SkillEffectId = entry.SkillEffectId }
+        SkillChainSlotData slotData = entry.SkillAdditionId >= 0
+            ? new SkillChainSlotData { SkillAdditionId = entry.SkillAdditionId }
             : null;
 
         SkillModifierSet modifiers = SkillResolver.CollectModifiers(EntityManager, Entity, slotData);

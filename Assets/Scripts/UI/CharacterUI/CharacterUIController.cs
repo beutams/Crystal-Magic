@@ -21,8 +21,8 @@ namespace CrystalMagic.UI
             View.InventorySkillStoneDropped += OnInventorySkillStoneDropped;
             View.InventoryEquipDropped += OnInventoryEquipDropped;
             View.EquipReturnedToInventory += OnEquipReturnedToInventory;
-            View.BonusEquipSwapped += OnBonusEquipSwapped;
-            View.SkillEffectRequested += OnSkillEffectRequested;
+            View.SpiritEquipSwapped += OnSpiritEquipSwapped;
+            View.SkillAdditionRequested += OnSkillAdditionRequested;
             View.SkillReordered += OnSkillReordered;
             View.SkillReturnedToInventory += OnSkillReturnedToInventory;
             BindEvent(new CommonGameEvent(RuntimeDataComponent.SkillRuntimeDataChangedEventName), _refreshHandler);
@@ -38,8 +38,8 @@ namespace CrystalMagic.UI
             View.InventorySkillStoneDropped -= OnInventorySkillStoneDropped;
             View.InventoryEquipDropped -= OnInventoryEquipDropped;
             View.EquipReturnedToInventory -= OnEquipReturnedToInventory;
-            View.BonusEquipSwapped -= OnBonusEquipSwapped;
-            View.SkillEffectRequested -= OnSkillEffectRequested;
+            View.SpiritEquipSwapped -= OnSpiritEquipSwapped;
+            View.SkillAdditionRequested -= OnSkillAdditionRequested;
             View.SkillReordered -= OnSkillReordered;
             View.SkillReturnedToInventory -= OnSkillReturnedToInventory;
             CloseEffectSelectUI();
@@ -98,7 +98,7 @@ namespace CrystalMagic.UI
             if (!TryConsumeBackpackItem(backpackData, data.SlotIndex, data.ItemId, 1))
                 return;
 
-            if (oldItemId > 0)
+            if (oldItemId >= 0)
                 AddItemToBackpack(backpackData, oldItemId, 1);
 
             SetEquippedItemId(equipmentData, equipSlotIndex, data.ItemId);
@@ -114,33 +114,33 @@ namespace CrystalMagic.UI
                 return;
 
             int itemId = GetEquippedItemId(equipmentData, equipSlotIndex);
-            if (itemId <= 0)
+            if (itemId < 0)
                 return;
 
             ItemData itemData = DataComponent.Instance.Get<ItemData>(itemId);
             if (itemData == null || !IsEquippableItem(itemData.ItemType))
                 return;
 
-            SetEquippedItemId(equipmentData, equipSlotIndex, equipSlotIndex == 0 ? 0 : -1);
+            SetEquippedItemId(equipmentData, equipSlotIndex, -1);
             AddItemToBackpack(backpackData, itemId, 1);
             SaveDataComponent.Instance.NotifyBackpackDataChanged();
             SaveDataComponent.Instance.NotifyEquipmentDataChanged();
         }
 
-        private void OnBonusEquipSwapped(int sourceSlotIndex, int targetSlotIndex)
+        private void OnSpiritEquipSwapped(int sourceSlotIndex, int targetSlotIndex)
         {
             if (sourceSlotIndex < 1 || sourceSlotIndex > 4 || targetSlotIndex < 1 || targetSlotIndex > 4 || sourceSlotIndex == targetSlotIndex)
                 return;
 
             EquipmentData equipmentData = SaveDataComponent.Instance.GetEquipmentData();
-            if (equipmentData?.BonusSlots == null || equipmentData.BonusSlots.Length < 4)
+            if (equipmentData?.SpiritSlots == null || equipmentData.SpiritSlots.Length < 4)
                 return;
 
-            int sourceBonusIndex = sourceSlotIndex - 1;
-            int targetBonusIndex = targetSlotIndex - 1;
-            int temp = equipmentData.BonusSlots[sourceBonusIndex];
-            equipmentData.BonusSlots[sourceBonusIndex] = equipmentData.BonusSlots[targetBonusIndex];
-            equipmentData.BonusSlots[targetBonusIndex] = temp;
+            int sourceSpiritIndex = sourceSlotIndex - 1;
+            int targetSpiritIndex = targetSlotIndex - 1;
+            int temp = equipmentData.SpiritSlots[sourceSpiritIndex];
+            equipmentData.SpiritSlots[sourceSpiritIndex] = equipmentData.SpiritSlots[targetSpiritIndex];
+            equipmentData.SpiritSlots[targetSpiritIndex] = temp;
             SaveDataComponent.Instance.NotifyEquipmentDataChanged();
         }
 
@@ -198,7 +198,7 @@ namespace CrystalMagic.UI
             SaveDataComponent.Instance.NotifySkillDataChanged();
         }
 
-        private void OnSkillEffectRequested(CharacterSkillDisplayData data)
+        private void OnSkillAdditionRequested(CharacterSkillDisplayData data)
         {
             if (data == null)
                 return;
@@ -218,7 +218,7 @@ namespace CrystalMagic.UI
             _effectSelectUI = UIComponent.Instance.OpenChild<EffectSelectUI>(View, new EffectSelectUIOpenData
             {
                 SkillSlotIndex = data.SkillIndex,
-                SelectedEffectId = chain.Slots[data.SkillIndex]?.SkillEffectId ?? 0,
+                SelectedAdditionId = chain.Slots[data.SkillIndex]?.SkillAdditionId ?? -1,
             });
         }
 
@@ -233,7 +233,7 @@ namespace CrystalMagic.UI
 
         private bool IsEquippableItem(ItemType itemType)
         {
-            return itemType == ItemType.Weapon || itemType == ItemType.Accessory;
+            return itemType == ItemType.MagicStone || itemType == ItemType.Spirit;
         }
 
         private bool CanEquipToSlot(ItemData itemData, int equipSlotIndex)
@@ -242,10 +242,10 @@ namespace CrystalMagic.UI
                 return false;
 
             if (equipSlotIndex == 0)
-                return itemData.ItemType == ItemType.Weapon;
+                return itemData.ItemType == ItemType.MagicStone;
 
             if (equipSlotIndex >= 1 && equipSlotIndex <= 4)
-                return itemData.ItemType == ItemType.Accessory;
+                return itemData.ItemType == ItemType.Spirit;
 
             return false;
         }
@@ -253,16 +253,16 @@ namespace CrystalMagic.UI
         private int GetEquippedItemId(EquipmentData equipmentData, int equipSlotIndex)
         {
             if (equipmentData == null)
-                return 0;
+                return -1;
 
             if (equipSlotIndex == 0)
-                return equipmentData.StaffId;
+                return equipmentData.MagicStoneId;
 
-            int bonusIndex = equipSlotIndex - 1;
-            if (equipmentData.BonusSlots == null || bonusIndex < 0 || bonusIndex >= equipmentData.BonusSlots.Length)
-                return 0;
+            int spiritIndex = equipSlotIndex - 1;
+            if (equipmentData.SpiritSlots == null || spiritIndex < 0 || spiritIndex >= equipmentData.SpiritSlots.Length)
+                return -1;
 
-            return equipmentData.BonusSlots[bonusIndex];
+            return equipmentData.SpiritSlots[spiritIndex];
         }
 
         private void SetEquippedItemId(EquipmentData equipmentData, int equipSlotIndex, int itemId)
@@ -272,31 +272,20 @@ namespace CrystalMagic.UI
 
             if (equipSlotIndex == 0)
             {
-                equipmentData.StaffId = itemId;
+                equipmentData.MagicStoneId = itemId;
                 return;
             }
 
-            int bonusIndex = equipSlotIndex - 1;
-            if (equipmentData.BonusSlots == null || bonusIndex < 0 || bonusIndex >= equipmentData.BonusSlots.Length)
+            int spiritIndex = equipSlotIndex - 1;
+            if (equipmentData.SpiritSlots == null || spiritIndex < 0 || spiritIndex >= equipmentData.SpiritSlots.Length)
                 return;
 
-            equipmentData.BonusSlots[bonusIndex] = itemId;
+            equipmentData.SpiritSlots[spiritIndex] = itemId;
         }
 
         private bool TryConsumeBackpackItem(BackpackData backpackData, int slotIndex, int itemId, int count)
         {
-            if (backpackData?.Items == null || count <= 0 || slotIndex < 0 || slotIndex >= backpackData.Items.Count)
-                return false;
-
-            InventoryItemData inventoryItem = backpackData.Items[slotIndex];
-            if (inventoryItem == null || inventoryItem.ItemId != itemId || inventoryItem.Quantity < count)
-                return false;
-
-            inventoryItem.Quantity -= count;
-            if (inventoryItem.Quantity <= 0)
-                backpackData.Items.RemoveAt(slotIndex);
-
-            return true;
+            return InventoryUtility.TryConsumeBackpackItem(backpackData, slotIndex, itemId, count);
         }
 
         private void AddItemToBackpack(BackpackData backpackData, int itemId, int quantity)

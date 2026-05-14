@@ -3,5 +3,6 @@
     "MoneyIconPath": "Assets/Res/Sprites/Buy.png",
     "InitialBackpackSize": 20,
     "InitialStashSize": -1,
-    "MaxSaveSlots": 20
+    "MaxSaveSlots": 20,
+    "BattlePropSharedCooldownSeconds": 3.0
 }

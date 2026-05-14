@@ -1,6 +1,7 @@
 using Unity.Entities;
 
 [FactoryKey("UnitWantToCastSource")]
+[EditorLabel("想要施法")]
 public class UnitWantToCastSource : ISource
 {
     private SourceContext _context;

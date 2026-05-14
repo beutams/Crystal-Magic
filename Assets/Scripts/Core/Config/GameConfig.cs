@@ -12,5 +12,6 @@ namespace CrystalMagic.Game.Config
         public int InitialBackpackSize = 20;
         public int InitialStashSize = -1;
         public int MaxSaveSlots = 20;
+        public float BattlePropSharedCooldownSeconds = 3f;
     }
 }

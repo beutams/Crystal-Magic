@@ -7,24 +7,117 @@
           "BaseBonus": 10.0
         },
         {
-          "Channel": 8,
-          "BaseBonus": -0.1
-        },
-        {
-          "Channel": 0,
-          "BaseBonus": -0.1
+          "Channel": 5,
+          "BaseBonus": 100.0
         }
       ],
-      "Id": 5
+      "Id": 0
+    },
+    {
+      "Properties": [
+        {
+          "Channel": 9,
+          "BaseBonus": 25.0
+        },
+        {
+          "Channel": 8,
+          "BaseBonus": 25.0
+        }
+      ],
+      "Id": 1
+    },
+    {
+      "Properties": [
+        {
+          "Channel": 1,
+          "BaseBonus": 100.0
+        },
+        {
+          "Channel": 2,
+          "BaseBonus": 3.0
+        }
+      ],
+      "Id": 2
+    },
+    {
+      "Properties": [
+        {
+          "Channel": 0,
+          "BaseBonus": 5.0
+        }
+      ],
+      "Id": 3
+    },
+    {
+      "Properties": [
+        {
+          "Channel": 3,
+          "BaseBonus": 5.0
+        }
+      ],
+      "Id": 101
+    },
+    {
+      "Properties": [
+        {
+          "Channel": 1,
+          "BaseBonus": 50.0
+        },
+        {
+          "Channel": 5,
+          "BaseBonus": 50.0
+        }
+      ],
+      "Id": 102
+    },
+    {
+      "Properties": [
+        {
+          "Channel": 6,
+          "BaseBonus": 5.0
+        },
+        {
+          "Channel": 7,
+          "BaseBonus": 5.0
+        }
+      ],
+      "Id": 103
     },
     {
       "Properties": [
         {
           "Channel": 11,
-          "BaseBonus": 0.25
+          "BaseBonus": 25.0
         }
       ],
-      "Id": 6
+      "Id": 104
+    },
+    {
+      "Properties": [
+        {
+          "Channel": 10,
+          "BaseBonus": 25.0
+        }
+      ],
+      "Id": 105
+    },
+    {
+      "Properties": [
+        {
+          "Channel": 12,
+          "BaseBonus": 25.0
+        }
+      ],
+      "Id": 106
+    },
+    {
+      "Properties": [
+        {
+          "Channel": 13,
+          "BaseBonus": 25.0
+        }
+      ],
+      "Id": 107
     }
   ]
 }

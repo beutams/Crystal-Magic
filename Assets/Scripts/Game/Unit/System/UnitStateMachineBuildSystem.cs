@@ -32,13 +32,13 @@ partial class UnitStateMachineBuildSystem : SystemBase
 
     private void TryBuild(UnitStateMachineComponent sm, Entity entity)
     {
-        if (sm.UnitDataId <= 0 && string.IsNullOrEmpty(sm.UnitName))
+        if (sm.UnitDataId < 0 && string.IsNullOrEmpty(sm.UnitName))
         {
             Debug.LogWarning($"[StateMachine] Entity {entity} 的 UnitDataId 和 UnitName 都为空，跳过初始化");
             return;
         }
 
-        UnitData data = sm.UnitDataId > 0
+        UnitData data = sm.UnitDataId >= 0
             ? DataComponent.Instance?.Get<UnitData>(sm.UnitDataId)
             : DataComponent.Instance?.Find<UnitData>(row => row.Name == sm.UnitName);
         if (data == null)

@@ -1,6 +1,52 @@
 ﻿{
   "Rows": [
     {
+      "NPC": "EquipShop",
+      "DisplayName": "装备商店",
+      "Interactions": [
+        {
+          "Key": "OpenEquipShop",
+          "DisplayName": "装备商店",
+          "EnableExpression": "",
+          "EntryNodeGuid": "3d73650e10a542518488b999161e168f",
+          "Nodes": [
+            {
+              "UIName": "ShopUI",
+              "OpenData": "EquipShop",
+              "WaitUntilClosed": true,
+              "Guid": "3d73650e10a542518488b999161e168f",
+              "Branches": [],
+              "Type": "OpenUI"
+            }
+          ]
+        }
+      ],
+      "Id": 0
+    },
+    {
+      "NPC": "PropShop",
+      "DisplayName": "道具商店",
+      "Interactions": [
+        {
+          "Key": "OpenPropShop",
+          "DisplayName": "道具商店",
+          "EnableExpression": "",
+          "EntryNodeGuid": "14dfb732e88441b099f7fe7cb07fe71f",
+          "Nodes": [
+            {
+              "UIName": "ShopUI",
+              "OpenData": "PropShop",
+              "WaitUntilClosed": true,
+              "Guid": "14dfb732e88441b099f7fe7cb07fe71f",
+              "Branches": [],
+              "Type": "OpenUI"
+            }
+          ]
+        }
+      ],
+      "Id": 1
+    },
+    {
       "NPC": "SkillShop",
       "DisplayName": "技能商店",
       "Interactions": [
@@ -14,14 +60,14 @@
               "UIName": "ShopUI",
               "OpenData": "SkillShop",
               "WaitUntilClosed": true,
-              "Type": "OpenUI",
               "Guid": "14dfb732e88441b099f7fe7cb07fe71f",
-              "Branches": []
+              "Branches": [],
+              "Type": "OpenUI"
             }
           ]
         }
       ],
-      "Id": 1
+      "Id": 2
     },
     {
       "NPC": "Stash",
@@ -37,14 +83,14 @@
               "UIName": "StashUI",
               "OpenData": "",
               "WaitUntilClosed": true,
-              "Type": "OpenUI",
               "Guid": "e1683275aaa04ce5a827d9fd8e45c10b",
-              "Branches": []
+              "Branches": [],
+              "Type": "OpenUI"
             }
           ]
         }
       ],
-      "Id": 2
+      "Id": 3
     },
     {
       "NPC": "Training",
@@ -57,14 +103,14 @@
           "EntryNodeGuid": "3d003138da8c4619980f4cf904066d0d",
           "Nodes": [
             {
-              "Type": "EnterTrainingGround",
               "Guid": "3d003138da8c4619980f4cf904066d0d",
-              "Branches": []
+              "Branches": [],
+              "Type": "EnterTrainingGround"
             }
           ]
         }
       ],
-      "Id": 3
+      "Id": 4
     }
   ]
 }

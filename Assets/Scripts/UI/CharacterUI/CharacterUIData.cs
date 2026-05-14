@@ -19,8 +19,8 @@ public class CharacterUIData : UIData
     public UINode Skill_SkillChain_Viewport_Content_SkillItem_Index;
     public UINode Skill_SkillChain_Viewport_Content_SkillItem_Index_IndexNum;
     public UINode Equip;
-    public UINode Equip_WeapenBorder;
-    public UINode Equip_WeapenBorder_Weapen;
+    public UINode Equip_MagicStoneBorder;
+    public UINode Equip_MagicStoneBorder_MagicStone;
     public UINode Equip_Equip1Border;
     public UINode Equip_Equip1Border_Equip1;
     public UINode Equip_Equip2Border;
@@ -61,8 +61,8 @@ public class CharacterUIData : UIData
         Skill_SkillChain_Viewport_Content_SkillItem_Index = UINode.From(Find(root, "Skill/SkillChain/Viewport/Content/SkillItem/Index"));
         Skill_SkillChain_Viewport_Content_SkillItem_Index_IndexNum = UINode.From(Find(root, "Skill/SkillChain/Viewport/Content/SkillItem/Index/IndexNum"));
         Equip = UINode.From(Find(root, "Equip"));
-        Equip_WeapenBorder = UINode.From(Find(root, "Equip/WeapenBorder"));
-        Equip_WeapenBorder_Weapen = UINode.From(Find(root, "Equip/WeapenBorder/Weapen"));
+        Equip_MagicStoneBorder = UINode.From(Find(root, "Equip/MagicStoneBorder"));
+        Equip_MagicStoneBorder_MagicStone = UINode.From(Find(root, "Equip/MagicStoneBorder/MagicStone"));
         Equip_Equip1Border = UINode.From(Find(root, "Equip/Equip1Border"));
         Equip_Equip1Border_Equip1 = UINode.From(Find(root, "Equip/Equip1Border/Equip1"));
         Equip_Equip2Border = UINode.From(Find(root, "Equip/Equip2Border"));

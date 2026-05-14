@@ -4,18 +4,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Rendering;
-
-public struct SkillProjectileComponent : IComponentData
-{
-    public float3 Direction;
-    public float Speed;
-    public float MaxRange;
-    public float TraveledDistance;
-    public float HitRadius;
-    public float Scale;
-    public byte CanPierce;
-    public byte TriggerDestroyEffectsOnMaxRange;
-}
+using UnityEngine;
 
 public struct SkillProjectileSpawnRequestComponent : IComponentData
 {
@@ -43,7 +32,12 @@ public struct SkillProjectileStartTimeProperty : IComponentData
 
 public sealed class SkillProjectilePayloadComponent : IComponentData
 {
+    public FixedString128Bytes ProjectileName;
     public SkillContent Context;
+    public Texture2D FlightTexture;
+    public int FlightFrameCount;
+    public Texture2D DestroyTexture;
+    public int DestroyFrameCount;
     public EffectData[] OnCollisionEffects;
     public EffectData[] OnDestroyEffects;
 }

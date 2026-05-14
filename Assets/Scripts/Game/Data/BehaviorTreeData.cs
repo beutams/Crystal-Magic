@@ -261,7 +261,7 @@ namespace CrystalMagic.Game.Data
     public sealed class CastToTargetBehaviorNodeData : BehaviorNodeData
     {
         public UnitSkillSelectionMode SelectionMode = UnitSkillSelectionMode.RandomAll;
-        public int SkillId;
+        public int SkillId = -1;
         public int SkillTagMask;
 
         public CastToTargetBehaviorNodeData()

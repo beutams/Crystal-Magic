@@ -16,6 +16,7 @@ namespace CrystalMagic.Core
             component.LoadTable<DropData>("DropDataTable");
             component.LoadTable<EquipData>("EquipDataTable");
             component.LoadTable<ItemData>("ItemDataTable");
+            component.LoadTable<PropData>("PropDataTable");
             component.LoadTable<NPCData>("NPCDataTable");
             component.LoadTable<ShopData>("ShopDataTable");
             component.LoadTable<SkillEffectData>("SkillEffectDataTable");

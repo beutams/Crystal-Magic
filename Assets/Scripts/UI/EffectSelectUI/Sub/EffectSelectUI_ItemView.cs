@@ -6,14 +6,14 @@ using UnityEngine.EventSystems;
 
 public class EffectSelectUI_ItemView : UISubView<EffectSelectUI_ItemData>, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
-    private EffectSelectEffectDisplayData _data;
+    private EffectSelectAdditionDisplayData _data;
     private UISelectableListItem _selectableItem;
 
-    public event Action<EffectSelectEffectDisplayData> HoverEntered;
-    public event Action<EffectSelectEffectDisplayData> HoverExited;
-    public event Action<EffectSelectEffectDisplayData> Clicked;
+    public event Action<EffectSelectAdditionDisplayData> HoverEntered;
+    public event Action<EffectSelectAdditionDisplayData> HoverExited;
+    public event Action<EffectSelectAdditionDisplayData> Clicked;
 
-    public void Render(EffectSelectEffectDisplayData data)
+    public void Render(EffectSelectAdditionDisplayData data)
     {
         Rebind();
         _data = data;

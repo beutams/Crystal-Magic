@@ -6,6 +6,7 @@ using Unity.Mathematics;
 /// 需要通过 Init 注入 Entity/EntityManager 后才能使用。
 /// </summary>
 [FactoryKey("UnitVelocitySource")]
+[EditorLabel("移动输入强度")]
 public class UnitVelocitySource : ISource
 {
     private SourceContext _context;
@@ -33,6 +34,7 @@ public class UnitVelocitySource : ISource
 }
 
 [FactoryKey("UnitIsEnemySource")]
+[EditorLabel("是否敌对")]
 public class UnitIsEnemySource : ISource
 {
     private SourceContext _context;

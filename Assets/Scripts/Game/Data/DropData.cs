@@ -34,7 +34,7 @@ namespace CrystalMagic.Game.Data
     public sealed class DropEntryData
     {
         public DropRewardType DropType;
-        public int ItemId;
+        public int ItemId = -1;
         public float Chance = 1f;
         public int MinQuantity = 1;
         public int MaxQuantity = 1;

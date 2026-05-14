@@ -124,8 +124,8 @@ namespace CrystalMagic.Game.Data
     [System.Serializable]
     public sealed class UnitSkillSlotData
     {
-        public int SkillId;
-        public int SkillEffectId;
+        public int SkillId = -1;
+        public int SkillAdditionId = -1;
         public int TagMask;
         public float MinDistance;
         public float MaxDistance = 99f;

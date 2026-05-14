@@ -2,21 +2,16 @@
   "Rows": [
     {
       "Name": "增幅",
-      "Description": "使技能伤害增加50%，不过蓝耗也增加50%",
+      "Description": "加25%伤害，下一个技能伤害减半",
       "IconPath": "Assets/Res/Sprites/SkillEffect/Damage Increase.png",
       "Modifiers": [
         {
-          "Channel": 0,
-          "Factor": 0.5,
-          "Bonus": 0.0
-        },
-        {
           "Channel": 100,
-          "Factor": 0.5,
+          "Factor": 0.25,
           "Bonus": 0.0
         }
       ],
-      "Id": 1
+      "Id": 0
     },
     {
       "Name": "高速行动",
@@ -29,7 +24,7 @@
           "Bonus": 0.0
         }
       ],
-      "Id": 2
+      "Id": 1
     },
     {
       "Name": "高速咏唱",
@@ -42,7 +37,7 @@
           "Bonus": 0.0
         }
       ],
-      "Id": 3
+      "Id": 2
     }
   ]
 }

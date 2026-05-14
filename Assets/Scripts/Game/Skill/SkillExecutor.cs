@@ -29,7 +29,11 @@ namespace CrystalMagic.Game.Skill
 
             foreach (EffectData effectData in effects)
             {
-                Effect effect = CreateEffect(effectData);
+                EffectData runtimeEffectData = effectData;
+                if (effectData != null && context?.RuntimeModifiers != null)
+                    runtimeEffectData = effectData.CreateRuntimeCopy(context.RuntimeModifiers);
+
+                Effect effect = CreateEffect(runtimeEffectData);
                 effect?.Execute(context);
             }
         }
@@ -38,11 +42,17 @@ namespace CrystalMagic.Game.Skill
         {
             return effectData switch
             {
+                ApplyBuffEffectData data => new ApplyBuffEffect(data),
                 AreaSearchEffectData data => new AreaSearchEffect(data),
+                ReadBuffStackEffectData data => new ReadBuffStackEffect(data),
+                RemoveBuffEffectData data => new RemoveBuffEffect(data),
                 CameraShakeEffectData data => new CameraShakeEffect(data),
                 DamageEffectData data => new DamageEffect(data),
+                ForwardRectSearchEffectData data => new ForwardRectSearchEffect(data),
+                HealEffectData data => new HealEffect(data),
                 KnockbackEffectData data => new KnockbackEffect(data),
                 PersistentEffectData data => new PersistentEffect(data),
+                RestoreManaEffectData data => new RestoreManaEffect(data),
                 SpawnProjectileEffectData data => new SpawnProjectileEffect(data),
                 SpawnSoundEffectData data => new SpawnSoundEffect(data),
                 SpawnVfxEffectData data => new SpawnVfxEffect(data),

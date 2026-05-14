@@ -13,7 +13,7 @@ public sealed class UnitDropAuthoring : MonoBehaviour
                 DependsOn(unitDataAsset);
 
             UnitDropModuleData dropData = UnitAuthoringUtility.ResolveModuleData<UnitDropModuleData>(authoring);
-            if (dropData == null || dropData.DropDataId <= 0)
+            if (dropData == null || dropData.DropDataId < 0)
                 return;
 
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);

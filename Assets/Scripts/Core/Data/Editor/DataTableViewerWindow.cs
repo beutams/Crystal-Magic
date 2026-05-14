@@ -51,7 +51,8 @@ namespace CrystalMagic.Editor.Data
         [MenuItem("Tools/Data/Data Table Viewer")]
         public static void Open()
         {
-            var w = GetWindow<DataTableViewerWindow>("Data Table Viewer");
+            var w = CreateInstance<DataTableViewerWindow>();
+            w.titleContent = new GUIContent("Data Table Viewer");
             w.minSize = new Vector2(640, 420);
             w.Show();
         }
@@ -191,7 +192,7 @@ namespace CrystalMagic.Editor.Data
 
             for (int i = 0; i < _rows.Count; i++)
             {
-                idField.SetValue(_rows[i], i + 1);
+                idField.SetValue(_rows[i], i);
             }
         }
 
@@ -333,7 +334,7 @@ namespace CrystalMagic.Editor.Data
                     if (submitByEnter)
                     {
                         evt.Use();
-                        GUI.FocusControl(null);
+                        CrystalMagic.Editor.EditorFocusUtility.ClearTextFocus();
                     }
                 }
 

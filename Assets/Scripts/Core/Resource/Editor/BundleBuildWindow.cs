@@ -123,7 +123,7 @@ namespace CrystalMagic.Editor.Resource
                 BundleBuildRuleData previous = _config.Rules[index - 1];
                 _config.Rules[index - 1] = _config.Rules[index];
                 _config.Rules[index] = previous;
-                GUI.FocusControl(null);
+                CrystalMagic.Editor.EditorFocusUtility.ClearTextFocus();
             }
 
             GUI.enabled = index < _config.Rules.Count - 1;
@@ -132,14 +132,14 @@ namespace CrystalMagic.Editor.Resource
                 BundleBuildRuleData next = _config.Rules[index + 1];
                 _config.Rules[index + 1] = _config.Rules[index];
                 _config.Rules[index] = next;
-                GUI.FocusControl(null);
+                CrystalMagic.Editor.EditorFocusUtility.ClearTextFocus();
             }
 
             GUI.enabled = true;
             if (GUILayout.Button("Delete", GUILayout.Width(60f)))
             {
                 _config.Rules.RemoveAt(index);
-                GUI.FocusControl(null);
+                CrystalMagic.Editor.EditorFocusUtility.ClearTextFocus();
                 EditorGUILayout.EndHorizontal();
                 EditorGUILayout.EndVertical();
                 return;

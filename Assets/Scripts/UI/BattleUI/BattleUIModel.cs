@@ -98,19 +98,19 @@ namespace CrystalMagic.UI
             for (int i = 0; i < chain.Slots.Count; i++)
             {
                 SkillChainSlotData slot = chain.Slots[i];
-                int skillStoneItemId = slot?.SkillStoneItemId ?? 0;
+                int skillStoneItemId = slot?.SkillStoneItemId ?? -1;
                 SkillData skillData = SkillChainResolver.GetSkillDataBySkillStoneItemId(skillStoneItemId);
-                SkillEffectData skillEffectData = slot != null && slot.SkillEffectId > 0
-                    ? DataComponent.Instance.Get<SkillEffectData>(slot.SkillEffectId)
+                SkillEffectData skillAdditionData = slot != null && slot.SkillAdditionId >= 0
+                    ? DataComponent.Instance.Get<SkillEffectData>(slot.SkillAdditionId)
                     : null;
 
                 items.Add(new BattleSkillDisplayData
                 {
                     DisplayIndex = i + 1,
                     SkillIndex = i,
-                    SkillId = skillData != null ? skillData.Id : 0,
+                    SkillId = skillData != null ? skillData.Id : -1,
                     SkillIconPath = skillData != null ? skillData.IconPath : string.Empty,
-                    EffectIconPath = skillEffectData != null ? skillEffectData.IconPath : string.Empty,
+                    AdditionIconPath = skillAdditionData != null ? skillAdditionData.IconPath : string.Empty,
                 });
             }
 
@@ -242,7 +242,7 @@ namespace CrystalMagic.UI
                     a.ShowChantProgress != b.ShowChantProgress ||
                     !Mathf.Approximately(a.ChantProgress, b.ChantProgress) ||
                     !string.Equals(a.SkillIconPath, b.SkillIconPath, System.StringComparison.Ordinal) ||
-                    !string.Equals(a.EffectIconPath, b.EffectIconPath, System.StringComparison.Ordinal))
+                    !string.Equals(a.AdditionIconPath, b.AdditionIconPath, System.StringComparison.Ordinal))
                 {
                     return false;
                 }
@@ -258,7 +258,7 @@ namespace CrystalMagic.UI
         public int SkillIndex;
         public int SkillId;
         public string SkillIconPath;
-        public string EffectIconPath;
+        public string AdditionIconPath;
         public bool IsSelected;
         public bool ShowChantProgress;
         public float ChantProgress;

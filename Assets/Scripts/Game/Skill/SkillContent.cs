@@ -1,5 +1,6 @@
 using UnityEngine;
 using Unity.Entities;
+using CrystalMagic.Game.Data;
 
 namespace CrystalMagic.Game.Skill
 {
@@ -28,9 +29,13 @@ namespace CrystalMagic.Game.Skill
 
         public GameObject Origin { get; set; }
 
+        public SkillModifierSet RuntimeModifiers { get; set; }
+
         public SkillContent Clone()
         {
-            return (SkillContent)MemberwiseClone();
+            SkillContent copy = (SkillContent)MemberwiseClone();
+            copy.RuntimeModifiers = RuntimeModifiers?.Clone();
+            return copy;
         }
 
         public SkillContent CloneForTarget(Entity targetEntity, Vector3 targetPosition)

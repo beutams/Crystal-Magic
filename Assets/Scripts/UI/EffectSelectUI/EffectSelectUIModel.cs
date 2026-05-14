@@ -7,12 +7,12 @@ namespace CrystalMagic.UI
     public sealed class EffectSelectUIOpenData
     {
         public int SkillSlotIndex;
-        public int SelectedEffectId;
+        public int SelectedAdditionId;
     }
 
-    public sealed class EffectSelectEffectDisplayData
+    public sealed class EffectSelectAdditionDisplayData
     {
-        public int EffectId;
+        public int AdditionId;
         public string Name;
         public string Description;
         public string IconPath;
@@ -24,16 +24,16 @@ namespace CrystalMagic.UI
         public const string DataChangedEventName = "EffectSelectUIModel.DataChanged";
         public override string ChangedEventName => DataChangedEventName;
 
-        private readonly List<EffectSelectEffectDisplayData> _items = new();
+        private readonly List<EffectSelectAdditionDisplayData> _items = new();
 
-        public IReadOnlyList<EffectSelectEffectDisplayData> Items => _items;
+        public IReadOnlyList<EffectSelectAdditionDisplayData> Items => _items;
         public int SkillSlotIndex { get; private set; }
-        public int SelectedEffectId { get; private set; }
+        public int SelectedAdditionId { get; private set; }
 
         public void SetOpenData(EffectSelectUIOpenData data)
         {
             SkillSlotIndex = data != null ? data.SkillSlotIndex : 0;
-            SelectedEffectId = data != null ? data.SelectedEffectId : 0;
+            SelectedAdditionId = data != null ? data.SelectedAdditionId : -1;
             Refresh();
         }
 
@@ -53,13 +53,13 @@ namespace CrystalMagic.UI
                     if (effectData == null)
                         continue;
 
-                    _items.Add(new EffectSelectEffectDisplayData
+                    _items.Add(new EffectSelectAdditionDisplayData
                     {
-                        EffectId = effectData.Id,
+                        AdditionId = effectData.Id,
                         Name = effectData.Name,
                         Description = effectData.Description,
                         IconPath = effectData.IconPath,
-                        IsSelected = effectData.Id == SelectedEffectId,
+                        IsSelected = effectData.Id == SelectedAdditionId,
                     });
                 }
             }

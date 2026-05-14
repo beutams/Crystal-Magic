@@ -243,14 +243,13 @@ namespace CrystalMagic.Core {
         public TownData GetTownData()
         {
             EnsureCurrentSaveDataValid();
-            return GetActiveTownDataInternal();
+            return _currentSaveData.Town;
         }
 
         public StashData GetStashData()
         {
             EnsureCurrentSaveDataValid();
-            TownData townData = GetActiveTownDataInternal();
-            return townData?.Stash;
+            return _currentSaveData.Town?.Stash;
         }
 
         public CharacterData GetCharacterData()
@@ -289,59 +288,10 @@ namespace CrystalMagic.Core {
             return _currentSaveData.Town;
         }
 
-        public TownData GetTrainingSessionData()
-        {
-            EnsureCurrentSaveDataValid();
-            return _currentSaveData.Training;
-        }
-
         public DungeonRunData GetDungeonRunData()
         {
             EnsureCurrentSaveDataValid();
             return _currentSaveData.DungeonRun;
-        }
-
-        public void EnsureTrainingSessionExists()
-        {
-            EnsureCurrentSaveDataValid();
-            if (_currentSaveData.Training != null)
-                return;
-
-            _currentSaveData.Training = CloneTownData(_currentSaveData.Town);
-            EnsureTownDataValid(_currentSaveData.Training);
-        }
-
-        public void BeginTrainingSessionFromPersistent()
-        {
-            EnsureCurrentSaveDataValid();
-            _currentSaveData.Training = CloneTownData(_currentSaveData.Town);
-            EnsureTownDataValid(_currentSaveData.Training);
-            PublishAllDataChangedEvents();
-        }
-
-        public void CommitTrainingSessionToPersistent(bool clearSession = true)
-        {
-            EnsureCurrentSaveDataValid();
-            if (_currentSaveData.Training == null)
-                return;
-
-            _currentSaveData.Town = CloneTownData(_currentSaveData.Training);
-            EnsureTownDataValid(_currentSaveData.Town);
-
-            if (clearSession)
-                _currentSaveData.Training = null;
-
-            PublishAllDataChangedEvents();
-        }
-
-        public void ClearTrainingSession()
-        {
-            EnsureCurrentSaveDataValid();
-            if (_currentSaveData.Training == null)
-                return;
-
-            _currentSaveData.Training = null;
-            PublishAllDataChangedEvents();
         }
 
         public void EnsureDungeonRunExists(int dungeonFloor = 1)
@@ -549,16 +499,6 @@ namespace CrystalMagic.Core {
             data.Town ??= new TownData();
             EnsureTownDataValid(data.Town);
 
-            if (data.Training != null)
-            {
-                EnsureTownDataValid(data.Training);
-            }
-            else if (data.Location.AreaType == SaveAreaType.Training)
-            {
-                data.Training = CloneTownData(data.Town);
-                EnsureTownDataValid(data.Training);
-            }
-
             if (data.DungeonRun != null)
             {
                 EnsureDungeonRunDataValid(data.DungeonRun, data.Town.Character);
@@ -603,7 +543,6 @@ namespace CrystalMagic.Core {
             if (data.Backpack.Capacity <= 0)
                 data.Backpack.Capacity = Mathf.Max(1, GetGameConfig().InitialBackpackSize);
 
-            data.MigrateLegacyData();
         }
 
         private void EnsureDungeonRunDataValid(DungeonRunData data, CharacterData fallbackCharacter = null)
@@ -618,16 +557,6 @@ namespace CrystalMagic.Core {
             data.ItemDrops ??= new List<ItemDropData>();
         }
 
-        private TownData GetActiveTownDataInternal()
-        {
-            if (_currentSaveData == null)
-                return null;
-
-            return _currentSaveData.Location?.AreaType == SaveAreaType.Training && _currentSaveData.Training != null
-                ? _currentSaveData.Training
-                : _currentSaveData.Town;
-        }
-
         private CharacterData GetActiveCharacterDataInternal()
         {
             if (_currentSaveData == null)
@@ -635,7 +564,7 @@ namespace CrystalMagic.Core {
 
             return _currentSaveData.Location?.AreaType == SaveAreaType.Dungeon && _currentSaveData.DungeonRun?.Character != null
                 ? _currentSaveData.DungeonRun.Character
-                : GetActiveTownDataInternal()?.Character;
+                : _currentSaveData.Town?.Character;
         }
 
         private long GetPreviewStashMoney(SaveData data)
@@ -643,9 +572,7 @@ namespace CrystalMagic.Core {
             if (data == null)
                 return 0;
 
-            return data.Location?.AreaType == SaveAreaType.Training && data.Training != null
-                ? data.Training.StashMoney
-                : data.Town?.StashMoney ?? 0;
+            return data.Town?.StashMoney ?? 0;
         }
 
         private DungeonRunData CreateDungeonRunFromPersistent(int dungeonFloor)
@@ -676,14 +603,6 @@ namespace CrystalMagic.Core {
             EnsureCharacterDataValid(data);
             data.Backpack.Items.Clear();
             data.Equipment = new EquipmentData();
-        }
-
-        private TownData CloneTownData(TownData source)
-        {
-            TownData clone = DeepClone(source);
-            clone ??= new TownData();
-            EnsureTownDataValid(clone);
-            return clone;
         }
 
         private CharacterData CloneCharacterData(CharacterData source)
