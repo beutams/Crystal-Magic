@@ -15,6 +15,7 @@ namespace CrystalMagic.UI
         private readonly Dictionary<Entity, ActiveBar> _activeBars = new();
         private readonly List<Entity> _cleanupEntities = new();
 
+        private UnitHealthBarUI _rootView;
         private RectTransform _rootRect;
         private Camera _currentCamera;
         private bool _initialized;
@@ -25,6 +26,7 @@ namespace CrystalMagic.UI
                 return;
 
             EventComponent.Instance.Subscribe<UnitDamagedEvent>(HandleUnitDamaged);
+            EnsureRootView();
             ResolveFloatingRoot();
             _initialized = true;
         }
@@ -47,6 +49,7 @@ namespace CrystalMagic.UI
 
             EventComponent.Instance.Unsubscribe<UnitDamagedEvent>(HandleUnitDamaged);
             ReleaseAllBars();
+            ReleaseRootView();
             _rootRect = null;
             _currentCamera = null;
             _initialized = false;
@@ -62,8 +65,7 @@ namespace CrystalMagic.UI
                 return;
 
             bar.HideAtTime = Time.time + UIComponent.Instance.GetUnitHealthBarShowSeconds();
-            bar.Model?.SetHealth(gameEvent.CurrentHealth, gameEvent.MaxHealth);
-            bar.Model?.SetVisible(true);
+            _rootView?.UpdateBar(bar.Handle, gameEvent.CurrentHealth, gameEvent.MaxHealth, Vector2.zero, true);
         }
 
         private bool ResolveFloatingRoot()
@@ -78,34 +80,39 @@ namespace CrystalMagic.UI
             return _rootRect != null && _currentCamera != null;
         }
 
+        private bool EnsureRootView()
+        {
+            if (_rootView != null)
+                return true;
+
+            if (UIComponent.Instance == null)
+                return false;
+
+            _rootView = UIComponent.Instance.Open<UnitHealthBarUI>();
+            if (_rootView == null)
+                return false;
+
+            UIComponent.Instance.SetLifetime(_rootView, UILifetime.Manual);
+            _rootView.PrepareForFloatingRoot();
+            return true;
+        }
+
         private ActiveBar GetOrCreateBar(Entity entity)
         {
-            if (_activeBars.TryGetValue(entity, out ActiveBar existingBar) && existingBar.View != null)
+            if (_activeBars.TryGetValue(entity, out ActiveBar existingBar) && existingBar.Handle != null)
                 return existingBar;
 
-            if (!ResolveFloatingRoot())
+            if (!EnsureRootView() || !ResolveFloatingRoot())
                 return null;
 
-            UnitHealthBarUI view = UIComponent.Instance.Open<UnitHealthBarUI>();
-            if (view == null)
+            UnitHealthBarUI.BarHandle handle = _rootView.AcquireBar();
+            if (handle == null)
                 return null;
-
-            UnitHealthBarUIModel model = UIComponent.Instance.GetModel<UnitHealthBarUIModel>(view);
-            if (model == null)
-            {
-                UIComponent.Instance.ReleaseUI(view);
-                return null;
-            }
-
-            UIComponent.Instance.SetLifetime(view, UILifetime.Manual);
-            view.PrepareForFloatingRoot(_rootRect);
-            model.SetVisible(true);
 
             ActiveBar bar = new ActiveBar
             {
                 Entity = entity,
-                View = view,
-                Model = model,
+                Handle = handle,
             };
             _activeBars[entity] = bar;
             return bar;
@@ -123,7 +130,7 @@ namespace CrystalMagic.UI
             foreach (KeyValuePair<Entity, ActiveBar> pair in _activeBars)
             {
                 ActiveBar bar = pair.Value;
-                if (bar == null || bar.View == null)
+                if (bar?.Handle == null)
                 {
                     _cleanupEntities.Add(pair.Key);
                     continue;
@@ -150,13 +157,13 @@ namespace CrystalMagic.UI
                 Vector3 screenPosition = _currentCamera.WorldToScreenPoint(worldPosition);
                 if (screenPosition.z <= 0f)
                 {
-                    bar.Model?.SetVisible(false);
+                    _rootView?.SetBarVisible(bar.Handle, false);
                     continue;
                 }
 
                 if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_rootRect, screenPosition, _currentCamera, out Vector2 localPoint))
                 {
-                    bar.Model?.UpdateDisplay(vitality.CurrentHealth, vitality.RealMaxHealth, localPoint, true);
+                    _rootView?.UpdateBar(bar.Handle, vitality.CurrentHealth, vitality.RealMaxHealth, localPoint, true);
                 }
             }
 
@@ -189,27 +196,35 @@ namespace CrystalMagic.UI
                 return;
 
             _activeBars.Remove(entity);
-            if (bar?.View != null)
-                UIComponent.Instance.ReleaseUI(bar.View);
+            if (bar?.Handle != null)
+                _rootView?.ReleaseBar(bar.Handle);
         }
 
         private void ReleaseAllBars()
         {
             foreach (KeyValuePair<Entity, ActiveBar> pair in _activeBars)
             {
-                if (pair.Value?.View != null)
-                    UIComponent.Instance.ReleaseUI(pair.Value.View);
+                if (pair.Value?.Handle != null)
+                    _rootView?.ReleaseBar(pair.Value.Handle);
             }
 
             _activeBars.Clear();
             _cleanupEntities.Clear();
         }
 
+        private void ReleaseRootView()
+        {
+            if (_rootView == null)
+                return;
+
+            UIComponent.Instance.ReleaseUI(_rootView);
+            _rootView = null;
+        }
+
         private sealed class ActiveBar
         {
             public Entity Entity;
-            public UnitHealthBarUI View;
-            public UnitHealthBarUIModel Model;
+            public UnitHealthBarUI.BarHandle Handle;
             public float HideAtTime;
         }
     }

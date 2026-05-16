@@ -1,16 +1,10 @@
 using Unity.Entities;
 using UnityEngine;
+using CrystalMagic.Game.Data;
 
 public class NPCInteractableAuthoring : MonoBehaviour
 {
-    [SerializeField, HideInInspector] private int _npcDataId = -1;
     [SerializeField, HideInInspector] private float _interactRange = 2f;
-
-    public int NpcDataId
-    {
-        get => _npcDataId;
-        set => _npcDataId = value;
-    }
 
     public float InteractRange
     {
@@ -22,14 +16,19 @@ public class NPCInteractableAuthoring : MonoBehaviour
     {
         public override void Bake(NPCInteractableAuthoring authoring)
         {
+#if UNITY_EDITOR
+            DependsOn(NPCAuthoringUtility.GetNpcDataTableAsset());
+#endif
+
             Transform interact = authoring.transform.Find("Interact");
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             Entity interactEntity = interact != null
                 ? GetEntity(interact, TransformUsageFlags.Dynamic)
                 : Entity.Null;
+            NPCData npcData = NPCAuthoringUtility.ResolveNpcData(authoring);
             AddComponent(entity, new NPCInteractable
             {
-                NpcDataId = authoring.NpcDataId,
+                NpcId = npcData?.Id ?? -1,
                 interact = interactEntity,
                 interactRangeSq = authoring.InteractRange * authoring.InteractRange,
             });
@@ -39,7 +38,7 @@ public class NPCInteractableAuthoring : MonoBehaviour
 
 public struct NPCInteractable : IComponentData
 {
-    public int NpcDataId;
+    public int NpcId;
     public Entity interact;
     public float interactRangeSq;
 }

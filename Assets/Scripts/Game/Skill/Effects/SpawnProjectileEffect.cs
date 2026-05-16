@@ -63,31 +63,21 @@ namespace CrystalMagic.Game.Skill.Effects
 
         private void CreateProjectileSpawnRequest(SkillContent context, Vector3 startPosition, Vector3 direction)
         {
-            EntityManager entityManager = context.EntityManager;
-            Entity requestEntity = entityManager.CreateEntity(typeof(SkillProjectileSpawnRequestComponent));
-
             FixedString128Bytes projectileName = new FixedString128Bytes(ProjectileVisualUtility.GenericProjectilePrefabName);
-
-            entityManager.SetComponentData(
-                requestEntity,
-                new SkillProjectileSpawnRequestComponent
+            SkillProjectileSpawnQueue.Enqueue(
+                new SkillProjectileSpawnRequest
                 {
+                    Kind = SkillProjectileSpawnRequestKind.Projectile,
                     ProjectileName = projectileName,
                     StartPosition = new float3(startPosition.x, startPosition.y, startPosition.z),
                     Direction = new float3(direction.x, direction.y, direction.z),
+                    Rotation = quaternion.identity,
                     Speed = Data.Speed,
                     MaxRange = Data.MaxRange,
                     HitRadius = 0.75f * math.max(Data.Scale, 0.01f),
                     ScaleMultiplier = math.max(Data.Scale, 0.01f),
                     CanPierce = Data.CanPierce ? (byte)1 : (byte)0,
                     TriggerDestroyEffectsOnMaxRange = Data.TriggerDestroyEffectsOnMaxRange ? (byte)1 : (byte)0,
-                });
-
-            entityManager.AddComponentObject(
-                requestEntity,
-                new SkillProjectilePayloadComponent
-                {
-                    ProjectileName = projectileName,
                     Context = context.Clone(),
                     FlightTexture = Data.FlightTexture,
                     FlightFrameCount = math.clamp(Data.FlightFrameCount, 1, 16),

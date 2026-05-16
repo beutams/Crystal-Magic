@@ -11,6 +11,8 @@ namespace CrystalMagic.Game.Data
     {
         public string NPC;
 
+        public string PrefabPath;
+
         public string DisplayName;
 
         public List<NPCInteractionData> Interactions = new();

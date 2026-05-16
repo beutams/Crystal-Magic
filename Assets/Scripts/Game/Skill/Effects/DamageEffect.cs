@@ -1,5 +1,6 @@
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data.Effects;
+using UnityEngine;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -28,12 +29,20 @@ namespace CrystalMagic.Game.Skill.Effects
                 return;
 
             UnitVitalityComponent vitality = entityManager.GetComponentData<UnitVitalityComponent>(target);
-            float damage = CalculateDamage(context, entityManager, vitality);
+            DamageBreakdown breakdown = CalculateDamage(context, entityManager, vitality);
+            float damage = breakdown.FinalDamage;
             if (damage <= 0f)
                 return;
 
+            float previousHealth = vitality.CurrentHealth;
             vitality.CurrentHealth = math.max(0f, vitality.CurrentHealth - damage);
             entityManager.SetComponentData(target, vitality);
+
+            Debug.Log(
+                $"[DamageEffect] Damage={damage:0.##} | Formula=max(0, AttackPower*Coeff+Flat-Defense) | " +
+                $"AttackPower={breakdown.AttackPower:0.##} Coeff={Data.DamageCoefficient:0.##} Flat={Data.FlatDamageBonus:0.##} " +
+                $"Raw={breakdown.RawDamage:0.##} Defense={breakdown.Defense:0.##} Final={breakdown.FinalDamage:0.##} " +
+                $"Target={target.Index}:{target.Version} HP={previousHealth:0.##}->{vitality.CurrentHealth:0.##}");
 
             if (vitality.CurrentHealth <= 0f)
             {
@@ -46,7 +55,7 @@ namespace CrystalMagic.Game.Skill.Effects
             EventComponent.Instance.Publish(new UnitDamagedEvent(target, vitality.CurrentHealth, vitality.RealMaxHealth));
         }
 
-        private float CalculateDamage(SkillContent context, EntityManager entityManager, UnitVitalityComponent targetVitality)
+        private DamageBreakdown CalculateDamage(SkillContent context, EntityManager entityManager, UnitVitalityComponent targetVitality)
         {
             float attackPower = 0f;
             if (context.HasOriginEntity &&
@@ -58,7 +67,21 @@ namespace CrystalMagic.Game.Skill.Effects
             }
 
             float rawDamage = attackPower * Data.DamageCoefficient + Data.FlatDamageBonus;
-            return math.max(0f, rawDamage - targetVitality.RealDefense);
+            return new DamageBreakdown
+            {
+                AttackPower = attackPower,
+                RawDamage = rawDamage,
+                Defense = targetVitality.RealDefense,
+                FinalDamage = math.max(0f, rawDamage - targetVitality.RealDefense),
+            };
+        }
+
+        private struct DamageBreakdown
+        {
+            public float AttackPower;
+            public float RawDamage;
+            public float Defense;
+            public float FinalDamage;
         }
     }
 

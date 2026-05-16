@@ -330,27 +330,24 @@ namespace CrystalMagic.Editor.Data
             GUILayout.Space(8f);
             UnitEditorWindow.DrawSectionHeader("NPC Interaction");
 
-            List<NPCData> npcRows = EditorComponents.Data.FindAll<NPCData>(_ => true)
-                .OrderBy(row => row.Id)
-                .ToList();
+            NPCData npcData = NPCAuthoringUtility.ResolveNpcData(npcAuthoring);
 
-            List<string> options = new() { "Unbound" };
-            int selectedIndex = 0;
-            for (int i = 0; i < npcRows.Count; i++)
+            using (new EditorGUI.DisabledScope(true))
             {
-                NPCData row = npcRows[i];
-                options.Add($"[{row.Id}] {row.DisplayName} ({row.NPC})");
-                if (row.Id == npcAuthoring.NpcDataId)
-                    selectedIndex = i + 1;
+                EditorGUILayout.TextField("Prefab", context.AssetPath ?? string.Empty);
+                EditorGUILayout.TextField("NPC Data", npcData != null
+                    ? $"[{npcData.Id}] {npcData.DisplayName} ({npcData.NPC})"
+                    : "Unbound");
             }
-
-            int newIndex = EditorGUILayout.Popup("NPC Data", selectedIndex, options.ToArray());
-            int newNpcId = newIndex == 0 ? -1 : npcRows[newIndex - 1].Id;
             float newRange = EditorGUILayout.FloatField("Interact Range", npcAuthoring.InteractRange);
 
-            if (newNpcId != npcAuthoring.NpcDataId || !Mathf.Approximately(newRange, npcAuthoring.InteractRange))
+            if (npcData == null)
             {
-                npcAuthoring.NpcDataId = newNpcId;
+                EditorGUILayout.HelpBox("No NPCData row matches this prefab yet. Refresh prefabs in NPC Editor and save the NPC table first.", MessageType.Warning);
+            }
+
+            if (!Mathf.Approximately(newRange, npcAuthoring.InteractRange))
+            {
                 npcAuthoring.InteractRange = newRange;
                 context.MarkPrefabDirty(npcAuthoring);
             }

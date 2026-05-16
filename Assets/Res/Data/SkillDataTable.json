@@ -38,7 +38,7 @@
       "EffectChain": [
         {
           "$type": "CrystalMagic.Game.Data.Effects.SpawnProjectileEffectData, Assembly-CSharp",
-          "Speed": 30.0,
+          "Speed": 10.0,
           "MaxRange": 40.0,
           "SpawnOffsetDistance": 1.0,
           "Scale": 1.0,

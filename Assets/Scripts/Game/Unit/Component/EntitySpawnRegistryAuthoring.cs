@@ -91,9 +91,9 @@ namespace CrystalMagic.Game.Unit
                 DynamicBuffer<ProjectileEntityPrefabRegistryEntry> projectileBuffer = AddBuffer<ProjectileEntityPrefabRegistryEntry>(entity);
                 DynamicBuffer<DropEntityPrefabRegistryEntry> dropBuffer = AddBuffer<DropEntityPrefabRegistryEntry>(entity);
 
-                AddUnitEntries(authoring.UnitPrefabs, unitBuffer);
-                AddProjectileEntries(authoring.ProjectilePrefabs, projectileBuffer);
-                AddDropEntries(authoring.DropPrefabs, dropBuffer);
+                AddUnitEntries(GetBakePrefabs(authoring.UnitPrefabs, UnitFolder), unitBuffer);
+                AddProjectileEntries(GetBakePrefabs(authoring.ProjectilePrefabs, ProjectileFolder), projectileBuffer);
+                AddDropEntries(GetBakePrefabs(authoring.DropPrefabs, DropFolder), dropBuffer);
             }
 
             private void AddUnitEntries(IReadOnlyList<GameObject> prefabs, DynamicBuffer<UnitEntityPrefabRegistryEntry> buffer)
@@ -145,6 +145,34 @@ namespace CrystalMagic.Game.Unit
                         Prefab = GetEntity(prefab, TransformUsageFlags.Dynamic),
                     });
                 }
+            }
+
+            private static IReadOnlyList<GameObject> GetBakePrefabs(IReadOnlyList<GameObject> fallbackPrefabs, string folder)
+            {
+#if UNITY_EDITOR
+                List<GameObject> prefabs = new();
+                if (AssetDatabase.IsValidFolder(folder))
+                {
+                    string[] guids = AssetDatabase.FindAssets("t:Prefab", new[] { folder });
+                    for (int i = 0; i < guids.Length; i++)
+                    {
+                        string assetPath = AssetDatabase.GUIDToAssetPath(guids[i]);
+                        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+                        if (prefab != null)
+                        {
+                            prefabs.Add(prefab);
+                        }
+                    }
+
+                    prefabs.Sort((left, right) => string.Compare(left.name, right.name, StringComparison.Ordinal));
+                }
+
+                if (prefabs.Count > 0)
+                {
+                    return prefabs;
+                }
+#endif
+                return fallbackPrefabs ?? Array.Empty<GameObject>();
             }
         }
     }

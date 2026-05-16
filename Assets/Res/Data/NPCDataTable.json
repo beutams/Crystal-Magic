@@ -1,7 +1,7 @@
 ﻿{
   "Rows": [
     {
-      "NPC": "EquipShop",
+      "NPC": "NPCEquipShop",
       "DisplayName": "装备商店",
       "Interactions": [
         {
@@ -24,7 +24,7 @@
       "Id": 0
     },
     {
-      "NPC": "PropShop",
+      "NPC": "NPCPropShop",
       "DisplayName": "道具商店",
       "Interactions": [
         {
@@ -47,7 +47,7 @@
       "Id": 1
     },
     {
-      "NPC": "SkillShop",
+      "NPC": "NPCSkillShop",
       "DisplayName": "技能商店",
       "Interactions": [
         {
@@ -70,7 +70,7 @@
       "Id": 2
     },
     {
-      "NPC": "Stash",
+      "NPC": "NPCStash",
       "DisplayName": "仓库",
       "Interactions": [
         {
@@ -93,7 +93,7 @@
       "Id": 3
     },
     {
-      "NPC": "Training",
+      "NPC": "NPCTraining",
       "DisplayName": "训练场",
       "Interactions": [
         {

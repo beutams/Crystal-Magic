@@ -10,56 +10,33 @@ using UnityEngine;
 [UpdateBefore(typeof(SkillProjectileSystem))]
 public partial class SkillProjectileSpawnSystem : SystemBase
 {
-    private EntityQuery _requestQuery;
-
-    protected override void OnCreate()
-    {
-        _requestQuery = GetEntityQuery(
-            ComponentType.ReadOnly<SkillProjectileSpawnRequestComponent>(),
-            ComponentType.ReadOnly<SkillProjectilePayloadComponent>());
-    }
-
     protected override void OnUpdate()
     {
-        if (_requestQuery.IsEmptyIgnoreFilter)
+        if (!SkillProjectileSpawnQueue.HasPendingRequests)
             return;
 
-        NativeArray<Entity> requestEntities = _requestQuery.ToEntityArray(Allocator.Temp);
-        NativeArray<SkillProjectileSpawnRequestComponent> requests = _requestQuery.ToComponentDataArray<SkillProjectileSpawnRequestComponent>(Allocator.Temp);
-
-        try
+        while (SkillProjectileSpawnQueue.TryDequeue(out SkillProjectileSpawnRequest request))
         {
-            for (int i = 0; i < requestEntities.Length; i++)
+            if (!EntitySpawnRegistryUtility.TryInstantiateProjectile(EntityManager, request.ProjectileName, out Entity projectileEntity))
             {
-                Entity requestEntity = requestEntities[i];
-                SkillProjectileSpawnRequestComponent request = requests[i];
-                SkillProjectilePayloadComponent payload = EntityManager.GetComponentObject<SkillProjectilePayloadComponent>(requestEntity);
-
-                if (!EntitySpawnRegistryUtility.TryInstantiateProjectile(EntityManager, request.ProjectileName, out Entity projectileEntity))
-                {
-                    Debug.LogError($"[SkillProjectileSpawnSystem] Missing projectile prefab in registry: {request.ProjectileName}");
-                    if (EntityManager.Exists(requestEntity))
-                        EntityManager.DestroyEntity(requestEntity);
-                    continue;
-                }
-
-                SpawnProjectile(projectileEntity, request, payload);
-
-                if (EntityManager.Exists(requestEntity))
-                    EntityManager.DestroyEntity(requestEntity);
+                Debug.LogError($"[SkillProjectileSpawnSystem] Missing projectile prefab in registry: {request.ProjectileName}");
+                continue;
             }
-        }
-        finally
-        {
-            requestEntities.Dispose();
-            requests.Dispose();
+
+            if (request.Kind == SkillProjectileSpawnRequestKind.DestroyVfx)
+            {
+                SpawnDestroyVfx(projectileEntity, request);
+            }
+            else
+            {
+                SpawnProjectile(projectileEntity, request);
+            }
         }
     }
 
     private void SpawnProjectile(
         Entity projectileEntity,
-        SkillProjectileSpawnRequestComponent request,
-        SkillProjectilePayloadComponent payload)
+        SkillProjectileSpawnRequest request)
     {
         quaternion rotation = CreateRotation(request.Direction);
         float prefabScale = 1f;
@@ -103,14 +80,48 @@ public partial class SkillProjectileSpawnSystem : SystemBase
 
         EnsureDestroyFlagDisabled(projectileEntity);
 
-        ApplyPayloadComponent(projectileEntity, payload);
+        ApplyPayloadComponent(projectileEntity, request);
         ProjectileVisualUtility.ApplyProjectileVisual(
             EntityManager,
             projectileEntity,
             request.ProjectileName,
-            payload.FlightTexture,
+            request.FlightTexture,
             true,
-            payload.FlightFrameCount);
+            request.FlightFrameCount);
+    }
+
+    private void SpawnDestroyVfx(Entity projectileEntity, SkillProjectileSpawnRequest request)
+    {
+        float scale = math.max(request.ScaleMultiplier, 0.0001f);
+        SetOrAddComponentData(
+            projectileEntity,
+            LocalTransform.FromPositionRotationScale(
+                request.StartPosition,
+                request.Rotation,
+                scale));
+
+        SetOrAddComponentData(
+            projectileEntity,
+            new SkillProjectileStartTimeProperty
+            {
+                Value = (float)SystemAPI.Time.ElapsedTime,
+            });
+
+        SetOrAddComponentData(
+            projectileEntity,
+            new ProjectileDestroyVfxComponent
+            {
+                RemainingLifetime = ProjectileVisualUtility.GetAnimationLifetime(request.ProjectileName, request.DestroyFrameCount),
+            });
+
+        EnsureDestroyFlagDisabled(projectileEntity);
+        ProjectileVisualUtility.ApplyProjectileVisual(
+            EntityManager,
+            projectileEntity,
+            request.ProjectileName,
+            request.DestroyTexture,
+            false,
+            request.DestroyFrameCount);
     }
 
     private void EnsureDestroyFlagDisabled(Entity entity)
@@ -137,7 +148,7 @@ public partial class SkillProjectileSpawnSystem : SystemBase
             EntityManager.AddComponentData(entity, value);
     }
 
-    private void ApplyPayloadComponent(Entity entity, SkillProjectilePayloadComponent payload)
+    private void ApplyPayloadComponent(Entity entity, SkillProjectileSpawnRequest payload)
     {
         if (EntityManager.HasComponent<SkillProjectilePayloadComponent>(entity))
         {

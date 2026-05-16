@@ -5,29 +5,29 @@
             "Name": "蓄能",
             "Description": "",
             "ItemType": 1,
-            "ExtraId": 1,
+            "ExtraId": 0,
             "Rarity": 1,
             "MaxStack": 99,
             "SellPrice": 50,
-            "IconPath": "Assets/Res/Sprites/Item/FireBall.png"
+            "IconPath": "Assets/Res/Sprites/Item/Charging.png"
         },
         {
             "Id": 1,
             "Name": "火球",
             "Description": "",
             "ItemType": 1,
-            "ExtraId": 2,
+            "ExtraId": 1,
             "Rarity": 1,
             "MaxStack": 99,
             "SellPrice": 50,
-            "IconPath": "Assets/Res/Sprites/Item/FireTornado.png"
+            "IconPath": "Assets/Res/Sprites/Item/FireBall.pngAssets/Res/Sprites/Item/FireBall.png"
         },
         {
             "Id": 2,
             "Name": "火焰冲击",
             "Description": "",
             "ItemType": 1,
-            "ExtraId": 3,
+            "ExtraId": 2,
             "Rarity": 1,
             "MaxStack": 99,
             "SellPrice": 50,
@@ -38,110 +38,110 @@
             "Name": "引爆",
             "Description": "",
             "ItemType": 1,
-            "ExtraId": 4,
+            "ExtraId": 3,
             "Rarity": 1,
             "MaxStack": 99,
             "SellPrice": 50,
-            "IconPath": "Assets/Res/Sprites/Item/Fiery.png"
+            "IconPath": "Assets/Res/Sprites/Item/Detonate.png"
         },
         {
             "Id": 4,
             "Name": "水涡",
             "Description": "",
             "ItemType": 1,
-            "ExtraId": 5,
+            "ExtraId": 4,
             "Rarity": 1,
             "MaxStack": 99,
             "SellPrice": 50,
-            "IconPath": "Assets/Res/Sprites/Item/Magical.png"
+            "IconPath": "Assets/Res/Sprites/Item/Eddies.png"
         },
         {
             "Id": 5,
             "Name": "冰刺",
             "Description": "",
             "ItemType": 1,
-            "ExtraId": 6,
+            "ExtraId": 5,
             "Rarity": 1,
             "MaxStack": 99,
             "SellPrice": 50,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/IceGland.png"
         },
         {
             "Id": 6,
             "Name": "冻结",
             "Description": "",
             "ItemType": 1,
-            "ExtraId": 7,
+            "ExtraId": 6,
             "Rarity": 1,
             "MaxStack": 99,
             "SellPrice": 50,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/Freeze.png"
         },
         {
             "Id": 7,
             "Name": "雷击",
             "Description": "",
             "ItemType": 1,
-            "ExtraId": 8,
+            "ExtraId": 7,
             "Rarity": 1,
             "MaxStack": 99,
             "SellPrice": 50,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/Lightning.png"
         },
         {
             "Id": 8,
             "Name": "雷域",
             "Description": "",
             "ItemType": 1,
-            "ExtraId": 9,
+            "ExtraId": 8,
             "Rarity": 1,
             "MaxStack": 99,
             "SellPrice": 50,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/Thunder Field.png"
         },
         {
             "Id": 9,
             "Name": "雷爆",
             "Description": "",
             "ItemType": 1,
-            "ExtraId": 10,
+            "ExtraId": 9,
             "Rarity": 1,
             "MaxStack": 99,
             "SellPrice": 50,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/Thunderstorm.png"
         },
         {
             "Id": 10,
             "Name": "加速",
             "Description": "",
             "ItemType": 1,
-            "ExtraId": 11,
+            "ExtraId": 10,
             "Rarity": 1,
             "MaxStack": 99,
             "SellPrice": 50,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/SpeedUp.png"
         },
         {
             "Id": 11,
             "Name": "回复",
             "Description": "",
             "ItemType": 1,
-            "ExtraId": 12,
+            "ExtraId": 11,
             "Rarity": 1,
             "MaxStack": 99,
             "SellPrice": 50,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/Heal.png"
         },
         {
             "Id": 12,
             "Name": "屏障",
             "Description": "",
             "ItemType": 1,
-            "ExtraId": 13,
+            "ExtraId": 12,
             "Rarity": 1,
             "MaxStack": 99,
             "SellPrice": 50,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/Shield.png"
         },
         {
             "Id": 13,

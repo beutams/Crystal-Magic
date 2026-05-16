@@ -172,58 +172,18 @@ public partial class SkillProjectileSystem : SystemBase
         if (payload.DestroyTexture == null || payload.ProjectileName.Length == 0)
             return;
 
-        if (!EntitySpawnRegistryUtility.TryInstantiateProjectile(EntityManager, payload.ProjectileName, out Entity vfxEntity))
-        {
-            Debug.LogWarning($"[SkillProjectileSystem] Missing projectile prefab in registry: {payload.ProjectileName}");
-            return;
-        }
-
-        SetOrAddComponentData(
-            vfxEntity,
-            LocalTransform.FromPositionRotationScale(
-                destroyPosition,
-                destroyRotation,
-                math.max(projectileScale, 0.0001f)));
-
-        SetOrAddComponentData(
-            vfxEntity,
-            new SkillProjectileStartTimeProperty
+        SkillProjectileSpawnQueue.Enqueue(
+            new SkillProjectileSpawnRequest
             {
-                Value = (float)SystemAPI.Time.ElapsedTime,
+                Kind = SkillProjectileSpawnRequestKind.DestroyVfx,
+                ProjectileName = payload.ProjectileName,
+                StartPosition = destroyPosition,
+                Direction = new float3(1f, 0f, 0f),
+                Rotation = destroyRotation,
+                ScaleMultiplier = math.max(projectileScale, 0.0001f),
+                DestroyTexture = payload.DestroyTexture,
+                DestroyFrameCount = payload.DestroyFrameCount,
             });
-
-        SetOrAddComponentData(
-            vfxEntity,
-            new ProjectileDestroyVfxComponent
-            {
-                RemainingLifetime = ProjectileVisualUtility.GetAnimationLifetime(payload.ProjectileName, payload.DestroyFrameCount),
-            });
-
-        EnsureDestroyFlagDisabled(vfxEntity);
-        ProjectileVisualUtility.ApplyProjectileVisual(
-            EntityManager,
-            vfxEntity,
-            payload.ProjectileName,
-            payload.DestroyTexture,
-            false,
-            payload.DestroyFrameCount);
-    }
-
-    private void EnsureDestroyFlagDisabled(Entity entity)
-    {
-        if (!EntityManager.HasComponent<DestroyEntityFlag>(entity))
-            EntityManager.AddComponent<DestroyEntityFlag>(entity);
-
-        EntityManager.SetComponentEnabled<DestroyEntityFlag>(entity, false);
-    }
-
-    private void SetOrAddComponentData<T>(Entity entity, T value)
-        where T : unmanaged, IComponentData
-    {
-        if (EntityManager.HasComponent<T>(entity))
-            EntityManager.SetComponentData(entity, value);
-        else
-            EntityManager.AddComponentData(entity, value);
     }
 
     private SkillContent BuildHitContext(SkillContent baseContext, Entity hitEntity, float3 hitPosition)

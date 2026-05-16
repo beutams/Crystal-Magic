@@ -73,16 +73,16 @@ partial class NPCInteractionConsumeSystem : SystemBase
         }
 
         NPCInteractable interactable = EntityManager.GetComponentData<NPCInteractable>(target);
-        if (interactable.NpcDataId < 0)
+        if (interactable.NpcId < 0)
         {
-            Debug.LogWarning("[NPCInteraction] NPCInteractable is missing NpcDataId.");
+            Debug.LogWarning("[NPCInteraction] NPCInteractable did not resolve a matching NPCData during baking.");
             return;
         }
 
-        NPCData npcData = DataComponent.Instance?.Get<NPCData>(interactable.NpcDataId);
+        NPCData npcData = DataComponent.Instance?.Get<NPCData>(interactable.NpcId);
         if (npcData == null)
         {
-            Debug.LogWarning($"[NPCInteraction] NPCData not found for Id '{interactable.NpcDataId}'.");
+            Debug.LogWarning($"[NPCInteraction] NPCData not found for resolved Id '{interactable.NpcId}'.");
             return;
         }
 
