@@ -112,6 +112,9 @@ namespace CrystalMagic.Game.Data
     [System.Serializable]
     public class EffectBuffData : BuffData
     {
+        [EditorLabel("触发间隔(秒)")]
+        public float TickIntervalSeconds;
+
         public override BuffCategory Category => BuffCategory.Effect;
 
         [SerializeReference]

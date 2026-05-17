@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using CrystalMagic.Game.Data;
+using CrystalMagic.Game.Data.Effects;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
@@ -135,6 +136,7 @@ namespace CrystalMagic.Editor.Data
                 Description = string.Empty,
                 IconPath = string.Empty,
                 Modifiers = new List<SkillModifierEntry>(),
+                FollowupEffects = new List<SkillFollowupEffectData>(),
             });
 
             NormalizeRowIds();
@@ -170,6 +172,7 @@ namespace CrystalMagic.Editor.Data
             copy.Id = _rows.Count;
             copy.Name = string.IsNullOrWhiteSpace(source.Name) ? $"Skill Effect {copy.Id}" : $"{source.Name}_Copy";
             copy.Modifiers ??= new List<SkillModifierEntry>();
+            copy.FollowupEffects ??= new List<SkillFollowupEffectData>();
             _rows.Add(copy);
             NormalizeRowIds();
             _selectedIndex = _rows.Count - 1;
@@ -372,6 +375,9 @@ namespace CrystalMagic.Editor.Data
             DrawSectionHeader("Modifiers");
             DrawModifierList(row);
 
+            DrawSectionHeader("Followup Effects");
+            DrawFollowupEffectList(row);
+
             EditorGUIUtility.labelWidth = previousLabelWidth;
             EditorGUILayout.EndScrollView();
             EditorGUILayout.EndVertical();
@@ -417,6 +423,107 @@ namespace CrystalMagic.Editor.Data
             if (removeAt >= 0)
             {
                 row.Modifiers.RemoveAt(removeAt);
+                _isDirty = true;
+            }
+        }
+
+        private void DrawFollowupEffectList(SkillEffectData row)
+        {
+            row.FollowupEffects ??= new List<SkillFollowupEffectData>();
+
+            int removeAt = -1;
+            for (int i = 0; i < row.FollowupEffects.Count; i++)
+            {
+                SkillFollowupEffectData followup = row.FollowupEffects[i] ?? new SkillFollowupEffectData();
+                EditorGUI.BeginChangeCheck();
+
+                EditorGUILayout.BeginVertical("box");
+                followup.FilterType = (SkillFollowupFilterType)EditorGUILayout.EnumPopup("Filter", followup.FilterType);
+                followup.Uses = Mathf.Max(1, EditorGUILayout.IntField("Uses", followup.Uses));
+
+                switch (followup.FilterType)
+                {
+                    case SkillFollowupFilterType.SkillId:
+                        followup.SkillId = EditorGUILayout.IntField("Skill Id", followup.SkillId);
+                        break;
+                    case SkillFollowupFilterType.SkillType:
+                        followup.SkillType = (SkillType)EditorGUILayout.EnumPopup("Skill Type", followup.SkillType);
+                        break;
+                    case SkillFollowupFilterType.Element:
+                        followup.Element = (ElementType)EditorGUILayout.EnumPopup("Element", followup.Element);
+                        break;
+                    case SkillFollowupFilterType.SkillAdditionId:
+                        followup.SkillAdditionId = EditorGUILayout.IntField("Skill Addition Id", followup.SkillAdditionId);
+                        break;
+                }
+
+                followup.Modifiers ??= new List<SkillModifierEntry>();
+                DrawModifierEntries("Applied Modifiers", followup.Modifiers);
+
+                if (GUILayout.Button("Delete Followup Effect", GUILayout.Width(148f)))
+                    removeAt = i;
+
+                EditorGUILayout.EndVertical();
+
+                if (EditorGUI.EndChangeCheck())
+                {
+                    row.FollowupEffects[i] = followup;
+                    _isDirty = true;
+                }
+            }
+
+            if (GUILayout.Button("+ Add Followup Effect", GUILayout.Width(140f)))
+            {
+                row.FollowupEffects.Add(new SkillFollowupEffectData());
+                _isDirty = true;
+            }
+
+            if (removeAt >= 0)
+            {
+                row.FollowupEffects.RemoveAt(removeAt);
+                _isDirty = true;
+            }
+        }
+
+        private void DrawModifierEntries(string label, List<SkillModifierEntry> modifiers)
+        {
+            EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
+
+            int removeAt = -1;
+            for (int i = 0; i < modifiers.Count; i++)
+            {
+                SkillModifierEntry entry = modifiers[i];
+                EditorGUI.BeginChangeCheck();
+                EditorGUILayout.BeginHorizontal();
+                entry.Channel = (SkillModifierChannel)EditorGUILayout.EnumPopup(entry.Channel, GUILayout.MinWidth(180f));
+
+                float previousLabelWidth = EditorGUIUtility.labelWidth;
+                EditorGUIUtility.labelWidth = 46f;
+                entry.Factor = EditorGUILayout.FloatField("Factor", entry.Factor, GUILayout.MinWidth(90f));
+                entry.Bonus = EditorGUILayout.FloatField("Bonus", entry.Bonus, GUILayout.MinWidth(90f));
+                EditorGUIUtility.labelWidth = previousLabelWidth;
+
+                if (GUILayout.Button("Delete", GUILayout.Width(52f)))
+                    removeAt = i;
+
+                EditorGUILayout.EndHorizontal();
+
+                if (EditorGUI.EndChangeCheck())
+                {
+                    modifiers[i] = entry;
+                    _isDirty = true;
+                }
+            }
+
+            if (GUILayout.Button("+ Add Modifier", GUILayout.Width(120f)))
+            {
+                modifiers.Add(new SkillModifierEntry());
+                _isDirty = true;
+            }
+
+            if (removeAt >= 0)
+            {
+                modifiers.RemoveAt(removeAt);
                 _isDirty = true;
             }
         }

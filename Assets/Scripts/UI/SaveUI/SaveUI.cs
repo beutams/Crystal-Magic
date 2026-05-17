@@ -44,7 +44,7 @@ public class SaveUI : UIBase<SaveUIData, SaveUIModel>
 
     private void EnsureItemViews(int slotCount)
     {
-        UI.SaveItem.GameObject.SetActive(false);
+        UI.ScrollView_Viewport_Content_SaveItem.GameObject.SetActive(false);
 
         while (_itemViews.Count > slotCount)
         {
@@ -56,7 +56,9 @@ public class SaveUI : UIBase<SaveUIData, SaveUIModel>
 
         while (_itemViews.Count < slotCount)
         {
-            SaveUI_SaveItemView itemView = UISubViewBase.AcquireFromPool(UI.SaveItem.GameObject.GetComponent<SaveUI_SaveItemView>(), UI.Content.GameObject.transform);
+            SaveUI_SaveItemView itemView = UISubViewBase.AcquireFromPool(
+                UI.ScrollView_Viewport_Content_SaveItem.GameObject.GetComponent<SaveUI_SaveItemView>(),
+                UI.ScrollView_Viewport_Content.GameObject.transform);
             if (itemView == null)
                 break;
 

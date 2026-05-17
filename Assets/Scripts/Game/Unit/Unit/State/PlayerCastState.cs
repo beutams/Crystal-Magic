@@ -10,55 +10,12 @@ public class PlayerCastState : AUnitState
 
     public override void OnEnter()
     {
-        if (!EntityManager.HasComponent<UnitCastComponent>(Entity) ||
-            !EntityManager.HasComponent<UnitIntentComponent>(Entity))
+        if (!EntityManager.HasComponent<UnitCastComponent>(Entity))
             return;
-
-        SkillCData skillConfig = SaveDataComponent.Instance?.GetSkillData();
-        RuntimeSkillData runtimeSkillData = RuntimeDataComponent.Instance.GetSkillData();
-
-        if (!SkillChainResolver.TryBuildSelectedChain(skillConfig, runtimeSkillData, _skillSlots, out int chainIndex))
-            return;
-
-        Unity.Collections.FixedList64Bytes<int> skillIds = default;
-        Unity.Collections.FixedList64Bytes<int> skillAdditionIds = default;
-
-        for (int i = 0; i < _skillSlots.Count; i++)
-        {
-            SkillChainSlotData slotData = _skillSlots[i];
-            SkillData skillData = SkillChainResolver.GetSkillData(slotData);
-            if (skillData == null)
-                continue;
-
-            if (skillIds.Length >= skillIds.Capacity ||
-                skillAdditionIds.Length >= skillAdditionIds.Capacity)
-                break;
-
-            skillIds.Add(skillData.Id);
-            skillAdditionIds.Add(slotData?.SkillAdditionId ?? -1);
-        }
 
         UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
-        SkillExecutionUtility.ResetCastState(ref cast);
-        if (skillIds.Length == 0)
-        {
-            EntityManager.SetComponentData(Entity, cast);
-            return;
-        }
-
-        UnitIntentComponent intent = EntityManager.GetComponentData<UnitIntentComponent>(Entity);
-        if (SkillExecutionUtility.TryBeginCast(
-                EntityManager,
-                Entity,
-                ref cast,
-                skillIds,
-                skillAdditionIds,
-                chainIndex,
-                hasLockedTarget: true,
-                lockedTargetPosition: intent.CastTargetPosition))
-        {
+        if (TryStartSelectedChain(ref cast))
             EventComponent.Instance.Publish(new SkillCastLockChangedEvent(true));
-        }
 
         EntityManager.SetComponentData(Entity, cast);
     }
@@ -82,11 +39,18 @@ public class PlayerCastState : AUnitState
                 if (nextSkillIndex < cast.SkillIds.Length)
                 {
                     if (!SkillExecutionUtility.TryStartSkillAtIndex(EntityManager, Entity, ref cast, nextSkillIndex, out _))
+                    {
                         SkillExecutionUtility.ResetCastState(ref cast);
+                        SkillExecutionUtility.ClearFollowupEffects(EntityManager, Entity);
+                    }
                 }
                 else
                 {
-                    SkillExecutionUtility.ResetCastState(ref cast);
+                    if (!TryRestartHeldCast(ref cast))
+                    {
+                        SkillExecutionUtility.ResetCastState(ref cast);
+                        SkillExecutionUtility.ClearFollowupEffects(EntityManager, Entity);
+                    }
                 }
 
                 break;
@@ -95,6 +59,7 @@ public class PlayerCastState : AUnitState
             case SkillAdvanceResult.Interrupted:
             case SkillAdvanceResult.Failed:
                 SkillExecutionUtility.ResetCastState(ref cast);
+                SkillExecutionUtility.ClearFollowupEffects(EntityManager, Entity);
                 break;
         }
 
@@ -108,10 +73,66 @@ public class PlayerCastState : AUnitState
         {
             UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
             SkillExecutionUtility.ResetCastState(ref cast);
+            SkillExecutionUtility.ClearFollowupEffects(EntityManager, Entity);
             SkillExecutionUtility.ApplyMovement(EntityManager, Entity, cast);
             EntityManager.SetComponentData(Entity, cast);
         }
 
         EventComponent.Instance.Publish(new SkillCastLockChangedEvent(false));
+    }
+
+    private bool TryRestartHeldCast(ref UnitCastComponent cast)
+    {
+        if (!EntityManager.HasComponent<UnitIntentComponent>(Entity))
+            return false;
+
+        UnitIntentComponent intent = EntityManager.GetComponentData<UnitIntentComponent>(Entity);
+        if (!intent.WantToCast)
+            return false;
+
+        return TryStartSelectedChain(ref cast);
+    }
+
+    private bool TryStartSelectedChain(ref UnitCastComponent cast)
+    {
+        if (!EntityManager.HasComponent<UnitIntentComponent>(Entity))
+            return false;
+
+        SkillCData skillConfig = SaveDataComponent.Instance?.GetSkillData();
+        RuntimeSkillData runtimeSkillData = RuntimeDataComponent.Instance.GetSkillData();
+        if (!SkillChainResolver.TryBuildSelectedChain(skillConfig, runtimeSkillData, _skillSlots, out int chainIndex))
+            return false;
+
+        Unity.Collections.FixedList64Bytes<int> skillIds = default;
+        Unity.Collections.FixedList64Bytes<int> skillAdditionIds = default;
+        for (int i = 0; i < _skillSlots.Count; i++)
+        {
+            SkillChainSlotData slotData = _skillSlots[i];
+            SkillData skillData = SkillChainResolver.GetSkillData(slotData);
+            if (skillData == null)
+                continue;
+
+            if (skillIds.Length >= skillIds.Capacity ||
+                skillAdditionIds.Length >= skillAdditionIds.Capacity)
+                break;
+
+            skillIds.Add(skillData.Id);
+            skillAdditionIds.Add(slotData?.SkillAdditionId ?? -1);
+        }
+
+        SkillExecutionUtility.ResetCastState(ref cast);
+        if (skillIds.Length == 0)
+            return false;
+
+        UnitIntentComponent intent = EntityManager.GetComponentData<UnitIntentComponent>(Entity);
+        return SkillExecutionUtility.TryBeginCast(
+            EntityManager,
+            Entity,
+            ref cast,
+            skillIds,
+            skillAdditionIds,
+            chainIndex,
+            hasLockedTarget: true,
+            lockedTargetPosition: intent.CastTargetPosition);
     }
 }

@@ -25,6 +25,7 @@ public class UnitCastState : AUnitState
         {
             unitSkill.ClearRequest();
             SkillExecutionUtility.ResetCastState(ref cast);
+            SkillExecutionUtility.ClearFollowupEffects(EntityManager, Entity);
             EntityManager.SetComponentData(Entity, cast);
             EntityManager.SetComponentData(Entity, unitSkill);
             return;
@@ -70,6 +71,7 @@ public class UnitCastState : AUnitState
             if (!perception.HasTarget)
             {
                 SkillExecutionUtility.ResetCastState(ref cast);
+                SkillExecutionUtility.ClearFollowupEffects(EntityManager, Entity);
                 SkillExecutionUtility.ApplyMovement(EntityManager, Entity, cast);
                 EntityManager.SetComponentData(Entity, cast);
                 return;
@@ -85,6 +87,7 @@ public class UnitCastState : AUnitState
             result == SkillAdvanceResult.Failed)
         {
             SkillExecutionUtility.ResetCastState(ref cast);
+            SkillExecutionUtility.ClearFollowupEffects(EntityManager, Entity);
         }
 
         SkillExecutionUtility.ApplyMovement(EntityManager, Entity, cast);
@@ -98,6 +101,7 @@ public class UnitCastState : AUnitState
 
         UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
         SkillExecutionUtility.ResetCastState(ref cast);
+        SkillExecutionUtility.ClearFollowupEffects(EntityManager, Entity);
         SkillExecutionUtility.ApplyMovement(EntityManager, Entity, cast);
         EntityManager.SetComponentData(Entity, cast);
     }
@@ -204,7 +208,7 @@ public class UnitCastState : AUnitState
             ? new SkillChainSlotData { SkillAdditionId = entry.SkillAdditionId }
             : null;
 
-        SkillModifierSet modifiers = SkillResolver.CollectModifiers(EntityManager, Entity, slotData);
+        SkillModifierSet modifiers = SkillResolver.CollectModifiers(EntityManager, Entity, baseSkill, slotData);
         UnitAttackComponent? attack = EntityManager.HasComponent<UnitAttackComponent>(Entity)
             ? EntityManager.GetComponentData<UnitAttackComponent>(Entity)
             : null;

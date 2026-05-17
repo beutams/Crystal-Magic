@@ -11,6 +11,23 @@
           "Bonus": 0.0
         }
       ],
+      "FollowupEffects": [
+        {
+          "FilterType": 0,
+          "Uses": 1,
+          "SkillId": -1,
+          "SkillType": 0,
+          "Element": 0,
+          "SkillAdditionId": -1,
+          "Modifiers": [
+            {
+              "Channel": 100,
+              "Factor": -0.5,
+              "Bonus": 0.0
+            }
+          ]
+        }
+      ],
       "Id": 0
     },
     {

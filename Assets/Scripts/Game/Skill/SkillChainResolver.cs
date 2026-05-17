@@ -5,6 +5,7 @@ using CrystalMagic.Game.Data.Effects;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
+using System.Reflection;
 
 namespace CrystalMagic.Game.Skill
 {
@@ -133,7 +134,7 @@ namespace CrystalMagic.Game.Skill
                 : elementComponent.Value.GetPowerBonus(element);
         }
 
-        public static SkillModifierSet CollectModifiers(EntityManager entityManager, Entity entity, SkillChainSlotData slotData = null)
+        public static SkillModifierSet CollectModifiers(EntityManager entityManager, Entity entity, SkillData skillData = null, SkillChainSlotData slotData = null)
         {
             SkillModifierSet modifiers = new();
 
@@ -158,7 +159,81 @@ namespace CrystalMagic.Game.Skill
                     modifiers.Add(skillEffectData.Modifiers);
             }
 
+            if (skillData != null && entityManager.HasBuffer<UnitCastFollowupEffectElement>(entity))
+            {
+                DynamicBuffer<UnitCastFollowupEffectElement> followupEffects = entityManager.GetBuffer<UnitCastFollowupEffectElement>(entity);
+                for (int i = 0; i < followupEffects.Length; i++)
+                {
+                    UnitCastFollowupEffectElement followupEffect = followupEffects[i];
+                    if (!MatchesFollowupEffect(followupEffect, skillData, slotData))
+                        continue;
+
+                    AddFollowupModifiers(modifiers, followupEffect);
+                }
+            }
+
             return modifiers;
+        }
+
+        public static bool MatchesFollowupEffect(UnitCastFollowupEffectElement followupEffect, SkillData skillData, SkillChainSlotData slotData)
+        {
+            if (skillData == null || followupEffect.RemainingUses <= 0)
+                return false;
+
+            return followupEffect.FilterType switch
+            {
+                SkillFollowupFilterType.AnySkill => true,
+                SkillFollowupFilterType.SkillId => followupEffect.SkillId >= 0 && skillData.Id == followupEffect.SkillId,
+                SkillFollowupFilterType.SkillType => skillData.SkillType == followupEffect.SkillType,
+                SkillFollowupFilterType.Element => followupEffect.Element != ElementType.None && SkillUsesElement(skillData.EffectChain, followupEffect.Element),
+                SkillFollowupFilterType.SkillAdditionId => slotData != null && slotData.SkillAdditionId >= 0 && slotData.SkillAdditionId == followupEffect.SkillAdditionId,
+                _ => false,
+            };
+        }
+
+        public static void AddFollowupModifiers(SkillModifierSet modifiers, UnitCastFollowupEffectElement followupEffect)
+        {
+            for (int i = 0; i < followupEffect.Modifiers.Length; i++)
+                modifiers.Add(followupEffect.Modifiers[i]);
+        }
+
+        private static bool SkillUsesElement(EffectData[] effectChain, ElementType element)
+        {
+            if (effectChain == null || effectChain.Length == 0 || element == ElementType.None)
+                return false;
+
+            for (int i = 0; i < effectChain.Length; i++)
+            {
+                if (EffectUsesElement(effectChain[i], element))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool EffectUsesElement(EffectData effectData, ElementType element)
+        {
+            if (effectData == null)
+                return false;
+
+            if (effectData is DamageEffectData damageEffectData && damageEffectData.Element == element)
+                return true;
+
+            if (effectData is PersistentEffectData persistentEffectData && persistentEffectData.Element == element)
+                return true;
+
+            FieldInfo[] fields = effectData.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance);
+            for (int i = 0; i < fields.Length; i++)
+            {
+                FieldInfo field = fields[i];
+                if (field.FieldType != typeof(EffectData[]) && !(field.FieldType.IsArray && typeof(EffectData).IsAssignableFrom(field.FieldType.GetElementType())))
+                    continue;
+
+                if (field.GetValue(effectData) is EffectData[] nestedEffects && SkillUsesElement(nestedEffects, element))
+                    return true;
+            }
+
+            return false;
         }
     }
 }

@@ -41,47 +41,160 @@
           ]
         },
         {
+          "Conditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitHasTargetSource",
+              "SourceParam": -1,
+              "CompareType": "IsTrue",
+              "CompareValue": 0.0
+            }
+          ],
           "Type": "CheckCondition",
           "Guid": "condition_enemy_has_target",
           "EditorPosition": {
             "x": -240.0,
             "y": 520.0
           },
-          "ChildGuids": [],
-          "Conditions": [
-            {
-              "ConditionType": 0,
-              "SourceType": "UnitHasTargetSource",
-              "CompareType": "IsTrue",
-              "CompareValue": 0.0
-            }
-          ]
+          "ChildGuids": []
         },
         {
+          "SelectionMode": 1,
+          "SkillId": 0,
+          "SkillTagMask": 1,
           "Type": "CastToTarget",
           "Guid": "cast_enemy_fireball",
           "EditorPosition": {
             "x": 0.0,
             "y": 520.0
           },
-          "ChildGuids": [],
-          "SelectionMode": 1,
-          "SkillId": 0,
-          "SkillTagMask": 1
+          "ChildGuids": []
         },
         {
+          "MinDurationSeconds": 1.0,
+          "MaxDurationSeconds": 2.5,
           "Type": "Wander",
           "Guid": "wander_enemy",
           "EditorPosition": {
             "x": 280.0,
             "y": 380.0
           },
-          "ChildGuids": [],
-          "MinDurationSeconds": 1.0,
-          "MaxDurationSeconds": 2.5
+          "ChildGuids": []
         }
       ],
       "Id": 1
+    },
+    {
+      "Name": "MonsterGoblinArcher",
+      "Description": "",
+      "RootNodeGuid": "451a264e6e5d40589c73fe9bc6718cee",
+      "Nodes": [
+        {
+          "Type": "Root",
+          "Guid": "451a264e6e5d40589c73fe9bc6718cee",
+          "EditorPosition": {
+            "x": 80.0,
+            "y": 120.0
+          },
+          "ChildGuids": [
+            "252fa7acf0d24766b6fc6677bca499d6"
+          ]
+        },
+        {
+          "Type": "Idle",
+          "Guid": "252fa7acf0d24766b6fc6677bca499d6",
+          "EditorPosition": {
+            "x": 360.0,
+            "y": 120.0
+          },
+          "ChildGuids": []
+        }
+      ],
+      "Id": 2
+    },
+    {
+      "Name": "MonsterGoblinWarrior",
+      "Description": "",
+      "RootNodeGuid": "8fc277ed070e4ccd8c1b6006177c541f",
+      "Nodes": [
+        {
+          "Type": "Root",
+          "Guid": "8fc277ed070e4ccd8c1b6006177c541f",
+          "EditorPosition": {
+            "x": 80.0,
+            "y": 120.0
+          },
+          "ChildGuids": [
+            "fb36575c55584171b4a1cfe56c574082"
+          ]
+        },
+        {
+          "Type": "Idle",
+          "Guid": "fb36575c55584171b4a1cfe56c574082",
+          "EditorPosition": {
+            "x": 360.0,
+            "y": 120.0
+          },
+          "ChildGuids": []
+        }
+      ],
+      "Id": 3
+    },
+    {
+      "Name": "MonsterSlime",
+      "Description": "",
+      "RootNodeGuid": "3f81f68cd0ba4867b7e53962598f8ec1",
+      "Nodes": [
+        {
+          "Type": "Root",
+          "Guid": "3f81f68cd0ba4867b7e53962598f8ec1",
+          "EditorPosition": {
+            "x": 80.0,
+            "y": 120.0
+          },
+          "ChildGuids": [
+            "5f99b700d7924729b9a4cb7f281eec46"
+          ]
+        },
+        {
+          "Type": "Idle",
+          "Guid": "5f99b700d7924729b9a4cb7f281eec46",
+          "EditorPosition": {
+            "x": 360.0,
+            "y": 120.0
+          },
+          "ChildGuids": []
+        }
+      ],
+      "Id": 4
+    },
+    {
+      "Name": "MonsterStraw",
+      "Description": "",
+      "RootNodeGuid": "ce4cca7248cd4e8f866b2f589938e87f",
+      "Nodes": [
+        {
+          "Type": "Root",
+          "Guid": "ce4cca7248cd4e8f866b2f589938e87f",
+          "EditorPosition": {
+            "x": 80.0,
+            "y": 120.0
+          },
+          "ChildGuids": [
+            "e8068f84c1874d4d86b1c7ca4d79820e"
+          ]
+        },
+        {
+          "Type": "Idle",
+          "Guid": "e8068f84c1874d4d86b1c7ca4d79820e",
+          "EditorPosition": {
+            "x": 360.0,
+            "y": 120.0
+          },
+          "ChildGuids": []
+        }
+      ],
+      "Id": 5
     }
   ]
 }

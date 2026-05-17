@@ -14,7 +14,7 @@ public class LoadUIData : UIData
     public UINode ScrollView_Viewport_Content_SaveItem_Open_CreateTime;
     public UINode ScrollView_Viewport_Content_SaveItem_Open_Money;
     public UINode ScrollView_Viewport_Content_SaveItem_Open_Index;
-    public UINode ScrollView_Viewport_Content_SaveItem_Open_DeleteBtn;
+    public UINode ScrollView_Viewport_Content_SaveItem_Open_Delete;
     public UINode ScrollView_Viewport_Content_SaveItem_Close;
     public UINode Back;
 
@@ -28,7 +28,7 @@ public class LoadUIData : UIData
         ScrollView_Viewport_Content_SaveItem_Open_CreateTime = UINode.From(Find(root, "Scroll View/Viewport/Content/SaveItem/Open/CreateTime"));
         ScrollView_Viewport_Content_SaveItem_Open_Money = UINode.From(Find(root, "Scroll View/Viewport/Content/SaveItem/Open/Money"));
         ScrollView_Viewport_Content_SaveItem_Open_Index = UINode.From(Find(root, "Scroll View/Viewport/Content/SaveItem/Open/Index"));
-        ScrollView_Viewport_Content_SaveItem_Open_DeleteBtn = UINode.From(Find(root, "Scroll View/Viewport/Content/SaveItem/Open/DeleteBtn"));
+        ScrollView_Viewport_Content_SaveItem_Open_Delete = UINode.From(Find(root, "Scroll View/Viewport/Content/SaveItem/Open/Delete"));
         ScrollView_Viewport_Content_SaveItem_Close = UINode.From(Find(root, "Scroll View/Viewport/Content/SaveItem/Close"));
         Back = UINode.From(Find(root, "Back"));
     }

@@ -2,20 +2,14 @@ using System;
 using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.UI;
-using UnityEngine;
 
 public class GameSaveUI : UIBase<GameSaveUIData, GameSaveUIModel>
 {
-    private readonly List<SaveUI_SaveItemView> _itemViews = new();
+    private readonly List<GameSaveUI_SaveItemView> _itemViews = new();
 
     public event Action BackClicked;
     public event Action<int> SaveItemClicked;
     public event Action<int> SaveItemDeleteClicked;
-
-    protected override void OnInit()
-    {
-        base.OnInit();
-    }
 
     public override void OnOpen()
     {
@@ -54,14 +48,16 @@ public class GameSaveUI : UIBase<GameSaveUIData, GameSaveUIModel>
         while (_itemViews.Count > slotCount)
         {
             int lastIndex = _itemViews.Count - 1;
-            SaveUI_SaveItemView itemView = _itemViews[lastIndex];
+            GameSaveUI_SaveItemView itemView = _itemViews[lastIndex];
             UISubViewBase.ReleaseToPool(itemView);
             _itemViews.RemoveAt(lastIndex);
         }
 
         while (_itemViews.Count < slotCount)
         {
-            SaveUI_SaveItemView itemView = UISubViewBase.AcquireFromPool(UI.ScrollView_Viewport_Content_SaveItem.GameObject.GetComponent<SaveUI_SaveItemView>(), UI.ScrollView_Viewport_Content.GameObject.transform);
+            GameSaveUI_SaveItemView itemView = UISubViewBase.AcquireFromPool(
+                UI.ScrollView_Viewport_Content_SaveItem.GameObject.GetComponent<GameSaveUI_SaveItemView>(),
+                UI.ScrollView_Viewport_Content.GameObject.transform);
             if (itemView == null)
                 break;
 

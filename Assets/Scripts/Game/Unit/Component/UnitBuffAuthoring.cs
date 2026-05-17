@@ -18,5 +18,6 @@ public struct UnitBuffElement : IBufferElementData
 {
     public int BuffId;
     public float RemainingTime;
+    public float NextTickTime;
     public int StackCount;
 }

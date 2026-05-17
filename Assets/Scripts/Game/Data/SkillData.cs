@@ -56,6 +56,7 @@ namespace CrystalMagic.Game.Data
         /// </summary>
         [SerializeReference]
         public EffectData[] EffectChain = System.Array.Empty<EffectData>();
+        public List<SkillFollowupEffectData> FollowupEffects = new();
     }
 
     public enum SkillModifierChannel

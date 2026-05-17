@@ -8,32 +8,13 @@ public class SaveUI_SaveItemView : UISubView<SaveUI_SaveItemData>
 
     public int SlotIndex { get; private set; }
 
-    private ButtonPlus _buttonPlus;
-    private ButtonPlus _deleteButtonPlus;
     private bool _hasRecord;
-
-    protected override void Awake()
-    {
-        base.Awake();
-        CacheButton();
-    }
-
-    private void OnEnable()
-    {
-        CacheButton();
-        _buttonPlus.onClick.AddListener(OnClicked);
-        _deleteButtonPlus.onClick.AddListener(OnDeleteClicked);
-    }
-
-    private void OnDisable()
-    {
-        _buttonPlus.onClick.RemoveListener(OnClicked);
-        _deleteButtonPlus.onClick.RemoveListener(OnDeleteClicked);
-    }
+    private bool _buttonEventsBound;
 
     public void Render(int slotIndex, SaveRecord record)
     {
         Rebind();
+        EnsureButtonEventsBound();
         SlotIndex = slotIndex;
         _hasRecord = record != null;
 
@@ -48,10 +29,14 @@ public class SaveUI_SaveItemView : UISubView<SaveUI_SaveItemData>
         UI.Open_Money.TextMeshProUGUI.text = record.StashMoney.ToString();
     }
 
-    private void CacheButton()
+    private void EnsureButtonEventsBound()
     {
-        _buttonPlus = GetComponent<ButtonPlus>();
-        _deleteButtonPlus = UI.Open_DeleteBtn.ButtonPlus;
+        if (_buttonEventsBound)
+            return;
+
+        GetComponent<ButtonPlus>().onClick.AddListener(OnClicked);
+        UI.Open_Delete.ButtonPlus.onClick.AddListener(OnDeleteClicked);
+        _buttonEventsBound = true;
     }
 
     private void OnClicked()

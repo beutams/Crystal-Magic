@@ -658,6 +658,9 @@ namespace CrystalMagic.Editor.Data
 
         private void DrawEffectBuffFields(EffectBuffData buff)
         {
+            DrawSectionHeader("效果触发");
+            buff.TickIntervalSeconds = EditorGUILayout.FloatField("触发间隔 (秒)", buff.TickIntervalSeconds);
+
             DrawSectionHeader("效果链");
             buff.EffectChain ??= Array.Empty<EffectData>();
             buff.EffectChain = DrawEffectChainInline("__buff_root__", buff.EffectChain, ref _addEffectTypeIndex);

@@ -1,9 +1,10 @@
-﻿using CrystalMagic.Core;
+using System;
+using CrystalMagic.Core;
 
-public class LoadUI_SaveItemView : UISubView<LoadUI_SaveItemData>
+public class GameSaveUI_SaveItemView : UISubView<GameSaveUI_SaveItemData>
 {
-    public event System.Action<int> Clicked;
-    public event System.Action<int> DeleteClicked;
+    public event Action<int> Clicked;
+    public event Action<int> DeleteClicked;
 
     public int SlotIndex { get; private set; }
 

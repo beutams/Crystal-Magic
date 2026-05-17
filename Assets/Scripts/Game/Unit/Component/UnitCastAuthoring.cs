@@ -1,3 +1,5 @@
+using CrystalMagic.Game.Data;
+using CrystalMagic.Game.Data.Effects;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -11,8 +13,22 @@ public class UnitCastAuthoring : MonoBehaviour
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             AddComponent(entity, new UnitCastComponent());
+            AddBuffer<UnitCastFollowupEffectElement>(entity);
         }
     }
+}
+
+public struct UnitCastFollowupEffectElement : IBufferElementData
+{
+    public int SourceSkillId;
+    public int SourceSkillAdditionId;
+    public int RemainingUses;
+    public SkillFollowupFilterType FilterType;
+    public int SkillId;
+    public SkillType SkillType;
+    public ElementType Element;
+    public int SkillAdditionId;
+    public FixedList512Bytes<SkillModifierEntry> Modifiers;
 }
 
 public enum SkillCastPhase : byte

@@ -31,7 +31,10 @@ namespace CrystalMagic.Game.Skill.Effects
 
             DynamicBuffer<UnitBuffElement> buffer = entityManager.GetBuffer<UnitBuffElement>(target);
             int stackToApply = math.max(1, Data.StackCount);
-            float duration = math.max(0f, Data.DurationSeconds);
+            float duration = Data.DurationSeconds < 0f ? -1f : math.max(0f, Data.DurationSeconds);
+            float nextTickTime = buffData is EffectBuffData effectBuffData && effectBuffData.TickIntervalSeconds > 0f
+                ? effectBuffData.TickIntervalSeconds
+                : 0f;
 
             for (int i = 0; i < buffer.Length; i++)
             {
@@ -40,6 +43,7 @@ namespace CrystalMagic.Game.Skill.Effects
                     continue;
 
                 element.RemainingTime = duration;
+                element.NextTickTime = nextTickTime;
                 element.StackCount = buffData.CanStack
                     ? math.min(math.max(1, buffData.MaxStacks), math.max(1, element.StackCount) + stackToApply)
                     : 1;
@@ -51,6 +55,7 @@ namespace CrystalMagic.Game.Skill.Effects
             {
                 BuffId = Data.BuffId,
                 RemainingTime = duration,
+                NextTickTime = nextTickTime,
                 StackCount = buffData.CanStack
                     ? math.min(math.max(1, buffData.MaxStacks), stackToApply)
                     : 1,

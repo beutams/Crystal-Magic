@@ -1,11 +1,15 @@
 using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
+using CrystalMagic.Game.Skill;
 using Unity.Entities;
+using UnityEngine;
 
 [UpdateBefore(typeof(UnitMoveSystem))]
 partial class UnitBuffSystem : SystemBase
 {
+    private readonly SkillContent _buffTickContext = new();
+
     protected override void OnUpdate()
     {
         float dt = SystemAPI.Time.DeltaTime;
@@ -18,8 +22,7 @@ partial class UnitBuffSystem : SystemBase
             for (int i = buffBuffer.Length - 1; i >= 0; i--)
             {
                 UnitBuffElement element = buffBuffer[i];
-                element.RemainingTime -= dt;
-                if (element.RemainingTime <= 0f)
+                if (!TryUpdateBuffElement(entity, dt, ref element))
                 {
                     buffBuffer.RemoveAt(i);
                     continue;
@@ -104,5 +107,62 @@ partial class UnitBuffSystem : SystemBase
             mana.ValueRW.MpRegenFactor = modifiers.GetFactor(PropertyModifierChannel.MpRegen);
             mana.ValueRW.MpRegenBonus = modifiers.GetBonus(PropertyModifierChannel.MpRegen);
         }
+    }
+
+    private bool TryUpdateBuffElement(Entity entity, float deltaTime, ref UnitBuffElement element)
+    {
+        BuffData buffData = DataComponent.Instance?.Get<BuffData>(element.BuffId);
+        if (buffData == null)
+            return false;
+
+        float effectiveDeltaTime = deltaTime;
+        if (element.RemainingTime >= 0f)
+        {
+            effectiveDeltaTime = Mathf.Min(deltaTime, element.RemainingTime);
+            element.RemainingTime -= deltaTime;
+        }
+
+        if (buffData is EffectBuffData effectBuffData)
+            TickEffectBuff(entity, effectBuffData, effectiveDeltaTime, ref element);
+
+        return element.RemainingTime < 0f || element.RemainingTime > 0f;
+    }
+
+    private void TickEffectBuff(Entity entity, EffectBuffData effectBuffData, float deltaTime, ref UnitBuffElement element)
+    {
+        if (effectBuffData.TickIntervalSeconds <= 0f ||
+            effectBuffData.EffectChain == null ||
+            effectBuffData.EffectChain.Length == 0 ||
+            deltaTime <= 0f)
+        {
+            return;
+        }
+
+        if (element.NextTickTime <= 0f)
+            element.NextTickTime = effectBuffData.TickIntervalSeconds;
+
+        element.NextTickTime -= deltaTime;
+        while (element.NextTickTime <= 0f)
+        {
+            ExecuteBuffTickEffects(entity, effectBuffData, element.StackCount);
+            element.NextTickTime += effectBuffData.TickIntervalSeconds;
+        }
+    }
+
+    private void ExecuteBuffTickEffects(Entity entity, EffectBuffData effectBuffData, int stackCount)
+    {
+        int executeCount = Mathf.Max(1, stackCount);
+        _buffTickContext.EntityManager = EntityManager;
+        _buffTickContext.HasOriginEntity = false;
+        _buffTickContext.OriginEntity = Entity.Null;
+        _buffTickContext.HasTargetEntity = true;
+        _buffTickContext.TargetEntity = entity;
+        _buffTickContext.HasTarget = false;
+        _buffTickContext.Target = null;
+        _buffTickContext.Origin = null;
+        _buffTickContext.RuntimeModifiers = null;
+
+        for (int i = 0; i < executeCount; i++)
+            SkillExecutor.ExecuteEffects(effectBuffData.EffectChain, _buffTickContext);
     }
 }

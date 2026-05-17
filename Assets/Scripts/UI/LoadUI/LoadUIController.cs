@@ -44,6 +44,19 @@
 
         private void OnSaveItemDeleteClicked(int slotIndex)
         {
+            CloseOpenedTip();
+
+            ConfirmUIOpenData openData = new(
+                "删除存档",
+                "是否删除该存档？",
+                () => ConfirmDelete(slotIndex),
+                null);
+
+            CrystalMagic.Core.UIComponent.Instance.OpenChild<ConfirmUI>(View, openData);
+        }
+
+        private void ConfirmDelete(int slotIndex)
+        {
             CrystalMagic.Core.SaveDataComponent.Instance.DeleteSlot(slotIndex);
             Model.SetSaveRecords(CrystalMagic.Core.SaveDataComponent.Instance.GetAllSaveRecords());
         }

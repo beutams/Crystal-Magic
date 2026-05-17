@@ -213,6 +213,7 @@ namespace CrystalMagic.Editor.Skill
                 MoveSpeedMultiplier = 1f,
                 Conditions = new List<ConditionConfig>(),
                 EffectChain = Array.Empty<EffectData>(),
+                FollowupEffects = new List<SkillFollowupEffectData>(),
             });
 
             NormalizeRowIds();
@@ -249,6 +250,7 @@ namespace CrystalMagic.Editor.Skill
             copy.Name = string.IsNullOrWhiteSpace(source.Name) ? $"Skill {copy.Id}" : $"{source.Name}_Copy";
             copy.Conditions ??= new List<ConditionConfig>();
             copy.EffectChain ??= Array.Empty<EffectData>();
+            copy.FollowupEffects ??= new List<SkillFollowupEffectData>();
             _rows.Add(copy);
             NormalizeRowIds();
             _selectedIndex = _rows.Count - 1;
@@ -482,6 +484,10 @@ namespace CrystalMagic.Editor.Skill
 
             DrawSectionHeader("Effect Chain");
             DrawEffectChain(skill);
+
+            DrawSectionHeader("Followup Effects");
+            skill.FollowupEffects ??= new List<SkillFollowupEffectData>();
+            DrawFollowupEffectList(skill.FollowupEffects);
 
             EditorGUIUtility.labelWidth = previousLabelWidth;
             EditorGUILayout.EndScrollView();
@@ -737,6 +743,64 @@ namespace CrystalMagic.Editor.Skill
             }
 
             EditorGUI.indentLevel--;
+        }
+
+        private void DrawFollowupEffectList(List<SkillFollowupEffectData> followupEffects)
+        {
+            int removeAt = -1;
+            for (int i = 0; i < followupEffects.Count; i++)
+            {
+                SkillFollowupEffectData followup = followupEffects[i] ?? new SkillFollowupEffectData();
+                EditorGUI.BeginChangeCheck();
+
+                EditorGUILayout.BeginVertical("box");
+                followup.FilterType = (SkillFollowupFilterType)EditorGUILayout.EnumPopup("Filter", followup.FilterType);
+                followup.Uses = Mathf.Max(1, EditorGUILayout.IntField("Uses", followup.Uses));
+
+                switch (followup.FilterType)
+                {
+                    case SkillFollowupFilterType.SkillId:
+                        followup.SkillId = EditorGUILayout.IntField("Skill Id", followup.SkillId);
+                        break;
+                    case SkillFollowupFilterType.SkillType:
+                        followup.SkillType = (SkillType)EditorGUILayout.EnumPopup("Skill Type", followup.SkillType);
+                        break;
+                    case SkillFollowupFilterType.Element:
+                        followup.Element = (ElementType)EditorGUILayout.EnumPopup("Element", followup.Element);
+                        break;
+                    case SkillFollowupFilterType.SkillAdditionId:
+                        followup.SkillAdditionId = EditorGUILayout.IntField("Skill Addition Id", followup.SkillAdditionId);
+                        break;
+                }
+
+                followup.Modifiers ??= new List<SkillModifierEntry>();
+                DrawSkillModifierList("Applied Modifiers", followup.Modifiers);
+
+                GUI.color = new Color(1f, 0.5f, 0.5f);
+                if (GUILayout.Button("Delete Followup Effect", GUILayout.Width(148f)))
+                    removeAt = i;
+                GUI.color = Color.white;
+
+                EditorGUILayout.EndVertical();
+
+                if (EditorGUI.EndChangeCheck())
+                {
+                    followupEffects[i] = followup;
+                    _isDirty = true;
+                }
+            }
+
+            if (GUILayout.Button("+ Add Followup Effect", GUILayout.Width(140f)))
+            {
+                followupEffects.Add(new SkillFollowupEffectData());
+                _isDirty = true;
+            }
+
+            if (removeAt >= 0)
+            {
+                followupEffects.RemoveAt(removeAt);
+                _isDirty = true;
+            }
         }
 
         private void DrawConditionList(List<ConditionConfig> conditions, string keyPrefix)

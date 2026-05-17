@@ -149,6 +149,14 @@ All UI panels must follow the existing MVC framework:
 - Name related files consistently as `<PanelName>.cs`, `<PanelName>Model.cs`, `<PanelName>Controller.cs`, and `<PanelName>Data.cs` when generated data bindings exist.
 - Let `UIComponent` create and bind MVC contexts; do not hand-roll controller/model construction outside the established UI flow.
 
+When modifying or extending an existing UI, inspect generated bindings before adding code:
+
+- Check the main `UIData` class first to see which child nodes and components are already bound.
+- For dynamic or repeated entries, check whether a matching `UISubView<TData>` sub view already exists before adding new hierarchy lookup code; these cases usually already have a sub view and sub data class under `Sub/`.
+- Avoid `transform.Find` and other string-based hierarchy lookups unless there is no generated binding and no practical alternative.
+- When using a component exposed through `UIData` such as `UI.Confirm.ButtonPlus`, do not add defensive null checks. If the component is missing, the prefab/setup is wrong and the failure should be visible instead of silently continuing.
+- Do not cache component references that `UIData` already stores. Use the generated `UIData` fields directly as the canonical references.
+
 Keep responsibilities separated:
 
 - View owns Unity references, button listeners, visual rendering, and user-intent events such as `BackClicked`.

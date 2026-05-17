@@ -172,6 +172,9 @@ namespace CrystalMagic.Core {
                     if (file.EndsWith(".backup.json", StringComparison.OrdinalIgnoreCase))
                         continue;
 
+                    if (!TryGetManualSaveSlotIndex(file, out int slotIndex))
+                        continue;
+
                     if (count >= GetMaxSaveSlots())
                         break;
 
@@ -184,7 +187,7 @@ namespace CrystalMagic.Core {
 
                         records.Add(new SaveRecord
                         {
-                            SaveIndex = data.SaveIndex,
+                            SaveIndex = slotIndex,
                             Timestamp = data.SaveTimestamp,
                             GameVersion = data.GameVersion,
                             StashMoney = GetPreviewStashMoney(data),
@@ -207,6 +210,25 @@ namespace CrystalMagic.Core {
         /// <summary>
         /// 删除指定槽位编号的存档。
         /// </summary>
+        private bool TryGetManualSaveSlotIndex(string filePath, out int slotIndex)
+        {
+            slotIndex = -1;
+
+            if (string.IsNullOrWhiteSpace(filePath))
+                return false;
+
+            string fileName = System.IO.Path.GetFileNameWithoutExtension(filePath);
+            if (string.IsNullOrWhiteSpace(fileName))
+                return false;
+
+            int versionMarkerIndex = fileName.IndexOf("_v", StringComparison.OrdinalIgnoreCase);
+            if (versionMarkerIndex <= 0)
+                return false;
+
+            string slotIndexText = fileName.Substring(0, versionMarkerIndex);
+            return int.TryParse(slotIndexText, out slotIndex);
+        }
+
         public bool DeleteSlot(int index)
         {
             try

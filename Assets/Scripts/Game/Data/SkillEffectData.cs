@@ -11,5 +11,6 @@ namespace CrystalMagic.Game.Data
         public string Description;
         public string IconPath;
         public List<SkillModifierEntry> Modifiers = new();
+        public List<SkillFollowupEffectData> FollowupEffects = new();
     }
 }
