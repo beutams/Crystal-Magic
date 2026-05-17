@@ -31,6 +31,7 @@ namespace CrystalMagic.Editor.Skill
         {
             typeof(ApplyBuffEffectData),
             typeof(AreaSearchEffectData),
+            typeof(ChainSearchEffectData),
             typeof(DamageEffectData),
             typeof(ForwardRectSearchEffectData),
             typeof(HealEffectData),
@@ -49,6 +50,7 @@ namespace CrystalMagic.Editor.Skill
         {
             "Apply Buff",
             "Area Search",
+            "Chain Search",
             "Damage",
             "Forward Rect Search",
             "Heal",
@@ -67,6 +69,7 @@ namespace CrystalMagic.Editor.Skill
         {
             new(0.34f, 0.22f, 0.56f),
             new(0.14f, 0.38f, 0.60f),
+            new(0.18f, 0.42f, 0.74f),
             new(0.60f, 0.18f, 0.14f),
             new(0.60f, 0.30f, 0.12f),
             new(0.16f, 0.52f, 0.22f),

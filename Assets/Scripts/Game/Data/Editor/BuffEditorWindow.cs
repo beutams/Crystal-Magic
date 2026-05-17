@@ -66,6 +66,7 @@ namespace CrystalMagic.Editor.Data
         {
             typeof(ApplyBuffEffectData),
             typeof(AreaSearchEffectData),
+            typeof(ChainSearchEffectData),
             typeof(DamageEffectData),
             typeof(ForwardRectSearchEffectData),
             typeof(HealEffectData),
@@ -83,6 +84,7 @@ namespace CrystalMagic.Editor.Data
         {
             "施加Buff (ApplyBuff)",
             "范围搜索 (AreaSearch)",
+            "连锁搜索 (ChainSearch)",
             "伤害 (Damage)",
             "前向矩形搜索 (ForwardRectSearch)",
             "回血 (Heal)",
@@ -100,6 +102,7 @@ namespace CrystalMagic.Editor.Data
         {
             new(0.34f, 0.22f, 0.56f),
             new(0.14f, 0.38f, 0.60f),
+            new(0.18f, 0.42f, 0.74f),
             new(0.60f, 0.18f, 0.14f),
             new(0.60f, 0.30f, 0.12f),
             new(0.16f, 0.52f, 0.22f),
