@@ -113,21 +113,69 @@
     },
     {
       "Name": "不完全",
-      "Description": "当前技能蓝耗减少300、伤害降低30%。后续同类技能保留扩展位。",
+      "Description": "后续三次携带该加成的技能分别减少300/200/100 MP，并降低30%/20%/10%伤害",
       "IconPath": "Assets/Res/Sprites/Item/Charging.png",
-      "Modifiers": [
+      "Modifiers": [],
+      "FollowupEffects": [
         {
-          "Channel": 0,
-          "Factor": 0.0,
-          "Bonus": -300.0
-        },
-        {
-          "Channel": 100,
-          "Factor": -0.3,
-          "Bonus": 0.0
+          "FilterType": 4,
+          "ConsumeRule": {
+            "$type": "CrystalMagic.Game.Data.UseCountSkillFollowupConsumeRuleData, Assembly-CSharp",
+            "Uses": 3
+          },
+          "ModifierRule": {
+            "$type": "CrystalMagic.Game.Data.SequenceSkillFollowupModifierRuleData, Assembly-CSharp",
+            "ModifierSets": [
+              {
+                "Modifiers": [
+                  {
+                    "Channel": 0,
+                    "Factor": 0.0,
+                    "Bonus": -300.0
+                  },
+                  {
+                    "Channel": 100,
+                    "Factor": -0.3,
+                    "Bonus": 0.0
+                  }
+                ]
+              },
+              {
+                "Modifiers": [
+                  {
+                    "Channel": 0,
+                    "Factor": 0.0,
+                    "Bonus": -200.0
+                  },
+                  {
+                    "Channel": 100,
+                    "Factor": -0.2,
+                    "Bonus": 0.0
+                  }
+                ]
+              },
+              {
+                "Modifiers": [
+                  {
+                    "Channel": 0,
+                    "Factor": 0.0,
+                    "Bonus": -100.0
+                  },
+                  {
+                    "Channel": 100,
+                    "Factor": -0.1,
+                    "Bonus": 0.0
+                  }
+                ]
+              }
+            ]
+          },
+          "SkillId": -1,
+          "SkillType": 0,
+          "Element": 0,
+          "SkillAdditionId": 4
         }
       ],
-      "FollowupEffects": [],
       "CastTasks": [],
       "EffectChain": [],
       "Id": 4
