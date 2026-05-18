@@ -14,6 +14,7 @@ public class UnitCastAuthoring : MonoBehaviour
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             AddComponent(entity, new UnitCastComponent());
             AddBuffer<UnitCastFollowupEffectElement>(entity);
+            AddComponentObject(entity, new UnitCastTaskPayloadComponent());
         }
     }
 }
@@ -22,13 +23,25 @@ public struct UnitCastFollowupEffectElement : IBufferElementData
 {
     public int SourceSkillId;
     public int SourceSkillAdditionId;
-    public int RemainingUses;
+    public SkillFollowupConsumeRuleType ConsumeRuleType;
+    public int ConsumeRuleStateInt0;
+    public float ConsumeRuleStateFloat0;
+    public SkillFollowupModifierRuleType ModifierRuleType;
+    public int ModifierRuleStateInt0;
+    public float ModifierRuleStateFloat0;
     public SkillFollowupFilterType FilterType;
     public int SkillId;
     public SkillType SkillType;
     public ElementType Element;
     public int SkillAdditionId;
-    public FixedList512Bytes<SkillModifierEntry> Modifiers;
+    public FixedList4096Bytes<SkillModifierEntry> ModifierEntries;
+    public FixedList128Bytes<SkillFollowupModifierSlice> ModifierSlices;
+}
+
+public struct SkillFollowupModifierSlice
+{
+    public int StartIndex;
+    public int Length;
 }
 
 public enum SkillCastPhase : byte
@@ -37,6 +50,16 @@ public enum SkillCastPhase : byte
     Windup = 1,
     Chanting = 2,
     Recovery = 3,
+}
+
+public enum SkillCastHookContinuation : byte
+{
+    None = 0,
+    StartWindup = 1,
+    ScheduleBeforeExecute = 2,
+    ExecutePrimarySkill = 3,
+    StartRecovery = 4,
+    FinishSkill = 5,
 }
 
 public struct UnitCastComponent : IComponentData
@@ -79,6 +102,9 @@ public struct UnitCastComponent : IComponentData
     /// </summary>
     public int CurrentSkillId;
 
+    public int ExecutionSerialCounter;
+    public int CurrentExecutionToken;
+
     /// <summary>
     /// 当前施法阶段。
     /// </summary>
@@ -89,4 +115,7 @@ public struct UnitCastComponent : IComponentData
     /// </summary>
     public float PhaseElapsed;
     public float PhaseDuration;
+    public bool IsWaitingHook;
+    public SkillCastHookPoint WaitingHookPoint;
+    public SkillCastHookContinuation HookContinuation;
 }

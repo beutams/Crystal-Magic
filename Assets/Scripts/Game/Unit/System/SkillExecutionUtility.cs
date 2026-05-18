@@ -1,10 +1,10 @@
+using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Skill;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
-using System.Collections.Generic;
 
 public enum SkillAdvanceResult : byte
 {
@@ -30,7 +30,7 @@ public static class SkillExecutionUtility
         bool hasLockedTarget,
         float2 lockedTargetPosition)
     {
-        ResetCastState(ref cast);
+        ResetCastState(entityManager, entity, ref cast);
         cast.SkillIds = skillIds;
         cast.SkillAdditionIds = skillAdditionIds;
         cast.ForceInterrupt = false;
@@ -44,11 +44,10 @@ public static class SkillExecutionUtility
 
         if (!TryStartSkillAtIndex(entityManager, entity, ref cast, 0, out _))
         {
-            ResetCastState(ref cast);
+            ResetCastState(entityManager, entity, ref cast);
             return false;
         }
 
-        LogPhase("Start Windup", cast);
         return true;
     }
 
@@ -59,30 +58,35 @@ public static class SkillExecutionUtility
 
         if (cast.ForceInterrupt)
         {
-            InterruptCurrentSkill(ref cast);
+            InterruptCurrentSkill(entityManager, entity, ref cast);
             return SkillAdvanceResult.Interrupted;
-        }
-
-        if (!TryGetCurrentSkill(entityManager, entity, cast, out _))
-        {
-            InterruptCurrentSkill(ref cast);
-            return SkillAdvanceResult.Failed;
         }
 
         float remainingTime = deltaTime;
         int guard = 0;
 
-        while (cast.IsCasting && remainingTime >= 0f && guard++ < 8)
+        while (cast.IsCasting && remainingTime >= 0f && guard++ < 16)
         {
+            if (cast.IsWaitingHook)
+            {
+                SkillAdvanceResult hookResult = TickHookTasks(entityManager, entity, ref cast, ref remainingTime);
+                if (hookResult != SkillAdvanceResult.Running)
+                    return hookResult;
+
+                if (remainingTime <= 0f)
+                    return SkillAdvanceResult.Running;
+
+                continue;
+            }
+
             if (!TryGetCurrentSkill(entityManager, entity, cast, out ResolvedSkillData skillData))
             {
-                InterruptCurrentSkill(ref cast);
+                InterruptCurrentSkill(entityManager, entity, ref cast);
                 return SkillAdvanceResult.Failed;
             }
 
             float phaseDuration = GetPhaseDuration(skillData, cast.Phase);
             float phaseRemaining = math.max(phaseDuration - cast.PhaseElapsed, 0f);
-
             if (phaseRemaining > remainingTime && phaseRemaining > 0f)
             {
                 cast.PhaseElapsed += remainingTime;
@@ -92,7 +96,13 @@ public static class SkillExecutionUtility
             cast.PhaseElapsed = phaseDuration;
             remainingTime = math.max(remainingTime - phaseRemaining, 0f);
 
-            SkillAdvanceResult phaseResult = AdvancePhase(entityManager, entity, skillData, ref cast);
+            SkillAdvanceResult phaseResult = AdvancePhase(skillData, ref cast);
+            if (phaseResult == SkillAdvanceResult.Failed)
+            {
+                InterruptCurrentSkill(entityManager, entity, ref cast);
+                return SkillAdvanceResult.Failed;
+            }
+
             if (phaseResult != SkillAdvanceResult.Running)
                 return phaseResult;
 
@@ -131,7 +141,204 @@ public static class SkillExecutionUtility
         entityManager.SetComponentData(entity, move);
     }
 
-    private static SkillAdvanceResult AdvancePhase(EntityManager entityManager, Entity entity, ResolvedSkillData skillData, ref UnitCastComponent cast)
+    public static bool TryResolveCurrentSkill(EntityManager entityManager, Entity entity, in UnitCastComponent cast, out ResolvedSkillData skillData)
+    {
+        return TryGetCurrentSkill(entityManager, entity, cast, out skillData);
+    }
+
+    public static void ExecuteResolvedSkillOnce(
+        EntityManager entityManager,
+        Entity entity,
+        in UnitCastComponent cast,
+        ResolvedSkillData skillData,
+        SkillModifierSet runtimeModifiers = null)
+    {
+        SkillContent.EntityManager = entityManager;
+        SkillContent.HasOriginEntity = true;
+        SkillContent.OriginEntity = entity;
+        SetSkillReleasePosition(entityManager, entity, cast, skillData);
+        SkillContent.HasTargetEntity = false;
+        SkillContent.TargetEntity = Entity.Null;
+        SkillContent.HasTarget = false;
+        SkillContent.Target = null;
+        SkillContent.Origin = null;
+        SkillContent.RuntimeModifiers = runtimeModifiers?.Clone();
+
+        SkillExecutor.ExecuteSkill(skillData, SkillContent);
+    }
+
+    public static bool TryStartSkillAtIndex(EntityManager entityManager, Entity entity, ref UnitCastComponent cast, int skillIndex, out ResolvedSkillData skillData)
+    {
+        cast.CurrentSkillIndex = skillIndex;
+        cast.CurrentSkillId = skillIndex >= 0 && skillIndex < cast.SkillIds.Length
+            ? cast.SkillIds[skillIndex]
+            : -1;
+
+        if (!TryGetSkillByIndex(entityManager, entity, cast, skillIndex, out skillData))
+            return false;
+
+        if (!TryConsumeMana(entityManager, entity, skillData.MpCost))
+            return false;
+
+        cast.ExecutionSerialCounter++;
+        cast.CurrentExecutionToken = cast.ExecutionSerialCounter;
+        cast.IsCasting = true;
+        cast.Phase = SkillCastPhase.None;
+        cast.PhaseElapsed = 0f;
+        cast.PhaseDuration = 0f;
+        ResetTaskPayload(entityManager, entity, cast.CurrentExecutionToken);
+        ScheduleHook(ref cast, SkillCastHookPoint.BeforeWindup, SkillCastHookContinuation.StartWindup);
+        return true;
+    }
+
+    public static void ResetCastState(EntityManager entityManager, Entity entity, ref UnitCastComponent cast)
+    {
+        ClearExecutionState(entityManager, entity, ref cast);
+        cast.HasLockedTarget = false;
+        cast.LockedTargetPosition = float2.zero;
+        cast.CurrentChainIndex = -1;
+        cast.CurrentSkillIndex = -1;
+        cast.CurrentSkillId = -1;
+        cast.SkillIds = default;
+        cast.SkillAdditionIds = default;
+    }
+
+    public static void ClearFollowupEffects(EntityManager entityManager, Entity entity)
+    {
+        if (!entityManager.HasBuffer<UnitCastFollowupEffectElement>(entity))
+            return;
+
+        entityManager.GetBuffer<UnitCastFollowupEffectElement>(entity).Clear();
+    }
+
+    private static SkillAdvanceResult TickHookTasks(EntityManager entityManager, Entity entity, ref UnitCastComponent cast, ref float remainingTime)
+    {
+        UnitCastTaskPayloadComponent payload = GetOrCreateTaskPayload(entityManager, entity);
+        EnsureHookTasksInitialized(cast, payload);
+
+        for (int i = payload.ActiveTasks.Count - 1; i >= 0; i--)
+        {
+            SkillCastTaskRuntime task = payload.ActiveTasks[i];
+            if (task == null || task.HookPoint != cast.WaitingHookPoint)
+                continue;
+
+            if (task.Tick(entityManager, entity, ref cast, ref remainingTime))
+                payload.ActiveTasks.RemoveAt(i);
+        }
+
+        if (HasPendingTasksForHook(payload, cast.WaitingHookPoint))
+            return SkillAdvanceResult.Running;
+
+        return ContinueAfterHook(entityManager, entity, ref cast);
+    }
+
+    private static void EnsureHookTasksInitialized(in UnitCastComponent cast, UnitCastTaskPayloadComponent payload)
+    {
+        if (payload == null || payload.ExecutionToken != cast.CurrentExecutionToken)
+            return;
+
+        int bit = 1 << (int)cast.WaitingHookPoint;
+        if ((payload.InitializedHookMask & bit) != 0)
+            return;
+
+        payload.InitializedHookMask |= bit;
+        int additionId = GetCurrentSkillAdditionId(cast);
+        SkillEffectData skillAdditionData = SkillChainResolver.GetSkillAdditionData(additionId);
+        if (skillAdditionData?.CastTasks == null || skillAdditionData.CastTasks.Count == 0)
+            return;
+
+        for (int i = 0; i < skillAdditionData.CastTasks.Count; i++)
+        {
+            SkillCastTaskData taskData = skillAdditionData.CastTasks[i];
+            if (taskData == null || taskData.HookPoint != cast.WaitingHookPoint)
+                continue;
+
+            SkillCastTaskRuntime runtime = SkillCastTaskRuntimeFactory.Create(taskData);
+            if (runtime != null)
+                payload.ActiveTasks.Add(runtime);
+        }
+    }
+
+    private static bool HasPendingTasksForHook(UnitCastTaskPayloadComponent payload, SkillCastHookPoint hookPoint)
+    {
+        if (payload?.ActiveTasks == null)
+            return false;
+
+        for (int i = 0; i < payload.ActiveTasks.Count; i++)
+        {
+            if (payload.ActiveTasks[i]?.HookPoint == hookPoint)
+                return true;
+        }
+
+        return false;
+    }
+
+    private static SkillAdvanceResult ContinueAfterHook(EntityManager entityManager, Entity entity, ref UnitCastComponent cast)
+    {
+        SkillCastHookContinuation continuation = cast.HookContinuation;
+        ClearHook(ref cast);
+
+        switch (continuation)
+        {
+            case SkillCastHookContinuation.StartWindup:
+                if (!TryGetCurrentSkill(entityManager, entity, cast, out ResolvedSkillData windupSkill))
+                {
+                    InterruptCurrentSkill(entityManager, entity, ref cast);
+                    return SkillAdvanceResult.Failed;
+                }
+
+                cast.Phase = SkillCastPhase.Windup;
+                cast.PhaseElapsed = 0f;
+                cast.PhaseDuration = GetPhaseDuration(windupSkill, SkillCastPhase.Windup);
+                LogPhase("Start Windup", cast);
+                return SkillAdvanceResult.Running;
+
+            case SkillCastHookContinuation.ScheduleBeforeExecute:
+                ScheduleHook(ref cast, SkillCastHookPoint.BeforeExecute, SkillCastHookContinuation.ExecutePrimarySkill);
+                return SkillAdvanceResult.Running;
+
+            case SkillCastHookContinuation.ExecutePrimarySkill:
+                if (!TryGetCurrentSkill(entityManager, entity, cast, out ResolvedSkillData executeSkill))
+                {
+                    InterruptCurrentSkill(entityManager, entity, ref cast);
+                    return SkillAdvanceResult.Failed;
+                }
+
+                if (!TryExecuteSkill(entityManager, entity, cast, executeSkill))
+                {
+                    InterruptCurrentSkill(entityManager, entity, ref cast);
+                    return SkillAdvanceResult.Failed;
+                }
+
+                ConsumeMatchingFollowupEffects(entityManager, entity, cast, executeSkill);
+                AppendGeneratedFollowupEffects(entityManager, entity, cast);
+                ScheduleHook(ref cast, SkillCastHookPoint.BeforeRecovery, SkillCastHookContinuation.StartRecovery);
+                return SkillAdvanceResult.Running;
+
+            case SkillCastHookContinuation.StartRecovery:
+                if (!TryGetCurrentSkill(entityManager, entity, cast, out ResolvedSkillData recoverySkill))
+                {
+                    InterruptCurrentSkill(entityManager, entity, ref cast);
+                    return SkillAdvanceResult.Failed;
+                }
+
+                cast.Phase = SkillCastPhase.Recovery;
+                cast.PhaseElapsed = 0f;
+                cast.PhaseDuration = GetPhaseDuration(recoverySkill, SkillCastPhase.Recovery);
+                LogPhase("Start Recovery", cast);
+                return SkillAdvanceResult.Running;
+
+            case SkillCastHookContinuation.FinishSkill:
+                CompleteCurrentSkill(entityManager, entity, ref cast);
+                return SkillAdvanceResult.Completed;
+
+            default:
+                InterruptCurrentSkill(entityManager, entity, ref cast);
+                return SkillAdvanceResult.Failed;
+        }
+    }
+
+    private static SkillAdvanceResult AdvancePhase(ResolvedSkillData skillData, ref UnitCastComponent cast)
     {
         switch (cast.Phase)
         {
@@ -143,46 +350,21 @@ public static class SkillExecutionUtility
                 return SkillAdvanceResult.Running;
 
             case SkillCastPhase.Chanting:
-                if (!TryExecuteSkill(entityManager, entity, cast, skillData))
-                {
-                    InterruptCurrentSkill(ref cast);
-                    return SkillAdvanceResult.Failed;
-                }
-
-                ConsumeMatchingFollowupEffects(entityManager, entity, cast);
-                AppendGeneratedFollowupEffects(entityManager, entity, cast);
-
-                Debug.Log($"[CastState] Chanting Completed | Chain={cast.CurrentChainIndex} SkillIndex={cast.CurrentSkillIndex} SkillId={cast.CurrentSkillId}");
-                cast.Phase = SkillCastPhase.Recovery;
-                cast.PhaseElapsed = 0f;
-                cast.PhaseDuration = GetPhaseDuration(skillData, SkillCastPhase.Recovery);
-                LogPhase("Start Recovery", cast);
+                ScheduleHook(ref cast, SkillCastHookPoint.BeforeChantEnd, SkillCastHookContinuation.ScheduleBeforeExecute);
                 return SkillAdvanceResult.Running;
 
             case SkillCastPhase.Recovery:
-                CompleteCurrentSkill(ref cast);
-                return SkillAdvanceResult.Completed;
+                ScheduleHook(ref cast, SkillCastHookPoint.AfterRecovery, SkillCastHookContinuation.FinishSkill);
+                return SkillAdvanceResult.Running;
 
             default:
-                InterruptCurrentSkill(ref cast);
                 return SkillAdvanceResult.Failed;
         }
     }
 
     private static bool TryExecuteSkill(EntityManager entityManager, Entity entity, in UnitCastComponent cast, ResolvedSkillData skillData)
     {
-        SkillContent.EntityManager = entityManager;
-        SkillContent.HasOriginEntity = true;
-        SkillContent.OriginEntity = entity;
-        SetSkillReleasePosition(entityManager, entity, cast, skillData);
-        SkillContent.HasTargetEntity = false;
-        SkillContent.TargetEntity = Entity.Null;
-        SkillContent.HasTarget = false;
-        SkillContent.Target = null;
-        SkillContent.Origin = null;
-        SkillContent.RuntimeModifiers = new SkillModifierSet();
-
-        SkillExecutor.ExecuteSkill(skillData, SkillContent);
+        ExecuteResolvedSkillOnce(entityManager, entity, cast, skillData);
         return true;
     }
 
@@ -211,26 +393,6 @@ public static class SkillExecutionUtility
                 SkillContent.Position = new Vector3(cast.LockedTargetPosition.x, cast.LockedTargetPosition.y, 0f);
                 break;
         }
-    }
-
-    public static bool TryStartSkillAtIndex(EntityManager entityManager, Entity entity, ref UnitCastComponent cast, int skillIndex, out ResolvedSkillData skillData)
-    {
-        cast.CurrentSkillIndex = skillIndex;
-        cast.CurrentSkillId = skillIndex >= 0 && skillIndex < cast.SkillIds.Length
-            ? cast.SkillIds[skillIndex]
-            : -1;
-
-        if (!TryGetSkillByIndex(entityManager, entity, cast, skillIndex, out skillData))
-            return false;
-
-        if (!TryConsumeMana(entityManager, entity, skillData.MpCost))
-            return false;
-
-        cast.IsCasting = true;
-        cast.Phase = SkillCastPhase.Windup;
-        cast.PhaseElapsed = 0f;
-        cast.PhaseDuration = GetPhaseDuration(skillData, SkillCastPhase.Windup);
-        return true;
     }
 
     private static bool TryConsumeMana(EntityManager entityManager, Entity entity, int manaCost)
@@ -278,6 +440,7 @@ public static class SkillExecutionUtility
         SkillChainSlotData slotData = additionId >= 0
             ? new SkillChainSlotData { SkillAdditionId = additionId }
             : null;
+        SkillEffectData skillAdditionData = SkillChainResolver.GetSkillAdditionData(additionId);
 
         SkillModifierSet modifiers = SkillResolver.CollectModifiers(entityManager, entity, baseSkill, slotData);
         UnitAttackComponent? attack = entityManager.HasComponent<UnitAttackComponent>(entity)
@@ -286,7 +449,7 @@ public static class SkillExecutionUtility
         UnitElementComponent? element = entityManager.HasComponent<UnitElementComponent>(entity)
             ? entityManager.GetComponentData<UnitElementComponent>(entity)
             : null;
-        skillData = SkillResolver.Resolve(baseSkill, modifiers, attack, element);
+        skillData = SkillResolver.Resolve(baseSkill, modifiers, skillAdditionData, attack, element);
         return skillData != null;
     }
 
@@ -301,45 +464,62 @@ public static class SkillExecutionUtility
         };
     }
 
-    private static void InterruptCurrentSkill(ref UnitCastComponent cast)
+    private static void InterruptCurrentSkill(EntityManager entityManager, Entity entity, ref UnitCastComponent cast)
     {
-        CompleteCurrentSkill(ref cast);
+        ClearExecutionState(entityManager, entity, ref cast);
     }
 
-    private static void CompleteCurrentSkill(ref UnitCastComponent cast)
+    private static void CompleteCurrentSkill(EntityManager entityManager, Entity entity, ref UnitCastComponent cast)
     {
+        ClearExecutionState(entityManager, entity, ref cast);
+    }
+
+    private static void ClearExecutionState(EntityManager entityManager, Entity entity, ref UnitCastComponent cast)
+    {
+        UnitBuffUtility.RemoveRuntimeBuffsByExecutionToken(entityManager, entity, cast.CurrentExecutionToken);
+        ResetTaskPayload(entityManager, entity, -1);
         cast.IsCasting = false;
         cast.ForceInterrupt = false;
         cast.Phase = SkillCastPhase.None;
         cast.PhaseElapsed = 0f;
         cast.PhaseDuration = 0f;
+        cast.CurrentExecutionToken = -1;
+        ClearHook(ref cast);
     }
 
-    public static void ResetCastState(ref UnitCastComponent cast)
+    private static UnitCastTaskPayloadComponent GetOrCreateTaskPayload(EntityManager entityManager, Entity entity)
     {
-        cast.IsCasting = false;
-        cast.ForceInterrupt = false;
-        cast.HasLockedTarget = false;
-        cast.LockedTargetPosition = float2.zero;
-        cast.CurrentChainIndex = -1;
-        cast.CurrentSkillIndex = -1;
-        cast.CurrentSkillId = -1;
-        cast.Phase = SkillCastPhase.None;
-        cast.PhaseElapsed = 0f;
-        cast.PhaseDuration = 0f;
-        cast.SkillIds = default;
-        cast.SkillAdditionIds = default;
+        if (entityManager.HasComponent<UnitCastTaskPayloadComponent>(entity))
+            return entityManager.GetComponentObject<UnitCastTaskPayloadComponent>(entity);
+
+        UnitCastTaskPayloadComponent payload = new();
+        entityManager.AddComponentObject(entity, payload);
+        return payload;
     }
 
-    public static void ClearFollowupEffects(EntityManager entityManager, Entity entity)
+    private static void ResetTaskPayload(EntityManager entityManager, Entity entity, int executionToken)
     {
-        if (!entityManager.HasBuffer<UnitCastFollowupEffectElement>(entity))
-            return;
-
-        entityManager.GetBuffer<UnitCastFollowupEffectElement>(entity).Clear();
+        UnitCastTaskPayloadComponent payload = GetOrCreateTaskPayload(entityManager, entity);
+        payload.ExecutionToken = executionToken;
+        payload.InitializedHookMask = 0;
+        payload.ActiveTasks.Clear();
     }
 
-    private static void ConsumeMatchingFollowupEffects(EntityManager entityManager, Entity entity, in UnitCastComponent cast)
+    private static void ScheduleHook(ref UnitCastComponent cast, SkillCastHookPoint hookPoint, SkillCastHookContinuation continuation)
+    {
+        cast.IsWaitingHook = true;
+        cast.WaitingHookPoint = hookPoint;
+        cast.HookContinuation = continuation;
+    }
+
+    private static void ClearHook(ref UnitCastComponent cast)
+    {
+        cast.IsWaitingHook = false;
+        cast.WaitingHookPoint = default;
+        cast.HookContinuation = SkillCastHookContinuation.None;
+    }
+
+    private static void ConsumeMatchingFollowupEffects(EntityManager entityManager, Entity entity, in UnitCastComponent cast, ResolvedSkillData resolvedSkillData)
     {
         if (!entityManager.HasBuffer<UnitCastFollowupEffectElement>(entity))
             return;
@@ -349,6 +529,7 @@ public static class SkillExecutionUtility
             return;
 
         SkillChainSlotData slotData = GetCurrentSlotData(cast);
+        SkillFollowupContext context = new(entityManager, entity, baseSkill, resolvedSkillData, slotData);
         DynamicBuffer<UnitCastFollowupEffectElement> followupEffects = entityManager.GetBuffer<UnitCastFollowupEffectElement>(entity);
         for (int i = followupEffects.Length - 1; i >= 0; i--)
         {
@@ -356,8 +537,16 @@ public static class SkillExecutionUtility
             if (!SkillResolver.MatchesFollowupEffect(followupEffect, baseSkill, slotData))
                 continue;
 
-            followupEffect.RemainingUses -= 1;
-            if (followupEffect.RemainingUses <= 0)
+            if (!SkillFollowupConsumeRuleRegistry.TryGetRule(followupEffect.ConsumeRuleType, out SkillFollowupConsumeRule rule))
+                continue;
+
+            if (!rule.CanApply(followupEffect, context))
+                continue;
+
+            if (SkillFollowupModifierRuleRegistry.TryGetRule(followupEffect.ModifierRuleType, out SkillFollowupModifierRule modifierRule))
+                modifierRule.OnConsumed(ref followupEffect, context);
+
+            if (!rule.Consume(ref followupEffect, context))
                 followupEffects.RemoveAt(i);
             else
                 followupEffects[i] = followupEffect;
@@ -376,8 +565,13 @@ public static class SkillExecutionUtility
             PendingFollowupEffects.AddRange(baseSkill.FollowupEffects);
 
         int additionId = GetCurrentSkillAdditionId(cast);
-        if (additionId >= 0 && DataComponent.Instance?.Get<SkillEffectData>(additionId) is SkillEffectData skillEffectData && skillEffectData.FollowupEffects != null && skillEffectData.FollowupEffects.Count > 0)
+        if (additionId >= 0 &&
+            DataComponent.Instance?.Get<SkillEffectData>(additionId) is SkillEffectData skillEffectData &&
+            skillEffectData.FollowupEffects != null &&
+            skillEffectData.FollowupEffects.Count > 0)
+        {
             PendingFollowupEffects.AddRange(skillEffectData.FollowupEffects);
+        }
 
         if (PendingFollowupEffects.Count == 0)
             return;
@@ -406,27 +600,36 @@ public static class SkillExecutionUtility
     private static bool TryCreateFollowupRuntime(SkillFollowupEffectData followupData, int sourceSkillId, int sourceSkillAdditionId, out UnitCastFollowupEffectElement followupEffect)
     {
         followupEffect = default;
-        if (followupData == null || followupData.Uses <= 0 || followupData.Modifiers == null || followupData.Modifiers.Count == 0)
+        if (followupData == null)
+            return false;
+
+        followupData.EnsureDefaults();
+        if (followupData.ConsumeRule == null || followupData.ModifierRule == null)
             return false;
 
         followupEffect.SourceSkillId = sourceSkillId;
         followupEffect.SourceSkillAdditionId = sourceSkillAdditionId;
-        followupEffect.RemainingUses = followupData.Uses;
+        followupEffect.ConsumeRuleType = followupData.ConsumeRule.RuleType;
+        followupEffect.ModifierRuleType = followupData.ModifierRule.RuleType;
         followupEffect.FilterType = followupData.FilterType;
         followupEffect.SkillId = followupData.SkillId;
         followupEffect.SkillType = followupData.SkillType;
         followupEffect.Element = followupData.Element;
         followupEffect.SkillAdditionId = followupData.SkillAdditionId;
 
-        for (int i = 0; i < followupData.Modifiers.Count; i++)
-        {
-            if (followupEffect.Modifiers.Length >= followupEffect.Modifiers.Capacity)
-                break;
+        if (!SkillFollowupConsumeRuleRegistry.TryGetRule(followupEffect.ConsumeRuleType, out SkillFollowupConsumeRule rule))
+            return false;
 
-            followupEffect.Modifiers.Add(followupData.Modifiers[i]);
-        }
+        if (!rule.TryInitializeRuntime(followupData.ConsumeRule, ref followupEffect))
+            return false;
 
-        return followupEffect.Modifiers.Length > 0;
+        if (!SkillFollowupModifierRuleRegistry.TryGetRule(followupEffect.ModifierRuleType, out SkillFollowupModifierRule modifierRule))
+            return false;
+
+        if (!modifierRule.TryInitializeRuntime(followupData.ModifierRule, ref followupEffect))
+            return false;
+
+        return followupEffect.ModifierSlices.Length > 0;
     }
 
     private static void LogPhase(string phaseName, in UnitCastComponent cast)

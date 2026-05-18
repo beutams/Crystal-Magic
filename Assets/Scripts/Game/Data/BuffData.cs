@@ -51,6 +51,8 @@ namespace CrystalMagic.Game.Data
         LightningPower = 12,
         [EditorLabel("风元素强度")]
         WindPower = 13,
+        [EditorLabel("受伤倍率")]
+        DamageTakenMultiplier = 14,
     }
 
     [System.Serializable]

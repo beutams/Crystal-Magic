@@ -31,6 +31,7 @@ namespace CrystalMagic.Game.Skill.Effects
             UnitVitalityComponent vitality = entityManager.GetComponentData<UnitVitalityComponent>(target);
             DamageBreakdown breakdown = CalculateDamage(context, entityManager, vitality);
             float damage = breakdown.FinalDamage;
+            damage = UnitBuffUtility.ApplyDamageTakenRuntimeBuffs(entityManager, target, damage);
             if (damage <= 0f)
                 return;
 

@@ -93,4 +93,38 @@ namespace CrystalMagic.Game.Skill.Effects
             return math.max(0f, attackPower * Data.ManaRestoreCoefficient + Data.FlatManaRestoreBonus);
         }
     }
+
+    public sealed class HealthCostEffect : Effect
+    {
+        public new HealthCostEffectData Data { get; }
+
+        public HealthCostEffect(HealthCostEffectData data) : base(data) => Data = data;
+
+        public override void Execute(SkillContent context)
+        {
+            if (Data == null || context == null || !context.HasOriginEntity)
+                return;
+
+            EntityManager entityManager = context.EntityManager;
+            Entity origin = context.OriginEntity;
+            if (origin == Entity.Null ||
+                !entityManager.Exists(origin) ||
+                !entityManager.HasComponent<UnitVitalityComponent>(origin))
+            {
+                return;
+            }
+
+            UnitVitalityComponent vitality = entityManager.GetComponentData<UnitVitalityComponent>(origin);
+            if (vitality.CurrentHealth <= 0f)
+                return;
+
+            float healthCost = math.max(0f, vitality.RealMaxHealth * Data.MaxHealthCoefficient + Data.FlatHealthCost);
+            if (healthCost <= 0f)
+                return;
+
+            vitality.CurrentHealth = math.max(1f, vitality.CurrentHealth - healthCost);
+            entityManager.SetComponentData(origin, vitality);
+            EventComponent.Instance.Publish(new UnitDamagedEvent(origin, vitality.CurrentHealth, vitality.RealMaxHealth));
+        }
+    }
 }

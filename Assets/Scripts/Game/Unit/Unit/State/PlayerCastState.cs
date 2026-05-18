@@ -40,7 +40,7 @@ public class PlayerCastState : AUnitState
                 {
                     if (!SkillExecutionUtility.TryStartSkillAtIndex(EntityManager, Entity, ref cast, nextSkillIndex, out _))
                     {
-                        SkillExecutionUtility.ResetCastState(ref cast);
+                        SkillExecutionUtility.ResetCastState(EntityManager, Entity, ref cast);
                         SkillExecutionUtility.ClearFollowupEffects(EntityManager, Entity);
                     }
                 }
@@ -48,7 +48,7 @@ public class PlayerCastState : AUnitState
                 {
                     if (!TryRestartHeldCast(ref cast))
                     {
-                        SkillExecutionUtility.ResetCastState(ref cast);
+                        SkillExecutionUtility.ResetCastState(EntityManager, Entity, ref cast);
                         SkillExecutionUtility.ClearFollowupEffects(EntityManager, Entity);
                     }
                 }
@@ -58,7 +58,7 @@ public class PlayerCastState : AUnitState
 
             case SkillAdvanceResult.Interrupted:
             case SkillAdvanceResult.Failed:
-                SkillExecutionUtility.ResetCastState(ref cast);
+                SkillExecutionUtility.ResetCastState(EntityManager, Entity, ref cast);
                 SkillExecutionUtility.ClearFollowupEffects(EntityManager, Entity);
                 break;
         }
@@ -72,7 +72,7 @@ public class PlayerCastState : AUnitState
         if (EntityManager.HasComponent<UnitCastComponent>(Entity))
         {
             UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
-            SkillExecutionUtility.ResetCastState(ref cast);
+            SkillExecutionUtility.ResetCastState(EntityManager, Entity, ref cast);
             SkillExecutionUtility.ClearFollowupEffects(EntityManager, Entity);
             SkillExecutionUtility.ApplyMovement(EntityManager, Entity, cast);
             EntityManager.SetComponentData(Entity, cast);
@@ -120,7 +120,7 @@ public class PlayerCastState : AUnitState
             skillAdditionIds.Add(slotData?.SkillAdditionId ?? -1);
         }
 
-        SkillExecutionUtility.ResetCastState(ref cast);
+        SkillExecutionUtility.ResetCastState(EntityManager, Entity, ref cast);
         if (skillIds.Length == 0)
             return false;
 

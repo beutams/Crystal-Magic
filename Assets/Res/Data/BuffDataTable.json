@@ -1,3 +1,18 @@
-﻿{
-  "Rows": []
+{
+  "Rows": [
+    {
+      "$type": "CrystalMagic.Game.Data.PropertyBuffData, Assembly-CSharp",
+      "PropertyModifiers": [
+        {
+          "Channel": 14,
+          "Factor": -1.0,
+          "Bonus": 0.0
+        }
+      ],
+      "Name": "格挡",
+      "CanStack": false,
+      "MaxStacks": 1,
+      "Id": 0
+    }
+  ]
 }

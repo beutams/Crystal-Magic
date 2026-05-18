@@ -1,8 +1,8 @@
-﻿{
+{
   "Rows": [
     {
       "Name": "增幅",
-      "Description": "加25%伤害，下一个技能伤害减半",
+      "Description": "当前技能伤害提高25%，下一个技能伤害降低50%",
       "IconPath": "Assets/Res/Sprites/SkillEffect/Damage Increase.png",
       "Modifiers": [
         {
@@ -14,47 +14,222 @@
       "FollowupEffects": [
         {
           "FilterType": 0,
-          "Uses": 1,
+          "ConsumeRule": {
+            "$type": "CrystalMagic.Game.Data.UseCountSkillFollowupConsumeRuleData, Assembly-CSharp",
+            "Uses": 1
+          },
+          "ModifierRule": {
+            "$type": "CrystalMagic.Game.Data.StaticSkillFollowupModifierRuleData, Assembly-CSharp",
+            "Modifiers": [
+              {
+                "Channel": 100,
+                "Factor": -0.5,
+                "Bonus": 0.0
+              }
+            ]
+          },
           "SkillId": -1,
           "SkillType": 0,
           "Element": 0,
-          "SkillAdditionId": -1,
-          "Modifiers": [
+          "SkillAdditionId": -1
+        }
+      ],
+      "CastTasks": [],
+      "EffectChain": [],
+      "Id": 0
+    },
+    {
+      "Name": "广域",
+      "Description": "当前技能范围提高20%，下一个技能伤害降低50%",
+      "IconPath": "Assets/Res/Sprites/Item/Thunder Field.png",
+      "Modifiers": [
+        {
+          "Channel": 200,
+          "Factor": 0.2,
+          "Bonus": 0.0
+        }
+      ],
+      "FollowupEffects": [
+        {
+          "FilterType": 0,
+          "ConsumeRule": {
+            "$type": "CrystalMagic.Game.Data.UseCountSkillFollowupConsumeRuleData, Assembly-CSharp",
+            "Uses": 1
+          },
+          "ModifierRule": {
+            "$type": "CrystalMagic.Game.Data.StaticSkillFollowupModifierRuleData, Assembly-CSharp",
+            "Modifiers": [
+              {
+                "Channel": 100,
+                "Factor": -0.5,
+                "Bonus": 0.0
+              }
+            ]
+          },
+          "SkillId": -1,
+          "SkillType": 0,
+          "Element": 0,
+          "SkillAdditionId": -1
+        }
+      ],
+      "CastTasks": [],
+      "EffectChain": [],
+      "Id": 1
+    },
+    {
+      "Name": "急速",
+      "Description": "当前技能行动速度提高50%",
+      "IconPath": "Assets/Res/Sprites/SkillEffect/Action Speed.png",
+      "Modifiers": [
+        {
+          "Channel": 1,
+          "Factor": 0.0,
+          "Bonus": 50.0
+        }
+      ],
+      "FollowupEffects": [],
+      "CastTasks": [],
+      "EffectChain": [],
+      "Id": 2
+    },
+    {
+      "Name": "格挡",
+      "Description": "技能期间第一次受到的伤害为0",
+      "IconPath": "Assets/Res/Sprites/Item/Shield.png",
+      "Modifiers": [],
+      "FollowupEffects": [],
+      "CastTasks": [
+        {
+          "$type": "CrystalMagic.Game.Data.ApplyRuntimeBuffSkillCastTaskData, Assembly-CSharp",
+          "HookPoint": 0,
+          "BuffId": 0,
+          "StackCount": 1,
+          "ConsumeOnDamageTaken": true,
+          "RemainingTriggerCount": 1
+        }
+      ],
+      "EffectChain": [],
+      "Id": 3
+    },
+    {
+      "Name": "不完全",
+      "Description": "当前技能蓝耗减少300、伤害降低30%。后续同类技能保留扩展位。",
+      "IconPath": "Assets/Res/Sprites/Item/Charging.png",
+      "Modifiers": [
+        {
+          "Channel": 0,
+          "Factor": 0.0,
+          "Bonus": -300.0
+        },
+        {
+          "Channel": 100,
+          "Factor": -0.3,
+          "Bonus": 0.0
+        }
+      ],
+      "FollowupEffects": [],
+      "CastTasks": [],
+      "EffectChain": [],
+      "Id": 4
+    },
+    {
+      "Name": "爆发",
+      "Description": "扣除10%最大生命但不会致死，当前技能伤害提高50%，范围提高25%",
+      "IconPath": "Assets/Res/Sprites/Item/Detonate.png",
+      "Modifiers": [
+        {
+          "Channel": 100,
+          "Factor": 0.5,
+          "Bonus": 0.0
+        },
+        {
+          "Channel": 200,
+          "Factor": 0.25,
+          "Bonus": 0.0
+        }
+      ],
+      "FollowupEffects": [],
+      "CastTasks": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.HealthCostEffectData, Assembly-CSharp",
+          "MaxHealthCoefficient": 0.1,
+          "FlatHealthCost": 0.0,
+          "Conditions": []
+        }
+      ],
+      "Id": 5
+    },
+    {
+      "Name": "连发",
+      "Description": "0.1秒后追加一次同技能执行，第二次伤害降低20%",
+      "IconPath": "Assets/Res/Sprites/Item/Lightning.png",
+      "Modifiers": [],
+      "FollowupEffects": [],
+      "CastTasks": [
+        {
+          "$type": "CrystalMagic.Game.Data.DoubleExecuteSkillCastTaskData, Assembly-CSharp",
+          "HookPoint": 3,
+          "DelaySeconds": 0.1,
+          "RuntimeModifiers": [
             {
               "Channel": 100,
-              "Factor": -0.5,
+              "Factor": -0.2,
               "Bonus": 0.0
             }
           ]
         }
       ],
-      "Id": 0
+      "EffectChain": [],
+      "Id": 6
     },
     {
-      "Name": "高速行动",
-      "Description": "行动速度加快100%",
-      "IconPath": "Assets/Res/Sprites/SkillEffect/Action Speed.png",
-      "Modifiers": [
-        {
-          "Channel": 1,
-          "Factor": -0.5,
-          "Bonus": 0.0
-        }
-      ],
-      "Id": 1
-    },
-    {
-      "Name": "高速咏唱",
-      "Description": "加快咏唱速度",
+      "Name": "反魔",
+      "Description": "当前技能咏唱时间增加50%、伤害降低30%、蓝耗翻倍；下一个技能不耗蓝",
       "IconPath": "Assets/Res/Sprites/SkillEffect/Chant Speed Up.png",
       "Modifiers": [
         {
           "Channel": 2,
-          "Factor": -0.5,
+          "Factor": 0.0,
+          "Bonus": -50.0
+        },
+        {
+          "Channel": 100,
+          "Factor": -0.3,
+          "Bonus": 0.0
+        },
+        {
+          "Channel": 0,
+          "Factor": 1.0,
           "Bonus": 0.0
         }
       ],
-      "Id": 2
+      "FollowupEffects": [
+        {
+          "FilterType": 0,
+          "ConsumeRule": {
+            "$type": "CrystalMagic.Game.Data.UseCountSkillFollowupConsumeRuleData, Assembly-CSharp",
+            "Uses": 1
+          },
+          "ModifierRule": {
+            "$type": "CrystalMagic.Game.Data.StaticSkillFollowupModifierRuleData, Assembly-CSharp",
+            "Modifiers": [
+              {
+                "Channel": 0,
+                "Factor": -1.0,
+                "Bonus": 0.0
+              }
+            ]
+          },
+          "SkillId": -1,
+          "SkillType": 0,
+          "Element": 0,
+          "SkillAdditionId": -1
+        }
+      ],
+      "CastTasks": [],
+      "EffectChain": [],
+      "Id": 7
     }
   ]
 }

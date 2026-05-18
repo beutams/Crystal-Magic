@@ -11,6 +11,15 @@ namespace CrystalMagic.Game.Skill
 {
     public static class SkillChainResolver
     {
+        public static SkillEffectData GetSkillAdditionData(int skillAdditionId)
+        {
+            if (skillAdditionId < 0)
+                return null;
+
+            DataComponent dataComponent = DataComponent.Instance;
+            return dataComponent == null ? null : dataComponent.Get<SkillEffectData>(skillAdditionId);
+        }
+
         public static SkillData GetSkillDataBySkillStoneItemId(int skillStoneItemId)
         {
             DataComponent dataComponent = DataComponent.Instance;
@@ -85,7 +94,7 @@ namespace CrystalMagic.Game.Skill
 
     public static class SkillResolver
     {
-        public static ResolvedSkillData Resolve(SkillData skillData, SkillModifierSet modifiers, UnitAttackComponent? attackComponent = null, UnitElementComponent? elementComponent = null)
+        public static ResolvedSkillData Resolve(SkillData skillData, SkillModifierSet modifiers, SkillEffectData skillAdditionData = null, UnitAttackComponent? attackComponent = null, UnitElementComponent? elementComponent = null)
         {
             if (skillData == null)
                 return null;
@@ -101,6 +110,8 @@ namespace CrystalMagic.Game.Skill
             float chantSpeedMultiplier = 1f - chantSpeedValue / 100f;
             float moveSpeedMultiplier = math.min(1f, math.max(0f, skillData.MoveSpeedMultiplier) * modifiers.GetMoveSpeedMultiplier());
 
+            EffectData[] mergedEffectChain = MergeEffectChains(skillData.EffectChain, skillAdditionData?.EffectChain);
+
             return new ResolvedSkillData
             {
                 Source = skillData,
@@ -113,8 +124,28 @@ namespace CrystalMagic.Game.Skill
                 RecoveryDuration = math.max(0f, skillData.RecoveryDuration * actionSpeedMultiplier),
                 CanMoveWhileCasting = skillData.CanMoveWhileCasting,
                 MoveSpeedMultiplier = moveSpeedMultiplier,
-                EffectChain = EffectData.CreateRuntimeCopies(skillData.EffectChain, modifiers, effectData => GetElementPowerBonus(elementComponent, effectData)),
+                EffectChain = EffectData.CreateRuntimeCopies(mergedEffectChain, modifiers, effectData => GetElementPowerBonus(elementComponent, effectData)),
             };
+        }
+
+        private static EffectData[] MergeEffectChains(EffectData[] baseEffects, EffectData[] additionEffects)
+        {
+            bool hasBaseEffects = baseEffects != null && baseEffects.Length > 0;
+            bool hasAdditionEffects = additionEffects != null && additionEffects.Length > 0;
+
+            if (!hasBaseEffects && !hasAdditionEffects)
+                return System.Array.Empty<EffectData>();
+
+            if (!hasAdditionEffects)
+                return baseEffects;
+
+            if (!hasBaseEffects)
+                return additionEffects;
+
+            EffectData[] merged = new EffectData[baseEffects.Length + additionEffects.Length];
+            System.Array.Copy(baseEffects, 0, merged, 0, baseEffects.Length);
+            System.Array.Copy(additionEffects, 0, merged, baseEffects.Length, additionEffects.Length);
+            return merged;
         }
 
         private static float GetElementPowerBonus(UnitElementComponent? elementComponent, EffectData effectData)
@@ -155,12 +186,13 @@ namespace CrystalMagic.Game.Skill
 
             if (slotData != null && slotData.SkillAdditionId >= 0)
             {
-                if (dataComponent.Get<SkillEffectData>(slotData.SkillAdditionId) is SkillEffectData skillEffectData)
+                if (SkillChainResolver.GetSkillAdditionData(slotData.SkillAdditionId) is SkillEffectData skillEffectData)
                     modifiers.Add(skillEffectData.Modifiers);
             }
 
             if (skillData != null && entityManager.HasBuffer<UnitCastFollowupEffectElement>(entity))
             {
+                SkillFollowupContext context = new(entityManager, entity, skillData, null, slotData);
                 DynamicBuffer<UnitCastFollowupEffectElement> followupEffects = entityManager.GetBuffer<UnitCastFollowupEffectElement>(entity);
                 for (int i = 0; i < followupEffects.Length; i++)
                 {
@@ -168,7 +200,7 @@ namespace CrystalMagic.Game.Skill
                     if (!MatchesFollowupEffect(followupEffect, skillData, slotData))
                         continue;
 
-                    AddFollowupModifiers(modifiers, followupEffect);
+                    ApplyFollowupModifiers(ref modifiers, followupEffect, context);
                 }
             }
 
@@ -177,7 +209,7 @@ namespace CrystalMagic.Game.Skill
 
         public static bool MatchesFollowupEffect(UnitCastFollowupEffectElement followupEffect, SkillData skillData, SkillChainSlotData slotData)
         {
-            if (skillData == null || followupEffect.RemainingUses <= 0)
+            if (skillData == null)
                 return false;
 
             return followupEffect.FilterType switch
@@ -191,10 +223,18 @@ namespace CrystalMagic.Game.Skill
             };
         }
 
-        public static void AddFollowupModifiers(SkillModifierSet modifiers, UnitCastFollowupEffectElement followupEffect)
+        public static void ApplyFollowupModifiers(ref SkillModifierSet modifiers, UnitCastFollowupEffectElement followupEffect, in SkillFollowupContext context)
         {
-            for (int i = 0; i < followupEffect.Modifiers.Length; i++)
-                modifiers.Add(followupEffect.Modifiers[i]);
+            if (!SkillFollowupConsumeRuleRegistry.TryGetRule(followupEffect.ConsumeRuleType, out SkillFollowupConsumeRule rule))
+                return;
+
+            if (!rule.CanApply(followupEffect, context))
+                return;
+
+            if (!SkillFollowupModifierRuleRegistry.TryGetRule(followupEffect.ModifierRuleType, out SkillFollowupModifierRule modifierRule))
+                return;
+
+            modifierRule.ApplyModifiers(ref modifiers, followupEffect, context);
         }
 
         private static bool SkillUsesElement(EffectData[] effectChain, ElementType element)

@@ -24,7 +24,7 @@ public class UnitCastState : AUnitState
         if (selectedIndex < 0)
         {
             unitSkill.ClearRequest();
-            SkillExecutionUtility.ResetCastState(ref cast);
+            SkillExecutionUtility.ResetCastState(EntityManager, Entity, ref cast);
             SkillExecutionUtility.ClearFollowupEffects(EntityManager, Entity);
             EntityManager.SetComponentData(Entity, cast);
             EntityManager.SetComponentData(Entity, unitSkill);
@@ -37,7 +37,7 @@ public class UnitCastState : AUnitState
         skillIds.Add(entry.SkillId);
         skillAdditionIds.Add(entry.SkillAdditionId);
 
-        SkillExecutionUtility.ResetCastState(ref cast);
+        SkillExecutionUtility.ResetCastState(EntityManager, Entity, ref cast);
         if (SkillExecutionUtility.TryBeginCast(
                 EntityManager,
                 Entity,
@@ -70,7 +70,7 @@ public class UnitCastState : AUnitState
             UnitPerceptionComponent perception = EntityManager.GetComponentData<UnitPerceptionComponent>(Entity);
             if (!perception.HasTarget)
             {
-                SkillExecutionUtility.ResetCastState(ref cast);
+                SkillExecutionUtility.ResetCastState(EntityManager, Entity, ref cast);
                 SkillExecutionUtility.ClearFollowupEffects(EntityManager, Entity);
                 SkillExecutionUtility.ApplyMovement(EntityManager, Entity, cast);
                 EntityManager.SetComponentData(Entity, cast);
@@ -86,7 +86,7 @@ public class UnitCastState : AUnitState
             result == SkillAdvanceResult.Interrupted ||
             result == SkillAdvanceResult.Failed)
         {
-            SkillExecutionUtility.ResetCastState(ref cast);
+            SkillExecutionUtility.ResetCastState(EntityManager, Entity, ref cast);
             SkillExecutionUtility.ClearFollowupEffects(EntityManager, Entity);
         }
 
@@ -100,7 +100,7 @@ public class UnitCastState : AUnitState
             return;
 
         UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
-        SkillExecutionUtility.ResetCastState(ref cast);
+        SkillExecutionUtility.ResetCastState(EntityManager, Entity, ref cast);
         SkillExecutionUtility.ClearFollowupEffects(EntityManager, Entity);
         SkillExecutionUtility.ApplyMovement(EntityManager, Entity, cast);
         EntityManager.SetComponentData(Entity, cast);
@@ -207,6 +207,7 @@ public class UnitCastState : AUnitState
         SkillChainSlotData slotData = entry.SkillAdditionId >= 0
             ? new SkillChainSlotData { SkillAdditionId = entry.SkillAdditionId }
             : null;
+        SkillEffectData skillAdditionData = SkillChainResolver.GetSkillAdditionData(entry.SkillAdditionId);
 
         SkillModifierSet modifiers = SkillResolver.CollectModifiers(EntityManager, Entity, baseSkill, slotData);
         UnitAttackComponent? attack = EntityManager.HasComponent<UnitAttackComponent>(Entity)
@@ -216,7 +217,7 @@ public class UnitCastState : AUnitState
             ? EntityManager.GetComponentData<UnitElementComponent>(Entity)
             : null;
 
-        resolvedSkill = SkillResolver.Resolve(baseSkill, modifiers, attack, element);
+        resolvedSkill = SkillResolver.Resolve(baseSkill, modifiers, skillAdditionData, attack, element);
         return resolvedSkill != null;
     }
 }

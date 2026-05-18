@@ -33,6 +33,8 @@ public class UnitCanStartCastSource : ISource
         if (baseSkill == null)
             return 0f;
 
+        SkillEffectData skillAdditionData = SkillChainResolver.GetSkillAdditionData(slotData?.SkillAdditionId ?? -1);
+
         SkillModifierSet modifiers = SkillResolver.CollectModifiers(_context.EntityManager, _context.Entity, baseSkill, slotData);
         UnitAttackComponent? attack = _context.EntityManager.HasComponent<UnitAttackComponent>(_context.Entity)
             ? _context.EntityManager.GetComponentData<UnitAttackComponent>(_context.Entity)
@@ -40,7 +42,7 @@ public class UnitCanStartCastSource : ISource
         UnitElementComponent? element = _context.EntityManager.HasComponent<UnitElementComponent>(_context.Entity)
             ? _context.EntityManager.GetComponentData<UnitElementComponent>(_context.Entity)
             : null;
-        ResolvedSkillData resolvedSkill = SkillResolver.Resolve(baseSkill, modifiers, attack, element);
+        ResolvedSkillData resolvedSkill = SkillResolver.Resolve(baseSkill, modifiers, skillAdditionData, attack, element);
         if (resolvedSkill == null)
             return 0f;
 

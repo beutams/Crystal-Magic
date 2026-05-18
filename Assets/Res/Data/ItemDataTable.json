@@ -145,8 +145,8 @@
         },
         {
             "Id": 13,
-            "Name": "强化:魔力增幅",
-            "Description": "增加伤害和蓝量",
+            "Name": "强化:增幅",
+            "Description": "当前技能伤害提高25%，下一个技能伤害降低50%",
             "ItemType": 3,
             "ExtraId": 0,
             "Rarity": 1,
@@ -156,8 +156,8 @@
         },
         {
             "Id": 14,
-            "Name": "强化:咏唱增幅",
-            "Description": "增加咏唱和行动速度",
+            "Name": "强化:广域",
+            "Description": "当前技能范围提高20%，下一个技能伤害降低50%",
             "ItemType": 3,
             "ExtraId": 1,
             "Rarity": 1,
@@ -167,8 +167,8 @@
         },
         {
             "Id": 15,
-            "Name": "强化:防御增幅",
-            "Description": "增加血上限和防御",
+            "Name": "强化:急速",
+            "Description": "当前技能行动速度提高50%",
             "ItemType": 3,
             "ExtraId": 2,
             "Rarity": 1,
@@ -178,8 +178,8 @@
         },
         {
             "Id": 16,
-            "Name": "强化:移速增幅",
-            "Description": "增加移速",
+            "Name": "强化:格挡",
+            "Description": "技能期间第一次受到的伤害为0",
             "ItemType": 3,
             "ExtraId": 3,
             "Rarity": 1,
@@ -284,6 +284,50 @@
             "Rarity": 1,
             "MaxStack": 10,
             "SellPrice": 10,
+            "IconPath": ""
+        },
+        {
+            "Id": 26,
+            "Name": "强化:不完全",
+            "Description": "当前技能蓝耗减少300、伤害降低30%",
+            "ItemType": 3,
+            "ExtraId": 4,
+            "Rarity": 1,
+            "MaxStack": 1,
+            "SellPrice": 100,
+            "IconPath": ""
+        },
+        {
+            "Id": 27,
+            "Name": "强化:爆发",
+            "Description": "扣除10%最大生命但不会致死，当前技能伤害提高50%，范围提高25%",
+            "ItemType": 3,
+            "ExtraId": 5,
+            "Rarity": 1,
+            "MaxStack": 1,
+            "SellPrice": 100,
+            "IconPath": ""
+        },
+        {
+            "Id": 28,
+            "Name": "强化:连发",
+            "Description": "0.1秒后追加一次同技能执行，第二次伤害降低20%",
+            "ItemType": 3,
+            "ExtraId": 6,
+            "Rarity": 1,
+            "MaxStack": 1,
+            "SellPrice": 100,
+            "IconPath": ""
+        },
+        {
+            "Id": 29,
+            "Name": "强化:反魔",
+            "Description": "当前技能咏唱时间增加50%、伤害降低30%、蓝耗翻倍；下一个技能不耗蓝",
+            "ItemType": 3,
+            "ExtraId": 7,
+            "Rarity": 1,
+            "MaxStack": 1,
+            "SellPrice": 100,
             "IconPath": ""
         }
     ]

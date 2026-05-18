@@ -35,6 +35,7 @@ namespace CrystalMagic.Editor.Skill
             typeof(DamageEffectData),
             typeof(ForwardRectSearchEffectData),
             typeof(HealEffectData),
+            typeof(HealthCostEffectData),
             typeof(KnockbackEffectData),
             typeof(PersistentEffectData),
             typeof(ReadBuffStackEffectData),
@@ -54,6 +55,7 @@ namespace CrystalMagic.Editor.Skill
             "Damage",
             "Forward Rect Search",
             "Heal",
+            "Health Cost",
             "Knockback",
             "Persistent",
             "Read Buff Stack",
@@ -73,6 +75,7 @@ namespace CrystalMagic.Editor.Skill
             new(0.60f, 0.18f, 0.14f),
             new(0.60f, 0.30f, 0.12f),
             new(0.16f, 0.52f, 0.22f),
+            new(0.42f, 0.16f, 0.16f),
             new(0.55f, 0.33f, 0.14f),
             new(0.14f, 0.50f, 0.24f),
             new(0.22f, 0.42f, 0.64f),
@@ -114,6 +117,26 @@ namespace CrystalMagic.Editor.Skill
         private static readonly Color DividerColor = new(0.15f, 0.15f, 0.15f, 1f);
         private static readonly Color ConditionAddHeaderColor = new(0.15f, 0.15f, 0.15f, 1f);
         private static readonly Color ConditionAddBodyColor = new(0.18f, 0.18f, 0.18f, 1f);
+        private static readonly Type[] FollowupConsumeRuleTypes =
+        {
+            typeof(UseCountSkillFollowupConsumeRuleData),
+        };
+
+        private static readonly string[] FollowupConsumeRuleNames =
+        {
+            "Use Count",
+        };
+        private static readonly Type[] FollowupModifierRuleTypes =
+        {
+            typeof(StaticSkillFollowupModifierRuleData),
+            typeof(SequenceSkillFollowupModifierRuleData),
+        };
+
+        private static readonly string[] FollowupModifierRuleNames =
+        {
+            "Static",
+            "Sequence",
+        };
 
         private static JsonSerializerSettings JsonSettings => new()
         {
@@ -754,11 +777,12 @@ namespace CrystalMagic.Editor.Skill
             for (int i = 0; i < followupEffects.Count; i++)
             {
                 SkillFollowupEffectData followup = followupEffects[i] ?? new SkillFollowupEffectData();
+                followup.EnsureDefaults();
                 EditorGUI.BeginChangeCheck();
 
                 EditorGUILayout.BeginVertical("box");
                 followup.FilterType = (SkillFollowupFilterType)EditorGUILayout.EnumPopup("Filter", followup.FilterType);
-                followup.Uses = Mathf.Max(1, EditorGUILayout.IntField("Uses", followup.Uses));
+                DrawFollowupConsumeRule(followup);
 
                 switch (followup.FilterType)
                 {
@@ -776,8 +800,7 @@ namespace CrystalMagic.Editor.Skill
                         break;
                 }
 
-                followup.Modifiers ??= new List<SkillModifierEntry>();
-                DrawSkillModifierList("Applied Modifiers", followup.Modifiers);
+                DrawFollowupModifierRule(followup);
 
                 GUI.color = new Color(1f, 0.5f, 0.5f);
                 if (GUILayout.Button("Delete Followup Effect", GUILayout.Width(148f)))
@@ -802,6 +825,115 @@ namespace CrystalMagic.Editor.Skill
             if (removeAt >= 0)
             {
                 followupEffects.RemoveAt(removeAt);
+                _isDirty = true;
+            }
+        }
+
+        private void DrawFollowupConsumeRule(SkillFollowupEffectData followup)
+        {
+            followup.EnsureDefaults();
+
+            int selectedIndex = GetFollowupConsumeRuleIndex(followup.ConsumeRule);
+            int nextIndex = EditorGUILayout.Popup("Consume Rule", selectedIndex, FollowupConsumeRuleNames);
+            if (nextIndex != selectedIndex)
+            {
+                followup.ConsumeRule = (SkillFollowupConsumeRuleData)Activator.CreateInstance(FollowupConsumeRuleTypes[nextIndex]);
+                _isDirty = true;
+            }
+
+            switch (followup.ConsumeRule)
+            {
+                case UseCountSkillFollowupConsumeRuleData useCountRuleData:
+                    useCountRuleData.Uses = Mathf.Max(1, EditorGUILayout.IntField("Uses", useCountRuleData.Uses));
+                    break;
+            }
+        }
+
+        private void DrawFollowupModifierRule(SkillFollowupEffectData followup)
+        {
+            followup.EnsureDefaults();
+
+            int selectedIndex = GetFollowupModifierRuleIndex(followup.ModifierRule);
+            int nextIndex = EditorGUILayout.Popup("Modifier Rule", selectedIndex, FollowupModifierRuleNames);
+            if (nextIndex != selectedIndex)
+            {
+                followup.ModifierRule = (SkillFollowupModifierRuleData)Activator.CreateInstance(FollowupModifierRuleTypes[nextIndex]);
+                followup.EnsureDefaults();
+                _isDirty = true;
+            }
+
+            switch (followup.ModifierRule)
+            {
+                case StaticSkillFollowupModifierRuleData staticRuleData:
+                    staticRuleData.Modifiers ??= new List<SkillModifierEntry>();
+                    DrawSkillModifierList("Applied Modifiers", staticRuleData.Modifiers);
+                    break;
+
+                case SequenceSkillFollowupModifierRuleData sequenceRuleData:
+                    sequenceRuleData.ModifierSets ??= new List<SkillFollowupModifierSetData>();
+                    DrawSequenceModifierSets(sequenceRuleData.ModifierSets);
+                    break;
+            }
+        }
+
+        private static int GetFollowupConsumeRuleIndex(SkillFollowupConsumeRuleData consumeRule)
+        {
+            if (consumeRule == null)
+                return 0;
+
+            for (int i = 0; i < FollowupConsumeRuleTypes.Length; i++)
+            {
+                if (FollowupConsumeRuleTypes[i] == consumeRule.GetType())
+                    return i;
+            }
+
+            return 0;
+        }
+
+        private static int GetFollowupModifierRuleIndex(SkillFollowupModifierRuleData modifierRule)
+        {
+            if (modifierRule == null)
+                return 0;
+
+            for (int i = 0; i < FollowupModifierRuleTypes.Length; i++)
+            {
+                if (FollowupModifierRuleTypes[i] == modifierRule.GetType())
+                    return i;
+            }
+
+            return 0;
+        }
+
+        private void DrawSequenceModifierSets(List<SkillFollowupModifierSetData> modifierSets)
+        {
+            int removeAt = -1;
+            for (int i = 0; i < modifierSets.Count; i++)
+            {
+                modifierSets[i] ??= new SkillFollowupModifierSetData();
+                modifierSets[i].Modifiers ??= new List<SkillModifierEntry>();
+
+                EditorGUILayout.BeginVertical("box");
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField($"Set {i}", EditorStyles.boldLabel);
+                GUI.color = new Color(1f, 0.5f, 0.5f);
+                if (GUILayout.Button("Delete Set", GUILayout.Width(88f)))
+                    removeAt = i;
+                GUI.color = Color.white;
+                EditorGUILayout.EndHorizontal();
+
+                DrawSkillModifierList("Modifiers", modifierSets[i].Modifiers);
+                EditorGUILayout.EndVertical();
+            }
+
+            if (GUILayout.Button("+ Add Modifier Set", GUILayout.Width(140f)))
+            {
+                modifierSets.Add(new SkillFollowupModifierSetData());
+                _isDirty = true;
+            }
+
+            if (removeAt >= 0)
+            {
+                modifierSets.RemoveAt(removeAt);
                 _isDirty = true;
             }
         }
