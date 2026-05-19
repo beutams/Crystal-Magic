@@ -15,7 +15,7 @@ namespace CrystalMagic.Editor.Data
     public class UnitEditorWindow : EditorWindow
     {
         private const string DataPath = "Assets/Res/Data/UnitDataTable.json";
-        private static string UnitPrefabDirectory => AssetPathHelper.GetUnitPrefabDirectory();
+        private const string UnitPrefabDirectory = "Assets/Res/Prefab/Unit";
         private const float ListPanelWidth = 220f;
         private const float ItemHeight = 26f;
         private const float LabelWidth = 140f;

@@ -1,4 +1,5 @@
 using CrystalMagic.Game.Data;
+
 namespace CrystalMagic.Game.Data.Effects
 {
     [System.Serializable]
@@ -6,8 +7,10 @@ namespace CrystalMagic.Game.Data.Effects
     {
         [EditorLabel("伤害倍率")]
         public float DamageCoefficient;
+
         [EditorLabel("额外伤害")]
         public float FlatDamageBonus;
+
         [EditorLabel("元素类型")]
         public ElementType Element = ElementType.None;
 
@@ -44,12 +47,15 @@ namespace CrystalMagic.Game.Data.Effects
         [EditorLabel("击退力度")]
         public float Force;
 
+        [EditorLabel("控制时长")]
+        public float DurationSeconds = 0.2f;
+
         public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, float elementBonus = 0f, System.Func<EffectData, float> elementBonusResolver = null)
         {
             KnockbackEffectData copy = (KnockbackEffectData)base.CreateRuntimeCopy(modifiers, elementBonus, elementBonusResolver);
             copy.Force = ApplyModifierNonNegative(modifiers, SkillModifierChannel.KnockbackForce, Force);
+            copy.DurationSeconds = ApplyModifierNonNegative(modifiers, SkillModifierChannel.HitStunSeconds, DurationSeconds);
             return copy;
         }
     }
-
 }

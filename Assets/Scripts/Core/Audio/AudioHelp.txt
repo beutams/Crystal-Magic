@@ -19,4 +19,6 @@ AudioComponent
     PlayUI() 使用UI音效池
 -提示
     LoadClip直接调用了ResourceComponent.Load<>(),在调用前需要确保是Assets开始的路径。
+    使用异步的方式进行Load音频，Load完成才判断是否有空间。
     音量注册了对SettingComponent的监听，由SettingComponent改变而改变。
+    音效存活时间约等于音效长度，超时会自动释放

@@ -32,6 +32,7 @@ namespace CrystalMagic.Editor.Data
             typeof(ForwardRectSearchEffectData),
             typeof(HealEffectData),
             typeof(HealthCostEffectData),
+            typeof(FearEffectData),
             typeof(KnockbackEffectData),
             typeof(PersistentEffectData),
             typeof(ReadBuffStackEffectData),
@@ -40,6 +41,7 @@ namespace CrystalMagic.Editor.Data
             typeof(SpawnProjectileEffectData),
             typeof(SpawnSoundEffectData),
             typeof(SpawnVfxEffectData),
+            typeof(StunEffectData),
             typeof(CameraShakeEffectData),
         };
 
@@ -52,6 +54,7 @@ namespace CrystalMagic.Editor.Data
             "Forward Rect Search",
             "Heal",
             "Health Cost",
+            "Fear",
             "Knockback",
             "Persistent",
             "Read Buff Stack",
@@ -60,6 +63,7 @@ namespace CrystalMagic.Editor.Data
             "Spawn Projectile",
             "Spawn Sound",
             "Spawn VFX",
+            "Stun",
             "Camera Shake",
         };
 
@@ -72,6 +76,7 @@ namespace CrystalMagic.Editor.Data
             new(0.60f, 0.30f, 0.12f),
             new(0.16f, 0.52f, 0.22f),
             new(0.42f, 0.16f, 0.16f),
+            new(0.42f, 0.24f, 0.12f),
             new(0.55f, 0.33f, 0.14f),
             new(0.14f, 0.50f, 0.24f),
             new(0.22f, 0.42f, 0.64f),
@@ -80,6 +85,7 @@ namespace CrystalMagic.Editor.Data
             new(0.55f, 0.38f, 0.10f),
             new(0.38f, 0.18f, 0.55f),
             new(0.18f, 0.48f, 0.48f),
+            new(0.32f, 0.32f, 0.32f),
             new(0.58f, 0.42f, 0.12f),
         };
 

@@ -120,11 +120,43 @@ namespace CrystalMagic.Game.Skill.Effects
             float2 direction = targetTransform.Position.xy - originPosition.xy;
             if (math.lengthsq(direction) <= 0.0001f)
                 direction = new float2(1f, 0f);
-            else
-                direction = math.normalize(direction);
+            UnitControlUtility.ApplyKnockback(entityManager, target, origin, direction, Data.Force, Data.DurationSeconds);
+        }
+    }
 
-            targetTransform.Position.xy += direction * Data.Force;
-            entityManager.SetComponentData(target, targetTransform);
+    public sealed class StunEffect : Effect
+    {
+        public new StunEffectData Data { get; }
+
+        public StunEffect(StunEffectData data) : base(data) => Data = data;
+
+        public override void Execute(SkillContent context)
+        {
+            if (Data == null || context == null || !context.HasTargetEntity)
+                return;
+
+            EntityManager entityManager = context.EntityManager;
+            Entity target = context.TargetEntity;
+            Entity source = context.HasOriginEntity ? context.OriginEntity : Entity.Null;
+            UnitControlUtility.ApplyStun(entityManager, target, source, Data.DurationSeconds);
+        }
+    }
+
+    public sealed class FearEffect : Effect
+    {
+        public new FearEffectData Data { get; }
+
+        public FearEffect(FearEffectData data) : base(data) => Data = data;
+
+        public override void Execute(SkillContent context)
+        {
+            if (Data == null || context == null || !context.HasTargetEntity || !context.HasOriginEntity)
+                return;
+
+            EntityManager entityManager = context.EntityManager;
+            Entity target = context.TargetEntity;
+            Entity source = context.OriginEntity;
+            UnitControlUtility.ApplyFear(entityManager, target, source, Data.DurationSeconds);
         }
     }
 }

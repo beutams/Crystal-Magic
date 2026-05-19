@@ -1,77 +1,100 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Reflection;
 using UnityEngine;
 
-namespace CrystalMagic.Core {
+namespace CrystalMagic.Core
+{
     /// <summary>
-    /// 全局配置管理组件
+    /// 全局配置组件。
     /// </summary>
     public class ConfigComponent : GameComponent<ConfigComponent>
     {
-        private Dictionary<Type, object> _configs = new();
+        private readonly Dictionary<Type, object> _configs = new();
 
         public override int Priority => 8;
 
+        public override void Initialize()
+        {
+            base.Initialize();
+            LoadAllConfigs();
+        }
+
         /// <summary>
-        /// 获取配置对象，首次访问时从 JSON 加载
+        /// 获取初始化时已加载的配置对象。
         /// </summary>
         public T Get<T>() where T : class, new()
         {
             if (_configs.TryGetValue(typeof(T), out object cached))
                 return (T)cached;
 
-            return Load<T>();
-        }
-
-        /// <summary>
-        /// 强制重新从文件加载指定配置
-        /// </summary>
-        public T Reload<T>() where T : class, new()
-        {
-            _configs.Remove(typeof(T));
-            return Load<T>();
-        }
-
-        /// <summary>
-        /// 将指定配置写回 JSON 文件
-        /// </summary>
-        public void Save<T>(T config) where T : class, new()
-        {
-            if (config == null) return;
+            Debug.LogWarning($"[ConfigComponent] Config {typeof(T).Name} was not preloaded, using defaults.");
+            T config = new T();
             _configs[typeof(T)] = config;
-
-            string path = GetFilePath(typeof(T));
-            string dir = Path.GetDirectoryName(path);
-            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-
-            File.WriteAllText(path, JsonUtility.ToJson(config, true),
-                System.Text.Encoding.UTF8);
-            Debug.Log($"[ConfigComponent] Saved {path}");
+            return config;
         }
 
-        private T Load<T>() where T : class, new()
+        private void LoadAllConfigs()
         {
-            T result;
-            string path = GetFilePath(typeof(T));
+            List<Type> configTypes = CollectConfigTypes();
+            for (int i = 0; i < configTypes.Count; i++)
+            {
+                Type configType = configTypes[i];
+                _configs[configType] = Load(configType);
+            }
+        }
+
+        private static List<Type> CollectConfigTypes()
+        {
+            List<Type> result = new();
+            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            for (int assemblyIndex = 0; assemblyIndex < assemblies.Length; assemblyIndex++)
+            {
+                Assembly assembly = assemblies[assemblyIndex];
+                Type[] types;
+                try
+                {
+                    types = assembly.GetTypes();
+                }
+                catch (ReflectionTypeLoadException ex)
+                {
+                    types = ex.Types;
+                }
+                catch
+                {
+                    continue;
+                }
+
+                for (int typeIndex = 0; typeIndex < types.Length; typeIndex++)
+                {
+                    Type type = types[typeIndex];
+                    if (type == null || type.IsAbstract || type.IsInterface)
+                        continue;
+
+                    if (type.GetCustomAttributes(typeof(GameConfigAttribute), false).Length > 0)
+                        result.Add(type);
+                }
+            }
+
+            result.Sort((left, right) => string.Compare(left.Name, right.Name, StringComparison.Ordinal));
+            return result;
+        }
+
+        private static object Load(Type type)
+        {
+            string path = AssetPathHelper.GetConfigAsset(type.Name);
             TextAsset asset = ResourceComponent.Instance.Load<TextAsset>(path);
 
             if (asset != null)
             {
-                result = JsonUtility.FromJson<T>(asset.text) ?? new T();
+                object config = JsonUtility.FromJson(asset.text, type) ?? Activator.CreateInstance(type);
                 Debug.Log($"[ConfigComponent] Loaded {path}");
-            }
-            else
-            {
-                result = new T();
-                Debug.LogWarning($"[ConfigComponent] {path} not found, using defaults");
+                return config;
             }
 
-            _configs[typeof(T)] = result;
-            return result;
+            Debug.LogWarning($"[ConfigComponent] {path} not found, using defaults");
+            return Activator.CreateInstance(type);
         }
-
-        private static string GetFilePath(Type t) => AssetPathHelper.GetConfigAsset(t.Name);
 
         public override void Cleanup()
         {

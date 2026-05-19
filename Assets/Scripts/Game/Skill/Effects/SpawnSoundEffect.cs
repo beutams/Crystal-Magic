@@ -1,5 +1,5 @@
-using CrystalMagic.Game.Data.Effects;
 using CrystalMagic.Core;
+using CrystalMagic.Game.Data.Effects;
 using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
@@ -7,7 +7,7 @@ using UnityEngine;
 namespace CrystalMagic.Game.Skill.Effects
 {
     /// <summary>
-    /// 生成音效效果，逻辑由音频系统接入
+    /// 生成音效效果，按通道将文件名解析成统一音频目录下的资源路径。
     /// </summary>
     public sealed class SpawnSoundEffect : Effect
     {
@@ -20,28 +20,42 @@ namespace CrystalMagic.Game.Skill.Effects
             if (Data == null || context == null || AudioComponent.Instance == null)
                 return;
 
+            string assetPath = ResolveAudioAssetPath();
+            if (string.IsNullOrWhiteSpace(assetPath))
+                return;
+
             switch (Data.Channel)
             {
                 case AudioChannel.BGM:
-                    AudioComponent.Instance.PlayBGM(Data.AudioPath, Data.Volume);
+                    AudioComponent.Instance.PlayBGM(assetPath, Data.Volume);
                     break;
 
                 case AudioChannel.UI:
-                    AudioComponent.Instance.PlayUI(Data.AudioPath, Data.Volume, Data.Pitch, Data.DelaySeconds);
+                    AudioComponent.Instance.PlayUI(assetPath, Data.Volume, Data.Pitch, Data.DelaySeconds);
                     break;
 
                 default:
-                    PlayUnitSound(context);
+                    PlayUnitSound(context, assetPath);
                     break;
             }
         }
 
-        private void PlayUnitSound(SkillContent context)
+        private string ResolveAudioAssetPath()
+        {
+            if (string.IsNullOrWhiteSpace(Data.AudioPath))
+                return string.Empty;
+
+            return Data.Channel == AudioChannel.BGM
+                ? AssetPathHelper.GetBgmAudioAsset(Data.AudioPath)
+                : AssetPathHelper.GetSfxAudioAsset(Data.AudioPath);
+        }
+
+        private void PlayUnitSound(SkillContent context, string assetPath)
         {
             if (Data.FollowCaster && context.HasOriginEntity)
             {
                 AudioComponent.Instance.PlayUnitFollowEntity(
-                    Data.AudioPath,
+                    assetPath,
                     context.OriginEntity,
                     context.EntityManager,
                     Vector3.zero,
@@ -57,7 +71,7 @@ namespace CrystalMagic.Game.Skill.Effects
                 : Vector3.zero;
 
             AudioComponent.Instance.PlayUnit(
-                Data.AudioPath,
+                assetPath,
                 position,
                 Data.Volume,
                 Data.Pitch,

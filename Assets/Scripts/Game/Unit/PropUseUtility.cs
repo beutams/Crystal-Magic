@@ -288,9 +288,7 @@ namespace CrystalMagic.Game
 
         private static float GetSharedCooldownSeconds()
         {
-            GameConfig config = ConfigComponent.Instance != null
-                ? ConfigComponent.Instance.Get<GameConfig>()
-                : new GameConfig();
+            GameConfig config = ConfigComponent.Instance.Get<GameConfig>();
             return Mathf.Max(0f, config.BattlePropSharedCooldownSeconds);
         }
     }

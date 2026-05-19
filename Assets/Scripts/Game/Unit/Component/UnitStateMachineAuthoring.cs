@@ -15,6 +15,22 @@ public class UnitStateMachineAuthoring : MonoBehaviour
 
             UnitData data = UnitAuthoringUtility.ResolveUnitData(authoring);
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
+            AddBuffer<UnitControlElement>(entity);
+            AddComponent(entity, new UnitControlStateComponent
+            {
+                ActiveType = UnitControlType.None,
+                RemainingTime = 0f,
+                ActivePriority = 0,
+                LockMove = 0,
+                LockCast = 0,
+                HasControl = 0,
+                ActiveSourceEntity = Entity.Null,
+            });
+            AddComponent(entity, new UnitKnockbackComponent
+            {
+                Velocity = Unity.Mathematics.float2.zero,
+                Damping = 0f,
+            });
             AddComponentObject(entity, new UnitStateMachineComponent
             {
                 UnitDataId = data?.Id ?? -1,

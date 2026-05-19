@@ -37,9 +37,7 @@ namespace CrystalMagic.UI
 
         private void EnsureSlotArray()
         {
-            int slotCount = ConfigComponent.Instance != null
-                ? UnityEngine.Mathf.Max(1, ConfigComponent.Instance.Get<GameConfig>().MaxSaveSlots)
-                : 20;
+            int slotCount = UnityEngine.Mathf.Max(1, ConfigComponent.Instance.Get<GameConfig>().MaxSaveSlots);
 
             if (_saveRecords.Length != slotCount)
                 _saveRecords = new SaveRecord[slotCount];

@@ -19,7 +19,7 @@ namespace CrystalMagic.Editor.Unit
     public class BehaviorTreeGraphWindow : EditorWindow
     {
         private const string DataPath = "Assets/Res/Data/BehaviorTreeDataTable.json";
-        private static string UnitPrefabDirectory => AssetPathHelper.GetUnitPrefabDirectory();
+        private const string UnitPrefabDirectory = "Assets/Res/Prefab/Unit";
         private const float ListPanelWidth = 240f;
         private const float SourcePanelWidth = 280f;
         private const float InsertFieldWidth = 30f;

@@ -64,7 +64,7 @@ namespace CrystalMagic.Editor.Config
 
             _configTypes.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
             _typeNames = _configTypes.Count > 0
-                ? _configTypes.ConvertAll(t => t.Name).ToArray()
+                ? _configTypes.ConvertAll(t => EditorLabelUtility.GetLabel(t, t.Name)).ToArray()
                 : new[] { "（未找到 [GameConfig] 类）" };
         }
 
@@ -165,7 +165,7 @@ namespace CrystalMagic.Editor.Config
             foreach (var field in _fields)
             {
                 object val = field.GetValue(_configObj);
-                object newVal = DrawField(field.Name, field.FieldType, val);
+                object newVal = DrawField(EditorLabelUtility.GetLabel(field), field.FieldType, val);
                 if (!Equals(newVal, val))
                 {
                     field.SetValue(_configObj, newVal);

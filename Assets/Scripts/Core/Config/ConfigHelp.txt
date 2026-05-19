@@ -1,3 +1,6 @@
 全局游戏设置(非存档)
+-内容
+    初始化时读取配置json
+    利用反射初始化所有带GameConfigAttribute的类
 -接口
-    Get
+    Get获取存档

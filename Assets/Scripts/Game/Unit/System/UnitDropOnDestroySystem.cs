@@ -172,7 +172,7 @@ partial class UnitDropOnDestroySystem : SystemBase
             return null;
 
         if (entry.DropType == DropRewardType.Money)
-            return ConfigComponent.Instance?.Get<GameConfig>()?.MoneyIconPath;
+            return ConfigComponent.Instance.Get<GameConfig>().MoneyIconPath;
 
         ItemData itemData = DataComponent.Instance.Get<ItemData>(entry.ItemId);
         return itemData?.IconPath;

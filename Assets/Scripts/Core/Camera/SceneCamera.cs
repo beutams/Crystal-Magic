@@ -16,7 +16,7 @@ namespace CrystalMagic.Core {
         public bool FollowPlayerTag => _followPlayerTag;
         public float FollowSmooth => _followSmooth;
 
-        private void Awake()
+        private void OnEnable()
         {
             Camera = GetComponent<Camera>();
             if (_registerOnAwake)
@@ -30,11 +30,7 @@ namespace CrystalMagic.Core {
 
         public Vector3 GetDesiredPosition(Vector3 targetPosition, Vector3 currentCameraPosition)
         {
-            return new Vector3(
-                targetPosition.x + _followOffset.x,
-                targetPosition.y + _followOffset.y,
-                currentCameraPosition.z
-            );
+            return new Vector3( targetPosition.x + _followOffset.x, targetPosition.y + _followOffset.y, currentCameraPosition.z);
         }
     }
 }

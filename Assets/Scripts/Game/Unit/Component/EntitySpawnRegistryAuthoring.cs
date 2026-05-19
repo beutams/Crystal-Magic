@@ -43,9 +43,9 @@ namespace CrystalMagic.Game.Unit
         public IReadOnlyList<GameObject> DropPrefabs => _dropPrefabs;
 
 #if UNITY_EDITOR
-        private static string UnitFolder => CrystalMagic.Core.AssetPathHelper.GetUnitPrefabDirectory();
-        private static string ProjectileFolder => CrystalMagic.Core.AssetPathHelper.GetProjectilePrefabDirectory();
-        private static string DropFolder => CrystalMagic.Core.AssetPathHelper.GetDropPrefabDirectory();
+        private const string UnitFolder = "Assets/Res/Prefab/Unit";
+        private const string ProjectileFolder = "Assets/Res/Prefab/Projectile";
+        private const string DropFolder = "Assets/Res/Prefab/Drop";
 
         private void Reset() => SyncPrefabLists();
 

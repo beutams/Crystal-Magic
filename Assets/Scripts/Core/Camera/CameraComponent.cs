@@ -26,10 +26,7 @@ namespace CrystalMagic.Core {
         public void Register(SceneCamera cam)
         {
             _current = cam;
-            if (UIComponent.TryGetInstance(out UIComponent uiComponent))
-            {
-                uiComponent.RefreshUICamera(Current);
-            }
+            UIComponent.Instance.RefreshUICamera(Current);
             Debug.Log($"[CameraComponent] Registered: {cam.gameObject.name}");
         }
 
@@ -38,35 +35,9 @@ namespace CrystalMagic.Core {
             if (_current == cam)
             {
                 _current = null;
-                if (UIComponent.TryGetInstance(out UIComponent uiComponent))
-                {
-                    uiComponent.RefreshUICamera(Current);
-                }
+                UIComponent.Instance.RefreshUICamera(Current);
                 Debug.Log($"[CameraComponent] Unregistered: {cam.gameObject.name}");
             }
-        }
-
-        public void SetScreenShakeScale(float scale)
-        {
-            _screenShakeScale = Mathf.Max(0f, scale);
-        }
-
-        public void AddShake(Vector3 worldPosition, float duration, float amplitude, float frequency, bool useDistanceAttenuation, float radius)
-        {
-            amplitude *= _screenShakeScale;
-            if (duration <= 0f || amplitude <= 0f)
-                return;
-
-            _shakes.Add(new ShakeInstance
-            {
-                WorldPosition = worldPosition,
-                Duration = duration,
-                Amplitude = amplitude,
-                Frequency = Mathf.Max(0.01f, frequency),
-                UseDistanceAttenuation = useDistanceAttenuation,
-                Radius = Mathf.Max(0f, radius),
-                Seed = UnityEngine.Random.value * 1000f,
-            });
         }
 
         private void LateUpdate()
@@ -90,6 +61,29 @@ namespace CrystalMagic.Core {
             _lastShakeOffset = offset;
             _shakeAppliedCamera = camera;
             camera.transform.position = basePosition + offset;
+        }
+        #region Shake
+        public void SetScreenShakeScale(float scale)
+        {
+            _screenShakeScale = Mathf.Max(0f, scale);
+        }
+
+        public void AddShake(Vector3 worldPosition, float duration, float amplitude, float frequency, bool useDistanceAttenuation, float radius)
+        {
+            amplitude *= _screenShakeScale;
+            if (duration <= 0f || amplitude <= 0f)
+                return;
+
+            _shakes.Add(new ShakeInstance
+            {
+                WorldPosition = worldPosition,
+                Duration = duration,
+                Amplitude = amplitude,
+                Frequency = Mathf.Max(0.01f, frequency),
+                UseDistanceAttenuation = useDistanceAttenuation,
+                Radius = Mathf.Max(0f, radius),
+                Seed = UnityEngine.Random.value * 1000f,
+            });
         }
 
         private Vector3 CalculateShakeOffset(Camera camera, Vector3 cameraPosition, float deltaTime)
@@ -126,7 +120,29 @@ namespace CrystalMagic.Core {
 
             return offset;
         }
+        private static float GetDistanceAttenuation(Camera camera, Vector3 cameraPosition, ShakeInstance shake)
+        {
+            if (!shake.UseDistanceAttenuation || shake.Radius <= 0f)
+                return 1f;
 
+            Vector3 toSource = shake.WorldPosition - cameraPosition;
+            Vector3 planar = toSource - camera.transform.forward * Vector3.Dot(toSource, camera.transform.forward);
+            return Mathf.Clamp01(1f - planar.magnitude / shake.Radius);
+        }
+        private void RestoreShakeOffset()
+        {
+            if (_lastShakeOffset == Vector3.zero)
+                return;
+
+            if (_shakeAppliedCamera != null)
+                _shakeAppliedCamera.transform.position -= _lastShakeOffset;
+
+            _lastShakeOffset = Vector3.zero;
+            _shakeAppliedCamera = null;
+        }
+        #endregion
+
+        #region Follow
         private void ApplyFollow(Camera camera, float deltaTime)
         {
             if (_current == null || !_current.FollowPlayerTag)
@@ -178,27 +194,7 @@ namespace CrystalMagic.Core {
             return true;
         }
 
-        private static float GetDistanceAttenuation(Camera camera, Vector3 cameraPosition, ShakeInstance shake)
-        {
-            if (!shake.UseDistanceAttenuation || shake.Radius <= 0f)
-                return 1f;
-
-            Vector3 toSource = shake.WorldPosition - cameraPosition;
-            Vector3 planar = toSource - camera.transform.forward * Vector3.Dot(toSource, camera.transform.forward);
-            return Mathf.Clamp01(1f - planar.magnitude / shake.Radius);
-        }
-
-        private void RestoreShakeOffset()
-        {
-            if (_lastShakeOffset == Vector3.zero)
-                return;
-
-            if (_shakeAppliedCamera != null)
-                _shakeAppliedCamera.transform.position -= _lastShakeOffset;
-
-            _lastShakeOffset = Vector3.zero;
-            _shakeAppliedCamera = null;
-        }
+        #endregion
 
         public override void Cleanup()
         {

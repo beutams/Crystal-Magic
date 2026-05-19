@@ -689,9 +689,7 @@ namespace CrystalMagic.Core {
 
         private GameConfig GetGameConfig()
         {
-            return ConfigComponent.Instance != null
-                ? ConfigComponent.Instance.Get<GameConfig>()
-                : new GameConfig();
+            return ConfigComponent.Instance.Get<GameConfig>();
         }
 
         private int GetMaxSaveSlots()

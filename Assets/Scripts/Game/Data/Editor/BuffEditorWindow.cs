@@ -71,6 +71,7 @@ namespace CrystalMagic.Editor.Data
             typeof(ForwardRectSearchEffectData),
             typeof(HealEffectData),
             typeof(HealthCostEffectData),
+            typeof(FearEffectData),
             typeof(KnockbackEffectData),
             typeof(PersistentEffectData),
             typeof(ReadBuffStackEffectData),
@@ -79,6 +80,7 @@ namespace CrystalMagic.Editor.Data
             typeof(SpawnProjectileEffectData),
             typeof(SpawnSoundEffectData),
             typeof(SpawnVfxEffectData),
+            typeof(StunEffectData),
             typeof(CameraShakeEffectData),
         };
         private static readonly string[] KnownEffectNames =
@@ -90,6 +92,7 @@ namespace CrystalMagic.Editor.Data
             "前向矩形搜索 (ForwardRectSearch)",
             "回血 (Heal)",
             "扣血 (HealthCost)",
+            "恐惧 (Fear)",
             "击退 (Knockback)",
             "持续效果 (Persistent)",
             "读取Buff层数 (ReadBuffStack)",
@@ -98,6 +101,7 @@ namespace CrystalMagic.Editor.Data
             "创建投射物 (SpawnProjectile)",
             "生成音效 (SpawnSound)",
             "生成特效 (SpawnVfx)",
+            "击晕 (Stun)",
             "Camera Shake (CameraShake)",
         };
         private static readonly Color[] EffectColors =
@@ -109,6 +113,7 @@ namespace CrystalMagic.Editor.Data
             new(0.60f, 0.30f, 0.12f),
             new(0.16f, 0.52f, 0.22f),
             new(0.42f, 0.16f, 0.16f),
+            new(0.42f, 0.24f, 0.12f),
             new(0.55f, 0.33f, 0.14f),
             new(0.14f, 0.50f, 0.24f),
             new(0.22f, 0.42f, 0.64f),
@@ -117,6 +122,7 @@ namespace CrystalMagic.Editor.Data
             new(0.55f, 0.38f, 0.10f),
             new(0.38f, 0.18f, 0.55f),
             new(0.18f, 0.48f, 0.48f),
+            new(0.32f, 0.32f, 0.32f),
             new(0.58f, 0.42f, 0.12f),
         };
 

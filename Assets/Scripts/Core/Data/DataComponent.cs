@@ -25,6 +25,40 @@ namespace CrystalMagic.Core {
             DataTableRegistry.RegisterAll(this);
         }
 
+        #region 接口
+        /// <summary>
+        /// 按 Id 获取配置行，找不到返回 null
+        /// </summary>
+        public T Get<T>(int id) where T : DataRow
+        {
+            return GetTable<T>()?.GetById(id);
+        }
+
+        /// <summary>
+        /// 按条件查找第一个匹配行，找不到返回 null
+        /// </summary>
+        public T Find<T>(Func<T, bool> predicate) where T : DataRow
+        {
+            var table = GetTable<T>();
+            if (table == null) return null;
+            foreach (T row in table.GetAll())
+            {
+                if (predicate(row)) return row;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 按条件查找所有匹配行
+        /// </summary>
+        public IEnumerable<T> FindAll<T>(Func<T, bool> predicate) where T : DataRow
+        {
+            var table = GetTable<T>();
+            if (table == null) return Enumerable.Empty<T>();
+            return table.GetAll().Where(predicate);
+        }
+
+        #endregion
         /// <summary>
         /// 加载配置表，传入表名即可（如 "ItemDataTable"）
         /// 路径由 AssetPathHelper.GetDataAsset 统一生成
@@ -42,7 +76,7 @@ namespace CrystalMagic.Core {
             DataTable<T> table = new DataTable<T>();
             
             // 尝试用 Newtonsoft.Json 加载（支持多态）
-            if (!TryLoadWithNewtonsoft<T>(asset.text, table))
+            if (!TryLoad(asset.text, table))
             {
                 // 回退到 JsonUtility（不支持多态）
                 if (!table.Load(asset.text))
@@ -56,7 +90,7 @@ namespace CrystalMagic.Core {
         /// <summary>
         /// 用 Newtonsoft.Json 加载支持多态的表
         /// </summary>
-        private bool TryLoadWithNewtonsoft<T>(string json, DataTable<T> table) where T : DataRow
+        private bool TryLoad<T>(string json, DataTable<T> table) where T : DataRow
         {
             try
             {
@@ -102,39 +136,6 @@ namespace CrystalMagic.Core {
             _tables.TryGetValue(typeof(T), out object table);
             return table as DataTable<T>;
         }
-
-        /// <summary>
-        /// 按 Id 获取配置行，找不到返回 null
-        /// </summary>
-        public T Get<T>(int id) where T : DataRow
-        {
-            return GetTable<T>()?.GetById(id);
-        }
-
-        /// <summary>
-        /// 按条件查找第一个匹配行，找不到返回 null
-        /// </summary>
-        public T Find<T>(Func<T, bool> predicate) where T : DataRow
-        {
-            var table = GetTable<T>();
-            if (table == null) return null;
-            foreach (T row in table.GetAll())
-            {
-                if (predicate(row)) return row;
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// 按条件查找所有匹配行
-        /// </summary>
-        public IEnumerable<T> FindAll<T>(Func<T, bool> predicate) where T : DataRow
-        {
-            var table = GetTable<T>();
-            if (table == null) return Enumerable.Empty<T>();
-            return table.GetAll().Where(predicate);
-        }
-
         /// <summary>
         /// 重新加载所有已注册的配置表（编辑器调试用）
         /// </summary>

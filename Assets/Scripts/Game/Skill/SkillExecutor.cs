@@ -49,6 +49,7 @@ namespace CrystalMagic.Game.Skill
                 RemoveBuffEffectData data => new RemoveBuffEffect(data),
                 CameraShakeEffectData data => new CameraShakeEffect(data),
                 DamageEffectData data => new DamageEffect(data),
+                FearEffectData data => new FearEffect(data),
                 ForwardRectSearchEffectData data => new ForwardRectSearchEffect(data),
                 HealEffectData data => new HealEffect(data),
                 HealthCostEffectData data => new HealthCostEffect(data),
@@ -58,6 +59,7 @@ namespace CrystalMagic.Game.Skill
                 SpawnProjectileEffectData data => new SpawnProjectileEffect(data),
                 SpawnSoundEffectData data => new SpawnSoundEffect(data),
                 SpawnVfxEffectData data => new SpawnVfxEffect(data),
+                StunEffectData data => new StunEffect(data),
                 _ => null,
             };
         }

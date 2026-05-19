@@ -37,7 +37,9 @@ namespace CrystalMagic.Core {
         private readonly List<PooledAudioSource> _unitPool = new();
         private readonly List<PooledAudioSource> _uiPool = new();
         private readonly Dictionary<string, AudioClip> _clipCache = new();
+        private readonly Dictionary<string, List<System.Action<AudioClip>>> _pendingClipCallbacks = new();
         private float _sfxVolume = 1f;
+        private bool _isAvailable;
 
         // -------- 容器 --------
         private Transform _audioRoot;
@@ -47,6 +49,7 @@ namespace CrystalMagic.Core {
         public override void Initialize()
         {
             base.Initialize();
+            _isAvailable = true;
 
             GameObject root = new GameObject("[AudioRoot]");
             DontDestroyOnLoad(root);
@@ -67,29 +70,31 @@ namespace CrystalMagic.Core {
 
             EventComponent.Instance.Subscribe(new CommonGameEvent(GameSettingsComponent.SettingsChangedEventName), OnSettingsChanged);
         }
-
-        // ==================== BGM ====================
-
+        #region BGM
         /// <summary>
         /// 立即播放 BGM（无淡入淡出）
         /// </summary>
         public void PlayBGM(string assetPath, bool loop = true)
         {
-            AudioClip clip = LoadClip(assetPath);
-            if (clip == null) return;
+            LoadClipAsync(assetPath, clip =>
+            {
+                if (!_isAvailable || clip == null)
+                    return;
 
-            _bgmSource.clip = clip;
-            _bgmSource.loop = loop;
-            _bgmSource.volume = _bgmVolume;
-            _bgmSource.Play();
+                PlayBGMClip(clip, _bgmVolume, loop);
+            });
         }
 
         public void PlayBGM(string assetPath, float volumeScale, bool loop = true)
         {
-            float oldVolume = _bgmVolume;
-            _bgmVolume = Mathf.Clamp01(volumeScale);
-            PlayBGM(assetPath, loop);
-            _bgmVolume = oldVolume;
+            float scaledVolume = Mathf.Clamp01(volumeScale);
+            LoadClipAsync(assetPath, clip =>
+            {
+                if (!_isAvailable || clip == null)
+                    return;
+
+                PlayBGMClip(clip, scaledVolume, loop);
+            });
         }
 
         /// <summary>
@@ -97,10 +102,13 @@ namespace CrystalMagic.Core {
         /// </summary>
         public void SwitchBGM(string assetPath, float fadeDuration = 0.5f, bool loop = true)
         {
-            AudioClip clip = LoadClip(assetPath);
-            if (clip == null) return;
+            LoadClipAsync(assetPath, clip =>
+            {
+                if (!_isAvailable || clip == null)
+                    return;
 
-            StartCoroutine(DoSwitchBGM(clip, fadeDuration, loop));
+                StartCoroutine(DoSwitchBGM(clip, fadeDuration, loop));
+            });
         }
 
         private IEnumerator DoSwitchBGM(AudioClip newClip, float fadeDuration, bool loop)
@@ -162,8 +170,9 @@ namespace CrystalMagic.Core {
             if (_bgmSource.isPlaying)
                 _bgmSource.volume = _bgmVolume;
         }
+        #endregion
 
-        // ==================== SFX ====================
+        #region SFX
         private void ApplySFXVolume(float volume)
         {
             _sfxVolume = Mathf.Clamp01(volume);
@@ -173,7 +182,7 @@ namespace CrystalMagic.Core {
 
         public void PlayUnit(string assetPath, Vector3 position, float volumeScale = 1f, float pitch = 1f, float spatialBlend = 1f, float delaySeconds = 0f)
         {
-            PlayFromPool(_unitPool, AudioChannel.Unit, assetPath, position, volumeScale, pitch, spatialBlend, delaySeconds, false, Entity.Null, default, Vector3.zero);
+            PlayFromPoolAsync(_unitPool, AudioChannel.Unit, assetPath, position, volumeScale, pitch, spatialBlend, delaySeconds, false, Entity.Null, default, Vector3.zero);
         }
 
         public void PlayUnitFollowEntity(string assetPath, Entity entity, EntityManager entityManager, Vector3 offset, float volumeScale = 1f, float pitch = 1f, float spatialBlend = 1f, float delaySeconds = 0f)
@@ -182,16 +191,15 @@ namespace CrystalMagic.Core {
                 ? entityPosition + offset
                 : offset;
 
-            PlayFromPool(_unitPool, AudioChannel.Unit, assetPath, position, volumeScale, pitch, spatialBlend, delaySeconds, true, entity, entityManager, offset);
+            PlayFromPoolAsync(_unitPool, AudioChannel.Unit, assetPath, position, volumeScale, pitch, spatialBlend, delaySeconds, true, entity, entityManager, offset);
         }
 
         public void PlayUI(string assetPath, float volumeScale = 1f, float pitch = 1f, float delaySeconds = 0f)
         {
-            PlayFromPool(_uiPool, AudioChannel.UI, assetPath, Vector3.zero, volumeScale, pitch, 0f, delaySeconds, false, Entity.Null, default, Vector3.zero);
+            PlayFromPoolAsync(_uiPool, AudioChannel.UI, assetPath, Vector3.zero, volumeScale, pitch, 0f, delaySeconds, false, Entity.Null, default, Vector3.zero);
         }
 
-        // ==================== 内部工具 ====================
-
+        #endregion
         private void Update()
         {
             UpdatePool(_unitPool);
@@ -212,12 +220,19 @@ namespace CrystalMagic.Core {
         /// <param name="entity">要跟随的 ECS 实体</param>
         /// <param name="entityManager">用来查询这个实体当前位置的 EntityManager</param>
         /// <param name="followOffset">跟随时的位置偏移量</param>
-        private void PlayFromPool(List<PooledAudioSource> pool, AudioChannel channel, string assetPath, Vector3 position, float volumeScale, float pitch, float spatialBlend, float delaySeconds, bool followEntity, Entity entity, EntityManager entityManager, Vector3 followOffset)
+        private void PlayFromPoolAsync(List<PooledAudioSource> pool, AudioChannel channel, string assetPath, Vector3 position, float volumeScale, float pitch, float spatialBlend, float delaySeconds, bool followEntity, Entity entity, EntityManager entityManager, Vector3 followOffset)
         {
-            AudioClip clip = LoadClip(assetPath);
-            if (clip == null)
-                return;
+            LoadClipAsync(assetPath, clip =>
+            {
+                if (!_isAvailable || clip == null)
+                    return;
 
+                PlayClipFromPool(pool, channel, clip, position, volumeScale, pitch, spatialBlend, delaySeconds, followEntity, entity, entityManager, followOffset);
+            });
+        }
+
+        private void PlayClipFromPool(List<PooledAudioSource> pool, AudioChannel channel, AudioClip clip, Vector3 position, float volumeScale, float pitch, float spatialBlend, float delaySeconds, bool followEntity, Entity entity, EntityManager entityManager, Vector3 followOffset)
+        {
             UpdatePool(pool);
             if (GetPlayingCount(pool) >= GetMaxPoolSize(channel))
                 return;
@@ -279,9 +294,7 @@ namespace CrystalMagic.Core {
 
         private static bool TryGetEntityPosition(Entity entity, EntityManager entityManager, out Vector3 position)
         {
-            if (entity != Entity.Null &&
-                entityManager.Exists(entity) &&
-                entityManager.HasComponent<LocalTransform>(entity))
+            if (entity != Entity.Null && entityManager.Exists(entity) && entityManager.HasComponent<LocalTransform>(entity))
             {
                 Unity.Mathematics.float3 entityPosition = entityManager.GetComponentData<LocalTransform>(entity).Position;
                 position = new Vector3(entityPosition.x, entityPosition.y, entityPosition.z);
@@ -382,19 +395,49 @@ namespace CrystalMagic.Core {
             };
         }
 
-        private AudioClip LoadClip(string assetPath)
+        private void PlayBGMClip(AudioClip clip, float volume, bool loop)
         {
-            if (string.IsNullOrWhiteSpace(assetPath))
-                return null;
+            _bgmSource.clip = clip;
+            _bgmSource.loop = loop;
+            _bgmSource.volume = Mathf.Clamp01(volume);
+            _bgmSource.Play();
+        }
+
+        private void LoadClipAsync(string assetPath, System.Action<AudioClip> onComplete)
+        {
+            if (string.IsNullOrWhiteSpace(assetPath) || ResourceComponent.Instance == null)
+            {
+                onComplete?.Invoke(null);
+                return;
+            }
 
             if (_clipCache.TryGetValue(assetPath, out AudioClip cachedClip))
-                return cachedClip;
+            {
+                onComplete?.Invoke(cachedClip);
+                return;
+            }
 
-            AudioClip clip = ResourceComponent.Instance.Load<AudioClip>(assetPath);
-            if (clip != null)
-                _clipCache[assetPath] = clip;
+            if (_pendingClipCallbacks.TryGetValue(assetPath, out List<System.Action<AudioClip>> pendingCallbacks))
+            {
+                pendingCallbacks.Add(onComplete);
+                return;
+            }
 
-            return clip;
+            _pendingClipCallbacks[assetPath] = new List<System.Action<AudioClip>> { onComplete };
+            ResourceComponent.Instance.LoadAsync<AudioClip>(assetPath, clip =>
+            {
+                if (clip != null)
+                    _clipCache[assetPath] = clip;
+
+                if (!_pendingClipCallbacks.TryGetValue(assetPath, out List<System.Action<AudioClip>> callbacks))
+                    return;
+
+                _pendingClipCallbacks.Remove(assetPath);
+                for (int i = 0; i < callbacks.Count; i++)
+                {
+                    callbacks[i]?.Invoke(clip);
+                }
+            });
         }
 
         private void CreatePool(List<PooledAudioSource> pool, AudioChannel channel, int initialPoolSize)
@@ -444,6 +487,7 @@ namespace CrystalMagic.Core {
 
         public override void Cleanup()
         {
+            _isAvailable = false;
             if (EventComponent.Instance != null)
                 EventComponent.Instance.Unsubscribe(new CommonGameEvent(GameSettingsComponent.SettingsChangedEventName), OnSettingsChanged);
 
@@ -451,6 +495,7 @@ namespace CrystalMagic.Core {
             StopPool(_unitPool);
             StopPool(_uiPool);
             _clipCache.Clear();
+            _pendingClipCallbacks.Clear();
 
             if (_audioRoot != null)
                 Destroy(_audioRoot.gameObject);
