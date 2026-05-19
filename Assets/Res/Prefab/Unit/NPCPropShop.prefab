@@ -19,6 +19,7 @@ GameObject:
   - component: {fileID: 4688306743195592210}
   - component: {fileID: 5235995832519930526}
   - component: {fileID: 448358576084545736}
+  - component: {fileID: 639147834839002419}
   m_Layer: 0
   m_Name: NPCPropShop
   m_TagString: Untagged
@@ -303,3 +304,16 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &639147834839002419
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 36189917606584973}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7158f745a79344da8b819f7efbe30340, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Tier: 3

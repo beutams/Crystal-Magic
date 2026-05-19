@@ -90,7 +90,7 @@ namespace CrystalMagic.Game.Skill.Effects
                 return _comparatorFactory;
 
             _comparatorFactory = new ComparatorFactory();
-            StateMachineRegistry.RegisterAll(new StateMachineFactory(), _comparatorFactory);
+            ComparatorRegistry.RegisterAll(_comparatorFactory);
             return _comparatorFactory;
         }
     }

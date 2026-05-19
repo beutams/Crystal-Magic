@@ -53,10 +53,16 @@ public class GameSaveUI : UIBase<GameSaveUIData, GameSaveUIModel>
             _itemViews.RemoveAt(lastIndex);
         }
 
+        GameSaveUI_SaveItemView templateView = UI.ScrollView_Viewport_Content_SaveItem.GameObject.GetComponent<GameSaveUI_SaveItemView>();
+        if (templateView == null)
+            return;
+
+        UISubViewBase.EnsurePoolCapacity(templateView, slotCount, slotCount);
+
         while (_itemViews.Count < slotCount)
         {
             GameSaveUI_SaveItemView itemView = UISubViewBase.AcquireFromPool(
-                UI.ScrollView_Viewport_Content_SaveItem.GameObject.GetComponent<GameSaveUI_SaveItemView>(),
+                templateView,
                 UI.ScrollView_Viewport_Content.GameObject.transform);
             if (itemView == null)
                 break;

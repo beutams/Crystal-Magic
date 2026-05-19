@@ -1,55 +1,52 @@
-using UnityEngine;
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
-namespace CrystalMagic.Core {
+namespace CrystalMagic.Core
+{
     /// <summary>
-    /// 泛型对象池实现
+    /// Generic object pool implementation.
     /// </summary>
     public class ObjectPool<T> : IObjectPool<T> where T : class
     {
-        private Stack<T> _available;
-        private HashSet<T> _inUse;
-        private Func<T> _creator;
-        private Action<T> _onGet;
-        private Action<T> _onReturn;
+        private readonly Stack<T> _available;
+        private readonly HashSet<T> _inUse;
+        private readonly Func<T> _creator;
+        private readonly Action<T> _onGet;
+        private readonly Action<T> _onReturn;
 
         private int _maxSize;
-        private int _initialSize;
 
-        public int Count => _available.Count;
-
-        /// <summary>
-        /// 创建对象池
-        /// </summary>
-        /// <param name="creator">对象创建函数</param>
-        /// <param name="initialSize">初始大小</param>
-        /// <param name="maxSize">最大大小</param>
-        /// <param name="onGet">获取对象时的回调</param>
-        /// <param name="onReturn">归还对象时的回调</param>
-        public ObjectPool(Func<T> creator, int initialSize = 0, int maxSize = 10, 
-            Action<T> onGet = null, Action<T> onReturn = null)
+        public ObjectPool(
+            Func<T> creator,
+            int initialSize = 0,
+            int maxSize = 10,
+            Action<T> onGet = null,
+            Action<T> onReturn = null)
         {
-            _creator = creator ?? throw new System.ArgumentNullException(nameof(creator));
-            _initialSize = Mathf.Max(1, initialSize);
-            _maxSize = Mathf.Max(_initialSize, maxSize);
+            _creator = creator ?? throw new ArgumentNullException(nameof(creator));
             _onGet = onGet;
             _onReturn = onReturn;
 
-            _available = new Stack<T>(_initialSize);
+            int normalizedInitialSize = Mathf.Max(0, initialSize);
+            _maxSize = Mathf.Max(normalizedInitialSize, maxSize);
+
+            _available = new Stack<T>(normalizedInitialSize);
             _inUse = new HashSet<T>();
 
-            // 预创建对象
-            for (int i = 0; i < _initialSize; i++)
+            for (int i = 0; i < normalizedInitialSize; i++)
             {
                 T obj = _creator();
                 _available.Push(obj);
             }
         }
 
-        /// <summary>
-        /// 获取对象
-        /// </summary>
+        public int Count => _available.Count;
+        public int InUseCount => _inUse.Count;
+        public int AvailableCount => _available.Count;
+        public int MaxSize => _maxSize;
+        public int TotalCount => _available.Count + _inUse.Count;
+
         public T Get()
         {
             T obj;
@@ -70,20 +67,13 @@ namespace CrystalMagic.Core {
 
             _inUse.Add(obj);
 
-            // 如果实现了 IPoolable 接口，调用其方法
             if (obj is IPoolable poolable)
-            {
                 poolable.OnGetFromPool();
-            }
 
             _onGet?.Invoke(obj);
-
             return obj;
         }
 
-        /// <summary>
-        /// 归还对象
-        /// </summary>
         public void Return(T obj)
         {
             if (obj == null)
@@ -95,34 +85,32 @@ namespace CrystalMagic.Core {
                 return;
             }
 
-            // 如果实现了 IPoolable 接口，调用其方法
             if (obj is IPoolable poolable)
-            {
                 poolable.OnReturnToPool();
-            }
 
             _onReturn?.Invoke(obj);
-
             _available.Push(obj);
         }
 
-        /// <summary>
-        /// 清空池
-        /// </summary>
+        public void EnsureCapacity(int initialSize, int maxSize)
+        {
+            int normalizedInitialSize = Mathf.Max(0, initialSize);
+            int normalizedMaxSize = Mathf.Max(normalizedInitialSize, maxSize);
+
+            if (normalizedMaxSize > _maxSize)
+                _maxSize = normalizedMaxSize;
+
+            while (TotalCount < normalizedInitialSize && TotalCount < _maxSize)
+            {
+                T obj = _creator();
+                _available.Push(obj);
+            }
+        }
+
         public void Clear()
         {
             _available.Clear();
             _inUse.Clear();
         }
-
-        /// <summary>
-        /// 获取使用中的对象数量
-        /// </summary>
-        public int InUseCount => _inUse.Count;
-
-        /// <summary>
-        /// 获取池中可用对象数量
-        /// </summary>
-        public int AvailableCount => _available.Count;
     }
 }

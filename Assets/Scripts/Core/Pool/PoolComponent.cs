@@ -1,18 +1,33 @@
-using UnityEngine;
 using System.Collections.Generic;
+using CrystalMagic.Game.Config;
+using UnityEngine;
 
-namespace CrystalMagic.Core {
+namespace CrystalMagic.Core
+{
     /// <summary>
-    /// 对象池管理组件
+    /// Manages pooled GameObject instances.
     /// </summary>
     public class PoolComponent : GameComponent<PoolComponent>
     {
-        private Dictionary<string, GameObjectPool> _pools = new();
-        private Dictionary<int, string> _prefabInstanceToPoolName = new();
-        private Dictionary<int, string> _objectInstanceToPoolName = new();
-        private Dictionary<int, string> _objectInstanceToOwnerKey = new();
-        private Dictionary<string, HashSet<GameObject>> _ownerObjects = new();
-        private Dictionary<string, GameObject> _resourcePoolPrefabs = new();
+        private readonly struct PoolCapacitySettings
+        {
+            public PoolCapacitySettings(int initialSize, int maxSize)
+            {
+                InitialSize = initialSize;
+                MaxSize = maxSize;
+            }
+
+            public int InitialSize { get; }
+            public int MaxSize { get; }
+        }
+
+        private readonly Dictionary<string, GameObjectPool> _pools = new();
+        private readonly Dictionary<int, string> _prefabInstanceToPoolName = new();
+        private readonly Dictionary<int, string> _objectInstanceToPoolName = new();
+        private readonly Dictionary<int, string> _objectInstanceToOwnerKey = new();
+        private readonly Dictionary<string, HashSet<GameObject>> _ownerObjects = new();
+        private readonly Dictionary<string, GameObject> _resourcePoolPrefabs = new();
+
         private Transform _poolContainer;
 
         public override int Priority => 12;
@@ -24,28 +39,18 @@ namespace CrystalMagic.Core {
             _poolContainer = containerObj.transform;
         }
 
-        /// <summary>
-        /// 从池中获取对象（按路径）
-        /// 如果池不存在，自动从资源模块加载创建
-        /// </summary>
         public GameObject Get(string assetPath)
         {
-            // 获取或创建对象池
-            if (!_pools.TryGetValue(assetPath, out GameObjectPool pool))
+            GameObjectPool pool = GetOrCreateResourcePool(assetPath, null);
+            if (pool == null)
             {
-                pool = CreatePoolFromResource(assetPath);
-                if (pool == null)
-                {
-                    Debug.LogError($"[PoolComponent] Failed to create pool for '{assetPath}'");
-                    return null;
-                }
+                Debug.LogError($"[PoolComponent] Failed to create pool for '{assetPath}'");
+                return null;
             }
 
             GameObject obj = pool.Get();
             if (obj != null)
-            {
                 _objectInstanceToPoolName[obj.GetInstanceID()] = assetPath;
-            }
 
             return obj;
         }
@@ -57,12 +62,6 @@ namespace CrystalMagic.Core {
             return obj;
         }
 
-        /// <summary>
-        /// 从池中获取对象（使用预制体实例）
-        /// 如果池不存在，会自动创建
-        /// 根据预制体实例的 GetInstanceID 创建唯一的对象池
-        /// 这样即使名字相同，不同的预制体实例也会有不同的对象池
-        /// </summary>
         public GameObject Get(GameObject prefab)
         {
             if (prefab == null)
@@ -71,26 +70,12 @@ namespace CrystalMagic.Core {
                 return null;
             }
 
-            // 使用实例 ID 作为唯一标识符
-            int prefabInstanceId = prefab.GetInstanceID();
-            string poolName = _prefabInstanceToPoolName.ContainsKey(prefabInstanceId)
-                ? _prefabInstanceToPoolName[prefabInstanceId]
-                : GeneratePoolName(prefab, prefabInstanceId);
-
-            // 获取或创建对象池
-            if (!_pools.TryGetValue(poolName, out GameObjectPool pool))
-            {
-                pool = new GameObjectPool(prefab, initialSize: 0, maxSize: 10, _poolContainer);
-                _pools[poolName] = pool;
-                _prefabInstanceToPoolName[prefabInstanceId] = poolName;
-                Debug.Log($"[PoolComponent] Auto-created pool '{poolName}' from prefab '{prefab.name}' (Instance ID: {prefabInstanceId})");
-            }
+            PoolCapacitySettings settings = ResolvePoolCapacity(prefab);
+            GameObjectPool pool = GetOrCreatePrefabPool(prefab, settings, out string poolName);
 
             GameObject obj = pool.Get();
             if (obj != null)
-            {
                 _objectInstanceToPoolName[obj.GetInstanceID()] = poolName;
-            }
 
             return obj;
         }
@@ -102,29 +87,41 @@ namespace CrystalMagic.Core {
             return obj;
         }
 
-        /// <summary>
-        /// 生成唯一的池名称
-        /// </summary>
-        private string GeneratePoolName(GameObject prefab, int instanceId)
+        public void EnsurePool(GameObject prefab, int maxSize, int initialSize = 0)
         {
-            return $"{prefab.name}_{instanceId}";
+            if (prefab == null)
+            {
+                Debug.LogError("[PoolComponent] Cannot ensure pool from null prefab");
+                return;
+            }
+
+            PoolCapacitySettings settings = CreateExplicitCapacity(initialSize, maxSize);
+            GetOrCreatePrefabPool(prefab, settings, out _);
         }
 
-        /// <summary>
-        /// 释放对象回到池中
-        /// </summary>
+        public void EnsurePool(string assetPath, int maxSize, int initialSize = 0)
+        {
+            if (string.IsNullOrWhiteSpace(assetPath))
+            {
+                Debug.LogError("[PoolComponent] Cannot ensure pool from empty asset path");
+                return;
+            }
+
+            PoolCapacitySettings settings = CreateExplicitCapacity(initialSize, maxSize);
+            GetOrCreateResourcePool(assetPath, settings);
+        }
+
         public void Release(GameObject obj)
         {
             if (obj == null)
                 return;
 
-            // 归还到池中时设置为 inactive
             obj.SetActive(false);
             RemoveOwnerObject(obj);
 
             int objectInstanceId = obj.GetInstanceID();
-            if (_objectInstanceToPoolName.TryGetValue(objectInstanceId, out string mappedPoolName)
-                && _pools.TryGetValue(mappedPoolName, out GameObjectPool mappedPool))
+            if (_objectInstanceToPoolName.TryGetValue(objectInstanceId, out string mappedPoolName) &&
+                _pools.TryGetValue(mappedPoolName, out GameObjectPool mappedPool))
             {
                 mappedPool.Return(obj);
                 return;
@@ -137,14 +134,13 @@ namespace CrystalMagic.Core {
             }
             else
             {
-                // 尝试找到包含该对象名字的第一个池
-                foreach (var kvp in _pools)
+                foreach (KeyValuePair<string, GameObjectPool> kvp in _pools)
                 {
-                    if (kvp.Key.StartsWith(poolName))
-                    {
-                        kvp.Value.Return(obj);
-                        return;
-                    }
+                    if (!kvp.Key.StartsWith(poolName))
+                        continue;
+
+                    kvp.Value.Return(obj);
+                    return;
                 }
 
                 Debug.LogWarning($"[PoolComponent] Object '{poolName}' pool not found, destroying object");
@@ -162,79 +158,33 @@ namespace CrystalMagic.Core {
             _ownerObjects.Remove(ownerKey);
 
             for (int i = 0; i < snapshot.Length; i++)
-            {
                 Release(snapshot[i]);
-            }
         }
 
-        /// <summary>
-        /// 销毁指定对象池
-        /// </summary>
         public void DestroyPool(string poolName)
         {
-            if (_pools.TryGetValue(poolName, out GameObjectPool pool))
-            {
-                pool.Clear();
-                _pools.Remove(poolName);
-                if (_resourcePoolPrefabs.TryGetValue(poolName, out GameObject prefab))
-                {
-                    ResourceComponent.Instance.Unload(prefab);
-                    _resourcePoolPrefabs.Remove(poolName);
-                }
-                Debug.Log($"[PoolComponent] Destroyed pool: {poolName}");
-            }
-        }
+            if (!_pools.TryGetValue(poolName, out GameObjectPool pool))
+                return;
 
-        /// <summary>
-        /// 从资源模块加载资源并创建对象池
-        /// </summary>
-        private GameObjectPool CreatePoolFromResource(string assetPath)
-        {
-            GameObject prefab = TryLoadPrefab(assetPath);
+            pool.Clear();
+            _pools.Remove(poolName);
 
-            if (prefab == null)
-            {
-                Debug.LogError($"[PoolComponent] Cannot find resource for '{assetPath}'");
-                return null;
-            }
-
-            GameObjectPool pool = new GameObjectPool(prefab, initialSize: 0, maxSize: 10, _poolContainer);
-            _pools[assetPath] = pool;
-            _resourcePoolPrefabs[assetPath] = prefab;
-
-            Debug.Log($"[PoolComponent] Created pool '{assetPath}' from resource");
-            return pool;
-        }
-
-        /// <summary>
-        /// 尝试加载预制体
-        /// </summary>
-        private GameObject TryLoadPrefab(string assetPath)
-        {
-
-            GameObject prefab = ResourceComponent.Instance.Load<GameObject>(assetPath);
-
-            if (prefab != null)
-                return prefab;
-
-            Debug.LogWarning($"[PoolComponent] Cannot find resource for '{assetPath}'");
-            return null;
-        }
-
-        /// <summary>
-        /// 清空所有对象池
-        /// </summary>
-        public void ClearAllPools()
-        {
-            foreach (var pool in _pools.Values)
-            {
-                pool.Clear();
-            }
-
-            foreach (GameObject prefab in _resourcePoolPrefabs.Values)
+            if (_resourcePoolPrefabs.TryGetValue(poolName, out GameObject prefab))
             {
                 ResourceComponent.Instance.Unload(prefab);
+                _resourcePoolPrefabs.Remove(poolName);
             }
+
+            Debug.Log($"[PoolComponent] Destroyed pool: {poolName}");
+        }
+
+        public void ClearAllPools()
+        {
+            foreach (GameObjectPool pool in _pools.Values)
+                pool.Clear();
+
+            foreach (GameObject prefab in _resourcePoolPrefabs.Values)
+                ResourceComponent.Instance.Unload(prefab);
 
             _pools.Clear();
             _prefabInstanceToPoolName.Clear();
@@ -249,10 +199,97 @@ namespace CrystalMagic.Core {
         {
             ClearAllPools();
             if (_poolContainer != null)
-            {
                 Object.Destroy(_poolContainer.gameObject);
-            }
             base.Cleanup();
+        }
+
+        private GameObjectPool GetOrCreatePrefabPool(GameObject prefab, PoolCapacitySettings settings, out string poolName)
+        {
+            int prefabInstanceId = prefab.GetInstanceID();
+            if (!_prefabInstanceToPoolName.TryGetValue(prefabInstanceId, out poolName))
+            {
+                poolName = GeneratePoolName(prefab, prefabInstanceId);
+                _prefabInstanceToPoolName[prefabInstanceId] = poolName;
+            }
+
+            if (_pools.TryGetValue(poolName, out GameObjectPool pool))
+            {
+                pool.EnsureCapacity(settings.InitialSize, settings.MaxSize);
+                return pool;
+            }
+
+            pool = new GameObjectPool(prefab, settings.InitialSize, settings.MaxSize, _poolContainer);
+            _pools[poolName] = pool;
+            Debug.Log($"[PoolComponent] Auto-created pool '{poolName}' from prefab '{prefab.name}' (Instance ID: {prefabInstanceId})");
+            return pool;
+        }
+
+        private GameObjectPool GetOrCreateResourcePool(string assetPath, PoolCapacitySettings? overrideSettings)
+        {
+            if (_pools.TryGetValue(assetPath, out GameObjectPool pool))
+            {
+                if (overrideSettings.HasValue)
+                    pool.EnsureCapacity(overrideSettings.Value.InitialSize, overrideSettings.Value.MaxSize);
+                return pool;
+            }
+
+            GameObject prefab = TryLoadPrefab(assetPath);
+            if (prefab == null)
+            {
+                Debug.LogError($"[PoolComponent] Cannot find resource for '{assetPath}'");
+                return null;
+            }
+
+            PoolCapacitySettings settings = overrideSettings ?? ResolvePoolCapacity(prefab);
+            pool = new GameObjectPool(prefab, settings.InitialSize, settings.MaxSize, _poolContainer);
+            _pools[assetPath] = pool;
+            _resourcePoolPrefabs[assetPath] = prefab;
+
+            Debug.Log($"[PoolComponent] Created pool '{assetPath}' from resource");
+            return pool;
+        }
+
+        private GameObject TryLoadPrefab(string assetPath)
+        {
+            GameObject prefab = ResourceComponent.Instance.Load<GameObject>(assetPath);
+            if (prefab != null)
+                return prefab;
+
+            Debug.LogWarning($"[PoolComponent] Cannot find resource for '{assetPath}'");
+            return null;
+        }
+
+        private static string GeneratePoolName(GameObject prefab, int instanceId)
+        {
+            return $"{prefab.name}_{instanceId}";
+        }
+
+        private static PoolCapacitySettings ResolvePoolCapacity(GameObject prefab)
+        {
+            PoolPreset preset = prefab != null ? prefab.GetComponent<PoolPreset>() : null;
+            return CreateTierCapacity(preset != null ? preset.Tier : PoolPresetTier.Medium);
+        }
+
+        private static PoolCapacitySettings CreateTierCapacity(PoolPresetTier tier)
+        {
+            GameConfig config = ConfigComponent.Instance.Get<GameConfig>();
+            return tier switch
+            {
+                PoolPresetTier.Single => new PoolCapacitySettings(0, Mathf.Max(1, config.SinglePoolMaxSize)),
+                PoolPresetTier.Small => new PoolCapacitySettings(0, Mathf.Max(1, config.SmallPoolMaxSize)),
+                PoolPresetTier.Large => new PoolCapacitySettings(0, Mathf.Max(1, config.LargePoolMaxSize)),
+                _ => new PoolCapacitySettings(0, Mathf.Max(1, config.MediumPoolMaxSize)),
+            };
+        }
+
+        private static PoolCapacitySettings CreateExplicitCapacity(int initialSize, int maxSize)
+        {
+            int normalizedInitialSize = Mathf.Max(0, initialSize);
+            int normalizedMaxSize = Mathf.Max(1, maxSize);
+            if (normalizedInitialSize > normalizedMaxSize)
+                normalizedMaxSize = normalizedInitialSize;
+
+            return new PoolCapacitySettings(normalizedInitialSize, normalizedMaxSize);
         }
 
         private void TrackOwnerObject(string ownerKey, GameObject obj)
@@ -287,9 +324,7 @@ namespace CrystalMagic.Core {
 
             objects.Remove(obj);
             if (objects.Count == 0)
-            {
                 _ownerObjects.Remove(ownerKey);
-            }
         }
     }
 }

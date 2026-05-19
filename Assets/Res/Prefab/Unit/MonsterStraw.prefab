@@ -26,6 +26,7 @@ GameObject:
   - component: {fileID: 504064578263819207}
   - component: {fileID: 504064578263819208}
   - component: {fileID: 504064578263819209}
+  - component: {fileID: 639147834838326920}
   m_Layer: 0
   m_Name: MonsterStraw
   m_TagString: Untagged
@@ -310,3 +311,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7d289ce0ed64a3ebb2731962965e693, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &639147834838326920
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 28937165386333400}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7158f745a79344da8b819f7efbe30340, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Tier: 3

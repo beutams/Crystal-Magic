@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 3979441615642440016}
   - component: {fileID: 3562280644150175891}
   - component: {fileID: 5214788997446170976}
+  - component: {fileID: 639147834836942385}
   m_Layer: 5
   m_Name: TipForm
   m_TagString: Untagged
@@ -228,3 +229,16 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &639147834836942385
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5137426116843058905}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7158f745a79344da8b819f7efbe30340, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Tier: 0

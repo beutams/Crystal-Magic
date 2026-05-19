@@ -40,6 +40,14 @@ namespace CrystalMagic.Core
             return view;
         }
 
+        public static void EnsurePoolCapacity(UISubViewBase templateView, int maxSize, int initialSize = 0)
+        {
+            if (templateView == null || PoolComponent.Instance == null)
+                return;
+
+            PoolComponent.Instance.EnsurePool(templateView.gameObject, maxSize, initialSize);
+        }
+
         public static void ReleaseToPool(UISubViewBase view)
         {
             if (view == null)

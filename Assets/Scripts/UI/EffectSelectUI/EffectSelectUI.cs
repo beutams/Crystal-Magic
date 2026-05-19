@@ -63,10 +63,16 @@ public class EffectSelectUI : UIBase<EffectSelectUIData, EffectSelectUIModel>
             _itemViews.RemoveAt(lastIndex);
         }
 
+        EffectSelectUI_ItemView templateView = UI.ScrollView_Viewport_Content_Item.GameObject.GetComponent<EffectSelectUI_ItemView>();
+        if (templateView == null)
+            return;
+
+        UISubViewBase.EnsurePoolCapacity(templateView, itemCount, itemCount);
+
         while (_itemViews.Count < itemCount)
         {
             EffectSelectUI_ItemView itemView = UISubViewBase.AcquireFromPool(
-                UI.ScrollView_Viewport_Content_Item.GameObject.GetComponent<EffectSelectUI_ItemView>(),
+                templateView,
                 UI.ScrollView_Viewport_Content.GameObject.transform);
             if (itemView == null)
                 break;

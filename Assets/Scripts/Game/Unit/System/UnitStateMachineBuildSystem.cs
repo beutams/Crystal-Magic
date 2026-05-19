@@ -15,7 +15,8 @@ partial class UnitStateMachineBuildSystem : SystemBase
         base.OnCreate();
         _factory = new StateMachineFactory();
         _comparatorFactory = new ComparatorFactory();
-        StateMachineRegistry.RegisterAll(_factory, _comparatorFactory);
+        StateMachineRegistry.RegisterAll(_factory);
+        ComparatorRegistry.RegisterAll(_comparatorFactory);
         Debug.Log($"[StateMachine] 工厂注册完成 - State: {_factory.StateCount}  ISource: {_comparatorFactory.SourceCount}  ICompareType: {_comparatorFactory.CompareCount}");
     }
 

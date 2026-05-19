@@ -65,6 +65,8 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
         if (templateView == null)
             return;
 
+        UISubViewBase.EnsurePoolCapacity(templateView, itemCount, itemCount);
+
         while (_skillItemViews.Count < itemCount)
         {
             BattleUI_SkillItemView itemView = UISubViewBase.AcquireFromPool(templateView, UI.SkillChain_Viewport_Content.GameObject.transform);

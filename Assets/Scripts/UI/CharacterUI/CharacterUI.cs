@@ -122,9 +122,15 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
             _skillItemViews.RemoveAt(lastIndex);
         }
 
+        CharacterUI_SkillItemView templateView = UI.Skill_SkillChain_Viewport_Content_SkillItem.GameObject.GetComponent<CharacterUI_SkillItemView>();
+        if (templateView == null)
+            return;
+
+        UISubViewBase.EnsurePoolCapacity(templateView, itemCount, itemCount);
+
         while (_skillItemViews.Count < itemCount)
         {
-            CharacterUI_SkillItemView itemView = UISubViewBase.AcquireFromPool(UI.Skill_SkillChain_Viewport_Content_SkillItem.GameObject.GetComponent<CharacterUI_SkillItemView>(), UI.Skill_SkillChain_Viewport_Content.GameObject.transform);
+            CharacterUI_SkillItemView itemView = UISubViewBase.AcquireFromPool(templateView, UI.Skill_SkillChain_Viewport_Content.GameObject.transform);
             if (itemView == null)
                 break;
 
@@ -145,9 +151,15 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
             _inventoryItemViews.RemoveAt(lastIndex);
         }
 
+        CharacterUI_InventoryItemView templateView = UI.InventoryView_Viewport_Content_InventoryItem.GameObject.GetComponent<CharacterUI_InventoryItemView>();
+        if (templateView == null)
+            return;
+
+        UISubViewBase.EnsurePoolCapacity(templateView, itemCount, itemCount);
+
         while (_inventoryItemViews.Count < itemCount)
         {
-            CharacterUI_InventoryItemView itemView = UISubViewBase.AcquireFromPool(UI.InventoryView_Viewport_Content_InventoryItem.GameObject.GetComponent<CharacterUI_InventoryItemView>(), UI.InventoryView_Viewport_Content.GameObject.transform);
+            CharacterUI_InventoryItemView itemView = UISubViewBase.AcquireFromPool(templateView, UI.InventoryView_Viewport_Content.GameObject.transform);
             if (itemView == null)
                 break;
 

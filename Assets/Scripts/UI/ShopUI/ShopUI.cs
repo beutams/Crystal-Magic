@@ -91,9 +91,15 @@ public class ShopUI : UIBase<ShopUIData, ShopUIModel>
             _commodityItemViews.RemoveAt(lastIndex);
         }
 
+        ShopUI_CommodityItemView templateView = UI.ShopView_Viewport_Content_CommodityItem.GameObject.GetComponent<ShopUI_CommodityItemView>();
+        if (templateView == null)
+            return;
+
+        UISubViewBase.EnsurePoolCapacity(templateView, itemCount, itemCount);
+
         while (_commodityItemViews.Count < itemCount)
         {
-            ShopUI_CommodityItemView itemView = UISubViewBase.AcquireFromPool(UI.ShopView_Viewport_Content_CommodityItem.GameObject.GetComponent<ShopUI_CommodityItemView>(), UI.ShopView_Viewport_Content.GameObject.transform);
+            ShopUI_CommodityItemView itemView = UISubViewBase.AcquireFromPool(templateView, UI.ShopView_Viewport_Content.GameObject.transform);
             if (itemView == null)
                 break;
 
@@ -114,9 +120,15 @@ public class ShopUI : UIBase<ShopUIData, ShopUIModel>
             _inventoryItemViews.RemoveAt(lastIndex);
         }
 
+        ShopUI_InventoryItemView templateView = UI.InventoryView_Viewport_Content_InventoryItem.GameObject.GetComponent<ShopUI_InventoryItemView>();
+        if (templateView == null)
+            return;
+
+        UISubViewBase.EnsurePoolCapacity(templateView, itemCount, itemCount);
+
         while (_inventoryItemViews.Count < itemCount)
         {
-            ShopUI_InventoryItemView itemView = UISubViewBase.AcquireFromPool(UI.InventoryView_Viewport_Content_InventoryItem.GameObject.GetComponent<ShopUI_InventoryItemView>(), UI.InventoryView_Viewport_Content.GameObject.transform);
+            ShopUI_InventoryItemView itemView = UISubViewBase.AcquireFromPool(templateView, UI.InventoryView_Viewport_Content.GameObject.transform);
             if (itemView == null)
                 break;
 

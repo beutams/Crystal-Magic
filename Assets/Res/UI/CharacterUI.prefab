@@ -1963,6 +1963,7 @@ GameObject:
   - component: {fileID: 3979441615642440016}
   - component: {fileID: 3562280644150175891}
   - component: {fileID: 7323259490526543557}
+  - component: {fileID: 639147834831477691}
   m_Layer: 5
   m_Name: CharacterUI
   m_TagString: Untagged
@@ -3337,3 +3338,16 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &639147834831477691
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5137426116843058905}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7158f745a79344da8b819f7efbe30340, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Tier: 0
