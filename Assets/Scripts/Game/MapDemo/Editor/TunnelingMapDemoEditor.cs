@@ -16,6 +16,9 @@ namespace CrystalMagic.Game.MapDemo.Editor
             TunnelingMapDemo demo = (TunnelingMapDemo)target;
 
             EditorGUILayout.Space();
+            EditorGUILayout.HelpBox($"统计文件: {TunnelingMapDemo.GenerationReportFilePath}", MessageType.Info);
+
+            EditorGUILayout.Space();
             using (new EditorGUILayout.HorizontalScope())
             {
                 if (GUILayout.Button("生成"))
@@ -28,6 +31,9 @@ namespace CrystalMagic.Game.MapDemo.Editor
                     demo.ClearDemoMap();
             }
 
+            EditorGUILayout.Space();
+            if (GUILayout.Button("清空统计文件"))
+                demo.ClearGenerationReportFile();
         }
     }
 }

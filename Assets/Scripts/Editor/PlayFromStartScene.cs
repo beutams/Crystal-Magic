@@ -11,10 +11,10 @@ namespace CrystalMagic.Editor
     {
         private const string StartScenePath = "Assets/Scenes/Start.unity";
 
-        static PlayFromStartScene()
+/*        static PlayFromStartScene()
         {
             EditorSceneManager.playModeStartScene =
                 AssetDatabase.LoadAssetAtPath<SceneAsset>(StartScenePath);
-        }
+        }*/
     }
 }
