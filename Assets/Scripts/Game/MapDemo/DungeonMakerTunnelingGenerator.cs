@@ -63,19 +63,60 @@ namespace CrystalMagic.Game.MapDemo
         AnteRoom = 2,
     }
 
+    public enum DungeonMakerRoomSizeClass : byte
+    {
+        None = 0,
+        Small = 1,
+        Medium = 2,
+        Large = 3,
+    }
+
+    public enum DungeonMakerSpecialRoomRole : byte
+    {
+        None = 0,
+        Start = 1,
+        NextLevel = 2,
+    }
+
+    public enum DungeonMakerTileOrigin : byte
+    {
+        None = 0,
+        BoundaryClosed = 1,
+        TunnelCarve = 2,
+        TunnelOffsetJoin = 3,
+        TunnelParallelJoinLead = 4,
+        TunnelParallelJoinExtend = 5,
+        TunnelProbeRestore = 6,
+        AnteRoomCarve = 7,
+        RoomCarve = 8,
+        DoorPlacement = 9,
+        ColumnPlacement = 10,
+        MonsterPlacement = 11,
+        TreasurePlacement = 12,
+    }
+
     [Serializable]
     public sealed class DungeonMakerRegion
     {
-        public DungeonMakerRegion(int id, DungeonMakerRegionKind kind, int[] tileIndices)
+        public DungeonMakerRegion(
+            int id,
+            DungeonMakerRegionKind kind,
+            int[] tileIndices,
+            DungeonMakerRoomSizeClass roomSizeClass = DungeonMakerRoomSizeClass.None,
+            DungeonMakerSpecialRoomRole specialRoomRole = DungeonMakerSpecialRoomRole.None)
         {
             Id = id;
             Kind = kind;
             TileIndices = tileIndices;
+            RoomSizeClass = roomSizeClass;
+            SpecialRoomRole = specialRoomRole;
         }
 
         public int Id { get; }
         public DungeonMakerRegionKind Kind { get; }
         public int[] TileIndices { get; }
+        public DungeonMakerRoomSizeClass RoomSizeClass { get; }
+        public DungeonMakerSpecialRoomRole SpecialRoomRole { get; }
     }
 
     [Serializable]
@@ -111,29 +152,88 @@ namespace CrystalMagic.Game.MapDemo
         public int BlockedTiles;
     }
 
+    [Serializable]
+    public sealed class DungeonMakerSkeletonSegment
+    {
+        public DungeonMakerSkeletonSegment(int id, int builderId, Vector2Int start, Vector2Int end, int[] ownedTileIndices)
+        {
+            Id = id;
+            BuilderId = builderId;
+            Start = start;
+            End = end;
+            OwnedTileIndices = ownedTileIndices;
+        }
+
+        public int Id { get; }
+        public int BuilderId { get; }
+        public Vector2Int Start { get; }
+        public Vector2Int End { get; }
+        public int[] OwnedTileIndices { get; }
+    }
+
+    [Serializable]
+    public sealed class DungeonMakerSkeletonLink
+    {
+        public DungeonMakerSkeletonLink(int fromSegmentId, int toSegmentId, Vector2Int from, Vector2Int to)
+        {
+            FromSegmentId = fromSegmentId;
+            ToSegmentId = toSegmentId;
+            From = from;
+            To = to;
+        }
+
+        public int FromSegmentId { get; }
+        public int ToSegmentId { get; }
+        public Vector2Int From { get; }
+        public Vector2Int To { get; }
+    }
+
+    [Serializable]
+    public sealed class DungeonMakerSkeletonAttachment
+    {
+        public DungeonMakerSkeletonAttachment(int segmentId)
+        {
+            SegmentId = segmentId;
+        }
+
+        public int SegmentId { get; }
+    }
+
     // 生成完成后的只读结果对象。
     // 只保留地图数组和显示坐标转换，不承担任何运行时生成职责。
     public sealed class DungeonMakerTunnelingResult
     {
         private readonly DungeonMakerSquareData[] _map;
+        private readonly DungeonMakerTileOrigin[] _originMap;
         private readonly DungeonMakerSkeletonKind[] _skeletonMap;
         private readonly DungeonMakerRegion[] _regions;
+        private readonly DungeonMakerSkeletonSegment[] _skeletonSegments;
+        private readonly DungeonMakerSkeletonLink[] _skeletonLinks;
+        private readonly DungeonMakerSkeletonAttachment[] _skeletonAttachments;
 
         public DungeonMakerTunnelingResult(
             int sourceWidth,
             int sourceHeight,
             int seed,
             DungeonMakerSquareData[] map,
+            DungeonMakerTileOrigin[] originMap,
             DungeonMakerSkeletonKind[] skeletonMap,
             DungeonMakerRegion[] regions,
+            DungeonMakerSkeletonSegment[] skeletonSegments,
+            DungeonMakerSkeletonLink[] skeletonLinks,
+            DungeonMakerSkeletonAttachment[] skeletonAttachments,
             DungeonMakerTunnelingStats stats)
         {
             SourceWidth = sourceWidth;
             SourceHeight = sourceHeight;
             Seed = seed;
             _map = map;
+            _originMap = originMap;
             _skeletonMap = skeletonMap;
             _regions = regions;
+            _skeletonSegments = skeletonSegments;
+            _skeletonLinks = skeletonLinks;
+            _skeletonAttachments = skeletonAttachments;
             Stats = stats;
         }
 
@@ -144,6 +244,9 @@ namespace CrystalMagic.Game.MapDemo
         public int Seed { get; }
         public DungeonMakerTunnelingStats Stats { get; }
         public IReadOnlyList<DungeonMakerRegion> Regions => _regions;
+        public IReadOnlyList<DungeonMakerSkeletonSegment> SkeletonSegments => _skeletonSegments;
+        public IReadOnlyList<DungeonMakerSkeletonLink> SkeletonLinks => _skeletonLinks;
+        public IReadOnlyList<DungeonMakerSkeletonAttachment> SkeletonAttachments => _skeletonAttachments;
 
         public DungeonMakerSquareData GetSourceTile(int x, int y)
         {
@@ -153,6 +256,16 @@ namespace CrystalMagic.Game.MapDemo
         public DungeonMakerSquareData GetDisplayTile(int x, int y)
         {
             return GetSourceTile(y, x);
+        }
+
+        public DungeonMakerTileOrigin GetSourceOrigin(int x, int y)
+        {
+            return _originMap[x * SourceHeight + y];
+        }
+
+        public DungeonMakerTileOrigin GetDisplayOrigin(int x, int y)
+        {
+            return GetSourceOrigin(y, x);
         }
 
         public DungeonMakerSkeletonKind GetSourceSkeletonKind(int x, int y)
@@ -166,6 +279,49 @@ namespace CrystalMagic.Game.MapDemo
     {
         public const int DefaultSeed = 1015776839;
         public const int DefaultTimeoutMs = 3000;
+
+        internal readonly struct StepResult
+        {
+            public StepResult(bool changedMap, bool advancedGeneration, bool hasMoreBuilders, int activeGeneration, int liveBuilderCount)
+            {
+                ChangedMap = changedMap;
+                AdvancedGeneration = advancedGeneration;
+                HasMoreBuilders = hasMoreBuilders;
+                ActiveGeneration = activeGeneration;
+                LiveBuilderCount = liveBuilderCount;
+            }
+
+            public bool ChangedMap { get; }
+            public bool AdvancedGeneration { get; }
+            public bool HasMoreBuilders { get; }
+            public int ActiveGeneration { get; }
+            public int LiveBuilderCount { get; }
+        }
+
+        internal sealed class Stepper
+        {
+            private readonly DungeonRuntime _runtime;
+
+            public Stepper(int seed, DungeonMakerTunnelingConfig config = null, int timeoutMs = DefaultTimeoutMs)
+            {
+                _runtime = new DungeonRuntime(seed == 0 ? DefaultSeed : seed, config ?? DungeonMakerTunnelingConfig.CreateDefault(), timeoutMs);
+            }
+
+            public int Seed => _runtime.Seed;
+            public bool HasMoreBuilders => _runtime.HasAnyBuilders();
+            public int ActiveGeneration => _runtime.ActiveGeneration;
+            public int LiveBuilderCount => _runtime.LiveBuilderCount;
+
+            public StepResult StepOnce()
+            {
+                return _runtime.StepOnce();
+            }
+
+            public DungeonMakerTunnelingResult BuildResult()
+            {
+                return _runtime.BuildResult();
+            }
+        }
 
         // 生成流程入口：
         // 1. 创建运行时上下文
@@ -193,12 +349,17 @@ namespace CrystalMagic.Game.MapDemo
             private readonly List<Builder> _builders = new();
             private readonly List<Room> _rooms = new();
             private readonly List<DungeonMakerRegion> _regions = new();
+            private readonly List<DungeonMakerSkeletonSegment> _skeletonSegments = new();
+            private readonly List<DungeonMakerSkeletonLink> _skeletonLinks = new();
+            private readonly HashSet<int> _valuableSkeletonSegmentIds = new();
+            private readonly Dictionary<int, int> _builderCurrentSkeletonSegmentIds = new();
             private readonly DungeonConfig _config;
             private readonly Stopwatch _timeoutWatch = new();
             private readonly int _timeoutMs;
 
             // 一维地图数组，索引规则是 x * DimY + y。
             private DungeonMakerSquareData[] _map;
+            private DungeonMakerTileOrigin[] _originMap;
             private DungeonMakerSkeletonKind[] _skeletonMap;
             // 当前 iteration 是否真的改动过地图。
             private bool _changedThisIteration;
@@ -216,6 +377,7 @@ namespace CrystalMagic.Game.MapDemo
             private int _peakLiveBuilders;
             private int _nextBuilderId = 1;
             private int _nextRegionId = 1;
+            private int _nextSkeletonSegmentId = 1;
 
             public DungeonRuntime(int seed, DungeonMakerTunnelingConfig config, int timeoutMs)
             {
@@ -227,6 +389,7 @@ namespace CrystalMagic.Game.MapDemo
             }
 
             public int Seed { get; }
+            public int LiveBuilderCount => CountLiveBuilders();
 
             // 主生成循环：
             // - 当前代不停迭代，直到这一轮已经没人再改图
@@ -265,12 +428,39 @@ namespace CrystalMagic.Game.MapDemo
                 _timeoutWatch.Stop();
             }
 
+            public bool HasAnyBuilders()
+            {
+                return CountLiveBuilders() > 0;
+            }
+
+            public StepResult StepOnce()
+            {
+                _timeoutWatch.Restart();
+                try
+                {
+                    GuardTimeout();
+                    bool changed = MakeIteration();
+                    bool advancedGeneration = false;
+                    if (!changed)
+                        advancedGeneration = AdvanceGeneration();
+
+                    bool hasMoreBuilders = HasAnyBuilders();
+                    return new StepResult(changed, advancedGeneration, hasMoreBuilders, _activeGeneration, CountLiveBuilders());
+                }
+                finally
+                {
+                    _timeoutWatch.Stop();
+                }
+            }
+
             // 复制地图数据并导出结果，避免外部直接持有内部运行时数组。
             public DungeonMakerTunnelingResult BuildResult()
             {
                 DungeonMakerSquareData[] copiedMap = new DungeonMakerSquareData[_map.Length];
+                DungeonMakerTileOrigin[] copiedOriginMap = new DungeonMakerTileOrigin[_originMap.Length];
                 DungeonMakerSkeletonKind[] copiedSkeletonMap = new DungeonMakerSkeletonKind[_skeletonMap.Length];
                 Array.Copy(_map, copiedMap, _map.Length);
+                Array.Copy(_originMap, copiedOriginMap, _originMap.Length);
                 Array.Copy(_skeletonMap, copiedSkeletonMap, _skeletonMap.Length);
                 DungeonMakerRegion[] copiedRegions = new DungeonMakerRegion[_regions.Count];
                 for (int i = 0; i < _regions.Count; i++)
@@ -278,10 +468,30 @@ namespace CrystalMagic.Game.MapDemo
                     DungeonMakerRegion region = _regions[i];
                     int[] tileIndices = new int[region.TileIndices.Length];
                     Array.Copy(region.TileIndices, tileIndices, tileIndices.Length);
-                    copiedRegions[i] = new DungeonMakerRegion(region.Id, region.Kind, tileIndices);
+                    copiedRegions[i] = new DungeonMakerRegion(region.Id, region.Kind, tileIndices, region.RoomSizeClass, region.SpecialRoomRole);
                 }
 
-                return new DungeonMakerTunnelingResult(_config.DimX, _config.DimY, Seed, copiedMap, copiedSkeletonMap, copiedRegions, BuildStats(copiedMap));
+                DungeonMakerSkeletonSegment[] copiedSkeletonSegments = new DungeonMakerSkeletonSegment[_skeletonSegments.Count];
+                for (int i = 0; i < _skeletonSegments.Count; i++)
+                {
+                    DungeonMakerSkeletonSegment segment = _skeletonSegments[i];
+                    int[] ownedTileIndices = new int[segment.OwnedTileIndices.Length];
+                    Array.Copy(segment.OwnedTileIndices, ownedTileIndices, ownedTileIndices.Length);
+                    copiedSkeletonSegments[i] = new DungeonMakerSkeletonSegment(segment.Id, segment.BuilderId, segment.Start, segment.End, ownedTileIndices);
+                }
+
+                DungeonMakerSkeletonLink[] copiedSkeletonLinks = new DungeonMakerSkeletonLink[_skeletonLinks.Count];
+                for (int i = 0; i < _skeletonLinks.Count; i++)
+                {
+                    DungeonMakerSkeletonLink link = _skeletonLinks[i];
+                    copiedSkeletonLinks[i] = new DungeonMakerSkeletonLink(link.FromSegmentId, link.ToSegmentId, link.From, link.To);
+                }
+                DungeonMakerSkeletonAttachment[] copiedSkeletonAttachments = new DungeonMakerSkeletonAttachment[_valuableSkeletonSegmentIds.Count];
+                int attachmentIndex = 0;
+                foreach (int segmentId in _valuableSkeletonSegmentIds)
+                    copiedSkeletonAttachments[attachmentIndex++] = new DungeonMakerSkeletonAttachment(segmentId);
+
+                return new DungeonMakerTunnelingResult(_config.DimX, _config.DimY, Seed, copiedMap, copiedOriginMap, copiedSkeletonMap, copiedRegions, copiedSkeletonSegments, copiedSkeletonLinks, copiedSkeletonAttachments, BuildStats(copiedMap));
             }
 
             private DungeonMakerTunnelingStats BuildStats(DungeonMakerSquareData[] map)
@@ -396,14 +606,15 @@ namespace CrystalMagic.Game.MapDemo
                 _peakLiveBuilders = 0;
 
                 _map = new DungeonMakerSquareData[_config.DimX * _config.DimY];
+                _originMap = new DungeonMakerTileOrigin[_config.DimX * _config.DimY];
                 _skeletonMap = new DungeonMakerSkeletonKind[_config.DimX * _config.DimY];
                 for (int i = 0; i < _map.Length; i++)
                     _map[i] = _config.Background;
 
-                SetRect(0, 0, _config.DimX - 1, 0, DungeonMakerSquareData.G_CLOSED);
-                SetRect(0, 0, 0, _config.DimY - 1, DungeonMakerSquareData.G_CLOSED);
-                SetRect(_config.DimX - 1, 0, _config.DimX - 1, _config.DimY - 1, DungeonMakerSquareData.G_CLOSED);
-                SetRect(0, _config.DimY - 1, _config.DimX - 1, _config.DimY - 1, DungeonMakerSquareData.G_CLOSED);
+                SetRect(0, 0, _config.DimX - 1, 0, DungeonMakerSquareData.G_CLOSED, DungeonMakerTileOrigin.BoundaryClosed);
+                SetRect(0, 0, 0, _config.DimY - 1, DungeonMakerSquareData.G_CLOSED, DungeonMakerTileOrigin.BoundaryClosed);
+                SetRect(_config.DimX - 1, 0, _config.DimX - 1, _config.DimY - 1, DungeonMakerSquareData.G_CLOSED, DungeonMakerTileOrigin.BoundaryClosed);
+                SetRect(0, _config.DimY - 1, _config.DimX - 1, _config.DimY - 1, DungeonMakerSquareData.G_CLOSED, DungeonMakerTileOrigin.BoundaryClosed);
 
                 foreach (TunnelerSeed seed in _config.Tunnelers)
                 {
@@ -555,6 +766,13 @@ namespace CrystalMagic.Game.MapDemo
                         break;
                 }
 
+                if (hasParentAttachPoint)
+                {
+                    CommitSkeletonConnection(parentAttachPoint, location);
+                    MarkCorridorSkeleton(location);
+                    RegisterSkeletonLink(-1, -1, parentAttachPoint, location);
+                }
+
                 AddBuilder(new Tunneler(
                     this,
                     location,
@@ -592,6 +810,13 @@ namespace CrystalMagic.Game.MapDemo
                 IntCoordinate parentAttachPoint = default)
             {
                 _totalRoomiesCreated++;
+
+                if (hasParentAttachPoint)
+                {
+                    CommitSkeletonConnection(parentAttachPoint, location);
+                    MarkAnchorSkeleton(location);
+                }
+
                 AddBuilder(new Roomie(
                     this,
                     location,
@@ -804,16 +1029,22 @@ namespace CrystalMagic.Game.MapDemo
             }
 
             // 写地图格，并标记本轮 iteration 已有改动。
-            public void SetMap(IntCoordinate position, DungeonMakerSquareData value)
+            public void SetMap(IntCoordinate position, DungeonMakerSquareData value, DungeonMakerTileOrigin origin = DungeonMakerTileOrigin.None)
             {
-                _map[position.X * _config.DimY + position.Y] = value;
+                int index = position.X * _config.DimY + position.Y;
+                _map[index] = value;
+                if (origin != DungeonMakerTileOrigin.None)
+                    _originMap[index] = origin;
                 _changedThisIteration = true;
             }
 
             // 写地图格，并标记本轮 iteration 已有改动。
-            public void SetMap(int x, int y, DungeonMakerSquareData value)
+            public void SetMap(int x, int y, DungeonMakerSquareData value, DungeonMakerTileOrigin origin = DungeonMakerTileOrigin.None)
             {
-                _map[x * _config.DimY + y] = value;
+                int index = x * _config.DimY + y;
+                _map[index] = value;
+                if (origin != DungeonMakerTileOrigin.None)
+                    _originMap[index] = origin;
                 _changedThisIteration = true;
             }
 
@@ -834,13 +1065,17 @@ namespace CrystalMagic.Game.MapDemo
                 return position.X * _config.DimY + position.Y;
             }
 
-            public void RegisterRegion(DungeonMakerRegionKind kind, List<int> tileIndices)
+            public void RegisterRegion(
+                DungeonMakerRegionKind kind,
+                List<int> tileIndices,
+                DungeonMakerRoomSizeClass roomSizeClass = DungeonMakerRoomSizeClass.None,
+                DungeonMakerSpecialRoomRole specialRoomRole = DungeonMakerSpecialRoomRole.None)
             {
                 if (tileIndices == null || tileIndices.Count == 0)
                     return;
 
                 int[] copiedTileIndices = tileIndices.ToArray();
-                _regions.Add(new DungeonMakerRegion(_nextRegionId++, kind, copiedTileIndices));
+                _regions.Add(new DungeonMakerRegion(_nextRegionId++, kind, copiedTileIndices, roomSizeClass, specialRoomRole));
             }
 
             public void CommitSkeletonConnection(IntCoordinate start, IntCoordinate end)
@@ -861,8 +1096,44 @@ namespace CrystalMagic.Game.MapDemo
                 }
             }
 
+            public int GetCurrentSkeletonSegmentId(int builderId)
+            {
+                return _builderCurrentSkeletonSegmentIds.TryGetValue(builderId, out int segmentId)
+                    ? segmentId
+                    : -1;
+            }
+
+            public int RegisterSkeletonSegment(int builderId, IntCoordinate start, IntCoordinate end, List<int> ownedTileIndices)
+            {
+                int segmentId = _nextSkeletonSegmentId++;
+                int[] copiedOwnedTileIndices = ownedTileIndices != null ? ownedTileIndices.ToArray() : Array.Empty<int>();
+                _skeletonSegments.Add(new DungeonMakerSkeletonSegment(
+                    segmentId,
+                    builderId,
+                    new Vector2Int(start.X, start.Y),
+                    new Vector2Int(end.X, end.Y),
+                    copiedOwnedTileIndices));
+                _builderCurrentSkeletonSegmentIds[builderId] = segmentId;
+                return segmentId;
+            }
+
+            public void RegisterSkeletonLink(int fromSegmentId, int toSegmentId, IntCoordinate from, IntCoordinate to)
+            {
+                _skeletonLinks.Add(new DungeonMakerSkeletonLink(
+                    fromSegmentId,
+                    toSegmentId,
+                    new Vector2Int(from.X, from.Y),
+                    new Vector2Int(to.X, to.Y)));
+            }
+
+            public void MarkValuableSkeletonSegment(int segmentId)
+            {
+                if (segmentId >= 0)
+                    _valuableSkeletonSegmentIds.Add(segmentId);
+            }
+
             // 批量写一个矩形区域。
-            public void SetRect(int startX, int startY, int endX, int endY, DungeonMakerSquareData value)
+            public void SetRect(int startX, int startY, int endX, int endY, DungeonMakerSquareData value, DungeonMakerTileOrigin origin = DungeonMakerTileOrigin.None)
             {
                 if (endX < startX || endY < startY)
                     return;
@@ -870,7 +1141,7 @@ namespace CrystalMagic.Game.MapDemo
                 for (int x = startX; x <= endX; x++)
                 {
                     for (int y = startY; y <= endY; y++)
-                        SetMap(x, y, value);
+                        SetMap(x, y, value, origin);
                 }
             }
 
@@ -887,6 +1158,7 @@ namespace CrystalMagic.Game.MapDemo
         {
             private readonly bool _hasParentAttachPoint;
             private readonly IntCoordinate _parentAttachPoint;
+            private readonly int _parentSkeletonSegmentId;
             private bool _skeletonConnectionCommitted;
 
             protected Builder(
@@ -911,6 +1183,9 @@ namespace CrystalMagic.Game.MapDemo
                 ParentBuilderId = parentBuilderId;
                 _hasParentAttachPoint = hasParentAttachPoint;
                 _parentAttachPoint = parentAttachPoint;
+                _parentSkeletonSegmentId = parentBuilderId >= 0
+                    ? dungeon.GetCurrentSkeletonSegmentId(parentBuilderId)
+                    : -1;
             }
 
             protected DungeonRuntime Dungeon { get; }
@@ -941,6 +1216,52 @@ namespace CrystalMagic.Game.MapDemo
 
                 Dungeon.CommitSkeletonConnection(_parentAttachPoint, childEntryPoint);
                 _skeletonConnectionCommitted = true;
+            }
+
+            protected int CurrentSkeletonSegmentId { get; private set; } = -1;
+            protected IntCoordinate CurrentSkeletonSegmentEnd { get; private set; }
+            protected int ParentSkeletonSegmentId => _parentSkeletonSegmentId;
+
+            protected void RegisterLinearSkeletonSegment(IntCoordinate start, IntCoordinate end, bool anchorSegment, List<int> ownedTileIndices)
+            {
+                int previousSegmentId = CurrentSkeletonSegmentId;
+                int segmentId = Dungeon.RegisterSkeletonSegment(BuilderId, start, end, ownedTileIndices);
+
+                if (previousSegmentId >= 0)
+                {
+                    Dungeon.RegisterSkeletonLink(previousSegmentId, segmentId, CurrentSkeletonSegmentEnd, start);
+                }
+                else if (_parentSkeletonSegmentId >= 0 && _hasParentAttachPoint)
+                {
+                    Dungeon.RegisterSkeletonLink(_parentSkeletonSegmentId, segmentId, _parentAttachPoint, start);
+                }
+
+                CurrentSkeletonSegmentId = segmentId;
+                CurrentSkeletonSegmentEnd = end;
+
+                IntCoordinate current = start;
+                if (anchorSegment)
+                    Dungeon.MarkAnchorSkeleton(current);
+                else
+                    Dungeon.MarkCorridorSkeleton(current);
+
+                while (current.X != end.X)
+                {
+                    current = new IntCoordinate(current.X + Math.Sign(end.X - current.X), current.Y);
+                    if (anchorSegment)
+                        Dungeon.MarkAnchorSkeleton(current);
+                    else
+                        Dungeon.MarkCorridorSkeleton(current);
+                }
+
+                while (current.Y != end.Y)
+                {
+                    current = new IntCoordinate(current.X, current.Y + Math.Sign(end.Y - current.Y));
+                    if (anchorSegment)
+                        Dungeon.MarkAnchorSkeleton(current);
+                    else
+                        Dungeon.MarkCorridorSkeleton(current);
+                }
             }
 
             // 向前探测可用空间：
@@ -1241,19 +1562,13 @@ namespace CrystalMagic.Game.MapDemo
 
                             if (offset != 0)
                             {
-                                for (int i = 1; i <= frontFree; i++)
-                                    Dungeon.SetMap(Location + i * Forward + offset * right, DungeonMakerSquareData.IT_OPEN);
                                 return false;
                             }
                         }
 
                         if (roomAhead && _tunnelWidth == 0 && frontFree > 1)
                         {
-                            BuildTunnel(frontFree - 1, 0);
-                            if (Forward.X == 0)
-                                Dungeon.SetMap(Location + frontFree * Forward, DungeonMakerSquareData.V_DOOR);
-                            else
-                                Dungeon.SetMap(Location + frontFree * Forward, DungeonMakerSquareData.H_DOOR);
+                            BuildTunnel(frontFree, 0);
                             return false;
                         }
 
@@ -1310,78 +1625,6 @@ namespace CrystalMagic.Game.MapDemo
                             if (specialCase)
                             {
                                 BuildTunnel(frontFree, _tunnelWidth);
-                                for (int i = -_tunnelWidth; i <= _tunnelWidth; i++)
-                                    Dungeon.SetMap(Location + (frontFree + 1) * Forward + i * right, DungeonMakerSquareData.IT_OPEN);
-
-                                int fwd = frontFree + 2;
-                                bool contactInNextRow = true;
-                                bool rowAfterIsOk = true;
-                                while (contactInNextRow && rowAfterIsOk)
-                                {
-                                    Dungeon.GuardTimeout();
-                                    for (int i = -_tunnelWidth; i <= _tunnelWidth; i++)
-                                    {
-                                        test = Location + fwd * Forward + i * right;
-                                        if (Dungeon.GetMap(test) != DungeonMakerSquareData.CLOSED)
-                                        {
-                                            contactInNextRow = false;
-                                            break;
-                                        }
-                                    }
-
-                                    testR = Location + fwd * Forward + (_tunnelWidth + 1) * right;
-                                    testL = Location + fwd * Forward - (_tunnelWidth + 1) * right;
-                                    datR = Dungeon.GetMap(testR);
-                                    datL = Dungeon.GetMap(testL);
-                                    if (!(IsOpenLike(datR) || IsOpenLike(datL)))
-                                    {
-                                        contactInNextRow = false;
-                                        break;
-                                    }
-
-                                    if (datR == DungeonMakerSquareData.IR_OPEN || datL == DungeonMakerSquareData.IR_OPEN)
-                                    {
-                                        contactInNextRow = false;
-                                        break;
-                                    }
-
-                                    for (int i = -_tunnelWidth; i <= _tunnelWidth; i++)
-                                    {
-                                        test = Location + (fwd + 1) * Forward + i * right;
-                                        if (Dungeon.GetMap(test) != DungeonMakerSquareData.CLOSED)
-                                            rowAfterIsOk = false;
-                                    }
-
-                                    testR = Location + (fwd + 1) * Forward + (_tunnelWidth + 1) * right;
-                                    testL = Location + (fwd + 1) * Forward - (_tunnelWidth + 1) * right;
-                                    datR = Dungeon.GetMap(testR);
-                                    datL = Dungeon.GetMap(testL);
-                                    if (!((IsOpenLike(datR) || datR == DungeonMakerSquareData.CLOSED) &&
-                                          (IsOpenLike(datL) || datL == DungeonMakerSquareData.CLOSED)))
-                                        rowAfterIsOk = false;
-                                    if (datR == DungeonMakerSquareData.IR_OPEN || datL == DungeonMakerSquareData.IR_OPEN)
-                                        rowAfterIsOk = false;
-
-                                    bool allOpen = true;
-                                    for (int i = -_tunnelWidth - 1; i <= _tunnelWidth + 1; i++)
-                                    {
-                                        test = Location + (fwd + 1) * Forward + i * right;
-                                        DungeonMakerSquareData tile = Dungeon.GetMap(test);
-                                        if (tile != DungeonMakerSquareData.IT_OPEN && tile != DungeonMakerSquareData.IA_OPEN)
-                                            allOpen = false;
-                                    }
-                                    if (allOpen)
-                                        rowAfterIsOk = true;
-
-                                    if (contactInNextRow && rowAfterIsOk)
-                                    {
-                                        for (int i = -_tunnelWidth; i <= _tunnelWidth; i++)
-                                            Dungeon.SetMap(Location + fwd * Forward + i * right, DungeonMakerSquareData.IT_OPEN);
-                                    }
-
-                                    fwd++;
-                                }
-
                                 return false;
                             }
 
@@ -1435,48 +1678,48 @@ namespace CrystalMagic.Game.MapDemo
                             {
                                 if (frontFree >= freeForwardRight && frontFree >= freeForwardLeft && frontFree >= freeBackward)
                                 {
-                                    SpawnLastChanceTunneler(Location, Forward, Generation + 1, Forward, randomJoinPreference);
+                                    SpawnLastChanceTunneler(Location, Forward, Generation + 1, Forward, randomJoinPreference, Location);
                                 }
                                 else if (freeBackward >= freeForwardRight && freeBackward >= freeForwardLeft)
                                 {
-                                    SpawnLastChanceTunneler(Location, -Forward, Generation + Dungeon.LastChanceGenDelay, -Forward, randomJoinPreference);
+                                    SpawnLastChanceTunneler(Location, -Forward, Generation + Dungeon.LastChanceGenDelay, -Forward, randomJoinPreference, Location);
                                 }
                                 else if (freeForwardRight >= freeForwardLeft || (freeForwardRight == freeForwardLeft && Dungeon.CoinFlip()))
                                 {
-                                    SpawnLastChanceTunneler(Location, right, Generation + Dungeon.LastChanceGenDelay, right, randomJoinPreference);
+                                    SpawnLastChanceTunneler(Location, right, Generation + Dungeon.LastChanceGenDelay, right, randomJoinPreference, Location);
                                 }
                                 else
                                 {
-                                    SpawnLastChanceTunneler(Location, left, Generation + Dungeon.LastChanceGenDelay, left, randomJoinPreference);
+                                    SpawnLastChanceTunneler(Location, left, Generation + Dungeon.LastChanceGenDelay, left, randomJoinPreference, Location);
                                 }
                             }
                             else
                             {
-                                SpawnLastChanceTunneler(Location, Forward, Generation + Dungeon.LastChanceGenDelay, Forward, randomJoinPreference);
+                                SpawnLastChanceTunneler(Location, Forward, Generation + Dungeon.LastChanceGenDelay, Forward, randomJoinPreference, Location);
                             }
                         }
                         else if (guaranteedClosedAhead)
                         {
-                            SpawnLastChanceTunneler(Location + _tunnelWidth * right, right, Generation + Dungeon.LastChanceGenDelay, right, randomJoinPreference);
-                            SpawnLastChanceTunneler(Location - _tunnelWidth * right, left, Generation + Dungeon.LastChanceGenDelay, left, randomJoinPreference);
+                            SpawnLastChanceTunneler(Location + _tunnelWidth * right, right, Generation + Dungeon.LastChanceGenDelay, right, randomJoinPreference, Location);
+                            SpawnLastChanceTunneler(Location - _tunnelWidth * right, left, Generation + Dungeon.LastChanceGenDelay, left, randomJoinPreference, Location);
                         }
                         else if (roomAhead)
                         {
                             if (freeForwardRight >= freeForwardLeft || (freeForwardRight == freeForwardLeft && Dungeon.CoinFlip()))
                             {
-                                SpawnLastChanceTunneler(Location + _tunnelWidth * right, right, Generation + Dungeon.LastChanceGenDelay, right, randomJoinPreference);
-                                SpawnLastChanceTunneler(Location - _tunnelWidth * right, Forward, Generation + Dungeon.LastChanceGenDelay, Forward, randomJoinPreference);
+                                SpawnLastChanceTunneler(Location + _tunnelWidth * right, right, Generation + Dungeon.LastChanceGenDelay, right, randomJoinPreference, Location);
+                                SpawnLastChanceTunneler(Location - _tunnelWidth * right, Forward, Generation + Dungeon.LastChanceGenDelay, Forward, randomJoinPreference, Location);
                             }
                             else
                             {
-                                SpawnLastChanceTunneler(Location + _tunnelWidth * right, Forward, Generation + Dungeon.LastChanceGenDelay, Forward, randomJoinPreference);
-                                SpawnLastChanceTunneler(Location - _tunnelWidth * right, left, Generation + Dungeon.LastChanceGenDelay, left, randomJoinPreference);
+                                SpawnLastChanceTunneler(Location + _tunnelWidth * right, Forward, Generation + Dungeon.LastChanceGenDelay, Forward, randomJoinPreference, Location);
+                                SpawnLastChanceTunneler(Location - _tunnelWidth * right, left, Generation + Dungeon.LastChanceGenDelay, left, randomJoinPreference, Location);
                             }
                         }
                         else
                         {
-                            SpawnLastChanceTunneler(Location + _tunnelWidth * right, Forward, Generation + Dungeon.LastChanceGenDelay, Forward, randomJoinPreference);
-                            SpawnLastChanceTunneler(Location - _tunnelWidth * right, Forward, Generation + Dungeon.LastChanceGenDelay, Forward, randomJoinPreference);
+                            SpawnLastChanceTunneler(Location + _tunnelWidth * right, Forward, Generation + Dungeon.LastChanceGenDelay, Forward, randomJoinPreference, Location);
+                            SpawnLastChanceTunneler(Location - _tunnelWidth * right, Forward, Generation + Dungeon.LastChanceGenDelay, Forward, randomJoinPreference, Location);
                         }
                     }
 
@@ -1527,12 +1770,12 @@ namespace CrystalMagic.Game.MapDemo
                 if (frontFree >= 2 * _tunnelWidth + 5)
                     smallAnteRoomPossible = true;
 
-                Dungeon.SetMap(Location, DungeonMakerSquareData.IT_OPEN);
+                Dungeon.SetMap(Location, DungeonMakerSquareData.IT_OPEN, DungeonMakerTileOrigin.TunnelProbeRestore);
                 Dungeon.MarkCorridorSkeleton(Location);
                 for (int m = 1; m <= _tunnelWidth; m++)
                 {
-                    Dungeon.SetMap(Location + m * right, DungeonMakerSquareData.IT_OPEN);
-                    Dungeon.SetMap(Location - m * right, DungeonMakerSquareData.IT_OPEN);
+                    Dungeon.SetMap(Location + m * right, DungeonMakerSquareData.IT_OPEN, DungeonMakerTileOrigin.TunnelProbeRestore);
+                    Dungeon.SetMap(Location - m * right, DungeonMakerSquareData.IT_OPEN, DungeonMakerTileOrigin.TunnelProbeRestore);
                 }
 
                 leftFree = _tunnelWidth + 3;
@@ -1548,12 +1791,12 @@ namespace CrystalMagic.Game.MapDemo
                 if (frontFree >= 2 * _tunnelWidth + 7)
                     largeAnteRoomPossible = true;
 
-                Dungeon.SetMap(Location, DungeonMakerSquareData.IT_OPEN);
+                Dungeon.SetMap(Location, DungeonMakerSquareData.IT_OPEN, DungeonMakerTileOrigin.TunnelProbeRestore);
                 Dungeon.MarkCorridorSkeleton(Location);
                 for (int m = 1; m <= _tunnelWidth; m++)
                 {
-                    Dungeon.SetMap(Location + m * right, DungeonMakerSquareData.IT_OPEN);
-                    Dungeon.SetMap(Location - m * right, DungeonMakerSquareData.IT_OPEN);
+                    Dungeon.SetMap(Location + m * right, DungeonMakerSquareData.IT_OPEN, DungeonMakerTileOrigin.TunnelProbeRestore);
+                    Dungeon.SetMap(Location - m * right, DungeonMakerSquareData.IT_OPEN, DungeonMakerTileOrigin.TunnelProbeRestore);
                 }
 
                 bool sizeUpTunnel = false;
@@ -2012,7 +2255,7 @@ namespace CrystalMagic.Game.MapDemo
             }
 
             // 用配置里的 last-chance 模板派生一个补救子代。
-            private void SpawnLastChanceTunneler(IntCoordinate location, IntCoordinate forward, int generation, IntCoordinate intendedDirection, int joinPreference)
+            private void SpawnLastChanceTunneler(IntCoordinate location, IntCoordinate forward, int generation, IntCoordinate intendedDirection, int joinPreference, IntCoordinate attachPoint)
             {
                 TunnelerSeed seed = Dungeon.LastChanceTunneler;
                 Dungeon.CreateTunneler(
@@ -2032,7 +2275,7 @@ namespace CrystalMagic.Game.MapDemo
                     joinPreference,
                     BuilderId,
                     true,
-                    location,
+                    attachPoint,
                     DungeonRuntime.TunnelerSpawnKind.LastChance);
             }
 
@@ -2049,26 +2292,28 @@ namespace CrystalMagic.Game.MapDemo
                     return false;
 
                 CommitParentSkeletonConnection(Location + Forward);
-                IntCoordinate right = GetRight(Forward);
                 List<int> regionTiles = new();
+                IntCoordinate right = GetRight(Forward);
                 for (int fwd = 1; fwd <= length; fwd++)
                 {
                     for (int side = -width; side <= width; side++)
                     {
                         IntCoordinate cell = Location + fwd * Forward + side * right;
-                        Dungeon.SetMap(cell, DungeonMakerSquareData.IA_OPEN);
+                        Dungeon.SetMap(cell, DungeonMakerSquareData.IA_OPEN, DungeonMakerTileOrigin.AnteRoomCarve);
                         regionTiles.Add(Dungeon.GetMapIndex(cell));
                     }
 
                     Dungeon.MarkAnchorSkeleton(Location + fwd * Forward);
                 }
 
+                RegisterLinearSkeletonSegment(Location, Location + length * Forward, false, regionTiles);
+
                 if (width >= 3 && length >= 7 && Dungeon.ColumnsInTunnels)
                 {
-                    Dungeon.SetMap(Location + 2 * Forward + (-width + 1) * right, DungeonMakerSquareData.COLUMN);
-                    Dungeon.SetMap(Location + 2 * Forward + (width - 1) * right, DungeonMakerSquareData.COLUMN);
-                    Dungeon.SetMap(Location + (length - 1) * Forward + (-width + 1) * right, DungeonMakerSquareData.COLUMN);
-                    Dungeon.SetMap(Location + (length - 1) * Forward + (width - 1) * right, DungeonMakerSquareData.COLUMN);
+                    Dungeon.SetMap(Location + 2 * Forward + (-width + 1) * right, DungeonMakerSquareData.COLUMN, DungeonMakerTileOrigin.ColumnPlacement);
+                    Dungeon.SetMap(Location + 2 * Forward + (width - 1) * right, DungeonMakerSquareData.COLUMN, DungeonMakerTileOrigin.ColumnPlacement);
+                    Dungeon.SetMap(Location + (length - 1) * Forward + (-width + 1) * right, DungeonMakerSquareData.COLUMN, DungeonMakerTileOrigin.ColumnPlacement);
+                    Dungeon.SetMap(Location + (length - 1) * Forward + (width - 1) * right, DungeonMakerSquareData.COLUMN, DungeonMakerTileOrigin.ColumnPlacement);
                 }
 
                 Dungeon.RegisterRegion(DungeonMakerRegionKind.AnteRoom, regionTiles);
@@ -2089,19 +2334,21 @@ namespace CrystalMagic.Game.MapDemo
                     return false;
 
                 CommitParentSkeletonConnection(Location + Forward);
-                IntCoordinate right = GetRight(Forward);
                 List<int> regionTiles = new();
+                IntCoordinate right = GetRight(Forward);
                 for (int fwd = 1; fwd <= length; fwd++)
                 {
                     for (int side = -width; side <= width; side++)
                     {
                         IntCoordinate cell = Location + fwd * Forward + side * right;
-                        Dungeon.SetMap(cell, DungeonMakerSquareData.IT_OPEN);
+                        Dungeon.SetMap(cell, DungeonMakerSquareData.IT_OPEN, DungeonMakerTileOrigin.TunnelCarve);
                         regionTiles.Add(Dungeon.GetMapIndex(cell));
                     }
 
                     Dungeon.MarkCorridorSkeleton(Location + fwd * Forward);
                 }
+
+                RegisterLinearSkeletonSegment(Location, Location + length * Forward, false, regionTiles);
 
                 if (width >= 3 && length >= 7 && Dungeon.ColumnsInTunnels)
                 {
@@ -2109,12 +2356,12 @@ namespace CrystalMagic.Game.MapDemo
                     for (int i = 0; i < numColumns; i++)
                     {
                         int fwd = 2 + i * 3;
-                        Dungeon.SetMap(Location + fwd * Forward + (-width + 1) * right, DungeonMakerSquareData.COLUMN);
-                        Dungeon.SetMap(Location + fwd * Forward + (width - 1) * right, DungeonMakerSquareData.COLUMN);
+                        Dungeon.SetMap(Location + fwd * Forward + (-width + 1) * right, DungeonMakerSquareData.COLUMN, DungeonMakerTileOrigin.ColumnPlacement);
+                        Dungeon.SetMap(Location + fwd * Forward + (width - 1) * right, DungeonMakerSquareData.COLUMN, DungeonMakerTileOrigin.ColumnPlacement);
 
                         fwd = length - 1 - i * 3;
-                        Dungeon.SetMap(Location + fwd * Forward + (-width + 1) * right, DungeonMakerSquareData.COLUMN);
-                        Dungeon.SetMap(Location + fwd * Forward + (width - 1) * right, DungeonMakerSquareData.COLUMN);
+                        Dungeon.SetMap(Location + fwd * Forward + (-width + 1) * right, DungeonMakerSquareData.COLUMN, DungeonMakerTileOrigin.ColumnPlacement);
+                        Dungeon.SetMap(Location + fwd * Forward + (width - 1) * right, DungeonMakerSquareData.COLUMN, DungeonMakerTileOrigin.ColumnPlacement);
                     }
                 }
 
@@ -2254,7 +2501,7 @@ namespace CrystalMagic.Game.MapDemo
                                     for (int side = width / 2; side >= width / 2 - width + 1; side--)
                                     {
                                         IntCoordinate cell = Location + (fwd + 1) * Forward + side * right;
-                                        Dungeon.SetMap(cell, DungeonMakerSquareData.IR_OPEN);
+                                        Dungeon.SetMap(cell, DungeonMakerSquareData.IR_OPEN, DungeonMakerTileOrigin.RoomCarve);
                                         room.AddSquare(cell);
                                         regionTiles.Add(Dungeon.GetMapIndex(cell));
                                         if (side == 0)
@@ -2269,7 +2516,7 @@ namespace CrystalMagic.Game.MapDemo
                                     for (int side = -leftFree + 1; side <= -leftFree + width; side++)
                                     {
                                         IntCoordinate cell = Location + (fwd + 1) * Forward + side * right;
-                                        Dungeon.SetMap(cell, DungeonMakerSquareData.IR_OPEN);
+                                        Dungeon.SetMap(cell, DungeonMakerSquareData.IR_OPEN, DungeonMakerTileOrigin.RoomCarve);
                                         room.AddSquare(cell);
                                         regionTiles.Add(Dungeon.GetMapIndex(cell));
                                         if (side == 0)
@@ -2278,7 +2525,9 @@ namespace CrystalMagic.Game.MapDemo
                                 }
                             }
 
-                            Dungeon.SetMap(doorCell, Forward.X == 0 ? DungeonMakerSquareData.V_DOOR : DungeonMakerSquareData.H_DOOR);
+                            Dungeon.SetMap(doorCell, DungeonMakerSquareData.IR_OPEN, DungeonMakerTileOrigin.RoomCarve);
+                            room.AddSquare(doorCell);
+                            regionTiles.Add(Dungeon.GetMapIndex(doorCell));
                             Dungeon.MarkAnchorSkeleton(doorCell);
                         }
                         else
@@ -2290,7 +2539,7 @@ namespace CrystalMagic.Game.MapDemo
                                     for (int side = -width / 2; side <= -width / 2 + width - 1; side++)
                                     {
                                         IntCoordinate cell = Location + (fwd + 1) * Forward + side * right;
-                                        Dungeon.SetMap(cell, DungeonMakerSquareData.IR_OPEN);
+                                        Dungeon.SetMap(cell, DungeonMakerSquareData.IR_OPEN, DungeonMakerTileOrigin.RoomCarve);
                                         room.AddSquare(cell);
                                         regionTiles.Add(Dungeon.GetMapIndex(cell));
                                         if (side == 0)
@@ -2305,7 +2554,7 @@ namespace CrystalMagic.Game.MapDemo
                                     for (int side = rightFree - 1; side >= rightFree - width; side--)
                                     {
                                         IntCoordinate cell = Location + (fwd + 1) * Forward + side * right;
-                                        Dungeon.SetMap(cell, DungeonMakerSquareData.IR_OPEN);
+                                        Dungeon.SetMap(cell, DungeonMakerSquareData.IR_OPEN, DungeonMakerTileOrigin.RoomCarve);
                                         room.AddSquare(cell);
                                         regionTiles.Add(Dungeon.GetMapIndex(cell));
                                         if (side == 0)
@@ -2314,13 +2563,15 @@ namespace CrystalMagic.Game.MapDemo
                                 }
                             }
 
-                            Dungeon.SetMap(doorCell, Forward.X == 0 ? DungeonMakerSquareData.V_DOOR : DungeonMakerSquareData.H_DOOR);
+                            Dungeon.SetMap(doorCell, DungeonMakerSquareData.IR_OPEN, DungeonMakerTileOrigin.RoomCarve);
+                            room.AddSquare(doorCell);
+                            regionTiles.Add(Dungeon.GetMapIndex(doorCell));
                             Dungeon.MarkAnchorSkeleton(doorCell);
                         }
 
                         CommitParentSkeletonConnection(Location + Forward);
-                        regionTiles.Add(Dungeon.GetMapIndex(doorCell));
-                        Dungeon.RegisterRegion(DungeonMakerRegionKind.Room, regionTiles);
+                        Dungeon.MarkValuableSkeletonSegment(ParentSkeletonSegmentId);
+                        Dungeon.RegisterRegion(DungeonMakerRegionKind.Room, regionTiles, ToRoomSizeClass(_size));
                         Dungeon.BuiltRoomD(_size);
                         room.SetInDungeon(true);
                         Dungeon.AddRoom(room);
@@ -2691,6 +2942,16 @@ namespace CrystalMagic.Game.MapDemo
             MEDIUM,
             // 大房间。
             LARGE,
+        }
+
+        private static DungeonMakerRoomSizeClass ToRoomSizeClass(RoomSize size)
+        {
+            return size switch
+            {
+                RoomSize.SMALL => DungeonMakerRoomSizeClass.Small,
+                RoomSize.MEDIUM => DungeonMakerRoomSizeClass.Medium,
+                _ => DungeonMakerRoomSizeClass.Large,
+            };
         }
 
         // 把设计文件风格的方向枚举翻译成整数向量。
