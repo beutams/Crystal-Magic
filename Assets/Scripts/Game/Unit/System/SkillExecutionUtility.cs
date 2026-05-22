@@ -27,6 +27,7 @@ public static class SkillExecutionUtility
         in Unity.Collections.FixedList64Bytes<int> skillIds,
         in Unity.Collections.FixedList64Bytes<int> skillAdditionIds,
         int chainIndex,
+        IReadOnlyList<ResolvedSkillData> resolvedSkills,
         bool hasLockedTarget,
         float2 lockedTargetPosition)
     {
@@ -38,8 +39,9 @@ public static class SkillExecutionUtility
         cast.LockedTargetPosition = lockedTargetPosition;
         cast.CurrentChainIndex = chainIndex;
         ClearFollowupEffects(entityManager, entity);
+        SetResolvedSkillPayload(entityManager, entity, resolvedSkills);
 
-        if (cast.SkillIds.Length == 0)
+        if (cast.SkillIds.Length == 0 || resolvedSkills == null || resolvedSkills.Count != cast.SkillIds.Length)
             return false;
 
         if (!TryStartSkillAtIndex(entityManager, entity, ref cast, 0, out _))
@@ -174,7 +176,7 @@ public static class SkillExecutionUtility
             ? cast.SkillIds[skillIndex]
             : -1;
 
-        if (!TryGetSkillByIndex(entityManager, entity, cast, skillIndex, out skillData))
+        if (!TryGetResolvedSkillByIndex(entityManager, entity, skillIndex, out skillData))
             return false;
 
         if (!TryConsumeMana(entityManager, entity, skillData.MpCost))
@@ -183,6 +185,7 @@ public static class SkillExecutionUtility
         cast.ExecutionSerialCounter++;
         cast.CurrentExecutionToken = cast.ExecutionSerialCounter;
         cast.IsCasting = true;
+        cast.StartedThisFrame = true;
         cast.Phase = SkillCastPhase.None;
         cast.PhaseElapsed = 0f;
         cast.PhaseDuration = 0f;
@@ -201,6 +204,7 @@ public static class SkillExecutionUtility
         cast.CurrentSkillId = -1;
         cast.SkillIds = default;
         cast.SkillAdditionIds = default;
+        ClearResolvedSkillPayload(entityManager, entity);
     }
 
     public static void ClearFollowupEffects(EntityManager entityManager, Entity entity)
@@ -411,45 +415,20 @@ public static class SkillExecutionUtility
 
     private static bool TryGetCurrentSkill(EntityManager entityManager, Entity entity, in UnitCastComponent cast, out ResolvedSkillData skillData)
     {
-        return TryGetSkillByIndex(entityManager, entity, cast, cast.CurrentSkillIndex, out skillData);
+        return TryGetResolvedSkillByIndex(entityManager, entity, cast.CurrentSkillIndex, out skillData);
     }
 
-    private static bool TryGetSkillByIndex(EntityManager entityManager, Entity entity, in UnitCastComponent cast, int skillIndex, out ResolvedSkillData skillData)
+    private static bool TryGetResolvedSkillByIndex(EntityManager entityManager, Entity entity, int skillIndex, out ResolvedSkillData skillData)
     {
-        if (skillIndex < 0 || skillIndex >= cast.SkillIds.Length)
-        {
-            skillData = null;
+        skillData = null;
+        if (skillIndex < 0 || !entityManager.HasComponent<UnitCastSkillPayloadComponent>(entity))
             return false;
-        }
 
-        DataComponent dataComponent = DataComponent.Instance;
-        if (dataComponent == null)
-        {
-            skillData = null;
+        UnitCastSkillPayloadComponent payload = entityManager.GetComponentObject<UnitCastSkillPayloadComponent>(entity);
+        if (payload?.ResolvedSkills == null || skillIndex >= payload.ResolvedSkills.Count)
             return false;
-        }
 
-        SkillData baseSkill = dataComponent.Get<SkillData>(cast.SkillIds[skillIndex]);
-        if (baseSkill == null)
-        {
-            skillData = null;
-            return false;
-        }
-
-        int additionId = skillIndex < cast.SkillAdditionIds.Length ? cast.SkillAdditionIds[skillIndex] : -1;
-        SkillChainSlotData slotData = additionId >= 0
-            ? new SkillChainSlotData { SkillAdditionId = additionId }
-            : null;
-        SkillEffectData skillAdditionData = SkillChainResolver.GetSkillAdditionData(additionId);
-
-        SkillModifierSet modifiers = SkillResolver.CollectModifiers(entityManager, entity, baseSkill, slotData);
-        UnitAttackComponent? attack = entityManager.HasComponent<UnitAttackComponent>(entity)
-            ? entityManager.GetComponentData<UnitAttackComponent>(entity)
-            : null;
-        UnitElementComponent? element = entityManager.HasComponent<UnitElementComponent>(entity)
-            ? entityManager.GetComponentData<UnitElementComponent>(entity)
-            : null;
-        skillData = SkillResolver.Resolve(baseSkill, modifiers, skillAdditionData, attack, element);
+        skillData = payload.ResolvedSkills[skillIndex];
         return skillData != null;
     }
 
@@ -479,6 +458,7 @@ public static class SkillExecutionUtility
         UnitBuffUtility.RemoveRuntimeBuffsByExecutionToken(entityManager, entity, cast.CurrentExecutionToken);
         ResetTaskPayload(entityManager, entity, -1);
         cast.IsCasting = false;
+        cast.StartedThisFrame = false;
         cast.ForceInterrupt = false;
         cast.Phase = SkillCastPhase.None;
         cast.PhaseElapsed = 0f;
@@ -503,6 +483,36 @@ public static class SkillExecutionUtility
         payload.ExecutionToken = executionToken;
         payload.InitializedHookMask = 0;
         payload.ActiveTasks.Clear();
+    }
+
+    private static UnitCastSkillPayloadComponent GetOrCreateSkillPayload(EntityManager entityManager, Entity entity)
+    {
+        if (entityManager.HasComponent<UnitCastSkillPayloadComponent>(entity))
+            return entityManager.GetComponentObject<UnitCastSkillPayloadComponent>(entity);
+
+        UnitCastSkillPayloadComponent payload = new();
+        entityManager.AddComponentObject(entity, payload);
+        return payload;
+    }
+
+    private static void SetResolvedSkillPayload(EntityManager entityManager, Entity entity, IReadOnlyList<ResolvedSkillData> resolvedSkills)
+    {
+        UnitCastSkillPayloadComponent payload = GetOrCreateSkillPayload(entityManager, entity);
+        payload.ResolvedSkills.Clear();
+        if (resolvedSkills == null)
+            return;
+
+        for (int i = 0; i < resolvedSkills.Count; i++)
+            payload.ResolvedSkills.Add(resolvedSkills[i]);
+    }
+
+    private static void ClearResolvedSkillPayload(EntityManager entityManager, Entity entity)
+    {
+        if (!entityManager.HasComponent<UnitCastSkillPayloadComponent>(entity))
+            return;
+
+        UnitCastSkillPayloadComponent payload = entityManager.GetComponentObject<UnitCastSkillPayloadComponent>(entity);
+        payload?.ResolvedSkills?.Clear();
     }
 
     private static void ScheduleHook(ref UnitCastComponent cast, SkillCastHookPoint hookPoint, SkillCastHookContinuation continuation)

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using CrystalMagic.Core;
+using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data.Effects;
 using UnityEngine;
 using Unity.Mathematics;
@@ -131,7 +132,7 @@ namespace CrystalMagic.Game.Data
 
     public sealed class SkillModifierSet
     {
-        private readonly Dictionary<SkillModifierChannel, SkillModifierEntry> _entries = new();
+        private readonly Dictionary<SkillModifierChannel, SkillModifierAccumulator> _entries = new();
 
         public void Add(IEnumerable<SkillModifierEntry> entries, int stacks = 1)
         {
@@ -144,24 +145,27 @@ namespace CrystalMagic.Game.Data
 
         public void Add(SkillModifierEntry entry, int stacks = 1)
         {
-            if (!_entries.TryGetValue(entry.Channel, out SkillModifierEntry current))
+            if (!_entries.TryGetValue(entry.Channel, out SkillModifierAccumulator current))
+            {
                 current.Channel = entry.Channel;
+                current.FactorMultiplier = 1f;
+            }
 
-            current.Factor += entry.Factor * stacks;
+            current.FactorMultiplier *= math.pow(math.max(0f, 1f + entry.Factor), math.max(1, stacks));
             current.Bonus += entry.Bonus * stacks;
             _entries[entry.Channel] = current;
         }
 
         public float GetFactor(SkillModifierChannel channel)
         {
-            return _entries.TryGetValue(channel, out SkillModifierEntry entry)
-                ? 1f + entry.Factor
+            return _entries.TryGetValue(channel, out SkillModifierAccumulator entry)
+                ? math.max(GetMinimumFactor(channel), entry.FactorMultiplier)
                 : 1f;
         }
 
         public float GetBonus(SkillModifierChannel channel)
         {
-            return _entries.TryGetValue(channel, out SkillModifierEntry entry)
+            return _entries.TryGetValue(channel, out SkillModifierAccumulator entry)
                 ? entry.Bonus
                 : 0f;
         }
@@ -191,8 +195,18 @@ namespace CrystalMagic.Game.Data
             if (other == null)
                 return;
 
-            foreach (SkillModifierEntry entry in other._entries.Values)
-                Add(entry);
+            foreach (SkillModifierAccumulator entry in other._entries.Values)
+            {
+                if (!_entries.TryGetValue(entry.Channel, out SkillModifierAccumulator current))
+                {
+                    current.Channel = entry.Channel;
+                    current.FactorMultiplier = 1f;
+                }
+
+                current.FactorMultiplier *= entry.FactorMultiplier;
+                current.Bonus += entry.Bonus;
+                _entries[entry.Channel] = current;
+            }
         }
 
         public SkillModifierSet Clone()
@@ -200,6 +214,18 @@ namespace CrystalMagic.Game.Data
             SkillModifierSet clone = new();
             clone.Add(this);
             return clone;
+        }
+
+        private static float GetMinimumFactor(SkillModifierChannel channel)
+        {
+            return ConfigComponent.Instance.Get<ModifierConfig>().GetSkillModifierMinimumFactor(channel);
+        }
+
+        private struct SkillModifierAccumulator
+        {
+            public SkillModifierChannel Channel;
+            public float FactorMultiplier;
+            public float Bonus;
         }
     }
 

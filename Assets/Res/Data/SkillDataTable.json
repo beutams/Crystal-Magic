@@ -15,12 +15,13 @@
       "EffectChain": [
         {
           "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
-          "BuffId": -1,
+          "BuffId": 5,
           "DurationSeconds": -1.0,
           "StackCount": 1,
           "Conditions": []
         }
       ],
+      "FollowupEffects": [],
       "Id": 0
     },
     {
@@ -117,6 +118,7 @@
           "Conditions": []
         }
       ],
+      "FollowupEffects": [],
       "Id": 1
     },
     {
@@ -162,6 +164,13 @@
               ]
             },
             {
+              "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+              "BuffId": 2,
+              "DurationSeconds": 5.0,
+              "StackCount": 1,
+              "Conditions": []
+            },
+            {
               "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
               "AudioPath": null,
               "Channel": 1,
@@ -192,6 +201,7 @@
           "Conditions": []
         }
       ],
+      "FollowupEffects": [],
       "Id": 2
     },
     {
@@ -227,7 +237,7 @@
           "OnAfterSearch": [
             {
               "$type": "CrystalMagic.Game.Data.Effects.ReadBuffStackEffectData, Assembly-CSharp",
-              "BuffId": -1,
+              "BuffId": 2,
               "PerStackModifiers": [
                 {
                   "Channel": 100,
@@ -266,6 +276,7 @@
           "Conditions": []
         }
       ],
+      "FollowupEffects": [],
       "Id": 3
     },
     {
@@ -280,7 +291,53 @@
       "MoveSpeedMultiplier": 0.5,
       "IconPath": "",
       "Conditions": [],
-      "EffectChain": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.PersistentEffectData, Assembly-CSharp",
+          "Element": 0,
+          "TotalDuration": 10.0,
+          "TickIntervalSeconds": 0.1,
+          "OnStartEffects": [],
+          "OnTickEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+              "BuffId": 1,
+              "DurationSeconds": 0.2,
+              "StackCount": 1,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
+          "VfxTexture": null,
+          "FrameCount": 16,
+          "Loop": false,
+          "Duration": 0.0,
+          "Scale": 1.0,
+          "SpawnOffset": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "FollowCaster": false,
+          "AlignToCasterForward": false,
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": null,
+          "Channel": 1,
+          "Volume": 1.0,
+          "Pitch": 1.0,
+          "SpatialBlend": 0.0,
+          "DelaySeconds": 0.0,
+          "FollowCaster": false,
+          "Conditions": []
+        }
+      ],
+      "FollowupEffects": [],
       "Id": 4
     },
     {
@@ -296,6 +353,7 @@
       "IconPath": "",
       "Conditions": [],
       "EffectChain": [],
+      "FollowupEffects": [],
       "Id": 5
     },
     {
@@ -311,6 +369,7 @@
       "IconPath": "",
       "Conditions": [],
       "EffectChain": [],
+      "FollowupEffects": [],
       "Id": 6
     },
     {
@@ -326,10 +385,11 @@
       "IconPath": "",
       "Conditions": [],
       "EffectChain": [],
+      "FollowupEffects": [],
       "Id": 7
     },
     {
-      "Name": "麻痹",
+      "Name": "雷域",
       "Description": "",
       "SkillType": 0,
       "MpCost": 100,
@@ -341,6 +401,7 @@
       "IconPath": "",
       "Conditions": [],
       "EffectChain": [],
+      "FollowupEffects": [],
       "Id": 8
     },
     {
@@ -356,6 +417,7 @@
       "IconPath": "",
       "Conditions": [],
       "EffectChain": [],
+      "FollowupEffects": [],
       "Id": 9
     },
     {
@@ -371,6 +433,7 @@
       "IconPath": "",
       "Conditions": [],
       "EffectChain": [],
+      "FollowupEffects": [],
       "Id": 10
     },
     {
@@ -386,6 +449,7 @@
       "IconPath": "",
       "Conditions": [],
       "EffectChain": [],
+      "FollowupEffects": [],
       "Id": 11
     },
     {
@@ -401,6 +465,7 @@
       "IconPath": "",
       "Conditions": [],
       "EffectChain": [],
+      "FollowupEffects": [],
       "Id": 12
     }
   ]

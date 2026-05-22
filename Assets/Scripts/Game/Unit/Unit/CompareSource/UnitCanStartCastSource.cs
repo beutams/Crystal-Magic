@@ -36,21 +36,11 @@ public class UnitCanStartCastSource : ISource
         SkillCData skillConfig = SaveDataComponent.Instance?.GetSkillData();
         RuntimeSkillData runtimeSkillData = RuntimeDataComponent.Instance.GetSkillData();
         SkillChainSlotData slotData = SkillChainResolver.GetFirstSlot(skillConfig, runtimeSkillData);
-        SkillData baseSkill = SkillChainResolver.GetSkillData(slotData);
-        if (baseSkill == null)
+        if (slotData == null)
             return 0f;
 
-        SkillEffectData skillAdditionData = SkillChainResolver.GetSkillAdditionData(slotData?.SkillAdditionId ?? -1);
-
-        SkillModifierSet modifiers = SkillResolver.CollectModifiers(_context.EntityManager, _context.Entity, baseSkill, slotData);
-        UnitAttackComponent? attack = _context.EntityManager.HasComponent<UnitAttackComponent>(_context.Entity)
-            ? _context.EntityManager.GetComponentData<UnitAttackComponent>(_context.Entity)
-            : null;
-        UnitElementComponent? element = _context.EntityManager.HasComponent<UnitElementComponent>(_context.Entity)
-            ? _context.EntityManager.GetComponentData<UnitElementComponent>(_context.Entity)
-            : null;
-        ResolvedSkillData resolvedSkill = SkillResolver.Resolve(baseSkill, modifiers, skillAdditionData, attack, element);
-        if (resolvedSkill == null)
+        SkillData baseSkill = SkillChainResolver.GetSkillData(slotData);
+        if (!SkillAnalysisUtility.TryAnalyzeSkill(_context.EntityManager, _context.Entity, baseSkill, slotData.SkillAdditionId, out ResolvedSkillData resolvedSkill))
             return 0f;
 
         if (!_context.EntityManager.HasComponent<UnitManaComponent>(_context.Entity))

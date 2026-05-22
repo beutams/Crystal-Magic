@@ -6,7 +6,7 @@ using Unity.Transforms;
 using UnityEngine;
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
-[UpdateAfter(typeof(SkillExecutionSystem))]
+[UpdateAfter(typeof(UnitSkillExecuteSystem))]
 [UpdateBefore(typeof(SkillProjectileSystem))]
 public partial class SkillProjectileSpawnSystem : SystemBase
 {

@@ -15,6 +15,7 @@ public class UnitCastAuthoring : MonoBehaviour
             AddComponent(entity, new UnitCastComponent());
             AddBuffer<UnitCastFollowupEffectElement>(entity);
             AddComponentObject(entity, new UnitCastTaskPayloadComponent());
+            AddComponentObject(entity, new UnitCastSkillPayloadComponent());
         }
     }
 }
@@ -71,6 +72,7 @@ public struct UnitCastComponent : IComponentData
     /// 当前单位是否正在执行技能释放流程。
     /// </summary>
     public bool IsCasting;
+    public bool StartedThisFrame;
 
     /// <summary>
     /// 是否请求强制打断当前施法。

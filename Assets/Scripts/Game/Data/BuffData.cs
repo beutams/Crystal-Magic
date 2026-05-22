@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using CrystalMagic.Core;
+using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data.Effects;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace CrystalMagic.Game.Data
@@ -65,7 +67,7 @@ namespace CrystalMagic.Game.Data
 
     public sealed class PropertyModifierSet
     {
-        private readonly Dictionary<PropertyModifierChannel, PropertyModifierEntry> _entries = new();
+        private readonly Dictionary<PropertyModifierChannel, PropertyModifierAccumulator> _entries = new();
 
         public void Add(IEnumerable<PropertyModifierEntry> entries, int stacks = 1)
         {
@@ -78,26 +80,41 @@ namespace CrystalMagic.Game.Data
 
         public void Add(PropertyModifierEntry entry, int stacks = 1)
         {
-            if (!_entries.TryGetValue(entry.Channel, out PropertyModifierEntry current))
+            if (!_entries.TryGetValue(entry.Channel, out PropertyModifierAccumulator current))
+            {
                 current.Channel = entry.Channel;
+                current.FactorMultiplier = 1f;
+            }
 
-            current.Factor += entry.Factor * stacks;
+            current.FactorMultiplier *= math.pow(math.max(0f, 1f + entry.Factor), math.max(1, stacks));
             current.Bonus += entry.Bonus * stacks;
             _entries[entry.Channel] = current;
         }
 
         public float GetFactor(PropertyModifierChannel channel)
         {
-            return _entries.TryGetValue(channel, out PropertyModifierEntry entry)
-                ? 1f + entry.Factor
+            return _entries.TryGetValue(channel, out PropertyModifierAccumulator entry)
+                ? math.max(GetMinimumFactor(channel), entry.FactorMultiplier)
                 : 1f;
         }
 
         public float GetBonus(PropertyModifierChannel channel)
         {
-            return _entries.TryGetValue(channel, out PropertyModifierEntry entry)
+            return _entries.TryGetValue(channel, out PropertyModifierAccumulator entry)
                 ? entry.Bonus
                 : 0f;
+        }
+
+        private static float GetMinimumFactor(PropertyModifierChannel channel)
+        {
+            return ConfigComponent.Instance.Get<ModifierConfig>().GetPropertyModifierMinimumFactor(channel);
+        }
+
+        private struct PropertyModifierAccumulator
+        {
+            public PropertyModifierChannel Channel;
+            public float FactorMultiplier;
+            public float Bonus;
         }
     }
 

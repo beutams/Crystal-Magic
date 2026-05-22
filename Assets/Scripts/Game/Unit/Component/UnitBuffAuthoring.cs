@@ -20,6 +20,7 @@ public struct UnitBuffElement : IBufferElementData
     public float RemainingTime;
     public float NextTickTime;
     public int StackCount;
+    public int RuntimePayloadId;
     public int SourceExecutionToken;
     public byte ConsumeOnDamageTaken;
     public int RemainingTriggerCount;

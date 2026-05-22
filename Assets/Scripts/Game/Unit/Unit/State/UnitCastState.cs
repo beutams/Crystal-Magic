@@ -31,28 +31,11 @@ public class UnitCastState : AUnitState
             return;
         }
 
-        UnitSkillEntry entry = unitSkill.Skills[selectedIndex];
-        Unity.Collections.FixedList64Bytes<int> skillIds = default;
-        Unity.Collections.FixedList64Bytes<int> skillAdditionIds = default;
-        skillIds.Add(entry.SkillId);
-        skillAdditionIds.Add(entry.SkillAdditionId);
-
         SkillExecutionUtility.ResetCastState(EntityManager, Entity, ref cast);
-        if (SkillExecutionUtility.TryBeginCast(
-                EntityManager,
-                Entity,
-                ref cast,
-                skillIds,
-                skillAdditionIds,
-                -1,
-                hasLockedTarget: true,
-                lockedTargetPosition: intent.CastTargetPosition))
-        {
-            entry.CooldownRemaining = math.max(0f, entry.CooldownSeconds);
-            unitSkill.Skills[selectedIndex] = entry;
-        }
-
-        unitSkill.ClearPending();
+        unitSkill.HasPendingCast = true;
+        unitSkill.PendingSkillIndex = selectedIndex;
+        unitSkill.HasLockedTarget = true;
+        unitSkill.LockedTargetPosition = intent.CastTargetPosition;
         unitSkill.ClearRequest();
         EntityManager.SetComponentData(Entity, cast);
         EntityManager.SetComponentData(Entity, unitSkill);
@@ -60,38 +43,6 @@ public class UnitCastState : AUnitState
 
     public override void OnUpdate(float deltaTime)
     {
-        if (!EntityManager.HasComponent<UnitCastComponent>(Entity))
-            return;
-
-        UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
-
-        if (cast.IsCasting && EntityManager.HasComponent<UnitPerceptionComponent>(Entity))
-        {
-            UnitPerceptionComponent perception = EntityManager.GetComponentData<UnitPerceptionComponent>(Entity);
-            if (!perception.HasTarget)
-            {
-                SkillExecutionUtility.ResetCastState(EntityManager, Entity, ref cast);
-                SkillExecutionUtility.ClearFollowupEffects(EntityManager, Entity);
-                SkillExecutionUtility.ApplyMovement(EntityManager, Entity, cast);
-                EntityManager.SetComponentData(Entity, cast);
-                return;
-            }
-        }
-
-        SkillAdvanceResult result = SkillAdvanceResult.None;
-        if (cast.IsCasting)
-            result = SkillExecutionUtility.AdvanceCurrentSkill(EntityManager, Entity, deltaTime, ref cast);
-
-        if (result == SkillAdvanceResult.Completed ||
-            result == SkillAdvanceResult.Interrupted ||
-            result == SkillAdvanceResult.Failed)
-        {
-            SkillExecutionUtility.ResetCastState(EntityManager, Entity, ref cast);
-            SkillExecutionUtility.ClearFollowupEffects(EntityManager, Entity);
-        }
-
-        SkillExecutionUtility.ApplyMovement(EntityManager, Entity, cast);
-        EntityManager.SetComponentData(Entity, cast);
     }
 
     public override void OnExit()
@@ -104,6 +55,14 @@ public class UnitCastState : AUnitState
         SkillExecutionUtility.ClearFollowupEffects(EntityManager, Entity);
         SkillExecutionUtility.ApplyMovement(EntityManager, Entity, cast);
         EntityManager.SetComponentData(Entity, cast);
+
+        if (EntityManager.HasComponent<UnitSkillComponent>(Entity))
+        {
+            UnitSkillComponent unitSkill = EntityManager.GetComponentData<UnitSkillComponent>(Entity);
+            unitSkill.ClearPending();
+            unitSkill.ClearRequest();
+            EntityManager.SetComponentData(Entity, unitSkill);
+        }
     }
 
     private int SelectSkillIndex(UnitSkillComponent unitSkill, float targetDistance)
@@ -194,30 +153,6 @@ public class UnitCastState : AUnitState
 
     private bool TryResolveSkill(UnitSkillEntry entry, out ResolvedSkillData resolvedSkill)
     {
-        resolvedSkill = null;
-
-        DataComponent dataComponent = DataComponent.Instance;
-        if (dataComponent == null)
-            return false;
-
-        SkillData baseSkill = dataComponent.Get<SkillData>(entry.SkillId);
-        if (baseSkill == null)
-            return false;
-
-        SkillChainSlotData slotData = entry.SkillAdditionId >= 0
-            ? new SkillChainSlotData { SkillAdditionId = entry.SkillAdditionId }
-            : null;
-        SkillEffectData skillAdditionData = SkillChainResolver.GetSkillAdditionData(entry.SkillAdditionId);
-
-        SkillModifierSet modifiers = SkillResolver.CollectModifiers(EntityManager, Entity, baseSkill, slotData);
-        UnitAttackComponent? attack = EntityManager.HasComponent<UnitAttackComponent>(Entity)
-            ? EntityManager.GetComponentData<UnitAttackComponent>(Entity)
-            : null;
-        UnitElementComponent? element = EntityManager.HasComponent<UnitElementComponent>(Entity)
-            ? EntityManager.GetComponentData<UnitElementComponent>(Entity)
-            : null;
-
-        resolvedSkill = SkillResolver.Resolve(baseSkill, modifiers, skillAdditionData, attack, element);
-        return resolvedSkill != null;
+        return SkillAnalysisUtility.TryAnalyzeSkill(EntityManager, Entity, entry.SkillId, entry.SkillAdditionId, out resolvedSkill);
     }
 }

@@ -1,4 +1,4 @@
-{
+﻿{
   "Rows": [
     {
       "$type": "CrystalMagic.Game.Data.PropertyBuffData, Assembly-CSharp",
@@ -12,7 +12,80 @@
       "Name": "格挡",
       "CanStack": false,
       "MaxStacks": 1,
-      "Id": 0
+      "Id": 0,
+      "Category": 0
+    },
+    {
+      "$type": "CrystalMagic.Game.Data.PropertyBuffData, Assembly-CSharp",
+      "PropertyModifiers": [
+        {
+          "Channel": 0,
+          "Factor": -0.3,
+          "Bonus": 0.0
+        }
+      ],
+      "Name": "水涡",
+      "CanStack": false,
+      "MaxStacks": 1,
+      "Id": 1,
+      "Category": 0
+    },
+    {
+      "$type": "CrystalMagic.Game.Data.EffectBuffData, Assembly-CSharp",
+      "TickIntervalSeconds": 1.0,
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+          "DamageCoefficient": 1.0,
+          "FlatDamageBonus": 10.0,
+          "Element": 2,
+          "Conditions": []
+        }
+      ],
+      "Name": "燃烧",
+      "CanStack": true,
+      "MaxStacks": 5,
+      "Id": 2,
+      "Category": 1
+    },
+    {
+      "$type": "CrystalMagic.Game.Data.PropertyBuffData, Assembly-CSharp",
+      "PropertyModifiers": [
+        {
+          "Channel": 0,
+          "Factor": -0.3,
+          "Bonus": 0.0
+        }
+      ],
+      "Name": "冻结",
+      "CanStack": false,
+      "MaxStacks": 1,
+      "Id": 3,
+      "Category": 0
+    },
+    {
+      "$type": "CrystalMagic.Game.Data.PropertyBuffData, Assembly-CSharp",
+      "PropertyModifiers": [
+        {
+          "Channel": 8,
+          "Factor": -0.5,
+          "Bonus": 0.0
+        }
+      ],
+      "Name": "麻痹",
+      "CanStack": false,
+      "MaxStacks": 1,
+      "Id": 4,
+      "Category": 0
+    },
+    {
+      "$type": "CrystalMagic.Game.Data.PropertyBuffData, Assembly-CSharp",
+      "PropertyModifiers": [],
+      "Name": "蓄能",
+      "CanStack": false,
+      "MaxStacks": 1,
+      "Id": 5,
+      "Category": 0
     }
   ]
 }

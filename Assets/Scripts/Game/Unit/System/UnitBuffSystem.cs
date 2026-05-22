@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
+using CrystalMagic.Game.Data.Effects;
 using CrystalMagic.Game.Skill;
 using Unity.Entities;
 using UnityEngine;
@@ -24,6 +25,7 @@ partial class UnitBuffSystem : SystemBase
                 UnitBuffElement element = buffBuffer[i];
                 if (!TryUpdateBuffElement(entity, dt, ref element))
                 {
+                    UnitBuffUtility.RemoveEffectBuffPayload(EntityManager, entity, element.RuntimePayloadId);
                     buffBuffer.RemoveAt(i);
                     continue;
                 }
@@ -144,17 +146,28 @@ partial class UnitBuffSystem : SystemBase
         element.NextTickTime -= deltaTime;
         while (element.NextTickTime <= 0f)
         {
-            ExecuteBuffTickEffects(entity, effectBuffData, element.StackCount);
+            ExecuteBuffTickEffects(entity, effectBuffData, element);
             element.NextTickTime += effectBuffData.TickIntervalSeconds;
         }
     }
 
-    private void ExecuteBuffTickEffects(Entity entity, EffectBuffData effectBuffData, int stackCount)
+    private void ExecuteBuffTickEffects(Entity entity, EffectBuffData effectBuffData, in UnitBuffElement element)
     {
-        int executeCount = Mathf.Max(1, stackCount);
+        int executeCount = Mathf.Max(1, element.StackCount);
+        EffectData[] runtimeEffectChain = effectBuffData.EffectChain;
+        bool hasOriginEntity = false;
+        Entity originEntity = Entity.Null;
+
+        if (UnitBuffUtility.TryGetEffectBuffPayload(EntityManager, entity, element.RuntimePayloadId, out UnitBuffPayloadEntry payload))
+        {
+            runtimeEffectChain = payload.RuntimeEffectChain;
+            hasOriginEntity = payload.HasOriginEntity;
+            originEntity = payload.OriginEntity;
+        }
+
         _buffTickContext.EntityManager = EntityManager;
-        _buffTickContext.HasOriginEntity = false;
-        _buffTickContext.OriginEntity = Entity.Null;
+        _buffTickContext.HasOriginEntity = hasOriginEntity;
+        _buffTickContext.OriginEntity = originEntity;
         _buffTickContext.HasTargetEntity = true;
         _buffTickContext.TargetEntity = entity;
         _buffTickContext.HasTarget = false;
@@ -163,6 +176,6 @@ partial class UnitBuffSystem : SystemBase
         _buffTickContext.RuntimeModifiers = null;
 
         for (int i = 0; i < executeCount; i++)
-            SkillExecutor.ExecuteEffects(effectBuffData.EffectChain, _buffTickContext);
+            SkillExecutor.ExecuteEffects(runtimeEffectChain, _buffTickContext);
     }
 }
