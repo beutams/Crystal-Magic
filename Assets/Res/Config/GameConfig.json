@@ -5,6 +5,8 @@
     "InitialStashSize": -1,
     "MaxSaveSlots": 20,
     "BattlePropSharedCooldownSeconds": 3.0,
+    "BattlePropSlotCount": 4,
+    "BattlePropShortcutSlotCount": 4,
     "SinglePoolMaxSize": 1,
     "SmallPoolMaxSize": 100,
     "MediumPoolMaxSize": 30,

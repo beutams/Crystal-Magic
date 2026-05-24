@@ -5,22 +5,31 @@ namespace CrystalMagic.Game.Data.Effects
     [System.Serializable]
     public sealed class PersistentEffectData : EffectData
     {
-        [EditorLabel("元素类型")]
+        [EditorLabel("Element")]
         public ElementType Element = ElementType.None;
-        [EditorLabel("总时长")]
+
+        [EditorLabel("Total Duration")]
         public float TotalDuration;
-        [EditorLabel("触发间隔")]
+
+        [EditorLabel("Tick Interval")]
         public float TickIntervalSeconds;
 
-        [EditorLabel("开始效果")]
+        [EditorLabel("On Start Effects")]
         [UnityEngine.SerializeReference]
         public EffectData[] OnStartEffects = System.Array.Empty<EffectData>();
 
-        [EditorLabel("周期效果")]
+        [EditorLabel("On Tick Effects")]
         [UnityEngine.SerializeReference]
         public EffectData[] OnTickEffects = System.Array.Empty<EffectData>();
 
-        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, float elementBonus = 0f, System.Func<EffectData, float> elementBonusResolver = null)
+        [EditorLabel("On End Effects")]
+        [UnityEngine.SerializeReference]
+        public EffectData[] OnEndEffects = System.Array.Empty<EffectData>();
+
+        public override EffectData CreateRuntimeCopy(
+            SkillModifierSet modifiers,
+            float elementBonus = 0f,
+            System.Func<EffectData, float> elementBonusResolver = null)
         {
             SkillModifierSet runtimeModifiers = CreateCombinedModifiers(modifiers, elementBonus, AppendElementModifiers);
             PersistentEffectData copy = (PersistentEffectData)base.CreateRuntimeCopy(runtimeModifiers, elementBonus, elementBonusResolver);
@@ -29,6 +38,7 @@ namespace CrystalMagic.Game.Data.Effects
             copy.TickIntervalSeconds = ApplyModifierNonNegative(runtimeModifiers, SkillModifierChannel.TickInterval, TickIntervalSeconds);
             copy.OnStartEffects = CreateRuntimeCopies(OnStartEffects, modifiers, elementBonusResolver);
             copy.OnTickEffects = CreateRuntimeCopies(OnTickEffects, modifiers, elementBonusResolver);
+            copy.OnEndEffects = CreateRuntimeCopies(OnEndEffects, modifiers, elementBonusResolver);
             return copy;
         }
 

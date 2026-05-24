@@ -135,20 +135,8 @@ namespace CrystalMagic.UI
         private int GetHaveCount(int itemId)
         {
             CrystalMagic.Core.BackpackData backpackData = CrystalMagic.Core.SaveDataComponent.Instance.GetBackpackData();
-            if (backpackData?.Items == null)
-                return 0;
-
-            int count = 0;
-            for (int i = 0; i < backpackData.Items.Count; i++)
-            {
-                CrystalMagic.Core.InventoryItemData item = backpackData.Items[i];
-                if (item == null || item.ItemId != itemId)
-                    continue;
-
-                count += item.Quantity;
-            }
-
-            return count;
+            CrystalMagic.Core.CharacterPropData propData = CrystalMagic.Core.SaveDataComponent.Instance.GetCharacterPropData();
+            return CrystalMagic.Core.InventoryUtility.GetItemCountInCharacterInventory(backpackData, propData, itemId);
         }
 
         private bool CanOpenBuyUI(ShopCommodityDisplayData data, out string tipMessage)
@@ -170,6 +158,16 @@ namespace CrystalMagic.UI
             if (money < data.Price)
             {
                 tipMessage = "金币不足，无法购买。";
+                return false;
+            }
+
+            if (!CrystalMagic.Core.InventoryUtility.CanAddItemToCharacterInventory(
+                    CrystalMagic.Core.SaveDataComponent.Instance.GetBackpackData(),
+                    CrystalMagic.Core.SaveDataComponent.Instance.GetCharacterPropData(),
+                    data.ItemId,
+                    1))
+            {
+                tipMessage = "背包或道具槽位已满，无法购买。";
                 return false;
             }
 

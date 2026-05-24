@@ -85,12 +85,14 @@ namespace CrystalMagic.Core {
         /// 角色背包
         /// </summary>
         public BackpackData Backpack;
+        public CharacterPropData Props;
 
         public CharacterData()
         {
             Equipment = new EquipmentData();
             Skills = new SkillCData();
             Backpack = new BackpackData();
+            Props = new CharacterPropData();
         }
 
     }
@@ -112,6 +114,94 @@ namespace CrystalMagic.Core {
     {
         public int Capacity;
         public List<InventoryItemData> Items = new();
+    }
+
+    [System.Serializable]
+    public class CharacterPropData
+    {
+        public List<CharacterPropSlotData> Slots = new();
+        public int[] ShortcutSlotIndexes = Array.Empty<int>();
+
+        public void EnsureValid(int slotCount, int shortcutSlotCount)
+        {
+            Slots ??= new List<CharacterPropSlotData>();
+
+            int clampedSlotCount = Math.Max(0, slotCount);
+            while (Slots.Count < clampedSlotCount)
+            {
+                Slots.Add(new CharacterPropSlotData());
+            }
+
+            while (Slots.Count > clampedSlotCount)
+            {
+                Slots.RemoveAt(Slots.Count - 1);
+            }
+
+            for (int i = 0; i < Slots.Count; i++)
+            {
+                Slots[i] ??= new CharacterPropSlotData();
+                Slots[i].EnsureValid();
+            }
+
+            int clampedShortcutCount = Math.Max(0, shortcutSlotCount);
+            if (ShortcutSlotIndexes == null || ShortcutSlotIndexes.Length != clampedShortcutCount)
+            {
+                int[] resizedShortcuts = new int[clampedShortcutCount];
+                for (int i = 0; i < resizedShortcuts.Length; i++)
+                {
+                    resizedShortcuts[i] = i < clampedSlotCount ? i : -1;
+                }
+
+                if (ShortcutSlotIndexes != null)
+                {
+                    int copyCount = Math.Min(ShortcutSlotIndexes.Length, resizedShortcuts.Length);
+                    for (int i = 0; i < copyCount; i++)
+                    {
+                        resizedShortcuts[i] = ShortcutSlotIndexes[i];
+                    }
+                }
+
+                ShortcutSlotIndexes = resizedShortcuts;
+            }
+
+            for (int i = 0; i < ShortcutSlotIndexes.Length; i++)
+            {
+                if (ShortcutSlotIndexes[i] < -1 || ShortcutSlotIndexes[i] >= clampedSlotCount)
+                    ShortcutSlotIndexes[i] = -1;
+            }
+        }
+
+        public void ClearSlots()
+        {
+            if (Slots == null)
+                return;
+
+            for (int i = 0; i < Slots.Count; i++)
+            {
+                Slots[i]?.Clear();
+            }
+        }
+    }
+
+    [System.Serializable]
+    public class CharacterPropSlotData
+    {
+        public int ItemId = -1;
+        public int Quantity;
+
+        public bool IsEmpty => ItemId < 0 || Quantity <= 0;
+
+        public void EnsureValid()
+        {
+            if (ItemId < 0 || Quantity <= 0)
+                Clear();
+        }
+
+        public void Clear()
+        {
+            ItemId = -1;
+            Quantity = 0;
+        }
     }
     #endregion
 

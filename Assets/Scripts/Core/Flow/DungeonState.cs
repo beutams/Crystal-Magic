@@ -1,3 +1,4 @@
+using CrystalMagic.Game;
 using CrystalMagic.UI;
 using UnityEngine;
 
@@ -75,6 +76,7 @@ namespace CrystalMagic.Core
 
             InputComponent.Instance.OnInventory += HandleInventory;
             InputComponent.Instance.OnProperty += HandleProperty;
+            InputComponent.Instance.OnPropShortcut += HandlePropShortcut;
             if (UIComponent.Instance != null)
                 UIComponent.Instance.EscapeUnhandled += HandleUnhandledEscape;
             _inputBound = true;
@@ -89,6 +91,7 @@ namespace CrystalMagic.Core
             {
                 InputComponent.Instance.OnInventory -= HandleInventory;
                 InputComponent.Instance.OnProperty -= HandleProperty;
+                InputComponent.Instance.OnPropShortcut -= HandlePropShortcut;
             }
             if (UIComponent.Instance != null)
                 UIComponent.Instance.EscapeUnhandled -= HandleUnhandledEscape;
@@ -127,6 +130,11 @@ namespace CrystalMagic.Core
             }
 
             UIComponent.Instance.ShowUI(_propertyUI);
+        }
+
+        private void HandlePropShortcut(int shortcutIndex)
+        {
+            PropUseUtility.TryUseShortcutSlot(shortcutIndex, out _);
         }
 
         private void HandleUnhandledEscape()

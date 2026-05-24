@@ -14,7 +14,14 @@ public class UnitStateMachineAuthoring : MonoBehaviour
                 DependsOn(unitDataAsset);
 
             UnitData data = UnitAuthoringUtility.ResolveUnitData(authoring);
+            Transform root = authoring.transform.root != null
+                ? authoring.transform.root
+                : authoring.transform;
+            Transform interact = root.Find("Interact");
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
+            Entity interactEntity = interact != null
+                ? GetEntity(interact, TransformUsageFlags.Dynamic)
+                : Entity.Null;
             AddBuffer<UnitControlElement>(entity);
             AddComponent(entity, new UnitControlStateComponent
             {
@@ -34,7 +41,12 @@ public class UnitStateMachineAuthoring : MonoBehaviour
             AddComponentObject(entity, new UnitStateMachineComponent
             {
                 UnitDataId = data?.Id ?? -1,
-                UnitName = data?.Name ?? authoring.transform.root.name,
+                UnitName = data?.Name ?? root.name,
+            });
+            AddComponent(entity, new UnitQuadVisualRequest
+            {
+                VisualKey = new Unity.Collections.FixedString128Bytes(root.name),
+                ExtraVisualEntity = interactEntity,
             });
         }
     }

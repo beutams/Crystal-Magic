@@ -13,7 +13,7 @@ partial struct UnitMoveSystem : ISystem
     public void OnUpdate(ref SystemState state)
     {
         float dt = SystemAPI.Time.DeltaTime;
-        ComponentLookup<LocalTransform> transformLookup = SystemAPI.GetComponentLookup<LocalTransform>(true);
+        ComponentLookup<LocalToWorld> transformLookup = SystemAPI.GetComponentLookup<LocalToWorld>(true);
         new UnitMoveJob
         {
             DeltaTime = dt,
@@ -26,7 +26,7 @@ partial struct UnitMoveSystem : ISystem
 public partial struct UnitMoveJob : IJobEntity
 {
     [ReadOnly]
-    public ComponentLookup<LocalTransform> TransformLookup;
+    public ComponentLookup<LocalToWorld> TransformLookup;
 
     public float DeltaTime;
 

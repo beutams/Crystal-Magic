@@ -4,10 +4,6 @@ Shader "CrystalMagic/TransparentSpriteMesh"
     {
         [MainTexture] _BaseMap("Texture", 2D) = "white" {}
         [MainColor] _BaseColor("Color", Color) = (1, 1, 1, 1)
-        [Toggle(_ALPHATEST_ON)] _AlphaClip("Alpha Clip", Float) = 0
-        _Cutoff("Cutoff", Range(0, 1)) = 0.1
-        [Enum(UnityEngine.Rendering.CullMode)] _Cull("Cull", Float) = 0
-        [ToggleUI] _ZWrite("Z Write", Float) = 0
     }
 
     SubShader
@@ -15,9 +11,6 @@ Shader "CrystalMagic/TransparentSpriteMesh"
         Tags
         {
             "RenderPipeline" = "UniversalPipeline"
-            "Queue" = "Transparent-100"
-            "RenderType" = "Transparent"
-            "UniversalMaterialType" = "Unlit"
         }
 
         Pass
@@ -26,13 +19,10 @@ Shader "CrystalMagic/TransparentSpriteMesh"
             Tags { "LightMode" = "UniversalForward" }
 
             Blend SrcAlpha OneMinusSrcAlpha
-            ZWrite [_ZWrite]
-            Cull [_Cull]
 
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment Frag
-            #pragma shader_feature_local_fragment _ALPHATEST_ON
             #pragma multi_compile_instancing
 
             #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
@@ -42,7 +32,6 @@ Shader "CrystalMagic/TransparentSpriteMesh"
             CBUFFER_START(UnityPerMaterial)
                 float4 _BaseMap_ST;
                 half4 _BaseColor;
-                half _Cutoff;
             CBUFFER_END
 
             TEXTURE2D(_BaseMap);
@@ -80,13 +69,7 @@ Shader "CrystalMagic/TransparentSpriteMesh"
             {
                 UNITY_SETUP_INSTANCE_ID(input);
 
-                half4 color = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv) * _BaseColor;
-
-                #if defined(_ALPHATEST_ON)
-                clip(color.a - _Cutoff);
-                #endif
-
-                return color;
+                return SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv) * _BaseColor;
             }
             ENDHLSL
         }

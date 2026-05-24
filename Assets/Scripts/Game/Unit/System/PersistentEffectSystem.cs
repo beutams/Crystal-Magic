@@ -26,16 +26,19 @@ partial class PersistentEffectSystem : SystemBase
 
         ExecuteEffects(data.OnStartEffects, context);
 
-        if (data.TotalDuration <= 0f || data.TickIntervalSeconds <= 0f || data.OnTickEffects == null || data.OnTickEffects.Length == 0)
+        bool hasTickEffects = data.TickIntervalSeconds > 0f && data.OnTickEffects != null && data.OnTickEffects.Length > 0;
+        bool hasEndEffects = data.OnEndEffects != null && data.OnEndEffects.Length > 0;
+        if (data.TotalDuration <= 0f || (!hasTickEffects && !hasEndEffects))
             return;
 
         PersistentEffectInstance instance = new()
         {
             TotalDuration = data.TotalDuration,
             TickIntervalSeconds = data.TickIntervalSeconds,
-            NextTickTime = data.TickIntervalSeconds,
+            NextTickTime = hasTickEffects ? data.TickIntervalSeconds : float.MaxValue,
             Context = context,
-            OnTickEffects = data.OnTickEffects,
+            OnTickEffects = hasTickEffects ? data.OnTickEffects : null,
+            OnEndEffects = hasEndEffects ? data.OnEndEffects : null,
         };
 
         if (_isUpdating)
@@ -65,7 +68,16 @@ partial class PersistentEffectSystem : SystemBase
             }
 
             if (instance.Elapsed >= instance.TotalDuration)
+            {
+                if (instance.OnEndEffects != null && instance.OnEndEffects.Length > 0)
+                {
+                    SkillContent endContext = instance.Context.Clone();
+                    endContext.EntityManager = EntityManager;
+                    ExecuteEffects(instance.OnEndEffects, endContext);
+                }
+
                 _instances.RemoveAt(i);
+            }
         }
         _isUpdating = false;
 
@@ -94,5 +106,6 @@ partial class PersistentEffectSystem : SystemBase
         public float NextTickTime;
         public SkillContent Context;
         public EffectData[] OnTickEffects;
+        public EffectData[] OnEndEffects;
     }
 }

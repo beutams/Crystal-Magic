@@ -56,6 +56,7 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitWantToCastSource",
+                      "SourceParam": -1,
                       "CompareType": "IsTrue",
                       "CompareValue": 0.0
                     }
@@ -67,6 +68,7 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "GreaterThan",
                       "CompareValue": 0.0
                     }
@@ -83,6 +85,7 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitWantToCastSource",
+                      "SourceParam": -1,
                       "CompareType": "IsTrue",
                       "CompareValue": 0.0
                     }
@@ -94,6 +97,7 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "LessThan",
                       "CompareValue": 0.1
                     }
@@ -110,12 +114,14 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitIsCastingSource",
+                      "SourceParam": -1,
                       "CompareType": "IsFalse",
                       "CompareValue": 0.0
                     },
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "GreaterThan",
                       "CompareValue": 0.0
                     }
@@ -127,12 +133,14 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitIsCastingSource",
+                      "SourceParam": -1,
                       "CompareType": "IsFalse",
                       "CompareValue": 0.0
                     },
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "LessThan",
                       "CompareValue": 0.1
                     }
@@ -205,6 +213,7 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitWantToCastSource",
+                      "SourceParam": -1,
                       "CompareType": "IsTrue",
                       "CompareValue": 0.0
                     }
@@ -216,6 +225,7 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "GreaterThan",
                       "CompareValue": 0.0
                     }
@@ -232,6 +242,7 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitWantToCastSource",
+                      "SourceParam": -1,
                       "CompareType": "IsTrue",
                       "CompareValue": 0.0
                     }
@@ -243,6 +254,7 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "LessThan",
                       "CompareValue": 0.1
                     }
@@ -259,12 +271,14 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitIsCastingSource",
+                      "SourceParam": -1,
                       "CompareType": "IsFalse",
                       "CompareValue": 0.0
                     },
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "GreaterThan",
                       "CompareValue": 0.0
                     }
@@ -276,12 +290,14 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitIsCastingSource",
+                      "SourceParam": -1,
                       "CompareType": "IsFalse",
                       "CompareValue": 0.0
                     },
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "LessThan",
                       "CompareValue": 0.1
                     }
@@ -354,6 +370,7 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitWantToCastSource",
+                      "SourceParam": -1,
                       "CompareType": "IsTrue",
                       "CompareValue": 0.0
                     }
@@ -365,6 +382,7 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "GreaterThan",
                       "CompareValue": 0.0
                     }
@@ -381,6 +399,7 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitWantToCastSource",
+                      "SourceParam": -1,
                       "CompareType": "IsTrue",
                       "CompareValue": 0.0
                     }
@@ -392,6 +411,7 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "LessThan",
                       "CompareValue": 0.1
                     }
@@ -408,12 +428,14 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitIsCastingSource",
+                      "SourceParam": -1,
                       "CompareType": "IsFalse",
                       "CompareValue": 0.0
                     },
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "GreaterThan",
                       "CompareValue": 0.0
                     }
@@ -425,12 +447,14 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitIsCastingSource",
+                      "SourceParam": -1,
                       "CompareType": "IsFalse",
                       "CompareValue": 0.0
                     },
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "LessThan",
                       "CompareValue": 0.1
                     }
@@ -503,6 +527,7 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitWantToCastSource",
+                      "SourceParam": -1,
                       "CompareType": "IsTrue",
                       "CompareValue": 0.0
                     }
@@ -514,6 +539,7 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "GreaterThan",
                       "CompareValue": 0.0
                     }
@@ -530,6 +556,7 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitWantToCastSource",
+                      "SourceParam": -1,
                       "CompareType": "IsTrue",
                       "CompareValue": 0.0
                     }
@@ -541,6 +568,7 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "LessThan",
                       "CompareValue": 0.1
                     }
@@ -557,12 +585,14 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitIsCastingSource",
+                      "SourceParam": -1,
                       "CompareType": "IsFalse",
                       "CompareValue": 0.0
                     },
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "GreaterThan",
                       "CompareValue": 0.0
                     }
@@ -574,12 +604,14 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitIsCastingSource",
+                      "SourceParam": -1,
                       "CompareType": "IsFalse",
                       "CompareValue": 0.0
                     },
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "LessThan",
                       "CompareValue": 0.1
                     }
@@ -652,6 +684,7 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitWantToCastSource",
+                      "SourceParam": -1,
                       "CompareType": "IsTrue",
                       "CompareValue": 0.0
                     }
@@ -663,6 +696,7 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "GreaterThan",
                       "CompareValue": 0.0
                     }
@@ -679,6 +713,7 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitWantToCastSource",
+                      "SourceParam": -1,
                       "CompareType": "IsTrue",
                       "CompareValue": 0.0
                     }
@@ -690,6 +725,7 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "LessThan",
                       "CompareValue": 0.1
                     }
@@ -706,12 +742,14 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitIsCastingSource",
+                      "SourceParam": -1,
                       "CompareType": "IsFalse",
                       "CompareValue": 0.0
                     },
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "GreaterThan",
                       "CompareValue": 0.0
                     }
@@ -723,12 +761,14 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitIsCastingSource",
+                      "SourceParam": -1,
                       "CompareType": "IsFalse",
                       "CompareValue": 0.0
                     },
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "LessThan",
                       "CompareValue": 0.1
                     }
@@ -878,6 +918,7 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "GreaterThan",
                       "CompareValue": 0.0
                     }
@@ -889,12 +930,14 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitWantToCastSource",
+                      "SourceParam": -1,
                       "CompareType": "IsTrue",
                       "CompareValue": 0.0
                     },
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitCanStartCastSource",
+                      "SourceParam": -1,
                       "CompareType": "IsTrue",
                       "CompareValue": 0.0
                     }
@@ -911,6 +954,7 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "LessThan",
                       "CompareValue": 0.1
                     }
@@ -922,12 +966,14 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitWantToCastSource",
+                      "SourceParam": -1,
                       "CompareType": "IsTrue",
                       "CompareValue": 0.0
                     },
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitCanStartCastSource",
+                      "SourceParam": -1,
                       "CompareType": "IsTrue",
                       "CompareValue": 0.0
                     }
@@ -944,12 +990,14 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitIsCastingSource",
+                      "SourceParam": -1,
                       "CompareType": "IsFalse",
                       "CompareValue": 0.0
                     },
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "LessThan",
                       "CompareValue": 0.1
                     }
@@ -961,12 +1009,14 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitIsCastingSource",
+                      "SourceParam": -1,
                       "CompareType": "IsFalse",
                       "CompareValue": 0.0
                     },
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "GreaterThan",
                       "CompareValue": 0.0
                     }
@@ -1023,6 +1073,7 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "GreaterThan",
                       "CompareValue": 0.0
                     }
@@ -1039,6 +1090,7 @@
                     {
                       "ConditionType": 0,
                       "SourceType": "UnitVelocitySource",
+                      "SourceParam": -1,
                       "CompareType": "LessThan",
                       "CompareValue": 0.0
                     }

@@ -16,7 +16,7 @@ namespace CrystalMagic.Game
         NotInBattleArea = 1,
         SharedCooldownActive = 2,
         PlayerNotFound = 3,
-        InvalidBackpackSlot = 4,
+        InvalidPropSlot = 4,
         ItemNotFound = 5,
         ItemNotUsable = 6,
         MissingUseData = 7,
@@ -36,15 +36,15 @@ namespace CrystalMagic.Game
 
     public static class PropUseUtility
     {
-        public static bool TryUseBackpackSlot(int slotIndex, out PropUseFailureReason failureReason)
+        public static bool TryUsePropSlot(int slotIndex, out PropUseFailureReason failureReason)
         {
             if (!TryBuildDefaultContext(out PropUseRequestContext context, out failureReason))
                 return false;
 
-            return TryUseBackpackSlot(slotIndex, context, out failureReason);
+            return TryUsePropSlot(slotIndex, context, out failureReason);
         }
 
-        public static bool TryUseBackpackSlot(int slotIndex, PropUseRequestContext context, out PropUseFailureReason failureReason)
+        public static bool TryUsePropSlot(int slotIndex, PropUseRequestContext context, out PropUseFailureReason failureReason)
         {
             failureReason = PropUseFailureReason.None;
             if (!IsBattleArea())
@@ -60,43 +60,73 @@ namespace CrystalMagic.Game
                 return false;
             }
 
-            BackpackData backpackData = SaveDataComponent.Instance.GetBackpackData();
-            if (backpackData?.Items == null || slotIndex < 0 || slotIndex >= backpackData.Items.Count)
+            CharacterPropData propData = SaveDataComponent.Instance.GetCharacterPropData();
+            if (!PropInventoryUtility.TryGetSlot(propData, slotIndex, out CharacterPropSlotData propSlot))
             {
-                failureReason = PropUseFailureReason.InvalidBackpackSlot;
+                failureReason = PropUseFailureReason.InvalidPropSlot;
                 return false;
             }
 
-            InventoryItemData inventoryItem = backpackData.Items[slotIndex];
-            if (inventoryItem == null || inventoryItem.ItemId < 0 || inventoryItem.Quantity <= 0)
+            if (propSlot.ItemId < 0 || propSlot.Quantity <= 0)
             {
                 failureReason = PropUseFailureReason.ItemNotFound;
                 return false;
             }
 
-            return TryUseResolvedBackpackItem(backpackData, slotIndex, inventoryItem.ItemId, context, out failureReason);
+            return TryUseResolvedPropSlot(propData, slotIndex, propSlot.ItemId, context, out failureReason);
         }
 
-        public static bool TryUseBackpackItem(int itemId, out PropUseFailureReason failureReason)
+        public static bool TryUseShortcutSlot(int shortcutIndex, out PropUseFailureReason failureReason)
         {
             if (!TryBuildDefaultContext(out PropUseRequestContext context, out failureReason))
                 return false;
 
-            return TryUseBackpackItem(itemId, context, out failureReason);
+            return TryUseShortcutSlot(shortcutIndex, context, out failureReason);
         }
 
-        public static bool TryUseBackpackItem(int itemId, PropUseRequestContext context, out PropUseFailureReason failureReason)
+        public static bool TryUseShortcutSlot(int shortcutIndex, PropUseRequestContext context, out PropUseFailureReason failureReason)
         {
             failureReason = PropUseFailureReason.None;
-            BackpackData backpackData = SaveDataComponent.Instance.GetBackpackData();
-            int slotIndex = InventoryUtility.FindFirstItemSlot(backpackData, itemId);
+            CharacterPropData propData = SaveDataComponent.Instance.GetCharacterPropData();
+            if (!PropInventoryUtility.TryGetShortcutPropSlot(propData, shortcutIndex, out int propSlotIndex))
+            {
+                failureReason = PropUseFailureReason.InvalidPropSlot;
+                return false;
+            }
+
+            return TryUsePropSlot(propSlotIndex, context, out failureReason);
+        }
+
+        public static bool TryUsePropItem(int itemId, out PropUseFailureReason failureReason)
+        {
+            if (!TryBuildDefaultContext(out PropUseRequestContext context, out failureReason))
+                return false;
+
+            return TryUsePropItem(itemId, context, out failureReason);
+        }
+
+        public static bool TryUsePropItem(int itemId, PropUseRequestContext context, out PropUseFailureReason failureReason)
+        {
+            failureReason = PropUseFailureReason.None;
+            CharacterPropData propData = SaveDataComponent.Instance.GetCharacterPropData();
+            int slotIndex = PropInventoryUtility.FindFirstPropSlot(propData, itemId);
             if (slotIndex < 0)
             {
                 failureReason = PropUseFailureReason.ItemNotFound;
                 return false;
             }
 
-            return TryUseResolvedBackpackItem(backpackData, slotIndex, itemId, context, out failureReason);
+            return TryUseResolvedPropSlot(propData, slotIndex, itemId, context, out failureReason);
+        }
+
+        public static bool TryBindShortcutSlot(int shortcutIndex, int propSlotIndex)
+        {
+            CharacterPropData propData = SaveDataComponent.Instance.GetCharacterPropData();
+            if (!PropInventoryUtility.TryBindShortcut(propData, shortcutIndex, propSlotIndex))
+                return false;
+
+            SaveDataComponent.Instance.NotifyCharacterPropDataChanged();
+            return true;
         }
 
         public static bool TryBuildDefaultContext(out PropUseRequestContext context, out PropUseFailureReason failureReason)
@@ -142,8 +172,8 @@ namespace CrystalMagic.Game
             return true;
         }
 
-        private static bool TryUseResolvedBackpackItem(
-            BackpackData backpackData,
+        private static bool TryUseResolvedPropSlot(
+            CharacterPropData characterPropData,
             int slotIndex,
             int itemId,
             PropUseRequestContext context,
@@ -190,14 +220,14 @@ namespace CrystalMagic.Game
                 return false;
             }
 
-            if (!InventoryUtility.TryConsumeBackpackItem(backpackData, slotIndex, itemId, 1))
+            if (!PropInventoryUtility.TryConsumePropSlot(characterPropData, slotIndex, itemId, 1))
             {
                 failureReason = PropUseFailureReason.ConsumeFailed;
                 return false;
             }
 
             SkillExecutor.ExecuteEffects(propData.EffectChain, skillContent);
-            SaveDataComponent.Instance.NotifyBackpackDataChanged();
+            SaveDataComponent.Instance.NotifyCharacterPropDataChanged();
             RuntimeDataComponent.Instance.StartPropSharedCooldown(GetSharedCooldownSeconds());
             return true;
         }

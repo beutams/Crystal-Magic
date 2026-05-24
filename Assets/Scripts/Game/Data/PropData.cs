@@ -22,6 +22,9 @@ namespace CrystalMagic.Game.Data
         public string Description;
         public PropTargetType TargetType;
 
+        [EditorLabel("携带上限")]
+        public int CarryLimit = 10;
+
         [SerializeReference]
         public EffectData[] EffectChain = System.Array.Empty<EffectData>();
     }

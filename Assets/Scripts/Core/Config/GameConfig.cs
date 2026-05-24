@@ -26,6 +26,12 @@ namespace CrystalMagic.Game.Config
         [EditorLabel("战斗道具公共冷却")]
         public float BattlePropSharedCooldownSeconds = 3f;
 
+        [EditorLabel("战斗道具槽位数")]
+        public int BattlePropSlotCount = 4;
+
+        [EditorLabel("战斗道具快捷槽位数")]
+        public int BattlePropShortcutSlotCount = 4;
+
         [EditorLabel("唯一对象池上限")]
         public int SinglePoolMaxSize = 1;
 

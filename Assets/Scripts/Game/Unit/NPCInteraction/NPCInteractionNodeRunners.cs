@@ -78,6 +78,7 @@ public sealed class NPCOpenUIInteractionNodeRunner : NPCInteractionNodeRunner
 
         if (_openedPanel == null || !_openedPanel.gameObject.activeInHierarchy)
         {
+            ReleaseOpenedPanel();
             _completed = true;
         }
     }
@@ -89,10 +90,19 @@ public sealed class NPCOpenUIInteractionNodeRunner : NPCInteractionNodeRunner
 
     public override void Cancel(NPCInteractionSession session)
     {
-        if (_openedPanel != null && _openedPanel.gameObject.activeInHierarchy && _node.WaitUntilClosed && UIComponent.Instance != null)
+        if (_node.WaitUntilClosed)
         {
-            UIComponent.Instance.ReleaseUI(_openedPanel);
+            ReleaseOpenedPanel();
         }
+    }
+
+    private void ReleaseOpenedPanel()
+    {
+        if (_openedPanel == null || UIComponent.Instance == null)
+            return;
+
+        UIComponent.Instance.ReleaseUI(_openedPanel);
+        _openedPanel = null;
     }
 }
 

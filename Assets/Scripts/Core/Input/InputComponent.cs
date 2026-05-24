@@ -23,6 +23,7 @@ namespace CrystalMagic.Core {
         public event Action OnInventory;
         public event Action OnProperty;
         public event Action OnEscape;
+        public event Action<int> OnPropShortcut;
         #endregion
 
         #region 调用
@@ -105,6 +106,7 @@ namespace CrystalMagic.Core {
             {
                 UpdateWorldPosition();
                 UpdateMousePress();
+                UpdatePropShortcuts();
             }
             UpdateEscape();
         }
@@ -143,6 +145,21 @@ namespace CrystalMagic.Core {
                 return;
 
             OnEscape?.Invoke();
+        }
+
+        private void UpdatePropShortcuts()
+        {
+            if (Keyboard.current == null)
+                return;
+
+            if (Keyboard.current.f1Key.wasPressedThisFrame)
+                OnPropShortcut?.Invoke(0);
+            if (Keyboard.current.f2Key.wasPressedThisFrame)
+                OnPropShortcut?.Invoke(1);
+            if (Keyboard.current.f3Key.wasPressedThisFrame)
+                OnPropShortcut?.Invoke(2);
+            if (Keyboard.current.f4Key.wasPressedThisFrame)
+                OnPropShortcut?.Invoke(3);
         }
 
         private void HandleGameGateChanged(GameGateChangedEvent gameEvent)

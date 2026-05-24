@@ -93,26 +93,20 @@ namespace CrystalMagic.UI
             if (maxBuyCount <= 0)
                 return 0;
 
-            return maxBuyCount > int.MaxValue ? int.MaxValue : (int)maxBuyCount;
+            int moneyLimitedCount = maxBuyCount > int.MaxValue ? int.MaxValue : (int)maxBuyCount;
+            int inventoryLimitedCount = InventoryUtility.GetAvailableAddCountInCharacterInventory(
+                SaveDataComponent.Instance.GetBackpackData(),
+                SaveDataComponent.Instance.GetCharacterPropData(),
+                ItemId);
+
+            return UnityEngine.Mathf.Min(moneyLimitedCount, inventoryLimitedCount);
         }
 
         private int GetHaveCount(int itemId)
         {
             BackpackData backpackData = SaveDataComponent.Instance.GetBackpackData();
-            if (backpackData?.Items == null)
-                return 0;
-
-            int count = 0;
-            for (int i = 0; i < backpackData.Items.Count; i++)
-            {
-                InventoryItemData item = backpackData.Items[i];
-                if (item == null || item.ItemId != itemId)
-                    continue;
-
-                count += item.Quantity;
-            }
-
-            return count;
+            CharacterPropData propData = SaveDataComponent.Instance.GetCharacterPropData();
+            return InventoryUtility.GetItemCountInCharacterInventory(backpackData, propData, itemId);
         }
 
         private void PublishChanged()

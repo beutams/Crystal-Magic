@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using CrystalMagic.Core;
+using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Skill;
 using Unity.Collections;
@@ -13,6 +14,7 @@ namespace CrystalMagic.UI
         public const string DataChangedEventName = "BattleUIModel.DataChanged";
 
         private readonly List<BattleSkillDisplayData> _skillItems = new();
+        private readonly List<BattlePropShortcutDisplayData> _propShortcutItems = new();
         private Entity _cachedPlayerEntity = Entity.Null;
         private float _hpRatio = 1f;
         private float _mpRatio = 1f;
@@ -23,6 +25,7 @@ namespace CrystalMagic.UI
 
         public override string ChangedEventName => DataChangedEventName;
         public IReadOnlyList<BattleSkillDisplayData> SkillItems => _skillItems;
+        public IReadOnlyList<BattlePropShortcutDisplayData> PropShortcutItems => _propShortcutItems;
         public float HpRatio => _hpRatio;
         public float MpRatio => _mpRatio;
         public float CurrentHp => _currentHp;
@@ -44,8 +47,11 @@ namespace CrystalMagic.UI
         private void RebuildState(bool publishIfChanged)
         {
             SkillCData skillConfig = SaveDataComponent.Instance.GetSkillData();
+            CharacterPropData propConfig = SaveDataComponent.Instance.GetCharacterPropData();
             RuntimeSkillData runtimeSkillData = RuntimeDataComponent.Instance.GetSkillData();
+            RuntimePropData runtimePropData = RuntimeDataComponent.Instance.GetPropData();
             List<BattleSkillDisplayData> nextItems = BuildSkillItems(skillConfig, runtimeSkillData, out int selectedChainIndex);
+            List<BattlePropShortcutDisplayData> nextPropItems = BuildPropShortcutItems(propConfig, runtimePropData);
 
             PlayerCombatSnapshot snapshot = ReadPlayerSnapshot(selectedChainIndex);
             ApplyRuntimeState(nextItems, snapshot);
@@ -58,6 +64,7 @@ namespace CrystalMagic.UI
             float nextMaxMp = snapshot.HasMana ? snapshot.MaxMana : 0f;
 
             bool changed = !AreSkillItemsEqual(_skillItems, nextItems)
+                || !ArePropShortcutItemsEqual(_propShortcutItems, nextPropItems)
                 || !Mathf.Approximately(_hpRatio, nextHpRatio)
                 || !Mathf.Approximately(_mpRatio, nextMpRatio)
                 || !Mathf.Approximately(_currentHp, nextCurrentHp)
@@ -70,6 +77,8 @@ namespace CrystalMagic.UI
 
             _skillItems.Clear();
             _skillItems.AddRange(nextItems);
+            _propShortcutItems.Clear();
+            _propShortcutItems.AddRange(nextPropItems);
             _hpRatio = nextHpRatio;
             _mpRatio = nextMpRatio;
             _currentHp = nextCurrentHp;
@@ -111,6 +120,48 @@ namespace CrystalMagic.UI
                     SkillId = skillData != null ? skillData.Id : -1,
                     SkillIconPath = skillData != null ? skillData.IconPath : string.Empty,
                     AdditionIconPath = skillAdditionData != null ? skillAdditionData.IconPath : string.Empty,
+                });
+            }
+
+            return items;
+        }
+
+        private static List<BattlePropShortcutDisplayData> BuildPropShortcutItems(CharacterPropData propConfig, RuntimePropData runtimePropData)
+        {
+            List<BattlePropShortcutDisplayData> items = new();
+            if (propConfig?.ShortcutSlotIndexes == null)
+                return items;
+
+            float cooldownRemaining = Mathf.Max(0f, runtimePropData?.SharedCooldownRemaining ?? 0f);
+            GameConfig config = ConfigComponent.Instance.Get<GameConfig>();
+            float cooldownDuration = Mathf.Max(0f, config.BattlePropSharedCooldownSeconds);
+            float cooldownRatio = cooldownDuration > 0f
+                ? Mathf.Clamp01(cooldownRemaining / cooldownDuration)
+                : 0f;
+
+            for (int i = 0; i < propConfig.ShortcutSlotIndexes.Length; i++)
+            {
+                int propSlotIndex = propConfig.ShortcutSlotIndexes[i];
+                CharacterPropSlotData propSlot = propConfig.Slots != null &&
+                                                 propSlotIndex >= 0 &&
+                                                 propSlotIndex < propConfig.Slots.Count
+                    ? propConfig.Slots[propSlotIndex]
+                    : null;
+                int itemId = propSlot != null && !propSlot.IsEmpty ? propSlot.ItemId : -1;
+                ItemData itemData = itemId >= 0 ? DataComponent.Instance.Get<ItemData>(itemId) : null;
+
+                items.Add(new BattlePropShortcutDisplayData
+                {
+                    DisplayIndex = i + 1,
+                    ShortcutIndex = i,
+                    PropSlotIndex = propSlotIndex,
+                    ItemId = itemId,
+                    Count = propSlot != null && !propSlot.IsEmpty ? propSlot.Quantity : 0,
+                    CarryLimit = itemId >= 0 ? PropInventoryUtility.GetCarryLimit(itemId) : 0,
+                    Name = itemData != null ? itemData.Name : string.Empty,
+                    IconPath = itemData != null ? itemData.IconPath : string.Empty,
+                    CooldownRemaining = cooldownRemaining,
+                    CooldownRatio = cooldownRatio,
                 });
             }
 
@@ -250,6 +301,43 @@ namespace CrystalMagic.UI
 
             return true;
         }
+
+        private static bool ArePropShortcutItemsEqual(IReadOnlyList<BattlePropShortcutDisplayData> left, IReadOnlyList<BattlePropShortcutDisplayData> right)
+        {
+            if (ReferenceEquals(left, right))
+                return true;
+
+            if (left == null || right == null || left.Count != right.Count)
+                return false;
+
+            for (int i = 0; i < left.Count; i++)
+            {
+                BattlePropShortcutDisplayData a = left[i];
+                BattlePropShortcutDisplayData b = right[i];
+                if (a == null || b == null)
+                {
+                    if (!ReferenceEquals(a, b))
+                        return false;
+                    continue;
+                }
+
+                if (a.DisplayIndex != b.DisplayIndex ||
+                    a.ShortcutIndex != b.ShortcutIndex ||
+                    a.PropSlotIndex != b.PropSlotIndex ||
+                    a.ItemId != b.ItemId ||
+                    a.Count != b.Count ||
+                    a.CarryLimit != b.CarryLimit ||
+                    !Mathf.Approximately(a.CooldownRemaining, b.CooldownRemaining) ||
+                    !Mathf.Approximately(a.CooldownRatio, b.CooldownRatio) ||
+                    !string.Equals(a.Name, b.Name, System.StringComparison.Ordinal) ||
+                    !string.Equals(a.IconPath, b.IconPath, System.StringComparison.Ordinal))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 
     public sealed class BattleSkillDisplayData
@@ -262,6 +350,20 @@ namespace CrystalMagic.UI
         public bool IsSelected;
         public bool ShowChantProgress;
         public float ChantProgress;
+    }
+
+    public sealed class BattlePropShortcutDisplayData
+    {
+        public int DisplayIndex;
+        public int ShortcutIndex;
+        public int PropSlotIndex;
+        public int ItemId;
+        public int Count;
+        public int CarryLimit;
+        public string Name;
+        public string IconPath;
+        public float CooldownRemaining;
+        public float CooldownRatio;
     }
 
     internal struct PlayerCombatSnapshot

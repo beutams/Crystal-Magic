@@ -56,6 +56,7 @@ namespace CrystalMagic.UI
 
             TownData townData = SaveDataComponent.Instance.GetTownData();
             BackpackData backpackData = SaveDataComponent.Instance.GetBackpackData();
+            CharacterPropData propData = SaveDataComponent.Instance.GetCharacterPropData();
             if (townData == null || backpackData == null)
                 return;
 
@@ -63,9 +64,18 @@ namespace CrystalMagic.UI
             if (totalCost <= 0 || townData.StashMoney < totalCost)
                 return;
 
+            if (!InventoryUtility.CanAddItemToCharacterInventory(backpackData, propData, Model.ItemId, quantity))
+                return;
+
+            int addedCount = AddItemToCharacterInventory(backpackData, propData, Model.ItemId, quantity);
+            if (addedCount != quantity)
+                return;
+
             townData.StashMoney -= totalCost;
-            AddItemToBackpack(backpackData, Model.ItemId, quantity);
-            SaveDataComponent.Instance.NotifyBackpackDataChanged();
+            if (PropInventoryUtility.IsPropItem(Model.ItemId))
+                SaveDataComponent.Instance.NotifyCharacterPropDataChanged();
+            else
+                SaveDataComponent.Instance.NotifyBackpackDataChanged();
             View.Close();
         }
 
@@ -74,9 +84,9 @@ namespace CrystalMagic.UI
             View.Close();
         }
 
-        private void AddItemToBackpack(BackpackData backpackData, int itemId, int quantity)
+        private int AddItemToCharacterInventory(BackpackData backpackData, CharacterPropData propData, int itemId, int quantity)
         {
-            InventoryUtility.AddItemToBackpack(backpackData, itemId, quantity);
+            return InventoryUtility.AddItemToCharacterInventory(backpackData, propData, itemId, quantity);
         }
     }
 }

@@ -20,7 +20,7 @@
             "Rarity": 1,
             "MaxStack": 99,
             "SellPrice": 50,
-            "IconPath": "Assets/Res/Sprites/Item/FireBall.pngAssets/Res/Sprites/Item/FireBall.png"
+            "IconPath": "Assets/Res/Sprites/Item/FireBall.png"
         },
         {
             "Id": 2,
@@ -152,7 +152,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 100,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/ModifierAmplify.png"
         },
         {
             "Id": 14,
@@ -163,7 +163,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 100,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/ModifierWideArea.png"
         },
         {
             "Id": 15,
@@ -174,7 +174,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 100,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/ModifierHaste.png"
         },
         {
             "Id": 16,
@@ -185,7 +185,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 100,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/ModifierGuard.png"
         },
         {
             "Id": 17,
@@ -196,7 +196,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 100,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/MagicBoost.png"
         },
         {
             "Id": 18,
@@ -207,7 +207,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 100,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/LifeBoost.png"
         },
         {
             "Id": 19,
@@ -218,7 +218,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 100,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/Regeneration.png"
         },
         {
             "Id": 20,
@@ -229,7 +229,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 100,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/FireSpirit.png"
         },
         {
             "Id": 21,
@@ -240,7 +240,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 100,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/WaterSpirit.png"
         },
         {
             "Id": 22,
@@ -251,7 +251,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 100,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/LightningSpirit.png"
         },
         {
             "Id": 23,
@@ -262,7 +262,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 100,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/WindSpirit.png"
         },
         {
             "Id": 24,
@@ -273,7 +273,7 @@
             "Rarity": 1,
             "MaxStack": 10,
             "SellPrice": 10,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/SmallHpPotion.png"
         },
         {
             "Id": 25,
@@ -284,7 +284,7 @@
             "Rarity": 1,
             "MaxStack": 10,
             "SellPrice": 10,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/SmallMpPotion.png"
         },
         {
             "Id": 26,
@@ -295,7 +295,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 100,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/ModifierIncomplete.png"
         },
         {
             "Id": 27,
@@ -306,7 +306,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 100,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/ModifierBurst.png"
         },
         {
             "Id": 28,
@@ -317,7 +317,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 100,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/ModifierMulticast.png"
         },
         {
             "Id": 29,
@@ -328,7 +328,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 100,
-            "IconPath": ""
+            "IconPath": "Assets/Res/Sprites/Item/ModifierAntiMagic.png"
         }
     ]
 }

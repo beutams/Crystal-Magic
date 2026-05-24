@@ -25,9 +25,11 @@ namespace CrystalMagic.UI
             View.SkillAdditionRequested += OnSkillAdditionRequested;
             View.SkillReordered += OnSkillReordered;
             View.SkillReturnedToInventory += OnSkillReturnedToInventory;
+            View.PropShortcutBindRequested += OnPropShortcutBindRequested;
             BindEvent(new CommonGameEvent(RuntimeDataComponent.SkillRuntimeDataChangedEventName), _refreshHandler);
             BindEvent(new CommonGameEvent(SaveDataComponent.SkillDataChangedEventName), _refreshHandler);
             BindEvent(new CommonGameEvent(SaveDataComponent.BackpackDataChangedEventName), _refreshHandler);
+            BindEvent(new CommonGameEvent(SaveDataComponent.CharacterPropDataChangedEventName), _refreshHandler);
             BindEvent(new CommonGameEvent(SaveDataComponent.EquipmentDataChangedEventName), _refreshHandler);
             Model.Refresh();
         }
@@ -42,6 +44,7 @@ namespace CrystalMagic.UI
             View.SkillAdditionRequested -= OnSkillAdditionRequested;
             View.SkillReordered -= OnSkillReordered;
             View.SkillReturnedToInventory -= OnSkillReturnedToInventory;
+            View.PropShortcutBindRequested -= OnPropShortcutBindRequested;
             CloseEffectSelectUI();
         }
 
@@ -220,6 +223,11 @@ namespace CrystalMagic.UI
                 SkillSlotIndex = data.SkillIndex,
                 SelectedAdditionId = chain.Slots[data.SkillIndex]?.SkillAdditionId ?? -1,
             });
+        }
+
+        private void OnPropShortcutBindRequested(int propSlotIndex, int shortcutIndex)
+        {
+            CrystalMagic.Game.PropUseUtility.TryBindShortcutSlot(shortcutIndex, propSlotIndex);
         }
 
         private void CloseEffectSelectUI()

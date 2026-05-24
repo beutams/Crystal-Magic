@@ -15,6 +15,7 @@ namespace CrystalMagic.Core {
         public const string StashDataChangedEventName = "SaveData.Town.Stash.Changed";
         public const string CharacterDataChangedEventName = "SaveData.Town.Character.Changed";
         public const string BackpackDataChangedEventName = "SaveData.Town.Character.Backpack.Changed";
+        public const string CharacterPropDataChangedEventName = "SaveData.Town.Character.Props.Changed";
         public const string EquipmentDataChangedEventName = "SaveData.Town.Character.Equipment.Changed";
         public const string SkillDataChangedEventName = "SaveData.Town.Character.Skill.Changed";
 
@@ -304,6 +305,12 @@ namespace CrystalMagic.Core {
             return GetActiveCharacterDataInternal()?.Backpack;
         }
 
+        public CharacterPropData GetCharacterPropData()
+        {
+            EnsureCurrentSaveDataValid();
+            return GetActiveCharacterDataInternal()?.Props;
+        }
+
         public TownData GetPersistentTownData()
         {
             EnsureCurrentSaveDataValid();
@@ -457,6 +464,13 @@ namespace CrystalMagic.Core {
             NotifyCharacterDataChanged();
         }
 
+        public void NotifyCharacterPropDataChanged()
+        {
+            EnsureCurrentSaveDataValid();
+            EventComponent.Instance.Publish(new CommonGameEvent(CharacterPropDataChangedEventName, GetCharacterPropData()));
+            NotifyCharacterDataChanged();
+        }
+
         public void NotifyEquipmentDataChanged()
         {
             EnsureCurrentSaveDataValid();
@@ -565,6 +579,9 @@ namespace CrystalMagic.Core {
             if (data.Backpack.Capacity <= 0)
                 data.Backpack.Capacity = Mathf.Max(1, GetGameConfig().InitialBackpackSize);
 
+            data.Props ??= new CharacterPropData();
+            data.Props.EnsureValid(GetPropSlotCount(), GetPropShortcutSlotCount());
+            PropInventoryUtility.MigrateBackpackPropsToPropSlots(data);
         }
 
         private void EnsureDungeonRunDataValid(DungeonRunData data, CharacterData fallbackCharacter = null)
@@ -624,6 +641,7 @@ namespace CrystalMagic.Core {
 
             EnsureCharacterDataValid(data);
             data.Backpack.Items.Clear();
+            data.Props.ClearSlots();
             data.Equipment = new EquipmentData();
         }
 
@@ -658,6 +676,7 @@ namespace CrystalMagic.Core {
             EventComponent.Instance.Publish(new CommonGameEvent(StashDataChangedEventName, GetStashData()));
             EventComponent.Instance.Publish(new CommonGameEvent(CharacterDataChangedEventName, GetCharacterData()));
             EventComponent.Instance.Publish(new CommonGameEvent(BackpackDataChangedEventName, GetBackpackData()));
+            EventComponent.Instance.Publish(new CommonGameEvent(CharacterPropDataChangedEventName, GetCharacterPropData()));
             EventComponent.Instance.Publish(new CommonGameEvent(EquipmentDataChangedEventName, GetEquipmentData()));
             EventComponent.Instance.Publish(new CommonGameEvent(SkillDataChangedEventName, GetSkillData()));
             EventComponent.Instance.Publish(new CommonGameEvent(SaveDataChangedEventName, _currentSaveData));
@@ -695,6 +714,16 @@ namespace CrystalMagic.Core {
         private int GetMaxSaveSlots()
         {
             return Mathf.Max(1, GetGameConfig().MaxSaveSlots);
+        }
+
+        private int GetPropSlotCount()
+        {
+            return Mathf.Max(0, GetGameConfig().BattlePropSlotCount);
+        }
+
+        private int GetPropShortcutSlotCount()
+        {
+            return Mathf.Max(0, GetGameConfig().BattlePropShortcutSlotCount);
         }
     }
 

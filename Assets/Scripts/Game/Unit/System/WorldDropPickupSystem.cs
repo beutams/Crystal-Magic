@@ -29,6 +29,7 @@ partial class WorldDropPickupSystem : SystemBase
             return;
 
         BackpackData backpackData = SaveDataComponent.Instance.GetBackpackData();
+        CharacterPropData propData = SaveDataComponent.Instance.GetCharacterPropData();
 
         foreach ((RefRO<WorldDropComponent> dropRef, RefRO<LocalTransform> transformRef, Entity entity) in
                  SystemAPI.Query<RefRO<WorldDropComponent>, RefRO<LocalTransform>>().WithEntityAccess())
@@ -38,7 +39,7 @@ partial class WorldDropPickupSystem : SystemBase
             if (distanceSq > drop.PickupRadius * drop.PickupRadius)
                 continue;
 
-            if (!TryPickup(drop, backpackData))
+            if (!TryPickup(drop, backpackData, propData))
                 continue;
 
             if (!EntityManager.HasComponent<DestroyEntityFlag>(entity))
@@ -48,7 +49,7 @@ partial class WorldDropPickupSystem : SystemBase
         }
     }
 
-    private static bool TryPickup(in WorldDropComponent drop, BackpackData backpackData)
+    private static bool TryPickup(in WorldDropComponent drop, BackpackData backpackData, CharacterPropData propData)
     {
         switch (drop.DropType)
         {
@@ -61,13 +62,16 @@ partial class WorldDropPickupSystem : SystemBase
 
             case DropRewardType.Item:
             default:
-                if (!InventoryUtility.CanAddItemToBackpack(backpackData, drop.ItemId, drop.Amount))
+                if (!InventoryUtility.CanAddItemToCharacterInventory(backpackData, propData, drop.ItemId, drop.Amount))
                     return false;
 
-                if (InventoryUtility.AddItemToBackpack(backpackData, drop.ItemId, drop.Amount) <= 0)
+                if (InventoryUtility.AddItemToCharacterInventory(backpackData, propData, drop.ItemId, drop.Amount) <= 0)
                     return false;
 
-                SaveDataComponent.Instance.NotifyBackpackDataChanged();
+                if (PropInventoryUtility.IsPropItem(drop.ItemId))
+                    SaveDataComponent.Instance.NotifyCharacterPropDataChanged();
+                else
+                    SaveDataComponent.Instance.NotifyBackpackDataChanged();
                 return true;
         }
     }

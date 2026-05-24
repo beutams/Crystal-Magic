@@ -48,7 +48,7 @@
         public void RefreshRuntimeData()
         {
             HaveCount = GetSourceCount();
-            MaxCount = HaveCount > 0 ? HaveCount : 0;
+            MaxCount = GetMaxTransferCount(HaveCount);
             Quantity = ClampQuantity(Quantity);
             PublishChanged();
         }
@@ -88,6 +88,28 @@
         public int GetCurrentMaxCount()
         {
             return MaxCount;
+        }
+
+        private int GetMaxTransferCount(int sourceCount)
+        {
+            if (sourceCount <= 0)
+                return 0;
+
+            if (Mode == StashInteractMode.Store)
+                return sourceCount;
+
+            if (CrystalMagic.Core.PropInventoryUtility.IsPropItem(ItemId))
+            {
+                int availableCount = CrystalMagic.Core.PropInventoryUtility.GetAvailableAddCount(
+                    CrystalMagic.Core.SaveDataComponent.Instance.GetCharacterPropData(),
+                    ItemId);
+                return UnityEngine.Mathf.Min(sourceCount, availableCount);
+            }
+
+            int backpackAvailableCount = CrystalMagic.Core.InventoryUtility.GetAvailableAddCountInBackpack(
+                CrystalMagic.Core.SaveDataComponent.Instance.GetBackpackData(),
+                ItemId);
+            return UnityEngine.Mathf.Min(sourceCount, backpackAvailableCount);
         }
 
         private int GetSourceCount()

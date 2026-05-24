@@ -28,6 +28,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
     public event Action<CrystalMagic.UI.CharacterSkillDisplayData> SkillAdditionRequested;
     public event Action<CrystalMagic.UI.CharacterSkillDisplayData, int> SkillReordered;
     public event Action<CrystalMagic.UI.CharacterSkillDisplayData> SkillReturnedToInventory;
+    public event Action<int, int> PropShortcutBindRequested;
 
     public override void OnOpen()
     {
@@ -545,6 +546,11 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
     private void OnChangeSkillButton()
     {
         ChangeSkillRequested?.Invoke();
+    }
+
+    public void RequestPropShortcutBind(int propSlotIndex, int shortcutIndex)
+    {
+        PropShortcutBindRequested?.Invoke(propSlotIndex, shortcutIndex);
     }
 
     private Sprite LoadIcon(string iconPath)

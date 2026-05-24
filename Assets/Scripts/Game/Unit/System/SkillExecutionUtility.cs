@@ -159,8 +159,8 @@ public static class SkillExecutionUtility
         SkillContent.HasOriginEntity = true;
         SkillContent.OriginEntity = entity;
         SetSkillReleasePosition(entityManager, entity, cast, skillData);
-        SkillContent.HasTargetEntity = false;
-        SkillContent.TargetEntity = Entity.Null;
+        SkillContent.HasTargetEntity = skillData?.SkillType == SkillType.SelfSkill;
+        SkillContent.TargetEntity = skillData?.SkillType == SkillType.SelfSkill ? entity : Entity.Null;
         SkillContent.HasTarget = false;
         SkillContent.Target = null;
         SkillContent.Origin = null;

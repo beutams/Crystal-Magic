@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System;
 using CrystalMagic.Core;
 using CrystalMagic.UI;
 using UnityEngine;
@@ -8,6 +9,9 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
     private readonly List<BattleUI_SkillItemView> _skillItemViews = new();
     private float _hpMaskBaseWidth = -1f;
     private float _mpMaskBaseWidth = -1f;
+
+    public event Action<int> PropShortcutUseRequested;
+    public event Action<int, int> PropShortcutBindRequested;
 
     public override void OnOpen()
     {
@@ -133,6 +137,16 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
         return Mathf.Approximately(value, Mathf.Round(value))
             ? Mathf.RoundToInt(value).ToString()
             : value.ToString("0.#");
+    }
+
+    public void RequestPropShortcutUse(int shortcutIndex)
+    {
+        PropShortcutUseRequested?.Invoke(shortcutIndex);
+    }
+
+    public void RequestPropShortcutBind(int propSlotIndex, int shortcutIndex)
+    {
+        PropShortcutBindRequested?.Invoke(propSlotIndex, shortcutIndex);
     }
 }
 
