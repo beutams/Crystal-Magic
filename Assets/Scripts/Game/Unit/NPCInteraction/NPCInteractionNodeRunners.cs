@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
+using CrystalMagic.UI;
 using UnityEngine;
 
 public sealed class NPCDialogueInteractionNodeRunner : NPCInteractionNodeRunner
@@ -149,18 +150,12 @@ public sealed class NPCEnterDungeonInteractionNodeRunner : NPCInteractionNodeRun
             return;
         }
 
+        SaveDataComponent.Instance?.ClearDungeonRun();
         LoadGameContext context = SaveDataComponent.Instance?.CreateLoadGameContext(
             SaveAreaType.Dungeon,
-            Mathf.Max(1, _node.DungeonFloor));
+            1);
 
-        GameFlowComponent.Instance.BeginTransition(new TransitionData
-        {
-            TargetSceneName = DungeonState.SceneName,
-            TargetStateType = typeof(DungeonState),
-            TargetStateData = context,
-            TransitionUIName = "TransitionUI",
-            ForceReloadTargetScene = true,
-        });
+        GameFlowComponent.Instance.BeginTransition(DungeonState.CreateEnterTransitionData(context));
     }
 
     public override bool IsCompleted(NPCInteractionSession session)
@@ -202,7 +197,9 @@ public sealed class NPCEnterTrainingGroundInteractionNodeRunner : NPCInteraction
 public sealed class NPCSelectInteractionNodeRunner : NPCInteractionNodeRunner
 {
     private readonly NPCSelectInteractionNodeData _node;
+    private UIBase _openedPanel;
     private bool _completed;
+    private bool _selectionResolved;
 
     public NPCSelectInteractionNodeRunner(NPCSelectInteractionNodeData node)
     {
@@ -231,13 +228,62 @@ public sealed class NPCSelectInteractionNodeRunner : NPCInteractionNodeRunner
             _node,
             enabledOptions));
 
-        Debug.Log("[NPCInteraction] Select node reached, but InteractionSelectUI is not implemented yet.");
-        session.SelectedNextNodeGuid = null;
-        _completed = true;
+        if (enabledOptions.Count == 0)
+        {
+            session.SelectedNextNodeGuid = null;
+            _completed = true;
+            return;
+        }
+
+        _openedPanel = UIComponent.Instance.Open<InteractionSelectUI>(new InteractionSelectUIOpenData(
+            enabledOptions,
+            option => HandleOptionSelected(session, option)));
+
+        if (_openedPanel == null)
+        {
+            _completed = true;
+        }
+    }
+
+    public override void Update(NPCInteractionSession session, float deltaTime)
+    {
+        if (_completed || _openedPanel == null)
+            return;
+
+        if (!_openedPanel.gameObject.activeInHierarchy)
+        {
+            ReleaseOpenedPanel();
+            _completed = true;
+        }
     }
 
     public override bool IsCompleted(NPCInteractionSession session)
     {
         return _completed;
+    }
+
+    public override void Cancel(NPCInteractionSession session)
+    {
+        ReleaseOpenedPanel();
+    }
+
+    private void HandleOptionSelected(NPCInteractionSession session, NPCSelectOptionData option)
+    {
+        if (_selectionResolved)
+            return;
+
+        _selectionResolved = true;
+        session.SelectedNextNodeGuid = option?.NextNodeGuid;
+        _openedPanel = null;
+        _completed = true;
+    }
+
+    private void ReleaseOpenedPanel()
+    {
+        if (_openedPanel == null)
+            return;
+
+        UIComponent.Instance.ReleaseUI(_openedPanel);
+        _openedPanel = null;
     }
 }

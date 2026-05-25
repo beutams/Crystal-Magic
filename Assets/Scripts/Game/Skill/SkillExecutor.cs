@@ -45,6 +45,7 @@ namespace CrystalMagic.Game.Skill
                 ApplyBuffEffectData data => new ApplyBuffEffect(data),
                 AreaSearchEffectData data => new AreaSearchEffect(data),
                 ChainSearchEffectData data => new ChainSearchEffect(data),
+                ConeSearchEffectData data => new ConeSearchEffect(data),
                 ReadBuffStackEffectData data => new ReadBuffStackEffect(data),
                 RemoveBuffEffectData data => new RemoveBuffEffect(data),
                 CameraShakeEffectData data => new CameraShakeEffect(data),

@@ -1,0 +1,20 @@
+{
+    "BossFloorInterval": 10,
+    "ThemeBandSize": 10,
+    "CellWorldSize": 2.0,
+    "ExitInteractionRange": 3.0,
+    "DefaultCorridorMaterialPath": "Assets/Res/Material/TrainPlane.mat",
+    "DefaultRoomMaterialPath": "Assets/Res/Material/Plane.mat",
+    "DefaultAnteRoomMaterialPath": "Assets/Res/Material/TrainPlane.mat",
+    "DefaultWallMaterialPath": "Assets/Res/Material/NPC1.mat",
+    "DefaultStartMarkerMaterialPath": "Assets/Res/Material/NPC2.mat",
+    "DefaultExitClosedMaterialPath": "Assets/Res/Material/NPC1.mat",
+    "DefaultExitOpenMaterialPath": "Assets/Res/Material/NPC3.mat",
+    "FallbackMob1PoolId": 1,
+    "FallbackMob2PoolId": 2,
+    "FallbackMob3PoolId": 3,
+    "FallbackTreasure1PoolId": 1,
+    "FallbackTreasure2PoolId": 2,
+    "FallbackTreasure3PoolId": 3,
+    "FallbackBossRoomId": 1
+}

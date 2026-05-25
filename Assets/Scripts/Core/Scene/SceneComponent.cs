@@ -24,11 +24,16 @@ namespace CrystalMagic.Core {
             _currentSceneName = sceneName;
         }
 
-        public System.Collections.IEnumerator LoadSceneAsyncCoroutine(string sceneName, System.Action onComplete = null, bool forceReload = false)
+        public System.Collections.IEnumerator LoadSceneAsyncCoroutine(
+            string sceneName,
+            System.Action onComplete = null,
+            bool forceReload = false,
+            System.Action<float> onProgress = null)
         {
             if (!forceReload && _currentSceneName == sceneName)
             {
                 Debug.LogWarning($"Scene '{sceneName}' is already loaded");
+                onProgress?.Invoke(1f);
                 onComplete?.Invoke();
                 yield break;
             }
@@ -39,10 +44,15 @@ namespace CrystalMagic.Core {
 
             while (!asyncLoad.isDone)
             {
+                float progress = asyncLoad.progress >= 0.9f
+                    ? 1f
+                    : Mathf.Clamp01(asyncLoad.progress / 0.9f);
+                onProgress?.Invoke(progress);
                 yield return null;
             }
 
             _currentSceneName = sceneName;
+            onProgress?.Invoke(1f);
             Debug.Log($"[SceneComponent] Scene loaded: {sceneName}");
             onComplete?.Invoke();
         }

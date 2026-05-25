@@ -183,17 +183,23 @@ namespace CrystalMagic.Core
         public const string SceneName = "DungeonScene";
         protected override string BattleSceneName => SceneName;
 
-        protected override void OnEnterBattle()
+        public static TransitionData CreateEnterTransitionData(LoadGameContext context)
         {
-            Debug.Log("[DungeonState] Entered Dungeon");
-            int dungeonFloor = 1;
-            SaveAreaType previousAreaType = SaveDataComponent.Instance.GetLocationData()?.AreaType ?? SaveAreaType.Town;
-
-            if (StateData is LoadGameContext context)
+            return new TransitionData
             {
-                dungeonFloor = context.DungeonFloor;
-                Debug.Log($"[DungeonState] Resuming dungeon at floor: {context.DungeonFloor}");
-            }
+                TargetSceneName = SceneName,
+                TargetStateType = typeof(DungeonState),
+                TargetStateData = context,
+                TransitionUIName = "TransitionUI",
+                ForceReloadTargetScene = true,
+                PostLoadCoroutineFactory = () => DungeonGenerationService.GenerateForTransition(context, SceneName),
+            };
+        }
+
+        public static int PrepareDungeonRun(LoadGameContext context)
+        {
+            int dungeonFloor = context?.DungeonFloor ?? 1;
+            SaveAreaType previousAreaType = SaveDataComponent.Instance.GetLocationData()?.AreaType ?? SaveAreaType.Town;
 
             if (previousAreaType == SaveAreaType.Dungeon)
             {
@@ -205,6 +211,15 @@ namespace CrystalMagic.Core
             }
 
             SaveDataComponent.Instance?.SetCurrentLocation(SaveAreaType.Dungeon, dungeonFloor);
+            return dungeonFloor;
+        }
+
+        protected override void OnEnterBattle()
+        {
+            Debug.Log("[DungeonState] Entered Dungeon");
+            LoadGameContext context = StateData as LoadGameContext;
+            int dungeonFloor = PrepareDungeonRun(context);
+            Debug.Log($"[DungeonState] Resuming dungeon at floor: {dungeonFloor}");
         }
 
         protected override void OnExitBattle()

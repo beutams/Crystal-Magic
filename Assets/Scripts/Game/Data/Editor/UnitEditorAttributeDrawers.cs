@@ -197,7 +197,7 @@ namespace CrystalMagic.Editor.Data
                 options.Add(new SkillOption
                 {
                     Id = row.Id,
-                    Label = $"[{row.Id}] {row.Name}",
+                    Label = $"[{row.Id}] {row.DisplayName}",
                 });
             }
 
@@ -250,7 +250,7 @@ namespace CrystalMagic.Editor.Data
             if (skill == null)
                 return $"{label} | Skill {slot.SkillId}";
 
-            return $"{label} | {skill.Name}";
+            return $"{label} | {skill.DisplayName}";
         }
     }
 
@@ -288,28 +288,11 @@ namespace CrystalMagic.Editor.Data
             GUILayout.Space(8f);
             UnitEditorWindow.DrawSectionHeader("Drop");
 
-            UnitDropModuleData module = context.GetModule<UnitDropModuleData>();
-            List<DropData> dropRows = EditorComponents.Data.FindAll<DropData>(_ => true)
-                .OrderBy(row => row.Id)
-                .ToList();
+            UnitDropModuleData module = context.GetOrCreateModule<UnitDropModuleData>();
+            if (module == null)
+                return;
 
-            List<string> options = new() { "None" };
-            int selectedIndex = 0;
-            for (int i = 0; i < dropRows.Count; i++)
-            {
-                DropData row = dropRows[i];
-                options.Add($"[{row.Id}] {row.Name}");
-                if (module != null && row.Id == module.DropDataId)
-                    selectedIndex = i + 1;
-            }
-
-            int newIndex = EditorGUILayout.Popup("Drop Data", selectedIndex, options.ToArray());
-            int newDropDataId = newIndex == 0 ? -1 : dropRows[newIndex - 1].Id;
-            if (module == null && newDropDataId >= 0)
-                module = context.GetOrCreateModule<UnitDropModuleData>();
-
-            if (module != null)
-                module.DropDataId = newDropDataId;
+            context.DrawInlineDropDataEditor(module);
         }
     }
 

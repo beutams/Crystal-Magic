@@ -149,4 +149,74 @@ public static class UnitQueryUtility
         QueryForwardRect(entries, origin, forward, length, width, results);
         return true;
     }
+
+    public static void QueryCone(
+        DynamicBuffer<UnitQueryEntry> entries,
+        float3 origin,
+        float2 forward,
+        float radius,
+        float angleDegrees,
+        List<UnitQueryHit> results)
+    {
+        results.Clear();
+
+        if (radius <= 0f || angleDegrees <= 0f || math.lengthsq(forward) <= 0.0001f)
+            return;
+
+        float2 normalizedForward = math.normalize(forward);
+        float radiusSq = radius * radius;
+        float minDot = math.cos(math.radians(math.min(360f, math.max(0f, angleDegrees)) * 0.5f));
+
+        for (int i = 0; i < entries.Length; i++)
+        {
+            UnitQueryEntry entry = entries[i];
+            float2 diff = entry.Position.xy - origin.xy;
+            float distanceSq = math.lengthsq(diff);
+            if (distanceSq > radiusSq)
+                continue;
+
+            if (distanceSq <= 0.0001f)
+            {
+                results.Add(new UnitQueryHit
+                {
+                    Entity = entry.Entity,
+                    Position = entry.Position,
+                });
+                continue;
+            }
+
+            float2 normalizedDiff = diff * math.rsqrt(distanceSq);
+            if (math.dot(normalizedForward, normalizedDiff) < minDot)
+                continue;
+
+            results.Add(new UnitQueryHit
+            {
+                Entity = entry.Entity,
+                Position = entry.Position,
+            });
+        }
+    }
+
+    public static bool TryQueryCone(
+        EntityManager entityManager,
+        float3 origin,
+        float2 forward,
+        float radius,
+        float angleDegrees,
+        List<UnitQueryHit> results)
+    {
+        EntityQuery singletonQuery = entityManager.CreateEntityQuery(
+            ComponentType.ReadOnly<UnitQuerySingleton>(),
+            ComponentType.ReadOnly<UnitQueryEntry>());
+        if (singletonQuery.IsEmptyIgnoreFilter)
+        {
+            results.Clear();
+            return false;
+        }
+
+        Entity singletonEntity = singletonQuery.GetSingletonEntity();
+        DynamicBuffer<UnitQueryEntry> entries = entityManager.GetBuffer<UnitQueryEntry>(singletonEntity, true);
+        QueryCone(entries, origin, forward, radius, angleDegrees, results);
+        return true;
+    }
 }

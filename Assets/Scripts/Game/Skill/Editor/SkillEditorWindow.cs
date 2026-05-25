@@ -32,6 +32,7 @@ namespace CrystalMagic.Editor.Skill
             typeof(ApplyBuffEffectData),
             typeof(AreaSearchEffectData),
             typeof(ChainSearchEffectData),
+            typeof(ConeSearchEffectData),
             typeof(DamageEffectData),
             typeof(ForwardRectSearchEffectData),
             typeof(HealEffectData),
@@ -54,6 +55,7 @@ namespace CrystalMagic.Editor.Skill
             "Apply Buff",
             "Area Search",
             "Chain Search",
+            "Cone Search",
             "Damage",
             "Forward Rect Search",
             "Heal",
@@ -76,6 +78,7 @@ namespace CrystalMagic.Editor.Skill
             new(0.34f, 0.22f, 0.56f),
             new(0.14f, 0.38f, 0.60f),
             new(0.18f, 0.42f, 0.74f),
+            new(0.20f, 0.50f, 0.70f),
             new(0.60f, 0.18f, 0.14f),
             new(0.60f, 0.30f, 0.12f),
             new(0.16f, 0.52f, 0.22f),
@@ -96,9 +99,11 @@ namespace CrystalMagic.Editor.Skill
         private List<SkillData> _rows = new();
         private bool _isDirty;
         private string _statusText = string.Empty;
+        private SkillOwnerType _activeOwnerType;
 
         private int _selectedIndex = -1;
         private int _addEffectTypeIndex;
+        private int _addCastTaskTypeIndex;
         private Vector2 _listScrollPos;
         private Vector2 _detailScrollPos;
         private readonly Dictionary<SkillData, string> _insertTexts = new();
@@ -143,6 +148,21 @@ namespace CrystalMagic.Editor.Skill
             "Static",
             "Sequence",
         };
+        private static readonly Type[] CastTaskTypes =
+        {
+            typeof(DoubleExecuteSkillCastTaskData),
+            typeof(ApplyRuntimeBuffSkillCastTaskData),
+            typeof(JumpArcSkillCastTaskData),
+        };
+
+        private static readonly string[] CastTaskNames =
+        {
+            "Double Execute",
+            "Apply Runtime Buff",
+            "Jump Arc",
+        };
+        private static readonly SkillCastHookPoint[] SkillCastHookPointValues = (SkillCastHookPoint[])Enum.GetValues(typeof(SkillCastHookPoint));
+        private static readonly string[] SkillCastHookPointDisplayNames = EditorLabelUtility.GetEnumDisplayNames<SkillCastHookPoint>();
 
         private static JsonSerializerSettings JsonSettings => new()
         {
@@ -202,6 +222,7 @@ namespace CrystalMagic.Editor.Skill
                     _rows = wrapper.Rows;
 
                 NormalizeRowIds();
+                EnsureSelectedSkillVisible();
                 _insertTexts.Clear();
                 _statusText = $"Loaded {_rows.Count} rows";
             }
@@ -221,6 +242,7 @@ namespace CrystalMagic.Editor.Skill
             try
             {
                 NormalizeRowIds();
+                NormalizeOwnerPrefixes();
                 string json = JsonConvert.SerializeObject(new TableWrapper { Rows = _rows }, JsonSettings);
                 File.WriteAllText(DataPath, json, Encoding.UTF8);
                 AssetDatabase.Refresh();
@@ -236,20 +258,28 @@ namespace CrystalMagic.Editor.Skill
 
         private void AddSkill()
         {
+            AddSkill(_activeOwnerType);
+        }
+
+        private void AddSkill(SkillOwnerType ownerType)
+        {
+            int nextIndex = _rows.Count;
             _rows.Add(new SkillData
             {
-                Id = _rows.Count,
-                Name = $"New Skill {_rows.Count}",
+                Id = nextIndex,
+                Name = $"{SkillData.GetOwnerPrefix(ownerType)}New Skill {nextIndex}",
                 Description = string.Empty,
                 IconPath = string.Empty,
                 MoveSpeedMultiplier = 1f,
                 Conditions = new List<ConditionConfig>(),
                 EffectChain = Array.Empty<EffectData>(),
+                CastTasks = new List<SkillCastTaskData>(),
                 FollowupEffects = new List<SkillFollowupEffectData>(),
             });
 
             NormalizeRowIds();
             _selectedIndex = _rows.Count - 1;
+            _activeOwnerType = ownerType;
             _isDirty = true;
             Repaint();
         }
@@ -264,6 +294,7 @@ namespace CrystalMagic.Editor.Skill
             _insertTexts.Remove(removedRow);
             NormalizeRowIds();
             _selectedIndex = Mathf.Clamp(_selectedIndex, -1, _rows.Count - 1);
+            EnsureSelectedSkillVisible();
             _isDirty = true;
         }
 
@@ -282,10 +313,12 @@ namespace CrystalMagic.Editor.Skill
             copy.Name = string.IsNullOrWhiteSpace(source.Name) ? $"Skill {copy.Id}" : $"{source.Name}_Copy";
             copy.Conditions ??= new List<ConditionConfig>();
             copy.EffectChain ??= Array.Empty<EffectData>();
+            copy.CastTasks ??= new List<SkillCastTaskData>();
             copy.FollowupEffects ??= new List<SkillFollowupEffectData>();
             _rows.Add(copy);
             NormalizeRowIds();
             _selectedIndex = _rows.Count - 1;
+            _activeOwnerType = copy.OwnerType;
             _isDirty = true;
             Repaint();
         }
@@ -294,6 +327,18 @@ namespace CrystalMagic.Editor.Skill
         {
             for (int i = 0; i < _rows.Count; i++)
                 _rows[i].Id = i;
+        }
+
+        private void NormalizeOwnerPrefixes()
+        {
+            for (int i = 0; i < _rows.Count; i++)
+            {
+                SkillData row = _rows[i];
+                if (row == null)
+                    continue;
+
+                row.SetOwnerType(row.OwnerType);
+            }
         }
 
         private void MoveRowToInsertIndex(int fromIndex, int insertIndex)
@@ -350,7 +395,7 @@ namespace CrystalMagic.Editor.Skill
             {
                 if (EditorUtility.DisplayDialog(
                         "Delete Skill",
-                        $"Delete \"{_rows[_selectedIndex].Name}\"?",
+                        $"Delete \"{_rows[_selectedIndex].DisplayName}\"?",
                         "Delete",
                         "Cancel"))
                 {
@@ -373,16 +418,18 @@ namespace CrystalMagic.Editor.Skill
             EditorGUILayout.BeginVertical(GUILayout.Width(ListPanelWidth), GUILayout.ExpandHeight(true));
 
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            GUILayout.Label($"Skill List ({_rows.Count})", EditorStyles.boldLabel);
+            DrawOwnerTabs();
             EditorGUILayout.EndHorizontal();
 
             _listScrollPos = EditorGUILayout.BeginScrollView(_listScrollPos, GUILayout.ExpandHeight(true));
             Event currentEvent = Event.current;
             SkillData moveRow = null;
             int moveToIndex = -1;
+            List<int> visibleIndices = GetVisibleRowIndices();
 
-            for (int i = 0; i < _rows.Count; i++)
+            for (int visibleIndex = 0; visibleIndex < visibleIndices.Count; visibleIndex++)
             {
+                int i = visibleIndices[visibleIndex];
                 SkillData skill = _rows[i];
                 bool isSelected = i == _selectedIndex;
 
@@ -391,7 +438,7 @@ namespace CrystalMagic.Editor.Skill
                     ? SelectedColor
                     : itemRect.Contains(currentEvent.mousePosition)
                         ? HoverColor
-                        : i % 2 == 0
+                        : visibleIndex % 2 == 0
                             ? EvenRowColor
                             : OddRowColor;
                 EditorGUI.DrawRect(itemRect, backgroundColor);
@@ -428,7 +475,8 @@ namespace CrystalMagic.Editor.Skill
                     }
                 }
 
-                string label = $"[{skill.Id}]  {(string.IsNullOrEmpty(skill.Name) ? "(Unnamed)" : skill.Name)}";
+                string skillDisplayName = skill.DisplayName;
+                string label = $"[{skill.Id}]  {(string.IsNullOrEmpty(skillDisplayName) ? "(Unnamed)" : skillDisplayName)}";
                 GUI.Label(
                     new Rect(insertRect.xMax + 8f, itemRect.y + 4f, itemRect.width - insertRect.width - 8f, itemRect.height - 4f),
                     label,
@@ -457,6 +505,63 @@ namespace CrystalMagic.Editor.Skill
             EditorGUILayout.EndVertical();
         }
 
+        private void DrawOwnerTabs()
+        {
+            int nextTab = GUILayout.Toolbar(
+                (int)_activeOwnerType,
+                new[] { BuildTabLabel(SkillOwnerType.Player), BuildTabLabel(SkillOwnerType.Monster) },
+                EditorStyles.toolbarButton);
+            if (nextTab == (int)_activeOwnerType)
+                return;
+
+            _activeOwnerType = (SkillOwnerType)nextTab;
+            _listScrollPos = Vector2.zero;
+            EnsureSelectedSkillVisible();
+            CrystalMagic.Editor.EditorFocusUtility.ClearTextFocus();
+        }
+
+        private string BuildTabLabel(SkillOwnerType ownerType)
+        {
+            int count = _rows.Count(row => row != null && SkillData.GetOwnerType(row.Name) == ownerType);
+            return ownerType == SkillOwnerType.Player
+                ? $"Player ({count})"
+                : $"Monster ({count})";
+        }
+
+        private List<int> GetVisibleRowIndices()
+        {
+            List<int> indices = new();
+            for (int i = 0; i < _rows.Count; i++)
+            {
+                SkillData row = _rows[i];
+                if (row != null && SkillData.GetOwnerType(row.Name) == _activeOwnerType)
+                    indices.Add(i);
+            }
+
+            return indices;
+        }
+
+        private void EnsureSelectedSkillVisible()
+        {
+            if (_selectedIndex >= 0 &&
+                _selectedIndex < _rows.Count &&
+                SkillData.GetOwnerType(_rows[_selectedIndex].Name) == _activeOwnerType)
+            {
+                return;
+            }
+
+            _selectedIndex = -1;
+            for (int i = 0; i < _rows.Count; i++)
+            {
+                SkillData row = _rows[i];
+                if (row != null && SkillData.GetOwnerType(row.Name) == _activeOwnerType)
+                {
+                    _selectedIndex = i;
+                    return;
+                }
+            }
+        }
+
         private void DrawPanelDivider()
         {
             Rect rect = GUILayoutUtility.GetRect(1f, 1f, GUILayout.Width(1f), GUILayout.ExpandHeight(true));
@@ -479,7 +584,7 @@ namespace CrystalMagic.Editor.Skill
             SkillData skill = _rows[_selectedIndex];
 
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            GUILayout.Label($"[{skill.Id}]  {skill.Name}", EditorStyles.boldLabel);
+            GUILayout.Label($"[{skill.Id}]  {skill.DisplayName}", EditorStyles.boldLabel);
             EditorGUILayout.EndHorizontal();
 
             _detailScrollPos = EditorGUILayout.BeginScrollView(_detailScrollPos);
@@ -492,7 +597,17 @@ namespace CrystalMagic.Editor.Skill
             using (new EditorGUI.DisabledScope(true))
                 EditorGUILayout.IntField("Id", skill.Id);
 
-            skill.Name = EditorGUILayout.TextField("Name", skill.Name ?? string.Empty);
+            SkillOwnerType nextOwnerType = (SkillOwnerType)EditorGUILayout.EnumPopup("Owner", skill.OwnerType);
+            if (nextOwnerType != skill.OwnerType)
+            {
+                skill.SetOwnerType(nextOwnerType);
+                _activeOwnerType = nextOwnerType;
+                EnsureSelectedSkillVisible();
+            }
+
+            string displayName = EditorGUILayout.TextField("Name", skill.DisplayName);
+            if (!string.Equals(displayName, skill.DisplayName, StringComparison.Ordinal))
+                skill.SetDisplayName(displayName);
             EditorGUILayout.LabelField("Description");
             skill.Description = EditorGUILayout.TextArea(skill.Description ?? string.Empty, GUILayout.MinHeight(48f), GUILayout.MaxHeight(80f));
             skill.SkillType = (SkillType)EditorGUILayout.EnumPopup("Skill Type", skill.SkillType);
@@ -514,6 +629,10 @@ namespace CrystalMagic.Editor.Skill
             skill.Conditions ??= new List<ConditionConfig>();
             DrawConditionList(skill.Conditions, "__skill_conditions__");
 
+            DrawSectionHeader("Cast Tasks");
+            skill.CastTasks ??= new List<SkillCastTaskData>();
+            DrawCastTaskList(skill.CastTasks);
+
             DrawSectionHeader("Effect Chain");
             DrawEffectChain(skill);
 
@@ -530,6 +649,87 @@ namespace CrystalMagic.Editor.Skill
         {
             skill.EffectChain ??= Array.Empty<EffectData>();
             skill.EffectChain = DrawEffectChainInline("__root__", skill.EffectChain, ref _addEffectTypeIndex);
+        }
+
+        private void DrawCastTaskList(List<SkillCastTaskData> castTasks)
+        {
+            castTasks ??= new List<SkillCastTaskData>();
+
+            EditorGUILayout.BeginHorizontal();
+            _addCastTaskTypeIndex = EditorGUILayout.Popup(_addCastTaskTypeIndex, CastTaskNames, GUILayout.Width(190f));
+            if (GUILayout.Button("+ Add", GUILayout.Width(66f)))
+            {
+                castTasks.Add((SkillCastTaskData)Activator.CreateInstance(CastTaskTypes[_addCastTaskTypeIndex]));
+                _isDirty = true;
+            }
+
+            EditorGUILayout.EndHorizontal();
+            GUILayout.Space(2f);
+
+            int removeAt = -1;
+            for (int i = 0; i < castTasks.Count; i++)
+            {
+                SkillCastTaskData task = castTasks[i];
+                if (task == null)
+                    continue;
+
+                EditorGUI.BeginChangeCheck();
+                EditorGUILayout.BeginVertical("box");
+                EditorGUILayout.BeginHorizontal();
+                int taskTypeIndex = Mathf.Max(0, Array.IndexOf(CastTaskTypes, task.GetType()));
+                EditorGUILayout.LabelField($"{CastTaskNames[taskTypeIndex]} #{i + 1}", EditorStyles.boldLabel);
+                if (GUILayout.Button("Delete Task", GUILayout.Width(92f)))
+                    removeAt = i;
+                EditorGUILayout.EndHorizontal();
+
+                DrawHookPointField(task);
+                DrawCastTaskFields(task);
+                EditorGUILayout.EndVertical();
+
+                if (EditorGUI.EndChangeCheck())
+                {
+                    castTasks[i] = task;
+                    _isDirty = true;
+                }
+            }
+
+            if (removeAt >= 0)
+            {
+                castTasks.RemoveAt(removeAt);
+                _isDirty = true;
+            }
+        }
+
+        private void DrawHookPointField(SkillCastTaskData task)
+        {
+            int hookIndex = Mathf.Max(0, Array.IndexOf(SkillCastHookPointValues, task.HookPoint));
+            hookIndex = EditorGUILayout.Popup("Hook Point", hookIndex, SkillCastHookPointDisplayNames);
+            task.HookPoint = SkillCastHookPointValues[Mathf.Clamp(hookIndex, 0, SkillCastHookPointValues.Length - 1)];
+        }
+
+        private void DrawCastTaskFields(SkillCastTaskData task)
+        {
+            switch (task)
+            {
+                case DoubleExecuteSkillCastTaskData doubleExecuteTaskData:
+                    doubleExecuteTaskData.DelaySeconds = Mathf.Max(0f, EditorGUILayout.FloatField("Delay Seconds", doubleExecuteTaskData.DelaySeconds));
+                    doubleExecuteTaskData.RuntimeModifiers ??= new List<SkillModifierEntry>();
+                    DrawSkillModifierList("Runtime Modifiers", doubleExecuteTaskData.RuntimeModifiers);
+                    break;
+
+                case ApplyRuntimeBuffSkillCastTaskData runtimeBuffTaskData:
+                    runtimeBuffTaskData.BuffId = EditorGUILayout.IntField("Buff Id", runtimeBuffTaskData.BuffId);
+                    runtimeBuffTaskData.StackCount = Mathf.Max(1, EditorGUILayout.IntField("Stack Count", runtimeBuffTaskData.StackCount));
+                    runtimeBuffTaskData.ConsumeOnDamageTaken = EditorGUILayout.Toggle("Consume On Damage", runtimeBuffTaskData.ConsumeOnDamageTaken);
+                    if (runtimeBuffTaskData.ConsumeOnDamageTaken)
+                        runtimeBuffTaskData.RemainingTriggerCount = Mathf.Max(1, EditorGUILayout.IntField("Remaining Triggers", runtimeBuffTaskData.RemainingTriggerCount));
+                    break;
+
+                case JumpArcSkillCastTaskData jumpArcTaskData:
+                    jumpArcTaskData.DurationSeconds = Mathf.Max(0f, EditorGUILayout.FloatField("Duration Seconds", jumpArcTaskData.DurationSeconds));
+                    jumpArcTaskData.ArcHeight = Mathf.Max(0f, EditorGUILayout.FloatField("Arc Height", jumpArcTaskData.ArcHeight));
+                    break;
+            }
         }
 
         private EffectData[] DrawEffectChainInline(string stateKey, EffectData[] chain, ref int typeIndex)

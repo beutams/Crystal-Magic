@@ -15,6 +15,7 @@ namespace CrystalMagic.Editor.Data
     public class UnitEditorWindow : EditorWindow
     {
         private const string DataPath = "Assets/Res/Data/UnitDataTable.json";
+        private const string DropDataPath = "Assets/Res/Data/DropDataTable.json";
         private const string UnitPrefabDirectory = "Assets/Res/Prefab/Unit";
         private const float ListPanelWidth = 220f;
         private const float ItemHeight = 26f;
@@ -33,6 +34,17 @@ namespace CrystalMagic.Editor.Data
             public List<UnitData> Rows = new();
         }
 
+        private sealed class DropTableWrapper
+        {
+            public List<DropData> Rows = new();
+        }
+
+        private sealed class IntOption
+        {
+            public int Id;
+            public string Label;
+        }
+
         private static readonly Color SelectedColor = new(0.27f, 0.52f, 0.85f, 0.85f);
         private static readonly Color EvenRowColor = new(0.22f, 0.22f, 0.22f, 1f);
         private static readonly Color OddRowColor = new(0.25f, 0.25f, 0.25f, 1f);
@@ -48,6 +60,7 @@ namespace CrystalMagic.Editor.Data
         };
 
         private List<UnitData> _rows = new();
+        private readonly List<DropData> _dropRows = new();
         private readonly List<UnitPrefabEntry> _prefabEntries = new();
         private bool _isDirty;
         private string _statusText = string.Empty;
@@ -68,6 +81,7 @@ namespace CrystalMagic.Editor.Data
         private void OnEnable()
         {
             LoadData();
+            LoadDropData();
             RefreshPrefabEntries();
         }
 
@@ -266,6 +280,7 @@ namespace CrystalMagic.Editor.Data
 
                 string json = JsonConvert.SerializeObject(new TableWrapper { Rows = _rows }, JsonSettings);
                 File.WriteAllText(DataPath, json, Encoding.UTF8);
+                SaveDropData();
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
                 _isDirty = false;
@@ -278,6 +293,43 @@ namespace CrystalMagic.Editor.Data
                 _statusText = $"保存失败：{ex.Message}";
                 Debug.LogError($"[UnitEditor] Save error:\n{ex}");
             }
+        }
+
+        private void LoadDropData()
+        {
+            _dropRows.Clear();
+            if (!File.Exists(DropDataPath))
+                return;
+
+            try
+            {
+                string json = File.ReadAllText(DropDataPath);
+                DropTableWrapper wrapper = JsonConvert.DeserializeObject<DropTableWrapper>(json, JsonSettings);
+                if (wrapper?.Rows != null)
+                    _dropRows.AddRange(wrapper.Rows);
+
+                NormalizeDropRowIds();
+                foreach (DropData row in _dropRows)
+                    row?.EnsureValid();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[UnitEditor] Drop table load error:\n{ex}");
+            }
+        }
+
+        private void SaveDropData()
+        {
+            string directory = Path.GetDirectoryName(DropDataPath);
+            if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
+
+            NormalizeDropRowIds();
+            foreach (DropData row in _dropRows)
+                row?.EnsureValid();
+
+            string json = JsonConvert.SerializeObject(new DropTableWrapper { Rows = _dropRows }, JsonSettings);
+            File.WriteAllText(DropDataPath, json, Encoding.UTF8);
         }
 
         private List<UnitData> BuildSaveRowsFromPrefabs()
@@ -309,6 +361,12 @@ namespace CrystalMagic.Editor.Data
             {
                 _rows[i].Id = i;
             }
+        }
+
+        private void NormalizeDropRowIds()
+        {
+            for (int i = 0; i < _dropRows.Count; i++)
+                _dropRows[i].Id = i;
         }
 
         private void DrawToolbar()
@@ -720,6 +778,193 @@ namespace CrystalMagic.Editor.Data
             }
 
             return "Unnamed Tree";
+        }
+
+        internal DropData GetDropData(int dropDataId)
+        {
+            if (dropDataId < 0)
+                return null;
+
+            for (int i = 0; i < _dropRows.Count; i++)
+            {
+                DropData row = _dropRows[i];
+                if (row != null && row.Id == dropDataId)
+                    return row;
+            }
+
+            return null;
+        }
+
+        internal DropData CreateDropDataForUnit(UnitData unit, UnitDropModuleData module)
+        {
+            if (unit == null || module == null)
+                return null;
+
+            DropData row = new DropData
+            {
+                Id = _dropRows.Count,
+                Name = string.IsNullOrWhiteSpace(unit.Name) ? $"Drop {_dropRows.Count}" : $"{unit.Name} Drop",
+                Description = string.Empty,
+                Entries = new List<DropEntryData>(),
+            };
+            row.EnsureValid();
+            _dropRows.Add(row);
+            NormalizeDropRowIds();
+            module.DropDataId = row.Id;
+            _isDirty = true;
+            return row;
+        }
+
+        internal bool DrawInlineDropDataEditor(UnitData unit, UnitDropModuleData module)
+        {
+            if (module == null)
+                return false;
+
+            bool changed = false;
+            List<IntOption> dropOptions = BuildDropOptions(_dropRows);
+            EditorGUILayout.BeginHorizontal();
+            int newDropDataId = DrawIntPopup("Drop Table", module.DropDataId, dropOptions);
+            if (newDropDataId != module.DropDataId)
+            {
+                module.DropDataId = newDropDataId;
+                changed = true;
+            }
+
+            if (GUILayout.Button("Create", GUILayout.Width(72f)))
+            {
+                DropData created = CreateDropDataForUnit(unit, module);
+                if (created != null)
+                    changed = true;
+            }
+            EditorGUILayout.EndHorizontal();
+
+            DropData dropData = GetDropData(module.DropDataId);
+            if (module.DropDataId >= 0 && dropData == null)
+            {
+                EditorGUILayout.HelpBox($"Missing DropData #{module.DropDataId}. Create a new one or switch the reference.", MessageType.Warning);
+                return changed;
+            }
+
+            if (dropData == null)
+            {
+                EditorGUILayout.HelpBox("No drop table assigned. Click Create to make one for this unit, or pick an existing table.", MessageType.Info);
+                return changed;
+            }
+
+            EditorGUI.indentLevel++;
+            EditorGUILayout.BeginVertical("box");
+            dropData.Name = EditorGUILayout.TextField("Table Name", dropData.Name ?? string.Empty);
+            EditorGUILayout.LabelField("Description");
+            dropData.Description = EditorGUILayout.TextArea(dropData.Description ?? string.Empty, GUILayout.MinHeight(36f), GUILayout.MaxHeight(72f));
+
+            GUILayout.Space(6f);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Entries", EditorStyles.boldLabel);
+            if (GUILayout.Button("Add Entry", GUILayout.Width(84f)))
+            {
+                dropData.Entries.Add(new DropEntryData());
+                changed = true;
+            }
+            EditorGUILayout.EndHorizontal();
+
+            dropData.Entries ??= new List<DropEntryData>();
+            List<IntOption> itemOptions = BuildItemOptions();
+            for (int i = 0; i < dropData.Entries.Count; i++)
+            {
+                DropEntryData entry = dropData.Entries[i] ?? new DropEntryData();
+                dropData.Entries[i] = entry;
+
+                EditorGUILayout.BeginVertical("helpbox");
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField($"Entry {i + 1}", EditorStyles.boldLabel);
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("Delete", GUILayout.Width(56f)))
+                {
+                    dropData.Entries.RemoveAt(i);
+                    changed = true;
+                    EditorGUILayout.EndHorizontal();
+                    EditorGUILayout.EndVertical();
+                    break;
+                }
+                EditorGUILayout.EndHorizontal();
+
+                entry.DropType = (DropRewardType)EditorGUILayout.EnumPopup("Drop Type", entry.DropType);
+                if (entry.DropType == DropRewardType.Item)
+                    entry.ItemId = DrawIntPopup("Item", entry.ItemId, itemOptions);
+                else
+                    EditorGUILayout.HelpBox("Money reward does not require an item id.", MessageType.None);
+
+                entry.Chance = EditorGUILayout.Slider("Chance", entry.Chance, 0f, 1f);
+                entry.MinQuantity = Mathf.Max(0, EditorGUILayout.IntField("Min Quantity", entry.MinQuantity));
+                entry.MaxQuantity = Mathf.Max(entry.MinQuantity, EditorGUILayout.IntField("Max Quantity", entry.MaxQuantity));
+                EditorGUILayout.EndVertical();
+            }
+
+            dropData.EnsureValid();
+            EditorGUILayout.EndVertical();
+            EditorGUI.indentLevel--;
+            return true;
+        }
+
+        private static List<IntOption> BuildDropOptions(IEnumerable<DropData> dropRows)
+        {
+            List<IntOption> options = new()
+            {
+                new IntOption { Id = -1, Label = "None" }
+            };
+
+            if (dropRows != null)
+            {
+                foreach (DropData row in dropRows.OrderBy(static row => row.Id))
+                {
+                    if (row == null)
+                        continue;
+
+                    options.Add(new IntOption
+                    {
+                        Id = row.Id,
+                        Label = $"[{row.Id}] {row.Name}",
+                    });
+                }
+            }
+
+            return options;
+        }
+
+        private static List<IntOption> BuildItemOptions()
+        {
+            List<IntOption> options = new()
+            {
+                new IntOption { Id = -1, Label = "None" }
+            };
+
+            foreach (ItemData row in EditorComponents.Data.FindAll<ItemData>(static _ => true).OrderBy(static row => row.Id))
+            {
+                options.Add(new IntOption
+                {
+                    Id = row.Id,
+                    Label = $"[{row.Id}] {row.Name}",
+                });
+            }
+
+            return options;
+        }
+
+        private static int DrawIntPopup(string label, int currentId, List<IntOption> options)
+        {
+            int selectedIndex = 0;
+            for (int i = 0; i < options.Count; i++)
+            {
+                if (options[i].Id == currentId)
+                {
+                    selectedIndex = i;
+                    break;
+                }
+            }
+
+            string[] labels = options.Select(static option => option.Label).ToArray();
+            int newIndex = EditorGUILayout.Popup(label, selectedIndex, labels);
+            return newIndex >= 0 && newIndex < options.Count ? options[newIndex].Id : currentId;
         }
     }
 }

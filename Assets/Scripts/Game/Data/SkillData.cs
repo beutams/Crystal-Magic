@@ -14,6 +14,12 @@ namespace CrystalMagic.Game.Data
         SelfSkill = 1,
     }
 
+    public enum SkillOwnerType
+    {
+        Player = 0,
+        Monster = 1,
+    }
+
     /// <summary>
     /// 技能配置表行
     /// </summary>
@@ -21,6 +27,9 @@ namespace CrystalMagic.Game.Data
     [ReadOnlyData]
     public class SkillData : DataRow
     {
+        public const char PlayerOwnerPrefix = 'P';
+        public const char MonsterOwnerPrefix = 'M';
+
         /// <summary>技能名称</summary>
         public string Name;
 
@@ -57,7 +66,72 @@ namespace CrystalMagic.Game.Data
         /// </summary>
         [SerializeReference]
         public EffectData[] EffectChain = System.Array.Empty<EffectData>();
+        public List<SkillCastTaskData> CastTasks = new();
         public List<SkillFollowupEffectData> FollowupEffects = new();
+
+        public SkillOwnerType OwnerType => GetOwnerType(Name);
+        public string DisplayName => GetDisplayName(Name);
+
+        public void SetOwnerType(SkillOwnerType ownerType)
+        {
+            Name = SetOwnerType(Name, ownerType);
+        }
+
+        public void SetDisplayName(string displayName)
+        {
+            Name = SetDisplayName(Name, displayName);
+        }
+
+        public static SkillOwnerType GetOwnerType(string rawName)
+        {
+            return GetOwnerTypeAndPrefixLength(rawName, out _) == SkillOwnerType.Monster
+                ? SkillOwnerType.Monster
+                : SkillOwnerType.Player;
+        }
+
+        public static string GetDisplayName(string rawName)
+        {
+            GetOwnerTypeAndPrefixLength(rawName, out int prefixLength);
+            return prefixLength > 0 && !string.IsNullOrEmpty(rawName)
+                ? rawName.Substring(prefixLength)
+                : rawName ?? string.Empty;
+        }
+
+        public static string SetOwnerType(string rawName, SkillOwnerType ownerType)
+        {
+            string displayName = GetDisplayName(rawName);
+            return GetOwnerPrefix(ownerType) + displayName;
+        }
+
+        public static string SetDisplayName(string rawName, string displayName)
+        {
+            SkillOwnerType ownerType = GetOwnerType(rawName);
+            return GetOwnerPrefix(ownerType) + (displayName ?? string.Empty);
+        }
+
+        public static char GetOwnerPrefix(SkillOwnerType ownerType)
+        {
+            return ownerType == SkillOwnerType.Monster ? MonsterOwnerPrefix : PlayerOwnerPrefix;
+        }
+
+        private static SkillOwnerType GetOwnerTypeAndPrefixLength(string rawName, out int prefixLength)
+        {
+            prefixLength = 0;
+            if (string.IsNullOrEmpty(rawName))
+                return SkillOwnerType.Player;
+
+            char firstChar = rawName[0];
+            if (firstChar == MonsterOwnerPrefix)
+            {
+                prefixLength = 1;
+                return SkillOwnerType.Monster;
+            }
+
+            if (firstChar == PlayerOwnerPrefix)
+                prefixLength = 1;
+
+            return SkillOwnerType.Player;
+        }
     }
 
     public enum SkillModifierChannel

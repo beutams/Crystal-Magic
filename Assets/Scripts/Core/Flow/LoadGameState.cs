@@ -49,14 +49,18 @@ namespace CrystalMagic.Core {
                 targetStateType = typeof(TownState);
             }
 
-            GameFlowComponent.Instance.BeginTransition(new TransitionData
-            {
-                TargetSceneName = targetSceneName,
-                TargetStateType = targetStateType,
-                TargetStateData = context,
-                TransitionUIName = "TransitionUI",
-                ForceReloadTargetScene = true,
-            });
+            TransitionData transitionData = context.ShouldEnterDungeon()
+                ? DungeonState.CreateEnterTransitionData(context)
+                : new TransitionData
+                {
+                    TargetSceneName = targetSceneName,
+                    TargetStateType = targetStateType,
+                    TargetStateData = context,
+                    TransitionUIName = "TransitionUI",
+                    ForceReloadTargetScene = true,
+                };
+
+            GameFlowComponent.Instance.BeginTransition(transitionData);
         }
 
         public override void OnExit() { }

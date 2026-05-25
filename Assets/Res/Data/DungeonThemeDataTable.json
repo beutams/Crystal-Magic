@@ -1,0 +1,46 @@
+{
+  "Rows": [
+    {
+      "Id": 1,
+      "Name": "Cavern Depths I",
+      "ThemeKey": "cave_01",
+      "FloorStart": 1,
+      "FloorEnd": 10,
+      "CorridorMaterialPath": "Assets/Res/Material/Dungeon/Cave_Corridor.mat",
+      "RoomMaterialPath": "Assets/Res/Material/Dungeon/Cave_Room.mat",
+      "AnteRoomMaterialPath": "Assets/Res/Material/Dungeon/Cave_AnteRoom.mat",
+      "WallMaterialPath": "Assets/Res/Material/Dungeon/Cave_Wall.mat",
+      "StartMarkerMaterialPath": "Assets/Res/Material/Dungeon/Cave_StartMarker.mat",
+      "ExitClosedMaterialPath": "Assets/Res/Material/Dungeon/Cave_ExitClosed.mat",
+      "ExitOpenMaterialPath": "Assets/Res/Material/Dungeon/Cave_ExitOpen.mat",
+      "Mob1PoolId": 1,
+      "Mob2PoolId": 2,
+      "Mob3PoolId": 3,
+      "Treasure1PoolId": 1,
+      "Treasure2PoolId": 2,
+      "Treasure3PoolId": 3,
+      "BossRoomIds": [1]
+    },
+    {
+      "Id": 2,
+      "Name": "Ancient Ruins II",
+      "ThemeKey": "ruins_02",
+      "FloorStart": 11,
+      "FloorEnd": 20,
+      "CorridorMaterialPath": "Assets/Res/Material/TrainPlane.mat",
+      "RoomMaterialPath": "Assets/Res/Material/Plane.mat",
+      "AnteRoomMaterialPath": "Assets/Res/Material/TrainPlane.mat",
+      "WallMaterialPath": "Assets/Res/Material/NPC1.mat",
+      "StartMarkerMaterialPath": "Assets/Res/Material/NPC2.mat",
+      "ExitClosedMaterialPath": "Assets/Res/Material/NPC1.mat",
+      "ExitOpenMaterialPath": "Assets/Res/Material/NPC3.mat",
+      "Mob1PoolId": 1,
+      "Mob2PoolId": 2,
+      "Mob3PoolId": 3,
+      "Treasure1PoolId": 1,
+      "Treasure2PoolId": 2,
+      "Treasure3PoolId": 3,
+      "BossRoomIds": [2]
+    }
+  ]
+}

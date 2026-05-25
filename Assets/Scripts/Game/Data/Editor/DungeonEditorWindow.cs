@@ -1,0 +1,1073 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using CrystalMagic.Core;
+using CrystalMagic.Game.Data;
+using Newtonsoft.Json;
+using UnityEditor;
+using UnityEngine;
+
+namespace CrystalMagic.Editor.Data
+{
+    public class DungeonEditorWindow : EditorWindow
+    {
+        private const string ThemeDataPath = "Assets/Res/Data/DungeonThemeDataTable.json";
+        private const string MonsterPoolDataPath = "Assets/Res/Data/DungeonMonsterPoolDataTable.json";
+        private const string TreasurePoolDataPath = "Assets/Res/Data/DungeonTreasurePoolDataTable.json";
+        private const string BossRoomDataPath = "Assets/Res/Data/DungeonBossRoomDataTable.json";
+        private const float ListPanelWidth = 240f;
+
+        private enum DungeonTab
+        {
+            Theme,
+            MonsterPool,
+            TreasurePool,
+            BossRoom,
+        }
+
+        private sealed class ThemeTableWrapper
+        {
+            public List<DungeonThemeData> Rows = new();
+        }
+
+        private sealed class MonsterPoolTableWrapper
+        {
+            public List<DungeonMonsterPoolData> Rows = new();
+        }
+
+        private sealed class BossRoomTableWrapper
+        {
+            public List<DungeonBossRoomData> Rows = new();
+        }
+
+        private sealed class TreasurePoolTableWrapper
+        {
+            public List<DungeonTreasurePoolData> Rows = new();
+        }
+
+        private sealed class IntOption
+        {
+            public int Id;
+            public string Label;
+        }
+
+        private sealed class StringOption
+        {
+            public string Value;
+            public string Label;
+        }
+
+        private static JsonSerializerSettings JsonSettings => new()
+        {
+            Formatting = Formatting.Indented,
+            NullValueHandling = NullValueHandling.Ignore,
+        };
+
+        private readonly List<DungeonThemeData> _themes = new();
+        private readonly List<DungeonMonsterPoolData> _monsterPools = new();
+        private readonly List<DungeonTreasurePoolData> _treasurePools = new();
+        private readonly List<DungeonBossRoomData> _bossRooms = new();
+
+        private DungeonTab _selectedTab;
+        private int _selectedThemeIndex = -1;
+        private int _selectedMonsterPoolIndex = -1;
+        private int _selectedTreasurePoolIndex = -1;
+        private int _selectedBossRoomIndex = -1;
+        private Vector2 _listScrollPos;
+        private Vector2 _detailScrollPos;
+        private bool _isDirty;
+        private string _statusText = string.Empty;
+
+        [MenuItem("Tools/Data/Dungeon Editor")]
+        public static void Open()
+        {
+            DungeonEditorWindow window = GetWindow<DungeonEditorWindow>("Dungeon Editor");
+            window.minSize = new Vector2(1080f, 620f);
+            window.Show();
+        }
+
+        private void OnEnable()
+        {
+            LoadAll();
+        }
+
+        private void OnGUI()
+        {
+            DrawToolbar();
+            DrawTabs();
+
+            EditorGUILayout.BeginHorizontal();
+            DrawListPanel();
+            DrawDivider();
+            DrawDetailPanel();
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawToolbar()
+        {
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+
+            if (GUILayout.Button("Load", EditorStyles.toolbarButton, GUILayout.Width(44f)))
+                LoadAll();
+
+            GUI.enabled = _isDirty;
+            if (GUILayout.Button(_isDirty ? "Save *" : "Save", EditorStyles.toolbarButton, GUILayout.Width(60f)))
+                SaveAll();
+            GUI.enabled = true;
+
+            if (GUILayout.Button("Add", EditorStyles.toolbarButton, GUILayout.Width(44f)))
+                AddRowForSelectedTab();
+
+            if (HasSelection())
+            {
+                if (GUILayout.Button("Duplicate", EditorStyles.toolbarButton, GUILayout.Width(72f)))
+                    DuplicateSelectedRow();
+                if (GUILayout.Button("Delete", EditorStyles.toolbarButton, GUILayout.Width(56f)))
+                    DeleteSelectedRow();
+            }
+
+            GUILayout.FlexibleSpace();
+            if (!string.IsNullOrEmpty(_statusText))
+                GUILayout.Label(_statusText, EditorStyles.miniLabel, GUILayout.ExpandWidth(false));
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawTabs()
+        {
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+            if (GUILayout.Toggle(_selectedTab == DungeonTab.Theme, "Themes", EditorStyles.toolbarButton))
+                SelectTab(DungeonTab.Theme);
+            if (GUILayout.Toggle(_selectedTab == DungeonTab.MonsterPool, "Monster Pools", EditorStyles.toolbarButton))
+                SelectTab(DungeonTab.MonsterPool);
+            if (GUILayout.Toggle(_selectedTab == DungeonTab.TreasurePool, "Treasure Pools", EditorStyles.toolbarButton))
+                SelectTab(DungeonTab.TreasurePool);
+            if (GUILayout.Toggle(_selectedTab == DungeonTab.BossRoom, "Boss Rooms", EditorStyles.toolbarButton))
+                SelectTab(DungeonTab.BossRoom);
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawListPanel()
+        {
+            EditorGUILayout.BeginVertical(GUILayout.Width(ListPanelWidth), GUILayout.ExpandHeight(true));
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+            GUILayout.Label(GetListTitle(), EditorStyles.boldLabel);
+            EditorGUILayout.EndHorizontal();
+
+            _listScrollPos = EditorGUILayout.BeginScrollView(_listScrollPos);
+            switch (_selectedTab)
+            {
+                case DungeonTab.Theme:
+                    DrawThemeList();
+                    break;
+                case DungeonTab.MonsterPool:
+                    DrawMonsterPoolList();
+                    break;
+                case DungeonTab.TreasurePool:
+                    DrawTreasurePoolList();
+                    break;
+                case DungeonTab.BossRoom:
+                    DrawBossRoomList();
+                    break;
+            }
+
+            EditorGUILayout.EndScrollView();
+            EditorGUILayout.EndVertical();
+        }
+
+        private void DrawThemeList()
+        {
+            for (int i = 0; i < _themes.Count; i++)
+            {
+                DungeonThemeData row = _themes[i];
+                string label = $"[{row.Id}] {row.Name}";
+                if (GUILayout.Toggle(i == _selectedThemeIndex, label, "Button"))
+                {
+                    if (_selectedThemeIndex != i)
+                        CrystalMagic.Editor.EditorFocusUtility.ClearTextFocus();
+                    _selectedThemeIndex = i;
+                }
+            }
+        }
+
+        private void DrawMonsterPoolList()
+        {
+            for (int i = 0; i < _monsterPools.Count; i++)
+            {
+                DungeonMonsterPoolData row = _monsterPools[i];
+                string label = $"[{row.Id}] {row.Name}";
+                if (GUILayout.Toggle(i == _selectedMonsterPoolIndex, label, "Button"))
+                {
+                    if (_selectedMonsterPoolIndex != i)
+                        CrystalMagic.Editor.EditorFocusUtility.ClearTextFocus();
+                    _selectedMonsterPoolIndex = i;
+                }
+            }
+        }
+
+        private void DrawBossRoomList()
+        {
+            for (int i = 0; i < _bossRooms.Count; i++)
+            {
+                DungeonBossRoomData row = _bossRooms[i];
+                string label = $"[{row.Id}] {row.Name}";
+                if (GUILayout.Toggle(i == _selectedBossRoomIndex, label, "Button"))
+                {
+                    if (_selectedBossRoomIndex != i)
+                        CrystalMagic.Editor.EditorFocusUtility.ClearTextFocus();
+                    _selectedBossRoomIndex = i;
+                }
+            }
+        }
+
+        private void DrawTreasurePoolList()
+        {
+            for (int i = 0; i < _treasurePools.Count; i++)
+            {
+                DungeonTreasurePoolData row = _treasurePools[i];
+                string label = $"[{row.Id}] {row.Name}";
+                if (GUILayout.Toggle(i == _selectedTreasurePoolIndex, label, "Button"))
+                {
+                    if (_selectedTreasurePoolIndex != i)
+                        CrystalMagic.Editor.EditorFocusUtility.ClearTextFocus();
+                    _selectedTreasurePoolIndex = i;
+                }
+            }
+        }
+
+        private static void DrawDivider()
+        {
+            Rect rect = GUILayoutUtility.GetRect(1f, 1f, GUILayout.Width(1f), GUILayout.ExpandHeight(true));
+            EditorGUI.DrawRect(rect, new Color(0.15f, 0.15f, 0.15f, 1f));
+        }
+
+        private void DrawDetailPanel()
+        {
+            EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+            _detailScrollPos = EditorGUILayout.BeginScrollView(_detailScrollPos);
+
+            switch (_selectedTab)
+            {
+                case DungeonTab.Theme:
+                    DrawThemeDetailPanel();
+                    break;
+                case DungeonTab.MonsterPool:
+                    DrawMonsterPoolDetailPanel();
+                    break;
+                case DungeonTab.TreasurePool:
+                    DrawTreasurePoolDetailPanel();
+                    break;
+                case DungeonTab.BossRoom:
+                    DrawBossRoomDetailPanel();
+                    break;
+            }
+
+            EditorGUILayout.EndScrollView();
+            EditorGUILayout.EndVertical();
+        }
+
+        private void DrawThemeDetailPanel()
+        {
+            if (_selectedThemeIndex < 0 || _selectedThemeIndex >= _themes.Count)
+            {
+                EditorGUILayout.HelpBox("Select one dungeon theme.", MessageType.Info);
+                return;
+            }
+
+            DungeonThemeData row = _themes[_selectedThemeIndex];
+            row.EnsureValid();
+            List<IntOption> poolOptions = BuildMonsterPoolOptions();
+            List<IntOption> treasurePoolOptions = BuildTreasurePoolOptions();
+            List<IntOption> bossRoomOptions = BuildBossRoomOptions();
+
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.LabelField("Basic", EditorStyles.boldLabel);
+            row.Id = EditorGUILayout.IntField("Id", row.Id);
+            row.Name = EditorGUILayout.TextField("Name", row.Name ?? string.Empty);
+            row.ThemeKey = EditorGUILayout.TextField("Theme Key", row.ThemeKey ?? string.Empty);
+            row.FloorStart = Mathf.Max(1, EditorGUILayout.IntField("Floor Start", row.FloorStart));
+            row.FloorEnd = Mathf.Max(row.FloorStart, EditorGUILayout.IntField("Floor End", row.FloorEnd));
+
+            GUILayout.Space(8f);
+            EditorGUILayout.LabelField("Materials", EditorStyles.boldLabel);
+            row.CorridorMaterialPath = EditorGUILayout.TextField("Corridor", row.CorridorMaterialPath ?? string.Empty);
+            row.RoomMaterialPath = EditorGUILayout.TextField("Room", row.RoomMaterialPath ?? string.Empty);
+            row.AnteRoomMaterialPath = EditorGUILayout.TextField("Ante Room", row.AnteRoomMaterialPath ?? string.Empty);
+            row.WallMaterialPath = EditorGUILayout.TextField("Wall", row.WallMaterialPath ?? string.Empty);
+            row.StartMarkerMaterialPath = EditorGUILayout.TextField("Start Marker", row.StartMarkerMaterialPath ?? string.Empty);
+            row.ExitClosedMaterialPath = EditorGUILayout.TextField("Exit Closed", row.ExitClosedMaterialPath ?? string.Empty);
+            row.ExitOpenMaterialPath = EditorGUILayout.TextField("Exit Open", row.ExitOpenMaterialPath ?? string.Empty);
+
+            GUILayout.Space(8f);
+            EditorGUILayout.LabelField("Monster Pools", EditorStyles.boldLabel);
+            row.Mob1PoolId = DrawIntPopup("Mob1 Pool", row.Mob1PoolId, poolOptions);
+            row.Mob2PoolId = DrawIntPopup("Mob2 Pool", row.Mob2PoolId, poolOptions);
+            row.Mob3PoolId = DrawIntPopup("Mob3 Pool", row.Mob3PoolId, poolOptions);
+
+            GUILayout.Space(8f);
+            EditorGUILayout.LabelField("Treasure Pools", EditorStyles.boldLabel);
+            row.Treasure1PoolId = DrawIntPopup("Treasure 1", row.Treasure1PoolId, treasurePoolOptions);
+            row.Treasure2PoolId = DrawIntPopup("Treasure 2", row.Treasure2PoolId, treasurePoolOptions);
+            row.Treasure3PoolId = DrawIntPopup("Treasure 3", row.Treasure3PoolId, treasurePoolOptions);
+
+            GUILayout.Space(8f);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Boss Rooms", EditorStyles.boldLabel);
+            if (GUILayout.Button("Add Boss Room Ref", GUILayout.Width(120f)))
+                row.BossRoomIds.Add(_bossRooms.Count > 0 ? _bossRooms[0].Id : -1);
+            EditorGUILayout.EndHorizontal();
+
+            row.BossRoomIds ??= new List<int>();
+            for (int i = 0; i < row.BossRoomIds.Count; i++)
+            {
+                EditorGUILayout.BeginHorizontal();
+                row.BossRoomIds[i] = DrawIntPopup($"Boss Room {i + 1}", row.BossRoomIds[i], bossRoomOptions);
+                if (GUILayout.Button("X", GUILayout.Width(24f)))
+                {
+                    row.BossRoomIds.RemoveAt(i);
+                    break;
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                row.EnsureValid();
+                _isDirty = true;
+            }
+        }
+
+        private void DrawMonsterPoolDetailPanel()
+        {
+            if (_selectedMonsterPoolIndex < 0 || _selectedMonsterPoolIndex >= _monsterPools.Count)
+            {
+                EditorGUILayout.HelpBox("Select one monster pool.", MessageType.Info);
+                return;
+            }
+
+            DungeonMonsterPoolData row = _monsterPools[_selectedMonsterPoolIndex];
+            row.EnsureValid();
+            List<StringOption> unitOptions = BuildUnitOptions();
+
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.LabelField("Basic", EditorStyles.boldLabel);
+            row.Id = EditorGUILayout.IntField("Id", row.Id);
+            row.Name = EditorGUILayout.TextField("Name", row.Name ?? string.Empty);
+
+            GUILayout.Space(8f);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Entries", EditorStyles.boldLabel);
+            if (GUILayout.Button("Add Entry", GUILayout.Width(84f)))
+                row.Entries.Add(new DungeonMonsterPoolEntryData());
+            EditorGUILayout.EndHorizontal();
+
+            row.Entries ??= new List<DungeonMonsterPoolEntryData>();
+            for (int i = 0; i < row.Entries.Count; i++)
+            {
+                DungeonMonsterPoolEntryData entry = row.Entries[i] ?? new DungeonMonsterPoolEntryData();
+                row.Entries[i] = entry;
+                EditorGUILayout.BeginVertical("box");
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField($"Entry {i + 1}", EditorStyles.boldLabel);
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("Delete", GUILayout.Width(56f)))
+                {
+                    row.Entries.RemoveAt(i);
+                    EditorGUILayout.EndHorizontal();
+                    EditorGUILayout.EndVertical();
+                    break;
+                }
+                EditorGUILayout.EndHorizontal();
+
+                entry.UnitName = DrawStringPopup("Unit", entry.UnitName, unitOptions);
+                entry.Weight = Mathf.Max(1, EditorGUILayout.IntField("Probability Weight", entry.Weight));
+                entry.MinFloor = Mathf.Max(1, EditorGUILayout.IntField("Min Floor", entry.MinFloor));
+                entry.MaxFloor = Mathf.Max(entry.MinFloor, EditorGUILayout.IntField("Max Floor", entry.MaxFloor));
+                entry.BossOnly = EditorGUILayout.Toggle("Boss Only", entry.BossOnly);
+                EditorGUILayout.EndVertical();
+            }
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                row.EnsureValid();
+                _isDirty = true;
+            }
+        }
+
+        private void DrawTreasurePoolDetailPanel()
+        {
+            if (_selectedTreasurePoolIndex < 0 || _selectedTreasurePoolIndex >= _treasurePools.Count)
+            {
+                EditorGUILayout.HelpBox("Select one treasure pool.", MessageType.Info);
+                return;
+            }
+
+            DungeonTreasurePoolData row = _treasurePools[_selectedTreasurePoolIndex];
+            row.EnsureValid();
+            List<IntOption> itemOptions = BuildItemOptions();
+
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.LabelField("Basic", EditorStyles.boldLabel);
+            row.Id = EditorGUILayout.IntField("Id", row.Id);
+            row.Name = EditorGUILayout.TextField("Name", row.Name ?? string.Empty);
+
+            GUILayout.Space(8f);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Entries", EditorStyles.boldLabel);
+            if (GUILayout.Button("Add Entry", GUILayout.Width(84f)))
+                row.Entries.Add(new DungeonTreasurePoolEntryData());
+            EditorGUILayout.EndHorizontal();
+
+            row.Entries ??= new List<DungeonTreasurePoolEntryData>();
+            for (int i = 0; i < row.Entries.Count; i++)
+            {
+                DungeonTreasurePoolEntryData entry = row.Entries[i] ?? new DungeonTreasurePoolEntryData();
+                row.Entries[i] = entry;
+                EditorGUILayout.BeginVertical("box");
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField($"Entry {i + 1}", EditorStyles.boldLabel);
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("Delete", GUILayout.Width(56f)))
+                {
+                    row.Entries.RemoveAt(i);
+                    EditorGUILayout.EndHorizontal();
+                    EditorGUILayout.EndVertical();
+                    break;
+                }
+                EditorGUILayout.EndHorizontal();
+
+                entry.Weight = Mathf.Max(1, EditorGUILayout.IntField("Probability Weight", entry.Weight));
+                entry.MinFloor = Mathf.Max(1, EditorGUILayout.IntField("Min Floor", entry.MinFloor));
+                entry.MaxFloor = Mathf.Max(entry.MinFloor, EditorGUILayout.IntField("Max Floor", entry.MaxFloor));
+
+                GUILayout.Space(4f);
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("Rewards", EditorStyles.miniBoldLabel);
+                if (GUILayout.Button("Add Reward", GUILayout.Width(88f)))
+                    entry.Rewards.Add(new DungeonTreasureRewardEntryData());
+                EditorGUILayout.EndHorizontal();
+
+                entry.Rewards ??= new List<DungeonTreasureRewardEntryData>();
+                for (int rewardIndex = 0; rewardIndex < entry.Rewards.Count; rewardIndex++)
+                {
+                    DungeonTreasureRewardEntryData reward = entry.Rewards[rewardIndex] ?? new DungeonTreasureRewardEntryData();
+                    entry.Rewards[rewardIndex] = reward;
+
+                    EditorGUILayout.BeginVertical("box");
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField($"Reward {rewardIndex + 1}", EditorStyles.miniBoldLabel);
+                    GUILayout.FlexibleSpace();
+                    if (GUILayout.Button("Delete", GUILayout.Width(56f)))
+                    {
+                        entry.Rewards.RemoveAt(rewardIndex);
+                        EditorGUILayout.EndHorizontal();
+                        EditorGUILayout.EndVertical();
+                        break;
+                    }
+                    EditorGUILayout.EndHorizontal();
+
+                    reward.RewardType = (DropRewardType)EditorGUILayout.EnumPopup("Reward Type", reward.RewardType);
+                    if (reward.RewardType == DropRewardType.Item)
+                        reward.ItemId = DrawIntPopup("Item", reward.ItemId, itemOptions);
+                    else
+                        EditorGUILayout.HelpBox("Money reward does not require an item id.", MessageType.None);
+                    reward.Chance = EditorGUILayout.Slider("Chance", reward.Chance, 0f, 1f);
+                    reward.MinQuantity = Mathf.Max(0, EditorGUILayout.IntField("Min Quantity", reward.MinQuantity));
+                    reward.MaxQuantity = Mathf.Max(reward.MinQuantity, EditorGUILayout.IntField("Max Quantity", reward.MaxQuantity));
+                    EditorGUILayout.EndVertical();
+                }
+
+                EditorGUILayout.EndVertical();
+            }
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                row.EnsureValid();
+                _isDirty = true;
+            }
+        }
+
+        private void DrawBossRoomDetailPanel()
+        {
+            if (_selectedBossRoomIndex < 0 || _selectedBossRoomIndex >= _bossRooms.Count)
+            {
+                EditorGUILayout.HelpBox("Select one boss room.", MessageType.Info);
+                return;
+            }
+
+            DungeonBossRoomData row = _bossRooms[_selectedBossRoomIndex];
+            row.EnsureValid();
+            List<StringOption> themeKeyOptions = BuildThemeKeyOptions();
+            List<IntOption> poolOptions = BuildMonsterPoolOptions();
+            List<IntOption> treasurePoolOptions = BuildTreasurePoolOptions();
+
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.LabelField("Basic", EditorStyles.boldLabel);
+            row.Id = EditorGUILayout.IntField("Id", row.Id);
+            row.Name = EditorGUILayout.TextField("Name", row.Name ?? string.Empty);
+            row.ThemeKey = DrawStringPopup("Theme Key", row.ThemeKey, themeKeyOptions, allowCustom: true);
+            row.FloorBandStart = Mathf.Max(1, EditorGUILayout.IntField("Band Start", row.FloorBandStart));
+            row.FloorBandEnd = Mathf.Max(row.FloorBandStart, EditorGUILayout.IntField("Band End", row.FloorBandEnd));
+            row.Width = Mathf.Max(8, EditorGUILayout.IntField("Width", row.Width));
+            row.Height = Mathf.Max(8, EditorGUILayout.IntField("Height", row.Height));
+            row.RewardTreasurePoolId = DrawIntPopup("Reward Treasure Pool", row.RewardTreasurePoolId, treasurePoolOptions);
+
+            GUILayout.Space(8f);
+            EditorGUILayout.LabelField("Anchors", EditorStyles.boldLabel);
+            row.PlayerSpawn = DrawInt2("Player Spawn", row.PlayerSpawn);
+            row.ExitSpawn = DrawInt2("Exit Spawn", row.ExitSpawn);
+            row.RewardSpawn = DrawInt2("Reward Spawn", row.RewardSpawn);
+            row.BossSpawn = DrawInt2("Boss Spawn", row.BossSpawn);
+
+            GUILayout.Space(8f);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Boss Pools", EditorStyles.boldLabel);
+            if (GUILayout.Button("Add Pool", GUILayout.Width(72f)))
+                row.BossPoolIds.Add(_monsterPools.Count > 0 ? _monsterPools[0].Id : -1);
+            EditorGUILayout.EndHorizontal();
+
+            row.BossPoolIds ??= new List<int>();
+            for (int i = 0; i < row.BossPoolIds.Count; i++)
+            {
+                EditorGUILayout.BeginHorizontal();
+                row.BossPoolIds[i] = DrawIntPopup($"Boss Pool {i + 1}", row.BossPoolIds[i], poolOptions);
+                if (GUILayout.Button("X", GUILayout.Width(24f)))
+                {
+                    row.BossPoolIds.RemoveAt(i);
+                    break;
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+
+            GUILayout.Space(8f);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Support Spawn Points", EditorStyles.boldLabel);
+            if (GUILayout.Button("Add Spawn", GUILayout.Width(84f)))
+                row.SupportSpawnPoints.Add(new Int2Data(4, 4));
+            EditorGUILayout.EndHorizontal();
+
+            row.SupportSpawnPoints ??= new List<Int2Data>();
+            for (int i = 0; i < row.SupportSpawnPoints.Count; i++)
+            {
+                EditorGUILayout.BeginHorizontal();
+                row.SupportSpawnPoints[i] = DrawInt2($"Spawn {i + 1}", row.SupportSpawnPoints[i]);
+                if (GUILayout.Button("X", GUILayout.Width(24f)))
+                {
+                    row.SupportSpawnPoints.RemoveAt(i);
+                    break;
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                row.EnsureValid();
+                _isDirty = true;
+            }
+        }
+
+        private void AddRowForSelectedTab()
+        {
+            switch (_selectedTab)
+            {
+                case DungeonTab.Theme:
+                    _themes.Add(new DungeonThemeData
+                    {
+                        Id = GetNextId(_themes.Select(static row => row.Id)),
+                        Name = $"Theme {_themes.Count + 1}",
+                        ThemeKey = $"theme_{_themes.Count + 1:D2}",
+                        FloorStart = 1,
+                        FloorEnd = 10,
+                    });
+                    _selectedThemeIndex = _themes.Count - 1;
+                    break;
+                case DungeonTab.MonsterPool:
+                    _monsterPools.Add(new DungeonMonsterPoolData
+                    {
+                        Id = GetNextId(_monsterPools.Select(static row => row.Id)),
+                        Name = $"Monster Pool {_monsterPools.Count + 1}",
+                    });
+                    _selectedMonsterPoolIndex = _monsterPools.Count - 1;
+                    break;
+                case DungeonTab.TreasurePool:
+                    _treasurePools.Add(new DungeonTreasurePoolData
+                    {
+                        Id = GetNextId(_treasurePools.Select(static row => row.Id)),
+                        Name = $"Treasure Pool {_treasurePools.Count + 1}",
+                    });
+                    _selectedTreasurePoolIndex = _treasurePools.Count - 1;
+                    break;
+                case DungeonTab.BossRoom:
+                    _bossRooms.Add(new DungeonBossRoomData
+                    {
+                        Id = GetNextId(_bossRooms.Select(static row => row.Id)),
+                        Name = $"Boss Room {_bossRooms.Count + 1}",
+                    });
+                    _selectedBossRoomIndex = _bossRooms.Count - 1;
+                    break;
+            }
+
+            _isDirty = true;
+        }
+
+        private void DuplicateSelectedRow()
+        {
+            switch (_selectedTab)
+            {
+                case DungeonTab.Theme:
+                    DuplicateTheme();
+                    break;
+                case DungeonTab.MonsterPool:
+                    DuplicateMonsterPool();
+                    break;
+                case DungeonTab.TreasurePool:
+                    DuplicateTreasurePool();
+                    break;
+                case DungeonTab.BossRoom:
+                    DuplicateBossRoom();
+                    break;
+            }
+        }
+
+        private void DeleteSelectedRow()
+        {
+            switch (_selectedTab)
+            {
+                case DungeonTab.Theme:
+                    if (_selectedThemeIndex >= 0 && _selectedThemeIndex < _themes.Count)
+                    {
+                        _themes.RemoveAt(_selectedThemeIndex);
+                        _selectedThemeIndex = Mathf.Clamp(_selectedThemeIndex, -1, _themes.Count - 1);
+                        _isDirty = true;
+                    }
+                    break;
+                case DungeonTab.MonsterPool:
+                    if (_selectedMonsterPoolIndex >= 0 && _selectedMonsterPoolIndex < _monsterPools.Count)
+                    {
+                        _monsterPools.RemoveAt(_selectedMonsterPoolIndex);
+                        _selectedMonsterPoolIndex = Mathf.Clamp(_selectedMonsterPoolIndex, -1, _monsterPools.Count - 1);
+                        _isDirty = true;
+                    }
+                    break;
+                case DungeonTab.TreasurePool:
+                    if (_selectedTreasurePoolIndex >= 0 && _selectedTreasurePoolIndex < _treasurePools.Count)
+                    {
+                        _treasurePools.RemoveAt(_selectedTreasurePoolIndex);
+                        _selectedTreasurePoolIndex = Mathf.Clamp(_selectedTreasurePoolIndex, -1, _treasurePools.Count - 1);
+                        _isDirty = true;
+                    }
+                    break;
+                case DungeonTab.BossRoom:
+                    if (_selectedBossRoomIndex >= 0 && _selectedBossRoomIndex < _bossRooms.Count)
+                    {
+                        _bossRooms.RemoveAt(_selectedBossRoomIndex);
+                        _selectedBossRoomIndex = Mathf.Clamp(_selectedBossRoomIndex, -1, _bossRooms.Count - 1);
+                        _isDirty = true;
+                    }
+                    break;
+            }
+        }
+
+        private void DuplicateTheme()
+        {
+            if (_selectedThemeIndex < 0 || _selectedThemeIndex >= _themes.Count)
+                return;
+
+            DungeonThemeData copy = DeepCopy(_themes[_selectedThemeIndex]);
+            copy.Id = GetNextId(_themes.Select(static row => row.Id));
+            copy.Name = $"{copy.Name} Copy";
+            copy.EnsureValid();
+            _themes.Add(copy);
+            _selectedThemeIndex = _themes.Count - 1;
+            _isDirty = true;
+        }
+
+        private void DuplicateMonsterPool()
+        {
+            if (_selectedMonsterPoolIndex < 0 || _selectedMonsterPoolIndex >= _monsterPools.Count)
+                return;
+
+            DungeonMonsterPoolData copy = DeepCopy(_monsterPools[_selectedMonsterPoolIndex]);
+            copy.Id = GetNextId(_monsterPools.Select(static row => row.Id));
+            copy.Name = $"{copy.Name} Copy";
+            copy.EnsureValid();
+            _monsterPools.Add(copy);
+            _selectedMonsterPoolIndex = _monsterPools.Count - 1;
+            _isDirty = true;
+        }
+
+        private void DuplicateBossRoom()
+        {
+            if (_selectedBossRoomIndex < 0 || _selectedBossRoomIndex >= _bossRooms.Count)
+                return;
+
+            DungeonBossRoomData copy = DeepCopy(_bossRooms[_selectedBossRoomIndex]);
+            copy.Id = GetNextId(_bossRooms.Select(static row => row.Id));
+            copy.Name = $"{copy.Name} Copy";
+            copy.EnsureValid();
+            _bossRooms.Add(copy);
+            _selectedBossRoomIndex = _bossRooms.Count - 1;
+            _isDirty = true;
+        }
+
+        private void DuplicateTreasurePool()
+        {
+            if (_selectedTreasurePoolIndex < 0 || _selectedTreasurePoolIndex >= _treasurePools.Count)
+                return;
+
+            DungeonTreasurePoolData copy = DeepCopy(_treasurePools[_selectedTreasurePoolIndex]);
+            copy.Id = GetNextId(_treasurePools.Select(static row => row.Id));
+            copy.Name = $"{copy.Name} Copy";
+            copy.EnsureValid();
+            _treasurePools.Add(copy);
+            _selectedTreasurePoolIndex = _treasurePools.Count - 1;
+            _isDirty = true;
+        }
+
+        private void LoadAll()
+        {
+            _themes.Clear();
+            _monsterPools.Clear();
+            _treasurePools.Clear();
+            _bossRooms.Clear();
+            _selectedThemeIndex = -1;
+            _selectedMonsterPoolIndex = -1;
+            _selectedTreasurePoolIndex = -1;
+            _selectedBossRoomIndex = -1;
+            _isDirty = false;
+
+            try
+            {
+                ThemeTableWrapper themeWrapper = LoadWrapper<ThemeTableWrapper>(ThemeDataPath);
+                MonsterPoolTableWrapper poolWrapper = LoadWrapper<MonsterPoolTableWrapper>(MonsterPoolDataPath);
+                TreasurePoolTableWrapper treasureWrapper = LoadWrapper<TreasurePoolTableWrapper>(TreasurePoolDataPath);
+                BossRoomTableWrapper bossWrapper = LoadWrapper<BossRoomTableWrapper>(BossRoomDataPath);
+
+                if (themeWrapper?.Rows != null)
+                {
+                    _themes.AddRange(themeWrapper.Rows);
+                    for (int i = 0; i < _themes.Count; i++)
+                        _themes[i]?.EnsureValid();
+                }
+
+                if (poolWrapper?.Rows != null)
+                {
+                    _monsterPools.AddRange(poolWrapper.Rows);
+                    for (int i = 0; i < _monsterPools.Count; i++)
+                        _monsterPools[i]?.EnsureValid();
+                }
+
+                if (treasureWrapper?.Rows != null)
+                {
+                    _treasurePools.AddRange(treasureWrapper.Rows);
+                    for (int i = 0; i < _treasurePools.Count; i++)
+                        _treasurePools[i]?.EnsureValid();
+                }
+
+                if (bossWrapper?.Rows != null)
+                {
+                    _bossRooms.AddRange(bossWrapper.Rows);
+                    for (int i = 0; i < _bossRooms.Count; i++)
+                        _bossRooms[i]?.EnsureValid();
+                }
+
+                _statusText = $"Loaded Themes:{_themes.Count} MonsterPools:{_monsterPools.Count} TreasurePools:{_treasurePools.Count} BossRooms:{_bossRooms.Count}";
+            }
+            catch (Exception ex)
+            {
+                _statusText = $"Load failed: {ex.Message}";
+                Debug.LogError($"[DungeonEditor] Load error:\n{ex}");
+            }
+        }
+
+        private void SaveAll()
+        {
+            try
+            {
+                for (int i = 0; i < _themes.Count; i++)
+                    _themes[i]?.EnsureValid();
+                for (int i = 0; i < _monsterPools.Count; i++)
+                    _monsterPools[i]?.EnsureValid();
+                for (int i = 0; i < _treasurePools.Count; i++)
+                    _treasurePools[i]?.EnsureValid();
+                for (int i = 0; i < _bossRooms.Count; i++)
+                    _bossRooms[i]?.EnsureValid();
+
+                SaveWrapper(ThemeDataPath, new ThemeTableWrapper { Rows = _themes });
+                SaveWrapper(MonsterPoolDataPath, new MonsterPoolTableWrapper { Rows = _monsterPools });
+                SaveWrapper(TreasurePoolDataPath, new TreasurePoolTableWrapper { Rows = _treasurePools });
+                SaveWrapper(BossRoomDataPath, new BossRoomTableWrapper { Rows = _bossRooms });
+
+                AssetDatabase.Refresh();
+                _isDirty = false;
+                _statusText = $"Saved Themes:{_themes.Count} MonsterPools:{_monsterPools.Count} TreasurePools:{_treasurePools.Count} BossRooms:{_bossRooms.Count}";
+            }
+            catch (Exception ex)
+            {
+                _statusText = $"Save failed: {ex.Message}";
+                Debug.LogError($"[DungeonEditor] Save error:\n{ex}");
+            }
+        }
+
+        private static T LoadWrapper<T>(string dataPath) where T : class, new()
+        {
+            if (!File.Exists(dataPath))
+                return new T();
+
+            string json = File.ReadAllText(dataPath);
+            return JsonConvert.DeserializeObject<T>(json, JsonSettings) ?? new T();
+        }
+
+        private static void SaveWrapper<T>(string dataPath, T wrapper)
+        {
+            string directory = Path.GetDirectoryName(dataPath);
+            if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
+
+            string json = JsonConvert.SerializeObject(wrapper, JsonSettings);
+            File.WriteAllText(dataPath, json, Encoding.UTF8);
+        }
+
+        private static T DeepCopy<T>(T source)
+        {
+            string json = JsonConvert.SerializeObject(source, JsonSettings);
+            return JsonConvert.DeserializeObject<T>(json, JsonSettings);
+        }
+
+        private string GetListTitle()
+        {
+            return _selectedTab switch
+            {
+                DungeonTab.Theme => $"Themes ({_themes.Count})",
+                DungeonTab.MonsterPool => $"Monster Pools ({_monsterPools.Count})",
+                DungeonTab.TreasurePool => $"Treasure Pools ({_treasurePools.Count})",
+                DungeonTab.BossRoom => $"Boss Rooms ({_bossRooms.Count})",
+                _ => string.Empty,
+            };
+        }
+
+        private bool HasSelection()
+        {
+            return _selectedTab switch
+            {
+                DungeonTab.Theme => _selectedThemeIndex >= 0 && _selectedThemeIndex < _themes.Count,
+                DungeonTab.MonsterPool => _selectedMonsterPoolIndex >= 0 && _selectedMonsterPoolIndex < _monsterPools.Count,
+                DungeonTab.TreasurePool => _selectedTreasurePoolIndex >= 0 && _selectedTreasurePoolIndex < _treasurePools.Count,
+                DungeonTab.BossRoom => _selectedBossRoomIndex >= 0 && _selectedBossRoomIndex < _bossRooms.Count,
+                _ => false,
+            };
+        }
+
+        private void SelectTab(DungeonTab tab)
+        {
+            if (_selectedTab == tab)
+                return;
+
+            _selectedTab = tab;
+            _listScrollPos = Vector2.zero;
+            _detailScrollPos = Vector2.zero;
+            CrystalMagic.Editor.EditorFocusUtility.ClearTextFocus();
+        }
+
+        private List<IntOption> BuildMonsterPoolOptions()
+        {
+            List<IntOption> options = new()
+            {
+                new IntOption { Id = -1, Label = "None" }
+            };
+
+            for (int i = 0; i < _monsterPools.Count; i++)
+            {
+                DungeonMonsterPoolData row = _monsterPools[i];
+                options.Add(new IntOption
+                {
+                    Id = row.Id,
+                    Label = $"[{row.Id}] {row.Name}",
+                });
+            }
+
+            return options;
+        }
+
+        private List<IntOption> BuildBossRoomOptions()
+        {
+            List<IntOption> options = new()
+            {
+                new IntOption { Id = -1, Label = "None" }
+            };
+
+            for (int i = 0; i < _bossRooms.Count; i++)
+            {
+                DungeonBossRoomData row = _bossRooms[i];
+                options.Add(new IntOption
+                {
+                    Id = row.Id,
+                    Label = $"[{row.Id}] {row.Name}",
+                });
+            }
+
+            return options;
+        }
+
+        private List<IntOption> BuildTreasurePoolOptions()
+        {
+            List<IntOption> options = new()
+            {
+                new IntOption { Id = -1, Label = "None" }
+            };
+
+            for (int i = 0; i < _treasurePools.Count; i++)
+            {
+                DungeonTreasurePoolData row = _treasurePools[i];
+                options.Add(new IntOption
+                {
+                    Id = row.Id,
+                    Label = $"[{row.Id}] {row.Name}",
+                });
+            }
+
+            return options;
+        }
+
+        private static List<IntOption> BuildItemOptions()
+        {
+            List<IntOption> options = new()
+            {
+                new IntOption { Id = -1, Label = "None" }
+            };
+
+            foreach (ItemData row in EditorComponents.Data.FindAll<ItemData>(static _ => true).OrderBy(static row => row.Id))
+            {
+                options.Add(new IntOption
+                {
+                    Id = row.Id,
+                    Label = $"[{row.Id}] {row.Name}",
+                });
+            }
+
+            return options;
+        }
+
+        private static List<StringOption> BuildUnitOptions()
+        {
+            List<StringOption> options = new()
+            {
+                new StringOption { Value = string.Empty, Label = "None" }
+            };
+
+            foreach (UnitData row in EditorComponents.Data.FindAll<UnitData>(static _ => true).OrderBy(static row => row.Id))
+            {
+                options.Add(new StringOption
+                {
+                    Value = row.Name ?? string.Empty,
+                    Label = $"[{row.Id}] {row.Name}",
+                });
+            }
+
+            return options;
+        }
+
+        private List<StringOption> BuildThemeKeyOptions()
+        {
+            List<StringOption> options = new()
+            {
+                new StringOption { Value = string.Empty, Label = "None" }
+            };
+
+            foreach (string themeKey in _themes
+                         .Select(static row => row.ThemeKey ?? string.Empty)
+                         .Where(static key => !string.IsNullOrWhiteSpace(key))
+                         .Distinct()
+                         .OrderBy(static key => key))
+            {
+                options.Add(new StringOption
+                {
+                    Value = themeKey,
+                    Label = themeKey,
+                });
+            }
+
+            return options;
+        }
+
+        private static int DrawIntPopup(string label, int currentId, List<IntOption> options)
+        {
+            int selectedIndex = 0;
+            for (int i = 0; i < options.Count; i++)
+            {
+                if (options[i].Id == currentId)
+                {
+                    selectedIndex = i;
+                    break;
+                }
+            }
+
+            string[] labels = options.Select(static option => option.Label).ToArray();
+            int newIndex = EditorGUILayout.Popup(label, selectedIndex, labels);
+            return newIndex >= 0 && newIndex < options.Count ? options[newIndex].Id : currentId;
+        }
+
+        private static string DrawStringPopup(string label, string currentValue, List<StringOption> options, bool allowCustom = false)
+        {
+            int selectedIndex = 0;
+            bool found = false;
+            for (int i = 0; i < options.Count; i++)
+            {
+                if (string.Equals(options[i].Value, currentValue, StringComparison.Ordinal))
+                {
+                    selectedIndex = i;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (allowCustom)
+            {
+                List<StringOption> localOptions = options;
+                if (!found && !string.IsNullOrWhiteSpace(currentValue))
+                {
+                    localOptions = new List<StringOption>(options)
+                    {
+                        new StringOption
+                        {
+                            Value = currentValue,
+                            Label = $"{currentValue} (Custom)",
+                        }
+                    };
+                    selectedIndex = localOptions.Count - 1;
+                }
+
+                EditorGUILayout.BeginHorizontal();
+                int newIndex = EditorGUILayout.Popup(label, selectedIndex, localOptions.Select(static option => option.Label).ToArray());
+                string newValue = newIndex >= 0 && newIndex < localOptions.Count ? localOptions[newIndex].Value : currentValue;
+                newValue = EditorGUILayout.TextField(newValue ?? string.Empty);
+                EditorGUILayout.EndHorizontal();
+                return newValue;
+            }
+
+            int selected = EditorGUILayout.Popup(label, selectedIndex, options.Select(static option => option.Label).ToArray());
+            return selected >= 0 && selected < options.Count ? options[selected].Value : currentValue;
+        }
+
+        private static Int2Data DrawInt2(string label, Int2Data value)
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel(label);
+            value.X = EditorGUILayout.IntField(value.X);
+            value.Y = EditorGUILayout.IntField(value.Y);
+            EditorGUILayout.EndHorizontal();
+            return value;
+        }
+
+        private static int GetNextId(IEnumerable<int> ids)
+        {
+            int nextId = 0;
+            foreach (int id in ids)
+                nextId = Mathf.Max(nextId, id + 1);
+            return nextId;
+        }
+    }
+}

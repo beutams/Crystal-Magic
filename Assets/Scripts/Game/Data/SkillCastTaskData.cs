@@ -59,4 +59,19 @@ namespace CrystalMagic.Game.Data
             HookPoint = SkillCastHookPoint.BeforeWindup;
         }
     }
+
+    [Serializable]
+    public sealed class JumpArcSkillCastTaskData : SkillCastTaskData
+    {
+        [EditorLabel("Duration Seconds")]
+        public float DurationSeconds = 0.35f;
+
+        [EditorLabel("Arc Height")]
+        public float ArcHeight = 1.5f;
+
+        public JumpArcSkillCastTaskData()
+        {
+            HookPoint = SkillCastHookPoint.BeforeChantEnd;
+        }
+    }
 }

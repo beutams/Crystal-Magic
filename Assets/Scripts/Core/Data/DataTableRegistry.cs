@@ -13,6 +13,10 @@ namespace CrystalMagic.Core
         {
             component.LoadTable<BehaviorTreeData>("BehaviorTreeDataTable");
             component.LoadTable<BuffData>("BuffDataTable");
+            component.LoadTable<DungeonBossRoomData>("DungeonBossRoomDataTable");
+            component.LoadTable<DungeonMonsterPoolData>("DungeonMonsterPoolDataTable");
+            component.LoadTable<DungeonTreasurePoolData>("DungeonTreasurePoolDataTable");
+            component.LoadTable<DungeonThemeData>("DungeonThemeDataTable");
             component.LoadTable<DropData>("DropDataTable");
             component.LoadTable<EquipData>("EquipDataTable");
             component.LoadTable<ItemData>("ItemDataTable");

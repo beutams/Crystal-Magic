@@ -1,0 +1,119 @@
+{
+  "Rows": [
+    {
+      "Id": 1,
+      "Name": "Theme1 Treasure1",
+      "Entries": [
+        {
+          "Weight": 1,
+          "MinFloor": 1,
+          "MaxFloor": 10,
+          "Rewards": [
+            {
+              "RewardType": 1,
+              "ItemId": -1,
+              "Chance": 1.0,
+              "MinQuantity": 8,
+              "MaxQuantity": 16
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Id": 2,
+      "Name": "Theme1 Treasure2",
+      "Entries": [
+        {
+          "Weight": 1,
+          "MinFloor": 1,
+          "MaxFloor": 10,
+          "Rewards": [
+            {
+              "RewardType": 1,
+              "ItemId": -1,
+              "Chance": 1.0,
+              "MinQuantity": 18,
+              "MaxQuantity": 32
+            },
+            {
+              "RewardType": 0,
+              "ItemId": 0,
+              "Chance": 0.45,
+              "MinQuantity": 1,
+              "MaxQuantity": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Id": 3,
+      "Name": "Theme1 Treasure3",
+      "Entries": [
+        {
+          "Weight": 1,
+          "MinFloor": 1,
+          "MaxFloor": 10,
+          "Rewards": [
+            {
+              "RewardType": 1,
+              "ItemId": -1,
+              "Chance": 1.0,
+              "MinQuantity": 35,
+              "MaxQuantity": 60
+            },
+            {
+              "RewardType": 0,
+              "ItemId": 1,
+              "Chance": 0.55,
+              "MinQuantity": 1,
+              "MaxQuantity": 1
+            },
+            {
+              "RewardType": 0,
+              "ItemId": 5,
+              "Chance": 0.3,
+              "MinQuantity": 1,
+              "MaxQuantity": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Id": 4,
+      "Name": "Theme1 Boss Reward",
+      "Entries": [
+        {
+          "Weight": 1,
+          "MinFloor": 10,
+          "MaxFloor": 10,
+          "Rewards": [
+            {
+              "RewardType": 1,
+              "ItemId": -1,
+              "Chance": 1.0,
+              "MinQuantity": 80,
+              "MaxQuantity": 120
+            },
+            {
+              "RewardType": 0,
+              "ItemId": 2,
+              "Chance": 1.0,
+              "MinQuantity": 1,
+              "MaxQuantity": 1
+            },
+            {
+              "RewardType": 0,
+              "ItemId": 9,
+              "Chance": 0.5,
+              "MinQuantity": 1,
+              "MaxQuantity": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -86,6 +86,92 @@ namespace CrystalMagic.Game.Skill
         }
     }
 
+    public sealed class JumpArcSkillCastTaskRuntime : SkillCastTaskRuntime
+    {
+        private readonly float _durationSeconds;
+        private readonly float _arcHeight;
+        private bool _started;
+
+        public JumpArcSkillCastTaskRuntime(JumpArcSkillCastTaskData data) : base(data?.HookPoint ?? SkillCastHookPoint.BeforeChantEnd)
+        {
+            _durationSeconds = math.max(0f, data?.DurationSeconds ?? 0f);
+            _arcHeight = math.max(0f, data?.ArcHeight ?? 0f);
+        }
+
+        public override bool Tick(EntityManager entityManager, Entity entity, ref UnitCastComponent cast, ref float remainingTime)
+        {
+            if (!_started)
+            {
+                if (!TryStartJump(entityManager, entity, cast))
+                    return true;
+
+                _started = true;
+            }
+
+            if (!entityManager.Exists(entity) || !entityManager.HasComponent<UnitJumpArcComponent>(entity))
+                return true;
+
+            UnitJumpArcComponent jump = entityManager.GetComponentData<UnitJumpArcComponent>(entity);
+            if (jump.IsCompleted == 0)
+                return false;
+
+            entityManager.RemoveComponent<UnitJumpArcComponent>(entity);
+            return true;
+        }
+
+        private bool TryStartJump(EntityManager entityManager, Entity entity, in UnitCastComponent cast)
+        {
+            if (!cast.HasLockedTarget || !entityManager.Exists(entity) || !entityManager.HasComponent<Unity.Transforms.LocalTransform>(entity))
+                return false;
+
+            Unity.Transforms.LocalTransform transform = entityManager.GetComponentData<Unity.Transforms.LocalTransform>(entity);
+            Unity.Mathematics.float3 startPosition = transform.Position;
+            Unity.Mathematics.float3 endPosition = new(cast.LockedTargetPosition.x, cast.LockedTargetPosition.y, startPosition.z);
+
+            if (_durationSeconds <= 0f)
+            {
+                transform.Position = endPosition;
+                transform.Rotation = quaternion.identity;
+                entityManager.SetComponentData(entity, transform);
+                SkillExecutionUtility.ClearJumpArcState(entityManager, entity);
+                return false;
+            }
+
+            if (entityManager.HasComponent<UnitMoveComponent>(entity))
+            {
+                UnitMoveComponent move = entityManager.GetComponentData<UnitMoveComponent>(entity);
+                move.AccelInput = float2.zero;
+                move.Velocity = float2.zero;
+                entityManager.SetComponentData(entity, move);
+            }
+
+            if (entityManager.HasComponent<Unity.Physics.PhysicsVelocity>(entity))
+            {
+                Unity.Physics.PhysicsVelocity physicsVelocity = entityManager.GetComponentData<Unity.Physics.PhysicsVelocity>(entity);
+                physicsVelocity.Linear = float3.zero;
+                physicsVelocity.Angular = float3.zero;
+                entityManager.SetComponentData(entity, physicsVelocity);
+            }
+
+            UnitJumpArcComponent jump = new()
+            {
+                StartPosition = startPosition,
+                EndPosition = endPosition,
+                Duration = _durationSeconds,
+                Elapsed = 0f,
+                ArcHeight = _arcHeight,
+                IsCompleted = 0,
+            };
+
+            if (entityManager.HasComponent<UnitJumpArcComponent>(entity))
+                entityManager.SetComponentData(entity, jump);
+            else
+                entityManager.AddComponentData(entity, jump);
+
+            return true;
+        }
+    }
+
     public static class SkillCastTaskRuntimeFactory
     {
         public static SkillCastTaskRuntime Create(SkillCastTaskData data)
@@ -94,6 +180,7 @@ namespace CrystalMagic.Game.Skill
             {
                 DoubleExecuteSkillCastTaskData doubleExecuteData => new DoubleExecuteSkillCastTaskRuntime(doubleExecuteData),
                 ApplyRuntimeBuffSkillCastTaskData applyRuntimeBuffData => new ApplyRuntimeBuffSkillCastTaskRuntime(applyRuntimeBuffData),
+                JumpArcSkillCastTaskData jumpArcData => new JumpArcSkillCastTaskRuntime(jumpArcData),
                 _ => null,
             };
         }

@@ -27,6 +27,7 @@ namespace CrystalMagic.Editor.Data
             typeof(ApplyBuffEffectData),
             typeof(AreaSearchEffectData),
             typeof(ChainSearchEffectData),
+            typeof(ConeSearchEffectData),
             typeof(DamageEffectData),
             typeof(ForwardRectSearchEffectData),
             typeof(HealEffectData),
@@ -49,6 +50,7 @@ namespace CrystalMagic.Editor.Data
             "Apply Buff",
             "Area Search",
             "Chain Search",
+            "Cone Search",
             "Damage",
             "Forward Rect Search",
             "Heal",
@@ -71,6 +73,7 @@ namespace CrystalMagic.Editor.Data
             new(0.34f, 0.22f, 0.56f),
             new(0.14f, 0.38f, 0.60f),
             new(0.18f, 0.42f, 0.74f),
+            new(0.20f, 0.50f, 0.70f),
             new(0.60f, 0.18f, 0.14f),
             new(0.60f, 0.30f, 0.12f),
             new(0.16f, 0.52f, 0.22f),
@@ -141,12 +144,14 @@ namespace CrystalMagic.Editor.Data
         {
             typeof(DoubleExecuteSkillCastTaskData),
             typeof(ApplyRuntimeBuffSkillCastTaskData),
+            typeof(JumpArcSkillCastTaskData),
         };
 
         private static readonly string[] CastTaskNames =
         {
             "Double Execute",
             "Apply Runtime Buff",
+            "Jump Arc",
         };
         private static readonly SkillCastHookPoint[] SkillCastHookPointValues = (SkillCastHookPoint[])Enum.GetValues(typeof(SkillCastHookPoint));
         private static readonly string[] SkillCastHookPointDisplayNames = EditorLabelUtility.GetEnumDisplayNames<SkillCastHookPoint>();
@@ -698,6 +703,11 @@ namespace CrystalMagic.Editor.Data
                     runtimeBuffTaskData.ConsumeOnDamageTaken = EditorGUILayout.Toggle("Consume On Damage", runtimeBuffTaskData.ConsumeOnDamageTaken);
                     if (runtimeBuffTaskData.ConsumeOnDamageTaken)
                         runtimeBuffTaskData.RemainingTriggerCount = Mathf.Max(1, EditorGUILayout.IntField("Remaining Triggers", runtimeBuffTaskData.RemainingTriggerCount));
+                    break;
+
+                case JumpArcSkillCastTaskData jumpArcTaskData:
+                    jumpArcTaskData.DurationSeconds = Mathf.Max(0f, EditorGUILayout.FloatField("Duration Seconds", jumpArcTaskData.DurationSeconds));
+                    jumpArcTaskData.ArcHeight = Mathf.Max(0f, EditorGUILayout.FloatField("Arc Height", jumpArcTaskData.ArcHeight));
                     break;
             }
         }

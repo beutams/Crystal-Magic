@@ -1,4 +1,7 @@
+using CrystalMagic.Game.MapDemo;
 using UnityEngine;
+using System.Collections.Generic;
+using CrystalMagic.Game.Data;
 
 namespace CrystalMagic.Core
 {
@@ -9,6 +12,7 @@ namespace CrystalMagic.Core
 
         private readonly RuntimeSkillData _skillData = new();
         private readonly RuntimePropData _propData = new();
+        private readonly RuntimeDungeonMapData _dungeonMapData = new();
 
         public RuntimeSkillData GetSkillData()
         {
@@ -20,10 +24,16 @@ namespace CrystalMagic.Core
             return _propData;
         }
 
+        public RuntimeDungeonMapData GetDungeonMapData()
+        {
+            return _dungeonMapData;
+        }
+
         public void Reset()
         {
             _skillData.CurrentSkillChainIndex = 0;
             _propData.SharedCooldownRemaining = 0f;
+            _dungeonMapData.Clear();
         }
 
         public void InitializeForGameRun()
@@ -94,6 +104,20 @@ namespace CrystalMagic.Core
         {
             EventComponent.Instance.Publish(new CommonGameEvent(PropRuntimeDataChangedEventName, _propData));
         }
+
+        public void SetCurrentDungeonLayout(
+            DungeonMakerTunnelingResult layout,
+            RuntimeDungeonSceneData sceneData,
+            int floor,
+            int seed,
+            int attemptCount)
+        {
+            _dungeonMapData.Layout = layout;
+            _dungeonMapData.SceneData = sceneData;
+            _dungeonMapData.Floor = Mathf.Max(1, floor);
+            _dungeonMapData.Seed = seed;
+            _dungeonMapData.AttemptCount = Mathf.Max(1, attemptCount);
+        }
     }
 
     public sealed class RuntimeSkillData
@@ -104,5 +128,88 @@ namespace CrystalMagic.Core
     public sealed class RuntimePropData
     {
         public float SharedCooldownRemaining;
+    }
+
+    public sealed class RuntimeDungeonMapData
+    {
+        public DungeonMakerTunnelingResult Layout;
+        public RuntimeDungeonSceneData SceneData;
+        public int Floor;
+        public int Seed;
+        public int AttemptCount;
+
+        public bool HasLayout => Layout != null;
+
+        public void Clear()
+        {
+            Layout = null;
+            SceneData = null;
+            Floor = 0;
+            Seed = 0;
+            AttemptCount = 0;
+        }
+    }
+
+    public sealed class RuntimeDungeonSceneData
+    {
+        public int ThemeId;
+        public string ThemeKey;
+        public bool IsBossFloor;
+        public float CellWorldSize;
+        public float ExitInteractionRange;
+        public string CorridorMaterialPath;
+        public string RoomMaterialPath;
+        public string AnteRoomMaterialPath;
+        public string WallMaterialPath;
+        public string StartMarkerMaterialPath;
+        public string ExitClosedMaterialPath;
+        public string ExitOpenMaterialPath;
+        public RuntimeDungeonObjectData StartObject;
+        public RuntimeDungeonObjectData NextLevelEntranceObject;
+        public List<RuntimeDungeonMonsterSpawnData> MonsterSpawns = new();
+        public List<RuntimeDungeonTreasureSpawnData> TreasureSpawns = new();
+    }
+
+    public sealed class RuntimeDungeonObjectData
+    {
+        public int RegionId;
+        public int TileIndex;
+        public Vector2Int SourceCoordinate;
+        public Vector2Int DisplayCoordinate;
+        public Vector3 WorldPosition;
+        public bool BlocksMovement;
+        public bool RequiresRoomClear;
+    }
+
+    public sealed class RuntimeDungeonMonsterSpawnData
+    {
+        public int RegionId;
+        public int TileIndex;
+        public int Level;
+        public bool IsBoss;
+        public string PrefabName;
+        public Vector2Int SourceCoordinate;
+        public Vector2Int DisplayCoordinate;
+        public Vector3 WorldPosition;
+    }
+
+    public sealed class RuntimeDungeonTreasureSpawnData
+    {
+        public int RegionId;
+        public int TileIndex;
+        public int Level;
+        public List<RuntimeDungeonTreasureRewardData> Rewards = new();
+        public Vector2Int SourceCoordinate;
+        public Vector2Int DisplayCoordinate;
+        public Vector3 WorldPosition;
+    }
+
+    public sealed class RuntimeDungeonTreasureRewardData
+    {
+        public DropRewardType RewardType;
+        public int ItemId = -1;
+        public float Chance = 1f;
+        public int MinQuantity = 1;
+        public int MaxQuantity = 1;
     }
 }

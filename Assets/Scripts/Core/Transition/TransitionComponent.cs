@@ -82,10 +82,18 @@ namespace CrystalMagic.Core {
         {
             EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.LoadStarted, transitionData.TargetSceneName));
             EventComponent.Instance?.Publish(new UISceneScopeChangedEvent(transitionData.TargetSceneName));
+            PublishLoadProgress(transitionData.TargetSceneName, 0.05f, "Loading scene", transitionData.TargetSceneName);
 
             yield return StartCoroutine(LoadSceneAsync(transitionData));
+            if (transitionData.PostLoadCoroutineFactory != null)
+            {
+                IEnumerator postLoadCoroutine = transitionData.PostLoadCoroutineFactory();
+                if (postLoadCoroutine != null)
+                    yield return StartCoroutine(postLoadCoroutine);
+            }
 
             EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.LoadCompleted, transitionData.TargetSceneName, 1f));
+            PublishLoadProgress(transitionData.TargetSceneName, 1f, "Load complete", transitionData.TargetSceneName);
             yield return StartCoroutine(FadeOutAsync(transitionMaskUI, transitionData.TargetSceneName));
 
             GameGateComponent gate = GameGateComponent.Instance;
@@ -103,7 +111,14 @@ namespace CrystalMagic.Core {
         {
             bool forceReloadTargetScene = transitionData.ForceReloadTargetScene;
             yield return StartCoroutine(
-                SceneComponent.Instance.LoadSceneAsyncCoroutine(transitionData.TargetSceneName, forceReload: forceReloadTargetScene)
+                SceneComponent.Instance.LoadSceneAsyncCoroutine(
+                    transitionData.TargetSceneName,
+                    forceReload: forceReloadTargetScene,
+                    onProgress: progress => PublishLoadProgress(
+                        transitionData.TargetSceneName,
+                        Mathf.Lerp(0.05f, 0.25f, progress),
+                        "Loading scene",
+                        transitionData.TargetSceneName))
             );
 
             if (transitionData.RequiredSubSceneNames == null)
@@ -112,6 +127,7 @@ namespace CrystalMagic.Core {
             SceneComponent.Instance.SetSubScenesActive(transitionData.RequiredSubSceneNames);
             foreach (string subSceneName in transitionData.RequiredSubSceneNames)
             {
+                PublishLoadProgress(transitionData.TargetSceneName, 0.27f, "Loading sub-scene", subSceneName);
                 yield return StartCoroutine(SceneComponent.Instance.WaitForSubSceneLoadedCoroutine(subSceneName));
             }
         }
@@ -125,6 +141,15 @@ namespace CrystalMagic.Core {
             }
 
             EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.FadeOutCompleted, targetSceneName, 1f));
+        }
+
+        private static void PublishLoadProgress(string targetSceneName, float progress, string title, string detail)
+        {
+            EventComponent.Instance?.Publish(new TransitionLoadProgressChangedEvent(
+                targetSceneName,
+                Mathf.Clamp01(progress),
+                title ?? string.Empty,
+                detail ?? string.Empty));
         }
     }
 }

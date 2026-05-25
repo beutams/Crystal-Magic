@@ -215,6 +215,28 @@ public static class SkillExecutionUtility
         entityManager.GetBuffer<UnitCastFollowupEffectElement>(entity).Clear();
     }
 
+    public static void ClearJumpArcState(EntityManager entityManager, Entity entity)
+    {
+        if (entityManager.Exists(entity) && entityManager.HasComponent<UnitJumpArcComponent>(entity))
+            entityManager.RemoveComponent<UnitJumpArcComponent>(entity);
+
+        if (entityManager.Exists(entity) && entityManager.HasComponent<UnitMoveComponent>(entity))
+        {
+            UnitMoveComponent move = entityManager.GetComponentData<UnitMoveComponent>(entity);
+            move.AccelInput = float2.zero;
+            move.Velocity = float2.zero;
+            entityManager.SetComponentData(entity, move);
+        }
+
+        if (entityManager.Exists(entity) && entityManager.HasComponent<Unity.Physics.PhysicsVelocity>(entity))
+        {
+            Unity.Physics.PhysicsVelocity physicsVelocity = entityManager.GetComponentData<Unity.Physics.PhysicsVelocity>(entity);
+            physicsVelocity.Linear = float3.zero;
+            physicsVelocity.Angular = float3.zero;
+            entityManager.SetComponentData(entity, physicsVelocity);
+        }
+    }
+
     private static SkillAdvanceResult TickHookTasks(EntityManager entityManager, Entity entity, ref UnitCastComponent cast, ref float remainingTime)
     {
         UnitCastTaskPayloadComponent payload = GetOrCreateTaskPayload(entityManager, entity);
@@ -246,21 +268,11 @@ public static class SkillExecutionUtility
             return;
 
         payload.InitializedHookMask |= bit;
+        SkillData baseSkillData = DataComponent.Instance?.Get<SkillData>(cast.CurrentSkillId);
         int additionId = GetCurrentSkillAdditionId(cast);
         SkillEffectData skillAdditionData = SkillChainResolver.GetSkillAdditionData(additionId);
-        if (skillAdditionData?.CastTasks == null || skillAdditionData.CastTasks.Count == 0)
-            return;
-
-        for (int i = 0; i < skillAdditionData.CastTasks.Count; i++)
-        {
-            SkillCastTaskData taskData = skillAdditionData.CastTasks[i];
-            if (taskData == null || taskData.HookPoint != cast.WaitingHookPoint)
-                continue;
-
-            SkillCastTaskRuntime runtime = SkillCastTaskRuntimeFactory.Create(taskData);
-            if (runtime != null)
-                payload.ActiveTasks.Add(runtime);
-        }
+        AppendHookTasks(payload, baseSkillData?.CastTasks, cast.WaitingHookPoint);
+        AppendHookTasks(payload, skillAdditionData?.CastTasks, cast.WaitingHookPoint);
     }
 
     private static bool HasPendingTasksForHook(UnitCastTaskPayloadComponent payload, SkillCastHookPoint hookPoint)
@@ -457,6 +469,7 @@ public static class SkillExecutionUtility
     {
         UnitBuffUtility.RemoveRuntimeBuffsByExecutionToken(entityManager, entity, cast.CurrentExecutionToken);
         ResetTaskPayload(entityManager, entity, -1);
+        ClearJumpArcState(entityManager, entity);
         cast.IsCasting = false;
         cast.StartedThisFrame = false;
         cast.ForceInterrupt = false;
@@ -513,6 +526,23 @@ public static class SkillExecutionUtility
 
         UnitCastSkillPayloadComponent payload = entityManager.GetComponentObject<UnitCastSkillPayloadComponent>(entity);
         payload?.ResolvedSkills?.Clear();
+    }
+
+    private static void AppendHookTasks(UnitCastTaskPayloadComponent payload, List<SkillCastTaskData> taskDataList, SkillCastHookPoint hookPoint)
+    {
+        if (payload == null || taskDataList == null || taskDataList.Count == 0)
+            return;
+
+        for (int i = 0; i < taskDataList.Count; i++)
+        {
+            SkillCastTaskData taskData = taskDataList[i];
+            if (taskData == null || taskData.HookPoint != hookPoint)
+                continue;
+
+            SkillCastTaskRuntime runtime = SkillCastTaskRuntimeFactory.Create(taskData);
+            if (runtime != null)
+                payload.ActiveTasks.Add(runtime);
+        }
     }
 
     private static void ScheduleHook(ref UnitCastComponent cast, SkillCastHookPoint hookPoint, SkillCastHookContinuation continuation)

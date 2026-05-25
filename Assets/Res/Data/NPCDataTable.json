@@ -100,8 +100,31 @@
           "Key": "Training",
           "DisplayName": "训练场",
           "EnableExpression": "",
-          "EntryNodeGuid": "3d003138da8c4619980f4cf904066d0d",
+          "EntryNodeGuid": "9fa755485fd94a18b7e4b386a3b5307a",
           "Nodes": [
+            {
+              "Options": [
+                {
+                  "DisplayName": "进入地牢",
+                  "EnableExpression": "",
+                  "NextNodeGuid": "c1a95e3707ff40248bb5153c55295ff8"
+                },
+                {
+                  "DisplayName": "进入训练营",
+                  "EnableExpression": "",
+                  "NextNodeGuid": "3d003138da8c4619980f4cf904066d0d"
+                }
+              ],
+              "Guid": "9fa755485fd94a18b7e4b386a3b5307a",
+              "Branches": [],
+              "Type": "Select"
+            },
+            {
+              "DungeonFloor": 1,
+              "Guid": "c1a95e3707ff40248bb5153c55295ff8",
+              "Branches": [],
+              "Type": "EnterDungeon"
+            },
             {
               "Guid": "3d003138da8c4619980f4cf904066d0d",
               "Branches": [],

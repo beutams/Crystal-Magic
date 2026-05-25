@@ -1,0 +1,42 @@
+{
+  "Rows": [
+    {
+      "Id": 1,
+      "Name": "Cave Maw Sanctum",
+      "ThemeKey": "cave_01",
+      "FloorBandStart": 1,
+      "FloorBandEnd": 1,
+      "Width": 24,
+      "Height": 18,
+      "PlayerSpawn": { "X": 3, "Y": 3 },
+      "ExitSpawn": { "X": 20, "Y": 14 },
+      "RewardSpawn": { "X": 12, "Y": 14 },
+      "BossSpawn": { "X": 12, "Y": 9 },
+      "SupportSpawnPoints": [
+        { "X": 8, "Y": 9 },
+        { "X": 16, "Y": 9 }
+      ],
+      "BossPoolIds": [101],
+      "RewardTreasurePoolId": 4
+    },
+    {
+      "Id": 2,
+      "Name": "Boss Hall B",
+      "ThemeKey": "ruins_01",
+      "FloorBandStart": 1,
+      "FloorBandEnd": 2,
+      "Width": 28,
+      "Height": 20,
+      "PlayerSpawn": { "X": 4, "Y": 4 },
+      "ExitSpawn": { "X": 23, "Y": 15 },
+      "RewardSpawn": { "X": 14, "Y": 15 },
+      "BossSpawn": { "X": 14, "Y": 10 },
+      "SupportSpawnPoints": [
+        { "X": 10, "Y": 10 },
+        { "X": 18, "Y": 10 }
+      ],
+      "BossPoolIds": [101],
+      "RewardTreasurePoolId": -1
+    }
+  ]
+}

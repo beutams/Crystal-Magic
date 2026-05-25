@@ -309,7 +309,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": -1
+          "DropDataId": 0
         }
       ],
       "Id": 1
@@ -466,7 +466,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": -1
+          "DropDataId": 1
         }
       ],
       "Id": 2
@@ -623,7 +623,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": -1
+          "DropDataId": 2
         }
       ],
       "Id": 3

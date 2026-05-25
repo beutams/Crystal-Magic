@@ -116,7 +116,7 @@ namespace CrystalMagic.Game.Skill
             {
                 Source = skillData,
                 Id = skillData.Id,
-                Name = skillData.Name,
+                Name = skillData.DisplayName,
                 SkillType = skillData.SkillType,
                 MpCost = math.max(0, (int)math.round(modifiers.Apply(SkillModifierChannel.MpCost, skillData.MpCost))),
                 WindupDuration = math.max(0f, skillData.WindupDuration * actionSpeedMultiplier),

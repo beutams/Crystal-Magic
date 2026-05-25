@@ -46,6 +46,21 @@ namespace CrystalMagic.Editor.Data
             UnitEditorWindow.MarkPrefabDirty(target);
             _window?.MarkDirty();
         }
+
+        public DropData GetDropData(int dropDataId)
+        {
+            return _window?.GetDropData(dropDataId);
+        }
+
+        public DropData CreateDropDataForUnit(UnitDropModuleData module)
+        {
+            return _window?.CreateDropDataForUnit(Unit, module);
+        }
+
+        public bool DrawInlineDropDataEditor(UnitDropModuleData module)
+        {
+            return _window != null && _window.DrawInlineDropDataEditor(Unit, module);
+        }
     }
 
     public interface IUnitEditorAttributeDrawer

@@ -63,6 +63,7 @@ namespace CrystalMagic.Core {
         public IReadOnlyList<string> RequiredSceneNames { get; set; }
         public IReadOnlyList<string> RequiredSubSceneNames { get; set; }
         public bool ForceReloadTargetScene { get; set; }
+        public System.Func<System.Collections.IEnumerator> PostLoadCoroutineFactory { get; set; }
         public System.Action OnComplete { get; set; }
     }
 }
