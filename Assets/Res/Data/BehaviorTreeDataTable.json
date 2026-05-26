@@ -1,4 +1,4 @@
-﻿{
+{
   "Rows": [
     {
       "Name": "Enemy",
@@ -9,8 +9,8 @@
           "Type": "Root",
           "Guid": "e401fd749cd943d79c701eacfaa9134c",
           "EditorPosition": {
-            "x": 80.0,
-            "y": 120.0
+            "x": 80,
+            "y": 120
           },
           "ChildGuids": [
             "selector_enemy_root"
@@ -20,8 +20,8 @@
           "Type": "Selector",
           "Guid": "selector_enemy_root",
           "EditorPosition": {
-            "x": 80.0,
-            "y": 240.0
+            "x": 80,
+            "y": 240
           },
           "ChildGuids": [
             "sequence_enemy_cast",
@@ -32,8 +32,8 @@
           "Type": "Sequence",
           "Guid": "sequence_enemy_cast",
           "EditorPosition": {
-            "x": -120.0,
-            "y": 380.0
+            "x": -120,
+            "y": 380
           },
           "ChildGuids": [
             "condition_enemy_has_target",
@@ -47,14 +47,14 @@
               "SourceType": "UnitHasTargetSource",
               "SourceParam": -1,
               "CompareType": "IsTrue",
-              "CompareValue": 0.0
+              "CompareValue": 0
             }
           ],
           "Type": "CheckCondition",
           "Guid": "condition_enemy_has_target",
           "EditorPosition": {
-            "x": -240.0,
-            "y": 520.0
+            "x": -240,
+            "y": 520
           },
           "ChildGuids": []
         },
@@ -65,19 +65,19 @@
           "Type": "CastToTarget",
           "Guid": "cast_enemy_fireball",
           "EditorPosition": {
-            "x": 0.0,
-            "y": 520.0
+            "x": 0,
+            "y": 520
           },
           "ChildGuids": []
         },
         {
-          "MinDurationSeconds": 1.0,
+          "MinDurationSeconds": 1,
           "MaxDurationSeconds": 2.5,
           "Type": "Wander",
           "Guid": "wander_enemy",
           "EditorPosition": {
-            "x": 280.0,
-            "y": 380.0
+            "x": 280,
+            "y": 380
           },
           "ChildGuids": []
         }
@@ -93,8 +93,8 @@
           "Type": "Root",
           "Guid": "451a264e6e5d40589c73fe9bc6718cee",
           "EditorPosition": {
-            "x": 80.0,
-            "y": 120.0
+            "x": 80,
+            "y": 120
           },
           "ChildGuids": [
             "252fa7acf0d24766b6fc6677bca499d6"
@@ -104,8 +104,8 @@
           "Type": "Idle",
           "Guid": "252fa7acf0d24766b6fc6677bca499d6",
           "EditorPosition": {
-            "x": 360.0,
-            "y": 120.0
+            "x": 360,
+            "y": 120
           },
           "ChildGuids": []
         }
@@ -121,8 +121,8 @@
           "Type": "Root",
           "Guid": "8fc277ed070e4ccd8c1b6006177c541f",
           "EditorPosition": {
-            "x": 80.0,
-            "y": 120.0
+            "x": 80,
+            "y": 120
           },
           "ChildGuids": [
             "fb36575c55584171b4a1cfe56c574082"
@@ -132,8 +132,8 @@
           "Type": "Idle",
           "Guid": "fb36575c55584171b4a1cfe56c574082",
           "EditorPosition": {
-            "x": 360.0,
-            "y": 120.0
+            "x": 360,
+            "y": 120
           },
           "ChildGuids": []
         }
@@ -149,8 +149,8 @@
           "Type": "Root",
           "Guid": "3f81f68cd0ba4867b7e53962598f8ec1",
           "EditorPosition": {
-            "x": 80.0,
-            "y": 120.0
+            "x": 80,
+            "y": 120
           },
           "ChildGuids": [
             "5f99b700d7924729b9a4cb7f281eec46"
@@ -160,8 +160,8 @@
           "Type": "Idle",
           "Guid": "5f99b700d7924729b9a4cb7f281eec46",
           "EditorPosition": {
-            "x": 360.0,
-            "y": 120.0
+            "x": 360,
+            "y": 120
           },
           "ChildGuids": []
         }
@@ -177,8 +177,8 @@
           "Type": "Root",
           "Guid": "ce4cca7248cd4e8f866b2f589938e87f",
           "EditorPosition": {
-            "x": 80.0,
-            "y": 120.0
+            "x": 80,
+            "y": 120
           },
           "ChildGuids": [
             "e8068f84c1874d4d86b1c7ca4d79820e"
@@ -188,13 +188,335 @@
           "Type": "Idle",
           "Guid": "e8068f84c1874d4d86b1c7ca4d79820e",
           "EditorPosition": {
-            "x": 360.0,
-            "y": 120.0
+            "x": 360,
+            "y": 120
           },
           "ChildGuids": []
         }
       ],
       "Id": 5
+    },
+    {
+      "Name": "MonsterStoneGolem",
+      "Description": "",
+      "RootNodeGuid": "stone_root",
+      "Nodes": [
+        {
+          "Type": "Root",
+          "Guid": "stone_root",
+          "EditorPosition": {
+            "x": 80,
+            "y": 120
+          },
+          "ChildGuids": [
+            "stone_selector"
+          ]
+        },
+        {
+          "Type": "Selector",
+          "Guid": "stone_selector",
+          "EditorPosition": {
+            "x": 80,
+            "y": 240
+          },
+          "ChildGuids": [
+            "stone_phase2_rage",
+            "stone_phase2_attack",
+            "stone_phase1_attack",
+            "stone_wander"
+          ]
+        },
+        {
+          "Type": "Sequence",
+          "Guid": "stone_phase2_rage",
+          "EditorPosition": {
+            "x": -320,
+            "y": 380
+          },
+          "ChildGuids": [
+            "stone_has_target_rage",
+            "stone_half_hp_rage",
+            "stone_no_rage_buff",
+            "stone_cast_rage"
+          ]
+        },
+        {
+          "Type": "CheckCondition",
+          "Guid": "stone_has_target_rage",
+          "EditorPosition": {
+            "x": -480,
+            "y": 520
+          },
+          "Conditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitHasTargetSource",
+              "SourceParam": -1,
+              "CompareType": "IsTrue",
+              "CompareValue": 0
+            }
+          ],
+          "ChildGuids": []
+        },
+        {
+          "Type": "CheckCondition",
+          "Guid": "stone_half_hp_rage",
+          "EditorPosition": {
+            "x": -320,
+            "y": 520
+          },
+          "Conditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitHealthRatioSource",
+              "SourceParam": -1,
+              "CompareType": "LessThan",
+              "CompareValue": 0.5
+            }
+          ],
+          "ChildGuids": []
+        },
+        {
+          "Type": "CheckCondition",
+          "Guid": "stone_no_rage_buff",
+          "EditorPosition": {
+            "x": -160,
+            "y": 520
+          },
+          "Conditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitBuffStackSource",
+              "SourceParam": 6,
+              "CompareType": "LessThan",
+              "CompareValue": 1
+            }
+          ],
+          "ChildGuids": []
+        },
+        {
+          "Type": "CastToTarget",
+          "Guid": "stone_cast_rage",
+          "EditorPosition": {
+            "x": 0,
+            "y": 520
+          },
+          "SelectionMode": 2,
+          "SkillId": -1,
+          "SkillTagMask": 1,
+          "ChildGuids": []
+        },
+        {
+          "Type": "Sequence",
+          "Guid": "stone_phase2_attack",
+          "EditorPosition": {
+            "x": 40,
+            "y": 380
+          },
+          "ChildGuids": [
+            "stone_has_target_p2",
+            "stone_half_hp_p2",
+            "stone_cast_p2"
+          ]
+        },
+        {
+          "Type": "CheckCondition",
+          "Guid": "stone_has_target_p2",
+          "EditorPosition": {
+            "x": -40,
+            "y": 520
+          },
+          "Conditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitHasTargetSource",
+              "SourceParam": -1,
+              "CompareType": "IsTrue",
+              "CompareValue": 0
+            }
+          ],
+          "ChildGuids": []
+        },
+        {
+          "Type": "CheckCondition",
+          "Guid": "stone_half_hp_p2",
+          "EditorPosition": {
+            "x": 120,
+            "y": 520
+          },
+          "Conditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitHealthRatioSource",
+              "SourceParam": -1,
+              "CompareType": "LessThan",
+              "CompareValue": 0.5
+            }
+          ],
+          "ChildGuids": []
+        },
+        {
+          "Type": "CastToTarget",
+          "Guid": "stone_cast_p2",
+          "EditorPosition": {
+            "x": 280,
+            "y": 520
+          },
+          "SelectionMode": 2,
+          "SkillId": -1,
+          "SkillTagMask": 4,
+          "ChildGuids": []
+        },
+        {
+          "Type": "Sequence",
+          "Guid": "stone_phase1_attack",
+          "EditorPosition": {
+            "x": 360,
+            "y": 380
+          },
+          "ChildGuids": [
+            "stone_has_target_p1",
+            "stone_cast_p1"
+          ]
+        },
+        {
+          "Type": "CheckCondition",
+          "Guid": "stone_has_target_p1",
+          "EditorPosition": {
+            "x": 360,
+            "y": 520
+          },
+          "Conditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitHasTargetSource",
+              "SourceParam": -1,
+              "CompareType": "IsTrue",
+              "CompareValue": 0
+            }
+          ],
+          "ChildGuids": []
+        },
+        {
+          "Type": "CastToTarget",
+          "Guid": "stone_cast_p1",
+          "EditorPosition": {
+            "x": 520,
+            "y": 520
+          },
+          "SelectionMode": 2,
+          "SkillId": -1,
+          "SkillTagMask": 2,
+          "ChildGuids": []
+        },
+        {
+          "Type": "Wander",
+          "Guid": "stone_wander",
+          "EditorPosition": {
+            "x": 680,
+            "y": 380
+          },
+          "MinDurationSeconds": 0.6,
+          "MaxDurationSeconds": 1.2,
+          "ChildGuids": []
+        }
+      ],
+      "Id": 6
+    },
+    {
+      "Name": "MonsterStoneGolemMinion",
+      "Description": "",
+      "RootNodeGuid": "stone_minion_root",
+      "Nodes": [
+        {
+          "Type": "Root",
+          "Guid": "stone_minion_root",
+          "EditorPosition": {
+            "x": 80,
+            "y": 120
+          },
+          "ChildGuids": [
+            "stone_minion_selector"
+          ]
+        },
+        {
+          "Type": "Selector",
+          "Guid": "stone_minion_selector",
+          "EditorPosition": {
+            "x": 80,
+            "y": 240
+          },
+          "ChildGuids": [
+            "stone_minion_engage",
+            "stone_minion_wander"
+          ]
+        },
+        {
+          "Type": "Sequence",
+          "Guid": "stone_minion_engage",
+          "EditorPosition": {
+            "x": -120,
+            "y": 380
+          },
+          "ChildGuids": [
+            "stone_minion_has_target",
+            "stone_minion_move",
+            "stone_minion_cast"
+          ]
+        },
+        {
+          "Type": "CheckCondition",
+          "Guid": "stone_minion_has_target",
+          "EditorPosition": {
+            "x": -240,
+            "y": 520
+          },
+          "Conditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitHasTargetSource",
+              "SourceParam": -1,
+              "CompareType": "IsTrue",
+              "CompareValue": 0
+            }
+          ],
+          "ChildGuids": []
+        },
+        {
+          "Type": "MoveToTarget",
+          "Guid": "stone_minion_move",
+          "EditorPosition": {
+            "x": -80,
+            "y": 520
+          },
+          "StopDistance": 2.1,
+          "ChildGuids": []
+        },
+        {
+          "Type": "CastToTarget",
+          "Guid": "stone_minion_cast",
+          "EditorPosition": {
+            "x": 80,
+            "y": 520
+          },
+          "SelectionMode": 1,
+          "SkillId": -1,
+          "SkillTagMask": 0,
+          "ChildGuids": []
+        },
+        {
+          "Type": "Wander",
+          "Guid": "stone_minion_wander",
+          "EditorPosition": {
+            "x": 280,
+            "y": 380
+          },
+          "MinDurationSeconds": 0.5,
+          "MaxDurationSeconds": 1,
+          "ChildGuids": []
+        }
+      ],
+      "Id": 7
     }
   ]
 }

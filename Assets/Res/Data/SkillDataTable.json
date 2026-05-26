@@ -6,7 +6,7 @@
       "SkillType": 1,
       "MpCost": 100,
       "WindupDuration": 0.25,
-      "ChantDuration": 0.0,
+      "ChantDuration": 0,
       "RecoveryDuration": 0.25,
       "CanMoveWhileCasting": true,
       "MoveSpeedMultiplier": 0.5,
@@ -18,12 +18,12 @@
           "VfxTexture": "Assets/Res/Sprites/Skill/ChargingSelfVfx.png",
           "FrameCount": 16,
           "Loop": false,
-          "Duration": 0.0,
+          "Duration": 0,
           "Scale": 1.1,
           "SpawnOffset": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
+            "x": 0,
+            "y": 0,
+            "z": 0
           },
           "FollowCaster": true,
           "AlignToCasterForward": false,
@@ -32,7 +32,7 @@
         {
           "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
           "BuffId": 5,
-          "DurationSeconds": -1.0,
+          "DurationSeconds": -1,
           "StackCount": 1,
           "Conditions": []
         }
@@ -55,10 +55,10 @@
       "EffectChain": [
         {
           "$type": "CrystalMagic.Game.Data.Effects.SpawnProjectileEffectData, Assembly-CSharp",
-          "Speed": 10.0,
-          "MaxRange": 40.0,
-          "SpawnOffsetDistance": 1.0,
-          "Scale": 1.0,
+          "Speed": 10,
+          "MaxRange": 40,
+          "SpawnOffsetDistance": 1,
+          "Scale": 1,
           "FlightTexture": "Assets/Res/Sprites/Skill/FireBall.png",
           "FlightFrameCount": 16,
           "DestroyTexture": "Assets/Res/Sprites/Skill/FireBallDestory.png",
@@ -72,12 +72,12 @@
               "VfxTexture": "Assets/Res/Sprites/Skill/FireBallImpact.png",
               "FrameCount": 16,
               "Loop": false,
-              "Duration": 0.0,
+              "Duration": 0,
               "Scale": 1.25,
               "SpawnOffset": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
+                "x": 0,
+                "y": 0,
+                "z": 0
               },
               "FollowCaster": false,
               "AlignToCasterForward": false,
@@ -85,11 +85,11 @@
             },
             {
               "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
-              "Radius": 5.0,
+              "Radius": 5,
               "CenterOffset": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
+                "x": 0,
+                "y": 0,
+                "z": 0
               },
               "TargetConditions": [
                 {
@@ -97,14 +97,14 @@
                   "SourceType": "UnitIsEnemySource",
                   "SourceParam": -1,
                   "CompareType": "IsTrue",
-                  "CompareValue": 0.0
+                  "CompareValue": 0
                 }
               ],
               "OnAfterSearch": [
                 {
                   "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
-                  "DamageCoefficient": 2.0,
-                  "FlatDamageBonus": 0.0,
+                  "DamageCoefficient": 2,
+                  "FlatDamageBonus": 0,
                   "Element": 2,
                   "Conditions": [
                     {
@@ -112,7 +112,7 @@
                       "SourceType": "UnitIsEnemySource",
                       "SourceParam": -1,
                       "CompareType": "IsTrue",
-                      "CompareValue": 0.0
+                      "CompareValue": 0
                     }
                   ]
                 },
@@ -120,10 +120,10 @@
                   "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
                   "AudioPath": null,
                   "Channel": 1,
-                  "Volume": 1.0,
-                  "Pitch": 1.0,
-                  "SpatialBlend": 0.0,
-                  "DelaySeconds": 0.0,
+                  "Volume": 1,
+                  "Pitch": 1,
+                  "SpatialBlend": 0,
+                  "DelaySeconds": 0,
                   "FollowCaster": false,
                   "Conditions": []
                 }
@@ -155,12 +155,12 @@
           "VfxTexture": "Assets/Res/Sprites/Skill/FlameStreamVfx.png",
           "FrameCount": 16,
           "Loop": false,
-          "Duration": 0.0,
+          "Duration": 0,
           "Scale": 1.45,
           "SpawnOffset": {
-            "x": 2.0,
-            "y": 0.0,
-            "z": 0.0
+            "x": 2,
+            "y": 0,
+            "z": 0
           },
           "FollowCaster": true,
           "AlignToCasterForward": true,
@@ -168,22 +168,22 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.Effects.ForwardRectSearchEffectData, Assembly-CSharp",
-          "Length": 20.0,
-          "Width": 4.0,
+          "Length": 20,
+          "Width": 4,
           "TargetConditions": [
             {
               "ConditionType": 0,
               "SourceType": "UnitIsEnemySource",
               "SourceParam": -1,
               "CompareType": "IsTrue",
-              "CompareValue": 0.0
+              "CompareValue": 0
             }
           ],
           "OnAfterSearch": [
             {
               "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
-              "DamageCoefficient": 2.0,
-              "FlatDamageBonus": 0.0,
+              "DamageCoefficient": 2,
+              "FlatDamageBonus": 0,
               "Element": 2,
               "Conditions": [
                 {
@@ -191,14 +191,14 @@
                   "SourceType": "UnitIsEnemySource",
                   "SourceParam": -1,
                   "CompareType": "IsTrue",
-                  "CompareValue": 0.0
+                  "CompareValue": 0
                 }
               ]
             },
             {
               "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
               "BuffId": 2,
-              "DurationSeconds": 5.0,
+              "DurationSeconds": 5,
               "StackCount": 1,
               "Conditions": []
             },
@@ -206,10 +206,10 @@
               "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
               "AudioPath": null,
               "Channel": 1,
-              "Volume": 1.0,
-              "Pitch": 1.0,
-              "SpatialBlend": 0.0,
-              "DelaySeconds": 0.0,
+              "Volume": 1,
+              "Pitch": 1,
+              "SpatialBlend": 0,
+              "DelaySeconds": 0,
               "FollowCaster": false,
               "Conditions": []
             }
@@ -226,7 +226,7 @@
       "SkillType": 0,
       "MpCost": 200,
       "WindupDuration": 0.1,
-      "ChantDuration": 0.0,
+      "ChantDuration": 0,
       "RecoveryDuration": 0.1,
       "CanMoveWhileCasting": true,
       "MoveSpeedMultiplier": 0.5,
@@ -235,11 +235,11 @@
       "EffectChain": [
         {
           "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
-          "Radius": 10.0,
+          "Radius": 10,
           "CenterOffset": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
+            "x": 0,
+            "y": 0,
+            "z": 0
           },
           "TargetConditions": [
             {
@@ -247,7 +247,7 @@
               "SourceType": "UnitIsEnemySource",
               "SourceParam": -1,
               "CompareType": "IsTrue",
-              "CompareValue": 0.0
+              "CompareValue": 0
             }
           ],
           "OnAfterSearch": [
@@ -258,14 +258,14 @@
                 {
                   "Channel": 100,
                   "Factor": 0.5,
-                  "Bonus": 0.0
+                  "Bonus": 0
                 }
               ],
               "OnAfterRead": [
                 {
                   "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
-                  "DamageCoefficient": 20.0,
-                  "FlatDamageBonus": 0.0,
+                  "DamageCoefficient": 20,
+                  "FlatDamageBonus": 0,
                   "Element": 2,
                   "Conditions": [
                     {
@@ -273,7 +273,7 @@
                       "SourceType": "UnitIsEnemySource",
                       "SourceParam": -1,
                       "CompareType": "IsTrue",
-                      "CompareValue": 0.0
+                      "CompareValue": 0
                     }
                   ]
                 }
@@ -284,7 +284,7 @@
                   "SourceType": "UnitIsEnemySource",
                   "SourceParam": -1,
                   "CompareType": "IsTrue",
-                  "CompareValue": 0.0
+                  "CompareValue": 0
                 }
               ]
             },
@@ -293,12 +293,12 @@
               "VfxTexture": "Assets/Res/Sprites/Skill/FireBallImpact.png",
               "FrameCount": 16,
               "Loop": false,
-              "Duration": 0.0,
-              "Scale": 1.0,
+              "Duration": 0,
+              "Scale": 1,
               "SpawnOffset": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
+                "x": 0,
+                "y": 0,
+                "z": 0
               },
               "FollowCaster": false,
               "AlignToCasterForward": false,
@@ -327,7 +327,7 @@
         {
           "$type": "CrystalMagic.Game.Data.Effects.PersistentEffectData, Assembly-CSharp",
           "Element": 0,
-          "TotalDuration": 10.0,
+          "TotalDuration": 10,
           "TickIntervalSeconds": 0.1,
           "OnStartEffects": [
             {
@@ -335,12 +335,12 @@
               "VfxTexture": "Assets/Res/Sprites/Skill/EddiesStartVfx.png",
               "FrameCount": 16,
               "Loop": false,
-              "Duration": 0.0,
+              "Duration": 0,
               "Scale": 1.25,
               "SpawnOffset": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
+                "x": 0,
+                "y": 0,
+                "z": 0
               },
               "FollowCaster": false,
               "AlignToCasterForward": false,
@@ -351,12 +351,12 @@
               "VfxTexture": "Assets/Res/Sprites/Skill/EddiesVfx.png",
               "FrameCount": 16,
               "Loop": true,
-              "Duration": 10.0,
+              "Duration": 10,
               "Scale": 1.25,
               "SpawnOffset": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
+                "x": 0,
+                "y": 0,
+                "z": 0
               },
               "FollowCaster": false,
               "AlignToCasterForward": false,
@@ -378,12 +378,12 @@
               "VfxTexture": "Assets/Res/Sprites/Skill/EddiesEndVfx.png",
               "FrameCount": 16,
               "Loop": false,
-              "Duration": 0.0,
+              "Duration": 0,
               "Scale": 1.25,
               "SpawnOffset": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
+                "x": 0,
+                "y": 0,
+                "z": 0
               },
               "FollowCaster": false,
               "AlignToCasterForward": false,
@@ -411,10 +411,10 @@
       "EffectChain": [
         {
           "$type": "CrystalMagic.Game.Data.Effects.SpawnProjectileEffectData, Assembly-CSharp",
-          "Speed": 10.0,
-          "MaxRange": 40.0,
-          "SpawnOffsetDistance": 1.0,
-          "Scale": 1.0,
+          "Speed": 10,
+          "MaxRange": 40,
+          "SpawnOffsetDistance": 1,
+          "Scale": 1,
           "FlightTexture": "Assets/Res/Sprites/Skill/IceSpikeFlight.png",
           "FlightFrameCount": 16,
           "DestroyTexture": "Assets/Res/Sprites/Skill/IceSpikeDestroy.png",
@@ -428,12 +428,12 @@
               "VfxTexture": "Assets/Res/Sprites/Skill/IceSpikeImpact.png",
               "FrameCount": 16,
               "Loop": false,
-              "Duration": 0.0,
+              "Duration": 0,
               "Scale": 1.2,
               "SpawnOffset": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
+                "x": 0,
+                "y": 0,
+                "z": 0
               },
               "FollowCaster": false,
               "AlignToCasterForward": false,
@@ -452,7 +452,7 @@
       "SkillType": 0,
       "MpCost": 100,
       "WindupDuration": 0.25,
-      "ChantDuration": 0.0,
+      "ChantDuration": 0,
       "RecoveryDuration": 0.25,
       "CanMoveWhileCasting": true,
       "MoveSpeedMultiplier": 0.5,
@@ -462,20 +462,20 @@
         {
           "$type": "CrystalMagic.Game.Data.Effects.PersistentEffectData, Assembly-CSharp",
           "Element": 0,
-          "TotalDuration": 3.0,
-          "TickIntervalSeconds": 0.0,
+          "TotalDuration": 3,
+          "TickIntervalSeconds": 0,
           "OnStartEffects": [
             {
               "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
               "VfxTexture": "Assets/Res/Sprites/Skill/FreezeStartVfx.png",
               "FrameCount": 16,
               "Loop": false,
-              "Duration": 0.0,
+              "Duration": 0,
               "Scale": 1.3,
               "SpawnOffset": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
+                "x": 0,
+                "y": 0,
+                "z": 0
               },
               "FollowCaster": false,
               "AlignToCasterForward": false,
@@ -489,12 +489,12 @@
               "VfxTexture": "Assets/Res/Sprites/Skill/FreezeEndVfx.png",
               "FrameCount": 16,
               "Loop": false,
-              "Duration": 0.0,
+              "Duration": 0,
               "Scale": 1.3,
               "SpawnOffset": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
+                "x": 0,
+                "y": 0,
+                "z": 0
               },
               "FollowCaster": false,
               "AlignToCasterForward": false,
@@ -525,12 +525,12 @@
           "VfxTexture": "Assets/Res/Sprites/Skill/LightningStrikeVfx.png",
           "FrameCount": 16,
           "Loop": false,
-          "Duration": 0.0,
+          "Duration": 0,
           "Scale": 1.45,
           "SpawnOffset": {
-            "x": 2.0,
-            "y": 0.0,
-            "z": 0.0
+            "x": 2,
+            "y": 0,
+            "z": 0
           },
           "FollowCaster": true,
           "AlignToCasterForward": true,
@@ -556,20 +556,20 @@
         {
           "$type": "CrystalMagic.Game.Data.Effects.PersistentEffectData, Assembly-CSharp",
           "Element": 0,
-          "TotalDuration": 5.0,
-          "TickIntervalSeconds": 0.0,
+          "TotalDuration": 5,
+          "TickIntervalSeconds": 0,
           "OnStartEffects": [
             {
               "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
               "VfxTexture": "Assets/Res/Sprites/Skill/ThunderFieldStartVfx.png",
               "FrameCount": 16,
               "Loop": false,
-              "Duration": 0.0,
+              "Duration": 0,
               "Scale": 1.35,
               "SpawnOffset": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
+                "x": 0,
+                "y": 0,
+                "z": 0
               },
               "FollowCaster": false,
               "AlignToCasterForward": false,
@@ -583,12 +583,12 @@
               "VfxTexture": "Assets/Res/Sprites/Skill/ThunderFieldEndVfx.png",
               "FrameCount": 16,
               "Loop": false,
-              "Duration": 0.0,
+              "Duration": 0,
               "Scale": 1.35,
               "SpawnOffset": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
+                "x": 0,
+                "y": 0,
+                "z": 0
               },
               "FollowCaster": false,
               "AlignToCasterForward": false,
@@ -607,7 +607,7 @@
       "SkillType": 0,
       "MpCost": 300,
       "WindupDuration": 0.1,
-      "ChantDuration": 0.0,
+      "ChantDuration": 0,
       "RecoveryDuration": 0.1,
       "CanMoveWhileCasting": true,
       "MoveSpeedMultiplier": 0.5,
@@ -619,12 +619,12 @@
           "VfxTexture": "Assets/Res/Sprites/Skill/ThunderstormVfx.png",
           "FrameCount": 16,
           "Loop": false,
-          "Duration": 0.0,
+          "Duration": 0,
           "Scale": 1.35,
           "SpawnOffset": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
+            "x": 0,
+            "y": 0,
+            "z": 0
           },
           "FollowCaster": false,
           "AlignToCasterForward": false,
@@ -640,10 +640,10 @@
       "SkillType": 1,
       "MpCost": 100,
       "WindupDuration": 0.1,
-      "ChantDuration": 0.0,
+      "ChantDuration": 0,
       "RecoveryDuration": 0.1,
       "CanMoveWhileCasting": true,
-      "MoveSpeedMultiplier": 1.0,
+      "MoveSpeedMultiplier": 1,
       "IconPath": "Assets/Res/Sprites/Item/SpeedUp.png",
       "Conditions": [],
       "EffectChain": [
@@ -652,12 +652,12 @@
           "VfxTexture": "Assets/Res/Sprites/Skill/SpeedUpSelfVfx.png",
           "FrameCount": 16,
           "Loop": false,
-          "Duration": 0.0,
+          "Duration": 0,
           "Scale": 1.15,
           "SpawnOffset": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
+            "x": 0,
+            "y": 0,
+            "z": 0
           },
           "FollowCaster": true,
           "AlignToCasterForward": false,
@@ -673,7 +673,7 @@
       "SkillType": 1,
       "MpCost": 200,
       "WindupDuration": 0.5,
-      "ChantDuration": 1.0,
+      "ChantDuration": 1,
       "RecoveryDuration": 0.5,
       "CanMoveWhileCasting": true,
       "MoveSpeedMultiplier": 0.5,
@@ -685,12 +685,12 @@
           "VfxTexture": "Assets/Res/Sprites/Skill/HealSelfVfx.png",
           "FrameCount": 16,
           "Loop": false,
-          "Duration": 0.0,
+          "Duration": 0,
           "Scale": 1.15,
           "SpawnOffset": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
+            "x": 0,
+            "y": 0,
+            "z": 0
           },
           "FollowCaster": true,
           "AlignToCasterForward": false,
@@ -706,30 +706,30 @@
       "SkillType": 0,
       "MpCost": 200,
       "WindupDuration": 0.25,
-      "ChantDuration": 1.0,
+      "ChantDuration": 1,
       "RecoveryDuration": 0.25,
       "CanMoveWhileCasting": false,
-      "MoveSpeedMultiplier": 1.0,
+      "MoveSpeedMultiplier": 1,
       "IconPath": "Assets/Res/Sprites/Item/Shield.png",
       "Conditions": [],
       "EffectChain": [
         {
           "$type": "CrystalMagic.Game.Data.Effects.PersistentEffectData, Assembly-CSharp",
           "Element": 0,
-          "TotalDuration": 8.0,
-          "TickIntervalSeconds": 0.0,
+          "TotalDuration": 8,
+          "TickIntervalSeconds": 0,
           "OnStartEffects": [
             {
               "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
               "VfxTexture": "Assets/Res/Sprites/Skill/ShieldStartVfx.png",
               "FrameCount": 16,
               "Loop": false,
-              "Duration": 0.0,
+              "Duration": 0,
               "Scale": 1.3,
               "SpawnOffset": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
+                "x": 0,
+                "y": 0,
+                "z": 0
               },
               "FollowCaster": false,
               "AlignToCasterForward": false,
@@ -740,12 +740,12 @@
               "VfxTexture": "Assets/Res/Sprites/Skill/ShieldLoopVfx.png",
               "FrameCount": 16,
               "Loop": true,
-              "Duration": 8.0,
+              "Duration": 8,
               "Scale": 1.3,
               "SpawnOffset": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
+                "x": 0,
+                "y": 0,
+                "z": 0
               },
               "FollowCaster": false,
               "AlignToCasterForward": false,
@@ -759,12 +759,12 @@
               "VfxTexture": "Assets/Res/Sprites/Skill/ShieldEndVfx.png",
               "FrameCount": 16,
               "Loop": false,
-              "Duration": 0.0,
+              "Duration": 0,
               "Scale": 1.3,
               "SpawnOffset": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
+                "x": 0,
+                "y": 0,
+                "z": 0
               },
               "FollowCaster": false,
               "AlignToCasterForward": false,
@@ -776,6 +776,739 @@
       ],
       "FollowupEffects": [],
       "Id": 12
+    },
+    {
+      "Name": "M双拳砸地",
+      "Description": "",
+      "SkillType": 1,
+      "MpCost": 0,
+      "WindupDuration": 0.9,
+      "ChantDuration": 0,
+      "RecoveryDuration": 0.7,
+      "CanMoveWhileCasting": false,
+      "MoveSpeedMultiplier": 1,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+          "Radius": 7,
+          "CenterOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitIsEnemySource",
+              "SourceParam": -1,
+              "CompareType": "IsTrue",
+              "CompareValue": 0
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "DamageCoefficient": 2.8,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.KnockbackEffectData, Assembly-CSharp",
+              "Force": 9,
+              "DurationSeconds": 0.25,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.CameraShakeEffectData, Assembly-CSharp",
+          "Duration": 0.18,
+          "Amplitude": 0.18,
+          "Frequency": 24,
+          "UseDistanceAttenuation": true,
+          "Radius": 18,
+          "PositionOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.PersistentEffectData, Assembly-CSharp",
+          "Element": 0,
+          "TotalDuration": 4,
+          "TickIntervalSeconds": 0.6,
+          "OnStartEffects": [],
+          "OnTickEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.RandomAreaPointEffectData, Assembly-CSharp",
+              "Radius": 8,
+              "MinRadius": 1,
+              "PointCount": 3,
+              "CenterOffset": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "OnEachPointEffects": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+                  "Radius": 2.1,
+                  "CenterOffset": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "TargetConditions": [
+                    {
+                      "ConditionType": 0,
+                      "SourceType": "UnitIsEnemySource",
+                      "SourceParam": -1,
+                      "CompareType": "IsTrue",
+                      "CompareValue": 0
+                    }
+                  ],
+                  "OnAfterSearch": [
+                    {
+                      "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+                      "DamageCoefficient": 1.1,
+                      "FlatDamageBonus": 0,
+                      "Element": 0,
+                      "Conditions": []
+                    }
+                  ],
+                  "Conditions": []
+                }
+              ],
+              "Conditions": []
+            }
+          ],
+          "OnEndEffects": [],
+          "Conditions": []
+        }
+      ],
+      "CastTasks": [],
+      "FollowupEffects": [],
+      "Id": 13
+    },
+    {
+      "Name": "M巨石投掷",
+      "Description": "",
+      "SkillType": 0,
+      "MpCost": 0,
+      "WindupDuration": 0.6,
+      "ChantDuration": 0.4,
+      "RecoveryDuration": 0.5,
+      "CanMoveWhileCasting": false,
+      "MoveSpeedMultiplier": 1,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnProjectileEffectData, Assembly-CSharp",
+          "Speed": 11,
+          "MaxRange": 28,
+          "SpawnOffsetDistance": 1,
+          "Scale": 1.8,
+          "FlightTexture": null,
+          "FlightFrameCount": 16,
+          "DestroyTexture": null,
+          "DestroyFrameCount": 16,
+          "CanPierce": false,
+          "TriggerDestroyEffectsOnMaxRange": true,
+          "OnCollisionEffects": null,
+          "OnDestoryEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+              "Radius": 4,
+              "CenterOffset": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "TargetConditions": [
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitIsEnemySource",
+                  "SourceParam": -1,
+                  "CompareType": "IsTrue",
+                  "CompareValue": 0
+                }
+              ],
+              "OnAfterSearch": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+                  "DamageCoefficient": 2.6,
+                  "FlatDamageBonus": 0,
+                  "Element": 0,
+                  "Conditions": []
+                }
+              ],
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnUnitEffectData, Assembly-CSharp",
+              "UnitName": "MonsterStoneGolemMinion",
+              "Count": 3,
+              "SpawnRadius": 3.5,
+              "MinSpawnRadius": 1,
+              "CenterOffset": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "CopyFactionFromCaster": true,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.CameraShakeEffectData, Assembly-CSharp",
+              "Duration": 0.15,
+              "Amplitude": 0.14,
+              "Frequency": 22,
+              "UseDistanceAttenuation": true,
+              "Radius": 16,
+              "PositionOffset": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "CastTasks": [],
+      "FollowupEffects": [],
+      "Id": 14
+    },
+    {
+      "Name": "M巨像激光",
+      "Description": "",
+      "SkillType": 1,
+      "MpCost": 0,
+      "WindupDuration": 0.7,
+      "ChantDuration": 0.3,
+      "RecoveryDuration": 0.4,
+      "CanMoveWhileCasting": false,
+      "MoveSpeedMultiplier": 1,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.PersistentBeamEffectData, Assembly-CSharp",
+          "Element": 0,
+          "TotalDuration": 2.4,
+          "TickIntervalSeconds": 0.15,
+          "Length": 18,
+          "Width": 2,
+          "OriginOffsetDistance": 0.9,
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitIsEnemySource",
+              "SourceParam": -1,
+              "CompareType": "IsTrue",
+              "CompareValue": 0
+            }
+          ],
+          "OnStartEffects": [],
+          "OnHitEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "DamageCoefficient": 1,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            }
+          ],
+          "OnEndEffects": [],
+          "Conditions": []
+        }
+      ],
+      "CastTasks": [
+        {
+          "$type": "CrystalMagic.Game.Data.TurnToTargetSkillCastTaskData, Assembly-CSharp",
+          "DurationSeconds": 2.4,
+          "TurnRateDegreesPerSecond": 60,
+          "HookPoint": 3
+        }
+      ],
+      "FollowupEffects": [],
+      "Id": 15
+    },
+    {
+      "Name": "M狂暴",
+      "Description": "",
+      "SkillType": 1,
+      "MpCost": 0,
+      "WindupDuration": 0.35,
+      "ChantDuration": 0,
+      "RecoveryDuration": 0.2,
+      "CanMoveWhileCasting": false,
+      "MoveSpeedMultiplier": 1,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+          "BuffId": 6,
+          "DurationSeconds": -1,
+          "StackCount": 1,
+          "Conditions": []
+        }
+      ],
+      "CastTasks": [],
+      "FollowupEffects": [],
+      "Id": 16
+    },
+    {
+      "Name": "M跳跃重压",
+      "Description": "",
+      "SkillType": 0,
+      "MpCost": 0,
+      "WindupDuration": 0.5,
+      "ChantDuration": 0.8,
+      "RecoveryDuration": 0.8,
+      "CanMoveWhileCasting": false,
+      "MoveSpeedMultiplier": 1,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+          "Radius": 6,
+          "CenterOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitIsEnemySource",
+              "SourceParam": -1,
+              "CompareType": "IsTrue",
+              "CompareValue": 0
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "DamageCoefficient": 3.3,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.KnockbackEffectData, Assembly-CSharp",
+              "Force": 13,
+              "DurationSeconds": 0.3,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.CameraShakeEffectData, Assembly-CSharp",
+          "Duration": 0.22,
+          "Amplitude": 0.22,
+          "Frequency": 24,
+          "UseDistanceAttenuation": true,
+          "Radius": 20,
+          "PositionOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "Conditions": []
+        }
+      ],
+      "CastTasks": [
+        {
+          "$type": "CrystalMagic.Game.Data.JumpArcSkillCastTaskData, Assembly-CSharp",
+          "DurationSeconds": 0.45,
+          "ArcHeight": 2.8,
+          "HookPoint": 1
+        }
+      ],
+      "FollowupEffects": [],
+      "Id": 17
+    },
+    {
+      "Name": "M双拳砸地·狂暴",
+      "Description": "",
+      "SkillType": 1,
+      "MpCost": 0,
+      "WindupDuration": 0.65,
+      "ChantDuration": 0,
+      "RecoveryDuration": 0.55,
+      "CanMoveWhileCasting": false,
+      "MoveSpeedMultiplier": 1,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+          "Radius": 8,
+          "CenterOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitIsEnemySource",
+              "SourceParam": -1,
+              "CompareType": "IsTrue",
+              "CompareValue": 0
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "DamageCoefficient": 3.3,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.KnockbackEffectData, Assembly-CSharp",
+              "Force": 11,
+              "DurationSeconds": 0.3,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.CameraShakeEffectData, Assembly-CSharp",
+          "Duration": 0.22,
+          "Amplitude": 0.22,
+          "Frequency": 26,
+          "UseDistanceAttenuation": true,
+          "Radius": 20,
+          "PositionOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.PersistentEffectData, Assembly-CSharp",
+          "Element": 0,
+          "TotalDuration": 5,
+          "TickIntervalSeconds": 0.5,
+          "OnStartEffects": [],
+          "OnTickEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.RandomAreaPointEffectData, Assembly-CSharp",
+              "Radius": 9,
+              "MinRadius": 1.5,
+              "PointCount": 4,
+              "CenterOffset": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "OnEachPointEffects": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+                  "Radius": 2.4,
+                  "CenterOffset": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "TargetConditions": [
+                    {
+                      "ConditionType": 0,
+                      "SourceType": "UnitIsEnemySource",
+                      "SourceParam": -1,
+                      "CompareType": "IsTrue",
+                      "CompareValue": 0
+                    }
+                  ],
+                  "OnAfterSearch": [
+                    {
+                      "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+                      "DamageCoefficient": 1.3,
+                      "FlatDamageBonus": 0,
+                      "Element": 0,
+                      "Conditions": []
+                    }
+                  ],
+                  "Conditions": []
+                }
+              ],
+              "Conditions": []
+            }
+          ],
+          "OnEndEffects": [],
+          "Conditions": []
+        }
+      ],
+      "CastTasks": [],
+      "FollowupEffects": [],
+      "Id": 18
+    },
+    {
+      "Name": "M巨石投掷·三连",
+      "Description": "",
+      "SkillType": 0,
+      "MpCost": 0,
+      "WindupDuration": 0.45,
+      "ChantDuration": 0.25,
+      "RecoveryDuration": 0.35,
+      "CanMoveWhileCasting": false,
+      "MoveSpeedMultiplier": 1,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnProjectileEffectData, Assembly-CSharp",
+          "Speed": 12,
+          "MaxRange": 30,
+          "SpawnOffsetDistance": 1,
+          "Scale": 1.8,
+          "FlightTexture": null,
+          "FlightFrameCount": 16,
+          "DestroyTexture": null,
+          "DestroyFrameCount": 16,
+          "CanPierce": false,
+          "TriggerDestroyEffectsOnMaxRange": true,
+          "OnCollisionEffects": null,
+          "OnDestoryEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+              "Radius": 4.2,
+              "CenterOffset": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "TargetConditions": [
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitIsEnemySource",
+                  "SourceParam": -1,
+                  "CompareType": "IsTrue",
+                  "CompareValue": 0
+                }
+              ],
+              "OnAfterSearch": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+                  "DamageCoefficient": 2.9,
+                  "FlatDamageBonus": 0,
+                  "Element": 0,
+                  "Conditions": []
+                }
+              ],
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnUnitEffectData, Assembly-CSharp",
+              "UnitName": "MonsterStoneGolemMinion",
+              "Count": 3,
+              "SpawnRadius": 3.8,
+              "MinSpawnRadius": 1,
+              "CenterOffset": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "CopyFactionFromCaster": true,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.CameraShakeEffectData, Assembly-CSharp",
+              "Duration": 0.16,
+              "Amplitude": 0.15,
+              "Frequency": 22,
+              "UseDistanceAttenuation": true,
+              "Radius": 16,
+              "PositionOffset": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "CastTasks": [
+        {
+          "$type": "CrystalMagic.Game.Data.RepeatCastWithRetargetSkillCastTaskData, Assembly-CSharp",
+          "AdditionalCastCount": 2,
+          "IntervalSeconds": 0.45,
+          "RetargetBeforeEachCast": true,
+          "HookPoint": 3
+        }
+      ],
+      "FollowupEffects": [],
+      "Id": 19
+    },
+    {
+      "Name": "M巨像激光爆裂",
+      "Description": "",
+      "SkillType": 1,
+      "MpCost": 0,
+      "WindupDuration": 0.6,
+      "ChantDuration": 0.25,
+      "RecoveryDuration": 0.45,
+      "CanMoveWhileCasting": false,
+      "MoveSpeedMultiplier": 1,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.PersistentBeamEffectData, Assembly-CSharp",
+          "Element": 0,
+          "TotalDuration": 2.8,
+          "TickIntervalSeconds": 0.12,
+          "Length": 20,
+          "Width": 2.4,
+          "OriginOffsetDistance": 1,
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitIsEnemySource",
+              "SourceParam": -1,
+              "CompareType": "IsTrue",
+              "CompareValue": 0
+            }
+          ],
+          "OnStartEffects": [],
+          "OnHitEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "DamageCoefficient": 1.15,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            }
+          ],
+          "OnEndEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+              "Radius": 4.5,
+              "CenterOffset": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "TargetConditions": [
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitIsEnemySource",
+                  "SourceParam": -1,
+                  "CompareType": "IsTrue",
+                  "CompareValue": 0
+                }
+              ],
+              "OnAfterSearch": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+                  "DamageCoefficient": 3,
+                  "FlatDamageBonus": 0,
+                  "Element": 0,
+                  "Conditions": []
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.KnockbackEffectData, Assembly-CSharp",
+                  "Force": 10,
+                  "DurationSeconds": 0.25,
+                  "Conditions": []
+                }
+              ],
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.CameraShakeEffectData, Assembly-CSharp",
+              "Duration": 0.2,
+              "Amplitude": 0.2,
+              "Frequency": 26,
+              "UseDistanceAttenuation": true,
+              "Radius": 20,
+              "PositionOffset": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "CastTasks": [
+        {
+          "$type": "CrystalMagic.Game.Data.TurnToTargetSkillCastTaskData, Assembly-CSharp",
+          "DurationSeconds": 2.8,
+          "TurnRateDegreesPerSecond": 85,
+          "HookPoint": 3
+        }
+      ],
+      "FollowupEffects": [],
+      "Id": 20
+    },
+    {
+      "Name": "M小巨像横扫",
+      "Description": "",
+      "SkillType": 0,
+      "MpCost": 0,
+      "WindupDuration": 0.35,
+      "ChantDuration": 0,
+      "RecoveryDuration": 0.25,
+      "CanMoveWhileCasting": false,
+      "MoveSpeedMultiplier": 1,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.ConeSearchEffectData, Assembly-CSharp",
+          "Radius": 3.2,
+          "AngleDegrees": 100,
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitIsEnemySource",
+              "SourceParam": -1,
+              "CompareType": "IsTrue",
+              "CompareValue": 0
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "DamageCoefficient": 1.6,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.KnockbackEffectData, Assembly-CSharp",
+              "Force": 6,
+              "DurationSeconds": 0.18,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "CastTasks": [],
+      "FollowupEffects": [],
+      "Id": 21
     }
   ]
 }

@@ -34,12 +34,15 @@ namespace CrystalMagic.Editor.Data
             typeof(HealthCostEffectData),
             typeof(FearEffectData),
             typeof(KnockbackEffectData),
+            typeof(PersistentBeamEffectData),
             typeof(PersistentEffectData),
+            typeof(RandomAreaPointEffectData),
             typeof(ReadBuffStackEffectData),
             typeof(RemoveBuffEffectData),
             typeof(RestoreManaEffectData),
             typeof(SpawnProjectileEffectData),
             typeof(SpawnSoundEffectData),
+            typeof(SpawnUnitEffectData),
             typeof(SpawnVfxEffectData),
             typeof(StunEffectData),
             typeof(CameraShakeEffectData),
@@ -57,12 +60,15 @@ namespace CrystalMagic.Editor.Data
             "Health Cost",
             "Fear",
             "Knockback",
+            "Persistent Beam",
             "Persistent",
+            "Random Area Points",
             "Read Buff Stack",
             "Remove Buff",
             "Restore Mana",
             "Spawn Projectile",
             "Spawn Sound",
+            "Spawn Unit",
             "Spawn VFX",
             "Stun",
             "Camera Shake",
@@ -80,12 +86,15 @@ namespace CrystalMagic.Editor.Data
             new(0.42f, 0.16f, 0.16f),
             new(0.42f, 0.24f, 0.12f),
             new(0.55f, 0.33f, 0.14f),
+            new(0.68f, 0.26f, 0.12f),
             new(0.14f, 0.50f, 0.24f),
+            new(0.26f, 0.50f, 0.24f),
             new(0.22f, 0.42f, 0.64f),
             new(0.50f, 0.18f, 0.18f),
             new(0.14f, 0.46f, 0.60f),
             new(0.55f, 0.38f, 0.10f),
             new(0.38f, 0.18f, 0.55f),
+            new(0.46f, 0.30f, 0.14f),
             new(0.18f, 0.48f, 0.48f),
             new(0.32f, 0.32f, 0.32f),
             new(0.58f, 0.42f, 0.12f),
@@ -145,6 +154,8 @@ namespace CrystalMagic.Editor.Data
             typeof(DoubleExecuteSkillCastTaskData),
             typeof(ApplyRuntimeBuffSkillCastTaskData),
             typeof(JumpArcSkillCastTaskData),
+            typeof(TurnToTargetSkillCastTaskData),
+            typeof(RepeatCastWithRetargetSkillCastTaskData),
         };
 
         private static readonly string[] CastTaskNames =
@@ -152,6 +163,8 @@ namespace CrystalMagic.Editor.Data
             "Double Execute",
             "Apply Runtime Buff",
             "Jump Arc",
+            "Turn To Target",
+            "Repeat Cast With Retarget",
         };
         private static readonly SkillCastHookPoint[] SkillCastHookPointValues = (SkillCastHookPoint[])Enum.GetValues(typeof(SkillCastHookPoint));
         private static readonly string[] SkillCastHookPointDisplayNames = EditorLabelUtility.GetEnumDisplayNames<SkillCastHookPoint>();
@@ -708,6 +721,17 @@ namespace CrystalMagic.Editor.Data
                 case JumpArcSkillCastTaskData jumpArcTaskData:
                     jumpArcTaskData.DurationSeconds = Mathf.Max(0f, EditorGUILayout.FloatField("Duration Seconds", jumpArcTaskData.DurationSeconds));
                     jumpArcTaskData.ArcHeight = Mathf.Max(0f, EditorGUILayout.FloatField("Arc Height", jumpArcTaskData.ArcHeight));
+                    break;
+
+                case TurnToTargetSkillCastTaskData turnToTargetTaskData:
+                    turnToTargetTaskData.DurationSeconds = Mathf.Max(0f, EditorGUILayout.FloatField("Duration Seconds", turnToTargetTaskData.DurationSeconds));
+                    turnToTargetTaskData.TurnRateDegreesPerSecond = Mathf.Max(0f, EditorGUILayout.FloatField("Turn Rate Degrees Per Second", turnToTargetTaskData.TurnRateDegreesPerSecond));
+                    break;
+
+                case RepeatCastWithRetargetSkillCastTaskData repeatCastTaskData:
+                    repeatCastTaskData.AdditionalCastCount = Mathf.Max(0, EditorGUILayout.IntField("Additional Cast Count", repeatCastTaskData.AdditionalCastCount));
+                    repeatCastTaskData.IntervalSeconds = Mathf.Max(0f, EditorGUILayout.FloatField("Interval Seconds", repeatCastTaskData.IntervalSeconds));
+                    repeatCastTaskData.RetargetBeforeEachCast = EditorGUILayout.Toggle("Retarget Before Each Cast", repeatCastTaskData.RetargetBeforeEachCast);
                     break;
             }
         }

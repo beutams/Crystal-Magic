@@ -1,12 +1,12 @@
-﻿{
+{
   "Rows": [
     {
       "$type": "CrystalMagic.Game.Data.PropertyBuffData, Assembly-CSharp",
       "PropertyModifiers": [
         {
           "Channel": 14,
-          "Factor": -1.0,
-          "Bonus": 0.0
+          "Factor": -1,
+          "Bonus": 0
         }
       ],
       "Name": "格挡",
@@ -21,7 +21,7 @@
         {
           "Channel": 0,
           "Factor": -0.3,
-          "Bonus": 0.0
+          "Bonus": 0
         }
       ],
       "Name": "水涡",
@@ -32,12 +32,12 @@
     },
     {
       "$type": "CrystalMagic.Game.Data.EffectBuffData, Assembly-CSharp",
-      "TickIntervalSeconds": 1.0,
+      "TickIntervalSeconds": 1,
       "EffectChain": [
         {
           "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
-          "DamageCoefficient": 1.0,
-          "FlatDamageBonus": 10.0,
+          "DamageCoefficient": 1,
+          "FlatDamageBonus": 10,
           "Element": 2,
           "Conditions": []
         }
@@ -54,7 +54,7 @@
         {
           "Channel": 0,
           "Factor": -0.3,
-          "Bonus": 0.0
+          "Bonus": 0
         }
       ],
       "Name": "冻结",
@@ -69,7 +69,7 @@
         {
           "Channel": 8,
           "Factor": -0.5,
-          "Bonus": 0.0
+          "Bonus": 0
         }
       ],
       "Name": "麻痹",
@@ -85,6 +85,31 @@
       "CanStack": false,
       "MaxStacks": 1,
       "Id": 5,
+      "Category": 0
+    },
+    {
+      "$type": "CrystalMagic.Game.Data.PropertyBuffData, Assembly-CSharp",
+      "PropertyModifiers": [
+        {
+          "Channel": 0,
+          "Factor": 0.25,
+          "Bonus": 0
+        },
+        {
+          "Channel": 8,
+          "Factor": 0,
+          "Bonus": 40
+        },
+        {
+          "Channel": 9,
+          "Factor": 0,
+          "Bonus": 35
+        }
+      ],
+      "Name": "狂暴",
+      "CanStack": false,
+      "MaxStacks": 1,
+      "Id": 6,
       "Category": 0
     }
   ]

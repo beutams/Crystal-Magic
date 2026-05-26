@@ -10,6 +10,7 @@ public static class ComparatorRegistry
 
         factory.RegisterSource("UnitBuffStackSource", static () => new UnitBuffStackSource());
         factory.RegisterSource("UnitCanStartCastSource", static () => new UnitCanStartCastSource());
+        factory.RegisterSource("UnitHealthRatioSource", static () => new UnitHealthRatioSource());
         factory.RegisterSource("UnitHasTargetSource", static () => new UnitHasTargetSource());
         factory.RegisterSource("UnitIsCastingSource", static () => new UnitIsCastingSource());
         factory.RegisterSource("UnitIsControlledSource", static () => new UnitIsControlledSource());

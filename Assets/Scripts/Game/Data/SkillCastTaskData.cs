@@ -74,4 +74,37 @@ namespace CrystalMagic.Game.Data
             HookPoint = SkillCastHookPoint.BeforeChantEnd;
         }
     }
+
+    [Serializable]
+    public sealed class TurnToTargetSkillCastTaskData : SkillCastTaskData
+    {
+        [EditorLabel("Duration Seconds")]
+        public float DurationSeconds = 1f;
+
+        [EditorLabel("Turn Rate Degrees Per Second")]
+        public float TurnRateDegreesPerSecond = 180f;
+
+        public TurnToTargetSkillCastTaskData()
+        {
+            HookPoint = SkillCastHookPoint.BeforeRecovery;
+        }
+    }
+
+    [Serializable]
+    public sealed class RepeatCastWithRetargetSkillCastTaskData : SkillCastTaskData
+    {
+        [EditorLabel("Additional Cast Count")]
+        public int AdditionalCastCount = 1;
+
+        [EditorLabel("Interval Seconds")]
+        public float IntervalSeconds = 0.2f;
+
+        [EditorLabel("Retarget Before Each Cast")]
+        public bool RetargetBeforeEachCast = true;
+
+        public RepeatCastWithRetargetSkillCastTaskData()
+        {
+            HookPoint = SkillCastHookPoint.BeforeRecovery;
+        }
+    }
 }

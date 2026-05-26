@@ -4,6 +4,10 @@ Shader "CrystalMagic/TransparentSpriteMesh"
     {
         [MainTexture] _BaseMap("Texture", 2D) = "white" {}
         [MainColor] _BaseColor("Color", Color) = (1, 1, 1, 1)
+        _FrameUvMin("Frame UV Min", Vector) = (0, 0, 0, 0)
+        _FrameUvSize("Frame UV Size", Vector) = (1, 1, 0, 0)
+        _FrameWorldSize("Frame World Size", Vector) = (1, 1, 0, 0)
+        _FramePivotOffset("Frame Pivot Offset", Vector) = (0, 0, 0, 0)
     }
 
     SubShader
@@ -24,6 +28,8 @@ Shader "CrystalMagic/TransparentSpriteMesh"
             #pragma vertex Vert
             #pragma fragment Frag
             #pragma multi_compile_instancing
+            #pragma multi_compile _ DOTS_INSTANCING_ON
+            #pragma target 4.5
 
             #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
 
@@ -32,7 +38,18 @@ Shader "CrystalMagic/TransparentSpriteMesh"
             CBUFFER_START(UnityPerMaterial)
                 float4 _BaseMap_ST;
                 half4 _BaseColor;
+                float4 _FrameUvMin;
+                float4 _FrameUvSize;
+                float4 _FrameWorldSize;
+                float4 _FramePivotOffset;
             CBUFFER_END
+
+            UNITY_DOTS_INSTANCING_START(UserPropertyMetadata)
+                UNITY_DOTS_INSTANCED_PROP(float4, _FrameUvMin)
+                UNITY_DOTS_INSTANCED_PROP(float4, _FrameUvSize)
+                UNITY_DOTS_INSTANCED_PROP(float4, _FrameWorldSize)
+                UNITY_DOTS_INSTANCED_PROP(float4, _FramePivotOffset)
+            UNITY_DOTS_INSTANCING_END(UserPropertyMetadata)
 
             TEXTURE2D(_BaseMap);
             SAMPLER(sampler_BaseMap);
@@ -59,7 +76,12 @@ Shader "CrystalMagic/TransparentSpriteMesh"
                 UNITY_TRANSFER_INSTANCE_ID(input, output);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
 
-                VertexPositionInputs positionInputs = GetVertexPositionInputs(input.positionOS.xyz);
+                float4 frameWorldSize = UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float4, _FrameWorldSize);
+                float4 framePivotOffset = UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float4, _FramePivotOffset);
+                float3 positionOS = input.positionOS.xyz;
+                positionOS.xy = input.positionOS.xy * frameWorldSize.xy + framePivotOffset.xy;
+
+                VertexPositionInputs positionInputs = GetVertexPositionInputs(positionOS);
                 output.positionCS = positionInputs.positionCS;
                 output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
                 return output;
@@ -69,7 +91,10 @@ Shader "CrystalMagic/TransparentSpriteMesh"
             {
                 UNITY_SETUP_INSTANCE_ID(input);
 
-                return SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv) * _BaseColor;
+                float4 frameUvMin = UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float4, _FrameUvMin);
+                float4 frameUvSize = UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float4, _FrameUvSize);
+                float2 atlasUv = input.uv * frameUvSize.xy + frameUvMin.xy;
+                return SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, atlasUv) * _BaseColor;
             }
             ENDHLSL
         }
