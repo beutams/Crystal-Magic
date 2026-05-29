@@ -49,6 +49,9 @@ partial class UnitSkillExecuteSystem : SystemBase
                             break;
                         }
 
+                        SkillExecutionUtility.ResetCastState(EntityManager, entity, ref cast);
+                        SkillExecutionUtility.ClearFollowupEffects(EntityManager, entity);
+
                         if (TryRestartHeldPlayerCast(entity, ref request, ref cast))
                         {
                             EntityManager.SetComponentData(entity, request);

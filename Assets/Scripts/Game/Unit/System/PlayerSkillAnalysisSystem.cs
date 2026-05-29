@@ -44,9 +44,6 @@ partial class PlayerSkillAnalysisSystem : SystemBase
             return false;
         }
 
-        if (skillIndex == 0)
-            SkillExecutionUtility.ClearFollowupEffects(entityManager, entity);
-
         bool prepared = SkillExecutionUtility.PrepareCast(
             entityManager,
             entity,

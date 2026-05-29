@@ -38,37 +38,6 @@ namespace CrystalMagic.Game.Skill
             return slotData == null ? null : GetSkillDataBySkillStoneItemId(slotData.SkillStoneItemId);
         }
 
-        public static bool TryBuildSelectedChain(SkillCData skillConfig, RuntimeSkillData runtimeSkillData, List<SkillChainSlotData> slots, out int chainIndex)
-        {
-            slots?.Clear();
-            chainIndex = -1;
-
-            if (skillConfig?.Chains == null || skillConfig.Chains.Length == 0)
-                return false;
-
-            int selectedIndex = Mathf.Clamp(runtimeSkillData?.CurrentSkillChainIndex ?? 0, 0, skillConfig.Chains.Length - 1);
-            SkillChainData chain = skillConfig.Chains[selectedIndex];
-            chain?.EnsureSlots();
-            if (chain?.Slots == null || chain.Slots.Count == 0)
-                return false;
-
-            foreach (SkillChainSlotData slotData in chain.Slots)
-            {
-                if (slotData == null || slotData.SkillStoneItemId < 0)
-                    continue;
-
-                SkillData skillData = GetSkillData(slotData);
-                if (skillData != null)
-                    slots.Add(slotData);
-            }
-
-            if (slots == null || slots.Count == 0)
-                return false;
-
-            chainIndex = selectedIndex;
-            return true;
-        }
-
         public static SkillChainSlotData GetFirstSlot(SkillCData skillConfig, RuntimeSkillData runtimeSkillData)
         {
             if (skillConfig?.Chains == null || skillConfig.Chains.Length == 0)

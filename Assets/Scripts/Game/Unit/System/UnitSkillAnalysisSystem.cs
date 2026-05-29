@@ -38,7 +38,6 @@ partial class UnitSkillAnalysisSystem : SystemBase
             return false;
         }
 
-        SkillExecutionUtility.ClearFollowupEffects(entityManager, entity);
         bool prepared = SkillExecutionUtility.PrepareCast(
             entityManager,
             entity,
