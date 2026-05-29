@@ -9,6 +9,7 @@ public class IdleState : AUnitState
 {
     public override void OnEnter()
     {
+        ClearAnimationFacingDirection();
     }
 
     public override void OnUpdate(float deltaTime) 
@@ -17,6 +18,10 @@ public class IdleState : AUnitState
         var move = EntityManager.GetComponentData<UnitMoveComponent>(Entity);
         move.AccelInput = intent.MoveDirection;
         EntityManager.SetComponentData(Entity, move);
+        ClearAnimationFacingDirection();
     }
-    public override void OnExit() { }
+    public override void OnExit()
+    {
+        ClearAnimationFacingDirection();
+    }
 }

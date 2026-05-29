@@ -13,6 +13,7 @@ public struct UnitAnimationComponent : IComponentData
     public int LastSkillId;
     public int SelectionCursor;
     public int LastAtlasPathHash;
+    public int LastDirectionalVariantHash;
 
     public static UnitAnimationComponent CreateDefault()
     {
@@ -27,6 +28,7 @@ public struct UnitAnimationComponent : IComponentData
             LastSkillId = -1,
             SelectionCursor = 0,
             LastAtlasPathHash = 0,
+            LastDirectionalVariantHash = 0,
         };
     }
 }

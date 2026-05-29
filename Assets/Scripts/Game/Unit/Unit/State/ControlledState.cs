@@ -6,15 +6,18 @@ public class ControlledState : AUnitState
     public override void OnEnter()
     {
         ClearControlledIntent();
+        ClearAnimationFacingDirection();
     }
 
     public override void OnUpdate(float deltaTime)
     {
         ClearControlledIntent();
+        ClearAnimationFacingDirection();
     }
 
     public override void OnExit()
     {
+        ClearAnimationFacingDirection();
     }
 
     private void ClearControlledIntent()

@@ -13,6 +13,7 @@ public class MoveState : AUnitState
         var move = EntityManager.GetComponentData<UnitMoveComponent>(Entity);
         move.AccelInput = intent.MoveDirection;
         EntityManager.SetComponentData(Entity, move);
+        ApplyAnimationFacing(intent.MoveDirection);
     }
 
     public override void OnUpdate(float deltaTime)
@@ -21,6 +22,7 @@ public class MoveState : AUnitState
         var move   = EntityManager.GetComponentData<UnitMoveComponent>(Entity);
         move.AccelInput = intent.MoveDirection;
         EntityManager.SetComponentData(Entity, move);
+        ApplyAnimationFacing(intent.MoveDirection);
     }
 
     public override void OnExit()
@@ -28,5 +30,17 @@ public class MoveState : AUnitState
         var move = EntityManager.GetComponentData<UnitMoveComponent>(Entity);
         move.AccelInput = float2.zero;
         EntityManager.SetComponentData(Entity, move);
+        ClearAnimationFacingDirection();
+    }
+
+    private void ApplyAnimationFacing(float2 direction)
+    {
+        if (math.lengthsq(direction) <= 0.0001f)
+        {
+            ClearAnimationFacingDirection();
+            return;
+        }
+
+        SetAnimationFacingDirection(direction);
     }
 }

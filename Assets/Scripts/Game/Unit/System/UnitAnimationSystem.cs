@@ -48,6 +48,7 @@ partial class UnitAnimationSystem : SystemBase
         string stateName = stateMachine.CurrentStateName ?? "None";
         int stateHash = StringComparer.Ordinal.GetHashCode(stateName);
         string activeSkillName = ResolveActiveSkillName(entity, stateName);
+        UnitAnimationDirection direction = ResolveAnimationDirection(entity, EntityManager);
 
         UnitAnimationEntryData entry = ResolveAnimationEntry(profile, stateName, activeSkillName);
         if (entry == null)
@@ -76,24 +77,27 @@ partial class UnitAnimationSystem : SystemBase
             animation.ElapsedSeconds += deltaTime * math.max(0.01f, profile.PlaybackSpeed * animation.SpeedMultiplier);
         }
 
-        int atlasHash = string.IsNullOrWhiteSpace(entry.AtlasTexturePath)
+        ResolveDirectionalVisual(entry, direction, out string atlasTexturePath, out bool mirrorX);
+        int atlasHash = string.IsNullOrWhiteSpace(atlasTexturePath)
             ? 0
-            : StringComparer.Ordinal.GetHashCode(entry.AtlasTexturePath);
+            : StringComparer.Ordinal.GetHashCode(atlasTexturePath);
+        int directionalVariantHash = GetDirectionalVariantHash(direction, mirrorX);
         if (clipChanged || animation.LastAtlasPathHash != atlasHash)
         {
-            UnitAnimationVisualUtility.ApplyAnimatedAtlas(EntityManager, entity, visualRequest.VisualKey, entry.AtlasTexturePath);
+            UnitAnimationVisualUtility.ApplyAnimatedAtlas(EntityManager, entity, visualRequest.VisualKey, atlasTexturePath);
             animation.LastAtlasPathHash = atlasHash;
         }
 
         int frameIndex = ResolveFrameIndex(entry, animation.ElapsedSeconds);
-        if (frameIndex != animation.FrameIndex)
+        if (frameIndex != animation.FrameIndex || animation.LastDirectionalVariantHash != directionalVariantHash)
         {
             animation.FrameIndex = frameIndex;
-            ApplyFrameProperties(entity, entry, frameIndex);
+            ApplyFrameProperties(entity, entry, frameIndex, mirrorX);
         }
 
         animation.LastStateHash = stateHash;
         animation.LastSkillId = activeSkillHash;
+        animation.LastDirectionalVariantHash = directionalVariantHash;
     }
 
     private UnitAnimationEntryData ResolveAnimationEntry(
@@ -151,6 +155,67 @@ partial class UnitAnimationSystem : SystemBase
         return math.clamp(rawIndex, 0, frameCount - 1);
     }
 
+    private static UnitAnimationDirection ResolveAnimationDirection(Entity entity, EntityManager entityManager)
+    {
+        if (UnitFacingUtility.TryGetAnimationDirection(entityManager, entity, out float2 animationDirection))
+            return QuantizeToFourDirections(animationDirection);
+
+        if (!TryGetMovementPriorityDirection(entityManager, entity, out float2 movementDirection) &&
+            !UnitFacingUtility.TryGetFacing(entityManager, entity, out movementDirection))
+        {
+            return UnitAnimationDirection.Front;
+        }
+
+        return QuantizeToFourDirections(movementDirection);
+    }
+
+    private static bool TryGetMovementPriorityDirection(EntityManager entityManager, Entity entity, out float2 direction)
+    {
+        direction = float2.zero;
+        if (entity == Entity.Null ||
+            !entityManager.Exists(entity) ||
+            !entityManager.HasComponent<UnitMoveComponent>(entity))
+        {
+            return false;
+        }
+
+        UnitMoveComponent move = entityManager.GetComponentData<UnitMoveComponent>(entity);
+        if (math.lengthsq(move.Velocity) <= 0.0001f)
+            return false;
+
+        direction = math.normalize(move.Velocity);
+        return true;
+    }
+
+    private static UnitAnimationDirection QuantizeToFourDirections(float2 rawDirection)
+    {
+        float2 direction = math.normalizesafe(rawDirection, new float2(0f, -1f));
+        float bestDot = float.NegativeInfinity;
+        UnitAnimationDirection bestDirection = UnitAnimationDirection.Front;
+
+        EvaluateCardinal(direction, new float2(0f, -1f), UnitAnimationDirection.Front, ref bestDot, ref bestDirection);
+        EvaluateCardinal(direction, new float2(0f, 1f), UnitAnimationDirection.Back, ref bestDot, ref bestDirection);
+        EvaluateCardinal(direction, new float2(-1f, 0f), UnitAnimationDirection.Left, ref bestDot, ref bestDirection);
+        EvaluateCardinal(direction, new float2(1f, 0f), UnitAnimationDirection.Right, ref bestDot, ref bestDirection);
+
+        return bestDirection;
+    }
+
+    private static void EvaluateCardinal(
+        float2 direction,
+        float2 cardinal,
+        UnitAnimationDirection candidate,
+        ref float bestDot,
+        ref UnitAnimationDirection bestDirection)
+    {
+        float dot = math.dot(direction, cardinal);
+        if (dot <= bestDot)
+            return;
+
+        bestDot = dot;
+        bestDirection = candidate;
+    }
+
     private string ResolveActiveSkillName(Entity entity, string stateName)
     {
         if (stateName.IndexOf("CastState", StringComparison.Ordinal) < 0)
@@ -200,7 +265,36 @@ partial class UnitAnimationSystem : SystemBase
         return string.IsNullOrEmpty(value) ? 0 : StringComparer.Ordinal.GetHashCode(value);
     }
 
-    private void ApplyFrameProperties(Entity entity, UnitAnimationEntryData entry, int frameIndex)
+    private static int GetDirectionalVariantHash(UnitAnimationDirection direction, bool mirrorX)
+    {
+        return ((int)direction * 2) + (mirrorX ? 1 : 0) + 1;
+    }
+
+    private static void ResolveDirectionalVisual(UnitAnimationEntryData entry, UnitAnimationDirection direction, out string atlasTexturePath, out bool mirrorX)
+    {
+        mirrorX = false;
+        atlasTexturePath = direction switch
+        {
+            UnitAnimationDirection.Back => entry.BackAtlasTexturePath,
+            UnitAnimationDirection.Left => entry.LeftAtlasTexturePath,
+            UnitAnimationDirection.Right => entry.LeftAtlasTexturePath,
+            _ => entry.FrontAtlasTexturePath,
+        };
+
+        mirrorX = direction == UnitAnimationDirection.Right && !string.IsNullOrWhiteSpace(entry.LeftAtlasTexturePath);
+
+        if (!string.IsNullOrWhiteSpace(atlasTexturePath))
+            return;
+
+        atlasTexturePath = !string.IsNullOrWhiteSpace(entry.FrontAtlasTexturePath)
+            ? entry.FrontAtlasTexturePath
+            : !string.IsNullOrWhiteSpace(entry.LeftAtlasTexturePath)
+                ? entry.LeftAtlasTexturePath
+                : entry.BackAtlasTexturePath;
+        mirrorX = false;
+    }
+
+    private void ApplyFrameProperties(Entity entity, UnitAnimationEntryData entry, int frameIndex, bool mirrorX)
     {
         if (entry == null || entity == Entity.Null || !EntityManager.Exists(entity))
             return;
@@ -214,14 +308,18 @@ partial class UnitAnimationSystem : SystemBase
         int col = frameIndex % cols;
         int rowTop = frameIndex / cols;
         int row = (rows - 1) - rowTop;
+        float uvMinX = col * uvWidth;
+        float uvMinY = row * uvHeight;
+        float frameUvMinX = mirrorX ? uvMinX + uvWidth : uvMinX;
+        float frameUvSizeX = mirrorX ? -uvWidth : uvWidth;
 
         EntityManager.SetComponentData(entity, new UnitAnimationFrameUvMinProperty
         {
-            Value = new float4(col * uvWidth, row * uvHeight, 0f, 0f),
+            Value = new float4(frameUvMinX, uvMinY, 0f, 0f),
         });
         EntityManager.SetComponentData(entity, new UnitAnimationFrameUvSizeProperty
         {
-            Value = new float4(uvWidth, uvHeight, 0f, 0f),
+            Value = new float4(frameUvSizeX, uvHeight, 0f, 0f),
         });
         EntityManager.SetComponentData(entity, new UnitAnimationFrameWorldSizeProperty
         {

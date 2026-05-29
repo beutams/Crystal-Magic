@@ -3,12 +3,22 @@ using CrystalMagic.Core;
 
 namespace CrystalMagic.Game.Data
 {
+    public enum UnitAnimationDirection
+    {
+        Front = 0,
+        Back = 1,
+        Left = 2,
+        Right = 3,
+    }
+
     [System.Serializable]
     public sealed class UnitAnimationEntryData
     {
         public string StateName;
         public string AnimationName;
-        public string AtlasTexturePath;
+        public string FrontAtlasTexturePath;
+        public string BackAtlasTexturePath;
+        public string LeftAtlasTexturePath;
         public float FramesPerSecond = 12f;
         public bool Loop = true;
         public int GridColumns = 4;
@@ -19,6 +29,9 @@ namespace CrystalMagic.Game.Data
         {
             StateName ??= string.Empty;
             AnimationName ??= string.Empty;
+            FrontAtlasTexturePath ??= string.Empty;
+            BackAtlasTexturePath ??= string.Empty;
+            LeftAtlasTexturePath ??= string.Empty;
             FramesPerSecond = UnityEngine.Mathf.Max(0.01f, FramesPerSecond);
             GridColumns = UnityEngine.Mathf.Max(1, GridColumns);
             GridRows = UnityEngine.Mathf.Max(1, GridRows);

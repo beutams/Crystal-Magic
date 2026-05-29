@@ -39,10 +39,17 @@ public class UnitCastState : AUnitState
         unitSkill.ClearRequest();
         EntityManager.SetComponentData(Entity, cast);
         EntityManager.SetComponentData(Entity, unitSkill);
+        UpdateAnimationFacing(intent.CastTargetPosition);
     }
 
     public override void OnUpdate(float deltaTime)
     {
+        if (!EntityManager.HasComponent<UnitCastComponent>(Entity))
+            return;
+
+        UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
+        if (cast.HasLockedTarget)
+            UpdateAnimationFacing(cast.LockedTargetPosition);
     }
 
     public override void OnExit()
@@ -63,6 +70,24 @@ public class UnitCastState : AUnitState
             unitSkill.ClearRequest();
             EntityManager.SetComponentData(Entity, unitSkill);
         }
+
+        ClearAnimationFacingDirection();
+    }
+
+    private void UpdateAnimationFacing(float2 targetPosition)
+    {
+        if (!EntityManager.HasComponent<Unity.Transforms.LocalTransform>(Entity))
+            return;
+
+        float2 selfPosition = EntityManager.GetComponentData<Unity.Transforms.LocalTransform>(Entity).Position.xy;
+        float2 direction = targetPosition - selfPosition;
+        if (math.lengthsq(direction) <= 0.0001f)
+        {
+            ClearAnimationFacingDirection();
+            return;
+        }
+
+        SetAnimationFacingDirection(direction);
     }
 
     private int SelectSkillIndex(UnitSkillComponent unitSkill, float targetDistance)

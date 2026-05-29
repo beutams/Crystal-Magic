@@ -285,11 +285,21 @@ namespace CrystalMagic.Editor.Data
             animation.AnimationName = EditorGUILayout.TextField("Animation Name", animation.AnimationName ?? string.Empty);
             DrawSkillNameHelper(unitData, ref animation.AnimationName);
 
-            Texture2D currentTexture = string.IsNullOrWhiteSpace(animation.AtlasTexturePath)
+            Texture2D currentFrontTexture = string.IsNullOrWhiteSpace(animation.FrontAtlasTexturePath)
                 ? null
-                : AssetDatabase.LoadAssetAtPath<Texture2D>(animation.AtlasTexturePath);
-            Texture2D nextTexture = (Texture2D)EditorGUILayout.ObjectField("Atlas Texture", currentTexture, typeof(Texture2D), false);
-            animation.AtlasTexturePath = nextTexture != null ? AssetDatabase.GetAssetPath(nextTexture) : string.Empty;
+                : AssetDatabase.LoadAssetAtPath<Texture2D>(animation.FrontAtlasTexturePath);
+            Texture2D nextFrontTexture = (Texture2D)EditorGUILayout.ObjectField("Front Texture", currentFrontTexture, typeof(Texture2D), false);
+            animation.FrontAtlasTexturePath = nextFrontTexture != null ? AssetDatabase.GetAssetPath(nextFrontTexture) : string.Empty;
+            Texture2D currentBackTexture = string.IsNullOrWhiteSpace(animation.BackAtlasTexturePath)
+                ? null
+                : AssetDatabase.LoadAssetAtPath<Texture2D>(animation.BackAtlasTexturePath);
+            Texture2D nextBackTexture = (Texture2D)EditorGUILayout.ObjectField("Back Texture", currentBackTexture, typeof(Texture2D), false);
+            animation.BackAtlasTexturePath = nextBackTexture != null ? AssetDatabase.GetAssetPath(nextBackTexture) : string.Empty;
+            Texture2D currentLeftTexture = string.IsNullOrWhiteSpace(animation.LeftAtlasTexturePath)
+                ? null
+                : AssetDatabase.LoadAssetAtPath<Texture2D>(animation.LeftAtlasTexturePath);
+            Texture2D nextLeftTexture = (Texture2D)EditorGUILayout.ObjectField("Left Texture", currentLeftTexture, typeof(Texture2D), false);
+            animation.LeftAtlasTexturePath = nextLeftTexture != null ? AssetDatabase.GetAssetPath(nextLeftTexture) : string.Empty;
             animation.FramesPerSecond = Mathf.Max(0.01f, EditorGUILayout.FloatField("FPS", animation.FramesPerSecond));
             animation.Loop = EditorGUILayout.Toggle("Loop", animation.Loop);
             animation.GridColumns = Mathf.Max(1, EditorGUILayout.IntField("Grid Columns", animation.GridColumns));
@@ -297,7 +307,7 @@ namespace CrystalMagic.Editor.Data
             animation.FrameCount = Mathf.Clamp(EditorGUILayout.IntField("Frame Count", animation.FrameCount), 1, animation.GridColumns * animation.GridRows);
 
             EditorGUILayout.HelpBox(
-                "This animation only changes UVs on the existing mesh/material. Frames are read left-to-right, top-to-bottom. If the grid has 16 slots and Frame Count is 15, the last slot is ignored and playback loops back to frame 0.",
+                "Each animation uses three directional textures: Front, Back, Left. Right automatically mirrors Left. UV frames are read left-to-right, top-to-bottom. If the grid has 16 slots and Frame Count is 15, the last slot is ignored and playback loops back to frame 0.",
                 MessageType.None);
             EditorGUILayout.EndVertical();
         }

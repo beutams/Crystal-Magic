@@ -4,6 +4,8 @@ using Unity.Mathematics;
 public struct UnitFacingComponent : IComponentData
 {
     public float2 Direction;
+    public float2 AnimationDirection;
+    public byte HasAnimationDirection;
 }
 
 public static class UnitFacingUtility
@@ -57,6 +59,65 @@ public static class UnitFacingUtility
     public static void SetFacing(EntityManager entityManager, Entity entity, float2 direction)
     {
         EnsureFacing(entityManager, entity, direction);
+    }
+
+    public static void SetAnimationDirection(EntityManager entityManager, Entity entity, float2 direction)
+    {
+        if (entity == Entity.Null || !entityManager.Exists(entity))
+            return;
+
+        float2 normalized = math.normalizesafe(direction, float2.zero);
+        if (math.lengthsq(normalized) <= 0.0001f)
+        {
+            ClearAnimationDirection(entityManager, entity);
+            return;
+        }
+
+        if (entityManager.HasComponent<UnitFacingComponent>(entity))
+        {
+            UnitFacingComponent facing = entityManager.GetComponentData<UnitFacingComponent>(entity);
+            facing.AnimationDirection = normalized;
+            facing.HasAnimationDirection = 1;
+            entityManager.SetComponentData(entity, facing);
+        }
+        else
+        {
+            entityManager.AddComponentData(entity, new UnitFacingComponent
+            {
+                Direction = DefaultFacing,
+                AnimationDirection = normalized,
+                HasAnimationDirection = 1,
+            });
+        }
+    }
+
+    public static void ClearAnimationDirection(EntityManager entityManager, Entity entity)
+    {
+        if (entity == Entity.Null || !entityManager.Exists(entity) || !entityManager.HasComponent<UnitFacingComponent>(entity))
+            return;
+
+        UnitFacingComponent facing = entityManager.GetComponentData<UnitFacingComponent>(entity);
+        facing.AnimationDirection = float2.zero;
+        facing.HasAnimationDirection = 0;
+        entityManager.SetComponentData(entity, facing);
+    }
+
+    public static bool TryGetAnimationDirection(EntityManager entityManager, Entity entity, out float2 direction)
+    {
+        direction = float2.zero;
+        if (entity == Entity.Null ||
+            !entityManager.Exists(entity) ||
+            !entityManager.HasComponent<UnitFacingComponent>(entity))
+        {
+            return false;
+        }
+
+        UnitFacingComponent facing = entityManager.GetComponentData<UnitFacingComponent>(entity);
+        if (facing.HasAnimationDirection == 0)
+            return false;
+
+        direction = math.normalizesafe(facing.AnimationDirection, float2.zero);
+        return math.lengthsq(direction) > 0.0001f;
     }
 
     public static bool FaceTowardsPosition(EntityManager entityManager, Entity entity, float2 targetPosition)

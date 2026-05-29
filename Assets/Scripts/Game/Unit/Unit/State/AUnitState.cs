@@ -21,6 +21,16 @@ public abstract class AUnitState
         EntityManager = em;
     }
 
+    protected void SetAnimationFacingDirection(Unity.Mathematics.float2 direction)
+    {
+        UnitFacingUtility.SetAnimationDirection(EntityManager, Entity, direction);
+    }
+
+    protected void ClearAnimationFacingDirection()
+    {
+        UnitFacingUtility.ClearAnimationDirection(EntityManager, Entity);
+    }
+
     public abstract void OnEnter();
     public abstract void OnUpdate(float deltaTime);
     public abstract void OnExit();
