@@ -19,32 +19,28 @@ public static class SkillExecutionUtility
 {
     private static readonly SkillContent SkillContent = new();
     private static readonly List<SkillFollowupEffectData> PendingFollowupEffects = new();
+    private static readonly SkillFactory s_skillFactory = CreateSkillFactory();
 
-    public static bool TryBeginCast(
+    public static bool PrepareCast(
         EntityManager entityManager,
         Entity entity,
         ref UnitCastComponent cast,
-        in Unity.Collections.FixedList64Bytes<int> skillIds,
-        in Unity.Collections.FixedList64Bytes<int> skillAdditionIds,
-        int chainIndex,
-        IReadOnlyList<ResolvedSkillData> resolvedSkills,
+        int skillId,
+        int skillAdditionId,
+        ResolvedSkillData resolvedSkill,
         bool hasLockedTarget,
         float2 lockedTargetPosition)
     {
         ResetCastState(entityManager, entity, ref cast);
-        cast.SkillIds = skillIds;
-        cast.SkillAdditionIds = skillAdditionIds;
         cast.ForceInterrupt = false;
         cast.HasLockedTarget = hasLockedTarget;
         cast.LockedTargetPosition = lockedTargetPosition;
-        cast.CurrentChainIndex = chainIndex;
-        ClearFollowupEffects(entityManager, entity);
-        SetResolvedSkillPayload(entityManager, entity, resolvedSkills);
+        cast.CurrentSkillId = skillId;
+        cast.CurrentSkillAdditionId = skillAdditionId;
+        cast.HasPreparedCast = true;
+        SetResolvedSkillPayload(entityManager, entity, resolvedSkill);
 
-        if (cast.SkillIds.Length == 0 || resolvedSkills == null || resolvedSkills.Count != cast.SkillIds.Length)
-            return false;
-
-        if (!TryStartSkillAtIndex(entityManager, entity, ref cast, 0, out _))
+        if (skillId < 0 || resolvedSkill == null)
         {
             ResetCastState(entityManager, entity, ref cast);
             return false;
@@ -148,35 +144,24 @@ public static class SkillExecutionUtility
         return TryGetCurrentSkill(entityManager, entity, cast, out skillData);
     }
 
-    public static void ExecuteResolvedSkillOnce(
+    public static bool ExecuteResolvedSkillOnce(
         EntityManager entityManager,
         Entity entity,
         in UnitCastComponent cast,
         ResolvedSkillData skillData,
         SkillModifierSet runtimeModifiers = null)
     {
-        SkillContent.EntityManager = entityManager;
-        SkillContent.HasOriginEntity = true;
-        SkillContent.OriginEntity = entity;
-        SetSkillReleasePosition(entityManager, entity, cast, skillData);
-        SkillContent.HasTargetEntity = skillData?.SkillType == SkillType.SelfSkill;
-        SkillContent.TargetEntity = skillData?.SkillType == SkillType.SelfSkill ? entity : Entity.Null;
-        SkillContent.HasTarget = false;
-        SkillContent.Target = null;
-        SkillContent.Origin = null;
-        SkillContent.RuntimeModifiers = runtimeModifiers?.Clone();
+        if (skillData == null)
+            return false;
 
-        SkillExecutor.ExecuteSkill(skillData, SkillContent);
+        string runtimeType = SkillData.GetEffectiveRuntimeType(skillData.RuntimeType);
+        Skill skill = s_skillFactory.CreateSkill(runtimeType, skillData);
+        return skill != null && skill.TryExecute(entityManager, entity, cast, SkillContent, runtimeModifiers);
     }
 
-    public static bool TryStartSkillAtIndex(EntityManager entityManager, Entity entity, ref UnitCastComponent cast, int skillIndex, out ResolvedSkillData skillData)
+    public static bool TryStartPreparedSkill(EntityManager entityManager, Entity entity, ref UnitCastComponent cast, out ResolvedSkillData skillData)
     {
-        cast.CurrentSkillIndex = skillIndex;
-        cast.CurrentSkillId = skillIndex >= 0 && skillIndex < cast.SkillIds.Length
-            ? cast.SkillIds[skillIndex]
-            : -1;
-
-        if (!TryGetResolvedSkillByIndex(entityManager, entity, skillIndex, out skillData))
+        if (!cast.HasPreparedCast || !TryGetCurrentSkill(entityManager, entity, cast, out skillData))
             return false;
 
         if (!TryConsumeMana(entityManager, entity, skillData.MpCost))
@@ -184,6 +169,7 @@ public static class SkillExecutionUtility
 
         cast.ExecutionSerialCounter++;
         cast.CurrentExecutionToken = cast.ExecutionSerialCounter;
+        cast.HasPreparedCast = false;
         cast.IsCasting = true;
         cast.StartedThisFrame = true;
         cast.Phase = SkillCastPhase.None;
@@ -197,13 +183,11 @@ public static class SkillExecutionUtility
     public static void ResetCastState(EntityManager entityManager, Entity entity, ref UnitCastComponent cast)
     {
         ClearExecutionState(entityManager, entity, ref cast);
+        cast.HasPreparedCast = false;
         cast.HasLockedTarget = false;
         cast.LockedTargetPosition = float2.zero;
-        cast.CurrentChainIndex = -1;
-        cast.CurrentSkillIndex = -1;
         cast.CurrentSkillId = -1;
-        cast.SkillIds = default;
-        cast.SkillAdditionIds = default;
+        cast.CurrentSkillAdditionId = -1;
         ClearResolvedSkillPayload(entityManager, entity);
     }
 
@@ -380,35 +364,14 @@ public static class SkillExecutionUtility
 
     private static bool TryExecuteSkill(EntityManager entityManager, Entity entity, in UnitCastComponent cast, ResolvedSkillData skillData)
     {
-        ExecuteResolvedSkillOnce(entityManager, entity, cast, skillData);
-        return true;
+        return ExecuteResolvedSkillOnce(entityManager, entity, cast, skillData);
     }
 
-    private static void SetSkillReleasePosition(EntityManager entityManager, Entity entity, in UnitCastComponent cast, ResolvedSkillData skillData)
+    private static SkillFactory CreateSkillFactory()
     {
-        switch (skillData?.SkillType)
-        {
-            case SkillType.SelfSkill:
-                if (entityManager.HasComponent<Unity.Transforms.LocalTransform>(entity))
-                {
-                    Unity.Transforms.LocalTransform transform = entityManager.GetComponentData<Unity.Transforms.LocalTransform>(entity);
-                    SkillContent.HasPosition = true;
-                    SkillContent.Position = transform.Position;
-                }
-                else
-                {
-                    SkillContent.HasPosition = false;
-                    SkillContent.Position = Vector3.zero;
-                }
-
-                break;
-
-            case SkillType.PositionSkill:
-            default:
-                SkillContent.HasPosition = cast.HasLockedTarget;
-                SkillContent.Position = new Vector3(cast.LockedTargetPosition.x, cast.LockedTargetPosition.y, 0f);
-                break;
-        }
+        SkillFactory factory = new();
+        SkillRegistry.RegisterAll(factory);
+        return factory;
     }
 
     private static bool TryConsumeMana(EntityManager entityManager, Entity entity, int manaCost)
@@ -427,20 +390,12 @@ public static class SkillExecutionUtility
 
     private static bool TryGetCurrentSkill(EntityManager entityManager, Entity entity, in UnitCastComponent cast, out ResolvedSkillData skillData)
     {
-        return TryGetResolvedSkillByIndex(entityManager, entity, cast.CurrentSkillIndex, out skillData);
-    }
-
-    private static bool TryGetResolvedSkillByIndex(EntityManager entityManager, Entity entity, int skillIndex, out ResolvedSkillData skillData)
-    {
         skillData = null;
-        if (skillIndex < 0 || !entityManager.HasComponent<UnitCastSkillPayloadComponent>(entity))
+        if (cast.CurrentSkillId < 0 || !entityManager.HasComponent<UnitCastSkillPayloadComponent>(entity))
             return false;
 
         UnitCastSkillPayloadComponent payload = entityManager.GetComponentObject<UnitCastSkillPayloadComponent>(entity);
-        if (payload?.ResolvedSkills == null || skillIndex >= payload.ResolvedSkills.Count)
-            return false;
-
-        skillData = payload.ResolvedSkills[skillIndex];
+        skillData = payload?.ResolvedSkill;
         return skillData != null;
     }
 
@@ -508,15 +463,10 @@ public static class SkillExecutionUtility
         return payload;
     }
 
-    private static void SetResolvedSkillPayload(EntityManager entityManager, Entity entity, IReadOnlyList<ResolvedSkillData> resolvedSkills)
+    private static void SetResolvedSkillPayload(EntityManager entityManager, Entity entity, ResolvedSkillData resolvedSkill)
     {
         UnitCastSkillPayloadComponent payload = GetOrCreateSkillPayload(entityManager, entity);
-        payload.ResolvedSkills.Clear();
-        if (resolvedSkills == null)
-            return;
-
-        for (int i = 0; i < resolvedSkills.Count; i++)
-            payload.ResolvedSkills.Add(resolvedSkills[i]);
+        payload.ResolvedSkill = resolvedSkill;
     }
 
     private static void ClearResolvedSkillPayload(EntityManager entityManager, Entity entity)
@@ -525,7 +475,8 @@ public static class SkillExecutionUtility
             return;
 
         UnitCastSkillPayloadComponent payload = entityManager.GetComponentObject<UnitCastSkillPayloadComponent>(entity);
-        payload?.ResolvedSkills?.Clear();
+        if (payload != null)
+            payload.ResolvedSkill = null;
     }
 
     private static void AppendHookTasks(UnitCastTaskPayloadComponent payload, List<SkillCastTaskData> taskDataList, SkillCastHookPoint hookPoint)
@@ -577,13 +528,15 @@ public static class SkillExecutionUtility
             if (!SkillResolver.MatchesFollowupEffect(followupEffect, baseSkill, slotData))
                 continue;
 
-            if (!SkillFollowupConsumeRuleRegistry.TryGetRule(followupEffect.ConsumeRuleType, out SkillFollowupConsumeRule rule))
+            string consumeRuleKey = followupEffect.ConsumeRuleKey.ToString();
+            if (!SkillFollowupConsumeRuleRegistry.TryCreateRule(consumeRuleKey, out SkillFollowupConsumeRule rule))
                 continue;
 
             if (!rule.CanApply(followupEffect, context))
                 continue;
 
-            if (SkillFollowupModifierRuleRegistry.TryGetRule(followupEffect.ModifierRuleType, out SkillFollowupModifierRule modifierRule))
+            string modifierRuleKey = followupEffect.ModifierRuleKey.ToString();
+            if (SkillFollowupModifierRuleRegistry.TryCreateRule(modifierRuleKey, out SkillFollowupModifierRule modifierRule))
                 modifierRule.OnConsumed(ref followupEffect, context);
 
             if (!rule.Consume(ref followupEffect, context))
@@ -632,9 +585,7 @@ public static class SkillExecutionUtility
 
     private static int GetCurrentSkillAdditionId(in UnitCastComponent cast)
     {
-        return cast.CurrentSkillIndex >= 0 && cast.CurrentSkillIndex < cast.SkillAdditionIds.Length
-            ? cast.SkillAdditionIds[cast.CurrentSkillIndex]
-            : -1;
+        return cast.CurrentSkillAdditionId;
     }
 
     private static bool TryCreateFollowupRuntime(SkillFollowupEffectData followupData, int sourceSkillId, int sourceSkillAdditionId, out UnitCastFollowupEffectElement followupEffect)
@@ -649,21 +600,23 @@ public static class SkillExecutionUtility
 
         followupEffect.SourceSkillId = sourceSkillId;
         followupEffect.SourceSkillAdditionId = sourceSkillAdditionId;
-        followupEffect.ConsumeRuleType = followupData.ConsumeRule.RuleType;
-        followupEffect.ModifierRuleType = followupData.ModifierRule.RuleType;
+        followupEffect.ConsumeRuleKey = SkillFollowupConsumeRuleRegistry.GetRuleKey(followupData.ConsumeRule);
+        followupEffect.ModifierRuleKey = SkillFollowupModifierRuleRegistry.GetRuleKey(followupData.ModifierRule);
         followupEffect.FilterType = followupData.FilterType;
         followupEffect.SkillId = followupData.SkillId;
-        followupEffect.SkillType = followupData.SkillType;
+        followupEffect.RuntimeType = followupData.EffectiveRuntimeType;
         followupEffect.Element = followupData.Element;
         followupEffect.SkillAdditionId = followupData.SkillAdditionId;
 
-        if (!SkillFollowupConsumeRuleRegistry.TryGetRule(followupEffect.ConsumeRuleType, out SkillFollowupConsumeRule rule))
+        string consumeRuleKey = followupEffect.ConsumeRuleKey.ToString();
+        if (!SkillFollowupConsumeRuleRegistry.TryCreateRule(consumeRuleKey, out SkillFollowupConsumeRule rule))
             return false;
 
         if (!rule.TryInitializeRuntime(followupData.ConsumeRule, ref followupEffect))
             return false;
 
-        if (!SkillFollowupModifierRuleRegistry.TryGetRule(followupEffect.ModifierRuleType, out SkillFollowupModifierRule modifierRule))
+        string modifierRuleKey = followupEffect.ModifierRuleKey.ToString();
+        if (!SkillFollowupModifierRuleRegistry.TryCreateRule(modifierRuleKey, out SkillFollowupModifierRule modifierRule))
             return false;
 
         if (!modifierRule.TryInitializeRuntime(followupData.ModifierRule, ref followupEffect))
@@ -674,6 +627,6 @@ public static class SkillExecutionUtility
 
     private static void LogPhase(string phaseName, in UnitCastComponent cast)
     {
-        Debug.Log($"[CastState] {phaseName} | Chain={cast.CurrentChainIndex} SkillIndex={cast.CurrentSkillIndex} SkillId={cast.CurrentSkillId} Duration={cast.PhaseDuration}");
+        Debug.Log($"[CastState] {phaseName} | SkillId={cast.CurrentSkillId} Duration={cast.PhaseDuration}");
     }
 }

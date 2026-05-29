@@ -137,13 +137,13 @@ namespace CrystalMagic.Editor.Unit
         {
             UnitCastComponent cast = context.GetComponent<UnitCastComponent>();
             UnitEditorWindow.DrawSectionHeader("Cast");
+            EditorGUILayout.Toggle("Has Prepared Cast", cast.HasPreparedCast);
             EditorGUILayout.Toggle("Is Casting", cast.IsCasting);
             EditorGUILayout.Toggle("Force Interrupt", cast.ForceInterrupt);
             EditorGUILayout.Toggle("Has Locked Target", cast.HasLockedTarget);
             EditorGUILayout.Vector2Field("Locked Target", cast.LockedTargetPosition);
-            EditorGUILayout.IntField("Chain Index", cast.CurrentChainIndex);
-            EditorGUILayout.IntField("Skill Index", cast.CurrentSkillIndex);
             EditorGUILayout.IntField("Skill Id", cast.CurrentSkillId);
+            EditorGUILayout.IntField("Skill Addition Id", cast.CurrentSkillAdditionId);
             EditorGUILayout.TextField("Phase", cast.Phase.ToString());
             EditorGUILayout.FloatField("Phase Elapsed", cast.PhaseElapsed);
             EditorGUILayout.FloatField("Phase Duration", cast.PhaseDuration);

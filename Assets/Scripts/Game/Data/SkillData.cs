@@ -2,197 +2,102 @@ using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data.Effects;
-using UnityEngine;
 using Unity.Mathematics;
+using UnityEngine;
 
 namespace CrystalMagic.Game.Data
 {
-    /// <summary>技能类型</summary>
-    public enum SkillType
-    {
-        PositionSkill = 0,
-        SelfSkill = 1,
-    }
-
-    public enum SkillOwnerType
-    {
-        Player = 0,
-        Monster = 1,
-    }
-
-    /// <summary>
-    /// 技能配置表行
-    /// </summary>
     [System.Serializable]
     [ReadOnlyData]
     public class SkillData : DataRow
     {
-        public const char PlayerOwnerPrefix = 'P';
-        public const char MonsterOwnerPrefix = 'M';
-
-        /// <summary>技能名称</summary>
         public string Name;
-
-        /// <summary>技能描述</summary>
+        public bool IsMonsterSkill;
         public string Description;
-
-        /// <summary>技能类型</summary>
-        public SkillType SkillType;
-
-        /// <summary>释放消耗的 MP</summary>
+        public string RuntimeType;
         public int MpCost;
-
-        /// <summary>前摇时间（秒）</summary>
         public float WindupDuration;
         public float ChantDuration;
-
-        /// <summary>后摇时间（秒）</summary>
         public float RecoveryDuration;
-
-        /// <summary>施法过程中是否允许移动</summary>
         public bool CanMoveWhileCasting;
-
-        /// <summary>施法移动速度倍率（1 = 不降速）</summary>
         public float MoveSpeedMultiplier;
-
-        /// <summary>图标资源路径（相对 Resources/）</summary>
         public string IconPath;
-
-        /// <summary>技能释放条件（所有条件通过才可释放）</summary>
         public List<ConditionConfig> Conditions = new();
 
-        /// <summary>
-        /// 效果链，按执行顺序排列
-        /// </summary>
         [SerializeReference]
         public EffectData[] EffectChain = System.Array.Empty<EffectData>();
+
         public List<SkillCastTaskData> CastTasks = new();
         public List<SkillFollowupEffectData> FollowupEffects = new();
 
-        public SkillOwnerType OwnerType => GetOwnerType(Name);
-        public string DisplayName => GetDisplayName(Name);
+        public string DisplayName => Name ?? string.Empty;
+        public string EffectiveRuntimeType => GetEffectiveRuntimeType(RuntimeType);
 
-        public void SetOwnerType(SkillOwnerType ownerType)
+        public static string GetEffectiveRuntimeType(string runtimeType)
         {
-            Name = SetOwnerType(Name, ownerType);
-        }
-
-        public void SetDisplayName(string displayName)
-        {
-            Name = SetDisplayName(Name, displayName);
-        }
-
-        public static SkillOwnerType GetOwnerType(string rawName)
-        {
-            return GetOwnerTypeAndPrefixLength(rawName, out _) == SkillOwnerType.Monster
-                ? SkillOwnerType.Monster
-                : SkillOwnerType.Player;
-        }
-
-        public static string GetDisplayName(string rawName)
-        {
-            GetOwnerTypeAndPrefixLength(rawName, out int prefixLength);
-            return prefixLength > 0 && !string.IsNullOrEmpty(rawName)
-                ? rawName.Substring(prefixLength)
-                : rawName ?? string.Empty;
-        }
-
-        public static string SetOwnerType(string rawName, SkillOwnerType ownerType)
-        {
-            string displayName = GetDisplayName(rawName);
-            return GetOwnerPrefix(ownerType) + displayName;
-        }
-
-        public static string SetDisplayName(string rawName, string displayName)
-        {
-            SkillOwnerType ownerType = GetOwnerType(rawName);
-            return GetOwnerPrefix(ownerType) + (displayName ?? string.Empty);
-        }
-
-        public static char GetOwnerPrefix(SkillOwnerType ownerType)
-        {
-            return ownerType == SkillOwnerType.Monster ? MonsterOwnerPrefix : PlayerOwnerPrefix;
-        }
-
-        private static SkillOwnerType GetOwnerTypeAndPrefixLength(string rawName, out int prefixLength)
-        {
-            prefixLength = 0;
-            if (string.IsNullOrEmpty(rawName))
-                return SkillOwnerType.Player;
-
-            char firstChar = rawName[0];
-            if (firstChar == MonsterOwnerPrefix)
-            {
-                prefixLength = 1;
-                return SkillOwnerType.Monster;
-            }
-
-            if (firstChar == PlayerOwnerPrefix)
-                prefixLength = 1;
-
-            return SkillOwnerType.Player;
+            return runtimeType ?? string.Empty;
         }
     }
 
     public enum SkillModifierChannel
     {
-        [EditorLabel("法力消耗")]
+        [EditorLabel("MP Cost")]
         MpCost = 0,
-        [EditorLabel("动作速度")]
+        [EditorLabel("Action Speed")]
         ActionSpeed = 1,
-        [EditorLabel("吟唱速度")]
+        [EditorLabel("Chant Speed")]
         ChantSpeed = 2,
-        [EditorLabel("保留")]
+        [EditorLabel("Reserved")]
         Reserved = 3,
-        [EditorLabel("施法移动速度倍率")]
+        [EditorLabel("Cast Move Speed Multiplier")]
         MoveSpeedMultiplier = 4,
 
-        [EditorLabel("伤害倍率")]
+        [EditorLabel("Damage Multiplier")]
         Damage = 100,
-        [EditorLabel("额外伤害")]
+        [EditorLabel("Flat Damage")]
         FlatDamage = 101,
-        [EditorLabel("击退力度")]
+        [EditorLabel("Knockback Force")]
         KnockbackForce = 103,
-        [EditorLabel("受击硬直")]
+        [EditorLabel("Hit Stun Seconds")]
         HitStunSeconds = 104,
-        [EditorLabel("治疗倍率")]
+        [EditorLabel("Heal Multiplier")]
         Heal = 105,
-        [EditorLabel("额外治疗")]
+        [EditorLabel("Flat Heal")]
         FlatHeal = 106,
-        [EditorLabel("回蓝倍率")]
+        [EditorLabel("Mana Restore Multiplier")]
         ManaRestore = 107,
-        [EditorLabel("额外回蓝")]
+        [EditorLabel("Flat Mana Restore")]
         FlatManaRestore = 108,
 
-        [EditorLabel("范围半径")]
+        [EditorLabel("Area Radius")]
         AreaRadius = 200,
-        [EditorLabel("投射物速度")]
+        [EditorLabel("Projectile Speed")]
         ProjectileSpeed = 300,
-        [EditorLabel("投射物距离")]
+        [EditorLabel("Projectile Range")]
         ProjectileRange = 301,
-        [EditorLabel("投射物缩放")]
+        [EditorLabel("Projectile Scale")]
         ProjectileScale = 302,
-        [EditorLabel("效果时长")]
+        [EditorLabel("Effect Duration")]
         EffectDuration = 400,
-        [EditorLabel("触发间隔")]
+        [EditorLabel("Tick Interval")]
         TickInterval = 401,
-        [EditorLabel("Buff 时长")]
+        [EditorLabel("Buff Duration")]
         BuffDuration = 402,
-        [EditorLabel("特效缩放")]
+        [EditorLabel("VFX Scale")]
         VfxScale = 500,
-        [EditorLabel("音量")]
+        [EditorLabel("Sound Volume")]
         SoundVolume = 600,
-        [EditorLabel("音调")]
+        [EditorLabel("Sound Pitch")]
         SoundPitch = 601,
-        [EditorLabel("音效延迟")]
+        [EditorLabel("Sound Delay")]
         SoundDelay = 602,
-        [EditorLabel("震屏振幅")]
+        [EditorLabel("Camera Shake Amplitude")]
         CameraShakeAmplitude = 700,
-        [EditorLabel("震屏时长")]
+        [EditorLabel("Camera Shake Duration")]
         CameraShakeDuration = 701,
-        [EditorLabel("震屏频率")]
+        [EditorLabel("Camera Shake Frequency")]
         CameraShakeFrequency = 702,
-        [EditorLabel("震屏半径")]
+        [EditorLabel("Camera Shake Radius")]
         CameraShakeRadius = 703,
     }
 
@@ -222,26 +127,29 @@ namespace CrystalMagic.Game.Data
             if (!_entries.TryGetValue(entry.Channel, out SkillModifierAccumulator current))
             {
                 current.Channel = entry.Channel;
-                current.FactorMultiplier = 1f;
+                current.FactorSum = 0f;
             }
 
-            current.FactorMultiplier *= math.pow(math.max(0f, 1f + entry.Factor), math.max(1, stacks));
-            current.Bonus += entry.Bonus * stacks;
+            current.FactorSum += entry.Factor * math.max(1, stacks);
+            current.Bonus += entry.Bonus * math.max(1, stacks);
             _entries[entry.Channel] = current;
         }
 
         public float GetFactor(SkillModifierChannel channel)
         {
-            return _entries.TryGetValue(channel, out SkillModifierAccumulator entry)
-                ? math.max(GetMinimumFactor(channel), entry.FactorMultiplier)
-                : 1f;
+            if (!_entries.TryGetValue(channel, out SkillModifierAccumulator entry))
+                return 1f;
+
+            float factor = math.max(0f, 1f + entry.FactorSum);
+            return math.max(GetMinimumFactor(channel), factor);
         }
 
         public float GetBonus(SkillModifierChannel channel)
         {
-            return _entries.TryGetValue(channel, out SkillModifierAccumulator entry)
-                ? entry.Bonus
-                : 0f;
+            if (!_entries.TryGetValue(channel, out SkillModifierAccumulator entry))
+                return 0f;
+
+            return entry.Bonus;
         }
 
         public float Apply(SkillModifierChannel channel, float baseValue)
@@ -274,10 +182,10 @@ namespace CrystalMagic.Game.Data
                 if (!_entries.TryGetValue(entry.Channel, out SkillModifierAccumulator current))
                 {
                     current.Channel = entry.Channel;
-                    current.FactorMultiplier = 1f;
+                    current.FactorSum = 0f;
                 }
 
-                current.FactorMultiplier *= entry.FactorMultiplier;
+                current.FactorSum += entry.FactorSum;
                 current.Bonus += entry.Bonus;
                 _entries[entry.Channel] = current;
             }
@@ -298,7 +206,7 @@ namespace CrystalMagic.Game.Data
         private struct SkillModifierAccumulator
         {
             public SkillModifierChannel Channel;
-            public float FactorMultiplier;
+            public float FactorSum;
             public float Bonus;
         }
     }
@@ -308,7 +216,7 @@ namespace CrystalMagic.Game.Data
         public SkillData Source;
         public int Id;
         public string Name;
-        public SkillType SkillType;
+        public string RuntimeType;
         public int MpCost;
         public float WindupDuration;
         public float ChantDuration;

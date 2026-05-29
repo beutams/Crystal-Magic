@@ -1,9 +1,10 @@
-{
+﻿{
   "Rows": [
     {
-      "Name": "蓄能",
+      "Name": "钃勮兘",
+      "IsMonsterSkill": false,
       "Description": "",
-      "SkillType": 1,
+      "RuntimeType": "SelfSkill",
       "MpCost": 100,
       "WindupDuration": 0.25,
       "ChantDuration": 0,
@@ -41,9 +42,10 @@
       "Id": 0
     },
     {
-      "Name": "火球",
+      "Name": "鐏悆",
+      "IsMonsterSkill": false,
       "Description": "",
-      "SkillType": 0,
+      "RuntimeType": "PositionSkill",
       "MpCost": 100,
       "WindupDuration": 0.25,
       "ChantDuration": 0.5,
@@ -138,9 +140,10 @@
       "Id": 1
     },
     {
-      "Name": "火焰冲击",
+      "Name": "鐏劙鍐插嚮",
+      "IsMonsterSkill": false,
       "Description": "",
-      "SkillType": 0,
+      "RuntimeType": "PositionSkill",
       "MpCost": 200,
       "WindupDuration": 0.25,
       "ChantDuration": 0.5,
@@ -221,9 +224,10 @@
       "Id": 2
     },
     {
-      "Name": "引爆",
+      "Name": "寮曠垎",
+      "IsMonsterSkill": false,
       "Description": "",
-      "SkillType": 0,
+      "RuntimeType": "PositionSkill",
       "MpCost": 200,
       "WindupDuration": 0.1,
       "ChantDuration": 0,
@@ -312,9 +316,10 @@
       "Id": 3
     },
     {
-      "Name": "水涡",
+      "Name": "姘存丁",
+      "IsMonsterSkill": false,
       "Description": "",
-      "SkillType": 0,
+      "RuntimeType": "PositionSkill",
       "MpCost": 100,
       "WindupDuration": 0.25,
       "ChantDuration": 0.5,
@@ -397,9 +402,10 @@
       "Id": 4
     },
     {
-      "Name": "冰刺",
+      "Name": "鍐板埡",
+      "IsMonsterSkill": false,
       "Description": "",
-      "SkillType": 0,
+      "RuntimeType": "PositionSkill",
       "MpCost": 200,
       "WindupDuration": 0.25,
       "ChantDuration": 0.5,
@@ -447,9 +453,10 @@
       "Id": 5
     },
     {
-      "Name": "冻结",
+      "Name": "鍐荤粨",
+      "IsMonsterSkill": false,
       "Description": "",
-      "SkillType": 0,
+      "RuntimeType": "PositionSkill",
       "MpCost": 100,
       "WindupDuration": 0.25,
       "ChantDuration": 0,
@@ -508,9 +515,10 @@
       "Id": 6
     },
     {
-      "Name": "雷击",
+      "Name": "闆峰嚮",
+      "IsMonsterSkill": false,
       "Description": "",
-      "SkillType": 0,
+      "RuntimeType": "PositionSkill",
       "MpCost": 100,
       "WindupDuration": 0.25,
       "ChantDuration": 0.5,
@@ -541,9 +549,10 @@
       "Id": 7
     },
     {
-      "Name": "雷域",
+      "Name": "闆峰煙",
+      "IsMonsterSkill": false,
       "Description": "",
-      "SkillType": 0,
+      "RuntimeType": "PositionSkill",
       "MpCost": 100,
       "WindupDuration": 0.25,
       "ChantDuration": 0.5,
@@ -602,9 +611,10 @@
       "Id": 8
     },
     {
-      "Name": "雷暴",
+      "Name": "闆锋毚",
+      "IsMonsterSkill": false,
       "Description": "",
-      "SkillType": 0,
+      "RuntimeType": "PositionSkill",
       "MpCost": 300,
       "WindupDuration": 0.1,
       "ChantDuration": 0,
@@ -635,9 +645,10 @@
       "Id": 9
     },
     {
-      "Name": "加速",
+      "Name": "鍔犻€?,
+      "IsMonsterSkill": false,
       "Description": "",
-      "SkillType": 1,
+      "RuntimeType": "SelfSkill",
       "MpCost": 100,
       "WindupDuration": 0.1,
       "ChantDuration": 0,
@@ -668,9 +679,10 @@
       "Id": 10
     },
     {
-      "Name": "回复",
+      "Name": "鍥炲",
+      "IsMonsterSkill": false,
       "Description": "",
-      "SkillType": 1,
+      "RuntimeType": "SelfSkill",
       "MpCost": 200,
       "WindupDuration": 0.5,
       "ChantDuration": 1,
@@ -701,9 +713,10 @@
       "Id": 11
     },
     {
-      "Name": "屏障",
+      "Name": "灞忛殰",
+      "IsMonsterSkill": false,
       "Description": "",
-      "SkillType": 0,
+      "RuntimeType": "PositionSkill",
       "MpCost": 200,
       "WindupDuration": 0.25,
       "ChantDuration": 1,
@@ -778,9 +791,10 @@
       "Id": 12
     },
     {
-      "Name": "M双拳砸地",
+      "Name": "M鍙屾嫵鐮稿湴",
+      "IsMonsterSkill": false,
       "Description": "",
-      "SkillType": 1,
+      "RuntimeType": "SelfSkill",
       "MpCost": 0,
       "WindupDuration": 0.9,
       "ChantDuration": 0,
@@ -897,9 +911,10 @@
       "Id": 13
     },
     {
-      "Name": "M巨石投掷",
+      "Name": "M宸ㄧ煶鎶曟幏",
+      "IsMonsterSkill": false,
       "Description": "",
-      "SkillType": 0,
+      "RuntimeType": "PositionSkill",
       "MpCost": 0,
       "WindupDuration": 0.6,
       "ChantDuration": 0.4,
@@ -988,9 +1003,10 @@
       "Id": 14
     },
     {
-      "Name": "M巨像激光",
+      "Name": "M宸ㄥ儚婵€鍏?,
+      "IsMonsterSkill": false,
       "Description": "",
-      "SkillType": 1,
+      "RuntimeType": "SelfSkill",
       "MpCost": 0,
       "WindupDuration": 0.7,
       "ChantDuration": 0.3,
@@ -1043,9 +1059,10 @@
       "Id": 15
     },
     {
-      "Name": "M狂暴",
+      "Name": "M鐙傛毚",
+      "IsMonsterSkill": false,
       "Description": "",
-      "SkillType": 1,
+      "RuntimeType": "SelfSkill",
       "MpCost": 0,
       "WindupDuration": 0.35,
       "ChantDuration": 0,
@@ -1068,9 +1085,10 @@
       "Id": 16
     },
     {
-      "Name": "M跳跃重压",
+      "Name": "M璺宠穬閲嶅帇",
+      "IsMonsterSkill": false,
       "Description": "",
-      "SkillType": 0,
+      "RuntimeType": "PositionSkill",
       "MpCost": 0,
       "WindupDuration": 0.5,
       "ChantDuration": 0.8,
@@ -1141,9 +1159,10 @@
       "Id": 17
     },
     {
-      "Name": "M双拳砸地·狂暴",
+      "Name": "M鍙屾嫵鐮稿湴路鐙傛毚",
+      "IsMonsterSkill": false,
       "Description": "",
-      "SkillType": 1,
+      "RuntimeType": "SelfSkill",
       "MpCost": 0,
       "WindupDuration": 0.65,
       "ChantDuration": 0,
@@ -1260,9 +1279,10 @@
       "Id": 18
     },
     {
-      "Name": "M巨石投掷·三连",
+      "Name": "M宸ㄧ煶鎶曟幏路涓夎繛",
+      "IsMonsterSkill": false,
       "Description": "",
-      "SkillType": 0,
+      "RuntimeType": "PositionSkill",
       "MpCost": 0,
       "WindupDuration": 0.45,
       "ChantDuration": 0.25,
@@ -1359,9 +1379,10 @@
       "Id": 19
     },
     {
-      "Name": "M巨像激光爆裂",
+      "Name": "M宸ㄥ儚婵€鍏夌垎瑁?,
+      "IsMonsterSkill": false,
       "Description": "",
-      "SkillType": 1,
+      "RuntimeType": "SelfSkill",
       "MpCost": 0,
       "WindupDuration": 0.6,
       "ChantDuration": 0.25,
@@ -1463,9 +1484,10 @@
       "Id": 20
     },
     {
-      "Name": "M小巨像横扫",
+      "Name": "M灏忓法鍍忔í鎵?,
+      "IsMonsterSkill": false,
       "Description": "",
-      "SkillType": 0,
+      "RuntimeType": "PositionSkill",
       "MpCost": 0,
       "WindupDuration": 0.35,
       "ChantDuration": 0,
@@ -1512,3 +1534,4 @@
     }
   ]
 }
+

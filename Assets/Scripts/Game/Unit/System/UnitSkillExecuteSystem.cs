@@ -13,6 +13,16 @@ partial class UnitSkillExecuteSystem : SystemBase
         {
             UnitCastComponent cast = castRef.ValueRW;
 
+            if (!cast.IsCasting && cast.HasPreparedCast)
+            {
+                if (!SkillExecutionUtility.TryStartPreparedSkill(EntityManager, entity, ref cast, out _))
+                {
+                    ClearPlayerChainRequestIfPresent(entity);
+                    SkillExecutionUtility.ResetCastState(EntityManager, entity, ref cast);
+                    SkillExecutionUtility.ClearFollowupEffects(EntityManager, entity);
+                }
+            }
+
             if (cast.StartedThisFrame)
             {
                 cast.StartedThisFrame = false;
@@ -29,29 +39,34 @@ partial class UnitSkillExecuteSystem : SystemBase
             {
                 case SkillAdvanceResult.Completed:
                 {
-                    int nextSkillIndex = cast.CurrentSkillIndex + 1;
-                    if (nextSkillIndex < cast.SkillIds.Length)
+                    if (EntityManager.HasComponent<PlayerTag>(entity) &&
+                        EntityManager.HasComponent<PlayerSkillComponent>(entity))
                     {
-                        if (!SkillExecutionUtility.TryStartSkillAtIndex(EntityManager, entity, ref cast, nextSkillIndex, out _))
+                        PlayerSkillComponent request = EntityManager.GetComponentData<PlayerSkillComponent>(entity);
+                        if (PlayerSkillAnalysisSystem.TryPrepareNextSkill(EntityManager, entity, ref request, ref cast))
                         {
-                            SkillExecutionUtility.ResetCastState(EntityManager, entity, ref cast);
-                            SkillExecutionUtility.ClearFollowupEffects(EntityManager, entity);
+                            EntityManager.SetComponentData(entity, request);
+                            break;
                         }
-                    }
-                    else if (EntityManager.HasComponent<PlayerTag>(entity) && TryRestartHeldPlayerCast(entity, ref cast))
-                    {
-                    }
-                    else
-                    {
-                        SkillExecutionUtility.ResetCastState(EntityManager, entity, ref cast);
-                        SkillExecutionUtility.ClearFollowupEffects(EntityManager, entity);
+
+                        if (TryRestartHeldPlayerCast(entity, ref request, ref cast))
+                        {
+                            EntityManager.SetComponentData(entity, request);
+                            break;
+                        }
+
+                        EntityManager.SetComponentData(entity, request);
                     }
 
+                    ClearPlayerChainRequestIfPresent(entity);
+                    SkillExecutionUtility.ResetCastState(EntityManager, entity, ref cast);
+                    SkillExecutionUtility.ClearFollowupEffects(EntityManager, entity);
                     break;
                 }
 
                 case SkillAdvanceResult.Interrupted:
                 case SkillAdvanceResult.Failed:
+                    ClearPlayerChainRequestIfPresent(entity);
                     SkillExecutionUtility.ResetCastState(EntityManager, entity, ref cast);
                     SkillExecutionUtility.ClearFollowupEffects(EntityManager, entity);
                     break;
@@ -62,24 +77,28 @@ partial class UnitSkillExecuteSystem : SystemBase
         }
     }
 
-    private bool TryRestartHeldPlayerCast(Entity entity, ref UnitCastComponent cast)
+    private bool TryRestartHeldPlayerCast(Entity entity, ref PlayerSkillComponent request, ref UnitCastComponent cast)
     {
-        if (!EntityManager.HasComponent<UnitIntentComponent>(entity) || !EntityManager.HasComponent<PlayerSkillComponent>(entity))
+        if (!EntityManager.HasComponent<UnitIntentComponent>(entity))
             return false;
 
         UnitIntentComponent intent = EntityManager.GetComponentData<UnitIntentComponent>(entity);
         if (!intent.WantToCast)
             return false;
 
-        PlayerSkillComponent request = EntityManager.GetComponentData<PlayerSkillComponent>(entity);
-        if (!PlayerSkillAnalysisSystem.TryQueueSelectedChainRequest(EntityManager, entity, ref request))
-        {
-            EntityManager.SetComponentData(entity, request);
+        if (!PlayerCastState.TryPopulateSelectedChainRequest(EntityManager, entity, ref request))
             return false;
-        }
 
-        bool started = PlayerSkillAnalysisSystem.TryStartPendingCast(EntityManager, entity, ref request, ref cast);
+        return PlayerSkillAnalysisSystem.TryPreparePendingCast(EntityManager, entity, ref request, ref cast);
+    }
+
+    private void ClearPlayerChainRequestIfPresent(Entity entity)
+    {
+        if (!EntityManager.HasComponent<PlayerSkillComponent>(entity))
+            return;
+
+        PlayerSkillComponent request = EntityManager.GetComponentData<PlayerSkillComponent>(entity);
+        request.Clear();
         EntityManager.SetComponentData(entity, request);
-        return started;
     }
 }

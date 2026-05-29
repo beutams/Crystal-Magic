@@ -117,7 +117,7 @@ namespace CrystalMagic.Game.Skill
                 Source = skillData,
                 Id = skillData.Id,
                 Name = skillData.DisplayName,
-                SkillType = skillData.SkillType,
+                RuntimeType = skillData.EffectiveRuntimeType,
                 MpCost = math.max(0, (int)math.round(modifiers.Apply(SkillModifierChannel.MpCost, skillData.MpCost))),
                 WindupDuration = math.max(0f, skillData.WindupDuration * actionSpeedMultiplier),
                 ChantDuration = math.max(0f, skillData.ChantDuration * chantSpeedMultiplier),
@@ -216,7 +216,7 @@ namespace CrystalMagic.Game.Skill
             {
                 SkillFollowupFilterType.AnySkill => true,
                 SkillFollowupFilterType.SkillId => followupEffect.SkillId >= 0 && skillData.Id == followupEffect.SkillId,
-                SkillFollowupFilterType.SkillType => skillData.SkillType == followupEffect.SkillType,
+                SkillFollowupFilterType.RuntimeType => string.Equals(skillData.EffectiveRuntimeType, followupEffect.RuntimeType.ToString(), System.StringComparison.Ordinal),
                 SkillFollowupFilterType.Element => followupEffect.Element != ElementType.None && SkillUsesElement(skillData.EffectChain, followupEffect.Element),
                 SkillFollowupFilterType.SkillAdditionId => slotData != null && slotData.SkillAdditionId >= 0 && slotData.SkillAdditionId == followupEffect.SkillAdditionId,
                 _ => false,
@@ -225,16 +225,18 @@ namespace CrystalMagic.Game.Skill
 
         public static void ApplyFollowupModifiers(ref SkillModifierSet modifiers, UnitCastFollowupEffectElement followupEffect, in SkillFollowupContext context)
         {
-            if (!SkillFollowupConsumeRuleRegistry.TryGetRule(followupEffect.ConsumeRuleType, out SkillFollowupConsumeRule rule))
+            string consumeRuleKey = followupEffect.ConsumeRuleKey.ToString();
+            if (!SkillFollowupConsumeRuleRegistry.TryCreateRule(consumeRuleKey, out SkillFollowupConsumeRule rule))
                 return;
 
             if (!rule.CanApply(followupEffect, context))
                 return;
 
-            if (!SkillFollowupModifierRuleRegistry.TryGetRule(followupEffect.ModifierRuleType, out SkillFollowupModifierRule modifierRule))
+            string modifierRuleKey = followupEffect.ModifierRuleKey.ToString();
+            if (!SkillFollowupModifierRuleRegistry.TryCreateRule(modifierRuleKey, out SkillFollowupModifierRule modifierRule))
                 return;
 
-            modifierRule.ApplyModifiers(ref modifiers, followupEffect, context);
+            modifierRule.GetModifier(ref modifiers, followupEffect, context);
         }
 
         private static bool SkillUsesElement(EffectData[] effectChain, ElementType element)

@@ -8,7 +8,7 @@ namespace CrystalMagic.Game.Data
     {
         AnySkill = 0,
         SkillId = 1,
-        SkillType = 2,
+        RuntimeType = 2,
         Element = 3,
         SkillAdditionId = 4,
     }
@@ -19,9 +19,6 @@ namespace CrystalMagic.Game.Data
         [EditorLabel("Filter")]
         public SkillFollowupFilterType FilterType;
 
-        // Keep the old field name so existing JSON can still flow into the new default rule once.
-        public int Uses = 1;
-
         [EditorLabel("Consume Rule")]
         public SkillFollowupConsumeRuleData ConsumeRule = new UseCountSkillFollowupConsumeRuleData();
 
@@ -31,8 +28,8 @@ namespace CrystalMagic.Game.Data
         [EditorLabel("Skill Id")]
         public int SkillId = -1;
 
-        [EditorLabel("Skill Type")]
-        public SkillType SkillType;
+        [EditorLabel("Runtime Type")]
+        public string RuntimeType;
 
         [EditorLabel("Element")]
         public ElementType Element = ElementType.None;
@@ -40,35 +37,17 @@ namespace CrystalMagic.Game.Data
         [EditorLabel("Skill Addition Id")]
         public int SkillAdditionId = -1;
 
-        // Keep the old field name so existing JSON can still flow into the new default modifier rule once.
-        [EditorLabel("Modifiers")]
-        public List<SkillModifierEntry> Modifiers = new();
+        public string EffectiveRuntimeType => SkillData.GetEffectiveRuntimeType(RuntimeType);
 
         public void EnsureDefaults()
         {
             if (ConsumeRule == null)
-                ConsumeRule = new UseCountSkillFollowupConsumeRuleData { Uses = Math.Max(1, Uses) };
-
-            Modifiers ??= new List<SkillModifierEntry>();
+                ConsumeRule = new UseCountSkillFollowupConsumeRuleData();
+            ConsumeRule.EnsureDefaults();
 
             if (ModifierRule == null)
-                ModifierRule = new StaticSkillFollowupModifierRuleData { Modifiers = new List<SkillModifierEntry>(Modifiers) };
-
-            switch (ModifierRule)
-            {
-                case StaticSkillFollowupModifierRuleData staticRuleData:
-                    staticRuleData.Modifiers ??= new List<SkillModifierEntry>();
-                    break;
-                case SequenceSkillFollowupModifierRuleData sequenceRuleData:
-                    sequenceRuleData.ModifierSets ??= new List<SkillFollowupModifierSetData>();
-                    for (int i = 0; i < sequenceRuleData.ModifierSets.Count; i++)
-                    {
-                        sequenceRuleData.ModifierSets[i] ??= new SkillFollowupModifierSetData();
-                        sequenceRuleData.ModifierSets[i].Modifiers ??= new List<SkillModifierEntry>();
-                    }
-
-                    break;
-            }
+                ModifierRule = new StaticSkillFollowupModifierRuleData();
+            ModifierRule.EnsureDefaults();
         }
     }
 }

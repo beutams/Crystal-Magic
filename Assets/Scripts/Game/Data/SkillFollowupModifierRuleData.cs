@@ -3,34 +3,43 @@ using System.Collections.Generic;
 
 namespace CrystalMagic.Game.Data
 {
-    public enum SkillFollowupModifierRuleType
-    {
-        Static = 0,
-        Sequence = 1,
-    }
-
     [Serializable]
     public abstract class SkillFollowupModifierRuleData
     {
-        public abstract SkillFollowupModifierRuleType RuleType { get; }
+        public virtual void EnsureDefaults()
+        {
+        }
     }
 
     [Serializable]
+    [FactoryKey("Static", 0, "Static")]
     public sealed class StaticSkillFollowupModifierRuleData : SkillFollowupModifierRuleData
     {
         [EditorLabel("Modifiers")]
         public List<SkillModifierEntry> Modifiers = new();
 
-        public override SkillFollowupModifierRuleType RuleType => SkillFollowupModifierRuleType.Static;
+        public override void EnsureDefaults()
+        {
+            Modifiers ??= new List<SkillModifierEntry>();
+        }
     }
 
     [Serializable]
+    [FactoryKey("Sequence", 10, "Sequence")]
     public sealed class SequenceSkillFollowupModifierRuleData : SkillFollowupModifierRuleData
     {
         [EditorLabel("Modifier Sets")]
         public List<SkillFollowupModifierSetData> ModifierSets = new();
 
-        public override SkillFollowupModifierRuleType RuleType => SkillFollowupModifierRuleType.Sequence;
+        public override void EnsureDefaults()
+        {
+            ModifierSets ??= new List<SkillFollowupModifierSetData>();
+            for (int i = 0; i < ModifierSets.Count; i++)
+            {
+                ModifierSets[i] ??= new SkillFollowupModifierSetData();
+                ModifierSets[i].EnsureDefaults();
+            }
+        }
     }
 
     [Serializable]
@@ -38,5 +47,10 @@ namespace CrystalMagic.Game.Data
     {
         [EditorLabel("Modifiers")]
         public List<SkillModifierEntry> Modifiers = new();
+
+        public void EnsureDefaults()
+        {
+            Modifiers ??= new List<SkillModifierEntry>();
+        }
     }
 }

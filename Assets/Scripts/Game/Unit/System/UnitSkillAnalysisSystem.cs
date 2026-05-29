@@ -11,18 +11,18 @@ partial class UnitSkillAnalysisSystem : SystemBase
     {
         foreach (var (castRef, unitSkillRef, entity) in SystemAPI.Query<RefRW<UnitCastComponent>, RefRW<UnitSkillComponent>>().WithNone<PlayerTag>().WithEntityAccess())
         {
-            if (!unitSkillRef.ValueRO.HasPendingCast || castRef.ValueRO.IsCasting)
+            if (!unitSkillRef.ValueRO.HasPendingCast || castRef.ValueRO.IsCasting || castRef.ValueRO.HasPreparedCast)
                 continue;
 
             UnitCastComponent cast = castRef.ValueRW;
             UnitSkillComponent unitSkill = unitSkillRef.ValueRW;
-            TryStartPendingCast(EntityManager, entity, ref unitSkill, ref cast);
+            TryPreparePendingCast(EntityManager, entity, ref unitSkill, ref cast);
             castRef.ValueRW = cast;
             unitSkillRef.ValueRW = unitSkill;
         }
     }
 
-    public static bool TryStartPendingCast(EntityManager entityManager, Entity entity, ref UnitSkillComponent unitSkill, ref UnitCastComponent cast)
+    public static bool TryPreparePendingCast(EntityManager entityManager, Entity entity, ref UnitSkillComponent unitSkill, ref UnitCastComponent cast)
     {
         int index = unitSkill.PendingSkillIndex;
         if (!unitSkill.HasPendingCast || index < 0 || index >= unitSkill.Skills.Length)
@@ -38,36 +38,24 @@ partial class UnitSkillAnalysisSystem : SystemBase
             return false;
         }
 
-        Unity.Collections.FixedList64Bytes<int> skillIds = default;
-        Unity.Collections.FixedList64Bytes<int> skillAdditionIds = default;
-        skillIds.Add(entry.SkillId);
-        skillAdditionIds.Add(entry.SkillAdditionId);
-        var resolvedSkills = new System.Collections.Generic.List<ResolvedSkillData> { resolvedSkill };
-        try
-        {
-            bool started = SkillExecutionUtility.TryBeginCast(
-                entityManager,
-                entity,
-                ref cast,
-                skillIds,
-                skillAdditionIds,
-                -1,
-                resolvedSkills,
-                unitSkill.HasLockedTarget,
-                unitSkill.LockedTargetPosition);
+        SkillExecutionUtility.ClearFollowupEffects(entityManager, entity);
+        bool prepared = SkillExecutionUtility.PrepareCast(
+            entityManager,
+            entity,
+            ref cast,
+            entry.SkillId,
+            entry.SkillAdditionId,
+            resolvedSkill,
+            unitSkill.HasLockedTarget,
+            unitSkill.LockedTargetPosition);
 
-            if (started)
-            {
-                entry.CooldownRemaining = math.max(0f, entry.CooldownSeconds);
-                unitSkill.Skills[index] = entry;
-            }
-
-            unitSkill.ClearPending();
-            return started;
-        }
-        finally
+        if (prepared)
         {
-            resolvedSkills.Clear();
+            entry.CooldownRemaining = math.max(0f, entry.CooldownSeconds);
+            unitSkill.Skills[index] = entry;
         }
+
+        unitSkill.ClearPending();
+        return prepared;
     }
 }

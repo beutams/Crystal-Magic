@@ -1,12 +1,30 @@
 using CrystalMagic.Game.Data;
+using Unity.Entities;
+using Unity.Transforms;
 
 namespace CrystalMagic.Game.Skill
 {
-    /// <summary>
-    /// 以施法者自身位置作为释放点的技能。
-    /// </summary>
-    public class SelfSkill : Skill
+    [FactoryKey(nameof(SelfSkill), 10, "Self Skill")]
+    public sealed class SelfSkill : Skill
     {
-        public SelfSkill(SkillData data) : base(data) { }
+        public SelfSkill(ResolvedSkillData data) : base(data)
+        {
+        }
+
+        protected override bool BuildContext(EntityManager entityManager, Entity entity, in UnitCastComponent cast, SkillContent context)
+        {
+            if (entityManager.HasComponent<LocalTransform>(entity))
+            {
+                LocalTransform transform = entityManager.GetComponentData<LocalTransform>(entity);
+                SetPosition(context, true, transform.Position);
+            }
+            else
+            {
+                SetPosition(context, false, UnityEngine.Vector3.zero);
+            }
+
+            SetTargetEntity(context, true, entity);
+            return true;
+        }
     }
 }

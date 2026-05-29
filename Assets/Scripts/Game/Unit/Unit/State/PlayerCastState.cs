@@ -1,4 +1,6 @@
 using CrystalMagic.Core;
+using CrystalMagic.Game.Data;
+using CrystalMagic.Game.Skill;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -14,7 +16,7 @@ public class PlayerCastState : AUnitState
 
         UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
         PlayerSkillComponent request = EntityManager.GetComponentData<PlayerSkillComponent>(Entity);
-        if (PlayerSkillAnalysisSystem.TryQueueSelectedChainRequest(EntityManager, Entity, ref request))
+        if (TryPopulateSelectedChainRequest(EntityManager, Entity, ref request))
             EventComponent.Instance.Publish(new SkillCastLockChangedEvent(true));
 
         EntityManager.SetComponentData(Entity, cast);
@@ -61,6 +63,53 @@ public class PlayerCastState : AUnitState
 
         EventComponent.Instance.Publish(new SkillCastLockChangedEvent(false));
         ClearAnimationFacingDirection();
+    }
+
+    public static bool TryPopulateSelectedChainRequest(EntityManager entityManager, Entity entity, ref PlayerSkillComponent request)
+    {
+        request.Clear();
+
+        if (!entityManager.HasComponent<UnitIntentComponent>(entity))
+            return false;
+
+        SkillCData skillConfig = SaveDataComponent.Instance?.GetSkillData();
+        RuntimeSkillData runtimeSkillData = RuntimeDataComponent.Instance.GetSkillData();
+        var slots = new System.Collections.Generic.List<SkillChainSlotData>();
+        try
+        {
+            if (!SkillChainResolver.TryBuildSelectedChain(skillConfig, runtimeSkillData, slots, out _))
+                return false;
+
+            for (int i = 0; i < slots.Count; i++)
+            {
+                SkillChainSlotData slotData = slots[i];
+                SkillData skillData = SkillChainResolver.GetSkillData(slotData);
+                if (skillData == null)
+                    continue;
+
+                if (request.SkillIds.Length >= request.SkillIds.Capacity ||
+                    request.SkillAdditionIds.Length >= request.SkillAdditionIds.Capacity)
+                    break;
+
+                request.SkillIds.Add(skillData.Id);
+                request.SkillAdditionIds.Add(slotData?.SkillAdditionId ?? -1);
+            }
+
+            if (request.SkillIds.Length == 0)
+                return false;
+
+            UnitIntentComponent intent = entityManager.GetComponentData<UnitIntentComponent>(entity);
+            request.HasActiveChain = true;
+            request.HasPendingCast = true;
+            request.CurrentSkillIndex = 0;
+            request.HasLockedTarget = true;
+            request.LockedTargetPosition = intent.CastTargetPosition;
+            return true;
+        }
+        finally
+        {
+            slots.Clear();
+        }
     }
 
     private void UpdateAnimationFacing(float2 targetPosition, bool hasTarget)

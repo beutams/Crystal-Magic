@@ -1,8 +1,6 @@
-using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Skill;
 using Unity.Entities;
-using Unity.Mathematics;
 
 [UpdateAfter(typeof(UnitStateTransitionSystem))]
 [UpdateBefore(typeof(UnitSkillAnalysisSystem))]
@@ -12,104 +10,80 @@ partial class PlayerSkillAnalysisSystem : SystemBase
     {
         foreach (var (castRef, requestRef, entity) in SystemAPI.Query<RefRW<UnitCastComponent>, RefRW<PlayerSkillComponent>>().WithAll<PlayerTag>().WithEntityAccess())
         {
-            if (!requestRef.ValueRO.HasPendingCast || castRef.ValueRO.IsCasting)
+            if (!requestRef.ValueRO.HasPendingCast || castRef.ValueRO.IsCasting || castRef.ValueRO.HasPreparedCast)
                 continue;
 
             UnitCastComponent cast = castRef.ValueRW;
             PlayerSkillComponent request = requestRef.ValueRW;
-            TryStartPendingCast(EntityManager, entity, ref request, ref cast);
+            TryPreparePendingCast(EntityManager, entity, ref request, ref cast);
             castRef.ValueRW = cast;
             requestRef.ValueRW = request;
         }
     }
 
-    public static bool TryQueueSelectedChainRequest(EntityManager entityManager, Entity entity, ref PlayerSkillComponent request)
+    public static bool TryPreparePendingCast(EntityManager entityManager, Entity entity, ref PlayerSkillComponent request, ref UnitCastComponent cast)
     {
-        request.Clear();
-
-        if (!entityManager.HasComponent<UnitIntentComponent>(entity))
+        if (!request.HasPendingCast || !request.HasActiveChain || request.SkillIds.Length == 0)
+        {
+            request.Clear();
             return false;
-
-        SkillCData skillConfig = SaveDataComponent.Instance?.GetSkillData();
-        RuntimeSkillData runtimeSkillData = RuntimeDataComponent.Instance.GetSkillData();
-        var slots = new System.Collections.Generic.List<SkillChainSlotData>();
-        try
-        {
-            if (!SkillChainResolver.TryBuildSelectedChain(skillConfig, runtimeSkillData, slots, out int chainIndex))
-                return false;
-
-            for (int i = 0; i < slots.Count; i++)
-            {
-                SkillChainSlotData slotData = slots[i];
-                SkillData skillData = SkillChainResolver.GetSkillData(slotData);
-                if (skillData == null)
-                    continue;
-
-                if (request.SkillIds.Length >= request.SkillIds.Capacity ||
-                    request.SkillAdditionIds.Length >= request.SkillAdditionIds.Capacity)
-                    break;
-
-                request.SkillIds.Add(skillData.Id);
-                request.SkillAdditionIds.Add(slotData?.SkillAdditionId ?? -1);
-            }
-
-            if (request.SkillIds.Length == 0)
-                return false;
-
-            UnitIntentComponent intent = entityManager.GetComponentData<UnitIntentComponent>(entity);
-            request.HasPendingCast = true;
-            request.HasLockedTarget = true;
-            request.LockedTargetPosition = intent.CastTargetPosition;
-            request.ChainIndex = chainIndex;
-            return true;
         }
-        finally
+
+        int skillIndex = request.CurrentSkillIndex;
+        if (skillIndex < 0 || skillIndex >= request.SkillIds.Length)
         {
-            slots.Clear();
+            request.Clear();
+            return false;
         }
+
+        int skillId = request.SkillIds[skillIndex];
+        int skillAdditionId = skillIndex < request.SkillAdditionIds.Length ? request.SkillAdditionIds[skillIndex] : -1;
+        if (!SkillAnalysisUtility.TryAnalyzeSkill(entityManager, entity, skillId, skillAdditionId, out ResolvedSkillData resolvedSkill))
+        {
+            request.Clear();
+            return false;
+        }
+
+        if (skillIndex == 0)
+            SkillExecutionUtility.ClearFollowupEffects(entityManager, entity);
+
+        bool prepared = SkillExecutionUtility.PrepareCast(
+            entityManager,
+            entity,
+            ref cast,
+            skillId,
+            skillAdditionId,
+            resolvedSkill,
+            request.HasLockedTarget,
+            request.LockedTargetPosition);
+
+        if (!prepared)
+        {
+            request.Clear();
+            return false;
+        }
+
+        request.HasPendingCast = false;
+        return true;
     }
 
-    public static bool TryStartPendingCast(EntityManager entityManager, Entity entity, ref PlayerSkillComponent request, ref UnitCastComponent cast)
+    public static bool TryPrepareNextSkill(EntityManager entityManager, Entity entity, ref PlayerSkillComponent request, ref UnitCastComponent cast)
     {
-        if (!request.HasPendingCast || request.SkillIds.Length == 0)
+        if (!request.HasActiveChain)
         {
             request.Clear();
             return false;
         }
 
-        var resolvedSkills = new System.Collections.Generic.List<ResolvedSkillData>();
-        try
+        int nextIndex = request.CurrentSkillIndex + 1;
+        if (nextIndex < 0 || nextIndex >= request.SkillIds.Length)
         {
-            for (int i = 0; i < request.SkillIds.Length; i++)
-            {
-                int skillId = request.SkillIds[i];
-                int skillAdditionId = i < request.SkillAdditionIds.Length ? request.SkillAdditionIds[i] : -1;
-                if (!SkillAnalysisUtility.TryAnalyzeSkill(entityManager, entity, skillId, skillAdditionId, out ResolvedSkillData resolvedSkill))
-                {
-                    request.Clear();
-                    return false;
-                }
-
-                resolvedSkills.Add(resolvedSkill);
-            }
-
-            bool started = SkillExecutionUtility.TryBeginCast(
-                entityManager,
-                entity,
-                ref cast,
-                request.SkillIds,
-                request.SkillAdditionIds,
-                request.ChainIndex,
-                resolvedSkills,
-                request.HasLockedTarget,
-                request.LockedTargetPosition);
-
             request.Clear();
-            return started;
+            return false;
         }
-        finally
-        {
-            resolvedSkills.Clear();
-        }
+
+        request.CurrentSkillIndex = nextIndex;
+        request.HasPendingCast = true;
+        return TryPreparePendingCast(entityManager, entity, ref request, ref cast);
     }
 }

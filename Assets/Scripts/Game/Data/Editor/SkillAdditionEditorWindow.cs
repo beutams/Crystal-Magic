@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Data.Effects;
+using CrystalMagic.Game.Skill;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
@@ -129,26 +130,6 @@ namespace CrystalMagic.Editor.Data
         private static readonly Color SectionLine = new(0.45f, 0.45f, 0.45f, 1f);
         private static readonly Color ConditionAddHeaderColor = new(0.15f, 0.15f, 0.15f, 1f);
         private static readonly Color ConditionAddBodyColor = new(0.18f, 0.18f, 0.18f, 1f);
-        private static readonly Type[] FollowupConsumeRuleTypes =
-        {
-            typeof(UseCountSkillFollowupConsumeRuleData),
-        };
-
-        private static readonly string[] FollowupConsumeRuleNames =
-        {
-            "Use Count",
-        };
-        private static readonly Type[] FollowupModifierRuleTypes =
-        {
-            typeof(StaticSkillFollowupModifierRuleData),
-            typeof(SequenceSkillFollowupModifierRuleData),
-        };
-
-        private static readonly string[] FollowupModifierRuleNames =
-        {
-            "Static",
-            "Sequence",
-        };
         private static readonly Type[] CastTaskTypes =
         {
             typeof(DoubleExecuteSkillCastTaskData),
@@ -606,8 +587,8 @@ namespace CrystalMagic.Editor.Data
                     case SkillFollowupFilterType.SkillId:
                         followup.SkillId = EditorGUILayout.IntField("Skill Id", followup.SkillId);
                         break;
-                    case SkillFollowupFilterType.SkillType:
-                        followup.SkillType = (SkillType)EditorGUILayout.EnumPopup("Skill Type", followup.SkillType);
+                    case SkillFollowupFilterType.RuntimeType:
+                        DrawFollowupRuntimeTypeField(followup);
                         break;
                     case SkillFollowupFilterType.Element:
                         followup.Element = (ElementType)EditorGUILayout.EnumPopup("Element", followup.Element);
@@ -914,6 +895,13 @@ namespace CrystalMagic.Editor.Data
                 return modifiers;
             }
 
+            if (fieldType == typeof(List<SkillFollowupModifierSetData>))
+            {
+                List<SkillFollowupModifierSetData> modifierSets = value as List<SkillFollowupModifierSetData> ?? new List<SkillFollowupModifierSetData>();
+                DrawSequenceModifierSets(modifierSets);
+                return modifierSets;
+            }
+
             if (fieldType == typeof(EffectData[]) || (fieldType.IsArray && typeof(EffectData).IsAssignableFrom(fieldType.GetElementType())))
             {
                 string stateKey = $"{parentKey}/{label}";
@@ -934,79 +922,133 @@ namespace CrystalMagic.Editor.Data
             return value;
         }
 
+        private void DrawSerializableObjectFields(object target, string parentKey)
+        {
+            if (target == null)
+                return;
+
+            FieldInfo[] fields = target.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance);
+            for (int i = 0; i < fields.Length; i++)
+            {
+                FieldInfo field = fields[i];
+                if (field.IsStatic)
+                    continue;
+
+                string label = EditorLabelUtility.GetLabel(field);
+                object currentValue = field.GetValue(target);
+                EditorGUI.BeginChangeCheck();
+                object nextValue = DrawEffectField(field.FieldType, label, currentValue, $"{parentKey}/{field.Name}");
+                if (!EditorGUI.EndChangeCheck())
+                    continue;
+
+                field.SetValue(target, nextValue);
+                _isDirty = true;
+            }
+        }
+
         private void DrawFollowupConsumeRule(SkillFollowupEffectData followup)
         {
             followup.EnsureDefaults();
 
-            int selectedIndex = GetFollowupConsumeRuleIndex(followup.ConsumeRule);
-            int nextIndex = EditorGUILayout.Popup("Consume Rule", selectedIndex, FollowupConsumeRuleNames);
+            IReadOnlyList<FactoryTypeInfo> ruleTypeInfos = SkillFollowupConsumeRuleRegistry.RuleTypeInfos;
+            if (ruleTypeInfos == null || ruleTypeInfos.Count == 0)
+            {
+                EditorGUILayout.HelpBox("No consume rules registered.", MessageType.Warning);
+                return;
+            }
+
+            string currentKey = SkillFollowupConsumeRuleRegistry.GetRuleKey(followup.ConsumeRule);
+            int selectedIndex = GetFactoryTypeIndex(ruleTypeInfos, currentKey);
+            string[] displayNames = GetFactoryDisplayNames(ruleTypeInfos);
+            int nextIndex = EditorGUILayout.Popup("Consume Rule", selectedIndex, displayNames);
             if (nextIndex != selectedIndex)
             {
-                followup.ConsumeRule = (SkillFollowupConsumeRuleData)Activator.CreateInstance(FollowupConsumeRuleTypes[nextIndex]);
+                followup.ConsumeRule = SkillFollowupConsumeRuleRegistry.CreateRuleData(ruleTypeInfos[Mathf.Clamp(nextIndex, 0, ruleTypeInfos.Count - 1)].Key);
+                followup.ConsumeRule?.EnsureDefaults();
                 _isDirty = true;
             }
 
-            switch (followup.ConsumeRule)
-            {
-                case UseCountSkillFollowupConsumeRuleData useCountRuleData:
-                    useCountRuleData.Uses = Mathf.Max(1, EditorGUILayout.IntField("Uses", useCountRuleData.Uses));
-                    break;
-            }
+            DrawSerializableObjectFields(followup.ConsumeRule, "FollowupConsumeRule");
+            followup.ConsumeRule?.EnsureDefaults();
         }
 
         private void DrawFollowupModifierRule(SkillFollowupEffectData followup)
         {
             followup.EnsureDefaults();
 
-            int selectedIndex = GetFollowupModifierRuleIndex(followup.ModifierRule);
-            int nextIndex = EditorGUILayout.Popup("Modifier Rule", selectedIndex, FollowupModifierRuleNames);
+            IReadOnlyList<FactoryTypeInfo> ruleTypeInfos = SkillFollowupModifierRuleRegistry.RuleTypeInfos;
+            if (ruleTypeInfos == null || ruleTypeInfos.Count == 0)
+            {
+                EditorGUILayout.HelpBox("No modifier rules registered.", MessageType.Warning);
+                return;
+            }
+
+            string currentKey = SkillFollowupModifierRuleRegistry.GetRuleKey(followup.ModifierRule);
+            int selectedIndex = GetFactoryTypeIndex(ruleTypeInfos, currentKey);
+            string[] displayNames = GetFactoryDisplayNames(ruleTypeInfos);
+            int nextIndex = EditorGUILayout.Popup("Modifier Rule", selectedIndex, displayNames);
             if (nextIndex != selectedIndex)
             {
-                followup.ModifierRule = (SkillFollowupModifierRuleData)Activator.CreateInstance(FollowupModifierRuleTypes[nextIndex]);
-                followup.EnsureDefaults();
+                followup.ModifierRule = SkillFollowupModifierRuleRegistry.CreateRuleData(ruleTypeInfos[Mathf.Clamp(nextIndex, 0, ruleTypeInfos.Count - 1)].Key);
+                followup.ModifierRule?.EnsureDefaults();
                 _isDirty = true;
             }
 
-            switch (followup.ModifierRule)
-            {
-                case StaticSkillFollowupModifierRuleData staticRuleData:
-                    staticRuleData.Modifiers ??= new List<SkillModifierEntry>();
-                    DrawModifierEntries("Applied Modifiers", staticRuleData.Modifiers);
-                    break;
-
-                case SequenceSkillFollowupModifierRuleData sequenceRuleData:
-                    sequenceRuleData.ModifierSets ??= new List<SkillFollowupModifierSetData>();
-                    DrawSequenceModifierSets(sequenceRuleData.ModifierSets);
-                    break;
-            }
+            DrawSerializableObjectFields(followup.ModifierRule, "FollowupModifierRule");
+            followup.ModifierRule?.EnsureDefaults();
         }
 
-        private static int GetFollowupConsumeRuleIndex(SkillFollowupConsumeRuleData consumeRule)
+        private void DrawFollowupRuntimeTypeField(SkillFollowupEffectData followup)
         {
-            if (consumeRule == null)
+            string currentKey = followup.EffectiveRuntimeType;
+            IReadOnlyList<FactoryTypeInfo> runtimeTypeInfos = SkillRegistry.SkillRuntimeTypeInfos;
+            if (runtimeTypeInfos == null || runtimeTypeInfos.Count == 0)
+            {
+                followup.RuntimeType = EditorGUILayout.TextField("Runtime Type", currentKey);
+                return;
+            }
+
+            string[] displayNames = new string[runtimeTypeInfos.Count];
+            int selectedIndex = -1;
+            for (int i = 0; i < runtimeTypeInfos.Count; i++)
+            {
+                FactoryTypeInfo info = runtimeTypeInfos[i];
+                displayNames[i] = $"{info.DisplayName} ({info.Key})";
+                if (string.Equals(info.Key, currentKey, StringComparison.Ordinal))
+                    selectedIndex = i;
+            }
+
+            if (selectedIndex < 0)
+            {
+                followup.RuntimeType = EditorGUILayout.TextField("Runtime Type", currentKey);
+                return;
+            }
+
+            int nextIndex = EditorGUILayout.Popup("Runtime Type", selectedIndex, displayNames);
+            followup.RuntimeType = runtimeTypeInfos[Mathf.Clamp(nextIndex, 0, runtimeTypeInfos.Count - 1)].Key;
+        }
+
+        private static int GetFactoryTypeIndex(IReadOnlyList<FactoryTypeInfo> typeInfos, string key)
+        {
+            if (typeInfos == null || typeInfos.Count == 0)
                 return 0;
 
-            for (int i = 0; i < FollowupConsumeRuleTypes.Length; i++)
+            for (int i = 0; i < typeInfos.Count; i++)
             {
-                if (FollowupConsumeRuleTypes[i] == consumeRule.GetType())
+                if (string.Equals(typeInfos[i].Key, key, StringComparison.Ordinal))
                     return i;
             }
 
             return 0;
         }
 
-        private static int GetFollowupModifierRuleIndex(SkillFollowupModifierRuleData modifierRule)
+        private static string[] GetFactoryDisplayNames(IReadOnlyList<FactoryTypeInfo> typeInfos)
         {
-            if (modifierRule == null)
-                return 0;
+            string[] displayNames = new string[typeInfos.Count];
+            for (int i = 0; i < typeInfos.Count; i++)
+                displayNames[i] = $"{typeInfos[i].DisplayName} ({typeInfos[i].Key})";
 
-            for (int i = 0; i < FollowupModifierRuleTypes.Length; i++)
-            {
-                if (FollowupModifierRuleTypes[i] == modifierRule.GetType())
-                    return i;
-            }
-
-            return 0;
+            return displayNames;
         }
 
         private void DrawSequenceModifierSets(List<SkillFollowupModifierSetData> modifierSets)
