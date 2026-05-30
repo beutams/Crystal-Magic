@@ -1,5 +1,6 @@
 using Unity.Entities;
 
+[UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateAfter(typeof(UnitStateMachineBuildSystem))]
 [UpdateBefore(typeof(UnitStateTransitionSystem))]
 partial class UnitStateMachineSystem : SystemBase

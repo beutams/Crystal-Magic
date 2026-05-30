@@ -44,16 +44,12 @@ public static class UnitFacingUtility
             return;
 
         float2 direction = math.normalizesafe(fallbackDirection, DefaultFacing);
-        if (entityManager.HasComponent<UnitFacingComponent>(entity))
-        {
-            UnitFacingComponent facing = entityManager.GetComponentData<UnitFacingComponent>(entity);
-            facing.Direction = direction;
-            entityManager.SetComponentData(entity, facing);
-        }
-        else
-        {
-            entityManager.AddComponentData(entity, new UnitFacingComponent { Direction = direction });
-        }
+        if (!entityManager.HasComponent<UnitFacingComponent>(entity))
+            return;
+
+        UnitFacingComponent facing = entityManager.GetComponentData<UnitFacingComponent>(entity);
+        facing.Direction = direction;
+        entityManager.SetComponentData(entity, facing);
     }
 
     public static void SetFacing(EntityManager entityManager, Entity entity, float2 direction)
@@ -73,22 +69,13 @@ public static class UnitFacingUtility
             return;
         }
 
-        if (entityManager.HasComponent<UnitFacingComponent>(entity))
-        {
-            UnitFacingComponent facing = entityManager.GetComponentData<UnitFacingComponent>(entity);
-            facing.AnimationDirection = normalized;
-            facing.HasAnimationDirection = 1;
-            entityManager.SetComponentData(entity, facing);
-        }
-        else
-        {
-            entityManager.AddComponentData(entity, new UnitFacingComponent
-            {
-                Direction = DefaultFacing,
-                AnimationDirection = normalized,
-                HasAnimationDirection = 1,
-            });
-        }
+        if (!entityManager.HasComponent<UnitFacingComponent>(entity))
+            return;
+
+        UnitFacingComponent facing = entityManager.GetComponentData<UnitFacingComponent>(entity);
+        facing.AnimationDirection = normalized;
+        facing.HasAnimationDirection = 1;
+        entityManager.SetComponentData(entity, facing);
     }
 
     public static void ClearAnimationDirection(EntityManager entityManager, Entity entity)

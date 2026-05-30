@@ -329,6 +329,17 @@
             "MaxStack": 1,
             "SellPrice": 100,
             "IconPath": "Assets/Res/Sprites/Item/ModifierAntiMagic.png"
+        },
+        {
+            "Id": 30,
+            "Name": "OP法杖",
+            "Description": "增加1000点最大MP和1000点MP恢复",
+            "ItemType": 4,
+            "ExtraId": 108,
+            "Rarity": 1,
+            "MaxStack": 1,
+            "SellPrice": 0,
+            "IconPath": "Assets/Res/Sprites/Item/MagicBoost.png"
         }
     ]
 }

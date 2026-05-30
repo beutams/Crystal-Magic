@@ -42,6 +42,7 @@ namespace CrystalMagic.Game.Skill.Effects
                 : null;
             bool hasOriginEntity = context.HasOriginEntity && context.OriginEntity != Entity.Null;
             Entity originEntity = hasOriginEntity ? context.OriginEntity : Entity.Null;
+            int sourceSkillId = context.SourceSkillId;
 
             for (int i = 0; i < buffer.Length; i++)
             {
@@ -57,6 +58,9 @@ namespace CrystalMagic.Game.Skill.Effects
                 element.StackCount = buffData.CanStack
                     ? math.min(math.max(1, buffData.MaxStacks), math.max(1, element.StackCount) + stackToApply)
                     : 1;
+                element.HasOriginEntity = hasOriginEntity ? (byte)1 : (byte)0;
+                element.OriginEntity = originEntity;
+                element.SourceSkillId = sourceSkillId;
 
                 if (replaceRuntimePayload)
                 {
@@ -89,6 +93,9 @@ namespace CrystalMagic.Game.Skill.Effects
                 RemainingTime = duration,
                 NextTickTime = nextTickTime,
                 RuntimePayloadId = runtimePayloadId,
+                HasOriginEntity = hasOriginEntity ? (byte)1 : (byte)0,
+                OriginEntity = originEntity,
+                SourceSkillId = sourceSkillId,
                 StackCount = buffData.CanStack
                     ? math.min(math.max(1, buffData.MaxStacks), stackToApply)
                     : 1,

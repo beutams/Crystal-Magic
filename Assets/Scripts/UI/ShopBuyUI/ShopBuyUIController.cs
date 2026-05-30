@@ -61,7 +61,7 @@ namespace CrystalMagic.UI
                 return;
 
             long totalCost = (long)Model.Price * quantity;
-            if (totalCost <= 0 || townData.StashMoney < totalCost)
+            if (totalCost < 0 || townData.StashMoney < totalCost)
                 return;
 
             if (!InventoryUtility.CanAddItemToCharacterInventory(backpackData, propData, Model.ItemId, quantity))

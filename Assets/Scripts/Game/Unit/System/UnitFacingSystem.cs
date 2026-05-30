@@ -2,6 +2,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
+[UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateAfter(typeof(UnitJumpArcSystem))]
 [UpdateBefore(typeof(UnitQueryBuildSystem))]
 partial struct UnitFacingSystem : ISystem

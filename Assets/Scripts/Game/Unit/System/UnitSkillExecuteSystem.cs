@@ -1,5 +1,6 @@
 using Unity.Entities;
 
+[UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateAfter(typeof(UnitSkillAnalysisSystem))]
 [UpdateAfter(typeof(UnitSkillSystem))]
 [UpdateAfter(typeof(UnitStateTransitionSystem))]

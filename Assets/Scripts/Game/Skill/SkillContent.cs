@@ -19,6 +19,8 @@ namespace CrystalMagic.Game.Skill
 
         public Entity OriginEntity { get; set; }
 
+        public int SourceSkillId { get; set; } = -1;
+
         public bool HasTargetEntity { get; set; }
 
         public Entity TargetEntity { get; set; }

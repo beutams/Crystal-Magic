@@ -44,6 +44,9 @@ public static class UnitBuffUtility
             NextTickTime = 0f,
             StackCount = math.max(1, stackCount),
             RuntimePayloadId = -1,
+            HasOriginEntity = 0,
+            OriginEntity = Entity.Null,
+            SourceSkillId = -1,
             SourceExecutionToken = executionToken,
             ConsumeOnDamageTaken = consumeOnDamageTaken ? (byte)1 : (byte)0,
             RemainingTriggerCount = consumeOnDamageTaken ? math.max(1, remainingTriggerCount) : 0,
@@ -190,9 +193,7 @@ public static class UnitBuffUtility
         if (entityManager.HasComponent<UnitBuffPayloadComponent>(entity))
             return entityManager.GetComponentObject<UnitBuffPayloadComponent>(entity);
 
-        UnitBuffPayloadComponent payloadComponent = new();
-        entityManager.AddComponentObject(entity, payloadComponent);
-        return payloadComponent;
+        return null;
     }
 
     private static int FindPayloadIndex(UnitBuffPayloadComponent payloadComponent, int payloadId)

@@ -10,6 +10,7 @@ public class UnitBuffAuthoring : MonoBehaviour
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
 
             AddBuffer<UnitBuffElement>(entity);
+            AddComponentObject(entity, new UnitBuffPayloadComponent());
         }
     }
 }
@@ -21,6 +22,9 @@ public struct UnitBuffElement : IBufferElementData
     public float NextTickTime;
     public int StackCount;
     public int RuntimePayloadId;
+    public byte HasOriginEntity;
+    public Entity OriginEntity;
+    public int SourceSkillId;
     public int SourceExecutionToken;
     public byte ConsumeOnDamageTaken;
     public int RemainingTriggerCount;

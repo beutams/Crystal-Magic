@@ -3,7 +3,7 @@ using Unity.Mathematics;
 
 [UpdateAfter(typeof(PlayerInputSystem))]
 [UpdateAfter(typeof(BehaviorTreeSystem))]
-[UpdateBefore(typeof(UnitStateMachineSystem))]
+[UpdateAfter(typeof(UnitStateTransitionSystem))]
 partial struct UnitControlSystem : ISystem
 {
     public void OnUpdate(ref SystemState state)

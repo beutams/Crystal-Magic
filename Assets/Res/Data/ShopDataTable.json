@@ -181,6 +181,13 @@
             "Price": 10,
             "Grade": 1,
             "NPC": "PropShop"
+        },
+        {
+            "Id": 26,
+            "itemDataId": 30,
+            "Price": 0,
+            "Grade": 1,
+            "NPC": "EquipShop"
         }
     ]
 }

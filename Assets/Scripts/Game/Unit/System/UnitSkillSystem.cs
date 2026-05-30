@@ -1,6 +1,7 @@
 using Unity.Entities;
 using Unity.Mathematics;
 
+[UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateAfter(typeof(UnitStateMachineSystem))]
 [UpdateBefore(typeof(UnitStateTransitionSystem))]
 partial class UnitSkillSystem : SystemBase

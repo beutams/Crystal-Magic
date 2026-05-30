@@ -11,6 +11,7 @@ public class PlayerTagAuthoring : MonoBehaviour
             AddComponent<PlayerTag>(entity);
             AddComponent<PlayerSkillComponent>(entity);
             AddBuffer<UnitBuffElement>(entity);
+            AddComponentObject(entity, new UnitBuffPayloadComponent());
         }
     }
 }

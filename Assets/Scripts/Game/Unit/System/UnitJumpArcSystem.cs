@@ -3,6 +3,7 @@ using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
 
+[UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateAfter(typeof(UnitMoveSystem))]
 [UpdateBefore(typeof(UnitSkillExecuteSystem))]
 [UpdateBefore(typeof(UnitQueryBuildSystem))]

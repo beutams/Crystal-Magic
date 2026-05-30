@@ -6,6 +6,7 @@ using Unity.Physics;
 using Unity.Transforms;
 
 [BurstCompile]
+[UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateAfter(typeof(UnitStateTransitionSystem))]
 partial struct UnitMoveSystem : ISystem
 {

@@ -3,7 +3,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 
 [UpdateAfter(typeof(UnitPerceptionSystem))]
-[UpdateBefore(typeof(UnitStateMachineSystem))]
+[UpdateAfter(typeof(UnitStateTransitionSystem))]
 partial class BehaviorTreeSystem : SystemBase
 {
     private readonly BehaviorTreeContext _context = new();

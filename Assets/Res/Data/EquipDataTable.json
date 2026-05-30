@@ -118,6 +118,19 @@
         }
       ],
       "Id": 107
+    },
+    {
+      "Properties": [
+        {
+          "Channel": 5,
+          "BaseBonus": 1000.0
+        },
+        {
+          "Channel": 7,
+          "BaseBonus": 1000.0
+        }
+      ],
+      "Id": 108
     }
   ]
 }

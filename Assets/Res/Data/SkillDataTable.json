@@ -1,7 +1,7 @@
-﻿{
+{
   "Rows": [
     {
-      "Name": "钃勮兘",
+      "Name": "蓄能",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "SelfSkill",
@@ -42,7 +42,7 @@
       "Id": 0
     },
     {
-      "Name": "鐏悆",
+      "Name": "火球",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "PositionSkill",
@@ -140,7 +140,7 @@
       "Id": 1
     },
     {
-      "Name": "鐏劙鍐插嚮",
+      "Name": "火焰冲击",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "PositionSkill",
@@ -224,7 +224,7 @@
       "Id": 2
     },
     {
-      "Name": "寮曠垎",
+      "Name": "引爆",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "PositionSkill",
@@ -280,6 +280,29 @@
                       "CompareValue": 0
                     }
                   ]
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.RemoveBuffEffectData, Assembly-CSharp",
+                  "BuffId": 2,
+                  "RemoveAllStacks": true,
+                  "RemoveStackCount": 1,
+                  "Conditions": []
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
+                  "VfxTexture": "Assets/Res/Sprites/Skill/FireBallImpact.png",
+                  "FrameCount": 16,
+                  "Loop": false,
+                  "Duration": 0,
+                  "Scale": 1,
+                  "SpawnOffset": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "FollowCaster": false,
+                  "AlignToCasterForward": false,
+                  "Conditions": []
                 }
               ],
               "Conditions": [
@@ -291,22 +314,6 @@
                   "CompareValue": 0
                 }
               ]
-            },
-            {
-              "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
-              "VfxTexture": "Assets/Res/Sprites/Skill/FireBallImpact.png",
-              "FrameCount": 16,
-              "Loop": false,
-              "Duration": 0,
-              "Scale": 1,
-              "SpawnOffset": {
-                "x": 0,
-                "y": 0,
-                "z": 0
-              },
-              "FollowCaster": false,
-              "AlignToCasterForward": false,
-              "Conditions": []
             }
           ],
           "Conditions": []
@@ -316,7 +323,7 @@
       "Id": 3
     },
     {
-      "Name": "姘存丁",
+      "Name": "水涡",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "PositionSkill",
@@ -402,7 +409,7 @@
       "Id": 4
     },
     {
-      "Name": "鍐板埡",
+      "Name": "冰刺",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "PositionSkill",
@@ -453,7 +460,7 @@
       "Id": 5
     },
     {
-      "Name": "鍐荤粨",
+      "Name": "冻结",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "PositionSkill",
@@ -515,7 +522,7 @@
       "Id": 6
     },
     {
-      "Name": "闆峰嚮",
+      "Name": "雷击",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "PositionSkill",
@@ -549,7 +556,7 @@
       "Id": 7
     },
     {
-      "Name": "闆峰煙",
+      "Name": "雷域",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "PositionSkill",
@@ -611,7 +618,7 @@
       "Id": 8
     },
     {
-      "Name": "闆锋毚",
+      "Name": "雷爆",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "PositionSkill",
@@ -645,7 +652,7 @@
       "Id": 9
     },
     {
-      "Name": "鍔犻€?,
+      "Name": "加速",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "SelfSkill",
@@ -679,7 +686,7 @@
       "Id": 10
     },
     {
-      "Name": "鍥炲",
+      "Name": "回复",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "SelfSkill",
@@ -713,7 +720,7 @@
       "Id": 11
     },
     {
-      "Name": "灞忛殰",
+      "Name": "屏障",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "PositionSkill",
@@ -791,7 +798,7 @@
       "Id": 12
     },
     {
-      "Name": "M鍙屾嫵鐮稿湴",
+      "Name": "M双拳砸地",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "SelfSkill",
@@ -911,7 +918,7 @@
       "Id": 13
     },
     {
-      "Name": "M宸ㄧ煶鎶曟幏",
+      "Name": "M巨石投掷",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "PositionSkill",
@@ -1003,7 +1010,7 @@
       "Id": 14
     },
     {
-      "Name": "M宸ㄥ儚婵€鍏?,
+      "Name": "M巨像激光",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "SelfSkill",
@@ -1059,7 +1066,7 @@
       "Id": 15
     },
     {
-      "Name": "M鐙傛毚",
+      "Name": "M狂暴",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "SelfSkill",
@@ -1085,7 +1092,7 @@
       "Id": 16
     },
     {
-      "Name": "M璺宠穬閲嶅帇",
+      "Name": "M跳跃重压",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "PositionSkill",
@@ -1159,7 +1166,7 @@
       "Id": 17
     },
     {
-      "Name": "M鍙屾嫵鐮稿湴路鐙傛毚",
+      "Name": "M双拳砸地·狂暴",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "SelfSkill",
@@ -1279,7 +1286,7 @@
       "Id": 18
     },
     {
-      "Name": "M宸ㄧ煶鎶曟幏路涓夎繛",
+      "Name": "M巨石投掷·三连",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "PositionSkill",
@@ -1379,7 +1386,7 @@
       "Id": 19
     },
     {
-      "Name": "M宸ㄥ儚婵€鍏夌垎瑁?,
+      "Name": "M巨像激光爆裂",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "SelfSkill",
@@ -1484,7 +1491,7 @@
       "Id": 20
     },
     {
-      "Name": "M灏忓法鍍忔í鎵?,
+      "Name": "M小巨像横扫",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "PositionSkill",
@@ -1534,4 +1541,3 @@
     }
   ]
 }
-

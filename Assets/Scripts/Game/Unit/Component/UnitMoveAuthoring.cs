@@ -34,6 +34,12 @@ public class UnitMoveAuthoring : MonoBehaviour
                 AccelInput          = float2.zero,
                 Velocity            = float2.zero,
             });
+            AddComponent(entity, new UnitFacingComponent
+            {
+                Direction = new float2(1f, 0f),
+                AnimationDirection = float2.zero,
+                HasAnimationDirection = 0,
+            });
         }
     }
 }

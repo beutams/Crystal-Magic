@@ -85,7 +85,15 @@ namespace CrystalMagic.UI
 
         private int GetMaxBuyCount()
         {
-            if (Price <= 0)
+            int inventoryLimitedCount = InventoryUtility.GetAvailableAddCountInCharacterInventory(
+                SaveDataComponent.Instance.GetBackpackData(),
+                SaveDataComponent.Instance.GetCharacterPropData(),
+                ItemId);
+
+            if (Price == 0)
+                return inventoryLimitedCount;
+
+            if (Price < 0)
                 return 0;
 
             long money = SaveDataComponent.Instance.GetTownData()?.StashMoney ?? 0;
@@ -94,10 +102,6 @@ namespace CrystalMagic.UI
                 return 0;
 
             int moneyLimitedCount = maxBuyCount > int.MaxValue ? int.MaxValue : (int)maxBuyCount;
-            int inventoryLimitedCount = InventoryUtility.GetAvailableAddCountInCharacterInventory(
-                SaveDataComponent.Instance.GetBackpackData(),
-                SaveDataComponent.Instance.GetCharacterPropData(),
-                ItemId);
 
             return UnityEngine.Mathf.Min(moneyLimitedCount, inventoryLimitedCount);
         }

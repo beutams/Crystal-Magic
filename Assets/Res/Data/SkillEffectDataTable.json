@@ -1,14 +1,14 @@
-﻿{
+{
   "Rows": [
     {
-      "Name": "澧炲箙",
-      "Description": "褰撳墠鎶€鑳戒激瀹虫彁楂?5%锛屼笅涓€涓妧鑳戒激瀹抽檷浣?0%",
+      "Name": "增幅",
+      "Description": "当前技能伤害提高25%，下一个技能伤害降低50%",
       "IconPath": "Assets/Res/Sprites/SkillEffect/Damage Increase.png",
       "Modifiers": [
         {
           "Channel": 100,
           "Factor": 0.25,
-          "Bonus": 0.0
+          "Bonus": 0
         }
       ],
       "FollowupEffects": [
@@ -24,7 +24,7 @@
               {
                 "Channel": 100,
                 "Factor": -0.5,
-                "Bonus": 0.0
+                "Bonus": 0
               }
             ]
           },
@@ -39,14 +39,14 @@
       "Id": 0
     },
     {
-      "Name": "骞垮煙",
-      "Description": "褰撳墠鎶€鑳借寖鍥存彁楂?0%锛屼笅涓€涓妧鑳戒激瀹抽檷浣?0%",
+      "Name": "广域",
+      "Description": "当前技能范围提高20%，下一个技能伤害降低50%",
       "IconPath": "Assets/Res/Sprites/Item/Thunder Field.png",
       "Modifiers": [
         {
           "Channel": 200,
           "Factor": 0.2,
-          "Bonus": 0.0
+          "Bonus": 0
         }
       ],
       "FollowupEffects": [
@@ -62,7 +62,7 @@
               {
                 "Channel": 100,
                 "Factor": -0.5,
-                "Bonus": 0.0
+                "Bonus": 0
               }
             ]
           },
@@ -77,14 +77,14 @@
       "Id": 1
     },
     {
-      "Name": "鎬ラ€?,
-      "Description": "褰撳墠鎶€鑳借鍔ㄩ€熷害鎻愰珮50%",
+      "Name": "急速",
+      "Description": "当前技能行动速度提高50%",
       "IconPath": "Assets/Res/Sprites/SkillEffect/Action Speed.png",
       "Modifiers": [
         {
           "Channel": 1,
-          "Factor": 0.0,
-          "Bonus": 50.0
+          "Factor": 0,
+          "Bonus": 50
         }
       ],
       "FollowupEffects": [],
@@ -93,8 +93,8 @@
       "Id": 2
     },
     {
-      "Name": "鏍兼尅",
-      "Description": "鎶€鑳芥湡闂寸涓€娆″彈鍒扮殑浼ゅ涓?",
+      "Name": "格挡",
+      "Description": "技能期间第一次受到的伤害为0",
       "IconPath": "Assets/Res/Sprites/Item/Shield.png",
       "Modifiers": [],
       "FollowupEffects": [],
@@ -112,8 +112,8 @@
       "Id": 3
     },
     {
-      "Name": "涓嶅畬鍏?,
-      "Description": "鍚庣画涓夋鎼哄甫璇ュ姞鎴愮殑鎶€鑳藉垎鍒噺灏?00/200/100 MP锛屽苟闄嶄綆30%/20%/10%浼ゅ",
+      "Name": "不完全",
+      "Description": "后续三次携带该加成的技能分别减少300/200/100 MP，并降低30%/20%/10%伤害",
       "IconPath": "Assets/Res/Sprites/Item/Charging.png",
       "Modifiers": [],
       "FollowupEffects": [
@@ -130,13 +130,13 @@
                 "Modifiers": [
                   {
                     "Channel": 0,
-                    "Factor": 0.0,
-                    "Bonus": -300.0
+                    "Factor": 0,
+                    "Bonus": -300
                   },
                   {
                     "Channel": 100,
                     "Factor": -0.3,
-                    "Bonus": 0.0
+                    "Bonus": 0
                   }
                 ]
               },
@@ -144,13 +144,13 @@
                 "Modifiers": [
                   {
                     "Channel": 0,
-                    "Factor": 0.0,
-                    "Bonus": -200.0
+                    "Factor": 0,
+                    "Bonus": -200
                   },
                   {
                     "Channel": 100,
                     "Factor": -0.2,
-                    "Bonus": 0.0
+                    "Bonus": 0
                   }
                 ]
               },
@@ -158,13 +158,13 @@
                 "Modifiers": [
                   {
                     "Channel": 0,
-                    "Factor": 0.0,
-                    "Bonus": -100.0
+                    "Factor": 0,
+                    "Bonus": -100
                   },
                   {
                     "Channel": 100,
                     "Factor": -0.1,
-                    "Bonus": 0.0
+                    "Bonus": 0
                   }
                 ]
               }
@@ -181,19 +181,19 @@
       "Id": 4
     },
     {
-      "Name": "鐖嗗彂",
-      "Description": "鎵ｉ櫎10%鏈€澶х敓鍛戒絾涓嶄細鑷存锛屽綋鍓嶆妧鑳戒激瀹虫彁楂?0%锛岃寖鍥存彁楂?5%",
+      "Name": "爆发",
+      "Description": "扣除10%最大生命但不会致死，当前技能伤害提高50%，范围提高25%",
       "IconPath": "Assets/Res/Sprites/Item/Detonate.png",
       "Modifiers": [
         {
           "Channel": 100,
           "Factor": 0.5,
-          "Bonus": 0.0
+          "Bonus": 0
         },
         {
           "Channel": 200,
           "Factor": 0.25,
-          "Bonus": 0.0
+          "Bonus": 0
         }
       ],
       "FollowupEffects": [],
@@ -202,15 +202,15 @@
         {
           "$type": "CrystalMagic.Game.Data.Effects.HealthCostEffectData, Assembly-CSharp",
           "MaxHealthCoefficient": 0.1,
-          "FlatHealthCost": 0.0,
+          "FlatHealthCost": 0,
           "Conditions": []
         }
       ],
       "Id": 5
     },
     {
-      "Name": "杩炲彂",
-      "Description": "0.1绉掑悗杩藉姞涓€娆″悓鎶€鑳芥墽琛岋紝绗簩娆′激瀹抽檷浣?0%",
+      "Name": "连发",
+      "Description": "0.1秒后追加一次同技能执行，第二次伤害降低20%",
       "IconPath": "Assets/Res/Sprites/Item/Lightning.png",
       "Modifiers": [],
       "FollowupEffects": [],
@@ -223,7 +223,7 @@
             {
               "Channel": 100,
               "Factor": -0.2,
-              "Bonus": 0.0
+              "Bonus": 0
             }
           ]
         }
@@ -232,24 +232,24 @@
       "Id": 6
     },
     {
-      "Name": "鍙嶉瓟",
-      "Description": "褰撳墠鎶€鑳藉拸鍞辨椂闂村鍔?0%銆佷激瀹抽檷浣?0%銆佽摑鑰楃炕鍊嶏紱涓嬩竴涓妧鑳戒笉鑰楄摑",
+      "Name": "反魔",
+      "Description": "当前技能和咏唱时间增加50%、伤害降低30%、蓝耗翻倍；下一个技能不耗蓝",
       "IconPath": "Assets/Res/Sprites/SkillEffect/Chant Speed Up.png",
       "Modifiers": [
         {
           "Channel": 2,
-          "Factor": 0.0,
-          "Bonus": -50.0
+          "Factor": 0,
+          "Bonus": -50
         },
         {
           "Channel": 100,
           "Factor": -0.3,
-          "Bonus": 0.0
+          "Bonus": 0
         },
         {
           "Channel": 0,
-          "Factor": 1.0,
-          "Bonus": 0.0
+          "Factor": 1,
+          "Bonus": 0
         }
       ],
       "FollowupEffects": [
@@ -264,8 +264,8 @@
             "Modifiers": [
               {
                 "Channel": 0,
-                "Factor": -1.0,
-                "Bonus": 0.0
+                "Factor": -1,
+                "Bonus": 0
               }
             ]
           },
@@ -281,4 +281,3 @@
     }
   ]
 }
-

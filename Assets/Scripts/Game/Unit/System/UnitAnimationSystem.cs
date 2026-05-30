@@ -5,6 +5,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 
+[UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateAfter(typeof(UnitStateTransitionSystem))]
 [UpdateAfter(typeof(UnitSkillExecuteSystem))]
 partial class UnitAnimationSystem : SystemBase

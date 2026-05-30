@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using CrystalMagic.Core;
+using CrystalMagic.Game.Data;
 using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
@@ -14,6 +15,7 @@ namespace CrystalMagic.UI
 
         private readonly Dictionary<Entity, ActiveBar> _activeBars = new();
         private readonly List<Entity> _cleanupEntities = new();
+        private readonly List<UnitHealthBarBuffDisplayData> _buffDisplayBuffer = new();
 
         private UnitHealthBarUI _rootView;
         private RectTransform _rootRect;
@@ -164,6 +166,7 @@ namespace CrystalMagic.UI
                 if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_rootRect, screenPosition, _currentCamera, out Vector2 localPoint))
                 {
                     _rootView?.UpdateBar(bar.Handle, vitality.CurrentHealth, vitality.RealMaxHealth, localPoint, true);
+                    UpdateBuffDisplay(entityManager, bar);
                 }
             }
 
@@ -200,6 +203,67 @@ namespace CrystalMagic.UI
                 _rootView?.ReleaseBar(bar.Handle);
         }
 
+        private void UpdateBuffDisplay(EntityManager entityManager, ActiveBar bar)
+        {
+            if (bar?.Handle == null || _rootView == null)
+                return;
+
+            BuildVisibleBuffs(entityManager, bar.Entity, _buffDisplayBuffer, out int signature);
+            if (bar.LastBuffSignature == signature)
+                return;
+
+            bar.LastBuffSignature = signature;
+            _rootView.UpdateBuffIcons(bar.Handle, _buffDisplayBuffer);
+        }
+
+        private static void BuildVisibleBuffs(
+            EntityManager entityManager,
+            Entity entity,
+            List<UnitHealthBarBuffDisplayData> output,
+            out int signature)
+        {
+            output.Clear();
+            signature = 17;
+
+            if (!entityManager.Exists(entity) || !entityManager.HasBuffer<UnitBuffElement>(entity))
+                return;
+
+            DynamicBuffer<UnitBuffElement> buffer = entityManager.GetBuffer<UnitBuffElement>(entity);
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                UnitBuffElement element = buffer[i];
+                if (element.BuffId < 0 || element.StackCount <= 0 || element.HasOriginEntity == 0)
+                    continue;
+
+                if (element.OriginEntity == Entity.Null ||
+                    !entityManager.Exists(element.OriginEntity) ||
+                    !entityManager.HasComponent<PlayerTag>(element.OriginEntity))
+                {
+                    continue;
+                }
+
+                if (element.SourceSkillId < 0)
+                    continue;
+
+                SkillData sourceSkill = DataComponent.Instance?.Get<SkillData>(element.SourceSkillId);
+                string iconPath = sourceSkill?.IconPath;
+                if (string.IsNullOrWhiteSpace(iconPath))
+                    continue;
+
+                output.Add(new UnitHealthBarBuffDisplayData
+                {
+                    BuffId = element.BuffId,
+                    StackCount = element.StackCount,
+                    SourceSkillId = element.SourceSkillId,
+                    IconPath = iconPath,
+                });
+
+                signature = (signature * 31) + element.BuffId;
+                signature = (signature * 31) + element.StackCount;
+                signature = (signature * 31) + element.SourceSkillId;
+            }
+        }
+
         private void ReleaseAllBars()
         {
             foreach (KeyValuePair<Entity, ActiveBar> pair in _activeBars)
@@ -226,6 +290,7 @@ namespace CrystalMagic.UI
             public Entity Entity;
             public UnitHealthBarUI.BarHandle Handle;
             public float HideAtTime;
+            public int LastBuffSignature;
         }
     }
 }

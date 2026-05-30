@@ -161,6 +161,8 @@ public static class SkillExecutionUtility
 
     public static bool TryStartPreparedSkill(EntityManager entityManager, Entity entity, ref UnitCastComponent cast, out ResolvedSkillData skillData)
     {
+        skillData = null;
+
         if (!cast.HasPreparedCast || !TryGetCurrentSkill(entityManager, entity, cast, out skillData))
             return false;
 

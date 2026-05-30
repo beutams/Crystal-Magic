@@ -148,7 +148,7 @@ namespace CrystalMagic.UI
                 return false;
             }
 
-            if (data.Price <= 0)
+            if (data.Price < 0)
             {
                 tipMessage = "该商品当前无法购买。";
                 return false;

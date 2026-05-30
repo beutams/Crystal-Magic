@@ -170,13 +170,13 @@ namespace CrystalMagic.UI
 
         private static void ApplyRuntimeState(List<BattleSkillDisplayData> items, PlayerCombatSnapshot snapshot)
         {
-            if (!snapshot.HasCast || !snapshot.IsCasting || snapshot.CurrentChainIndex < 0)
+            if (!snapshot.HasCast || !snapshot.IsCasting || snapshot.CurrentSkillIndex < 0)
                 return;
 
             for (int i = 0; i < items.Count; i++)
             {
                 BattleSkillDisplayData item = items[i];
-                bool isSelected = snapshot.CurrentChainIndex == snapshot.SelectedChainIndex && item.SkillIndex == snapshot.CurrentSkillIndex;
+                bool isSelected = item.SkillIndex == snapshot.CurrentSkillIndex;
                 item.IsSelected = isSelected;
                 item.ShowChantProgress = isSelected && snapshot.Phase == SkillCastPhase.Chanting && snapshot.PhaseDuration > 0f;
                 item.ChantProgress = item.ShowChantProgress
@@ -200,11 +200,16 @@ namespace CrystalMagic.UI
                 UnitCastComponent cast = entityManager.GetComponentData<UnitCastComponent>(player);
                 snapshot.HasCast = true;
                 snapshot.IsCasting = cast.IsCasting;
-                snapshot.CurrentChainIndex = cast.CurrentChainIndex;
-                snapshot.CurrentSkillIndex = cast.CurrentSkillIndex;
                 snapshot.Phase = cast.Phase;
                 snapshot.PhaseElapsed = cast.PhaseElapsed;
                 snapshot.PhaseDuration = cast.PhaseDuration;
+            }
+
+            if (entityManager.HasComponent<PlayerSkillComponent>(player))
+            {
+                PlayerSkillComponent request = entityManager.GetComponentData<PlayerSkillComponent>(player);
+                if (request.HasActiveChain)
+                    snapshot.CurrentSkillIndex = request.CurrentSkillIndex;
             }
 
             if (entityManager.HasComponent<UnitVitalityComponent>(player))
@@ -371,7 +376,6 @@ namespace CrystalMagic.UI
         public int SelectedChainIndex;
         public bool HasCast;
         public bool IsCasting;
-        public int CurrentChainIndex;
         public int CurrentSkillIndex;
         public SkillCastPhase Phase;
         public float PhaseElapsed;

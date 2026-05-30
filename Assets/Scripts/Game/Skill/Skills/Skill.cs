@@ -24,6 +24,7 @@ namespace CrystalMagic.Game.Skill
                 return false;
 
             ResetContext(context, entityManager, entity, runtimeModifiers);
+            context.SourceSkillId = Data != null ? Data.Id : -1;
             if (!BuildContext(entityManager, entity, cast, context))
                 return false;
 

@@ -117,17 +117,18 @@ partial class UnitBuffSystem : SystemBase
         if (buffData == null)
             return false;
 
+        bool hasInfiniteDuration = element.RemainingTime < 0f;
         float effectiveDeltaTime = deltaTime;
-        if (element.RemainingTime >= 0f)
+        if (!hasInfiniteDuration)
         {
             effectiveDeltaTime = Mathf.Min(deltaTime, element.RemainingTime);
-            element.RemainingTime -= deltaTime;
+            element.RemainingTime = Mathf.Max(0f, element.RemainingTime - deltaTime);
         }
 
         if (buffData is EffectBuffData effectBuffData)
             TickEffectBuff(entity, effectBuffData, effectiveDeltaTime, ref element);
 
-        return element.RemainingTime < 0f || element.RemainingTime > 0f;
+        return hasInfiniteDuration || element.RemainingTime > 0f;
     }
 
     private void TickEffectBuff(Entity entity, EffectBuffData effectBuffData, float deltaTime, ref UnitBuffElement element)
@@ -168,6 +169,7 @@ partial class UnitBuffSystem : SystemBase
         _buffTickContext.EntityManager = EntityManager;
         _buffTickContext.HasOriginEntity = hasOriginEntity;
         _buffTickContext.OriginEntity = originEntity;
+        _buffTickContext.SourceSkillId = element.SourceSkillId;
         _buffTickContext.HasTargetEntity = true;
         _buffTickContext.TargetEntity = entity;
         _buffTickContext.HasTarget = false;

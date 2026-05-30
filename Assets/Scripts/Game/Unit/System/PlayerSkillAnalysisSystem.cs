@@ -2,6 +2,7 @@ using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Skill;
 using Unity.Entities;
 
+[UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateAfter(typeof(UnitStateTransitionSystem))]
 [UpdateBefore(typeof(UnitSkillAnalysisSystem))]
 partial class PlayerSkillAnalysisSystem : SystemBase
