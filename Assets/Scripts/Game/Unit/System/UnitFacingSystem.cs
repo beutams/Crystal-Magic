@@ -1,6 +1,5 @@
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Transforms;
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateAfter(typeof(UnitJumpArcSystem))]
@@ -16,17 +15,6 @@ partial struct UnitFacingSystem : ISystem
                 continue;
 
             facingRef.ValueRW.Direction = math.normalize(moveRef.ValueRO.Velocity);
-        }
-
-        foreach ((RefRW<UnitFacingComponent> facingRef, RefRW<LocalTransform> transformRef) in
-                 SystemAPI.Query<RefRW<UnitFacingComponent>, RefRW<LocalTransform>>())
-        {
-            float2 direction = math.normalizesafe(facingRef.ValueRO.Direction, new float2(1f, 0f));
-            facingRef.ValueRW.Direction = direction;
-
-            LocalTransform transform = transformRef.ValueRO;
-            transform.Rotation = UnitFacingUtility.CreateRotation(direction);
-            transformRef.ValueRW = transform;
         }
     }
 }

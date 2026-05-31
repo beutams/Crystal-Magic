@@ -1,4 +1,5 @@
 using UnityEngine;
+using CrystalMagic.UI;
 
 namespace CrystalMagic.Core
 {
@@ -6,11 +7,16 @@ namespace CrystalMagic.Core
     {
         public const string SceneName = "TrainingScene";
         protected override string BattleSceneName => SceneName;
+        private TrainingDummyStatsUI _trainingDummyStatsUI;
 
         protected override void OnEnterBattle()
         {
             Debug.Log("[TrainingState] Entered Training Ground");
             SaveDataComponent.Instance?.SetCurrentLocation(SaveAreaType.Training);
+
+            _trainingDummyStatsUI = UIComponent.Instance.Open<TrainingDummyStatsUI>();
+            if (_trainingDummyStatsUI != null)
+                UIComponent.Instance.SetLifetime(_trainingDummyStatsUI, UILifetime.Manual);
 
             if (StateData is LoadGameContext context)
             {
@@ -20,6 +26,12 @@ namespace CrystalMagic.Core
 
         protected override void OnExitBattle()
         {
+            if (_trainingDummyStatsUI != null)
+            {
+                UIComponent.Instance.ReleaseUI(_trainingDummyStatsUI);
+                _trainingDummyStatsUI = null;
+            }
+
             Debug.Log("[TrainingState] Exited Training Ground");
         }
 

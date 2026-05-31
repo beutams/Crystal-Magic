@@ -15,16 +15,16 @@ public static class UnitAnimationVisualUtility
     private static Material s_defaultUnitMaterial;
     private static bool s_loggedMissingDefaultMaterial;
 
-    public static bool ApplyAnimatedAtlas(
-        EntityManager entityManager,
-        Entity entity,
+    public static bool TryResolveAnimatedAtlas(
         in FixedString128Bytes visualKey,
-        string atlasTexturePath)
+        string atlasTexturePath,
+        out Mesh mesh,
+        out Material material)
     {
-        if (entity == Entity.Null ||
-            !entityManager.Exists(entity) ||
-            !entityManager.HasComponent<MaterialMeshInfo>(entity) ||
-            string.IsNullOrWhiteSpace(atlasTexturePath))
+        mesh = null;
+        material = null;
+
+        if (string.IsNullOrWhiteSpace(atlasTexturePath))
         {
             return false;
         }
@@ -37,13 +37,10 @@ public static class UnitAnimationVisualUtility
         }
 
         string key = visualKey.ToString();
-        Mesh mesh = GetMesh(key);
-        Material material = GetMaterial(key, texture, atlasTexturePath);
+        mesh = GetMesh(key);
+        material = GetMaterial(key, texture, atlasTexturePath);
         if (mesh == null || material == null)
             return false;
-
-        entityManager.SetSharedComponentManaged(entity, new RenderMeshArray(new[] { material }, new[] { mesh }));
-        entityManager.SetComponentData(entity, MaterialMeshInfo.FromRenderMeshArrayIndices(0, 0));
         return true;
     }
 

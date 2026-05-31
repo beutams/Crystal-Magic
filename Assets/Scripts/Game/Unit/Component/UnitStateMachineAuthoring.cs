@@ -48,6 +48,7 @@ public class UnitStateMachineAuthoring : MonoBehaviour
             {
                 VisualKey = new Unity.Collections.FixedString128Bytes(root.name),
                 ExtraVisualEntity = interactEntity,
+                IsApplied = 0,
             });
             AddComponent(entity, UnitAnimationComponent.CreateDefault());
             AddComponent(entity, new UnitAnimationFrameUvMinProperty

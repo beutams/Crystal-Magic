@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Rendering;
 using UnityEngine;
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
@@ -20,10 +22,17 @@ partial class UnitAnimationSystem : SystemBase
             return;
 
         float deltaTime = SystemAPI.Time.DeltaTime;
+        List<PendingAnimatedAtlasApply> pendingAtlasApplies = null;
         foreach ((RefRW<UnitAnimationComponent> animation, RefRO<UnitQuadVisualRequest> request, UnitStateMachineComponent stateMachine, Entity entity) in
                  SystemAPI.Query<RefRW<UnitAnimationComponent>, RefRO<UnitQuadVisualRequest>, UnitStateMachineComponent>().WithEntityAccess())
         {
-            UpdateAnimation(entity, stateMachine, request.ValueRO, profileTable, deltaTime, ref animation.ValueRW);
+            UpdateAnimation(entity, stateMachine, request.ValueRO, profileTable, deltaTime, ref animation.ValueRW, ref pendingAtlasApplies);
+        }
+
+        if (pendingAtlasApplies != null)
+        {
+            for (int i = 0; i < pendingAtlasApplies.Count; i++)
+                ApplyQueuedAtlas(pendingAtlasApplies[i]);
         }
     }
 
@@ -33,7 +42,8 @@ partial class UnitAnimationSystem : SystemBase
         in UnitQuadVisualRequest visualRequest,
         DataTable<UnitAnimationProfileData> profileTable,
         float deltaTime,
-        ref UnitAnimationComponent animation)
+        ref UnitAnimationComponent animation,
+        ref List<PendingAnimatedAtlasApply> pendingAtlasApplies)
     {
         UnitAnimationProfileData profile = FindProfile(profileTable, stateMachine);
         if (profile == null)
@@ -85,8 +95,12 @@ partial class UnitAnimationSystem : SystemBase
         int directionalVariantHash = GetDirectionalVariantHash(direction, mirrorX);
         if (clipChanged || animation.LastAtlasPathHash != atlasHash)
         {
-            UnitAnimationVisualUtility.ApplyAnimatedAtlas(EntityManager, entity, visualRequest.VisualKey, atlasTexturePath);
-            animation.LastAtlasPathHash = atlasHash;
+            if (UnitAnimationVisualUtility.TryResolveAnimatedAtlas(visualRequest.VisualKey, atlasTexturePath, out Mesh mesh, out Material material))
+            {
+                pendingAtlasApplies ??= new List<PendingAnimatedAtlasApply>();
+                pendingAtlasApplies.Add(new PendingAnimatedAtlasApply(entity, mesh, material));
+                animation.LastAtlasPathHash = atlasHash;
+            }
         }
 
         int frameIndex = ResolveFrameIndex(entry, animation.ElapsedSeconds);
@@ -99,6 +113,21 @@ partial class UnitAnimationSystem : SystemBase
         animation.LastStateHash = stateHash;
         animation.LastSkillId = activeSkillHash;
         animation.LastDirectionalVariantHash = directionalVariantHash;
+    }
+
+    private void ApplyQueuedAtlas(PendingAnimatedAtlasApply pending)
+    {
+        if (pending.Entity == Entity.Null ||
+            !EntityManager.Exists(pending.Entity) ||
+            !EntityManager.HasComponent<MaterialMeshInfo>(pending.Entity))
+        {
+            return;
+        }
+
+        EntityManager.SetSharedComponentManaged(
+            pending.Entity,
+            new RenderMeshArray(new[] { pending.Material }, new[] { pending.Mesh }));
+        EntityManager.SetComponentData(pending.Entity, MaterialMeshInfo.FromRenderMeshArrayIndices(0, 0));
     }
 
     private UnitAnimationEntryData ResolveAnimationEntry(
@@ -353,5 +382,19 @@ partial class UnitAnimationSystem : SystemBase
         {
             Value = new float4(0f, 0f, 0f, 0f),
         });
+    }
+
+    private readonly struct PendingAnimatedAtlasApply
+    {
+        public PendingAnimatedAtlasApply(Entity entity, Mesh mesh, Material material)
+        {
+            Entity = entity;
+            Mesh = mesh;
+            Material = material;
+        }
+
+        public Entity Entity { get; }
+        public Mesh Mesh { get; }
+        public Material Material { get; }
     }
 }

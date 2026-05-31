@@ -23,22 +23,19 @@ partial class UnitQuadVisualSystem : SystemBase
 
         List<PendingVisualApply> pendingVisuals = null;
         using EntityCommandBuffer ecb = new(Allocator.Temp);
-        foreach ((RefRO<UnitQuadVisualRequest> request, Entity entity) in
-                 SystemAPI.Query<RefRO<UnitQuadVisualRequest>>().WithEntityAccess())
+        foreach ((RefRW<UnitQuadVisualRequest> request, Entity entity) in
+                 SystemAPI.Query<RefRW<UnitQuadVisualRequest>>().WithEntityAccess())
         {
+            if (request.ValueRO.IsApplied != 0)
+                continue;
+
             string visualKey = request.ValueRO.VisualKey.ToString();
             if (string.IsNullOrWhiteSpace(visualKey))
-            {
-                ecb.RemoveComponent<UnitQuadVisualRequest>(entity);
                 continue;
-            }
 
             if (!TryGetVisualSource(visualKey, out VisualSource source) ||
                 !TryGetOverrideMaterial(visualKey, source.Texture, out Material material))
-            {
-                ecb.RemoveComponent<UnitQuadVisualRequest>(entity);
                 continue;
-            }
 
             bool rootApplied = QueueVisualApply(entity, source.Mesh, material, required: true, ref pendingVisuals);
             bool extraApplied = QueueVisualApply(
@@ -49,7 +46,11 @@ partial class UnitQuadVisualSystem : SystemBase
                 ref pendingVisuals);
 
             if (rootApplied && extraApplied)
-                ecb.RemoveComponent<UnitQuadVisualRequest>(entity);
+            {
+                UnitQuadVisualRequest appliedRequest = request.ValueRO;
+                appliedRequest.IsApplied = 1;
+                request.ValueRW = appliedRequest;
+            }
         }
 
         if (pendingVisuals != null)

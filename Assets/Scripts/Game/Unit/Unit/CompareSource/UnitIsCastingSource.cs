@@ -24,6 +24,7 @@ public class UnitIsCastingSource : ISource
         if (!_context.HasRuntimeEntity || !_context.EntityManager.HasComponent<UnitCastComponent>(_context.Entity))
             return 0f;
 
-        return _context.EntityManager.GetComponentData<UnitCastComponent>(_context.Entity).IsCasting ? 1f : 0f;
+        UnitCastComponent cast = _context.EntityManager.GetComponentData<UnitCastComponent>(_context.Entity);
+        return cast.IsCasting || cast.HasPreparedCast ? 1f : 0f;
     }
 }

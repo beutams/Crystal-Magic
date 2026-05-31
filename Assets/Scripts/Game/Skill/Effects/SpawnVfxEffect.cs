@@ -70,7 +70,7 @@ namespace CrystalMagic.Game.Skill.Effects
             if (!Data.AlignToCasterForward)
                 return Quaternion.identity;
 
-            if (TryGetEntityRotation(context.HasOriginEntity, context.OriginEntity, context.EntityManager, out Quaternion rotation))
+            if (TryGetEntityFacingRotation(context.HasOriginEntity, context.OriginEntity, context.EntityManager, out Quaternion rotation))
                 return rotation;
 
             return Quaternion.identity;
@@ -110,14 +110,14 @@ namespace CrystalMagic.Game.Skill.Effects
             return false;
         }
 
-        private static bool TryGetEntityRotation(bool hasEntity, Entity entity, EntityManager entityManager, out Quaternion rotation)
+        private static bool TryGetEntityFacingRotation(bool hasEntity, Entity entity, EntityManager entityManager, out Quaternion rotation)
         {
             if (hasEntity &&
                 entity != Entity.Null &&
                 entityManager.Exists(entity) &&
-                entityManager.HasComponent<LocalTransform>(entity))
+                UnitFacingUtility.TryGetFacing(entityManager, entity, out Unity.Mathematics.float2 facing))
             {
-                Unity.Mathematics.quaternion entityRotation = entityManager.GetComponentData<LocalTransform>(entity).Rotation;
+                Unity.Mathematics.quaternion entityRotation = UnitFacingUtility.CreateRotation(facing);
                 rotation = new Quaternion(entityRotation.value.x, entityRotation.value.y, entityRotation.value.z, entityRotation.value.w);
                 return true;
             }

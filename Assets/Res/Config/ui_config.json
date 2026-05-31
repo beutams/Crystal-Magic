@@ -41,6 +41,7 @@
             "groupName": "Top",
             "order": 10000,
             "uiNames": [
+                "TrainingDummyStatsUI",
                 "TransitionUI",
                 "TransitionMaskUI"
             ]

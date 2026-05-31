@@ -1,3 +1,44 @@
-{
-  "Rows": []
+﻿{
+  "Rows": [
+    {
+      "UnitDataId": 12,
+      "UnitName": "PlayerDungeon",
+      "PlaybackSpeed": 1.0,
+      "Animations": [
+        {
+          "StateName": "MoveState",
+          "AnimationName": "",
+          "FrontAtlasTexturePath": "Assets/Res/Sprites/Units/Player/Front.png",
+          "BackAtlasTexturePath": "Assets/Res/Sprites/Units/Player/Back.png",
+          "LeftAtlasTexturePath": "Assets/Res/Sprites/Units/Player/Left.png",
+          "FramesPerSecond": 12.0,
+          "Loop": true,
+          "GridColumns": 9,
+          "GridRows": 1,
+          "FrameCount": 9
+        }
+      ],
+      "Id": 1
+    },
+    {
+      "UnitDataId": 13,
+      "UnitName": "PlayerTown",
+      "PlaybackSpeed": 1.0,
+      "Animations": [
+        {
+          "StateName": "MoveState",
+          "AnimationName": "",
+          "FrontAtlasTexturePath": "Assets/Res/Sprites/Units/Player/Front_4x.png",
+          "BackAtlasTexturePath": "Assets/Res/Sprites/Units/Player/Back_4x.png",
+          "LeftAtlasTexturePath": "Assets/Res/Sprites/Units/Player/Left_4x.png",
+          "FramesPerSecond": 12.0,
+          "Loop": true,
+          "GridColumns": 9,
+          "GridRows": 1,
+          "FrameCount": 9
+        }
+      ],
+      "Id": 2
+    }
+  ]
 }

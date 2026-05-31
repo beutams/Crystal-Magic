@@ -13,7 +13,7 @@
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
           "BaseMaxHealth": 120000.0,
-          "BaseHealthRegenPerSecond": 1200.0,
+          "BaseHealthRegenPerSecond": 50.0,
           "BaseDefense": 0.0
         },
         {

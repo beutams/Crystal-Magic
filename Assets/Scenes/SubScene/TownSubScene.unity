@@ -363,6 +363,8 @@ MonoBehaviour:
   - {fileID: 28937165386333400, guid: d4e83d94b1156624e813f505ea93d4e4, type: 3}
   - {fileID: 28937165386333400, guid: b724bca480c11ef4d9483c3f03da7e89, type: 3}
   - {fileID: 28937165386333400, guid: 6c5c8ce2caf2eae4682ab6fcd3a0b251, type: 3}
+  - {fileID: 28937165386333400, guid: 59d34c86fca8478f8d57a5f4f7d43e1b, type: 3}
+  - {fileID: 28937165386333400, guid: c6b53d9c2af34af39f5af1f7fd3dd7a2, type: 3}
   - {fileID: 28937165386333400, guid: 016d1fbd4f693834bb7b4bafa4409119, type: 3}
   - {fileID: 36189917606584973, guid: 3578a246b29bff441b83a13f610890d5, type: 3}
   - {fileID: 36189917606584973, guid: 23044f0f9839ce04d873cc341b80d810, type: 3}
@@ -605,11 +607,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5817485185460318402, guid: 1751044ccf914c44f818fc9de5d17f8b, type: 3}
       propertyPath: m_LocalScale.x
-      value: 2.76
+      value: 2.26
       objectReference: {fileID: 0}
     - target: {fileID: 5817485185460318402, guid: 1751044ccf914c44f818fc9de5d17f8b, type: 3}
       propertyPath: m_LocalScale.y
-      value: 3.42
+      value: 2.56
       objectReference: {fileID: 0}
     - target: {fileID: 5817485185460318402, guid: 1751044ccf914c44f818fc9de5d17f8b, type: 3}
       propertyPath: m_LocalPosition.x
