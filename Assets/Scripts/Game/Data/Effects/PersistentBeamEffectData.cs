@@ -9,6 +9,11 @@ namespace CrystalMagic.Game.Data.Effects
         [EditorLabel("Element")]
         public ElementType Element = ElementType.None;
 
+        public override ElementType GetAttributeElementType()
+        {
+            return Element;
+        }
+
         [EditorLabel("Total Duration")]
         public float TotalDuration = 1f;
 
@@ -41,19 +46,20 @@ namespace CrystalMagic.Game.Data.Effects
 
         public override EffectData CreateRuntimeCopy(
             SkillModifierSet modifiers,
-            float elementBonus = 0f,
-            System.Func<EffectData, float> elementBonusResolver = null)
+            UnitElementComponent? elementComponent = null)
         {
-            SkillModifierSet runtimeModifiers = CreateCombinedModifiers(modifiers, elementBonus, AppendElementModifiers);
-            PersistentBeamEffectData copy = (PersistentBeamEffectData)base.CreateRuntimeCopy(runtimeModifiers, elementBonus, elementBonusResolver);
+            float attributePower = ResolveAttributePower(elementComponent);
+            SkillModifierSet runtimeModifiers = CreateModifiersWithAttributePower(modifiers, attributePower);
+            AppendElementModifiers(GetAttributePowerValue(runtimeModifiers), runtimeModifiers);
+            PersistentBeamEffectData copy = (PersistentBeamEffectData)base.CreateRuntimeCopy(runtimeModifiers, elementComponent);
             copy.TotalDuration = ApplyModifierNonNegative(runtimeModifiers, SkillModifierChannel.EffectDuration, TotalDuration);
             copy.TickIntervalSeconds = ApplyModifierNonNegative(runtimeModifiers, SkillModifierChannel.TickInterval, TickIntervalSeconds);
             copy.Length = ApplyModifierNonNegative(runtimeModifiers, SkillModifierChannel.ProjectileRange, Length);
             copy.Width = ApplyModifierNonNegative(runtimeModifiers, SkillModifierChannel.AreaRadius, Width);
             copy.TargetConditions = TargetConditions == null ? new List<ConditionConfig>() : new List<ConditionConfig>(TargetConditions);
-            copy.OnStartEffects = CreateRuntimeCopies(OnStartEffects, modifiers, elementBonusResolver);
-            copy.OnHitEffects = CreateRuntimeCopies(OnHitEffects, modifiers, elementBonusResolver);
-            copy.OnEndEffects = CreateRuntimeCopies(OnEndEffects, modifiers, elementBonusResolver);
+            copy.OnStartEffects = CreateRuntimeCopies(OnStartEffects, modifiers, elementComponent);
+            copy.OnHitEffects = CreateRuntimeCopies(OnHitEffects, modifiers, elementComponent);
+            copy.OnEndEffects = CreateRuntimeCopies(OnEndEffects, modifiers, elementComponent);
             return copy;
         }
 

@@ -26,10 +26,9 @@ namespace CrystalMagic.Game.Data.Effects
 
         public override EffectData CreateRuntimeCopy(
             SkillModifierSet modifiers,
-            float elementBonus = 0f,
-            System.Func<EffectData, float> elementBonusResolver = null)
+            UnitElementComponent? elementComponent = null)
         {
-            SpawnVfxEffectData copy = (SpawnVfxEffectData)base.CreateRuntimeCopy(modifiers, elementBonus, elementBonusResolver);
+            SpawnVfxEffectData copy = (SpawnVfxEffectData)base.CreateRuntimeCopy(modifiers, elementComponent);
             copy.Duration = ApplyModifierNonNegative(modifiers, SkillModifierChannel.EffectDuration, Duration);
             copy.Scale = ApplyModifierNonNegative(modifiers, SkillModifierChannel.VfxScale, Scale);
             copy.FrameCount = math.clamp(FrameCount, 1, 16);

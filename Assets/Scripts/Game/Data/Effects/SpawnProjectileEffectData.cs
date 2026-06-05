@@ -40,17 +40,16 @@ namespace CrystalMagic.Game.Data.Effects
 
         public override EffectData CreateRuntimeCopy(
             SkillModifierSet modifiers,
-            float elementBonus = 0f,
-            System.Func<EffectData, float> elementBonusResolver = null)
+            UnitElementComponent? elementComponent = null)
         {
-            SpawnProjectileEffectData copy = (SpawnProjectileEffectData)base.CreateRuntimeCopy(modifiers, elementBonus, elementBonusResolver);
+            SpawnProjectileEffectData copy = (SpawnProjectileEffectData)base.CreateRuntimeCopy(modifiers, elementComponent);
             copy.Speed = ApplyModifierNonNegative(modifiers, SkillModifierChannel.ProjectileSpeed, Speed);
             copy.MaxRange = ApplyModifierNonNegative(modifiers, SkillModifierChannel.ProjectileRange, MaxRange);
             copy.Scale = ApplyModifierNonNegative(modifiers, SkillModifierChannel.ProjectileScale, Scale);
             copy.FlightFrameCount = math.clamp(FlightFrameCount, 1, 16);
             copy.DestroyFrameCount = math.clamp(DestroyFrameCount, 1, 16);
-            copy.OnCollisionEffects = CreateRuntimeCopies(OnCollisionEffects, modifiers, elementBonusResolver);
-            copy.OnDestroyEffects = CreateRuntimeCopies(OnDestroyEffects, modifiers, elementBonusResolver);
+            copy.OnCollisionEffects = CreateRuntimeCopies(OnCollisionEffects, modifiers, elementComponent);
+            copy.OnDestroyEffects = CreateRuntimeCopies(OnDestroyEffects, modifiers, elementComponent);
             return copy;
         }
     }

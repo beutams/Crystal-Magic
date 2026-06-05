@@ -7,7 +7,7 @@ namespace CrystalMagic.Game.Data
 {
     [System.Serializable]
     [ReadOnlyData]
-    public class SkillEffectData : DataRow
+    public class SkillAdditionData : DataRow
     {
         public string Name;
         public string Description;

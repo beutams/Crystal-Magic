@@ -24,14 +24,13 @@ namespace CrystalMagic.Game.Data.Effects
 
         public override EffectData CreateRuntimeCopy(
             SkillModifierSet modifiers,
-            float elementBonus = 0f,
-            System.Func<EffectData, float> elementBonusResolver = null)
+            UnitElementComponent? elementComponent = null)
         {
-            RandomAreaPointEffectData copy = (RandomAreaPointEffectData)base.CreateRuntimeCopy(modifiers, elementBonus, elementBonusResolver);
+            RandomAreaPointEffectData copy = (RandomAreaPointEffectData)base.CreateRuntimeCopy(modifiers, elementComponent);
             copy.Radius = ApplyModifierNonNegative(modifiers, SkillModifierChannel.AreaRadius, Radius);
             copy.MinRadius = ApplyModifierNonNegative(modifiers, SkillModifierChannel.AreaRadius, MinRadius);
             copy.PointCount = Unity.Mathematics.math.max(1, PointCount);
-            copy.OnEachPointEffects = CreateRuntimeCopies(OnEachPointEffects, modifiers, elementBonusResolver);
+            copy.OnEachPointEffects = CreateRuntimeCopies(OnEachPointEffects, modifiers, elementComponent);
             return copy;
         }
     }

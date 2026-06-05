@@ -13,10 +13,11 @@ namespace CrystalMagic.Game.Skill
 
         protected override bool BuildContext(EntityManager entityManager, Entity entity, in UnitCastComponent cast, SkillContent context)
         {
+            bool hasTargetPosition = SkillTargetUtility.TryGetTargetPosition(entityManager, entity, out Unity.Mathematics.float2 targetPosition);
             SetPosition(
                 context,
-                cast.HasLockedTarget,
-                new Vector3(cast.LockedTargetPosition.x, cast.LockedTargetPosition.y, 0f));
+                hasTargetPosition,
+                new Vector3(targetPosition.x, targetPosition.y, 0f));
             SetTargetEntity(context, false, Entity.Null);
             return true;
         }

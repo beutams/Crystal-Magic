@@ -12,7 +12,6 @@ namespace CrystalMagic.Core {
         private InputControls _controls;
         private bool _playerInputLocked;
         private bool _uiInputLocked;
-        private bool _skillChainSwitchLocked;
 
         #region 事件
         public event Action<Vector2> OnMove;
@@ -44,16 +43,13 @@ namespace CrystalMagic.Core {
             _controls.Town.Enable();
             _playerInputLocked = GameGateComponent.Instance.IsPlayerInputLocked;
             _uiInputLocked = GameGateComponent.Instance.IsUIInputLocked;
-            _skillChainSwitchLocked = false;
             ApplyPlayerInputLockState();
             EventComponent.Instance.Subscribe<GameGateChangedEvent>(HandleGameGateChanged);
-            EventComponent.Instance.Subscribe<SkillCastLockChangedEvent>(HandleSkillCastLockChanged);
         }
 
         public override void Cleanup()
         {
             EventComponent.Instance.Unsubscribe<GameGateChangedEvent>(HandleGameGateChanged);
-            EventComponent.Instance.Unsubscribe<SkillCastLockChangedEvent>(HandleSkillCastLockChanged);
             if (_controls != null)
             {
                 _controls.Town.Move.performed -= HandleMove;
@@ -80,9 +76,6 @@ namespace CrystalMagic.Core {
         private void HandleProperty(InputAction.CallbackContext ctx) => OnProperty?.Invoke();
         private void HandleSkill(InputAction.CallbackContext ctx)
         {
-            if (_skillChainSwitchLocked)
-                return;
-
             int skillChainNumber = Mathf.RoundToInt(ctx.ReadValue<float>());
             int skillChainIndex = skillChainNumber - 1;
             if (skillChainIndex < 0 || skillChainIndex >= 5)
@@ -92,9 +85,6 @@ namespace CrystalMagic.Core {
         }
         private void HandleTab(InputAction.CallbackContext ctx)
         {
-            if (_skillChainSwitchLocked)
-                return;
-
             RuntimeDataComponent.Instance.SelectNextSkillChain(SaveDataComponent.Instance?.GetSkillData());
         }
         #endregion
@@ -174,11 +164,6 @@ namespace CrystalMagic.Core {
                     _uiInputLocked = gameEvent.IsLocked;
                     break;
             }
-        }
-
-        private void HandleSkillCastLockChanged(SkillCastLockChangedEvent gameEvent)
-        {
-            _skillChainSwitchLocked = gameEvent.IsLocked;
         }
 
         private void ApplyPlayerInputLockState()

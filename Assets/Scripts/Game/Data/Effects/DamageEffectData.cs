@@ -14,10 +14,17 @@ namespace CrystalMagic.Game.Data.Effects
         [EditorLabel("元素类型")]
         public ElementType Element = ElementType.None;
 
-        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, float elementBonus = 0f, System.Func<EffectData, float> elementBonusResolver = null)
+        public override ElementType GetAttributeElementType()
         {
-            SkillModifierSet runtimeModifiers = CreateCombinedModifiers(modifiers, elementBonus, AppendElementModifiers);
-            DamageEffectData copy = (DamageEffectData)base.CreateRuntimeCopy(runtimeModifiers, elementBonus, elementBonusResolver);
+            return Element;
+        }
+
+        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, UnitElementComponent? elementComponent = null)
+        {
+            float attributePower = ResolveAttributePower(elementComponent);
+            SkillModifierSet runtimeModifiers = CreateModifiersWithAttributePower(modifiers, attributePower);
+            AppendElementModifiers(GetAttributePowerValue(runtimeModifiers), runtimeModifiers);
+            DamageEffectData copy = (DamageEffectData)base.CreateRuntimeCopy(runtimeModifiers, elementComponent);
             copy.DamageCoefficient = ApplyModifier(runtimeModifiers, SkillModifierChannel.Damage, DamageCoefficient);
             copy.FlatDamageBonus = ApplyModifier(runtimeModifiers, SkillModifierChannel.FlatDamage, FlatDamageBonus);
             return copy;
@@ -50,9 +57,9 @@ namespace CrystalMagic.Game.Data.Effects
         [EditorLabel("控制时长")]
         public float DurationSeconds = 0.2f;
 
-        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, float elementBonus = 0f, System.Func<EffectData, float> elementBonusResolver = null)
+        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, UnitElementComponent? elementComponent = null)
         {
-            KnockbackEffectData copy = (KnockbackEffectData)base.CreateRuntimeCopy(modifiers, elementBonus, elementBonusResolver);
+            KnockbackEffectData copy = (KnockbackEffectData)base.CreateRuntimeCopy(modifiers, elementComponent);
             copy.Force = ApplyModifierNonNegative(modifiers, SkillModifierChannel.KnockbackForce, Force);
             copy.DurationSeconds = ApplyModifierNonNegative(modifiers, SkillModifierChannel.HitStunSeconds, DurationSeconds);
             return copy;

@@ -11,19 +11,19 @@ namespace CrystalMagic.Game.Skill
             Entity entity,
             SkillData skillData,
             ResolvedSkillData resolvedSkillData,
-            SkillChainSlotData slotData)
+            SkillAdditionData skillAdditionData)
         {
             EntityManager = entityManager;
             Entity = entity;
             SkillData = skillData;
             ResolvedSkillData = resolvedSkillData;
-            SlotData = slotData;
+            SkillAdditionData = skillAdditionData;
         }
 
         public EntityManager EntityManager { get; }
         public Entity Entity { get; }
         public SkillData SkillData { get; }
         public ResolvedSkillData ResolvedSkillData { get; }
-        public SkillChainSlotData SlotData { get; }
+        public SkillAdditionData SkillAdditionData { get; }
     }
 }

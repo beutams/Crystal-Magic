@@ -27,14 +27,10 @@ public static class SkillExecutionUtility
         ref UnitCastComponent cast,
         int skillId,
         int skillAdditionId,
-        ResolvedSkillData resolvedSkill,
-        bool hasLockedTarget,
-        float2 lockedTargetPosition)
+        ResolvedSkillData resolvedSkill)
     {
         ResetCastState(entityManager, entity, ref cast);
         cast.ForceInterrupt = false;
-        cast.HasLockedTarget = hasLockedTarget;
-        cast.LockedTargetPosition = lockedTargetPosition;
         cast.CurrentSkillId = skillId;
         cast.CurrentSkillAdditionId = skillAdditionId;
         cast.HasPreparedCast = true;
@@ -186,8 +182,6 @@ public static class SkillExecutionUtility
     {
         ClearExecutionState(entityManager, entity, ref cast);
         cast.HasPreparedCast = false;
-        cast.HasLockedTarget = false;
-        cast.LockedTargetPosition = float2.zero;
         cast.CurrentSkillId = -1;
         cast.CurrentSkillAdditionId = -1;
         ClearResolvedSkillPayload(entityManager, entity);
@@ -195,10 +189,11 @@ public static class SkillExecutionUtility
 
     public static void ClearFollowupEffects(EntityManager entityManager, Entity entity)
     {
-        if (!entityManager.HasBuffer<UnitCastFollowupEffectElement>(entity))
+        if (!entityManager.HasComponent<UnitCastFollowupRuntimeComponent>(entity))
             return;
 
-        entityManager.GetBuffer<UnitCastFollowupEffectElement>(entity).Clear();
+        UnitCastFollowupRuntimeComponent followupPayload = entityManager.GetComponentObject<UnitCastFollowupRuntimeComponent>(entity);
+        followupPayload?.Followups?.Clear();
     }
 
     public static void ClearJumpArcState(EntityManager entityManager, Entity entity)
@@ -256,7 +251,7 @@ public static class SkillExecutionUtility
         payload.InitializedHookMask |= bit;
         SkillData baseSkillData = DataComponent.Instance?.Get<SkillData>(cast.CurrentSkillId);
         int additionId = GetCurrentSkillAdditionId(cast);
-        SkillEffectData skillAdditionData = SkillChainResolver.GetSkillAdditionData(additionId);
+        SkillAdditionData skillAdditionData = SkillChainResolver.GetSkillAdditionData(additionId);
         AppendHookTasks(payload, baseSkillData?.CastTasks, cast.WaitingHookPoint);
         AppendHookTasks(payload, skillAdditionData?.CastTasks, cast.WaitingHookPoint);
     }
@@ -514,43 +509,38 @@ public static class SkillExecutionUtility
 
     private static void ConsumeMatchingFollowupEffects(EntityManager entityManager, Entity entity, in UnitCastComponent cast, ResolvedSkillData resolvedSkillData)
     {
-        if (!entityManager.HasBuffer<UnitCastFollowupEffectElement>(entity))
+        if (!entityManager.HasComponent<UnitCastFollowupRuntimeComponent>(entity))
             return;
 
         SkillData baseSkill = DataComponent.Instance?.Get<SkillData>(cast.CurrentSkillId);
         if (baseSkill == null)
             return;
 
-        SkillChainSlotData slotData = GetCurrentSlotData(cast);
-        SkillFollowupContext context = new(entityManager, entity, baseSkill, resolvedSkillData, slotData);
-        DynamicBuffer<UnitCastFollowupEffectElement> followupEffects = entityManager.GetBuffer<UnitCastFollowupEffectElement>(entity);
-        for (int i = followupEffects.Length - 1; i >= 0; i--)
+        int additionId = GetCurrentSkillAdditionId(cast);
+        SkillAdditionData skillAdditionData = SkillChainResolver.GetSkillAdditionData(additionId);
+        SkillFollowupContext context = new(entityManager, entity, baseSkill, resolvedSkillData, skillAdditionData);
+        UnitCastFollowupRuntimeComponent followupPayload = entityManager.GetComponentObject<UnitCastFollowupRuntimeComponent>(entity);
+        List<SkillFollowupRuntime> followupEffects = followupPayload?.Followups;
+        if (followupEffects == null)
+            return;
+
+        for (int i = followupEffects.Count - 1; i >= 0; i--)
         {
-            UnitCastFollowupEffectElement followupEffect = followupEffects[i];
-            if (!SkillResolver.MatchesFollowupEffect(followupEffect, baseSkill, slotData))
+            SkillFollowupRuntime followupEffect = followupEffects[i];
+            if (!SkillResolver.MatchesFollowupEffect(followupEffect, baseSkill, skillAdditionData))
                 continue;
 
-            string consumeRuleKey = followupEffect.ConsumeRuleKey.ToString();
-            if (!SkillFollowupConsumeRuleRegistry.TryCreateRule(consumeRuleKey, out SkillFollowupConsumeRule rule))
+            if (!followupEffect.CanApply(context))
                 continue;
 
-            if (!rule.CanApply(followupEffect, context))
-                continue;
-
-            string modifierRuleKey = followupEffect.ModifierRuleKey.ToString();
-            if (SkillFollowupModifierRuleRegistry.TryCreateRule(modifierRuleKey, out SkillFollowupModifierRule modifierRule))
-                modifierRule.OnConsumed(ref followupEffect, context);
-
-            if (!rule.Consume(ref followupEffect, context))
+            if (!followupEffect.Consume(context))
                 followupEffects.RemoveAt(i);
-            else
-                followupEffects[i] = followupEffect;
         }
     }
 
     private static void AppendGeneratedFollowupEffects(EntityManager entityManager, Entity entity, in UnitCastComponent cast)
     {
-        if (!entityManager.HasBuffer<UnitCastFollowupEffectElement>(entity))
+        if (!entityManager.HasComponent<UnitCastFollowupRuntimeComponent>(entity))
             return;
 
         PendingFollowupEffects.Clear();
@@ -561,28 +551,26 @@ public static class SkillExecutionUtility
 
         int additionId = GetCurrentSkillAdditionId(cast);
         if (additionId >= 0 &&
-            DataComponent.Instance?.Get<SkillEffectData>(additionId) is SkillEffectData skillEffectData &&
-            skillEffectData.FollowupEffects != null &&
-            skillEffectData.FollowupEffects.Count > 0)
+            DataComponent.Instance?.Get<SkillAdditionData>(additionId) is SkillAdditionData skillAdditionData &&
+            skillAdditionData.FollowupEffects != null &&
+            skillAdditionData.FollowupEffects.Count > 0)
         {
-            PendingFollowupEffects.AddRange(skillEffectData.FollowupEffects);
+            PendingFollowupEffects.AddRange(skillAdditionData.FollowupEffects);
         }
 
         if (PendingFollowupEffects.Count == 0)
             return;
 
-        DynamicBuffer<UnitCastFollowupEffectElement> followupBuffer = entityManager.GetBuffer<UnitCastFollowupEffectElement>(entity);
+        UnitCastFollowupRuntimeComponent followupPayload = entityManager.GetComponentObject<UnitCastFollowupRuntimeComponent>(entity);
+        List<SkillFollowupRuntime> followupBuffer = followupPayload?.Followups;
+        if (followupBuffer == null)
+            return;
+
         for (int i = 0; i < PendingFollowupEffects.Count; i++)
         {
-            if (TryCreateFollowupRuntime(PendingFollowupEffects[i], cast.CurrentSkillId, additionId, out UnitCastFollowupEffectElement followupEffect))
+            if (TryCreateFollowupRuntime(PendingFollowupEffects[i], cast.CurrentSkillId, additionId, out SkillFollowupRuntime followupEffect))
                 followupBuffer.Add(followupEffect);
         }
-    }
-
-    private static SkillChainSlotData GetCurrentSlotData(in UnitCastComponent cast)
-    {
-        int additionId = GetCurrentSkillAdditionId(cast);
-        return additionId >= 0 ? new SkillChainSlotData { SkillAdditionId = additionId } : null;
     }
 
     private static int GetCurrentSkillAdditionId(in UnitCastComponent cast)
@@ -590,41 +578,40 @@ public static class SkillExecutionUtility
         return cast.CurrentSkillAdditionId;
     }
 
-    private static bool TryCreateFollowupRuntime(SkillFollowupEffectData followupData, int sourceSkillId, int sourceSkillAdditionId, out UnitCastFollowupEffectElement followupEffect)
+    private static bool TryCreateFollowupRuntime(SkillFollowupEffectData followupData, int sourceSkillId, int sourceSkillAdditionId, out SkillFollowupRuntime followupEffect)
     {
-        followupEffect = default;
+        followupEffect = null;
         if (followupData == null)
             return false;
 
         followupData.EnsureDefaults();
-        if (followupData.ConsumeRule == null || followupData.ModifierRule == null)
+        if (followupData.Filter == null || followupData.ConsumeRule == null || followupData.ModifierRule == null)
             return false;
 
-        followupEffect.SourceSkillId = sourceSkillId;
-        followupEffect.SourceSkillAdditionId = sourceSkillAdditionId;
-        followupEffect.ConsumeRuleKey = SkillFollowupConsumeRuleRegistry.GetRuleKey(followupData.ConsumeRule);
-        followupEffect.ModifierRuleKey = SkillFollowupModifierRuleRegistry.GetRuleKey(followupData.ModifierRule);
-        followupEffect.FilterType = followupData.FilterType;
-        followupEffect.SkillId = followupData.SkillId;
-        followupEffect.RuntimeType = followupData.EffectiveRuntimeType;
-        followupEffect.Element = followupData.Element;
-        followupEffect.SkillAdditionId = followupData.SkillAdditionId;
-
-        string consumeRuleKey = followupEffect.ConsumeRuleKey.ToString();
-        if (!SkillFollowupConsumeRuleRegistry.TryCreateRule(consumeRuleKey, out SkillFollowupConsumeRule rule))
+        string filterKey = SkillFollowupFilterRegistry.GetFilterKey(followupData.Filter);
+        if (!SkillFollowupRuntimeFactories.FilterFactory.TryCreateFilter(filterKey, out SkillFollowupFilter filter))
             return false;
 
-        if (!rule.TryInitializeRuntime(followupData.ConsumeRule, ref followupEffect))
+        string consumeRuleKey = SkillFollowupConsumeRuleRegistry.GetRuleKey(followupData.ConsumeRule);
+        if (!SkillFollowupRuntimeFactories.ConsumeRuleFactory.TryCreateRule(consumeRuleKey, out SkillFollowupConsumeRule rule))
             return false;
 
-        string modifierRuleKey = followupEffect.ModifierRuleKey.ToString();
-        if (!SkillFollowupModifierRuleRegistry.TryCreateRule(modifierRuleKey, out SkillFollowupModifierRule modifierRule))
+        string modifierRuleKey = SkillFollowupModifierRuleRegistry.GetRuleKey(followupData.ModifierRule);
+        if (!SkillFollowupRuntimeFactories.ModifierRuleFactory.TryCreateRule(modifierRuleKey, out SkillFollowupModifierRule modifierRule))
             return false;
 
-        if (!modifierRule.TryInitializeRuntime(followupData.ModifierRule, ref followupEffect))
+        followupEffect = new SkillFollowupRuntime(sourceSkillId, sourceSkillAdditionId, filter, rule, modifierRule);
+        SkillFollowupRuntimeState runtimeState = followupEffect.State;
+        if (!filter.TryInitializeRuntime(followupData.Filter, runtimeState))
             return false;
 
-        return followupEffect.ModifierSlices.Length > 0;
+        if (!rule.TryInitializeRuntime(followupData.ConsumeRule, runtimeState))
+            return false;
+
+        if (!modifierRule.TryInitializeRuntime(followupData.ModifierRule, runtimeState))
+            return false;
+
+        return runtimeState.ModifierSlices.Count > 0;
     }
 
     private static void LogPhase(string phaseName, in UnitCastComponent cast)

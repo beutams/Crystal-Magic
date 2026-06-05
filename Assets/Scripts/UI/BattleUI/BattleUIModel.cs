@@ -109,8 +109,8 @@ namespace CrystalMagic.UI
                 SkillChainSlotData slot = chain.Slots[i];
                 int skillStoneItemId = slot?.SkillStoneItemId ?? -1;
                 SkillData skillData = SkillChainResolver.GetSkillDataBySkillStoneItemId(skillStoneItemId);
-                SkillEffectData skillAdditionData = slot != null && slot.SkillAdditionId >= 0
-                    ? DataComponent.Instance.Get<SkillEffectData>(slot.SkillAdditionId)
+                SkillAdditionData skillAdditionData = slot != null && slot.SkillAdditionId >= 0
+                    ? DataComponent.Instance.Get<SkillAdditionData>(slot.SkillAdditionId)
                     : null;
 
                 items.Add(new BattleSkillDisplayData
@@ -170,7 +170,10 @@ namespace CrystalMagic.UI
 
         private static void ApplyRuntimeState(List<BattleSkillDisplayData> items, PlayerCombatSnapshot snapshot)
         {
-            if (!snapshot.HasCast || !snapshot.IsCasting || snapshot.CurrentSkillIndex < 0)
+            if (!snapshot.HasCast ||
+                !snapshot.IsCasting ||
+                snapshot.CurrentSkillIndex < 0 ||
+                snapshot.ActiveChainIndex != snapshot.SelectedChainIndex)
                 return;
 
             for (int i = 0; i < items.Count; i++)
@@ -209,7 +212,10 @@ namespace CrystalMagic.UI
             {
                 PlayerSkillComponent request = entityManager.GetComponentData<PlayerSkillComponent>(player);
                 if (request.HasActiveChain)
+                {
+                    snapshot.ActiveChainIndex = request.ActiveChainIndex;
                     snapshot.CurrentSkillIndex = request.CurrentSkillIndex;
+                }
             }
 
             if (entityManager.HasComponent<UnitVitalityComponent>(player))
@@ -374,6 +380,7 @@ namespace CrystalMagic.UI
     internal struct PlayerCombatSnapshot
     {
         public int SelectedChainIndex;
+        public int ActiveChainIndex;
         public bool HasCast;
         public bool IsCasting;
         public int CurrentSkillIndex;

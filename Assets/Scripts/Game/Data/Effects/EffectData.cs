@@ -25,14 +25,19 @@ namespace CrystalMagic.Game.Data.Effects
         [EditorLabel("生效条件")]
         public List<ConditionConfig> Conditions = new();
 
-        public virtual EffectData CreateRuntimeCopy(SkillModifierSet modifiers, float elementBonus = 0f, Func<EffectData, float> elementBonusResolver = null)
+        public virtual ElementType GetAttributeElementType()
+        {
+            return ElementType.None;
+        }
+
+        public virtual EffectData CreateRuntimeCopy(SkillModifierSet modifiers, UnitElementComponent? elementComponent = null)
         {
             EffectData copy = (EffectData)MemberwiseClone();
             copy.Conditions = Conditions == null ? new List<ConditionConfig>() : new List<ConditionConfig>(Conditions);
             return copy;
         }
 
-        public static EffectData[] CreateRuntimeCopies(EffectData[] effects, SkillModifierSet modifiers, Func<EffectData, float> elementBonusResolver = null)
+        public static EffectData[] CreateRuntimeCopies(EffectData[] effects, SkillModifierSet modifiers, UnitElementComponent? elementComponent = null)
         {
             if (effects == null || effects.Length == 0)
                 return Array.Empty<EffectData>();
@@ -41,17 +46,42 @@ namespace CrystalMagic.Game.Data.Effects
             for (int i = 0; i < effects.Length; i++)
             {
                 EffectData effect = effects[i];
-                float elementBonus = elementBonusResolver?.Invoke(effect) ?? 0f;
-                copies[i] = effect?.CreateRuntimeCopy(modifiers, elementBonus, elementBonusResolver);
+                copies[i] = effect?.CreateRuntimeCopy(modifiers, elementComponent);
             }
 
             return copies;
+        }
+
+        protected float ResolveAttributePower(UnitElementComponent? elementComponent)
+        {
+            if (!elementComponent.HasValue)
+                return 0f;
+
+            ElementType element = GetAttributeElementType();
+            return element == ElementType.None
+                ? 0f
+                : elementComponent.Value.GetPowerBonus(element);
         }
 
         protected static SkillModifierSet CreateCombinedModifiers(SkillModifierSet modifiers, float elementBonus, Action<float, SkillModifierSet> appendElementModifiers)
         {
             SkillModifierSet combined = modifiers?.Clone() ?? new SkillModifierSet();
             appendElementModifiers?.Invoke(math.max(-1f, elementBonus), combined);
+            return combined;
+        }
+
+        protected static SkillModifierSet CreateModifiersWithAttributePower(SkillModifierSet modifiers, float attributePower)
+        {
+            SkillModifierSet combined = modifiers?.Clone() ?? new SkillModifierSet();
+            if (math.abs(attributePower) > 0.0001f)
+            {
+                combined.Add(new SkillModifierEntry
+                {
+                    Channel = SkillModifierChannel.AttributePower,
+                    Bonus = attributePower,
+                });
+            }
+
             return combined;
         }
 
@@ -64,6 +94,11 @@ namespace CrystalMagic.Game.Data.Effects
         {
             float modified = ApplyModifier(modifiers, channel, value);
             return modified < 0f ? 0f : modified;
+        }
+
+        protected static float GetAttributePowerValue(SkillModifierSet modifiers)
+        {
+            return modifiers?.GetAttributePowerValue() ?? 0f;
         }
     }
 }

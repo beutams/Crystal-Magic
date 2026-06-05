@@ -1,6 +1,7 @@
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Skill;
 using Unity.Entities;
+using Unity.Mathematics;
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateAfter(typeof(UnitStateTransitionSystem))]
@@ -51,9 +52,7 @@ partial class PlayerSkillAnalysisSystem : SystemBase
             ref cast,
             skillId,
             skillAdditionId,
-            resolvedSkill,
-            request.HasLockedTarget,
-            request.LockedTargetPosition);
+            resolvedSkill);
 
         if (!prepared)
         {

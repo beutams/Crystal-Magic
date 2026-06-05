@@ -19,9 +19,9 @@ namespace CrystalMagic.Game.Data.Effects
         [EditorLabel("位置偏移")]
         public Vector3 PositionOffset;
 
-        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, float elementBonus = 0f, System.Func<EffectData, float> elementBonusResolver = null)
+        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, UnitElementComponent? elementComponent = null)
         {
-            CameraShakeEffectData copy = (CameraShakeEffectData)base.CreateRuntimeCopy(modifiers, elementBonus, elementBonusResolver);
+            CameraShakeEffectData copy = (CameraShakeEffectData)base.CreateRuntimeCopy(modifiers, elementComponent);
             copy.Duration = ApplyModifierNonNegative(modifiers, SkillModifierChannel.CameraShakeDuration, Duration);
             copy.Amplitude = ApplyModifierNonNegative(modifiers, SkillModifierChannel.CameraShakeAmplitude, Amplitude);
             copy.Frequency = ApplyModifierNonNegative(modifiers, SkillModifierChannel.CameraShakeFrequency, Frequency);

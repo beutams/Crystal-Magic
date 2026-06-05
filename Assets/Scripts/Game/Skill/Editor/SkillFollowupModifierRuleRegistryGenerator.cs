@@ -174,16 +174,6 @@ namespace CrystalMagic.Editor.Skill
             sb.AppendLine("            return Activator.CreateInstance(type) as SkillFollowupModifierRuleData;");
             sb.AppendLine("        }");
             sb.AppendLine();
-            sb.AppendLine("        public static SkillFollowupModifierRule CreateRule(string key)");
-            sb.AppendLine("        {");
-            sb.AppendLine("            return s_factory.Create(key ?? string.Empty);");
-            sb.AppendLine("        }");
-            sb.AppendLine();
-            sb.AppendLine("        public static bool TryCreateRule(string key, out SkillFollowupModifierRule rule)");
-            sb.AppendLine("        {");
-            sb.AppendLine("            return s_factory.TryCreate(key ?? string.Empty, out rule);");
-            sb.AppendLine("        }");
-            sb.AppendLine();
         }
 
         private static void AppendRegistration(
@@ -193,15 +183,6 @@ namespace CrystalMagic.Editor.Skill
         {
             List<FactoryRegistryGeneratorUtility.MappedType> validTypes = CollectValidPairs(dataTypes, runtimeTypes);
 
-            sb.AppendLine("        private static readonly SkillFollowupModifierRuleFactory s_factory = CreateFactory();");
-            sb.AppendLine();
-            sb.AppendLine("        private static SkillFollowupModifierRuleFactory CreateFactory()");
-            sb.AppendLine("        {");
-            sb.AppendLine("            SkillFollowupModifierRuleFactory factory = new();");
-            sb.AppendLine("            RegisterAll(factory);");
-            sb.AppendLine("            return factory;");
-            sb.AppendLine("        }");
-            sb.AppendLine();
             sb.AppendLine("        public static void RegisterAll(SkillFollowupModifierRuleFactory factory)");
             sb.AppendLine("        {");
             sb.AppendLine("            if (factory == null)");

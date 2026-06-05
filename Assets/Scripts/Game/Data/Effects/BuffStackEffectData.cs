@@ -15,11 +15,11 @@ namespace CrystalMagic.Game.Data.Effects
         [EditorLabel("读取后效果")]
         public EffectData[] OnAfterRead = Array.Empty<EffectData>();
 
-        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, float elementBonus = 0f, Func<EffectData, float> elementBonusResolver = null)
+        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, UnitElementComponent? elementComponent = null)
         {
-            ReadBuffStackEffectData copy = (ReadBuffStackEffectData)base.CreateRuntimeCopy(modifiers, elementBonus, elementBonusResolver);
+            ReadBuffStackEffectData copy = (ReadBuffStackEffectData)base.CreateRuntimeCopy(modifiers, elementComponent);
             copy.PerStackModifiers = PerStackModifiers == null ? new List<SkillModifierEntry>() : new List<SkillModifierEntry>(PerStackModifiers);
-            copy.OnAfterRead = CreateRuntimeCopies(OnAfterRead, modifiers, elementBonusResolver);
+            copy.OnAfterRead = CreateRuntimeCopies(OnAfterRead, modifiers, elementComponent);
             return copy;
         }
     }

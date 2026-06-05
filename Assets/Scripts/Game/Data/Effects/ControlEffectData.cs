@@ -6,9 +6,9 @@ namespace CrystalMagic.Game.Data.Effects
         [EditorLabel("控制时长")]
         public float DurationSeconds = 0.5f;
 
-        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, float elementBonus = 0f, System.Func<EffectData, float> elementBonusResolver = null)
+        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, UnitElementComponent? elementComponent = null)
         {
-            StunEffectData copy = (StunEffectData)base.CreateRuntimeCopy(modifiers, elementBonus, elementBonusResolver);
+            StunEffectData copy = (StunEffectData)base.CreateRuntimeCopy(modifiers, elementComponent);
             copy.DurationSeconds = ApplyModifierNonNegative(modifiers, SkillModifierChannel.HitStunSeconds, DurationSeconds);
             return copy;
         }
@@ -20,9 +20,9 @@ namespace CrystalMagic.Game.Data.Effects
         [EditorLabel("控制时长")]
         public float DurationSeconds = 1f;
 
-        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, float elementBonus = 0f, System.Func<EffectData, float> elementBonusResolver = null)
+        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, UnitElementComponent? elementComponent = null)
         {
-            FearEffectData copy = (FearEffectData)base.CreateRuntimeCopy(modifiers, elementBonus, elementBonusResolver);
+            FearEffectData copy = (FearEffectData)base.CreateRuntimeCopy(modifiers, elementComponent);
             copy.DurationSeconds = ApplyModifierNonNegative(modifiers, SkillModifierChannel.HitStunSeconds, DurationSeconds);
             return copy;
         }

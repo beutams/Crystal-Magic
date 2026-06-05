@@ -5,19 +5,18 @@ using CrystalMagic.Game.Data.Effects;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
-using System.Reflection;
 
 namespace CrystalMagic.Game.Skill
 {
     public static class SkillChainResolver
     {
-        public static SkillEffectData GetSkillAdditionData(int skillAdditionId)
+        public static SkillAdditionData GetSkillAdditionData(int skillAdditionId)
         {
             if (skillAdditionId < 0)
                 return null;
 
             DataComponent dataComponent = DataComponent.Instance;
-            return dataComponent == null ? null : dataComponent.Get<SkillEffectData>(skillAdditionId);
+            return dataComponent == null ? null : dataComponent.Get<SkillAdditionData>(skillAdditionId);
         }
 
         public static SkillData GetSkillDataBySkillStoneItemId(int skillStoneItemId)
@@ -63,7 +62,7 @@ namespace CrystalMagic.Game.Skill
 
     public static class SkillResolver
     {
-        public static ResolvedSkillData Resolve(SkillData skillData, SkillModifierSet modifiers, SkillEffectData skillAdditionData = null, UnitAttackComponent? attackComponent = null, UnitElementComponent? elementComponent = null)
+        public static ResolvedSkillData Resolve(SkillData skillData, SkillModifierSet modifiers, SkillAdditionData skillAdditionData = null, UnitAttackComponent? attackComponent = null, UnitElementComponent? elementComponent = null)
         {
             if (skillData == null)
                 return null;
@@ -93,7 +92,7 @@ namespace CrystalMagic.Game.Skill
                 RecoveryDuration = math.max(0f, skillData.RecoveryDuration * actionSpeedMultiplier),
                 CanMoveWhileCasting = skillData.CanMoveWhileCasting,
                 MoveSpeedMultiplier = moveSpeedMultiplier,
-                EffectChain = EffectData.CreateRuntimeCopies(mergedEffectChain, modifiers, effectData => GetElementPowerBonus(elementComponent, effectData)),
+                EffectChain = EffectData.CreateRuntimeCopies(mergedEffectChain, modifiers, elementComponent),
             };
         }
 
@@ -117,24 +116,11 @@ namespace CrystalMagic.Game.Skill
             return merged;
         }
 
-        private static float GetElementPowerBonus(UnitElementComponent? elementComponent, EffectData effectData)
-        {
-            if (!elementComponent.HasValue || effectData == null)
-                return 0f;
-
-            ElementType element = effectData switch
-            {
-                DamageEffectData damageEffectData => damageEffectData.Element,
-                PersistentEffectData persistentEffectData => persistentEffectData.Element,
-                _ => ElementType.None,
-            };
-
-            return element == ElementType.None
-                ? 0f
-                : elementComponent.Value.GetPowerBonus(element);
-        }
-
-        public static SkillModifierSet CollectModifiers(EntityManager entityManager, Entity entity, SkillData skillData = null, SkillChainSlotData slotData = null)
+        public static SkillModifierSet CollectModifiers(
+            EntityManager entityManager,
+            Entity entity,
+            SkillData skillData = null,
+            SkillAdditionData skillAdditionData = null)
         {
             SkillModifierSet modifiers = new();
 
@@ -153,98 +139,47 @@ namespace CrystalMagic.Game.Skill
                 }
             }
 
-            if (slotData != null && slotData.SkillAdditionId >= 0)
-            {
-                if (SkillChainResolver.GetSkillAdditionData(slotData.SkillAdditionId) is SkillEffectData skillEffectData)
-                    modifiers.Add(skillEffectData.Modifiers);
-            }
+            if (skillAdditionData != null)
+                modifiers.Add(skillAdditionData.Modifiers);
 
-            if (skillData != null && entityManager.HasBuffer<UnitCastFollowupEffectElement>(entity))
+            if (skillData != null && entityManager.HasComponent<UnitCastFollowupRuntimeComponent>(entity))
             {
-                SkillFollowupContext context = new(entityManager, entity, skillData, null, slotData);
-                DynamicBuffer<UnitCastFollowupEffectElement> followupEffects = entityManager.GetBuffer<UnitCastFollowupEffectElement>(entity);
-                for (int i = 0; i < followupEffects.Length; i++)
+                SkillFollowupContext context = new(entityManager, entity, skillData, null, skillAdditionData);
+                UnitCastFollowupRuntimeComponent followupComponent = entityManager.GetComponentObject<UnitCastFollowupRuntimeComponent>(entity);
+                List<SkillFollowupRuntime> followupEffects = followupComponent?.Followups;
+                if (followupEffects == null)
+                    return modifiers;
+
+                for (int i = 0; i < followupEffects.Count; i++)
                 {
-                    UnitCastFollowupEffectElement followupEffect = followupEffects[i];
-                    if (!MatchesFollowupEffect(followupEffect, skillData, slotData))
-                        continue;
-
-                    ApplyFollowupModifiers(ref modifiers, followupEffect, context);
+                    ApplyFollowupModifiers(ref modifiers, followupEffects[i], context);
                 }
             }
 
             return modifiers;
         }
 
-        public static bool MatchesFollowupEffect(UnitCastFollowupEffectElement followupEffect, SkillData skillData, SkillChainSlotData slotData)
+        public static bool MatchesFollowupEffect(SkillFollowupRuntime followupEffect, SkillData skillData, SkillAdditionData skillAdditionData)
         {
-            if (skillData == null)
+            if (skillData == null || followupEffect == null)
                 return false;
 
-            return followupEffect.FilterType switch
-            {
-                SkillFollowupFilterType.AnySkill => true,
-                SkillFollowupFilterType.SkillId => followupEffect.SkillId >= 0 && skillData.Id == followupEffect.SkillId,
-                SkillFollowupFilterType.RuntimeType => string.Equals(skillData.EffectiveRuntimeType, followupEffect.RuntimeType.ToString(), System.StringComparison.Ordinal),
-                SkillFollowupFilterType.Element => followupEffect.Element != ElementType.None && SkillUsesElement(skillData.EffectChain, followupEffect.Element),
-                SkillFollowupFilterType.SkillAdditionId => slotData != null && slotData.SkillAdditionId >= 0 && slotData.SkillAdditionId == followupEffect.SkillAdditionId,
-                _ => false,
-            };
+            SkillFollowupContext context = new(default, Entity.Null, skillData, null, skillAdditionData);
+            return followupEffect.IsMatch(context);
         }
 
-        public static void ApplyFollowupModifiers(ref SkillModifierSet modifiers, UnitCastFollowupEffectElement followupEffect, in SkillFollowupContext context)
+        public static void ApplyFollowupModifiers(ref SkillModifierSet modifiers, SkillFollowupRuntime followupEffect, in SkillFollowupContext context)
         {
-            string consumeRuleKey = followupEffect.ConsumeRuleKey.ToString();
-            if (!SkillFollowupConsumeRuleRegistry.TryCreateRule(consumeRuleKey, out SkillFollowupConsumeRule rule))
+            if (followupEffect == null)
                 return;
 
-            if (!rule.CanApply(followupEffect, context))
+            if (!followupEffect.IsMatch(context))
                 return;
 
-            string modifierRuleKey = followupEffect.ModifierRuleKey.ToString();
-            if (!SkillFollowupModifierRuleRegistry.TryCreateRule(modifierRuleKey, out SkillFollowupModifierRule modifierRule))
+            if (!followupEffect.CanApply(context))
                 return;
 
-            modifierRule.GetModifier(ref modifiers, followupEffect, context);
-        }
-
-        private static bool SkillUsesElement(EffectData[] effectChain, ElementType element)
-        {
-            if (effectChain == null || effectChain.Length == 0 || element == ElementType.None)
-                return false;
-
-            for (int i = 0; i < effectChain.Length; i++)
-            {
-                if (EffectUsesElement(effectChain[i], element))
-                    return true;
-            }
-
-            return false;
-        }
-
-        private static bool EffectUsesElement(EffectData effectData, ElementType element)
-        {
-            if (effectData == null)
-                return false;
-
-            if (effectData is DamageEffectData damageEffectData && damageEffectData.Element == element)
-                return true;
-
-            if (effectData is PersistentEffectData persistentEffectData && persistentEffectData.Element == element)
-                return true;
-
-            FieldInfo[] fields = effectData.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance);
-            for (int i = 0; i < fields.Length; i++)
-            {
-                FieldInfo field = fields[i];
-                if (field.FieldType != typeof(EffectData[]) && !(field.FieldType.IsArray && typeof(EffectData).IsAssignableFrom(field.FieldType.GetElementType())))
-                    continue;
-
-                if (field.GetValue(effectData) is EffectData[] nestedEffects && SkillUsesElement(nestedEffects, element))
-                    return true;
-            }
-
-            return false;
+            followupEffect.GetModifier(ref modifiers, context);
         }
     }
 }

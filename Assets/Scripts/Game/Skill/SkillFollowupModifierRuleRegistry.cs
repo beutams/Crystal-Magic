@@ -101,25 +101,6 @@ namespace CrystalMagic.Game.Skill
             return Activator.CreateInstance(type) as SkillFollowupModifierRuleData;
         }
 
-        public static SkillFollowupModifierRule CreateRule(string key)
-        {
-            return s_factory.Create(key ?? string.Empty);
-        }
-
-        public static bool TryCreateRule(string key, out SkillFollowupModifierRule rule)
-        {
-            return s_factory.TryCreate(key ?? string.Empty, out rule);
-        }
-
-        private static readonly SkillFollowupModifierRuleFactory s_factory = CreateFactory();
-
-        private static SkillFollowupModifierRuleFactory CreateFactory()
-        {
-            SkillFollowupModifierRuleFactory factory = new();
-            RegisterAll(factory);
-            return factory;
-        }
-
         public static void RegisterAll(SkillFollowupModifierRuleFactory factory)
         {
             if (factory == null)

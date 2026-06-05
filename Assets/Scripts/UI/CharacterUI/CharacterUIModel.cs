@@ -47,8 +47,8 @@ namespace CrystalMagic.UI
                 CrystalMagic.Core.SkillChainSlotData slot = chain.Slots[i];
                 int skillStoneItemId = slot?.SkillStoneItemId ?? -1;
                 CrystalMagic.Game.Data.SkillData skillData = SkillChainResolver.GetSkillDataBySkillStoneItemId(skillStoneItemId);
-                CrystalMagic.Game.Data.SkillEffectData skillAdditionData = slot != null && slot.SkillAdditionId >= 0
-                    ? CrystalMagic.Core.DataComponent.Instance.Get<CrystalMagic.Game.Data.SkillEffectData>(slot.SkillAdditionId)
+                CrystalMagic.Game.Data.SkillAdditionData skillAdditionData = slot != null && slot.SkillAdditionId >= 0
+                    ? CrystalMagic.Core.DataComponent.Instance.Get<CrystalMagic.Game.Data.SkillAdditionData>(slot.SkillAdditionId)
                     : null;
                 string skillIconPath = skillData != null ? skillData.IconPath : string.Empty;
                 string additionIconPath = skillAdditionData != null ? skillAdditionData.IconPath : string.Empty;

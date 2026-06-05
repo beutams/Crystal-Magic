@@ -34,7 +34,7 @@ SkillData
     ResolvedSkillData
     -内容
         运行时真实的SkillData
-SkillEffectData
+SkillAdditionData
 UnitData
     内含不同组件对应的数据设置UnitModuleData
     UnitModuleData

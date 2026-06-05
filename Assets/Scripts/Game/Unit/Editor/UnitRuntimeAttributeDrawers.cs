@@ -140,8 +140,6 @@ namespace CrystalMagic.Editor.Unit
             EditorGUILayout.Toggle("Has Prepared Cast", cast.HasPreparedCast);
             EditorGUILayout.Toggle("Is Casting", cast.IsCasting);
             EditorGUILayout.Toggle("Force Interrupt", cast.ForceInterrupt);
-            EditorGUILayout.Toggle("Has Locked Target", cast.HasLockedTarget);
-            EditorGUILayout.Vector2Field("Locked Target", cast.LockedTargetPosition);
             EditorGUILayout.IntField("Skill Id", cast.CurrentSkillId);
             EditorGUILayout.IntField("Skill Addition Id", cast.CurrentSkillAdditionId);
             EditorGUILayout.TextField("Phase", cast.Phase.ToString());

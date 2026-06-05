@@ -211,7 +211,7 @@ namespace CrystalMagic.Editor.Data
                 new SkillOption { Id = -1, Label = "None" }
             };
 
-            foreach (SkillEffectData row in EditorComponents.Data.FindAll<SkillEffectData>(_ => true).OrderBy(row => row.Id))
+            foreach (SkillAdditionData row in EditorComponents.Data.FindAll<SkillAdditionData>(_ => true).OrderBy(row => row.Id))
             {
                 options.Add(new SkillOption
                 {

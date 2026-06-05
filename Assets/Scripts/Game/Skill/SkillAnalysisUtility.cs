@@ -27,11 +27,8 @@ namespace CrystalMagic.Game.Skill
             if (baseSkill == null)
                 return false;
 
-            SkillChainSlotData slotData = skillAdditionId >= 0
-                ? new SkillChainSlotData { SkillAdditionId = skillAdditionId }
-                : null;
-            SkillEffectData skillAdditionData = SkillChainResolver.GetSkillAdditionData(skillAdditionId);
-            SkillModifierSet modifiers = SkillResolver.CollectModifiers(entityManager, entity, baseSkill, slotData);
+            SkillAdditionData skillAdditionData = SkillChainResolver.GetSkillAdditionData(skillAdditionId);
+            SkillModifierSet modifiers = SkillResolver.CollectModifiers(entityManager, entity, baseSkill, skillAdditionData);
 
             UnitAttackComponent? attack = entityManager.HasComponent<UnitAttackComponent>(entity)
                 ? entityManager.GetComponentData<UnitAttackComponent>(entity)

@@ -41,15 +41,15 @@ namespace CrystalMagic.UI
         {
             _items.Clear();
 
-            DataTable<SkillEffectData> table = DataComponent.Instance.GetTable<SkillEffectData>();
-            IEnumerable<SkillEffectData> allEffects = table?.GetAll();
+            DataTable<SkillAdditionData> table = DataComponent.Instance.GetTable<SkillAdditionData>();
+            IEnumerable<SkillAdditionData> allEffects = table?.GetAll();
             if (allEffects != null)
             {
-                List<SkillEffectData> sortedEffects = new(allEffects);
+                List<SkillAdditionData> sortedEffects = new(allEffects);
                 sortedEffects.Sort((left, right) => left.Id.CompareTo(right.Id));
                 for (int i = 0; i < sortedEffects.Count; i++)
                 {
-                    SkillEffectData effectData = sortedEffects[i];
+                    SkillAdditionData effectData = sortedEffects[i];
                     if (effectData == null)
                         continue;
 

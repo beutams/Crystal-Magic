@@ -45,9 +45,7 @@ partial class UnitSkillAnalysisSystem : SystemBase
             ref cast,
             entry.SkillId,
             entry.SkillAdditionId,
-            resolvedSkill,
-            unitSkill.HasLockedTarget,
-            unitSkill.LockedTargetPosition);
+            resolvedSkill);
 
         if (prepared)
         {

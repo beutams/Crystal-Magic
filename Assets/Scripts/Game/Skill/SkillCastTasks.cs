@@ -102,7 +102,7 @@ namespace CrystalMagic.Game.Skill
         {
             if (!_started)
             {
-                if (!TryStartJump(entityManager, entity, cast))
+                if (!TryStartJump(entityManager, entity))
                     return true;
 
                 _started = true;
@@ -119,14 +119,16 @@ namespace CrystalMagic.Game.Skill
             return true;
         }
 
-        private bool TryStartJump(EntityManager entityManager, Entity entity, in UnitCastComponent cast)
+        private bool TryStartJump(EntityManager entityManager, Entity entity)
         {
-            if (!cast.HasLockedTarget || !entityManager.Exists(entity) || !entityManager.HasComponent<Unity.Transforms.LocalTransform>(entity))
+            if (!entityManager.Exists(entity) ||
+                !entityManager.HasComponent<Unity.Transforms.LocalTransform>(entity) ||
+                !SkillTargetUtility.TryGetTargetPosition(entityManager, entity, out float2 targetPosition))
                 return false;
 
             Unity.Transforms.LocalTransform transform = entityManager.GetComponentData<Unity.Transforms.LocalTransform>(entity);
             Unity.Mathematics.float3 startPosition = transform.Position;
-            Unity.Mathematics.float3 endPosition = new(cast.LockedTargetPosition.x, cast.LockedTargetPosition.y, startPosition.z);
+            Unity.Mathematics.float3 endPosition = new(targetPosition.x, targetPosition.y, startPosition.z);
 
             if (_durationSeconds <= 0f)
             {
@@ -189,20 +191,20 @@ namespace CrystalMagic.Game.Skill
         {
             if (_durationSeconds <= 0f)
             {
-                UpdateFacing(entityManager, entity, cast, float.MaxValue);
+                UpdateFacing(entityManager, entity, float.MaxValue);
                 return true;
             }
 
             float consumedTime = math.min(remainingTime, _remainingDuration);
             remainingTime -= consumedTime;
             _remainingDuration -= consumedTime;
-            UpdateFacing(entityManager, entity, cast, consumedTime);
+            UpdateFacing(entityManager, entity, consumedTime);
             return _remainingDuration <= 0f;
         }
 
-        private void UpdateFacing(EntityManager entityManager, Entity entity, in UnitCastComponent cast, float deltaTime)
+        private void UpdateFacing(EntityManager entityManager, Entity entity, float deltaTime)
         {
-            if (!TryGetDesiredDirection(entityManager, entity, cast, out float2 desiredDirection))
+            if (!TryGetDesiredDirection(entityManager, entity, out float2 desiredDirection))
                 return;
 
             UnitFacingUtility.TryGetFacing(entityManager, entity, out float2 currentFacing);
@@ -217,7 +219,7 @@ namespace CrystalMagic.Game.Skill
             UnitFacingUtility.SetFacing(entityManager, entity, nextFacing);
         }
 
-        private static bool TryGetDesiredDirection(EntityManager entityManager, Entity entity, in UnitCastComponent cast, out float2 desiredDirection)
+        private static bool TryGetDesiredDirection(EntityManager entityManager, Entity entity, out float2 desiredDirection)
         {
             desiredDirection = new float2(1f, 0f);
             if (entity == Entity.Null ||
@@ -228,16 +230,9 @@ namespace CrystalMagic.Game.Skill
             }
 
             Unity.Transforms.LocalTransform transform = entityManager.GetComponentData<Unity.Transforms.LocalTransform>(entity);
-            float2 targetPosition = cast.HasLockedTarget
-                ? cast.LockedTargetPosition
-                : transform.Position.xy + new float2(1f, 0f);
-
-            if (entityManager.HasComponent<UnitPerceptionComponent>(entity))
-            {
-                UnitPerceptionComponent perception = entityManager.GetComponentData<UnitPerceptionComponent>(entity);
-                if (perception.HasTarget)
-                    targetPosition = perception.TargetPosition;
-            }
+            float2 targetPosition = transform.Position.xy + new float2(1f, 0f);
+            if (SkillTargetUtility.TryGetTargetPosition(entityManager, entity, out float2 resolvedTargetPosition))
+                targetPosition = resolvedTargetPosition;
 
             desiredDirection = targetPosition - transform.Position.xy;
             if (math.lengthsq(desiredDirection) <= 0.0001f)
@@ -301,7 +296,7 @@ namespace CrystalMagic.Game.Skill
                 }
 
                 if (_retargetBeforeEachCast)
-                    Retarget(entityManager, entity, ref cast);
+                    Retarget(entityManager, entity);
 
                 if (SkillExecutionUtility.TryResolveCurrentSkill(entityManager, entity, cast, out ResolvedSkillData skillData))
                     SkillExecutionUtility.ExecuteResolvedSkillOnce(entityManager, entity, cast, skillData);
@@ -316,7 +311,7 @@ namespace CrystalMagic.Game.Skill
             return true;
         }
 
-        private static void Retarget(EntityManager entityManager, Entity entity, ref UnitCastComponent cast)
+        private static void Retarget(EntityManager entityManager, Entity entity)
         {
             if (!entityManager.Exists(entity) || !entityManager.HasComponent<UnitPerceptionComponent>(entity))
                 return;
@@ -325,8 +320,13 @@ namespace CrystalMagic.Game.Skill
             if (!perception.HasTarget)
                 return;
 
-            cast.HasLockedTarget = true;
-            cast.LockedTargetPosition = perception.TargetPosition;
+            if (entityManager.HasComponent<UnitIntentComponent>(entity))
+            {
+                UnitIntentComponent intent = entityManager.GetComponentData<UnitIntentComponent>(entity);
+                intent.CastTargetPosition = perception.TargetPosition;
+                entityManager.SetComponentData(entity, intent);
+            }
+
             UnitFacingUtility.FaceTowardsPosition(entityManager, entity, perception.TargetPosition);
         }
     }

@@ -107,40 +107,19 @@ namespace CrystalMagic.Game.Skill.Effects
             if (context == null || effectBuffData?.EffectChain == null || effectBuffData.EffectChain.Length == 0)
                 return System.Array.Empty<EffectData>();
 
+            UnitElementComponent? originElementComponent = null;
+            if (context.HasOriginEntity &&
+                context.OriginEntity != Entity.Null &&
+                context.EntityManager.Exists(context.OriginEntity) &&
+                context.EntityManager.HasComponent<UnitElementComponent>(context.OriginEntity))
+            {
+                originElementComponent = context.EntityManager.GetComponentData<UnitElementComponent>(context.OriginEntity);
+            }
+
             return EffectData.CreateRuntimeCopies(
                 effectBuffData.EffectChain,
                 context.RuntimeModifiers,
-                effectData => ResolveOriginElementBonus(context, effectData));
-        }
-
-        private static float ResolveOriginElementBonus(SkillContent context, EffectData effectData)
-        {
-            if (context == null ||
-                effectData == null ||
-                !context.HasOriginEntity ||
-                context.OriginEntity == Entity.Null)
-            {
-                return 0f;
-            }
-
-            EntityManager entityManager = context.EntityManager;
-            if (!entityManager.Exists(context.OriginEntity) ||
-                !entityManager.HasComponent<UnitElementComponent>(context.OriginEntity))
-            {
-                return 0f;
-            }
-
-            ElementType element = effectData switch
-            {
-                DamageEffectData damageEffectData => damageEffectData.Element,
-                PersistentEffectData persistentEffectData => persistentEffectData.Element,
-                _ => ElementType.None,
-            };
-
-            if (element == ElementType.None)
-                return 0f;
-
-            return entityManager.GetComponentData<UnitElementComponent>(context.OriginEntity).GetPowerBonus(element);
+                originElementComponent);
         }
 
         private static float GetPreferredDuration(float currentDuration, float incomingDuration)

@@ -56,6 +56,8 @@ namespace CrystalMagic.Game.Data
         Damage = 100,
         [EditorLabel("Flat Damage")]
         FlatDamage = 101,
+        [EditorLabel("Attribute Power")]
+        AttributePower = 102,
         [EditorLabel("Knockback Force")]
         KnockbackForce = 103,
         [EditorLabel("Hit Stun Seconds")]
@@ -172,6 +174,11 @@ namespace CrystalMagic.Game.Data
             return math.max(0f, Apply(SkillModifierChannel.MoveSpeedMultiplier, 1f));
         }
 
+        public float GetAttributePowerValue()
+        {
+            return Apply(SkillModifierChannel.AttributePower, 0f);
+        }
+
         public void Add(SkillModifierSet other)
         {
             if (other == null)
@@ -208,6 +215,55 @@ namespace CrystalMagic.Game.Data
             public SkillModifierChannel Channel;
             public float FactorSum;
             public float Bonus;
+        }
+    }
+
+    public static class SkillModifierChannelUtility
+    {
+        private static readonly SkillModifierChannel[] EditableChannels = CreateEditableChannels();
+        private static readonly string[] EditableChannelDisplayNames = CreateEditableDisplayNames();
+
+        public static SkillModifierChannel[] GetEditableChannels()
+        {
+            SkillModifierChannel[] copy = new SkillModifierChannel[EditableChannels.Length];
+            System.Array.Copy(EditableChannels, copy, EditableChannels.Length);
+            return copy;
+        }
+
+        public static string[] GetEditableDisplayNames()
+        {
+            string[] copy = new string[EditableChannelDisplayNames.Length];
+            System.Array.Copy(EditableChannelDisplayNames, copy, EditableChannelDisplayNames.Length);
+            return copy;
+        }
+
+        public static bool IsInternalChannel(SkillModifierChannel channel)
+        {
+            return channel == SkillModifierChannel.AttributePower;
+        }
+
+        private static SkillModifierChannel[] CreateEditableChannels()
+        {
+            SkillModifierChannel[] allChannels = (SkillModifierChannel[])System.Enum.GetValues(typeof(SkillModifierChannel));
+            List<SkillModifierChannel> channels = new(allChannels.Length);
+            for (int i = 0; i < allChannels.Length; i++)
+            {
+                if (IsInternalChannel(allChannels[i]))
+                    continue;
+
+                channels.Add(allChannels[i]);
+            }
+
+            return channels.ToArray();
+        }
+
+        private static string[] CreateEditableDisplayNames()
+        {
+            string[] displayNames = new string[EditableChannels.Length];
+            for (int i = 0; i < EditableChannels.Length; i++)
+                displayNames[i] = EditorLabelUtility.GetEnumValueLabel(EditableChannels[i]);
+
+            return displayNames;
         }
     }
 

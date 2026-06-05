@@ -26,10 +26,9 @@ namespace CrystalMagic.Game.Data.Effects
 
         public override EffectData CreateRuntimeCopy(
             SkillModifierSet modifiers,
-            float elementBonus = 0f,
-            System.Func<EffectData, float> elementBonusResolver = null)
+            UnitElementComponent? elementComponent = null)
         {
-            SpawnUnitEffectData copy = (SpawnUnitEffectData)base.CreateRuntimeCopy(modifiers, elementBonus, elementBonusResolver);
+            SpawnUnitEffectData copy = (SpawnUnitEffectData)base.CreateRuntimeCopy(modifiers, elementComponent);
             copy.Count = Unity.Mathematics.math.max(1, Count);
             copy.SpawnRadius = ApplyModifierNonNegative(modifiers, SkillModifierChannel.AreaRadius, SpawnRadius);
             copy.MinSpawnRadius = ApplyModifierNonNegative(modifiers, SkillModifierChannel.AreaRadius, MinSpawnRadius);

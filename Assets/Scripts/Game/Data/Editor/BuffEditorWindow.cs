@@ -25,7 +25,8 @@ namespace CrystalMagic.Editor.Data
         private const float  InsertFieldWidth = 30f;
         private const float  LabelWidth     = 180f;
         private static readonly string[] PropertyModifierChannelDisplayNames = EditorLabelUtility.GetEnumDisplayNames<PropertyModifierChannel>();
-        private static readonly string[] SkillModifierChannelDisplayNames = EditorLabelUtility.GetEnumDisplayNames<SkillModifierChannel>();
+        private static readonly SkillModifierChannel[] EditableSkillModifierChannels = SkillModifierChannelUtility.GetEditableChannels();
+        private static readonly string[] SkillModifierChannelDisplayNames = SkillModifierChannelUtility.GetEditableDisplayNames();
 
         // ===== Buff 瀛愮被娉ㄥ唽 =====
         private static readonly Type[]   KnownBuffTypes =
@@ -633,9 +634,9 @@ namespace CrystalMagic.Editor.Data
 
                 EditorGUI.BeginChangeCheck();
                 EditorGUILayout.BeginHorizontal();
-                int skillChannelIndex = Array.IndexOf((SkillModifierChannel[])Enum.GetValues(typeof(SkillModifierChannel)), entry.Channel);
+                int skillChannelIndex = Array.IndexOf(EditableSkillModifierChannels, entry.Channel);
                 skillChannelIndex = EditorGUILayout.Popup(Mathf.Max(0, skillChannelIndex), SkillModifierChannelDisplayNames, GUILayout.MinWidth(180));
-                entry.Channel = ((SkillModifierChannel[])Enum.GetValues(typeof(SkillModifierChannel)))[skillChannelIndex];
+                entry.Channel = EditableSkillModifierChannels[Mathf.Clamp(skillChannelIndex, 0, EditableSkillModifierChannels.Length - 1)];
 
                 float prevWidth = EditorGUIUtility.labelWidth;
                 EditorGUIUtility.labelWidth = 46f;
@@ -884,9 +885,9 @@ namespace CrystalMagic.Editor.Data
 
                 EditorGUI.BeginChangeCheck();
                 EditorGUILayout.BeginHorizontal();
-                int skillChannelIndex = Array.IndexOf((SkillModifierChannel[])Enum.GetValues(typeof(SkillModifierChannel)), entry.Channel);
+                int skillChannelIndex = Array.IndexOf(EditableSkillModifierChannels, entry.Channel);
                 skillChannelIndex = EditorGUILayout.Popup(Mathf.Max(0, skillChannelIndex), SkillModifierChannelDisplayNames, GUILayout.MinWidth(180));
-                entry.Channel = ((SkillModifierChannel[])Enum.GetValues(typeof(SkillModifierChannel)))[Mathf.Clamp(skillChannelIndex, 0, SkillModifierChannelDisplayNames.Length - 1)];
+                entry.Channel = EditableSkillModifierChannels[Mathf.Clamp(skillChannelIndex, 0, EditableSkillModifierChannels.Length - 1)];
                 entry.Factor = EditorGUILayout.FloatField("Factor", entry.Factor);
                 entry.Bonus = EditorGUILayout.FloatField("Bonus", entry.Bonus);
 

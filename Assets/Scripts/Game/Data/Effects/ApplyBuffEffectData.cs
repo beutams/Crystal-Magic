@@ -12,9 +12,9 @@ namespace CrystalMagic.Game.Data.Effects
         [EditorLabel("施加层数")]
         public int StackCount = 1;
 
-        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, float elementBonus = 0f, System.Func<EffectData, float> elementBonusResolver = null)
+        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, UnitElementComponent? elementComponent = null)
         {
-            ApplyBuffEffectData copy = (ApplyBuffEffectData)base.CreateRuntimeCopy(modifiers, elementBonus, elementBonusResolver);
+            ApplyBuffEffectData copy = (ApplyBuffEffectData)base.CreateRuntimeCopy(modifiers, elementComponent);
             copy.DurationSeconds = ApplyModifierNonNegative(modifiers, SkillModifierChannel.BuffDuration, DurationSeconds);
             return copy;
         }

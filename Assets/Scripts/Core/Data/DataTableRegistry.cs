@@ -23,7 +23,7 @@ namespace CrystalMagic.Core
             component.LoadTable<PropData>("PropDataTable");
             component.LoadTable<NPCData>("NPCDataTable");
             component.LoadTable<ShopData>("ShopDataTable");
-            component.LoadTable<SkillEffectData>("SkillEffectDataTable");
+            component.LoadTable<SkillAdditionData>("SkillAdditionDataTable");
             component.LoadTable<SkillData>("SkillDataTable");
             component.LoadTable<UnitAnimationProfileData>("UnitAnimationProfileDataTable");
             component.LoadTable<UnitData>("UnitDataTable");

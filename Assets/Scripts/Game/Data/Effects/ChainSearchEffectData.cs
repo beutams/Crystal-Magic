@@ -20,14 +20,13 @@ namespace CrystalMagic.Game.Data.Effects
 
         public override EffectData CreateRuntimeCopy(
             SkillModifierSet modifiers,
-            float elementBonus = 0f,
-            Func<EffectData, float> elementBonusResolver = null)
+            UnitElementComponent? elementComponent = null)
         {
-            ChainSearchEffectData copy = (ChainSearchEffectData)base.CreateRuntimeCopy(modifiers, elementBonus, elementBonusResolver);
+            ChainSearchEffectData copy = (ChainSearchEffectData)base.CreateRuntimeCopy(modifiers, elementComponent);
             copy.Radius = ApplyModifierNonNegative(modifiers, SkillModifierChannel.AreaRadius, Radius);
             copy.MaxJumps = MaxJumps < 0 ? 0 : MaxJumps;
             copy.TargetConditions = TargetConditions == null ? new List<ConditionConfig>() : new List<ConditionConfig>(TargetConditions);
-            copy.OnAfterSearch = CreateRuntimeCopies(OnAfterSearch, modifiers, elementBonusResolver);
+            copy.OnAfterSearch = CreateRuntimeCopies(OnAfterSearch, modifiers, elementComponent);
             return copy;
         }
     }

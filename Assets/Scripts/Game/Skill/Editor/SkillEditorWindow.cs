@@ -26,7 +26,8 @@ namespace CrystalMagic.Editor.Skill
         private const float ItemHeight = 26f;
         private const float InsertFieldWidth = 30f;
         private const float LabelWidth = 150f;
-        private static readonly string[] SkillModifierChannelDisplayNames = EditorLabelUtility.GetEnumDisplayNames<SkillModifierChannel>();
+        private static readonly SkillModifierChannel[] EditableSkillModifierChannels = SkillModifierChannelUtility.GetEditableChannels();
+        private static readonly string[] SkillModifierChannelDisplayNames = SkillModifierChannelUtility.GetEditableDisplayNames();
 
         private static readonly Type[] KnownEffectTypes =
         {
@@ -542,13 +543,13 @@ namespace CrystalMagic.Editor.Skill
             skill.RuntimeType = nextKey;
         }
 
-        private void DrawFollowupRuntimeTypeField(SkillFollowupEffectData followup)
+        private void DrawFollowupRuntimeTypeField(RuntimeTypeFollowupFilterData filter)
         {
-            string currentKey = followup.EffectiveRuntimeType;
+            string currentKey = filter.EffectiveRuntimeType;
             IReadOnlyList<FactoryTypeInfo> runtimeTypeInfos = SkillRegistry.SkillRuntimeTypeInfos;
             if (runtimeTypeInfos == null || runtimeTypeInfos.Count == 0)
             {
-                followup.RuntimeType = EditorGUILayout.TextField("Runtime Type", currentKey);
+                filter.RuntimeType = EditorGUILayout.TextField("Runtime Type", currentKey);
                 return;
             }
 
@@ -564,12 +565,12 @@ namespace CrystalMagic.Editor.Skill
 
             if (selectedIndex < 0)
             {
-                followup.RuntimeType = EditorGUILayout.TextField("Runtime Type", currentKey);
+                filter.RuntimeType = EditorGUILayout.TextField("Runtime Type", currentKey);
                 return;
             }
 
             int nextIndex = EditorGUILayout.Popup("Runtime Type", selectedIndex, displayNames);
-            followup.RuntimeType = runtimeTypeInfos[Mathf.Clamp(nextIndex, 0, runtimeTypeInfos.Count - 1)].Key;
+            filter.RuntimeType = runtimeTypeInfos[Mathf.Clamp(nextIndex, 0, runtimeTypeInfos.Count - 1)].Key;
         }
 
         private List<int> GetVisibleRowIndices()
@@ -1028,9 +1029,9 @@ namespace CrystalMagic.Editor.Skill
                 EditorGUI.BeginChangeCheck();
                 EditorGUILayout.BeginHorizontal();
 
-                int channelIndex = Array.IndexOf((SkillModifierChannel[])Enum.GetValues(typeof(SkillModifierChannel)), entry.Channel);
+                int channelIndex = Array.IndexOf(EditableSkillModifierChannels, entry.Channel);
                 channelIndex = EditorGUILayout.Popup(Mathf.Max(0, channelIndex), SkillModifierChannelDisplayNames, GUILayout.MinWidth(180));
-                entry.Channel = ((SkillModifierChannel[])Enum.GetValues(typeof(SkillModifierChannel)))[Mathf.Clamp(channelIndex, 0, SkillModifierChannelDisplayNames.Length - 1)];
+                entry.Channel = EditableSkillModifierChannels[Mathf.Clamp(channelIndex, 0, EditableSkillModifierChannels.Length - 1)];
                 entry.Factor = EditorGUILayout.FloatField("Factor", entry.Factor);
                 entry.Bonus = EditorGUILayout.FloatField("Bonus", entry.Bonus);
 
@@ -1073,25 +1074,8 @@ namespace CrystalMagic.Editor.Skill
                 EditorGUI.BeginChangeCheck();
 
                 EditorGUILayout.BeginVertical("box");
-                followup.FilterType = (SkillFollowupFilterType)EditorGUILayout.EnumPopup("Filter", followup.FilterType);
+                DrawFollowupFilter(followup);
                 DrawFollowupConsumeRule(followup);
-
-                switch (followup.FilterType)
-                {
-                    case SkillFollowupFilterType.SkillId:
-                        followup.SkillId = EditorGUILayout.IntField("Skill Id", followup.SkillId);
-                        break;
-                    case SkillFollowupFilterType.RuntimeType:
-                        DrawFollowupRuntimeTypeField(followup);
-                        break;
-                    case SkillFollowupFilterType.Element:
-                        followup.Element = (ElementType)EditorGUILayout.EnumPopup("Element", followup.Element);
-                        break;
-                    case SkillFollowupFilterType.SkillAdditionId:
-                        followup.SkillAdditionId = EditorGUILayout.IntField("Skill Addition Id", followup.SkillAdditionId);
-                        break;
-                }
-
                 DrawFollowupModifierRule(followup);
 
                 GUI.color = new Color(1f, 0.5f, 0.5f);
@@ -1119,6 +1103,36 @@ namespace CrystalMagic.Editor.Skill
                 followupEffects.RemoveAt(removeAt);
                 _isDirty = true;
             }
+        }
+
+        private void DrawFollowupFilter(SkillFollowupEffectData followup)
+        {
+            followup.EnsureDefaults();
+
+            IReadOnlyList<FactoryTypeInfo> filterTypeInfos = SkillFollowupFilterRegistry.FilterTypeInfos;
+            if (filterTypeInfos == null || filterTypeInfos.Count == 0)
+            {
+                EditorGUILayout.HelpBox("No followup filters registered.", MessageType.Warning);
+                return;
+            }
+
+            string currentKey = SkillFollowupFilterRegistry.GetFilterKey(followup.Filter);
+            int selectedIndex = GetFactoryTypeIndex(filterTypeInfos, currentKey);
+            string[] displayNames = GetFactoryDisplayNames(filterTypeInfos);
+            int nextIndex = EditorGUILayout.Popup("Filter", selectedIndex, displayNames);
+            if (nextIndex != selectedIndex)
+            {
+                followup.Filter = SkillFollowupFilterRegistry.CreateFilterData(filterTypeInfos[Mathf.Clamp(nextIndex, 0, filterTypeInfos.Count - 1)].Key);
+                followup.Filter?.EnsureDefaults();
+                _isDirty = true;
+            }
+
+            if (followup.Filter is RuntimeTypeFollowupFilterData runtimeTypeFilter)
+                DrawFollowupRuntimeTypeField(runtimeTypeFilter);
+            else
+                DrawSerializableObjectFields(followup.Filter, "FollowupFilter");
+
+            followup.Filter?.EnsureDefaults();
         }
 
         private void DrawFollowupConsumeRule(SkillFollowupEffectData followup)

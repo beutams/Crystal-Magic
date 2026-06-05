@@ -1,6 +1,6 @@
+using System.Collections.Generic;
 using CrystalMagic.Game.Data;
-using CrystalMagic.Game.Data.Effects;
-using Unity.Collections;
+using CrystalMagic.Game.Skill;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
@@ -13,36 +13,16 @@ public class UnitCastAuthoring : MonoBehaviour
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             AddComponent(entity, new UnitCastComponent());
-            AddBuffer<UnitCastFollowupEffectElement>(entity);
+            AddComponentObject(entity, new UnitCastFollowupRuntimeComponent());
             AddComponentObject(entity, new UnitCastTaskPayloadComponent());
             AddComponentObject(entity, new UnitCastSkillPayloadComponent());
         }
     }
 }
 
-public struct UnitCastFollowupEffectElement : IBufferElementData
+public class UnitCastFollowupRuntimeComponent : IComponentData
 {
-    public int SourceSkillId;
-    public int SourceSkillAdditionId;
-    public FixedString64Bytes ConsumeRuleKey;
-    public int ConsumeRuleStateInt0;
-    public float ConsumeRuleStateFloat0;
-    public FixedString64Bytes ModifierRuleKey;
-    public int ModifierRuleStateInt0;
-    public float ModifierRuleStateFloat0;
-    public SkillFollowupFilterType FilterType;
-    public int SkillId;
-    public FixedString64Bytes RuntimeType;
-    public ElementType Element;
-    public int SkillAdditionId;
-    public FixedList4096Bytes<SkillModifierEntry> ModifierEntries;
-    public FixedList128Bytes<SkillFollowupModifierSlice> ModifierSlices;
-}
-
-public struct SkillFollowupModifierSlice
-{
-    public int StartIndex;
-    public int Length;
+    public List<SkillFollowupRuntime> Followups = new();
 }
 
 public enum SkillCastPhase : byte
@@ -69,8 +49,6 @@ public struct UnitCastComponent : IComponentData
     public bool IsCasting;
     public bool StartedThisFrame;
     public bool ForceInterrupt;
-    public bool HasLockedTarget;
-    public float2 LockedTargetPosition;
     public int CurrentSkillId;
     public int CurrentSkillAdditionId;
     public int ExecutionSerialCounter;

@@ -1,0 +1,554 @@
+﻿Core\
+  Audio\
+    AudioComponent.cs FALSE
+  Camera\
+    CameraComponent.cs FALSE
+    SceneCamera.cs FALSE
+  Config\
+    Editor\
+      ConfigEditorWindow.cs FALSE
+    ConfigComponent.cs FALSE
+    DungeonConfig.cs FALSE
+    GameConfig.cs FALSE
+    GameConfigAttribute.cs FALSE
+    ModifierConfig.cs FALSE
+  Data\
+    Editor\
+      DataTableRegistryGenerator.cs FALSE
+      DataTableViewerWindow.cs FALSE
+    DataComponent.cs FALSE
+    DataRow.cs FALSE
+    DataTable.cs FALSE
+    DataTableRegistry.cs FALSE
+    ReadOnlyDataAttribute.cs FALSE
+    UnityObjectPathJsonConverter.cs FALSE
+  Editor\
+    EditorFocusUtility.cs FALSE
+  Events\
+    CommonGameEvent.cs FALSE
+    EventComponent.cs FALSE
+    GameEvents.cs FALSE
+    GameGateChangedEvent.cs FALSE
+    MainMenuConfigRequestedEvent.cs FALSE
+    MainMenuExitRequestedEvent.cs FALSE
+    MainMenuLoadRequestedEvent.cs FALSE
+    MainMenuStartRequestedEvent.cs FALSE
+    TransitionLoadProgressChangedEvent.cs FALSE
+    TransitionPhaseChangedEvent.cs FALSE
+    UISceneScopeChangedEvent.cs FALSE
+  Factory\
+    Editor\
+      FactoryRegistryGeneratorUtility.cs FALSE
+      RegistryGeneratorUtility.cs FALSE
+    FactoryKeyAttribute.cs FALSE
+    GeneratedFactory.cs FALSE
+  Flow\
+    DungeonGenerationService.cs FALSE
+    DungeonState.cs FALSE
+    GameFlowComponent.cs FALSE
+    GameState.cs FALSE
+    LoadGameState.cs FALSE
+    MainMenuState.cs FALSE
+    RunResultState.cs FALSE
+    TownState.cs FALSE
+    TrainingState.cs FALSE
+    TransitionState.cs FALSE
+  GameGate\
+    GameGateComponent.cs FALSE
+  Input\
+    InputComponent.cs FALSE
+  Pool\
+    GameObjectPool.cs FALSE
+    IObjectPool.cs FALSE
+    IPoolable.cs FALSE
+    ObjectPool.cs FALSE
+    PoolComponent.cs FALSE
+    PoolPreset.cs FALSE
+  Resource\
+    Editor\
+      BundleBuildConfigData.cs FALSE
+      BundleBuildUtility.cs FALSE
+      BundleBuildWindow.cs FALSE
+    AssetBundlePlatformUtility.cs FALSE
+    AssetBundleResourceLoader.cs FALSE
+    AssetPathHelper.cs FALSE
+    BundleCatalog.cs FALSE
+    BundleCatalogAsset.cs FALSE
+    BundleCatalogData.cs FALSE
+    EditorResourceLoader.cs FALSE
+    IResourceLoader.cs FALSE
+    ResourceComponent.cs FALSE
+    ResourceLoadMode.cs FALSE
+  Runtime\
+    DungeonSceneRuntimeBuilder.cs FALSE
+    DungeonSceneRuntimeRoot.cs FALSE
+    RuntimeDataComponent.cs FALSE
+  SaveData\
+    CurrencyUtility.cs FALSE
+    InventoryUtility.cs FALSE
+    PropInventoryUtility.cs FALSE
+    SaveData.cs FALSE
+    SaveDataComponent.cs FALSE
+    SaveVariableData.cs FALSE
+  Scene\
+    Editor\
+      SubSceneAutoOpenOnPlay.cs FALSE
+    AutoOpen.cs FALSE
+    SceneComponent.cs FALSE
+  Settings\
+    GameSettingsComponent.cs FALSE
+    GameSettingsData.cs FALSE
+  Transition\
+    TransitionComponent.cs FALSE
+  UI\
+    Editor\
+      UIClassGenerator.cs FALSE
+      UIDataGenerator.cs FALSE
+      UINodeConfig.cs FALSE
+      UINodeConfigWindow.cs FALSE
+      UISubClassGenerator.cs FALSE
+    EmptyUIModel.cs FALSE
+    ITransitionUI.cs FALSE
+    IUIOpenDataReceiver.cs FALSE
+    ListUIGroup.cs FALSE
+    QueueUIGroup.cs FALSE
+    StackUIGroup.cs FALSE
+    UIBase.cs FALSE
+    UIBindingExtensions.cs FALSE
+    UIBindingScope.cs FALSE
+    UIComponent.cs FALSE
+    UIControllerBase.cs FALSE
+    UIData.cs FALSE
+    UIGroup.cs FALSE
+    UIGroupConfig.cs FALSE
+    UIGroupType.cs FALSE
+    UIModelBase.cs FALSE
+    UINode.cs FALSE
+    UIProperty.cs FALSE
+    UISubView.cs FALSE
+  EditorComponents.cs FALSE
+  EditorLabelAttribute.cs FALSE
+  GameComponent.cs FALSE
+  GameEntry.cs FALSE
+  IGameComponent.cs FALSE
+  PersistentEventSystem.cs FALSE
+  Singleton.cs FALSE
+Editor\
+  PlayFromStartScene.cs FALSE
+  UIConfigWindow.cs FALSE
+Game\
+  Comparator\
+    Editor\
+      ComparatorRegistryGenerator.cs FALSE
+    Comparator.cs FALSE
+    ComparatorFactory.cs FALSE
+    ComparatorRegistry.cs FALSE
+    Condition.cs FALSE
+    ConditionConfig.cs FALSE
+    ICompareType.cs FALSE
+    ISource.cs FALSE
+  Config\
+  Data\
+    Editor\
+      BuffEditorWindow.cs FALSE
+      DungeonEditorWindow.cs FALSE
+      EquipEditorWindow.cs FALSE
+      NPCEditorWindow.cs FALSE
+      PropEditorWindow.cs FALSE
+      SkillAdditionEditorWindow.cs FALSE
+      UnitAnimationProfileEditorWindow.cs FALSE
+      UnitEditorAttributeDrawerFactory.cs FALSE
+      UnitEditorAttributeDrawers.cs FALSE
+      UnitEditorDrawerContext.cs FALSE
+      UnitEditorWindow.cs FALSE
+    Effects\
+      ApplyBuffEffectData.cs FALSE
+      AreaSearchEffectData.cs FALSE
+      BuffStackEffectData.cs FALSE
+      CameraShakeEffectData.cs FALSE
+      ChainSearchEffectData.cs FALSE
+      ConeSearchEffectData.cs FALSE
+      ControlEffectData.cs FALSE
+      DamageEffectData.cs FALSE
+      EffectData.cs FALSE
+      ForwardRectSearchEffectData.cs FALSE
+      HealthCostEffectData.cs FALSE
+      PersistentBeamEffectData.cs FALSE
+      PersistentEffectData.cs FALSE
+      RandomAreaPointEffectData.cs FALSE
+      RecoverEffectData.cs FALSE
+      SpawnProjectileEffectData.cs FALSE
+      SpawnSoundEffectData.cs FALSE
+      SpawnUnitEffectData.cs FALSE
+      SpawnVfxEffectData.cs FALSE
+    BehaviorTreeData.cs FALSE
+    BuffData.cs FALSE
+    DropData.cs FALSE
+    DungeonDefinitionData.cs FALSE
+    ItemData.cs FALSE
+    NPCData.cs FALSE
+    PropData.cs FALSE
+    ShopData.cs FALSE
+    SkillAdditionData.cs FALSE
+    SkillCastTaskData.cs FALSE
+    SkillData.cs FALSE
+    SkillFollowupConsumeRuleData.cs FALSE
+    SkillFollowupEffectData.cs FALSE
+    SkillFollowupFilterData.cs FALSE
+    SkillFollowupModifierRuleData.cs FALSE
+    UnitAnimationClipData.cs FALSE
+    UnitData.cs FALSE
+  MapDemo\
+    Editor\
+      TunnelingMapDemoEditor.cs FALSE
+    DungeonMakerTunnelingConfig.cs FALSE
+    DungeonMakerTunnelingGenerator.cs FALSE
+    TunnelingMapDemo.cs FALSE
+  Skill\
+    Editor\
+      SkillEditorWindow.cs FALSE
+      SkillFollowupConsumeRuleRegistryGenerator.cs FALSE
+      SkillFollowupFilterRegistryGenerator.cs FALSE
+      SkillFollowupModifierRuleRegistryGenerator.cs FALSE
+      SkillRegistryGenerator.cs FALSE
+    Effects\
+      ApplyBuffEffect.cs FALSE
+      AreaSearchEffect.cs FALSE
+      BuffStackEffect.cs FALSE
+      CameraShakeEffect.cs FALSE
+      ChainSearchEffect.cs FALSE
+      ConeSearchEffect.cs FALSE
+      DamageEffect.cs FALSE
+      Effect.cs FALSE
+      ForwardRectSearchEffect.cs FALSE
+      PersistentBeamEffect.cs FALSE
+      PersistentEffect.cs FALSE
+      RandomAreaPointEffect.cs FALSE
+      RecoverEffect.cs FALSE
+      SpawnProjectileEffect.cs FALSE
+      SpawnSoundEffect.cs FALSE
+      SpawnUnitEffect.cs FALSE
+      SpawnVfxEffect.cs FALSE
+    Followup\
+      Consume\
+        UseCountSkillFollowupConsumeRule.cs FALSE
+      Filter\
+        AnySkillFollowupFilter.cs FALSE
+        ElementFollowupFilter.cs FALSE
+        RuntimeTypeFollowupFilter.cs FALSE
+        SkillAdditionNameFollowupFilter.cs FALSE
+        SkillIdFollowupFilter.cs FALSE
+      Modifier\
+        SequenceSkillFollowupModifierRule.cs FALSE
+        StaticSkillFollowupModifierRule.cs FALSE
+    Skills\
+      PositionSkill.cs FALSE
+      SelfSkill.cs FALSE
+      Skill.cs FALSE
+    Flipbook4x4Runtime.cs FALSE
+    SkillAnalysisUtility.cs FALSE
+    SkillCastTasks.cs FALSE
+    SkillChainResolver.cs FALSE
+    SkillContent.cs FALSE
+    SkillExecutor.cs FALSE
+    SkillFactory.cs FALSE
+    SkillFollowupConsumeRule.cs FALSE
+    SkillFollowupConsumeRuleFactory.cs FALSE
+    SkillFollowupConsumeRuleRegistry.cs FALSE
+    SkillFollowupContext.cs FALSE
+    SkillFollowupFilter.cs FALSE
+    SkillFollowupFilterFactory.cs FALSE
+    SkillFollowupFilterRegistry.cs FALSE
+    SkillFollowupModifierRule.cs FALSE
+    SkillFollowupModifierRuleFactory.cs FALSE
+    SkillFollowupModifierRuleRegistry.cs FALSE
+    SkillFollowupModifierRuntimeUtility.cs FALSE
+    SkillFollowupRuntimeFactories.cs FALSE
+    SkillRegistry.cs FALSE
+    SkillTargetUtility.cs FALSE
+  Unit\
+    BehaviorTree\
+      ActionBehaviorNodes.cs FALSE
+      BehaviorNodeFactory.cs FALSE
+      BehaviorNodes.cs FALSE
+      BehaviorTreeRegistry.cs FALSE
+      BehaviorTreeRuntime.cs FALSE
+      CommonBehaviorNodes.cs FALSE
+      DecoratorBehaviorNodes.cs FALSE
+    Component\
+      Tag\
+        NPCTagAuthoring.cs FALSE
+        PlayerTagAuthoring.cs FALSE
+      DestroyEntityFlag.cs FALSE
+      EntitySpawnRegistryAuthoring.cs FALSE
+      NPCAuthoringUtility.cs FALSE
+      NPCInteractableAuthoring.cs FALSE
+      NPCInteractionRequest.cs FALSE
+      NPCInteractionState.cs FALSE
+      PlayerSkillComponent.cs FALSE
+      ProjectileDestroyVfxComponent.cs FALSE
+      SkillProjectileAuthoring.cs FALSE
+      SkillProjectileComponent.cs FALSE
+      UnitAnimationComponent.cs FALSE
+      UnitAttackAuthoring.cs FALSE
+      UnitAuthoringUtility.cs FALSE
+      UnitBehaviorTreeAuthoring.cs FALSE
+      UnitBuffAuthoring.cs FALSE
+      UnitBuffPayloadComponent.cs FALSE
+      UnitCastAuthoring.cs FALSE
+      UnitCastSkillPayloadComponent.cs FALSE
+      UnitCastTaskPayloadComponent.cs FALSE
+      UnitControlComponent.cs FALSE
+      UnitDropAuthoring.cs FALSE
+      UnitFacingComponent.cs FALSE
+      UnitFactionAuthoring.cs FALSE
+      UnitIntentAuthoring.cs FALSE
+      UnitJumpArcComponent.cs FALSE
+      UnitManaAuthoring.cs FALSE
+      UnitMoveAuthoring.cs FALSE
+      UnitPerceptionAuthoring.cs FALSE
+      UnitQuadVisualRequest.cs FALSE
+      UnitSkillAuthoring.cs FALSE
+      UnitStateMachineAuthoring.cs FALSE
+      UnitVitalityAuthoring.cs FALSE
+      WorldDropComponent.cs FALSE
+    Editor\
+      BehaviorTreeGraphWindow.cs FALSE
+      BehaviorTreeRegistryGenerator.cs FALSE
+      NPCInteractionNodeRegistryGenerator.cs FALSE
+      StateMachineGraphWindow.cs FALSE
+      StateMachineRegistryGenerator.cs FALSE
+      UnitRuntimeAttributeDrawerFactory.cs FALSE
+      UnitRuntimeAttributeDrawers.cs FALSE
+      UnitRuntimeDebugWindow.cs FALSE
+      UnitRuntimeDrawerContext.cs FALSE
+    Event\
+      NPCInteractionFinishedEvent.cs FALSE
+      NPCInteractionNodeStartedEvent.cs FALSE
+      NPCInteractionSelectRequestedEvent.cs FALSE
+      NPCInteractionStartedEvent.cs FALSE
+    NPCInteraction\
+      NPCInteractionNodeDataConverter.cs FALSE
+      NPCInteractionNodeDataFactory.cs FALSE
+      NPCInteractionNodeDataRegistry.cs FALSE
+      NPCInteractionNodeFactory.cs FALSE
+      NPCInteractionNodeRegistry.cs FALSE
+      NPCInteractionNodeRunner.cs FALSE
+      NPCInteractionNodeRunners.cs FALSE
+      NPCInteractionSession.cs FALSE
+    System\
+      BehaviorTreeInitSystem.cs FALSE
+      BehaviorTreeSystem.cs FALSE
+      DestroyEntitySystem.cs FALSE
+      EntitySpawnRegistryUtility.cs FALSE
+      NPCInteractInputSystem.cs FALSE
+      NPCInteractionSystem.cs FALSE
+      NPCInteractPromptSystem.cs FALSE
+      PersistentBeamEffectSystem.cs FALSE
+      PersistentEffectSystem.cs FALSE
+      PlayerEquipmentPassiveBuffSystem.cs FALSE
+      PlayerInputSystem.cs FALSE
+      PlayerSkillAnalysisSystem.cs FALSE
+      ProjectileDestroyVfxSystem.cs FALSE
+      ProjectileVisualUtility.cs FALSE
+      SkillExecutionUtility.cs FALSE
+      SkillProjectileSpawnSystem.cs FALSE
+      SkillProjectileSystem.cs FALSE
+      UnitAnimationSystem.cs FALSE
+      UnitAnimationVisualUtility.cs FALSE
+      UnitBuffSystem.cs FALSE
+      UnitBuffUtility.cs FALSE
+      UnitControlSystem.cs FALSE
+      UnitControlUtility.cs FALSE
+      UnitDropOnDestroySystem.cs FALSE
+      UnitFacingSystem.cs FALSE
+      UnitJumpArcSystem.cs FALSE
+      UnitMoveSystem.cs FALSE
+      UnitPerceptionSystem.cs FALSE
+      UnitQuadVisualSystem.cs FALSE
+      UnitQuerySystem.cs FALSE
+      UnitRecoverySystem.cs FALSE
+      UnitSkillAnalysisSystem.cs FALSE
+      UnitSkillExecuteSystem.cs FALSE
+      UnitSkillSystem.cs FALSE
+      UnitStateMachineBuildSystem.cs FALSE
+      UnitStateMachineSystem.cs FALSE
+      UnitStateTransitionSystem.cs FALSE
+      WorldDropPickupSystem.cs FALSE
+    Unit\
+      CompareSource\
+        UnitBuffStackSource.cs FALSE
+        UnitCanStartCastSource.cs FALSE
+        UnitHasTargetSource.cs FALSE
+        UnitHealthRatioSource.cs FALSE
+        UnitIsCastingSource.cs FALSE
+        UnitIsControlledSource.cs FALSE
+        UnitTargetCastRangeMarginSource.cs FALSE
+        UnitVelocitySource.cs FALSE
+        UnitWantToCastSource.cs FALSE
+      State\
+        AUnitState.cs FALSE
+        ControlledState.cs FALSE
+        IdleState.cs FALSE
+        MoveState.cs FALSE
+        PlayerCastState.cs FALSE
+        UnitCastState.cs FALSE
+    PropUseUtility.cs FALSE
+    StateMachineFactory.cs FALSE
+    StateMachineRegistry.cs FALSE
+UI\
+  BattleUI\
+    Sub\
+    BattleUI.cs FALSE
+    BattleUIController.cs FALSE
+    BattleUIData.cs FALSE
+    BattleUIModel.cs FALSE
+  CharacterUI\
+    Sub\
+      CharacterUI_InventoryItemData.cs FALSE
+      CharacterUI_InventoryItemView.cs FALSE
+      CharacterUI_SkillItemData.cs FALSE
+      CharacterUI_SkillItemView.cs FALSE
+    CharacterUI.cs FALSE
+    CharacterUIController.cs FALSE
+    CharacterUIData.cs FALSE
+    CharacterUIModel.cs FALSE
+  ConfirmUI\
+    ConfirmUI.cs FALSE
+    ConfirmUIController.cs FALSE
+    ConfirmUIData.cs FALSE
+    ConfirmUIModel.cs FALSE
+    ConfirmUIOpenData.cs FALSE
+  EffectItemInfoUI\
+    EffectItemInfoUI.cs FALSE
+    EffectItemInfoUIController.cs FALSE
+    EffectItemInfoUIData.cs FALSE
+    EffectItemInfoUIModel.cs FALSE
+  EffectSelectUI\
+    Sub\
+      EffectSelectUI_ItemData.cs FALSE
+      EffectSelectUI_ItemView.cs FALSE
+    EffectSelectUI.cs FALSE
+    EffectSelectUIController.cs FALSE
+    EffectSelectUIData.cs FALSE
+    EffectSelectUIModel.cs FALSE
+  GameMenuUI\
+  GameSaveUI\
+    Sub\
+      GameSaveUI_SaveItemData.cs FALSE
+      GameSaveUI_SaveItemView.cs FALSE
+    GameSaveUI.cs FALSE
+    GameSaveUIController.cs FALSE
+    GameSaveUIData.cs FALSE
+    GameSaveUIModel.cs FALSE
+  GameSettingUI\
+    GameMenuUI.cs FALSE
+    GameMenuUIController.cs FALSE
+    GameMenuUIData.cs FALSE
+    GameMenuUIModel.cs FALSE
+  InteractionSelectUI\
+    Sub\
+      InteractionSelectUI_OptionData.cs FALSE
+      InteractionSelectUI_OptionView.cs FALSE
+    InteractionSelectUI.cs FALSE
+    InteractionSelectUIController.cs FALSE
+    InteractionSelectUIData.cs FALSE
+    InteractionSelectUIModel.cs FALSE
+  LoadUI\
+    Sub\
+      LoadUI_SaveItemData.cs FALSE
+      LoadUI_SaveItemView.cs FALSE
+    LoadUI.cs FALSE
+    LoadUIController.cs FALSE
+    LoadUIData.cs FALSE
+    LoadUIModel.cs FALSE
+  MainMenuUI\
+    MainMenuUI.cs FALSE
+    MainMenuUIController.cs FALSE
+    MainMenuUIData.cs FALSE
+    MainMenuUIModel.cs FALSE
+  PropertyUI\
+    PropertyUI.cs FALSE
+    PropertyUIController.cs FALSE
+    PropertyUIData.cs FALSE
+    PropertyUIModel.cs FALSE
+  SaveUI\
+    Sub\
+      SaveUI_OpenData.cs FALSE
+      SaveUI_OpenView.cs FALSE
+      SaveUI_SaveItemData.cs FALSE
+      SaveUI_SaveItemView.cs FALSE
+    SaveUI.cs FALSE
+    SaveUIController.cs FALSE
+    SaveUIData.cs FALSE
+    SaveUIModel.cs FALSE
+  ShopBuyUI\
+    ShopBuyUI.cs FALSE
+    ShopBuyUIController.cs FALSE
+    ShopBuyUIData.cs FALSE
+    ShopBuyUIModel.cs FALSE
+  ShopItemInfoUI\
+    ShopItemInfoUI.cs FALSE
+    ShopItemInfoUIController.cs FALSE
+    ShopItemInfoUIData.cs FALSE
+    ShopItemInfoUIModel.cs FALSE
+  ShopSellUI\
+    ShopSellUI.cs FALSE
+    ShopSellUIController.cs FALSE
+    ShopSellUIData.cs FALSE
+    ShopSellUIModel.cs FALSE
+  ShopUI\
+    Sub\
+      ShopUI_CommodityItemData.cs FALSE
+      ShopUI_CommodityItemView.cs FALSE
+      ShopUI_InventoryItemData.cs FALSE
+      ShopUI_InventoryItemView.cs FALSE
+    ShopUI.cs FALSE
+    ShopUIController.cs FALSE
+    ShopUIData.cs FALSE
+    ShopUIModel.cs FALSE
+  StashInteractUI\
+    StashInteractUI.cs FALSE
+    StashInteractUIController.cs FALSE
+    StashInteractUIData.cs FALSE
+    StashInteractUIModel.cs FALSE
+  StashUI\
+    Sub\
+      StashUI_InventoryItemData.cs FALSE
+      StashUI_InventoryItemView.cs FALSE
+      StashUI_StashItemData.cs FALSE
+      StashUI_StashItemView.cs FALSE
+    StashUI.cs FALSE
+    StashUIController.cs FALSE
+    StashUIData.cs FALSE
+    StashUIModel.cs FALSE
+  TipForm\
+    TipForm.cs FALSE
+    TipFormController.cs FALSE
+    TipFormData.cs FALSE
+    TipFormModel.cs FALSE
+  TrainingDummyStatsUI\
+    TrainingDummyStatsUI.cs FALSE
+    TrainingDummyStatsUIController.cs FALSE
+    TrainingDummyStatsUIData.cs FALSE
+    TrainingDummyStatsUIModel.cs FALSE
+  TransitionMaskUI\
+    TransitionMaskUI.cs FALSE
+    TransitionMaskUIController.cs FALSE
+    TransitionMaskUIData.cs FALSE
+    TransitionMaskUIModel.cs FALSE
+  TransitionUI\
+    TransitionUI.cs FALSE
+    TransitionUIController.cs FALSE
+    TransitionUIData.cs FALSE
+    TransitionUIModel.cs FALSE
+  UnitHealthBarUI\
+    UnitHealthBarManager.cs FALSE
+    UnitHealthBarUI.cs FALSE
+    UnitHealthBarUIController.cs FALSE
+    UnitHealthBarUIData.cs FALSE
+    UnitHealthBarUIModel.cs FALSE
+  Universal\
+    ButtonPlus.cs FALSE
+    UISelectableListGroup.cs FALSE
+    UISelectableListItem.cs FALSE

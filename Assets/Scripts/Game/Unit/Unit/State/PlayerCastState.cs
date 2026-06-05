@@ -15,33 +15,23 @@ public class PlayerCastState : AUnitState
             !EntityManager.HasComponent<PlayerSkillComponent>(Entity))
             return;
 
-        UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
         PlayerSkillComponent request = EntityManager.GetComponentData<PlayerSkillComponent>(Entity);
-        if (TryPopulateSelectedChainRequest(EntityManager, Entity, ref request))
-            EventComponent.Instance.Publish(new SkillCastLockChangedEvent(true));
+        TryPopulateSelectedChainRequest(EntityManager, Entity, ref request);
+        UnitIntentComponent intent = EntityManager.GetComponentData<UnitIntentComponent>(Entity);
 
-        EntityManager.SetComponentData(Entity, cast);
         EntityManager.SetComponentData(Entity, request);
-        UpdateAnimationFacing(request.LockedTargetPosition, request.HasLockedTarget);
+        UpdateAnimationFacing(intent.CastTargetPosition, true);
     }
 
     public override void OnUpdate(float deltaTime)
     {
-        if (!EntityManager.HasComponent<UnitCastComponent>(Entity) ||
-            !EntityManager.HasComponent<PlayerSkillComponent>(Entity))
+        if (!EntityManager.HasComponent<UnitIntentComponent>(Entity))
         {
             return;
         }
 
-        UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
-        if (cast.HasLockedTarget)
-        {
-            UpdateAnimationFacing(cast.LockedTargetPosition, true);
-            return;
-        }
-
-        PlayerSkillComponent request = EntityManager.GetComponentData<PlayerSkillComponent>(Entity);
-        UpdateAnimationFacing(request.LockedTargetPosition, request.HasLockedTarget);
+        UnitIntentComponent intent = EntityManager.GetComponentData<UnitIntentComponent>(Entity);
+        UpdateAnimationFacing(intent.CastTargetPosition, true);
     }
 
     public override void OnExit()
@@ -62,7 +52,6 @@ public class PlayerCastState : AUnitState
             EntityManager.SetComponentData(Entity, request);
         }
 
-        EventComponent.Instance.Publish(new SkillCastLockChangedEvent(false));
         ClearAnimationFacingDirection();
     }
 
@@ -104,12 +93,10 @@ public class PlayerCastState : AUnitState
         if (request.SkillIds.Length == 0)
             return false;
 
-        UnitIntentComponent intent = entityManager.GetComponentData<UnitIntentComponent>(entity);
         request.HasActiveChain = true;
         request.HasPendingCast = true;
+        request.ActiveChainIndex = chainIndex;
         request.CurrentSkillIndex = 0;
-        request.HasLockedTarget = true;
-        request.LockedTargetPosition = intent.CastTargetPosition;
         return true;
     }
 

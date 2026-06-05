@@ -19,13 +19,13 @@ namespace CrystalMagic.Game.Data.Effects
         [EditorLabel("On After Search")]
         public EffectData[] OnAfterSearch = System.Array.Empty<EffectData>();
 
-        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, float elementBonus = 0f, System.Func<EffectData, float> elementBonusResolver = null)
+        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, UnitElementComponent? elementComponent = null)
         {
-            ConeSearchEffectData copy = (ConeSearchEffectData)base.CreateRuntimeCopy(modifiers, elementBonus, elementBonusResolver);
+            ConeSearchEffectData copy = (ConeSearchEffectData)base.CreateRuntimeCopy(modifiers, elementComponent);
             copy.Radius = ApplyModifierNonNegative(modifiers, SkillModifierChannel.AreaRadius, Radius);
             copy.AngleDegrees = Mathf.Clamp(AngleDegrees, 0f, 360f);
             copy.TargetConditions = TargetConditions == null ? new List<ConditionConfig>() : new List<ConditionConfig>(TargetConditions);
-            copy.OnAfterSearch = CreateRuntimeCopies(OnAfterSearch, modifiers, elementBonusResolver);
+            copy.OnAfterSearch = CreateRuntimeCopies(OnAfterSearch, modifiers, elementComponent);
             return copy;
         }
     }

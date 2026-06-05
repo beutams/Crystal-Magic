@@ -26,8 +26,6 @@ public class UnitSkillAuthoring : MonoBehaviour
                 RequestedTagMask = 0,
                 HasPendingCast = false,
                 PendingSkillIndex = -1,
-                HasLockedTarget = false,
-                LockedTargetPosition = float2.zero,
             };
 
             if (data.Skills != null)
@@ -91,15 +89,11 @@ public struct UnitSkillComponent : IComponentData
     public int RequestedTagMask;
     public bool HasPendingCast;
     public int PendingSkillIndex;
-    public bool HasLockedTarget;
-    public float2 LockedTargetPosition;
 
     public void ClearPending()
     {
         HasPendingCast = false;
         PendingSkillIndex = -1;
-        HasLockedTarget = false;
-        LockedTargetPosition = float2.zero;
     }
 
     public void ClearRequest()

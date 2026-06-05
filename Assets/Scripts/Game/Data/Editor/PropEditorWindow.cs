@@ -21,7 +21,8 @@ namespace CrystalMagic.Editor.Data
         private const float ListPanelWidth = 220f;
         private const float ItemHeight = 26f;
         private const float LabelWidth = 150f;
-        private static readonly string[] SkillModifierChannelDisplayNames = EditorLabelUtility.GetEnumDisplayNames<SkillModifierChannel>();
+        private static readonly SkillModifierChannel[] EditableSkillModifierChannels = SkillModifierChannelUtility.GetEditableChannels();
+        private static readonly string[] SkillModifierChannelDisplayNames = SkillModifierChannelUtility.GetEditableDisplayNames();
 
         private static readonly Type[] KnownEffectTypes =
         {
@@ -545,9 +546,9 @@ namespace CrystalMagic.Editor.Data
                 EditorGUI.BeginChangeCheck();
                 EditorGUILayout.BeginHorizontal();
 
-                int channelIndex = Array.IndexOf((SkillModifierChannel[])Enum.GetValues(typeof(SkillModifierChannel)), entry.Channel);
+                int channelIndex = Array.IndexOf(EditableSkillModifierChannels, entry.Channel);
                 channelIndex = EditorGUILayout.Popup(Mathf.Max(0, channelIndex), SkillModifierChannelDisplayNames, GUILayout.MinWidth(180));
-                entry.Channel = ((SkillModifierChannel[])Enum.GetValues(typeof(SkillModifierChannel)))[Mathf.Clamp(channelIndex, 0, SkillModifierChannelDisplayNames.Length - 1)];
+                entry.Channel = EditableSkillModifierChannels[Mathf.Clamp(channelIndex, 0, EditableSkillModifierChannels.Length - 1)];
                 entry.Factor = EditorGUILayout.FloatField("Factor", entry.Factor);
                 entry.Bonus = EditorGUILayout.FloatField("Bonus", entry.Bonus);
 

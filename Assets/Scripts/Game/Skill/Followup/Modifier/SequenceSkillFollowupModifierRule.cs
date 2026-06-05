@@ -6,13 +6,13 @@ namespace CrystalMagic.Game.Skill
     [FactoryKey("Sequence", 10, "Sequence")]
     internal sealed class SequenceSkillFollowupModifierRule : SkillFollowupModifierRule
     {
-        public override bool TryInitializeRuntime(SkillFollowupModifierRuleData ruleData, ref UnitCastFollowupEffectElement followup)
+        public override bool TryInitializeRuntime(SkillFollowupModifierRuleData ruleData, SkillFollowupRuntimeState followup)
         {
             if (ruleData is not SequenceSkillFollowupModifierRuleData sequenceRuleData)
                 return false;
 
-            followup.ModifierEntries = default;
-            followup.ModifierSlices = default;
+            followup.ModifierEntries.Clear();
+            followup.ModifierSlices.Clear();
             followup.ModifierRuleStateInt0 = 0;
             followup.ModifierRuleStateFloat0 = 0f;
 
@@ -26,7 +26,7 @@ namespace CrystalMagic.Game.Skill
                 if (modifierSet?.Modifiers == null || modifierSet.Modifiers.Count <= 0)
                     continue;
 
-                if (!SkillFollowupModifierRuntimeUtility.TryAppendModifierSlice(ref followup, modifierSet.Modifiers))
+                if (!SkillFollowupModifierRuntimeUtility.TryAppendModifierSlice(followup, modifierSet.Modifiers))
                     return false;
 
                 hasSlice = true;
@@ -35,21 +35,21 @@ namespace CrystalMagic.Game.Skill
             return hasSlice;
         }
 
-        public override void GetModifier(ref SkillModifierSet modifiers, in UnitCastFollowupEffectElement followup, in SkillFollowupContext context)
+        public override void GetModifier(ref SkillModifierSet modifiers, SkillFollowupRuntimeState followup, in SkillFollowupContext context)
         {
-            if (followup.ModifierSlices.Length <= 0)
+            if (followup.ModifierSlices.Count <= 0)
                 return;
 
-            int sliceIndex = Mathf.Clamp(followup.ModifierRuleStateInt0, 0, followup.ModifierSlices.Length - 1);
+            int sliceIndex = Mathf.Clamp(followup.ModifierRuleStateInt0, 0, followup.ModifierSlices.Count - 1);
             SkillFollowupModifierRuntimeUtility.ApplySliceModifiers(ref modifiers, followup.ModifierEntries, followup.ModifierSlices[sliceIndex]);
         }
 
-        public override void OnConsumed(ref UnitCastFollowupEffectElement followup, in SkillFollowupContext context)
+        public override void OnConsumed(SkillFollowupRuntimeState followup, in SkillFollowupContext context)
         {
-            if (followup.ModifierSlices.Length <= 1)
+            if (followup.ModifierSlices.Count <= 1)
                 return;
 
-            if (followup.ModifierRuleStateInt0 < followup.ModifierSlices.Length - 1)
+            if (followup.ModifierRuleStateInt0 < followup.ModifierSlices.Count - 1)
                 followup.ModifierRuleStateInt0 += 1;
         }
     }

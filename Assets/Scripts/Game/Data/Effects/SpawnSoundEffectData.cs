@@ -33,9 +33,9 @@ namespace CrystalMagic.Game.Data.Effects
         [EditorLabel("跟随施法者")]
         public bool FollowCaster;
 
-        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, float elementBonus = 0f, System.Func<EffectData, float> elementBonusResolver = null)
+        public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, UnitElementComponent? elementComponent = null)
         {
-            SpawnSoundEffectData copy = (SpawnSoundEffectData)base.CreateRuntimeCopy(modifiers, elementBonus, elementBonusResolver);
+            SpawnSoundEffectData copy = (SpawnSoundEffectData)base.CreateRuntimeCopy(modifiers, elementComponent);
             copy.Volume = ApplyModifierNonNegative(modifiers, SkillModifierChannel.SoundVolume, Volume);
             copy.Pitch = ApplyModifierNonNegative(modifiers, SkillModifierChannel.SoundPitch, Pitch);
             copy.DelaySeconds = ApplyModifierNonNegative(modifiers, SkillModifierChannel.SoundDelay, DelaySeconds);

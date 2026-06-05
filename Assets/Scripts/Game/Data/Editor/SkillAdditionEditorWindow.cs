@@ -15,13 +15,14 @@ namespace CrystalMagic.Editor.Data
 {
     public class SkillAdditionEditorWindow : EditorWindow
     {
-        private const string DataPath = "Assets/Res/Data/SkillEffectDataTable.json";
+        private const string DataPath = "Assets/Res/Data/SkillAdditionDataTable.json";
         private const string UnitDataPath = "Assets/Res/Data/UnitDataTable.json";
         private const float ListPanelWidth = 220f;
         private const float ItemHeight = 26f;
         private const float InsertFieldWidth = 30f;
         private const float LabelWidth = 150f;
-        private static readonly string[] SkillModifierChannelDisplayNames = EditorLabelUtility.GetEnumDisplayNames<SkillModifierChannel>();
+        private static readonly SkillModifierChannel[] EditableSkillModifierChannels = SkillModifierChannelUtility.GetEditableChannels();
+        private static readonly string[] SkillModifierChannelDisplayNames = SkillModifierChannelUtility.GetEditableDisplayNames();
 
         private static readonly Type[] KnownEffectTypes =
         {
@@ -101,7 +102,7 @@ namespace CrystalMagic.Editor.Data
             new(0.58f, 0.42f, 0.12f),
         };
 
-        private List<SkillEffectData> _rows = new();
+        private List<SkillAdditionData> _rows = new();
         private bool _isDirty;
         private string _statusText = string.Empty;
 
@@ -110,7 +111,7 @@ namespace CrystalMagic.Editor.Data
         private int _addCastTaskTypeIndex;
         private Vector2 _listScrollPos;
         private Vector2 _detailScrollPos;
-        private readonly Dictionary<SkillEffectData, string> _insertTexts = new();
+        private readonly Dictionary<SkillAdditionData, string> _insertTexts = new();
         private readonly Dictionary<string, int> _nestedTypeIndices = new();
         private readonly Dictionary<string, bool> _effectFoldStates = new();
         private readonly Dictionary<string, bool> _conditionFoldStates = new();
@@ -159,7 +160,7 @@ namespace CrystalMagic.Editor.Data
 
         private class TableWrapper
         {
-            public List<SkillEffectData> Rows = new();
+            public List<SkillAdditionData> Rows = new();
         }
 
         private class UnitTableWrapper
@@ -256,7 +257,7 @@ namespace CrystalMagic.Editor.Data
 
         private void AddRow()
         {
-            _rows.Add(new SkillEffectData
+            _rows.Add(new SkillAdditionData
             {
                 Id = _rows.Count,
                 Name = $"New Skill Effect {_rows.Count}",
@@ -279,7 +280,7 @@ namespace CrystalMagic.Editor.Data
             if (_selectedIndex < 0 || _selectedIndex >= _rows.Count)
                 return;
 
-            SkillEffectData removedRow = _rows[_selectedIndex];
+            SkillAdditionData removedRow = _rows[_selectedIndex];
             _rows.RemoveAt(_selectedIndex);
             _insertTexts.Remove(removedRow);
             NormalizeRowIds();
@@ -292,9 +293,9 @@ namespace CrystalMagic.Editor.Data
             if (_selectedIndex < 0 || _selectedIndex >= _rows.Count)
                 return;
 
-            SkillEffectData source = _rows[_selectedIndex];
+            SkillAdditionData source = _rows[_selectedIndex];
             string json = JsonConvert.SerializeObject(source, JsonSettings);
-            SkillEffectData copy = JsonConvert.DeserializeObject<SkillEffectData>(json, JsonSettings);
+            SkillAdditionData copy = JsonConvert.DeserializeObject<SkillAdditionData>(json, JsonSettings);
             if (copy == null)
                 return;
 
@@ -334,7 +335,7 @@ namespace CrystalMagic.Editor.Data
             if (fromIndex == insertIndex)
                 return;
 
-            SkillEffectData row = _rows[fromIndex];
+            SkillAdditionData row = _rows[fromIndex];
             _rows.RemoveAt(fromIndex);
             insertIndex = Mathf.Clamp(insertIndex, 0, _rows.Count);
             _rows.Insert(insertIndex, row);
@@ -399,12 +400,12 @@ namespace CrystalMagic.Editor.Data
 
             _listScrollPos = EditorGUILayout.BeginScrollView(_listScrollPos, GUILayout.ExpandHeight(true));
             Event evt = Event.current;
-            SkillEffectData moveRow = null;
+            SkillAdditionData moveRow = null;
             int moveToIndex = -1;
 
             for (int i = 0; i < _rows.Count; i++)
             {
-                SkillEffectData row = _rows[i];
+                SkillAdditionData row = _rows[i];
                 bool isSelected = i == _selectedIndex;
                 Rect itemRect = GUILayoutUtility.GetRect(ListPanelWidth, ItemHeight, GUILayout.ExpandWidth(true));
 
@@ -483,7 +484,7 @@ namespace CrystalMagic.Editor.Data
                 return;
             }
 
-            SkillEffectData row = _rows[_selectedIndex];
+            SkillAdditionData row = _rows[_selectedIndex];
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             GUILayout.Label($"[{row.Id}] {row.Name}", EditorStyles.boldLabel);
             EditorGUILayout.EndHorizontal();
@@ -521,7 +522,7 @@ namespace CrystalMagic.Editor.Data
             EditorGUILayout.EndVertical();
         }
 
-        private void DrawModifierList(SkillEffectData row)
+        private void DrawModifierList(SkillAdditionData row)
         {
             row.Modifiers ??= new List<SkillModifierEntry>();
 
@@ -532,9 +533,9 @@ namespace CrystalMagic.Editor.Data
 
                 EditorGUI.BeginChangeCheck();
                 EditorGUILayout.BeginHorizontal();
-                int channelIndex = Array.IndexOf((SkillModifierChannel[])Enum.GetValues(typeof(SkillModifierChannel)), entry.Channel);
+                int channelIndex = Array.IndexOf(EditableSkillModifierChannels, entry.Channel);
                 channelIndex = EditorGUILayout.Popup(Mathf.Max(0, channelIndex), SkillModifierChannelDisplayNames, GUILayout.MinWidth(180f));
-                entry.Channel = ((SkillModifierChannel[])Enum.GetValues(typeof(SkillModifierChannel)))[Mathf.Clamp(channelIndex, 0, SkillModifierChannelDisplayNames.Length - 1)];
+                entry.Channel = EditableSkillModifierChannels[Mathf.Clamp(channelIndex, 0, EditableSkillModifierChannels.Length - 1)];
 
                 float previousLabelWidth = EditorGUIUtility.labelWidth;
                 EditorGUIUtility.labelWidth = 46f;
@@ -567,7 +568,7 @@ namespace CrystalMagic.Editor.Data
             }
         }
 
-        private void DrawFollowupEffectList(SkillEffectData row)
+        private void DrawFollowupEffectList(SkillAdditionData row)
         {
             row.FollowupEffects ??= new List<SkillFollowupEffectData>();
 
@@ -579,25 +580,8 @@ namespace CrystalMagic.Editor.Data
                 EditorGUI.BeginChangeCheck();
 
                 EditorGUILayout.BeginVertical("box");
-                followup.FilterType = (SkillFollowupFilterType)EditorGUILayout.EnumPopup("Filter", followup.FilterType);
+                DrawFollowupFilter(followup);
                 DrawFollowupConsumeRule(followup);
-
-                switch (followup.FilterType)
-                {
-                    case SkillFollowupFilterType.SkillId:
-                        followup.SkillId = EditorGUILayout.IntField("Skill Id", followup.SkillId);
-                        break;
-                    case SkillFollowupFilterType.RuntimeType:
-                        DrawFollowupRuntimeTypeField(followup);
-                        break;
-                    case SkillFollowupFilterType.Element:
-                        followup.Element = (ElementType)EditorGUILayout.EnumPopup("Element", followup.Element);
-                        break;
-                    case SkillFollowupFilterType.SkillAdditionId:
-                        followup.SkillAdditionId = EditorGUILayout.IntField("Skill Addition Id", followup.SkillAdditionId);
-                        break;
-                }
-
                 DrawFollowupModifierRule(followup);
 
                 if (GUILayout.Button("Delete Followup Effect", GUILayout.Width(148f)))
@@ -625,7 +609,37 @@ namespace CrystalMagic.Editor.Data
             }
         }
 
-        private void DrawCastTaskList(SkillEffectData row)
+        private void DrawFollowupFilter(SkillFollowupEffectData followup)
+        {
+            followup.EnsureDefaults();
+
+            IReadOnlyList<FactoryTypeInfo> filterTypeInfos = SkillFollowupFilterRegistry.FilterTypeInfos;
+            if (filterTypeInfos == null || filterTypeInfos.Count == 0)
+            {
+                EditorGUILayout.HelpBox("No followup filters registered.", MessageType.Warning);
+                return;
+            }
+
+            string currentKey = SkillFollowupFilterRegistry.GetFilterKey(followup.Filter);
+            int selectedIndex = GetFactoryTypeIndex(filterTypeInfos, currentKey);
+            string[] displayNames = GetFactoryDisplayNames(filterTypeInfos);
+            int nextIndex = EditorGUILayout.Popup("Filter", selectedIndex, displayNames);
+            if (nextIndex != selectedIndex)
+            {
+                followup.Filter = SkillFollowupFilterRegistry.CreateFilterData(filterTypeInfos[Mathf.Clamp(nextIndex, 0, filterTypeInfos.Count - 1)].Key);
+                followup.Filter?.EnsureDefaults();
+                _isDirty = true;
+            }
+
+            if (followup.Filter is RuntimeTypeFollowupFilterData runtimeTypeFilter)
+                DrawFollowupRuntimeTypeField(runtimeTypeFilter);
+            else
+                DrawSerializableObjectFields(followup.Filter, "FollowupFilter");
+
+            followup.Filter?.EnsureDefaults();
+        }
+
+        private void DrawCastTaskList(SkillAdditionData row)
         {
             row.CastTasks ??= new List<SkillCastTaskData>();
 
@@ -998,13 +1012,13 @@ namespace CrystalMagic.Editor.Data
             followup.ModifierRule?.EnsureDefaults();
         }
 
-        private void DrawFollowupRuntimeTypeField(SkillFollowupEffectData followup)
+        private void DrawFollowupRuntimeTypeField(RuntimeTypeFollowupFilterData filter)
         {
-            string currentKey = followup.EffectiveRuntimeType;
+            string currentKey = filter.EffectiveRuntimeType;
             IReadOnlyList<FactoryTypeInfo> runtimeTypeInfos = SkillRegistry.SkillRuntimeTypeInfos;
             if (runtimeTypeInfos == null || runtimeTypeInfos.Count == 0)
             {
-                followup.RuntimeType = EditorGUILayout.TextField("Runtime Type", currentKey);
+                filter.RuntimeType = EditorGUILayout.TextField("Runtime Type", currentKey);
                 return;
             }
 
@@ -1020,12 +1034,12 @@ namespace CrystalMagic.Editor.Data
 
             if (selectedIndex < 0)
             {
-                followup.RuntimeType = EditorGUILayout.TextField("Runtime Type", currentKey);
+                filter.RuntimeType = EditorGUILayout.TextField("Runtime Type", currentKey);
                 return;
             }
 
             int nextIndex = EditorGUILayout.Popup("Runtime Type", selectedIndex, displayNames);
-            followup.RuntimeType = runtimeTypeInfos[Mathf.Clamp(nextIndex, 0, runtimeTypeInfos.Count - 1)].Key;
+            filter.RuntimeType = runtimeTypeInfos[Mathf.Clamp(nextIndex, 0, runtimeTypeInfos.Count - 1)].Key;
         }
 
         private static int GetFactoryTypeIndex(IReadOnlyList<FactoryTypeInfo> typeInfos, string key)
@@ -1093,9 +1107,9 @@ namespace CrystalMagic.Editor.Data
                 SkillModifierEntry entry = modifiers[i];
                 EditorGUI.BeginChangeCheck();
                 EditorGUILayout.BeginHorizontal();
-                int channelIndex = Array.IndexOf((SkillModifierChannel[])Enum.GetValues(typeof(SkillModifierChannel)), entry.Channel);
+                int channelIndex = Array.IndexOf(EditableSkillModifierChannels, entry.Channel);
                 channelIndex = EditorGUILayout.Popup(Mathf.Max(0, channelIndex), SkillModifierChannelDisplayNames, GUILayout.MinWidth(180f));
-                entry.Channel = ((SkillModifierChannel[])Enum.GetValues(typeof(SkillModifierChannel)))[Mathf.Clamp(channelIndex, 0, SkillModifierChannelDisplayNames.Length - 1)];
+                entry.Channel = EditableSkillModifierChannels[Mathf.Clamp(channelIndex, 0, EditableSkillModifierChannels.Length - 1)];
 
                 float previousLabelWidth = EditorGUIUtility.labelWidth;
                 EditorGUIUtility.labelWidth = 46f;

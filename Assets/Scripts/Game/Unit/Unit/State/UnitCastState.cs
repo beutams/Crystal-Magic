@@ -10,14 +10,12 @@ public class UnitCastState : AUnitState
     public override void OnEnter()
     {
         if (!EntityManager.HasComponent<UnitSkillComponent>(Entity) ||
-            !EntityManager.HasComponent<UnitIntentComponent>(Entity) ||
             !EntityManager.HasComponent<UnitPerceptionComponent>(Entity) ||
             !EntityManager.HasComponent<UnitCastComponent>(Entity))
             return;
 
         UnitSkillComponent unitSkill = EntityManager.GetComponentData<UnitSkillComponent>(Entity);
         UnitPerceptionComponent perception = EntityManager.GetComponentData<UnitPerceptionComponent>(Entity);
-        UnitIntentComponent intent = EntityManager.GetComponentData<UnitIntentComponent>(Entity);
         UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
 
         int selectedIndex = SelectSkillIndex(unitSkill, perception.TargetDistance);
@@ -34,22 +32,19 @@ public class UnitCastState : AUnitState
         SkillExecutionUtility.ResetCastState(EntityManager, Entity, ref cast);
         unitSkill.HasPendingCast = true;
         unitSkill.PendingSkillIndex = selectedIndex;
-        unitSkill.HasLockedTarget = true;
-        unitSkill.LockedTargetPosition = intent.CastTargetPosition;
         unitSkill.ClearRequest();
         EntityManager.SetComponentData(Entity, cast);
         EntityManager.SetComponentData(Entity, unitSkill);
-        UpdateAnimationFacing(intent.CastTargetPosition);
+        if (SkillTargetUtility.TryGetTargetPosition(EntityManager, Entity, out float2 targetPosition))
+            UpdateAnimationFacing(targetPosition);
     }
 
     public override void OnUpdate(float deltaTime)
     {
-        if (!EntityManager.HasComponent<UnitCastComponent>(Entity))
-            return;
-
-        UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
-        if (cast.HasLockedTarget)
-            UpdateAnimationFacing(cast.LockedTargetPosition);
+        if (SkillTargetUtility.TryGetTargetPosition(EntityManager, Entity, out float2 targetPosition))
+            UpdateAnimationFacing(targetPosition);
+        else
+            ClearAnimationFacingDirection();
     }
 
     public override void OnExit()

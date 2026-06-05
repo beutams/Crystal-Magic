@@ -1,16 +1,13 @@
 using Unity.Collections;
 using Unity.Entities;
-using Unity.Mathematics;
-
 public struct PlayerSkillComponent : IComponentData
 {
     public FixedList64Bytes<int> SkillIds;
     public FixedList64Bytes<int> SkillAdditionIds;
     public bool HasActiveChain;
     public bool HasPendingCast;
+    public int ActiveChainIndex;
     public int CurrentSkillIndex;
-    public bool HasLockedTarget;
-    public float2 LockedTargetPosition;
 
     public void Clear()
     {
@@ -18,8 +15,7 @@ public struct PlayerSkillComponent : IComponentData
         SkillAdditionIds = default;
         HasActiveChain = false;
         HasPendingCast = false;
+        ActiveChainIndex = -1;
         CurrentSkillIndex = -1;
-        HasLockedTarget = false;
-        LockedTargetPosition = float2.zero;
     }
 }
