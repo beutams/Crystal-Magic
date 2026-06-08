@@ -24,8 +24,9 @@ Use this skill when adding or modifying a lifecycle-managed component in the Cry
 - When modifying existing logic, do not leave transition residue or dead compatibility code behind; update all related code paths together so the final implementation is clean and complete.
 - Save newly created or edited text/code files as UTF-8 by default, and avoid introducing non-UTF-8 Chinese text into the repository.
 - When adding or updating this skill, also sync the same change into the project-local copy under `.agents/skills/` so the repository version stays up to date for other machines.
-- Keep `E:\workspace\TestPro\Crystal-Magic\cs_review_status.txt` in sync with code review/edit status when this skill is used.
-- If a `.cs` file has been reviewed, change its marker from `FALSE` to `TRUE`.
+- Keep `E:\workspace\TestPro\Crystal-Magic\cs_review_status.txt` in sync with review status when this skill is used.
+- `FALSE` means the file has not been reviewed yet; editing a `FALSE` file does not change its marker.
+- If a `.cs` file is actually reviewed, change its marker from `FALSE` to `TRUE`.
 - If a `.cs` file was already marked `TRUE` and is later modified, append `DIRTY` after `TRUE`, for example: `ExampleComponent.cs TRUE DIRTY`.
 
 ## Component Template

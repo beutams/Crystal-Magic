@@ -54,6 +54,7 @@ partial struct DungeonExitSystem : ISystem
                  SystemAPI.Query<RefRW<DungeonExitComponent>>().WithEntityAccess())
         {
             DungeonExitComponent exit = exitRef.ValueRO;
+            bool wasOpen = exit.IsOpen != 0;
             bool shouldOpen = exit.RequiresRoomClear == 0 || !blockedRegions.Contains(exit.RegionId);
             byte openValue = shouldOpen ? (byte)1 : (byte)0;
             if (exit.IsOpen == openValue)
@@ -62,6 +63,12 @@ partial struct DungeonExitSystem : ISystem
             exit.IsOpen = openValue;
             exitRef.ValueRW = exit;
             DungeonSceneVisualUtility.ApplySceneObjectMaterial(state.EntityManager, entity, "Exit", shouldOpen ? exit.OpenMaterialPath.ToString() : exit.ClosedMaterialPath.ToString());
+
+            if (!wasOpen && shouldOpen)
+            {
+                int currentFloor = SaveDataComponent.Instance?.GetLocationData()?.DungeonFloor ?? 1;
+                SaveDataComponent.Instance?.UnlockDungeonStartFloorAfterBossClear(currentFloor);
+            }
         }
 
         if (!_interactRequested.Value)

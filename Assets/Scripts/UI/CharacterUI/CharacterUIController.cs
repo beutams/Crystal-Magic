@@ -75,6 +75,7 @@ namespace CrystalMagic.UI
             {
                 SkillStoneItemId = data.ItemId,
             });
+            TrimSkillAdditionsToLimit(chain);
 
             SaveDataComponent.Instance.NotifyBackpackDataChanged();
             SaveDataComponent.Instance.NotifySkillDataChanged();
@@ -196,6 +197,7 @@ namespace CrystalMagic.UI
 
             int skillId = chain.Slots[data.SkillIndex].SkillStoneItemId;
             chain.Slots.RemoveAt(data.SkillIndex);
+            TrimSkillAdditionsToLimit(chain);
             AddItemToBackpack(backpackData, skillId, 1);
             SaveDataComponent.Instance.NotifyBackpackDataChanged();
             SaveDataComponent.Instance.NotifySkillDataChanged();
@@ -217,11 +219,18 @@ namespace CrystalMagic.UI
             if (chain?.Slots == null || data.SkillIndex < 0 || data.SkillIndex >= chain.Slots.Count)
                 return;
 
+            SkillChainSlotData slot = chain.Slots[data.SkillIndex];
+            int allowedAdditionCount = GetAllowedAdditionCount(chain);
+            int assignedAdditionCount = GetAssignedAdditionCount(chain);
+            bool canAssignNewAddition = slot != null && slot.SkillAdditionId >= 0 || assignedAdditionCount < allowedAdditionCount;
+            if (!canAssignNewAddition)
+                return;
+
             CloseEffectSelectUI();
             _effectSelectUI = UIComponent.Instance.OpenChild<EffectSelectUI>(View, new EffectSelectUIOpenData
             {
                 SkillSlotIndex = data.SkillIndex,
-                SelectedAdditionId = chain.Slots[data.SkillIndex]?.SkillAdditionId ?? -1,
+                SelectedAdditionId = slot?.SkillAdditionId ?? -1,
             });
         }
 
@@ -299,6 +308,48 @@ namespace CrystalMagic.UI
         private void AddItemToBackpack(BackpackData backpackData, int itemId, int quantity)
         {
             InventoryUtility.AddItemToBackpack(backpackData, itemId, quantity);
+        }
+
+        private static int GetAllowedAdditionCount(SkillChainData chain)
+        {
+            int skillCount = chain?.Slots?.Count ?? 0;
+            return skillCount / 2;
+        }
+
+        private static int GetAssignedAdditionCount(SkillChainData chain)
+        {
+            if (chain?.Slots == null)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < chain.Slots.Count; i++)
+            {
+                SkillChainSlotData slot = chain.Slots[i];
+                if (slot != null && slot.SkillAdditionId >= 0)
+                    count++;
+            }
+
+            return count;
+        }
+
+        private static void TrimSkillAdditionsToLimit(SkillChainData chain)
+        {
+            if (chain?.Slots == null)
+                return;
+
+            int overflow = GetAssignedAdditionCount(chain) - GetAllowedAdditionCount(chain);
+            if (overflow <= 0)
+                return;
+
+            for (int i = chain.Slots.Count - 1; i >= 0 && overflow > 0; i--)
+            {
+                SkillChainSlotData slot = chain.Slots[i];
+                if (slot == null || slot.SkillAdditionId < 0)
+                    continue;
+
+                slot.SkillAdditionId = -1;
+                overflow--;
+            }
         }
 
     }

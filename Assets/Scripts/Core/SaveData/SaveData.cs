@@ -214,6 +214,7 @@ namespace CrystalMagic.Core {
     {
         public string RunId;
         public long RunTimestamp;
+        public int BaseSeed;
         public int CurrentFloor;
         public int Seed;
         /// <summary>

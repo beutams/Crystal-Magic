@@ -61,7 +61,7 @@ namespace CrystalMagic.Core
                 yield break;
             }
 
-            int masterSeed = DeriveMasterSeed(runData, context, dungeonFloor);
+            int masterSeed = DeriveMasterSeed(runData, dungeonFloor);
             if (isBossFloor)
             {
                 PublishProgress(
@@ -91,7 +91,10 @@ namespace CrystalMagic.Core
                 "Searching dungeon layout",
                 $"Floor {dungeonFloor} MasterSeed {masterSeed}");
 
+            int maxAttemptCount = Mathf.Max(1, dungeonConfig?.LayoutSearchAttemptLimit ?? 100);
+            bool useBestCandidateFallback = dungeonConfig?.UseBestCandidateFallback ?? true;
             int attemptIndex = 0;
+            CandidateSelection bestCandidate = null;
             while (true)
             {
                 int candidateSeed = DeriveCandidateSeed(masterSeed, attemptIndex);
@@ -103,20 +106,50 @@ namespace CrystalMagic.Core
                     targetSceneName,
                     candidateContext);
 
+                int candidateScore = ScoreCandidate(candidateContext.Result.Stats, DefaultRules);
+                if (bestCandidate == null || candidateScore > bestCandidate.Score)
+                {
+                    bestCandidate = new CandidateSelection(candidateContext.Result, candidateSeed, attemptIndex, candidateScore);
+                }
+
                 if (IsMapQualified(candidateContext.Result.Stats, DefaultRules))
                 {
-                    runData.Seed = candidateSeed;
-                    runData.CurrentFloor = dungeonFloor;
-                    RuntimeDungeonSceneData sceneData = BuildSceneData(candidateContext.Result, dungeonFloor, theme, dungeonConfig);
-                    RuntimeDataComponent.Instance.SetCurrentDungeonLayout(candidateContext.Result, sceneData, dungeonFloor, candidateSeed, attemptIndex + 1);
-                    yield return DungeonSceneRuntimeBuilder.BuildCurrentDungeonSceneCoroutine(
+                    yield return AcceptCandidateCoroutine(
+                        runData,
+                        candidateContext.Result,
+                        dungeonFloor,
+                        theme,
+                        dungeonConfig,
                         targetSceneName,
-                        (progress, title, detail) => PublishProgress(targetSceneName, progress, title, detail));
-                    PublishProgress(
-                        targetSceneName,
-                        0.999f,
+                        candidateSeed,
+                        attemptIndex + 1,
                         "Dungeon layout ready",
-                        $"Accepted attempt {attemptIndex + 1} Seed {candidateSeed}");
+                        $"Accepted attempt {attemptIndex + 1} Seed {candidateSeed} Score {candidateScore}");
+                    yield break;
+                }
+
+                int attemptCount = attemptIndex + 1;
+                if (useBestCandidateFallback && attemptCount >= maxAttemptCount && bestCandidate != null)
+                {
+                    if (bestCandidate.Score <= 0)
+                    {
+                        string errorDetail = $"No valid dungeon layout found in {attemptCount} attempts for floor {dungeonFloor}. Best score was {bestCandidate.Score}.";
+                        PublishProgress(targetSceneName, 0.35f, "Dungeon layout search failed", errorDetail);
+                        Debug.LogError($"[DungeonGenerationService] {errorDetail}");
+                        throw new InvalidOperationException(errorDetail);
+                    }
+
+                    yield return AcceptCandidateCoroutine(
+                        runData,
+                        bestCandidate.Result,
+                        dungeonFloor,
+                        theme,
+                        dungeonConfig,
+                        targetSceneName,
+                        bestCandidate.Seed,
+                        bestCandidate.AttemptIndex + 1,
+                        "Dungeon fallback layout ready",
+                        $"No qualified layout in {attemptCount} attempts, using best attempt {bestCandidate.AttemptIndex + 1} Seed {bestCandidate.Seed} Score {bestCandidate.Score}");
                     yield break;
                 }
 
@@ -125,9 +158,33 @@ namespace CrystalMagic.Core
                     targetSceneName,
                     0.32f,
                     "Searching dungeon layout",
-                    $"Attempt {attemptIndex} rejected, continuing search");
+                    useBestCandidateFallback
+                        ? $"Attempt {attemptIndex} rejected, continuing search (best score {bestCandidate?.Score ?? int.MinValue}/{maxAttemptCount})"
+                        : $"Attempt {attemptIndex} rejected, continuing search");
                 yield return null;
             }
+        }
+
+        private static IEnumerator AcceptCandidateCoroutine(
+            DungeonRunData runData,
+            DungeonMakerTunnelingResult result,
+            int dungeonFloor,
+            DungeonThemeData theme,
+            DungeonConfig dungeonConfig,
+            string targetSceneName,
+            int acceptedSeed,
+            int attemptCount,
+            string title,
+            string detail)
+        {
+            runData.Seed = acceptedSeed;
+            runData.CurrentFloor = dungeonFloor;
+            RuntimeDungeonSceneData sceneData = BuildSceneData(result, dungeonFloor, theme, dungeonConfig);
+            RuntimeDataComponent.Instance.SetCurrentDungeonLayout(result, sceneData, dungeonFloor, acceptedSeed, attemptCount);
+            yield return DungeonSceneRuntimeBuilder.BuildCurrentDungeonSceneCoroutine(
+                targetSceneName,
+                (progress, progressTitle, progressDetail) => PublishProgress(targetSceneName, progress, progressTitle, progressDetail));
+            PublishProgress(targetSceneName, 0.999f, title, detail);
         }
 
         private static IEnumerator GenerateSingleAcceptedLayoutCoroutine(
@@ -245,15 +302,18 @@ namespace CrystalMagic.Core
                 detail ?? string.Empty));
         }
 
-        private static int DeriveMasterSeed(DungeonRunData runData, LoadGameContext context, int dungeonFloor)
+        private static int DeriveMasterSeed(DungeonRunData runData, int dungeonFloor)
         {
             unchecked
             {
-                uint timestamp = (uint)runData.RunTimestamp;
-                uint timestampHigh = (uint)(runData.RunTimestamp >> 32);
+                uint baseSeed = (uint)(runData?.BaseSeed == 0 ? DungeonMakerTunnelingGenerator.DefaultSeed : runData.BaseSeed);
                 uint floor = (uint)Mathf.Max(1, dungeonFloor);
-                uint saveIndex = (uint)Mathf.Max(0, context?.SaveIndex ?? 0);
-                uint mixed = timestamp ^ (timestampHigh * 2246822519u) ^ (floor * 3266489917u) ^ (saveIndex * 668265263u);
+                uint mixed = baseSeed ^ (floor * 3266489917u) ^ 2246822519u;
+                mixed ^= mixed >> 16;
+                mixed *= 2246822519u;
+                mixed ^= mixed >> 13;
+                mixed *= 3266489917u;
+                mixed ^= mixed >> 16;
                 int result = (int)(mixed == 0 ? (uint)DungeonMakerTunnelingGenerator.DefaultSeed : mixed);
                 return result;
             }
@@ -825,10 +885,45 @@ namespace CrystalMagic.Core
 
         private static bool IsMapQualified(DungeonMakerTunnelingStats stats, DungeonGenerationRules rules)
         {
-            return IsWithinRange(stats.LargeRooms, rules.LargeRoomRange)
+            return HasRequiredEntryExitRooms(stats)
+                && IsWithinRange(stats.LargeRooms, rules.LargeRoomRange)
                 && IsWithinRange(stats.MediumRooms, rules.MediumRoomRange)
                 && IsWithinRange(stats.SmallRooms, rules.SmallRoomRange)
                 && IsWithinRange(stats.WalkableTiles, rules.WalkableTileRange);
+        }
+
+        private static bool HasRequiredEntryExitRooms(DungeonMakerTunnelingStats stats)
+        {
+            return stats != null && stats.LargeRooms > 0 && stats.SmallRooms > 0;
+        }
+
+        private static int ScoreCandidate(DungeonMakerTunnelingStats stats, DungeonGenerationRules rules)
+        {
+            if (stats == null)
+                return int.MinValue;
+
+            if (!HasRequiredEntryExitRooms(stats))
+                return 0;
+
+            int score = 0;
+            score += ScoreRangeFit(stats.LargeRooms, rules.LargeRoomRange, 10000, 2400);
+            score += ScoreRangeFit(stats.MediumRooms, rules.MediumRoomRange, 5000, 900);
+            score += ScoreRangeFit(stats.SmallRooms, rules.SmallRoomRange, 5000, 900);
+            score += ScoreRangeFit(stats.WalkableTiles, rules.WalkableTileRange, 8000, 8);
+            return score;
+        }
+
+        private static int ScoreRangeFit(int value, Vector2Int range, int inRangeScore, int distancePenalty)
+        {
+            Vector2Int normalized = NormalizeRange(range);
+            if (value < normalized.x)
+                return -((normalized.x - value) * distancePenalty);
+
+            if (value > normalized.y)
+                return -((value - normalized.y) * distancePenalty);
+
+            int center = (normalized.x + normalized.y) / 2;
+            return inRangeScore - Mathf.Abs(value - center);
         }
 
         private static bool IsWithinRange(int value, Vector2Int range)
@@ -2282,6 +2377,22 @@ namespace CrystalMagic.Core
         private sealed class CandidateGenerationContext
         {
             public DungeonMakerTunnelingResult Result;
+        }
+
+        private sealed class CandidateSelection
+        {
+            public CandidateSelection(DungeonMakerTunnelingResult result, int seed, int attemptIndex, int score)
+            {
+                Result = result;
+                Seed = seed;
+                AttemptIndex = attemptIndex;
+                Score = score;
+            }
+
+            public DungeonMakerTunnelingResult Result { get; }
+            public int Seed { get; }
+            public int AttemptIndex { get; }
+            public int Score { get; }
         }
 
         private readonly struct GeneratedDungeonPayload

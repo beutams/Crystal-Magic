@@ -3,6 +3,8 @@
     "ThemeBandSize": 10,
     "CellWorldSize": 2.0,
     "ExitInteractionRange": 3.0,
+    "LayoutSearchAttemptLimit": 100,
+    "UseBestCandidateFallback": true,
     "DefaultCorridorMaterialPath": "Assets/Res/Material/TrainPlane.mat",
     "DefaultRoomMaterialPath": "Assets/Res/Material/Plane.mat",
     "DefaultAnteRoomMaterialPath": "Assets/Res/Material/TrainPlane.mat",

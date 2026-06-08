@@ -44,13 +44,13 @@
     GeneratedFactory.cs FALSE
   Flow\
     DungeonGenerationService.cs TRUE DIRTY
-    DungeonState.cs TRUE DIRTY
+    DungeonState.cs TRUE
     GameFlowComponent.cs FALSE
     GameState.cs FALSE
     LoadGameState.cs FALSE
     MainMenuState.cs FALSE
     RunResultState.cs FALSE
-    TownState.cs TRUE DIRTY
+    TownState.cs TRUE
     TrainingState.cs FALSE
     TransitionState.cs FALSE
   GameGate\
@@ -71,7 +71,7 @@
       BundleBuildWindow.cs FALSE
     AssetBundlePlatformUtility.cs FALSE
     AssetBundleResourceLoader.cs FALSE
-    AssetPathHelper.cs TRUE DIRTY
+    AssetPathHelper.cs TRUE
     BundleCatalog.cs FALSE
     BundleCatalogAsset.cs FALSE
     BundleCatalogData.cs FALSE
@@ -80,10 +80,10 @@
     ResourceComponent.cs FALSE
     ResourceLoadMode.cs FALSE
   Runtime\
-    DungeonSceneRuntimeBuilder.cs TRUE DIRTY
-    DungeonSceneRuntimeRoot.cs TRUE DIRTY
-    DungeonSceneVisualUtility.cs TRUE DIRTY
-    RuntimeDataComponent.cs TRUE DIRTY
+    DungeonSceneRuntimeBuilder.cs TRUE
+    DungeonSceneRuntimeRoot.cs TRUE
+    DungeonSceneVisualUtility.cs TRUE
+    RuntimeDataComponent.cs TRUE
   SaveData\
     CurrencyUtility.cs FALSE
     InventoryUtility.cs FALSE
@@ -186,8 +186,8 @@ Game\
     BuffData.cs FALSE
     DropData.cs FALSE
     DungeonDefinitionData.cs FALSE
-    ItemData.cs TRUE DIRTY
-    NPCData.cs TRUE DIRTY
+    ItemData.cs TRUE
+    NPCData.cs TRUE
     PropData.cs FALSE
     ShopData.cs FALSE
     SkillAdditionData.cs FALSE
@@ -281,10 +281,10 @@ Game\
         NPCTagAuthoring.cs FALSE
         PlayerTagAuthoring.cs FALSE
       DestroyEntityFlag.cs FALSE
-      DungeonExitAuthoring.cs TRUE DIRTY
-      DungeonMonsterSpawnComponent.cs TRUE DIRTY
-      DungeonTreasureAuthoring.cs TRUE DIRTY
-      EntitySpawnRegistryAuthoring.cs TRUE DIRTY
+      DungeonExitAuthoring.cs TRUE
+      DungeonMonsterSpawnComponent.cs TRUE
+      DungeonTreasureAuthoring.cs TRUE
+      EntitySpawnRegistryAuthoring.cs TRUE
       NPCAuthoringUtility.cs FALSE
       NPCInteractableAuthoring.cs FALSE
       NPCInteractionRequest.cs FALSE
@@ -334,23 +334,23 @@ Game\
     NPCInteraction\
       NPCInteractionNodeDataConverter.cs FALSE
       NPCInteractionNodeDataFactory.cs FALSE
-      NPCInteractionNodeDataRegistry.cs TRUE DIRTY
+      NPCInteractionNodeDataRegistry.cs TRUE
       NPCInteractionNodeFactory.cs FALSE
-      NPCInteractionNodeRegistry.cs TRUE DIRTY
+      NPCInteractionNodeRegistry.cs TRUE
       NPCInteractionNodeRunner.cs FALSE
-      NPCInteractionNodeRunners.cs TRUE DIRTY
-      NPCInteractionRuntimeUtility.cs TRUE DIRTY
+      NPCInteractionNodeRunners.cs TRUE
+      NPCInteractionRuntimeUtility.cs TRUE
       NPCInteractionSession.cs FALSE
     System\
       BehaviorTreeInitSystem.cs FALSE
       BehaviorTreeSystem.cs FALSE
       DestroyEntitySystem.cs FALSE
-      DungeonExitSystem.cs TRUE DIRTY
-      DungeonExitInteractionNodes.cs TRUE DIRTY
-      DungeonTreasureSystem.cs TRUE DIRTY
-      EntitySpawnRegistryUtility.cs TRUE DIRTY
+      DungeonExitSystem.cs TRUE
+      DungeonExitInteractionNodes.cs TRUE
+      DungeonTreasureSystem.cs TRUE
+      EntitySpawnRegistryUtility.cs TRUE
       NPCInteractInputSystem.cs FALSE
-      NPCInteractionSystem.cs TRUE DIRTY
+      NPCInteractionSystem.cs TRUE
       NPCInteractPromptSystem.cs FALSE
       PersistentBeamEffectSystem.cs FALSE
       PersistentEffectSystem.cs FALSE

@@ -61,7 +61,17 @@ namespace CrystalMagic.UI
             if (chain?.Slots == null || Model.SkillSlotIndex < 0 || Model.SkillSlotIndex >= chain.Slots.Count)
                 return;
 
-            chain.Slots[Model.SkillSlotIndex].SkillAdditionId = data.AdditionId;
+            CrystalMagic.Core.SkillChainSlotData slot = chain.Slots[Model.SkillSlotIndex];
+            if (slot == null)
+                return;
+
+            int allowedAdditionCount = GetAllowedAdditionCount(chain);
+            int assignedAdditionCount = GetAssignedAdditionCount(chain);
+            bool isAssigningNewAddition = slot.SkillAdditionId < 0 && data.AdditionId >= 0;
+            if (isAssigningNewAddition && assignedAdditionCount >= allowedAdditionCount)
+                return;
+
+            slot.SkillAdditionId = data.AdditionId;
             CrystalMagic.Core.SaveDataComponent.Instance.NotifySkillDataChanged();
             View.Close();
         }
@@ -73,6 +83,28 @@ namespace CrystalMagic.UI
 
             _itemInfoUI.Close();
             _itemInfoUI = null;
+        }
+
+        private static int GetAllowedAdditionCount(CrystalMagic.Core.SkillChainData chain)
+        {
+            int skillCount = chain?.Slots?.Count ?? 0;
+            return skillCount / 2;
+        }
+
+        private static int GetAssignedAdditionCount(CrystalMagic.Core.SkillChainData chain)
+        {
+            if (chain?.Slots == null)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < chain.Slots.Count; i++)
+            {
+                CrystalMagic.Core.SkillChainSlotData slot = chain.Slots[i];
+                if (slot != null && slot.SkillAdditionId >= 0)
+                    count++;
+            }
+
+            return count;
         }
     }
 }

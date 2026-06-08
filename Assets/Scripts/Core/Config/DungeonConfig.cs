@@ -20,6 +20,12 @@ namespace CrystalMagic.Game.Config
         [EditorLabel("Exit Interaction Range")]
         public float ExitInteractionRange = 3f;
 
+        [EditorLabel("Layout Search Attempt Limit")]
+        public int LayoutSearchAttemptLimit = 100;
+
+        [EditorLabel("Use Best Candidate Fallback")]
+        public bool UseBestCandidateFallback = true;
+
         [EditorLabel("Default Corridor Material")]
         public string DefaultCorridorMaterialPath = "Assets/Res/Material/TrainPlane.mat";
 

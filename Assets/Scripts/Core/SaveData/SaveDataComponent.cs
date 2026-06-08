@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data;
+using CrystalMagic.Game.MapDemo;
 
 namespace CrystalMagic.Core {
     /// <summary>
@@ -332,7 +333,11 @@ namespace CrystalMagic.Core {
             EnsureCurrentSaveDataValid();
             if (_currentSaveData.DungeonRun?.Character != null)
             {
-                _currentSaveData.DungeonRun.CurrentFloor = Mathf.Max(1, dungeonFloor);
+                int normalizedFloor = Mathf.Max(1, dungeonFloor);
+                if (_currentSaveData.DungeonRun.CurrentFloor != normalizedFloor)
+                    _currentSaveData.DungeonRun.Seed = 0;
+
+                _currentSaveData.DungeonRun.CurrentFloor = normalizedFloor;
                 return;
             }
 
@@ -426,13 +431,17 @@ namespace CrystalMagic.Core {
                 SetVariable(DungeonHighestReachedFloorVariableKey, normalizedFloor);
 
             UnlockDungeonStartFloorInternal(1);
+        }
 
-            int unlockGroupCount = normalizedFloor / DungeonStartFloorUnlockInterval;
-            for (int groupIndex = 1; groupIndex <= unlockGroupCount; groupIndex++)
-            {
-                int startFloor = groupIndex * DungeonStartFloorUnlockInterval + 1;
-                UnlockDungeonStartFloorInternal(startFloor);
-            }
+        public void UnlockDungeonStartFloorAfterBossClear(int clearedFloor)
+        {
+            EnsureCurrentSaveDataValid();
+
+            int normalizedFloor = Mathf.Max(1, clearedFloor);
+            if (normalizedFloor % DungeonStartFloorUnlockInterval != 0)
+                return;
+
+            UnlockDungeonStartFloorInternal(normalizedFloor + 1);
         }
 
         public bool IsDungeonStartFloorUnlocked(int startFloor)
@@ -656,6 +665,15 @@ namespace CrystalMagic.Core {
             if (data == null)
                 return;
 
+            if (string.IsNullOrWhiteSpace(data.RunId))
+                data.RunId = Guid.NewGuid().ToString("N");
+
+            if (data.RunTimestamp <= 0)
+                data.RunTimestamp = DateTime.Now.Ticks;
+
+            if (data.BaseSeed == 0)
+                data.BaseSeed = DeriveDungeonRunBaseSeed(data);
+
             data.CurrentFloor = Mathf.Max(1, data.CurrentFloor);
             data.Character ??= CloneCharacterData(fallbackCharacter);
             EnsureCharacterDataValid(data.Character);
@@ -697,8 +715,32 @@ namespace CrystalMagic.Core {
                 Monsters = new List<MonsterStateData>(),
                 ItemDrops = new List<ItemDropData>(),
             };
+            data.BaseSeed = DeriveDungeonRunBaseSeed(data);
             EnsureDungeonRunDataValid(data, sourceCharacter);
             return data;
+        }
+
+        private static int DeriveDungeonRunBaseSeed(DungeonRunData data)
+        {
+            unchecked
+            {
+                uint hash = 2166136261u;
+                string runId = data?.RunId ?? string.Empty;
+                for (int i = 0; i < runId.Length; i++)
+                {
+                    hash ^= runId[i];
+                    hash *= 16777619u;
+                }
+
+                long timestamp = data?.RunTimestamp ?? 0L;
+                hash ^= (uint)timestamp;
+                hash *= 16777619u;
+                hash ^= (uint)(timestamp >> 32);
+                hash *= 16777619u;
+
+                int result = (int)(hash == 0 ? (uint)DungeonMakerTunnelingGenerator.DefaultSeed : hash);
+                return result == 0 ? 1 : result;
+            }
         }
 
         private void ClearBackpackAndEquipment(CharacterData data)
