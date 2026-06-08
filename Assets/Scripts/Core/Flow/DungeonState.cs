@@ -1,5 +1,7 @@
 using CrystalMagic.Game;
 using CrystalMagic.UI;
+using Unity.Collections;
+using Unity.Entities;
 using UnityEngine;
 
 namespace CrystalMagic.Core
@@ -182,6 +184,7 @@ namespace CrystalMagic.Core
     {
         public const string SceneName = "DungeonScene";
         protected override string BattleSceneName => SceneName;
+        private bool _isProcessingDefeat;
 
         public static TransitionData CreateEnterTransitionData(LoadGameContext context)
         {
@@ -211,15 +214,49 @@ namespace CrystalMagic.Core
             }
 
             SaveDataComponent.Instance?.SetCurrentLocation(SaveAreaType.Dungeon, dungeonFloor);
+            SaveDataComponent.Instance?.UpdateDungeonReachedFloorProgress(dungeonFloor);
             return dungeonFloor;
         }
 
         protected override void OnEnterBattle()
         {
+            _isProcessingDefeat = false;
             Debug.Log("[DungeonState] Entered Dungeon");
             LoadGameContext context = StateData as LoadGameContext;
             int dungeonFloor = PrepareDungeonRun(context);
             Debug.Log($"[DungeonState] Resuming dungeon at floor: {dungeonFloor}");
+        }
+
+        protected override void OnUpdateBattle()
+        {
+            if (_isProcessingDefeat)
+                return;
+
+            if (TransitionComponent.Instance != null && TransitionComponent.Instance.IsTransitioning)
+                return;
+
+            EntityManager entityManager = World.DefaultGameObjectInjectionWorld?.EntityManager ?? default;
+            if (!entityManager.IsCreated)
+                return;
+
+            EntityQuery playerQuery = entityManager.CreateEntityQuery(
+                ComponentType.ReadOnly<PlayerTag>(),
+                ComponentType.ReadOnly<UnitVitalityComponent>());
+            if (playerQuery.IsEmptyIgnoreFilter)
+                return;
+
+            using NativeArray<UnitVitalityComponent> vitalities = playerQuery.ToComponentDataArray<UnitVitalityComponent>(Allocator.Temp);
+            for (int i = 0; i < vitalities.Length; i++)
+            {
+                if (vitalities[i].CurrentHealth > 0f)
+                    continue;
+
+                _isProcessingDefeat = true;
+                SaveDataComponent.Instance?.ApplyDungeonDeathAndCommit();
+                LoadGameContext context = SaveDataComponent.Instance?.CreateLoadGameContext(SaveAreaType.Town);
+                GameFlowComponent.Instance?.BeginTransition(TownState.CreateEnterTransitionData(context));
+                break;
+            }
         }
 
         protected override void OnExitBattle()

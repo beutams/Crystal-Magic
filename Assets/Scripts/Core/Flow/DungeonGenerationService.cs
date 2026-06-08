@@ -12,6 +12,10 @@ namespace CrystalMagic.Core
     {
         private const int StepBatchSize = 32;
         private const float ProgressReportIntervalSeconds = 0.05f;
+        private const float FloorVisualDepth = 0.1f;
+        private const float FloorVisualZ = 0.85f;
+        private const float WallVisualDepth = 1.6f;
+        private const float WallVisualZ = 0.8f;
 
         private static readonly DungeonGenerationRules DefaultRules = new();
 
@@ -1121,7 +1125,9 @@ namespace CrystalMagic.Core
             DungeonMakerTunnelingResult result,
             int dungeonFloor,
             DungeonThemeData theme,
-            DungeonConfig dungeonConfig)
+            DungeonConfig dungeonConfig,
+            DungeonBossRoomData bossRoom = null,
+            int seed = 0)
         {
             DungeonMakerSquareData[] map = CopySourceMap(result);
             int[] regionIdByTile = BuildRegionIdByTileMap(result, map.Length);
@@ -1129,54 +1135,101 @@ namespace CrystalMagic.Core
             {
                 ThemeId = theme?.Id ?? -1,
                 ThemeKey = theme?.ThemeKey ?? string.Empty,
-                IsBossFloor = false,
+                IsBossFloor = bossRoom != null,
                 CellWorldSize = Mathf.Max(0.25f, dungeonConfig?.CellWorldSize ?? 2f),
                 ExitInteractionRange = Mathf.Max(0.5f, dungeonConfig?.ExitInteractionRange ?? 3f),
                 CorridorMaterialPath = ResolveMaterialPath(theme?.CorridorMaterialPath, dungeonConfig?.DefaultCorridorMaterialPath),
                 RoomMaterialPath = ResolveMaterialPath(theme?.RoomMaterialPath, dungeonConfig?.DefaultRoomMaterialPath),
                 AnteRoomMaterialPath = ResolveMaterialPath(theme?.AnteRoomMaterialPath, dungeonConfig?.DefaultAnteRoomMaterialPath),
                 WallMaterialPath = ResolveMaterialPath(theme?.WallMaterialPath, dungeonConfig?.DefaultWallMaterialPath),
-                StartMarkerMaterialPath = ResolveMaterialPath(theme?.StartMarkerMaterialPath, dungeonConfig?.DefaultStartMarkerMaterialPath),
                 ExitClosedMaterialPath = ResolveMaterialPath(theme?.ExitClosedMaterialPath, dungeonConfig?.DefaultExitClosedMaterialPath),
                 ExitOpenMaterialPath = ResolveMaterialPath(theme?.ExitOpenMaterialPath, dungeonConfig?.DefaultExitOpenMaterialPath),
             };
 
-            sceneData.StartObject = BuildSpecialObjectData(result, map, regionIdByTile, sceneData.CellWorldSize, DungeonMakerSpecialRoomRole.Start)
-                ?? BuildFallbackObjectData(result, map, regionIdByTile, sceneData.CellWorldSize, blocksMovement: false, requiresRoomClear: false);
-            sceneData.NextLevelEntranceObject = BuildSpecialObjectData(result, map, regionIdByTile, sceneData.CellWorldSize, DungeonMakerSpecialRoomRole.NextLevel)
-                ?? BuildFallbackObjectData(result, map, regionIdByTile, sceneData.CellWorldSize, blocksMovement: false, requiresRoomClear: true);
+            AddEnvironmentSpawns(sceneData, result);
 
-            for (int tileIndex = 0; tileIndex < map.Length; tileIndex++)
+            RuntimeDungeonSceneObjectSpawnData playerSpawn = bossRoom == null
+                ? BuildSpecialPointData(result, map, regionIdByTile, sceneData.CellWorldSize, DungeonMakerSpecialRoomRole.Start)
+                    ?? BuildFallbackPointData(result, map, regionIdByTile, sceneData.CellWorldSize, requiresRoomClear: false)
+                : CreatePointFromBossCoordinate(result, regionIdByTile, bossRoom.PlayerSpawn, sceneData.CellWorldSize, requiresRoomClear: false)
+                    ?? BuildFallbackPointData(result, map, regionIdByTile, sceneData.CellWorldSize, requiresRoomClear: false);
+            sceneData.PlayerSpawnWorldPosition = playerSpawn?.WorldPosition ?? Vector3.zero;
+
+            RuntimeDungeonSceneObjectSpawnData exitSpawn = bossRoom == null
+                ? BuildSpecialPointData(result, map, regionIdByTile, sceneData.CellWorldSize, DungeonMakerSpecialRoomRole.NextLevel)
+                    ?? BuildFallbackPointData(result, map, regionIdByTile, sceneData.CellWorldSize, requiresRoomClear: true)
+                : CreatePointFromBossCoordinate(result, regionIdByTile, bossRoom.ExitSpawn, sceneData.CellWorldSize, requiresRoomClear: true)
+                    ?? BuildFallbackPointData(result, map, regionIdByTile, sceneData.CellWorldSize, requiresRoomClear: true);
+            if (exitSpawn != null)
             {
-                int monsterLevel = GetMonsterLevel(map[tileIndex]);
-                if (monsterLevel > 0)
-                {
-                    sceneData.MonsterSpawns.Add(CreateMonsterSpawnData(
-                        result,
-                        tileIndex,
-                        regionIdByTile[tileIndex],
-                        monsterLevel,
-                        dungeonFloor,
-                        theme,
-                        dungeonConfig,
-                        isBoss: false));
-                    continue;
-                }
+                sceneData.SceneObjects.Add(CreateExitSceneObject(exitSpawn, sceneData, dungeonFloor + 1));
+            }
 
-                int treasureLevel = GetTreasureLevel(map[tileIndex]);
-                if (treasureLevel > 0)
+            if (bossRoom == null)
+            {
+                for (int tileIndex = 0; tileIndex < map.Length; tileIndex++)
                 {
-                    List<RuntimeDungeonTreasureRewardData> treasureRewards = ResolveTreasureRewards(treasureLevel, dungeonFloor, theme, dungeonConfig);
-                    if (treasureRewards.Count > 0)
+                    int monsterLevel = GetMonsterLevel(map[tileIndex]);
+                    if (monsterLevel > 0)
                     {
-                        sceneData.TreasureSpawns.Add(CreateTreasureSpawnData(
+                        sceneData.MonsterSpawns.Add(CreateMonsterSpawnData(
                             result,
                             tileIndex,
                             regionIdByTile[tileIndex],
-                            treasureLevel,
-                            treasureRewards,
-                            sceneData.CellWorldSize));
+                            monsterLevel,
+                            dungeonFloor,
+                            theme,
+                            dungeonConfig,
+                            isBoss: false));
+                        continue;
                     }
+
+                    int treasureLevel = GetTreasureLevel(map[tileIndex]);
+                    if (treasureLevel <= 0)
+                        continue;
+
+                    List<RuntimeDungeonTreasureRewardData> treasureRewards = ResolveTreasureRewards(treasureLevel, dungeonFloor, theme, dungeonConfig);
+                    if (treasureRewards.Count <= 0)
+                        continue;
+
+                    RuntimeDungeonSceneObjectSpawnData treasurePoint = CreatePointData(
+                        result,
+                        tileIndex,
+                        regionIdByTile[tileIndex],
+                        sceneData.CellWorldSize,
+                        requiresRoomClear: false);
+                    sceneData.SceneObjects.Add(CreateTreasureSceneObject(treasurePoint, treasureRewards));
+                }
+            }
+            else
+            {
+                RuntimeDungeonMonsterSpawnData bossSpawn = CreateBossMonsterSpawnData(result, regionIdByTile, bossRoom.BossSpawn, dungeonFloor, theme, dungeonConfig, bossRoom, seed);
+                if (bossSpawn != null)
+                    sceneData.MonsterSpawns.Add(bossSpawn);
+
+                List<Int2Data> supportSpawnPoints = bossRoom.SupportSpawnPoints ?? new List<Int2Data>();
+                for (int i = 0; i < supportSpawnPoints.Count; i++)
+                {
+                    RuntimeDungeonMonsterSpawnData supportSpawn = CreateSupportMonsterSpawnData(
+                        result,
+                        regionIdByTile,
+                        supportSpawnPoints[i],
+                        dungeonFloor,
+                        theme,
+                        dungeonConfig,
+                        seed + i + 1);
+                    if (supportSpawn != null)
+                        sceneData.MonsterSpawns.Add(supportSpawn);
+                }
+
+                List<RuntimeDungeonTreasureRewardData> rewardEntries = bossRoom.RewardTreasurePoolId > 0
+                    ? ResolveTreasureRewardsFromPool(bossRoom.RewardTreasurePoolId, 3, dungeonFloor, theme?.Id ?? 0)
+                    : ResolveTreasureRewards(3, dungeonFloor, theme, dungeonConfig);
+                if (rewardEntries.Count > 0)
+                {
+                    RuntimeDungeonSceneObjectSpawnData rewardPoint = CreatePointFromBossCoordinate(result, regionIdByTile, bossRoom.RewardSpawn, sceneData.CellWorldSize, requiresRoomClear: false);
+                    if (rewardPoint != null)
+                        sceneData.SceneObjects.Add(CreateTreasureSceneObject(rewardPoint, rewardEntries));
                 }
             }
 
@@ -1194,7 +1247,7 @@ namespace CrystalMagic.Core
             bossRoom ??= CreateFallbackBossRoomData(dungeonFloor);
 
             DungeonMakerTunnelingResult layout = BuildBossRoomLayout(seed, bossRoom);
-            RuntimeDungeonSceneData sceneData = BuildBossSceneData(layout, dungeonFloor, bossRoom, theme, dungeonConfig, seed);
+            RuntimeDungeonSceneData sceneData = BuildSceneData(layout, dungeonFloor, theme, dungeonConfig, bossRoom, seed);
             return new GeneratedDungeonPayload(layout, sceneData);
         }
 
@@ -1402,69 +1455,7 @@ namespace CrystalMagic.Core
                 stats);
         }
 
-        private static RuntimeDungeonSceneData BuildBossSceneData(
-            DungeonMakerTunnelingResult layout,
-            int dungeonFloor,
-            DungeonBossRoomData bossRoom,
-            DungeonThemeData theme,
-            DungeonConfig dungeonConfig,
-            int seed)
-        {
-            RuntimeDungeonSceneData sceneData = new()
-            {
-                ThemeId = theme?.Id ?? -1,
-                ThemeKey = theme?.ThemeKey ?? string.Empty,
-                IsBossFloor = true,
-                CellWorldSize = Mathf.Max(0.25f, dungeonConfig?.CellWorldSize ?? 2f),
-                ExitInteractionRange = Mathf.Max(0.5f, dungeonConfig?.ExitInteractionRange ?? 3f),
-                CorridorMaterialPath = ResolveMaterialPath(theme?.CorridorMaterialPath, dungeonConfig?.DefaultCorridorMaterialPath),
-                RoomMaterialPath = ResolveMaterialPath(theme?.RoomMaterialPath, dungeonConfig?.DefaultRoomMaterialPath),
-                AnteRoomMaterialPath = ResolveMaterialPath(theme?.AnteRoomMaterialPath, dungeonConfig?.DefaultAnteRoomMaterialPath),
-                WallMaterialPath = ResolveMaterialPath(theme?.WallMaterialPath, dungeonConfig?.DefaultWallMaterialPath),
-                StartMarkerMaterialPath = ResolveMaterialPath(theme?.StartMarkerMaterialPath, dungeonConfig?.DefaultStartMarkerMaterialPath),
-                ExitClosedMaterialPath = ResolveMaterialPath(theme?.ExitClosedMaterialPath, dungeonConfig?.DefaultExitClosedMaterialPath),
-                ExitOpenMaterialPath = ResolveMaterialPath(theme?.ExitOpenMaterialPath, dungeonConfig?.DefaultExitOpenMaterialPath),
-            };
-
-            int[] regionIdByTile = BuildRegionIdByTileMap(layout, layout.SourceWidth * layout.SourceHeight);
-            sceneData.StartObject = CreateObjectFromBossCoordinate(layout, regionIdByTile, bossRoom.PlayerSpawn, sceneData.CellWorldSize, blocksMovement: false, requiresRoomClear: false)
-                ?? BuildFallbackObjectData(layout, CopySourceMap(layout), regionIdByTile, sceneData.CellWorldSize, blocksMovement: false, requiresRoomClear: false);
-            sceneData.NextLevelEntranceObject = CreateObjectFromBossCoordinate(layout, regionIdByTile, bossRoom.ExitSpawn, sceneData.CellWorldSize, blocksMovement: false, requiresRoomClear: true)
-                ?? BuildFallbackObjectData(layout, CopySourceMap(layout), regionIdByTile, sceneData.CellWorldSize, blocksMovement: false, requiresRoomClear: true);
-
-            RuntimeDungeonMonsterSpawnData bossSpawn = CreateBossMonsterSpawnData(layout, regionIdByTile, bossRoom.BossSpawn, dungeonFloor, theme, dungeonConfig, bossRoom, seed);
-            if (bossSpawn != null)
-                sceneData.MonsterSpawns.Add(bossSpawn);
-
-            List<Int2Data> supportSpawnPoints = bossRoom.SupportSpawnPoints ?? new List<Int2Data>();
-            for (int i = 0; i < supportSpawnPoints.Count; i++)
-            {
-                RuntimeDungeonMonsterSpawnData supportSpawn = CreateSupportMonsterSpawnData(
-                    layout,
-                    regionIdByTile,
-                    supportSpawnPoints[i],
-                    dungeonFloor,
-                    theme,
-                    dungeonConfig,
-                    seed + i + 1);
-                if (supportSpawn != null)
-                    sceneData.MonsterSpawns.Add(supportSpawn);
-            }
-
-            List<RuntimeDungeonTreasureRewardData> rewardEntries = bossRoom.RewardTreasurePoolId > 0
-                ? ResolveTreasureRewardsFromPool(bossRoom.RewardTreasurePoolId, 3, dungeonFloor, theme?.Id ?? 0)
-                : ResolveTreasureRewards(3, dungeonFloor, theme, dungeonConfig);
-            if (rewardEntries.Count > 0)
-            {
-                RuntimeDungeonTreasureSpawnData rewardSpawn = CreateTreasureFromBossCoordinate(layout, regionIdByTile, bossRoom.RewardSpawn, 3, rewardEntries, sceneData.CellWorldSize);
-                if (rewardSpawn != null)
-                    sceneData.TreasureSpawns.Add(rewardSpawn);
-            }
-
-            return sceneData;
-        }
-
-        private static RuntimeDungeonObjectData BuildSpecialObjectData(
+        private static RuntimeDungeonSceneObjectSpawnData BuildSpecialPointData(
             DungeonMakerTunnelingResult result,
             DungeonMakerSquareData[] map,
             int[] regionIdByTile,
@@ -1481,24 +1472,22 @@ namespace CrystalMagic.Core
                 if (!TryPickSpecialObjectTileIndex(region, map, result.SourceHeight, out int tileIndex))
                     return null;
 
-                return CreateDungeonObjectData(
+                return CreatePointData(
                     result,
                     tileIndex,
                     regionIdByTile[tileIndex],
                     cellWorldSize,
-                    blocksMovement: false,
                     requiresRoomClear: role == DungeonMakerSpecialRoomRole.NextLevel);
             }
 
             return null;
         }
 
-        private static RuntimeDungeonObjectData BuildFallbackObjectData(
+        private static RuntimeDungeonSceneObjectSpawnData BuildFallbackPointData(
             DungeonMakerTunnelingResult result,
             DungeonMakerSquareData[] map,
             int[] regionIdByTile,
             float cellWorldSize,
-            bool blocksMovement,
             bool requiresRoomClear)
         {
             for (int tileIndex = 0; tileIndex < map.Length; tileIndex++)
@@ -1506,7 +1495,7 @@ namespace CrystalMagic.Core
                 if (!IsWalkableTile(map[tileIndex]))
                     continue;
 
-                return CreateDungeonObjectData(result, tileIndex, regionIdByTile[tileIndex], cellWorldSize, blocksMovement, requiresRoomClear);
+                return CreatePointData(result, tileIndex, regionIdByTile[tileIndex], cellWorldSize, requiresRoomClear);
             }
 
             return null;
@@ -1577,24 +1566,22 @@ namespace CrystalMagic.Core
             return bestTileIndex;
         }
 
-        private static RuntimeDungeonObjectData CreateDungeonObjectData(
+        private static RuntimeDungeonSceneObjectSpawnData CreatePointData(
             DungeonMakerTunnelingResult result,
             int tileIndex,
             int regionId,
             float cellWorldSize,
-            bool blocksMovement,
             bool requiresRoomClear)
         {
             Vector2Int sourceCoordinate = GetSourceCoordinateFromTileIndex(tileIndex, result.SourceHeight);
             Vector2Int displayCoordinate = new(sourceCoordinate.y, sourceCoordinate.x);
-            return new RuntimeDungeonObjectData
+            return new RuntimeDungeonSceneObjectSpawnData
             {
                 RegionId = regionId,
                 TileIndex = tileIndex,
                 SourceCoordinate = sourceCoordinate,
                 DisplayCoordinate = displayCoordinate,
                 WorldPosition = GetWorldPosition(result, displayCoordinate, cellWorldSize),
-                BlocksMovement = blocksMovement,
                 RequiresRoomClear = requiresRoomClear,
             };
         }
@@ -1621,28 +1608,6 @@ namespace CrystalMagic.Core
                 SourceCoordinate = sourceCoordinate,
                 DisplayCoordinate = displayCoordinate,
                 WorldPosition = GetWorldPosition(result, displayCoordinate, Mathf.Max(0.25f, dungeonConfig?.CellWorldSize ?? 2f)),
-            };
-        }
-
-        private static RuntimeDungeonTreasureSpawnData CreateTreasureSpawnData(
-            DungeonMakerTunnelingResult result,
-            int tileIndex,
-            int regionId,
-            int level,
-            List<RuntimeDungeonTreasureRewardData> rewards,
-            float cellWorldSize)
-        {
-            Vector2Int sourceCoordinate = GetSourceCoordinateFromTileIndex(tileIndex, result.SourceHeight);
-            Vector2Int displayCoordinate = new(sourceCoordinate.y, sourceCoordinate.x);
-            return new RuntimeDungeonTreasureSpawnData
-            {
-                RegionId = regionId,
-                TileIndex = tileIndex,
-                Level = level,
-                Rewards = CloneTreasureRewards(rewards),
-                SourceCoordinate = sourceCoordinate,
-                DisplayCoordinate = displayCoordinate,
-                WorldPosition = GetWorldPosition(result, displayCoordinate, cellWorldSize),
             };
         }
 
@@ -1720,12 +1685,11 @@ namespace CrystalMagic.Core
             };
         }
 
-        private static RuntimeDungeonObjectData CreateObjectFromBossCoordinate(
+        private static RuntimeDungeonSceneObjectSpawnData CreatePointFromBossCoordinate(
             DungeonMakerTunnelingResult layout,
             int[] regionIdByTile,
             Int2Data coordinate,
             float cellWorldSize,
-            bool blocksMovement,
             bool requiresRoomClear)
         {
             int tileIndex = GetTileIndexForBossCoordinate(coordinate, layout.SourceWidth, layout.SourceHeight);
@@ -1733,7 +1697,7 @@ namespace CrystalMagic.Core
                 return null;
 
             int regionId = tileIndex >= 0 && tileIndex < regionIdByTile.Length ? regionIdByTile[tileIndex] : -1;
-            return CreateDungeonObjectData(layout, tileIndex, regionId, cellWorldSize, blocksMovement, requiresRoomClear);
+            return CreatePointData(layout, tileIndex, regionId, cellWorldSize, requiresRoomClear);
         }
 
         private static RuntimeDungeonMonsterSpawnData CreateBossMonsterSpawnData(
@@ -1799,27 +1763,6 @@ namespace CrystalMagic.Core
                 DisplayCoordinate = displayCoordinate,
                 WorldPosition = GetWorldPosition(layout, displayCoordinate, Mathf.Max(0.25f, dungeonConfig?.CellWorldSize ?? 2f)),
             };
-        }
-
-        private static RuntimeDungeonTreasureSpawnData CreateTreasureFromBossCoordinate(
-            DungeonMakerTunnelingResult layout,
-            int[] regionIdByTile,
-            Int2Data coordinate,
-            int level,
-            List<RuntimeDungeonTreasureRewardData> rewards,
-            float cellWorldSize)
-        {
-            int tileIndex = GetTileIndexForBossCoordinate(coordinate, layout.SourceWidth, layout.SourceHeight);
-            if (tileIndex < 0)
-                return null;
-
-            return CreateTreasureSpawnData(
-                layout,
-                tileIndex,
-                tileIndex >= 0 && tileIndex < regionIdByTile.Length ? regionIdByTile[tileIndex] : -1,
-                level,
-                rewards,
-                cellWorldSize);
         }
 
         private static int GetTileIndexForBossCoordinate(Int2Data coordinate, int sourceWidth, int sourceHeight)
@@ -2034,6 +1977,274 @@ namespace CrystalMagic.Core
                         generalEntries.Add(entry);
                 }
             }
+        }
+
+        private static RuntimeDungeonSceneObjectSpawnData CreateExitSceneObject(
+            RuntimeDungeonSceneObjectSpawnData pointData,
+            RuntimeDungeonSceneData sceneData,
+            int targetFloor)
+        {
+            if (pointData == null)
+                return null;
+
+            pointData.ObjectType = RuntimeDungeonSceneObjectType.Exit;
+            pointData.PrefabName = "Exit";
+            pointData.Size = Vector3.one;
+            pointData.InteractionRange = sceneData.ExitInteractionRange;
+            pointData.TargetFloor = Mathf.Max(1, targetFloor);
+            pointData.ClosedMaterialPath = sceneData.ExitClosedMaterialPath ?? string.Empty;
+            pointData.OpenMaterialPath = sceneData.ExitOpenMaterialPath ?? string.Empty;
+            return pointData;
+        }
+
+        private static RuntimeDungeonSceneObjectSpawnData CreateTreasureSceneObject(
+            RuntimeDungeonSceneObjectSpawnData pointData,
+            List<RuntimeDungeonTreasureRewardData> rewards)
+        {
+            if (pointData == null)
+                return null;
+
+            pointData.ObjectType = RuntimeDungeonSceneObjectType.Treasure;
+            pointData.PrefabName = "Treasure";
+            pointData.Size = Vector3.one;
+            pointData.InteractionRange = 1.35f;
+            pointData.Rewards = CloneTreasureRewards(rewards);
+            return pointData;
+        }
+
+        private static void AddEnvironmentSpawns(
+            RuntimeDungeonSceneData sceneData,
+            DungeonMakerTunnelingResult layout)
+        {
+            DungeonMakerRegionKind?[,] regionKinds = BuildRegionKindMap(layout);
+            AddEnvironmentSpawnsForMask(
+                sceneData,
+                layout,
+                BuildWalkableMask(layout, regionKinds, DungeonMakerRegionKind.Room),
+                sceneData.RoomMaterialPath,
+                FloorVisualDepth,
+                FloorVisualZ,
+                "Environment");
+            AddEnvironmentSpawnsForMask(
+                sceneData,
+                layout,
+                BuildWalkableMask(layout, regionKinds, DungeonMakerRegionKind.AnteRoom),
+                sceneData.AnteRoomMaterialPath,
+                FloorVisualDepth,
+                FloorVisualZ,
+                "Environment");
+            AddEnvironmentSpawnsForMask(
+                sceneData,
+                layout,
+                BuildWalkableMask(layout, regionKinds, DungeonMakerRegionKind.Corridor),
+                sceneData.CorridorMaterialPath,
+                FloorVisualDepth,
+                FloorVisualZ,
+                "Environment");
+
+            bool[,] wallMask = BuildSurfaceMask(layout, static tile => IsWallTile(tile));
+            List<RectInt> wallRectangles = BuildRectangles(wallMask, surfaceOnly: false);
+            for (int i = 0; i < wallRectangles.Count; i++)
+            {
+                RectInt rectangle = wallRectangles[i];
+                sceneData.EnvironmentSpawns.Add(new RuntimeDungeonEnvironmentSpawnData
+                {
+                    PrefabName = "Collider",
+                    MaterialPath = sceneData.WallMaterialPath ?? string.Empty,
+                    WorldPosition = GetWorldPositionForRectangle(rectangle, layout.DisplayWidth, layout.DisplayHeight, sceneData.CellWorldSize, WallVisualZ),
+                    Size = new Vector3(
+                        rectangle.width * sceneData.CellWorldSize,
+                        rectangle.height * sceneData.CellWorldSize,
+                        WallVisualDepth),
+                });
+            }
+        }
+
+        private static void AddEnvironmentSpawnsForMask(
+            RuntimeDungeonSceneData sceneData,
+            DungeonMakerTunnelingResult layout,
+            bool[,] mask,
+            string materialPath,
+            float depth,
+            float visualZ,
+            string prefabName)
+        {
+            List<RectInt> rectangles = BuildRectangles(mask, surfaceOnly: false);
+            for (int i = 0; i < rectangles.Count; i++)
+            {
+                RectInt rectangle = rectangles[i];
+                sceneData.EnvironmentSpawns.Add(new RuntimeDungeonEnvironmentSpawnData
+                {
+                    PrefabName = prefabName,
+                    MaterialPath = materialPath ?? string.Empty,
+                    WorldPosition = GetWorldPositionForRectangle(rectangle, layout.DisplayWidth, layout.DisplayHeight, sceneData.CellWorldSize, visualZ),
+                    Size = new Vector3(
+                        rectangle.width * sceneData.CellWorldSize,
+                        rectangle.height * sceneData.CellWorldSize,
+                        depth),
+                });
+            }
+        }
+
+        private static DungeonMakerRegionKind?[,] BuildRegionKindMap(DungeonMakerTunnelingResult layout)
+        {
+            int sourceWidth = layout.SourceWidth;
+            int sourceHeight = layout.SourceHeight;
+            DungeonMakerRegionKind?[,] map = new DungeonMakerRegionKind?[layout.DisplayWidth, layout.DisplayHeight];
+            IReadOnlyList<DungeonMakerRegion> regions = layout.Regions;
+
+            for (int i = 0; i < regions.Count; i++)
+            {
+                DungeonMakerRegion region = regions[i];
+                if (region?.TileIndices == null)
+                    continue;
+
+                for (int tileIndexIndex = 0; tileIndexIndex < region.TileIndices.Length; tileIndexIndex++)
+                {
+                    int tileIndex = region.TileIndices[tileIndexIndex];
+                    int sourceX = tileIndex / sourceHeight;
+                    int sourceY = tileIndex % sourceHeight;
+                    if (sourceX < 0 || sourceX >= sourceWidth || sourceY < 0 || sourceY >= sourceHeight)
+                        continue;
+
+                    map[sourceY, sourceX] = region.Kind;
+                }
+            }
+
+            return map;
+        }
+
+        private static bool[,] BuildWalkableMask(
+            DungeonMakerTunnelingResult layout,
+            DungeonMakerRegionKind?[,] regionKinds,
+            DungeonMakerRegionKind targetKind)
+        {
+            int width = layout.DisplayWidth;
+            int height = layout.DisplayHeight;
+            bool[,] mask = new bool[width, height];
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    if (!IsWalkableTile(layout.GetDisplayTile(x, y)))
+                        continue;
+
+                    DungeonMakerRegionKind resolvedKind = regionKinds[x, y] ?? DungeonMakerRegionKind.Corridor;
+                    mask[x, y] = resolvedKind == targetKind;
+                }
+            }
+
+            return mask;
+        }
+
+        private static bool[,] BuildSurfaceMask(DungeonMakerTunnelingResult layout, Func<DungeonMakerSquareData, bool> predicate)
+        {
+            int width = layout.DisplayWidth;
+            int height = layout.DisplayHeight;
+            bool[,] sourceMask = new bool[width, height];
+            bool[,] surfaceMask = new bool[width, height];
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                    sourceMask[x, y] = predicate(layout.GetDisplayTile(x, y));
+            }
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                    surfaceMask[x, y] = IsSurfaceMask(sourceMask, x, y, width, height);
+            }
+
+            return surfaceMask;
+        }
+
+        private static List<RectInt> BuildRectangles(bool[,] targetMask, bool surfaceOnly)
+        {
+            int width = targetMask.GetLength(0);
+            int height = targetMask.GetLength(1);
+            bool[,] used = new bool[width, height];
+            List<RectInt> rectangles = new();
+
+            if (surfaceOnly)
+            {
+                bool[,] sourceMask = targetMask;
+                targetMask = new bool[width, height];
+                for (int y = 0; y < height; y++)
+                {
+                    for (int x = 0; x < width; x++)
+                        targetMask[x, y] = IsSurfaceMask(sourceMask, x, y, width, height);
+                }
+            }
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    if (!targetMask[x, y] || used[x, y])
+                        continue;
+
+                    int rectWidth = 0;
+                    while (x + rectWidth < width && targetMask[x + rectWidth, y] && !used[x + rectWidth, y])
+                        rectWidth++;
+
+                    int rectHeight = 1;
+                    bool canGrow = true;
+                    while (y + rectHeight < height && canGrow)
+                    {
+                        for (int dx = 0; dx < rectWidth; dx++)
+                        {
+                            if (!targetMask[x + dx, y + rectHeight] || used[x + dx, y + rectHeight])
+                            {
+                                canGrow = false;
+                                break;
+                            }
+                        }
+
+                        if (canGrow)
+                            rectHeight++;
+                    }
+
+                    for (int dy = 0; dy < rectHeight; dy++)
+                    {
+                        for (int dx = 0; dx < rectWidth; dx++)
+                            used[x + dx, y + dy] = true;
+                    }
+
+                    rectangles.Add(new RectInt(x, y, rectWidth, rectHeight));
+                }
+            }
+
+            return rectangles;
+        }
+
+        private static bool IsSurfaceMask(bool[,] mask, int x, int y, int width, int height)
+        {
+            if (!mask[x, y])
+                return false;
+
+            if (x == 0 || y == 0 || x == width - 1 || y == height - 1)
+                return true;
+
+            return !mask[x - 1, y]
+                || !mask[x + 1, y]
+                || !mask[x, y - 1]
+                || !mask[x, y + 1];
+        }
+
+        private static Vector3 GetWorldPositionForRectangle(
+            RectInt rectangle,
+            int displayWidth,
+            int displayHeight,
+            float cellWorldSize,
+            float z)
+        {
+            float halfWidth = displayWidth * 0.5f;
+            float halfHeight = displayHeight * 0.5f;
+            float centerX = (rectangle.x + rectangle.width * 0.5f - halfWidth) * cellWorldSize;
+            float centerY = (rectangle.y + rectangle.height * 0.5f - halfHeight) * cellWorldSize;
+            return new Vector3(centerX, centerY, z);
         }
 
         private static int GetDeterministicIndex(int seed, int count)

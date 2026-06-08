@@ -38,6 +38,18 @@ namespace CrystalMagic.Core {
             RefreshUIInputLock();
         }
 
+        public static TransitionData CreateEnterTransitionData(object data = null)
+        {
+            return new TransitionData
+            {
+                TargetSceneName = SceneName,
+                TargetStateType = typeof(TownState),
+                TargetStateData = data,
+                TransitionUIName = "TransitionUI",
+                ForceReloadTargetScene = true,
+            };
+        }
+
         private void BindInput()
         {
             if (_inputBound || InputComponent.Instance == null)

@@ -31,6 +31,11 @@ namespace CrystalMagic.Core
             return $"Assets/Res/Prefab/Drop/{prefabName}.prefab";
         }
 
+        public static string GetEnvironmentPrefabAsset(string prefabName)
+        {
+            return $"Assets/Res/Prefab/Environment/{prefabName}.prefab";
+        }
+
         public static string GetVfxPrefabAsset(string prefabName)
         {
             return $"Assets/Res/Prefab/VFX/{prefabName}.prefab";

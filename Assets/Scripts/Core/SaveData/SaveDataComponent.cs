@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using CrystalMagic.Game.Config;
+using CrystalMagic.Game.Data;
 
 namespace CrystalMagic.Core {
     /// <summary>
@@ -25,6 +26,9 @@ namespace CrystalMagic.Core {
         private const int CURRENT_SAVE_VERSION = 1;
         private const int CURRENT_CONTENT_VERSION = 1;
         private const int DEFAULT_SAVE_INDEX = 0;
+        public const string DungeonUnlockedStartFloorVariablePrefix = "DungeonUnlockedStartFloor_";
+        public const string DungeonHighestReachedFloorVariableKey = "DungeonHighestReachedFloor";
+        public const int DungeonStartFloorUnlockInterval = 20;
 
         private SaveData _currentSaveData;
         private int _currentSaveIndex;
@@ -342,11 +346,17 @@ namespace CrystalMagic.Core {
             PublishAllDataChangedEvents();
         }
 
-        public void CommitDungeonRunToPersistent(bool clearRun = true)
+        public void CommitDungeonRunToPersistent(bool clearRun = true, bool includeRunMoney = true, bool removeNonTransferableItems = true)
         {
             EnsureCurrentSaveDataValid();
             if (_currentSaveData.DungeonRun?.Character == null)
                 return;
+
+            if (removeNonTransferableItems)
+                RemoveNonTransferableItems(_currentSaveData.DungeonRun.Character);
+
+            if (includeRunMoney && _currentSaveData.DungeonRun.RunMoney > 0)
+                _currentSaveData.Town.StashMoney += _currentSaveData.DungeonRun.RunMoney;
 
             _currentSaveData.Town.Character = CloneCharacterData(_currentSaveData.DungeonRun.Character);
             EnsureCharacterDataValid(_currentSaveData.Town.Character);
@@ -363,7 +373,7 @@ namespace CrystalMagic.Core {
             EnsureDungeonRunExists(_currentSaveData.Location?.DungeonFloor ?? 1);
 
             ClearBackpackAndEquipment(_currentSaveData.DungeonRun.Character);
-            CommitDungeonRunToPersistent();
+            CommitDungeonRunToPersistent(includeRunMoney: false, removeNonTransferableItems: false);
         }
 
         public void ClearDungeonRun()
@@ -398,6 +408,61 @@ namespace CrystalMagic.Core {
         {
             EnsureCurrentSaveDataValid();
             return _currentSaveData.Variables.Check(expression);
+        }
+
+        public void EnsureDungeonStartFloorUnlocksInitialized()
+        {
+            EnsureCurrentSaveDataValid();
+            EnsureDungeonStartFloorUnlocksInitialized(_currentSaveData);
+        }
+
+        public void UpdateDungeonReachedFloorProgress(int dungeonFloor)
+        {
+            EnsureCurrentSaveDataValid();
+
+            int normalizedFloor = Mathf.Max(1, dungeonFloor);
+            double highestReached = GetVariable(DungeonHighestReachedFloorVariableKey, 1d);
+            if (normalizedFloor > highestReached)
+                SetVariable(DungeonHighestReachedFloorVariableKey, normalizedFloor);
+
+            UnlockDungeonStartFloorInternal(1);
+
+            int unlockGroupCount = normalizedFloor / DungeonStartFloorUnlockInterval;
+            for (int groupIndex = 1; groupIndex <= unlockGroupCount; groupIndex++)
+            {
+                int startFloor = groupIndex * DungeonStartFloorUnlockInterval + 1;
+                UnlockDungeonStartFloorInternal(startFloor);
+            }
+        }
+
+        public bool IsDungeonStartFloorUnlocked(int startFloor)
+        {
+            EnsureCurrentSaveDataValid();
+
+            int normalizedFloor = NormalizeDungeonStartFloor(startFloor);
+            if (normalizedFloor == 1)
+                return true;
+
+            return GetVariable(GetDungeonStartFloorUnlockVariableKey(normalizedFloor), 0d) > 0.5d;
+        }
+
+        public List<int> GetUnlockedDungeonStartFloors()
+        {
+            EnsureCurrentSaveDataValid();
+            EnsureDungeonStartFloorUnlocksInitialized();
+
+            List<int> floors = new() { 1 };
+            int highestReachedFloor = Mathf.Max(1, (int)Math.Round(GetVariable(DungeonHighestReachedFloorVariableKey, 1d)));
+            int maxCandidateFloor = Mathf.Max(1, ((highestReachedFloor / DungeonStartFloorUnlockInterval) + 1) * DungeonStartFloorUnlockInterval + 1);
+            for (int startFloor = DungeonStartFloorUnlockInterval + 1; startFloor <= maxCandidateFloor; startFloor += DungeonStartFloorUnlockInterval)
+            {
+                if (!IsDungeonStartFloorUnlocked(startFloor))
+                    continue;
+
+                floors.Add(startFloor);
+            }
+
+            return floors;
         }
 
         public void SetCurrentLocation(SaveAreaType areaType, int dungeonFloor = 1)
@@ -543,6 +608,8 @@ namespace CrystalMagic.Core {
             {
                 data.DungeonRun = CreateDungeonRunFromPersistent(data.Town.Character, data.Location.DungeonFloor);
             }
+
+            EnsureDungeonStartFloorUnlocksInitialized(data);
         }
 
         private void EnsureTownDataValid(TownData data)
@@ -643,6 +710,137 @@ namespace CrystalMagic.Core {
             data.Backpack.Items.Clear();
             data.Props.ClearSlots();
             data.Equipment = new EquipmentData();
+            ClearSkillChains(data);
+        }
+
+        private void RemoveNonTransferableItems(CharacterData data)
+        {
+            if (data == null)
+                return;
+
+            EnsureCharacterDataValid(data);
+
+            if (data.Backpack?.Items != null)
+            {
+                data.Backpack.Items.RemoveAll(item => item != null && IsItemNonTransferable(item.ItemId));
+            }
+
+            if (data.Props?.Slots != null)
+            {
+                for (int i = 0; i < data.Props.Slots.Count; i++)
+                {
+                    CharacterPropSlotData slot = data.Props.Slots[i];
+                    if (slot == null || slot.ItemId < 0)
+                        continue;
+
+                    if (IsItemNonTransferable(slot.ItemId))
+                        slot.Clear();
+                }
+            }
+
+            if (data.Equipment != null)
+            {
+                if (IsItemNonTransferable(data.Equipment.MagicStoneId))
+                    data.Equipment.MagicStoneId = -1;
+
+                if (data.Equipment.SpiritSlots != null)
+                {
+                    for (int i = 0; i < data.Equipment.SpiritSlots.Length; i++)
+                    {
+                        if (IsItemNonTransferable(data.Equipment.SpiritSlots[i]))
+                            data.Equipment.SpiritSlots[i] = -1;
+                    }
+                }
+            }
+
+            if (data.Skills?.Chains != null)
+            {
+                for (int i = 0; i < data.Skills.Chains.Length; i++)
+                {
+                    SkillChainData chain = data.Skills.Chains[i];
+                    if (chain?.Slots == null)
+                        continue;
+
+                    for (int slotIndex = 0; slotIndex < chain.Slots.Count; slotIndex++)
+                    {
+                        SkillChainSlotData slot = chain.Slots[slotIndex];
+                        if (slot == null)
+                            continue;
+
+                        if (IsItemNonTransferable(slot.SkillStoneItemId))
+                        {
+                            slot.SkillStoneItemId = -1;
+                            slot.SkillAdditionId = -1;
+                        }
+                    }
+                }
+            }
+        }
+
+        private bool IsItemNonTransferable(int itemId)
+        {
+            if (itemId < 0 || DataComponent.Instance == null)
+                return false;
+
+            ItemData itemData = DataComponent.Instance.Get<ItemData>(itemId);
+            return itemData != null && itemData.IsNonTransferable;
+        }
+
+        private static void ClearSkillChains(CharacterData data)
+        {
+            if (data?.Skills?.Chains == null)
+                return;
+
+            for (int chainIndex = 0; chainIndex < data.Skills.Chains.Length; chainIndex++)
+            {
+                SkillChainData chain = data.Skills.Chains[chainIndex];
+                if (chain?.Slots == null)
+                    continue;
+
+                for (int slotIndex = 0; slotIndex < chain.Slots.Count; slotIndex++)
+                {
+                    SkillChainSlotData slot = chain.Slots[slotIndex];
+                    if (slot == null)
+                        continue;
+
+                    slot.SkillStoneItemId = -1;
+                    slot.SkillAdditionId = -1;
+                }
+            }
+        }
+
+        private void UnlockDungeonStartFloorInternal(int startFloor)
+        {
+            int normalizedFloor = NormalizeDungeonStartFloor(startFloor);
+            SetVariable(GetDungeonStartFloorUnlockVariableKey(normalizedFloor), 1d);
+        }
+
+        private static void EnsureDungeonStartFloorUnlocksInitialized(SaveData data)
+        {
+            if (data?.Variables == null)
+                return;
+
+            string unlockKey = GetDungeonStartFloorUnlockVariableKey(1);
+            if (!data.Variables.Contains(unlockKey))
+                data.Variables.Set(unlockKey, 1d);
+
+            if (!data.Variables.Contains(DungeonHighestReachedFloorVariableKey))
+                data.Variables.Set(DungeonHighestReachedFloorVariableKey, 1d);
+        }
+
+        private static int NormalizeDungeonStartFloor(int startFloor)
+        {
+            int normalizedFloor = Mathf.Max(1, startFloor);
+            if (normalizedFloor == 1)
+                return 1;
+
+            int remainder = (normalizedFloor - 1) % DungeonStartFloorUnlockInterval;
+            return remainder == 0 ? normalizedFloor : normalizedFloor - remainder + DungeonStartFloorUnlockInterval;
+        }
+
+        public static string GetDungeonStartFloorUnlockVariableKey(int startFloor)
+        {
+            return $"{DungeonUnlockedStartFloorVariablePrefix}{NormalizeDungeonStartFloor(startFloor)}";
         }
 
         private CharacterData CloneCharacterData(CharacterData source)

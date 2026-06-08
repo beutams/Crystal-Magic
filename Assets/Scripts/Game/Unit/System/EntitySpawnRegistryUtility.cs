@@ -110,6 +110,41 @@ namespace CrystalMagic.Game.Unit
             return instance != Entity.Null;
         }
 
+        public static bool TryGetEnvironmentPrefab(EntityManager entityManager, in FixedString128Bytes prefabName, out Entity prefab)
+        {
+            if (!TryGetRegistryEntity(entityManager, out Entity registryEntity) ||
+                !entityManager.HasBuffer<EnvironmentEntityPrefabRegistryEntry>(registryEntity))
+            {
+                prefab = Entity.Null;
+                return false;
+            }
+
+            DynamicBuffer<EnvironmentEntityPrefabRegistryEntry> buffer = entityManager.GetBuffer<EnvironmentEntityPrefabRegistryEntry>(registryEntity);
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                if (buffer[i].Name.Equals(prefabName))
+                {
+                    prefab = buffer[i].Prefab;
+                    return prefab != Entity.Null;
+                }
+            }
+
+            prefab = Entity.Null;
+            return false;
+        }
+
+        public static bool TryInstantiateEnvironment(EntityManager entityManager, in FixedString128Bytes prefabName, out Entity instance)
+        {
+            if (!TryGetEnvironmentPrefab(entityManager, prefabName, out Entity prefab))
+            {
+                instance = Entity.Null;
+                return false;
+            }
+
+            instance = entityManager.Instantiate(prefab);
+            return instance != Entity.Null;
+        }
+
         private static bool TryGetRegistryEntity(EntityManager entityManager, out Entity registryEntity)
         {
             EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<EntitySpawnRegistrySingleton>());

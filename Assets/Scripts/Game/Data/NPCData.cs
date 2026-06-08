@@ -169,6 +169,12 @@ namespace CrystalMagic.Game.Data
     }
 
     [Serializable]
+    [FactoryKey("EnterTown", 6, "Enter Town")]
+    public sealed class NPCEnterTownInteractionNodeData : NPCInteractionNodeData
+    {
+    }
+
+    [Serializable]
     [FactoryKey("Select", 1, "Select")]
     public sealed class NPCSelectInteractionNodeData : NPCInteractionNodeData
     {

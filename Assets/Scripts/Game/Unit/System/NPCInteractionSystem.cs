@@ -87,6 +87,7 @@ partial class NPCInteractionConsumeSystem : SystemBase
         }
 
         NPCInteractionData interaction = SelectInteraction(npcData);
+        interaction = NPCInteractionRuntimeUtility.ResolveRuntimeInteraction(npcData, interaction);
         if (interaction == null)
         {
             Debug.Log($"[NPCInteraction] No enabled interaction found for NPC '{npcData.NPC}'.");

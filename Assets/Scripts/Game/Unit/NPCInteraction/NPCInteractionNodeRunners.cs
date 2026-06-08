@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
@@ -150,10 +151,15 @@ public sealed class NPCEnterDungeonInteractionNodeRunner : NPCInteractionNodeRun
             return;
         }
 
-        SaveDataComponent.Instance?.ClearDungeonRun();
-        LoadGameContext context = SaveDataComponent.Instance?.CreateLoadGameContext(
+        int dungeonFloor = Math.Max(1, _node.DungeonFloor);
+        SaveDataComponent saveDataComponent = SaveDataComponent.Instance;
+        SaveAreaType currentAreaType = saveDataComponent?.GetLocationData()?.AreaType ?? SaveAreaType.Town;
+        if (currentAreaType != SaveAreaType.Dungeon)
+            saveDataComponent?.ClearDungeonRun();
+
+        LoadGameContext context = saveDataComponent?.CreateLoadGameContext(
             SaveAreaType.Dungeon,
-            1);
+            dungeonFloor);
 
         GameFlowComponent.Instance.BeginTransition(DungeonState.CreateEnterTransitionData(context));
     }
@@ -186,6 +192,36 @@ public sealed class NPCEnterTrainingGroundInteractionNodeRunner : NPCInteraction
         LoadGameContext context = SaveDataComponent.Instance?.CreateLoadGameContext(SaveAreaType.Training);
 
         GameFlowComponent.Instance.BeginTransition(TrainingState.CreateEnterTransitionData(context));
+    }
+
+    public override bool IsCompleted(NPCInteractionSession session)
+    {
+        return _completed;
+    }
+}
+
+public sealed class NPCEnterTownInteractionNodeRunner : NPCInteractionNodeRunner
+{
+    private bool _completed;
+
+    public NPCEnterTownInteractionNodeRunner(NPCEnterTownInteractionNodeData node)
+    {
+    }
+
+    public override void Enter(NPCInteractionSession session)
+    {
+        session.RequestTerminateInteraction();
+        _completed = true;
+
+        if (GameFlowComponent.Instance == null)
+        {
+            Debug.LogWarning("[NPCInteraction] GameFlowComponent is not available for EnterTown node.");
+            return;
+        }
+
+        SaveDataComponent.Instance?.CommitDungeonRunToPersistent();
+        LoadGameContext context = SaveDataComponent.Instance?.CreateLoadGameContext(SaveAreaType.Town);
+        GameFlowComponent.Instance.BeginTransition(TownState.CreateEnterTransitionData(context));
     }
 
     public override bool IsCompleted(NPCInteractionSession session)

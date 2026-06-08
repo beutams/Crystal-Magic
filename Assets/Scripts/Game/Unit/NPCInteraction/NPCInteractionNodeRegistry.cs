@@ -15,6 +15,7 @@ public static class NPCInteractionNodeRegistry
         "Move",
         "EnterDungeon",
         "EnterTrainingGround",
+        "EnterTown",
     };
 
     private static readonly Dictionary<string, Type> s_types = new(StringComparer.Ordinal)
@@ -25,6 +26,7 @@ public static class NPCInteractionNodeRegistry
         { "Move", typeof(CrystalMagic.Game.Data.NPCMoveInteractionNodeData) },
         { "EnterDungeon", typeof(CrystalMagic.Game.Data.NPCEnterDungeonInteractionNodeData) },
         { "EnterTrainingGround", typeof(CrystalMagic.Game.Data.NPCEnterTrainingGroundInteractionNodeData) },
+        { "EnterTown", typeof(CrystalMagic.Game.Data.NPCEnterTownInteractionNodeData) },
     };
 
     private static readonly Dictionary<Type, string> s_keys = new()
@@ -35,6 +37,7 @@ public static class NPCInteractionNodeRegistry
         { typeof(CrystalMagic.Game.Data.NPCMoveInteractionNodeData), "Move" },
         { typeof(CrystalMagic.Game.Data.NPCEnterDungeonInteractionNodeData), "EnterDungeon" },
         { typeof(CrystalMagic.Game.Data.NPCEnterTrainingGroundInteractionNodeData), "EnterTrainingGround" },
+        { typeof(CrystalMagic.Game.Data.NPCEnterTownInteractionNodeData), "EnterTown" },
     };
 
     private static readonly Dictionary<string, string> s_displayNames = new(StringComparer.Ordinal)
@@ -45,6 +48,7 @@ public static class NPCInteractionNodeRegistry
         { "Move", "Move" },
         { "EnterDungeon", "Enter Dungeon" },
         { "EnterTrainingGround", "Enter Training Ground" },
+        { "EnterTown", "Enter Town" },
     };
 
     public static string DefaultTypeKey => "Dialogue";
@@ -84,6 +88,7 @@ public static class NPCInteractionNodeRegistry
         factory.Register("Move", static () => new CrystalMagic.Game.Data.NPCMoveInteractionNodeData());
         factory.Register("EnterDungeon", static () => new CrystalMagic.Game.Data.NPCEnterDungeonInteractionNodeData());
         factory.Register("EnterTrainingGround", static () => new CrystalMagic.Game.Data.NPCEnterTrainingGroundInteractionNodeData());
+        factory.Register("EnterTown", static () => new CrystalMagic.Game.Data.NPCEnterTownInteractionNodeData());
     }
 
     public static void RegisterAll(NPCInteractionNodeFactory factory)
@@ -97,5 +102,6 @@ public static class NPCInteractionNodeRegistry
         factory.Register(typeof(CrystalMagic.Game.Data.NPCMoveInteractionNodeData), static node => new NPCMoveInteractionNodeRunner((CrystalMagic.Game.Data.NPCMoveInteractionNodeData)node));
         factory.Register(typeof(CrystalMagic.Game.Data.NPCEnterDungeonInteractionNodeData), static node => new NPCEnterDungeonInteractionNodeRunner((CrystalMagic.Game.Data.NPCEnterDungeonInteractionNodeData)node));
         factory.Register(typeof(CrystalMagic.Game.Data.NPCEnterTrainingGroundInteractionNodeData), static node => new NPCEnterTrainingGroundInteractionNodeRunner((CrystalMagic.Game.Data.NPCEnterTrainingGroundInteractionNodeData)node));
+        factory.Register(typeof(CrystalMagic.Game.Data.NPCEnterTownInteractionNodeData), static node => new NPCEnterTownInteractionNodeRunner((CrystalMagic.Game.Data.NPCEnterTownInteractionNodeData)node));
     }
 }

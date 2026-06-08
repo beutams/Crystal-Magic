@@ -107,7 +107,7 @@
                 {
                   "DisplayName": "进入地牢",
                   "EnableExpression": "",
-                  "NextNodeGuid": "c1a95e3707ff40248bb5153c55295ff8"
+                  "NextNodeGuid": "6d0a28f1c4c14e89a514e6de07be4b91"
                 },
                 {
                   "DisplayName": "进入训练营",
@@ -116,6 +116,18 @@
                 }
               ],
               "Guid": "9fa755485fd94a18b7e4b386a3b5307a",
+              "Branches": [],
+              "Type": "Select"
+            },
+            {
+              "Options": [
+                {
+                  "DisplayName": "第1层",
+                  "EnableExpression": "",
+                  "NextNodeGuid": "c1a95e3707ff40248bb5153c55295ff8"
+                }
+              ],
+              "Guid": "6d0a28f1c4c14e89a514e6de07be4b91",
               "Branches": [],
               "Type": "Select"
             },

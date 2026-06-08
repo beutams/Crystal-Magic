@@ -57,6 +57,7 @@ namespace CrystalMagic.Game.Data
                 NPCMoveInteractionNodeData move => $"{displayName} | {(string.IsNullOrWhiteSpace(move.TargetMarker) ? "Empty" : move.TargetMarker)}",
                 NPCEnterDungeonInteractionNodeData enterDungeon => $"{displayName} | Floor {Math.Max(1, enterDungeon.DungeonFloor)}",
                 NPCEnterTrainingGroundInteractionNodeData => displayName,
+                NPCEnterTownInteractionNodeData => displayName,
                 _ => displayName,
             };
         }

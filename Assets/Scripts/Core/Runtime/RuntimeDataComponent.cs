@@ -161,24 +161,44 @@ namespace CrystalMagic.Core
         public string RoomMaterialPath;
         public string AnteRoomMaterialPath;
         public string WallMaterialPath;
-        public string StartMarkerMaterialPath;
         public string ExitClosedMaterialPath;
         public string ExitOpenMaterialPath;
-        public RuntimeDungeonObjectData StartObject;
-        public RuntimeDungeonObjectData NextLevelEntranceObject;
+        public Vector3 PlayerSpawnWorldPosition;
+        public List<RuntimeDungeonEnvironmentSpawnData> EnvironmentSpawns = new();
+        public List<RuntimeDungeonSceneObjectSpawnData> SceneObjects = new();
         public List<RuntimeDungeonMonsterSpawnData> MonsterSpawns = new();
-        public List<RuntimeDungeonTreasureSpawnData> TreasureSpawns = new();
     }
 
-    public sealed class RuntimeDungeonObjectData
+    public sealed class RuntimeDungeonEnvironmentSpawnData
     {
+        public string PrefabName;
+        public string MaterialPath;
+        public Vector3 WorldPosition;
+        public Vector3 Size = Vector3.one;
+    }
+
+    public enum RuntimeDungeonSceneObjectType
+    {
+        Exit = 0,
+        Treasure = 1,
+    }
+
+    public sealed class RuntimeDungeonSceneObjectSpawnData
+    {
+        public RuntimeDungeonSceneObjectType ObjectType;
+        public string PrefabName;
         public int RegionId;
         public int TileIndex;
         public Vector2Int SourceCoordinate;
         public Vector2Int DisplayCoordinate;
         public Vector3 WorldPosition;
-        public bool BlocksMovement;
+        public Vector3 Size = Vector3.one;
         public bool RequiresRoomClear;
+        public float InteractionRange;
+        public int TargetFloor;
+        public string ClosedMaterialPath;
+        public string OpenMaterialPath;
+        public List<RuntimeDungeonTreasureRewardData> Rewards = new();
     }
 
     public sealed class RuntimeDungeonMonsterSpawnData
@@ -188,17 +208,6 @@ namespace CrystalMagic.Core
         public int Level;
         public bool IsBoss;
         public string PrefabName;
-        public Vector2Int SourceCoordinate;
-        public Vector2Int DisplayCoordinate;
-        public Vector3 WorldPosition;
-    }
-
-    public sealed class RuntimeDungeonTreasureSpawnData
-    {
-        public int RegionId;
-        public int TileIndex;
-        public int Level;
-        public List<RuntimeDungeonTreasureRewardData> Rewards = new();
         public Vector2Int SourceCoordinate;
         public Vector2Int DisplayCoordinate;
         public Vector3 WorldPosition;
