@@ -34,6 +34,14 @@ public struct FollowEntityComponent : IComponentData
     public byte AlignRotation;
 }
 
+public struct QuadOverlayPulseComponent : IComponentData, IEnableableComponent
+{
+    public float4 OverlayColor;
+    public float DurationSeconds;
+    public float RemainingSeconds;
+    public float PeakStrength;
+}
+
 public sealed class QuadAnimationVisualComponent : IComponentData
 {
     public QuadAnimationVisualKind VisualKind;

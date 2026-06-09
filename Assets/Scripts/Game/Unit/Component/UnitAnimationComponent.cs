@@ -56,3 +56,15 @@ public struct UnitAnimationFramePivotOffsetProperty : IComponentData
 {
     public float4 Value;
 }
+
+[MaterialProperty("_OverlayColor")]
+public struct UnitAnimationOverlayColorProperty : IComponentData
+{
+    public float4 Value;
+}
+
+[MaterialProperty("_OverlayStrength")]
+public struct UnitAnimationOverlayStrengthProperty : IComponentData
+{
+    public float4 Value;
+}

@@ -8,6 +8,8 @@ Shader "CrystalMagic/TransparentSpriteMesh"
         _FrameUvSize("Frame UV Size", Vector) = (1, 1, 0, 0)
         _FrameWorldSize("Frame World Size", Vector) = (1, 1, 0, 0)
         _FramePivotOffset("Frame Pivot Offset", Vector) = (0, 0, 0, 0)
+        _OverlayColor("Overlay Color", Color) = (1, 1, 1, 1)
+        _OverlayStrength("Overlay Strength", Vector) = (0, 0, 0, 0)
     }
 
     SubShader
@@ -42,6 +44,8 @@ Shader "CrystalMagic/TransparentSpriteMesh"
                 float4 _FrameUvSize;
                 float4 _FrameWorldSize;
                 float4 _FramePivotOffset;
+                float4 _OverlayColor;
+                float4 _OverlayStrength;
             CBUFFER_END
 
             UNITY_DOTS_INSTANCING_START(UserPropertyMetadata)
@@ -49,6 +53,8 @@ Shader "CrystalMagic/TransparentSpriteMesh"
                 UNITY_DOTS_INSTANCED_PROP(float4, _FrameUvSize)
                 UNITY_DOTS_INSTANCED_PROP(float4, _FrameWorldSize)
                 UNITY_DOTS_INSTANCED_PROP(float4, _FramePivotOffset)
+                UNITY_DOTS_INSTANCED_PROP(float4, _OverlayColor)
+                UNITY_DOTS_INSTANCED_PROP(float4, _OverlayStrength)
             UNITY_DOTS_INSTANCING_END(UserPropertyMetadata)
 
             TEXTURE2D(_BaseMap);
@@ -94,7 +100,11 @@ Shader "CrystalMagic/TransparentSpriteMesh"
                 float4 frameUvMin = UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float4, _FrameUvMin);
                 float4 frameUvSize = UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float4, _FrameUvSize);
                 float2 atlasUv = input.uv * frameUvSize.xy + frameUvMin.xy;
-                return SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, atlasUv) * _BaseColor;
+                float4 overlayColor = UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float4, _OverlayColor);
+                float overlayStrength = UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float4, _OverlayStrength).x;
+                half4 color = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, atlasUv) * _BaseColor;
+                color.rgb = lerp(color.rgb, color.rgb * overlayColor.rgb, saturate(overlayStrength));
+                return color;
             }
             ENDHLSL
         }
