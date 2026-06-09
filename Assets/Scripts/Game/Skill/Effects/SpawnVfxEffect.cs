@@ -1,17 +1,18 @@
 using CrystalMagic.Game.Data.Effects;
-using CrystalMagic.Core;
+using CrystalMagic.Game.Unit;
+using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
 namespace CrystalMagic.Game.Skill.Effects
 {
     /// <summary>
-    /// 生成特效效果，逻辑由特效系统接入
+    /// 生成特效效果，由通用 Quad 动画系统负责播放与销毁。
     /// </summary>
     public sealed class SpawnVfxEffect : Effect
     {
-        private const string GenericVfxPrefabName = "VFX";
         public new SpawnVfxEffectData Data { get; }
 
         public SpawnVfxEffect(SpawnVfxEffectData data) : base(data) => Data = data;
@@ -21,39 +22,116 @@ namespace CrystalMagic.Game.Skill.Effects
             if (Data == null || context == null)
                 return;
 
-            string vfxAssetPath = AssetPathHelper.GetVfxPrefabAsset(GenericVfxPrefabName);
-            GameObject vfx = PoolComponent.Instance.Get(vfxAssetPath);
-            if (vfx == null)
+            EntityManager entityManager = context.EntityManager;
+            if (!EntitySpawnRegistryUtility.TryInstantiateVfx(entityManager, new FixedString128Bytes(QuadAnimationVisualUtility.GenericVfxPrefabName), out Entity vfxEntity))
                 return;
 
             Quaternion rotation = GetSpawnRotation(context);
             Vector3 position = GetSpawnPosition(context, rotation);
-            vfx.transform.SetPositionAndRotation(position, rotation);
-            vfx.transform.localScale = Vector3.one * Data.Scale;
+            SetOrAddComponentData(
+                entityManager,
+                vfxEntity,
+                LocalTransform.FromPositionRotationScale(
+                    new float3(position.x, position.y, position.z),
+                    new quaternion(rotation.x, rotation.y, rotation.z, rotation.w),
+                    1f));
 
-            Flipbook4x4Runtime flipbook = vfx.GetComponent<Flipbook4x4Runtime>();
-            if (flipbook == null)
-                flipbook = vfx.AddComponent<Flipbook4x4Runtime>();
+            EnsureAnimationPropertyComponents(entityManager, vfxEntity);
+            EnsureDestroyFlagDisabled(entityManager, vfxEntity);
+            ConfigureAnimation(entityManager, vfxEntity);
+            ConfigureFollow(entityManager, vfxEntity, context);
+        }
 
-            bool destroyWhenFinished = !Data.Loop;
-            flipbook.Initialize(Data.VfxTexture, Data.FrameCount, Data.Loop, destroyWhenFinished);
+        private void ConfigureAnimation(EntityManager entityManager, Entity entity)
+        {
+            SetOrAddComponentData(
+                entityManager,
+                entity,
+                new QuadAnimationComponent
+                {
+                    GridColumns = math.max(1, Data.GridColumns),
+                    GridRows = math.max(1, Data.GridRows),
+                    FrameCount = math.max(1, Data.FrameCount),
+                    FramesPerSecond = math.max(0.01f, Data.FramesPerSecond),
+                    ElapsedSeconds = 0f,
+                    Width = math.max(0.01f, Data.Width > 0f ? Data.Width : Data.Scale),
+                    Height = math.max(0.01f, Data.Height > 0f ? Data.Height : Data.Scale),
+                    PivotOffset = float2.zero,
+                    RemainingLifetimeSeconds = Data.Loop ? math.max(0f, Data.Duration) : 0f,
+                    FrameIndex = -1,
+                    LastTextureInstanceId = 0,
+                    LastVisualKeyHash = 0,
+                    Loop = Data.Loop ? (byte)1 : (byte)0,
+                    AutoDestroyOnComplete = 1,
+                    IsPlaying = 1,
+                });
 
-            SkillVfxRuntime runtime = vfx.GetComponent<SkillVfxRuntime>();
-            if (runtime == null)
-                runtime = vfx.AddComponent<SkillVfxRuntime>();
-
-            if (Data.FollowCaster && context.HasOriginEntity)
+            if (entityManager.HasComponent<QuadAnimationVisualComponent>(entity))
             {
-                runtime.Initialize(
-                    context.OriginEntity,
-                    context.EntityManager,
-                    Data.SpawnOffset,
-                    Data.AlignToCasterForward,
-                    Data.Loop ? Data.Duration : 0f);
+                QuadAnimationVisualComponent visual = entityManager.GetComponentObject<QuadAnimationVisualComponent>(entity);
+                visual.VisualKind = QuadAnimationVisualKind.Vfx;
+                visual.PrefabName = QuadAnimationVisualUtility.GenericVfxPrefabName;
+                visual.Texture = Data.VfxTexture;
+            }
+            else
+            {
+                entityManager.AddComponentObject(
+                    entity,
+                    new QuadAnimationVisualComponent
+                    {
+                        VisualKind = QuadAnimationVisualKind.Vfx,
+                        PrefabName = QuadAnimationVisualUtility.GenericVfxPrefabName,
+                        Texture = Data.VfxTexture,
+                    });
+            }
+        }
+
+        private void ConfigureFollow(EntityManager entityManager, Entity entity, SkillContent context)
+        {
+            bool shouldFollow = Data.FollowCaster && context.HasOriginEntity;
+            if (!shouldFollow)
+            {
+                if (entityManager.HasComponent<FollowEntityComponent>(entity))
+                    entityManager.RemoveComponent<FollowEntityComponent>(entity);
                 return;
             }
 
-            runtime.Initialize(Entity.Null, context.EntityManager, Vector3.zero, false, Data.Loop ? Data.Duration : 0f);
+            FollowEntityComponent follow = new()
+            {
+                Target = context.OriginEntity,
+                Offset = new float3(Data.SpawnOffset.x, Data.SpawnOffset.y, Data.SpawnOffset.z),
+                AlignRotation = Data.AlignToCasterForward ? (byte)1 : (byte)0,
+            };
+
+            if (entityManager.HasComponent<FollowEntityComponent>(entity))
+                entityManager.SetComponentData(entity, follow);
+            else
+                entityManager.AddComponentData(entity, follow);
+        }
+
+        private static void EnsureAnimationPropertyComponents(EntityManager entityManager, Entity entity)
+        {
+            SetOrAddComponentData(entityManager, entity, new UnitAnimationFrameUvMinProperty { Value = new float4(0f, 0f, 0f, 0f) });
+            SetOrAddComponentData(entityManager, entity, new UnitAnimationFrameUvSizeProperty { Value = new float4(1f, 1f, 0f, 0f) });
+            SetOrAddComponentData(entityManager, entity, new UnitAnimationFrameWorldSizeProperty { Value = new float4(1f, 1f, 0f, 0f) });
+            SetOrAddComponentData(entityManager, entity, new UnitAnimationFramePivotOffsetProperty { Value = new float4(0f, 0f, 0f, 0f) });
+        }
+
+        private static void EnsureDestroyFlagDisabled(EntityManager entityManager, Entity entity)
+        {
+            if (!entityManager.HasComponent<DestroyEntityFlag>(entity))
+                entityManager.AddComponent<DestroyEntityFlag>(entity);
+
+            entityManager.SetComponentEnabled<DestroyEntityFlag>(entity, false);
+        }
+
+        private static void SetOrAddComponentData<T>(EntityManager entityManager, Entity entity, T value)
+            where T : unmanaged, IComponentData
+        {
+            if (entityManager.HasComponent<T>(entity))
+                entityManager.SetComponentData(entity, value);
+            else
+                entityManager.AddComponentData(entity, value);
         }
 
         private Vector3 GetSpawnPosition(SkillContent context, Quaternion rotation)
@@ -101,7 +179,7 @@ namespace CrystalMagic.Game.Skill.Effects
                 entityManager.Exists(entity) &&
                 entityManager.HasComponent<LocalTransform>(entity))
             {
-                Unity.Mathematics.float3 entityPosition = entityManager.GetComponentData<LocalTransform>(entity).Position;
+                float3 entityPosition = entityManager.GetComponentData<LocalTransform>(entity).Position;
                 position = new Vector3(entityPosition.x, entityPosition.y, entityPosition.z);
                 return true;
             }
@@ -115,62 +193,15 @@ namespace CrystalMagic.Game.Skill.Effects
             if (hasEntity &&
                 entity != Entity.Null &&
                 entityManager.Exists(entity) &&
-                UnitFacingUtility.TryGetFacing(entityManager, entity, out Unity.Mathematics.float2 facing))
+                UnitFacingUtility.TryGetFacing(entityManager, entity, out float2 facing))
             {
-                Unity.Mathematics.quaternion entityRotation = UnitFacingUtility.CreateRotation(facing);
+                quaternion entityRotation = UnitFacingUtility.CreateRotation(facing);
                 rotation = new Quaternion(entityRotation.value.x, entityRotation.value.y, entityRotation.value.z, entityRotation.value.w);
                 return true;
             }
 
             rotation = Quaternion.identity;
             return false;
-        }
-    }
-
-    public sealed class SkillVfxRuntime : MonoBehaviour
-    {
-        private Entity _followEntity;
-        private EntityManager _entityManager;
-        private Vector3 _offset;
-        private bool _alignToEntityRotation;
-        private float _destroyTime;
-
-        public void Initialize(Entity followEntity, EntityManager entityManager, Vector3 offset, bool alignToEntityRotation, float duration)
-        {
-            _followEntity = followEntity;
-            _entityManager = entityManager;
-            _offset = offset;
-            _alignToEntityRotation = alignToEntityRotation;
-            _destroyTime = duration > 0f ? Time.time + duration : 0f;
-            RefreshTransform();
-        }
-
-        private void Update()
-        {
-            RefreshTransform();
-
-            if (_destroyTime > 0f && Time.time >= _destroyTime)
-                PoolComponent.Instance.Release(gameObject);
-        }
-
-        private void RefreshTransform()
-        {
-            if (_followEntity == Entity.Null ||
-                !_entityManager.Exists(_followEntity) ||
-                !_entityManager.HasComponent<LocalTransform>(_followEntity))
-                return;
-
-            LocalTransform followTransform = _entityManager.GetComponentData<LocalTransform>(_followEntity);
-            Quaternion rotation = Quaternion.identity;
-            if (_alignToEntityRotation)
-            {
-                Unity.Mathematics.quaternion entityRotation = followTransform.Rotation;
-                rotation = new Quaternion(entityRotation.value.x, entityRotation.value.y, entityRotation.value.z, entityRotation.value.w);
-                transform.rotation = rotation;
-            }
-
-            Unity.Mathematics.float3 entityPosition = followTransform.Position;
-            transform.position = new Vector3(entityPosition.x, entityPosition.y, entityPosition.z) + rotation * _offset;
         }
     }
 }

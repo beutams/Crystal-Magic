@@ -1,11 +1,9 @@
 using System.Collections.Generic;
+using CrystalMagic.Game.Skill;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
-using UnityEngine;
-using CrystalMagic.Game.Skill;
-using CrystalMagic.Game.Unit;
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateAfter(typeof(SkillProjectileSpawnSystem))]
@@ -41,6 +39,9 @@ public partial class SkillProjectileSystem : SystemBase
             {
                 Entity entity = entities[i];
                 SkillProjectileComponent projectile = projectiles[i];
+                if (projectile.IsDestroying != 0)
+                    continue;
+
                 LocalTransform transform = transforms[i];
                 SkillProjectilePayloadComponent payload = EntityManager.GetComponentObject<SkillProjectilePayloadComponent>(entity);
                 DynamicBuffer<SkillProjectileHitEntityElement> hitEntities = EntityManager.GetBuffer<SkillProjectileHitEntityElement>(entity);
@@ -62,7 +63,7 @@ public partial class SkillProjectileSystem : SystemBase
 
                     if (projectile.CanPierce == 0)
                     {
-                        DestroyProjectile(entity, payload, projectile.Scale, hitPosition, transform.Rotation, true, hitContext);
+                        DestroyProjectile(entity, payload, transform.Position, transform.Rotation, true, hitContext);
                         continue;
                     }
                 }
@@ -72,7 +73,6 @@ public partial class SkillProjectileSystem : SystemBase
                     DestroyProjectile(
                         entity,
                         payload,
-                        projectile.Scale,
                         transform.Position,
                         transform.Rotation,
                         projectile.TriggerDestroyEffectsOnMaxRange != 0,
@@ -138,7 +138,6 @@ public partial class SkillProjectileSystem : SystemBase
     private void DestroyProjectile(
         Entity entity,
         SkillProjectilePayloadComponent payload,
-        float projectileScale,
         float3 destroyPosition,
         quaternion destroyRotation,
         bool triggerDestroyEffects,
@@ -149,41 +148,60 @@ public partial class SkillProjectileSystem : SystemBase
             SkillContent context = destroyContext?.Clone() ?? payload.Context.Clone();
             context.EntityManager = EntityManager;
             context.HasPosition = true;
-            context.Position = new Vector3(destroyPosition.x, destroyPosition.y, destroyPosition.z);
+            context.Position = new UnityEngine.Vector3(destroyPosition.x, destroyPosition.y, destroyPosition.z);
             SkillExecutor.ExecuteEffects(payload.OnDestroyEffects, context);
-            SpawnDestroyVfx(payload, destroyPosition, destroyRotation, projectileScale);
         }
 
-        if (EntityManager.Exists(entity))
+        if (!EntityManager.Exists(entity))
+            return;
+
+        if (payload.DestroyTexture == null || payload.DestroyFrameCount <= 0)
         {
             if (!EntityManager.HasComponent<DestroyEntityFlag>(entity))
                 EntityManager.AddComponent<DestroyEntityFlag>(entity);
 
             EntityManager.SetComponentEnabled<DestroyEntityFlag>(entity, true);
-        }
-    }
-
-    private void SpawnDestroyVfx(
-        SkillProjectilePayloadComponent payload,
-        float3 destroyPosition,
-        quaternion destroyRotation,
-        float projectileScale)
-    {
-        if (payload.DestroyTexture == null || payload.ProjectileName.Length == 0)
             return;
+        }
 
-        SkillProjectileSpawnQueue.Enqueue(
-            new SkillProjectileSpawnRequest
+        LocalTransform transform = EntityManager.GetComponentData<LocalTransform>(entity);
+        transform.Position = destroyPosition;
+        transform.Rotation = destroyRotation;
+        EntityManager.SetComponentData(entity, transform);
+
+        SkillProjectileComponent projectile = EntityManager.GetComponentData<SkillProjectileComponent>(entity);
+        projectile.IsDestroying = 1;
+        projectile.Speed = 0f;
+        EntityManager.SetComponentData(entity, projectile);
+
+        EntityManager.SetComponentData(
+            entity,
+            new QuadAnimationComponent
             {
-                Kind = SkillProjectileSpawnRequestKind.DestroyVfx,
-                ProjectileName = payload.ProjectileName,
-                StartPosition = destroyPosition,
-                Direction = new float3(1f, 0f, 0f),
-                Rotation = destroyRotation,
-                ScaleMultiplier = math.max(projectileScale, 0.0001f),
-                DestroyTexture = payload.DestroyTexture,
-                DestroyFrameCount = payload.DestroyFrameCount,
+                GridColumns = math.max(1, payload.DestroyGridColumns),
+                GridRows = math.max(1, payload.DestroyGridRows),
+                FrameCount = math.max(1, payload.DestroyFrameCount),
+                FramesPerSecond = math.max(0.01f, payload.DestroyFramesPerSecond),
+                ElapsedSeconds = 0f,
+                Width = math.max(0.01f, payload.DestroyWidth),
+                Height = math.max(0.01f, payload.DestroyHeight),
+                PivotOffset = float2.zero,
+                RemainingLifetimeSeconds = 0f,
+                FrameIndex = -1,
+                LastTextureInstanceId = 0,
+                LastVisualKeyHash = 0,
+                Loop = 0,
+                AutoDestroyOnComplete = 1,
+                IsPlaying = 1,
             });
+
+        if (EntityManager.HasComponent<QuadAnimationVisualComponent>(entity))
+        {
+            QuadAnimationVisualComponent visual = EntityManager.GetComponentObject<QuadAnimationVisualComponent>(entity);
+            visual.VisualKind = QuadAnimationVisualKind.Projectile;
+            visual.PrefabName = payload.ProjectileName.ToString();
+            visual.Texture = payload.DestroyTexture;
+        }
     }
 
     private SkillContent BuildHitContext(SkillContent baseContext, Entity hitEntity, float3 hitPosition)
@@ -191,7 +209,7 @@ public partial class SkillProjectileSystem : SystemBase
         SkillContent context = baseContext.Clone();
         context.EntityManager = EntityManager;
         context.HasPosition = true;
-        context.Position = new Vector3(hitPosition.x, hitPosition.y, hitPosition.z);
+        context.Position = new UnityEngine.Vector3(hitPosition.x, hitPosition.y, hitPosition.z);
         context.HasTargetEntity = true;
         context.TargetEntity = hitEntity;
         context.HasTarget = false;

@@ -248,7 +248,6 @@ Game\
       PositionSkill.cs FALSE
       SelfSkill.cs FALSE
       Skill.cs FALSE
-    Flipbook4x4Runtime.cs FALSE
     SkillAnalysisUtility.cs FALSE
     SkillCastTasks.cs FALSE
     SkillChainResolver.cs FALSE
@@ -286,13 +285,13 @@ Game\
       DungeonExitAuthoring.cs TRUE
       DungeonMonsterSpawnComponent.cs TRUE
       DungeonTreasureAuthoring.cs TRUE
-      EntitySpawnRegistryAuthoring.cs TRUE
+      EntitySpawnRegistryAuthoring.cs TRUE DIRTY
       NPCAuthoringUtility.cs FALSE
       NPCInteractableAuthoring.cs FALSE
       NPCInteractionRequest.cs FALSE
       NPCInteractionState.cs FALSE
       PlayerSkillComponent.cs FALSE
-      ProjectileDestroyVfxComponent.cs FALSE
+      QuadAnimationComponent.cs FALSE
       SkillProjectileAuthoring.cs FALSE
       SkillProjectileComponent.cs FALSE
       UnitAnimationComponent.cs FALSE
@@ -350,7 +349,7 @@ Game\
       DungeonExitSystem.cs TRUE
       DungeonExitInteractionNodes.cs TRUE
       DungeonTreasureSystem.cs TRUE
-      EntitySpawnRegistryUtility.cs TRUE
+      EntitySpawnRegistryUtility.cs TRUE DIRTY
       NPCInteractInputSystem.cs FALSE
       NPCInteractionSystem.cs TRUE
       NPCInteractPromptSystem.cs FALSE
@@ -359,8 +358,8 @@ Game\
       PlayerEquipmentPassiveBuffSystem.cs FALSE
       PlayerInputSystem.cs FALSE
       PlayerSkillAnalysisSystem.cs FALSE
-      ProjectileDestroyVfxSystem.cs FALSE
-      ProjectileVisualUtility.cs FALSE
+      QuadAnimationSystem.cs FALSE
+      QuadAnimationVisualUtility.cs FALSE
       SkillExecutionUtility.cs FALSE
       SkillProjectileSpawnSystem.cs FALSE
       SkillProjectileSystem.cs FALSE

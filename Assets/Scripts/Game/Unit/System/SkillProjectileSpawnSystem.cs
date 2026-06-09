@@ -1,6 +1,5 @@
-using Unity.Collections;
-using Unity.Entities;
 using CrystalMagic.Game.Unit;
+using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
@@ -23,34 +22,20 @@ public partial class SkillProjectileSpawnSystem : SystemBase
                 continue;
             }
 
-            if (request.Kind == SkillProjectileSpawnRequestKind.DestroyVfx)
-            {
-                SpawnDestroyVfx(projectileEntity, request);
-            }
-            else
-            {
-                SpawnProjectile(projectileEntity, request);
-            }
+            SpawnProjectile(projectileEntity, request);
         }
     }
 
-    private void SpawnProjectile(
-        Entity projectileEntity,
-        SkillProjectileSpawnRequest request)
+    private void SpawnProjectile(Entity projectileEntity, SkillProjectileSpawnRequest request)
     {
         quaternion rotation = CreateRotation(request.Direction);
-        float prefabScale = 1f;
-        if (EntityManager.HasComponent<LocalTransform>(projectileEntity))
-            prefabScale = math.max(0.0001f, EntityManager.GetComponentData<LocalTransform>(projectileEntity).Scale);
-
-        float scale = math.max(0.0001f, prefabScale * request.ScaleMultiplier);
 
         SetOrAddComponentData(
             projectileEntity,
             LocalTransform.FromPositionRotationScale(
                 request.StartPosition,
                 rotation,
-                scale));
+                1f));
 
         SetOrAddComponentData(
             projectileEntity,
@@ -61,16 +46,9 @@ public partial class SkillProjectileSpawnSystem : SystemBase
                 MaxRange = request.MaxRange,
                 TraveledDistance = 0f,
                 HitRadius = request.HitRadius,
-                Scale = scale,
                 CanPierce = request.CanPierce,
                 TriggerDestroyEffectsOnMaxRange = request.TriggerDestroyEffectsOnMaxRange,
-            });
-
-        SetOrAddComponentData(
-            projectileEntity,
-            new SkillProjectileStartTimeProperty
-            {
-                Value = (float)SystemAPI.Time.ElapsedTime,
+                IsDestroying = 0,
             });
 
         if (!EntityManager.HasBuffer<SkillProjectileHitEntityElement>(projectileEntity))
@@ -79,49 +57,86 @@ public partial class SkillProjectileSpawnSystem : SystemBase
             EntityManager.GetBuffer<SkillProjectileHitEntityElement>(projectileEntity).Clear();
 
         EnsureDestroyFlagDisabled(projectileEntity);
-
+        EnsureAnimationPropertyComponents(projectileEntity);
         ApplyPayloadComponent(projectileEntity, request);
-        ProjectileVisualUtility.ApplyProjectileVisual(
-            EntityManager,
+        ApplyAnimation(
             projectileEntity,
-            request.ProjectileName,
+            QuadAnimationVisualKind.Projectile,
+            request.ProjectileName.ToString(),
             request.FlightTexture,
-            true,
-            request.FlightFrameCount);
+            request.FlightGridColumns,
+            request.FlightGridRows,
+            request.FlightFrameCount,
+            request.FlightFramesPerSecond,
+            request.Width,
+            request.Height,
+            loop: true,
+            autoDestroyOnComplete: false,
+            lifetimeSeconds: 0f);
     }
 
-    private void SpawnDestroyVfx(Entity projectileEntity, SkillProjectileSpawnRequest request)
+    private void EnsureAnimationPropertyComponents(Entity entity)
     {
-        float scale = math.max(request.ScaleMultiplier, 0.0001f);
-        SetOrAddComponentData(
-            projectileEntity,
-            LocalTransform.FromPositionRotationScale(
-                request.StartPosition,
-                request.Rotation,
-                scale));
+        SetOrAddComponentData(entity, new UnitAnimationFrameUvMinProperty { Value = new float4(0f, 0f, 0f, 0f) });
+        SetOrAddComponentData(entity, new UnitAnimationFrameUvSizeProperty { Value = new float4(1f, 1f, 0f, 0f) });
+        SetOrAddComponentData(entity, new UnitAnimationFrameWorldSizeProperty { Value = new float4(1f, 1f, 0f, 0f) });
+        SetOrAddComponentData(entity, new UnitAnimationFramePivotOffsetProperty { Value = new float4(0f, 0f, 0f, 0f) });
+    }
 
+    private void ApplyAnimation(
+        Entity entity,
+        QuadAnimationVisualKind visualKind,
+        string prefabName,
+        Texture2D texture,
+        int gridColumns,
+        int gridRows,
+        int frameCount,
+        float fps,
+        float width,
+        float height,
+        bool loop,
+        bool autoDestroyOnComplete,
+        float lifetimeSeconds)
+    {
         SetOrAddComponentData(
-            projectileEntity,
-            new SkillProjectileStartTimeProperty
+            entity,
+            new QuadAnimationComponent
             {
-                Value = (float)SystemAPI.Time.ElapsedTime,
+                GridColumns = math.max(1, gridColumns),
+                GridRows = math.max(1, gridRows),
+                FrameCount = math.max(1, frameCount),
+                FramesPerSecond = math.max(0.01f, fps),
+                ElapsedSeconds = 0f,
+                Width = math.max(0.01f, width),
+                Height = math.max(0.01f, height),
+                PivotOffset = float2.zero,
+                RemainingLifetimeSeconds = math.max(0f, lifetimeSeconds),
+                FrameIndex = -1,
+                LastTextureInstanceId = 0,
+                LastVisualKeyHash = 0,
+                Loop = loop ? (byte)1 : (byte)0,
+                AutoDestroyOnComplete = autoDestroyOnComplete ? (byte)1 : (byte)0,
+                IsPlaying = 1,
             });
 
-        SetOrAddComponentData(
-            projectileEntity,
-            new ProjectileDestroyVfxComponent
-            {
-                RemainingLifetime = ProjectileVisualUtility.GetAnimationLifetime(request.ProjectileName, request.DestroyFrameCount),
-            });
-
-        EnsureDestroyFlagDisabled(projectileEntity);
-        ProjectileVisualUtility.ApplyProjectileVisual(
-            EntityManager,
-            projectileEntity,
-            request.ProjectileName,
-            request.DestroyTexture,
-            false,
-            request.DestroyFrameCount);
+        if (EntityManager.HasComponent<QuadAnimationVisualComponent>(entity))
+        {
+            QuadAnimationVisualComponent visual = EntityManager.GetComponentObject<QuadAnimationVisualComponent>(entity);
+            visual.VisualKind = visualKind;
+            visual.PrefabName = prefabName;
+            visual.Texture = texture;
+        }
+        else
+        {
+            EntityManager.AddComponentObject(
+                entity,
+                new QuadAnimationVisualComponent
+                {
+                    VisualKind = visualKind,
+                    PrefabName = prefabName,
+                    Texture = texture,
+                });
+        }
     }
 
     private void EnsureDestroyFlagDisabled(Entity entity)
@@ -156,9 +171,19 @@ public partial class SkillProjectileSpawnSystem : SystemBase
             existing.ProjectileName = payload.ProjectileName;
             existing.Context = payload.Context.Clone();
             existing.FlightTexture = payload.FlightTexture;
+            existing.FlightGridColumns = payload.FlightGridColumns;
+            existing.FlightGridRows = payload.FlightGridRows;
             existing.FlightFrameCount = payload.FlightFrameCount;
+            existing.FlightFramesPerSecond = payload.FlightFramesPerSecond;
+            existing.FlightWidth = payload.Width;
+            existing.FlightHeight = payload.Height;
             existing.DestroyTexture = payload.DestroyTexture;
+            existing.DestroyGridColumns = payload.DestroyGridColumns;
+            existing.DestroyGridRows = payload.DestroyGridRows;
             existing.DestroyFrameCount = payload.DestroyFrameCount;
+            existing.DestroyFramesPerSecond = payload.DestroyFramesPerSecond;
+            existing.DestroyWidth = payload.Width;
+            existing.DestroyHeight = payload.Height;
             existing.OnCollisionEffects = payload.OnCollisionEffects;
             existing.OnDestroyEffects = payload.OnDestroyEffects;
             return;
@@ -171,9 +196,19 @@ public partial class SkillProjectileSpawnSystem : SystemBase
                 ProjectileName = payload.ProjectileName,
                 Context = payload.Context.Clone(),
                 FlightTexture = payload.FlightTexture,
+                FlightGridColumns = payload.FlightGridColumns,
+                FlightGridRows = payload.FlightGridRows,
                 FlightFrameCount = payload.FlightFrameCount,
+                FlightFramesPerSecond = payload.FlightFramesPerSecond,
+                FlightWidth = payload.Width,
+                FlightHeight = payload.Height,
                 DestroyTexture = payload.DestroyTexture,
+                DestroyGridColumns = payload.DestroyGridColumns,
+                DestroyGridRows = payload.DestroyGridRows,
                 DestroyFrameCount = payload.DestroyFrameCount,
+                DestroyFramesPerSecond = payload.DestroyFramesPerSecond,
+                DestroyWidth = payload.Width,
+                DestroyHeight = payload.Height,
                 OnCollisionEffects = payload.OnCollisionEffects,
                 OnDestroyEffects = payload.OnDestroyEffects,
             });

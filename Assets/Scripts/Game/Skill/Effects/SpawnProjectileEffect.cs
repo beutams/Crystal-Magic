@@ -63,26 +63,34 @@ namespace CrystalMagic.Game.Skill.Effects
 
         private void CreateProjectileSpawnRequest(SkillContent context, Vector3 startPosition, Vector3 direction)
         {
-            FixedString128Bytes projectileName = new FixedString128Bytes(ProjectileVisualUtility.GenericProjectilePrefabName);
+            float width = math.max(Data.Width > 0f ? Data.Width : Data.Scale, 0.01f);
+            float height = math.max(Data.Height > 0f ? Data.Height : Data.Scale, 0.01f);
+            FixedString128Bytes projectileName = new(QuadAnimationVisualUtility.GenericProjectilePrefabName);
             SkillProjectileSpawnQueue.Enqueue(
                 new SkillProjectileSpawnRequest
                 {
-                    Kind = SkillProjectileSpawnRequestKind.Projectile,
                     ProjectileName = projectileName,
                     StartPosition = new float3(startPosition.x, startPosition.y, startPosition.z),
                     Direction = new float3(direction.x, direction.y, direction.z),
                     Rotation = quaternion.identity,
                     Speed = Data.Speed,
                     MaxRange = Data.MaxRange,
-                    HitRadius = 0.75f * math.max(Data.Scale, 0.01f),
-                    ScaleMultiplier = math.max(Data.Scale, 0.01f),
+                    HitRadius = 0.75f * math.max(width, height),
+                    Width = width,
+                    Height = height,
                     CanPierce = Data.CanPierce ? (byte)1 : (byte)0,
                     TriggerDestroyEffectsOnMaxRange = Data.TriggerDestroyEffectsOnMaxRange ? (byte)1 : (byte)0,
                     Context = context.Clone(),
                     FlightTexture = Data.FlightTexture,
-                    FlightFrameCount = math.clamp(Data.FlightFrameCount, 1, 16),
+                    FlightGridColumns = Data.FlightGridColumns,
+                    FlightGridRows = Data.FlightGridRows,
+                    FlightFrameCount = Data.FlightFrameCount,
+                    FlightFramesPerSecond = Data.FlightFramesPerSecond,
                     DestroyTexture = Data.DestroyTexture,
-                    DestroyFrameCount = math.clamp(Data.DestroyFrameCount, 1, 16),
+                    DestroyGridColumns = Data.DestroyGridColumns,
+                    DestroyGridRows = Data.DestroyGridRows,
+                    DestroyFrameCount = Data.DestroyFrameCount,
+                    DestroyFramesPerSecond = Data.DestroyFramesPerSecond,
                     OnCollisionEffects = Data.OnCollisionEffects,
                     OnDestroyEffects = Data.OnDestroyEffects,
                 });
