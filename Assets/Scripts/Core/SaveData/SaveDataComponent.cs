@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data;
@@ -11,6 +12,7 @@ namespace CrystalMagic.Core {
     /// </summary>
     public class SaveDataComponent : GameComponent<SaveDataComponent>
     {
+        #region Event Names
         public const string SaveDataChangedEventName = "SaveData.Changed";
         public const string GlobalDataChangedEventName = "SaveData.Global.Changed";
         public const string TownDataChangedEventName = "SaveData.Town.Changed";
@@ -20,30 +22,37 @@ namespace CrystalMagic.Core {
         public const string CharacterPropDataChangedEventName = "SaveData.Town.Character.Props.Changed";
         public const string EquipmentDataChangedEventName = "SaveData.Town.Character.Equipment.Changed";
         public const string SkillDataChangedEventName = "SaveData.Town.Character.Skill.Changed";
+        #endregion
 
+        #region Component
         public override int Priority => 18;
+        #endregion
 
+        #region Constants
         private const string SAVE_FOLDER = "SaveData";
-        private const int CURRENT_SAVE_VERSION = 1;
-        private const int CURRENT_CONTENT_VERSION = 1;
-        private const int DEFAULT_SAVE_INDEX = 0;
         public const string DungeonUnlockedStartFloorVariablePrefix = "DungeonUnlockedStartFloor_";
         public const string DungeonHighestReachedFloorVariableKey = "DungeonHighestReachedFloor";
         public const int DungeonStartFloorUnlockInterval = 20;
+        #endregion
 
+        #region Fields
         private SaveData _currentSaveData;
         private int _currentSaveIndex;
+        #endregion
 
+        #region Events
         public event Action<SaveData> OnSaveSuccess;
         public event Action<string> OnSaveFailed;
         public event Action<SaveData> OnLoadSuccess;
         public event Action<string> OnLoadFailed;
+        #endregion
 
+        #region Lifecycle
         public override void Initialize()
         {
             base.Initialize();
             EnsureSaveFolderExists();
-            _currentSaveIndex = DEFAULT_SAVE_INDEX;
+            _currentSaveIndex = -1;
             RuntimeDataComponent.Instance.Reset();
             Debug.Log("[SaveDataComponent] Initialized");
         }
@@ -52,18 +61,23 @@ namespace CrystalMagic.Core {
         {
             base.Cleanup();
         }
+        #endregion
 
         /// <summary>
         /// 保存当前存档。若当前没有已选槽位，则保存到默认槽位 0。
         /// </summary>
+        #region Save Load
         public bool Save()
         {
-            if (_currentSaveData == null)
+            int currentSaveIndex = GetCurrentSaveIndex();
+            if (currentSaveIndex < 0)
             {
-                _currentSaveData = new SaveData();
+                OnSaveFailed?.Invoke("Save failed: no save slot selected.");
+                Debug.LogError("[SaveDataComponent] Save failed: no save slot selected.");
+                return false;
             }
 
-            return SaveToSlot(GetCurrentSaveIndex());
+            return SaveToSlot(currentSaveIndex);
         }
 
         /// <summary>
@@ -71,9 +85,18 @@ namespace CrystalMagic.Core {
         /// </summary>
         public bool SaveToSlot(int index)
         {
+            if (index < 0)
+            {
+                OnSaveFailed?.Invoke($"Save failed: invalid slot index {index}.");
+                Debug.LogError($"[SaveDataComponent] Save failed: invalid slot index {index}.");
+                return false;
+            }
+
             if (_currentSaveData == null)
             {
-                _currentSaveData = new SaveData();
+                OnSaveFailed?.Invoke("Save failed: current save data is null.");
+                Debug.LogError("[SaveDataComponent] Save failed: current save data is null.");
+                return false;
             }
 
             try
@@ -110,7 +133,15 @@ namespace CrystalMagic.Core {
         /// </summary>
         public bool Load()
         {
-            return LoadFromSlot(GetCurrentSaveIndex());
+            int currentSaveIndex = GetCurrentSaveIndex();
+            if (currentSaveIndex < 0)
+            {
+                OnLoadFailed?.Invoke("Load failed: no save slot selected.");
+                Debug.LogError("[SaveDataComponent] Load failed: no save slot selected.");
+                return false;
+            }
+
+            return LoadFromSlot(currentSaveIndex);
         }
 
         /// <summary>
@@ -118,6 +149,13 @@ namespace CrystalMagic.Core {
         /// </summary>
         public bool LoadFromSlot(int index)
         {
+            if (index < 0)
+            {
+                OnLoadFailed?.Invoke($"Load failed: invalid slot index {index}.");
+                Debug.LogError($"[SaveDataComponent] Load failed: invalid slot index {index}.");
+                return false;
+            }
+
             try
             {
                 string filePath = GetSavePath(index);
@@ -158,6 +196,9 @@ namespace CrystalMagic.Core {
         /// <summary>
         /// 获取所有存档记录，按最新时间排序，最多返回 20 条。
         /// </summary>
+        #endregion
+
+        #region Save Records
         public List<SaveRecord> GetAllSaveRecords()
         {
             List<SaveRecord> records = new();
@@ -227,12 +268,7 @@ namespace CrystalMagic.Core {
             if (string.IsNullOrWhiteSpace(fileName))
                 return false;
 
-            int versionMarkerIndex = fileName.IndexOf("_v", StringComparison.OrdinalIgnoreCase);
-            if (versionMarkerIndex <= 0)
-                return false;
-
-            string slotIndexText = fileName.Substring(0, versionMarkerIndex);
-            return int.TryParse(slotIndexText, out slotIndex);
+            return int.TryParse(fileName, out slotIndex);
         }
 
         public bool DeleteSlot(int index)
@@ -256,6 +292,9 @@ namespace CrystalMagic.Core {
             }
         }
 
+        #endregion
+
+        #region Data Access
         public SaveData GetCurrentSaveData()
         {
             EnsureCurrentSaveDataValid();
@@ -328,6 +367,9 @@ namespace CrystalMagic.Core {
             return _currentSaveData.DungeonRun;
         }
 
+        #endregion
+
+        #region Dungeon Run
         public void EnsureDungeonRunExists(int dungeonFloor = 1)
         {
             EnsureCurrentSaveDataValid();
@@ -391,6 +433,9 @@ namespace CrystalMagic.Core {
             PublishAllDataChangedEvents();
         }
 
+        #endregion
+
+        #region Variables
         public void SetVariable(string key, double value)
         {
             EnsureCurrentSaveDataValid();
@@ -415,6 +460,9 @@ namespace CrystalMagic.Core {
             return _currentSaveData.Variables.Check(expression);
         }
 
+        #endregion
+
+        #region Dungeon Progress
         public void EnsureDungeonStartFloorUnlocksInitialized()
         {
             EnsureCurrentSaveDataValid();
@@ -474,6 +522,9 @@ namespace CrystalMagic.Core {
             return floors;
         }
 
+        #endregion
+
+        #region Location
         public void SetCurrentLocation(SaveAreaType areaType, int dungeonFloor = 1)
         {
             EnsureCurrentSaveDataValid();
@@ -497,6 +548,9 @@ namespace CrystalMagic.Core {
             };
         }
 
+        #endregion
+
+        #region Change Notifications
         public void NotifySaveDataChanged()
         {
             EnsureCurrentSaveDataValid();
@@ -559,10 +613,13 @@ namespace CrystalMagic.Core {
             NotifyCharacterDataChanged();
         }
 
+        #endregion
+
+        #region Save Data Creation
         public SaveData CreateNewSaveData()
         {
             SaveData data = new SaveData();
-            EnsureSaveDataValid(data);
+            EnsureSaveDataValid(data, false);
             return data;
         }
 
@@ -577,6 +634,9 @@ namespace CrystalMagic.Core {
             return SaveToSlot(index);
         }
 
+        #endregion
+
+        #region Paths And Files
         private string GetSaveFolderPath()
         {
             return System.IO.Path.Combine(Application.persistentDataPath, SAVE_FOLDER);
@@ -586,7 +646,7 @@ namespace CrystalMagic.Core {
         {
             return System.IO.Path.Combine(
                 GetSaveFolderPath(),
-                $"{index}_v{CURRENT_SAVE_VERSION}.json");
+                $"{index}.json");
         }
 
         private void EnsureSaveFolderExists()
@@ -599,68 +659,136 @@ namespace CrystalMagic.Core {
             }
         }
 
-        private void EnsureSaveDataValid(SaveData data)
+        #endregion
+
+        #region Validation
+        private void EnsureSaveDataValid(SaveData data, bool logRepairs = true)
         {
-            data.Global ??= new GlobalData();
-            data.Variables ??= new SaveVariableData();
-            data.Location ??= new SaveLocationData();
+            List<string> repairedPaths = logRepairs ? new List<string>() : null;
+
+            if (data.Global == null)
+            {
+                data.Global = new GlobalData();
+                repairedPaths?.Add("Global");
+            }
+
+            if (data.Variables == null)
+            {
+                data.Variables = new SaveVariableData();
+                repairedPaths?.Add("Variables");
+            }
+
+            if (data.Location == null)
+            {
+                data.Location = new SaveLocationData();
+                repairedPaths?.Add("Location");
+            }
+
             data.Location.DungeonFloor = Mathf.Max(1, data.Location.DungeonFloor);
 
-            data.Town ??= new TownData();
-            EnsureTownDataValid(data.Town);
+            if (data.Town == null)
+            {
+                data.Town = new TownData();
+                repairedPaths?.Add("Town");
+            }
+
+            EnsureTownDataValid(data.Town, repairedPaths);
 
             if (data.DungeonRun != null)
             {
-                EnsureDungeonRunDataValid(data.DungeonRun, data.Town.Character);
+                EnsureDungeonRunDataValid(data.DungeonRun, data.Town.Character, repairedPaths);
             }
             else if (data.Location.AreaType == SaveAreaType.Dungeon)
             {
                 data.DungeonRun = CreateDungeonRunFromPersistent(data.Town.Character, data.Location.DungeonFloor);
+                repairedPaths?.Add("DungeonRun");
             }
 
             EnsureDungeonStartFloorUnlocksInitialized(data);
+            LogValidationRepairsIfNeeded(data, repairedPaths, logRepairs);
         }
 
-        private void EnsureTownDataValid(TownData data)
+        private void EnsureTownDataValid(TownData data, List<string> repairedPaths = null)
         {
             if (data == null)
                 return;
 
-            data.Stash ??= new StashData();
-            data.Character ??= new CharacterData();
-            EnsureStashDataValid(data.Stash);
-            EnsureCharacterDataValid(data.Character);
+            if (data.Stash == null)
+            {
+                data.Stash = new StashData();
+                repairedPaths?.Add("Town.Stash");
+            }
+
+            if (data.Character == null)
+            {
+                data.Character = new CharacterData();
+                repairedPaths?.Add("Town.Character");
+            }
+
+            EnsureStashDataValid(data.Stash, repairedPaths);
+            EnsureCharacterDataValid(data.Character, repairedPaths, "Town.Character");
         }
 
-        private void EnsureStashDataValid(StashData data)
+        private void EnsureStashDataValid(StashData data, List<string> repairedPaths = null)
         {
             if (data == null)
                 return;
 
-            data.Items ??= new List<InventoryItemData>();
+            if (data.Items == null)
+            {
+                data.Items = new List<InventoryItemData>();
+                repairedPaths?.Add("Town.Stash.Items");
+            }
+
             if (data.Capacity <= 0)
                 data.Capacity = GetGameConfig().InitialStashSize;
         }
 
-        private void EnsureCharacterDataValid(CharacterData data)
+        private void EnsureCharacterDataValid(CharacterData data, List<string> repairedPaths = null, string basePath = "Town.Character")
         {
             if (data == null)
                 return;
 
-            data.Equipment ??= new EquipmentData();
-            data.Skills ??= new SkillCData();
-            data.Skills.EnsureValid();
-            data.Backpack ??= new BackpackData();
-            data.Backpack.Items ??= new List<InventoryItemData>();
+            if (data.Equipment == null)
+            {
+                data.Equipment = new EquipmentData();
+                repairedPaths?.Add($"{basePath}.Equipment");
+            }
+
+            if (data.Skills == null)
+            {
+                data.Skills = new SkillCData();
+                repairedPaths?.Add($"{basePath}.Skills");
+            }
+
+            data.Skills.EnsureValid(repairedPaths, $"{basePath}.Skills");
+
+            if (data.Backpack == null)
+            {
+                data.Backpack = new BackpackData();
+                repairedPaths?.Add($"{basePath}.Backpack");
+            }
+
+            if (data.Backpack.Items == null)
+            {
+                data.Backpack.Items = new List<InventoryItemData>();
+                repairedPaths?.Add($"{basePath}.Backpack.Items");
+            }
+
             if (data.Backpack.Capacity <= 0)
                 data.Backpack.Capacity = Mathf.Max(1, GetGameConfig().InitialBackpackSize);
 
-            data.Props ??= new CharacterPropData();
-            data.Props.EnsureValid(GetPropSlotCount(), GetPropShortcutSlotCount());
+            if (data.Props == null)
+            {
+                data.Props = new CharacterPropData();
+                repairedPaths?.Add($"{basePath}.Props");
+            }
+
+            data.Props.EnsureValid(GetPropSlotCount(), GetPropShortcutSlotCount(), repairedPaths, $"{basePath}.Props");
             PropInventoryUtility.MigrateBackpackPropsToPropSlots(data);
         }
 
-        private void EnsureDungeonRunDataValid(DungeonRunData data, CharacterData fallbackCharacter = null)
+        private void EnsureDungeonRunDataValid(DungeonRunData data, CharacterData fallbackCharacter = null, List<string> repairedPaths = null)
         {
             if (data == null)
                 return;
@@ -675,10 +803,25 @@ namespace CrystalMagic.Core {
                 data.BaseSeed = DeriveDungeonRunBaseSeed(data);
 
             data.CurrentFloor = Mathf.Max(1, data.CurrentFloor);
-            data.Character ??= CloneCharacterData(fallbackCharacter);
-            EnsureCharacterDataValid(data.Character);
-            data.Monsters ??= new List<MonsterStateData>();
-            data.ItemDrops ??= new List<ItemDropData>();
+            if (data.Character == null)
+            {
+                data.Character = CloneCharacterData(fallbackCharacter);
+                repairedPaths?.Add("DungeonRun.Character");
+            }
+
+            EnsureCharacterDataValid(data.Character, repairedPaths, "DungeonRun.Character");
+
+            if (data.Monsters == null)
+            {
+                data.Monsters = new List<MonsterStateData>();
+                repairedPaths?.Add("DungeonRun.Monsters");
+            }
+
+            if (data.ItemDrops == null)
+            {
+                data.ItemDrops = new List<ItemDropData>();
+                repairedPaths?.Add("DungeonRun.ItemDrops");
+            }
         }
 
         private CharacterData GetActiveCharacterDataInternal()
@@ -851,6 +994,9 @@ namespace CrystalMagic.Core {
             }
         }
 
+        #endregion
+
+        #region Dungeon Unlock Helpers
         private void UnlockDungeonStartFloorInternal(int startFloor)
         {
             int normalizedFloor = NormalizeDungeonStartFloor(startFloor);
@@ -885,6 +1031,9 @@ namespace CrystalMagic.Core {
             return $"{DungeonUnlockedStartFloorVariablePrefix}{NormalizeDungeonStartFloor(startFloor)}";
         }
 
+        #endregion
+
+        #region Clone And Repair Helpers
         private CharacterData CloneCharacterData(CharacterData source)
         {
             CharacterData clone = DeepClone(source);
@@ -904,10 +1053,27 @@ namespace CrystalMagic.Core {
 
         private void EnsureCurrentSaveDataValid()
         {
-            _currentSaveData ??= new SaveData();
+            if (_currentSaveData == null)
+            {
+                _currentSaveData = new SaveData();
+                Debug.LogWarning("[SaveDataComponent] Current save data was null. A new SaveData instance was created during validation.");
+            }
+
             EnsureSaveDataValid(_currentSaveData);
         }
 
+        private static void LogValidationRepairsIfNeeded(SaveData data, List<string> repairedPaths, bool logRepairs)
+        {
+            if (!logRepairs || repairedPaths == null || repairedPaths.Count == 0)
+                return;
+
+            string joinedPaths = string.Join(", ", repairedPaths.Distinct());
+            Debug.LogWarning($"[SaveDataComponent] Save data validation repaired missing data by creating new instances: {joinedPaths}. SaveIndex={data?.SaveIndex}");
+        }
+
+        #endregion
+
+        #region Publish Helpers
         private void PublishAllDataChangedEvents()
         {
             EnsureCurrentSaveDataValid();
@@ -922,6 +1088,9 @@ namespace CrystalMagic.Core {
             EventComponent.Instance.Publish(new CommonGameEvent(SaveDataChangedEventName, _currentSaveData));
         }
 
+        #endregion
+
+        #region Logging
         private void CreateBackup(string savePath)
         {
             try
@@ -938,6 +1107,9 @@ namespace CrystalMagic.Core {
             }
         }
 
+        #endregion
+
+        #region Config Helpers
         private int GetCurrentSaveIndex()
         {
             if (_currentSaveData != null)
@@ -965,6 +1137,7 @@ namespace CrystalMagic.Core {
         {
             return Mathf.Max(0, GetGameConfig().BattlePropShortcutSlotCount);
         }
+        #endregion
     }
 
     /// <summary>

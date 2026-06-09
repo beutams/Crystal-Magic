@@ -88,7 +88,7 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
     ""name"": ""InputControls"",
     ""maps"": [
         {
-            ""name"": ""Town"",
+            ""name"": ""Interaction"",
             ""id"": ""27f76953-3e0e-4ccc-ac70-4b0bbcc8ee90"",
             ""actions"": [
                 {
@@ -110,45 +110,9 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""Click"",
-                    ""type"": ""Button"",
-                    ""id"": ""ccd32997-c66a-472d-9f6f-1929c8d0df3a"",
-                    ""expectedControlType"": ""Button"",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false
-                },
-                {
                     ""name"": ""Inventory"",
                     ""type"": ""Button"",
                     ""id"": ""3ffb76b1-c513-47ab-8d95-10111d787be9"",
-                    ""expectedControlType"": """",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false
-                },
-                {
-                    ""name"": ""ESC"",
-                    ""type"": ""Button"",
-                    ""id"": ""6a992ad9-b172-43f9-bbbf-e2d27e2b8ba7"",
-                    ""expectedControlType"": """",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false
-                },
-                {
-                    ""name"": ""Skill"",
-                    ""type"": ""Value"",
-                    ""id"": ""f96b9221-1346-40aa-9f2c-774a8a8a6d68"",
-                    ""expectedControlType"": """",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": true
-                },
-                {
-                    ""name"": ""Tab"",
-                    ""type"": ""Button"",
-                    ""id"": ""94cd6c66-bdf5-48b1-97c0-14107825ab66"",
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
@@ -162,15 +126,6 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
-                },
-                {
-                    ""name"": ""UseProp"",
-                    ""type"": ""Value"",
-                    ""id"": ""2a60ad94-4492-4415-acc0-d1a9890f0ea7"",
-                    ""expectedControlType"": """",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": true
                 }
             ],
             ""bindings"": [
@@ -242,17 +197,6 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""992b39c7-9490-4f33-8e2b-def1f28fff8a"",
-                    ""path"": ""<Mouse>/leftButton"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Click"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
                     ""id"": ""33432e18-b2ea-460c-8313-810cfcffad90"",
                     ""path"": ""<Keyboard>/b"",
                     ""interactions"": """",
@@ -264,15 +208,59 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""33df67a0-bfcb-4e13-aaae-a51d75999514"",
-                    ""path"": ""<Keyboard>/escape"",
+                    ""id"": ""c83455a9-ee26-4f7c-9f2d-525918bda642"",
+                    ""path"": ""<Keyboard>/i"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""ESC"",
+                    ""action"": ""Property"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                }
+            ]
+        },
+        {
+            ""name"": ""Battle"",
+            ""id"": ""dd874c17-9a4d-4c5c-9a03-df6d85154025"",
+            ""actions"": [
+                {
+                    ""name"": ""Skill"",
+                    ""type"": ""Value"",
+                    ""id"": ""f96b9221-1346-40aa-9f2c-774a8a8a6d68"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 },
+                {
+                    ""name"": ""Tab"",
+                    ""type"": ""Button"",
+                    ""id"": ""94cd6c66-bdf5-48b1-97c0-14107825ab66"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Click"",
+                    ""type"": ""Button"",
+                    ""id"": ""ccd32997-c66a-472d-9f6f-1929c8d0df3a"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""UseProp"",
+                    ""type"": ""Value"",
+                    ""id"": ""2a60ad94-4492-4415-acc0-d1a9890f0ea7"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                }
+            ],
+            ""bindings"": [
                 {
                     ""name"": """",
                     ""id"": ""8ded4410-a47b-464a-b79a-eb92eaaedafe"",
@@ -341,12 +329,12 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""c83455a9-ee26-4f7c-9f2d-525918bda642"",
-                    ""path"": ""<Keyboard>/i"",
+                    ""id"": ""992b39c7-9490-4f33-8e2b-def1f28fff8a"",
+                    ""path"": ""<Mouse>/leftButton"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Property"",
+                    ""action"": ""Click"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -384,26 +372,60 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": false
                 }
             ]
+        },
+        {
+            ""name"": ""Global"",
+            ""id"": ""1ef42d0f-4aa8-4826-85b0-8d06571f8f78"",
+            ""actions"": [
+                {
+                    ""name"": ""ESC"",
+                    ""type"": ""Button"",
+                    ""id"": ""9bb0019d-b0ab-4747-9c60-f0f61209f8a2"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""f925bb0b-2eb8-49b0-b2eb-04ff2d361c6d"",
+                    ""path"": ""<Keyboard>/escape"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ESC"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
         }
     ],
     ""controlSchemes"": []
 }");
-        // Town
-        m_Town = asset.FindActionMap("Town", throwIfNotFound: true);
-        m_Town_Move = m_Town.FindAction("Move", throwIfNotFound: true);
-        m_Town_Interact = m_Town.FindAction("Interact", throwIfNotFound: true);
-        m_Town_Click = m_Town.FindAction("Click", throwIfNotFound: true);
-        m_Town_Inventory = m_Town.FindAction("Inventory", throwIfNotFound: true);
-        m_Town_ESC = m_Town.FindAction("ESC", throwIfNotFound: true);
-        m_Town_Skill = m_Town.FindAction("Skill", throwIfNotFound: true);
-        m_Town_Tab = m_Town.FindAction("Tab", throwIfNotFound: true);
-        m_Town_Property = m_Town.FindAction("Property", throwIfNotFound: true);
-        m_Town_UseProp = m_Town.FindAction("UseProp", throwIfNotFound: true);
+        // Interaction
+        m_Interaction = asset.FindActionMap("Interaction", throwIfNotFound: true);
+        m_Interaction_Move = m_Interaction.FindAction("Move", throwIfNotFound: true);
+        m_Interaction_Interact = m_Interaction.FindAction("Interact", throwIfNotFound: true);
+        m_Interaction_Inventory = m_Interaction.FindAction("Inventory", throwIfNotFound: true);
+        m_Interaction_Property = m_Interaction.FindAction("Property", throwIfNotFound: true);
+        // Battle
+        m_Battle = asset.FindActionMap("Battle", throwIfNotFound: true);
+        m_Battle_Skill = m_Battle.FindAction("Skill", throwIfNotFound: true);
+        m_Battle_Tab = m_Battle.FindAction("Tab", throwIfNotFound: true);
+        m_Battle_Click = m_Battle.FindAction("Click", throwIfNotFound: true);
+        m_Battle_UseProp = m_Battle.FindAction("UseProp", throwIfNotFound: true);
+        // Global
+        m_Global = asset.FindActionMap("Global", throwIfNotFound: true);
+        m_Global_ESC = m_Global.FindAction("ESC", throwIfNotFound: true);
     }
 
     ~@InputControls()
     {
-        UnityEngine.Debug.Assert(!m_Town.enabled, "This will cause a leak and performance issues, InputControls.Town.Disable() has not been called.");
+        UnityEngine.Debug.Assert(!m_Interaction.enabled, "This will cause a leak and performance issues, InputControls.Interaction.Disable() has not been called.");
+        UnityEngine.Debug.Assert(!m_Battle.enabled, "This will cause a leak and performance issues, InputControls.Battle.Disable() has not been called.");
+        UnityEngine.Debug.Assert(!m_Global.enabled, "This will cause a leak and performance issues, InputControls.Global.Disable() has not been called.");
     }
 
     /// <summary>
@@ -476,69 +498,43 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         return asset.FindBinding(bindingMask, out action);
     }
 
-    // Town
-    private readonly InputActionMap m_Town;
-    private List<ITownActions> m_TownActionsCallbackInterfaces = new List<ITownActions>();
-    private readonly InputAction m_Town_Move;
-    private readonly InputAction m_Town_Interact;
-    private readonly InputAction m_Town_Click;
-    private readonly InputAction m_Town_Inventory;
-    private readonly InputAction m_Town_ESC;
-    private readonly InputAction m_Town_Skill;
-    private readonly InputAction m_Town_Tab;
-    private readonly InputAction m_Town_Property;
-    private readonly InputAction m_Town_UseProp;
+    // Interaction
+    private readonly InputActionMap m_Interaction;
+    private List<IInteractionActions> m_InteractionActionsCallbackInterfaces = new List<IInteractionActions>();
+    private readonly InputAction m_Interaction_Move;
+    private readonly InputAction m_Interaction_Interact;
+    private readonly InputAction m_Interaction_Inventory;
+    private readonly InputAction m_Interaction_Property;
     /// <summary>
-    /// Provides access to input actions defined in input action map "Town".
+    /// Provides access to input actions defined in input action map "Interaction".
     /// </summary>
-    public struct TownActions
+    public struct InteractionActions
     {
         private @InputControls m_Wrapper;
 
         /// <summary>
         /// Construct a new instance of the input action map wrapper class.
         /// </summary>
-        public TownActions(@InputControls wrapper) { m_Wrapper = wrapper; }
+        public InteractionActions(@InputControls wrapper) { m_Wrapper = wrapper; }
         /// <summary>
-        /// Provides access to the underlying input action "Town/Move".
+        /// Provides access to the underlying input action "Interaction/Move".
         /// </summary>
-        public InputAction @Move => m_Wrapper.m_Town_Move;
+        public InputAction @Move => m_Wrapper.m_Interaction_Move;
         /// <summary>
-        /// Provides access to the underlying input action "Town/Interact".
+        /// Provides access to the underlying input action "Interaction/Interact".
         /// </summary>
-        public InputAction @Interact => m_Wrapper.m_Town_Interact;
+        public InputAction @Interact => m_Wrapper.m_Interaction_Interact;
+        /// Provides access to the underlying input action "Interaction/Inventory".
+        /// </summary>
+        public InputAction @Inventory => m_Wrapper.m_Interaction_Inventory;
         /// <summary>
-        /// Provides access to the underlying input action "Town/Click".
+        /// Provides access to the underlying input action "Interaction/Property".
         /// </summary>
-        public InputAction @Click => m_Wrapper.m_Town_Click;
-        /// <summary>
-        /// Provides access to the underlying input action "Town/Inventory".
-        /// </summary>
-        public InputAction @Inventory => m_Wrapper.m_Town_Inventory;
-        /// <summary>
-        /// Provides access to the underlying input action "Town/ESC".
-        /// </summary>
-        public InputAction @ESC => m_Wrapper.m_Town_ESC;
-        /// <summary>
-        /// Provides access to the underlying input action "Town/Skill".
-        /// </summary>
-        public InputAction @Skill => m_Wrapper.m_Town_Skill;
-        /// <summary>
-        /// Provides access to the underlying input action "Town/Tab".
-        /// </summary>
-        public InputAction @Tab => m_Wrapper.m_Town_Tab;
-        /// <summary>
-        /// Provides access to the underlying input action "Town/Property".
-        /// </summary>
-        public InputAction @Property => m_Wrapper.m_Town_Property;
-        /// <summary>
-        /// Provides access to the underlying input action "Town/UseProp".
-        /// </summary>
-        public InputAction @UseProp => m_Wrapper.m_Town_UseProp;
+        public InputAction @Property => m_Wrapper.m_Interaction_Property;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
-        public InputActionMap Get() { return m_Wrapper.m_Town; }
+        public InputActionMap Get() { return m_Wrapper.m_Interaction; }
         /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Enable()" />
         public void Enable() { Get().Enable(); }
         /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Disable()" />
@@ -546,9 +542,9 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.enabled" />
         public bool enabled => Get().enabled;
         /// <summary>
-        /// Implicitly converts an <see ref="TownActions" /> to an <see ref="InputActionMap" /> instance.
+        /// Implicitly converts an <see ref="InteractionActions" /> to an <see ref="InputActionMap" /> instance.
         /// </summary>
-        public static implicit operator InputActionMap(TownActions set) { return set.Get(); }
+        public static implicit operator InputActionMap(InteractionActions set) { return set.Get(); }
         /// <summary>
         /// Adds <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
         /// </summary>
@@ -556,35 +552,149 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         /// <remarks>
         /// If <paramref name="instance" /> is <c>null</c> or <paramref name="instance"/> have already been added this method does nothing.
         /// </remarks>
-        /// <seealso cref="TownActions" />
-        public void AddCallbacks(ITownActions instance)
+        /// <seealso cref="InteractionActions" />
+        public void AddCallbacks(IInteractionActions instance)
         {
-            if (instance == null || m_Wrapper.m_TownActionsCallbackInterfaces.Contains(instance)) return;
-            m_Wrapper.m_TownActionsCallbackInterfaces.Add(instance);
+            if (instance == null || m_Wrapper.m_InteractionActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_InteractionActionsCallbackInterfaces.Add(instance);
             @Move.started += instance.OnMove;
             @Move.performed += instance.OnMove;
             @Move.canceled += instance.OnMove;
             @Interact.started += instance.OnInteract;
             @Interact.performed += instance.OnInteract;
             @Interact.canceled += instance.OnInteract;
-            @Click.started += instance.OnClick;
-            @Click.performed += instance.OnClick;
-            @Click.canceled += instance.OnClick;
             @Inventory.started += instance.OnInventory;
             @Inventory.performed += instance.OnInventory;
             @Inventory.canceled += instance.OnInventory;
-            @ESC.started += instance.OnESC;
-            @ESC.performed += instance.OnESC;
-            @ESC.canceled += instance.OnESC;
+            @Property.started += instance.OnProperty;
+            @Property.performed += instance.OnProperty;
+            @Property.canceled += instance.OnProperty;
+        }
+
+        /// <summary>
+        /// Removes <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+        /// </summary>
+        /// <remarks>
+        /// Calling this method when <paramref name="instance" /> have not previously been registered has no side-effects.
+        /// </remarks>
+        /// <seealso cref="InteractionActions" />
+        private void UnregisterCallbacks(IInteractionActions instance)
+        {
+            @Move.started -= instance.OnMove;
+            @Move.performed -= instance.OnMove;
+            @Move.canceled -= instance.OnMove;
+            @Interact.started -= instance.OnInteract;
+            @Interact.performed -= instance.OnInteract;
+            @Interact.canceled -= instance.OnInteract;
+            @Inventory.started -= instance.OnInventory;
+            @Inventory.performed -= instance.OnInventory;
+            @Inventory.canceled -= instance.OnInventory;
+            @Property.started -= instance.OnProperty;
+            @Property.performed -= instance.OnProperty;
+            @Property.canceled -= instance.OnProperty;
+        }
+
+        /// <summary>
+        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="InteractionActions.UnregisterCallbacks(IInteractionActions)" />.
+        /// </summary>
+        /// <seealso cref="InteractionActions.UnregisterCallbacks(IInteractionActions)" />
+        public void RemoveCallbacks(IInteractionActions instance)
+        {
+            if (m_Wrapper.m_InteractionActionsCallbackInterfaces.Remove(instance))
+                UnregisterCallbacks(instance);
+        }
+
+        /// <summary>
+        /// Replaces all existing callback instances and previously registered input action callbacks associated with them with callbacks provided via <param cref="instance" />.
+        /// </summary>
+        /// <remarks>
+        /// If <paramref name="instance" /> is <c>null</c>, calling this method will only unregister all existing callbacks but not register any new callbacks.
+        /// </remarks>
+        /// <seealso cref="InteractionActions.AddCallbacks(IInteractionActions)" />
+        /// <seealso cref="InteractionActions.RemoveCallbacks(IInteractionActions)" />
+        /// <seealso cref="InteractionActions.UnregisterCallbacks(IInteractionActions)" />
+        public void SetCallbacks(IInteractionActions instance)
+        {
+            foreach (var item in m_Wrapper.m_InteractionActionsCallbackInterfaces)
+                UnregisterCallbacks(item);
+            m_Wrapper.m_InteractionActionsCallbackInterfaces.Clear();
+            AddCallbacks(instance);
+        }
+    }
+    /// <summary>
+    /// Provides a new <see cref="InteractionActions" /> instance referencing this action map.
+    /// </summary>
+    public InteractionActions @Interaction => new InteractionActions(this);
+
+    // Battle
+    private readonly InputActionMap m_Battle;
+    private List<IBattleActions> m_BattleActionsCallbackInterfaces = new List<IBattleActions>();
+    private readonly InputAction m_Battle_Skill;
+    private readonly InputAction m_Battle_Tab;
+    private readonly InputAction m_Battle_Click;
+    private readonly InputAction m_Battle_UseProp;
+    /// <summary>
+    /// Provides access to input actions defined in input action map "Battle".
+    /// </summary>
+    public struct BattleActions
+    {
+        private @InputControls m_Wrapper;
+
+        /// <summary>
+        /// Construct a new instance of the input action map wrapper class.
+        /// </summary>
+        public BattleActions(@InputControls wrapper) { m_Wrapper = wrapper; }
+        /// <summary>
+        /// Provides access to the underlying input action "Battle/Skill".
+        /// </summary>
+        public InputAction @Skill => m_Wrapper.m_Battle_Skill;
+        /// <summary>
+        /// Provides access to the underlying input action "Battle/Tab".
+        /// </summary>
+        public InputAction @Tab => m_Wrapper.m_Battle_Tab;
+        /// <summary>
+        /// Provides access to the underlying input action "Battle/Click".
+        /// </summary>
+        public InputAction @Click => m_Wrapper.m_Battle_Click;
+        /// <summary>
+        /// Provides access to the underlying input action "Battle/UseProp".
+        /// </summary>
+        public InputAction @UseProp => m_Wrapper.m_Battle_UseProp;
+        /// <summary>
+        /// Provides access to the underlying input action map instance.
+        /// </summary>
+        public InputActionMap Get() { return m_Wrapper.m_Battle; }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Enable()" />
+        public void Enable() { Get().Enable(); }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Disable()" />
+        public void Disable() { Get().Disable(); }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.enabled" />
+        public bool enabled => Get().enabled;
+        /// <summary>
+        /// Implicitly converts an <see ref="BattleActions" /> to an <see ref="InputActionMap" /> instance.
+        /// </summary>
+        public static implicit operator InputActionMap(BattleActions set) { return set.Get(); }
+        /// <summary>
+        /// Adds <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+        /// </summary>
+        /// <param name="instance">Callback instance.</param>
+        /// <remarks>
+        /// If <paramref name="instance" /> is <c>null</c> or <paramref name="instance"/> have already been added this method does nothing.
+        /// </remarks>
+        /// <seealso cref="BattleActions" />
+        public void AddCallbacks(IBattleActions instance)
+        {
+            if (instance == null || m_Wrapper.m_BattleActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_BattleActionsCallbackInterfaces.Add(instance);
             @Skill.started += instance.OnSkill;
             @Skill.performed += instance.OnSkill;
             @Skill.canceled += instance.OnSkill;
             @Tab.started += instance.OnTab;
             @Tab.performed += instance.OnTab;
             @Tab.canceled += instance.OnTab;
-            @Property.started += instance.OnProperty;
-            @Property.performed += instance.OnProperty;
-            @Property.canceled += instance.OnProperty;
+            @Click.started += instance.OnClick;
+            @Click.performed += instance.OnClick;
+            @Click.canceled += instance.OnClick;
             @UseProp.started += instance.OnUseProp;
             @UseProp.performed += instance.OnUseProp;
             @UseProp.canceled += instance.OnUseProp;
@@ -596,45 +706,30 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         /// <remarks>
         /// Calling this method when <paramref name="instance" /> have not previously been registered has no side-effects.
         /// </remarks>
-        /// <seealso cref="TownActions" />
-        private void UnregisterCallbacks(ITownActions instance)
+        /// <seealso cref="BattleActions" />
+        private void UnregisterCallbacks(IBattleActions instance)
         {
-            @Move.started -= instance.OnMove;
-            @Move.performed -= instance.OnMove;
-            @Move.canceled -= instance.OnMove;
-            @Interact.started -= instance.OnInteract;
-            @Interact.performed -= instance.OnInteract;
-            @Interact.canceled -= instance.OnInteract;
-            @Click.started -= instance.OnClick;
-            @Click.performed -= instance.OnClick;
-            @Click.canceled -= instance.OnClick;
-            @Inventory.started -= instance.OnInventory;
-            @Inventory.performed -= instance.OnInventory;
-            @Inventory.canceled -= instance.OnInventory;
-            @ESC.started -= instance.OnESC;
-            @ESC.performed -= instance.OnESC;
-            @ESC.canceled -= instance.OnESC;
             @Skill.started -= instance.OnSkill;
             @Skill.performed -= instance.OnSkill;
             @Skill.canceled -= instance.OnSkill;
             @Tab.started -= instance.OnTab;
             @Tab.performed -= instance.OnTab;
             @Tab.canceled -= instance.OnTab;
-            @Property.started -= instance.OnProperty;
-            @Property.performed -= instance.OnProperty;
-            @Property.canceled -= instance.OnProperty;
+            @Click.started -= instance.OnClick;
+            @Click.performed -= instance.OnClick;
+            @Click.canceled -= instance.OnClick;
             @UseProp.started -= instance.OnUseProp;
             @UseProp.performed -= instance.OnUseProp;
             @UseProp.canceled -= instance.OnUseProp;
         }
 
         /// <summary>
-        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="TownActions.UnregisterCallbacks(ITownActions)" />.
+        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="BattleActions.UnregisterCallbacks(IBattleActions)" />.
         /// </summary>
-        /// <seealso cref="TownActions.UnregisterCallbacks(ITownActions)" />
-        public void RemoveCallbacks(ITownActions instance)
+        /// <seealso cref="BattleActions.UnregisterCallbacks(IBattleActions)" />
+        public void RemoveCallbacks(IBattleActions instance)
         {
-            if (m_Wrapper.m_TownActionsCallbackInterfaces.Remove(instance))
+            if (m_Wrapper.m_BattleActionsCallbackInterfaces.Remove(instance))
                 UnregisterCallbacks(instance);
         }
 
@@ -644,27 +739,123 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         /// <remarks>
         /// If <paramref name="instance" /> is <c>null</c>, calling this method will only unregister all existing callbacks but not register any new callbacks.
         /// </remarks>
-        /// <seealso cref="TownActions.AddCallbacks(ITownActions)" />
-        /// <seealso cref="TownActions.RemoveCallbacks(ITownActions)" />
-        /// <seealso cref="TownActions.UnregisterCallbacks(ITownActions)" />
-        public void SetCallbacks(ITownActions instance)
+        /// <seealso cref="BattleActions.AddCallbacks(IBattleActions)" />
+        /// <seealso cref="BattleActions.RemoveCallbacks(IBattleActions)" />
+        /// <seealso cref="BattleActions.UnregisterCallbacks(IBattleActions)" />
+        public void SetCallbacks(IBattleActions instance)
         {
-            foreach (var item in m_Wrapper.m_TownActionsCallbackInterfaces)
+            foreach (var item in m_Wrapper.m_BattleActionsCallbackInterfaces)
                 UnregisterCallbacks(item);
-            m_Wrapper.m_TownActionsCallbackInterfaces.Clear();
+            m_Wrapper.m_BattleActionsCallbackInterfaces.Clear();
             AddCallbacks(instance);
         }
     }
     /// <summary>
-    /// Provides a new <see cref="TownActions" /> instance referencing this action map.
+    /// Provides a new <see cref="BattleActions" /> instance referencing this action map.
     /// </summary>
-    public TownActions @Town => new TownActions(this);
+    public BattleActions @Battle => new BattleActions(this);
+
+    // Global
+    private readonly InputActionMap m_Global;
+    private List<IGlobalActions> m_GlobalActionsCallbackInterfaces = new List<IGlobalActions>();
+    private readonly InputAction m_Global_ESC;
     /// <summary>
-    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Town" which allows adding and removing callbacks.
+    /// Provides access to input actions defined in input action map "Global".
     /// </summary>
-    /// <seealso cref="TownActions.AddCallbacks(ITownActions)" />
-    /// <seealso cref="TownActions.RemoveCallbacks(ITownActions)" />
-    public interface ITownActions
+    public struct GlobalActions
+    {
+        private @InputControls m_Wrapper;
+
+        /// <summary>
+        /// Construct a new instance of the input action map wrapper class.
+        /// </summary>
+        public GlobalActions(@InputControls wrapper) { m_Wrapper = wrapper; }
+        /// <summary>
+        /// Provides access to the underlying input action "Global/ESC".
+        /// </summary>
+        public InputAction @ESC => m_Wrapper.m_Global_ESC;
+        /// <summary>
+        /// Provides access to the underlying input action map instance.
+        /// </summary>
+        public InputActionMap Get() { return m_Wrapper.m_Global; }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Enable()" />
+        public void Enable() { Get().Enable(); }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Disable()" />
+        public void Disable() { Get().Disable(); }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.enabled" />
+        public bool enabled => Get().enabled;
+        /// <summary>
+        /// Implicitly converts an <see ref="GlobalActions" /> to an <see ref="InputActionMap" /> instance.
+        /// </summary>
+        public static implicit operator InputActionMap(GlobalActions set) { return set.Get(); }
+        /// <summary>
+        /// Adds <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+        /// </summary>
+        /// <param name="instance">Callback instance.</param>
+        /// <remarks>
+        /// If <paramref name="instance" /> is <c>null</c> or <paramref name="instance"/> have already been added this method does nothing.
+        /// </remarks>
+        /// <seealso cref="GlobalActions" />
+        public void AddCallbacks(IGlobalActions instance)
+        {
+            if (instance == null || m_Wrapper.m_GlobalActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_GlobalActionsCallbackInterfaces.Add(instance);
+            @ESC.started += instance.OnESC;
+            @ESC.performed += instance.OnESC;
+            @ESC.canceled += instance.OnESC;
+        }
+
+        /// <summary>
+        /// Removes <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+        /// </summary>
+        /// <remarks>
+        /// Calling this method when <paramref name="instance" /> have not previously been registered has no side-effects.
+        /// </remarks>
+        /// <seealso cref="GlobalActions" />
+        private void UnregisterCallbacks(IGlobalActions instance)
+        {
+            @ESC.started -= instance.OnESC;
+            @ESC.performed -= instance.OnESC;
+            @ESC.canceled -= instance.OnESC;
+        }
+
+        /// <summary>
+        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="GlobalActions.UnregisterCallbacks(IGlobalActions)" />.
+        /// </summary>
+        /// <seealso cref="GlobalActions.UnregisterCallbacks(IGlobalActions)" />
+        public void RemoveCallbacks(IGlobalActions instance)
+        {
+            if (m_Wrapper.m_GlobalActionsCallbackInterfaces.Remove(instance))
+                UnregisterCallbacks(instance);
+        }
+
+        /// <summary>
+        /// Replaces all existing callback instances and previously registered input action callbacks associated with them with callbacks provided via <param cref="instance" />.
+        /// </summary>
+        /// <remarks>
+        /// If <paramref name="instance" /> is <c>null</c>, calling this method will only unregister all existing callbacks but not register any new callbacks.
+        /// </remarks>
+        /// <seealso cref="GlobalActions.AddCallbacks(IGlobalActions)" />
+        /// <seealso cref="GlobalActions.RemoveCallbacks(IGlobalActions)" />
+        /// <seealso cref="GlobalActions.UnregisterCallbacks(IGlobalActions)" />
+        public void SetCallbacks(IGlobalActions instance)
+        {
+            foreach (var item in m_Wrapper.m_GlobalActionsCallbackInterfaces)
+                UnregisterCallbacks(item);
+            m_Wrapper.m_GlobalActionsCallbackInterfaces.Clear();
+            AddCallbacks(instance);
+        }
+    }
+    /// <summary>
+    /// Provides a new <see cref="GlobalActions" /> instance referencing this action map.
+    /// </summary>
+    public GlobalActions @Global => new GlobalActions(this);
+    /// <summary>
+    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Interaction" which allows adding and removing callbacks.
+    /// </summary>
+    /// <seealso cref="InteractionActions.AddCallbacks(IInteractionActions)" />
+    /// <seealso cref="InteractionActions.RemoveCallbacks(IInteractionActions)" />
+    public interface IInteractionActions
     {
         /// <summary>
         /// Method invoked when associated input action "Move" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
@@ -680,14 +871,6 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnInteract(InputAction.CallbackContext context);
-        /// <summary>
-        /// Method invoked when associated input action "Click" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
-        /// </summary>
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnClick(InputAction.CallbackContext context);
-        /// <summary>
         /// Method invoked when associated input action "Inventory" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
@@ -695,12 +878,20 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnInventory(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "ESC" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "Property" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnESC(InputAction.CallbackContext context);
+        void OnProperty(InputAction.CallbackContext context);
+    }
+    /// <summary>
+    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Battle" which allows adding and removing callbacks.
+    /// </summary>
+    /// <seealso cref="BattleActions.AddCallbacks(IBattleActions)" />
+    /// <seealso cref="BattleActions.RemoveCallbacks(IBattleActions)" />
+    public interface IBattleActions
+    {
         /// <summary>
         /// Method invoked when associated input action "Skill" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
@@ -716,12 +907,12 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnTab(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "Property" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "Click" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnProperty(InputAction.CallbackContext context);
+        void OnClick(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "UseProp" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
@@ -729,5 +920,20 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnUseProp(InputAction.CallbackContext context);
+    }
+    /// <summary>
+    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Global" which allows adding and removing callbacks.
+    /// </summary>
+    /// <seealso cref="GlobalActions.AddCallbacks(IGlobalActions)" />
+    /// <seealso cref="GlobalActions.RemoveCallbacks(IGlobalActions)" />
+    public interface IGlobalActions
+    {
+        /// <summary>
+        /// Method invoked when associated input action "ESC" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnESC(InputAction.CallbackContext context);
     }
 }

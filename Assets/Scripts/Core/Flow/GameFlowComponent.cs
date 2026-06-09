@@ -7,12 +7,18 @@ namespace CrystalMagic.Core
     public class GameFlowComponent : GameComponent<GameFlowComponent>
     {
         private const string DefaultTransitionMaskUIName = "TransitionMaskUI";
+
+        #region State Flow Fields
         private GameState _currentState;
+        private readonly Dictionary<Type, GameState> _stateCache = new();
+        #endregion
+
+        #region Transition Flow Fields
         private TransitionData _activeTransitionData;
         private UIBase _activeTransitionPanel;
         private ITransitionUI _activeTransitionUI;
         private bool _isTransitioning;
-        private readonly Dictionary<Type, GameState> _stateCache = new();
+        #endregion
 
         public override int Priority => 30;
 
@@ -110,6 +116,7 @@ namespace CrystalMagic.Core
             base.Cleanup();
         }
 
+        #region State Flow
         private void SetStateInternal(GameState newState, object data = null)
         {
             if (newState == null || _currentState == newState)
@@ -149,7 +156,9 @@ namespace CrystalMagic.Core
 
             return (T)_stateCache[stateType];
         }
+        #endregion
 
+        #region Transition Flow
         private void BindEvents()
         {
             if (EventComponent.Instance == null)
@@ -254,5 +263,6 @@ namespace CrystalMagic.Core
             _activeTransitionPanel = null;
             _activeTransitionUI = null;
         }
+        #endregion
     }
 }

@@ -520,7 +520,7 @@ namespace CrystalMagic.Core {
                 return;
 
             ApplyBGMVolume(settings.MasterVolume * settings.BgmVolume);
-            ApplySFXVolume(settings.MasterVolume * settings.UnitVolume);
+            ApplySFXVolume(settings.MasterVolume * settings.SfxVolume);
         }
 
         private sealed class PooledAudioSource

@@ -1,69 +1,69 @@
 ﻿Core\
   Audio\
-    AudioComponent.cs FALSE
+    AudioComponent.cs TRUE
   Camera\
-    CameraComponent.cs FALSE
-    SceneCamera.cs FALSE
+    CameraComponent.cs WAIT
+    SceneCamera.cs WAIT
   Config\
     Editor\
       ConfigEditorWindow.cs FALSE
-    ConfigComponent.cs FALSE
-    DungeonConfig.cs FALSE
-    GameConfig.cs FALSE
-    GameConfigAttribute.cs FALSE
-    ModifierConfig.cs FALSE
+    ConfigComponent.cs TRUE
+    DungeonConfig.cs TRUE
+    GameConfig.cs TRUE
+    GameConfigAttribute.cs TRUE
+    ModifierConfig.cs TRUE
   Data\
     Editor\
       DataTableRegistryGenerator.cs FALSE
       DataTableViewerWindow.cs FALSE
-    DataComponent.cs FALSE
-    DataRow.cs FALSE
-    DataTable.cs FALSE
-    DataTableRegistry.cs FALSE
-    ReadOnlyDataAttribute.cs FALSE
-    UnityObjectPathJsonConverter.cs FALSE
+    DataComponent.cs TRUE
+    DataRow.cs TRUE
+    DataTable.cs TRUE
+    DataTableRegistry.cs TRUE
+    ReadOnlyDataAttribute.cs TRUE
+    UnityObjectPathJsonConverter.cs TRUE
   Editor\
     EditorFocusUtility.cs FALSE
   Events\
-    CommonGameEvent.cs FALSE
-    EventComponent.cs FALSE
-    GameEvents.cs FALSE
-    GameGateChangedEvent.cs FALSE
-    MainMenuConfigRequestedEvent.cs FALSE
-    MainMenuExitRequestedEvent.cs FALSE
-    MainMenuLoadRequestedEvent.cs FALSE
-    MainMenuStartRequestedEvent.cs FALSE
-    TransitionLoadProgressChangedEvent.cs FALSE
-    TransitionPhaseChangedEvent.cs FALSE
-    UISceneScopeChangedEvent.cs FALSE
+    CommonGameEvent.cs TRUE
+    EventComponent.cs TRUE
+    GameEvents.cs TRUE
+    GameGateChangedEvent.cs TRUE
+    MainMenuConfigRequestedEvent.cs TRUE
+    MainMenuExitRequestedEvent.cs TRUE
+    MainMenuLoadRequestedEvent.cs TRUE
+    MainMenuStartRequestedEvent.cs TRUE
+    TransitionLoadProgressChangedEvent.cs TRUE
+    TransitionPhaseChangedEvent.cs TRUE
+    UISceneScopeChangedEvent.cs TRUE
   Factory\
     Editor\
       FactoryRegistryGeneratorUtility.cs FALSE
       RegistryGeneratorUtility.cs FALSE
-    FactoryKeyAttribute.cs FALSE
-    GeneratedFactory.cs FALSE
+    FactoryKeyAttribute.cs TRUE
+    GeneratedFactory.cs TRUE
   Flow\
     DungeonGenerationService.cs TRUE DIRTY
-    DungeonState.cs TRUE
+    DungeonState.cs TRUE DIRTY
     GameFlowComponent.cs FALSE
     GameState.cs FALSE
     LoadGameState.cs FALSE
     MainMenuState.cs FALSE
     RunResultState.cs FALSE
-    TownState.cs TRUE
+    TownState.cs TRUE DIRTY
     TrainingState.cs FALSE
     TransitionState.cs FALSE
   GameGate\
     GameGateComponent.cs FALSE
   Input\
-    InputComponent.cs FALSE
+    InputComponent.cs TRUE DIRTY
   Pool\
-    GameObjectPool.cs FALSE
-    IObjectPool.cs FALSE
-    IPoolable.cs FALSE
-    ObjectPool.cs FALSE
-    PoolComponent.cs FALSE
-    PoolPreset.cs FALSE
+    GameObjectPool.cs TRUE
+    IObjectPool.cs TRUE
+    IPoolable.cs TRUE
+    ObjectPool.cs TRUE
+    PoolComponent.cs TRUE
+    PoolPreset.cs TRUE
   Resource\
     Editor\
       BundleBuildConfigData.cs FALSE
@@ -80,25 +80,27 @@
     ResourceComponent.cs FALSE
     ResourceLoadMode.cs FALSE
   Runtime\
-    DungeonSceneRuntimeBuilder.cs TRUE
-    DungeonSceneRuntimeRoot.cs TRUE
-    DungeonSceneVisualUtility.cs TRUE
-    RuntimeDataComponent.cs TRUE
+    DungeonSceneRuntimeBuilder.cs WAIT
+    DungeonSceneRuntimeRoot.cs WAIT
+    DungeonSceneVisualUtility.cs WAIT
+    RuntimeDataComponent.cs WAIT
   SaveData\
-    CurrencyUtility.cs FALSE
-    InventoryUtility.cs FALSE
-    PropInventoryUtility.cs FALSE
-    SaveData.cs FALSE
-    SaveDataComponent.cs TRUE DIRTY
-    SaveVariableData.cs FALSE
+    CurrencyUtility.cs WAIT
+    InventoryUtility.cs WAIT
+    PropInventoryUtility.cs WAIT
+    SaveData.cs TRUE
+    SaveDataComponent.cs WAIT
+    SaveVariableData.cs TRUE
   Scene\
     Editor\
       SubSceneAutoOpenOnPlay.cs FALSE
     AutoOpen.cs FALSE
-    SceneComponent.cs FALSE
+    SceneComponent.cs WAIT
   Settings\
-    GameSettingsComponent.cs FALSE
-    GameSettingsData.cs FALSE
+    GameSettingsComponent.cs TRUE
+    GameSettingsData.cs TRUE
+  Timer\
+    TimerComponent.cs TRUE
   Transition\
     TransitionComponent.cs FALSE
   UI\
@@ -129,25 +131,25 @@
     UISubView.cs FALSE
   EditorComponents.cs FALSE
   EditorLabelAttribute.cs FALSE
-  GameComponent.cs FALSE
-  GameEntry.cs FALSE
-  IGameComponent.cs FALSE
-  PersistentEventSystem.cs FALSE
-  Singleton.cs FALSE
+  GameComponent.cs TRUE
+  GameEntry.cs TRUE
+  IGameComponent.cs TRUE
+  PersistentEventSystem.cs TRUE
+  Singleton.cs TRUE
 Editor\
   PlayFromStartScene.cs FALSE
   UIConfigWindow.cs FALSE
 Game\
   Comparator\
     Editor\
-      ComparatorRegistryGenerator.cs FALSE
-    Comparator.cs FALSE
-    ComparatorFactory.cs FALSE
-    ComparatorRegistry.cs FALSE
-    Condition.cs FALSE
-    ConditionConfig.cs FALSE
-    ICompareType.cs FALSE
-    ISource.cs FALSE
+      ComparatorRegistryGenerator.cs TRUE
+    Comparator.cs TRUE
+    ComparatorFactory.cs TRUE
+    ComparatorRegistry.cs TRUE
+    Condition.cs TRUE
+    ConditionConfig.cs TRUE
+    ICompareType.cs TRUE
+    ISource.cs TRUE
   Config\
   Data\
     Editor\

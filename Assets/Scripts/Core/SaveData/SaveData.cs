@@ -122,14 +122,19 @@ namespace CrystalMagic.Core {
         public List<CharacterPropSlotData> Slots = new();
         public int[] ShortcutSlotIndexes = Array.Empty<int>();
 
-        public void EnsureValid(int slotCount, int shortcutSlotCount)
+        public void EnsureValid(int slotCount, int shortcutSlotCount, List<string> repairedPaths = null, string path = "Props")
         {
-            Slots ??= new List<CharacterPropSlotData>();
+            if (Slots == null)
+            {
+                Slots = new List<CharacterPropSlotData>();
+                repairedPaths?.Add($"{path}.Slots");
+            }
 
             int clampedSlotCount = Math.Max(0, slotCount);
             while (Slots.Count < clampedSlotCount)
             {
                 Slots.Add(new CharacterPropSlotData());
+                repairedPaths?.Add($"{path}.Slots[{Slots.Count - 1}]");
             }
 
             while (Slots.Count > clampedSlotCount)
@@ -139,7 +144,11 @@ namespace CrystalMagic.Core {
 
             for (int i = 0; i < Slots.Count; i++)
             {
-                Slots[i] ??= new CharacterPropSlotData();
+                if (Slots[i] == null)
+                {
+                    Slots[i] = new CharacterPropSlotData();
+                    repairedPaths?.Add($"{path}.Slots[{i}]");
+                }
                 Slots[i].EnsureValid();
             }
 
@@ -162,6 +171,7 @@ namespace CrystalMagic.Core {
                 }
 
                 ShortcutSlotIndexes = resizedShortcuts;
+                repairedPaths?.Add($"{path}.ShortcutSlotIndexes");
             }
 
             for (int i = 0; i < ShortcutSlotIndexes.Length; i++)
@@ -310,11 +320,12 @@ namespace CrystalMagic.Core {
             }
         }
 
-        public void EnsureValid()
+        public void EnsureValid(List<string> repairedPaths = null, string path = "Skills")
         {
             if (Chains == null)
             {
                 Chains = new SkillChainData[5];
+                repairedPaths?.Add($"{path}.Chains");
             }
             else if (Chains.Length != 5)
             {
@@ -326,13 +337,18 @@ namespace CrystalMagic.Core {
                 }
 
                 Chains = resizedChains;
+                repairedPaths?.Add($"{path}.Chains");
             }
 
             for (int i = 0; i < Chains.Length; i++)
             {
-                Chains[i] ??= new SkillChainData();
+                if (Chains[i] == null)
+                {
+                    Chains[i] = new SkillChainData();
+                    repairedPaths?.Add($"{path}.Chains[{i}]");
+                }
                 Chains[i].Index = i;
-                Chains[i].EnsureSlots();
+                Chains[i].EnsureSlots(repairedPaths, $"{path}.Chains[{i}]");
             }
         }
     }
@@ -346,13 +362,21 @@ namespace CrystalMagic.Core {
         public int Index;
         public List<SkillChainSlotData> Slots = new();
 
-        public void EnsureSlots()
+        public void EnsureSlots(List<string> repairedPaths = null, string path = "Skills.Chain")
         {
-            Slots ??= new List<SkillChainSlotData>();
+            if (Slots == null)
+            {
+                Slots = new List<SkillChainSlotData>();
+                repairedPaths?.Add($"{path}.Slots");
+            }
 
             for (int i = 0; i < Slots.Count; i++)
             {
-                Slots[i] ??= new SkillChainSlotData();
+                if (Slots[i] == null)
+                {
+                    Slots[i] = new SkillChainSlotData();
+                    repairedPaths?.Add($"{path}.Slots[{i}]");
+                }
             }
         }
 

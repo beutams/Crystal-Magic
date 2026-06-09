@@ -23,6 +23,7 @@ namespace CrystalMagic.Core
         public sealed override void OnEnter()
         {
             OnEnterBattle();
+            InputComponent.Instance?.SetBattleInputEnabled(true);
             _unitHealthBarManager ??= new UnitHealthBarManager();
             _unitHealthBarManager.Initialize();
             OpenBattleUI();
@@ -32,7 +33,6 @@ namespace CrystalMagic.Core
         public sealed override void OnUpdate()
         {
             OnUpdateBattle();
-            RuntimeDataComponent.Instance?.TickPropSharedCooldown(Time.deltaTime);
             _unitHealthBarManager?.Tick();
             RefreshUIInputLock();
         }
@@ -41,6 +41,7 @@ namespace CrystalMagic.Core
         {
             _unitHealthBarManager?.Dispose();
             _unitHealthBarManager = null;
+            InputComponent.Instance?.SetBattleInputEnabled(false);
             ReleaseUIInputLock();
             UnbindInput();
             OnExitBattle();
@@ -78,7 +79,7 @@ namespace CrystalMagic.Core
 
             InputComponent.Instance.OnInventory += HandleInventory;
             InputComponent.Instance.OnProperty += HandleProperty;
-            InputComponent.Instance.OnPropShortcut += HandlePropShortcut;
+            InputComponent.Instance.OnUseProp += HandlePropShortcut;
             if (UIComponent.Instance != null)
                 UIComponent.Instance.EscapeUnhandled += HandleUnhandledEscape;
             _inputBound = true;
@@ -93,7 +94,7 @@ namespace CrystalMagic.Core
             {
                 InputComponent.Instance.OnInventory -= HandleInventory;
                 InputComponent.Instance.OnProperty -= HandleProperty;
-                InputComponent.Instance.OnPropShortcut -= HandlePropShortcut;
+                InputComponent.Instance.OnUseProp -= HandlePropShortcut;
             }
             if (UIComponent.Instance != null)
                 UIComponent.Instance.EscapeUnhandled -= HandleUnhandledEscape;
@@ -235,9 +236,11 @@ namespace CrystalMagic.Core
             if (TransitionComponent.Instance != null && TransitionComponent.Instance.IsTransitioning)
                 return;
 
-            EntityManager entityManager = World.DefaultGameObjectInjectionWorld?.EntityManager ?? default;
-            if (!entityManager.IsCreated)
+            World world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated)
                 return;
+
+            EntityManager entityManager = world.EntityManager;
 
             EntityQuery playerQuery = entityManager.CreateEntityQuery(
                 ComponentType.ReadOnly<PlayerTag>(),

@@ -1348,7 +1348,7 @@ namespace CrystalMagic.Core
 
         private static DungeonConfig GetDungeonConfig()
         {
-            return ConfigComponent.Instance?.Get<DungeonConfig>() ?? new DungeonConfig();
+            return ConfigComponent.Instance.Get<DungeonConfig>();
         }
 
         private static DungeonThemeData ResolveThemeData(int dungeonFloor)
@@ -2179,6 +2179,15 @@ namespace CrystalMagic.Core
                         depth),
                 });
             }
+        }
+
+        private static bool IsWallTile(DungeonMakerSquareData tile)
+        {
+            return tile is DungeonMakerSquareData.CLOSED
+                or DungeonMakerSquareData.G_CLOSED
+                or DungeonMakerSquareData.NJ_CLOSED
+                or DungeonMakerSquareData.NJ_G_CLOSED
+                or DungeonMakerSquareData.COLUMN;
         }
 
         private static DungeonMakerRegionKind?[,] BuildRegionKindMap(DungeonMakerTunnelingResult layout)

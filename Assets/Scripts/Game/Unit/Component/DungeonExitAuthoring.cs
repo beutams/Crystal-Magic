@@ -24,8 +24,8 @@ public sealed class DungeonExitAuthoring : MonoBehaviour
                 InteractionRange = Mathf.Max(0.5f, authoring.InteractionRange),
                 RequiresRoomClear = 1,
                 IsOpen = 0,
-                ClosedMaterialPath = FixedString128Bytes.Empty,
-                OpenMaterialPath = FixedString128Bytes.Empty,
+                ClosedMaterialPath = default,
+                OpenMaterialPath = default,
             });
         }
     }

@@ -87,17 +87,11 @@ namespace CrystalMagic.Core
             SetSettings(settings);
         }
 
-        public void SetUnitVolume(float value)
+        public void SetSfxVolume(float value)
         {
             GameSettingsData settings = GetSettingsCopy();
-            settings.UnitVolume = value;
-            settings.UIVolume = value;
+            settings.SfxVolume = value;
             SetSettings(settings);
-        }
-
-        public void SetUIVolume(float value)
-        {
-            SetUnitVolume(value);
         }
 
         public void SetScreenShakeScale(float value)
@@ -160,7 +154,6 @@ namespace CrystalMagic.Core
         {
             settings ??= GameSettingsData.CreateDefault();
             settings.Clamp();
-            settings.UIVolume = settings.UnitVolume;
             return settings;
         }
 

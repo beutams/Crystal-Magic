@@ -18,7 +18,7 @@ namespace CrystalMagic.Game.Data
         public int MpCost;
         public float WindupDuration;
         public float ChantDuration;
-        public float RecoveryDuration;.
+        public float RecoveryDuration;
         public bool CanMoveWhileCasting;
         public float MoveSpeedMultiplier;
         public string IconPath;

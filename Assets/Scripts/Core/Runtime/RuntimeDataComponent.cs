@@ -32,7 +32,7 @@ namespace CrystalMagic.Core
         public void Reset()
         {
             _skillData.CurrentSkillChainIndex = 0;
-            _propData.SharedCooldownRemaining = 0f;
+            StopPropSharedCooldown();
             _dungeonMapData.Clear();
         }
 
@@ -72,27 +72,46 @@ namespace CrystalMagic.Core
             return skillConfig?.Chains != null ? skillConfig.Chains.Length : 0;
         }
 
-        public void TickPropSharedCooldown(float deltaTime)
-        {
-            if (_propData.SharedCooldownRemaining <= 0f)
-                return;
-
-            float nextValue = Mathf.Max(0f, _propData.SharedCooldownRemaining - Mathf.Max(0f, deltaTime));
-            if (Mathf.Approximately(nextValue, _propData.SharedCooldownRemaining))
-                return;
-
-            _propData.SharedCooldownRemaining = nextValue;
-            NotifyPropDataChanged();
-        }
-
         public void StartPropSharedCooldown(float cooldownSeconds)
         {
             float nextValue = Mathf.Max(0f, cooldownSeconds);
-            if (Mathf.Approximately(_propData.SharedCooldownRemaining, nextValue))
+            bool hasRegisteredTimer = _propData.SharedCooldownTimerId > 0;
+            if (hasRegisteredTimer
+                && Mathf.Approximately(TimerComponent.Instance.GetRemainingSeconds(_propData.SharedCooldownTimerId), nextValue)
+                && Mathf.Approximately(_propData.SharedCooldownRemaining, nextValue))
                 return;
+
+            if (!hasRegisteredTimer)
+            {
+                _propData.SharedCooldownTimerId = TimerComponent.Instance.Register(
+                    nextValue,
+                    remainingSeconds =>
+                    {
+                        if (Mathf.Approximately(_propData.SharedCooldownRemaining, remainingSeconds))
+                            return;
+
+                        _propData.SharedCooldownRemaining = remainingSeconds;
+                        NotifyPropDataChanged();
+                    },
+                    () =>
+                    {
+                        if (Mathf.Approximately(_propData.SharedCooldownRemaining, 0f))
+                            return;
+
+                        _propData.SharedCooldownRemaining = 0f;
+                        NotifyPropDataChanged();
+                    });
+            }
 
             _propData.SharedCooldownRemaining = nextValue;
             NotifyPropDataChanged();
+            if (nextValue <= 0f)
+            {
+                TimerComponent.Instance.ResetTimer(_propData.SharedCooldownTimerId, 0f, false);
+                return;
+            }
+
+            TimerComponent.Instance.ResetTimer(_propData.SharedCooldownTimerId, nextValue);
         }
 
         public void NotifySkillDataChanged()
@@ -118,6 +137,20 @@ namespace CrystalMagic.Core
             _dungeonMapData.Seed = seed;
             _dungeonMapData.AttemptCount = Mathf.Max(1, attemptCount);
         }
+
+        private void StopPropSharedCooldown(bool notify = true)
+        {
+            if (_propData.SharedCooldownTimerId > 0)
+            {
+                TimerComponent.Instance.Cancel(_propData.SharedCooldownTimerId);
+                _propData.SharedCooldownTimerId = 0;
+            }
+
+            bool changed = !Mathf.Approximately(_propData.SharedCooldownRemaining, 0f);
+            _propData.SharedCooldownRemaining = 0f;
+            if (notify && changed)
+                NotifyPropDataChanged();
+        }
     }
 
     public sealed class RuntimeSkillData
@@ -128,6 +161,7 @@ namespace CrystalMagic.Core
     public sealed class RuntimePropData
     {
         public float SharedCooldownRemaining;
+        public int SharedCooldownTimerId;
     }
 
     public sealed class RuntimeDungeonMapData

@@ -1,0 +1,4 @@
+GeneratedFactory通用工厂模板
+-内容
+    提供注册构造函数并通过string调用
+    有带入参不带入参两种版本

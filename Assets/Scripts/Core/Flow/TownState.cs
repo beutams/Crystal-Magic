@@ -16,6 +16,7 @@ namespace CrystalMagic.Core {
         public override void OnEnter()
         {
             Debug.Log("[TownState] Entered Town");
+            InputComponent.Instance?.SetBattleInputEnabled(false);
             SaveDataComponent.Instance?.SetCurrentLocation(SaveAreaType.Town);
             BindInput();
             

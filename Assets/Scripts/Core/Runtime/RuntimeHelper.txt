@@ -1,1 +1,4 @@
 RuntimeDataComponent
+-内容
+    当前技能链ID
+    当前剩余道具时间计时器

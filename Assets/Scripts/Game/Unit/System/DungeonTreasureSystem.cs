@@ -1,4 +1,5 @@
 using CrystalMagic.Core;
+using CrystalMagic.Game.Data;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;

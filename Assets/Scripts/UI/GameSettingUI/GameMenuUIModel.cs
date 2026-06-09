@@ -33,17 +33,11 @@ namespace CrystalMagic.UI
             PublishChanged();
         }
 
-        public void SetUnitVolume(float value)
+        public void SetSfxVolume(float value)
         {
-            Settings.UnitVolume = value;
-            Settings.UIVolume = value;
+            Settings.SfxVolume = value;
             Settings.Clamp();
             PublishChanged();
-        }
-
-        public void SetUIVolume(float value)
-        {
-            SetUnitVolume(value);
         }
 
         public void SetScreenShakeScale(float value)

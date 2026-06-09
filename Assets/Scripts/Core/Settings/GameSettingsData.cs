@@ -8,16 +8,14 @@ namespace CrystalMagic.Core
     {
         public float MasterVolume = 1f;
         public float BgmVolume = 1f;
-        public float UnitVolume = 1f;
-        public float UIVolume = 1f;
+        public float SfxVolume = 1f;
         public float ScreenShakeScale = 1f;
 
         public void Clamp()
         {
             MasterVolume = Mathf.Clamp01(MasterVolume);
             BgmVolume = Mathf.Clamp01(BgmVolume);
-            UnitVolume = Mathf.Clamp01(UnitVolume);
-            UIVolume = Mathf.Clamp01(UIVolume);
+            SfxVolume = Mathf.Clamp01(SfxVolume);
             ScreenShakeScale = Mathf.Max(0f, ScreenShakeScale);
         }
 
@@ -27,8 +25,7 @@ namespace CrystalMagic.Core
             {
                 MasterVolume = MasterVolume,
                 BgmVolume = BgmVolume,
-                UnitVolume = UnitVolume,
-                UIVolume = UIVolume,
+                SfxVolume = SfxVolume,
                 ScreenShakeScale = ScreenShakeScale,
             };
         }

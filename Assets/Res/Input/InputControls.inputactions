@@ -2,7 +2,7 @@
     "name": "InputControls",
     "maps": [
         {
-            "name": "Town",
+            "name": "Interaction",
             "id": "27f76953-3e0e-4ccc-ac70-4b0bbcc8ee90",
             "actions": [
                 {
@@ -42,33 +42,6 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "ESC",
-                    "type": "Button",
-                    "id": "6a992ad9-b172-43f9-bbbf-e2d27e2b8ba7",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "Skill",
-                    "type": "Value",
-                    "id": "f96b9221-1346-40aa-9f2c-774a8a8a6d68",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": true
-                },
-                {
-                    "name": "Tab",
-                    "type": "Button",
-                    "id": "94cd6c66-bdf5-48b1-97c0-14107825ab66",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
                     "name": "Property",
                     "type": "Button",
                     "id": "eb68eb5f-fab9-48a3-8e14-b777cf609db5",
@@ -76,15 +49,6 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
-                },
-                {
-                    "name": "UseProp",
-                    "type": "Value",
-                    "id": "2a60ad94-4492-4415-acc0-d1a9890f0ea7",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": true
                 }
             ],
             "bindings": [
@@ -178,15 +142,50 @@
                 },
                 {
                     "name": "",
-                    "id": "33df67a0-bfcb-4e13-aaae-a51d75999514",
-                    "path": "<Keyboard>/escape",
+                    "id": "c83455a9-ee26-4f7c-9f2d-525918bda642",
+                    "path": "<Keyboard>/i",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "ESC",
+                    "action": "Property",
                     "isComposite": false,
                     "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "Battle",
+            "id": "dd874c17-9a4d-4c5c-9a03-df6d85154025",
+            "actions": [
+                {
+                    "name": "Skill",
+                    "type": "Value",
+                    "id": "f96b9221-1346-40aa-9f2c-774a8a8a6d68",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
                 },
+                {
+                    "name": "Tab",
+                    "type": "Button",
+                    "id": "94cd6c66-bdf5-48b1-97c0-14107825ab66",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "UseProp",
+                    "type": "Value",
+                    "id": "2a60ad94-4492-4415-acc0-d1a9890f0ea7",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                }
+            ],
+            "bindings": [
                 {
                     "name": "",
                     "id": "8ded4410-a47b-464a-b79a-eb92eaaedafe",
@@ -255,17 +254,6 @@
                 },
                 {
                     "name": "",
-                    "id": "c83455a9-ee26-4f7c-9f2d-525918bda642",
-                    "path": "<Keyboard>/i",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Property",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "7f0054a8-0051-4228-9853-084ff12cdbb8",
                     "path": "<Keyboard>/z",
                     "interactions": "",
@@ -294,6 +282,34 @@
                     "processors": "Scale(factor=3)",
                     "groups": "",
                     "action": "UseProp",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "Global",
+            "id": "1ef42d0f-4aa8-4826-85b0-8d06571f8f78",
+            "actions": [
+                {
+                    "name": "ESC",
+                    "type": "Button",
+                    "id": "9bb0019d-b0ab-4747-9c60-f0f61209f8a2",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "f925bb0b-2eb8-49b0-b2eb-04ff2d361c6d",
+                    "path": "<Keyboard>/escape",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ESC",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

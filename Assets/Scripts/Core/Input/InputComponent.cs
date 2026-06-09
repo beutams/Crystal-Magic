@@ -12,6 +12,7 @@ namespace CrystalMagic.Core {
         private InputControls _controls;
         private bool _playerInputLocked;
         private bool _uiInputLocked;
+        private bool _battleInputEnabled;
 
         #region 事件
         public event Action<Vector2> OnMove;
@@ -22,7 +23,7 @@ namespace CrystalMagic.Core {
         public event Action OnInventory;
         public event Action OnProperty;
         public event Action OnEscape;
-        public event Action<int> OnPropShortcut;
+        public event Action<int> OnUseProp;
         #endregion
 
         #region 调用
@@ -31,18 +32,23 @@ namespace CrystalMagic.Core {
             base.Initialize();
             _controls = new InputControls();
 
-            _controls.Town.Move.performed += HandleMove;
-            _controls.Town.Move.canceled += HandleMoveCanceled;
-            _controls.Town.Interact.performed += HandleInteract;
-            _controls.Town.Click.performed += HandleClick;
-            _controls.Town.Inventory.performed += HandleInventory;
-            _controls.Town.Property.performed += HandleProperty;
-            _controls.Town.Skill.performed += HandleSkill;
-            _controls.Town.Tab.performed += HandleTab;
+            _controls.Interaction.Move.performed += HandleMove;
+            _controls.Interaction.Move.canceled += HandleMoveCanceled;
+            _controls.Interaction.Interact.performed += HandleInteract;
+            _controls.Interaction.Inventory.performed += HandleInventory;
+            _controls.Interaction.Property.performed += HandleProperty;
+            _controls.Battle.Click.performed += HandleClick;
+            _controls.Battle.UseProp.performed += HandleUseProp;
+            _controls.Battle.Skill.performed += HandleSkill;
+            _controls.Battle.Tab.performed += HandleTab;
+            _controls.Global.ESC.performed += HandleEscape;
 
-            _controls.Town.Enable();
+            _controls.Interaction.Enable();
+            _controls.Global.Enable();
+            _controls.Battle.Disable();
             _playerInputLocked = GameGateComponent.Instance.IsPlayerInputLocked;
             _uiInputLocked = GameGateComponent.Instance.IsUIInputLocked;
+            _battleInputEnabled = false;
             ApplyPlayerInputLockState();
             EventComponent.Instance.Subscribe<GameGateChangedEvent>(HandleGameGateChanged);
         }
@@ -52,16 +58,20 @@ namespace CrystalMagic.Core {
             EventComponent.Instance.Unsubscribe<GameGateChangedEvent>(HandleGameGateChanged);
             if (_controls != null)
             {
-                _controls.Town.Move.performed -= HandleMove;
-                _controls.Town.Move.canceled -= HandleMoveCanceled;
-                _controls.Town.Interact.performed -= HandleInteract;
-                _controls.Town.Click.performed -= HandleClick;
-                _controls.Town.Inventory.performed -= HandleInventory;
-                _controls.Town.Property.performed -= HandleProperty;
-                _controls.Town.Skill.performed -= HandleSkill;
-                _controls.Town.Tab.performed -= HandleTab;
+                _controls.Interaction.Move.performed -= HandleMove;
+                _controls.Interaction.Move.canceled -= HandleMoveCanceled;
+                _controls.Interaction.Interact.performed -= HandleInteract;
+                _controls.Interaction.Inventory.performed -= HandleInventory;
+                _controls.Interaction.Property.performed -= HandleProperty;
+                _controls.Battle.Click.performed -= HandleClick;
+                _controls.Battle.UseProp.performed -= HandleUseProp;
+                _controls.Battle.Skill.performed -= HandleSkill;
+                _controls.Battle.Tab.performed -= HandleTab;
+                _controls.Global.ESC.performed -= HandleEscape;
 
-                _controls.Town.Disable();
+                _controls.Interaction.Disable();
+                _controls.Battle.Disable();
+                _controls.Global.Disable();
                 _controls.Dispose();
                 _controls = null;
             }
@@ -74,6 +84,15 @@ namespace CrystalMagic.Core {
         private void HandleInteract(InputAction.CallbackContext ctx) => OnInteract?.Invoke();
         private void HandleInventory(InputAction.CallbackContext ctx) => OnInventory?.Invoke();
         private void HandleProperty(InputAction.CallbackContext ctx) => OnProperty?.Invoke();
+        private void HandleUseProp(InputAction.CallbackContext ctx)
+        {
+            int shortcutNumber = Mathf.RoundToInt(ctx.ReadValue<float>());
+            int shortcutIndex = shortcutNumber - 1;
+            if (shortcutIndex < 0)
+                return;
+
+            OnUseProp?.Invoke(shortcutIndex);
+        }
         private void HandleSkill(InputAction.CallbackContext ctx)
         {
             int skillChainNumber = Mathf.RoundToInt(ctx.ReadValue<float>());
@@ -87,8 +106,20 @@ namespace CrystalMagic.Core {
         {
             RuntimeDataComponent.Instance.SelectNextSkillChain(SaveDataComponent.Instance?.GetSkillData());
         }
-        #endregion
+        private void HandleEscape(InputAction.CallbackContext ctx)
+        {
+            if (_uiInputLocked)
+                return;
 
+            OnEscape?.Invoke();
+        }
+
+        public void SetBattleInputEnabled(bool enabled)
+        {
+            _battleInputEnabled = enabled;
+            ApplyPlayerInputLockState();
+        }
+        #endregion
 
         private void Update()
         {
@@ -96,9 +127,7 @@ namespace CrystalMagic.Core {
             {
                 UpdateWorldPosition();
                 UpdateMousePress();
-                UpdatePropShortcuts();
             }
-            UpdateEscape();
         }
         private void UpdateWorldPosition()
         {
@@ -120,36 +149,10 @@ namespace CrystalMagic.Core {
 
         private void UpdateMousePress()
         {
-            if (_controls == null || !_controls.Town.Click.IsPressed())
+            if (_controls == null || !_controls.Battle.Click.IsPressed())
                 return;
 
             OnMousePress?.Invoke();
-        }
-
-        private void UpdateEscape()
-        {
-            if (_uiInputLocked)
-                return;
-
-            if (Keyboard.current == null || !Keyboard.current.escapeKey.wasPressedThisFrame)
-                return;
-
-            OnEscape?.Invoke();
-        }
-
-        private void UpdatePropShortcuts()
-        {
-            if (Keyboard.current == null)
-                return;
-
-            if (Keyboard.current.f1Key.wasPressedThisFrame)
-                OnPropShortcut?.Invoke(0);
-            if (Keyboard.current.f2Key.wasPressedThisFrame)
-                OnPropShortcut?.Invoke(1);
-            if (Keyboard.current.f3Key.wasPressedThisFrame)
-                OnPropShortcut?.Invoke(2);
-            if (Keyboard.current.f4Key.wasPressedThisFrame)
-                OnPropShortcut?.Invoke(3);
         }
 
         private void HandleGameGateChanged(GameGateChangedEvent gameEvent)
@@ -173,11 +176,19 @@ namespace CrystalMagic.Core {
 
             if (_playerInputLocked)
             {
-                _controls.Town.Disable();
+                _controls.Interaction.Disable();
+                _controls.Battle.Disable();
                 return;
             }
 
-            _controls.Town.Enable();
+            _controls.Interaction.Enable();
+            if (_battleInputEnabled)
+            {
+                _controls.Battle.Enable();
+                return;
+            }
+
+            _controls.Battle.Disable();
         }
     }
 }

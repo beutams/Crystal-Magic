@@ -20,3 +20,6 @@ ReadOnlyDataAttribute
 DataTableRegistry
 -内容
     自动生成所有表的LoadTable函数，从而加载所有表
+UnityObjectPathJsonConverter
+-内容
+    JSON转换器，讲资源path自动转换成Object，省去了load的过程

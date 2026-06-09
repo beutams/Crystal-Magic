@@ -4,11 +4,11 @@ using UnityEngine;
 namespace CrystalMagic.Core
 {
     /// <summary>
-    /// 游戏总入口管理器
+    /// 游戏总入口管理器。
     /// </summary>
     public class GameEntry : Singleton<GameEntry>
     {
-        private List<IGameComponent> _components = new();
+        private readonly List<IGameComponent> _components = new();
         private bool _isInitialized = false;
 
         public EventComponent EventComponent { get; private set; }
@@ -26,6 +26,7 @@ namespace CrystalMagic.Core
         public InputComponent InputComponent { get; private set; }
         public GameGateComponent GameGateComponent { get; private set; }
         public GameFlowComponent GameFlowComponent { get; private set; }
+        public TimerComponent TimerComponent { get; private set; }
 
         protected override void Awake()
         {
@@ -37,7 +38,8 @@ namespace CrystalMagic.Core
             if (!_isInitialized)
             {
                 InitializeAllComponents();
-                // 初始化完成后，转场进入主菜单场景
+
+                // 初始化完成后进入主菜单。
                 GameFlowComponent.Instance.BeginTransition(new TransitionData
                 {
                     TargetSceneName = "MainMenu",
@@ -48,7 +50,7 @@ namespace CrystalMagic.Core
         }
 
         /// <summary>
-        /// 初始化所有游戏组件
+        /// 初始化所有游戏组件。
         /// </summary>
         public void InitializeAllComponents()
         {
@@ -60,27 +62,57 @@ namespace CrystalMagic.Core
 
             Debug.Log("[GameEntry] Initializing game components...");
 
-            // 手动注册各组件
-            RegisterComponent(EventComponent.Instance);
-            RegisterComponent(GameGateComponent.Instance);
-            RegisterComponent(ResourceComponent.Instance);
-            RegisterComponent(PoolComponent.Instance);
-            RegisterComponent(SceneComponent.Instance);
-            RegisterComponent(TransitionComponent.Instance);
-            RegisterComponent(UIComponent.Instance);
-            RegisterComponent(DataComponent.Instance);
-            RegisterComponent(ConfigComponent.Instance);
-            RegisterComponent(CameraComponent.Instance);
-            RegisterComponent(SaveDataComponent.Instance);
-            RegisterComponent(GameSettingsComponent.Instance);
-            RegisterComponent(AudioComponent.Instance);
-            RegisterComponent(InputComponent.Instance);
-            RegisterComponent(GameFlowComponent.Instance);
+            EventComponent = EventComponent.Instance;
+            _components.Add(EventComponent);
 
-            // 按优先级排序
+            GameGateComponent = GameGateComponent.Instance;
+            _components.Add(GameGateComponent);
+
+            ResourceComponent = ResourceComponent.Instance;
+            _components.Add(ResourceComponent);
+
+            PoolComponent = PoolComponent.Instance;
+            _components.Add(PoolComponent);
+
+            SceneComponent = SceneComponent.Instance;
+            _components.Add(SceneComponent);
+
+            TransitionComponent = TransitionComponent.Instance;
+            _components.Add(TransitionComponent);
+
+            UIComponent = UIComponent.Instance;
+            _components.Add(UIComponent);
+
+            DataComponent = DataComponent.Instance;
+            _components.Add(DataComponent);
+
+            ConfigComponent = ConfigComponent.Instance;
+            _components.Add(ConfigComponent);
+
+            CameraComponent = CameraComponent.Instance;
+            _components.Add(CameraComponent);
+
+            SaveDataComponent = SaveDataComponent.Instance;
+            _components.Add(SaveDataComponent);
+
+            GameSettingsComponent = GameSettingsComponent.Instance;
+            _components.Add(GameSettingsComponent);
+
+            AudioComponent = AudioComponent.Instance;
+            _components.Add(AudioComponent);
+
+            InputComponent = InputComponent.Instance;
+            _components.Add(InputComponent);
+
+            GameFlowComponent = GameFlowComponent.Instance;
+            _components.Add(GameFlowComponent);
+
+            TimerComponent = TimerComponent.Instance;
+            _components.Add(TimerComponent);
+
+            // 按优先级排序后依次初始化。
             _components.Sort((a, b) => a.Priority.CompareTo(b.Priority));
 
-            // 初始化每个组件
             foreach (var component in _components)
             {
                 try
@@ -99,55 +131,13 @@ namespace CrystalMagic.Core
         }
 
         /// <summary>
-        /// 注册组件
-        /// </summary>
-        private void RegisterComponent(IGameComponent component)
-        {
-            if (component == null)
-                return;
-
-            _components.Add(component);
-
-            // 存储到对应的属性
-            if (component is EventComponent eventComponent)
-                EventComponent = eventComponent;
-            else if (component is ResourceComponent resourceComponent)
-                ResourceComponent = resourceComponent;
-            else if (component is PoolComponent poolComponent)
-                PoolComponent = poolComponent;
-            else if (component is SceneComponent sceneComponent)
-                SceneComponent = sceneComponent;
-            else if (component is TransitionComponent transitionComponent)
-                TransitionComponent = transitionComponent;
-            else if (component is UIComponent uiComponent)
-                UIComponent = uiComponent;
-            else if (component is DataComponent dataComponent)
-                DataComponent = dataComponent;
-            else if (component is ConfigComponent configComponent)
-                ConfigComponent = configComponent;
-            else if (component is CameraComponent cameraComponent)
-                CameraComponent = cameraComponent;
-            else if (component is SaveDataComponent saveDataComponent)
-                SaveDataComponent = saveDataComponent;
-            else if (component is GameSettingsComponent gameSettingsComponent)
-                GameSettingsComponent = gameSettingsComponent;
-            else if (component is AudioComponent audioComponent)
-                AudioComponent = audioComponent;
-            else if (component is InputComponent inputComponent)
-                InputComponent = inputComponent;
-            else if (component is GameGateComponent gameGateComponent)
-                GameGateComponent = gameGateComponent;
-            else if (component is GameFlowComponent gameFlowComponent)
-                GameFlowComponent = gameFlowComponent;
-        }
-        /// <summary>
-        /// 清理所有组件
+        /// 清理所有组件。
         /// </summary>
         public void CleanupAllComponents()
         {
             Debug.Log("[GameEntry] Cleaning up all components...");
 
-            // 反向顺序清理
+            // 按初始化逆序清理。
             for (int i = _components.Count - 1; i >= 0; i--)
             {
                 try
@@ -170,7 +160,7 @@ namespace CrystalMagic.Core
         }
 
         /// <summary>
-        /// 获取初始化状态
+        /// 当前是否已经完成初始化。
         /// </summary>
         public bool IsInitialized => _isInitialized;
     }

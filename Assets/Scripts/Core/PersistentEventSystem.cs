@@ -4,26 +4,11 @@ using UnityEngine.EventSystems;
 namespace CrystalMagic.Core
 {
     /// <summary>
-    /// 跨场景持久化 EventSystem
-    /// 挂载在 Start 场景的 EventSystem GameObject 上
-    /// 其他场景若含有 EventSystem，加载时自动销毁多余的
+    /// 跨场景持久化的 EventSystem。
+    /// 场景中如果重复创建，会由 Singleton 基类保留首个实例并销毁后续实例。
     /// </summary>
     [RequireComponent(typeof(EventSystem))]
-    public class PersistentEventSystem : MonoBehaviour
+    public class PersistentEventSystem : Singleton<PersistentEventSystem>
     {
-        private static PersistentEventSystem _instance;
-
-        private void Awake()
-        {
-            if (_instance == null)
-            {
-                _instance = this;
-                DontDestroyOnLoad(gameObject);
-            }
-            else
-            {
-                Destroy(gameObject);
-            }
-        }
     }
 }
