@@ -4,7 +4,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(UnitSkillExecuteSystem))]
 [UpdateBefore(typeof(SkillProjectileSystem))]
 public partial class SkillProjectileSpawnSystem : SystemBase
@@ -56,7 +56,6 @@ public partial class SkillProjectileSpawnSystem : SystemBase
         else
             EntityManager.GetBuffer<SkillProjectileHitEntityElement>(projectileEntity).Clear();
 
-        EnsureDestroyFlagDisabled(projectileEntity);
         EnsureAnimationPropertyComponents(projectileEntity);
         ApplyPayloadComponent(projectileEntity, request);
         ApplyAnimation(
@@ -137,14 +136,6 @@ public partial class SkillProjectileSpawnSystem : SystemBase
                     Texture = texture,
                 });
         }
-    }
-
-    private void EnsureDestroyFlagDisabled(Entity entity)
-    {
-        if (!EntityManager.HasComponent<DestroyEntityFlag>(entity))
-            EntityManager.AddComponent<DestroyEntityFlag>(entity);
-
-        EntityManager.SetComponentEnabled<DestroyEntityFlag>(entity, false);
     }
 
     private static quaternion CreateRotation(float3 direction)

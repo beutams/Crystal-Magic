@@ -6,6 +6,7 @@ using UnityEngine;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 
+[UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(NPCInteractInputSystem))]
 partial class NPCInteractionConsumeSystem : SystemBase
 {

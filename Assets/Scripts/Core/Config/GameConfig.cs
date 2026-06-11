@@ -32,6 +32,9 @@ namespace CrystalMagic.Game.Config
         [EditorLabel("战斗道具快捷槽位数")]
         public int BattlePropShortcutSlotCount = 4;
 
+        [EditorLabel("掉落物拾取半径")]
+        public float WorldDropPickupRadius = 0.45f;
+
         [EditorLabel("唯一对象池上限")]
         public int SinglePoolMaxSize = 1;
 

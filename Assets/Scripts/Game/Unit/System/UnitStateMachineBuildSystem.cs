@@ -4,7 +4,7 @@ using CrystalMagic.Game.Data;
 using Unity.Entities;
 using UnityEngine;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(UnitInitializationSystemGroup))]
 [UpdateBefore(typeof(UnitStateMachineSystem))]
 partial class UnitStateMachineBuildSystem : SystemBase
 {

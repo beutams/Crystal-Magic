@@ -9,6 +9,9 @@ namespace CrystalMagic.Game.Data.Effects
         [EditorLabel("Unit Name")]
         public string UnitName;
 
+        [EditorLabel("Candidate Unit Names")]
+        public string[] CandidateUnitNames = System.Array.Empty<string>();
+
         [EditorLabel("Count")]
         public int Count = 1;
 
@@ -32,6 +35,9 @@ namespace CrystalMagic.Game.Data.Effects
             copy.Count = Unity.Mathematics.math.max(1, Count);
             copy.SpawnRadius = ApplyModifierNonNegative(modifiers, SkillModifierChannel.AreaRadius, SpawnRadius);
             copy.MinSpawnRadius = ApplyModifierNonNegative(modifiers, SkillModifierChannel.AreaRadius, MinSpawnRadius);
+            copy.CandidateUnitNames = CandidateUnitNames == null
+                ? System.Array.Empty<string>()
+                : (string[])CandidateUnitNames.Clone();
             return copy;
         }
     }

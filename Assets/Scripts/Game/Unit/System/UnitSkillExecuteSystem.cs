@@ -1,9 +1,8 @@
 using Unity.Entities;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(UnitSkillAnalysisSystem))]
-[UpdateAfter(typeof(UnitSkillSystem))]
-[UpdateAfter(typeof(UnitStateTransitionSystem))]
+[UpdateAfter(typeof(DungeonExitSystem))]
 partial class UnitSkillExecuteSystem : SystemBase
 {
     protected override void OnUpdate()

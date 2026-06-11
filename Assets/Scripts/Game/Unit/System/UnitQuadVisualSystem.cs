@@ -5,7 +5,7 @@ using Unity.Entities;
 using Unity.Rendering;
 using UnityEngine;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(UnitInitializationSystemGroup))]
 partial class UnitQuadVisualSystem : SystemBase
 {
     private const string DefaultUnitMaterialPath = "Assets/Res/Material/Unit.mat";
@@ -18,9 +18,6 @@ partial class UnitQuadVisualSystem : SystemBase
 
     protected override void OnUpdate()
     {
-        if (ResourceComponent.Instance == null)
-            return;
-
         List<PendingVisualApply> pendingVisuals = null;
         using EntityCommandBuffer ecb = new(Allocator.Temp);
         foreach ((RefRW<UnitQuadVisualRequest> request, Entity entity) in

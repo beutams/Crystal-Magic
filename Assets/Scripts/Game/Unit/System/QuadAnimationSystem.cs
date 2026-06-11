@@ -2,7 +2,8 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(UnitExecutionSystemGroup))]
+[UpdateAfter(typeof(UnitAnimationSystem))]
 [UpdateAfter(typeof(SkillProjectileSystem))]
 [UpdateBefore(typeof(DestroyEntitySystem))]
 public partial class QuadAnimationSystem : SystemBase

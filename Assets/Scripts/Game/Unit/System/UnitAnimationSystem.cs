@@ -7,8 +7,8 @@ using Unity.Mathematics;
 using Unity.Rendering;
 using UnityEngine;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
-[UpdateAfter(typeof(UnitStateTransitionSystem))]
+[UpdateInGroup(typeof(UnitExecutionSystemGroup))]
+[UpdateAfter(typeof(UnitStateMachineSystem))]
 [UpdateAfter(typeof(UnitSkillExecuteSystem))]
 partial class UnitAnimationSystem : SystemBase
 {

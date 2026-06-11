@@ -42,8 +42,9 @@ namespace CrystalMagic.Game.Skill.Effects
 
             forward = math.normalize(forward);
 
-            if (!UnitQueryUtility.TryQueryForwardRect(entityManager, originPosition, forward, Data.Length, Data.Width, _hits))
+            if (!UnitQueryUtility.TryGetEntries(entityManager, out DynamicBuffer<UnitQueryEntry> entries))
                 return;
+            UnitQueryUtility.QueryForwardRect(entries, originPosition, forward, Data.Length, Data.Width, _hits);
 
             for (int i = 0; i < _hits.Count; i++)
             {

@@ -9,15 +9,12 @@ using Unity.Rendering;
 using Unity.Transforms;
 using UnityEngine;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(UnitPostProcessSystemGroup))]
 [UpdateBefore(typeof(DestroyEntitySystem))]
 partial class UnitDropOnDestroySystem : SystemBase
 {
     private const string DropPrefabName = "Drop";
-    private const float DefaultPickupRadius = 0.45f;
     private static readonly System.Collections.Generic.Dictionary<string, Material> s_dropMaterials = new();
-    private static Mesh s_dropMesh;
-    private static Material s_dropBaseMaterial;
     private static bool s_loggedMissingDropPrefab;
 
     protected override void OnUpdate()
@@ -51,9 +48,7 @@ partial class UnitDropOnDestroySystem : SystemBase
 
                 int minQuantity = math.max(0, entry.MinQuantity);
                 int maxQuantity = math.max(minQuantity, entry.MaxQuantity);
-                int quantity = maxQuantity > minQuantity
-                    ? random.NextInt(minQuantity, maxQuantity + 1)
-                    : minQuantity;
+                int quantity = maxQuantity > minQuantity ? random.NextInt(minQuantity, maxQuantity + 1) : minQuantity;
                 if (quantity <= 0)
                     continue;
 
@@ -67,11 +62,10 @@ partial class UnitDropOnDestroySystem : SystemBase
         if (entry == null)
             return false;
 
-        return entry.DropType switch
-        {
-            DropRewardType.Money => true,
-            _ => entry.ItemId >= 0,
-        };
+        if (entry.DropType == DropRewardType.Money)
+            return true;
+
+        return entry.ItemId >= 0;
     }
 
     private void SpawnDropEntity(DropEntryData entry, int quantity, float3 position)
@@ -82,42 +76,25 @@ partial class UnitDropOnDestroySystem : SystemBase
             return;
         }
 
-        SetOrAddComponentData(
-            dropEntity,
-            LocalTransform.FromPositionRotationScale(position, quaternion.identity, 1f));
+        SetOrAddComponentData(dropEntity, LocalTransform.FromPositionRotationScale(position, quaternion.identity, 1f));
 
-        SetOrAddComponentData(
-            dropEntity,
-            new WorldDropComponent
+        SetOrAddComponentData(dropEntity, new WorldDropComponent
             {
                 DropType = entry.DropType,
                 ItemId = entry.ItemId,
                 Amount = quantity,
-                PickupRadius = DefaultPickupRadius,
-            });
+            }
+        );
 
-        EnsureDestroyFlagDisabled(dropEntity);
         ApplyDropVisual(dropEntity, entry);
     }
 
     private static Unity.Mathematics.Random CreateRandom(Entity entity, float3 position)
     {
-        uint seed = math.hash(new int4(
-            entity.Index,
-            entity.Version,
-            (int)math.round(position.x * 100f),
-            (int)math.round(position.y * 100f)));
+        uint seed = math.hash(new int4( entity.Index, entity.Version, (int)math.round(position.x * 100f), (int)math.round(position.y * 100f)));
         if (seed == 0)
             seed = 1u;
         return new Unity.Mathematics.Random(seed);
-    }
-
-    private void EnsureDestroyFlagDisabled(Entity entity)
-    {
-        if (!EntityManager.HasComponent<DestroyEntityFlag>(entity))
-            EntityManager.AddComponent<DestroyEntityFlag>(entity);
-
-        EntityManager.SetComponentEnabled<DestroyEntityFlag>(entity, false);
     }
 
     private void SetOrAddComponentData<T>(Entity entity, T value)
@@ -134,8 +111,12 @@ partial class UnitDropOnDestroySystem : SystemBase
         if (!EntityManager.HasComponent<MaterialMeshInfo>(dropEntity))
             return;
 
-        Material dropMaterial = GetOrCreateDropMaterial(entry);
-        Mesh dropMesh = GetDropMesh();
+        RenderMeshArray renderMeshArray = EntityManager.GetSharedComponentManaged<RenderMeshArray>(dropEntity);
+        UnityObjectRef<Mesh>[] meshReferences = renderMeshArray.MeshReferences;
+        UnityObjectRef<Material>[] materialReferences = renderMeshArray.MaterialReferences;
+        Mesh dropMesh = meshReferences != null && meshReferences.Length > 0 ? meshReferences[0].Value : null;
+        Material baseMaterial = materialReferences != null && materialReferences.Length > 0 ? materialReferences[0].Value : null;
+        Material dropMaterial = GetOrCreateDropMaterial(entry, baseMaterial);
         if (dropMaterial == null || dropMesh == null)
             return;
 
@@ -143,24 +124,20 @@ partial class UnitDropOnDestroySystem : SystemBase
         EntityManager.SetComponentData(dropEntity, MaterialMeshInfo.FromRenderMeshArrayIndices(0, 0));
     }
 
-    private Material GetOrCreateDropMaterial(DropEntryData entry)
+    private Material GetOrCreateDropMaterial(DropEntryData entry, Material baseMaterial)
     {
-        string iconPath = GetIconPath(entry);
-        if (string.IsNullOrWhiteSpace(iconPath))
+        string iconPath = AssetPathHelper.GetImageAsset(GetIconPath(entry));
+        if (string.IsNullOrWhiteSpace(iconPath) || baseMaterial == null)
             return null;
 
         if (s_dropMaterials.TryGetValue(iconPath, out Material material) && material != null)
             return material;
 
-        s_dropBaseMaterial ??= ResourceComponent.Instance.Load<Material>("Assets/Res/Material/Drop.mat");
-        if (s_dropBaseMaterial == null)
-            return null;
-
         Texture texture = ResourceComponent.Instance.Load<Texture>(iconPath);
         if (texture == null)
             return null;
 
-        material = new Material(s_dropBaseMaterial);
+        material = new Material(baseMaterial);
         material.SetTexture("_BaseMap", texture);
         s_dropMaterials[iconPath] = material;
         return material;
@@ -178,24 +155,12 @@ partial class UnitDropOnDestroySystem : SystemBase
         return itemData?.IconPath;
     }
 
-    private Mesh GetDropMesh()
-    {
-        if (s_dropMesh != null)
-            return s_dropMesh;
-
-        GameObject dropPrefab = ResourceComponent.Instance.Load<GameObject>(AssetPathHelper.GetDropPrefabAsset(DropPrefabName));
-        s_dropMesh = dropPrefab != null ? dropPrefab.GetComponent<MeshFilter>()?.sharedMesh : null;
-        return s_dropMesh;
-    }
-
     private static void LogMissingDropPrefabOnce()
     {
         if (s_loggedMissingDropPrefab)
             return;
 
         s_loggedMissingDropPrefab = true;
-        Debug.LogWarning(
-            $"[UnitDropOnDestroySystem] Could not instantiate drop prefab '{DropPrefabName}' from EntitySpawnRegistry. " +
-            "Make sure EntitySpawnRegistryAuthoring is baked and the prefab exists under the drop prefab directory.");
+        Debug.LogWarning( $"[UnitDropOnDestroySystem] Could not instantiate drop prefab '{DropPrefabName}' from EntitySpawnRegistry. " + "Make sure EntitySpawnRegistryAuthoring is baked and the prefab exists under the drop prefab directory.");
     }
 }

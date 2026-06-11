@@ -4,6 +4,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
+[UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateBefore(typeof(BehaviorTreeSystem))]
 partial class UnitPerceptionSystem : SystemBase
 {

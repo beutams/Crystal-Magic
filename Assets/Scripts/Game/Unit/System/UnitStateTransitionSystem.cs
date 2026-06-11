@@ -1,7 +1,9 @@
 using Unity.Entities;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
-[UpdateAfter(typeof(UnitStateMachineSystem))]
+[UpdateInGroup(typeof(UnitDecisionSystemGroup))]
+[UpdateAfter(typeof(UnitSkillSystem))]
+[UpdateAfter(typeof(UnitControlSystem))]
+[UpdateBefore(typeof(UnitStateMachineSystem))]
 partial class UnitStateTransitionSystem : SystemBase
 {
     protected override void OnUpdate()

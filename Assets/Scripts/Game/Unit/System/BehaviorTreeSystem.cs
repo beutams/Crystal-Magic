@@ -2,8 +2,8 @@ using CrystalMagic.Core;
 using Unity.Entities;
 using Unity.Mathematics;
 
+[UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateAfter(typeof(UnitPerceptionSystem))]
-[UpdateAfter(typeof(UnitStateTransitionSystem))]
 partial class BehaviorTreeSystem : SystemBase
 {
     private readonly BehaviorTreeContext _context = new();

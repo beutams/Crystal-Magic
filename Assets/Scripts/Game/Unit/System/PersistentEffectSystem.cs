@@ -4,6 +4,8 @@ using CrystalMagic.Game.Skill;
 using Unity.Entities;
 using UnityEngine;
 
+[UpdateInGroup(typeof(UnitExecutionSystemGroup))]
+[UpdateAfter(typeof(SkillProjectileSystem))]
 partial class PersistentEffectSystem : SystemBase
 {
     private readonly List<PersistentEffectInstance> _instances = new();

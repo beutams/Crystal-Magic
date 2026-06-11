@@ -2,6 +2,7 @@ using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using Unity.Entities;
 
+[UpdateInGroup(typeof(UnitInitializationSystemGroup))]
 [UpdateBefore(typeof(UnitBuffSystem))]
 partial class PlayerEquipmentPropertySystem : SystemBase
 {

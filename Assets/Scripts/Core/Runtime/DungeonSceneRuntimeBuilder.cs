@@ -228,10 +228,6 @@ namespace CrystalMagic.Core
                 else
                     entityManager.AddComponentData(monster, new DungeonMonsterSpawnComponent { RegionId = spawn.RegionId });
 
-                if (!entityManager.HasComponent<DestroyEntityFlag>(monster))
-                    entityManager.AddComponent<DestroyEntityFlag>(monster);
-                entityManager.SetComponentEnabled<DestroyEntityFlag>(monster, false);
-
                 spawnedEntities.Add(monster);
             }
         }

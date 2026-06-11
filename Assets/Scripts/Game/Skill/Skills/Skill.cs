@@ -54,12 +54,20 @@ namespace CrystalMagic.Game.Skill
             context.TargetEntity = targetEntity;
         }
 
+        protected static void SetOtherEntity(SkillContent context, bool hasOtherEntity, Entity otherEntity)
+        {
+            context.HasOtherEntity = hasOtherEntity;
+            context.OtherEntity = otherEntity;
+        }
+
         private static void ResetContext(
             SkillContent context,
             EntityManager entityManager,
             Entity entity,
             SkillModifierSet runtimeModifiers)
         {
+            bool preserveHookContext = context.TriggerSource != SkillTriggerSource.None;
+
             context.EntityManager = entityManager;
             context.HasOriginEntity = true;
             context.OriginEntity = entity;
@@ -71,6 +79,17 @@ namespace CrystalMagic.Game.Skill
             context.HasPosition = false;
             context.Position = Vector3.zero;
             context.RuntimeModifiers = runtimeModifiers?.Clone();
+
+            if (!preserveHookContext)
+                context.TriggerSource = SkillTriggerSource.ActiveCast;
+
+            if (context.TriggerSource == SkillTriggerSource.ActiveCast)
+            {
+                context.HookType = SkillHookType.None;
+                context.HasOtherEntity = false;
+                context.OtherEntity = Entity.Null;
+                context.TriggerValue = 0f;
+            }
         }
     }
 }

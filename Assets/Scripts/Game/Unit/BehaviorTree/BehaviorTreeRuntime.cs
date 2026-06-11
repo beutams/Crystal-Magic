@@ -164,13 +164,14 @@ public sealed class BehaviorTreeRuntime
 
 public static class BehaviorTreeBuilder
 {
+    private static BehaviorNodeFactory s_factory;
+
     public static BehaviorTreeRuntime Build(BehaviorTreeData data)
     {
         if (data == null || data.Nodes == null || data.Nodes.Count == 0)
             return null;
 
-        var factory = new BehaviorNodeFactory();
-        BehaviorTreeRegistry.RegisterAll(factory);
+        BehaviorNodeFactory factory = GetFactory();
 
         var runtimeNodes = new Dictionary<string, ABehaviorNode>(System.StringComparer.Ordinal);
         for (int i = 0; i < data.Nodes.Count; i++)
@@ -211,5 +212,15 @@ public static class BehaviorTreeBuilder
         }
 
         return new BehaviorTreeRuntime(root);
+    }
+
+    private static BehaviorNodeFactory GetFactory()
+    {
+        if (s_factory != null)
+            return s_factory;
+
+        s_factory = new BehaviorNodeFactory();
+        BehaviorTreeRegistry.RegisterAll(s_factory);
+        return s_factory;
     }
 }

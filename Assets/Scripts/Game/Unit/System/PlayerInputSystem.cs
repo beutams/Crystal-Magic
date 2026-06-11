@@ -8,7 +8,8 @@ using CrystalMagic.Core;
 /// 玩家输入系统——仅负责将原始输入写入 UnitIntentComponent。
 /// 不直接操作 UnitMoveComponent，由状态机决定如何使用意图。
 /// </summary>
-[UpdateBefore(typeof(UnitStateMachineSystem))]
+[UpdateInGroup(typeof(UnitDecisionSystemGroup))]
+[UpdateBefore(typeof(UnitStateTransitionSystem))]
 partial struct PlayerInputSystem : ISystem
 {
     private NativeReference<float2> _moveInput;

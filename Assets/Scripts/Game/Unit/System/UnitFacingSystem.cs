@@ -1,9 +1,8 @@
 using Unity.Entities;
 using Unity.Mathematics;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(UnitJumpArcSystem))]
-[UpdateBefore(typeof(UnitQueryBuildSystem))]
 partial struct UnitFacingSystem : ISystem
 {
     public void OnUpdate(ref SystemState state)

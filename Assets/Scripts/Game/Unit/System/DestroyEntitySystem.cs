@@ -2,7 +2,7 @@ using Unity.Burst;
 using Unity.Entities;
 
 [BurstCompile]
-[UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
+[UpdateInGroup(typeof(UnitPostProcessSystemGroup), OrderLast = true)]
 [UpdateBefore(typeof(EndSimulationEntityCommandBufferSystem))]
 partial struct DestroyEntitySystem : ISystem
 {

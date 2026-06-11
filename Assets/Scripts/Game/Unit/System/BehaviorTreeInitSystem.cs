@@ -3,6 +3,7 @@ using CrystalMagic.Game.Data;
 using Unity.Entities;
 using UnityEngine;
 
+[UpdateInGroup(typeof(UnitInitializationSystemGroup))]
 [UpdateBefore(typeof(BehaviorTreeSystem))]
 partial class BehaviorTreeInitSystem : SystemBase
 {
@@ -25,7 +26,7 @@ partial class BehaviorTreeInitSystem : SystemBase
                 continue;
             }
 
-            BehaviorTreeData data = DataComponent.Instance?.Find<BehaviorTreeData>(
+            BehaviorTreeData data = DataComponent.Instance.Find<BehaviorTreeData>(
                 row => string.Equals(row.Name, behaviorTree.UnitName, System.StringComparison.Ordinal));
             if (data == null)
             {

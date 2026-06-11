@@ -1,12 +1,14 @@
+using Unity.Entities;
 using System.Collections.Generic;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Data.Effects;
 using CrystalMagic.Game.Skill;
-using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
+[UpdateInGroup(typeof(UnitExecutionSystemGroup))]
+[UpdateAfter(typeof(PersistentEffectSystem))]
 partial class PersistentBeamEffectSystem : SystemBase
 {
     private static ComparatorFactory s_comparatorFactory;
@@ -93,8 +95,9 @@ partial class PersistentBeamEffectSystem : SystemBase
         if (!TryGetBeamOriginAndFacing(instance.Data, instance.Context, out float3 origin, out float2 forward))
             return;
 
-        if (!UnitQueryUtility.TryQueryForwardRect(EntityManager, origin, forward, instance.Data.Length, instance.Data.Width, _hits))
+        if (!UnitQueryUtility.TryGetEntries(EntityManager, out DynamicBuffer<UnitQueryEntry> entries))
             return;
+        UnitQueryUtility.QueryForwardRect(entries, origin, forward, instance.Data.Length, instance.Data.Width, _hits);
 
         for (int i = 0; i < _hits.Count; i++)
         {

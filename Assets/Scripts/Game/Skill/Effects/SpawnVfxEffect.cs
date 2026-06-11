@@ -37,7 +37,6 @@ namespace CrystalMagic.Game.Skill.Effects
                     1f));
 
             EnsureAnimationPropertyComponents(entityManager, vfxEntity);
-            EnsureDestroyFlagDisabled(entityManager, vfxEntity);
             ConfigureAnimation(entityManager, vfxEntity);
             ConfigureFollow(entityManager, vfxEntity, context);
         }
@@ -115,14 +114,6 @@ namespace CrystalMagic.Game.Skill.Effects
             SetOrAddComponentData(entityManager, entity, new UnitAnimationFrameUvSizeProperty { Value = new float4(1f, 1f, 0f, 0f) });
             SetOrAddComponentData(entityManager, entity, new UnitAnimationFrameWorldSizeProperty { Value = new float4(1f, 1f, 0f, 0f) });
             SetOrAddComponentData(entityManager, entity, new UnitAnimationFramePivotOffsetProperty { Value = new float4(0f, 0f, 0f, 0f) });
-        }
-
-        private static void EnsureDestroyFlagDisabled(EntityManager entityManager, Entity entity)
-        {
-            if (!entityManager.HasComponent<DestroyEntityFlag>(entity))
-                entityManager.AddComponent<DestroyEntityFlag>(entity);
-
-            entityManager.SetComponentEnabled<DestroyEntityFlag>(entity, false);
         }
 
         private static void SetOrAddComponentData<T>(EntityManager entityManager, Entity entity, T value)

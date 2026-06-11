@@ -3,10 +3,9 @@ using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(UnitMoveSystem))]
 [UpdateBefore(typeof(UnitSkillExecuteSystem))]
-[UpdateBefore(typeof(UnitQueryBuildSystem))]
 partial class UnitJumpArcSystem : SystemBase
 {
     protected override void OnUpdate()

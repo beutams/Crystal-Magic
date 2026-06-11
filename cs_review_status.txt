@@ -9,7 +9,7 @@
       ConfigEditorWindow.cs FALSE
     ConfigComponent.cs TRUE
     DungeonConfig.cs TRUE
-    GameConfig.cs TRUE
+    GameConfig.cs TRUE DIRTY
     GameConfigAttribute.cs TRUE
     ModifierConfig.cs TRUE
   Data\
@@ -154,14 +154,14 @@ Game\
   Data\
     Editor\
       BuffEditorWindow.cs FALSE
-      DungeonEditorWindow.cs FALSE
+      DungeonEditorWindow.cs TRUE DIRTY
       EquipEditorWindow.cs FALSE
       NPCEditorWindow.cs FALSE
       PropEditorWindow.cs FALSE
       SkillAdditionEditorWindow.cs FALSE
       UnitAnimationProfileEditorWindow.cs FALSE
       UnitEditorAttributeDrawerFactory.cs FALSE
-      UnitEditorAttributeDrawers.cs FALSE
+      UnitEditorAttributeDrawers.cs TRUE
       UnitEditorDrawerContext.cs FALSE
       UnitEditorWindow.cs FALSE
     Effects\
@@ -182,7 +182,7 @@ Game\
       RecoverEffectData.cs FALSE
       SpawnProjectileEffectData.cs FALSE
       SpawnSoundEffectData.cs FALSE
-      SpawnUnitEffectData.cs FALSE
+      SpawnUnitEffectData.cs TRUE
       SpawnVfxEffectData.cs FALSE
     BehaviorTreeData.cs FALSE
     BuffData.cs FALSE
@@ -200,7 +200,7 @@ Game\
     SkillFollowupFilterData.cs FALSE
     SkillFollowupModifierRuleData.cs FALSE
     UnitAnimationClipData.cs FALSE
-    UnitData.cs FALSE
+    UnitData.cs TRUE
   MapDemo\
     Editor\
       TunnelingMapDemoEditor.cs FALSE
@@ -230,7 +230,7 @@ Game\
       RecoverEffect.cs FALSE
       SpawnProjectileEffect.cs FALSE
       SpawnSoundEffect.cs FALSE
-      SpawnUnitEffect.cs FALSE
+      SpawnUnitEffect.cs TRUE
       SpawnVfxEffect.cs FALSE
     Followup\
       Consume\
@@ -245,14 +245,14 @@ Game\
         SequenceSkillFollowupModifierRule.cs FALSE
         StaticSkillFollowupModifierRule.cs FALSE
     Skills\
-      PositionSkill.cs FALSE
-      SelfSkill.cs FALSE
-      Skill.cs FALSE
+      PositionSkill.cs TRUE
+      SelfSkill.cs TRUE
+      Skill.cs TRUE
     SkillAnalysisUtility.cs FALSE
     SkillCastTasks.cs FALSE
     SkillChainResolver.cs FALSE
-    SkillContent.cs FALSE
-    SkillExecutor.cs FALSE
+    SkillContent.cs TRUE
+    SkillExecutor.cs TRUE
     SkillFactory.cs FALSE
     SkillFollowupConsumeRule.cs FALSE
     SkillFollowupConsumeRuleFactory.cs FALSE
@@ -298,13 +298,13 @@ Game\
       UnitAttackAuthoring.cs FALSE
       UnitAuthoringUtility.cs FALSE
       UnitBehaviorTreeAuthoring.cs FALSE
-      UnitBuffAuthoring.cs FALSE
+      UnitBuffAuthoring.cs TRUE
       UnitBuffPayloadComponent.cs FALSE
       UnitCastAuthoring.cs FALSE
       UnitCastSkillPayloadComponent.cs FALSE
       UnitCastTaskPayloadComponent.cs FALSE
       UnitControlComponent.cs FALSE
-      UnitDropAuthoring.cs FALSE
+      UnitDropAuthoring.cs TRUE
       UnitFacingComponent.cs FALSE
       UnitFactionAuthoring.cs FALSE
       UnitIntentAuthoring.cs FALSE
@@ -343,15 +343,16 @@ Game\
       NPCInteractionRuntimeUtility.cs TRUE
       NPCInteractionSession.cs FALSE
     System\
-      BehaviorTreeInitSystem.cs FALSE
+      BehaviorTreeInitSystem.cs TRUE
+        用数据构建出行为树节点对象
       BehaviorTreeSystem.cs FALSE
       DestroyEntitySystem.cs FALSE
-      DungeonExitSystem.cs TRUE
-      DungeonExitInteractionNodes.cs TRUE
-      DungeonTreasureSystem.cs TRUE
-      EntitySpawnRegistryUtility.cs TRUE DIRTY
+      DungeonExitSystem.cs FALSE
+      DungeonExitInteractionNodes.cs FALSE
+      DungeonTreasureSystem.cs FALSE
+      EntitySpawnRegistryUtility.cs FALSE
       NPCInteractInputSystem.cs FALSE
-      NPCInteractionSystem.cs TRUE
+      NPCInteractionSystem.cs FALSE
       NPCInteractPromptSystem.cs FALSE
       PersistentBeamEffectSystem.cs FALSE
       PersistentEffectSystem.cs FALSE
@@ -369,17 +370,20 @@ Game\
       UnitBuffUtility.cs FALSE
       UnitControlSystem.cs FALSE
       UnitControlUtility.cs FALSE
-      UnitDropOnDestroySystem.cs FALSE
+      UnitDropOnDestroySystem.cs TRUE
       UnitFacingSystem.cs FALSE
       UnitJumpArcSystem.cs FALSE
       UnitMoveSystem.cs FALSE
       UnitPerceptionSystem.cs FALSE
       UnitQuadVisualSystem.cs FALSE
-      UnitQuerySystem.cs FALSE
+      UnitQuerySystem.cs TRUE
+        ==缺少四叉树
+        数据化单位位置，提供快速查询接口
       UnitRecoverySystem.cs FALSE
       UnitSkillAnalysisSystem.cs FALSE
       UnitSkillExecuteSystem.cs FALSE
       UnitSkillSystem.cs FALSE
+      UnitSystemGroups.cs FALSE
       UnitStateMachineBuildSystem.cs FALSE
       UnitStateMachineSystem.cs FALSE
       UnitStateTransitionSystem.cs FALSE

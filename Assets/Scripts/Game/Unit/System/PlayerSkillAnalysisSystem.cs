@@ -3,8 +3,8 @@ using CrystalMagic.Game.Skill;
 using Unity.Entities;
 using Unity.Mathematics;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
-[UpdateAfter(typeof(UnitStateTransitionSystem))]
+[UpdateInGroup(typeof(UnitExecutionSystemGroup))]
+[UpdateAfter(typeof(UnitStateMachineSystem))]
 [UpdateBefore(typeof(UnitSkillAnalysisSystem))]
 partial class PlayerSkillAnalysisSystem : SystemBase
 {

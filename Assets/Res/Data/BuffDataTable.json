@@ -1,4 +1,4 @@
-{
+﻿{
   "Rows": [
     {
       "$type": "CrystalMagic.Game.Data.PropertyBuffData, Assembly-CSharp",
@@ -9,7 +9,7 @@
           "Bonus": 0
         }
       ],
-      "Name": "格挡",
+      "Name": "鏍兼尅",
       "CanStack": false,
       "MaxStacks": 1,
       "Id": 0,
@@ -24,7 +24,7 @@
           "Bonus": 0
         }
       ],
-      "Name": "水涡",
+      "Name": "姘存丁",
       "CanStack": false,
       "MaxStacks": 1,
       "Id": 1,
@@ -42,7 +42,7 @@
           "Conditions": []
         }
       ],
-      "Name": "燃烧",
+      "Name": "鐕冪儳",
       "CanStack": true,
       "MaxStacks": 5,
       "Id": 2,
@@ -57,7 +57,7 @@
           "Bonus": 0
         }
       ],
-      "Name": "冻结",
+      "Name": "鍐荤粨",
       "CanStack": false,
       "MaxStacks": 1,
       "Id": 3,
@@ -72,7 +72,7 @@
           "Bonus": 0
         }
       ],
-      "Name": "麻痹",
+      "Name": "楹荤椆",
       "CanStack": false,
       "MaxStacks": 1,
       "Id": 4,
@@ -81,7 +81,7 @@
     {
       "$type": "CrystalMagic.Game.Data.PropertyBuffData, Assembly-CSharp",
       "PropertyModifiers": [],
-      "Name": "蓄能",
+      "Name": "钃勮兘",
       "CanStack": false,
       "MaxStacks": 1,
       "Id": 5,
@@ -106,11 +106,127 @@
           "Bonus": 35
         }
       ],
-      "Name": "狂暴",
+      "Name": "鐙傛毚",
       "CanStack": false,
       "MaxStacks": 1,
       "Id": 6,
       "Category": 0
+    },
+    {
+      "$type": "CrystalMagic.Game.Data.PropertyBuffData, Assembly-CSharp",
+      "PropertyModifiers": [
+        {
+          "Channel": 0,
+          "Factor": -0.4,
+          "Bonus": 0
+        }
+      ],
+      "Name": "蛛网减速",
+      "CanStack": false,
+      "MaxStacks": 1,
+      "Id": 7,
+      "Category": 0
+    },
+    {
+      "$type": "CrystalMagic.Game.Data.EffectBuffData, Assembly-CSharp",
+      "TickIntervalSeconds": 0.1,
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+          "BuffId": 9,
+          "DurationSeconds": 0.15,
+          "StackCount": 1,
+          "Conditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitIsCastingSource",
+              "SourceParam": -1,
+              "CompareType": "IsFalse",
+              "CompareValue": 0.0
+            },
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitHealthRatioSource",
+              "SourceParam": -1,
+              "CompareType": "GreaterThan",
+              "CompareValue": 0.5001
+            }
+          ]
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+          "BuffId": 10,
+          "DurationSeconds": 0.15,
+          "StackCount": 1,
+          "Conditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitHealthRatioSource",
+              "SourceParam": -1,
+              "CompareType": "LessThan",
+              "CompareValue": 0.5001
+            }
+          ]
+        }
+      ],
+      "Name": "重装举盾驱动",
+      "CanStack": false,
+      "MaxStacks": 1,
+      "Id": 8,
+      "Category": 1
+    },
+    {
+      "$type": "CrystalMagic.Game.Data.PropertyBuffData, Assembly-CSharp",
+      "PropertyModifiers": [
+        {
+          "Channel": 0,
+          "Factor": -0.35,
+          "Bonus": 0
+        },
+        {
+          "Channel": 2,
+          "Factor": 0,
+          "Bonus": 18
+        }
+      ],
+      "Name": "重装举盾",
+      "CanStack": false,
+      "MaxStacks": 1,
+      "Id": 9,
+      "Category": 0
+    },
+    {
+      "$type": "CrystalMagic.Game.Data.PropertyBuffData, Assembly-CSharp",
+      "PropertyModifiers": [
+        {
+          "Channel": 0,
+          "Factor": 0.3,
+          "Bonus": 0
+        }
+      ],
+      "Name": "破盾提速",
+      "CanStack": false,
+      "MaxStacks": 1,
+      "Id": 10,
+      "Category": 0
+    },
+    {
+      "$type": "CrystalMagic.Game.Data.EffectBuffData, Assembly-CSharp",
+      "TickIntervalSeconds": 1.0,
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+          "DamageCoefficient": 0.35,
+          "FlatDamageBonus": 4.0,
+          "Element": 0,
+          "Conditions": []
+        }
+      ],
+      "Name": "蜘蛛毒素",
+      "CanStack": false,
+      "MaxStacks": 1,
+      "Id": 11,
+      "Category": 1
     }
   ]
 }

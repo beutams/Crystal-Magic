@@ -244,6 +244,8 @@ namespace CrystalMagic.Game
 
             SkillContent content = new SkillContent
             {
+                TriggerSource = SkillTriggerSource.Script,
+                HookType = SkillHookType.None,
                 EntityManager = context.EntityManager,
                 HasOriginEntity = true,
                 OriginEntity = context.UserEntity,

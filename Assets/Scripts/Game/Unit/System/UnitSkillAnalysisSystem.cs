@@ -3,7 +3,7 @@ using CrystalMagic.Game.Skill;
 using Unity.Entities;
 using Unity.Mathematics;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(PlayerSkillAnalysisSystem))]
 [UpdateBefore(typeof(UnitSkillExecuteSystem))]
 partial class UnitSkillAnalysisSystem : SystemBase

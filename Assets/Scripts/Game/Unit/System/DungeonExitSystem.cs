@@ -5,7 +5,8 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(UnitExecutionSystemGroup))]
+[UpdateAfter(typeof(DungeonTreasureSystem))]
 partial struct DungeonExitSystem : ISystem
 {
     private NativeReference<bool> _interactRequested;

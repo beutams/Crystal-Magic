@@ -1,11 +1,13 @@
 using CrystalMagic.Core;
+using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
-[UpdateAfter(typeof(UnitDropOnDestroySystem))]
+[UpdateInGroup(typeof(UnitExecutionSystemGroup))]
+[UpdateAfter(typeof(NPCInteractionConsumeSystem))]
+[UpdateBefore(typeof(DungeonTreasureSystem))]
 partial class WorldDropPickupSystem : SystemBase
 {
     protected override void OnCreate()
@@ -15,6 +17,9 @@ partial class WorldDropPickupSystem : SystemBase
 
     protected override void OnUpdate()
     {
+        float pickupRadius = math.max(0f, ConfigComponent.Instance.Get<GameConfig>().WorldDropPickupRadius);
+        float pickupRadiusSq = pickupRadius * pickupRadius;
+
         bool hasPlayer = false;
         float3 playerPosition = float3.zero;
         foreach ((RefRO<PlayerTag> _, RefRO<LocalTransform> transform) in
@@ -36,7 +41,7 @@ partial class WorldDropPickupSystem : SystemBase
         {
             WorldDropComponent drop = dropRef.ValueRO;
             float distanceSq = math.lengthsq((playerPosition - transformRef.ValueRO.Position).xy);
-            if (distanceSq > drop.PickupRadius * drop.PickupRadius)
+            if (distanceSq > pickupRadiusSq)
                 continue;
 
             if (!TryPickup(drop, backpackData, propData))

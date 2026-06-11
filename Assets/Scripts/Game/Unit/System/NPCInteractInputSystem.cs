@@ -2,6 +2,7 @@ using CrystalMagic.Core;
 using Unity.Collections;
 using Unity.Entities;
 
+[UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(NPCInteractPromptSystem))]
 partial struct NPCInteractInputSystem : ISystem
 {

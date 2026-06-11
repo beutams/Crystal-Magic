@@ -1,7 +1,7 @@
-{
+﻿{
   "Rows": [
     {
-      "Name": "蓄能",
+      "Name": "钃勮兘",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "SelfSkill",
@@ -42,7 +42,7 @@
       "Id": 0
     },
     {
-      "Name": "火球",
+      "Name": "鐏悆",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "PositionSkill",
@@ -140,7 +140,7 @@
       "Id": 1
     },
     {
-      "Name": "火焰冲击",
+      "Name": "鐏劙鍐插嚮",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "PositionSkill",
@@ -224,7 +224,7 @@
       "Id": 2
     },
     {
-      "Name": "引爆",
+      "Name": "寮曠垎",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "PositionSkill",
@@ -323,7 +323,7 @@
       "Id": 3
     },
     {
-      "Name": "水涡",
+      "Name": "姘存丁",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "PositionSkill",
@@ -430,7 +430,7 @@
       "Id": 4
     },
     {
-      "Name": "冰刺",
+      "Name": "鍐板埡",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "PositionSkill",
@@ -528,7 +528,7 @@
       "Id": 5
     },
     {
-      "Name": "冻结",
+      "Name": "鍐荤粨",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "PositionSkill",
@@ -590,7 +590,7 @@
       "Id": 6
     },
     {
-      "Name": "雷击",
+      "Name": "闆峰嚮",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "PositionSkill",
@@ -624,7 +624,7 @@
       "Id": 7
     },
     {
-      "Name": "雷域",
+      "Name": "闆峰煙",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "PositionSkill",
@@ -686,7 +686,7 @@
       "Id": 8
     },
     {
-      "Name": "雷爆",
+      "Name": "闆风垎",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "PositionSkill",
@@ -720,7 +720,7 @@
       "Id": 9
     },
     {
-      "Name": "加速",
+      "Name": "鍔犻€?,
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "SelfSkill",
@@ -754,7 +754,7 @@
       "Id": 10
     },
     {
-      "Name": "回复",
+      "Name": "鍥炲",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "SelfSkill",
@@ -788,7 +788,7 @@
       "Id": 11
     },
     {
-      "Name": "屏障",
+      "Name": "灞忛殰",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "PositionSkill",
@@ -866,8 +866,8 @@
       "Id": 12
     },
     {
-      "Name": "M双拳砸地",
-      "IsMonsterSkill": false,
+      "Name": "鍙屾嫵鐮稿湴",
+      "IsMonsterSkill": true,
       "Description": "",
       "RuntimeType": "SelfSkill",
       "MpCost": 0,
@@ -986,8 +986,8 @@
       "Id": 13
     },
     {
-      "Name": "M巨石投掷",
-      "IsMonsterSkill": false,
+      "Name": "宸ㄧ煶鎶曟幏",
+      "IsMonsterSkill": true,
       "Description": "",
       "RuntimeType": "PositionSkill",
       "MpCost": 0,
@@ -1078,8 +1078,8 @@
       "Id": 14
     },
     {
-      "Name": "M巨像激光",
-      "IsMonsterSkill": false,
+      "Name": "宸ㄥ儚婵€鍏?,
+      "IsMonsterSkill": true,
       "Description": "",
       "RuntimeType": "SelfSkill",
       "MpCost": 0,
@@ -1134,8 +1134,8 @@
       "Id": 15
     },
     {
-      "Name": "M狂暴",
-      "IsMonsterSkill": false,
+      "Name": "鐙傛毚",
+      "IsMonsterSkill": true,
       "Description": "",
       "RuntimeType": "SelfSkill",
       "MpCost": 0,
@@ -1160,8 +1160,8 @@
       "Id": 16
     },
     {
-      "Name": "M跳跃重压",
-      "IsMonsterSkill": false,
+      "Name": "璺宠穬閲嶅帇",
+      "IsMonsterSkill": true,
       "Description": "",
       "RuntimeType": "PositionSkill",
       "MpCost": 0,
@@ -1234,8 +1234,8 @@
       "Id": 17
     },
     {
-      "Name": "M双拳砸地·狂暴",
-      "IsMonsterSkill": false,
+      "Name": "双拳砸地·狂暴",
+      "IsMonsterSkill": true,
       "Description": "",
       "RuntimeType": "SelfSkill",
       "MpCost": 0,
@@ -1354,8 +1354,8 @@
       "Id": 18
     },
     {
-      "Name": "M巨石投掷·三连",
-      "IsMonsterSkill": false,
+      "Name": "巨石投掷·三连",
+      "IsMonsterSkill": true,
       "Description": "",
       "RuntimeType": "PositionSkill",
       "MpCost": 0,
@@ -1454,8 +1454,8 @@
       "Id": 19
     },
     {
-      "Name": "M巨像激光爆裂",
-      "IsMonsterSkill": false,
+      "Name": "巨像激光爆裂",
+      "IsMonsterSkill": true,
       "Description": "",
       "RuntimeType": "SelfSkill",
       "MpCost": 0,
@@ -1559,8 +1559,8 @@
       "Id": 20
     },
     {
-      "Name": "M小巨像横扫",
-      "IsMonsterSkill": false,
+      "Name": "小巨像横扫",
+      "IsMonsterSkill": true,
       "Description": "",
       "RuntimeType": "PositionSkill",
       "MpCost": 0,
@@ -1606,6 +1606,671 @@
       "CastTasks": [],
       "FollowupEffects": [],
       "Id": 21
+    },
+    {
+      "Name": "哥布林横扫",
+      "IsMonsterSkill": true,
+      "Description": "",
+      "RuntimeType": "PositionSkill",
+      "MpCost": 0,
+      "WindupDuration": 0.3,
+      "ChantDuration": 0,
+      "RecoveryDuration": 0.25,
+      "CanMoveWhileCasting": false,
+      "MoveSpeedMultiplier": 1,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.ConeSearchEffectData, Assembly-CSharp",
+          "Radius": 3,
+          "AngleDegrees": 100,
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitIsEnemySource",
+              "SourceParam": -1,
+              "CompareType": "IsTrue",
+              "CompareValue": 0
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "DamageCoefficient": 1.8,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "CastTasks": [],
+      "FollowupEffects": [],
+      "Id": 22
+    },
+    {
+      "Name": "哥布林射击",
+      "IsMonsterSkill": true,
+      "Description": "",
+      "RuntimeType": "PositionSkill",
+      "MpCost": 0,
+      "WindupDuration": 0.25,
+      "ChantDuration": 0.15,
+      "RecoveryDuration": 0.2,
+      "CanMoveWhileCasting": false,
+      "MoveSpeedMultiplier": 1,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnProjectileEffectData, Assembly-CSharp",
+          "Speed": 14,
+          "MaxRange": 24,
+          "SpawnOffsetDistance": 0.8,
+          "Scale": 0.9,
+          "Width": 0.9,
+          "Height": 0.9,
+          "FlightTexture": null,
+          "FlightGridColumns": 4,
+          "FlightGridRows": 4,
+          "FlightFrameCount": 16,
+          "FlightFramesPerSecond": 16,
+          "DestroyTexture": null,
+          "DestroyGridColumns": 4,
+          "DestroyGridRows": 4,
+          "DestroyFrameCount": 16,
+          "DestroyFramesPerSecond": 16,
+          "CanPierce": false,
+          "TriggerDestroyEffectsOnMaxRange": true,
+          "OnCollisionEffects": null,
+          "OnDestoryEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+              "Radius": 1.2,
+              "CenterOffset": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "TargetConditions": [
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitIsEnemySource",
+                  "SourceParam": -1,
+                  "CompareType": "IsTrue",
+                  "CompareValue": 0
+                }
+              ],
+              "OnAfterSearch": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+                  "DamageCoefficient": 1.6,
+                  "FlatDamageBonus": 0,
+                  "Element": 0,
+                  "Conditions": []
+                }
+              ],
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "CastTasks": [],
+      "FollowupEffects": [],
+      "Id": 23
+    },
+    {
+      "Name": "史莱姆跳跃",
+      "IsMonsterSkill": true,
+      "Description": "",
+      "RuntimeType": "PositionSkill",
+      "MpCost": 0,
+      "WindupDuration": 0.35,
+      "ChantDuration": 0.55,
+      "RecoveryDuration": 0.35,
+      "CanMoveWhileCasting": false,
+      "MoveSpeedMultiplier": 1,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+          "Radius": 3.2,
+          "CenterOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitIsEnemySource",
+              "SourceParam": -1,
+              "CompareType": "IsTrue",
+              "CompareValue": 0
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "DamageCoefficient": 2.2,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.KnockbackEffectData, Assembly-CSharp",
+              "Force": 6,
+              "DurationSeconds": 0.18,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "CastTasks": [
+        {
+          "$type": "CrystalMagic.Game.Data.JumpArcSkillCastTaskData, Assembly-CSharp",
+          "DurationSeconds": 0.35,
+          "ArcHeight": 1.6,
+          "HookPoint": 1
+        }
+      ],
+      "FollowupEffects": [],
+      "Id": 24
+    },
+    {
+      "Name": "蜘蛛丝喷吐",
+      "IsMonsterSkill": true,
+      "Description": "",
+      "RuntimeType": "PositionSkill",
+      "MpCost": 0,
+      "WindupDuration": 0.3,
+      "ChantDuration": 0.2,
+      "RecoveryDuration": 0.25,
+      "CanMoveWhileCasting": false,
+      "MoveSpeedMultiplier": 1,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnProjectileEffectData, Assembly-CSharp",
+          "Speed": 10,
+          "MaxRange": 18,
+          "SpawnOffsetDistance": 0.7,
+          "Scale": 0.9,
+          "Width": 0.9,
+          "Height": 0.9,
+          "FlightTexture": null,
+          "FlightGridColumns": 4,
+          "FlightGridRows": 4,
+          "FlightFrameCount": 16,
+          "FlightFramesPerSecond": 16,
+          "DestroyTexture": null,
+          "DestroyGridColumns": 4,
+          "DestroyGridRows": 4,
+          "DestroyFrameCount": 16,
+          "DestroyFramesPerSecond": 16,
+          "CanPierce": false,
+          "TriggerDestroyEffectsOnMaxRange": true,
+          "OnCollisionEffects": null,
+          "OnDestoryEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+              "Radius": 1.4,
+              "CenterOffset": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "TargetConditions": [
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitIsEnemySource",
+                  "SourceParam": -1,
+                  "CompareType": "IsTrue",
+                  "CompareValue": 0
+                }
+              ],
+              "OnAfterSearch": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+                  "DamageCoefficient": 1.1,
+                  "FlatDamageBonus": 0,
+                  "Element": 0,
+                  "Conditions": []
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+                  "BuffId": 7,
+                  "DurationSeconds": 2.5,
+                  "StackCount": 1,
+                  "Conditions": []
+                }
+              ],
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "CastTasks": [],
+      "FollowupEffects": [],
+      "Id": 25
+    },
+    {
+      "Name": "蜘蛛扇咬",
+      "IsMonsterSkill": true,
+      "Description": "",
+      "RuntimeType": "PositionSkill",
+      "MpCost": 0,
+      "WindupDuration": 0.25,
+      "ChantDuration": 0,
+      "RecoveryDuration": 0.2,
+      "CanMoveWhileCasting": false,
+      "MoveSpeedMultiplier": 1,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.ConeSearchEffectData, Assembly-CSharp",
+          "Radius": 2.6,
+          "AngleDegrees": 95,
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitIsEnemySource",
+              "SourceParam": -1,
+              "CompareType": "IsTrue",
+              "CompareValue": 0
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "DamageCoefficient": 1.7,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "CastTasks": [],
+      "FollowupEffects": [],
+      "Id": 26
+    },
+    {
+      "Name": "重装挥砍",
+      "IsMonsterSkill": true,
+      "Description": "",
+      "RuntimeType": "PositionSkill",
+      "MpCost": 0,
+      "WindupDuration": 0.32,
+      "ChantDuration": 0.0,
+      "RecoveryDuration": 0.28,
+      "CanMoveWhileCasting": false,
+      "MoveSpeedMultiplier": 1.0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.ConeSearchEffectData, Assembly-CSharp",
+          "Radius": 3.2,
+          "AngleDegrees": 110.0,
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitIsEnemySource",
+              "SourceParam": -1,
+              "CompareType": "IsTrue",
+              "CompareValue": 0.0
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "DamageCoefficient": 2.1,
+              "FlatDamageBonus": 0.0,
+              "Element": 0,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.KnockbackEffectData, Assembly-CSharp",
+              "Force": 4.5,
+              "DurationSeconds": 0.12,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "CastTasks": [],
+      "FollowupEffects": [],
+      "Id": 27
+    },
+    {
+      "Name": "重装跳劈",
+      "IsMonsterSkill": true,
+      "Description": "",
+      "RuntimeType": "PositionSkill",
+      "MpCost": 0,
+      "WindupDuration": 0.45,
+      "ChantDuration": 0.55,
+      "RecoveryDuration": 0.35,
+      "CanMoveWhileCasting": false,
+      "MoveSpeedMultiplier": 1.0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+          "Radius": 3.6,
+          "CenterOffset": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitIsEnemySource",
+              "SourceParam": -1,
+              "CompareType": "IsTrue",
+              "CompareValue": 0.0
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "DamageCoefficient": 2.8,
+              "FlatDamageBonus": 0.0,
+              "Element": 0,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.KnockbackEffectData, Assembly-CSharp",
+              "Force": 7.0,
+              "DurationSeconds": 0.18,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "CastTasks": [
+        {
+          "$type": "CrystalMagic.Game.Data.JumpArcSkillCastTaskData, Assembly-CSharp",
+          "DurationSeconds": 0.4,
+          "ArcHeight": 1.9,
+          "HookPoint": 1
+        }
+      ],
+      "FollowupEffects": [],
+      "Id": 28
+    },
+    {
+      "Name": "蜘蛛跳扑",
+      "IsMonsterSkill": true,
+      "Description": "",
+      "RuntimeType": "PositionSkill",
+      "MpCost": 0,
+      "WindupDuration": 0.35,
+      "ChantDuration": 0.45,
+      "RecoveryDuration": 0.25,
+      "CanMoveWhileCasting": false,
+      "MoveSpeedMultiplier": 1.0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+          "Radius": 3.0,
+          "CenterOffset": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitIsEnemySource",
+              "SourceParam": -1,
+              "CompareType": "IsTrue",
+              "CompareValue": 0.0
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "DamageCoefficient": 2.4,
+              "FlatDamageBonus": 0.0,
+              "Element": 0,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+              "BuffId": 11,
+              "DurationSeconds": 3.0,
+              "StackCount": 1,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "CastTasks": [
+        {
+          "$type": "CrystalMagic.Game.Data.JumpArcSkillCastTaskData, Assembly-CSharp",
+          "DurationSeconds": 0.35,
+          "ArcHeight": 1.75,
+          "HookPoint": 1
+        }
+      ],
+      "FollowupEffects": [],
+      "Id": 29
+    },
+    {
+      "Name": "蜘蛛捕食",
+      "IsMonsterSkill": true,
+      "Description": "",
+      "RuntimeType": "PositionSkill",
+      "MpCost": 0,
+      "WindupDuration": 0.42,
+      "ChantDuration": 0.0,
+      "RecoveryDuration": 0.28,
+      "CanMoveWhileCasting": false,
+      "MoveSpeedMultiplier": 1.0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.ConeSearchEffectData, Assembly-CSharp",
+          "Radius": 2.5,
+          "AngleDegrees": 75.0,
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitIsEnemySource",
+              "SourceParam": -1,
+              "CompareType": "IsTrue",
+              "CompareValue": 0.0
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "DamageCoefficient": 2.0,
+              "FlatDamageBonus": 0.0,
+              "Element": 0,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.StunEffectData, Assembly-CSharp",
+              "DurationSeconds": 0.8,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+              "BuffId": 11,
+              "DurationSeconds": 3.0,
+              "StackCount": 1,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "CastTasks": [],
+      "FollowupEffects": [],
+      "Id": 30
+    },
+    {
+      "Name": "哥布林光球",
+      "IsMonsterSkill": true,
+      "Description": "",
+      "RuntimeType": "PositionSkill",
+      "MpCost": 0,
+      "WindupDuration": 0.28,
+      "ChantDuration": 0.2,
+      "RecoveryDuration": 0.2,
+      "CanMoveWhileCasting": false,
+      "MoveSpeedMultiplier": 1.0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnProjectileEffectData, Assembly-CSharp",
+          "Speed": 11.5,
+          "MaxRange": 24.0,
+          "SpawnOffsetDistance": 0.8,
+          "Scale": 1.1,
+          "Width": 1.1,
+          "Height": 1.1,
+          "FlightTexture": null,
+          "FlightGridColumns": 4,
+          "FlightGridRows": 4,
+          "FlightFrameCount": 16,
+          "FlightFramesPerSecond": 16.0,
+          "DestroyTexture": null,
+          "DestroyGridColumns": 4,
+          "DestroyGridRows": 4,
+          "DestroyFrameCount": 16,
+          "DestroyFramesPerSecond": 16.0,
+          "CanPierce": false,
+          "TriggerDestroyEffectsOnMaxRange": true,
+          "OnCollisionEffects": null,
+          "OnDestoryEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+              "Radius": 1.8,
+              "CenterOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "TargetConditions": [
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitIsEnemySource",
+                  "SourceParam": -1,
+                  "CompareType": "IsTrue",
+                  "CompareValue": 0.0
+                }
+              ],
+              "OnAfterSearch": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+                  "DamageCoefficient": 1.9,
+                  "FlatDamageBonus": 0.0,
+                  "Element": 0,
+                  "Conditions": []
+                }
+              ],
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "CastTasks": [],
+      "FollowupEffects": [],
+      "Id": 31
+    },
+    {
+      "Name": "召唤哥布林",
+      "IsMonsterSkill": true,
+      "Description": "",
+      "RuntimeType": "SelfSkill",
+      "MpCost": 0,
+      "WindupDuration": 0.45,
+      "ChantDuration": 0.65,
+      "RecoveryDuration": 0.35,
+      "CanMoveWhileCasting": false,
+      "MoveSpeedMultiplier": 1.0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnUnitEffectData, Assembly-CSharp",
+          "UnitName": "",
+          "CandidateUnitNames": [
+            "MonsterGoblinWarrior",
+            "MonsterGoblinArcher"
+          ],
+          "Count": 4,
+          "SpawnRadius": 4.6,
+          "MinSpawnRadius": 1.5,
+          "CenterOffset": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "CopyFactionFromCaster": true,
+          "Conditions": []
+        }
+      ],
+      "CastTasks": [],
+      "FollowupEffects": [],
+      "Id": 32
+    },
+    {
+      "Name": "召唤重装哥布林",
+      "IsMonsterSkill": true,
+      "Description": "",
+      "RuntimeType": "SelfSkill",
+      "MpCost": 0,
+      "WindupDuration": 0.55,
+      "ChantDuration": 0.75,
+      "RecoveryDuration": 0.4,
+      "CanMoveWhileCasting": false,
+      "MoveSpeedMultiplier": 1.0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnUnitEffectData, Assembly-CSharp",
+          "UnitName": "MonsterGoblinShield",
+          "CandidateUnitNames": [],
+          "Count": 1,
+          "SpawnRadius": 3.8,
+          "MinSpawnRadius": 1.2,
+          "CenterOffset": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "CopyFactionFromCaster": true,
+          "Conditions": []
+        }
+      ],
+      "CastTasks": [],
+      "FollowupEffects": [],
+      "Id": 33
     }
   ]
 }

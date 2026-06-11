@@ -41,6 +41,11 @@ namespace CrystalMagic.Core
             return $"Assets/Res/Prefab/VFX/{prefabName}.prefab";
         }
 
+        public static string GetImageAsset(string imagePathOrFileName)
+        {
+            return $"Assets/Res/Images/{imagePathOrFileName}.png";
+        }
+
         public static string GetConfigAsset(string configName)
         {
             return $"Assets/Res/Config/{configName}.json";

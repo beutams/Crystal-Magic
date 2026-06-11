@@ -1,8 +1,8 @@
 using Unity.Entities;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(UnitDecisionSystemGroup), OrderLast = true)]
 [UpdateAfter(typeof(UnitStateMachineBuildSystem))]
-[UpdateBefore(typeof(UnitStateTransitionSystem))]
+[UpdateAfter(typeof(UnitStateTransitionSystem))]
 partial class UnitStateMachineSystem : SystemBase
 {
     protected override void OnUpdate()

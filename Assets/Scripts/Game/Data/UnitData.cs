@@ -58,6 +58,9 @@ namespace CrystalMagic.Game.Data
                     case UnitSkillModuleData skillModule:
                         skillModule.Skills ??= new List<UnitSkillSlotData>();
                         break;
+                    case UnitBuffModuleData buffModule:
+                        buffModule.Buffs ??= new List<UnitInitialBuffEntry>();
+                        break;
                 }
             }
         }
@@ -113,6 +116,20 @@ namespace CrystalMagic.Game.Data
     public sealed class UnitPerceptionModuleData : UnitModuleData
     {
         public float SearchRadius = 8f;
+    }
+
+    [System.Serializable]
+    public sealed class UnitBuffModuleData : UnitModuleData
+    {
+        public List<UnitInitialBuffEntry> Buffs = new();
+    }
+
+    [System.Serializable]
+    public sealed class UnitInitialBuffEntry
+    {
+        public int BuffId = -1;
+        public float DurationSeconds = -1f;
+        public int StackCount = 1;
     }
 
     [System.Serializable]

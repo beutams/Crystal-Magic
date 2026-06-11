@@ -3,6 +3,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 
 [BurstCompile]
+[UpdateInGroup(typeof(UnitInitializationSystemGroup))]
 [UpdateAfter(typeof(UnitBuffSystem))]
 partial struct UnitRecoverySystem : ISystem
 {

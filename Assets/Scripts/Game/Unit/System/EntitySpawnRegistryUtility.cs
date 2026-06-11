@@ -60,6 +60,7 @@ namespace CrystalMagic.Game.Unit
             }
 
             instance = entityManager.Instantiate(prefab);
+            InitializeDestroyFlag(entityManager, instance);
             return instance != Entity.Null;
         }
 
@@ -72,6 +73,7 @@ namespace CrystalMagic.Game.Unit
             }
 
             instance = entityManager.Instantiate(prefab);
+            InitializeDestroyFlag(entityManager, instance);
             return instance != Entity.Null;
         }
 
@@ -107,6 +109,7 @@ namespace CrystalMagic.Game.Unit
             }
 
             instance = entityManager.Instantiate(prefab);
+            InitializeDestroyFlag(entityManager, instance);
             return instance != Entity.Null;
         }
 
@@ -142,6 +145,7 @@ namespace CrystalMagic.Game.Unit
             }
 
             instance = entityManager.Instantiate(prefab);
+            InitializeDestroyFlag(entityManager, instance);
             return instance != Entity.Null;
         }
 
@@ -177,7 +181,19 @@ namespace CrystalMagic.Game.Unit
             }
 
             instance = entityManager.Instantiate(prefab);
+            InitializeDestroyFlag(entityManager, instance);
             return instance != Entity.Null;
+        }
+
+        public static void InitializeDestroyFlag(EntityManager entityManager, Entity entity)
+        {
+            if (entity == Entity.Null || !entityManager.Exists(entity))
+                return;
+
+            if (!entityManager.HasComponent<DestroyEntityFlag>(entity))
+                entityManager.AddComponent<DestroyEntityFlag>(entity);
+
+            entityManager.SetComponentEnabled<DestroyEntityFlag>(entity, false);
         }
 
         private static bool TryGetRegistryEntity(EntityManager entityManager, out Entity registryEntity)

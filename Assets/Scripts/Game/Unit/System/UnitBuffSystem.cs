@@ -6,7 +6,8 @@ using CrystalMagic.Game.Skill;
 using Unity.Entities;
 using UnityEngine;
 
-[UpdateBefore(typeof(UnitMoveSystem))]
+[UpdateInGroup(typeof(UnitInitializationSystemGroup))]
+[UpdateBefore(typeof(UnitRecoverySystem))]
 partial class UnitBuffSystem : SystemBase
 {
     private readonly SkillContent _buffTickContext = new();
@@ -167,6 +168,11 @@ partial class UnitBuffSystem : SystemBase
         }
 
         _buffTickContext.EntityManager = EntityManager;
+        _buffTickContext.TriggerSource = SkillTriggerSource.BuffHook;
+        _buffTickContext.HookType = SkillHookType.OnBuffTick;
+        _buffTickContext.HasOtherEntity = false;
+        _buffTickContext.OtherEntity = Entity.Null;
+        _buffTickContext.TriggerValue = 0f;
         _buffTickContext.HasOriginEntity = hasOriginEntity;
         _buffTickContext.OriginEntity = originEntity;
         _buffTickContext.SourceSkillId = element.SourceSkillId;
@@ -175,6 +181,8 @@ partial class UnitBuffSystem : SystemBase
         _buffTickContext.HasTarget = false;
         _buffTickContext.Target = null;
         _buffTickContext.Origin = null;
+        _buffTickContext.HasPosition = false;
+        _buffTickContext.Position = Vector3.zero;
         _buffTickContext.RuntimeModifiers = null;
 
         for (int i = 0; i < executeCount; i++)

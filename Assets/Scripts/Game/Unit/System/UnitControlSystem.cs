@@ -1,9 +1,10 @@
 using Unity.Entities;
 using Unity.Mathematics;
 
+[UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateAfter(typeof(PlayerInputSystem))]
 [UpdateAfter(typeof(BehaviorTreeSystem))]
-[UpdateAfter(typeof(UnitStateTransitionSystem))]
+[UpdateBefore(typeof(UnitStateTransitionSystem))]
 partial struct UnitControlSystem : ISystem
 {
     public void OnUpdate(ref SystemState state)

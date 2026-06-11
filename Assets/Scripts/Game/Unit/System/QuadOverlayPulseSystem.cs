@@ -1,7 +1,7 @@
 using Unity.Entities;
 using Unity.Mathematics;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(UnitAnimationSystem))]
 [UpdateAfter(typeof(QuadAnimationSystem))]
 [UpdateBefore(typeof(DestroyEntitySystem))]

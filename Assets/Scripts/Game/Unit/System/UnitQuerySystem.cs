@@ -19,7 +19,7 @@ public struct UnitQueryEntry : IBufferElementData
     public float3 Position;
 }
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(UnitInitializationSystemGroup), OrderFirst = true)]
 [UpdateBefore(typeof(UnitPerceptionSystem))]
 [UpdateBefore(typeof(SkillProjectileSystem))]
 partial class UnitQueryBuildSystem : SystemBase
@@ -53,6 +53,22 @@ partial class UnitQueryBuildSystem : SystemBase
 
 public static class UnitQueryUtility
 {
+    public static bool TryGetEntries(EntityManager entityManager, out DynamicBuffer<UnitQueryEntry> entries)
+    {
+        EntityQuery singletonQuery = entityManager.CreateEntityQuery(
+            ComponentType.ReadOnly<UnitQuerySingleton>(),
+            ComponentType.ReadOnly<UnitQueryEntry>());
+        if (singletonQuery.IsEmptyIgnoreFilter)
+        {
+            entries = default;
+            return false;
+        }
+
+        Entity singletonEntity = singletonQuery.GetSingletonEntity();
+        entries = entityManager.GetBuffer<UnitQueryEntry>(singletonEntity, true);
+        return true;
+    }
+
     public static void QueryCircle(DynamicBuffer<UnitQueryEntry> entries, float3 center, float radius, List<UnitQueryHit> results)
     {
         results.Clear();
@@ -71,23 +87,6 @@ public static class UnitQueryUtility
                 Position = entry.Position,
             });
         }
-    }
-
-    public static bool TryQueryCircle(EntityManager entityManager, float3 center, float radius, List<UnitQueryHit> results)
-    {
-        EntityQuery singletonQuery = entityManager.CreateEntityQuery(
-            ComponentType.ReadOnly<UnitQuerySingleton>(),
-            ComponentType.ReadOnly<UnitQueryEntry>());
-        if (singletonQuery.IsEmptyIgnoreFilter)
-        {
-            results.Clear();
-            return false;
-        }
-
-        Entity singletonEntity = singletonQuery.GetSingletonEntity();
-        DynamicBuffer<UnitQueryEntry> entries = entityManager.GetBuffer<UnitQueryEntry>(singletonEntity, true);
-        QueryCircle(entries, center, radius, results);
-        return true;
     }
 
     public static void QueryForwardRect(
@@ -125,29 +124,6 @@ public static class UnitQueryUtility
                 Position = entry.Position,
             });
         }
-    }
-
-    public static bool TryQueryForwardRect(
-        EntityManager entityManager,
-        float3 origin,
-        float2 forward,
-        float length,
-        float width,
-        List<UnitQueryHit> results)
-    {
-        EntityQuery singletonQuery = entityManager.CreateEntityQuery(
-            ComponentType.ReadOnly<UnitQuerySingleton>(),
-            ComponentType.ReadOnly<UnitQueryEntry>());
-        if (singletonQuery.IsEmptyIgnoreFilter)
-        {
-            results.Clear();
-            return false;
-        }
-
-        Entity singletonEntity = singletonQuery.GetSingletonEntity();
-        DynamicBuffer<UnitQueryEntry> entries = entityManager.GetBuffer<UnitQueryEntry>(singletonEntity, true);
-        QueryForwardRect(entries, origin, forward, length, width, results);
-        return true;
     }
 
     public static void QueryCone(
@@ -197,26 +173,4 @@ public static class UnitQueryUtility
         }
     }
 
-    public static bool TryQueryCone(
-        EntityManager entityManager,
-        float3 origin,
-        float2 forward,
-        float radius,
-        float angleDegrees,
-        List<UnitQueryHit> results)
-    {
-        EntityQuery singletonQuery = entityManager.CreateEntityQuery(
-            ComponentType.ReadOnly<UnitQuerySingleton>(),
-            ComponentType.ReadOnly<UnitQueryEntry>());
-        if (singletonQuery.IsEmptyIgnoreFilter)
-        {
-            results.Clear();
-            return false;
-        }
-
-        Entity singletonEntity = singletonQuery.GetSingletonEntity();
-        DynamicBuffer<UnitQueryEntry> entries = entityManager.GetBuffer<UnitQueryEntry>(singletonEntity, true);
-        QueryCone(entries, origin, forward, radius, angleDegrees, results);
-        return true;
-    }
 }
