@@ -75,8 +75,10 @@ public class UnitStateMachineComponent : IComponentData
 {
     public int UnitDataId;
     public string UnitName;
+    [System.NonSerialized] public AUnitState InitialState;
     [System.NonSerialized] public AUnitState CurrentState;
     [System.NonSerialized] public AUnitState PreviousState;
+    public string InitialStateName = "None";
     public string CurrentStateName = "None";
     public string PreviousStateName = "None";
     public float StateTime;

@@ -20,8 +20,7 @@ partial class UnitQuadVisualSystem : SystemBase
     {
         List<PendingVisualApply> pendingVisuals = null;
         using EntityCommandBuffer ecb = new(Allocator.Temp);
-        foreach ((RefRW<UnitQuadVisualRequest> request, Entity entity) in
-                 SystemAPI.Query<RefRW<UnitQuadVisualRequest>>().WithEntityAccess())
+        foreach ((RefRW<UnitQuadVisualRequest> request, Entity entity) in SystemAPI.Query<RefRW<UnitQuadVisualRequest>>().WithEntityAccess())
         {
             if (request.ValueRO.IsApplied != 0)
                 continue;

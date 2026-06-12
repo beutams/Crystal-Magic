@@ -54,6 +54,7 @@ public class UnitSkillAuthoring : MonoBehaviour
             }
 
             AddComponent(entity, component);
+            AddComponentObject(entity, new UnitSkillModifierRuntimeComponent());
         }
     }
 }

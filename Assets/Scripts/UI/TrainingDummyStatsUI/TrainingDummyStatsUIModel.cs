@@ -146,13 +146,13 @@ namespace CrystalMagic.UI
                 snapshot.MaxAcceleration = move.RealMaxAcceleration;
             }
 
-            if (entityManager.HasBuffer<UnitBuffElement>(dummyEntity))
+            if (entityManager.HasComponent<UnitBuffRuntimeComponent>(dummyEntity))
             {
-                DynamicBuffer<UnitBuffElement> buffs = entityManager.GetBuffer<UnitBuffElement>(dummyEntity);
+                UnitBuffRuntimeComponent runtimeComponent = entityManager.GetComponentObject<UnitBuffRuntimeComponent>(dummyEntity);
                 int activeBuffCount = 0;
-                for (int i = 0; i < buffs.Length; i++)
+                for (int i = 0; i < runtimeComponent.Buffs.Count; i++)
                 {
-                    if (buffs[i].BuffId >= 0 && buffs[i].StackCount > 0)
+                    if (runtimeComponent.Buffs[i].BuffId >= 0 && runtimeComponent.Buffs[i].StackCount > 0)
                         activeBuffCount++;
                 }
 

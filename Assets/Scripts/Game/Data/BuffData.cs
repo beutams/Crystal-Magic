@@ -20,12 +20,18 @@ namespace CrystalMagic.Game.Data
         public string Name;
         public bool CanStack;
         public int MaxStacks = 1;
+        public List<PropertyModifierEntry> PropertyModifiers = new();
+        public List<SkillModifierEntry> SkillModifiers = new();
+        [EditorLabel("触发间隔(秒)")]
+        public float TickIntervalSeconds;
+        [SerializeReference]
+        public EffectData[] EffectChain = System.Array.Empty<EffectData>();
         public abstract BuffCategory Category { get; }
     }
 
     public enum PropertyModifierChannel
     {
-        [EditorLabel("移速")]
+        [EditorLabel("移动速度")]
         MoveSpeed = 0,
         [EditorLabel("最大生命")]
         MaxHealth = 1,
@@ -83,19 +89,21 @@ namespace CrystalMagic.Game.Data
             if (!_entries.TryGetValue(entry.Channel, out PropertyModifierAccumulator current))
             {
                 current.Channel = entry.Channel;
-                current.FactorMultiplier = 1f;
+                current.FactorSum = 0f;
             }
 
-            current.FactorMultiplier *= math.pow(math.max(0f, 1f + entry.Factor), math.max(1, stacks));
+            current.FactorSum += entry.Factor * math.max(1, stacks);
             current.Bonus += entry.Bonus * stacks;
             _entries[entry.Channel] = current;
         }
 
         public float GetFactor(PropertyModifierChannel channel)
         {
-            return _entries.TryGetValue(channel, out PropertyModifierAccumulator entry)
-                ? math.max(GetMinimumFactor(channel), entry.FactorMultiplier)
-                : 1f;
+            if (!_entries.TryGetValue(channel, out PropertyModifierAccumulator entry))
+                return 1f;
+
+            float factor = math.max(0f, 1f + entry.FactorSum);
+            return math.max(GetMinimumFactor(channel), factor);
         }
 
         public float GetBonus(PropertyModifierChannel channel)
@@ -113,7 +121,7 @@ namespace CrystalMagic.Game.Data
         private struct PropertyModifierAccumulator
         {
             public PropertyModifierChannel Channel;
-            public float FactorMultiplier;
+            public float FactorSum;
             public float Bonus;
         }
     }
@@ -122,8 +130,6 @@ namespace CrystalMagic.Game.Data
     [System.Serializable]
     public class PropertyBuffData : BuffData
     {
-        public List<PropertyModifierEntry> PropertyModifiers = new();
-
         public override BuffCategory Category => BuffCategory.PropertyModifier;
     }
 
@@ -131,21 +137,13 @@ namespace CrystalMagic.Game.Data
     [System.Serializable]
     public class EffectBuffData : BuffData
     {
-        [EditorLabel("触发间隔(秒)")]
-        public float TickIntervalSeconds;
-
         public override BuffCategory Category => BuffCategory.Effect;
-
-        [SerializeReference]
-        public EffectData[] EffectChain = System.Array.Empty<EffectData>();
     }
 
     [ReadOnlyData]
     [System.Serializable]
     public class SkillModifierBuffData : BuffData
     {
-        public List<SkillModifierEntry> SkillModifiers = new();
-
         public override BuffCategory Category => BuffCategory.SkillModifier;
     }
 }

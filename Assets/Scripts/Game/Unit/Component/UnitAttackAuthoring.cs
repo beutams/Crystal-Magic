@@ -17,10 +17,6 @@ public class UnitAttackAuthoring : MonoBehaviour
             float baseRange  = 1f;
             float baseActionSpeedBonus = 0f;
             float baseChantSpeedBonus = 0f;
-            float baseWaterPowerBonus = 0f;
-            float baseFirePowerBonus = 0f;
-            float baseLightningPowerBonus = 0f;
-            float baseWindPowerBonus = 0f;
             UnitAttackModuleData data = UnitAuthoringUtility.ResolveModuleData<UnitAttackModuleData>(authoring);
             if (data != null)
             {
@@ -28,10 +24,6 @@ public class UnitAttackAuthoring : MonoBehaviour
                 baseRange  = data.BaseSkillRange;
                 baseActionSpeedBonus = data.BaseActionSpeedBonus;
                 baseChantSpeedBonus = data.BaseChantSpeedBonus;
-                baseWaterPowerBonus = data.BaseWaterPowerBonus;
-                baseFirePowerBonus = data.BaseFirePowerBonus;
-                baseLightningPowerBonus = data.BaseLightningPowerBonus;
-                baseWindPowerBonus = data.BaseWindPowerBonus;
             }
 
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
@@ -56,21 +48,10 @@ public class UnitAttackAuthoring : MonoBehaviour
             });
             AddComponent(entity, new UnitElementComponent
             {
-                WaterPower = baseWaterPowerBonus,
-                EquipmentWaterPower = 0f,
-                FirePower = baseFirePowerBonus,
-                EquipmentFirePower = 0f,
-                LightningPower = baseLightningPowerBonus,
-                EquipmentLightningPower = 0f,
-                WindPower = baseWindPowerBonus,
-                EquipmentWindPower = 0f,
-            });
-            AddComponent(entity, new UnitElementBaseComponent
-            {
-                WaterPower = baseWaterPowerBonus,
-                FirePower = baseFirePowerBonus,
-                LightningPower = baseLightningPowerBonus,
-                WindPower = baseWindPowerBonus,
+                WaterPower = 0f,
+                FirePower = 0f,
+                LightningPower = 0f,
+                WindPower = 0f,
             });
         }
     }
@@ -111,13 +92,9 @@ public struct UnitAttackComponent : IComponentData
 public struct UnitElementComponent : IComponentData
 {
     public float WaterPower;
-    public float EquipmentWaterPower;
     public float FirePower;
-    public float EquipmentFirePower;
     public float LightningPower;
-    public float EquipmentLightningPower;
     public float WindPower;
-    public float EquipmentWindPower;
 
     public float GetPowerBonus(CrystalMagic.Game.Data.Effects.ElementType elementType)
     {
@@ -130,12 +107,4 @@ public struct UnitElementComponent : IComponentData
             _ => 0f,
         };
     }
-}
-
-public struct UnitElementBaseComponent : IComponentData
-{
-    public float WaterPower;
-    public float FirePower;
-    public float LightningPower;
-    public float WindPower;
 }

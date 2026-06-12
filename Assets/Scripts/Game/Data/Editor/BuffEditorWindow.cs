@@ -521,15 +521,10 @@ namespace CrystalMagic.Editor.Data
 
             if (EditorGUI.EndChangeCheck())
                 _isDirty = true;
-
-
-            // -------------------- 子类字段 --------------------
-            if (buff is PropertyBuffData propBuff)
-                DrawPropertyBuffFields(propBuff);
-            else if (buff is EffectBuffData effectBuff)
-                DrawEffectBuffFields(effectBuff);
-            else if (buff is SkillModifierBuffData skillModifierBuff)
-                DrawSkillModifierFields(skillModifierBuff);
+            // -------------------- Buff 能力字段 --------------------
+            DrawPropertyBuffFields(buff);
+            DrawSkillModifierFields(buff);
+            DrawEffectBuffFields(buff);
 
             EditorGUIUtility.labelWidth = prevLabelWidth;
             EditorGUILayout.EndScrollView();
@@ -539,7 +534,7 @@ namespace CrystalMagic.Editor.Data
         // --------------------
         // PropertyBuffData 字段
         // --------------------
-        private void DrawPropertyBuffFields(PropertyBuffData buff)
+        private void DrawPropertyBuffFields(BuffData buff)
         {
             DrawSectionHeader("属性修饰");
             buff.PropertyModifiers ??= new List<PropertyModifierEntry>();
@@ -622,7 +617,7 @@ namespace CrystalMagic.Editor.Data
         // --------------------
         // SkillModifierBuffData 字段
         // --------------------
-        private void DrawSkillModifierFields(SkillModifierBuffData buff)
+        private void DrawSkillModifierFields(BuffData buff)
         {
             DrawSectionHeader("技能修正");
             buff.SkillModifiers ??= new List<SkillModifierEntry>();
@@ -669,7 +664,7 @@ namespace CrystalMagic.Editor.Data
             }
         }
 
-        private void DrawEffectBuffFields(EffectBuffData buff)
+        private void DrawEffectBuffFields(BuffData buff)
         {
             DrawSectionHeader("效果触发");
             buff.TickIntervalSeconds = EditorGUILayout.FloatField("触发间隔 (秒)", buff.TickIntervalSeconds);

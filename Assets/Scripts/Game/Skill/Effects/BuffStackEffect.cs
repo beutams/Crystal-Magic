@@ -13,24 +13,19 @@ namespace CrystalMagic.Game.Skill.Effects
 
         public override void Execute(SkillContent context)
         {
-            if (Data == null ||
-                context == null ||
-                !context.HasTargetEntity ||
-                Data.BuffId < 0)
-            {
+            if (Data == null || context == null || !context.HasTargetEntity || Data.BuffId < 0)
                 return;
-            }
 
             EntityManager entityManager = context.EntityManager;
             Entity target = context.TargetEntity;
             if (target == Entity.Null ||
                 !entityManager.Exists(target) ||
-                !entityManager.HasBuffer<UnitBuffElement>(target))
+                !UnitBuffUtility.TryGetRuntimeComponent(entityManager, target, out UnitBuffRuntimeComponent runtimeComponent))
             {
                 return;
             }
 
-            int stackCount = GetBuffStackCount(entityManager.GetBuffer<UnitBuffElement>(target, true), Data.BuffId);
+            int stackCount = GetBuffStackCount(runtimeComponent, Data.BuffId);
             if (stackCount <= 0)
                 return;
 
@@ -40,13 +35,16 @@ namespace CrystalMagic.Game.Skill.Effects
             SkillExecutor.ExecuteEffects(Data.OnAfterRead, childContext);
         }
 
-        private static int GetBuffStackCount(DynamicBuffer<UnitBuffElement> buffer, int buffId)
+        private static int GetBuffStackCount(UnitBuffRuntimeComponent runtimeComponent, int buffId)
         {
-            for (int i = 0; i < buffer.Length; i++)
+            if (runtimeComponent?.Buffs == null)
+                return 0;
+
+            for (int i = 0; i < runtimeComponent.Buffs.Count; i++)
             {
-                UnitBuffElement element = buffer[i];
-                if (element.BuffId == buffId)
-                    return math.max(0, element.StackCount);
+                UnitBuffRuntimeEntry entry = runtimeComponent.Buffs[i];
+                if (entry.BuffId == buffId)
+                    return math.max(0, entry.StackCount);
             }
 
             return 0;
@@ -61,44 +59,35 @@ namespace CrystalMagic.Game.Skill.Effects
 
         public override void Execute(SkillContent context)
         {
-            if (Data == null ||
-                context == null ||
-                !context.HasTargetEntity ||
-                Data.BuffId < 0)
-            {
+            if (Data == null || context == null || !context.HasTargetEntity || Data.BuffId < 0)
                 return;
-            }
 
             EntityManager entityManager = context.EntityManager;
             Entity target = context.TargetEntity;
             if (target == Entity.Null ||
                 !entityManager.Exists(target) ||
-                !entityManager.HasBuffer<UnitBuffElement>(target))
+                !UnitBuffUtility.TryGetRuntimeComponent(entityManager, target, out UnitBuffRuntimeComponent runtimeComponent))
             {
                 return;
             }
 
-            DynamicBuffer<UnitBuffElement> buffer = entityManager.GetBuffer<UnitBuffElement>(target);
-            for (int i = 0; i < buffer.Length; i++)
+            for (int i = 0; i < runtimeComponent.Buffs.Count; i++)
             {
-                UnitBuffElement element = buffer[i];
-                if (element.BuffId != Data.BuffId)
+                UnitBuffRuntimeEntry entry = runtimeComponent.Buffs[i];
+                if (entry.BuffId != Data.BuffId)
                     continue;
 
                 if (Data.RemoveAllStacks)
                 {
-                    buffer.RemoveAt(i);
+                    runtimeComponent.Buffs.RemoveAt(i);
                     return;
                 }
 
-                int remainStack = element.StackCount - math.max(1, Data.RemoveStackCount);
+                int remainStack = entry.StackCount - math.max(1, Data.RemoveStackCount);
                 if (remainStack <= 0)
-                    buffer.RemoveAt(i);
+                    runtimeComponent.Buffs.RemoveAt(i);
                 else
-                {
-                    element.StackCount = remainStack;
-                    buffer[i] = element;
-                }
+                    entry.StackCount = remainStack;
 
                 return;
             }

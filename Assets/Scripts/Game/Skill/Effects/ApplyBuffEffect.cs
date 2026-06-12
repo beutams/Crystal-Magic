@@ -22,89 +22,70 @@ namespace CrystalMagic.Game.Skill.Effects
             if (target == Entity.Null || !entityManager.Exists(target))
                 return;
 
-            if (!entityManager.HasBuffer<UnitBuffElement>(target))
-                return;
-
             BuffData buffData = DataComponent.Instance?.Get<BuffData>(Data.BuffId);
             if (buffData == null)
                 return;
 
-            DynamicBuffer<UnitBuffElement> buffer = entityManager.GetBuffer<UnitBuffElement>(target);
+            UnitBuffRuntimeComponent runtimeComponent = UnitBuffUtility.GetOrCreateRuntimeComponent(entityManager, target);
+            if (runtimeComponent == null)
+                return;
+
             int stackToApply = math.max(1, Data.StackCount);
             float duration = Data.DurationSeconds < 0f ? -1f : math.max(0f, Data.DurationSeconds);
-            EffectBuffData effectBuffData = buffData as EffectBuffData;
-            bool isEffectBuff = effectBuffData != null;
-            float nextTickTime = isEffectBuff && effectBuffData.TickIntervalSeconds > 0f
-                ? effectBuffData.TickIntervalSeconds
+            bool hasTickEffect = buffData.TickIntervalSeconds > 0f && buffData.EffectChain != null && buffData.EffectChain.Length > 0;
+            float nextTickTime = hasTickEffect
+                ? buffData.TickIntervalSeconds
                 : 0f;
-            EffectData[] runtimeEffectChain = isEffectBuff
-                ? CreateRuntimeEffectChain(context, effectBuffData)
-                : null;
+            EffectData[] runtimeEffectChain = hasTickEffect
+                ? CreateRuntimeEffectChain(context, buffData)
+                : System.Array.Empty<EffectData>();
             bool hasOriginEntity = context.HasOriginEntity && context.OriginEntity != Entity.Null;
             Entity originEntity = hasOriginEntity ? context.OriginEntity : Entity.Null;
             int sourceSkillId = context.SourceSkillId;
 
-            for (int i = 0; i < buffer.Length; i++)
+            for (int i = 0; i < runtimeComponent.Buffs.Count; i++)
             {
-                UnitBuffElement element = buffer[i];
-                if (element.BuffId != Data.BuffId)
+                UnitBuffRuntimeEntry entry = runtimeComponent.Buffs[i];
+                if (entry.BuffId != Data.BuffId)
                     continue;
 
-                bool replaceRuntimePayload = isEffectBuff &&
-                    (element.RuntimePayloadId < 0 || IsIncomingDurationLonger(element.RemainingTime, duration));
+                bool replaceRuntimeEffectChain = hasTickEffect &&
+                    (entry.RuntimeEffectChain == null || entry.RuntimeEffectChain.Length == 0 || IsIncomingDurationLonger(entry.RemainingTime, duration));
 
-                element.RemainingTime = GetPreferredDuration(element.RemainingTime, duration);
-                element.NextTickTime = nextTickTime;
-                element.StackCount = buffData.CanStack
-                    ? math.min(math.max(1, buffData.MaxStacks), math.max(1, element.StackCount) + stackToApply)
+                entry.RemainingTime = GetPreferredDuration(entry.RemainingTime, duration);
+                entry.NextTickTime = nextTickTime;
+                entry.StackCount = buffData.CanStack
+                    ? math.min(math.max(1, buffData.MaxStacks), math.max(1, entry.StackCount) + stackToApply)
                     : 1;
-                element.HasOriginEntity = hasOriginEntity ? (byte)1 : (byte)0;
-                element.OriginEntity = originEntity;
-                element.SourceSkillId = sourceSkillId;
-
-                if (replaceRuntimePayload)
-                {
-                    element.RuntimePayloadId = UnitBuffUtility.SetEffectBuffPayload(
-                        entityManager,
-                        target,
-                        element.RuntimePayloadId,
-                        runtimeEffectChain,
-                        hasOriginEntity,
-                        originEntity);
-                }
-
-                buffer[i] = element;
+                entry.HasOriginEntity = hasOriginEntity;
+                entry.OriginEntity = originEntity;
+                entry.SourceSkillId = sourceSkillId;
+                entry.InitializeFromDefinition(buffData, replaceRuntimeEffectChain ? runtimeEffectChain : entry.RuntimeEffectChain);
+                if (replaceRuntimeEffectChain)
+                    entry.RuntimeEffectChain = runtimeEffectChain ?? System.Array.Empty<EffectData>();
                 return;
             }
 
-            int runtimePayloadId = isEffectBuff
-                ? UnitBuffUtility.SetEffectBuffPayload(
-                    entityManager,
-                    target,
-                    -1,
-                    runtimeEffectChain,
-                    hasOriginEntity,
-                    originEntity)
-                : -1;
-
-            buffer.Add(new UnitBuffElement
+            UnitBuffRuntimeEntry newEntry = new()
             {
                 BuffId = Data.BuffId,
                 RemainingTime = duration,
                 NextTickTime = nextTickTime,
-                RuntimePayloadId = runtimePayloadId,
-                HasOriginEntity = hasOriginEntity ? (byte)1 : (byte)0,
-                OriginEntity = originEntity,
-                SourceSkillId = sourceSkillId,
                 StackCount = buffData.CanStack
                     ? math.min(math.max(1, buffData.MaxStacks), stackToApply)
                     : 1,
-            });
+                HasOriginEntity = hasOriginEntity,
+                OriginEntity = originEntity,
+                SourceSkillId = sourceSkillId,
+                RuntimeEffectChain = runtimeEffectChain ?? System.Array.Empty<EffectData>(),
+            };
+            newEntry.InitializeFromDefinition(buffData, newEntry.RuntimeEffectChain);
+            runtimeComponent.Buffs.Add(newEntry);
         }
 
-        private static EffectData[] CreateRuntimeEffectChain(SkillContent context, EffectBuffData effectBuffData)
+        private static EffectData[] CreateRuntimeEffectChain(SkillContent context, BuffData buffData)
         {
-            if (context == null || effectBuffData?.EffectChain == null || effectBuffData.EffectChain.Length == 0)
+            if (context == null || buffData?.EffectChain == null || buffData.EffectChain.Length == 0)
                 return System.Array.Empty<EffectData>();
 
             UnitElementComponent? originElementComponent = null;
@@ -117,7 +98,7 @@ namespace CrystalMagic.Game.Skill.Effects
             }
 
             return EffectData.CreateRuntimeCopies(
-                effectBuffData.EffectChain,
+                buffData.EffectChain,
                 context.RuntimeModifiers,
                 originElementComponent);
         }

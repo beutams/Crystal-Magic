@@ -122,41 +122,7 @@ namespace CrystalMagic.Game.Skill
             SkillData skillData = null,
             SkillAdditionData skillAdditionData = null)
         {
-            SkillModifierSet modifiers = new();
-
-            DataComponent dataComponent = DataComponent.Instance;
-            if (dataComponent == null)
-                return modifiers;
-
-            if (entityManager.HasBuffer<UnitBuffElement>(entity))
-            {
-                DynamicBuffer<UnitBuffElement> buffs = entityManager.GetBuffer<UnitBuffElement>(entity);
-                for (int i = 0; i < buffs.Length; i++)
-                {
-                    UnitBuffElement buffElement = buffs[i];
-                    if (dataComponent.Get<BuffData>(buffElement.BuffId) is SkillModifierBuffData buffData)
-                        modifiers.Add(buffData.SkillModifiers, math.max(1, buffElement.StackCount));
-                }
-            }
-
-            if (skillAdditionData != null)
-                modifiers.Add(skillAdditionData.Modifiers);
-
-            if (skillData != null && entityManager.HasComponent<UnitCastFollowupRuntimeComponent>(entity))
-            {
-                SkillFollowupContext context = new(entityManager, entity, skillData, null, skillAdditionData);
-                UnitCastFollowupRuntimeComponent followupComponent = entityManager.GetComponentObject<UnitCastFollowupRuntimeComponent>(entity);
-                List<SkillFollowupRuntime> followupEffects = followupComponent?.Followups;
-                if (followupEffects == null)
-                    return modifiers;
-
-                for (int i = 0; i < followupEffects.Count; i++)
-                {
-                    ApplyFollowupModifiers(ref modifiers, followupEffects[i], context);
-                }
-            }
-
-            return modifiers;
+            return UnitSkillModifierUtility.CreateCastModifiers(entityManager, entity, skillData, skillAdditionData);
         }
 
         public static bool MatchesFollowupEffect(SkillFollowupRuntime followupEffect, SkillData skillData, SkillAdditionData skillAdditionData)

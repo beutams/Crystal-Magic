@@ -1,6 +1,6 @@
+using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
-using CrystalMagic.Game.Data.Effects;
 using Unity.Entities;
 using Unity.Mathematics;
 
@@ -18,195 +18,127 @@ public static class UnitBuffUtility
         if (buffId < 0 || entity == Entity.Null || !entityManager.Exists(entity))
             return;
 
-        if (!entityManager.HasBuffer<UnitBuffElement>(entity))
-            entityManager.AddBuffer<UnitBuffElement>(entity);
+        BuffData buffData = DataComponent.Instance?.Get<BuffData>(buffId);
+        if (buffData == null)
+            return;
 
-        DynamicBuffer<UnitBuffElement> buffer = entityManager.GetBuffer<UnitBuffElement>(entity);
-        for (int i = 0; i < buffer.Length; i++)
+        UnitBuffRuntimeComponent runtimeComponent = GetOrCreateRuntimeComponent(entityManager, entity);
+        if (runtimeComponent == null)
+            return;
+
+        List<UnitBuffRuntimeEntry> buffs = runtimeComponent.Buffs;
+        for (int i = 0; i < buffs.Count; i++)
         {
-            UnitBuffElement element = buffer[i];
-            if (element.BuffId != buffId || element.SourceExecutionToken != executionToken)
+            UnitBuffRuntimeEntry entry = buffs[i];
+            if (entry.BuffId != buffId || entry.SourceExecutionToken != executionToken)
                 continue;
 
-            element.StackCount = math.max(1, stackCount);
-            element.ConsumeOnDamageTaken = consumeOnDamageTaken ? (byte)1 : (byte)0;
-            element.RemainingTriggerCount = consumeOnDamageTaken ? math.max(1, remainingTriggerCount) : 0;
-            element.RemainingTime = -1f;
-            element.NextTickTime = 0f;
-            buffer[i] = element;
+            entry.StackCount = math.max(1, stackCount);
+            entry.ConsumeOnDamageTaken = consumeOnDamageTaken;
+            entry.RemainingTriggerCount = consumeOnDamageTaken ? math.max(1, remainingTriggerCount) : 0;
+            entry.RemainingTime = -1f;
+            entry.NextTickTime = 0f;
+            entry.InitializeFromDefinition(buffData, entry.RuntimeEffectChain);
             return;
         }
 
-        buffer.Add(new UnitBuffElement
+        UnitBuffRuntimeEntry newEntry = new()
         {
             BuffId = buffId,
             RemainingTime = -1f,
             NextTickTime = 0f,
             StackCount = math.max(1, stackCount),
-            RuntimePayloadId = -1,
-            HasOriginEntity = 0,
+            HasOriginEntity = false,
             OriginEntity = Entity.Null,
             SourceSkillId = -1,
             SourceExecutionToken = executionToken,
-            ConsumeOnDamageTaken = consumeOnDamageTaken ? (byte)1 : (byte)0,
+            ConsumeOnDamageTaken = consumeOnDamageTaken,
             RemainingTriggerCount = consumeOnDamageTaken ? math.max(1, remainingTriggerCount) : 0,
-        });
+        };
+        newEntry.InitializeFromDefinition(buffData);
+        buffs.Add(newEntry);
     }
 
     public static void RemoveRuntimeBuffsByExecutionToken(EntityManager entityManager, Entity entity, int executionToken)
     {
-        if (executionToken < 0 || entity == Entity.Null || !entityManager.Exists(entity) || !entityManager.HasBuffer<UnitBuffElement>(entity))
-            return;
-
-        DynamicBuffer<UnitBuffElement> buffer = entityManager.GetBuffer<UnitBuffElement>(entity);
-        for (int i = buffer.Length - 1; i >= 0; i--)
-        {
-            if (buffer[i].SourceExecutionToken == executionToken)
-            {
-                RemoveEffectBuffPayload(entityManager, entity, buffer[i].RuntimePayloadId);
-                buffer.RemoveAt(i);
-            }
-        }
-    }
-
-    public static int SetEffectBuffPayload(
-        EntityManager entityManager,
-        Entity entity,
-        int payloadId,
-        EffectData[] runtimeEffectChain,
-        bool hasOriginEntity,
-        Entity originEntity)
-    {
-        if (entity == Entity.Null || !entityManager.Exists(entity))
-            return -1;
-
-        UnitBuffPayloadComponent payloadComponent = GetOrCreatePayloadComponent(entityManager, entity);
-        if (payloadComponent == null)
-            return -1;
-
-        int entryIndex = FindPayloadIndex(payloadComponent, payloadId);
-        if (entryIndex < 0)
-        {
-            payloadId = payloadComponent.NextPayloadId++;
-            payloadComponent.Entries.Add(new UnitBuffPayloadEntry
-            {
-                PayloadId = payloadId,
-                HasOriginEntity = hasOriginEntity,
-                OriginEntity = hasOriginEntity ? originEntity : Entity.Null,
-                RuntimeEffectChain = runtimeEffectChain ?? System.Array.Empty<EffectData>(),
-            });
-            return payloadId;
-        }
-
-        UnitBuffPayloadEntry entry = payloadComponent.Entries[entryIndex];
-        entry.HasOriginEntity = hasOriginEntity;
-        entry.OriginEntity = hasOriginEntity ? originEntity : Entity.Null;
-        entry.RuntimeEffectChain = runtimeEffectChain ?? System.Array.Empty<EffectData>();
-        payloadComponent.Entries[entryIndex] = entry;
-        return payloadId;
-    }
-
-    public static bool TryGetEffectBuffPayload(
-        EntityManager entityManager,
-        Entity entity,
-        int payloadId,
-        out UnitBuffPayloadEntry payload)
-    {
-        payload = null;
-        if (payloadId < 0 ||
+        if (executionToken < 0 ||
             entity == Entity.Null ||
             !entityManager.Exists(entity) ||
-            !entityManager.HasComponent<UnitBuffPayloadComponent>(entity))
-        {
-            return false;
-        }
-
-        UnitBuffPayloadComponent payloadComponent = entityManager.GetComponentObject<UnitBuffPayloadComponent>(entity);
-        int entryIndex = FindPayloadIndex(payloadComponent, payloadId);
-        if (entryIndex < 0)
-            return false;
-
-        payload = payloadComponent.Entries[entryIndex];
-        return payload != null;
-    }
-
-    public static void RemoveEffectBuffPayload(EntityManager entityManager, Entity entity, int payloadId)
-    {
-        if (payloadId < 0 ||
-            entity == Entity.Null ||
-            !entityManager.Exists(entity) ||
-            !entityManager.HasComponent<UnitBuffPayloadComponent>(entity))
+            !TryGetRuntimeComponent(entityManager, entity, out UnitBuffRuntimeComponent runtimeComponent))
         {
             return;
         }
 
-        UnitBuffPayloadComponent payloadComponent = entityManager.GetComponentObject<UnitBuffPayloadComponent>(entity);
-        int entryIndex = FindPayloadIndex(payloadComponent, payloadId);
-        if (entryIndex >= 0)
-            payloadComponent.Entries.RemoveAt(entryIndex);
+        List<UnitBuffRuntimeEntry> buffs = runtimeComponent.Buffs;
+        for (int i = buffs.Count - 1; i >= 0; i--)
+        {
+            if (buffs[i].SourceExecutionToken == executionToken)
+                buffs.RemoveAt(i);
+        }
     }
 
     public static float ApplyDamageTakenRuntimeBuffs(EntityManager entityManager, Entity entity, float damage)
     {
-        if (damage <= 0f || entity == Entity.Null || !entityManager.Exists(entity) || !entityManager.HasBuffer<UnitBuffElement>(entity))
-            return damage;
-
-        DynamicBuffer<UnitBuffElement> buffer = entityManager.GetBuffer<UnitBuffElement>(entity);
-        PropertyModifierSet modifiers = new();
-        for (int i = 0; i < buffer.Length; i++)
+        if (damage <= 0f ||
+            entity == Entity.Null ||
+            !entityManager.Exists(entity) ||
+            !TryGetRuntimeComponent(entityManager, entity, out UnitBuffRuntimeComponent runtimeComponent))
         {
-            UnitBuffElement element = buffer[i];
-            if (DataComponent.Instance?.Get<BuffData>(element.BuffId) is not PropertyBuffData propertyBuffData)
-                continue;
-
-            modifiers.Add(propertyBuffData.PropertyModifiers, element.StackCount > 0 ? element.StackCount : 1);
+            return damage;
         }
+
+        List<UnitBuffRuntimeEntry> buffs = runtimeComponent.Buffs;
+        PropertyModifierSet modifiers = new();
+        for (int i = 0; i < buffs.Count; i++)
+            buffs[i].ContributePropertyModifiers(modifiers);
 
         float finalDamage = math.max(
             0f,
             damage * modifiers.GetFactor(PropertyModifierChannel.DamageTakenMultiplier) +
             modifiers.GetBonus(PropertyModifierChannel.DamageTakenMultiplier));
         if (finalDamage < damage)
-            ConsumeDamageTakenRuntimeBuffs(buffer);
+            ConsumeDamageTakenRuntimeBuffs(buffs);
 
         return finalDamage;
     }
 
-    private static void ConsumeDamageTakenRuntimeBuffs(DynamicBuffer<UnitBuffElement> buffer)
+    public static UnitBuffRuntimeComponent GetOrCreateRuntimeComponent(EntityManager entityManager, Entity entity)
     {
-        for (int i = buffer.Length - 1; i >= 0; i--)
+        if (entity == Entity.Null || !entityManager.Exists(entity))
+            return null;
+
+        if (entityManager.HasComponent<UnitBuffRuntimeComponent>(entity))
+            return entityManager.GetComponentObject<UnitBuffRuntimeComponent>(entity);
+
+        UnitBuffRuntimeComponent runtimeComponent = new();
+        entityManager.AddComponentObject(entity, runtimeComponent);
+        return runtimeComponent;
+    }
+
+    public static bool TryGetRuntimeComponent(EntityManager entityManager, Entity entity, out UnitBuffRuntimeComponent runtimeComponent)
+    {
+        runtimeComponent = null;
+        if (entity == Entity.Null || !entityManager.Exists(entity) || !entityManager.HasComponent<UnitBuffRuntimeComponent>(entity))
+            return false;
+
+        runtimeComponent = entityManager.GetComponentObject<UnitBuffRuntimeComponent>(entity);
+        return runtimeComponent != null;
+    }
+
+    private static void ConsumeDamageTakenRuntimeBuffs(List<UnitBuffRuntimeEntry> buffs)
+    {
+        if (buffs == null)
+            return;
+
+        for (int i = buffs.Count - 1; i >= 0; i--)
         {
-            UnitBuffElement element = buffer[i];
-            if (element.SourceExecutionToken < 0 || element.ConsumeOnDamageTaken == 0)
+            UnitBuffRuntimeEntry entry = buffs[i];
+            if (entry.SourceExecutionToken < 0 || !entry.ConsumeOnDamageTaken)
                 continue;
 
-            element.RemainingTriggerCount--;
-            if (element.RemainingTriggerCount <= 0)
-                buffer.RemoveAt(i);
-            else
-                buffer[i] = element;
+            entry.RemainingTriggerCount--;
+            if (entry.RemainingTriggerCount <= 0)
+                buffs.RemoveAt(i);
         }
-    }
-
-    private static UnitBuffPayloadComponent GetOrCreatePayloadComponent(EntityManager entityManager, Entity entity)
-    {
-        if (entityManager.HasComponent<UnitBuffPayloadComponent>(entity))
-            return entityManager.GetComponentObject<UnitBuffPayloadComponent>(entity);
-
-        return null;
-    }
-
-    private static int FindPayloadIndex(UnitBuffPayloadComponent payloadComponent, int payloadId)
-    {
-        if (payloadComponent?.Entries == null)
-            return -1;
-
-        for (int i = 0; i < payloadComponent.Entries.Count; i++)
-        {
-            if (payloadComponent.Entries[i]?.PayloadId == payloadId)
-                return i;
-        }
-
-        return -1;
     }
 }

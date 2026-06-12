@@ -91,10 +91,6 @@ namespace CrystalMagic.Editor.Data
             module.BaseSkillRange = EditorGUILayout.FloatField("Base Skill Range", module.BaseSkillRange);
             module.BaseActionSpeedBonus = EditorGUILayout.FloatField("Action Speed (-100~100)", module.BaseActionSpeedBonus);
             module.BaseChantSpeedBonus = EditorGUILayout.FloatField("Chant Speed (-100~100)", module.BaseChantSpeedBonus);
-            module.BaseWaterPowerBonus = EditorGUILayout.FloatField("Water Power Bonus", module.BaseWaterPowerBonus);
-            module.BaseFirePowerBonus = EditorGUILayout.FloatField("Fire Power Bonus", module.BaseFirePowerBonus);
-            module.BaseLightningPowerBonus = EditorGUILayout.FloatField("Lightning Power Bonus", module.BaseLightningPowerBonus);
-            module.BaseWindPowerBonus = EditorGUILayout.FloatField("Wind Power Bonus", module.BaseWindPowerBonus);
         }
     }
 

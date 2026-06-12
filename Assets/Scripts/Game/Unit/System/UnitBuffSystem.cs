@@ -1,191 +1,79 @@
 using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
-using CrystalMagic.Game.Data.Effects;
-using CrystalMagic.Game.Skill;
+using Unity.Collections;
 using Unity.Entities;
-using UnityEngine;
 
 [UpdateInGroup(typeof(UnitInitializationSystemGroup))]
 [UpdateBefore(typeof(UnitRecoverySystem))]
 partial class UnitBuffSystem : SystemBase
 {
-    private readonly SkillContent _buffTickContext = new();
+    private EntityQuery _buffRuntimeQuery;
+    private readonly BuffUpdateContext _updateContext = new();
+
+    protected override void OnCreate()
+    {
+        _buffRuntimeQuery = GetEntityQuery(ComponentType.ReadOnly<UnitBuffRuntimeComponent>());
+    }
 
     protected override void OnUpdate()
     {
         float dt = SystemAPI.Time.DeltaTime;
-        Dictionary<Entity, PropertyModifierSet> modifiersByEntity = new();
-
-        foreach ((DynamicBuffer<UnitBuffElement> queryBuffer, Entity entity) in
-            SystemAPI.Query<DynamicBuffer<UnitBuffElement>>().WithEntityAccess())
+        PendingEffectExecutionQueueComponent effectExecutionQueue = PendingEffectExecutionQueueUtility.GetOrCreate(EntityManager);
+        using NativeArray<Entity> buffEntities = _buffRuntimeQuery.ToEntityArray(Allocator.Temp);
+        for (int entityIndex = 0; entityIndex < buffEntities.Length; entityIndex++)
         {
-            DynamicBuffer<UnitBuffElement> buffBuffer = queryBuffer;
-            for (int i = buffBuffer.Length - 1; i >= 0; i--)
-            {
-                UnitBuffElement element = buffBuffer[i];
-                if (!TryUpdateBuffElement(entity, dt, ref element))
-                {
-                    UnitBuffUtility.RemoveEffectBuffPayload(EntityManager, entity, element.RuntimePayloadId);
-                    buffBuffer.RemoveAt(i);
-                    continue;
-                }
-
-                buffBuffer[i] = element;
-            }
-
-            PropertyModifierSet modifiers = new();
-            for (int i = 0; i < buffBuffer.Length; i++)
-            {
-                UnitBuffElement buffElement = buffBuffer[i];
-                if (DataComponent.Instance.Get<BuffData>(buffElement.BuffId) is not PropertyBuffData propertyBuff)
-                    continue;
-
-                modifiers.Add(propertyBuff.PropertyModifiers, buffElement.StackCount > 0 ? buffElement.StackCount : 1);
-            }
-
-            modifiersByEntity[entity] = modifiers;
-        }
-
-        foreach ((RefRW<UnitMoveComponent> move, Entity entity) in
-            SystemAPI.Query<RefRW<UnitMoveComponent>>().WithAll<UnitBuffElement>().WithEntityAccess())
-        {
-            if (!modifiersByEntity.TryGetValue(entity, out PropertyModifierSet modifiers))
+            Entity entity = buffEntities[entityIndex];
+            if (!UnitBuffUtility.TryGetRuntimeComponent(EntityManager, entity, out UnitBuffRuntimeComponent runtimeComponent))
                 continue;
 
-            move.ValueRW.SpeedFactor = modifiers.GetFactor(PropertyModifierChannel.MoveSpeed);
-            move.ValueRW.SpeedBonus = modifiers.GetBonus(PropertyModifierChannel.MoveSpeed);
-        }
-
-        foreach ((RefRW<UnitVitalityComponent> vitality, Entity entity) in
-            SystemAPI.Query<RefRW<UnitVitalityComponent>>().WithAll<UnitBuffElement>().WithEntityAccess())
-        {
-            if (!modifiersByEntity.TryGetValue(entity, out PropertyModifierSet modifiers))
-                continue;
-
-            vitality.ValueRW.HealthFactor = modifiers.GetFactor(PropertyModifierChannel.MaxHealth);
-            vitality.ValueRW.HealthBonus = modifiers.GetBonus(PropertyModifierChannel.MaxHealth);
-            vitality.ValueRW.HealthRegenFactor = modifiers.GetFactor(PropertyModifierChannel.HealthRegen);
-            vitality.ValueRW.HealthRegenBonus = modifiers.GetBonus(PropertyModifierChannel.HealthRegen);
-            vitality.ValueRW.DefenseFactor = modifiers.GetFactor(PropertyModifierChannel.Defense);
-            vitality.ValueRW.DefenseBonus = modifiers.GetBonus(PropertyModifierChannel.Defense);
-        }
-
-        foreach ((RefRW<UnitAttackComponent> attack, Entity entity) in
-            SystemAPI.Query<RefRW<UnitAttackComponent>>().WithAll<UnitBuffElement>().WithEntityAccess())
-        {
-            if (!modifiersByEntity.TryGetValue(entity, out PropertyModifierSet modifiers))
-                continue;
-
-            attack.ValueRW.AttackFactor = modifiers.GetFactor(PropertyModifierChannel.AttackPower);
-            attack.ValueRW.AttackBonus = modifiers.GetBonus(PropertyModifierChannel.AttackPower);
-            attack.ValueRW.RangeFactor = modifiers.GetFactor(PropertyModifierChannel.SkillRange);
-            attack.ValueRW.RangeBonus = modifiers.GetBonus(PropertyModifierChannel.SkillRange);
-            attack.ValueRW.ActionSpeedFactor = modifiers.GetFactor(PropertyModifierChannel.ActionSpeed);
-            attack.ValueRW.ActionSpeedBonus = modifiers.GetBonus(PropertyModifierChannel.ActionSpeed);
-            attack.ValueRW.ChantSpeedFactor = modifiers.GetFactor(PropertyModifierChannel.ChantSpeed);
-            attack.ValueRW.ChantSpeedBonus = modifiers.GetBonus(PropertyModifierChannel.ChantSpeed);
-        }
-
-        foreach ((RefRW<UnitElementComponent> element, RefRO<UnitElementBaseComponent> elementBase, Entity entity) in
-            SystemAPI.Query<RefRW<UnitElementComponent>, RefRO<UnitElementBaseComponent>>().WithAll<UnitBuffElement>().WithEntityAccess())
-        {
-            if (!modifiersByEntity.TryGetValue(entity, out PropertyModifierSet modifiers))
-                continue;
-
-            element.ValueRW.WaterPower = elementBase.ValueRO.WaterPower + element.ValueRO.EquipmentWaterPower + modifiers.GetBonus(PropertyModifierChannel.WaterPower);
-            element.ValueRW.FirePower = elementBase.ValueRO.FirePower + element.ValueRO.EquipmentFirePower + modifiers.GetBonus(PropertyModifierChannel.FirePower);
-            element.ValueRW.LightningPower = elementBase.ValueRO.LightningPower + element.ValueRO.EquipmentLightningPower + modifiers.GetBonus(PropertyModifierChannel.LightningPower);
-            element.ValueRW.WindPower = elementBase.ValueRO.WindPower + element.ValueRO.EquipmentWindPower + modifiers.GetBonus(PropertyModifierChannel.WindPower);
-        }
-
-        foreach ((RefRW<UnitManaComponent> mana, Entity entity) in
-            SystemAPI.Query<RefRW<UnitManaComponent>>().WithAll<UnitBuffElement>().WithEntityAccess())
-        {
-            if (!modifiersByEntity.TryGetValue(entity, out PropertyModifierSet modifiers))
-                continue;
-
-            mana.ValueRW.MpFactor = modifiers.GetFactor(PropertyModifierChannel.MaxMp);
-            mana.ValueRW.MpBonus = modifiers.GetBonus(PropertyModifierChannel.MaxMp);
-            mana.ValueRW.MpRegenFactor = modifiers.GetFactor(PropertyModifierChannel.MpRegen);
-            mana.ValueRW.MpRegenBonus = modifiers.GetBonus(PropertyModifierChannel.MpRegen);
+            UpdateBuffEntries(entity, runtimeComponent, effectExecutionQueue, dt);
+            PropertyModifierSet modifiers = BuildPropertyModifiers(runtimeComponent.Buffs);
+            SkillModifierSet skillModifiers = BuildSkillModifiers(runtimeComponent.Buffs);
+            UnitModifierUtility.ApplyRuntimePropertyModifiers(EntityManager, entity, modifiers);
+            UnitSkillModifierUtility.AddRuntimeModifiers(EntityManager, entity, skillModifiers);
         }
     }
 
-    private bool TryUpdateBuffElement(Entity entity, float deltaTime, ref UnitBuffElement element)
+    private void UpdateBuffEntries(
+        Entity entity,
+        UnitBuffRuntimeComponent runtimeComponent,
+        PendingEffectExecutionQueueComponent effectExecutionQueue,
+        float deltaTime)
     {
-        BuffData buffData = DataComponent.Instance?.Get<BuffData>(element.BuffId);
-        if (buffData == null)
-            return false;
-
-        bool hasInfiniteDuration = element.RemainingTime < 0f;
-        float effectiveDeltaTime = deltaTime;
-        if (!hasInfiniteDuration)
+        List<UnitBuffRuntimeEntry> buffs = runtimeComponent.Buffs;
+        _updateContext.EntityManager = EntityManager;
+        _updateContext.TargetEntity = entity;
+        _updateContext.EffectExecutionQueue = effectExecutionQueue;
+        for (int i = buffs.Count - 1; i >= 0; i--)
         {
-            effectiveDeltaTime = Mathf.Min(deltaTime, element.RemainingTime);
-            element.RemainingTime = Mathf.Max(0f, element.RemainingTime - deltaTime);
-        }
-
-        if (buffData is EffectBuffData effectBuffData)
-            TickEffectBuff(entity, effectBuffData, effectiveDeltaTime, ref element);
-
-        return hasInfiniteDuration || element.RemainingTime > 0f;
-    }
-
-    private void TickEffectBuff(Entity entity, EffectBuffData effectBuffData, float deltaTime, ref UnitBuffElement element)
-    {
-        if (effectBuffData.TickIntervalSeconds <= 0f ||
-            effectBuffData.EffectChain == null ||
-            effectBuffData.EffectChain.Length == 0 ||
-            deltaTime <= 0f)
-        {
-            return;
-        }
-
-        if (element.NextTickTime <= 0f)
-            element.NextTickTime = effectBuffData.TickIntervalSeconds;
-
-        element.NextTickTime -= deltaTime;
-        while (element.NextTickTime <= 0f)
-        {
-            ExecuteBuffTickEffects(entity, effectBuffData, element);
-            element.NextTickTime += effectBuffData.TickIntervalSeconds;
+            UnitBuffRuntimeEntry entry = buffs[i];
+            if (!entry.Update(_updateContext, deltaTime))
+                buffs.RemoveAt(i);
         }
     }
 
-    private void ExecuteBuffTickEffects(Entity entity, EffectBuffData effectBuffData, in UnitBuffElement element)
+    private static PropertyModifierSet BuildPropertyModifiers(List<UnitBuffRuntimeEntry> buffs)
     {
-        int executeCount = Mathf.Max(1, element.StackCount);
-        EffectData[] runtimeEffectChain = effectBuffData.EffectChain;
-        bool hasOriginEntity = false;
-        Entity originEntity = Entity.Null;
+        PropertyModifierSet modifiers = new();
+        if (buffs == null)
+            return modifiers;
 
-        if (UnitBuffUtility.TryGetEffectBuffPayload(EntityManager, entity, element.RuntimePayloadId, out UnitBuffPayloadEntry payload))
-        {
-            runtimeEffectChain = payload.RuntimeEffectChain;
-            hasOriginEntity = payload.HasOriginEntity;
-            originEntity = payload.OriginEntity;
-        }
+        for (int i = 0; i < buffs.Count; i++)
+            buffs[i].ContributePropertyModifiers(modifiers);
 
-        _buffTickContext.EntityManager = EntityManager;
-        _buffTickContext.TriggerSource = SkillTriggerSource.BuffHook;
-        _buffTickContext.HookType = SkillHookType.OnBuffTick;
-        _buffTickContext.HasOtherEntity = false;
-        _buffTickContext.OtherEntity = Entity.Null;
-        _buffTickContext.TriggerValue = 0f;
-        _buffTickContext.HasOriginEntity = hasOriginEntity;
-        _buffTickContext.OriginEntity = originEntity;
-        _buffTickContext.SourceSkillId = element.SourceSkillId;
-        _buffTickContext.HasTargetEntity = true;
-        _buffTickContext.TargetEntity = entity;
-        _buffTickContext.HasTarget = false;
-        _buffTickContext.Target = null;
-        _buffTickContext.Origin = null;
-        _buffTickContext.HasPosition = false;
-        _buffTickContext.Position = Vector3.zero;
-        _buffTickContext.RuntimeModifiers = null;
+        return modifiers;
+    }
 
-        for (int i = 0; i < executeCount; i++)
-            SkillExecutor.ExecuteEffects(runtimeEffectChain, _buffTickContext);
+    private static SkillModifierSet BuildSkillModifiers(List<UnitBuffRuntimeEntry> buffs)
+    {
+        SkillModifierSet modifiers = new();
+        if (buffs == null)
+            return modifiers;
+
+        for (int i = 0; i < buffs.Count; i++)
+            buffs[i].ContributeSkillModifiers(modifiers);
+
+        return modifiers;
     }
 }

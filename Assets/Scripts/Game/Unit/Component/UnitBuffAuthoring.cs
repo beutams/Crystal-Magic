@@ -1,6 +1,5 @@
 using CrystalMagic.Game.Data;
 using Unity.Entities;
-using Unity.Mathematics;
 using UnityEngine;
 
 public class UnitBuffAuthoring : MonoBehaviour
@@ -10,9 +9,8 @@ public class UnitBuffAuthoring : MonoBehaviour
         public override void Bake(UnitBuffAuthoring authoring)
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
-
-            DynamicBuffer<UnitBuffElement> buffer = AddBuffer<UnitBuffElement>(entity);
-            AddComponentObject(entity, new UnitBuffPayloadComponent());
+            UnitBuffRuntimeComponent runtimeComponent = new();
+            AddComponentObject(entity, runtimeComponent);
 
             UnitBuffModuleData data = UnitAuthoringUtility.ResolveModuleData<UnitBuffModuleData>(authoring);
             if (data?.Buffs == null)
@@ -24,36 +22,20 @@ public class UnitBuffAuthoring : MonoBehaviour
                 if (entry == null || entry.BuffId < 0)
                     continue;
 
-                buffer.Add(new UnitBuffElement
+                runtimeComponent.Buffs.Add(new UnitBuffRuntimeEntry
                 {
                     BuffId = entry.BuffId,
-                    RemainingTime = entry.DurationSeconds < 0f ? -1f : math.max(0f, entry.DurationSeconds),
+                    RemainingTime = entry.DurationSeconds,
                     NextTickTime = 0f,
-                    StackCount = math.max(1, entry.StackCount),
-                    RuntimePayloadId = -1,
-                    HasOriginEntity = 0,
+                    StackCount = Mathf.Max(1, entry.StackCount),
+                    HasOriginEntity = false,
                     OriginEntity = Entity.Null,
                     SourceSkillId = -1,
                     SourceExecutionToken = 0,
-                    ConsumeOnDamageTaken = 0,
+                    ConsumeOnDamageTaken = false,
                     RemainingTriggerCount = 0,
                 });
             }
         }
     }
-}
-
-public struct UnitBuffElement : IBufferElementData
-{
-    public int BuffId;
-    public float RemainingTime;
-    public float NextTickTime;
-    public int StackCount;
-    public int RuntimePayloadId;
-    public byte HasOriginEntity;
-    public Entity OriginEntity;
-    public int SourceSkillId;
-    public int SourceExecutionToken;
-    public byte ConsumeOnDamageTaken;
-    public int RemainingTriggerCount;
 }

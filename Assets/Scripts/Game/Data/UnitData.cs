@@ -93,10 +93,6 @@ namespace CrystalMagic.Game.Data
         public float BaseSkillRange = 1f;
         public float BaseActionSpeedBonus;
         public float BaseChantSpeedBonus;
-        public float BaseWaterPowerBonus;
-        public float BaseFirePowerBonus;
-        public float BaseLightningPowerBonus;
-        public float BaseWindPowerBonus;
     }
 
     [System.Serializable]

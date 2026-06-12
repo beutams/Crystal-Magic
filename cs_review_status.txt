@@ -161,7 +161,7 @@ Game\
       SkillAdditionEditorWindow.cs FALSE
       UnitAnimationProfileEditorWindow.cs FALSE
       UnitEditorAttributeDrawerFactory.cs FALSE
-      UnitEditorAttributeDrawers.cs TRUE
+      UnitEditorAttributeDrawers.cs TRUE DIRTY
       UnitEditorDrawerContext.cs FALSE
       UnitEditorWindow.cs FALSE
     Effects\
@@ -200,7 +200,7 @@ Game\
     SkillFollowupFilterData.cs FALSE
     SkillFollowupModifierRuleData.cs FALSE
     UnitAnimationClipData.cs FALSE
-    UnitData.cs TRUE
+    UnitData.cs TRUE DIRTY
   MapDemo\
     Editor\
       TunnelingMapDemoEditor.cs FALSE
@@ -298,8 +298,8 @@ Game\
       UnitAttackAuthoring.cs FALSE
       UnitAuthoringUtility.cs FALSE
       UnitBehaviorTreeAuthoring.cs FALSE
-      UnitBuffAuthoring.cs TRUE
-      UnitBuffPayloadComponent.cs FALSE
+      UnitBuffAuthoring.cs TRUE DIRTY
+      UnitBuffRuntimeComponent.cs FALSE
       UnitCastAuthoring.cs FALSE
       UnitCastSkillPayloadComponent.cs FALSE
       UnitCastTaskPayloadComponent.cs FALSE
@@ -314,6 +314,7 @@ Game\
       UnitPerceptionAuthoring.cs FALSE
       UnitQuadVisualRequest.cs FALSE
       UnitSkillAuthoring.cs FALSE
+      UnitSkillModifierRuntimeComponent.cs FALSE
       UnitStateMachineAuthoring.cs FALSE
       UnitVitalityAuthoring.cs FALSE
       WorldDropComponent.cs FALSE
@@ -350,13 +351,16 @@ Game\
       DungeonExitSystem.cs FALSE
       DungeonExitInteractionNodes.cs FALSE
       DungeonTreasureSystem.cs FALSE
+      EffectExecutionSystem.cs FALSE
       EntitySpawnRegistryUtility.cs FALSE
       NPCInteractInputSystem.cs FALSE
       NPCInteractionSystem.cs FALSE
       NPCInteractPromptSystem.cs FALSE
       PersistentBeamEffectSystem.cs FALSE
       PersistentEffectSystem.cs FALSE
-      PlayerEquipmentPassiveBuffSystem.cs FALSE
+      PlayerEquipmentPropertySystem.cs TRUE
+        统计装备属性写入属性组件中
+      UnitModifierUtility.cs FALSE
       PlayerInputSystem.cs FALSE
       PlayerSkillAnalysisSystem.cs FALSE
       QuadAnimationSystem.cs FALSE
@@ -366,7 +370,8 @@ Game\
       SkillProjectileSystem.cs FALSE
       UnitAnimationSystem.cs FALSE
       UnitAnimationVisualUtility.cs FALSE
-      UnitBuffSystem.cs FALSE
+      UnitBuffSystem.cs TRUE
+        统计Buff写入属性和技能修正，发送技能请求
       UnitBuffUtility.cs FALSE
       UnitControlSystem.cs FALSE
       UnitControlUtility.cs FALSE
@@ -379,12 +384,17 @@ Game\
       UnitQuerySystem.cs TRUE
         ==缺少四叉树
         数据化单位位置，提供快速查询接口
-      UnitRecoverySystem.cs FALSE
+      UnitRecoverySystem.cs TRUE
+        应用生命恢复
       UnitSkillAnalysisSystem.cs FALSE
+      UnitSkillModifierResetSystem.cs TRUE
+        重置SkillModifier
+      UnitSkillModifierUtility.cs FALSE
       UnitSkillExecuteSystem.cs FALSE
       UnitSkillSystem.cs FALSE
       UnitSystemGroups.cs FALSE
-      UnitStateMachineBuildSystem.cs FALSE
+      UnitStateMachineBuildSystem.cs TRUE
+        构建状态机数据结构
       UnitStateMachineSystem.cs FALSE
       UnitStateTransitionSystem.cs FALSE
       WorldDropPickupSystem.cs FALSE

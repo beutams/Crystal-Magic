@@ -11,7 +11,13 @@ partial class UnitStateTransitionSystem : SystemBase
         foreach (var (smComp, entity) in SystemAPI.Query<UnitStateMachineComponent>().WithEntityAccess())
         {
             if (smComp.CurrentState == null)
+            {
+                if (smComp.InitialState == null)
+                    continue;
+
+                EnterInitialState(smComp);
                 continue;
+            }
 
             var transitions = smComp.CurrentState.transitions;
             if (transitions == null || transitions.Count == 0)
@@ -29,6 +35,16 @@ partial class UnitStateTransitionSystem : SystemBase
                 }
             }
         }
+    }
+
+    private static void EnterInitialState(UnitStateMachineComponent sm)
+    {
+        sm.PreviousState = null;
+        sm.PreviousStateName = "None";
+        sm.CurrentState = sm.InitialState;
+        sm.CurrentStateName = sm.InitialStateName;
+        sm.StateTime = 0f;
+        sm.CurrentState.OnEnter();
     }
 
     private static void DoTransition(UnitStateMachineComponent sm, AUnitState next)

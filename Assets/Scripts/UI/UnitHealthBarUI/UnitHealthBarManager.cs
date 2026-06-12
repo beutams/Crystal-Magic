@@ -253,7 +253,7 @@ namespace CrystalMagic.UI
             ReleaseEnemyBuffQuery();
             _enemyBuffQueryWorld = world;
             _enemyBuffQuery = world.EntityManager.CreateEntityQuery(
-                ComponentType.ReadOnly<UnitBuffElement>(),
+                ComponentType.ReadOnly<UnitBuffRuntimeComponent>(),
                 ComponentType.ReadOnly<UnitFactionComponent>(),
                 ComponentType.ReadOnly<UnitVitalityComponent>(),
                 ComponentType.ReadOnly<LocalToWorld>());
@@ -283,42 +283,45 @@ namespace CrystalMagic.UI
             output.Clear();
             signature = 17;
 
-            if (!entityManager.Exists(entity) || !entityManager.HasBuffer<UnitBuffElement>(entity))
+            if (!entityManager.Exists(entity) || !entityManager.HasComponent<UnitBuffRuntimeComponent>(entity))
                 return;
 
-            DynamicBuffer<UnitBuffElement> buffer = entityManager.GetBuffer<UnitBuffElement>(entity);
-            for (int i = 0; i < buffer.Length; i++)
+            UnitBuffRuntimeComponent runtimeComponent = entityManager.GetComponentObject<UnitBuffRuntimeComponent>(entity);
+            if (runtimeComponent?.Buffs == null)
+                return;
+
+            for (int i = 0; i < runtimeComponent.Buffs.Count; i++)
             {
-                UnitBuffElement element = buffer[i];
-                if (element.BuffId < 0 || element.StackCount <= 0 || element.HasOriginEntity == 0)
+                UnitBuffRuntimeEntry entry = runtimeComponent.Buffs[i];
+                if (entry.BuffId < 0 || entry.StackCount <= 0 || !entry.HasOriginEntity)
                     continue;
 
-                if (element.OriginEntity == Entity.Null ||
-                    !entityManager.Exists(element.OriginEntity) ||
-                    !entityManager.HasComponent<PlayerTag>(element.OriginEntity))
+                if (entry.OriginEntity == Entity.Null ||
+                    !entityManager.Exists(entry.OriginEntity) ||
+                    !entityManager.HasComponent<PlayerTag>(entry.OriginEntity))
                 {
                     continue;
                 }
 
-                if (element.SourceSkillId < 0)
+                if (entry.SourceSkillId < 0)
                     continue;
 
-                SkillData sourceSkill = DataComponent.Instance?.Get<SkillData>(element.SourceSkillId);
+                SkillData sourceSkill = DataComponent.Instance?.Get<SkillData>(entry.SourceSkillId);
                 string iconPath = sourceSkill?.IconPath;
                 if (string.IsNullOrWhiteSpace(iconPath))
                     continue;
 
                 output.Add(new UnitHealthBarBuffDisplayData
                 {
-                    BuffId = element.BuffId,
-                    StackCount = element.StackCount,
-                    SourceSkillId = element.SourceSkillId,
+                    BuffId = entry.BuffId,
+                    StackCount = entry.StackCount,
+                    SourceSkillId = entry.SourceSkillId,
                     IconPath = iconPath,
                 });
 
-                signature = (signature * 31) + element.BuffId;
-                signature = (signature * 31) + element.StackCount;
-                signature = (signature * 31) + element.SourceSkillId;
+                signature = (signature * 31) + entry.BuffId;
+                signature = (signature * 31) + entry.StackCount;
+                signature = (signature * 31) + entry.SourceSkillId;
             }
         }
 

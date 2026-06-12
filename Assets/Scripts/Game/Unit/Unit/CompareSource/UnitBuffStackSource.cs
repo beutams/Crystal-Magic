@@ -17,7 +17,7 @@ public class UnitBuffStackSource : ISource
             return false;
 
         if (_context.HasRuntimeEntity)
-            return _context.EntityManager.HasBuffer<UnitBuffElement>(_context.Entity);
+            return _context.EntityManager.HasComponent<UnitBuffRuntimeComponent>(_context.Entity);
 
         return _context.UnitPrefab != null && _context.UnitPrefab.GetComponent<UnitBuffAuthoring>() != null;
     }
@@ -26,17 +26,20 @@ public class UnitBuffStackSource : ISource
     {
         if (_context.SourceParam < 0 ||
             !_context.HasRuntimeEntity ||
-            !_context.EntityManager.HasBuffer<UnitBuffElement>(_context.Entity))
+            !_context.EntityManager.HasComponent<UnitBuffRuntimeComponent>(_context.Entity))
         {
             return 0f;
         }
 
-        DynamicBuffer<UnitBuffElement> buffer = _context.EntityManager.GetBuffer<UnitBuffElement>(_context.Entity, true);
-        for (int i = 0; i < buffer.Length; i++)
+        UnitBuffRuntimeComponent runtimeComponent = _context.EntityManager.GetComponentObject<UnitBuffRuntimeComponent>(_context.Entity);
+        if (runtimeComponent?.Buffs == null)
+            return 0f;
+
+        for (int i = 0; i < runtimeComponent.Buffs.Count; i++)
         {
-            UnitBuffElement element = buffer[i];
-            if (element.BuffId == _context.SourceParam)
-                return element.StackCount;
+            UnitBuffRuntimeEntry entry = runtimeComponent.Buffs[i];
+            if (entry.BuffId == _context.SourceParam)
+                return entry.StackCount;
         }
 
         return 0f;
