@@ -10,12 +10,10 @@ public static class UnitBuffUtility
         EntityManager entityManager,
         Entity entity,
         int buffId,
-        int executionToken,
-        int stackCount = 1,
-        bool consumeOnDamageTaken = false,
-        int remainingTriggerCount = 1)
+        int sourceSkillId,
+        int stackCount = 1)
     {
-        if (buffId < 0 || entity == Entity.Null || !entityManager.Exists(entity))
+        if (buffId < 0 || sourceSkillId < 0 || entity == Entity.Null || !entityManager.Exists(entity))
             return;
 
         BuffData buffData = DataComponent.Instance?.Get<BuffData>(buffId);
@@ -30,15 +28,13 @@ public static class UnitBuffUtility
         for (int i = 0; i < buffs.Count; i++)
         {
             UnitBuffRuntimeEntry entry = buffs[i];
-            if (entry.BuffId != buffId || entry.SourceExecutionToken != executionToken)
+            // Cast-task temporary buffs intentionally omit origin info so they do not collide with regular applied buffs.
+            if (entry.BuffId != buffId || entry.SourceSkillId != sourceSkillId || entry.HasOriginEntity)
                 continue;
 
             entry.StackCount = math.max(1, stackCount);
-            entry.ConsumeOnDamageTaken = consumeOnDamageTaken;
-            entry.RemainingTriggerCount = consumeOnDamageTaken ? math.max(1, remainingTriggerCount) : 0;
             entry.RemainingTime = -1f;
-            entry.NextTickTime = 0f;
-            entry.InitializeFromDefinition(buffData, entry.RuntimeEffectChain);
+            entry.InitializeFromDefinition(buffData);
             return;
         }
 
@@ -46,22 +42,18 @@ public static class UnitBuffUtility
         {
             BuffId = buffId,
             RemainingTime = -1f,
-            NextTickTime = 0f,
             StackCount = math.max(1, stackCount),
             HasOriginEntity = false,
             OriginEntity = Entity.Null,
-            SourceSkillId = -1,
-            SourceExecutionToken = executionToken,
-            ConsumeOnDamageTaken = consumeOnDamageTaken,
-            RemainingTriggerCount = consumeOnDamageTaken ? math.max(1, remainingTriggerCount) : 0,
+            SourceSkillId = sourceSkillId,
         };
         newEntry.InitializeFromDefinition(buffData);
         buffs.Add(newEntry);
     }
 
-    public static void RemoveRuntimeBuffsByExecutionToken(EntityManager entityManager, Entity entity, int executionToken)
+    public static void RemoveRuntimeBuffsBySourceSkillId(EntityManager entityManager, Entity entity, int sourceSkillId)
     {
-        if (executionToken < 0 ||
+        if (sourceSkillId < 0 ||
             entity == Entity.Null ||
             !entityManager.Exists(entity) ||
             !TryGetRuntimeComponent(entityManager, entity, out UnitBuffRuntimeComponent runtimeComponent))
@@ -72,7 +64,7 @@ public static class UnitBuffUtility
         List<UnitBuffRuntimeEntry> buffs = runtimeComponent.Buffs;
         for (int i = buffs.Count - 1; i >= 0; i--)
         {
-            if (buffs[i].SourceExecutionToken == executionToken)
+            if (!buffs[i].HasOriginEntity && buffs[i].SourceSkillId == sourceSkillId)
                 buffs.RemoveAt(i);
         }
     }
@@ -96,9 +88,6 @@ public static class UnitBuffUtility
             0f,
             damage * modifiers.GetFactor(PropertyModifierChannel.DamageTakenMultiplier) +
             modifiers.GetBonus(PropertyModifierChannel.DamageTakenMultiplier));
-        if (finalDamage < damage)
-            ConsumeDamageTakenRuntimeBuffs(buffs);
-
         return finalDamage;
     }
 
@@ -123,22 +112,5 @@ public static class UnitBuffUtility
 
         runtimeComponent = entityManager.GetComponentObject<UnitBuffRuntimeComponent>(entity);
         return runtimeComponent != null;
-    }
-
-    private static void ConsumeDamageTakenRuntimeBuffs(List<UnitBuffRuntimeEntry> buffs)
-    {
-        if (buffs == null)
-            return;
-
-        for (int i = buffs.Count - 1; i >= 0; i--)
-        {
-            UnitBuffRuntimeEntry entry = buffs[i];
-            if (entry.SourceExecutionToken < 0 || !entry.ConsumeOnDamageTaken)
-                continue;
-
-            entry.RemainingTriggerCount--;
-            if (entry.RemainingTriggerCount <= 0)
-                buffs.RemoveAt(i);
-        }
     }
 }

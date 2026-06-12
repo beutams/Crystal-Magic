@@ -39,6 +39,15 @@ namespace CrystalMagic.Game.Skill.Effects
             vitality.CurrentHealth = math.max(0f, vitality.CurrentHealth - damage);
             entityManager.SetComponentData(target, vitality);
             QuadOverlayPulseUtility.PlayHit(entityManager, target);
+            UnitBuffHookUtility.Dispatch(
+                entityManager,
+                target,
+                SkillHookType.OnDamaged,
+                context.TriggerSource,
+                context.HasOriginEntity,
+                context.OriginEntity,
+                context.SourceSkillId,
+                triggerValue: damage);
 
             Debug.Log(
                 $"[DamageEffect] Damage={damage:0.##} | Formula=max(0, AttackPower*Coeff+Flat-Defense) | " +

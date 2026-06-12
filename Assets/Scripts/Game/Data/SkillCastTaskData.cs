@@ -48,12 +48,6 @@ namespace CrystalMagic.Game.Data
         [EditorLabel("层数")]
         public int StackCount = 1;
 
-        [EditorLabel("受伤时消耗")]
-        public bool ConsumeOnDamageTaken = true;
-
-        [EditorLabel("可触发次数")]
-        public int RemainingTriggerCount = 1;
-
         public ApplyRuntimeBuffSkillCastTaskData()
         {
             HookPoint = SkillCastHookPoint.BeforeWindup;

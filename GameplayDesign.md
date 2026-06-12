@@ -205,3 +205,70 @@
 
 - 敌人的技能具有冷却时间（CD）
 - 不同敌人的技能冷却时间可能不同
+
+## 7. 当前实现记录：Hook 与被动技能
+
+这一节用于记录当前代码中已经接通、但前文大纲没有单独展开的实现状态。
+
+### 7.1 Buff Hook 当前已接通的触发点
+
+当前 Buff Hook 已经接通的触发点如下：
+
+- `OnCastStart`
+- `OnCastComplete`
+- `OnDamaged`
+- `OnBuffTick`
+
+其中：
+
+- `OnCastStart` 在角色正式开始一次施法时触发
+- `OnCastComplete` 在技能主体成功执行后触发
+- `OnDamaged` 在目标实际受到伤害后触发
+- `OnBuffTick` 由 Buff 自身的计时触发
+
+### 7.2 Buff Hook 当前已定义但未接通的触发点
+
+当前代码里已经定义了下列 Hook 类型，但还没有完整接入实际触发链路：
+
+- `OnSpawn`
+- `BeforeDeath`
+- `AfterDeath`
+- `OnHitTarget`
+- `OnKillTarget`
+
+这些 Hook 目前只停留在枚举定义层，尚未在统一的运行时事件链路中触发。
+
+### 7.3 被动技能（Followup）当前实现状态
+
+当前“被动技能”更准确地说是 Followup 系统，而不是通用 Hook 系统。
+
+它目前的实现方式是：
+
+- 一次技能成功执行后，可以生成 Followup 运行时数据
+- Followup 会在后续技能释放时参与技能修正计算
+- 当后续技能满足筛选条件时，会消耗对应的 Followup 次数
+
+当前 Followup 已有的能力主要是：
+
+- 按技能 Id 筛选
+- 按技能运行时类型筛选
+- 按元素筛选
+- 按技能附加名筛选
+- 对后续技能提供数值修正
+- 按使用次数消耗
+
+### 7.4 被动技能 Hook 当前未实现的部分
+
+当前被动技能并没有做成和 Buff 一样的通用 Hook 触发体系，因此以下能力仍未实现：
+
+- 通过 `PassiveHook` 触发源统一进入技能执行链
+- 被动技能直接监听 `OnSpawn`
+- 被动技能直接监听 `BeforeDeath`
+- 被动技能直接监听 `AfterDeath`
+- 被动技能直接监听 `OnHitTarget`
+- 被动技能直接监听 `OnDamaged`
+- 被动技能直接监听 `OnKillTarget`
+- 被动技能直接监听 `OnCastStart`
+- 被动技能直接监听 `OnCastComplete`
+
+也就是说，当前被动技能更偏向“后续技能修正器”，而不是“通用事件响应型被动”。

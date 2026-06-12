@@ -9,6 +9,7 @@ using UnityEditor;
 using UnityEngine;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Data.Effects;
+using CrystalMagic.Game.Skill;
 
 namespace CrystalMagic.Editor.Data
 {
@@ -27,6 +28,10 @@ namespace CrystalMagic.Editor.Data
         private static readonly string[] PropertyModifierChannelDisplayNames = EditorLabelUtility.GetEnumDisplayNames<PropertyModifierChannel>();
         private static readonly SkillModifierChannel[] EditableSkillModifierChannels = SkillModifierChannelUtility.GetEditableChannels();
         private static readonly string[] SkillModifierChannelDisplayNames = SkillModifierChannelUtility.GetEditableDisplayNames();
+        private static readonly BuffTriggerType[] BuffTriggerTypes = (BuffTriggerType[])Enum.GetValues(typeof(BuffTriggerType));
+        private static readonly string[] BuffTriggerTypeDisplayNames = EditorLabelUtility.GetEnumDisplayNames<BuffTriggerType>();
+        private static readonly SkillHookType[] BuffHookTypes = (SkillHookType[])Enum.GetValues(typeof(SkillHookType));
+        private static readonly string[] BuffHookTypeDisplayNames = EditorLabelUtility.GetEnumDisplayNames<SkillHookType>();
 
         // ===== Buff 瀛愮被娉ㄥ唽 =====
         private static readonly Type[]   KnownBuffTypes =
@@ -46,7 +51,7 @@ namespace CrystalMagic.Editor.Data
             new(0.60f, 0.18f, 0.14f),  // EffectBuff - 红
         };
 
-        // ===== Effect 子类注册（用于 EffectBuff 的 EffectChain）=====
+        // ===== Effect 子类注册（用于 Buff 触发条目）=====
         private static string[] GetBuffTypeDisplayNames()
         {
             string[] displayNames = new string[KnownBuffTypes.Length];
@@ -261,7 +266,7 @@ namespace CrystalMagic.Editor.Data
             newBuff.MaxStacks = 1;
 
             if (newBuff is EffectBuffData te)
-                te.EffectChain = Array.Empty<EffectData>();
+                te.TriggerEntries = new List<BuffTriggerEntry>();
 
             _rows.Add(newBuff);
             NormalizeRowIds();
@@ -666,12 +671,68 @@ namespace CrystalMagic.Editor.Data
 
         private void DrawEffectBuffFields(BuffData buff)
         {
-            DrawSectionHeader("效果触发");
-            buff.TickIntervalSeconds = EditorGUILayout.FloatField("触发间隔 (秒)", buff.TickIntervalSeconds);
+            DrawSectionHeader("触发条目");
+            buff.TriggerEntries ??= new List<BuffTriggerEntry>();
 
-            DrawSectionHeader("效果链");
-            buff.EffectChain ??= Array.Empty<EffectData>();
-            buff.EffectChain = DrawEffectChainInline("__buff_root__", buff.EffectChain, ref _addEffectTypeIndex);
+            if (GUILayout.Button("+ 添加触发条目", GUILayout.Width(120)))
+            {
+                buff.TriggerEntries.Add(new BuffTriggerEntry
+                {
+                    TriggerType = BuffTriggerType.Tick,
+                    Effects = Array.Empty<EffectData>(),
+                });
+                _isDirty = true;
+            }
+
+            int removeAt = -1;
+            for (int i = 0; i < buff.TriggerEntries.Count; i++)
+            {
+                BuffTriggerEntry triggerEntry = buff.TriggerEntries[i] ?? new BuffTriggerEntry();
+                EditorGUILayout.BeginVertical("box");
+
+                EditorGUI.BeginChangeCheck();
+                int triggerTypeIndex = Array.IndexOf(BuffTriggerTypes, triggerEntry.TriggerType);
+                triggerTypeIndex = EditorGUILayout.Popup("触发类型", Mathf.Max(0, triggerTypeIndex), BuffTriggerTypeDisplayNames);
+                triggerEntry.TriggerType = BuffTriggerTypes[Mathf.Clamp(triggerTypeIndex, 0, BuffTriggerTypes.Length - 1)];
+
+                if (triggerEntry.TriggerType == BuffTriggerType.Tick)
+                {
+                    triggerEntry.TickIntervalSeconds = EditorGUILayout.FloatField("触发间隔 (秒)", triggerEntry.TickIntervalSeconds);
+                }
+                else
+                {
+                    int hookTypeIndex = Array.IndexOf(BuffHookTypes, triggerEntry.HookType);
+                    hookTypeIndex = EditorGUILayout.Popup("Hook 类型", Mathf.Max(0, hookTypeIndex), BuffHookTypeDisplayNames);
+                    triggerEntry.HookType = BuffHookTypes[Mathf.Clamp(hookTypeIndex, 0, BuffHookTypes.Length - 1)];
+                }
+
+                triggerEntry.ConsumeStackOnTrigger = EditorGUILayout.Toggle("触发时消耗1层", triggerEntry.ConsumeStackOnTrigger);
+                if (EditorGUI.EndChangeCheck())
+                {
+                    buff.TriggerEntries[i] = triggerEntry;
+                    _isDirty = true;
+                }
+
+                string stateKey = $"__buff_trigger_{buff.Id}_{i}";
+                if (!_nestedTypeIndices.TryGetValue(stateKey, out int addEffectIndex))
+                    addEffectIndex = 0;
+                triggerEntry.Effects ??= Array.Empty<EffectData>();
+                triggerEntry.Effects = DrawEffectChainInline(stateKey, triggerEntry.Effects, ref addEffectIndex);
+                _nestedTypeIndices[stateKey] = addEffectIndex;
+                buff.TriggerEntries[i] = triggerEntry;
+
+                GUI.color = new Color(1f, 0.5f, 0.5f);
+                if (GUILayout.Button("删除触发条目", GUILayout.Width(96)))
+                    removeAt = i;
+                GUI.color = Color.white;
+                EditorGUILayout.EndVertical();
+            }
+
+            if (removeAt >= 0)
+            {
+                buff.TriggerEntries.RemoveAt(removeAt);
+                _isDirty = true;
+            }
         }
 
         // --------------------

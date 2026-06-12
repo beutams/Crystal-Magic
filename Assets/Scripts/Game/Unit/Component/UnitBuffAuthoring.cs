@@ -26,14 +26,10 @@ public class UnitBuffAuthoring : MonoBehaviour
                 {
                     BuffId = entry.BuffId,
                     RemainingTime = entry.DurationSeconds,
-                    NextTickTime = 0f,
                     StackCount = Mathf.Max(1, entry.StackCount),
                     HasOriginEntity = false,
                     OriginEntity = Entity.Null,
                     SourceSkillId = -1,
-                    SourceExecutionToken = 0,
-                    ConsumeOnDamageTaken = false,
-                    RemainingTriggerCount = 0,
                 });
             }
         }

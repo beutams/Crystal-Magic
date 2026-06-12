@@ -175,6 +175,14 @@ public static class SkillExecutionUtility
         cast.PhaseDuration = 0f;
         ResetTaskPayload(entityManager, entity, cast.CurrentExecutionToken);
         ScheduleHook(ref cast, SkillCastHookPoint.BeforeWindup, SkillCastHookContinuation.StartWindup);
+        UnitBuffHookUtility.Dispatch(
+            entityManager,
+            entity,
+            SkillHookType.OnCastStart,
+            SkillTriggerSource.ActiveCast,
+            hasOriginEntity: true,
+            originEntity: entity,
+            sourceSkillId: cast.CurrentSkillId);
         return true;
     }
 
@@ -307,6 +315,14 @@ public static class SkillExecutionUtility
                     return SkillAdvanceResult.Failed;
                 }
 
+                UnitBuffHookUtility.Dispatch(
+                    entityManager,
+                    entity,
+                    SkillHookType.OnCastComplete,
+                    SkillTriggerSource.ActiveCast,
+                    hasOriginEntity: true,
+                    originEntity: entity,
+                    sourceSkillId: cast.CurrentSkillId);
                 ConsumeMatchingFollowupEffects(entityManager, entity, cast, executeSkill);
                 AppendGeneratedFollowupEffects(entityManager, entity, cast);
                 ScheduleHook(ref cast, SkillCastHookPoint.BeforeRecovery, SkillCastHookContinuation.StartRecovery);
@@ -419,7 +435,7 @@ public static class SkillExecutionUtility
 
     private static void ClearExecutionState(EntityManager entityManager, Entity entity, ref UnitCastComponent cast)
     {
-        UnitBuffUtility.RemoveRuntimeBuffsByExecutionToken(entityManager, entity, cast.CurrentExecutionToken);
+        UnitBuffUtility.RemoveRuntimeBuffsBySourceSkillId(entityManager, entity, cast.CurrentSkillId);
         ResetTaskPayload(entityManager, entity, -1);
         ClearJumpArcState(entityManager, entity);
         cast.IsCasting = false;

@@ -299,7 +299,8 @@ Game\
       UnitAuthoringUtility.cs FALSE
       UnitBehaviorTreeAuthoring.cs FALSE
       UnitBuffAuthoring.cs TRUE DIRTY
-      UnitBuffRuntimeComponent.cs FALSE
+      UnitBuffRuntimeComponent.cs TRUE
+        存储运行时技能数据，以及Tick,Hook调用时发送施法请求
       UnitCastAuthoring.cs FALSE
       UnitCastSkillPayloadComponent.cs FALSE
       UnitCastTaskPayloadComponent.cs FALSE
@@ -371,8 +372,9 @@ Game\
       UnitAnimationSystem.cs FALSE
       UnitAnimationVisualUtility.cs FALSE
       UnitBuffSystem.cs TRUE
-        统计Buff写入属性和技能修正，发送技能请求
+        统计Buff写入属性和技能修正，轮询技能时间
       UnitBuffUtility.cs FALSE
+      UnitBuffHookUtility.cs FALSE
       UnitControlSystem.cs FALSE
       UnitControlUtility.cs FALSE
       UnitDropOnDestroySystem.cs TRUE

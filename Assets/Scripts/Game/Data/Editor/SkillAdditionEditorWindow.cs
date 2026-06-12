@@ -708,9 +708,6 @@ namespace CrystalMagic.Editor.Data
                 case ApplyRuntimeBuffSkillCastTaskData runtimeBuffTaskData:
                     runtimeBuffTaskData.BuffId = EditorGUILayout.IntField("Buff Id", runtimeBuffTaskData.BuffId);
                     runtimeBuffTaskData.StackCount = Mathf.Max(1, EditorGUILayout.IntField("Stack Count", runtimeBuffTaskData.StackCount));
-                    runtimeBuffTaskData.ConsumeOnDamageTaken = EditorGUILayout.Toggle("Consume On Damage", runtimeBuffTaskData.ConsumeOnDamageTaken);
-                    if (runtimeBuffTaskData.ConsumeOnDamageTaken)
-                        runtimeBuffTaskData.RemainingTriggerCount = Mathf.Max(1, EditorGUILayout.IntField("Remaining Triggers", runtimeBuffTaskData.RemainingTriggerCount));
                     break;
 
                 case JumpArcSkillCastTaskData jumpArcTaskData:

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data.Effects;
+using CrystalMagic.Game.Skill;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -22,11 +23,32 @@ namespace CrystalMagic.Game.Data
         public int MaxStacks = 1;
         public List<PropertyModifierEntry> PropertyModifiers = new();
         public List<SkillModifierEntry> SkillModifiers = new();
+        public List<BuffTriggerEntry> TriggerEntries = new();
+        public abstract BuffCategory Category { get; }
+
+        public List<BuffTriggerEntry> CreateEffectiveTriggerEntries()
+        {
+            return TriggerEntries ?? new List<BuffTriggerEntry>();
+        }
+    }
+
+    public enum BuffTriggerType : byte
+    {
+        Tick = 0,
+        Hook = 1,
+    }
+
+    [System.Serializable]
+    public sealed class BuffTriggerEntry
+    {
+        public BuffTriggerType TriggerType;
         [EditorLabel("触发间隔(秒)")]
         public float TickIntervalSeconds;
+        public SkillHookType HookType;
+        public bool ConsumeStackOnTrigger;
+
         [SerializeReference]
-        public EffectData[] EffectChain = System.Array.Empty<EffectData>();
-        public abstract BuffCategory Category { get; }
+        public EffectData[] Effects = System.Array.Empty<EffectData>();
     }
 
     public enum PropertyModifierChannel

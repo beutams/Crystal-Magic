@@ -56,16 +56,12 @@ namespace CrystalMagic.Game.Skill
     {
         private readonly int _buffId;
         private readonly int _stackCount;
-        private readonly bool _consumeOnDamageTaken;
-        private readonly int _remainingTriggerCount;
         private bool _applied;
 
         public ApplyRuntimeBuffSkillCastTaskRuntime(ApplyRuntimeBuffSkillCastTaskData data) : base(data?.HookPoint ?? SkillCastHookPoint.BeforeWindup)
         {
             _buffId = data?.BuffId ?? -1;
             _stackCount = math.max(1, data?.StackCount ?? 1);
-            _consumeOnDamageTaken = data?.ConsumeOnDamageTaken ?? false;
-            _remainingTriggerCount = math.max(1, data?.RemainingTriggerCount ?? 1);
         }
 
         public override bool Tick(EntityManager entityManager, Entity entity, ref UnitCastComponent cast, ref float remainingTime)
@@ -77,10 +73,8 @@ namespace CrystalMagic.Game.Skill
                 entityManager,
                 entity,
                 _buffId,
-                cast.CurrentExecutionToken,
-                _stackCount,
-                _consumeOnDamageTaken,
-                _remainingTriggerCount);
+                cast.CurrentSkillId,
+                _stackCount);
             _applied = true;
             return true;
         }
