@@ -405,7 +405,7 @@ GameObject:
   - component: {fileID: 1841286425}
   - component: {fileID: 1841286426}
   m_Layer: 0
-  m_Name: Manager
+  m_Name: DungeonRegistrySubScene
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -435,26 +435,18 @@ MonoBehaviour:
   m_GameObject: {fileID: 1841286424}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9dde44a8c1f3f1a4ea6123e2c5a519c2, type: 3}
+  m_Script: {fileID: 11500000, guid: 45a335734b1572644a6a5d09d87adc65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _unitPrefabs:
-  - {fileID: 28937165386333400, guid: 712d8fa16958ab141b3013e09376820b, type: 3}
-  - {fileID: 28937165386333400, guid: d4e83d94b1156624e813f505ea93d4e4, type: 3}
-  - {fileID: 28937165386333400, guid: b724bca480c11ef4d9483c3f03da7e89, type: 3}
-  - {fileID: 28937165386333400, guid: 6c5c8ce2caf2eae4682ab6fcd3a0b251, type: 3}
-  - {fileID: 28937165386333400, guid: 016d1fbd4f693834bb7b4bafa4409119, type: 3}
-  - {fileID: 36189917606584973, guid: 3578a246b29bff441b83a13f610890d5, type: 3}
-  - {fileID: 36189917606584973, guid: 23044f0f9839ce04d873cc341b80d810, type: 3}
-  - {fileID: 36189917606584973, guid: c3542ebb87e11e54cb647648c06c6a50, type: 3}
-  - {fileID: 7307774103284855405, guid: eef4a27652aabfd4d8e06887598b7daa, type: 3}
-  - {fileID: 6977492858261363131, guid: 2067091fa0fc8ae4dab302f3544ab56d, type: 3}
-  - {fileID: 680176080510393247, guid: 9bbebcb8a52e2d744916ace90558aedf, type: 3}
-  - {fileID: 5789166119428417417, guid: 1751044ccf914c44f818fc9de5d17f8b, type: 3}
-  _projectilePrefabs:
-  - {fileID: 7099561344832099384, guid: e9fce668ff4692b4d9cfdf3fcdde1c5f, type: 3}
-  _dropPrefabs:
-  - {fileID: 6997506446576889114, guid: 7f68d8767cdb1bc4f98f1f7e878c7926, type: 3}
+  _SceneAsset: {fileID: 102900000, guid: 0e1c3b904ea149c68a8d41b9e3b27451, type: 3}
+  _HierarchyColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  AutoLoadScene: 1
+  _SceneGUID:
+    Value:
+      x: 0
+      y: 0
+      z: 0
+      w: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

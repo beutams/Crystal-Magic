@@ -27,6 +27,7 @@ GameObject:
   - component: {fileID: 504064578263819208}
   - component: {fileID: 504064578263819209}
   - component: {fileID: 639147834837831293}
+  - component: {fileID: 639147834837831294}
   m_Layer: 0
   m_Name: MonsterGoblinShield
   m_TagString: Untagged
@@ -319,3 +320,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Tier: 4
+--- !u!114 &639147834837831294
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 28937165386333400}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0f7a7f8a1a1477ba5db8d64fdb63861, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

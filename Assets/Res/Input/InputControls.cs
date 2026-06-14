@@ -110,6 +110,15 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
+                    ""name"": ""Click"",
+                    ""type"": ""Button"",
+                    ""id"": ""ccd32997-c66a-472d-9f6f-1929c8d0df3a"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
                     ""name"": ""Inventory"",
                     ""type"": ""Button"",
                     ""id"": ""3ffb76b1-c513-47ab-8d95-10111d787be9"",
@@ -197,6 +206,17 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
+                    ""id"": ""992b39c7-9490-4f33-8e2b-def1f28fff8a"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Click"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""33432e18-b2ea-460c-8313-810cfcffad90"",
                     ""path"": ""<Keyboard>/b"",
                     ""interactions"": """",
@@ -237,15 +257,6 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
                     ""type"": ""Button"",
                     ""id"": ""94cd6c66-bdf5-48b1-97c0-14107825ab66"",
                     ""expectedControlType"": """",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false
-                },
-                {
-                    ""name"": ""Click"",
-                    ""type"": ""Button"",
-                    ""id"": ""ccd32997-c66a-472d-9f6f-1929c8d0df3a"",
-                    ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
@@ -329,17 +340,6 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""992b39c7-9490-4f33-8e2b-def1f28fff8a"",
-                    ""path"": ""<Mouse>/leftButton"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Click"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
                     ""id"": ""7f0054a8-0051-4228-9853-084ff12cdbb8"",
                     ""path"": ""<Keyboard>/z"",
                     ""interactions"": """",
@@ -408,13 +408,13 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         m_Interaction = asset.FindActionMap("Interaction", throwIfNotFound: true);
         m_Interaction_Move = m_Interaction.FindAction("Move", throwIfNotFound: true);
         m_Interaction_Interact = m_Interaction.FindAction("Interact", throwIfNotFound: true);
+        m_Interaction_Click = m_Interaction.FindAction("Click", throwIfNotFound: true);
         m_Interaction_Inventory = m_Interaction.FindAction("Inventory", throwIfNotFound: true);
         m_Interaction_Property = m_Interaction.FindAction("Property", throwIfNotFound: true);
         // Battle
         m_Battle = asset.FindActionMap("Battle", throwIfNotFound: true);
         m_Battle_Skill = m_Battle.FindAction("Skill", throwIfNotFound: true);
         m_Battle_Tab = m_Battle.FindAction("Tab", throwIfNotFound: true);
-        m_Battle_Click = m_Battle.FindAction("Click", throwIfNotFound: true);
         m_Battle_UseProp = m_Battle.FindAction("UseProp", throwIfNotFound: true);
         // Global
         m_Global = asset.FindActionMap("Global", throwIfNotFound: true);
@@ -503,6 +503,7 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
     private List<IInteractionActions> m_InteractionActionsCallbackInterfaces = new List<IInteractionActions>();
     private readonly InputAction m_Interaction_Move;
     private readonly InputAction m_Interaction_Interact;
+    private readonly InputAction m_Interaction_Click;
     private readonly InputAction m_Interaction_Inventory;
     private readonly InputAction m_Interaction_Property;
     /// <summary>
@@ -524,6 +525,11 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Interaction/Interact".
         /// </summary>
         public InputAction @Interact => m_Wrapper.m_Interaction_Interact;
+        /// <summary>
+        /// Provides access to the underlying input action "Interaction/Click".
+        /// </summary>
+        public InputAction @Click => m_Wrapper.m_Interaction_Click;
+        /// <summary>
         /// Provides access to the underlying input action "Interaction/Inventory".
         /// </summary>
         public InputAction @Inventory => m_Wrapper.m_Interaction_Inventory;
@@ -563,6 +569,9 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
             @Interact.started += instance.OnInteract;
             @Interact.performed += instance.OnInteract;
             @Interact.canceled += instance.OnInteract;
+            @Click.started += instance.OnClick;
+            @Click.performed += instance.OnClick;
+            @Click.canceled += instance.OnClick;
             @Inventory.started += instance.OnInventory;
             @Inventory.performed += instance.OnInventory;
             @Inventory.canceled += instance.OnInventory;
@@ -586,6 +595,9 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
             @Interact.started -= instance.OnInteract;
             @Interact.performed -= instance.OnInteract;
             @Interact.canceled -= instance.OnInteract;
+            @Click.started -= instance.OnClick;
+            @Click.performed -= instance.OnClick;
+            @Click.canceled -= instance.OnClick;
             @Inventory.started -= instance.OnInventory;
             @Inventory.performed -= instance.OnInventory;
             @Inventory.canceled -= instance.OnInventory;
@@ -631,7 +643,6 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
     private List<IBattleActions> m_BattleActionsCallbackInterfaces = new List<IBattleActions>();
     private readonly InputAction m_Battle_Skill;
     private readonly InputAction m_Battle_Tab;
-    private readonly InputAction m_Battle_Click;
     private readonly InputAction m_Battle_UseProp;
     /// <summary>
     /// Provides access to input actions defined in input action map "Battle".
@@ -652,10 +663,6 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Battle/Tab".
         /// </summary>
         public InputAction @Tab => m_Wrapper.m_Battle_Tab;
-        /// <summary>
-        /// Provides access to the underlying input action "Battle/Click".
-        /// </summary>
-        public InputAction @Click => m_Wrapper.m_Battle_Click;
         /// <summary>
         /// Provides access to the underlying input action "Battle/UseProp".
         /// </summary>
@@ -692,9 +699,6 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
             @Tab.started += instance.OnTab;
             @Tab.performed += instance.OnTab;
             @Tab.canceled += instance.OnTab;
-            @Click.started += instance.OnClick;
-            @Click.performed += instance.OnClick;
-            @Click.canceled += instance.OnClick;
             @UseProp.started += instance.OnUseProp;
             @UseProp.performed += instance.OnUseProp;
             @UseProp.canceled += instance.OnUseProp;
@@ -715,9 +719,6 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
             @Tab.started -= instance.OnTab;
             @Tab.performed -= instance.OnTab;
             @Tab.canceled -= instance.OnTab;
-            @Click.started -= instance.OnClick;
-            @Click.performed -= instance.OnClick;
-            @Click.canceled -= instance.OnClick;
             @UseProp.started -= instance.OnUseProp;
             @UseProp.performed -= instance.OnUseProp;
             @UseProp.canceled -= instance.OnUseProp;
@@ -871,6 +872,14 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnInteract(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Click" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnClick(InputAction.CallbackContext context);
+        /// <summary>
         /// Method invoked when associated input action "Inventory" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
@@ -906,13 +915,6 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnTab(InputAction.CallbackContext context);
-        /// <summary>
-        /// Method invoked when associated input action "Click" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
-        /// </summary>
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnClick(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "UseProp" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>

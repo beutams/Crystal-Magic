@@ -207,7 +207,18 @@ public static class SkillExecutionUtility
     public static void ClearJumpArcState(EntityManager entityManager, Entity entity)
     {
         if (entityManager.Exists(entity) && entityManager.HasComponent<UnitJumpArcComponent>(entity))
-            entityManager.RemoveComponent<UnitJumpArcComponent>(entity);
+        {
+            entityManager.SetComponentData(entity, new UnitJumpArcComponent
+            {
+                StartPosition = float3.zero,
+                EndPosition = float3.zero,
+                Duration = 0f,
+                Elapsed = 0f,
+                ArcHeight = 0f,
+                IsActive = 0,
+                IsCompleted = 1,
+            });
+        }
 
         if (entityManager.Exists(entity) && entityManager.HasComponent<UnitMoveComponent>(entity))
         {

@@ -195,6 +195,7 @@ namespace CrystalMagic.Core
                 TargetStateType = typeof(DungeonState),
                 TargetStateData = context,
                 TransitionUIName = "TransitionUI",
+                RequiredSubSceneNames = new[] { "DungeonRegistrySubScene" },
                 ForceReloadTargetScene = true,
                 PostLoadCoroutineFactory = () => DungeonGenerationService.GenerateForTransition(context, SceneName),
             };

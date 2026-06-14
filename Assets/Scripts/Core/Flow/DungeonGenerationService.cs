@@ -17,8 +17,6 @@ namespace CrystalMagic.Core
         private const float WallVisualDepth = 1.6f;
         private const float WallVisualZ = 0.8f;
 
-        private static readonly DungeonGenerationRules DefaultRules = new();
-
         public static IEnumerator GenerateForTransition(LoadGameContext context, string targetSceneName)
         {
             int dungeonFloor = DungeonState.PrepareDungeonRun(context);
@@ -27,9 +25,11 @@ namespace CrystalMagic.Core
                 yield break;
 
             DungeonConfig dungeonConfig = GetDungeonConfig();
+            DungeonGenerationConfig generationConfig = GetDungeonGenerationConfig();
+            DungeonGenerationRules rules = BuildRules(generationConfig);
             DungeonThemeData theme = ResolveThemeData(dungeonFloor);
             bool isBossFloor = IsBossFloor(dungeonFloor, dungeonConfig);
-            DungeonMakerTunnelingConfig config = BuildConfig(dungeonFloor);
+            DungeonMakerTunnelingConfig config = BuildConfig(dungeonFloor, generationConfig);
             ValidateConfig(config);
 
             if (runData.CurrentFloor == dungeonFloor && runData.Seed != 0)
@@ -51,6 +51,7 @@ namespace CrystalMagic.Core
                         dungeonFloor,
                         runData.Seed,
                         config,
+                        rules,
                         dungeonConfig,
                         theme,
                         targetSceneName,
@@ -93,6 +94,16 @@ namespace CrystalMagic.Core
 
             int maxAttemptCount = Mathf.Max(1, dungeonConfig?.LayoutSearchAttemptLimit ?? 100);
             bool useBestCandidateFallback = dungeonConfig?.UseBestCandidateFallback ?? true;
+            DungeonGenerationAttemptRecorder.BeginSession(
+                dungeonFloor,
+                masterSeed,
+                maxAttemptCount,
+                useBestCandidateFallback,
+                config,
+                rules.LargeRoomRange,
+                rules.MediumRoomRange,
+                rules.SmallRoomRange,
+                rules.WalkableTileRange);
             int attemptIndex = 0;
             CandidateSelection bestCandidate = null;
             while (true)
@@ -102,18 +113,37 @@ namespace CrystalMagic.Core
                 yield return GenerateCandidateCoroutine(
                     candidateSeed,
                     config,
+                    rules,
                     attemptIndex,
                     targetSceneName,
                     candidateContext);
 
-                int candidateScore = ScoreCandidate(candidateContext.Result.Stats, DefaultRules);
+                int candidateScore = ScoreCandidate(candidateContext.Result.Stats, rules);
                 if (bestCandidate == null || candidateScore > bestCandidate.Score)
                 {
                     bestCandidate = new CandidateSelection(candidateContext.Result, candidateSeed, attemptIndex, candidateScore);
                 }
 
-                if (IsMapQualified(candidateContext.Result.Stats, DefaultRules))
+                bool isQualified = IsMapQualified(candidateContext.Result.Stats, rules);
+                DungeonGenerationAttemptRecorder.RecordAttempt(
+                    attemptIndex + 1,
+                    candidateSeed,
+                    candidateScore,
+                    bestCandidate.Score,
+                    candidateContext.Result.Stats,
+                    isQualified,
+                    rules.LargeRoomRange,
+                    rules.MediumRoomRange,
+                    rules.SmallRoomRange,
+                    rules.WalkableTileRange);
+
+                if (isQualified)
                 {
+                    DungeonGenerationAttemptRecorder.RecordAccepted(
+                        attemptIndex + 1,
+                        candidateSeed,
+                        candidateScore,
+                        candidateContext.Result.Stats);
                     yield return AcceptCandidateCoroutine(
                         runData,
                         candidateContext.Result,
@@ -134,11 +164,18 @@ namespace CrystalMagic.Core
                     if (bestCandidate.Score <= 0)
                     {
                         string errorDetail = $"No valid dungeon layout found in {attemptCount} attempts for floor {dungeonFloor}. Best score was {bestCandidate.Score}.";
+                        DungeonGenerationAttemptRecorder.RecordFailure(attemptCount, bestCandidate.Score);
                         PublishProgress(targetSceneName, 0.35f, "Dungeon layout search failed", errorDetail);
                         Debug.LogError($"[DungeonGenerationService] {errorDetail}");
                         throw new InvalidOperationException(errorDetail);
                     }
 
+                    DungeonGenerationAttemptRecorder.RecordFallbackAccepted(
+                        bestCandidate.AttemptIndex + 1,
+                        bestCandidate.Seed,
+                        bestCandidate.Score,
+                        attemptCount,
+                        bestCandidate.Result.Stats);
                     yield return AcceptCandidateCoroutine(
                         runData,
                         bestCandidate.Result,
@@ -191,6 +228,7 @@ namespace CrystalMagic.Core
             int dungeonFloor,
             int acceptedSeed,
             DungeonMakerTunnelingConfig config,
+            DungeonGenerationRules rules,
             DungeonConfig dungeonConfig,
             DungeonThemeData theme,
             string targetSceneName,
@@ -201,6 +239,7 @@ namespace CrystalMagic.Core
             yield return GenerateCandidateCoroutine(
                 acceptedSeed,
                 config,
+                rules,
                 0,
                 targetSceneName,
                 acceptedContext,
@@ -246,6 +285,7 @@ namespace CrystalMagic.Core
         private static IEnumerator GenerateCandidateCoroutine(
             int candidateSeed,
             DungeonMakerTunnelingConfig config,
+            DungeonGenerationRules rules,
             int attemptIndex,
             string targetSceneName,
             CandidateGenerationContext context,
@@ -281,8 +321,8 @@ namespace CrystalMagic.Core
             }
 
             DungeonMakerTunnelingResult rawResult = stepper.BuildResult();
-            DungeonMakerTunnelingResult postProcessed = PostProcessCandidateResult(rawResult, DefaultRules);
-            context.Result = FinalizeGeneratedLayout(postProcessed, DefaultRules);
+            DungeonMakerTunnelingResult postProcessed = PostProcessCandidateResult(rawResult, rules);
+            context.Result = FinalizeGeneratedLayout(postProcessed, rules);
         }
 
         private static float EstimateCandidateProgress(int activeGeneration, int liveBuilderCount)
@@ -319,13 +359,80 @@ namespace CrystalMagic.Core
             }
         }
 
-        private static DungeonMakerTunnelingConfig BuildConfig(int dungeonFloor)
+        private static DungeonMakerTunnelingConfig BuildConfig(int dungeonFloor, DungeonGenerationConfig generationConfig)
         {
             DungeonMakerTunnelingConfig config = DungeonMakerTunnelingConfig.CreateDefault();
-            config.MaxSmallDungeonRooms = Mathf.Max(12, config.MaxSmallDungeonRooms + Mathf.Max(0, dungeonFloor - 1));
-            config.MaxMediumDungeonRooms = Mathf.Max(6, config.MaxMediumDungeonRooms + Mathf.Max(0, dungeonFloor / 3));
-            config.MaxLargeDungeonRooms = Mathf.Max(1, config.MaxLargeDungeonRooms + Mathf.Max(0, dungeonFloor / 5));
+            generationConfig ??= new DungeonGenerationConfig();
+            config.DimX = generationConfig.DimX;
+            config.DimY = generationConfig.DimY;
+            config.MinSmallRoomSize = generationConfig.MinSmallRoomSize;
+            config.MinMediumRoomSize = generationConfig.MinMediumRoomSize;
+            config.MinLargeRoomSize = generationConfig.MinLargeRoomSize;
+            config.MaxRoomSize = generationConfig.MaxRoomSize;
+            config.TunnelJoinDist = generationConfig.TunnelJoinDist;
+            config.Patience = generationConfig.Patience;
+            config.Mutator = generationConfig.Mutator;
+            config.RoomAspectRatio = generationConfig.RoomAspectRatio;
+            config.MaxSmallDungeonRooms = Mathf.Max(generationConfig.MinSmallDungeonRooms, generationConfig.MaxSmallDungeonRooms + Mathf.Max(0, (dungeonFloor - 1) * generationConfig.SmallRoomAddPerFloor));
+            config.MaxMediumDungeonRooms = Mathf.Max(generationConfig.MinMediumDungeonRooms, generationConfig.MaxMediumDungeonRooms + GetFloorScaledIncrement(dungeonFloor, generationConfig.MediumRoomAddFloorInterval));
+            config.MaxLargeDungeonRooms = Mathf.Max(generationConfig.MinLargeDungeonRooms, generationConfig.MaxLargeDungeonRooms + GetFloorScaledIncrement(dungeonFloor, generationConfig.LargeRoomAddFloorInterval));
+            ApplyRoomSizeProbabilityProfile(config);
+            ApplyTunnelGrowthProbabilityProfile(config);
             return config;
+        }
+
+        private static void ApplyRoomSizeProbabilityProfile(DungeonMakerTunnelingConfig config)
+        {
+            config.RoomSizeProbS = new List<DungeonMakerTripleInt>
+            {
+                new(100, 0, 0),
+                new(85, 15, 0),
+                new(35, 35, 30),
+                new(10, 40, 50),
+                new(0, 20, 80),
+                new(0, 0, 100),
+            };
+
+            config.RoomSizeProbB = new List<DungeonMakerTripleInt>
+            {
+                new(100, 0, 0),
+                new(20, 30, 50),
+                new(0, 10, 90),
+                new(0, 0, 100),
+            };
+        }
+
+        private static void ApplyTunnelGrowthProbabilityProfile(DungeonMakerTunnelingConfig config)
+        {
+            config.SizeUpProb = new List<int> { 0, 40, 50, 60, 70, 80, 90 };
+            config.SizeDownProb = new List<int> { 0, 0, 5, 10, 15, 15, 20 };
+        }
+
+        private static DungeonGenerationRules BuildRules(DungeonGenerationConfig generationConfig)
+        {
+            generationConfig ??= new DungeonGenerationConfig();
+            return new DungeonGenerationRules
+            {
+                LargeRoomRange = new Vector2Int(generationConfig.LargeRoomMin, generationConfig.LargeRoomMax),
+                MediumRoomRange = new Vector2Int(generationConfig.MediumRoomMin, generationConfig.MediumRoomMax),
+                SmallRoomRange = new Vector2Int(generationConfig.SmallRoomMin, generationConfig.SmallRoomMax),
+                WalkableTileRange = new Vector2Int(generationConfig.WalkableTileMin, generationConfig.WalkableTileMax),
+                PruneDeadEnds = generationConfig.PruneDeadEnds,
+                SpawnEncounters = generationConfig.SpawnEncounters,
+                CorridorLevel1SpawnChanceDenominator = generationConfig.CorridorLevel1SpawnChanceDenominator,
+                AnteRoomMonsterCountRange = new EncounterCountRange(generationConfig.AnteRoomMonsterMin, generationConfig.AnteRoomMonsterMax),
+                SmallRoomMonsterCountRange = new EncounterCountRange(generationConfig.SmallRoomMonsterMin, generationConfig.SmallRoomMonsterMax),
+                MediumRoomMonsterCountRange = new EncounterCountRange(generationConfig.MediumRoomMonsterMin, generationConfig.MediumRoomMonsterMax),
+                LargeRoomMonsterCountRange = new EncounterCountRange(generationConfig.LargeRoomMonsterMin, generationConfig.LargeRoomMonsterMax),
+            };
+        }
+
+        private static int GetFloorScaledIncrement(int dungeonFloor, int interval)
+        {
+            if (interval <= 0)
+                return 0;
+
+            return Mathf.Max(0, dungeonFloor / interval);
         }
 
         private static void ValidateConfig(DungeonMakerTunnelingConfig config)
@@ -1349,6 +1456,11 @@ namespace CrystalMagic.Core
         private static DungeonConfig GetDungeonConfig()
         {
             return ConfigComponent.Instance.Get<DungeonConfig>();
+        }
+
+        private static DungeonGenerationConfig GetDungeonGenerationConfig()
+        {
+            return ConfigComponent.Instance.Get<DungeonGenerationConfig>();
         }
 
         private static DungeonThemeData ResolveThemeData(int dungeonFloor)

@@ -106,16 +106,16 @@ namespace CrystalMagic.Game.Skill
                 return true;
 
             UnitJumpArcComponent jump = entityManager.GetComponentData<UnitJumpArcComponent>(entity);
-            if (jump.IsCompleted == 0)
+            if (jump.IsActive != 0 && jump.IsCompleted == 0)
                 return false;
 
-            entityManager.RemoveComponent<UnitJumpArcComponent>(entity);
             return true;
         }
 
         private bool TryStartJump(EntityManager entityManager, Entity entity)
         {
             if (!entityManager.Exists(entity) ||
+                !entityManager.HasComponent<UnitJumpArcComponent>(entity) ||
                 !entityManager.HasComponent<Unity.Transforms.LocalTransform>(entity) ||
                 !SkillTargetUtility.TryGetTargetPosition(entityManager, entity, out float2 targetPosition))
                 return false;
@@ -156,14 +156,11 @@ namespace CrystalMagic.Game.Skill
                 Duration = _durationSeconds,
                 Elapsed = 0f,
                 ArcHeight = _arcHeight,
+                IsActive = 1,
                 IsCompleted = 0,
             };
 
-            if (entityManager.HasComponent<UnitJumpArcComponent>(entity))
-                entityManager.SetComponentData(entity, jump);
-            else
-                entityManager.AddComponentData(entity, jump);
-
+            entityManager.SetComponentData(entity, jump);
             return true;
         }
     }

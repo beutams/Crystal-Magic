@@ -720,7 +720,7 @@
       "Id": 9
     },
     {
-      "Name": "鍔犻€?,
+      "Name": "加速",
       "IsMonsterSkill": false,
       "Description": "",
       "RuntimeType": "SelfSkill",
@@ -1078,7 +1078,7 @@
       "Id": 14
     },
     {
-      "Name": "宸ㄥ儚婵€鍏?,
+      "Name": "巨像激光",
       "IsMonsterSkill": true,
       "Description": "",
       "RuntimeType": "SelfSkill",

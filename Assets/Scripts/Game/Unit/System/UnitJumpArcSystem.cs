@@ -18,6 +18,9 @@ partial class UnitJumpArcSystem : SystemBase
             UnitJumpArcComponent jump = jumpRef.ValueRW;
             LocalTransform transform = transformRef.ValueRW;
 
+            if (jump.IsActive == 0)
+                continue;
+
             if (EntityManager.HasComponent<UnitMoveComponent>(entity))
             {
                 UnitMoveComponent move = EntityManager.GetComponentData<UnitMoveComponent>(entity);
@@ -40,6 +43,7 @@ partial class UnitJumpArcSystem : SystemBase
                 transform.Position = jump.EndPosition;
                 transform.Rotation = quaternion.identity;
                 jump.Elapsed = 0f;
+                jump.IsActive = 0;
                 jump.IsCompleted = 1;
             }
             else if (jump.IsCompleted == 0)
@@ -54,6 +58,7 @@ partial class UnitJumpArcSystem : SystemBase
                 if (jump.Elapsed >= duration)
                 {
                     transform.Position = jump.EndPosition;
+                    jump.IsActive = 0;
                     jump.IsCompleted = 1;
                 }
             }
@@ -61,6 +66,7 @@ partial class UnitJumpArcSystem : SystemBase
             {
                 transform.Position = jump.EndPosition;
                 transform.Rotation = quaternion.identity;
+                jump.IsActive = 0;
             }
 
             jumpRef.ValueRW = jump;

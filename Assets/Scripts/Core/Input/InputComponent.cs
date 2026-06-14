@@ -37,7 +37,7 @@ namespace CrystalMagic.Core {
             _controls.Interaction.Interact.performed += HandleInteract;
             _controls.Interaction.Inventory.performed += HandleInventory;
             _controls.Interaction.Property.performed += HandleProperty;
-            _controls.Battle.Click.performed += HandleClick;
+            _controls.Interaction.Click.performed += HandleClick;
             _controls.Battle.UseProp.performed += HandleUseProp;
             _controls.Battle.Skill.performed += HandleSkill;
             _controls.Battle.Tab.performed += HandleTab;
@@ -63,7 +63,7 @@ namespace CrystalMagic.Core {
                 _controls.Interaction.Interact.performed -= HandleInteract;
                 _controls.Interaction.Inventory.performed -= HandleInventory;
                 _controls.Interaction.Property.performed -= HandleProperty;
-                _controls.Battle.Click.performed -= HandleClick;
+                _controls.Interaction.Click.performed -= HandleClick;
                 _controls.Battle.UseProp.performed -= HandleUseProp;
                 _controls.Battle.Skill.performed -= HandleSkill;
                 _controls.Battle.Tab.performed -= HandleTab;
@@ -149,7 +149,7 @@ namespace CrystalMagic.Core {
 
         private void UpdateMousePress()
         {
-            if (_controls == null || !_controls.Battle.Click.IsPressed())
+            if (_controls == null || !_controls.Interaction.Click.IsPressed())
                 return;
 
             OnMousePress?.Invoke();

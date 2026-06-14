@@ -5,6 +5,18 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
+internal readonly struct PendingDungeonExitMaterialChange
+{
+    public PendingDungeonExitMaterialChange(Entity entity, string materialPath)
+    {
+        Entity = entity;
+        MaterialPath = materialPath;
+    }
+
+    public Entity Entity { get; }
+    public string MaterialPath { get; }
+}
+
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(DungeonTreasureSystem))]
 partial struct DungeonExitSystem : ISystem
@@ -31,6 +43,7 @@ partial struct DungeonExitSystem : ISystem
     public void OnUpdate(ref SystemState state)
     {
         DungeonExitInteractionGraph.Tick(SystemAPI.Time.DeltaTime);
+        System.Collections.Generic.List<PendingDungeonExitMaterialChange> pendingMaterialChanges = new();
 
         if (!_subscribed && InputComponent.TryGetInstance(out InputComponent inputComponent))
         {
@@ -63,13 +76,24 @@ partial struct DungeonExitSystem : ISystem
 
             exit.IsOpen = openValue;
             exitRef.ValueRW = exit;
-            DungeonSceneVisualUtility.ApplySceneObjectMaterial(state.EntityManager, entity, "Exit", shouldOpen ? exit.OpenMaterialPath.ToString() : exit.ClosedMaterialPath.ToString());
+            pendingMaterialChanges.Add(new PendingDungeonExitMaterialChange(
+                entity,
+                shouldOpen ? exit.OpenMaterialPath.ToString() : exit.ClosedMaterialPath.ToString()));
 
             if (!wasOpen && shouldOpen)
             {
                 int currentFloor = SaveDataComponent.Instance?.GetLocationData()?.DungeonFloor ?? 1;
                 SaveDataComponent.Instance?.UnlockDungeonStartFloorAfterBossClear(currentFloor);
             }
+        }
+
+        for (int i = 0; i < pendingMaterialChanges.Count; i++)
+        {
+            PendingDungeonExitMaterialChange pending = pendingMaterialChanges[i];
+            if (!state.EntityManager.Exists(pending.Entity))
+                continue;
+
+            DungeonSceneVisualUtility.ApplySceneObjectMaterial(state.EntityManager, pending.Entity, "Exit", pending.MaterialPath);
         }
 
         if (!_interactRequested.Value)
