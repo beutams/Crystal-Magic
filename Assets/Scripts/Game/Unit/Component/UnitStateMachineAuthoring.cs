@@ -18,11 +18,7 @@ public class UnitStateMachineAuthoring : MonoBehaviour
             Transform root = authoring.transform.root != null
                 ? authoring.transform.root
                 : authoring.transform;
-            Transform interact = root.Find("Interact");
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
-            Entity interactEntity = interact != null
-                ? GetEntity(interact, TransformUsageFlags.Dynamic)
-                : Entity.Null;
             AddBuffer<UnitControlElement>(entity);
             AddComponent(entity, new UnitControlStateComponent
             {
@@ -44,13 +40,7 @@ public class UnitStateMachineAuthoring : MonoBehaviour
                 UnitDataId = data?.Id ?? -1,
                 UnitName = data?.Name ?? root.name,
             });
-            AddComponent(entity, new UnitQuadVisualRequest
-            {
-                VisualKey = new Unity.Collections.FixedString128Bytes(root.name),
-                ExtraVisualEntity = interactEntity,
-                IsApplied = 0,
-            });
-            AddComponent(entity, UnitAnimationComponent.CreateDefault());
+            AddComponent(entity, UnitAnimationComponent.CreateDefault(new Unity.Collections.FixedString128Bytes(root.name)));
             AddComponent(entity, new UnitAnimationFrameUvMinProperty
             {
                 Value = new float4(0f, 0f, 0f, 0f),

@@ -1,9 +1,11 @@
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Rendering;
 
 public struct UnitAnimationComponent : IComponentData
 {
+    public FixedString128Bytes VisualKey;
     public int ClipId;
     public int FrameIndex;
     public float ElapsedSeconds;
@@ -15,10 +17,11 @@ public struct UnitAnimationComponent : IComponentData
     public int LastAtlasPathHash;
     public int LastDirectionalVariantHash;
 
-    public static UnitAnimationComponent CreateDefault()
+    public static UnitAnimationComponent CreateDefault(in FixedString128Bytes visualKey)
     {
         return new UnitAnimationComponent
         {
+            VisualKey = visualKey,
             ClipId = -1,
             FrameIndex = -1,
             ElapsedSeconds = 0f,

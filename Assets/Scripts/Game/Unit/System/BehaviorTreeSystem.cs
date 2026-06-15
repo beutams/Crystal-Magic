@@ -10,16 +10,15 @@ partial class BehaviorTreeSystem : SystemBase
 
     protected override void OnUpdate()
     {
-        bool simulationLocked =
-            GameGateComponent.TryGetInstance(out GameGateComponent gameGateComponent) &&
-            gameGateComponent.IsSimulationLocked;
+        if (GameGateComponent.Instance.IsSimulationLocked)
+            return;
         float deltaTime = SystemAPI.Time.DeltaTime;
 
         foreach (var (intent, perception, behaviorTree, entity) in
                  SystemAPI.Query<RefRW<UnitIntentComponent>, RefRO<UnitPerceptionComponent>, UnitBehaviorTreeComponent>()
                      .WithEntityAccess())
         {
-            if (simulationLocked || behaviorTree == null || !behaviorTree.IsInitialized || behaviorTree.Runtime == null)
+            if (behaviorTree == null || !behaviorTree.IsInitialized || behaviorTree.Runtime == null)
             {
                 intent.ValueRW.MoveDirection = float2.zero;
                 intent.ValueRW.WantToCast = false;

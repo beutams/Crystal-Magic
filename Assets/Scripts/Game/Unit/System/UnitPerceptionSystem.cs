@@ -12,14 +12,7 @@ partial class UnitPerceptionSystem : SystemBase
 
     protected override void OnUpdate()
     {
-        bool simulationLocked =
-            GameGateComponent.TryGetInstance(out GameGateComponent gameGateComponent) &&
-            gameGateComponent.IsSimulationLocked;
-
-        if (simulationLocked)
-            return;
-
-        if (!SystemAPI.HasSingleton<UnitQuerySingleton>())
+        if (GameGateComponent.Instance.IsSimulationLocked || !SystemAPI.HasSingleton<UnitQuerySingleton>())
             return;
 
         DynamicBuffer<UnitQueryEntry> queryEntries = SystemAPI.GetSingletonBuffer<UnitQueryEntry>(true);
@@ -54,7 +47,7 @@ partial class UnitPerceptionSystem : SystemBase
                     continue;
                 if (!UnitFactionUtility.IsEnemy(faction.ValueRO.Value,EntityManager.GetComponentData<UnitFactionComponent>(hit.Entity).Value))
                     continue;
-                if (EntityManager.HasComponent<UnitVitalityComponent>(hit.Entity) && EntityManager.GetComponentData<UnitVitalityComponent>(hit.Entity).CurrentHealth <= 0f)
+                if (EntityManager.HasComponent<DestroyEntityFlag>(hit.Entity) && EntityManager.IsComponentEnabled<DestroyEntityFlag>(hit.Entity))
                     continue;
 
                 float2 diff = hit.Position.xy - center.xy;

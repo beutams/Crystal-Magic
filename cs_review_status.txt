@@ -312,7 +312,8 @@ Game\
       UnitJumpArcComponent.cs FALSE
       UnitManaAuthoring.cs FALSE
       UnitMoveAuthoring.cs FALSE
-      UnitPerceptionAuthoring.cs FALSE
+      UnitPerceptionAuthoring.cs TRUE
+        索敌组件，适配unit编辑器
       UnitQuadVisualRequest.cs FALSE
       UnitSkillAuthoring.cs FALSE
       UnitSkillModifierRuntimeComponent.cs FALSE
@@ -381,7 +382,8 @@ Game\
       UnitFacingSystem.cs FALSE
       UnitJumpArcSystem.cs FALSE
       UnitMoveSystem.cs FALSE
-      UnitPerceptionSystem.cs FALSE
+      UnitPerceptionSystem.cs TRUE
+        查询最近的敌人写入索敌组件
       UnitQuadVisualSystem.cs FALSE
       UnitQuerySystem.cs TRUE
         ==缺少四叉树

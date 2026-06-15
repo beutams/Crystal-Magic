@@ -23,10 +23,10 @@ partial class UnitAnimationSystem : SystemBase
 
         float deltaTime = SystemAPI.Time.DeltaTime;
         List<PendingAnimatedAtlasApply> pendingAtlasApplies = null;
-        foreach ((RefRW<UnitAnimationComponent> animation, RefRO<UnitQuadVisualRequest> request, UnitStateMachineComponent stateMachine, Entity entity) in
-                 SystemAPI.Query<RefRW<UnitAnimationComponent>, RefRO<UnitQuadVisualRequest>, UnitStateMachineComponent>().WithEntityAccess())
+        foreach ((RefRW<UnitAnimationComponent> animation, UnitStateMachineComponent stateMachine, Entity entity) in
+                 SystemAPI.Query<RefRW<UnitAnimationComponent>, UnitStateMachineComponent>().WithEntityAccess())
         {
-            UpdateAnimation(entity, stateMachine, request.ValueRO, profileTable, deltaTime, ref animation.ValueRW, ref pendingAtlasApplies);
+            UpdateAnimation(entity, stateMachine, profileTable, deltaTime, ref animation.ValueRW, ref pendingAtlasApplies);
         }
 
         if (pendingAtlasApplies != null)
@@ -39,7 +39,6 @@ partial class UnitAnimationSystem : SystemBase
     private void UpdateAnimation(
         Entity entity,
         UnitStateMachineComponent stateMachine,
-        in UnitQuadVisualRequest visualRequest,
         DataTable<UnitAnimationProfileData> profileTable,
         float deltaTime,
         ref UnitAnimationComponent animation,
@@ -95,7 +94,7 @@ partial class UnitAnimationSystem : SystemBase
         int directionalVariantHash = GetDirectionalVariantHash(direction, mirrorX);
         if (clipChanged || animation.LastAtlasPathHash != atlasHash)
         {
-            if (UnitAnimationVisualUtility.TryResolveAnimatedAtlas(visualRequest.VisualKey, atlasTexturePath, out Mesh mesh, out Material material))
+            if (UnitAnimationVisualUtility.TryResolveAnimatedAtlas(animation.VisualKey, atlasTexturePath, out Mesh mesh, out Material material))
             {
                 pendingAtlasApplies ??= new List<PendingAnimatedAtlasApply>();
                 pendingAtlasApplies.Add(new PendingAnimatedAtlasApply(entity, mesh, material));
