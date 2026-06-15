@@ -21,9 +21,6 @@ public class UnitSkillAuthoring : MonoBehaviour
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             UnitSkillComponent component = new UnitSkillComponent
             {
-                RequestMode = UnitSkillSelectionMode.None,
-                RequestedSkillId = -1,
-                RequestedTagMask = 0,
                 HasPendingCast = false,
                 PendingSkillIndex = -1,
             };
@@ -42,7 +39,6 @@ public class UnitSkillAuthoring : MonoBehaviour
                     component.Skills.Add(new UnitSkillEntry
                     {
                         SkillId = slot.SkillId,
-                        SkillAdditionId = slot.SkillAdditionId,
                         TagMask = slot.TagMask,
                         MinDistance = math.max(0f, slot.MinDistance),
                         MaxDistance = math.max(slot.MinDistance, slot.MaxDistance),
@@ -62,7 +58,6 @@ public class UnitSkillAuthoring : MonoBehaviour
 public struct UnitSkillEntry
 {
     public int SkillId;
-    public int SkillAdditionId;
     public int TagMask;
     public float MinDistance;
     public float MaxDistance;
@@ -85,9 +80,6 @@ namespace CrystalMagic.Game.Data
 public struct UnitSkillComponent : IComponentData
 {
     public FixedList512Bytes<UnitSkillEntry> Skills;
-    public UnitSkillSelectionMode RequestMode;
-    public int RequestedSkillId;
-    public int RequestedTagMask;
     public bool HasPendingCast;
     public int PendingSkillIndex;
 
@@ -95,12 +87,5 @@ public struct UnitSkillComponent : IComponentData
     {
         HasPendingCast = false;
         PendingSkillIndex = -1;
-    }
-
-    public void ClearRequest()
-    {
-        RequestMode = UnitSkillSelectionMode.None;
-        RequestedSkillId = -1;
-        RequestedTagMask = 0;
     }
 }

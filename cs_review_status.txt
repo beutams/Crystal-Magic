@@ -270,13 +270,21 @@ Game\
     SkillTargetUtility.cs FALSE
   Unit\
     BehaviorTree\
-      ActionBehaviorNodes.cs FALSE
-      BehaviorNodeFactory.cs FALSE
-      BehaviorNodes.cs FALSE
-      BehaviorTreeRegistry.cs FALSE
-      BehaviorTreeRuntime.cs FALSE
-      CommonBehaviorNodes.cs FALSE
-      DecoratorBehaviorNodes.cs FALSE
+      ActionBehaviorNodes.cs TRUE
+        行为节点
+      BehaviorNodeFactory.cs TRUE
+        行为树工厂
+      BehaviorNodes.cs TRUE
+        行为树节点基类
+      BehaviorTreeRegistry.cs TRUE
+        工厂注册器
+      BehaviorTreeRuntime.cs TRUE
+      ==没有多态，全部写死
+        行为树节点数据，黑板数据存放处
+      CommonBehaviorNodes.cs TRUE
+        组合节点+条件节点
+      DecoratorBehaviorNodes.cs TRUE
+        修饰节点
     Component\
       Tag\
         NPCTagAuthoring.cs FALSE
@@ -297,7 +305,8 @@ Game\
       UnitAnimationComponent.cs FALSE
       UnitAttackAuthoring.cs FALSE
       UnitAuthoringUtility.cs FALSE
-      UnitBehaviorTreeAuthoring.cs FALSE
+      UnitBehaviorTreeAuthoring.cs TRUE
+        行为树组件，携带黑板
       UnitBuffAuthoring.cs TRUE DIRTY
       UnitBuffRuntimeComponent.cs TRUE
         存储运行时技能数据，以及Tick,Hook调用时发送施法请求
@@ -308,16 +317,20 @@ Game\
       UnitDropAuthoring.cs TRUE
       UnitFacingComponent.cs FALSE
       UnitFactionAuthoring.cs FALSE
-      UnitIntentAuthoring.cs FALSE
+      UnitIntentAuthoring.cs TRUE
+        ==没有多态
+        单位意图集合
       UnitJumpArcComponent.cs FALSE
       UnitManaAuthoring.cs FALSE
       UnitMoveAuthoring.cs FALSE
       UnitPerceptionAuthoring.cs TRUE
         索敌组件，适配unit编辑器
       UnitQuadVisualRequest.cs FALSE
-      UnitSkillAuthoring.cs FALSE
+      UnitSkillAuthoring.cs TRUE
+        单位所有技能数据
       UnitSkillModifierRuntimeComponent.cs FALSE
       UnitStateMachineAuthoring.cs FALSE
+      ========太多组件在这里添加
       UnitVitalityAuthoring.cs FALSE
       WorldDropComponent.cs FALSE
     Editor\
@@ -348,7 +361,8 @@ Game\
     System\
       BehaviorTreeInitSystem.cs TRUE
         用数据构建出行为树节点对象
-      BehaviorTreeSystem.cs FALSE
+      BehaviorTreeSystem.cs TRUE
+        参数写入黑板，执行行为树
       DestroyEntitySystem.cs FALSE
       DungeonExitSystem.cs FALSE
       DungeonExitInteractionNodes.cs FALSE
@@ -363,7 +377,9 @@ Game\
       PlayerEquipmentPropertySystem.cs TRUE
         统计装备属性写入属性组件中
       UnitModifierUtility.cs FALSE
-      PlayerInputSystem.cs FALSE
+      PlayerInputSystem.cs TRUE
+        用户输入存值
+      PlayerPropUseSystem.cs FALSE
       PlayerSkillAnalysisSystem.cs FALSE
       QuadAnimationSystem.cs FALSE
       QuadAnimationVisualUtility.cs FALSE
@@ -395,12 +411,15 @@ Game\
         重置SkillModifier
       UnitSkillModifierUtility.cs FALSE
       UnitSkillExecuteSystem.cs FALSE
-      UnitSkillSystem.cs FALSE
+      UnitSkillSystem.cs TRUE
+        只是计算冷却
       UnitSystemGroups.cs FALSE
       UnitStateMachineBuildSystem.cs TRUE
         构建状态机数据结构
-      UnitStateMachineSystem.cs FALSE
-      UnitStateTransitionSystem.cs FALSE
+      UnitStateMachineSystem.cs TRUE
+        执行状态轮询
+      UnitStateTransitionSystem.cs TRUE
+        计算并执行状态转换
       WorldDropPickupSystem.cs FALSE
     Unit\
       CompareSource\

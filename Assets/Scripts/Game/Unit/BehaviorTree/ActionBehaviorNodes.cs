@@ -14,27 +14,26 @@ public sealed class MoveToTargetBehaviorNode : ActionBehaviorNode
         _data = data;
     }
 
-    protected override BehaviorNodeStatus OnTick(BehaviorTreeContext context)
+    protected override BehaviorNodeStatus OnTick(BehaviorBlackboard blackboard)
     {
-        if (context == null || !context.Perception.HasTarget)
+        if (blackboard == null || !blackboard.Sense.HasTarget)
             return BehaviorNodeStatus.Failure;
 
-        if (!context.TryGetSelfPosition(out float2 selfPosition))
+        if (!blackboard.TryGetSelfPosition(out float2 selfPosition))
             return BehaviorNodeStatus.Failure;
 
-        float2 targetPosition = context.Perception.TargetPosition;
+        float2 targetPosition = blackboard.Sense.TargetPosition;
         float2 toTarget = targetPosition - selfPosition;
         float distanceSq = math.lengthsq(toTarget);
         float stopDistance = math.max(0f, _data.StopDistance);
         if (distanceSq <= stopDistance * stopDistance)
         {
-            context.SetMoveDirection(float2.zero);
+            blackboard.SetMoveDirection(float2.zero);
             return BehaviorNodeStatus.Success;
         }
 
         float2 direction = math.normalizesafe(toTarget);
-        context.SetMoveDirection(direction);
-        context.SyncBlackboardTarget();
+        blackboard.SetMoveDirection(direction);
         return BehaviorNodeStatus.Running;
     }
 }
@@ -50,25 +49,16 @@ public sealed class CastToTargetBehaviorNode : ActionBehaviorNode
         _data = data;
     }
 
-    protected override BehaviorNodeStatus OnTick(BehaviorTreeContext context)
+    protected override BehaviorNodeStatus OnTick(BehaviorBlackboard blackboard)
     {
-        if (context == null || !context.Perception.HasTarget)
+        if (blackboard == null || !blackboard.Sense.HasTarget)
             return BehaviorNodeStatus.Failure;
 
-        context.SetCastTarget(context.Perception.TargetPosition);
-        context.SetWantToCast();
-        context.SyncBlackboardTarget();
+        blackboard.SetCastTarget(blackboard.Sense.TargetPosition);
+        blackboard.SetWantToCast();
+        blackboard.SetSkillRequest(_data.SelectionMode, _data.SkillId, _data.SkillTagMask);
 
-        if (context.Entity != Entity.Null && context.EntityManager.HasComponent<UnitSkillComponent>(context.Entity))
-        {
-            UnitSkillComponent unitSkill = context.EntityManager.GetComponentData<UnitSkillComponent>(context.Entity);
-            unitSkill.RequestMode = _data.SelectionMode;
-            unitSkill.RequestedSkillId = _data.SkillId;
-            unitSkill.RequestedTagMask = _data.SkillTagMask;
-            context.EntityManager.SetComponentData(context.Entity, unitSkill);
-        }
-
-        if (context.TryGetTargetEntity(out Entity targetEntity) && targetEntity != Entity.Null)
+        if (blackboard.TryGetTargetEntity(out Entity targetEntity) && targetEntity != Entity.Null)
             return BehaviorNodeStatus.Running;
 
         return BehaviorNodeStatus.Success;
@@ -88,16 +78,16 @@ public sealed class WanderBehaviorNode : ActionBehaviorNode
         _data = data;
     }
 
-    protected override BehaviorNodeStatus OnTick(BehaviorTreeContext context)
+    protected override BehaviorNodeStatus OnTick(BehaviorBlackboard blackboard)
     {
-        if (context == null)
+        if (blackboard == null)
             return BehaviorNodeStatus.Failure;
 
         if (_remainingSeconds <= 0f || math.lengthsq(_direction) <= 0.0001f)
             PickNextDirection();
 
-        _remainingSeconds = math.max(0f, _remainingSeconds - math.max(0f, context.DeltaTime));
-        context.SetMoveDirection(_direction);
+        _remainingSeconds = math.max(0f, _remainingSeconds - math.max(0f, blackboard.Runtime.DeltaTime));
+        blackboard.SetMoveDirection(_direction);
         return BehaviorNodeStatus.Running;
     }
 
@@ -130,10 +120,10 @@ public sealed class IdleBehaviorNode : ActionBehaviorNode
     {
     }
 
-    protected override BehaviorNodeStatus OnTick(BehaviorTreeContext context)
+    protected override BehaviorNodeStatus OnTick(BehaviorBlackboard blackboard)
     {
-        if (context != null)
-            context.SetMoveDirection(float2.zero);
+        if (blackboard != null)
+            blackboard.SetMoveDirection(float2.zero);
 
         return BehaviorNodeStatus.Running;
     }

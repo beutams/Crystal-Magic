@@ -21,35 +21,20 @@ internal readonly struct PendingDungeonExitMaterialChange
 [UpdateAfter(typeof(DungeonTreasureSystem))]
 partial struct DungeonExitSystem : ISystem
 {
-    private NativeReference<bool> _interactRequested;
-    private bool _subscribed;
-
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<DungeonExitComponent>();
         state.RequireForUpdate<PlayerTag>();
-        _interactRequested = new NativeReference<bool>(false, Allocator.Persistent);
     }
 
     public void OnDestroy(ref SystemState state)
     {
-        if (_subscribed && InputComponent.TryGetInstance(out InputComponent inputComponent))
-            inputComponent.OnInteract -= HandleInteract;
-
-        if (_interactRequested.IsCreated)
-            _interactRequested.Dispose();
     }
 
     public void OnUpdate(ref SystemState state)
     {
         DungeonExitInteractionGraph.Tick(SystemAPI.Time.DeltaTime);
         System.Collections.Generic.List<PendingDungeonExitMaterialChange> pendingMaterialChanges = new();
-
-        if (!_subscribed && InputComponent.TryGetInstance(out InputComponent inputComponent))
-        {
-            inputComponent.OnInteract += HandleInteract;
-            _subscribed = true;
-        }
 
         NativeParallelHashSet<int> blockedRegions = new(16, Allocator.Temp);
         foreach ((RefRO<DungeonMonsterSpawnComponent> regionRef, Entity entity) in
@@ -96,39 +81,38 @@ partial struct DungeonExitSystem : ISystem
             DungeonSceneVisualUtility.ApplySceneObjectMaterial(state.EntityManager, pending.Entity, "Exit", pending.MaterialPath);
         }
 
-        if (!_interactRequested.Value)
-            return;
-
-        _interactRequested.Value = false;
-        if (GameGateComponent.TryGetInstance(out GameGateComponent gateComponent) && gateComponent.IsPlayerInputLocked)
-            return;
-
         if (TransitionComponent.Instance != null && TransitionComponent.Instance.IsTransitioning)
+            return;
+
+        bool wantToInteract = false;
+        float3 playerPosition = default;
+        foreach ((RefRO<PlayerTag> _, RefRO<UnitIntentComponent> intentRef, RefRO<LocalTransform> playerTransform) in
+                 SystemAPI.Query<RefRO<PlayerTag>, RefRO<UnitIntentComponent>, RefRO<LocalTransform>>())
+        {
+            wantToInteract = intentRef.ValueRO.WantToInteract;
+            playerPosition = playerTransform.ValueRO.Position;
+            break;
+        }
+
+        if (!wantToInteract)
             return;
 
         Entity nearestExit = Entity.Null;
         float nearestDistanceSq = float.MaxValue;
-
-        foreach ((RefRO<PlayerTag> _, RefRO<LocalTransform> playerTransform) in SystemAPI.Query<RefRO<PlayerTag>, RefRO<LocalTransform>>())
+        foreach ((RefRO<DungeonExitComponent> exitRef, RefRO<LocalTransform> exitTransform, Entity entity) in
+                 SystemAPI.Query<RefRO<DungeonExitComponent>, RefRO<LocalTransform>>().WithEntityAccess())
         {
-            float3 playerPosition = playerTransform.ValueRO.Position;
-            foreach ((RefRO<DungeonExitComponent> exitRef, RefRO<LocalTransform> exitTransform, Entity entity) in
-                     SystemAPI.Query<RefRO<DungeonExitComponent>, RefRO<LocalTransform>>().WithEntityAccess())
-            {
-                DungeonExitComponent exit = exitRef.ValueRO;
-                if (exit.IsOpen == 0)
-                    continue;
+            DungeonExitComponent exit = exitRef.ValueRO;
+            if (exit.IsOpen == 0)
+                continue;
 
-                float distanceSq = math.lengthsq((playerPosition - exitTransform.ValueRO.Position).xy);
-                float interactionRangeSq = exit.InteractionRange * exit.InteractionRange;
-                if (distanceSq > interactionRangeSq || distanceSq >= nearestDistanceSq)
-                    continue;
+            float distanceSq = math.lengthsq((playerPosition - exitTransform.ValueRO.Position).xy);
+            float interactionRangeSq = exit.InteractionRange * exit.InteractionRange;
+            if (distanceSq > interactionRangeSq || distanceSq >= nearestDistanceSq)
+                continue;
 
-                nearestDistanceSq = distanceSq;
-                nearestExit = entity;
-            }
-
-            break;
+            nearestDistanceSq = distanceSq;
+            nearestExit = entity;
         }
 
         if (nearestExit == Entity.Null || !state.EntityManager.Exists(nearestExit))
@@ -136,10 +120,5 @@ partial struct DungeonExitSystem : ISystem
 
         DungeonExitComponent nearestExitData = state.EntityManager.GetComponentData<DungeonExitComponent>(nearestExit);
         DungeonExitInteractionGraph.TryOpen(nearestExitData.TargetFloor);
-    }
-
-    private void HandleInteract()
-    {
-        _interactRequested.Value = true;
     }
 }

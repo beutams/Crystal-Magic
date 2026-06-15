@@ -2,40 +2,42 @@ using System.Collections.Generic;
 using CrystalMagic.Game.Data;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Transforms;
 
 public sealed class BehaviorBlackboard
 {
-    public Entity CurrentTargetEntity = Entity.Null;
-    public float2 CurrentTargetPosition;
-    public string CurrentNodeName = "None";
-    public string LastStatus = "None";
+    public BehaviorBlackboardRuntime Runtime;
+    public BehaviorBlackboardSense Sense;
+    public BehaviorBlackboardIntent Intent;
+    public BehaviorBlackboardDebug Debug;
 
     public void ResetFrame()
     {
-        CurrentNodeName = "None";
-        LastStatus = "None";
+        Runtime.Entity = Entity.Null;
+        Runtime.EntityManager = default;
+        Runtime.DeltaTime = 0f;
+
+        Sense.HasSelfPosition = false;
+        Sense.SelfPosition = float2.zero;
+        Sense.HasTarget = false;
+        Sense.TargetEntity = Entity.Null;
+        Sense.TargetPosition = float2.zero;
+        Sense.TargetDistance = 0f;
+
+        Intent.MoveDirection = float2.zero;
+        Intent.WantToCast = false;
+        Intent.CastTargetPosition = float2.zero;
+        Intent.SkillRequestMode = UnitSkillSelectionMode.None;
+        Intent.RequestedSkillId = -1;
+        Intent.RequestedTagMask = 0;
+
+        Debug.CurrentNodeName = "None";
+        Debug.LastStatus = "None";
     }
-}
 
-public sealed class BehaviorTreeContext
-{
-    public Entity Entity;
-    public EntityManager EntityManager;
-    public float DeltaTime;
-    public UnitPerceptionComponent Perception;
-    public UnitIntentComponent Intent;
-    public BehaviorBlackboard Blackboard;
-
-    public void BeginTick(Entity entity, EntityManager entityManager, float deltaTime, in UnitPerceptionComponent perception, in UnitIntentComponent intent, BehaviorBlackboard blackboard)
+    public void SetCurrentNode(ABehaviorNode node)
     {
-        Entity = entity;
-        EntityManager = entityManager;
-        DeltaTime = deltaTime;
-        Perception = perception;
-        Intent = intent;
-        Blackboard = blackboard;
-        Blackboard?.ResetFrame();
+        if (node != null)
+            Debug.CurrentNodeName = node.DisplayName;
     }
 
     public void SetMoveDirection(float2 direction)
@@ -53,20 +55,18 @@ public sealed class BehaviorTreeContext
         Intent.WantToCast = true;
     }
 
-    public void MarkCurrentNode(ABehaviorNode node)
+    public void SetSkillRequest(UnitSkillSelectionMode requestMode, int requestedSkillId, int requestedTagMask)
     {
-        if (Blackboard != null && node != null)
-            Blackboard.CurrentNodeName = node.DisplayName;
+        Intent.SkillRequestMode = requestMode;
+        Intent.RequestedSkillId = requestedSkillId;
+        Intent.RequestedTagMask = requestedTagMask;
     }
 
     public bool TryGetSelfPosition(out float2 position)
     {
-        if (Entity != Entity.Null &&
-            EntityManager.Exists(Entity) &&
-            EntityManager.HasComponent<LocalTransform>(Entity))
+        if (Sense.HasSelfPosition)
         {
-            float3 entityPosition = EntityManager.GetComponentData<LocalTransform>(Entity).Position;
-            position = entityPosition.xy;
+            position = Sense.SelfPosition;
             return true;
         }
 
@@ -76,15 +76,9 @@ public sealed class BehaviorTreeContext
 
     public bool TryGetTargetPosition(out float2 position)
     {
-        if (Perception.HasTarget)
+        if (Sense.HasTarget)
         {
-            position = Perception.TargetPosition;
-            return true;
-        }
-
-        if (Blackboard != null && Blackboard.CurrentTargetEntity != Entity.Null)
-        {
-            position = Blackboard.CurrentTargetPosition;
+            position = Sense.TargetPosition;
             return true;
         }
 
@@ -94,44 +88,48 @@ public sealed class BehaviorTreeContext
 
     public bool TryGetTargetEntity(out Entity targetEntity)
     {
-        if (Perception.HasTarget)
+        if (Sense.HasTarget)
         {
-            targetEntity = Perception.TargetEntity;
-            return true;
-        }
-
-        if (Blackboard != null && Blackboard.CurrentTargetEntity != Entity.Null)
-        {
-            targetEntity = Blackboard.CurrentTargetEntity;
+            targetEntity = Sense.TargetEntity;
             return true;
         }
 
         targetEntity = Entity.Null;
         return false;
     }
+}
 
-    public bool TryGetCastRange(out float castRange)
-    {
-        if (Entity != Entity.Null &&
-            EntityManager.Exists(Entity) &&
-            EntityManager.HasComponent<UnitAttackComponent>(Entity))
-        {
-            castRange = EntityManager.GetComponentData<UnitAttackComponent>(Entity).RealSkillRange;
-            return true;
-        }
+public struct BehaviorBlackboardRuntime
+{
+    public Entity Entity;
+    public EntityManager EntityManager;
+    public float DeltaTime;
+}
 
-        castRange = 0f;
-        return false;
-    }
+public struct BehaviorBlackboardSense
+{
+    public bool HasSelfPosition;
+    public float2 SelfPosition;
+    public bool HasTarget;
+    public Entity TargetEntity;
+    public float2 TargetPosition;
+    public float TargetDistance;
+}
 
-    public void SyncBlackboardTarget()
-    {
-        if (Blackboard == null)
-            return;
+public struct BehaviorBlackboardIntent
+{
+    public float2 MoveDirection;
+    public bool WantToCast;
+    public float2 CastTargetPosition;
+    public UnitSkillSelectionMode SkillRequestMode;
+    public int RequestedSkillId;
+    public int RequestedTagMask;
+}
 
-        Blackboard.CurrentTargetEntity = Perception.HasTarget ? Perception.TargetEntity : Entity.Null;
-        Blackboard.CurrentTargetPosition = Perception.HasTarget ? Perception.TargetPosition : float2.zero;
-    }
+public struct BehaviorBlackboardDebug
+{
+    public string CurrentNodeName;
+    public string LastStatus;
 }
 
 public sealed class BehaviorTreeRuntime
@@ -145,14 +143,14 @@ public sealed class BehaviorTreeRuntime
 
     public bool IsValid => _root != null;
 
-    public BehaviorNodeStatus Tick(BehaviorTreeContext context)
+    public BehaviorNodeStatus Tick(BehaviorBlackboard blackboard)
     {
         if (_root == null)
             return BehaviorNodeStatus.Failure;
 
-        BehaviorNodeStatus status = _root.Tick(context);
-        if (context.Blackboard != null)
-            context.Blackboard.LastStatus = status.ToString();
+        BehaviorNodeStatus status = _root.Tick(blackboard);
+        if (blackboard != null)
+            blackboard.Debug.LastStatus = status.ToString();
         return status;
     }
 

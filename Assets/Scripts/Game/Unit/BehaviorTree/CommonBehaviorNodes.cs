@@ -17,12 +17,12 @@ public sealed class RootBehaviorNode : ABehaviorNode
         Children.Add(child);
     }
 
-    protected override BehaviorNodeStatus OnTick(BehaviorTreeContext context)
+    protected override BehaviorNodeStatus OnTick(BehaviorBlackboard blackboard)
     {
         if (Children.Count == 0 || Children[0] == null)
             return BehaviorNodeStatus.Failure;
 
-        return Children[0].Tick(context);
+        return Children[0].Tick(blackboard);
     }
 }
 
@@ -36,12 +36,12 @@ public sealed class SelectorBehaviorNode : CompositeBehaviorNode
     {
     }
 
-    protected override BehaviorNodeStatus OnTick(BehaviorTreeContext context)
+    protected override BehaviorNodeStatus OnTick(BehaviorBlackboard blackboard)
     {
         int startIndex = _runningChildIndex >= 0 ? _runningChildIndex : 0;
         for (int i = startIndex; i < Children.Count; i++)
         {
-            BehaviorNodeStatus status = Children[i].Tick(context);
+            BehaviorNodeStatus status = Children[i].Tick(blackboard);
             if (status == BehaviorNodeStatus.Failure)
                 continue;
 
@@ -70,12 +70,12 @@ public sealed class SequenceBehaviorNode : CompositeBehaviorNode
     {
     }
 
-    protected override BehaviorNodeStatus OnTick(BehaviorTreeContext context)
+    protected override BehaviorNodeStatus OnTick(BehaviorBlackboard blackboard)
     {
         int startIndex = _runningChildIndex >= 0 ? _runningChildIndex : 0;
         for (int i = startIndex; i < Children.Count; i++)
         {
-            BehaviorNodeStatus status = Children[i].Tick(context);
+            BehaviorNodeStatus status = Children[i].Tick(blackboard);
             if (status == BehaviorNodeStatus.Success)
                 continue;
 
@@ -105,7 +105,7 @@ public sealed class ParallelBehaviorNode : CompositeBehaviorNode
         _data = data;
     }
 
-    protected override BehaviorNodeStatus OnTick(BehaviorTreeContext context)
+    protected override BehaviorNodeStatus OnTick(BehaviorBlackboard blackboard)
     {
         if (Children.Count == 0)
             return BehaviorNodeStatus.Failure;
@@ -116,7 +116,7 @@ public sealed class ParallelBehaviorNode : CompositeBehaviorNode
 
         for (int i = 0; i < Children.Count; i++)
         {
-            BehaviorNodeStatus status = Children[i].Tick(context);
+            BehaviorNodeStatus status = Children[i].Tick(blackboard);
             switch (status)
             {
                 case BehaviorNodeStatus.Success:
@@ -161,12 +161,15 @@ public sealed class CheckConditionBehaviorNode : ABehaviorNode
         _data = data;
     }
 
-    protected override BehaviorNodeStatus OnTick(BehaviorTreeContext context)
+    protected override BehaviorNodeStatus OnTick(BehaviorBlackboard blackboard)
     {
-        if (context == null)
+        if (blackboard == null)
             return BehaviorNodeStatus.Failure;
 
-        Comparator comparator = s_comparatorFactory.BuildComparator(_data.Conditions, context.Entity, context.EntityManager);
+        Comparator comparator = s_comparatorFactory.BuildComparator(
+            _data.Conditions,
+            blackboard.Runtime.Entity,
+            blackboard.Runtime.EntityManager);
         return comparator.GetResult()
             ? BehaviorNodeStatus.Success
             : BehaviorNodeStatus.Failure;

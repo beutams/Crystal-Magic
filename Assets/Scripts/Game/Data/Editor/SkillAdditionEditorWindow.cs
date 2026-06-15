@@ -238,15 +238,12 @@ namespace CrystalMagic.Editor.Data
 
             try
             {
-                Dictionary<int, int> idRemap = NormalizeRowIds();
-                int linkedUnitCount = SyncUnitSkillAdditionIds(idRemap);
+                NormalizeRowIds();
                 string json = JsonConvert.SerializeObject(new TableWrapper { Rows = _rows }, JsonSettings);
                 File.WriteAllText(DataPath, json, Encoding.UTF8);
                 AssetDatabase.Refresh();
                 _isDirty = false;
-                _statusText = linkedUnitCount > 0
-                    ? $"Saved {_rows.Count} rows | Synced {linkedUnitCount} unit skill addition reference(s)"
-                    : $"Saved {_rows.Count} rows";
+                _statusText = $"Saved {_rows.Count} rows";
             }
             catch (Exception ex)
             {
@@ -1294,53 +1291,6 @@ namespace CrystalMagic.Editor.Data
             GUI.color = Color.white;
 
             return keep;
-        }
-
-        private int SyncUnitSkillAdditionIds(IReadOnlyDictionary<int, int> idRemap)
-        {
-            if (idRemap == null || idRemap.Count == 0 || !File.Exists(UnitDataPath))
-                return 0;
-
-            UnitTableWrapper wrapper = JsonConvert.DeserializeObject<UnitTableWrapper>(File.ReadAllText(UnitDataPath), UnitJsonSettings);
-            if (wrapper?.Rows == null || wrapper.Rows.Count == 0)
-                return 0;
-
-            int updatedCount = 0;
-            foreach (UnitData row in wrapper.Rows)
-            {
-                row?.NormalizeModules();
-                UnitSkillModuleData skillModule = row?.GetModule<UnitSkillModuleData>();
-                if (skillModule?.Skills == null)
-                    continue;
-
-                for (int i = 0; i < skillModule.Skills.Count; i++)
-                {
-                    UnitSkillSlotData slot = skillModule.Skills[i];
-                    if (slot == null || slot.SkillAdditionId < 0)
-                        continue;
-
-                    if (idRemap.TryGetValue(slot.SkillAdditionId, out int newId))
-                    {
-                        if (slot.SkillAdditionId == newId)
-                            continue;
-
-                        slot.SkillAdditionId = newId;
-                        updatedCount++;
-                    }
-                    else
-                    {
-                        slot.SkillAdditionId = -1;
-                        updatedCount++;
-                    }
-                }
-            }
-
-            if (updatedCount <= 0)
-                return 0;
-
-            string json = JsonConvert.SerializeObject(wrapper, UnitJsonSettings);
-            File.WriteAllText(UnitDataPath, json, Encoding.UTF8);
-            return updatedCount;
         }
 
         private static Rect GetConditionContentRect()

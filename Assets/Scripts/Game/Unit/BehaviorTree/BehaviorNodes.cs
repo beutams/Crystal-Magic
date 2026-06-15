@@ -28,10 +28,10 @@ public abstract class ABehaviorNode
             Children.Add(child);
     }
 
-    public BehaviorNodeStatus Tick(BehaviorTreeContext context)
+    public BehaviorNodeStatus Tick(BehaviorBlackboard blackboard)
     {
-        context?.MarkCurrentNode(this);
-        return OnTick(context);
+        blackboard?.SetCurrentNode(this);
+        return OnTick(blackboard);
     }
 
     public virtual void Reset()
@@ -40,7 +40,7 @@ public abstract class ABehaviorNode
             Children[i]?.Reset();
     }
 
-    protected abstract BehaviorNodeStatus OnTick(BehaviorTreeContext context);
+    protected abstract BehaviorNodeStatus OnTick(BehaviorBlackboard blackboard);
 }
 
 public abstract class CompositeBehaviorNode : ABehaviorNode

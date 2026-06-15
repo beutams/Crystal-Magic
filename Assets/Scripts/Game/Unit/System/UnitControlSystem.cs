@@ -23,8 +23,7 @@ partial struct UnitControlSystem : ISystem
             if (entityManager.HasComponent<UnitIntentComponent>(entity))
             {
                 UnitIntentComponent intent = entityManager.GetComponentData<UnitIntentComponent>(entity);
-                intent.MoveDirection = float2.zero;
-                intent.WantToCast = false;
+                intent.ClearFrameIntent();
                 entityManager.SetComponentData(entity, intent);
             }
         }

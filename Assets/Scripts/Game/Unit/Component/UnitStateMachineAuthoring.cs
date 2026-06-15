@@ -15,9 +15,7 @@ public class UnitStateMachineAuthoring : MonoBehaviour
                 DependsOn(unitDataAsset);
 
             UnitData data = UnitAuthoringUtility.ResolveUnitData(authoring);
-            Transform root = authoring.transform.root != null
-                ? authoring.transform.root
-                : authoring.transform;
+            Transform root = authoring.transform.root != null ? authoring.transform.root : authoring.transform;
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             AddBuffer<UnitControlElement>(entity);
             AddComponent(entity, new UnitControlStateComponent

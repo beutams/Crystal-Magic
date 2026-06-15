@@ -150,25 +150,40 @@ namespace CrystalMagic.Game
                 return false;
             }
 
-            Entity player = entities[0];
+            return TryBuildContext(entityManager, entities[0], out context, out failureReason);
+        }
+
+        public static bool TryBuildContext(
+            EntityManager entityManager,
+            Entity userEntity,
+            out PropUseRequestContext context,
+            out PropUseFailureReason failureReason)
+        {
+            context = default;
+            failureReason = PropUseFailureReason.None;
+            if (userEntity == Entity.Null || !entityManager.Exists(userEntity))
+            {
+                failureReason = PropUseFailureReason.PlayerNotFound;
+                return false;
+            }
+
             context = new PropUseRequestContext
             {
                 EntityManager = entityManager,
-                UserEntity = player,
+                UserEntity = userEntity,
             };
 
-            if (entityManager.HasComponent<UnitPerceptionComponent>(player))
-            {
-                UnitPerceptionComponent perception = entityManager.GetComponentData<UnitPerceptionComponent>(player);
-                if (perception.HasTarget && perception.TargetEntity != Entity.Null && entityManager.Exists(perception.TargetEntity))
-                {
-                    context.HasTargetEntity = true;
-                    context.TargetEntity = perception.TargetEntity;
-                    context.HasTargetPosition = true;
-                    context.TargetPosition = new Vector3(perception.TargetPosition.x, perception.TargetPosition.y, 0f);
-                }
-            }
+            if (!entityManager.HasComponent<UnitPerceptionComponent>(userEntity))
+                return true;
 
+            UnitPerceptionComponent perception = entityManager.GetComponentData<UnitPerceptionComponent>(userEntity);
+            if (!perception.HasTarget || perception.TargetEntity == Entity.Null || !entityManager.Exists(perception.TargetEntity))
+                return true;
+
+            context.HasTargetEntity = true;
+            context.TargetEntity = perception.TargetEntity;
+            context.HasTargetPosition = true;
+            context.TargetPosition = new Vector3(perception.TargetPosition.x, perception.TargetPosition.y, 0f);
             return true;
         }
 

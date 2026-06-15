@@ -137,7 +137,6 @@ namespace CrystalMagic.Editor.Data
 
             module.Skills ??= new List<UnitSkillSlotData>();
             List<SkillOption> skillOptions = BuildSkillOptions();
-            List<SkillOption> effectOptions = BuildSkillEffectOptions();
 
             GUILayout.Space(8f);
             UnitEditorWindow.DrawSectionHeader("Skills");
@@ -167,7 +166,6 @@ namespace CrystalMagic.Editor.Data
                 EditorGUILayout.EndHorizontal();
 
                 slot.SkillId = DrawOptionPopup("Skill", slot.SkillId, skillOptions);
-                slot.SkillAdditionId = DrawOptionPopup("Skill Addition", slot.SkillAdditionId, effectOptions);
                 slot.TagMask = EditorGUILayout.IntField("Tag Mask", slot.TagMask);
                 slot.MinDistance = EditorGUILayout.FloatField("Min Distance", slot.MinDistance);
                 slot.MaxDistance = EditorGUILayout.FloatField("Max Distance", slot.MaxDistance);
@@ -194,25 +192,6 @@ namespace CrystalMagic.Editor.Data
                 {
                     Id = row.Id,
                     Label = $"[{row.Id}] {row.DisplayName}",
-                });
-            }
-
-            return options;
-        }
-
-        private static List<SkillOption> BuildSkillEffectOptions()
-        {
-            List<SkillOption> options = new()
-            {
-                new SkillOption { Id = -1, Label = "None" }
-            };
-
-            foreach (SkillAdditionData row in EditorComponents.Data.FindAll<SkillAdditionData>(_ => true).OrderBy(row => row.Id))
-            {
-                options.Add(new SkillOption
-                {
-                    Id = row.Id,
-                    Label = $"[{row.Id}] {row.Name}",
                 });
             }
 

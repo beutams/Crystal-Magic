@@ -196,8 +196,7 @@ public static class UnitControlUtility
         if (entityManager.HasComponent<UnitIntentComponent>(target))
         {
             UnitIntentComponent intent = entityManager.GetComponentData<UnitIntentComponent>(target);
-            intent.MoveDirection = float2.zero;
-            intent.WantToCast = false;
+            intent.ClearFrameIntent();
             entityManager.SetComponentData(target, intent);
         }
 

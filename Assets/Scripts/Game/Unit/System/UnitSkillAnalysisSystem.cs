@@ -33,7 +33,7 @@ partial class UnitSkillAnalysisSystem : SystemBase
         }
 
         UnitSkillEntry entry = unitSkill.Skills[index];
-        if (!SkillAnalysisUtility.TryAnalyzeSkill(entityManager, entity, entry.SkillId, entry.SkillAdditionId, out ResolvedSkillData resolvedSkill))
+        if (!SkillAnalysisUtility.TryAnalyzeSkill(entityManager, entity, entry.SkillId, -1, out ResolvedSkillData resolvedSkill))
         {
             unitSkill.ClearPending();
             return false;
@@ -44,7 +44,7 @@ partial class UnitSkillAnalysisSystem : SystemBase
             entity,
             ref cast,
             entry.SkillId,
-            entry.SkillAdditionId,
+            -1,
             resolvedSkill);
 
         if (prepared)

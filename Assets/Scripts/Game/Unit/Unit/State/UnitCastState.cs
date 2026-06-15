@@ -10,18 +10,19 @@ public class UnitCastState : AUnitState
     public override void OnEnter()
     {
         if (!EntityManager.HasComponent<UnitSkillComponent>(Entity) ||
+            !EntityManager.HasComponent<UnitIntentComponent>(Entity) ||
             !EntityManager.HasComponent<UnitPerceptionComponent>(Entity) ||
             !EntityManager.HasComponent<UnitCastComponent>(Entity))
             return;
 
         UnitSkillComponent unitSkill = EntityManager.GetComponentData<UnitSkillComponent>(Entity);
+        UnitIntentComponent intent = EntityManager.GetComponentData<UnitIntentComponent>(Entity);
         UnitPerceptionComponent perception = EntityManager.GetComponentData<UnitPerceptionComponent>(Entity);
         UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
 
-        int selectedIndex = SelectSkillIndex(unitSkill, perception.TargetDistance);
+        int selectedIndex = SelectSkillIndex(intent, unitSkill, perception.TargetDistance);
         if (selectedIndex < 0)
         {
-            unitSkill.ClearRequest();
             SkillExecutionUtility.ResetCastState(EntityManager, Entity, ref cast);
             SkillExecutionUtility.ClearFollowupEffects(EntityManager, Entity);
             EntityManager.SetComponentData(Entity, cast);
@@ -32,7 +33,6 @@ public class UnitCastState : AUnitState
         SkillExecutionUtility.ResetCastState(EntityManager, Entity, ref cast);
         unitSkill.HasPendingCast = true;
         unitSkill.PendingSkillIndex = selectedIndex;
-        unitSkill.ClearRequest();
         EntityManager.SetComponentData(Entity, cast);
         EntityManager.SetComponentData(Entity, unitSkill);
         if (SkillTargetUtility.TryGetTargetPosition(EntityManager, Entity, out float2 targetPosition))
@@ -62,7 +62,6 @@ public class UnitCastState : AUnitState
         {
             UnitSkillComponent unitSkill = EntityManager.GetComponentData<UnitSkillComponent>(Entity);
             unitSkill.ClearPending();
-            unitSkill.ClearRequest();
             EntityManager.SetComponentData(Entity, unitSkill);
         }
 
@@ -85,13 +84,13 @@ public class UnitCastState : AUnitState
         SetAnimationFacingDirection(direction);
     }
 
-    private int SelectSkillIndex(UnitSkillComponent unitSkill, float targetDistance)
+    private int SelectSkillIndex(UnitIntentComponent intent, UnitSkillComponent unitSkill, float targetDistance)
     {
         int totalWeight = 0;
         for (int i = 0; i < unitSkill.Skills.Length; i++)
         {
             UnitSkillEntry entry = unitSkill.Skills[i];
-            if (!CanUseSkill(unitSkill, entry, targetDistance, out _))
+            if (!CanUseSkill(intent, entry, targetDistance, out _))
                 continue;
 
             totalWeight += Mathf.Max(1, entry.Weight);
@@ -100,12 +99,12 @@ public class UnitCastState : AUnitState
         if (totalWeight <= 0)
             return -1;
 
-        if (unitSkill.RequestMode == UnitSkillSelectionMode.ExactSkillId)
+        if (intent.SkillRequestMode == UnitSkillSelectionMode.ExactSkillId)
         {
             for (int i = 0; i < unitSkill.Skills.Length; i++)
             {
                 UnitSkillEntry entry = unitSkill.Skills[i];
-                if (CanUseSkill(unitSkill, entry, targetDistance, out _))
+                if (CanUseSkill(intent, entry, targetDistance, out _))
                     return i;
             }
 
@@ -117,7 +116,7 @@ public class UnitCastState : AUnitState
         for (int i = 0; i < unitSkill.Skills.Length; i++)
         {
             UnitSkillEntry entry = unitSkill.Skills[i];
-            if (!CanUseSkill(unitSkill, entry, targetDistance, out _))
+            if (!CanUseSkill(intent, entry, targetDistance, out _))
                 continue;
 
             accum += Mathf.Max(1, entry.Weight);
@@ -128,7 +127,7 @@ public class UnitCastState : AUnitState
         return -1;
     }
 
-    private bool CanUseSkill(UnitSkillComponent unitSkill, UnitSkillEntry entry, float targetDistance, out ResolvedSkillData resolvedSkill)
+    private bool CanUseSkill(UnitIntentComponent intent, UnitSkillEntry entry, float targetDistance, out ResolvedSkillData resolvedSkill)
     {
         if (entry.SkillId < 0)
         {
@@ -161,18 +160,18 @@ public class UnitCastState : AUnitState
                 return false;
         }
 
-        return unitSkill.RequestMode switch
+        return intent.SkillRequestMode switch
         {
             UnitSkillSelectionMode.None => false,
             UnitSkillSelectionMode.RandomAll => true,
-            UnitSkillSelectionMode.RandomTagMask => unitSkill.RequestedTagMask != 0 && (entry.TagMask & unitSkill.RequestedTagMask) != 0,
-            UnitSkillSelectionMode.ExactSkillId => entry.SkillId == unitSkill.RequestedSkillId,
+            UnitSkillSelectionMode.RandomTagMask => intent.RequestedTagMask != 0 && (entry.TagMask & intent.RequestedTagMask) != 0,
+            UnitSkillSelectionMode.ExactSkillId => entry.SkillId == intent.RequestedSkillId,
             _ => false,
         };
     }
 
     private bool TryResolveSkill(UnitSkillEntry entry, out ResolvedSkillData resolvedSkill)
     {
-        return SkillAnalysisUtility.TryAnalyzeSkill(EntityManager, Entity, entry.SkillId, entry.SkillAdditionId, out resolvedSkill);
+        return SkillAnalysisUtility.TryAnalyzeSkill(EntityManager, Entity, entry.SkillId, -1, out resolvedSkill);
     }
 }

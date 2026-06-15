@@ -25,8 +25,7 @@ public class ControlledState : AUnitState
         if (EntityManager.HasComponent<UnitIntentComponent>(Entity))
         {
             UnitIntentComponent intent = EntityManager.GetComponentData<UnitIntentComponent>(Entity);
-            intent.MoveDirection = float2.zero;
-            intent.WantToCast = false;
+            intent.ClearFrameIntent();
             EntityManager.SetComponentData(Entity, intent);
         }
 
