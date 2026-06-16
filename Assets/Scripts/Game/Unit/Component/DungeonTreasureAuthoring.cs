@@ -34,12 +34,3 @@ public struct DungeonTreasureComponent : IComponentData
     public float InteractionRange;
     public byte IsOpened;
 }
-
-public struct DungeonTreasureRewardElement : IBufferElementData
-{
-    public DropRewardType RewardType;
-    public int ItemId;
-    public float Chance;
-    public int MinQuantity;
-    public int MaxQuantity;
-}

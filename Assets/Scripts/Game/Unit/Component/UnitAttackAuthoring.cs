@@ -83,28 +83,11 @@ public struct UnitAttackComponent : IComponentData
     public float RealSkillRange => (BaseSkillRange + BaseSkillRangeOffset) * RangeFactor + RangeBonus;
     public float RealActionSpeedBonus => math.clamp((BaseActionSpeedBonus + BaseActionSpeedBonusOffset) * ActionSpeedFactor + ActionSpeedBonus, -100f, 100f);
     public float RealChantSpeedBonus => math.clamp((BaseChantSpeedBonus + BaseChantSpeedBonusOffset) * ChantSpeedFactor + ChantSpeedBonus, -100f, 100f);
-    public float ActionDurationMultiplier => RealActionSpeedBonus >= 0f
-        ? 1f / (1f + RealActionSpeedBonus / 100f)
-        : 1f - RealActionSpeedBonus / 100f;
-    public float ChantDurationMultiplier => 1f - RealChantSpeedBonus / 100f;
-}
+    public float ActionDurationMultiplier => GetDurationMultiplier(RealActionSpeedBonus);
+    public float ChantDurationMultiplier => GetDurationMultiplier(RealChantSpeedBonus);
 
-public struct UnitElementComponent : IComponentData
-{
-    public float WaterPower;
-    public float FirePower;
-    public float LightningPower;
-    public float WindPower;
-
-    public float GetPowerBonus(CrystalMagic.Game.Data.Effects.ElementType elementType)
+    public static float GetDurationMultiplier(float speedBonus)
     {
-        return elementType switch
-        {
-            CrystalMagic.Game.Data.Effects.ElementType.Water => WaterPower,
-            CrystalMagic.Game.Data.Effects.ElementType.Fire => FirePower,
-            CrystalMagic.Game.Data.Effects.ElementType.Lightning => LightningPower,
-            CrystalMagic.Game.Data.Effects.ElementType.Wind => WindPower,
-            _ => 0f,
-        };
+        return speedBonus >= 0f ? 1f / (1f + speedBonus / 100f) : 1f - speedBonus / 100f;
     }
 }

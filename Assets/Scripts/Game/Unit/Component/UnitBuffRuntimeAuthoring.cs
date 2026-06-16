@@ -7,6 +7,40 @@ using CrystalMagic.Game.Skill;
 using Unity.Entities;
 using UnityEngine;
 
+public class UnitBuffRuntimeAuthoring : MonoBehaviour
+{
+    class UnitBuffRuntimeBaker : Baker<UnitBuffRuntimeAuthoring>
+    {
+        public override void Bake(UnitBuffRuntimeAuthoring authoring)
+        {
+            Entity entity = GetEntity(TransformUsageFlags.Dynamic);
+            UnitBuffRuntimeComponent runtimeComponent = new();
+            AddComponentObject(entity, runtimeComponent);
+
+            UnitBuffModuleData data = UnitAuthoringUtility.ResolveModuleData<UnitBuffModuleData>(authoring);
+            if (data?.Buffs == null)
+                return;
+
+            for (int i = 0; i < data.Buffs.Count; i++)
+            {
+                UnitInitialBuffEntry entry = data.Buffs[i];
+                if (entry == null || entry.BuffId < 0)
+                    continue;
+
+                runtimeComponent.Buffs.Add(new UnitBuffRuntimeEntry
+                {
+                    BuffId = entry.BuffId,
+                    RemainingTime = entry.DurationSeconds,
+                    StackCount = Mathf.Max(1, entry.StackCount),
+                    HasOriginEntity = false,
+                    OriginEntity = Entity.Null,
+                    SourceSkillId = -1,
+                });
+            }
+        }
+    }
+}
+
 public class UnitBuffRuntimeComponent : IComponentData
 {
     public List<UnitBuffRuntimeEntry> Buffs = new();
@@ -29,6 +63,7 @@ public sealed class UnitBuffRuntimeEntry
     {
         if (buffData == null)
             return;
+
         PropertyModifiers = buffData.PropertyModifiers != null ? new List<PropertyModifierEntry>(buffData.PropertyModifiers) : new List<PropertyModifierEntry>();
         SkillModifiers = buffData.SkillModifiers != null ? new List<SkillModifierEntry>(buffData.SkillModifiers) : new List<SkillModifierEntry>();
         TriggerEntries = runtimeTriggerEntries ?? CreateRuntimeTriggers(buffData);

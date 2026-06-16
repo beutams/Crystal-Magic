@@ -112,22 +112,18 @@ public static class SkillExecutionUtility
         if (!entityManager.HasComponent<UnitMoveComponent>(entity))
             return;
 
-        UnitMoveComponent move = entityManager.GetComponentData<UnitMoveComponent>(entity);
         if (!cast.IsCasting)
-        {
-            move.StateSpeedFactor = 1f;
-            entityManager.SetComponentData(entity, move);
             return;
-        }
 
-        move.SetAccelerateCommand(float2.zero);
+        UnitMoveComponent move = entityManager.GetComponentData<UnitMoveComponent>(entity);
+        move.ClearTargetMovement();
 
         if (TryGetCurrentSkill(entityManager, entity, cast, out ResolvedSkillData skillData) &&
             skillData.CanMoveWhileCasting &&
             entityManager.HasComponent<UnitIntentComponent>(entity))
         {
             UnitIntentComponent intent = entityManager.GetComponentData<UnitIntentComponent>(entity);
-            move.SetAccelerateCommand(intent.MoveDirection, skillData.MoveSpeedMultiplier);
+            move.SetTargetMovementByFactor(intent.MoveDirection, skillData.MoveSpeedMultiplier);
         }
 
         entityManager.SetComponentData(entity, move);
@@ -202,6 +198,11 @@ public static class SkillExecutionUtility
         followupPayload?.Followups?.Clear();
     }
 
+    public static bool SupportsFollowupEffects(EntityManager entityManager, Entity entity)
+    {
+        return entityManager.HasComponent<PlayerTag>(entity);
+    }
+
     public static void ClearJumpArcState(EntityManager entityManager, Entity entity)
     {
         if (entityManager.Exists(entity) && entityManager.HasComponent<UnitJumpArcComponent>(entity))
@@ -221,7 +222,7 @@ public static class SkillExecutionUtility
         if (entityManager.Exists(entity) && entityManager.HasComponent<UnitMoveComponent>(entity))
         {
             UnitMoveComponent move = entityManager.GetComponentData<UnitMoveComponent>(entity);
-            move.ClearCommand();
+            move.ClearTargetMovement();
             move.Velocity = float2.zero;
             entityManager.SetComponentData(entity, move);
         }
@@ -534,6 +535,9 @@ public static class SkillExecutionUtility
 
     private static void ConsumeMatchingFollowupEffects(EntityManager entityManager, Entity entity, in UnitCastComponent cast, ResolvedSkillData resolvedSkillData)
     {
+        if (!SupportsFollowupEffects(entityManager, entity))
+            return;
+
         if (!entityManager.HasComponent<UnitCastFollowupRuntimeComponent>(entity))
             return;
 
@@ -565,6 +569,9 @@ public static class SkillExecutionUtility
 
     private static void AppendGeneratedFollowupEffects(EntityManager entityManager, Entity entity, in UnitCastComponent cast)
     {
+        if (!SupportsFollowupEffects(entityManager, entity))
+            return;
+
         if (!entityManager.HasComponent<UnitCastFollowupRuntimeComponent>(entity))
             return;
 

@@ -24,7 +24,6 @@ public class UnitCastState : AUnitState
         if (selectedIndex < 0)
         {
             SkillExecutionUtility.ResetCastState(EntityManager, Entity, ref cast);
-            SkillExecutionUtility.ClearFollowupEffects(EntityManager, Entity);
             EntityManager.SetComponentData(Entity, cast);
             EntityManager.SetComponentData(Entity, unitSkill);
             return;
@@ -36,15 +35,13 @@ public class UnitCastState : AUnitState
         EntityManager.SetComponentData(Entity, cast);
         EntityManager.SetComponentData(Entity, unitSkill);
         if (SkillTargetUtility.TryGetTargetPosition(EntityManager, Entity, out float2 targetPosition))
-            UpdateAnimationFacing(targetPosition);
+            UpdateFacing(targetPosition);
     }
 
     public override void OnUpdate(float deltaTime)
     {
         if (SkillTargetUtility.TryGetTargetPosition(EntityManager, Entity, out float2 targetPosition))
-            UpdateAnimationFacing(targetPosition);
-        else
-            ClearAnimationFacingDirection();
+            UpdateFacing(targetPosition);
     }
 
     public override void OnExit()
@@ -54,8 +51,6 @@ public class UnitCastState : AUnitState
 
         UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
         SkillExecutionUtility.ResetCastState(EntityManager, Entity, ref cast);
-        SkillExecutionUtility.ClearFollowupEffects(EntityManager, Entity);
-        SkillExecutionUtility.ApplyMovement(EntityManager, Entity, cast);
         EntityManager.SetComponentData(Entity, cast);
 
         if (EntityManager.HasComponent<UnitSkillComponent>(Entity))
@@ -64,11 +59,9 @@ public class UnitCastState : AUnitState
             unitSkill.ClearPending();
             EntityManager.SetComponentData(Entity, unitSkill);
         }
-
-        ClearAnimationFacingDirection();
     }
 
-    private void UpdateAnimationFacing(float2 targetPosition)
+    private void UpdateFacing(float2 targetPosition)
     {
         if (!EntityManager.HasComponent<Unity.Transforms.LocalTransform>(Entity))
             return;
@@ -76,12 +69,9 @@ public class UnitCastState : AUnitState
         float2 selfPosition = EntityManager.GetComponentData<Unity.Transforms.LocalTransform>(Entity).Position.xy;
         float2 direction = targetPosition - selfPosition;
         if (math.lengthsq(direction) <= 0.0001f)
-        {
-            ClearAnimationFacingDirection();
             return;
-        }
 
-        SetAnimationFacingDirection(direction);
+        UnitFacingUtility.SetFacing(EntityManager, Entity, direction);
     }
 
     private int SelectSkillIndex(UnitIntentComponent intent, UnitSkillComponent unitSkill, float targetDistance)

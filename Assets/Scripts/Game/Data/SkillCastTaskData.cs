@@ -70,21 +70,6 @@ namespace CrystalMagic.Game.Data
     }
 
     [Serializable]
-    public sealed class TurnToTargetSkillCastTaskData : SkillCastTaskData
-    {
-        [EditorLabel("Duration Seconds")]
-        public float DurationSeconds = 1f;
-
-        [EditorLabel("Turn Rate Degrees Per Second")]
-        public float TurnRateDegreesPerSecond = 180f;
-
-        public TurnToTargetSkillCastTaskData()
-        {
-            HookPoint = SkillCastHookPoint.BeforeRecovery;
-        }
-    }
-
-    [Serializable]
     public sealed class RepeatCastWithRetargetSkillCastTaskData : SkillCastTaskData
     {
         [EditorLabel("Additional Cast Count")]

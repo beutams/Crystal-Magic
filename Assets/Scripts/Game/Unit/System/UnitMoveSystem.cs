@@ -8,6 +8,7 @@ using Unity.Transforms;
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(UnitSkillAnalysisSystem))]
 [UpdateAfter(typeof(UnitStateMachineSystem))]
+[UpdateAfter(typeof(UnitSkillExecuteSystem))]
 partial struct UnitMoveSystem : ISystem
 {
     [BurstCompile]
@@ -31,32 +32,18 @@ public partial struct UnitMoveJob : IJobEntity
         ref PhysicsVelocity physicsVelocity,
         ref LocalTransform transform)
     {
-        switch (move.CommandType)
-        {
-            case UnitMoveCommandType.DirectVelocity:
-                ApplyDirectVelocity(ref move, ref physicsVelocity, ref transform);
-                return;
-        }
-
-        float2 commandDirection = move.CommandType == UnitMoveCommandType.Accelerate
-            ? move.CommandDirection
-            : float2.zero;
-        float2 targetVel = commandDirection * move.RealMoveSpeed;
-        UpdateMoveVelocity(ref move, targetVel);
+        float2 targetDirection = math.normalizesafe(move.DesiredDirection, float2.zero);
+        float maxSpeed = math.max(0f, move.DesiredMaxSpeed);
+        float maxAcceleration = math.max(0f, move.DesiredAcceleration);
+        float2 targetVel = targetDirection * maxSpeed;
+        UpdateMoveVelocity(ref move, targetVel, maxAcceleration, maxSpeed);
         ApplyPlanarTransform(ref physicsVelocity, ref transform, move.Velocity);
     }
 
-    private void ApplyDirectVelocity(ref UnitMoveComponent move, ref PhysicsVelocity physicsVelocity, ref LocalTransform transform)
-    {
-        move.Velocity = move.DirectVelocity;
-        ApplyPlanarTransform(ref physicsVelocity, ref transform, move.Velocity);
-    }
-
-    private void UpdateMoveVelocity(ref UnitMoveComponent move, float2 targetVel)
+    private void UpdateMoveVelocity(ref UnitMoveComponent move, float2 targetVel, float maxAccel, float maxSpeed)
     {
         float2 diff = targetVel - move.Velocity;
         float diffLen = math.length(diff);
-        float maxAccel = move.RealMaxAcceleration;
 
         if (diffLen > 0.0001f)
         {
@@ -67,7 +54,6 @@ public partial struct UnitMoveJob : IJobEntity
                 move.Velocity += (diff / diffLen) * step;
         }
 
-        float maxSpeed = move.RealMoveSpeed;
         float velLen = math.length(move.Velocity);
         if (velLen > maxSpeed && velLen > 0.0001f)
             move.Velocity = (move.Velocity / velLen) * maxSpeed;

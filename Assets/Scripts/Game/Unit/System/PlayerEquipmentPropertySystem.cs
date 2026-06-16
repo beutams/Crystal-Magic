@@ -15,10 +15,6 @@ partial class PlayerEquipmentPropertySystem : SystemBase
     {
         PropertyModifierSet totals = BuildTotals(SaveDataComponent.Instance.GetEquipmentData());
 
-        foreach ((RefRW<UnitElementComponent> _, Entity entity) in
-                 SystemAPI.Query<RefRW<UnitElementComponent>>().WithEntityAccess())
-            UnitModifierUtility.ResetFrameProperties(EntityManager, entity);
-
         foreach ((RefRO<PlayerTag> _, Entity entity) in SystemAPI.Query<RefRO<PlayerTag>>().WithEntityAccess())
             UnitModifierUtility.ApplyEquipmentPropertyModifiers(EntityManager, entity, totals);
     }

@@ -14,36 +14,6 @@ namespace CrystalMagic.Game.Unit
     {
     }
 
-    public struct UnitEntityPrefabRegistryEntry : IBufferElementData
-    {
-        public FixedString128Bytes Name;
-        public Entity Prefab;
-    }
-
-    public struct ProjectileEntityPrefabRegistryEntry : IBufferElementData
-    {
-        public FixedString128Bytes Name;
-        public Entity Prefab;
-    }
-
-    public struct DropEntityPrefabRegistryEntry : IBufferElementData
-    {
-        public FixedString128Bytes Name;
-        public Entity Prefab;
-    }
-
-    public struct EnvironmentEntityPrefabRegistryEntry : IBufferElementData
-    {
-        public FixedString128Bytes Name;
-        public Entity Prefab;
-    }
-
-    public struct VfxEntityPrefabRegistryEntry : IBufferElementData
-    {
-        public FixedString128Bytes Name;
-        public Entity Prefab;
-    }
-
     public class EntitySpawnRegistryAuthoring : MonoBehaviour
     {
         [SerializeField, HideInInspector] private List<GameObject> _unitPrefabs = new();

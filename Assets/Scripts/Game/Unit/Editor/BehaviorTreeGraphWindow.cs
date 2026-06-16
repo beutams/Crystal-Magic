@@ -982,7 +982,7 @@ namespace CrystalMagic.Editor.Unit
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
                 GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-                if (prefab == null || prefab.GetComponent<UnitBehaviorTreeAuthoring>() == null)
+                if (prefab == null || prefab.GetComponent<UnitAIFeatureAuthoring>() == null)
                     continue;
 
                 _behaviorPrefabEntries.Add(new UnitPrefabEntry

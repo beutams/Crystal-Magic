@@ -1122,14 +1122,7 @@
           "Conditions": []
         }
       ],
-      "CastTasks": [
-        {
-          "$type": "CrystalMagic.Game.Data.TurnToTargetSkillCastTaskData, Assembly-CSharp",
-          "DurationSeconds": 2.4,
-          "TurnRateDegreesPerSecond": 60,
-          "HookPoint": 3
-        }
-      ],
+      "CastTasks": [],
       "FollowupEffects": [],
       "Id": 15
     },
@@ -1547,14 +1540,7 @@
           "Conditions": []
         }
       ],
-      "CastTasks": [
-        {
-          "$type": "CrystalMagic.Game.Data.TurnToTargetSkillCastTaskData, Assembly-CSharp",
-          "DurationSeconds": 2.8,
-          "TurnRateDegreesPerSecond": 85,
-          "HookPoint": 3
-        }
-      ],
+      "CastTasks": [],
       "FollowupEffects": [],
       "Id": 20
     },

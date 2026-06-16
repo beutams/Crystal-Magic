@@ -72,10 +72,8 @@ namespace CrystalMagic.Game.Skill
             float chantSpeedBonus = attackComponent?.RealChantSpeedBonus ?? 0f;
             float actionSpeedValue = modifiers.GetActionSpeedValue(actionSpeedBonus);
             float chantSpeedValue = modifiers.GetChantSpeedValue(chantSpeedBonus);
-            float actionSpeedMultiplier = actionSpeedValue >= 0f
-                ? 1f / (1f + actionSpeedValue / 100f)
-                : 1f - actionSpeedValue / 100f;
-            float chantSpeedMultiplier = 1f - chantSpeedValue / 100f;
+            float actionSpeedMultiplier = UnitAttackComponent.GetDurationMultiplier(actionSpeedValue);
+            float chantSpeedMultiplier = UnitAttackComponent.GetDurationMultiplier(chantSpeedValue);
             float moveSpeedMultiplier = math.min(1f, math.max(0f, skillData.MoveSpeedMultiplier) * modifiers.GetMoveSpeedMultiplier());
 
             EffectData[] mergedEffectChain = MergeEffectChains(skillData.EffectChain, skillAdditionData?.EffectChain);

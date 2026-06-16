@@ -186,34 +186,12 @@ partial class UnitAnimationSystem : SystemBase
 
     private static UnitAnimationDirection ResolveAnimationDirection(Entity entity, EntityManager entityManager)
     {
-        if (UnitFacingUtility.TryGetAnimationDirection(entityManager, entity, out float2 animationDirection))
-            return QuantizeToFourDirections(animationDirection);
-
-        if (!TryGetMovementPriorityDirection(entityManager, entity, out float2 movementDirection) &&
-            !UnitFacingUtility.TryGetFacing(entityManager, entity, out movementDirection))
+        if (!UnitFacingUtility.TryGetFacing(entityManager, entity, out float2 facingDirection))
         {
             return UnitAnimationDirection.Front;
         }
 
-        return QuantizeToFourDirections(movementDirection);
-    }
-
-    private static bool TryGetMovementPriorityDirection(EntityManager entityManager, Entity entity, out float2 direction)
-    {
-        direction = float2.zero;
-        if (entity == Entity.Null ||
-            !entityManager.Exists(entity) ||
-            !entityManager.HasComponent<UnitMoveComponent>(entity))
-        {
-            return false;
-        }
-
-        UnitMoveComponent move = entityManager.GetComponentData<UnitMoveComponent>(entity);
-        if (math.lengthsq(move.Velocity) <= 0.0001f)
-            return false;
-
-        direction = math.normalize(move.Velocity);
-        return true;
+        return QuantizeToFourDirections(facingDirection);
     }
 
     private static UnitAnimationDirection QuantizeToFourDirections(float2 rawDirection)

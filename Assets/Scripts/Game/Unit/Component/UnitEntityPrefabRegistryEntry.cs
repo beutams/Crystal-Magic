@@ -1,0 +1,11 @@
+using Unity.Collections;
+using Unity.Entities;
+
+namespace CrystalMagic.Game.Unit
+{
+    public struct UnitEntityPrefabRegistryEntry : IBufferElementData
+    {
+        public FixedString128Bytes Name;
+        public Entity Prefab;
+    }
+}

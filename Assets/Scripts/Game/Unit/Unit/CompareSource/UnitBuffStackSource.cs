@@ -19,7 +19,7 @@ public class UnitBuffStackSource : ISource
         if (_context.HasRuntimeEntity)
             return _context.EntityManager.HasComponent<UnitBuffRuntimeComponent>(_context.Entity);
 
-        return _context.UnitPrefab != null && _context.UnitPrefab.GetComponent<UnitBuffAuthoring>() != null;
+        return _context.UnitPrefab != null && _context.UnitPrefab.GetComponent<UnitBuffRuntimeAuthoring>() != null;
     }
 
     public float GetValue()

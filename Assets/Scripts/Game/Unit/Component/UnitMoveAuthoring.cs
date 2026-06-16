@@ -25,109 +25,73 @@ public class UnitMoveAuthoring : MonoBehaviour
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             AddComponent(entity, new UnitMoveComponent
             {
-                BaseMoveSpeed       = baseSpeed,
+                BaseMoveSpeed = baseSpeed,
                 BaseMoveSpeedOffset = 0f,
                 BaseMaxAcceleration = baseAccel,
-                SpeedFactor         = 1f,
-                SpeedBonus          = 0f,
-                StateSpeedFactor    = 1f,
-                CommandType         = UnitMoveCommandType.None,
-                CommandDirection    = float2.zero,
-                DirectVelocity      = float2.zero,
-                Velocity            = float2.zero,
+                SpeedFactor = 1f,
+                SpeedBonus = 0f,
+                DesiredDirection = float2.zero,
+                DesiredMaxSpeed = 0f,
+                DesiredAcceleration = math.max(0f, baseAccel),
+                Velocity = float2.zero,
             });
             AddComponent(entity, new UnitFacingComponent
             {
                 Direction = new float2(1f, 0f),
-                AnimationDirection = float2.zero,
-                HasAnimationDirection = 0,
             });
         }
     }
 }
 
-public enum UnitMoveCommandType : byte
-{
-    None = 0,
-    Accelerate = 1,
-    DirectVelocity = 2,
-}
-
 public struct UnitMoveComponent : IComponentData
 {
-    /// <summary>
-    /// 单位配置中的基础最大移动速度，不包含 Buff 或状态倍率。
-    /// </summary>
     public float BaseMoveSpeed;
-
-    /// <summary>
-    /// 装备提供的基础移速加成，只做基础值加算。
-    /// </summary>
     public float BaseMoveSpeedOffset;
-
-    /// <summary>
-    /// 单位配置中的基础加速度，决定当前速度追向目标速度的快慢。
-    /// </summary>
     public float BaseMaxAcceleration;
-
-    /// <summary>
-    /// Buff 系统写入的移动速度倍率，默认值为 1。
-    /// </summary>
     public float SpeedFactor;
-
-    /// <summary>
-    /// Buff 系统写入的移动速度加成，默认值为 0。
-    /// </summary>
     public float SpeedBonus;
-
-    /// <summary>
-    /// 当前状态写入的临时速度倍率，例如施法减速，默认值为 1。
-    /// </summary>
-    public float StateSpeedFactor;
-
-    /// <summary>
-    /// 当前状态写入的纯移动输入方向，不要在这里混入速度倍率。
-    /// </summary>
-    public UnitMoveCommandType CommandType;
-    public float2 CommandDirection;
-    public float2 DirectVelocity;
-
-    /// <summary>
-    /// 当前平滑后的移动速度，由 UnitMoveJob 计算并写入 PhysicsVelocity。
-    /// </summary>
+    public float2 DesiredDirection;
+    public float DesiredMaxSpeed;
+    public float DesiredAcceleration;
     public float2 Velocity;
 
-    /// <summary>
-    /// 移动模拟实际使用的最终最大速度。
-    /// </summary>
-    public float RealMoveSpeed => ((BaseMoveSpeed + BaseMoveSpeedOffset) * SpeedFactor + SpeedBonus) * StateSpeedFactor;
+    public float RealMoveSpeed => (BaseMoveSpeed + BaseMoveSpeedOffset) * SpeedFactor + SpeedBonus;
+    public float RealMaxAcceleration => BaseMaxAcceleration * SpeedFactor + SpeedBonus;
 
-    /// <summary>
-    /// 移动模拟实际使用的最终最大加速度。
-    /// </summary>
-    public float RealMaxAcceleration => (BaseMaxAcceleration * SpeedFactor + SpeedBonus) * StateSpeedFactor;
-
-    public void ClearCommand()
+    public float GetRealMoveSpeed(float commandSpeedFactor)
     {
-        CommandType = UnitMoveCommandType.None;
-        CommandDirection = float2.zero;
-        DirectVelocity = float2.zero;
-        StateSpeedFactor = 1f;
+        return RealMoveSpeed * math.max(0f, commandSpeedFactor);
     }
 
-    public void SetAccelerateCommand(float2 direction, float speedFactor = 1f)
+    public float GetRealMaxAcceleration(float commandSpeedFactor)
     {
-        CommandType = UnitMoveCommandType.Accelerate;
-        CommandDirection = direction;
-        DirectVelocity = float2.zero;
-        StateSpeedFactor = math.max(0f, speedFactor);
+        return RealMaxAcceleration * math.max(0f, commandSpeedFactor);
     }
 
-    public void SetDirectVelocityCommand(float2 velocity)
+    public void SetTargetMovement(float2 direction, float maxSpeed, float acceleration)
     {
-        CommandType = UnitMoveCommandType.DirectVelocity;
-        CommandDirection = float2.zero;
-        DirectVelocity = velocity;
-        StateSpeedFactor = 1f;
+        float2 normalizedDirection = math.normalizesafe(direction, float2.zero);
+        DesiredDirection = normalizedDirection;
+        DesiredMaxSpeed = math.max(0f, maxSpeed);
+        DesiredAcceleration = math.max(0f, acceleration);
+
+        if (math.lengthsq(normalizedDirection) <= 0.0001f || DesiredMaxSpeed <= 0.0001f)
+        {
+            DesiredDirection = float2.zero;
+            DesiredMaxSpeed = 0f;
+        }
+    }
+
+    public void SetTargetMovementByFactor(float2 direction, float speedFactor = 1f)
+    {
+        float safeSpeedFactor = math.max(0f, speedFactor);
+        SetTargetMovement(direction,GetRealMoveSpeed(safeSpeedFactor),GetRealMaxAcceleration(safeSpeedFactor));
+    }
+
+    public void ClearTargetMovement()
+    {
+        DesiredDirection = float2.zero;
+        DesiredMaxSpeed = 0f;
+        DesiredAcceleration = math.max(0f, RealMaxAcceleration);
     }
 }

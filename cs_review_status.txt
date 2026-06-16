@@ -290,50 +290,74 @@ Game\
         NPCTagAuthoring.cs FALSE
         PlayerTagAuthoring.cs FALSE
       DestroyEntityFlag.cs FALSE
+      DropEntityPrefabRegistryEntry.cs FALSE
       DungeonExitAuthoring.cs TRUE
       DungeonMonsterSpawnComponent.cs TRUE
-      DungeonTreasureAuthoring.cs TRUE
+      DungeonTreasureAuthoring.cs TRUE DIRTY
+      DungeonTreasureRewardElement.cs FALSE
       EntitySpawnRegistryAuthoring.cs TRUE DIRTY
-      NPCAuthoringUtility.cs FALSE
+      EnvironmentEntityPrefabRegistryEntry.cs FALSE
       NPCInteractableAuthoring.cs FALSE
       NPCInteractionRequest.cs FALSE
       NPCInteractionState.cs FALSE
-      PlayerSkillComponent.cs FALSE
+      PlayerSkillComponent.cs TRUE
+        施法请求组件，存放待释放技能链原始数据
+      ProjectileEntityPrefabRegistryEntry.cs FALSE
       QuadAnimationComponent.cs FALSE
       SkillProjectileAuthoring.cs FALSE
       SkillProjectileComponent.cs FALSE
       UnitAnimationComponent.cs FALSE
-      UnitAttackAuthoring.cs FALSE
-      UnitAuthoringUtility.cs FALSE
+      UnitAttackAuthoring.cs TRUE
+        技能攻击相关数据
       UnitBehaviorTreeAuthoring.cs TRUE
         行为树组件，携带黑板
-      UnitBuffAuthoring.cs TRUE DIRTY
-      UnitBuffRuntimeComponent.cs TRUE
-        存储运行时技能数据，以及Tick,Hook调用时发送施法请求
+      UnitBuffRuntimeAuthoring.cs TRUE
+        存储运行时Buff数据，以及Tick/Hook调用时发送施法请求
       UnitCastAuthoring.cs FALSE
+      UnitCastFollowupRuntimeComponent.cs FALSE
       UnitCastSkillPayloadComponent.cs FALSE
       UnitCastTaskPayloadComponent.cs FALSE
       UnitControlComponent.cs TRUE
         控制组件，存储当前受控信息
       UnitDropAuthoring.cs TRUE
-      UnitFacingComponent.cs FALSE
-      UnitFactionAuthoring.cs FALSE
+        掉落物数据
+      UnitElementComponent.cs TRUE
+        元素属性数据
+      UnitFacingComponent.cs TRUE
+        朝向数据
+      UnitFactionAuthoring.cs TRUE
+        阵营数据
       UnitIntentAuthoring.cs TRUE
         ==没有多态
         单位意图集合
       UnitJumpArcComponent.cs FALSE
-      UnitManaAuthoring.cs FALSE
-      UnitMoveAuthoring.cs FALSE
+      UnitManaAuthoring.cs TRUE
+        魔法数据
+      UnitMoveAuthoring.cs TRUE
+        移动数据
       UnitPerceptionAuthoring.cs TRUE
         索敌组件，适配unit编辑器
-      UnitQuadVisualRequest.cs FALSE
       UnitSkillAuthoring.cs TRUE
         单位所有技能数据
       UnitSkillModifierRuntimeComponent.cs FALSE
       UnitStateMachineAuthoring.cs FALSE
       ========太多组件在这里添加
+      UnitEntityPrefabRegistryEntry.cs FALSE
       UnitVitalityAuthoring.cs FALSE
+      VfxEntityPrefabRegistryEntry.cs FALSE
       WorldDropComponent.cs FALSE
+    Feature\
+      NPCInteractionFeatureAuthoring.cs FALSE
+      PlayerFeatureAuthoring.cs FALSE
+      UnitAIFeatureAuthoring.cs FALSE
+      UnitBattleFeatureAuthoring.cs FALSE
+      UnitControlFeatureAuthoring.cs FALSE
+      UnitDecisionFeatureAuthoring.cs FALSE
+      UnitDropFeatureAuthoring.cs FALSE
+      UnitJumpFeatureAuthoring.cs FALSE
+      UnitMovementFeatureAuthoring.cs FALSE
+      UnitSkillFeatureAuthoring.cs FALSE
+      UnitVisualFeatureAuthoring.cs FALSE
     Editor\
       BehaviorTreeGraphWindow.cs FALSE
       BehaviorTreeRegistryGenerator.cs FALSE
@@ -357,7 +381,6 @@ Game\
       NPCInteractionNodeRegistry.cs TRUE
       NPCInteractionNodeRunner.cs FALSE
       NPCInteractionNodeRunners.cs TRUE
-      NPCInteractionRuntimeUtility.cs TRUE
       NPCInteractionSession.cs FALSE
     System\
       BehaviorTreeInitSystem.cs TRUE
@@ -369,49 +392,40 @@ Game\
       DungeonExitInteractionNodes.cs FALSE
       DungeonTreasureSystem.cs FALSE
       EffectExecutionSystem.cs FALSE
-      EntitySpawnRegistryUtility.cs FALSE
       NPCInteractInputSystem.cs FALSE
       NPCInteractionSystem.cs FALSE
       NPCInteractPromptSystem.cs FALSE
       PersistentBeamEffectSystem.cs FALSE
       PersistentEffectSystem.cs FALSE
-      PlayerEquipmentPropertySystem.cs TRUE
+      PlayerEquipmentPropertySystem.cs TRUE DIRTY
         统计装备属性写入属性组件中
-      UnitModifierUtility.cs FALSE
       PlayerInputSystem.cs TRUE
         用户输入存值
       PlayerPropUseSystem.cs FALSE
       PlayerSkillAnalysisSystem.cs FALSE
       QuadAnimationSystem.cs FALSE
-      QuadAnimationVisualUtility.cs FALSE
-      SkillExecutionUtility.cs FALSE
       SkillProjectileSpawnSystem.cs FALSE
       SkillProjectileSystem.cs FALSE
       UnitAnimationSystem.cs FALSE
-      UnitAnimationVisualUtility.cs FALSE
       UnitBuffSystem.cs TRUE
         统计Buff写入属性和技能修正，轮询技能时间
-      UnitBuffUtility.cs FALSE
-      UnitBuffHookUtility.cs FALSE
       UnitControlSystem.cs TRUE
         刷新受控数据
-      UnitControlUtility.cs FALSE
       UnitDropOnDestroySystem.cs TRUE
-      UnitFacingSystem.cs FALSE
       UnitJumpArcSystem.cs FALSE
       UnitMoveSystem.cs FALSE
+      UnitResetSystem.cs TRUE
+        重置每帧数据
       UnitPerceptionSystem.cs TRUE
         查询最近的敌人写入索敌组件
       UnitQuadVisualSystem.cs FALSE
-      UnitQuerySystem.cs TRUE
+      UnitQuerySystem.cs TRUE DIRTY
         ==缺少四叉树
         数据化单位位置，提供快速查询接口
       UnitRecoverySystem.cs TRUE
         应用生命恢复
       UnitSkillAnalysisSystem.cs FALSE
-      UnitSkillModifierResetSystem.cs TRUE
         重置SkillModifier
-      UnitSkillModifierUtility.cs FALSE
       UnitSkillExecuteSystem.cs FALSE
       UnitSkillSystem.cs TRUE
         只是计算冷却
@@ -423,6 +437,26 @@ Game\
       UnitStateTransitionSystem.cs TRUE
         计算并执行状态转换
       WorldDropPickupSystem.cs FALSE
+    Utility\
+      EntitySpawnRegistryUtility.cs FALSE
+      NPCAuthoringUtility.cs FALSE
+      NPCInteractionRuntimeUtility.cs TRUE DIRTY
+      PendingEffectExecutionQueueUtility.cs FALSE
+      PropUseUtility.cs FALSE
+      QuadAnimationVisualUtility.cs FALSE
+      QuadOverlayPulseUtility.cs FALSE
+      SkillExecutionUtility.cs FALSE
+      UnitAnimationVisualUtility.cs FALSE
+      UnitAuthoringUtility.cs FALSE
+      UnitBuffHookUtility.cs FALSE
+      UnitBuffUtility.cs FALSE
+      UnitControlUtility.cs FALSE
+      UnitFacingUtility.cs FALSE
+      UnitFactionUtility.cs FALSE
+      UnitFeatureBakeUtility.cs FALSE
+      UnitModifierUtility.cs FALSE
+      UnitQueryUtility.cs FALSE
+      UnitSkillModifierUtility.cs FALSE
     Unit\
       CompareSource\
         UnitBuffStackSource.cs FALSE
@@ -435,13 +469,17 @@ Game\
         UnitVelocitySource.cs FALSE
         UnitWantToCastSource.cs FALSE
       State\
-        AUnitState.cs FALSE
-        ControlledState.cs FALSE
-        IdleState.cs FALSE
-        MoveState.cs FALSE
-        PlayerCastState.cs FALSE
+        AUnitState.cs TRUE
+            状态基类
+        ControlledState.cs TRUE
+            受控状态，计算受控移动
+        IdleState.cs TRUE
+            啥都不干
+        MoveState.cs TRUE
+            写入移动方向
+        PlayerCastState.cs TRUE
+            将施法请求写入技能组件
         UnitCastState.cs FALSE
-    PropUseUtility.cs FALSE
     StateMachineFactory.cs FALSE
     StateMachineRegistry.cs FALSE
 UI\

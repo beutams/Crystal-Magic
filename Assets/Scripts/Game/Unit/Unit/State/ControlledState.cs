@@ -4,28 +4,19 @@ using Unity.Mathematics;
 [FactoryKey("ControlledState")]
 public class ControlledState : AUnitState
 {
+    private const float KnockbackSnapAcceleration = 100000f;
+
     public override void OnEnter()
     {
-        ApplyControlledMovement();
-        ClearAnimationFacingDirection();
     }
 
     public override void OnUpdate(float deltaTime)
     {
         ApplyControlledMovement();
-        ClearAnimationFacingDirection();
     }
 
     public override void OnExit()
     {
-        if (EntityManager.HasComponent<UnitMoveComponent>(Entity))
-        {
-            UnitMoveComponent move = EntityManager.GetComponentData<UnitMoveComponent>(Entity);
-            move.ClearCommand();
-            EntityManager.SetComponentData(Entity, move);
-        }
-
-        ClearAnimationFacingDirection();
     }
 
     private void ApplyControlledMovement()
@@ -34,7 +25,6 @@ public class ControlledState : AUnitState
             return;
 
         UnitMoveComponent move = EntityManager.GetComponentData<UnitMoveComponent>(Entity);
-        move.ClearCommand();
 
         if (EntityManager.HasComponent<UnitControlRuntimeComponent>(Entity))
         {
@@ -42,11 +32,19 @@ public class ControlledState : AUnitState
             switch (control.ActiveType)
             {
                 case UnitControlType.Knockback:
-                    move.SetDirectVelocityCommand(control.ActiveMotionVelocity);
+                    move.SetTargetMovement(
+                        control.ActiveMotionVelocity,
+                        math.length(control.ActiveMotionVelocity),
+                        math.max(move.RealMaxAcceleration, KnockbackSnapAcceleration));
+                    if (math.lengthsq(control.ActiveMotionVelocity) > 0.0001f)
+                        UnitFacingUtility.SetFacing(EntityManager, Entity, -control.ActiveMotionVelocity);
                     break;
 
                 case UnitControlType.Fear:
-                    move.SetAccelerateCommand(GetFearDirection(control.ActiveSourceEntity));
+                    float2 fearDirection = GetFearDirection(control.ActiveSourceEntity);
+                    move.SetTargetMovementByFactor(fearDirection);
+                    if (math.lengthsq(fearDirection) > 0.0001f)
+                        UnitFacingUtility.SetFacing(EntityManager, Entity, fearDirection);
                     break;
             }
         }

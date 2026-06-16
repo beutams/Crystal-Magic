@@ -5,7 +5,6 @@ using Unity.Transforms;
 
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(UnitMoveSystem))]
-[UpdateBefore(typeof(UnitSkillExecuteSystem))]
 partial class UnitJumpArcSystem : SystemBase
 {
     protected override void OnUpdate()
@@ -24,7 +23,6 @@ partial class UnitJumpArcSystem : SystemBase
             if (EntityManager.HasComponent<UnitMoveComponent>(entity))
             {
                 UnitMoveComponent move = EntityManager.GetComponentData<UnitMoveComponent>(entity);
-                move.ClearCommand();
                 move.Velocity = float2.zero;
                 EntityManager.SetComponentData(entity, move);
             }

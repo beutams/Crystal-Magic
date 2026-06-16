@@ -623,9 +623,9 @@ namespace CrystalMagic.Editor.Data
 
             EditorGUILayout.HelpBox("这里只预览状态数据，修改请到 State Machine 编辑器。", MessageType.Info);
 
-            if (!HasAuthoring<UnitStateMachineAuthoring>(entry))
+            if (!HasAuthoring<UnitDecisionFeatureAuthoring>(entry))
             {
-                EditorGUILayout.HelpBox("当前 Prefab 没有挂 UnitStateMachineAuthoring。", MessageType.Warning);
+                EditorGUILayout.HelpBox("当前 Prefab 没有挂 UnitDecisionFeatureAuthoring。", MessageType.Warning);
                 return;
             }
 
@@ -683,10 +683,10 @@ namespace CrystalMagic.Editor.Data
 
             EditorGUILayout.HelpBox("这里只预览行为树数据，修改请到 Behavior Tree 编辑器。", MessageType.Info);
 
-            UnitBehaviorTreeAuthoring authoring = entry.Prefab.GetComponent<UnitBehaviorTreeAuthoring>();
+            UnitAIFeatureAuthoring authoring = entry.Prefab.GetComponent<UnitAIFeatureAuthoring>();
             if (authoring == null)
             {
-                EditorGUILayout.HelpBox("当前 Prefab 没有挂 UnitBehaviorTreeAuthoring。", MessageType.Warning);
+                EditorGUILayout.HelpBox("当前 Prefab 没有挂 UnitAIFeatureAuthoring。", MessageType.Warning);
                 return;
             }
 

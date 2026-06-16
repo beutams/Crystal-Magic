@@ -144,7 +144,6 @@ namespace CrystalMagic.Editor.Skill
             typeof(DoubleExecuteSkillCastTaskData),
             typeof(ApplyRuntimeBuffSkillCastTaskData),
             typeof(JumpArcSkillCastTaskData),
-            typeof(TurnToTargetSkillCastTaskData),
             typeof(RepeatCastWithRetargetSkillCastTaskData),
         };
 
@@ -153,7 +152,6 @@ namespace CrystalMagic.Editor.Skill
             "Double Execute",
             "Apply Runtime Buff",
             "Jump Arc",
-            "Turn To Target",
             "Repeat Cast With Retarget",
         };
         private static readonly SkillCastHookPoint[] SkillCastHookPointValues = (SkillCastHookPoint[])Enum.GetValues(typeof(SkillCastHookPoint));
@@ -770,11 +768,6 @@ namespace CrystalMagic.Editor.Skill
                 case JumpArcSkillCastTaskData jumpArcTaskData:
                     jumpArcTaskData.DurationSeconds = Mathf.Max(0f, EditorGUILayout.FloatField("Duration Seconds", jumpArcTaskData.DurationSeconds));
                     jumpArcTaskData.ArcHeight = Mathf.Max(0f, EditorGUILayout.FloatField("Arc Height", jumpArcTaskData.ArcHeight));
-                    break;
-
-                case TurnToTargetSkillCastTaskData turnToTargetTaskData:
-                    turnToTargetTaskData.DurationSeconds = Mathf.Max(0f, EditorGUILayout.FloatField("Duration Seconds", turnToTargetTaskData.DurationSeconds));
-                    turnToTargetTaskData.TurnRateDegreesPerSecond = Mathf.Max(0f, EditorGUILayout.FloatField("Turn Rate Degrees Per Second", turnToTargetTaskData.TurnRateDegreesPerSecond));
                     break;
 
                 case RepeatCastWithRetargetSkillCastTaskData repeatCastTaskData:

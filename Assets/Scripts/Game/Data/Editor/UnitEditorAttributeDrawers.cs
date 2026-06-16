@@ -12,7 +12,7 @@ namespace CrystalMagic.Editor.Data
     {
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasAuthoring<UnitFactionAuthoring>();
+            return context.HasFeature<UnitBattleFeatureAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -33,7 +33,7 @@ namespace CrystalMagic.Editor.Data
     {
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasAuthoring<UnitMoveAuthoring>();
+            return context.HasFeature<UnitMovementFeatureAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -54,7 +54,7 @@ namespace CrystalMagic.Editor.Data
     {
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasAuthoring<UnitVitalityAuthoring>();
+            return context.HasFeature<UnitBattleFeatureAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -76,7 +76,7 @@ namespace CrystalMagic.Editor.Data
     {
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasAuthoring<UnitAttackAuthoring>();
+            return context.HasFeature<UnitBattleFeatureAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -99,7 +99,7 @@ namespace CrystalMagic.Editor.Data
     {
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasAuthoring<UnitManaAuthoring>();
+            return context.HasFeature<UnitBattleFeatureAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -126,7 +126,7 @@ namespace CrystalMagic.Editor.Data
 
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasAuthoring<UnitSkillAuthoring>();
+            return context.HasFeature<UnitSkillFeatureAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -234,7 +234,7 @@ namespace CrystalMagic.Editor.Data
     {
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasAuthoring<UnitPerceptionAuthoring>();
+            return context.HasFeature<UnitAIFeatureAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -261,7 +261,7 @@ namespace CrystalMagic.Editor.Data
 
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasAuthoring<UnitBuffAuthoring>();
+            return context.HasFeature<UnitBattleFeatureAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -366,7 +366,7 @@ namespace CrystalMagic.Editor.Data
     {
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasAuthoring<UnitDropAuthoring>();
+            return context.HasFeature<UnitDropFeatureAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -387,12 +387,12 @@ namespace CrystalMagic.Editor.Data
     {
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasAuthoring<NPCInteractableAuthoring>();
+            return context.HasFeature<NPCInteractionFeatureAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
         {
-            NPCInteractableAuthoring npcAuthoring = context.GetAuthoring<NPCInteractableAuthoring>();
+            NPCInteractionFeatureAuthoring npcAuthoring = context.GetFeature<NPCInteractionFeatureAuthoring>();
             if (npcAuthoring == null)
                 return;
 

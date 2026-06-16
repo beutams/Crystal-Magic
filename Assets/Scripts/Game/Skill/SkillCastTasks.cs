@@ -136,7 +136,7 @@ namespace CrystalMagic.Game.Skill
             if (entityManager.HasComponent<UnitMoveComponent>(entity))
             {
                 UnitMoveComponent move = entityManager.GetComponentData<UnitMoveComponent>(entity);
-                move.ClearCommand();
+                move.ClearTargetMovement();
                 move.Velocity = float2.zero;
                 entityManager.SetComponentData(entity, move);
             }
@@ -162,97 +162,6 @@ namespace CrystalMagic.Game.Skill
 
             entityManager.SetComponentData(entity, jump);
             return true;
-        }
-    }
-
-    public sealed class TurnToTargetSkillCastTaskRuntime : SkillCastTaskRuntime
-    {
-        private readonly float _durationSeconds;
-        private readonly float _turnRateRadiansPerSecond;
-        private float _remainingDuration;
-
-        public TurnToTargetSkillCastTaskRuntime(TurnToTargetSkillCastTaskData data) : base(data?.HookPoint ?? SkillCastHookPoint.BeforeRecovery)
-        {
-            _durationSeconds = math.max(0f, data?.DurationSeconds ?? 0f);
-            _turnRateRadiansPerSecond = math.radians(math.max(0f, data?.TurnRateDegreesPerSecond ?? 0f));
-            _remainingDuration = _durationSeconds;
-        }
-
-        public override bool Tick(EntityManager entityManager, Entity entity, ref UnitCastComponent cast, ref float remainingTime)
-        {
-            if (_durationSeconds <= 0f)
-            {
-                UpdateFacing(entityManager, entity, float.MaxValue);
-                return true;
-            }
-
-            float consumedTime = math.min(remainingTime, _remainingDuration);
-            remainingTime -= consumedTime;
-            _remainingDuration -= consumedTime;
-            UpdateFacing(entityManager, entity, consumedTime);
-            return _remainingDuration <= 0f;
-        }
-
-        private void UpdateFacing(EntityManager entityManager, Entity entity, float deltaTime)
-        {
-            if (!TryGetDesiredDirection(entityManager, entity, out float2 desiredDirection))
-                return;
-
-            UnitFacingUtility.TryGetFacing(entityManager, entity, out float2 currentFacing);
-            if (_turnRateRadiansPerSecond <= 0f || !entityManager.Exists(entity))
-            {
-                UnitFacingUtility.SetFacing(entityManager, entity, desiredDirection);
-                return;
-            }
-
-            float maxRadians = _turnRateRadiansPerSecond * math.max(0f, deltaTime);
-            float2 nextFacing = RotateTowards(currentFacing, desiredDirection, maxRadians);
-            UnitFacingUtility.SetFacing(entityManager, entity, nextFacing);
-        }
-
-        private static bool TryGetDesiredDirection(EntityManager entityManager, Entity entity, out float2 desiredDirection)
-        {
-            desiredDirection = new float2(1f, 0f);
-            if (entity == Entity.Null ||
-                !entityManager.Exists(entity) ||
-                !entityManager.HasComponent<Unity.Transforms.LocalTransform>(entity))
-            {
-                return false;
-            }
-
-            Unity.Transforms.LocalTransform transform = entityManager.GetComponentData<Unity.Transforms.LocalTransform>(entity);
-            float2 targetPosition = transform.Position.xy + new float2(1f, 0f);
-            if (SkillTargetUtility.TryGetTargetPosition(entityManager, entity, out float2 resolvedTargetPosition))
-                targetPosition = resolvedTargetPosition;
-
-            desiredDirection = targetPosition - transform.Position.xy;
-            if (math.lengthsq(desiredDirection) <= 0.0001f)
-                return false;
-
-            desiredDirection = math.normalize(desiredDirection);
-            return true;
-        }
-
-        private static float2 RotateTowards(float2 current, float2 target, float maxRadians)
-        {
-            float2 normalizedCurrent = math.normalizesafe(current, new float2(1f, 0f));
-            float2 normalizedTarget = math.normalizesafe(target, new float2(1f, 0f));
-            float currentAngle = math.atan2(normalizedCurrent.y, normalizedCurrent.x);
-            float targetAngle = math.atan2(normalizedTarget.y, normalizedTarget.x);
-            float delta = DeltaAngleRadians(currentAngle, targetAngle);
-            float step = math.clamp(delta, -maxRadians, maxRadians);
-            float nextAngle = currentAngle + step;
-            return new float2(math.cos(nextAngle), math.sin(nextAngle));
-        }
-
-        private static float DeltaAngleRadians(float current, float target)
-        {
-            float delta = target - current;
-            while (delta > math.PI)
-                delta -= math.PI * 2f;
-            while (delta < -math.PI)
-                delta += math.PI * 2f;
-            return delta;
         }
     }
 
@@ -317,8 +226,6 @@ namespace CrystalMagic.Game.Skill
                 intent.CastTargetPosition = perception.TargetPosition;
                 entityManager.SetComponentData(entity, intent);
             }
-
-            UnitFacingUtility.FaceTowardsPosition(entityManager, entity, perception.TargetPosition);
         }
     }
 
@@ -331,7 +238,6 @@ namespace CrystalMagic.Game.Skill
                 DoubleExecuteSkillCastTaskData doubleExecuteData => new DoubleExecuteSkillCastTaskRuntime(doubleExecuteData),
                 ApplyRuntimeBuffSkillCastTaskData applyRuntimeBuffData => new ApplyRuntimeBuffSkillCastTaskRuntime(applyRuntimeBuffData),
                 JumpArcSkillCastTaskData jumpArcData => new JumpArcSkillCastTaskRuntime(jumpArcData),
-                TurnToTargetSkillCastTaskData turnToTargetData => new TurnToTargetSkillCastTaskRuntime(turnToTargetData),
                 RepeatCastWithRetargetSkillCastTaskData repeatCastData => new RepeatCastWithRetargetSkillCastTaskRuntime(repeatCastData),
                 _ => null,
             };

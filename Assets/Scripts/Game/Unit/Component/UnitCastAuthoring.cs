@@ -20,11 +20,6 @@ public class UnitCastAuthoring : MonoBehaviour
     }
 }
 
-public class UnitCastFollowupRuntimeComponent : IComponentData
-{
-    public List<SkillFollowupRuntime> Followups = new();
-}
-
 public enum SkillCastPhase : byte
 {
     None = 0,

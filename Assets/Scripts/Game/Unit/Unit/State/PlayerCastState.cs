@@ -20,7 +20,7 @@ public class PlayerCastState : AUnitState
         UnitIntentComponent intent = EntityManager.GetComponentData<UnitIntentComponent>(Entity);
 
         EntityManager.SetComponentData(Entity, request);
-        UpdateAnimationFacing(intent.CastTargetPosition, true);
+        UpdateFacing(intent.CastTargetPosition, true);
     }
 
     public override void OnUpdate(float deltaTime)
@@ -31,7 +31,7 @@ public class PlayerCastState : AUnitState
         }
 
         UnitIntentComponent intent = EntityManager.GetComponentData<UnitIntentComponent>(Entity);
-        UpdateAnimationFacing(intent.CastTargetPosition, true);
+        UpdateFacing(intent.CastTargetPosition, true);
     }
 
     public override void OnExit()
@@ -41,7 +41,6 @@ public class PlayerCastState : AUnitState
             UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
             SkillExecutionUtility.ResetCastState(EntityManager, Entity, ref cast);
             SkillExecutionUtility.ClearFollowupEffects(EntityManager, Entity);
-            SkillExecutionUtility.ApplyMovement(EntityManager, Entity, cast);
             EntityManager.SetComponentData(Entity, cast);
         }
 
@@ -51,8 +50,6 @@ public class PlayerCastState : AUnitState
             request.Clear();
             EntityManager.SetComponentData(Entity, request);
         }
-
-        ClearAnimationFacingDirection();
     }
 
     public static bool TryPopulateSelectedChainRequest(EntityManager entityManager, Entity entity, ref PlayerSkillComponent request)
@@ -100,22 +97,16 @@ public class PlayerCastState : AUnitState
         return true;
     }
 
-    private void UpdateAnimationFacing(float2 targetPosition, bool hasTarget)
+    private void UpdateFacing(float2 targetPosition, bool hasTarget)
     {
         if (!hasTarget || !EntityManager.HasComponent<LocalTransform>(Entity))
-        {
-            ClearAnimationFacingDirection();
             return;
-        }
 
         float2 selfPosition = EntityManager.GetComponentData<LocalTransform>(Entity).Position.xy;
         float2 direction = targetPosition - selfPosition;
         if (math.lengthsq(direction) <= 0.0001f)
-        {
-            ClearAnimationFacingDirection();
             return;
-        }
 
-        SetAnimationFacingDirection(direction);
+        UnitFacingUtility.SetFacing(EntityManager, Entity, direction);
     }
 }

@@ -9,38 +9,31 @@ public class MoveState : AUnitState
 {
     public override void OnEnter()
     {
-        var intent = EntityManager.GetComponentData<UnitIntentComponent>(Entity);
-        var move = EntityManager.GetComponentData<UnitMoveComponent>(Entity);
-        move.SetAccelerateCommand(intent.MoveDirection);
-        EntityManager.SetComponentData(Entity, move);
-        ApplyAnimationFacing(intent.MoveDirection);
     }
 
     public override void OnUpdate(float deltaTime)
     {
-        var intent = EntityManager.GetComponentData<UnitIntentComponent>(Entity);
-        var move   = EntityManager.GetComponentData<UnitMoveComponent>(Entity);
-        move.SetAccelerateCommand(intent.MoveDirection);
-        EntityManager.SetComponentData(Entity, move);
-        ApplyAnimationFacing(intent.MoveDirection);
+        ApplyMoveIntent();
     }
 
     public override void OnExit()
     {
-        var move = EntityManager.GetComponentData<UnitMoveComponent>(Entity);
-        move.ClearCommand();
-        EntityManager.SetComponentData(Entity, move);
-        ClearAnimationFacingDirection();
     }
 
-    private void ApplyAnimationFacing(float2 direction)
+    private void ApplyMoveIntent()
     {
-        if (math.lengthsq(direction) <= 0.0001f)
+        if (!EntityManager.HasComponent<UnitIntentComponent>(Entity) ||
+            !EntityManager.HasComponent<UnitMoveComponent>(Entity))
         {
-            ClearAnimationFacingDirection();
             return;
         }
 
-        SetAnimationFacingDirection(direction);
+        UnitIntentComponent intent = EntityManager.GetComponentData<UnitIntentComponent>(Entity);
+        UnitMoveComponent move = EntityManager.GetComponentData<UnitMoveComponent>(Entity);
+        move.SetTargetMovementByFactor(intent.MoveDirection);
+        EntityManager.SetComponentData(Entity, move);
+
+        if (math.lengthsq(intent.MoveDirection) > 0.0001f)
+            UnitFacingUtility.SetFacing(EntityManager, Entity, intent.MoveDirection);
     }
 }

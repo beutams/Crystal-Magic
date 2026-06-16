@@ -38,10 +38,10 @@ UnitAttackAuthoring
         Four elemental damage bonuses.
 
 UnitBehaviorTreeAuthoring
-UnitBuffAuthoring
+UnitBuffRuntimeAuthoring
 - Content
-    IBufferElementData
-        BuffId, remaining time, and stack count.
+    UnitBuffRuntimeComponent
+        Buff runtime list and baked initial buff entries.
 
 UnitCastAuthoring
 UnitFactionAuthoring
