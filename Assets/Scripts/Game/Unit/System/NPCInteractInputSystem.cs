@@ -20,9 +20,12 @@ partial struct NPCInteractInputSystem : ISystem
         request.ValueRW.HasRequest = 0;
 
         bool wantToInteract = false;
-        foreach ((RefRO<PlayerTag> _, RefRO<UnitIntentComponent> intentRef) in
-                 SystemAPI.Query<RefRO<PlayerTag>, RefRO<UnitIntentComponent>>())
+        foreach ((RefRO<PlayerTag> _, RefRO<UnitIntentComponent> intentRef, Entity entity) in
+                 SystemAPI.Query<RefRO<PlayerTag>, RefRO<UnitIntentComponent>>().WithEntityAccess())
         {
+            if (UnitControlUtility.IsInControlledState(state.EntityManager, entity))
+                break;
+
             wantToInteract = intentRef.ValueRO.WantToInteract;
             break;
         }

@@ -86,9 +86,12 @@ partial struct DungeonExitSystem : ISystem
 
         bool wantToInteract = false;
         float3 playerPosition = default;
-        foreach ((RefRO<PlayerTag> _, RefRO<UnitIntentComponent> intentRef, RefRO<LocalTransform> playerTransform) in
-                 SystemAPI.Query<RefRO<PlayerTag>, RefRO<UnitIntentComponent>, RefRO<LocalTransform>>())
+        foreach ((RefRO<PlayerTag> _, RefRO<UnitIntentComponent> intentRef, RefRO<LocalTransform> playerTransform, Entity entity) in
+                 SystemAPI.Query<RefRO<PlayerTag>, RefRO<UnitIntentComponent>, RefRO<LocalTransform>>().WithEntityAccess())
         {
+            if (UnitControlUtility.IsInControlledState(state.EntityManager, entity))
+                break;
+
             wantToInteract = intentRef.ValueRO.WantToInteract;
             playerPosition = playerTransform.ValueRO.Position;
             break;

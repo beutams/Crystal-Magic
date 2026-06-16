@@ -136,7 +136,7 @@ namespace CrystalMagic.Game.Skill
             if (entityManager.HasComponent<UnitMoveComponent>(entity))
             {
                 UnitMoveComponent move = entityManager.GetComponentData<UnitMoveComponent>(entity);
-                move.AccelInput = float2.zero;
+                move.ClearCommand();
                 move.Velocity = float2.zero;
                 entityManager.SetComponentData(entity, move);
             }

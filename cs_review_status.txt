@@ -313,7 +313,8 @@ Game\
       UnitCastAuthoring.cs FALSE
       UnitCastSkillPayloadComponent.cs FALSE
       UnitCastTaskPayloadComponent.cs FALSE
-      UnitControlComponent.cs FALSE
+      UnitControlComponent.cs TRUE
+        控制组件，存储当前受控信息
       UnitDropAuthoring.cs TRUE
       UnitFacingComponent.cs FALSE
       UnitFactionAuthoring.cs FALSE
@@ -392,7 +393,8 @@ Game\
         统计Buff写入属性和技能修正，轮询技能时间
       UnitBuffUtility.cs FALSE
       UnitBuffHookUtility.cs FALSE
-      UnitControlSystem.cs FALSE
+      UnitControlSystem.cs TRUE
+        刷新受控数据
       UnitControlUtility.cs FALSE
       UnitDropOnDestroySystem.cs TRUE
       UnitFacingSystem.cs FALSE

@@ -5,18 +5,14 @@ public static class UnitControlUtility
 {
     public static void ApplyKnockback(EntityManager entityManager, Entity target, Entity source, float2 direction, float force, float durationSeconds)
     {
-        if (!entityManager.Exists(target) || !entityManager.HasBuffer<UnitControlElement>(target))
+        if (!TryGetRuntime(entityManager, target, out UnitControlRuntimeComponent runtime))
             return;
 
         float2 normalizedDirection = math.normalizesafe(direction, new float2(1f, 0f));
+        float clampedForce = math.max(0f, force);
         float clampedDuration = math.max(0.01f, durationSeconds);
-        UnitKnockbackComponent knockback = entityManager.HasComponent<UnitKnockbackComponent>(target)
-            ? entityManager.GetComponentData<UnitKnockbackComponent>(target)
-            : default;
-        knockback.Velocity = normalizedDirection * math.max(0f, force);
-        knockback.Damping = math.max(0f, force) / clampedDuration;
-        if (entityManager.HasComponent<UnitKnockbackComponent>(target))
-            entityManager.SetComponentData(target, knockback);
+        float2 motionVelocity = normalizedDirection * clampedForce;
+        float motionDamping = clampedForce / clampedDuration;
 
         ApplyOrRefreshControl(
             entityManager,
@@ -27,11 +23,17 @@ public static class UnitControlUtility
             GetPriority(UnitControlType.Knockback),
             lockMove: true,
             lockCast: true,
-            interruptOnApply: true);
+            interruptOnApply: true,
+            motionVelocity,
+            motionDamping,
+            runtime);
     }
 
     public static void ApplyStun(EntityManager entityManager, Entity target, Entity source, float durationSeconds)
     {
+        if (!TryGetRuntime(entityManager, target, out UnitControlRuntimeComponent runtime))
+            return;
+
         ApplyOrRefreshControl(
             entityManager,
             target,
@@ -41,11 +43,17 @@ public static class UnitControlUtility
             GetPriority(UnitControlType.Stun),
             lockMove: true,
             lockCast: true,
-            interruptOnApply: true);
+            interruptOnApply: true,
+            float2.zero,
+            0f,
+            runtime);
     }
 
     public static void ApplyFear(EntityManager entityManager, Entity target, Entity source, float durationSeconds)
     {
+        if (!TryGetRuntime(entityManager, target, out UnitControlRuntimeComponent runtime))
+            return;
+
         ApplyOrRefreshControl(
             entityManager,
             target,
@@ -55,86 +63,54 @@ public static class UnitControlUtility
             GetPriority(UnitControlType.Fear),
             lockMove: true,
             lockCast: true,
-            interruptOnApply: true);
+            interruptOnApply: true,
+            float2.zero,
+            0f,
+            runtime);
     }
 
     public static void RefreshControlState(EntityManager entityManager, Entity entity)
     {
-        if (!entityManager.Exists(entity) ||
-            !entityManager.HasBuffer<UnitControlElement>(entity) ||
-            !entityManager.HasComponent<UnitControlStateComponent>(entity))
-        {
+        if (!TryGetRuntime(entityManager, entity, out UnitControlRuntimeComponent runtime))
             return;
-        }
 
-        DynamicBuffer<UnitControlElement> controls = entityManager.GetBuffer<UnitControlElement>(entity);
-        UnitControlStateComponent state = entityManager.GetComponentData<UnitControlStateComponent>(entity);
-
-        int selectedIndex = -1;
-        int selectedPriority = int.MinValue;
-        for (int i = 0; i < controls.Length; i++)
-        {
-            UnitControlElement control = controls[i];
-            if (control.RemainingTime <= 0f)
-                continue;
-
-            if (selectedIndex < 0 || control.Priority > selectedPriority)
-            {
-                selectedIndex = i;
-                selectedPriority = control.Priority;
-            }
-        }
-
-        if (selectedIndex < 0)
-        {
-            state.ActiveType = UnitControlType.None;
-            state.RemainingTime = 0f;
-            state.ActivePriority = 0;
-            state.LockMove = 0;
-            state.LockCast = 0;
-            state.HasControl = 0;
-            state.ActiveSourceEntity = Entity.Null;
-            entityManager.SetComponentData(entity, state);
-
-            if (entityManager.HasComponent<UnitKnockbackComponent>(entity))
-            {
-                UnitKnockbackComponent knockback = entityManager.GetComponentData<UnitKnockbackComponent>(entity);
-                knockback.Velocity = float2.zero;
-                knockback.Damping = 0f;
-                entityManager.SetComponentData(entity, knockback);
-            }
-
-            return;
-        }
-
-        UnitControlElement active = controls[selectedIndex];
-        state.ActiveType = active.ControlType;
-        state.RemainingTime = active.RemainingTime;
-        state.ActivePriority = active.Priority;
-        state.LockMove = active.LockMove;
-        state.LockCast = active.LockCast;
-        state.HasControl = 1;
-        state.ActiveSourceEntity = active.SourceEntity;
-        entityManager.SetComponentData(entity, state);
+        RefreshResolvedState(ref runtime);
+        entityManager.SetComponentData(entity, runtime);
     }
 
     public static void TickAndRefresh(EntityManager entityManager, Entity entity, float deltaTime)
     {
-        if (!entityManager.Exists(entity) || !entityManager.HasBuffer<UnitControlElement>(entity))
+        if (!TryGetRuntime(entityManager, entity, out UnitControlRuntimeComponent runtime))
             return;
 
-        DynamicBuffer<UnitControlElement> controls = entityManager.GetBuffer<UnitControlElement>(entity);
-        for (int i = controls.Length - 1; i >= 0; i--)
+        float safeDeltaTime = math.max(0f, deltaTime);
+        for (int i = runtime.Entries.Length - 1; i >= 0; i--)
         {
-            UnitControlElement control = controls[i];
-            control.RemainingTime = math.max(0f, control.RemainingTime - math.max(0f, deltaTime));
-            if (control.RemainingTime <= 0f)
-                controls.RemoveAt(i);
+            UnitControlRuntimeEntry entry = runtime.Entries[i];
+            entry.RemainingTime = math.max(0f, entry.RemainingTime - safeDeltaTime);
+            entry.MotionVelocity = DampenVelocity(entry.MotionVelocity, entry.MotionDamping, safeDeltaTime);
+
+            if (entry.RemainingTime <= 0f)
+                runtime.Entries.RemoveAt(i);
             else
-                controls[i] = control;
+                runtime.Entries[i] = entry;
         }
 
-        RefreshControlState(entityManager, entity);
+        RefreshResolvedState(ref runtime);
+        entityManager.SetComponentData(entity, runtime);
+    }
+
+    public static bool IsInControlledState(EntityManager entityManager, Entity entity)
+    {
+        if (entity == Entity.Null ||
+            !entityManager.Exists(entity) ||
+            !entityManager.HasComponent<UnitStateMachineComponent>(entity))
+        {
+            return false;
+        }
+
+        UnitStateMachineComponent stateMachine = entityManager.GetComponentObject<UnitStateMachineComponent>(entity);
+        return stateMachine != null && stateMachine.CurrentStateName == nameof(ControlledState);
     }
 
     private static void ApplyOrRefreshControl(
@@ -146,35 +122,36 @@ public static class UnitControlUtility
         int priority,
         bool lockMove,
         bool lockCast,
-        bool interruptOnApply)
+        bool interruptOnApply,
+        float2 motionVelocity,
+        float motionDamping,
+        UnitControlRuntimeComponent runtime)
     {
-        if (!entityManager.Exists(target) || !entityManager.HasBuffer<UnitControlElement>(target))
-            return;
-
-        DynamicBuffer<UnitControlElement> controls = entityManager.GetBuffer<UnitControlElement>(target);
         float clampedDuration = math.max(0.01f, durationSeconds);
         bool found = false;
 
-        for (int i = 0; i < controls.Length; i++)
+        for (int i = 0; i < runtime.Entries.Length; i++)
         {
-            UnitControlElement control = controls[i];
-            if (control.ControlType != controlType)
+            UnitControlRuntimeEntry entry = runtime.Entries[i];
+            if (entry.ControlType != controlType)
                 continue;
 
-            control.RemainingTime = math.max(control.RemainingTime, clampedDuration);
-            control.Priority = priority;
-            control.LockMove = BoolToByte(lockMove);
-            control.LockCast = BoolToByte(lockCast);
-            control.InterruptOnApply = BoolToByte(interruptOnApply);
-            control.SourceEntity = source;
-            controls[i] = control;
+            entry.RemainingTime = math.max(entry.RemainingTime, clampedDuration);
+            entry.Priority = priority;
+            entry.LockMove = BoolToByte(lockMove);
+            entry.LockCast = BoolToByte(lockCast);
+            entry.InterruptOnApply = BoolToByte(interruptOnApply);
+            entry.SourceEntity = source;
+            entry.MotionVelocity = motionVelocity;
+            entry.MotionDamping = math.max(0f, motionDamping);
+            runtime.Entries[i] = entry;
             found = true;
             break;
         }
 
         if (!found)
         {
-            controls.Add(new UnitControlElement
+            runtime.Entries.Add(new UnitControlRuntimeEntry
             {
                 ControlType = controlType,
                 RemainingTime = clampedDuration,
@@ -183,6 +160,8 @@ public static class UnitControlUtility
                 LockCast = BoolToByte(lockCast),
                 InterruptOnApply = BoolToByte(interruptOnApply),
                 SourceEntity = source,
+                MotionVelocity = motionVelocity,
+                MotionDamping = math.max(0f, motionDamping),
             });
         }
 
@@ -193,21 +172,83 @@ public static class UnitControlUtility
             entityManager.SetComponentData(target, cast);
         }
 
-        if (entityManager.HasComponent<UnitIntentComponent>(target))
+        RefreshResolvedState(ref runtime);
+        entityManager.SetComponentData(target, runtime);
+    }
+
+    private static bool TryGetRuntime(EntityManager entityManager, Entity entity, out UnitControlRuntimeComponent runtime)
+    {
+        runtime = default;
+        if (entity == Entity.Null ||
+            !entityManager.Exists(entity) ||
+            !entityManager.HasComponent<UnitControlRuntimeComponent>(entity))
         {
-            UnitIntentComponent intent = entityManager.GetComponentData<UnitIntentComponent>(target);
-            intent.ClearFrameIntent();
-            entityManager.SetComponentData(target, intent);
+            return false;
         }
 
-        if (entityManager.HasComponent<UnitMoveComponent>(target))
+        runtime = entityManager.GetComponentData<UnitControlRuntimeComponent>(entity);
+        return true;
+    }
+
+    private static void RefreshResolvedState(ref UnitControlRuntimeComponent runtime)
+    {
+        int selectedIndex = -1;
+        int selectedPriority = int.MinValue;
+
+        for (int i = 0; i < runtime.Entries.Length; i++)
         {
-            UnitMoveComponent move = entityManager.GetComponentData<UnitMoveComponent>(target);
-            move.AccelInput = float2.zero;
-            entityManager.SetComponentData(target, move);
+            UnitControlRuntimeEntry entry = runtime.Entries[i];
+            if (entry.RemainingTime <= 0f)
+                continue;
+
+            if (selectedIndex < 0 || entry.Priority > selectedPriority)
+            {
+                selectedIndex = i;
+                selectedPriority = entry.Priority;
+            }
         }
 
-        RefreshControlState(entityManager, target);
+        if (selectedIndex < 0)
+        {
+            runtime.ActiveType = UnitControlType.None;
+            runtime.ActiveRemainingTime = 0f;
+            runtime.ActivePriority = 0;
+            runtime.LockMove = 0;
+            runtime.LockCast = 0;
+            runtime.HasControl = 0;
+            runtime.ActiveSourceEntity = Entity.Null;
+            runtime.ActiveMotionVelocity = float2.zero;
+            runtime.ActiveMotionDamping = 0f;
+            return;
+        }
+
+        UnitControlRuntimeEntry active = runtime.Entries[selectedIndex];
+        runtime.ActiveType = active.ControlType;
+        runtime.ActiveRemainingTime = active.RemainingTime;
+        runtime.ActivePriority = active.Priority;
+        runtime.LockMove = active.LockMove;
+        runtime.LockCast = active.LockCast;
+        runtime.HasControl = 1;
+        runtime.ActiveSourceEntity = active.SourceEntity;
+        runtime.ActiveMotionVelocity = active.MotionVelocity;
+        runtime.ActiveMotionDamping = active.MotionDamping;
+    }
+
+    private static float2 DampenVelocity(float2 velocity, float damping, float deltaTime)
+    {
+        float speed = math.length(velocity);
+        if (speed <= 0.0001f)
+            return float2.zero;
+
+        float safeDamping = math.max(0f, damping);
+        if (safeDamping <= 0f)
+            return velocity;
+
+        float decelStep = safeDamping * deltaTime;
+        if (decelStep >= speed)
+            return float2.zero;
+
+        return velocity - (velocity / speed) * decelStep;
     }
 
     private static int GetPriority(UnitControlType controlType)

@@ -120,16 +120,14 @@ public static class SkillExecutionUtility
             return;
         }
 
-        move.AccelInput = float2.zero;
-        move.StateSpeedFactor = 1f;
+        move.SetAccelerateCommand(float2.zero);
 
         if (TryGetCurrentSkill(entityManager, entity, cast, out ResolvedSkillData skillData) &&
             skillData.CanMoveWhileCasting &&
             entityManager.HasComponent<UnitIntentComponent>(entity))
         {
             UnitIntentComponent intent = entityManager.GetComponentData<UnitIntentComponent>(entity);
-            move.AccelInput = intent.MoveDirection;
-            move.StateSpeedFactor = math.max(0f, skillData.MoveSpeedMultiplier);
+            move.SetAccelerateCommand(intent.MoveDirection, skillData.MoveSpeedMultiplier);
         }
 
         entityManager.SetComponentData(entity, move);
@@ -223,7 +221,7 @@ public static class SkillExecutionUtility
         if (entityManager.Exists(entity) && entityManager.HasComponent<UnitMoveComponent>(entity))
         {
             UnitMoveComponent move = entityManager.GetComponentData<UnitMoveComponent>(entity);
-            move.AccelInput = float2.zero;
+            move.ClearCommand();
             move.Velocity = float2.zero;
             entityManager.SetComponentData(entity, move);
         }

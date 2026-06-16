@@ -31,7 +31,9 @@ public class UnitMoveAuthoring : MonoBehaviour
                 SpeedFactor         = 1f,
                 SpeedBonus          = 0f,
                 StateSpeedFactor    = 1f,
-                AccelInput          = float2.zero,
+                CommandType         = UnitMoveCommandType.None,
+                CommandDirection    = float2.zero,
+                DirectVelocity      = float2.zero,
                 Velocity            = float2.zero,
             });
             AddComponent(entity, new UnitFacingComponent
@@ -42,6 +44,13 @@ public class UnitMoveAuthoring : MonoBehaviour
             });
         }
     }
+}
+
+public enum UnitMoveCommandType : byte
+{
+    None = 0,
+    Accelerate = 1,
+    DirectVelocity = 2,
 }
 
 public struct UnitMoveComponent : IComponentData
@@ -79,7 +88,9 @@ public struct UnitMoveComponent : IComponentData
     /// <summary>
     /// 当前状态写入的纯移动输入方向，不要在这里混入速度倍率。
     /// </summary>
-    public float2 AccelInput;
+    public UnitMoveCommandType CommandType;
+    public float2 CommandDirection;
+    public float2 DirectVelocity;
 
     /// <summary>
     /// 当前平滑后的移动速度，由 UnitMoveJob 计算并写入 PhysicsVelocity。
@@ -95,4 +106,28 @@ public struct UnitMoveComponent : IComponentData
     /// 移动模拟实际使用的最终最大加速度。
     /// </summary>
     public float RealMaxAcceleration => (BaseMaxAcceleration * SpeedFactor + SpeedBonus) * StateSpeedFactor;
+
+    public void ClearCommand()
+    {
+        CommandType = UnitMoveCommandType.None;
+        CommandDirection = float2.zero;
+        DirectVelocity = float2.zero;
+        StateSpeedFactor = 1f;
+    }
+
+    public void SetAccelerateCommand(float2 direction, float speedFactor = 1f)
+    {
+        CommandType = UnitMoveCommandType.Accelerate;
+        CommandDirection = direction;
+        DirectVelocity = float2.zero;
+        StateSpeedFactor = math.max(0f, speedFactor);
+    }
+
+    public void SetDirectVelocityCommand(float2 velocity)
+    {
+        CommandType = UnitMoveCommandType.DirectVelocity;
+        CommandDirection = float2.zero;
+        DirectVelocity = velocity;
+        StateSpeedFactor = 1f;
+    }
 }

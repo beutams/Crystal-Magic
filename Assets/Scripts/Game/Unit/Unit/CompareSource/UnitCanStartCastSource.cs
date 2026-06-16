@@ -26,9 +26,9 @@ public class UnitCanStartCastSource : ISource
         if (!CanUse())
             return 0f;
 
-        if (_context.EntityManager.HasComponent<UnitControlStateComponent>(_context.Entity))
+        if (_context.EntityManager.HasComponent<UnitControlRuntimeComponent>(_context.Entity))
         {
-            UnitControlStateComponent controlState = _context.EntityManager.GetComponentData<UnitControlStateComponent>(_context.Entity);
+            UnitControlRuntimeComponent controlState = _context.EntityManager.GetComponentData<UnitControlRuntimeComponent>(_context.Entity);
             if (controlState.HasControl != 0 && controlState.LockCast != 0)
                 return 0f;
         }

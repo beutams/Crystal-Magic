@@ -9,15 +9,25 @@ public class IdleState : AUnitState
 {
     public override void OnEnter()
     {
+        if (EntityManager.HasComponent<UnitMoveComponent>(Entity))
+        {
+            UnitMoveComponent move = EntityManager.GetComponentData<UnitMoveComponent>(Entity);
+            move.ClearCommand();
+            EntityManager.SetComponentData(Entity, move);
+        }
+
         ClearAnimationFacingDirection();
     }
 
     public override void OnUpdate(float deltaTime) 
     {
-        var intent = EntityManager.GetComponentData<UnitIntentComponent>(Entity);
-        var move = EntityManager.GetComponentData<UnitMoveComponent>(Entity);
-        move.AccelInput = intent.MoveDirection;
-        EntityManager.SetComponentData(Entity, move);
+        if (EntityManager.HasComponent<UnitMoveComponent>(Entity))
+        {
+            UnitMoveComponent move = EntityManager.GetComponentData<UnitMoveComponent>(Entity);
+            move.ClearCommand();
+            EntityManager.SetComponentData(Entity, move);
+        }
+
         ClearAnimationFacingDirection();
     }
     public override void OnExit()

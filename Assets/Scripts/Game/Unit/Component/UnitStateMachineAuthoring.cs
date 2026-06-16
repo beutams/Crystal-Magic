@@ -17,21 +17,18 @@ public class UnitStateMachineAuthoring : MonoBehaviour
             UnitData data = UnitAuthoringUtility.ResolveUnitData(authoring);
             Transform root = authoring.transform.root != null ? authoring.transform.root : authoring.transform;
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
-            AddBuffer<UnitControlElement>(entity);
-            AddComponent(entity, new UnitControlStateComponent
+            AddComponent(entity, new UnitControlRuntimeComponent
             {
+                Entries = new Unity.Collections.FixedList512Bytes<UnitControlRuntimeEntry>(),
                 ActiveType = UnitControlType.None,
-                RemainingTime = 0f,
+                ActiveRemainingTime = 0f,
                 ActivePriority = 0,
                 LockMove = 0,
                 LockCast = 0,
                 HasControl = 0,
                 ActiveSourceEntity = Entity.Null,
-            });
-            AddComponent(entity, new UnitKnockbackComponent
-            {
-                Velocity = Unity.Mathematics.float2.zero,
-                Damping = 0f,
+                ActiveMotionVelocity = Unity.Mathematics.float2.zero,
+                ActiveMotionDamping = 0f,
             });
             AddComponentObject(entity, new UnitStateMachineComponent
             {

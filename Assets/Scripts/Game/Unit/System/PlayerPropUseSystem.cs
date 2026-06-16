@@ -17,6 +17,9 @@ partial struct PlayerPropUseSystem : ISystem
         foreach ((RefRO<PlayerTag> _, RefRO<UnitIntentComponent> intentRef, Entity entity) in
                  SystemAPI.Query<RefRO<PlayerTag>, RefRO<UnitIntentComponent>>().WithEntityAccess())
         {
+            if (UnitControlUtility.IsInControlledState(entityManager, entity))
+                continue;
+
             UnitIntentComponent intent = intentRef.ValueRO;
             if (!intent.WantToUseProp || intent.RequestedPropShortcutIndex < 0)
                 continue;

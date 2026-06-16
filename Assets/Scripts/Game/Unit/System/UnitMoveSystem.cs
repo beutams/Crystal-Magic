@@ -1,5 +1,4 @@
 using Unity.Burst;
-using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
@@ -15,11 +14,9 @@ partial struct UnitMoveSystem : ISystem
     public void OnUpdate(ref SystemState state)
     {
         float dt = SystemAPI.Time.DeltaTime;
-        ComponentLookup<LocalToWorld> transformLookup = SystemAPI.GetComponentLookup<LocalToWorld>(true);
         new UnitMoveJob
         {
             DeltaTime = dt,
-            TransformLookup = transformLookup,
         }.ScheduleParallel();
     }
 }
@@ -27,74 +24,32 @@ partial struct UnitMoveSystem : ISystem
 [BurstCompile]
 public partial struct UnitMoveJob : IJobEntity
 {
-    [ReadOnly]
-    public ComponentLookup<LocalToWorld> TransformLookup;
-
     public float DeltaTime;
 
     public void Execute(
         ref UnitMoveComponent move,
         ref PhysicsVelocity physicsVelocity,
-        ref LocalTransform transform,
-        ref UnitKnockbackComponent knockback,
-        in UnitControlStateComponent controlState)
+        ref LocalTransform transform)
     {
-        switch (controlState.ActiveType)
+        switch (move.CommandType)
         {
-            case UnitControlType.Knockback:
-                ApplyKnockback(ref move, ref physicsVelocity, ref transform, ref knockback);
-                return;
-
-            case UnitControlType.Fear:
-                ApplyDirectedMovement(ref move, ref physicsVelocity, ref transform, GetFearDirection(transform.Position.xy, controlState.ActiveSourceEntity));
-                return;
-
-            case UnitControlType.Stun:
-                ApplyStoppedMovement(ref move, ref physicsVelocity, ref transform);
+            case UnitMoveCommandType.DirectVelocity:
+                ApplyDirectVelocity(ref move, ref physicsVelocity, ref transform);
                 return;
         }
 
-        float2 targetVel = move.AccelInput * move.RealMoveSpeed;
+        float2 commandDirection = move.CommandType == UnitMoveCommandType.Accelerate
+            ? move.CommandDirection
+            : float2.zero;
+        float2 targetVel = commandDirection * move.RealMoveSpeed;
         UpdateMoveVelocity(ref move, targetVel);
         ApplyPlanarTransform(ref physicsVelocity, ref transform, move.Velocity);
     }
 
-    private void ApplyKnockback(ref UnitMoveComponent move, ref PhysicsVelocity physicsVelocity, ref LocalTransform transform, ref UnitKnockbackComponent knockback)
+    private void ApplyDirectVelocity(ref UnitMoveComponent move, ref PhysicsVelocity physicsVelocity, ref LocalTransform transform)
     {
-        move.AccelInput = float2.zero;
-        move.Velocity = float2.zero;
-
-        float2 currentVelocity = knockback.Velocity;
-        float currentSpeed = math.length(currentVelocity);
-        if (currentSpeed > 0.0001f)
-        {
-            float decelStep = math.max(0f, knockback.Damping) * DeltaTime;
-            if (decelStep >= currentSpeed)
-                knockback.Velocity = float2.zero;
-            else
-                knockback.Velocity = currentVelocity - (currentVelocity / currentSpeed) * decelStep;
-        }
-        else
-        {
-            knockback.Velocity = float2.zero;
-        }
-
-        ApplyPlanarTransform(ref physicsVelocity, ref transform, currentVelocity);
-    }
-
-    private void ApplyDirectedMovement(ref UnitMoveComponent move, ref PhysicsVelocity physicsVelocity, ref LocalTransform transform, float2 direction)
-    {
-        move.AccelInput = float2.zero;
-        float2 targetVel = direction * move.RealMoveSpeed;
-        UpdateMoveVelocity(ref move, targetVel);
+        move.Velocity = move.DirectVelocity;
         ApplyPlanarTransform(ref physicsVelocity, ref transform, move.Velocity);
-    }
-
-    private void ApplyStoppedMovement(ref UnitMoveComponent move, ref PhysicsVelocity physicsVelocity, ref LocalTransform transform)
-    {
-        move.AccelInput = float2.zero;
-        move.Velocity = float2.zero;
-        ApplyPlanarTransform(ref physicsVelocity, ref transform, float2.zero);
     }
 
     private void UpdateMoveVelocity(ref UnitMoveComponent move, float2 targetVel)
@@ -116,15 +71,6 @@ public partial struct UnitMoveJob : IJobEntity
         float velLen = math.length(move.Velocity);
         if (velLen > maxSpeed && velLen > 0.0001f)
             move.Velocity = (move.Velocity / velLen) * maxSpeed;
-    }
-
-    private float2 GetFearDirection(float2 selfPosition, Entity sourceEntity)
-    {
-        if (sourceEntity == Entity.Null || !TransformLookup.HasComponent(sourceEntity))
-            return float2.zero;
-
-        float2 direction = selfPosition - TransformLookup[sourceEntity].Position.xy;
-        return math.normalizesafe(direction);
     }
 
     private static void ApplyPlanarTransform(ref PhysicsVelocity physicsVelocity, ref LocalTransform transform, float2 planarVelocity)

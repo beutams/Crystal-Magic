@@ -15,7 +15,7 @@ public class UnitIsControlledSource : ISource
     {
         return _context.HasRuntimeEntity &&
             _context.EntityManager.Exists(_context.Entity) &&
-            _context.EntityManager.HasComponent<UnitControlStateComponent>(_context.Entity);
+            _context.EntityManager.HasComponent<UnitControlRuntimeComponent>(_context.Entity);
     }
 
     public float GetValue()
@@ -23,7 +23,7 @@ public class UnitIsControlledSource : ISource
         if (!CanUse())
             return 0f;
 
-        UnitControlStateComponent control = _context.EntityManager.GetComponentData<UnitControlStateComponent>(_context.Entity);
+        UnitControlRuntimeComponent control = _context.EntityManager.GetComponentData<UnitControlRuntimeComponent>(_context.Entity);
         return control.HasControl != 0 ? 1f : 0f;
     }
 }

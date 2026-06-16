@@ -24,7 +24,7 @@ partial class UnitJumpArcSystem : SystemBase
             if (EntityManager.HasComponent<UnitMoveComponent>(entity))
             {
                 UnitMoveComponent move = EntityManager.GetComponentData<UnitMoveComponent>(entity);
-                move.AccelInput = float2.zero;
+                move.ClearCommand();
                 move.Velocity = float2.zero;
                 EntityManager.SetComponentData(entity, move);
             }

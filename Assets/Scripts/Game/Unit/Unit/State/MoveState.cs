@@ -1,8 +1,8 @@
 using Unity.Mathematics;
 
 /// <summary>
-/// 移动状态——从 UnitIntentComponent 读取移动方向，写入 UnitMoveComponent.AccelInput。
-/// MoveSystem 负责从加速度积分到速度。
+/// 移动状态——从 UnitIntentComponent 读取移动方向，写入移动命令。
+/// MoveSystem 负责把命令推进为实际速度。
 /// </summary>
 [FactoryKey("MoveState")]
 public class MoveState : AUnitState
@@ -11,7 +11,7 @@ public class MoveState : AUnitState
     {
         var intent = EntityManager.GetComponentData<UnitIntentComponent>(Entity);
         var move = EntityManager.GetComponentData<UnitMoveComponent>(Entity);
-        move.AccelInput = intent.MoveDirection;
+        move.SetAccelerateCommand(intent.MoveDirection);
         EntityManager.SetComponentData(Entity, move);
         ApplyAnimationFacing(intent.MoveDirection);
     }
@@ -20,7 +20,7 @@ public class MoveState : AUnitState
     {
         var intent = EntityManager.GetComponentData<UnitIntentComponent>(Entity);
         var move   = EntityManager.GetComponentData<UnitMoveComponent>(Entity);
-        move.AccelInput = intent.MoveDirection;
+        move.SetAccelerateCommand(intent.MoveDirection);
         EntityManager.SetComponentData(Entity, move);
         ApplyAnimationFacing(intent.MoveDirection);
     }
@@ -28,7 +28,7 @@ public class MoveState : AUnitState
     public override void OnExit()
     {
         var move = EntityManager.GetComponentData<UnitMoveComponent>(Entity);
-        move.AccelInput = float2.zero;
+        move.ClearCommand();
         EntityManager.SetComponentData(Entity, move);
         ClearAnimationFacingDirection();
     }
