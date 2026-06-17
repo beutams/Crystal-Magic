@@ -38,6 +38,10 @@ UnitAttackAuthoring
         Four elemental damage bonuses.
 
 UnitBehaviorTreeAuthoring
+UnitCastAvailabilityAuthoring
+- Content
+    UnitCastAvailabilityComponent
+        Precomputed cast availability and source-ready cast flag.
 UnitBuffRuntimeAuthoring
 - Content
     UnitBuffRuntimeComponent

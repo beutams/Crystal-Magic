@@ -311,6 +311,7 @@ Game\
         技能攻击相关数据
       UnitBehaviorTreeAuthoring.cs TRUE
         行为树组件，携带黑板
+      UnitCastAvailabilityAuthoring.cs FALSE
       UnitBuffRuntimeAuthoring.cs TRUE
         存储运行时Buff数据，以及Tick/Hook调用时发送施法请求
       UnitCastAuthoring.cs FALSE
@@ -327,7 +328,7 @@ Game\
         朝向数据
       UnitFactionAuthoring.cs TRUE
         阵营数据
-      UnitIntentAuthoring.cs TRUE
+      UnitIntentAuthoring.cs TRUE DIRTY
         ==没有多态
         单位意图集合
       UnitJumpArcComponent.cs FALSE
@@ -337,7 +338,7 @@ Game\
         移动数据
       UnitPerceptionAuthoring.cs TRUE
         索敌组件，适配unit编辑器
-      UnitSkillAuthoring.cs TRUE
+      UnitSkillAuthoring.cs TRUE DIRTY
         单位所有技能数据
       UnitSkillModifierRuntimeComponent.cs FALSE
       UnitStateMachineAuthoring.cs FALSE
@@ -436,6 +437,7 @@ Game\
         执行状态轮询
       UnitStateTransitionSystem.cs TRUE
         计算并执行状态转换
+      UnitCastAvailabilitySystem.cs FALSE
       WorldDropPickupSystem.cs FALSE
     Utility\
       EntitySpawnRegistryUtility.cs FALSE
@@ -479,7 +481,8 @@ Game\
             写入移动方向
         PlayerCastState.cs TRUE
             将施法请求写入技能组件
-        UnitCastState.cs FALSE
+        UnitCastState.cs TRUE
+            从可用技能中随机选择一个发送释放请求
     StateMachineFactory.cs FALSE
     StateMachineRegistry.cs FALSE
 UI\

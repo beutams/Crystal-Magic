@@ -11,6 +11,7 @@ public class UnitIntentAuthoring : MonoBehaviour
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             AddComponent(entity, new UnitIntentComponent());
+            AddComponent(entity, UnitCastAvailabilityComponent.CreateDefault());
         }
     }
 }

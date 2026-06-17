@@ -123,6 +123,7 @@ public static class UnitFeatureBakeUtility
     {
         baker.DependsOnUnitDataTable();
         baker.AddComponent(entity, new UnitIntentComponent());
+        baker.AddComponent(entity, UnitCastAvailabilityComponent.CreateDefault());
 
         UnitData unitData = UnitAuthoringUtility.ResolveUnitData(authoring);
         Transform root = authoring.transform.root != null ? authoring.transform.root : authoring.transform;
@@ -201,6 +202,7 @@ public static class UnitFeatureBakeUtility
         PlayerSkillComponent playerSkill = default;
         playerSkill.Clear();
         baker.AddComponent(entity, playerSkill);
+        baker.AddComponent(entity, UnitCastAvailabilityComponent.CreateDefault());
     }
 
     public static void AddUnitSkillComponents<T>(this Baker<T> baker, Component authoring, Entity entity) where T : Component

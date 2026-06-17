@@ -1,6 +1,3 @@
-using CrystalMagic.Core;
-using CrystalMagic.Game.Data;
-using CrystalMagic.Game.Skill;
 using Unity.Entities;
 
 [FactoryKey("UnitCanStartCastSource")]
@@ -18,7 +15,7 @@ public class UnitCanStartCastSource : ISource
     {
         return _context.HasRuntimeEntity &&
             _context.EntityManager.Exists(_context.Entity) &&
-            _context.EntityManager.HasComponent<UnitIntentComponent>(_context.Entity);
+            _context.EntityManager.HasComponent<UnitCastAvailabilityComponent>(_context.Entity);
     }
 
     public float GetValue()
@@ -26,27 +23,7 @@ public class UnitCanStartCastSource : ISource
         if (!CanUse())
             return 0f;
 
-        if (_context.EntityManager.HasComponent<UnitControlRuntimeComponent>(_context.Entity))
-        {
-            UnitControlRuntimeComponent controlState = _context.EntityManager.GetComponentData<UnitControlRuntimeComponent>(_context.Entity);
-            if (controlState.HasControl != 0 && controlState.LockCast != 0)
-                return 0f;
-        }
-
-        SkillCData skillConfig = SaveDataComponent.Instance?.GetSkillData();
-        RuntimeSkillData runtimeSkillData = RuntimeDataComponent.Instance.GetSkillData();
-        SkillChainSlotData slotData = SkillChainResolver.GetFirstSlot(skillConfig, runtimeSkillData);
-        if (slotData == null)
-            return 0f;
-
-        SkillData baseSkill = SkillChainResolver.GetSkillData(slotData);
-        if (!SkillAnalysisUtility.TryAnalyzeSkill(_context.EntityManager, _context.Entity, baseSkill, slotData.SkillAdditionId, out ResolvedSkillData resolvedSkill))
-            return 0f;
-
-        if (!_context.EntityManager.HasComponent<UnitManaComponent>(_context.Entity))
-            return resolvedSkill.MpCost <= 0 ? 1f : 0f;
-
-        UnitManaComponent mana = _context.EntityManager.GetComponentData<UnitManaComponent>(_context.Entity);
-        return mana.CurrentMana >= resolvedSkill.MpCost ? 1f : 0f;
+        UnitCastAvailabilityComponent availability = _context.EntityManager.GetComponentData<UnitCastAvailabilityComponent>(_context.Entity);
+        return availability.CanStartCast != 0 ? 1f : 0f;
     }
 }

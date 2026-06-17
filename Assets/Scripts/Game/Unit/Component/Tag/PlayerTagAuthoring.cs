@@ -10,6 +10,7 @@ public class PlayerTagAuthoring : MonoBehaviour
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             AddComponent<PlayerTag>(entity);
             AddComponent<PlayerSkillComponent>(entity);
+            AddComponent(entity, UnitCastAvailabilityComponent.CreateDefault());
             AddComponentObject(entity, new UnitBuffRuntimeComponent());
             AddComponentObject(entity, new UnitSkillModifierRuntimeComponent());
         }

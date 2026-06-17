@@ -64,6 +64,7 @@ public struct UnitSkillEntry
     public float CooldownSeconds;
     public float CooldownRemaining;
     public int Weight;
+    public byte IsAvailable;
 }
 
 namespace CrystalMagic.Game.Data
