@@ -288,11 +288,15 @@ Game\
         修饰节点
     Component\
       Tag\
-        NPCTagAuthoring.cs FALSE
-        PlayerTagAuthoring.cs FALSE
-      DestroyEntityFlag.cs FALSE
+        NPCTagAuthoring.cs TRUE
+          Tag
+        PlayerTagAuthoring.cs TRUE
+          Tag
+      DestroyEntityFlag.cs TRUE
+        死亡标记
       DropEntityPrefabRegistryEntry.cs FALSE
-      DungeonExitAuthoring.cs TRUE DIRTY        
+      DungeonExitAuthoring.cs TRUE
+        地牢出口组件        
       DungeonMonsterSpawnComponent.cs TRUE
       DungeonTreasureAuthoring.cs TRUE DIRTY
         宝箱标记
@@ -350,7 +354,8 @@ Game\
       UnitStateMachineAuthoring.cs FALSE
       ========太多组件在这里添加
       UnitEntityPrefabRegistryEntry.cs FALSE
-      UnitVitalityAuthoring.cs FALSE
+      UnitVitalityAuthoring.cs TRUE
+        生命数据
       VfxEntityPrefabRegistryEntry.cs FALSE
       WorldDropComponent.cs FALSE
     Feature\
@@ -401,7 +406,8 @@ Game\
         用数据构建出行为树节点对象
       BehaviorTreeSystem.cs TRUE
         参数写入黑板，执行行为树
-      DestroyEntitySystem.cs FALSE
+      DestroyEntitySystem.cs TRUE
+        删除带死亡标记的实体
       DungeonExitSystem.cs TRUE
         刷新出口解锁状态
       DungeonTreasureSystem.cs TRUE DIRTY
@@ -412,15 +418,16 @@ Game\
         真实交互系统，执行交互节点链到结束。
       NPCInteractPromptSystem.cs TRUE DIRTY
         统计所有可交互种类，选出最近的
-      PersistentBeamEffectSystem.cs FALSE
       PersistentEffectSystem.cs TRUE
         加入持续效果请求，然后计时释放持续性效果
       PlayerEquipmentPropertySystem.cs TRUE DIRTY
         统计装备属性写入属性组件中
       PlayerInputSystem.cs TRUE
         用户输入存值
-      PlayerPropUseSystem.cs FALSE
-      PlayerSkillAnalysisSystem.cs FALSE
+      PlayerPropUseSystem.cs TRUE
+        使用道具
+      PlayerSkillAnalysisSystem.cs TRUE
+        生成具体技能请求
       QuadAnimationSystem.cs FALSE
       SkillProjectileSpawnSystem.cs FALSE
       SkillProjectileSystem.cs FALSE
