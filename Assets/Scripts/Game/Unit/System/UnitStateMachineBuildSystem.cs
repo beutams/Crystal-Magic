@@ -5,7 +5,6 @@ using Unity.Entities;
 using UnityEngine;
 
 [UpdateInGroup(typeof(UnitInitializationSystemGroup))]
-[UpdateBefore(typeof(UnitStateMachineSystem))]
 partial class UnitStateMachineBuildSystem : SystemBase
 {
     private StateMachineFactory _factory;

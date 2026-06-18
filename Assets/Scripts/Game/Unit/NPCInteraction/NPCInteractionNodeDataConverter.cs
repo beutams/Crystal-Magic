@@ -27,7 +27,7 @@ namespace CrystalMagic.Game.Data
                 throw new JsonSerializationException($"Unknown NPC interaction node type: {typeName}");
             }
 
-            NPCInteractionNodeData node = NPCInteractionNodeDataRegistry.Create(typeName);
+            NPCInteractionNodeData node = NPCInteractionNodeDataFactory.Default.CreateNode(typeName, assignGuid: false);
             using JsonReader objectReader = jObject.CreateReader();
             serializer.Populate(objectReader, node);
             node.Guid ??= Guid.NewGuid().ToString("N");
@@ -44,7 +44,10 @@ namespace CrystalMagic.Game.Data
 
             NPCInteractionNodeData node = (NPCInteractionNodeData)value;
             node.Guid ??= Guid.NewGuid().ToString("N");
-            string typeName = NPCInteractionNodeDataRegistry.ResolveTypeName(node);
+            if (!NPCInteractionNodeDataRegistry.TryGetNodeKey(node.GetType(), out string typeName))
+            {
+                throw new JsonSerializationException($"Unregistered NPC interaction node type: {node.GetType().FullName}");
+            }
 
             JObject jObject = new JObject();
             foreach (FieldInfo field in GetSerializableFields(node.GetType()))

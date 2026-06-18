@@ -91,7 +91,6 @@
         {
             CrystalMagic.Core.StashData stashData = CrystalMagic.Core.SaveDataComponent.Instance.GetStashData();
             CrystalMagic.Core.BackpackData backpackData = CrystalMagic.Core.SaveDataComponent.Instance.GetBackpackData();
-            CrystalMagic.Core.CharacterPropData propData = CrystalMagic.Core.SaveDataComponent.Instance.GetCharacterPropData();
             if (stashData?.Items == null || backpackData?.Items == null)
                 return;
 
@@ -103,33 +102,17 @@
             if (inventoryItem == null || inventoryItem.ItemId != Model.ItemId || inventoryItem.Quantity < quantity)
                 return;
 
-            bool isPropItem = CrystalMagic.Core.PropInventoryUtility.IsPropItem(Model.ItemId);
-            if (isPropItem)
-            {
-                if (!CrystalMagic.Core.PropInventoryUtility.CanAddProp(propData, Model.ItemId, quantity))
-                    return;
+            if (!CrystalMagic.Core.InventoryUtility.CanAddItemToBackpack(backpackData, Model.ItemId, quantity))
+                return;
 
-                if (CrystalMagic.Core.PropInventoryUtility.AddProp(propData, Model.ItemId, quantity) != quantity)
-                    return;
-            }
-            else
-            {
-                if (!CrystalMagic.Core.InventoryUtility.CanAddItemToBackpack(backpackData, Model.ItemId, quantity))
-                    return;
-
-                if (CrystalMagic.Core.InventoryUtility.AddItemToBackpack(backpackData, Model.ItemId, quantity) != quantity)
-                    return;
-            }
+            if (CrystalMagic.Core.InventoryUtility.AddItemToBackpack(backpackData, Model.ItemId, quantity) != quantity)
+                return;
 
             inventoryItem.Quantity -= quantity;
             if (inventoryItem.Quantity <= 0)
                 stashData.Items.RemoveAt(slotIndex);
 
-            if (isPropItem)
-                CrystalMagic.Core.SaveDataComponent.Instance.NotifyCharacterPropDataChanged();
-            else
-                CrystalMagic.Core.SaveDataComponent.Instance.NotifyBackpackDataChanged();
-
+            CrystalMagic.Core.SaveDataComponent.Instance.NotifyBackpackDataChanged();
             CrystalMagic.Core.SaveDataComponent.Instance.NotifyStashDataChanged();
             View.Close();
         }

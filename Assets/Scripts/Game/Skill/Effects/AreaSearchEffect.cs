@@ -32,9 +32,9 @@ namespace CrystalMagic.Game.Skill.Effects
             Vector3 offset = Data.CenterOffset;
             center += new float3(offset.x, offset.y, offset.z);
 
-            if (!UnitQueryUtility.TryGetEntries(entityManager, out DynamicBuffer<UnitQueryEntry> entries))
+            if (!UnitQueryUtility.TryGetTree(entityManager, UnitQueryTreeKind.Unit, out UnitQueryTree unitTree))
                 return;
-            UnitQueryUtility.QueryCircle(entries, center, Data.Radius, _hits);
+            unitTree.QueryCircle(center, Data.Radius, _hits);
 
             for (int i = 0; i < _hits.Count; i++)
             {

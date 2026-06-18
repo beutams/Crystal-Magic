@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using CrystalMagic.Game.Data;
 
-public sealed class NPCInteractionNodeFactory
+public sealed class NPCInteractionNodeRunnerFactory
     : GeneratedFactory<Type, NPCInteractionNodeData, NPCInteractionNodeRunner>
 {
-    public NPCInteractionNodeFactory()
+    public NPCInteractionNodeRunnerFactory()
         : base(TypeComparer.Instance)
     {
     }

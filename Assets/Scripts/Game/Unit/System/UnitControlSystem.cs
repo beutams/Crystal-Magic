@@ -4,7 +4,7 @@ using Unity.Mathematics;
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateAfter(typeof(PlayerInputSystem))]
 [UpdateAfter(typeof(BehaviorTreeSystem))]
-[UpdateBefore(typeof(UnitStateTransitionSystem))]
+[UpdateBefore(typeof(UnitSkillSystem))]
 partial struct UnitControlSystem : ISystem
 {
     public void OnUpdate(ref SystemState state)

@@ -310,11 +310,11 @@ public static class UnitFeatureBakeUtility
         NPCData npcData = NPCAuthoringUtility.ResolveNpcData(authoring);
 
         baker.AddComponent<NPCTag>(entity);
-        baker.AddComponent(entity, new NPCInteractable
+        baker.AddComponent(entity, new NPCInteractableComponent
         {
             NpcId = npcData?.Id ?? -1,
-            interact = interactEntity,
-            interactRangeSq = interactionRange * interactionRange,
+            InteractEntity = interactEntity,
+            InteractRangeSq = interactionRange * interactionRange,
         });
     }
 

@@ -26,19 +26,19 @@ public class NPCInteractableAuthoring : MonoBehaviour
                 ? GetEntity(interact, TransformUsageFlags.Dynamic)
                 : Entity.Null;
             NPCData npcData = NPCAuthoringUtility.ResolveNpcData(authoring);
-            AddComponent(entity, new NPCInteractable
+            AddComponent(entity, new NPCInteractableComponent
             {
                 NpcId = npcData?.Id ?? -1,
-                interact = interactEntity,
-                interactRangeSq = authoring.InteractRange * authoring.InteractRange,
+                InteractEntity = interactEntity,
+                InteractRangeSq = authoring.InteractRange * authoring.InteractRange,
             });
         }
     }
 }
 
-public struct NPCInteractable : IComponentData
+public struct NPCInteractableComponent : IComponentData
 {
     public int NpcId;
-    public Entity interact;
-    public float interactRangeSq;
+    public Entity InteractEntity;
+    public float InteractRangeSq;
 }

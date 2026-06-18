@@ -3,7 +3,6 @@ using Unity.Entities;
 
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(DungeonExitSystem))]
-[UpdateBefore(typeof(UnitSkillAnalysisSystem))]
 partial struct PlayerPropUseSystem : ISystem
 {
     public void OnCreate(ref SystemState state)

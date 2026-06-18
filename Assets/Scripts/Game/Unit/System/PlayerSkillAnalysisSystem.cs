@@ -4,7 +4,6 @@ using Unity.Entities;
 using Unity.Mathematics;
 
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
-[UpdateAfter(typeof(UnitStateMachineSystem))]
 [UpdateBefore(typeof(UnitSkillAnalysisSystem))]
 partial class PlayerSkillAnalysisSystem : SystemBase
 {

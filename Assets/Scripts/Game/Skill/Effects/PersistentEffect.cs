@@ -5,9 +5,6 @@ using UnityEngine;
 
 namespace CrystalMagic.Game.Skill.Effects
 {
-    /// <summary>
-    /// 持续性效果（Buff / 场地效果），逻辑由持久化系统接入
-    /// </summary>
     public sealed class PersistentEffect : Effect
     {
         public new PersistentEffectData Data { get; }
@@ -16,14 +13,13 @@ namespace CrystalMagic.Game.Skill.Effects
 
         public override void Execute(SkillContent context)
         {
-            PersistentEffectSystem system = PersistentEffectSystem.Default;
-            if (system == null || Data == null || context == null)
+            if (Data == null || context == null)
                 return;
 
-            if (!TryGetReleasePosition(context, system.EffectEntityManager, out Vector3 position))
+            if (!TryGetReleasePosition(context, context.EntityManager, out Vector3 position))
                 return;
 
-            system.AddEffect(Data, context, position);
+            PersistentEffectUtility.AddEffect(Data, context, position);
         }
 
         private static bool TryGetReleasePosition(SkillContent context, EntityManager entityManager, out Vector3 position)

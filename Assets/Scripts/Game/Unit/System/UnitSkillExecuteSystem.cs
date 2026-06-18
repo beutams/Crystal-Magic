@@ -2,7 +2,6 @@ using Unity.Entities;
 
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(UnitSkillAnalysisSystem))]
-[UpdateAfter(typeof(DungeonExitSystem))]
 partial class UnitSkillExecuteSystem : SystemBase
 {
     protected override void OnUpdate()

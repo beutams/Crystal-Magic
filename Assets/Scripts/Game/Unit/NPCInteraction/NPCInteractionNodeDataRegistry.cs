@@ -1,3 +1,6 @@
+// AUTO-GENERATED - DO NOT EDIT MANUALLY
+// Use menu: Tools/Registry/NPC Interaction Node
+
 using System;
 using System.Collections.Generic;
 
@@ -5,73 +8,86 @@ namespace CrystalMagic.Game.Data
 {
     public static class NPCInteractionNodeDataRegistry
     {
-        private static readonly NPCInteractionNodeDataFactory s_factory = CreateFactory();
-
-        public static IReadOnlyList<string> TypeOrder => NPCInteractionNodeRegistry.TypeOrder;
-
-        public static bool TryGetNodeType(string typeName, out Type nodeType)
+        private static readonly string[] s_typeOrder =
         {
-            return NPCInteractionNodeRegistry.TryGetNodeType(typeName, out nodeType);
+            "Dialogue",
+            "Select",
+            "OpenUI",
+            "Move",
+            "EnterDungeon",
+            "EnterTrainingGround",
+            "EnterTown",
+        };
+
+        private static readonly Dictionary<string, Type> s_types = new(StringComparer.Ordinal)
+        {
+            { "Dialogue", typeof(CrystalMagic.Game.Data.NPCDialogueInteractionNodeData) },
+            { "Select", typeof(CrystalMagic.Game.Data.NPCSelectInteractionNodeData) },
+            { "OpenUI", typeof(CrystalMagic.Game.Data.NPCOpenUIInteractionNodeData) },
+            { "Move", typeof(CrystalMagic.Game.Data.NPCMoveInteractionNodeData) },
+            { "EnterDungeon", typeof(CrystalMagic.Game.Data.NPCEnterDungeonInteractionNodeData) },
+            { "EnterTrainingGround", typeof(CrystalMagic.Game.Data.NPCEnterTrainingGroundInteractionNodeData) },
+            { "EnterTown", typeof(CrystalMagic.Game.Data.NPCEnterTownInteractionNodeData) },
+        };
+
+        private static readonly Dictionary<Type, string> s_keys = new()
+        {
+            { typeof(CrystalMagic.Game.Data.NPCDialogueInteractionNodeData), "Dialogue" },
+            { typeof(CrystalMagic.Game.Data.NPCSelectInteractionNodeData), "Select" },
+            { typeof(CrystalMagic.Game.Data.NPCOpenUIInteractionNodeData), "OpenUI" },
+            { typeof(CrystalMagic.Game.Data.NPCMoveInteractionNodeData), "Move" },
+            { typeof(CrystalMagic.Game.Data.NPCEnterDungeonInteractionNodeData), "EnterDungeon" },
+            { typeof(CrystalMagic.Game.Data.NPCEnterTrainingGroundInteractionNodeData), "EnterTrainingGround" },
+            { typeof(CrystalMagic.Game.Data.NPCEnterTownInteractionNodeData), "EnterTown" },
+        };
+
+        private static readonly Dictionary<string, string> s_displayNames = new(StringComparer.Ordinal)
+        {
+            { "Dialogue", "Dialogue" },
+            { "Select", "Select" },
+            { "OpenUI", "Open UI" },
+            { "Move", "Move" },
+            { "EnterDungeon", "Enter Dungeon" },
+            { "EnterTrainingGround", "Enter Training Ground" },
+            { "EnterTown", "Enter Town" },
+        };
+
+        public static IReadOnlyList<string> TypeOrder => s_typeOrder;
+
+        public static bool ContainsKey(string key)
+        {
+            return s_types.ContainsKey(key ?? string.Empty);
         }
 
-        public static string GetDisplayName(string typeName)
+        public static bool TryGetNodeType(string key, out Type type)
         {
-            return NPCInteractionNodeRegistry.GetDisplayName(typeName);
+            return s_types.TryGetValue(key ?? string.Empty, out type);
         }
 
-        public static string ResolveTypeName(NPCInteractionNodeData node)
+        public static bool TryGetNodeKey(Type type, out string key)
         {
-            if (node == null)
-            {
-                return DefaultTypeName;
-            }
-
-            if (NPCInteractionNodeRegistry.TryGetNodeKey(node.GetType(), out string typeName))
-            {
-                return typeName;
-            }
-
-            return DefaultTypeName;
+            return s_keys.TryGetValue(type, out key);
         }
 
-        public static NPCInteractionNodeData Create(string typeName)
+        public static string GetDisplayName(string key)
         {
-            if (!NPCInteractionNodeRegistry.ContainsKey(typeName))
-            {
-                typeName = DefaultTypeName;
-            }
-
-            return s_factory.CreateNode(typeName);
+            return s_displayNames.TryGetValue(key ?? string.Empty, out string displayName)
+                ? displayName
+                : key ?? "Unknown";
         }
 
-        public static string GetSummary(NPCInteractionNodeData node)
+        public static void RegisterAll(NPCInteractionNodeDataFactory factory)
         {
-            string typeName = ResolveTypeName(node);
-            string displayName = GetDisplayName(typeName);
+            if (factory == null)
+                return;
 
-            return node switch
-            {
-                NPCDialogueInteractionNodeData dialogue => $"{displayName} | {(string.IsNullOrWhiteSpace(dialogue.ContentKey) ? "Empty" : dialogue.ContentKey)}",
-                NPCSelectInteractionNodeData select => $"{displayName} | {select.Options?.Count ?? 0} option(s)",
-                NPCOpenUIInteractionNodeData openUI => $"{displayName} | {(string.IsNullOrWhiteSpace(openUI.UIName) ? "Empty" : openUI.UIName)}",
-                NPCMoveInteractionNodeData move => $"{displayName} | {(string.IsNullOrWhiteSpace(move.TargetMarker) ? "Empty" : move.TargetMarker)}",
-                NPCEnterDungeonInteractionNodeData enterDungeon => $"{displayName} | Floor {Math.Max(1, enterDungeon.DungeonFloor)}",
-                NPCEnterTrainingGroundInteractionNodeData => displayName,
-                NPCEnterTownInteractionNodeData => displayName,
-                _ => displayName,
-            };
-        }
-
-        private static string DefaultTypeName =>
-            string.IsNullOrWhiteSpace(NPCInteractionNodeRegistry.DefaultTypeKey)
-                ? (TypeOrder.Count > 0 ? TypeOrder[0] : "Dialogue")
-                : NPCInteractionNodeRegistry.DefaultTypeKey;
-
-        private static NPCInteractionNodeDataFactory CreateFactory()
-        {
-            var factory = new NPCInteractionNodeDataFactory();
-            NPCInteractionNodeRegistry.RegisterAll(factory);
-            return factory;
+            factory.Register("Dialogue", static () => new CrystalMagic.Game.Data.NPCDialogueInteractionNodeData());
+            factory.Register("Select", static () => new CrystalMagic.Game.Data.NPCSelectInteractionNodeData());
+            factory.Register("OpenUI", static () => new CrystalMagic.Game.Data.NPCOpenUIInteractionNodeData());
+            factory.Register("Move", static () => new CrystalMagic.Game.Data.NPCMoveInteractionNodeData());
+            factory.Register("EnterDungeon", static () => new CrystalMagic.Game.Data.NPCEnterDungeonInteractionNodeData());
+            factory.Register("EnterTrainingGround", static () => new CrystalMagic.Game.Data.NPCEnterTrainingGroundInteractionNodeData());
+            factory.Register("EnterTown", static () => new CrystalMagic.Game.Data.NPCEnterTownInteractionNodeData());
         }
     }
 }

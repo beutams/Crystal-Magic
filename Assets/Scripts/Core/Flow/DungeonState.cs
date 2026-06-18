@@ -14,6 +14,7 @@ namespace CrystalMagic.Core
         private PropertyUI _propertyUI;
         private GameMenuUI _gameMenuUI;
         private UnitHealthBarManager _unitHealthBarManager;
+        private InteractionPromptManager _interactionPromptManager;
         private bool _inputBound;
         private bool _playerInputLockedByUI;
 
@@ -26,6 +27,8 @@ namespace CrystalMagic.Core
             InputComponent.Instance?.SetBattleInputEnabled(true);
             _unitHealthBarManager ??= new UnitHealthBarManager();
             _unitHealthBarManager.Initialize();
+            _interactionPromptManager ??= new InteractionPromptManager();
+            _interactionPromptManager.Initialize();
             OpenBattleUI();
             BindInput();
         }
@@ -34,6 +37,7 @@ namespace CrystalMagic.Core
         {
             OnUpdateBattle();
             _unitHealthBarManager?.Tick();
+            _interactionPromptManager?.Tick();
             RefreshUIInputLock();
         }
 
@@ -41,6 +45,8 @@ namespace CrystalMagic.Core
         {
             _unitHealthBarManager?.Dispose();
             _unitHealthBarManager = null;
+            _interactionPromptManager?.Dispose();
+            _interactionPromptManager = null;
             InputComponent.Instance?.SetBattleInputEnabled(false);
             ReleaseUIInputLock();
             UnbindInput();

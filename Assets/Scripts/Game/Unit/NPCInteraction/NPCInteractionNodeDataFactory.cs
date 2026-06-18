@@ -3,6 +3,8 @@ using CrystalMagic.Game.Data;
 
 public sealed class NPCInteractionNodeDataFactory : GeneratedFactory<string, NPCInteractionNodeData>
 {
+    public static NPCInteractionNodeDataFactory Default { get; } = CreateDefaultFactory();
+
     public NPCInteractionNodeDataFactory()
         : base(StringComparer.Ordinal)
     {
@@ -22,5 +24,12 @@ public sealed class NPCInteractionNodeDataFactory : GeneratedFactory<string, NPC
         }
 
         return node;
+    }
+
+    private static NPCInteractionNodeDataFactory CreateDefaultFactory()
+    {
+        NPCInteractionNodeDataFactory factory = new();
+        NPCInteractionNodeDataRegistry.RegisterAll(factory);
+        return factory;
     }
 }

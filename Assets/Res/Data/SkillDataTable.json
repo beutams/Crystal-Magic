@@ -1092,29 +1092,35 @@
       "Conditions": [],
       "EffectChain": [
         {
-          "$type": "CrystalMagic.Game.Data.Effects.PersistentBeamEffectData, Assembly-CSharp",
+          "$type": "CrystalMagic.Game.Data.Effects.PersistentEffectData, Assembly-CSharp",
           "Element": 0,
           "TotalDuration": 2.4,
           "TickIntervalSeconds": 0.15,
-          "Length": 18,
-          "Width": 2,
-          "OriginOffsetDistance": 0.9,
-          "TargetConditions": [
-            {
-              "ConditionType": 0,
-              "SourceType": "UnitIsEnemySource",
-              "SourceParam": -1,
-              "CompareType": "IsTrue",
-              "CompareValue": 0
-            }
-          ],
           "OnStartEffects": [],
-          "OnHitEffects": [
+          "OnTickEffects": [
             {
-              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
-              "DamageCoefficient": 1,
-              "FlatDamageBonus": 0,
-              "Element": 0,
+              "$type": "CrystalMagic.Game.Data.Effects.ForwardRectSearchEffectData, Assembly-CSharp",
+              "Length": 18,
+              "Width": 2,
+              "OriginOffsetDistance": 0.9,
+              "TargetConditions": [
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitIsEnemySource",
+                  "SourceParam": -1,
+                  "CompareType": "IsTrue",
+                  "CompareValue": 0
+                }
+              ],
+              "OnAfterSearch": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+                  "DamageCoefficient": 1,
+                  "FlatDamageBonus": 0,
+                  "Element": 0,
+                  "Conditions": []
+                }
+              ],
               "Conditions": []
             }
           ],
@@ -1461,29 +1467,35 @@
       "Conditions": [],
       "EffectChain": [
         {
-          "$type": "CrystalMagic.Game.Data.Effects.PersistentBeamEffectData, Assembly-CSharp",
+          "$type": "CrystalMagic.Game.Data.Effects.PersistentEffectData, Assembly-CSharp",
           "Element": 0,
           "TotalDuration": 2.8,
           "TickIntervalSeconds": 0.12,
-          "Length": 20,
-          "Width": 2.4,
-          "OriginOffsetDistance": 1,
-          "TargetConditions": [
-            {
-              "ConditionType": 0,
-              "SourceType": "UnitIsEnemySource",
-              "SourceParam": -1,
-              "CompareType": "IsTrue",
-              "CompareValue": 0
-            }
-          ],
           "OnStartEffects": [],
-          "OnHitEffects": [
+          "OnTickEffects": [
             {
-              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
-              "DamageCoefficient": 1.15,
-              "FlatDamageBonus": 0,
-              "Element": 0,
+              "$type": "CrystalMagic.Game.Data.Effects.ForwardRectSearchEffectData, Assembly-CSharp",
+              "Length": 20,
+              "Width": 2.4,
+              "OriginOffsetDistance": 1,
+              "TargetConditions": [
+                {
+                  "ConditionType": 0,
+                  "SourceType": "UnitIsEnemySource",
+                  "SourceParam": -1,
+                  "CompareType": "IsTrue",
+                  "CompareValue": 0
+                }
+              ],
+              "OnAfterSearch": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+                  "DamageCoefficient": 1.15,
+                  "FlatDamageBonus": 0,
+                  "Element": 0,
+                  "Conditions": []
+                }
+              ],
               "Conditions": []
             }
           ],

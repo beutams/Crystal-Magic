@@ -6,8 +6,6 @@ using Unity.Transforms;
 
 [BurstCompile]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
-[UpdateAfter(typeof(UnitSkillAnalysisSystem))]
-[UpdateAfter(typeof(UnitStateMachineSystem))]
 [UpdateAfter(typeof(UnitSkillExecuteSystem))]
 partial struct UnitMoveSystem : ISystem
 {

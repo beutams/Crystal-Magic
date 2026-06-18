@@ -8,7 +8,7 @@ namespace CrystalMagic.Core
     {
         public static int AddItemToBackpack(BackpackData backpackData, int itemId, int quantity)
         {
-            if (backpackData == null || PropInventoryUtility.IsPropItem(itemId))
+            if (backpackData == null)
                 return 0;
 
             backpackData.Items ??= new List<InventoryItemData>();
@@ -17,7 +17,7 @@ namespace CrystalMagic.Core
 
         public static bool CanAddItemToBackpack(BackpackData backpackData, int itemId, int quantity)
         {
-            if (backpackData == null || PropInventoryUtility.IsPropItem(itemId))
+            if (backpackData == null)
                 return false;
 
             backpackData.Items ??= new List<InventoryItemData>();
@@ -26,30 +26,26 @@ namespace CrystalMagic.Core
 
         public static int AddItemToCharacterInventory(BackpackData backpackData, CharacterPropData propData, int itemId, int quantity)
         {
-            return PropInventoryUtility.IsPropItem(itemId)
-                ? PropInventoryUtility.AddProp(propData, itemId, quantity)
-                : AddItemToBackpack(backpackData, itemId, quantity);
+            return AddItemToBackpack(backpackData, itemId, quantity);
         }
 
         public static bool CanAddItemToCharacterInventory(BackpackData backpackData, CharacterPropData propData, int itemId, int quantity)
         {
-            return PropInventoryUtility.IsPropItem(itemId)
-                ? PropInventoryUtility.CanAddProp(propData, itemId, quantity)
-                : CanAddItemToBackpack(backpackData, itemId, quantity);
+            return CanAddItemToBackpack(backpackData, itemId, quantity);
         }
 
         public static int GetItemCountInCharacterInventory(BackpackData backpackData, CharacterPropData propData, int itemId)
         {
-            return PropInventoryUtility.IsPropItem(itemId)
+            int backpackCount = GetItemCount(backpackData?.Items, itemId);
+            int propCount = PropInventoryUtility.IsPropItem(itemId)
                 ? PropInventoryUtility.GetItemCount(propData, itemId)
-                : GetItemCount(backpackData?.Items, itemId);
+                : 0;
+            return backpackCount + propCount;
         }
 
         public static int GetAvailableAddCountInCharacterInventory(BackpackData backpackData, CharacterPropData propData, int itemId)
         {
-            return PropInventoryUtility.IsPropItem(itemId)
-                ? PropInventoryUtility.GetAvailableAddCount(propData, itemId)
-                : GetAvailableAddCountInBackpack(backpackData, itemId);
+            return GetAvailableAddCountInBackpack(backpackData, itemId);
         }
 
         public static int AddItem(List<InventoryItemData> items, int capacity, int itemId, int quantity, ItemType fallbackItemType)
@@ -96,7 +92,7 @@ namespace CrystalMagic.Core
 
         public static int GetAvailableAddCountInBackpack(BackpackData backpackData, int itemId)
         {
-            if (backpackData == null || PropInventoryUtility.IsPropItem(itemId))
+            if (backpackData == null)
                 return 0;
 
             backpackData.Items ??= new List<InventoryItemData>();

@@ -8,7 +8,6 @@ using Unity.Rendering;
 using UnityEngine;
 
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
-[UpdateAfter(typeof(UnitStateMachineSystem))]
 [UpdateAfter(typeof(UnitSkillExecuteSystem))]
 partial class UnitAnimationSystem : SystemBase
 {

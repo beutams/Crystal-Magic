@@ -1,7 +1,6 @@
 using Unity.Entities;
 
 [UpdateInGroup(typeof(UnitDecisionSystemGroup), OrderLast = true)]
-[UpdateAfter(typeof(UnitStateMachineBuildSystem))]
 [UpdateAfter(typeof(UnitStateTransitionSystem))]
 partial class UnitStateMachineSystem : SystemBase
 {

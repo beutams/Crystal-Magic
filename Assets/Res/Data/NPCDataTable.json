@@ -125,6 +125,31 @@
                   "DisplayName": "第1层",
                   "EnableExpression": "",
                   "NextNodeGuid": "c1a95e3707ff40248bb5153c55295ff8"
+                },
+                {
+                  "DisplayName": "第21层",
+                  "EnableExpression": "DungeonUnlockedStartFloor_21 > 0",
+                  "NextNodeGuid": "dungeon_floor_21"
+                },
+                {
+                  "DisplayName": "第41层",
+                  "EnableExpression": "DungeonUnlockedStartFloor_41 > 0",
+                  "NextNodeGuid": "dungeon_floor_41"
+                },
+                {
+                  "DisplayName": "第61层",
+                  "EnableExpression": "DungeonUnlockedStartFloor_61 > 0",
+                  "NextNodeGuid": "dungeon_floor_61"
+                },
+                {
+                  "DisplayName": "第81层",
+                  "EnableExpression": "DungeonUnlockedStartFloor_81 > 0",
+                  "NextNodeGuid": "dungeon_floor_81"
+                },
+                {
+                  "DisplayName": "第101层",
+                  "EnableExpression": "DungeonUnlockedStartFloor_101 > 0",
+                  "NextNodeGuid": "dungeon_floor_101"
                 }
               ],
               "Guid": "6d0a28f1c4c14e89a514e6de07be4b91",
@@ -138,6 +163,36 @@
               "Type": "EnterDungeon"
             },
             {
+              "DungeonFloor": 21,
+              "Guid": "dungeon_floor_21",
+              "Branches": [],
+              "Type": "EnterDungeon"
+            },
+            {
+              "DungeonFloor": 41,
+              "Guid": "dungeon_floor_41",
+              "Branches": [],
+              "Type": "EnterDungeon"
+            },
+            {
+              "DungeonFloor": 61,
+              "Guid": "dungeon_floor_61",
+              "Branches": [],
+              "Type": "EnterDungeon"
+            },
+            {
+              "DungeonFloor": 81,
+              "Guid": "dungeon_floor_81",
+              "Branches": [],
+              "Type": "EnterDungeon"
+            },
+            {
+              "DungeonFloor": 101,
+              "Guid": "dungeon_floor_101",
+              "Branches": [],
+              "Type": "EnterDungeon"
+            },
+            {
               "Guid": "3d003138da8c4619980f4cf904066d0d",
               "Branches": [],
               "Type": "EnterTrainingGround"
@@ -146,6 +201,50 @@
         }
       ],
       "Id": 4
+    },
+    {
+      "NPC": "Exit",
+      "PrefabPath": "Assets/Res/Prefab/Environment/Exit.prefab",
+      "DisplayName": "出口",
+      "Interactions": [
+        {
+          "Key": "DungeonExit",
+          "DisplayName": "出口",
+          "EnableExpression": "",
+          "EntryNodeGuid": "exit_select",
+          "Nodes": [
+            {
+              "Options": [
+                {
+                  "DisplayName": "继续下一层",
+                  "EnableExpression": "",
+                  "NextNodeGuid": "exit_next_floor"
+                },
+                {
+                  "DisplayName": "撤离地牢",
+                  "EnableExpression": "",
+                  "NextNodeGuid": "exit_retreat"
+                }
+              ],
+              "Guid": "exit_select",
+              "Branches": [],
+              "Type": "Select"
+            },
+            {
+              "DungeonFloor": 1,
+              "Guid": "exit_next_floor",
+              "Branches": [],
+              "Type": "EnterDungeon"
+            },
+            {
+              "Guid": "exit_retreat",
+              "Branches": [],
+              "Type": "EnterTown"
+            }
+          ]
+        }
+      ],
+      "Id": 5
     }
   ]
 }

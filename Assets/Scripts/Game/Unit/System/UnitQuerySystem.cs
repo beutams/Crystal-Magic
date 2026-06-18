@@ -13,10 +13,10 @@ public struct UnitQuerySingleton : IComponentData
 {
 }
 
-public struct UnitQueryEntry : IBufferElementData
+public sealed class UnitQueryRuntimeComponent : IComponentData
 {
-    public Entity Entity;
-    public float3 Position;
+    public UnitQueryTree UnitTree = new();
+    public UnitQueryTree WorldDropTree = new();
 }
 
 [UpdateInGroup(typeof(UnitInitializationSystemGroup), OrderFirst = true)]
@@ -25,28 +25,46 @@ public struct UnitQueryEntry : IBufferElementData
 partial class UnitQueryBuildSystem : SystemBase
 {
     private Entity _singletonEntity;
+    private readonly List<UnitQueryHit> _unitEntries = new();
+    private readonly List<UnitQueryHit> _worldDropEntries = new();
 
     protected override void OnCreate()
     {
         _singletonEntity = EntityManager.CreateEntity(typeof(UnitQuerySingleton));
-        EntityManager.AddBuffer<UnitQueryEntry>(_singletonEntity);
+        EntityManager.AddComponentObject(_singletonEntity, new UnitQueryRuntimeComponent());
     }
 
     protected override void OnUpdate()
     {
-        DynamicBuffer<UnitQueryEntry> entries = EntityManager.GetBuffer<UnitQueryEntry>(_singletonEntity);
-        entries.Clear();
+        _unitEntries.Clear();
+        _worldDropEntries.Clear();
 
         foreach ((RefRO<LocalTransform> transform, Entity entity) in
                  SystemAPI.Query<RefRO<LocalTransform>>()
                      .WithAll<UnitFactionComponent>()
                      .WithEntityAccess())
         {
-            entries.Add(new UnitQueryEntry
+            _unitEntries.Add(new UnitQueryHit
             {
                 Entity = entity,
                 Position = transform.ValueRO.Position,
             });
         }
+
+        foreach ((RefRO<LocalTransform> transform, Entity entity) in
+                 SystemAPI.Query<RefRO<LocalTransform>>()
+                     .WithAll<WorldDropComponent>()
+                     .WithEntityAccess())
+        {
+            _worldDropEntries.Add(new UnitQueryHit
+            {
+                Entity = entity,
+                Position = transform.ValueRO.Position,
+            });
+        }
+
+        UnitQueryRuntimeComponent runtime = EntityManager.GetComponentObject<UnitQueryRuntimeComponent>(_singletonEntity);
+        runtime.UnitTree.Rebuild(_unitEntries);
+        runtime.WorldDropTree.Rebuild(_worldDropEntries);
     }
 }

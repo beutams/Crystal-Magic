@@ -8,7 +8,7 @@
     Editor\
       ConfigEditorWindow.cs FALSE
     ConfigComponent.cs TRUE
-    DungeonConfig.cs TRUE
+    DungeonConfig.cs TRUE DIRTY           
     GameConfig.cs TRUE DIRTY
     GameConfigAttribute.cs TRUE
     ModifierConfig.cs TRUE
@@ -225,7 +225,8 @@ Game\
       Effect.cs FALSE
       ForwardRectSearchEffect.cs FALSE
       PersistentBeamEffect.cs FALSE
-      PersistentEffect.cs FALSE
+      PersistentEffect.cs TRUE
+        持续性效果，添加一个持续任务到系统
       RandomAreaPointEffect.cs FALSE
       RecoverEffect.cs FALSE
       SpawnProjectileEffect.cs FALSE
@@ -252,7 +253,7 @@ Game\
     SkillCastTasks.cs FALSE
     SkillChainResolver.cs FALSE
     SkillContent.cs TRUE
-    SkillExecutor.cs TRUE
+    SkillExecutor.cs TRUE DIRTY
     SkillFactory.cs FALSE
     SkillFollowupConsumeRule.cs FALSE
     SkillFollowupConsumeRuleFactory.cs FALSE
@@ -291,15 +292,19 @@ Game\
         PlayerTagAuthoring.cs FALSE
       DestroyEntityFlag.cs FALSE
       DropEntityPrefabRegistryEntry.cs FALSE
-      DungeonExitAuthoring.cs TRUE
+      DungeonExitAuthoring.cs TRUE DIRTY        
       DungeonMonsterSpawnComponent.cs TRUE
       DungeonTreasureAuthoring.cs TRUE DIRTY
+        宝箱标记
       DungeonTreasureRewardElement.cs FALSE
       EntitySpawnRegistryAuthoring.cs TRUE DIRTY
       EnvironmentEntityPrefabRegistryEntry.cs FALSE
-      NPCInteractableAuthoring.cs FALSE
-      NPCInteractionRequest.cs FALSE
-      NPCInteractionState.cs FALSE
+      NPCInteractableAuthoring.cs TRUE
+        NPC交互组件
+      NPCInteractionRuntimeComponent.cs TRUE
+        运行时NPC交互请求单例
+      PendingEffectExecutionQueueComponent.cs FALSE
+      PersistentEffectQueueComponent.cs FALSE
       PlayerSkillComponent.cs TRUE
         施法请求组件，存放待释放技能链原始数据
       ProjectileEntityPrefabRegistryEntry.cs FALSE
@@ -309,6 +314,7 @@ Game\
       UnitAnimationComponent.cs FALSE
       UnitAttackAuthoring.cs TRUE
         技能攻击相关数据
+      PlayerInteractionRuntimeComponent.cs FALSE
       UnitBehaviorTreeAuthoring.cs TRUE
         行为树组件，携带黑板
       UnitCastAvailabilityAuthoring.cs FALSE
@@ -375,13 +381,20 @@ Game\
       NPCInteractionSelectRequestedEvent.cs FALSE
       NPCInteractionStartedEvent.cs FALSE
     NPCInteraction\
-      NPCInteractionNodeDataConverter.cs FALSE
-      NPCInteractionNodeDataFactory.cs FALSE
-      NPCInteractionNodeDataRegistry.cs TRUE
-      NPCInteractionNodeFactory.cs FALSE
-      NPCInteractionNodeRegistry.cs TRUE
-      NPCInteractionNodeRunner.cs FALSE
-      NPCInteractionNodeRunners.cs TRUE
+      NPCInteractionNodeDataConverter.cs TRUE
+        JSON转化
+      NPCInteractionNodeDataFactory.cs TRUE
+        工厂
+     NPCInteractionNodeDataRegistry.cs TRUE
+        工厂注册器
+      NPCInteractionNodeRunnerFactory.cs FALSE
+        工厂
+      NPCInteractionNodeRunnerRegistry.cs TRUE
+        工厂注册器
+      NPCInteractionNodeRunner.cs TRUE
+        交互节点父类
+      NPCInteractionNodeRunners.cs TRUE DIRTY   
+        交互节点子类
       NPCInteractionSession.cs FALSE
     System\
       BehaviorTreeInitSystem.cs TRUE
@@ -389,15 +402,19 @@ Game\
       BehaviorTreeSystem.cs TRUE
         参数写入黑板，执行行为树
       DestroyEntitySystem.cs FALSE
-      DungeonExitSystem.cs FALSE
-      DungeonExitInteractionNodes.cs FALSE
-      DungeonTreasureSystem.cs FALSE
-      EffectExecutionSystem.cs FALSE
-      NPCInteractInputSystem.cs FALSE
-      NPCInteractionSystem.cs FALSE
-      NPCInteractPromptSystem.cs FALSE
+      DungeonExitSystem.cs TRUE
+        刷新出口解锁状态
+      DungeonTreasureSystem.cs TRUE DIRTY
+        打开宝箱生成掉落物
+      EffectExecutionSystem.cs TRUE
+        上层buff之类的释放effect，通过请求推迟到执行层释放
+      NPCInteractionSystem.cs TRUE
+        真实交互系统，执行交互节点链到结束。
+      NPCInteractPromptSystem.cs TRUE DIRTY
+        统计所有可交互种类，选出最近的
       PersistentBeamEffectSystem.cs FALSE
-      PersistentEffectSystem.cs FALSE
+      PersistentEffectSystem.cs TRUE
+        加入持续效果请求，然后计时释放持续性效果
       PlayerEquipmentPropertySystem.cs TRUE DIRTY
         统计装备属性写入属性组件中
       PlayerInputSystem.cs TRUE
@@ -412,16 +429,15 @@ Game\
         统计Buff写入属性和技能修正，轮询技能时间
       UnitControlSystem.cs TRUE
         刷新受控数据
-      UnitDropOnDestroySystem.cs TRUE
+      UnitDropOnDestroySystem.cs TRUE DIRTY
       UnitJumpArcSystem.cs FALSE
-      UnitMoveSystem.cs FALSE
+      UnitMoveSystem.cs TRUE
+        应用移动
       UnitResetSystem.cs TRUE
         重置每帧数据
       UnitPerceptionSystem.cs TRUE
         查询最近的敌人写入索敌组件
-      UnitQuadVisualSystem.cs FALSE
       UnitQuerySystem.cs TRUE DIRTY
-        ==缺少四叉树
         数据化单位位置，提供快速查询接口
       UnitRecoverySystem.cs TRUE
         应用生命恢复
@@ -430,7 +446,8 @@ Game\
       UnitSkillExecuteSystem.cs FALSE
       UnitSkillSystem.cs TRUE
         只是计算冷却
-      UnitSystemGroups.cs FALSE
+      UnitSystemGroups.cs TRUE
+        分类
       UnitStateMachineBuildSystem.cs TRUE
         构建状态机数据结构
       UnitStateMachineSystem.cs TRUE
@@ -438,11 +455,11 @@ Game\
       UnitStateTransitionSystem.cs TRUE
         计算并执行状态转换
       UnitCastAvailabilitySystem.cs FALSE
-      WorldDropPickupSystem.cs FALSE
+      WorldDropPickupSystem.cs TRUE
+        拾取掉落物
     Utility\
       EntitySpawnRegistryUtility.cs FALSE
       NPCAuthoringUtility.cs FALSE
-      NPCInteractionRuntimeUtility.cs TRUE DIRTY
       PendingEffectExecutionQueueUtility.cs FALSE
       PropUseUtility.cs FALSE
       QuadAnimationVisualUtility.cs FALSE
@@ -454,6 +471,7 @@ Game\
       UnitBuffUtility.cs FALSE
       UnitControlUtility.cs FALSE
       UnitFacingUtility.cs FALSE
+      WorldDropSpawnUtility.cs FALSE
       UnitFactionUtility.cs FALSE
       UnitFeatureBakeUtility.cs FALSE
       UnitModifierUtility.cs FALSE
@@ -637,6 +655,8 @@ UI\
     UnitHealthBarUIController.cs FALSE
     UnitHealthBarUIData.cs FALSE
     UnitHealthBarUIModel.cs FALSE
+  WorldDropPromptUI\
+    WorldDropPromptManager.cs FALSE
   Universal\
     ButtonPlus.cs FALSE
     UISelectableListGroup.cs FALSE

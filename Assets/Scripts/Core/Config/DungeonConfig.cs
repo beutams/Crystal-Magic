@@ -17,9 +17,6 @@ namespace CrystalMagic.Game.Config
         [EditorLabel("Cell World Size")]
         public float CellWorldSize = 2f;
 
-        [EditorLabel("Exit Interaction Range")]
-        public float ExitInteractionRange = 3f;
-
         [EditorLabel("Layout Search Attempt Limit")]
         public int LayoutSearchAttemptLimit = 100;
 
@@ -40,12 +37,6 @@ namespace CrystalMagic.Game.Config
 
         [EditorLabel("Default Start Marker Material")]
         public string DefaultStartMarkerMaterialPath = "Assets/Res/Material/NPC2.mat";
-
-        [EditorLabel("Default Exit Closed Material")]
-        public string DefaultExitClosedMaterialPath = "Assets/Res/Material/NPC1.mat";
-
-        [EditorLabel("Default Exit Open Material")]
-        public string DefaultExitOpenMaterialPath = "Assets/Res/Material/NPC3.mat";
 
         [EditorLabel("Fallback Mob1 Pool Id")]
         public int FallbackMob1PoolId = 1;

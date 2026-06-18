@@ -12,45 +12,15 @@ partial class PersistentEffectSystem : SystemBase
     private readonly List<PersistentEffectInstance> _pendingInstances = new();
     private bool _isUpdating;
 
-    public static PersistentEffectSystem Default =>
-        World.DefaultGameObjectInjectionWorld?.GetExistingSystemManaged<PersistentEffectSystem>();
-
-    public EntityManager EffectEntityManager => EntityManager;
-
-    public void AddEffect(PersistentEffectData data, SkillContent sourceContext, Vector3 releasePosition)
+    protected override void OnCreate()
     {
-        SkillContent context = sourceContext.Clone();
-        context.EntityManager = EntityManager;
-        context.HasPosition = true;
-        context.Position = releasePosition;
-        context.HasTargetEntity = false;
-        context.TargetEntity = Entity.Null;
-
-        ExecuteEffects(data.OnStartEffects, context);
-
-        bool hasTickEffects = data.TickIntervalSeconds > 0f && data.OnTickEffects != null && data.OnTickEffects.Length > 0;
-        bool hasEndEffects = data.OnEndEffects != null && data.OnEndEffects.Length > 0;
-        if (data.TotalDuration <= 0f || (!hasTickEffects && !hasEndEffects))
-            return;
-
-        PersistentEffectInstance instance = new()
-        {
-            TotalDuration = data.TotalDuration,
-            TickIntervalSeconds = data.TickIntervalSeconds,
-            NextTickTime = hasTickEffects ? data.TickIntervalSeconds : float.MaxValue,
-            Context = context,
-            OnTickEffects = hasTickEffects ? data.OnTickEffects : null,
-            OnEndEffects = hasEndEffects ? data.OnEndEffects : null,
-        };
-
-        if (_isUpdating)
-            _pendingInstances.Add(instance);
-        else
-            _instances.Add(instance);
+        PersistentEffectUtility.GetOrCreate(EntityManager);
+        RequireForUpdate<PersistentEffectQueueComponent>();
     }
 
     protected override void OnUpdate()
     {
+        ConsumePendingRequests();
         AppendPendingInstances();
 
         float deltaTime = SystemAPI.Time.DeltaTime;
@@ -89,6 +59,56 @@ partial class PersistentEffectSystem : SystemBase
     private void ExecuteEffects(EffectData[] effects, SkillContent context)
     {
         SkillExecutor.ExecuteEffects(effects, context);
+    }
+
+    private void ConsumePendingRequests()
+    {
+        PersistentEffectQueueComponent queue = PersistentEffectUtility.GetOrCreate(EntityManager);
+        if (queue.Requests.Count <= 0)
+            return;
+
+        for (int i = 0; i < queue.Requests.Count; i++)
+        {
+            PersistentEffectRequest request = queue.Requests[i];
+            if (request == null || request.Data == null || request.SourceContext == null)
+                continue;
+
+            AddEffectInternal(request.Data, request.SourceContext, request.ReleasePosition);
+        }
+
+        queue.Requests.Clear();
+    }
+
+    private void AddEffectInternal(PersistentEffectData data, SkillContent sourceContext, Vector3 releasePosition)
+    {
+        SkillContent context = sourceContext.Clone();
+        context.EntityManager = EntityManager;
+        context.HasPosition = true;
+        context.Position = releasePosition;
+        context.HasTargetEntity = false;
+        context.TargetEntity = Entity.Null;
+
+        ExecuteEffects(data.OnStartEffects, context);
+
+        bool hasTickEffects = data.TickIntervalSeconds > 0f && data.OnTickEffects != null && data.OnTickEffects.Length > 0;
+        bool hasEndEffects = data.OnEndEffects != null && data.OnEndEffects.Length > 0;
+        if (data.TotalDuration <= 0f || (!hasTickEffects && !hasEndEffects))
+            return;
+
+        PersistentEffectInstance instance = new()
+        {
+            TotalDuration = data.TotalDuration,
+            TickIntervalSeconds = data.TickIntervalSeconds,
+            NextTickTime = hasTickEffects ? data.TickIntervalSeconds : float.MaxValue,
+            Context = context,
+            OnTickEffects = hasTickEffects ? data.OnTickEffects : null,
+            OnEndEffects = hasEndEffects ? data.OnEndEffects : null,
+        };
+
+        if (_isUpdating)
+            _pendingInstances.Add(instance);
+        else
+            _instances.Add(instance);
     }
 
     private void AppendPendingInstances()

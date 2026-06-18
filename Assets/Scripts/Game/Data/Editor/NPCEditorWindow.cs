@@ -13,7 +13,7 @@ namespace CrystalMagic.Editor.Data
     public class NPCEditorWindow : EditorWindow
     {
         private const string DataPath = "Assets/Res/Data/NPCDataTable.json";
-        private const string UnitPrefabDirectory = "Assets/Res/Prefab/Unit";
+        private const string PrefabRootDirectory = "Assets/Res/Prefab";
         private const float ListPanelWidth = 220f;
         private const float LabelWidth = 150f;
         private const float GraphNodeWidth = 460f;
@@ -411,9 +411,9 @@ namespace CrystalMagic.Editor.Data
             List<NPCData> refreshedRows = new List<NPCData>();
             bool changed = false;
 
-            if (AssetDatabase.IsValidFolder(UnitPrefabDirectory))
+            if (AssetDatabase.IsValidFolder(PrefabRootDirectory))
             {
-                string[] prefabGuids = AssetDatabase.FindAssets("t:Prefab", new[] { UnitPrefabDirectory });
+                string[] prefabGuids = AssetDatabase.FindAssets("t:Prefab", new[] { PrefabRootDirectory });
                 Array.Sort(prefabGuids, StringComparer.Ordinal);
                 for (int i = 0; i < prefabGuids.Length; i++)
                 {
@@ -507,7 +507,7 @@ namespace CrystalMagic.Editor.Data
 
             EditorGUILayout.BeginVertical("box", GUILayout.Width(GraphNodeWidth));
 
-            string nodeTypeName = NPCInteractionNodeDataRegistry.ResolveTypeName(node);
+            string nodeTypeName = ResolveNodeTypeName(node);
             string nodeDisplayName = NPCInteractionNodeDataRegistry.GetDisplayName(nodeTypeName);
             Rect headerRect = EditorGUILayout.GetControlRect(false, 22f);
             EditorGUI.DrawRect(headerRect, GetGraphNodeColor(node));
@@ -809,7 +809,7 @@ namespace CrystalMagic.Editor.Data
                 }
 
                 guidOptions.Add(node.Guid);
-                displayOptions.Add($"{i + 1}. {NPCInteractionNodeDataRegistry.GetDisplayName(NPCInteractionNodeDataRegistry.ResolveTypeName(node))}");
+                displayOptions.Add($"{i + 1}. {NPCInteractionNodeDataRegistry.GetDisplayName(ResolveNodeTypeName(node))}");
             }
 
             int selectedIndex = FindNodeReferenceIndex(guidOptions, currentGuid);
@@ -934,7 +934,7 @@ namespace CrystalMagic.Editor.Data
 
         private void AddEntryNode(NPCInteractionData interaction, string typeName)
         {
-            NPCInteractionNodeData node = NPCInteractionNodeDataRegistry.Create(typeName);
+            NPCInteractionNodeData node = NPCInteractionNodeDataFactory.Default.CreateNode(typeName);
             if (node == null)
             {
                 return;
@@ -959,7 +959,7 @@ namespace CrystalMagic.Editor.Data
 
         private void AddSuccessorNode(NPCInteractionData interaction, NPCInteractionNodeData parentNode, string typeName, bool asSelectOption)
         {
-            NPCInteractionNodeData node = NPCInteractionNodeDataRegistry.Create(typeName);
+            NPCInteractionNodeData node = NPCInteractionNodeDataFactory.Default.CreateNode(typeName);
             if (node == null)
             {
                 return;
@@ -1005,7 +1005,7 @@ namespace CrystalMagic.Editor.Data
             {
                 string capturedTypeName = typeName;
                 bool isCurrent = string.Equals(
-                    NPCInteractionNodeDataRegistry.ResolveTypeName(interaction.Nodes[index]),
+                    ResolveNodeTypeName(interaction.Nodes[index]),
                     capturedTypeName,
                     StringComparison.Ordinal);
 
@@ -1021,13 +1021,13 @@ namespace CrystalMagic.Editor.Data
         private void ChangeNodeType(NPCInteractionData interaction, int index, string typeName)
         {
             NPCInteractionNodeData oldNode = interaction.Nodes[index];
-            string currentType = NPCInteractionNodeDataRegistry.ResolveTypeName(oldNode);
+            string currentType = ResolveNodeTypeName(oldNode);
             if (string.Equals(currentType, typeName, StringComparison.Ordinal))
             {
                 return;
             }
 
-            NPCInteractionNodeData newNode = NPCInteractionNodeDataRegistry.Create(typeName);
+            NPCInteractionNodeData newNode = NPCInteractionNodeDataFactory.Default.CreateNode(typeName);
             if (newNode == null)
             {
                 return;
@@ -1088,8 +1088,13 @@ namespace CrystalMagic.Editor.Data
             {
                 if (interaction.Nodes[i] == null)
                 {
-                    interaction.Nodes[i] = NPCInteractionNodeDataRegistry.Create(null);
+                    interaction.Nodes[i] = NPCInteractionNodeDataFactory.Default.CreateNode("Dialogue");
                     changed = true;
+
+                    if (interaction.Nodes[i] == null)
+                    {
+                        continue;
+                    }
                 }
 
                 if (EnsureNodeValid(interaction.Nodes[i]))
@@ -1204,6 +1209,23 @@ namespace CrystalMagic.Editor.Data
             }
 
             return changed;
+        }
+
+        private static string ResolveNodeTypeName(NPCInteractionNodeData node)
+        {
+            if (node == null)
+            {
+                Debug.LogError("[NPCInteraction] Failed to resolve node type because node data is null.");
+                return string.Empty;
+            }
+
+            if (NPCInteractionNodeDataRegistry.TryGetNodeKey(node.GetType(), out string typeName))
+            {
+                return typeName;
+            }
+
+            Debug.LogError($"[NPCInteraction] Failed to resolve unregistered node type '{node.GetType().FullName}'.");
+            return string.Empty;
         }
 
         private static Color GetGraphNodeColor(NPCInteractionNodeData node)

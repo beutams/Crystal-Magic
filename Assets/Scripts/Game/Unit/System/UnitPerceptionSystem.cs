@@ -12,10 +12,11 @@ partial class UnitPerceptionSystem : SystemBase
 
     protected override void OnUpdate()
     {
-        if (GameGateComponent.Instance.IsSimulationLocked || !SystemAPI.HasSingleton<UnitQuerySingleton>())
+        if (GameGateComponent.Instance.IsSimulationLocked ||
+            !UnitQueryUtility.TryGetTree(EntityManager, UnitQueryTreeKind.Unit, out UnitQueryTree unitTree))
+        {
             return;
-
-        DynamicBuffer<UnitQueryEntry> queryEntries = SystemAPI.GetSingletonBuffer<UnitQueryEntry>(true);
+        }
 
         foreach (var (perception, faction, transform, entity) in
                  SystemAPI.Query<RefRW<UnitPerceptionComponent>, RefRO<UnitFactionComponent>, RefRO<LocalTransform>>()
@@ -35,7 +36,7 @@ partial class UnitPerceptionSystem : SystemBase
             }
 
             float3 center = transform.ValueRO.Position;
-            UnitQueryUtility.QueryCircle(queryEntries, center, radius, _hits);
+            unitTree.QueryCircle(center, radius, _hits);
 
             float bestDistanceSq = float.MaxValue;
             for (int i = 0; i < _hits.Count; i++)

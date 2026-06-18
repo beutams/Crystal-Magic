@@ -7,18 +7,20 @@ using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
-[UpdateAfter(typeof(NPCInteractInputSystem))]
-partial class NPCInteractionConsumeSystem : SystemBase
+[UpdateAfter(typeof(NPCInteractPromptSystem))]
+[UpdateAfter(typeof(DungeonExitSystem))]
+partial class NPCInteractionSystem : SystemBase
 {
-    private NPCInteractionNodeFactory _nodeFactory;
+    private NPCInteractionNodeRunnerFactory _runnerFactory;
     private NPCInteractionSession _session;
 
     protected override void OnCreate()
     {
         base.OnCreate();
-        _nodeFactory = new NPCInteractionNodeFactory();
-        NPCInteractionNodeRegistry.RegisterAll(_nodeFactory);
-        RequireForUpdate<NPCInteractionRequest>();
+        _runnerFactory = new NPCInteractionNodeRunnerFactory();
+        NPCInteractionNodeRunnerRegistry.RegisterAll(_runnerFactory);
+        RequireForUpdate<PlayerInteractionRuntimeComponent>();
+        RequireForUpdate<PlayerTag>();
     }
 
     protected override void OnDestroy()
@@ -30,80 +32,85 @@ partial class NPCInteractionConsumeSystem : SystemBase
 
     protected override void OnUpdate()
     {
-        ConsumePendingRequest();
-
-        if (_session == null || !_session.IsActive)
-        {
-            return;
-        }
-
-        UpdateActiveSession(SystemAPI.Time.DeltaTime);
-    }
-
-    private void ConsumePendingRequest()
-    {
-        if (!SystemAPI.HasSingleton<NPCInteractionRequest>())
-        {
-            return;
-        }
-
-        RefRW<NPCInteractionRequest> request = SystemAPI.GetSingletonRW<NPCInteractionRequest>();
-        if (request.ValueRO.HasRequest == 0)
-        {
-            return;
-        }
-
-        Entity target = request.ValueRO.Target;
-        request.ValueRW.Target = Entity.Null;
-        request.ValueRW.HasRequest = 0;
-
         if (_session != null && _session.IsActive)
         {
-            Debug.Log("[NPCInteraction] Ignored interaction request because another interaction is active.");
+            UpdateActiveSession(SystemAPI.Time.DeltaTime);
             return;
         }
 
-        TryStartInteraction(target);
+        TryStartRequestedInteraction();
     }
 
-    private void TryStartInteraction(Entity target)
+    private void TryStartRequestedInteraction()
     {
-        if (target == Entity.Null || !EntityManager.Exists(target) || !EntityManager.HasComponent<NPCInteractable>(target))
-        {
+        RefRW<PlayerInteractionRuntimeComponent> runtime = SystemAPI.GetSingletonRW<PlayerInteractionRuntimeComponent>();
+        if (runtime.ValueRO.CurrentKind != PlayerInteractionKind.Npc || runtime.ValueRO.CurrentTarget == Entity.Null)
             return;
+
+        Entity playerEntity = Entity.Null;
+        foreach ((RefRO<PlayerTag> _, RefRO<UnitIntentComponent> intentRef, Entity entity) in
+                 SystemAPI.Query<RefRO<PlayerTag>, RefRO<UnitIntentComponent>>().WithEntityAccess())
+        {
+            if (UnitControlUtility.IsInControlledState(EntityManager, entity))
+                break;
+
+            playerEntity = entity;
+            if (!intentRef.ValueRO.WantToInteract)
+                return;
+
+            break;
         }
 
-        NPCInteractable interactable = EntityManager.GetComponentData<NPCInteractable>(target);
+        if (playerEntity == Entity.Null)
+            return;
+
+        Entity target = runtime.ValueRO.CurrentTarget;
+        if (!TryStartInteraction(target))
+            return;
+
+        runtime.ValueRW.CurrentTarget = Entity.Null;
+        runtime.ValueRW.CurrentKind = PlayerInteractionKind.None;
+        ConsumeInteract(playerEntity);
+    }
+
+    private bool TryStartInteraction(Entity target)
+    {
+        if (target == Entity.Null || !EntityManager.Exists(target) || !EntityManager.HasComponent<NPCInteractableComponent>(target))
+        {
+            return false;
+        }
+
+        NPCInteractableComponent interactable = EntityManager.GetComponentData<NPCInteractableComponent>(target);
         if (interactable.NpcId < 0)
         {
-            Debug.LogWarning("[NPCInteraction] NPCInteractable did not resolve a matching NPCData during baking.");
-            return;
+            Debug.LogWarning("[NPCInteraction] NPCInteractableComponent did not resolve a matching NPCData during baking.");
+            return false;
         }
 
         NPCData npcData = DataComponent.Instance?.Get<NPCData>(interactable.NpcId);
         if (npcData == null)
         {
             Debug.LogWarning($"[NPCInteraction] NPCData not found for resolved Id '{interactable.NpcId}'.");
-            return;
+            return false;
         }
 
         NPCInteractionData interaction = SelectInteraction(npcData);
-        interaction = NPCInteractionRuntimeUtility.ResolveRuntimeInteraction(npcData, interaction);
         if (interaction == null)
         {
             Debug.Log($"[NPCInteraction] No enabled interaction found for NPC '{npcData.NPC}'.");
-            return;
+            return false;
         }
 
         if (interaction.GetEntryNode() == null)
         {
             Debug.LogWarning($"[NPCInteraction] Interaction '{interaction.Key}' on NPC '{npcData.NPC}' is missing an entry node.");
-            return;
+            return false;
         }
 
         _session = new NPCInteractionSession(target, npcData, interaction);
-        EventComponent.Instance?.Publish(new NPCInteractionStartedEvent(target, npcData, interaction));
+        EventComponent.Instance.Publish(new NPCInteractionStartedEvent(target, npcData, interaction));
         AdvanceSessionUntilBlocked(0f);
+        return true;
     }
 
     private NPCInteractionData SelectInteraction(NPCData npcData)
@@ -164,32 +171,23 @@ partial class NPCInteractionConsumeSystem : SystemBase
 
             if (_session.CurrentRunner == null)
             {
-                _session.CurrentRunner = _nodeFactory.Create(currentNode);
+                _session.CurrentRunner = _runnerFactory.Create(currentNode);
                 if (_session.CurrentRunner == null)
                 {
-                    Debug.LogWarning($"[NPCInteraction] Unsupported node type '{NPCInteractionNodeDataRegistry.ResolveTypeName(currentNode)}'. Skipped.");
+                    string nodeTypeName = NPCInteractionNodeDataRegistry.TryGetNodeKey(currentNode.GetType(), out string resolvedTypeName)
+                        ? resolvedTypeName
+                        : currentNode.GetType().FullName;
+                    Debug.LogWarning($"[NPCInteraction] Unsupported node type '{nodeTypeName}'. Skipped.");
                     _session.CurrentNodeGuid = ResolveNextNodeGuid(_session, currentNode, null);
                     continue;
                 }
 
-                EventComponent.Instance?.Publish(new NPCInteractionNodeStartedEvent(
-                    _session.Target,
-                    _session.NpcData,
-                    _session.Interaction,
-                    currentNode));
+                EventComponent.Instance?.Publish(new NPCInteractionNodeStartedEvent( _session.Target, _session.NpcData, _session.Interaction, currentNode));
                 _session.SelectedNextNodeGuid = null;
                 _session.CurrentRunner.Enter(_session);
             }
 
             _session.CurrentRunner.Update(_session, deltaTime);
-            if (_session.ShouldTerminateInteraction)
-            {
-                _session.CurrentRunner.Exit(_session);
-                _session.CurrentRunner = null;
-                FinishSession(wasCancelled: false);
-                return;
-            }
-
             if (!_session.CurrentRunner.IsCompleted(_session))
             {
                 return;
@@ -244,6 +242,16 @@ partial class NPCInteractionConsumeSystem : SystemBase
         }
 
         return null;
+    }
+
+    private void ConsumeInteract(Entity playerEntity)
+    {
+        if (playerEntity == Entity.Null || !EntityManager.HasComponent<UnitIntentComponent>(playerEntity))
+            return;
+
+        UnitIntentComponent intent = EntityManager.GetComponentData<UnitIntentComponent>(playerEntity);
+        intent.WantToInteract = false;
+        EntityManager.SetComponentData(playerEntity, intent);
     }
 
 }

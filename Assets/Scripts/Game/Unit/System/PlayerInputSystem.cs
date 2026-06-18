@@ -5,7 +5,7 @@ using UnityEngine;
 using CrystalMagic.Core;
 
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
-[UpdateBefore(typeof(UnitStateTransitionSystem))]
+[UpdateBefore(typeof(UnitControlSystem))]
 partial struct PlayerInputSystem : ISystem
 {
     private NativeReference<float2> _moveInput;

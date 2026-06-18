@@ -40,9 +40,9 @@ namespace CrystalMagic.Game.Skill.Effects
             if (math.lengthsq(forward) <= 0.0001f)
                 return;
 
-            if (!UnitQueryUtility.TryGetEntries(entityManager, out DynamicBuffer<UnitQueryEntry> entries))
+            if (!UnitQueryUtility.TryGetTree(entityManager, UnitQueryTreeKind.Unit, out UnitQueryTree unitTree))
                 return;
-            UnitQueryUtility.QueryCone(entries, originPosition, forward, Data.Radius, Data.AngleDegrees, _hits);
+            unitTree.QueryCone(originPosition, forward, Data.Radius, Data.AngleDegrees, _hits);
 
             for (int i = 0; i < _hits.Count; i++)
             {

@@ -30,12 +30,8 @@ namespace CrystalMagic.Game.Skill
             SkillAdditionData skillAdditionData = SkillChainResolver.GetSkillAdditionData(skillAdditionId);
             SkillModifierSet modifiers = SkillResolver.CollectModifiers(entityManager, entity, baseSkill, skillAdditionData);
 
-            UnitAttackComponent? attack = entityManager.HasComponent<UnitAttackComponent>(entity)
-                ? entityManager.GetComponentData<UnitAttackComponent>(entity)
-                : null;
-            UnitElementComponent? element = entityManager.HasComponent<UnitElementComponent>(entity)
-                ? entityManager.GetComponentData<UnitElementComponent>(entity)
-                : null;
+            UnitAttackComponent? attack = entityManager.HasComponent<UnitAttackComponent>(entity) ? entityManager.GetComponentData<UnitAttackComponent>(entity) : null;
+            UnitElementComponent? element = entityManager.HasComponent<UnitElementComponent>(entity) ? entityManager.GetComponentData<UnitElementComponent>(entity) : null;
 
             resolvedSkill = SkillResolver.Resolve(baseSkill, modifiers, skillAdditionData, attack, element);
             return resolvedSkill != null;

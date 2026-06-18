@@ -1,5 +1,6 @@
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
+using CrystalMagic.Game.Unit;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -7,72 +8,78 @@ using Unity.Transforms;
 
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(WorldDropPickupSystem))]
+[UpdateBefore(typeof(DungeonExitSystem))]
+[UpdateBefore(typeof(NPCInteractionSystem))]
 partial struct DungeonTreasureSystem : ISystem
 {
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<DungeonTreasureComponent>();
         state.RequireForUpdate<PlayerTag>();
+        state.RequireForUpdate<PlayerInteractionRuntimeComponent>();
     }
 
     public void OnUpdate(ref SystemState state)
     {
-        float3 playerPosition = default;
-        bool hasPlayer = false;
-        foreach ((RefRO<PlayerTag> _, RefRO<LocalTransform> playerTransform) in SystemAPI.Query<RefRO<PlayerTag>, RefRO<LocalTransform>>())
+        RefRW<PlayerInteractionRuntimeComponent> runtime = SystemAPI.GetSingletonRW<PlayerInteractionRuntimeComponent>();
+        if (runtime.ValueRO.CurrentKind != PlayerInteractionKind.Treasure || runtime.ValueRO.CurrentTarget == Entity.Null)
+            return;
+
+        Entity playerEntity = Entity.Null;
+        bool wantToInteract = false;
+        foreach ((RefRO<PlayerTag> _, RefRO<UnitIntentComponent> intentRef, Entity entity) in
+                 SystemAPI.Query<RefRO<PlayerTag>, RefRO<UnitIntentComponent>>().WithEntityAccess())
         {
-            playerPosition = playerTransform.ValueRO.Position;
-            hasPlayer = true;
+            if (UnitControlUtility.IsInControlledState(state.EntityManager, entity))
+                break;
+
+            playerEntity = entity;
+            wantToInteract = intentRef.ValueRO.WantToInteract;
             break;
         }
 
-        if (!hasPlayer)
+        if (playerEntity == Entity.Null || !wantToInteract)
             return;
 
-        BackpackData backpackData = SaveDataComponent.Instance.GetBackpackData();
-        CharacterPropData propData = SaveDataComponent.Instance.GetCharacterPropData();
-        bool inventoryChanged = false;
-        bool propChanged = false;
-
-        foreach ((RefRW<DungeonTreasureComponent> treasureRef, RefRO<LocalTransform> transformRef, DynamicBuffer<DungeonTreasureRewardElement> rewards, Entity entity) in
-                 SystemAPI.Query<RefRW<DungeonTreasureComponent>, RefRO<LocalTransform>, DynamicBuffer<DungeonTreasureRewardElement>>().WithEntityAccess())
+        Entity target = runtime.ValueRO.CurrentTarget;
+        if (!state.EntityManager.Exists(target) || !state.EntityManager.HasComponent<DungeonTreasureComponent>(target))
         {
-            DungeonTreasureComponent treasure = treasureRef.ValueRO;
-            if (treasure.IsOpened != 0)
-                continue;
-
-            float distanceSq = math.lengthsq((playerPosition - transformRef.ValueRO.Position).xy);
-            if (distanceSq > treasure.InteractionRange * treasure.InteractionRange)
-                continue;
-
-            if (!TryOpenTreasure(entity, rewards, backpackData, propData, ref inventoryChanged, ref propChanged))
-                continue;
-
-            treasure.IsOpened = 1;
-            treasureRef.ValueRW = treasure;
-            if (!state.EntityManager.HasComponent<DestroyEntityFlag>(entity))
-                state.EntityManager.AddComponent<DestroyEntityFlag>(entity);
-            state.EntityManager.SetComponentEnabled<DestroyEntityFlag>(entity, true);
+            runtime.ValueRW.CurrentTarget = Entity.Null;
+            runtime.ValueRW.CurrentKind = PlayerInteractionKind.None;
+            return;
         }
 
-        if (propChanged)
-            SaveDataComponent.Instance.NotifyCharacterPropDataChanged();
-        else if (inventoryChanged)
-            SaveDataComponent.Instance.NotifyBackpackDataChanged();
+        DungeonTreasureComponent targetTreasure = state.EntityManager.GetComponentData<DungeonTreasureComponent>(target);
+        if (targetTreasure.IsOpened != 0)
+        {
+            runtime.ValueRW.CurrentTarget = Entity.Null;
+            runtime.ValueRW.CurrentKind = PlayerInteractionKind.None;
+            return;
+        }
+
+        DynamicBuffer<DungeonTreasureRewardElement> rewards = state.EntityManager.GetBuffer<DungeonTreasureRewardElement>(target);
+        float3 treasurePosition = state.EntityManager.GetComponentData<LocalTransform>(target).Position;
+        if (!TryOpenTreasure(ref state, target, treasurePosition, rewards))
+            return;
+
+        targetTreasure.IsOpened = 1;
+        state.EntityManager.SetComponentData(target, targetTreasure);
+        runtime.ValueRW.CurrentTarget = Entity.Null;
+        runtime.ValueRW.CurrentKind = PlayerInteractionKind.None;
+        ConsumeInteract(ref state, playerEntity);
     }
 
     private static bool TryOpenTreasure(
+        ref SystemState state,
         Entity entity,
-        DynamicBuffer<DungeonTreasureRewardElement> rewards,
-        BackpackData backpackData,
-        CharacterPropData propData,
-        ref bool inventoryChanged,
-        ref bool propChanged)
+        float3 position,
+        DynamicBuffer<DungeonTreasureRewardElement> rewards)
     {
         if (rewards.Length == 0)
             return true;
 
         Unity.Mathematics.Random random = CreateRandom(entity);
+        using NativeList<PendingTreasureReward> pendingRewards = new NativeList<PendingTreasureReward>(rewards.Length, Allocator.Temp);
         for (int i = 0; i < rewards.Length; i++)
         {
             DungeonTreasureRewardElement reward = rewards[i];
@@ -85,27 +92,25 @@ partial struct DungeonTreasureSystem : ISystem
             if (quantity <= 0)
                 continue;
 
-            switch (reward.RewardType)
+            pendingRewards.Add(new PendingTreasureReward
             {
-                case DropRewardType.Money:
-                    CurrencyUtility.AddMoneyToCurrentArea(quantity);
-                    inventoryChanged = true;
-                    break;
+                RewardType = reward.RewardType,
+                ItemId = reward.ItemId,
+                Quantity = quantity,
+            });
+        }
 
-                case DropRewardType.Item:
-                default:
-                    if (!InventoryUtility.CanAddItemToCharacterInventory(backpackData, propData, reward.ItemId, quantity))
-                        return false;
+        if (pendingRewards.Length == 0)
+            return true;
 
-                    if (InventoryUtility.AddItemToCharacterInventory(backpackData, propData, reward.ItemId, quantity) <= 0)
-                        return false;
+        if (!WorldDropSpawnUtility.CanSpawnDrop(state.EntityManager))
+            return false;
 
-                    if (PropInventoryUtility.IsPropItem(reward.ItemId))
-                        propChanged = true;
-                    else
-                        inventoryChanged = true;
-                    break;
-            }
+        for (int i = 0; i < pendingRewards.Length; i++)
+        {
+            PendingTreasureReward reward = pendingRewards[i];
+            if (!WorldDropSpawnUtility.TrySpawnDrop(state.EntityManager, reward.RewardType, reward.ItemId, reward.Quantity, position))
+                return false;
         }
 
         return true;
@@ -117,5 +122,22 @@ partial struct DungeonTreasureSystem : ISystem
         if (seed == 0)
             seed = 1u;
         return new Unity.Mathematics.Random(seed);
+    }
+
+    private static void ConsumeInteract(ref SystemState state, Entity playerEntity)
+    {
+        if (playerEntity == Entity.Null || !state.EntityManager.HasComponent<UnitIntentComponent>(playerEntity))
+            return;
+
+        UnitIntentComponent intent = state.EntityManager.GetComponentData<UnitIntentComponent>(playerEntity);
+        intent.WantToInteract = false;
+        state.EntityManager.SetComponentData(playerEntity, intent);
+    }
+
+    private struct PendingTreasureReward
+    {
+        public DropRewardType RewardType;
+        public int ItemId;
+        public int Quantity;
     }
 }

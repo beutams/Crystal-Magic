@@ -30,16 +30,6 @@ namespace CrystalMagic.Core
             ApplySharedMaterial(entityManager, entity, material, mesh);
         }
 
-        public static void ApplySceneObjectMaterial(EntityManager entityManager, Entity entity, string prefabName, string materialPath)
-        {
-            if (string.IsNullOrWhiteSpace(materialPath))
-                return;
-
-            Material material = ResourceComponent.Instance?.Load<Material>(materialPath);
-            Mesh mesh = GetPrefabMesh(prefabName, ownerKey: string.Empty);
-            ApplySharedMaterial(entityManager, entity, material, mesh);
-        }
-
         public static void ApplyNonUniformScale(EntityManager entityManager, Entity entity, float3 size)
         {
             PostTransformMatrix matrix = new()

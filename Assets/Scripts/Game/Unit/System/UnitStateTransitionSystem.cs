@@ -2,7 +2,6 @@ using Unity.Entities;
 
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateAfter(typeof(UnitSkillSystem))]
-[UpdateAfter(typeof(UnitControlSystem))]
 [UpdateBefore(typeof(UnitStateMachineSystem))]
 partial class UnitStateTransitionSystem : SystemBase
 {

@@ -155,31 +155,6 @@ namespace CrystalMagic.Core
             return propSlotIndex >= 0 && propData.Slots != null && propSlotIndex < propData.Slots.Count;
         }
 
-        public static void MigrateBackpackPropsToPropSlots(CharacterData characterData)
-        {
-            if (characterData?.Backpack?.Items == null || characterData.Props?.Slots == null)
-                return;
-
-            List<InventoryItemData> items = characterData.Backpack.Items;
-            for (int i = items.Count - 1; i >= 0; i--)
-            {
-                InventoryItemData item = items[i];
-                if (item == null)
-                {
-                    items.RemoveAt(i);
-                    continue;
-                }
-
-                if (!IsPropItem(item.ItemId))
-                    continue;
-
-                int moved = AddProp(characterData.Props, item.ItemId, item.Quantity);
-                item.Quantity -= moved;
-                if (item.Quantity <= 0)
-                    items.RemoveAt(i);
-            }
-        }
-
         private static int FindFirstEmptySlot(CharacterPropData propData)
         {
             if (propData?.Slots == null)

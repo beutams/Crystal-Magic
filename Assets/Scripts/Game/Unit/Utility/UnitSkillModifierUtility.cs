@@ -66,8 +66,7 @@ public static class UnitSkillModifierUtility
         if (skillAdditionData != null)
             modifiers.Add(skillAdditionData.Modifiers);
 
-        if (skillData != null &&
-            SkillExecutionUtility.SupportsFollowupEffects(entityManager, entity) &&
+        if (skillData != null && SkillExecutionUtility.SupportsFollowupEffects(entityManager, entity) &&
             entityManager.HasComponent<UnitCastFollowupRuntimeComponent>(entity))
         {
             SkillFollowupContext context = new(entityManager, entity, skillData, null, skillAdditionData);

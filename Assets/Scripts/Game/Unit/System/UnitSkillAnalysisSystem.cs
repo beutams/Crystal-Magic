@@ -5,7 +5,6 @@ using Unity.Mathematics;
 
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(PlayerSkillAnalysisSystem))]
-[UpdateBefore(typeof(UnitSkillExecuteSystem))]
 partial class UnitSkillAnalysisSystem : SystemBase
 {
     protected override void OnUpdate()

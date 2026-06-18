@@ -72,10 +72,7 @@ namespace CrystalMagic.UI
                 return;
 
             townData.StashMoney -= totalCost;
-            if (PropInventoryUtility.IsPropItem(Model.ItemId))
-                SaveDataComponent.Instance.NotifyCharacterPropDataChanged();
-            else
-                SaveDataComponent.Instance.NotifyBackpackDataChanged();
+            SaveDataComponent.Instance.NotifyBackpackDataChanged();
             View.Close();
         }
 

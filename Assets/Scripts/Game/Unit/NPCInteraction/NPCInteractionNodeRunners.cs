@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using CrystalMagic.UI;
+using Unity.Entities;
 using UnityEngine;
 
 public sealed class NPCDialogueInteractionNodeRunner : NPCInteractionNodeRunner
@@ -54,9 +55,7 @@ public sealed class NPCOpenUIInteractionNodeRunner : NPCInteractionNodeRunner
             return;
         }
 
-        _openedPanel = string.IsNullOrWhiteSpace(_node.OpenData)
-            ? UIComponent.Instance.Open(_node.UIName)
-            : UIComponent.Instance.Open(_node.UIName, _node.OpenData);
+        _openedPanel = string.IsNullOrWhiteSpace(_node.OpenData) ? UIComponent.Instance.Open(_node.UIName) : UIComponent.Instance.Open(_node.UIName, _node.OpenData);
 
         if (_openedPanel == null)
         {
@@ -142,7 +141,6 @@ public sealed class NPCEnterDungeonInteractionNodeRunner : NPCInteractionNodeRun
 
     public override void Enter(NPCInteractionSession session)
     {
-        session.RequestTerminateInteraction();
         _completed = true;
 
         if (GameFlowComponent.Instance == null)
@@ -151,7 +149,7 @@ public sealed class NPCEnterDungeonInteractionNodeRunner : NPCInteractionNodeRun
             return;
         }
 
-        int dungeonFloor = Math.Max(1, _node.DungeonFloor);
+        int dungeonFloor = ResolveDungeonFloor(session);
         SaveDataComponent saveDataComponent = SaveDataComponent.Instance;
         SaveAreaType currentAreaType = saveDataComponent?.GetLocationData()?.AreaType ?? SaveAreaType.Town;
         if (currentAreaType != SaveAreaType.Dungeon)
@@ -162,6 +160,22 @@ public sealed class NPCEnterDungeonInteractionNodeRunner : NPCInteractionNodeRun
             dungeonFloor);
 
         GameFlowComponent.Instance.BeginTransition(DungeonState.CreateEnterTransitionData(context));
+    }
+
+    private int ResolveDungeonFloor(NPCInteractionSession session)
+    {
+        if (session != null && session.Target != Entity.Null)
+        {
+            World world = World.DefaultGameObjectInjectionWorld;
+            if (world != null && world.IsCreated)
+            {
+                EntityManager entityManager = world.EntityManager;
+                if (entityManager.Exists(session.Target) && entityManager.HasComponent<DungeonExitComponent>(session.Target))
+                    return Math.Max(1, entityManager.GetComponentData<DungeonExitComponent>(session.Target).TargetFloor);
+            }
+        }
+
+        return Math.Max(1, _node.DungeonFloor);
     }
 
     public override bool IsCompleted(NPCInteractionSession session)
@@ -180,7 +194,6 @@ public sealed class NPCEnterTrainingGroundInteractionNodeRunner : NPCInteraction
 
     public override void Enter(NPCInteractionSession session)
     {
-        session.RequestTerminateInteraction();
         _completed = true;
 
         if (GameFlowComponent.Instance == null)
@@ -210,7 +223,6 @@ public sealed class NPCEnterTownInteractionNodeRunner : NPCInteractionNodeRunner
 
     public override void Enter(NPCInteractionSession session)
     {
-        session.RequestTerminateInteraction();
         _completed = true;
 
         if (GameFlowComponent.Instance == null)

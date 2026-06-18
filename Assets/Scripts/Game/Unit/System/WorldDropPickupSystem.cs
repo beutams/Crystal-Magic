@@ -1,60 +1,80 @@
 using CrystalMagic.Core;
-using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data;
 using Unity.Entities;
-using Unity.Mathematics;
-using Unity.Transforms;
 
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
-[UpdateAfter(typeof(NPCInteractionConsumeSystem))]
-[UpdateBefore(typeof(DungeonTreasureSystem))]
+[UpdateAfter(typeof(NPCInteractPromptSystem))]
+[UpdateBefore(typeof(NPCInteractionSystem))]
 partial class WorldDropPickupSystem : SystemBase
 {
     protected override void OnCreate()
     {
         RequireForUpdate<PlayerTag>();
+        RequireForUpdate<PlayerInteractionRuntimeComponent>();
     }
 
     protected override void OnUpdate()
     {
-        float pickupRadius = math.max(0f, ConfigComponent.Instance.Get<GameConfig>().WorldDropPickupRadius);
-        float pickupRadiusSq = pickupRadius * pickupRadius;
+        RefRW<PlayerInteractionRuntimeComponent> runtime = SystemAPI.GetSingletonRW<PlayerInteractionRuntimeComponent>();
+        if (runtime.ValueRO.CurrentKind != PlayerInteractionKind.Drop || runtime.ValueRO.CurrentTarget == Entity.Null)
+            return;
 
-        bool hasPlayer = false;
-        float3 playerPosition = float3.zero;
-        foreach ((RefRO<PlayerTag> _, RefRO<LocalTransform> transform) in
-                 SystemAPI.Query<RefRO<PlayerTag>, RefRO<LocalTransform>>())
+        Entity playerEntity = Entity.Null;
+        bool wantToInteract = false;
+        foreach ((RefRO<PlayerTag> _, RefRO<UnitIntentComponent> intentRef, Entity entity) in
+                 SystemAPI.Query<RefRO<PlayerTag>, RefRO<UnitIntentComponent>>().WithEntityAccess())
         {
-            playerPosition = transform.ValueRO.Position;
-            hasPlayer = true;
+            playerEntity = entity;
+            wantToInteract = !UnitControlUtility.IsInControlledState(EntityManager, entity) && intentRef.ValueRO.WantToInteract;
             break;
         }
 
-        if (!hasPlayer)
+        if (playerEntity == Entity.Null || !wantToInteract)
             return;
 
-        BackpackData backpackData = SaveDataComponent.Instance.GetBackpackData();
-        CharacterPropData propData = SaveDataComponent.Instance.GetCharacterPropData();
-
-        foreach ((RefRO<WorldDropComponent> dropRef, RefRO<LocalTransform> transformRef, Entity entity) in
-                 SystemAPI.Query<RefRO<WorldDropComponent>, RefRO<LocalTransform>>().WithEntityAccess())
+        Entity target = runtime.ValueRO.CurrentTarget;
+        if (!EntityManager.Exists(target) || !EntityManager.HasComponent<WorldDropComponent>(target))
         {
-            WorldDropComponent drop = dropRef.ValueRO;
-            float distanceSq = math.lengthsq((playerPosition - transformRef.ValueRO.Position).xy);
-            if (distanceSq > pickupRadiusSq)
-                continue;
-
-            if (!TryPickup(drop, backpackData, propData))
-                continue;
-
-            if (!EntityManager.HasComponent<DestroyEntityFlag>(entity))
-                EntityManager.AddComponent<DestroyEntityFlag>(entity);
-
-            EntityManager.SetComponentEnabled<DestroyEntityFlag>(entity, true);
+            runtime.ValueRW.CurrentTarget = Entity.Null;
+            runtime.ValueRW.CurrentKind = PlayerInteractionKind.None;
+            return;
         }
+
+        if (EntityManager.HasComponent<DestroyEntityFlag>(target) &&
+            EntityManager.IsComponentEnabled<DestroyEntityFlag>(target))
+        {
+            runtime.ValueRW.CurrentTarget = Entity.Null;
+            runtime.ValueRW.CurrentKind = PlayerInteractionKind.None;
+            return;
+        }
+
+        BackpackData backpackData = SaveDataComponent.Instance.GetBackpackData();
+        WorldDropComponent dropData = EntityManager.GetComponentData<WorldDropComponent>(target);
+
+        ConsumeInteract(playerEntity);
+
+        if (!TryPickup(dropData, backpackData))
+            return;
+
+        if (!EntityManager.HasComponent<DestroyEntityFlag>(target))
+            EntityManager.AddComponent<DestroyEntityFlag>(target);
+
+        EntityManager.SetComponentEnabled<DestroyEntityFlag>(target, true);
+        runtime.ValueRW.CurrentTarget = Entity.Null;
+        runtime.ValueRW.CurrentKind = PlayerInteractionKind.None;
     }
 
-    private static bool TryPickup(in WorldDropComponent drop, BackpackData backpackData, CharacterPropData propData)
+    private void ConsumeInteract(Entity playerEntity)
+    {
+        if (playerEntity == Entity.Null || !EntityManager.HasComponent<UnitIntentComponent>(playerEntity))
+            return;
+
+        UnitIntentComponent intent = EntityManager.GetComponentData<UnitIntentComponent>(playerEntity);
+        intent.WantToInteract = false;
+        EntityManager.SetComponentData(playerEntity, intent);
+    }
+
+    private static bool TryPickup(in WorldDropComponent drop, BackpackData backpackData)
     {
         switch (drop.DropType)
         {
@@ -67,16 +87,13 @@ partial class WorldDropPickupSystem : SystemBase
 
             case DropRewardType.Item:
             default:
-                if (!InventoryUtility.CanAddItemToCharacterInventory(backpackData, propData, drop.ItemId, drop.Amount))
+                if (!InventoryUtility.CanAddItemToBackpack(backpackData, drop.ItemId, drop.Amount))
                     return false;
 
-                if (InventoryUtility.AddItemToCharacterInventory(backpackData, propData, drop.ItemId, drop.Amount) <= 0)
+                if (InventoryUtility.AddItemToBackpack(backpackData, drop.ItemId, drop.Amount) <= 0)
                     return false;
 
-                if (PropInventoryUtility.IsPropItem(drop.ItemId))
-                    SaveDataComponent.Instance.NotifyCharacterPropDataChanged();
-                else
-                    SaveDataComponent.Instance.NotifyBackpackDataChanged();
+                SaveDataComponent.Instance.NotifyBackpackDataChanged();
                 return true;
         }
     }

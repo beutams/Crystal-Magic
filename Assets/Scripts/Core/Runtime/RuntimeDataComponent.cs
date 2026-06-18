@@ -190,13 +190,10 @@ namespace CrystalMagic.Core
         public string ThemeKey;
         public bool IsBossFloor;
         public float CellWorldSize;
-        public float ExitInteractionRange;
         public string CorridorMaterialPath;
         public string RoomMaterialPath;
         public string AnteRoomMaterialPath;
         public string WallMaterialPath;
-        public string ExitClosedMaterialPath;
-        public string ExitOpenMaterialPath;
         public Vector3 PlayerSpawnWorldPosition;
         public List<RuntimeDungeonEnvironmentSpawnData> EnvironmentSpawns = new();
         public List<RuntimeDungeonSceneObjectSpawnData> SceneObjects = new();
@@ -228,10 +225,7 @@ namespace CrystalMagic.Core
         public Vector3 WorldPosition;
         public Vector3 Size = Vector3.one;
         public bool RequiresRoomClear;
-        public float InteractionRange;
         public int TargetFloor;
-        public string ClosedMaterialPath;
-        public string OpenMaterialPath;
         public List<RuntimeDungeonTreasureRewardData> Rewards = new();
     }
 

@@ -19,7 +19,6 @@ public sealed class NPCInteractionSession
     public string SelectedNextNodeGuid { get; set; }
     public NPCInteractionNodeRunner CurrentRunner { get; set; }
     public bool IsActive { get; private set; }
-    public bool ShouldTerminateInteraction { get; private set; }
 
     public NPCInteractionNodeData GetCurrentNode()
     {
@@ -41,10 +40,5 @@ public sealed class NPCInteractionSession
         CurrentRunner?.Cancel(this);
         CurrentRunner = null;
         IsActive = false;
-    }
-
-    public void RequestTerminateInteraction()
-    {
-        ShouldTerminateInteraction = true;
     }
 }

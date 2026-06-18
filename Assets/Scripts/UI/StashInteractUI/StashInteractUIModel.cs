@@ -98,14 +98,6 @@
             if (Mode == StashInteractMode.Store)
                 return sourceCount;
 
-            if (CrystalMagic.Core.PropInventoryUtility.IsPropItem(ItemId))
-            {
-                int availableCount = CrystalMagic.Core.PropInventoryUtility.GetAvailableAddCount(
-                    CrystalMagic.Core.SaveDataComponent.Instance.GetCharacterPropData(),
-                    ItemId);
-                return UnityEngine.Mathf.Min(sourceCount, availableCount);
-            }
-
             int backpackAvailableCount = CrystalMagic.Core.InventoryUtility.GetAvailableAddCountInBackpack(
                 CrystalMagic.Core.SaveDataComponent.Instance.GetBackpackData(),
                 ItemId);

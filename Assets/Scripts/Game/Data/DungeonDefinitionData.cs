@@ -18,8 +18,6 @@ namespace CrystalMagic.Game.Data
         public string AnteRoomMaterialPath;
         public string WallMaterialPath;
         public string StartMarkerMaterialPath;
-        public string ExitClosedMaterialPath;
-        public string ExitOpenMaterialPath;
 
         public int Mob1PoolId = -1;
         public int Mob2PoolId = -1;

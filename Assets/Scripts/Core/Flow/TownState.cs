@@ -1,4 +1,5 @@
 using UnityEngine;
+using CrystalMagic.UI;
 
 namespace CrystalMagic.Core {
     /// <summary>
@@ -9,6 +10,7 @@ namespace CrystalMagic.Core {
         public const string SceneName = "TownScene";
         private const string UIPlayerInputLockReason = "TownState.UIOpen";
         private CharacterUI _characterUI;
+        private InteractionPromptManager _interactionPromptManager;
         private GameMenuUI _gameMenuUI;
         private bool _inputBound;
         private bool _playerInputLockedByUI;
@@ -18,6 +20,8 @@ namespace CrystalMagic.Core {
             Debug.Log("[TownState] Entered Town");
             InputComponent.Instance?.SetBattleInputEnabled(false);
             SaveDataComponent.Instance?.SetCurrentLocation(SaveAreaType.Town);
+            _interactionPromptManager ??= new InteractionPromptManager();
+            _interactionPromptManager.Initialize();
             BindInput();
             
             // 可以在这里访问 StateData（如果是从读档进入）
@@ -30,12 +34,15 @@ namespace CrystalMagic.Core {
         public override void OnExit()
         {
             Debug.Log("[TownState] Exited Town");
+            _interactionPromptManager?.Dispose();
+            _interactionPromptManager = null;
             ReleaseUIInputLock();
             UnbindInput();
         }
 
         public override void OnUpdate()
         {
+            _interactionPromptManager?.Tick();
             RefreshUIInputLock();
         }
 

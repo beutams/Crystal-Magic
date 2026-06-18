@@ -4,7 +4,6 @@ using Unity.Entities;
 using UnityEngine;
 
 [UpdateInGroup(typeof(UnitInitializationSystemGroup))]
-[UpdateBefore(typeof(BehaviorTreeSystem))]
 partial class BehaviorTreeInitSystem : SystemBase
 {
     protected override void OnUpdate()

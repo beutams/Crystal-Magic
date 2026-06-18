@@ -244,8 +244,6 @@ namespace CrystalMagic.Editor.Data
             row.AnteRoomMaterialPath = EditorGUILayout.TextField("Ante Room", row.AnteRoomMaterialPath ?? string.Empty);
             row.WallMaterialPath = EditorGUILayout.TextField("Wall", row.WallMaterialPath ?? string.Empty);
             row.StartMarkerMaterialPath = EditorGUILayout.TextField("Start Marker", row.StartMarkerMaterialPath ?? string.Empty);
-            row.ExitClosedMaterialPath = EditorGUILayout.TextField("Exit Closed", row.ExitClosedMaterialPath ?? string.Empty);
-            row.ExitOpenMaterialPath = EditorGUILayout.TextField("Exit Open", row.ExitOpenMaterialPath ?? string.Empty);
 
             GUILayout.Space(8f);
             EditorGUILayout.HelpBox("Monster pools, treasure pools, and boss rooms are edited in their own theme-scoped tabs.", MessageType.None);

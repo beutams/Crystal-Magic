@@ -1,142 +1,202 @@
-using Unity.Burst;
-using Unity.Collections;
+using System.Collections.Generic;
+using CrystalMagic.Core;
+using CrystalMagic.Game.Config;
 using Unity.Entities;
-using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
 
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(UnitMoveSystem))]
-[BurstCompile]
-partial struct NPCInteractPromptSystem : ISystem
+[UpdateBefore(typeof(WorldDropPickupSystem))]
+[UpdateBefore(typeof(DungeonTreasureSystem))]
+[UpdateBefore(typeof(DungeonExitSystem))]
+[UpdateBefore(typeof(NPCInteractionSystem))]
+partial class NPCInteractPromptSystem : SystemBase
 {
-    private NativeReference<Entity> _nearestNpc;
-    private NativeReference<float> _nearestDistanceSq;
+    private readonly List<UnitQueryHit> _dropHits = new();
 
-    public void OnCreate(ref SystemState state)
+    protected override void OnCreate()
     {
-        state.RequireForUpdate<PlayerTag>();
+        RequireForUpdate<PlayerTag>();
 
-        _nearestNpc = new NativeReference<Entity>(Entity.Null, Allocator.Persistent);
-        _nearestDistanceSq = new NativeReference<float>(float.MaxValue, Allocator.Persistent);
-
-        Entity singletonEntity = state.EntityManager.CreateEntity();
-        state.EntityManager.AddComponentData(singletonEntity, new NPCInteractionState
+        Entity singletonEntity = EntityManager.CreateEntity();
+        EntityManager.AddComponentData(singletonEntity, new PlayerInteractionRuntimeComponent
         {
             CurrentTarget = Entity.Null,
-        });
-        state.EntityManager.AddComponentData(singletonEntity, new NPCInteractionRequest
-        {
-            Target = Entity.Null,
-            HasRequest = 0,
+            CurrentKind = PlayerInteractionKind.None,
         });
     }
 
-    public void OnDestroy(ref SystemState state)
+    protected override void OnUpdate()
     {
-        if (_nearestNpc.IsCreated)
-            _nearestNpc.Dispose();
+        RefRW<PlayerInteractionRuntimeComponent> runtime = SystemAPI.GetSingletonRW<PlayerInteractionRuntimeComponent>();
+        HideLegacyNpcInteractEntities();
+        float interactionRange = math.max(0f, ConfigComponent.Instance.Get<GameConfig>().InteractionRange);
+        float interactionRangeSq = interactionRange * interactionRange;
 
-        if (_nearestDistanceSq.IsCreated)
-            _nearestDistanceSq.Dispose();
-    }
-
-    [BurstCompile]
-    public void OnUpdate(ref SystemState state)
-    {
         float3 playerPosition = float3.zero;
-        bool hasPlayer = false;
+        Entity playerEntity = Entity.Null;
 
-        foreach ((RefRO<PlayerTag> _, RefRO<LocalTransform> transform) in
-            SystemAPI.Query<RefRO<PlayerTag>, RefRO<LocalTransform>>())
+        foreach ((RefRO<PlayerTag> _, RefRO<LocalTransform> transform, Entity entity) in
+                 SystemAPI.Query<RefRO<PlayerTag>, RefRO<LocalTransform>>().WithEntityAccess())
         {
+            if (UnitControlUtility.IsInControlledState(EntityManager, entity))
+                break;
+
             playerPosition = transform.ValueRO.Position;
-            hasPlayer = true;
+            playerEntity = entity;
             break;
         }
 
-        _nearestNpc.Value = Entity.Null;
-        _nearestDistanceSq.Value = float.MaxValue;
-
-        state.Dependency = new NPCInteractPromptFindJob
+        if (playerEntity == Entity.Null || GameGateComponent.Instance.IsPlayerInputLocked)
         {
-            HasPlayer = hasPlayer,
-            PlayerPosition = playerPosition,
-            LocalTransforms = SystemAPI.GetComponentLookup<LocalTransform>(false),
-            NearestNpc = _nearestNpc,
-            NearestDistanceSq = _nearestDistanceSq,
-        }.Schedule(state.Dependency);
-        state.Dependency.Complete();
+            runtime.ValueRW.CurrentTarget = Entity.Null;
+            runtime.ValueRW.CurrentKind = PlayerInteractionKind.None;
+            return;
+        }
 
-        Entity nearestNpc = _nearestNpc.Value;
+        Entity bestTarget = Entity.Null;
+        PlayerInteractionKind bestKind = PlayerInteractionKind.None;
+        float bestDistanceSq = float.MaxValue;
 
-        state.Dependency = new NPCInteractPromptShowNearestJob
+        CollectDropCandidate(playerPosition, interactionRange, ref bestTarget, ref bestKind, ref bestDistanceSq);
+        CollectTreasureCandidate(playerPosition, interactionRangeSq, ref bestTarget, ref bestKind, ref bestDistanceSq);
+        CollectNpcCandidate(playerPosition, interactionRangeSq, ref bestTarget, ref bestKind, ref bestDistanceSq);
+
+        runtime.ValueRW.CurrentTarget = bestTarget;
+        runtime.ValueRW.CurrentKind = bestKind;
+    }
+
+    private void CollectDropCandidate(
+        float3 playerPosition,
+        float interactionRange,
+        ref Entity bestTarget,
+        ref PlayerInteractionKind bestKind,
+        ref float bestDistanceSq)
+    {
+        if (!UnitQueryUtility.TryGetTree(EntityManager, UnitQueryTreeKind.WorldDrop, out UnitQueryTree worldDropTree))
+            return;
+
+        worldDropTree.QueryCircle(playerPosition, interactionRange, _dropHits);
+        for (int i = 0; i < _dropHits.Count; i++)
         {
-            NearestNpc = nearestNpc,
-            Interactables = SystemAPI.GetComponentLookup<NPCInteractable>(true),
-            LocalTransforms = SystemAPI.GetComponentLookup<LocalTransform>(false),
-        }.Schedule(state.Dependency);
-        state.Dependency.Complete();
+            UnitQueryHit hit = _dropHits[i];
+            if (EntityManager.HasComponent<DestroyEntityFlag>(hit.Entity) &&
+                EntityManager.IsComponentEnabled<DestroyEntityFlag>(hit.Entity))
+            {
+                continue;
+            }
 
-        RefRW<NPCInteractionState> interactionState = SystemAPI.GetSingletonRW<NPCInteractionState>();
-        interactionState.ValueRW.CurrentTarget = nearestNpc;
-    }
-}
+            if (!EntityManager.Exists(hit.Entity) || !EntityManager.HasComponent<WorldDropComponent>(hit.Entity))
+                continue;
 
-[BurstCompile]
-public partial struct NPCInteractPromptFindJob : IJobEntity
-{
-    public bool HasPlayer;
-    public float3 PlayerPosition;
-    public ComponentLookup<LocalTransform> LocalTransforms;
-    public NativeReference<Entity> NearestNpc;
-    public NativeReference<float> NearestDistanceSq;
-
-    public void Execute(Entity entity, in NPCTag tag, in NPCInteractable interactable)
-    {
-        HidePrompt(interactable);
-
-        if (!HasPlayer || !LocalTransforms.HasComponent(entity))
-            return;
-
-        float3 npcPosition = LocalTransforms[entity].Position;
-        float distanceSq = math.distancesq(PlayerPosition, npcPosition);
-        if (distanceSq > interactable.interactRangeSq || distanceSq >= NearestDistanceSq.Value)
-            return;
-
-        NearestDistanceSq.Value = distanceSq;
-        NearestNpc.Value = entity;
+            float distanceSq = math.lengthsq((playerPosition - hit.Position).xy);
+            TrySelectCandidate(hit.Entity, PlayerInteractionKind.Drop, distanceSq, ref bestTarget, ref bestKind, ref bestDistanceSq);
+        }
     }
 
-    private void HidePrompt(NPCInteractable interactable)
+    private void CollectTreasureCandidate(
+        float3 playerPosition,
+        float interactionRangeSq,
+        ref Entity bestTarget,
+        ref PlayerInteractionKind bestKind,
+        ref float bestDistanceSq)
     {
-        if (interactable.interact == Entity.Null || !LocalTransforms.HasComponent(interactable.interact))
-            return;
+        foreach ((RefRO<DungeonTreasureComponent> treasureRef, RefRO<LocalTransform> transformRef, Entity entity) in
+                 SystemAPI.Query<RefRO<DungeonTreasureComponent>, RefRO<LocalTransform>>().WithEntityAccess())
+        {
+            DungeonTreasureComponent treasure = treasureRef.ValueRO;
+            if (treasure.IsOpened != 0)
+                continue;
 
-        LocalTransform interactTransform = LocalTransforms[interactable.interact];
-        interactTransform.Scale = 0f;
-        LocalTransforms[interactable.interact] = interactTransform;
+            float distanceSq = math.lengthsq((playerPosition - transformRef.ValueRO.Position).xy);
+            if (distanceSq > interactionRangeSq)
+                continue;
+
+            TrySelectCandidate(entity, PlayerInteractionKind.Treasure, distanceSq, ref bestTarget, ref bestKind, ref bestDistanceSq);
+        }
     }
-}
 
-[BurstCompile]
-public struct NPCInteractPromptShowNearestJob : IJob
-{
-    public Entity NearestNpc;
-    [ReadOnly] public ComponentLookup<NPCInteractable> Interactables;
-    public ComponentLookup<LocalTransform> LocalTransforms;
-
-    public void Execute()
+    private void CollectNpcCandidate(
+        float3 playerPosition,
+        float interactionRangeSq,
+        ref Entity bestTarget,
+        ref PlayerInteractionKind bestKind,
+        ref float bestDistanceSq)
     {
-        if (NearestNpc == Entity.Null || !Interactables.HasComponent(NearestNpc))
+        foreach ((RefRO<NPCInteractableComponent> _, RefRO<LocalTransform> transformRef, Entity entity) in
+                 SystemAPI.Query<RefRO<NPCInteractableComponent>, RefRO<LocalTransform>>().WithEntityAccess())
+        {
+            if (EntityManager.HasComponent<DungeonExitComponent>(entity))
+            {
+                DungeonExitComponent exit = EntityManager.GetComponentData<DungeonExitComponent>(entity);
+                if (exit.IsOpen == 0)
+                    continue;
+            }
+
+            float distanceSq = math.lengthsq((playerPosition - transformRef.ValueRO.Position).xy);
+            if (distanceSq > interactionRangeSq)
+                continue;
+
+            TrySelectCandidate(entity, PlayerInteractionKind.Npc, distanceSq, ref bestTarget, ref bestKind, ref bestDistanceSq);
+        }
+    }
+
+    private void HideLegacyNpcInteractEntities()
+    {
+        foreach (RefRO<NPCInteractableComponent> interactableRef in SystemAPI.Query<RefRO<NPCInteractableComponent>>())
+        {
+            NPCInteractableComponent interactable = interactableRef.ValueRO;
+            if (interactable.InteractEntity == Entity.Null || !EntityManager.HasComponent<LocalTransform>(interactable.InteractEntity))
+                continue;
+
+            LocalTransform interactTransform = EntityManager.GetComponentData<LocalTransform>(interactable.InteractEntity);
+            if (math.abs(interactTransform.Scale) <= 0.0001f)
+                continue;
+
+            interactTransform.Scale = 0f;
+            EntityManager.SetComponentData(interactable.InteractEntity, interactTransform);
+        }
+    }
+
+    private static void TrySelectCandidate(
+        Entity candidateEntity,
+        PlayerInteractionKind candidateKind,
+        float candidateDistanceSq,
+        ref Entity bestTarget,
+        ref PlayerInteractionKind bestKind,
+        ref float bestDistanceSq)
+    {
+        if (candidateEntity == Entity.Null)
             return;
 
-        NPCInteractable interactable = Interactables[NearestNpc];
-        if (interactable.interact == Entity.Null || !LocalTransforms.HasComponent(interactable.interact))
+        if (candidateDistanceSq + 0.0001f < bestDistanceSq)
+        {
+            bestTarget = candidateEntity;
+            bestKind = candidateKind;
+            bestDistanceSq = candidateDistanceSq;
+            return;
+        }
+
+        if (math.abs(candidateDistanceSq - bestDistanceSq) > 0.0001f)
             return;
 
-        LocalTransform interactTransform = LocalTransforms[interactable.interact];
-        interactTransform.Scale = 1f;
-        LocalTransforms[interactable.interact] = interactTransform;
+        if (GetPriority(candidateKind) >= GetPriority(bestKind))
+            return;
+
+        bestTarget = candidateEntity;
+        bestKind = candidateKind;
+        bestDistanceSq = candidateDistanceSq;
+    }
+
+    private static int GetPriority(PlayerInteractionKind kind)
+    {
+        return kind switch
+        {
+            PlayerInteractionKind.Drop => 0,
+            PlayerInteractionKind.Treasure => 1,
+            PlayerInteractionKind.Npc => 2,
+            _ => int.MaxValue,
+        };
     }
 }

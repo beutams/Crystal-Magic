@@ -30,16 +30,9 @@ public partial class SkillProjectileSpawnSystem : SystemBase
     {
         quaternion rotation = CreateRotation(request.Direction);
 
-        SetOrAddComponentData(
-            projectileEntity,
-            LocalTransform.FromPositionRotationScale(
-                request.StartPosition,
-                rotation,
-                1f));
+        SetOrAddComponentData( projectileEntity, LocalTransform.FromPositionRotationScale(request.StartPosition,rotation,1f));
 
-        SetOrAddComponentData(
-            projectileEntity,
-            new SkillProjectileComponent
+        SetOrAddComponentData(projectileEntity,new SkillProjectileComponent
             {
                 Direction = math.normalizesafe(request.Direction, new float3(1f, 0f, 0f)),
                 Speed = request.Speed,

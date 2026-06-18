@@ -1339,13 +1339,10 @@ namespace CrystalMagic.Core
                 ThemeKey = theme?.ThemeKey ?? string.Empty,
                 IsBossFloor = bossRoom != null,
                 CellWorldSize = Mathf.Max(0.25f, dungeonConfig?.CellWorldSize ?? 2f),
-                ExitInteractionRange = Mathf.Max(0.5f, dungeonConfig?.ExitInteractionRange ?? 3f),
                 CorridorMaterialPath = ResolveMaterialPath(theme?.CorridorMaterialPath, dungeonConfig?.DefaultCorridorMaterialPath),
                 RoomMaterialPath = ResolveMaterialPath(theme?.RoomMaterialPath, dungeonConfig?.DefaultRoomMaterialPath),
                 AnteRoomMaterialPath = ResolveMaterialPath(theme?.AnteRoomMaterialPath, dungeonConfig?.DefaultAnteRoomMaterialPath),
                 WallMaterialPath = ResolveMaterialPath(theme?.WallMaterialPath, dungeonConfig?.DefaultWallMaterialPath),
-                ExitClosedMaterialPath = ResolveMaterialPath(theme?.ExitClosedMaterialPath, dungeonConfig?.DefaultExitClosedMaterialPath),
-                ExitOpenMaterialPath = ResolveMaterialPath(theme?.ExitOpenMaterialPath, dungeonConfig?.DefaultExitOpenMaterialPath),
             };
 
             AddEnvironmentSpawns(sceneData, result);
@@ -2197,10 +2194,7 @@ namespace CrystalMagic.Core
             pointData.ObjectType = RuntimeDungeonSceneObjectType.Exit;
             pointData.PrefabName = "Exit";
             pointData.Size = Vector3.one;
-            pointData.InteractionRange = sceneData.ExitInteractionRange;
             pointData.TargetFloor = Mathf.Max(1, targetFloor);
-            pointData.ClosedMaterialPath = sceneData.ExitClosedMaterialPath ?? string.Empty;
-            pointData.OpenMaterialPath = sceneData.ExitOpenMaterialPath ?? string.Empty;
             return pointData;
         }
 
@@ -2214,7 +2208,6 @@ namespace CrystalMagic.Core
             pointData.ObjectType = RuntimeDungeonSceneObjectType.Treasure;
             pointData.PrefabName = "Treasure";
             pointData.Size = Vector3.one;
-            pointData.InteractionRange = 1.35f;
             pointData.Rewards = CloneTreasureRewards(rewards);
             return pointData;
         }

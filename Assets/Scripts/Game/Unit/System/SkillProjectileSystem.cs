@@ -23,11 +23,13 @@ public partial class SkillProjectileSystem : SystemBase
 
     protected override void OnUpdate()
     {
-        if (_projectileQuery.IsEmptyIgnoreFilter || !SystemAPI.HasSingleton<UnitQuerySingleton>())
+        if (_projectileQuery.IsEmptyIgnoreFilter ||
+            !UnitQueryUtility.TryGetTree(EntityManager, UnitQueryTreeKind.Unit, out UnitQueryTree unitTree))
+        {
             return;
+        }
 
         float deltaTime = SystemAPI.Time.DeltaTime;
-        DynamicBuffer<UnitQueryEntry> queryEntries = SystemAPI.GetSingletonBuffer<UnitQueryEntry>(true);
 
         NativeArray<Entity> entities = _projectileQuery.ToEntityArray(Allocator.Temp);
         NativeArray<SkillProjectileComponent> projectiles = _projectileQuery.ToComponentDataArray<SkillProjectileComponent>(Allocator.Temp);
@@ -54,7 +56,7 @@ public partial class SkillProjectileSystem : SystemBase
                 EntityManager.SetComponentData(entity, transform);
                 EntityManager.SetComponentData(entity, projectile);
 
-                if (TryFindHitEntity(queryEntries, payload, projectile, hitEntities, transform.Position, out Entity hitEntity, out float3 hitPosition))
+                if (TryFindHitEntity(unitTree, payload, projectile, hitEntities, transform.Position, out Entity hitEntity, out float3 hitPosition))
                 {
                     hitEntities.Add(new SkillProjectileHitEntityElement { Value = hitEntity });
 
@@ -89,7 +91,7 @@ public partial class SkillProjectileSystem : SystemBase
     }
 
     private bool TryFindHitEntity(
-        DynamicBuffer<UnitQueryEntry> queryEntries,
+        UnitQueryTree unitTree,
         SkillProjectilePayloadComponent payload,
         SkillProjectileComponent projectile,
         DynamicBuffer<SkillProjectileHitEntityElement> hitEntities,
@@ -100,7 +102,7 @@ public partial class SkillProjectileSystem : SystemBase
         hitEntity = Entity.Null;
         hitPosition = float3.zero;
 
-        UnitQueryUtility.QueryCircle(queryEntries, projectilePosition, projectile.HitRadius, _hits);
+        unitTree.QueryCircle(projectilePosition, projectile.HitRadius, _hits);
 
         float bestDistanceSq = float.MaxValue;
         for (int i = 0; i < _hits.Count; i++)

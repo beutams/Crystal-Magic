@@ -785,7 +785,6 @@ namespace CrystalMagic.Core {
             }
 
             data.Props.EnsureValid(GetPropSlotCount(), GetPropShortcutSlotCount(), repairedPaths, $"{basePath}.Props");
-            PropInventoryUtility.MigrateBackpackPropsToPropSlots(data);
         }
 
         private void EnsureDungeonRunDataValid(DungeonRunData data, CharacterData fallbackCharacter = null, List<string> repairedPaths = null)

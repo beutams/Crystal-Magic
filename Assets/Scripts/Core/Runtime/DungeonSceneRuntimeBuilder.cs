@@ -129,7 +129,7 @@ namespace CrystalMagic.Core
                     entityManager,
                     entity,
                     sceneObject.PrefabName,
-                    sceneObject.ObjectType == RuntimeDungeonSceneObjectType.Exit ? sceneObject.ClosedMaterialPath : string.Empty,
+                    string.Empty,
                     resourceOwnerKey,
                     new float3(sceneObject.Size.x, sceneObject.Size.y, sceneObject.Size.z));
                 ApplyBoxColliderSize(entityManager, entity, sceneObject.Size);
@@ -151,11 +151,8 @@ namespace CrystalMagic.Core
                         DungeonExitComponent exit = entityManager.GetComponentData<DungeonExitComponent>(entity);
                         exit.RegionId = sceneObject.RegionId;
                         exit.TargetFloor = Mathf.Max(1, sceneObject.TargetFloor);
-                        exit.InteractionRange = Mathf.Max(0.5f, sceneObject.InteractionRange);
                         exit.RequiresRoomClear = sceneObject.RequiresRoomClear ? (byte)1 : (byte)0;
                         exit.IsOpen = 0;
-                        exit.ClosedMaterialPath = new FixedString128Bytes(sceneObject.ClosedMaterialPath ?? string.Empty);
-                        exit.OpenMaterialPath = new FixedString128Bytes(sceneObject.OpenMaterialPath ?? string.Empty);
                         entityManager.SetComponentData(entity, exit);
                     }
                     break;
@@ -165,7 +162,6 @@ namespace CrystalMagic.Core
                     {
                         DungeonTreasureComponent treasure = entityManager.GetComponentData<DungeonTreasureComponent>(entity);
                         treasure.RegionId = sceneObject.RegionId;
-                        treasure.InteractionRange = Mathf.Max(0.25f, sceneObject.InteractionRange);
                         treasure.IsOpened = 0;
                         entityManager.SetComponentData(entity, treasure);
                     }
