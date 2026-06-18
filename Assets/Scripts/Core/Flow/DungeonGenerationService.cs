@@ -2051,20 +2051,20 @@ namespace CrystalMagic.Core
             return BuildRuntimeTreasureRewards(entries[0].Rewards);
         }
 
-        private static List<RuntimeDungeonTreasureRewardData> BuildRuntimeTreasureRewards(IEnumerable<DungeonTreasureRewardEntryData> rewards)
+        private static List<RuntimeDungeonTreasureRewardData> BuildRuntimeTreasureRewards(IEnumerable<DropEntryData> rewards)
         {
             List<RuntimeDungeonTreasureRewardData> resolvedRewards = new();
             if (rewards == null)
                 return resolvedRewards;
 
-            foreach (DungeonTreasureRewardEntryData reward in rewards)
+            foreach (DropEntryData reward in rewards)
             {
                 if (!IsValidTreasureReward(reward))
                     continue;
 
                 resolvedRewards.Add(new RuntimeDungeonTreasureRewardData
                 {
-                    RewardType = reward.RewardType,
+                    RewardType = reward.DropType,
                     ItemId = reward.ItemId,
                     Chance = Mathf.Clamp01(reward.Chance),
                     MinQuantity = Mathf.Max(0, reward.MinQuantity),
@@ -2099,12 +2099,12 @@ namespace CrystalMagic.Core
             return clonedRewards;
         }
 
-        private static bool IsValidTreasureReward(DungeonTreasureRewardEntryData reward)
+        private static bool IsValidTreasureReward(DropEntryData reward)
         {
             if (reward == null)
                 return false;
 
-            return reward.RewardType switch
+            return reward.DropType switch
             {
                 DropRewardType.Money => reward.MaxQuantity > 0 || reward.MinQuantity > 0,
                 _ => reward.ItemId >= 0,

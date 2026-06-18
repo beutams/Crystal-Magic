@@ -109,10 +109,10 @@ namespace CrystalMagic.Game.Data
                 Entries[i].Weight = Mathf.Max(1, Entries[i].Weight);
                 Entries[i].MinFloor = Mathf.Max(1, Entries[i].MinFloor);
                 Entries[i].MaxFloor = Mathf.Max(Entries[i].MinFloor, Entries[i].MaxFloor);
-                Entries[i].Rewards ??= new List<DungeonTreasureRewardEntryData>();
+                Entries[i].Rewards ??= new List<DropEntryData>();
                 for (int rewardIndex = 0; rewardIndex < Entries[i].Rewards.Count; rewardIndex++)
                 {
-                    Entries[i].Rewards[rewardIndex] ??= new DungeonTreasureRewardEntryData();
+                    Entries[i].Rewards[rewardIndex] ??= new DropEntryData();
                     Entries[i].Rewards[rewardIndex].Chance = Mathf.Clamp01(Entries[i].Rewards[rewardIndex].Chance);
                     Entries[i].Rewards[rewardIndex].MinQuantity = Mathf.Max(0, Entries[i].Rewards[rewardIndex].MinQuantity);
                     Entries[i].Rewards[rewardIndex].MaxQuantity = Mathf.Max(
@@ -129,17 +129,7 @@ namespace CrystalMagic.Game.Data
         public int Weight = 1;
         public int MinFloor = 1;
         public int MaxFloor = 9999;
-        public List<DungeonTreasureRewardEntryData> Rewards = new();
-    }
-
-    [Serializable]
-    public sealed class DungeonTreasureRewardEntryData
-    {
-        public DropRewardType RewardType;
-        public int ItemId = -1;
-        public float Chance = 1f;
-        public int MinQuantity = 1;
-        public int MaxQuantity = 1;
+        public List<DropEntryData> Rewards = new();
     }
 
     [Serializable]

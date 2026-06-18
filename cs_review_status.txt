@@ -429,7 +429,8 @@ Game\
         统计Buff写入属性和技能修正，轮询技能时间
       UnitControlSystem.cs TRUE
         刷新受控数据
-      UnitDropOnDestroySystem.cs TRUE DIRTY
+      UnitDropOnDestroySystem.cs TRUE
+        怪物死亡掉落物
       UnitJumpArcSystem.cs FALSE
       UnitMoveSystem.cs TRUE
         应用移动

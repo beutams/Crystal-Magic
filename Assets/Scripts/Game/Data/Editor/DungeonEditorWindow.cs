@@ -629,13 +629,13 @@ namespace CrystalMagic.Editor.Data
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField("Rewards", EditorStyles.miniBoldLabel);
                 if (GUILayout.Button("Add Reward", GUILayout.Width(88f)))
-                    entry.Rewards.Add(new DungeonTreasureRewardEntryData());
+                    entry.Rewards.Add(new DropEntryData());
                 EditorGUILayout.EndHorizontal();
 
-                entry.Rewards ??= new List<DungeonTreasureRewardEntryData>();
+                entry.Rewards ??= new List<DropEntryData>();
                 for (int rewardIndex = 0; rewardIndex < entry.Rewards.Count; rewardIndex++)
                 {
-                    DungeonTreasureRewardEntryData reward = entry.Rewards[rewardIndex] ?? new DungeonTreasureRewardEntryData();
+                    DropEntryData reward = entry.Rewards[rewardIndex] ?? new DropEntryData();
                     entry.Rewards[rewardIndex] = reward;
 
                     EditorGUILayout.BeginVertical("box");
@@ -651,8 +651,8 @@ namespace CrystalMagic.Editor.Data
                     }
                     EditorGUILayout.EndHorizontal();
 
-                    reward.RewardType = (DropRewardType)EditorGUILayout.EnumPopup("Reward Type", reward.RewardType);
-                    if (reward.RewardType == DropRewardType.Item)
+                    reward.DropType = (DropRewardType)EditorGUILayout.EnumPopup("Reward Type", reward.DropType);
+                    if (reward.DropType == DropRewardType.Item)
                         reward.ItemId = DrawIntPopup("Item", reward.ItemId, itemOptions);
                     else
                         EditorGUILayout.HelpBox("Money reward does not require an item id.", MessageType.None);
