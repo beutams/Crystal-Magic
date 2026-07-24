@@ -255,9 +255,9 @@ namespace CrystalMagic.Core
                     continue;
 
                 _isProcessingDefeat = true;
-                SaveDataComponent.Instance?.ApplyDungeonDeathAndCommit();
-                LoadGameContext context = SaveDataComponent.Instance?.CreateLoadGameContext(SaveAreaType.Town);
-                GameFlowComponent.Instance?.BeginTransition(TownState.CreateEnterTransitionData(context));
+                SaveDataComponent.Instance.ApplyDungeonDeathAndCommit();
+                LoadGameContext context = SaveDataComponent.Instance.CreateLoadGameContext(SaveAreaType.Town);
+                GameFlowComponent.Instance.SetState<ResultState>(ResultStateData.Create(ResultOutcome.Failure, context));
                 break;
             }
         }

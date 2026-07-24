@@ -231,9 +231,9 @@ public sealed class NPCEnterTownInteractionNodeRunner : NPCInteractionNodeRunner
             return;
         }
 
-        SaveDataComponent.Instance?.CommitDungeonRunToPersistent();
-        LoadGameContext context = SaveDataComponent.Instance?.CreateLoadGameContext(SaveAreaType.Town);
-        GameFlowComponent.Instance.BeginTransition(TownState.CreateEnterTransitionData(context));
+        SaveDataComponent.Instance.CommitDungeonRunToPersistent();
+        LoadGameContext context = SaveDataComponent.Instance.CreateLoadGameContext(SaveAreaType.Town);
+        GameFlowComponent.Instance.SetState<ResultState>(ResultStateData.Create(ResultOutcome.Success, context));
     }
 
     public override bool IsCompleted(NPCInteractionSession session)

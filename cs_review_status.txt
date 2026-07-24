@@ -49,7 +49,7 @@
     GameState.cs FALSE
     LoadGameState.cs FALSE
     MainMenuState.cs FALSE
-    RunResultState.cs FALSE
+    ResultState.cs FALSE
     TownState.cs TRUE DIRTY
     TrainingState.cs FALSE
     TransitionState.cs FALSE
@@ -176,7 +176,6 @@ Game\
       EffectData.cs FALSE
       ForwardRectSearchEffectData.cs FALSE
       HealthCostEffectData.cs FALSE
-      PersistentBeamEffectData.cs FALSE
       PersistentEffectData.cs FALSE
       RandomAreaPointEffectData.cs FALSE
       RecoverEffectData.cs FALSE
@@ -224,7 +223,6 @@ Game\
       DamageEffect.cs FALSE
       Effect.cs FALSE
       ForwardRectSearchEffect.cs FALSE
-      PersistentBeamEffect.cs FALSE
       PersistentEffect.cs TRUE
         持续性效果，添加一个持续任务到系统
       RandomAreaPointEffect.cs FALSE
