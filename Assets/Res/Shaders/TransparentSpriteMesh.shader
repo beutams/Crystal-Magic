@@ -17,6 +17,8 @@ Shader "CrystalMagic/TransparentSpriteMesh"
         Tags
         {
             "RenderPipeline" = "UniversalPipeline"
+            "Queue" = "Transparent"
+            "RenderType" = "Transparent"
         }
 
         Pass
@@ -25,6 +27,7 @@ Shader "CrystalMagic/TransparentSpriteMesh"
             Tags { "LightMode" = "UniversalForward" }
 
             Blend SrcAlpha OneMinusSrcAlpha
+            ZWrite Off
 
             HLSLPROGRAM
             #pragma vertex Vert
