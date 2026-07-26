@@ -190,14 +190,22 @@ namespace CrystalMagic.Core
         public string ThemeKey;
         public bool IsBossFloor;
         public float CellWorldSize;
-        public string CorridorMaterialPath;
-        public string RoomMaterialPath;
-        public string AnteRoomMaterialPath;
-        public string WallMaterialPath;
+        public int DisplayWidth;
+        public int DisplayHeight;
         public Vector3 PlayerSpawnWorldPosition;
+        public List<RuntimeDungeonTileSpawnData> TileSpawns = new();
         public List<RuntimeDungeonEnvironmentSpawnData> EnvironmentSpawns = new();
         public List<RuntimeDungeonSceneObjectSpawnData> SceneObjects = new();
         public List<RuntimeDungeonMonsterSpawnData> MonsterSpawns = new();
+    }
+
+    public sealed class RuntimeDungeonTileSpawnData
+    {
+        public string SpritePath;
+        public string SpriteName;
+        public Vector4 UvRect;
+        public Vector3 WorldPosition;
+        public float CellWorldSize;
     }
 
     public sealed class RuntimeDungeonEnvironmentSpawnData
@@ -206,6 +214,10 @@ namespace CrystalMagic.Core
         public string MaterialPath;
         public Vector3 WorldPosition;
         public Vector3 Size = Vector3.one;
+        public float RotationDegrees;
+        public bool ApplyCollider = true;
+        public bool HideVisual;
+        public bool IsDecoration;
     }
 
     public enum RuntimeDungeonSceneObjectType

@@ -33,6 +33,20 @@ namespace CrystalMagic.Game.MapDemo
     }
 
     [Serializable]
+    public sealed class DungeonMakerVisualStyleRuleData
+    {
+        public int StyleId = -1;
+        public List<DungeonMakerVisualStyleWeightData> ChildStyleWeights = new();
+    }
+
+    [Serializable]
+    public sealed class DungeonMakerVisualStyleWeightData
+    {
+        public int StyleId = -1;
+        public int Weight = 1;
+    }
+
+    [Serializable]
     public struct DungeonMakerTunnelerSeedData
     {
         public Vector2Int Location;
@@ -132,6 +146,19 @@ namespace CrystalMagic.Game.MapDemo
         public bool ColumnsInTunnels = false;
         public double RoomAspectRatio = 0.6;
         public int GenSpeedUpOnAnteRoom = 2;
+
+        public int MinCorridorWidth = 1;
+        public int MaxCorridorWidth = 3;
+        public int MinAnteRoomSide = 5;
+        public int MaxAnteRoomSide = 7;
+        public int MinRoomLength = 5;
+        public int MaxRoomLength = 22;
+        public int MinRoomWidth = 5;
+        public int MaxRoomWidth = 22;
+
+        [Header("Visual Styles")]
+        public int RootVisualStyleId = -1;
+        public List<DungeonMakerVisualStyleRuleData> VisualStyleRules = new();
 
         [Header("房间限制")]
         public int MinSmallRoomSize = 20;

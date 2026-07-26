@@ -15,6 +15,7 @@ partial class BehaviorTreeSystem : SystemBase
 
         foreach (var (behaviorTree, entity) in
                  SystemAPI.Query<UnitBehaviorTreeComponent>()
+                     .WithNone<UnitDeathComponent>()
                      .WithEntityAccess())
         {
             if (behaviorTree == null)

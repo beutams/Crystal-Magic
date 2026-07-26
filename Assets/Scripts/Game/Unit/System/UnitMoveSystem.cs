@@ -21,6 +21,7 @@ partial struct UnitMoveSystem : ISystem
 }
 
 [BurstCompile]
+[WithNone(typeof(UnitDeathComponent))]
 public partial struct UnitMoveJob : IJobEntity
 {
     public float DeltaTime;

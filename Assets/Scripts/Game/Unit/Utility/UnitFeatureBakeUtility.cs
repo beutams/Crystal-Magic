@@ -2,6 +2,7 @@ using CrystalMagic.Game.Data;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Physics;
 using UnityEngine;
 
 public static class UnitFeatureBakeUtility
@@ -37,6 +38,12 @@ public static class UnitFeatureBakeUtility
         });
         baker.AddComponent<DestroyEntityFlag>(entity);
         baker.SetComponentEnabled<DestroyEntityFlag>(entity, false);
+        baker.AddComponent(entity, new UnitDeathComponent
+        {
+            Phase = UnitDeathPhase.None,
+            ElapsedSeconds = 0f,
+        });
+        baker.SetComponentEnabled<UnitDeathComponent>(entity, false);
 
         UnitManaModuleData manaData = UnitAuthoringUtility.ResolveModuleData<UnitManaModuleData>(authoring);
         float baseMp = manaData?.BaseMaxMp ?? 50f;
@@ -123,7 +130,8 @@ public static class UnitFeatureBakeUtility
     {
         baker.DependsOnUnitDataTable();
         baker.AddComponent(entity, new UnitIntentComponent());
-        baker.AddComponent(entity, UnitCastAvailabilityComponent.CreateDefault());
+        if (authoring.GetComponent<PlayerFeatureAuthoring>() == null)
+            baker.AddComponent(entity, UnitCastAvailabilityComponent.CreateDefault());
 
         UnitData unitData = UnitAuthoringUtility.ResolveUnitData(authoring);
         Transform root = authoring.transform.root != null ? authoring.transform.root : authoring.transform;
@@ -199,6 +207,11 @@ public static class UnitFeatureBakeUtility
     public static void AddPlayerComponents<T>(this Baker<T> baker, Entity entity) where T : Component
     {
         baker.AddComponent<PlayerTag>(entity);
+        baker.AddComponent(entity, new PhysicsMassOverride
+        {
+            IsKinematic = 1,
+            SetVelocityToZero = 0,
+        });
         PlayerSkillComponent playerSkill = default;
         playerSkill.Clear();
         baker.AddComponent(entity, playerSkill);

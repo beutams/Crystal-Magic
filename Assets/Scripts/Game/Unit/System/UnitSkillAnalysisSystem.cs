@@ -9,7 +9,10 @@ partial class UnitSkillAnalysisSystem : SystemBase
 {
     protected override void OnUpdate()
     {
-        foreach (var (castRef, unitSkillRef, entity) in SystemAPI.Query<RefRW<UnitCastComponent>, RefRW<UnitSkillComponent>>().WithNone<PlayerTag>().WithEntityAccess())
+        foreach (var (castRef, unitSkillRef, entity) in SystemAPI.Query<RefRW<UnitCastComponent>, RefRW<UnitSkillComponent>>()
+                     .WithNone<PlayerTag>()
+                     .WithNone<UnitDeathComponent>()
+                     .WithEntityAccess())
         {
             if (!unitSkillRef.ValueRO.HasPendingCast || castRef.ValueRO.IsCasting || castRef.ValueRO.HasPreparedCast)
                 continue;

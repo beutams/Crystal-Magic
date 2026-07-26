@@ -42,6 +42,7 @@ partial class UnitQueryBuildSystem : SystemBase
         foreach ((RefRO<LocalTransform> transform, Entity entity) in
                  SystemAPI.Query<RefRO<LocalTransform>>()
                      .WithAll<UnitFactionComponent>()
+                     .WithNone<UnitDeathComponent>()
                      .WithEntityAccess())
         {
             _unitEntries.Add(new UnitQueryHit

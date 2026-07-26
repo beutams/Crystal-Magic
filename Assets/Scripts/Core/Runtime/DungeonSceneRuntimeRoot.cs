@@ -7,6 +7,7 @@ namespace CrystalMagic.Core
     internal sealed class DungeonSceneRuntimeRoot : MonoBehaviour
     {
         private readonly List<Entity> _spawnedEntities = new();
+        private readonly List<Object> _runtimeAssets = new();
         private string _resourceOwnerKey;
 
         public void Initialize(string resourceOwnerKey, IReadOnlyList<Entity> spawnedEntities)
@@ -21,10 +22,28 @@ namespace CrystalMagic.Core
                 _spawnedEntities.Add(spawnedEntities[i]);
         }
 
+        public void TrackRuntimeAsset(Object runtimeAsset)
+        {
+            if (runtimeAsset != null)
+                _runtimeAssets.Add(runtimeAsset);
+        }
+
         private void OnDestroy()
         {
             DestroyTrackedEntities();
+            DestroyRuntimeAssets();
             ResourceComponent.Instance?.ReleaseOwner(_resourceOwnerKey);
+        }
+
+        private void DestroyRuntimeAssets()
+        {
+            for (int i = 0; i < _runtimeAssets.Count; i++)
+            {
+                if (_runtimeAssets[i] != null)
+                    Destroy(_runtimeAssets[i]);
+            }
+
+            _runtimeAssets.Clear();
         }
 
         private void DestroyTrackedEntities()

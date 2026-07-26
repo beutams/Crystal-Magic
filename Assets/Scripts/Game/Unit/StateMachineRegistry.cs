@@ -9,6 +9,7 @@ public static class StateMachineRegistry
             return;
 
         factory.Register("ControlledState", static () => new ControlledState());
+        factory.Register("DeathState", static () => new DeathState());
         factory.Register("IdleState", static () => new IdleState());
         factory.Register("MoveState", static () => new MoveState());
         factory.Register("PlayerCastState", static () => new PlayerCastState());

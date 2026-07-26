@@ -12,7 +12,9 @@ partial class UnitJumpArcSystem : SystemBase
         float deltaTime = SystemAPI.Time.DeltaTime;
 
         foreach (var (jumpRef, transformRef, entity) in
-                 SystemAPI.Query<RefRW<UnitJumpArcComponent>, RefRW<LocalTransform>>().WithEntityAccess())
+                 SystemAPI.Query<RefRW<UnitJumpArcComponent>, RefRW<LocalTransform>>()
+                     .WithNone<UnitDeathComponent>()
+                     .WithEntityAccess())
         {
             UnitJumpArcComponent jump = jumpRef.ValueRW;
             LocalTransform transform = transformRef.ValueRW;

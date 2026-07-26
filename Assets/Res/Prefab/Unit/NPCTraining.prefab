@@ -11,11 +11,6 @@ GameObject:
   - component: {fileID: 7160492101615508333}
   - component: {fileID: 7653395555486460593}
   - component: {fileID: 5222767604184045095}
-  - component: {fileID: 900000000000000000}
-  - component: {fileID: 900000000000000001}
-  - component: {fileID: 900000000000000002}
-  - component: {fileID: 900000000000000003}
-  - component: {fileID: 900000000000000004}
   m_Layer: 0
   m_Name: Interact
   m_TagString: Untagged
@@ -103,15 +98,14 @@ GameObject:
   - component: {fileID: 2128642704882324699}
   - component: {fileID: 6838440700651060339}
   - component: {fileID: 2670471996623945303}
-  - component: {fileID: 3731376066668278381}
-  - component: {fileID: 1087674345544082175}
-  - component: {fileID: 170213230750685556}
-  - component: {fileID: 6679270894588258830}
-  - component: {fileID: 7057877494122567580}
-  - component: {fileID: 7703899708640575062}
   - component: {fileID: 1859095682264892673}
   - component: {fileID: 2678070384473609053}
   - component: {fileID: 639147834838459627}
+  - component: {fileID: 900000000000000000}
+  - component: {fileID: 900000000000000001}
+  - component: {fileID: 900000000000000002}
+  - component: {fileID: 900000000000000003}
+  - component: {fileID: 900000000000000004}
   m_Layer: 0
   m_Name: NPCTraining
   m_TagString: Untagged
@@ -255,7 +249,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2420065246750548283}
+  m_GameObject: {fileID: 6977492858261363131}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c3365ddf1a035c4409a05b1f7dcf6880, type: 3}
@@ -267,7 +261,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2420065246750548283}
+  m_GameObject: {fileID: 6977492858261363131}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c00262dede535a499a7153da89a2a08, type: 3}
@@ -279,7 +273,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2420065246750548283}
+  m_GameObject: {fileID: 6977492858261363131}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e823784b6717bd3479a4cc8ec4b77e38, type: 3}
@@ -291,7 +285,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2420065246750548283}
+  m_GameObject: {fileID: 6977492858261363131}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6fed03e37d8eefe4a8a924e92be69b4b, type: 3}
@@ -303,7 +297,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2420065246750548283}
+  m_GameObject: {fileID: 6977492858261363131}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 93910d474f8881e428458c27ec304c33, type: 3}

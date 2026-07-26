@@ -14,8 +14,10 @@ public struct UnitAnimationComponent : IComponentData
     public int LastStateHash;
     public int LastSkillId;
     public int SelectionCursor;
-    public int LastAtlasPathHash;
+    public int LastTextureInstanceId;
     public int LastDirectionalVariantHash;
+    public byte IsCurrentClipFinished;
+    public byte IsCurrentClipLooping;
 
     public static UnitAnimationComponent CreateDefault(in FixedString128Bytes visualKey)
     {
@@ -30,8 +32,10 @@ public struct UnitAnimationComponent : IComponentData
             LastStateHash = 0,
             LastSkillId = -1,
             SelectionCursor = 0,
-            LastAtlasPathHash = 0,
+            LastTextureInstanceId = 0,
             LastDirectionalVariantHash = 0,
+            IsCurrentClipFinished = 0,
+            IsCurrentClipLooping = 0,
         };
     }
 }

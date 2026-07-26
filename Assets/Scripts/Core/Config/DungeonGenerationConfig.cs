@@ -65,6 +65,30 @@ namespace CrystalMagic.Game.Config
         [EditorLabel("Room Aspect Ratio")]
         public float RoomAspectRatio = 0.6f;
 
+        [EditorLabel("Min Corridor Width")]
+        public int MinCorridorWidth = 1;
+
+        [EditorLabel("Max Corridor Width")]
+        public int MaxCorridorWidth = 3;
+
+        [EditorLabel("Min Ante Room Side")]
+        public int MinAnteRoomSide = 5;
+
+        [EditorLabel("Max Ante Room Side")]
+        public int MaxAnteRoomSide = 7;
+
+        [EditorLabel("Min Room Length")]
+        public int MinRoomLength = 5;
+
+        [EditorLabel("Max Room Length")]
+        public int MaxRoomLength = 22;
+
+        [EditorLabel("Min Room Width")]
+        public int MinRoomWidth = 5;
+
+        [EditorLabel("Max Room Width")]
+        public int MaxRoomWidth = 22;
+
         [EditorLabel("Large Room Min")]
         public int LargeRoomMin = 5;
 

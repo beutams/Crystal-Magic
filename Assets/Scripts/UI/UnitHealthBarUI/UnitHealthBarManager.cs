@@ -146,7 +146,9 @@ namespace CrystalMagic.UI
                 Entity entity = pair.Key;
                 if (!entityManager.Exists(entity)
                     || !entityManager.HasComponent<LocalToWorld>(entity)
-                    || !entityManager.HasComponent<UnitVitalityComponent>(entity))
+                    || !entityManager.HasComponent<UnitVitalityComponent>(entity)
+                    || (entityManager.HasComponent<UnitDeathComponent>(entity) &&
+                        entityManager.IsComponentEnabled<UnitDeathComponent>(entity)))
                 {
                     _cleanupEntities.Add(entity);
                     continue;

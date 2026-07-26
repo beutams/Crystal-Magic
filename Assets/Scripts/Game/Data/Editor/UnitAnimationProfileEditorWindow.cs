@@ -16,8 +16,9 @@ namespace CrystalMagic.Editor.Data
         private const string ProfileDataPath = "Assets/Res/Data/UnitAnimationProfileDataTable.json";
         private const string UnitDataPath = "Assets/Res/Data/UnitDataTable.json";
         private const string UnitPrefabDirectory = "Assets/Res/Prefab/Unit";
+        private const string SpriteClipDirectory = "Assets/Res/Data/UnitAnimationClips";
         private const float ListPanelWidth = 260f;
-        private static readonly string[] KnownStateNames = { "IdleState", "MoveState", "ControlledState", "UnitCastState", "PlayerCastState" };
+        private static readonly string[] KnownStateNames = { "IdleState", "MoveState", "ControlledState", "UnitCastState", "PlayerCastState", "DeathState" };
 
         private sealed class UnitPrefabEntry
         {
@@ -193,7 +194,7 @@ namespace CrystalMagic.Editor.Data
             {
                 UnitAnimationEntryData animation = profile.Animations[i] ??= new UnitAnimationEntryData();
                 animation.Normalize();
-                DrawAnimationEntry(unitData, profile, i, animation);
+                DrawAnimationEntry(unitData, entry, profile, i, animation);
             }
 
             if (EditorGUI.EndChangeCheck())
@@ -254,7 +255,12 @@ namespace CrystalMagic.Editor.Data
             profile.UnitName = unitData?.Name ?? entry.DisplayName;
         }
 
-        private void DrawAnimationEntry(UnitData unitData, UnitAnimationProfileData profile, int index, UnitAnimationEntryData animation)
+        private void DrawAnimationEntry(
+            UnitData unitData,
+            UnitPrefabEntry entry,
+            UnitAnimationProfileData profile,
+            int index,
+            UnitAnimationEntryData animation)
         {
             EditorGUILayout.BeginVertical("box");
             EditorGUILayout.BeginHorizontal();
@@ -285,31 +291,74 @@ namespace CrystalMagic.Editor.Data
             animation.AnimationName = EditorGUILayout.TextField("Animation Name", animation.AnimationName ?? string.Empty);
             DrawSkillNameHelper(unitData, ref animation.AnimationName);
 
-            Texture2D currentFrontTexture = string.IsNullOrWhiteSpace(animation.FrontAtlasTexturePath)
+            UnitSpriteAnimationClip currentClip = string.IsNullOrWhiteSpace(animation.SpriteClipPath)
                 ? null
-                : AssetDatabase.LoadAssetAtPath<Texture2D>(animation.FrontAtlasTexturePath);
-            Texture2D nextFrontTexture = (Texture2D)EditorGUILayout.ObjectField("Front Texture", currentFrontTexture, typeof(Texture2D), false);
-            animation.FrontAtlasTexturePath = nextFrontTexture != null ? AssetDatabase.GetAssetPath(nextFrontTexture) : string.Empty;
-            Texture2D currentBackTexture = string.IsNullOrWhiteSpace(animation.BackAtlasTexturePath)
-                ? null
-                : AssetDatabase.LoadAssetAtPath<Texture2D>(animation.BackAtlasTexturePath);
-            Texture2D nextBackTexture = (Texture2D)EditorGUILayout.ObjectField("Back Texture", currentBackTexture, typeof(Texture2D), false);
-            animation.BackAtlasTexturePath = nextBackTexture != null ? AssetDatabase.GetAssetPath(nextBackTexture) : string.Empty;
-            Texture2D currentLeftTexture = string.IsNullOrWhiteSpace(animation.LeftAtlasTexturePath)
-                ? null
-                : AssetDatabase.LoadAssetAtPath<Texture2D>(animation.LeftAtlasTexturePath);
-            Texture2D nextLeftTexture = (Texture2D)EditorGUILayout.ObjectField("Left Texture", currentLeftTexture, typeof(Texture2D), false);
-            animation.LeftAtlasTexturePath = nextLeftTexture != null ? AssetDatabase.GetAssetPath(nextLeftTexture) : string.Empty;
-            animation.FramesPerSecond = Mathf.Max(0.01f, EditorGUILayout.FloatField("FPS", animation.FramesPerSecond));
-            animation.Loop = EditorGUILayout.Toggle("Loop", animation.Loop);
-            animation.GridColumns = Mathf.Max(1, EditorGUILayout.IntField("Grid Columns", animation.GridColumns));
-            animation.GridRows = Mathf.Max(1, EditorGUILayout.IntField("Grid Rows", animation.GridRows));
-            animation.FrameCount = Mathf.Clamp(EditorGUILayout.IntField("Frame Count", animation.FrameCount), 1, animation.GridColumns * animation.GridRows);
+                : AssetDatabase.LoadAssetAtPath<UnitSpriteAnimationClip>(animation.SpriteClipPath);
+            UnitSpriteAnimationClip nextClip = (UnitSpriteAnimationClip)EditorGUILayout.ObjectField(
+                "Sprite Sequence Clip",
+                currentClip,
+                typeof(UnitSpriteAnimationClip),
+                false);
+            animation.SpriteClipPath = nextClip != null ? AssetDatabase.GetAssetPath(nextClip) : string.Empty;
+
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Create Sprite Clip", GUILayout.Width(150f)))
+            {
+                UnitSpriteAnimationClip createdClip = CreateSpriteClip(entry, animation);
+                animation.SpriteClipPath = AssetDatabase.GetAssetPath(createdClip);
+                Selection.activeObject = createdClip;
+                EditorGUIUtility.PingObject(createdClip);
+                _isDirty = true;
+            }
+
+            using (new EditorGUI.DisabledScope(nextClip == null))
+            {
+                if (GUILayout.Button("Open Sprite Clip", GUILayout.Width(150f)))
+                {
+                    Selection.activeObject = nextClip;
+                    EditorGUIUtility.PingObject(nextClip);
+                }
+            }
+
+            EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.HelpBox(
-                "Each animation uses three directional textures: Front, Back, Left. Right automatically mirrors Left. UV frames are read left-to-right, top-to-bottom. If the grid has 16 slots and Frame Count is 15, the last slot is ignored and playback loops back to frame 0.",
+                "Configure FPS, looping, reference frame size, and Front/Back/Left Sprite arrays on the Sprite Sequence Clip. Right automatically mirrors Left. Every frame uses its own Sprite rect and pivot.",
                 MessageType.None);
             EditorGUILayout.EndVertical();
+        }
+
+        private static UnitSpriteAnimationClip CreateSpriteClip(UnitPrefabEntry entry, UnitAnimationEntryData animation)
+        {
+            EnsureAssetFolder(SpriteClipDirectory);
+            string stateName = string.IsNullOrWhiteSpace(animation.StateName) ? "State" : animation.StateName;
+            string animationName = string.IsNullOrWhiteSpace(animation.AnimationName) ? "Default" : animation.AnimationName;
+            string fileName = SanitizeFileName($"{entry.DisplayName}_{stateName}_{animationName}");
+            string assetPath = AssetDatabase.GenerateUniqueAssetPath($"{SpriteClipDirectory}/{fileName}.asset");
+            UnitSpriteAnimationClip clip = ScriptableObject.CreateInstance<UnitSpriteAnimationClip>();
+            AssetDatabase.CreateAsset(clip, assetPath);
+            AssetDatabase.SaveAssets();
+            return clip;
+        }
+
+        private static void EnsureAssetFolder(string folderPath)
+        {
+            string[] segments = folderPath.Split('/');
+            string current = segments[0];
+            for (int i = 1; i < segments.Length; i++)
+            {
+                string next = $"{current}/{segments[i]}";
+                if (!AssetDatabase.IsValidFolder(next))
+                    AssetDatabase.CreateFolder(current, segments[i]);
+                current = next;
+            }
+        }
+
+        private static string SanitizeFileName(string value)
+        {
+            foreach (char invalidCharacter in Path.GetInvalidFileNameChars())
+                value = value.Replace(invalidCharacter, '_');
+            return string.IsNullOrWhiteSpace(value) ? "UnitSpriteAnimationClip" : value;
         }
 
         private void DrawSkillNameHelper(UnitData unitData, ref string animationName)

@@ -55,14 +55,6 @@ namespace CrystalMagic.Game.Skill.Effects
                 $"Raw={breakdown.RawDamage:0.##} Defense={breakdown.Defense:0.##} Final={breakdown.FinalDamage:0.##} " +
                 $"Target={target.Index}:{target.Version} HP={previousHealth:0.##}->{vitality.CurrentHealth:0.##}");
 
-            if (vitality.CurrentHealth <= 0f)
-            {
-                if (!entityManager.HasComponent<DestroyEntityFlag>(target))
-                    entityManager.AddComponent<DestroyEntityFlag>(target);
-
-                entityManager.SetComponentEnabled<DestroyEntityFlag>(target, true);
-            }
-
             EventComponent.Instance.Publish(new UnitDamagedEvent(target, vitality.CurrentHealth, vitality.RealMaxHealth));
         }
 

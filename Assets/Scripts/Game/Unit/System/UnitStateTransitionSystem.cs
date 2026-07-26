@@ -7,7 +7,9 @@ partial class UnitStateTransitionSystem : SystemBase
 {
     protected override void OnUpdate()
     {
-        foreach (var (smComp, entity) in SystemAPI.Query<UnitStateMachineComponent>().WithEntityAccess())
+        foreach (var (smComp, entity) in SystemAPI.Query<UnitStateMachineComponent>()
+                     .WithNone<UnitDeathComponent>()
+                     .WithEntityAccess())
         {
             if (smComp.CurrentState == null)
             {
@@ -48,12 +50,6 @@ partial class UnitStateTransitionSystem : SystemBase
 
     private static void DoTransition(UnitStateMachineComponent sm, AUnitState next)
     {
-        sm.CurrentState.OnExit();
-        sm.PreviousState = sm.CurrentState;
-        sm.PreviousStateName = sm.CurrentStateName;
-        sm.CurrentState = next;
-        sm.CurrentStateName = next.GetType().Name;
-        sm.StateTime = 0f;
-        sm.CurrentState.OnEnter();
+        UnitStateMachineUtility.TryForceState(sm, next.GetType().Name);
     }
 }

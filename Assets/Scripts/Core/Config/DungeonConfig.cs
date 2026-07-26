@@ -23,21 +23,6 @@ namespace CrystalMagic.Game.Config
         [EditorLabel("Use Best Candidate Fallback")]
         public bool UseBestCandidateFallback = true;
 
-        [EditorLabel("Default Corridor Material")]
-        public string DefaultCorridorMaterialPath = "Assets/Res/Material/TrainPlane.mat";
-
-        [EditorLabel("Default Room Material")]
-        public string DefaultRoomMaterialPath = "Assets/Res/Material/Plane.mat";
-
-        [EditorLabel("Default Ante Room Material")]
-        public string DefaultAnteRoomMaterialPath = "Assets/Res/Material/TrainPlane.mat";
-
-        [EditorLabel("Default Wall Material")]
-        public string DefaultWallMaterialPath = "Assets/Res/Material/NPC1.mat";
-
-        [EditorLabel("Default Start Marker Material")]
-        public string DefaultStartMarkerMaterialPath = "Assets/Res/Material/NPC2.mat";
-
         [EditorLabel("Fallback Mob1 Pool Id")]
         public int FallbackMob1PoolId = 1;
 

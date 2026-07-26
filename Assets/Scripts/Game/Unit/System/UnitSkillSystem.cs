@@ -10,7 +10,9 @@ partial class UnitSkillSystem : SystemBase
     {
         float deltaTime = SystemAPI.Time.DeltaTime;
 
-        foreach (RefRW<UnitSkillComponent> unitSkillRef in SystemAPI.Query<RefRW<UnitSkillComponent>>().WithNone<PlayerTag>())
+        foreach (RefRW<UnitSkillComponent> unitSkillRef in SystemAPI.Query<RefRW<UnitSkillComponent>>()
+                     .WithNone<PlayerTag>()
+                     .WithNone<UnitDeathComponent>())
         {
             UnitSkillComponent unitSkill = unitSkillRef.ValueRW;
             TickCooldowns(deltaTime, ref unitSkill);

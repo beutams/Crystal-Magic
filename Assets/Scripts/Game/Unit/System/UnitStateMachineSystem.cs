@@ -8,7 +8,7 @@ partial class UnitStateMachineSystem : SystemBase
     {
         float dt = SystemAPI.Time.DeltaTime;
 
-        foreach (UnitStateMachineComponent sm in SystemAPI.Query<UnitStateMachineComponent>())
+        foreach (UnitStateMachineComponent sm in SystemAPI.Query<UnitStateMachineComponent>().WithNone<UnitDeathComponent>())
         {
             if (sm.CurrentState == null)
                 continue;

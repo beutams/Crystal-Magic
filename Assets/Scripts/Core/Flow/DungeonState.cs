@@ -244,14 +244,14 @@ namespace CrystalMagic.Core
 
             EntityQuery playerQuery = entityManager.CreateEntityQuery(
                 ComponentType.ReadOnly<PlayerTag>(),
-                ComponentType.ReadOnly<UnitVitalityComponent>());
+                ComponentType.ReadOnly<UnitDeathComponent>());
             if (playerQuery.IsEmptyIgnoreFilter)
                 return;
 
-            using NativeArray<UnitVitalityComponent> vitalities = playerQuery.ToComponentDataArray<UnitVitalityComponent>(Allocator.Temp);
-            for (int i = 0; i < vitalities.Length; i++)
+            using NativeArray<UnitDeathComponent> deaths = playerQuery.ToComponentDataArray<UnitDeathComponent>(Allocator.Temp);
+            for (int i = 0; i < deaths.Length; i++)
             {
-                if (vitalities[i].CurrentHealth > 0f)
+                if (deaths[i].Phase != UnitDeathPhase.Completed)
                     continue;
 
                 _isProcessingDefeat = true;

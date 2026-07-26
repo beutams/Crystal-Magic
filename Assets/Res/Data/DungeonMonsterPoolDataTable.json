@@ -1,34 +1,43 @@
-{
+﻿{
   "Rows": [
     {
-      "Id": 1,
-      "Name": "Theme1 Mob1",
+      "Name": "Cavern Mob1",
       "Entries": [
-        { "UnitName": "MonsterSlime", "Weight": 2, "MinFloor": 1, "MaxFloor": 20, "BossOnly": false },
-        { "UnitName": "MonsterStraw", "Weight": 1, "MinFloor": 1, "MaxFloor": 20, "BossOnly": false }
-      ]
+        {
+          "UnitName": "MonsterGoblinWarrior",
+          "Weight": 1,
+          "MinFloor": 1,
+          "MaxFloor": 10,
+          "BossOnly": false
+        }
+      ],
+      "Id": 0
     },
     {
-      "Id": 2,
-      "Name": "Theme1 Mob2",
+      "Name": "Cavern Mob2",
       "Entries": [
-        { "UnitName": "MonsterGoblinWarrior", "Weight": 1, "MinFloor": 1, "MaxFloor": 20, "BossOnly": false }
-      ]
+        {
+          "UnitName": "MonsterGoblinWarrior",
+          "Weight": 1,
+          "MinFloor": 1,
+          "MaxFloor": 10,
+          "BossOnly": false
+        }
+      ],
+      "Id": 1
     },
     {
-      "Id": 3,
-      "Name": "Theme1 Mob3",
+      "Name": "Cavern Mob3",
       "Entries": [
-        { "UnitName": "MonsterGoblinArcher", "Weight": 1, "MinFloor": 1, "MaxFloor": 20, "BossOnly": false }
-      ]
-    },
-    {
-      "Id": 101,
-      "Name": "Theme1 Bosses",
-      "Entries": [
-        { "UnitName": "MonsterGoblinWarrior", "Weight": 1, "MinFloor": 1, "MaxFloor": 20, "BossOnly": true },
-        { "UnitName": "MonsterGoblinArcher", "Weight": 1, "MinFloor": 1, "MaxFloor": 20, "BossOnly": true }
-      ]
+        {
+          "UnitName": "MonsterGoblinWarrior",
+          "Weight": 1,
+          "MinFloor": 1,
+          "MaxFloor": 10,
+          "BossOnly": false
+        }
+      ],
+      "Id": 2
     }
   ]
 }

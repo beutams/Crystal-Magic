@@ -16,26 +16,13 @@ namespace CrystalMagic.Game.Data
     {
         public string StateName;
         public string AnimationName;
-        public string FrontAtlasTexturePath;
-        public string BackAtlasTexturePath;
-        public string LeftAtlasTexturePath;
-        public float FramesPerSecond = 12f;
-        public bool Loop = true;
-        public int GridColumns = 4;
-        public int GridRows = 4;
-        public int FrameCount = 16;
+        public string SpriteClipPath;
 
         public void Normalize()
         {
             StateName ??= string.Empty;
             AnimationName ??= string.Empty;
-            FrontAtlasTexturePath ??= string.Empty;
-            BackAtlasTexturePath ??= string.Empty;
-            LeftAtlasTexturePath ??= string.Empty;
-            FramesPerSecond = UnityEngine.Mathf.Max(0.01f, FramesPerSecond);
-            GridColumns = UnityEngine.Mathf.Max(1, GridColumns);
-            GridRows = UnityEngine.Mathf.Max(1, GridRows);
-            FrameCount = UnityEngine.Mathf.Clamp(FrameCount, 1, GridColumns * GridRows);
+            SpriteClipPath ??= string.Empty;
         }
     }
 

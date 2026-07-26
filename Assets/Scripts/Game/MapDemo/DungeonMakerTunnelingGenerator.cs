@@ -103,13 +103,17 @@ namespace CrystalMagic.Game.MapDemo
             DungeonMakerRegionKind kind,
             int[] tileIndices,
             DungeonMakerRoomSizeClass roomSizeClass = DungeonMakerRoomSizeClass.None,
-            DungeonMakerSpecialRoomRole specialRoomRole = DungeonMakerSpecialRoomRole.None)
+            DungeonMakerSpecialRoomRole specialRoomRole = DungeonMakerSpecialRoomRole.None,
+            int visualStyleId = -1,
+            int corridorWidth = 0)
         {
             Id = id;
             Kind = kind;
             TileIndices = tileIndices;
             RoomSizeClass = roomSizeClass;
             SpecialRoomRole = specialRoomRole;
+            VisualStyleId = visualStyleId;
+            CorridorWidth = corridorWidth;
         }
 
         public int Id { get; }
@@ -117,6 +121,8 @@ namespace CrystalMagic.Game.MapDemo
         public int[] TileIndices { get; }
         public DungeonMakerRoomSizeClass RoomSizeClass { get; }
         public DungeonMakerSpecialRoomRole SpecialRoomRole { get; }
+        public int VisualStyleId { get; }
+        public int CorridorWidth { get; }
     }
 
     [Serializable]
@@ -353,6 +359,7 @@ namespace CrystalMagic.Game.MapDemo
             private readonly List<DungeonMakerSkeletonLink> _skeletonLinks = new();
             private readonly HashSet<int> _valuableSkeletonSegmentIds = new();
             private readonly Dictionary<int, int> _builderCurrentSkeletonSegmentIds = new();
+            private readonly Dictionary<int, int> _builderVisualStyleIds = new();
             private readonly DungeonConfig _config;
             private readonly Stopwatch _timeoutWatch = new();
             private readonly int _timeoutMs;
@@ -468,7 +475,14 @@ namespace CrystalMagic.Game.MapDemo
                     DungeonMakerRegion region = _regions[i];
                     int[] tileIndices = new int[region.TileIndices.Length];
                     Array.Copy(region.TileIndices, tileIndices, tileIndices.Length);
-                    copiedRegions[i] = new DungeonMakerRegion(region.Id, region.Kind, tileIndices, region.RoomSizeClass, region.SpecialRoomRole);
+                    copiedRegions[i] = new DungeonMakerRegion(
+                        region.Id,
+                        region.Kind,
+                        tileIndices,
+                        region.RoomSizeClass,
+                        region.SpecialRoomRole,
+                        region.VisualStyleId,
+                        region.CorridorWidth);
                 }
 
                 DungeonMakerSkeletonSegment[] copiedSkeletonSegments = new DungeonMakerSkeletonSegment[_skeletonSegments.Count];
@@ -773,6 +787,12 @@ namespace CrystalMagic.Game.MapDemo
                     RegisterSkeletonLink(-1, -1, parentAttachPoint, location);
                 }
 
+                tunnelWidth = ClampTunnelHalfWidth(tunnelWidth);
+
+                int builderId = AllocateBuilderId();
+                int visualStyleId = ResolveChildVisualStyle(parentBuilderId, builderId);
+                _builderVisualStyleIds[builderId] = visualStyleId;
+
                 AddBuilder(new Tunneler(
                     this,
                     location,
@@ -780,7 +800,7 @@ namespace CrystalMagic.Game.MapDemo
                     age,
                     maxAge,
                     generation,
-                    AllocateBuilderId(),
+                    builderId,
                     parentBuilderId,
                     hasParentAttachPoint,
                     parentAttachPoint,
@@ -792,7 +812,8 @@ namespace CrystalMagic.Game.MapDemo
                     changeDirectionProb,
                     makeRoomsRightProb,
                     makeRoomsLeftProb,
-                    joinPreference));
+                    joinPreference,
+                    visualStyleId));
             }
 
             // 创建一个新的 Roomie，并加入 Builder 池。
@@ -817,6 +838,10 @@ namespace CrystalMagic.Game.MapDemo
                     MarkAnchorSkeleton(location);
                 }
 
+                int builderId = AllocateBuilderId();
+                int visualStyleId = GetInheritedVisualStyle(parentBuilderId);
+                _builderVisualStyleIds[builderId] = visualStyleId;
+
                 AddBuilder(new Roomie(
                     this,
                     location,
@@ -824,13 +849,14 @@ namespace CrystalMagic.Game.MapDemo
                     age,
                     maxAge,
                     generation,
-                    AllocateBuilderId(),
+                    builderId,
                     parentBuilderId,
                     hasParentAttachPoint,
                     parentAttachPoint,
                     defaultWidth,
                     size,
-                    category));
+                    category,
+                    visualStyleId));
             }
 
             // 优先复用空槽位，避免频繁收缩/扩容 Builder 列表。
@@ -862,6 +888,10 @@ namespace CrystalMagic.Game.MapDemo
             public bool ColumnsInTunnels => _config.ColumnsInTunnels;
             public double RoomAspectRatio => _config.RoomAspectRatio;
             public int GenSpeedUpOnAnteRoom => _config.GenSpeedUpOnAnteRoom;
+            public int MinRoomLength => Math.Max(1, _config.MinRoomLength);
+            public int MaxRoomLength => Math.Max(MinRoomLength, _config.MaxRoomLength);
+            public int MinRoomWidth => Math.Max(1, _config.MinRoomWidth);
+            public int MaxRoomWidth => Math.Max(MinRoomWidth, _config.MaxRoomWidth);
             public int LastChanceGenDelay => _config.LastChanceGenerationalDelay;
             public TunnelerSeed LastChanceTunneler => _config.LastChanceTunneler;
             public void RegisterAnteRoomBuilt() => _totalAnteRoomsBuilt++;
@@ -923,6 +953,26 @@ namespace CrystalMagic.Game.MapDemo
             public int GetAnteRoomProb(int tunnelWidth)
             {
                 return tunnelWidth >= _config.AnteRoomProb.Count ? 100 : _config.AnteRoomProb[tunnelWidth];
+            }
+
+            public int ClampTunnelHalfWidth(int tunnelHalfWidth)
+            {
+                int minWidth = NormalizeOddSize(_config.MinCorridorWidth, 1);
+                int maxWidth = Math.Max(minWidth, NormalizeOddSize(_config.MaxCorridorWidth, 1));
+                return Math.Clamp(tunnelHalfWidth, (minWidth - 1) / 2, (maxWidth - 1) / 2);
+            }
+
+            public int GetAnteRoomSideLength(int tunnelHalfWidth)
+            {
+                int minSide = NormalizeOddSize(_config.MinAnteRoomSide, 3);
+                int maxSide = Math.Max(minSide, NormalizeOddSize(_config.MaxAnteRoomSide, 3));
+                return Math.Clamp(2 * tunnelHalfWidth + 5, minSide, maxSide);
+            }
+
+            private static int NormalizeOddSize(int value, int minimum)
+            {
+                int normalized = Math.Max(minimum, value);
+                return normalized % 2 == 0 ? normalized + 1 : normalized;
             }
 
             // 读取当前代的变宽概率。
@@ -1069,13 +1119,72 @@ namespace CrystalMagic.Game.MapDemo
                 DungeonMakerRegionKind kind,
                 List<int> tileIndices,
                 DungeonMakerRoomSizeClass roomSizeClass = DungeonMakerRoomSizeClass.None,
-                DungeonMakerSpecialRoomRole specialRoomRole = DungeonMakerSpecialRoomRole.None)
+                DungeonMakerSpecialRoomRole specialRoomRole = DungeonMakerSpecialRoomRole.None,
+                int visualStyleId = -1,
+                int corridorWidth = 0)
             {
                 if (tileIndices == null || tileIndices.Count == 0)
                     return;
 
                 int[] copiedTileIndices = tileIndices.ToArray();
-                _regions.Add(new DungeonMakerRegion(_nextRegionId++, kind, copiedTileIndices, roomSizeClass, specialRoomRole));
+                _regions.Add(new DungeonMakerRegion(
+                    _nextRegionId++,
+                    kind,
+                    copiedTileIndices,
+                    roomSizeClass,
+                    specialRoomRole,
+                    visualStyleId,
+                    corridorWidth));
+            }
+
+            private int GetInheritedVisualStyle(int parentBuilderId)
+            {
+                return parentBuilderId >= 0 && _builderVisualStyleIds.TryGetValue(parentBuilderId, out int styleId)
+                    ? styleId
+                    : _config.RootVisualStyleId;
+            }
+
+            private int ResolveChildVisualStyle(int parentBuilderId, int childBuilderId)
+            {
+                int inheritedStyleId = GetInheritedVisualStyle(parentBuilderId);
+                if (parentBuilderId < 0)
+                    return inheritedStyleId;
+
+                for (int i = 0; i < _config.VisualStyleRules.Count; i++)
+                {
+                    DungeonConfig.VisualStyleRule rule = _config.VisualStyleRules[i];
+                    if (rule.StyleId != inheritedStyleId || rule.ChildStyleWeights.Count == 0)
+                        continue;
+
+                    int totalWeight = 0;
+                    for (int weightIndex = 0; weightIndex < rule.ChildStyleWeights.Count; weightIndex++)
+                        totalWeight += Math.Max(1, rule.ChildStyleWeights[weightIndex].Weight);
+
+                    int roll = GetVisualStyleRoll(parentBuilderId, childBuilderId, totalWeight);
+                    for (int weightIndex = 0; weightIndex < rule.ChildStyleWeights.Count; weightIndex++)
+                    {
+                        DungeonConfig.VisualStyleWeight weight = rule.ChildStyleWeights[weightIndex];
+                        roll -= Math.Max(1, weight.Weight);
+                        if (roll < 0)
+                            return weight.StyleId;
+                    }
+                }
+
+                return inheritedStyleId;
+            }
+
+            private int GetVisualStyleRoll(int parentBuilderId, int childBuilderId, int totalWeight)
+            {
+                unchecked
+                {
+                    uint value = (uint)Seed;
+                    value ^= (uint)(parentBuilderId + 1) * 2246822519u;
+                    value ^= (uint)(childBuilderId + 1) * 3266489917u;
+                    value ^= value >> 16;
+                    value *= 2246822519u;
+                    value ^= value >> 13;
+                    return (int)(value % (uint)Math.Max(1, totalWeight));
+                }
             }
 
             public void CommitSkeletonConnection(IntCoordinate start, IntCoordinate end)
@@ -1397,7 +1506,8 @@ namespace CrystalMagic.Game.MapDemo
                 int changeDirProb,
                 int makeRoomsRightProb,
                 int makeRoomsLeftProb,
-                int joinPreference)
+                int joinPreference,
+                int visualStyleId)
                 : base(
                     dungeon,
                     location,
@@ -1419,7 +1529,10 @@ namespace CrystalMagic.Game.MapDemo
                 _makeRoomsRightProb = makeRoomsRightProb;
                 _makeRoomsLeftProb = makeRoomsLeftProb;
                 _joinPreference = joinPreference;
+                VisualStyleId = visualStyleId;
             }
+
+            private int VisualStyleId { get; }
 
             // Tunneler 的一次完整动作。
             // 读这段时可以按下面几个阶段理解：
@@ -1753,63 +1866,23 @@ namespace CrystalMagic.Game.MapDemo
                 // 父 Tunneler 自己推进到这段隧道的尽头。
                 Location += _stepLength * Forward;
 
-                // 检查当前位置前方是否有条件插入前厅。
-                bool smallAnteRoomPossible = false;
-                bool largeAnteRoomPossible = false;
-
-                leftFree = _tunnelWidth + 2;
-                rightFree = _tunnelWidth + 2;
-                Dungeon.SetMap(Location, DungeonMakerSquareData.CLOSED);
-                for (int m = 1; m <= _tunnelWidth; m++)
-                {
-                    Dungeon.SetMap(Location + m * right, DungeonMakerSquareData.CLOSED);
-                    Dungeon.SetMap(Location - m * right, DungeonMakerSquareData.CLOSED);
-                }
-
-                frontFree = FrontFree(Location - Forward, Forward, ref leftFree, ref rightFree);
-                if (frontFree >= 2 * _tunnelWidth + 5)
-                    smallAnteRoomPossible = true;
-
-                Dungeon.SetMap(Location, DungeonMakerSquareData.IT_OPEN, DungeonMakerTileOrigin.TunnelProbeRestore);
-                Dungeon.MarkCorridorSkeleton(Location);
-                for (int m = 1; m <= _tunnelWidth; m++)
-                {
-                    Dungeon.SetMap(Location + m * right, DungeonMakerSquareData.IT_OPEN, DungeonMakerTileOrigin.TunnelProbeRestore);
-                    Dungeon.SetMap(Location - m * right, DungeonMakerSquareData.IT_OPEN, DungeonMakerTileOrigin.TunnelProbeRestore);
-                }
-
-                leftFree = _tunnelWidth + 3;
-                rightFree = _tunnelWidth + 3;
-                Dungeon.SetMap(Location, DungeonMakerSquareData.CLOSED);
-                for (int m = 1; m <= _tunnelWidth; m++)
-                {
-                    Dungeon.SetMap(Location + m * right, DungeonMakerSquareData.CLOSED);
-                    Dungeon.SetMap(Location - m * right, DungeonMakerSquareData.CLOSED);
-                }
-
-                frontFree = FrontFree(Location - Forward, Forward, ref leftFree, ref rightFree);
-                if (frontFree >= 2 * _tunnelWidth + 7)
-                    largeAnteRoomPossible = true;
-
-                Dungeon.SetMap(Location, DungeonMakerSquareData.IT_OPEN, DungeonMakerTileOrigin.TunnelProbeRestore);
-                Dungeon.MarkCorridorSkeleton(Location);
-                for (int m = 1; m <= _tunnelWidth; m++)
-                {
-                    Dungeon.SetMap(Location + m * right, DungeonMakerSquareData.IT_OPEN, DungeonMakerTileOrigin.TunnelProbeRestore);
-                    Dungeon.SetMap(Location - m * right, DungeonMakerSquareData.IT_OPEN, DungeonMakerTileOrigin.TunnelProbeRestore);
-                }
-
-                bool sizeUpTunnel = false;
-                bool sizeDownTunnel = false;
+                int nextTunnelWidth = _tunnelWidth;
                 diceRoll = Dungeon.Next101();
                 int sizeUpProb = Dungeon.GetSizeUpProb(Generation);
                 int sizeDownProb = sizeUpProb + Dungeon.GetSizeDownProb(Generation);
                 if (diceRoll < sizeUpProb)
-                    sizeUpTunnel = true;
+                    nextTunnelWidth++;
                 else if (diceRoll < sizeDownProb)
-                    sizeDownTunnel = true;
+                    nextTunnelWidth--;
 
-                if (sizeUpTunnel && !largeAnteRoomPossible)
+                nextTunnelWidth = Dungeon.ClampTunnelHalfWidth(nextTunnelWidth);
+                bool sizeUpTunnel = nextTunnelWidth > _tunnelWidth;
+                bool sizeDownTunnel = nextTunnelWidth < _tunnelWidth;
+                int anteRoomSideLength = Dungeon.GetAnteRoomSideLength(nextTunnelWidth);
+                int anteRoomHalfWidth = (anteRoomSideLength - 1) / 2;
+                bool anteRoomPossible = CanBuildAnteRoom(anteRoomSideLength, anteRoomHalfWidth);
+
+                if (sizeUpTunnel && !anteRoomPossible)
                     return true;
 
                 bool changeDirection = Dungeon.Next100() < _changeDirProb;
@@ -1864,55 +1937,30 @@ namespace CrystalMagic.Game.MapDemo
                 IntCoordinate attachPointRight;
                 IntCoordinate attachPointLeft;
 
+                bool wantsAnteRoom = Dungeon.Next100() < Dungeon.GetAnteRoomProb(_tunnelWidth);
                 if (sizeUpTunnel)
+                    wantsAnteRoom |= doSpawn;
+
+                if (wantsAnteRoom && anteRoomPossible && BuildAnteRoom(anteRoomSideLength, anteRoomHalfWidth))
                 {
-                    if (Dungeon.Next100() < Dungeon.GetAnteRoomProb(_tunnelWidth) || doSpawn)
-                    {
-                        BuildAnteRoom(2 * _tunnelWidth + 5, _tunnelWidth + 2);
-                        spawnPointForward = Location + (2 * _tunnelWidth + 5) * Forward;
-                        spawnPointRight = Location + (_tunnelWidth + 3) * Forward + (_tunnelWidth + 2) * right;
-                        spawnPointLeft = Location + (_tunnelWidth + 3) * Forward + (_tunnelWidth + 2) * left;
-                        attachPointForward = spawnPointForward;
-                        attachPointRight = Location + (_tunnelWidth + 3) * Forward;
-                        attachPointLeft = Location + (_tunnelWidth + 3) * Forward;
-                        builtAnteRoom = true;
-                    }
-                    else
-                    {
-                        spawnPointForward = Location;
-                        spawnPointRight = Location - _tunnelWidth * Forward + _tunnelWidth * right;
-                        spawnPointLeft = Location - _tunnelWidth * Forward + _tunnelWidth * left;
-                        attachPointForward = spawnPointForward;
-                        attachPointRight = Location - _tunnelWidth * Forward;
-                        attachPointLeft = Location - _tunnelWidth * Forward;
-                        if (Dungeon.GetMap(spawnPointRight) != DungeonMakerSquareData.IT_OPEN || Dungeon.GetMap(spawnPointLeft) != DungeonMakerSquareData.IT_OPEN)
-                            return true;
-                    }
+                    spawnPointForward = Location + anteRoomSideLength * Forward;
+                    spawnPointRight = Location + (anteRoomHalfWidth + 1) * Forward + anteRoomHalfWidth * right;
+                    spawnPointLeft = Location + (anteRoomHalfWidth + 1) * Forward + anteRoomHalfWidth * left;
+                    attachPointForward = spawnPointForward;
+                    attachPointRight = Location + (anteRoomHalfWidth + 1) * Forward;
+                    attachPointLeft = Location + (anteRoomHalfWidth + 1) * Forward;
+                    builtAnteRoom = true;
                 }
                 else
                 {
-                    if (Dungeon.Next100() < Dungeon.GetAnteRoomProb(_tunnelWidth) && smallAnteRoomPossible)
-                    {
-                        BuildAnteRoom(2 * _tunnelWidth + 3, _tunnelWidth + 1);
-                        spawnPointForward = Location + (2 * _tunnelWidth + 3) * Forward;
-                        spawnPointRight = Location + (_tunnelWidth + 2) * Forward + (_tunnelWidth + 1) * right;
-                        spawnPointLeft = Location + (_tunnelWidth + 2) * Forward + (_tunnelWidth + 1) * left;
-                        attachPointForward = spawnPointForward;
-                        attachPointRight = Location + (_tunnelWidth + 2) * Forward;
-                        attachPointLeft = Location + (_tunnelWidth + 2) * Forward;
-                        builtAnteRoom = true;
-                    }
-                    else
-                    {
-                        spawnPointForward = Location;
-                        spawnPointRight = Location - _tunnelWidth * Forward + _tunnelWidth * right;
-                        spawnPointLeft = Location - _tunnelWidth * Forward + _tunnelWidth * left;
-                        attachPointForward = spawnPointForward;
-                        attachPointRight = Location - _tunnelWidth * Forward;
-                        attachPointLeft = Location - _tunnelWidth * Forward;
-                        if (Dungeon.GetMap(spawnPointRight) != DungeonMakerSquareData.IT_OPEN || Dungeon.GetMap(spawnPointLeft) != DungeonMakerSquareData.IT_OPEN)
-                            return true;
-                    }
+                    spawnPointForward = Location;
+                    spawnPointRight = Location - _tunnelWidth * Forward + _tunnelWidth * right;
+                    spawnPointLeft = Location - _tunnelWidth * Forward + _tunnelWidth * left;
+                    attachPointForward = spawnPointForward;
+                    attachPointRight = Location - _tunnelWidth * Forward;
+                    attachPointLeft = Location - _tunnelWidth * Forward;
+                    if (Dungeon.GetMap(spawnPointRight) != DungeonMakerSquareData.IT_OPEN || Dungeon.GetMap(spawnPointLeft) != DungeonMakerSquareData.IT_OPEN)
+                        return true;
                 }
 
                 // 这里开始决定下一轮/子代的风格：转向、分叉、直行。
@@ -2217,6 +2265,8 @@ namespace CrystalMagic.Game.MapDemo
                     if (stepLength < 3)
                         stepLength = 3;
                 }
+
+                tunnelWidth = Dungeon.ClampTunnelHalfWidth(tunnelWidth);
             }
 
             // 判断当前自身是不是已经处于“last chance”参数模板，避免无限套娃。
@@ -2316,9 +2366,17 @@ namespace CrystalMagic.Game.MapDemo
                     Dungeon.SetMap(Location + (length - 1) * Forward + (width - 1) * right, DungeonMakerSquareData.COLUMN, DungeonMakerTileOrigin.ColumnPlacement);
                 }
 
-                Dungeon.RegisterRegion(DungeonMakerRegionKind.AnteRoom, regionTiles);
+                Dungeon.RegisterRegion(DungeonMakerRegionKind.AnteRoom, regionTiles, visualStyleId: VisualStyleId);
                 Dungeon.RegisterAnteRoomBuilt();
                 return true;
+            }
+
+            private bool CanBuildAnteRoom(int length, int halfWidth)
+            {
+                int leftFree = halfWidth + 1;
+                int rightFree = halfWidth + 1;
+                int frontFree = FrontFree(Location, Forward, ref leftFree, ref rightFree);
+                return frontFree > length;
             }
 
             // 在当前位置前方 carve 一段隧道。
@@ -2365,7 +2423,11 @@ namespace CrystalMagic.Game.MapDemo
                     }
                 }
 
-                Dungeon.RegisterRegion(DungeonMakerRegionKind.Corridor, regionTiles);
+                Dungeon.RegisterRegion(
+                    DungeonMakerRegionKind.Corridor,
+                    regionTiles,
+                    visualStyleId: VisualStyleId,
+                    corridorWidth: 2 * width + 1);
                 return true;
             }
 
@@ -2402,7 +2464,8 @@ namespace CrystalMagic.Game.MapDemo
                 IntCoordinate parentAttachPoint,
                 int defaultWidth,
                 RoomSize size,
-                int category)
+                int category,
+                int visualStyleId)
                 : base(
                     dungeon,
                     location,
@@ -2418,7 +2481,10 @@ namespace CrystalMagic.Game.MapDemo
                 _defaultWidth = defaultWidth;
                 _size = size;
                 _category = category;
+                VisualStyleId = visualStyleId;
             }
+
+            private int VisualStyleId { get; }
 
             // Roomie 的工作流：
             // 1. 检查该房型是否还需要
@@ -2471,20 +2537,35 @@ namespace CrystalMagic.Game.MapDemo
                         widthDouble = width;
                     }
 
+                    if (length < Dungeon.MinRoomLength || width < Dungeon.MinRoomWidth)
+                        return false;
+
+                    length = Math.Min(length, Dungeon.MaxRoomLength);
+                    width = Math.Min(width, Dungeon.MaxRoomWidth);
+                    lengthDouble = length;
+                    widthDouble = width;
+
                     if (widthDouble / lengthDouble < roomAspectRatio)
                         return false;
 
                     while (length * width > maxSize)
                     {
                         Dungeon.GuardTimeout();
-                        if (length > width)
+                        bool canReduceLength = length > Dungeon.MinRoomLength;
+                        bool canReduceWidth = width > Dungeon.MinRoomWidth;
+                        if (!canReduceLength && !canReduceWidth)
+                            return false;
+
+                        if (length > width && canReduceLength)
                             length--;
-                        else if (width > length)
+                        else if (width > length && canReduceWidth)
                             width--;
-                        else if (Dungeon.CoinFlip())
+                        else if (canReduceLength && canReduceWidth && Dungeon.CoinFlip())
                             length--;
+                        else if (canReduceWidth)
+                            width--;
                         else
-                            width--;
+                            length--;
                     }
 
                     if (length * width >= minSize)
@@ -2571,7 +2652,11 @@ namespace CrystalMagic.Game.MapDemo
 
                         CommitParentSkeletonConnection(Location + Forward);
                         Dungeon.MarkValuableSkeletonSegment(ParentSkeletonSegmentId);
-                        Dungeon.RegisterRegion(DungeonMakerRegionKind.Room, regionTiles, ToRoomSizeClass(_size));
+                        Dungeon.RegisterRegion(
+                            DungeonMakerRegionKind.Room,
+                            regionTiles,
+                            ToRoomSizeClass(_size),
+                            visualStyleId: VisualStyleId);
                         Dungeon.BuiltRoomD(_size);
                         room.SetInDungeon(true);
                         Dungeon.AddRoom(room);
@@ -2723,6 +2808,16 @@ namespace CrystalMagic.Game.MapDemo
             public double RoomAspectRatio;
             // 生成前厅后对子代代数做的加速修正。
             public int GenSpeedUpOnAnteRoom;
+            public int MinCorridorWidth;
+            public int MaxCorridorWidth;
+            public int MinAnteRoomSide;
+            public int MaxAnteRoomSide;
+            public int MinRoomLength;
+            public int MaxRoomLength;
+            public int MinRoomWidth;
+            public int MaxRoomWidth;
+            public int RootVisualStyleId;
+            public List<VisualStyleRule> VisualStyleRules;
 
             // 小房的最小面积。
             public int MinSmallRoomSize;
@@ -2778,6 +2873,16 @@ namespace CrystalMagic.Game.MapDemo
                     ColumnsInTunnels = source.ColumnsInTunnels,
                     RoomAspectRatio = source.RoomAspectRatio,
                     GenSpeedUpOnAnteRoom = source.GenSpeedUpOnAnteRoom,
+                    MinCorridorWidth = source.MinCorridorWidth,
+                    MaxCorridorWidth = source.MaxCorridorWidth,
+                    MinAnteRoomSide = source.MinAnteRoomSide,
+                    MaxAnteRoomSide = source.MaxAnteRoomSide,
+                    MinRoomLength = source.MinRoomLength,
+                    MaxRoomLength = source.MaxRoomLength,
+                    MinRoomWidth = source.MinRoomWidth,
+                    MaxRoomWidth = source.MaxRoomWidth,
+                    RootVisualStyleId = source.RootVisualStyleId,
+                    VisualStyleRules = ConvertVisualStyleRules(source.VisualStyleRules),
                     MinSmallRoomSize = source.MinSmallRoomSize,
                     MinMediumRoomSize = source.MinMediumRoomSize,
                     MinLargeRoomSize = source.MinLargeRoomSize,
@@ -2825,6 +2930,59 @@ namespace CrystalMagic.Game.MapDemo
                     source.MakeRoomsRightProb,
                     source.MakeRoomsLeftProb,
                     source.JoinPreference);
+            }
+
+            private static List<VisualStyleRule> ConvertVisualStyleRules(List<DungeonMakerVisualStyleRuleData> source)
+            {
+                List<VisualStyleRule> result = new();
+                if (source == null)
+                    return result;
+
+                for (int i = 0; i < source.Count; i++)
+                {
+                    DungeonMakerVisualStyleRuleData rule = source[i];
+                    if (rule == null)
+                        continue;
+
+                    VisualStyleRule copiedRule = new() { StyleId = rule.StyleId };
+                    if (rule.ChildStyleWeights != null)
+                    {
+                        for (int weightIndex = 0; weightIndex < rule.ChildStyleWeights.Count; weightIndex++)
+                        {
+                            DungeonMakerVisualStyleWeightData weight = rule.ChildStyleWeights[weightIndex];
+                            if (weight == null)
+                                continue;
+
+                            copiedRule.ChildStyleWeights.Add(new VisualStyleWeight
+                            {
+                                StyleId = weight.StyleId,
+                                Weight = Math.Max(1, weight.Weight),
+                            });
+                        }
+                    }
+
+                    result.Add(copiedRule);
+                }
+
+                return result;
+            }
+
+            public sealed class VisualStyleRule
+            {
+                public int StyleId;
+                public List<VisualStyleWeight> ChildStyleWeights = new();
+            }
+
+            public sealed class VisualStyleWeight
+            {
+                public int StyleId;
+                public int Weight;
+            }
+
+            private static int NormalizeOddSize(int value, int minimum)
+            {
+                int normalized = Math.Max(minimum, value);
+                return normalized % 2 == 0 ? normalized + 1 : normalized;
             }
 
             private static Direction ConvertDirection(DungeonMakerDirection source)

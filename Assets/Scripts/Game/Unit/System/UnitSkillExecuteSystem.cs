@@ -8,7 +8,9 @@ partial class UnitSkillExecuteSystem : SystemBase
     {
         float deltaTime = SystemAPI.Time.DeltaTime;
 
-        foreach (var (castRef, entity) in SystemAPI.Query<RefRW<UnitCastComponent>>().WithEntityAccess())
+        foreach (var (castRef, entity) in SystemAPI.Query<RefRW<UnitCastComponent>>()
+                     .WithNone<UnitDeathComponent>()
+                     .WithEntityAccess())
         {
             UnitCastComponent cast = castRef.ValueRW;
 

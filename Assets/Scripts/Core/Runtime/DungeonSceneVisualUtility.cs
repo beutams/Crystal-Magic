@@ -52,6 +52,12 @@ namespace CrystalMagic.Core
             entityManager.SetComponentData(entity, MaterialMeshInfo.FromRenderMeshArrayIndices(0, 0));
         }
 
+        public static void HideVisual(EntityManager entityManager, Entity entity)
+        {
+            if (entityManager.HasComponent<MaterialMeshInfo>(entity))
+                entityManager.RemoveComponent<MaterialMeshInfo>(entity);
+        }
+
         public static Mesh GetPrefabMesh(string prefabName, string ownerKey)
         {
             if (string.IsNullOrWhiteSpace(prefabName))

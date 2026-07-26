@@ -61,6 +61,10 @@ namespace CrystalMagic.Core
                 yield break;
             }
 
+            reportProgress?.Invoke(0.993f, "Building dungeon scene", "Building tile visuals");
+            DungeonTileVisualBuilder.Build(runtimeRoot, sceneData, resourceOwnerKey);
+            yield return null;
+
             reportProgress?.Invoke(0.994f, "Building dungeon scene", "Spawning environment");
             SpawnEnvironment(entityManager, sceneData, resourceOwnerKey, spawnedEntities);
             yield return null;
@@ -95,15 +99,27 @@ namespace CrystalMagic.Core
                 if (!EntitySpawnRegistryUtility.TryInstantiateEnvironment(entityManager, new FixedString128Bytes(spawn.PrefabName), out Entity entity))
                     continue;
 
-                SetOrAddLocalTransform(entityManager, entity, spawn.WorldPosition);
-                DungeonSceneVisualUtility.ApplyEnvironmentVisual(
-                    entityManager,
-                    entity,
-                    spawn.PrefabName,
-                    spawn.MaterialPath,
-                    resourceOwnerKey,
-                    new float3(spawn.Size.x, spawn.Size.y, spawn.Size.z));
-                ApplyBoxColliderSize(entityManager, entity, spawn.Size);
+                SetOrAddLocalTransform(entityManager, entity, spawn.WorldPosition, spawn.RotationDegrees);
+                if (spawn.HideVisual)
+                {
+                    DungeonSceneVisualUtility.ApplyNonUniformScale(
+                        entityManager,
+                        entity,
+                        new float3(spawn.Size.x, spawn.Size.y, spawn.Size.z));
+                    DungeonSceneVisualUtility.HideVisual(entityManager, entity);
+                }
+                else
+                {
+                    DungeonSceneVisualUtility.ApplyEnvironmentVisual(
+                        entityManager,
+                        entity,
+                        spawn.PrefabName,
+                        spawn.MaterialPath,
+                        resourceOwnerKey,
+                        new float3(spawn.Size.x, spawn.Size.y, spawn.Size.z));
+                }
+                if (spawn.ApplyCollider)
+                    ApplyBoxColliderSize(entityManager, entity, spawn.Size);
                 spawnedEntities.Add(entity);
             }
         }
@@ -237,13 +253,18 @@ namespace CrystalMagic.Core
             return true;
         }
 
-        private static void SetOrAddLocalTransform(EntityManager entityManager, Entity entity, Vector3 worldPosition)
+        private static void SetOrAddLocalTransform(
+            EntityManager entityManager,
+            Entity entity,
+            Vector3 worldPosition,
+            float rotationDegrees = 0f)
         {
+            quaternion rotation = quaternion.RotateZ(math.radians(rotationDegrees));
             if (entityManager.HasComponent<LocalTransform>(entity))
             {
                 LocalTransform transform = entityManager.GetComponentData<LocalTransform>(entity);
                 transform.Position = new float3(worldPosition.x, worldPosition.y, worldPosition.z);
-                transform.Rotation = quaternion.identity;
+                transform.Rotation = rotation;
                 transform.Scale = 1f;
                 entityManager.SetComponentData(entity, transform);
             }
@@ -251,7 +272,7 @@ namespace CrystalMagic.Core
             {
                 entityManager.AddComponentData(entity, LocalTransform.FromPositionRotationScale(
                     new float3(worldPosition.x, worldPosition.y, worldPosition.z),
-                    quaternion.identity,
+                    rotation,
                     1f));
             }
         }

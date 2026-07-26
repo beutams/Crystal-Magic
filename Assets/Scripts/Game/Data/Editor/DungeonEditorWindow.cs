@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace CrystalMagic.Editor.Data
 {
-    public class DungeonEditorWindow : EditorWindow
+    public partial class DungeonEditorWindow : EditorWindow
     {
         private const string ThemeDataPath = "Assets/Res/Data/DungeonThemeDataTable.json";
         private const string MonsterPoolDataPath = "Assets/Res/Data/DungeonMonsterPoolDataTable.json";
@@ -25,6 +25,17 @@ namespace CrystalMagic.Editor.Data
             MonsterPool,
             TreasurePool,
             BossRoom,
+        }
+
+        private enum ThemeSubTab
+        {
+            Overview,
+            VisualStyles,
+            Style,
+            WallTiles,
+            DoorTiles,
+            RoomProfiles,
+            AnteRoomProfiles,
         }
 
         private sealed class ThemeTableWrapper
@@ -70,9 +81,14 @@ namespace CrystalMagic.Editor.Data
         private readonly List<DungeonTreasurePoolData> _treasurePools = new();
         private readonly List<DungeonBossRoomData> _bossRooms = new();
         private readonly Dictionary<string, bool> _foldoutStates = new();
+        private readonly List<string> _themeStyleValidationMessages = new();
 
         private DungeonTab _selectedTab;
+        private ThemeSubTab _selectedThemeSubTab;
         private int _selectedThemeIndex = -1;
+        private int _selectedStyleIndex = -1;
+        private int _selectedRoomProfileIndex = -1;
+        private int _selectedAnteProfileIndex = -1;
         private Vector2 _listScrollPos;
         private Vector2 _detailScrollPos;
         private bool _isDirty;
@@ -119,6 +135,10 @@ namespace CrystalMagic.Editor.Data
             if (GUILayout.Button("Add", EditorStyles.toolbarButton, GUILayout.Width(44f)))
                 AddRowForSelectedTab();
             GUI.enabled = true;
+
+            if (_selectedTab == DungeonTab.Theme
+                && GUILayout.Button("Validate Styles", EditorStyles.toolbarButton, GUILayout.Width(96f)))
+                ValidateThemeStyles();
 
             if (_selectedTab == DungeonTab.Theme && HasSelection())
             {
@@ -178,11 +198,15 @@ namespace CrystalMagic.Editor.Data
             {
                 DungeonThemeData row = _themes[i];
                 string label = $"[{row.Id}] {row.Name}";
-                if (GUILayout.Toggle(i == _selectedThemeIndex, label, "Button"))
+                if (GUILayout.Toggle(i == _selectedThemeIndex, label, "Button")
+                    && _selectedThemeIndex != i)
                 {
-                    if (_selectedThemeIndex != i)
-                        CrystalMagic.Editor.EditorFocusUtility.ClearTextFocus();
+                    CrystalMagic.Editor.EditorFocusUtility.ClearTextFocus();
                     _selectedThemeIndex = i;
+                    _selectedThemeSubTab = ThemeSubTab.Overview;
+                    _selectedStyleIndex = -1;
+                    _selectedRoomProfileIndex = -1;
+                    _selectedAnteProfileIndex = -1;
                 }
             }
         }
@@ -229,6 +253,59 @@ namespace CrystalMagic.Editor.Data
 
             row.EnsureValid();
 
+            DrawThemeSubTabs();
+            GUILayout.Space(8f);
+
+            switch (_selectedThemeSubTab)
+            {
+                case ThemeSubTab.Overview:
+                    DrawThemeOverview(row);
+                    break;
+                case ThemeSubTab.VisualStyles:
+                    DrawThemeVisualStyles(row);
+                    break;
+                case ThemeSubTab.Style:
+                    DrawStyleSettings(row, GetSelectedStyle(row));
+                    break;
+                case ThemeSubTab.WallTiles:
+                    DrawWallTileSettings(GetSelectedStyle(row));
+                    break;
+                case ThemeSubTab.DoorTiles:
+                    DrawDoorTileSettings(GetSelectedStyle(row));
+                    break;
+                case ThemeSubTab.RoomProfiles:
+                    DrawProfileSettings(GetSelectedStyle(row), false);
+                    break;
+                case ThemeSubTab.AnteRoomProfiles:
+                    DrawProfileSettings(GetSelectedStyle(row), true);
+                    break;
+            }
+
+            DrawThemeStyleValidationMessages();
+        }
+
+        private void DrawThemeSubTabs()
+        {
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+            DrawThemeSubTabToggle(ThemeSubTab.Overview, "Overview");
+            DrawThemeSubTabToggle(ThemeSubTab.VisualStyles, "Visual Styles");
+            DrawThemeSubTabToggle(ThemeSubTab.Style, "Style");
+            DrawThemeSubTabToggle(ThemeSubTab.WallTiles, "Wall Tiles");
+            DrawThemeSubTabToggle(ThemeSubTab.DoorTiles, "Door Tiles");
+            DrawThemeSubTabToggle(ThemeSubTab.RoomProfiles, "Room Profiles");
+            DrawThemeSubTabToggle(ThemeSubTab.AnteRoomProfiles, "Ante Profiles");
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawThemeSubTabToggle(ThemeSubTab tab, string label)
+        {
+            if (GUILayout.Toggle(_selectedThemeSubTab == tab, label, EditorStyles.toolbarButton))
+                _selectedThemeSubTab = tab;
+        }
+
+        private void DrawThemeOverview(DungeonThemeData row)
+        {
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.LabelField("Basic", EditorStyles.boldLabel);
             row.Id = EditorGUILayout.IntField("Id", row.Id);
@@ -238,15 +315,7 @@ namespace CrystalMagic.Editor.Data
             row.FloorEnd = Mathf.Max(row.FloorStart, EditorGUILayout.IntField("Floor End", row.FloorEnd));
 
             GUILayout.Space(8f);
-            EditorGUILayout.LabelField("Materials", EditorStyles.boldLabel);
-            row.CorridorMaterialPath = EditorGUILayout.TextField("Corridor", row.CorridorMaterialPath ?? string.Empty);
-            row.RoomMaterialPath = EditorGUILayout.TextField("Room", row.RoomMaterialPath ?? string.Empty);
-            row.AnteRoomMaterialPath = EditorGUILayout.TextField("Ante Room", row.AnteRoomMaterialPath ?? string.Empty);
-            row.WallMaterialPath = EditorGUILayout.TextField("Wall", row.WallMaterialPath ?? string.Empty);
-            row.StartMarkerMaterialPath = EditorGUILayout.TextField("Start Marker", row.StartMarkerMaterialPath ?? string.Empty);
-
-            GUILayout.Space(8f);
-            EditorGUILayout.HelpBox("Monster pools, treasure pools, and boss rooms are edited in their own theme-scoped tabs.", MessageType.None);
+            EditorGUILayout.HelpBox("Use the Visual Styles subpage to configure this theme's styles. Monster pools, treasure pools, and boss rooms remain in the other main tabs.", MessageType.None);
 
             if (EditorGUI.EndChangeCheck())
             {
@@ -786,6 +855,10 @@ namespace CrystalMagic.Editor.Data
                 FloorEnd = 10,
             });
             _selectedThemeIndex = _themes.Count - 1;
+            _selectedThemeSubTab = ThemeSubTab.Overview;
+            _selectedStyleIndex = -1;
+            _selectedRoomProfileIndex = -1;
+            _selectedAnteProfileIndex = -1;
 
             _isDirty = true;
         }
@@ -805,6 +878,10 @@ namespace CrystalMagic.Editor.Data
             {
                 _themes.RemoveAt(_selectedThemeIndex);
                 _selectedThemeIndex = Mathf.Clamp(_selectedThemeIndex, -1, _themes.Count - 1);
+                _selectedThemeSubTab = ThemeSubTab.Overview;
+                _selectedStyleIndex = -1;
+                _selectedRoomProfileIndex = -1;
+                _selectedAnteProfileIndex = -1;
                 _isDirty = true;
             }
         }
@@ -828,6 +905,10 @@ namespace CrystalMagic.Editor.Data
             copy.EnsureValid();
             _themes.Add(copy);
             _selectedThemeIndex = _themes.Count - 1;
+            _selectedThemeSubTab = ThemeSubTab.Overview;
+            _selectedStyleIndex = -1;
+            _selectedRoomProfileIndex = -1;
+            _selectedAnteProfileIndex = -1;
             _isDirty = true;
         }
 
@@ -890,6 +971,11 @@ namespace CrystalMagic.Editor.Data
             _treasurePools.Clear();
             _bossRooms.Clear();
             _selectedThemeIndex = -1;
+            _selectedThemeSubTab = ThemeSubTab.Overview;
+            _selectedStyleIndex = -1;
+            _selectedRoomProfileIndex = -1;
+            _selectedAnteProfileIndex = -1;
+            _themeStyleValidationMessages.Clear();
             _isDirty = false;
 
             try

@@ -12,7 +12,6 @@ namespace CrystalMagic.Core
     {
         private const int StepBatchSize = 32;
         private const float ProgressReportIntervalSeconds = 0.05f;
-        private const float FloorVisualDepth = 0.1f;
         private const float FloorVisualZ = 0.85f;
         private const float WallVisualDepth = 1.6f;
         private const float WallVisualZ = 0.8f;
@@ -29,7 +28,7 @@ namespace CrystalMagic.Core
             DungeonGenerationRules rules = BuildRules(generationConfig);
             DungeonThemeData theme = ResolveThemeData(dungeonFloor);
             bool isBossFloor = IsBossFloor(dungeonFloor, dungeonConfig);
-            DungeonMakerTunnelingConfig config = BuildConfig(dungeonFloor, generationConfig);
+            DungeonMakerTunnelingConfig config = BuildConfig(dungeonFloor, generationConfig, theme);
             ValidateConfig(config);
 
             if (runData.CurrentFloor == dungeonFloor && runData.Seed != 0)
@@ -359,7 +358,10 @@ namespace CrystalMagic.Core
             }
         }
 
-        private static DungeonMakerTunnelingConfig BuildConfig(int dungeonFloor, DungeonGenerationConfig generationConfig)
+        private static DungeonMakerTunnelingConfig BuildConfig(
+            int dungeonFloor,
+            DungeonGenerationConfig generationConfig,
+            DungeonThemeData theme)
         {
             DungeonMakerTunnelingConfig config = DungeonMakerTunnelingConfig.CreateDefault();
             generationConfig ??= new DungeonGenerationConfig();
@@ -373,12 +375,63 @@ namespace CrystalMagic.Core
             config.Patience = generationConfig.Patience;
             config.Mutator = generationConfig.Mutator;
             config.RoomAspectRatio = generationConfig.RoomAspectRatio;
+            config.MinCorridorWidth = generationConfig.MinCorridorWidth;
+            config.MaxCorridorWidth = generationConfig.MaxCorridorWidth;
+            config.MinAnteRoomSide = generationConfig.MinAnteRoomSide;
+            config.MaxAnteRoomSide = generationConfig.MaxAnteRoomSide;
+            config.MinRoomLength = generationConfig.MinRoomLength;
+            config.MaxRoomLength = generationConfig.MaxRoomLength;
+            config.MinRoomWidth = generationConfig.MinRoomWidth;
+            config.MaxRoomWidth = generationConfig.MaxRoomWidth;
+            ApplyVisualStyleRules(config, theme);
             config.MaxSmallDungeonRooms = Mathf.Max(generationConfig.MinSmallDungeonRooms, generationConfig.MaxSmallDungeonRooms + Mathf.Max(0, (dungeonFloor - 1) * generationConfig.SmallRoomAddPerFloor));
             config.MaxMediumDungeonRooms = Mathf.Max(generationConfig.MinMediumDungeonRooms, generationConfig.MaxMediumDungeonRooms + GetFloorScaledIncrement(dungeonFloor, generationConfig.MediumRoomAddFloorInterval));
             config.MaxLargeDungeonRooms = Mathf.Max(generationConfig.MinLargeDungeonRooms, generationConfig.MaxLargeDungeonRooms + GetFloorScaledIncrement(dungeonFloor, generationConfig.LargeRoomAddFloorInterval));
             ApplyRoomSizeProbabilityProfile(config);
             ApplyTunnelGrowthProbabilityProfile(config);
             return config;
+        }
+
+        private static void ApplyVisualStyleRules(DungeonMakerTunnelingConfig config, DungeonThemeData theme)
+        {
+            config.RootVisualStyleId = theme?.RootVisualStyleId ?? -1;
+            config.VisualStyleRules.Clear();
+            if (theme == null)
+                return;
+
+            theme.EnsureValid();
+            for (int i = 0; i < theme.VisualStyles.Count; i++)
+            {
+                DungeonVisualStyleData style = theme.VisualStyles[i];
+                if (style == null || style.Id <= 0)
+                    continue;
+
+                style.EnsureValid();
+                DungeonMakerVisualStyleRuleData rule = new() { StyleId = style.Id };
+                for (int transitionIndex = 0; transitionIndex < style.ChildStyleTransitions.Count; transitionIndex++)
+                {
+                    DungeonVisualStyleTransitionData transition = style.ChildStyleTransitions[transitionIndex];
+                    if (transition == null || transition.StyleId <= 0 || theme.GetVisualStyle(transition.StyleId) == null)
+                        continue;
+
+                    rule.ChildStyleWeights.Add(new DungeonMakerVisualStyleWeightData
+                    {
+                        StyleId = transition.StyleId,
+                        Weight = Mathf.Max(1, transition.Weight),
+                    });
+                }
+
+                if (rule.ChildStyleWeights.Count == 0)
+                {
+                    rule.ChildStyleWeights.Add(new DungeonMakerVisualStyleWeightData
+                    {
+                        StyleId = style.Id,
+                        Weight = 1,
+                    });
+                }
+
+                config.VisualStyleRules.Add(rule);
+            }
         }
 
         private static void ApplyRoomSizeProbabilityProfile(DungeonMakerTunnelingConfig config)
@@ -445,6 +498,14 @@ namespace CrystalMagic.Core
             config.MinMediumRoomSize = Mathf.Clamp(config.MinMediumRoomSize, config.MinSmallRoomSize, config.MaxRoomSize);
             config.MinLargeRoomSize = Mathf.Clamp(config.MinLargeRoomSize, config.MinMediumRoomSize, config.MaxRoomSize);
             config.RoomAspectRatio = Mathf.Max(0.01f, (float)config.RoomAspectRatio);
+            config.MinCorridorWidth = NormalizeOddSize(config.MinCorridorWidth, 1);
+            config.MaxCorridorWidth = Mathf.Max(config.MinCorridorWidth, NormalizeOddSize(config.MaxCorridorWidth, 1));
+            config.MinAnteRoomSide = NormalizeOddSize(config.MinAnteRoomSide, 3);
+            config.MaxAnteRoomSide = Mathf.Max(config.MinAnteRoomSide, NormalizeOddSize(config.MaxAnteRoomSide, 3));
+            config.MinRoomLength = Mathf.Max(1, config.MinRoomLength);
+            config.MaxRoomLength = Mathf.Max(config.MinRoomLength, config.MaxRoomLength);
+            config.MinRoomWidth = Mathf.Max(1, config.MinRoomWidth);
+            config.MaxRoomWidth = Mathf.Max(config.MinRoomWidth, config.MaxRoomWidth);
             config.BabyDelayProbsTunneler ??= new List<int>();
             config.BabyDelayProbsRoomie ??= new List<int>();
             config.MaxAgesT ??= new List<int>();
@@ -455,6 +516,12 @@ namespace CrystalMagic.Core
             config.SizeDownProb ??= new List<int>();
             config.AnteRoomProb ??= new List<int>();
             config.Tunnelers ??= Array.Empty<DungeonMakerTunnelerSeedData>();
+        }
+
+        private static int NormalizeOddSize(int value, int minimum)
+        {
+            int normalized = Mathf.Max(minimum, value);
+            return normalized % 2 == 0 ? normalized + 1 : normalized;
         }
 
         private static DungeonMakerTunnelingResult PostProcessCandidateResult(
@@ -1276,7 +1343,14 @@ namespace CrystalMagic.Core
             for (int i = 0; i < source.Count; i++)
             {
                 DungeonMakerRegion region = source[i];
-                copied[i] = new DungeonMakerRegion(region.Id, region.Kind, region.TileIndices, region.RoomSizeClass, region.SpecialRoomRole);
+                copied[i] = new DungeonMakerRegion(
+                    region.Id,
+                    region.Kind,
+                    region.TileIndices,
+                    region.RoomSizeClass,
+                    region.SpecialRoomRole,
+                    region.VisualStyleId,
+                    region.CorridorWidth);
             }
 
             return copied;
@@ -1333,19 +1407,19 @@ namespace CrystalMagic.Core
         {
             DungeonMakerSquareData[] map = CopySourceMap(result);
             int[] regionIdByTile = BuildRegionIdByTileMap(result, map.Length);
+            theme?.EnsureValid();
             RuntimeDungeonSceneData sceneData = new()
             {
                 ThemeId = theme?.Id ?? -1,
                 ThemeKey = theme?.ThemeKey ?? string.Empty,
                 IsBossFloor = bossRoom != null,
                 CellWorldSize = Mathf.Max(0.25f, dungeonConfig?.CellWorldSize ?? 2f),
-                CorridorMaterialPath = ResolveMaterialPath(theme?.CorridorMaterialPath, dungeonConfig?.DefaultCorridorMaterialPath),
-                RoomMaterialPath = ResolveMaterialPath(theme?.RoomMaterialPath, dungeonConfig?.DefaultRoomMaterialPath),
-                AnteRoomMaterialPath = ResolveMaterialPath(theme?.AnteRoomMaterialPath, dungeonConfig?.DefaultAnteRoomMaterialPath),
-                WallMaterialPath = ResolveMaterialPath(theme?.WallMaterialPath, dungeonConfig?.DefaultWallMaterialPath),
+                DisplayWidth = result.DisplayWidth,
+                DisplayHeight = result.DisplayHeight,
             };
 
-            AddEnvironmentSpawns(sceneData, result);
+            AddTileGridSpawns(sceneData, result, theme);
+            DungeonInteriorPlacementUtility.AddDecorationSpawns(sceneData, result, theme, seed);
 
             RuntimeDungeonSceneObjectSpawnData playerSpawn = bossRoom == null
                 ? BuildSpecialPointData(result, map, regionIdByTile, sceneData.CellWorldSize, DungeonMakerSpecialRoomRole.Start)
@@ -1982,12 +2056,91 @@ namespace CrystalMagic.Core
             return ((Mathf.Max(1, dungeonFloor) - 1) / bandSize) + 1;
         }
 
-        private static string ResolveMaterialPath(string preferredPath, string fallbackPath)
+        private static DungeonCorridorVisualData GetCorridorVisual(DungeonVisualStyleData style, int width, int seed)
         {
-            if (!string.IsNullOrWhiteSpace(preferredPath))
-                return preferredPath;
+            if (style?.Corridors == null)
+                return null;
 
-            return fallbackPath ?? string.Empty;
+            List<DungeonCorridorVisualData> candidates = new();
+            for (int i = 0; i < style.Corridors.Count; i++)
+            {
+                DungeonCorridorVisualData visual = style.Corridors[i];
+                if (visual != null && visual.Width == width)
+                    candidates.Add(visual);
+            }
+
+            if (candidates.Count == 0)
+            {
+                for (int i = 0; i < style.Corridors.Count; i++)
+                {
+                    DungeonCorridorVisualData visual = style.Corridors[i];
+                    if (visual != null)
+                        candidates.Add(visual);
+                }
+            }
+            return PickWeightedVisual(candidates, seed, static visual => visual.Weight);
+        }
+
+        private static DungeonAreaVisualData GetAreaVisual(List<DungeonAreaVisualData> visuals, int width, int seed)
+        {
+            if (visuals == null)
+                return null;
+
+            List<DungeonAreaVisualData> candidates = new();
+            for (int i = 0; i < visuals.Count; i++)
+            {
+                DungeonAreaVisualData visual = visuals[i];
+                if (visual != null && width >= visual.MinWidth && width <= visual.MaxWidth)
+                    candidates.Add(visual);
+            }
+
+            if (candidates.Count == 0)
+            {
+                for (int i = 0; i < visuals.Count; i++)
+                {
+                    DungeonAreaVisualData visual = visuals[i];
+                    if (visual != null)
+                        candidates.Add(visual);
+                }
+            }
+            return PickWeightedVisual(candidates, seed, static visual => visual.Weight);
+        }
+
+        private static DungeonAreaVisualData GetExactSizeAreaVisual(List<DungeonAreaVisualData> visuals, int size, int seed)
+        {
+            if (visuals == null || visuals.Count == 0)
+                return null;
+
+            List<DungeonAreaVisualData> candidates = new();
+            for (int i = 0; i < visuals.Count; i++)
+            {
+                DungeonAreaVisualData visual = visuals[i];
+                if (visual != null && visual.MinWidth == size && visual.MaxWidth == size)
+                    candidates.Add(visual);
+            }
+
+            return PickWeightedVisual(candidates, seed, static visual => visual.Weight);
+        }
+
+        private static T PickWeightedVisual<T>(List<T> candidates, int seed, Func<T, int> getWeight) where T : class
+        {
+            if (candidates == null || candidates.Count == 0)
+                return null;
+
+            int totalWeight = 0;
+            for (int i = 0; i < candidates.Count; i++)
+                totalWeight += Mathf.Max(1, getWeight(candidates[i]));
+
+            int roll = GetDeterministicIndex(seed, totalWeight);
+            for (int i = 0; i < candidates.Count; i++)
+            {
+                T candidate = candidates[i];
+                roll -= Mathf.Max(1, getWeight(candidate));
+                if (roll < 0)
+                    return candidate;
+            }
+
+            return candidates[0];
         }
 
         private static string ResolveMonsterPrefabName(int level, int seed, int tileIndex, int dungeonFloor, DungeonThemeData theme, DungeonConfig dungeonConfig, bool isBoss)
@@ -2212,94 +2365,448 @@ namespace CrystalMagic.Core
             return pointData;
         }
 
-        private static void AddEnvironmentSpawns(
+        private static void AddTileGridSpawns(
             RuntimeDungeonSceneData sceneData,
+            DungeonMakerTunnelingResult layout,
+            DungeonThemeData theme)
+        {
+            DungeonMakerRegion[,] regionMap = BuildRegionMap(layout);
+            Dictionary<int, RectInt> regionBounds = new();
+            Dictionary<Vector2Int, DungeonTilePlacement> wallTiles = new();
+            HashSet<Vector2Int> collisionCells = new();
+
+            for (int y = 0; y < layout.DisplayHeight; y++)
+            {
+                for (int x = 0; x < layout.DisplayWidth; x++)
+                {
+                    DungeonMakerSquareData tile = layout.GetDisplayTile(x, y);
+                    DungeonMakerRegion region = regionMap[x, y] ?? FindAdjacentRegion(regionMap, x, y);
+                    DungeonVisualStyleData style = ResolveVisualStyle(theme, region);
+
+                    if (tile == DungeonMakerSquareData.H_DOOR || tile == DungeonMakerSquareData.V_DOOR)
+                    {
+                        DungeonTileGridData doorGrid = tile == DungeonMakerSquareData.H_DOOR
+                            ? style?.DoorTileSet?.Horizontal
+                            : style?.DoorTileSet?.Vertical;
+                        AddTileFromGrid(sceneData, doorGrid, 0, 0, x, y, layout, sceneData.CellWorldSize, FloorVisualZ - 0.02f, collisionCells);
+                        continue;
+                    }
+
+                    if (!IsWalkableTile(tile))
+                        continue;
+
+                    DungeonTileGridData floorGrid = ResolveFloorTileGrid(layout, theme, region);
+                    RectInt bounds = GetRegionBounds(layout, region, regionBounds);
+                    AddFloorTile(
+                        sceneData,
+                        floorGrid,
+                        bounds,
+                        x,
+                        y,
+                        layout,
+                        sceneData.CellWorldSize,
+                        collisionCells);
+
+                    AddAdjacentWallTiles(
+                        wallTiles,
+                        style?.WallTileSet?.TileGrid,
+                        x,
+                        y,
+                        layout);
+                }
+            }
+
+            foreach (DungeonTilePlacement placement in wallTiles.Values)
+            {
+                DungeonTileGridCellData cell = ResolveConnectedWallTileCell(placement, wallTiles);
+                AddTileCell(
+                    sceneData,
+                    cell,
+                    placement.Position.x,
+                    placement.Position.y,
+                    sceneData.CellWorldSize,
+                    WallVisualZ,
+                    collisionCells);
+            }
+
+            AddTileCollisionSpawns(sceneData, layout, collisionCells);
+        }
+
+        private static void AddFloorTile(
+            RuntimeDungeonSceneData sceneData,
+            DungeonTileGridData grid,
+            RectInt regionBounds,
+            int x,
+            int y,
+            DungeonMakerTunnelingResult layout,
+            float cellWorldSize,
+            HashSet<Vector2Int> collisionCells)
+        {
+            if (grid == null || grid.Columns <= 0 || grid.Rows <= 0)
+                return;
+
+            bool hasLeftBoundary = !IsWalkableDisplayTile(layout, x - 1, y);
+            bool hasRightBoundary = !IsWalkableDisplayTile(layout, x + 1, y);
+            bool hasTopBoundary = !IsWalkableDisplayTile(layout, x, y + 1);
+            bool hasBottomBoundary = !IsWalkableDisplayTile(layout, x, y - 1);
+            int localX = x - regionBounds.x;
+            int localYFromTop = regionBounds.yMax - y - 1;
+            int gridX = ResolveTiledGridCoordinate(localX, grid.Columns, hasLeftBoundary, hasRightBoundary);
+            int gridY = ResolveTiledGridCoordinate(localYFromTop, grid.Rows, hasTopBoundary, hasBottomBoundary);
+            DungeonTileGridCellData cell = grid.GetCell(gridX, gridY);
+            AddTileCell(sceneData, cell, x, y, cellWorldSize, FloorVisualZ, collisionCells);
+        }
+
+        private static void AddAdjacentWallTiles(
+            Dictionary<Vector2Int, DungeonTilePlacement> wallTiles,
+            DungeonTileGridData wallGrid,
+            int centerX,
+            int centerY,
             DungeonMakerTunnelingResult layout)
         {
-            DungeonMakerRegionKind?[,] regionKinds = BuildRegionKindMap(layout);
-            AddEnvironmentSpawnsForMask(
-                sceneData,
-                layout,
-                BuildWalkableMask(layout, regionKinds, DungeonMakerRegionKind.Room),
-                sceneData.RoomMaterialPath,
-                FloorVisualDepth,
-                FloorVisualZ,
-                "Environment");
-            AddEnvironmentSpawnsForMask(
-                sceneData,
-                layout,
-                BuildWalkableMask(layout, regionKinds, DungeonMakerRegionKind.AnteRoom),
-                sceneData.AnteRoomMaterialPath,
-                FloorVisualDepth,
-                FloorVisualZ,
-                "Environment");
-            AddEnvironmentSpawnsForMask(
-                sceneData,
-                layout,
-                BuildWalkableMask(layout, regionKinds, DungeonMakerRegionKind.Corridor),
-                sceneData.CorridorMaterialPath,
-                FloorVisualDepth,
-                FloorVisualZ,
-                "Environment");
+            if (wallGrid == null)
+                return;
 
-            bool[,] wallMask = BuildSurfaceMask(layout, static tile => IsWallTile(tile));
-            List<RectInt> wallRectangles = BuildRectangles(wallMask, surfaceOnly: false);
-            for (int i = 0; i < wallRectangles.Count; i++)
+            for (int offsetY = -1; offsetY <= 1; offsetY++)
             {
-                RectInt rectangle = wallRectangles[i];
+                for (int offsetX = -1; offsetX <= 1; offsetX++)
+                {
+                    if (offsetX == 0 && offsetY == 0)
+                        continue;
+
+                    int targetX = centerX + offsetX;
+                    int targetY = centerY + offsetY;
+                    if (!IsDisplayCoordinateInBounds(layout, targetX, targetY)
+                        || IsWalkableDisplayTile(layout, targetX, targetY))
+                    {
+                        continue;
+                    }
+
+                    Vector2Int position = new(targetX, targetY);
+                    int priority = offsetX != 0 && offsetY != 0 ? 2 : 1;
+                    if (!wallTiles.TryGetValue(position, out DungeonTilePlacement existing) || priority > existing.Priority)
+                    {
+                        wallTiles[position] = new DungeonTilePlacement(position, wallGrid, priority);
+                    }
+                }
+            }
+        }
+
+        private static DungeonTileGridCellData ResolveConnectedWallTileCell(
+            DungeonTilePlacement placement,
+            Dictionary<Vector2Int, DungeonTilePlacement> wallTiles)
+        {
+            if (placement?.Grid == null)
+                return null;
+
+            Vector2Int position = placement.Position;
+            bool hasLeft = wallTiles.ContainsKey(position + Vector2Int.left);
+            bool hasRight = wallTiles.ContainsKey(position + Vector2Int.right);
+            bool hasTop = wallTiles.ContainsKey(position + Vector2Int.up);
+            bool hasBottom = wallTiles.ContainsKey(position + Vector2Int.down);
+            int connectionCount = (hasLeft ? 1 : 0)
+                + (hasRight ? 1 : 0)
+                + (hasTop ? 1 : 0)
+                + (hasBottom ? 1 : 0);
+
+            // The 3x3 wall table stores the inverse of the connected side.
+            // For example: a wall linked to its right and bottom neighbors uses the top-left cell.
+            if (connectionCount == 4)
+                return null;
+            if (connectionCount == 3)
+            {
+                if (!hasTop)
+                    return placement.Grid.GetCell(1, 0);
+                if (!hasBottom)
+                    return placement.Grid.GetCell(1, 2);
+                if (!hasLeft)
+                    return placement.Grid.GetCell(0, 1);
+                return placement.Grid.GetCell(2, 1);
+            }
+            if (hasRight && hasBottom)
+                return placement.Grid.GetCell(0, 0);
+            if (hasLeft && hasBottom)
+                return placement.Grid.GetCell(2, 0);
+            if (hasRight && hasTop)
+                return placement.Grid.GetCell(0, 2);
+            if (hasLeft && hasTop)
+                return placement.Grid.GetCell(2, 2);
+            if (hasLeft && hasRight)
+                return placement.Grid.GetCell(1, 0);
+            if (hasTop && hasBottom)
+                return placement.Grid.GetCell(0, 1);
+            if (hasRight)
+                return placement.Grid.GetCell(0, 1);
+            if (hasLeft)
+                return placement.Grid.GetCell(2, 1);
+            if (hasBottom)
+                return placement.Grid.GetCell(1, 0);
+            if (hasTop)
+                return placement.Grid.GetCell(1, 2);
+
+            return placement.Grid.GetCell(1, 0);
+        }
+
+        private static void AddTileFromGrid(
+            RuntimeDungeonSceneData sceneData,
+            DungeonTileGridData grid,
+            int gridX,
+            int gridY,
+            int x,
+            int y,
+            DungeonMakerTunnelingResult layout,
+            float cellWorldSize,
+            float z,
+            HashSet<Vector2Int> collisionCells)
+        {
+            if (!IsDisplayCoordinateInBounds(layout, x, y))
+                return;
+
+            AddTileCell(sceneData, grid?.GetCell(gridX, gridY), x, y, cellWorldSize, z, collisionCells);
+        }
+
+        private static void AddTileCell(
+            RuntimeDungeonSceneData sceneData,
+            DungeonTileGridCellData cell,
+            int x,
+            int y,
+            float cellWorldSize,
+            float z,
+            HashSet<Vector2Int> collisionCells)
+        {
+            if (cell == null)
+                return;
+
+            if (cell.HasCollision)
+                collisionCells.Add(new Vector2Int(x, y));
+
+            if (string.IsNullOrWhiteSpace(cell.SpritePath) || string.IsNullOrWhiteSpace(cell.SpriteName))
+                return;
+
+            sceneData.TileSpawns.Add(new RuntimeDungeonTileSpawnData
+            {
+                SpritePath = cell.SpritePath,
+                SpriteName = cell.SpriteName,
+                UvRect = new Vector4(cell.SpriteUvX, cell.SpriteUvY, cell.SpriteUvWidth, cell.SpriteUvHeight),
+                WorldPosition = GetWorldPositionForTile(
+                    x,
+                    y,
+                    sceneData.DisplayWidth,
+                    sceneData.DisplayHeight,
+                    cellWorldSize,
+                    z),
+                CellWorldSize = cellWorldSize,
+            });
+        }
+
+        private static void AddTileCollisionSpawns(
+            RuntimeDungeonSceneData sceneData,
+            DungeonMakerTunnelingResult layout,
+            HashSet<Vector2Int> collisionCells)
+        {
+            if (collisionCells.Count == 0)
+                return;
+
+            int minX = int.MaxValue;
+            int minY = int.MaxValue;
+            int maxX = int.MinValue;
+            int maxY = int.MinValue;
+            foreach (Vector2Int cell in collisionCells)
+            {
+                minX = Mathf.Min(minX, cell.x);
+                minY = Mathf.Min(minY, cell.y);
+                maxX = Mathf.Max(maxX, cell.x);
+                maxY = Mathf.Max(maxY, cell.y);
+            }
+
+            bool[,] collisionMask = new bool[maxX - minX + 1, maxY - minY + 1];
+            foreach (Vector2Int cell in collisionCells)
+                collisionMask[cell.x - minX, cell.y - minY] = true;
+
+            List<RectInt> rectangles = BuildRectangles(collisionMask);
+            for (int i = 0; i < rectangles.Count; i++)
+            {
+                RectInt localRectangle = rectangles[i];
+                RectInt worldRectangle = new(
+                    minX + localRectangle.x,
+                    minY + localRectangle.y,
+                    localRectangle.width,
+                    localRectangle.height);
                 sceneData.EnvironmentSpawns.Add(new RuntimeDungeonEnvironmentSpawnData
                 {
                     PrefabName = "Collider",
-                    MaterialPath = sceneData.WallMaterialPath ?? string.Empty,
-                    WorldPosition = GetWorldPositionForRectangle(rectangle, layout.DisplayWidth, layout.DisplayHeight, sceneData.CellWorldSize, WallVisualZ),
+                    WorldPosition = GetWorldPositionForRectangle(
+                        worldRectangle,
+                        layout.DisplayWidth,
+                        layout.DisplayHeight,
+                        sceneData.CellWorldSize,
+                        WallVisualZ),
                     Size = new Vector3(
-                        rectangle.width * sceneData.CellWorldSize,
-                        rectangle.height * sceneData.CellWorldSize,
+                        worldRectangle.width * sceneData.CellWorldSize,
+                        worldRectangle.height * sceneData.CellWorldSize,
                         WallVisualDepth),
+                    HideVisual = true,
                 });
             }
         }
 
-        private static void AddEnvironmentSpawnsForMask(
-            RuntimeDungeonSceneData sceneData,
+        private static DungeonTileGridData ResolveFloorTileGrid(
             DungeonMakerTunnelingResult layout,
-            bool[,] mask,
-            string materialPath,
-            float depth,
-            float visualZ,
-            string prefabName)
+            DungeonThemeData theme,
+            DungeonMakerRegion region)
         {
-            List<RectInt> rectangles = BuildRectangles(mask, surfaceOnly: false);
-            for (int i = 0; i < rectangles.Count; i++)
+            DungeonVisualStyleData style = ResolveVisualStyle(theme, region);
+            int regionWidth = GetRegionVisualWidth(layout, region);
+            int seed = unchecked(layout.Seed + (region?.Id ?? 0) * 486187739);
+
+            return region?.Kind switch
             {
-                RectInt rectangle = rectangles[i];
-                sceneData.EnvironmentSpawns.Add(new RuntimeDungeonEnvironmentSpawnData
-                {
-                    PrefabName = prefabName,
-                    MaterialPath = materialPath ?? string.Empty,
-                    WorldPosition = GetWorldPositionForRectangle(rectangle, layout.DisplayWidth, layout.DisplayHeight, sceneData.CellWorldSize, visualZ),
-                    Size = new Vector3(
-                        rectangle.width * sceneData.CellWorldSize,
-                        rectangle.height * sceneData.CellWorldSize,
-                        depth),
-                });
-            }
+                DungeonMakerRegionKind.Room => GetAreaVisual(style?.RoomVisuals, regionWidth, seed)?.TileGrid,
+                DungeonMakerRegionKind.AnteRoom => GetExactSizeAreaVisual(style?.AnteRoomVisuals, regionWidth, seed)?.TileGrid,
+                _ => GetCorridorVisual(style, regionWidth, seed)?.TileGrid,
+            };
         }
 
-        private static bool IsWallTile(DungeonMakerSquareData tile)
+        private static DungeonVisualStyleData ResolveVisualStyle(DungeonThemeData theme, DungeonMakerRegion region)
         {
-            return tile is DungeonMakerSquareData.CLOSED
-                or DungeonMakerSquareData.G_CLOSED
-                or DungeonMakerSquareData.NJ_CLOSED
-                or DungeonMakerSquareData.NJ_G_CLOSED
-                or DungeonMakerSquareData.COLUMN;
+            int styleId = region?.VisualStyleId > 0 ? region.VisualStyleId : theme?.RootVisualStyleId ?? -1;
+            return theme?.GetVisualStyle(styleId) ?? theme?.GetRootVisualStyle();
         }
 
-        private static DungeonMakerRegionKind?[,] BuildRegionKindMap(DungeonMakerTunnelingResult layout)
+        private static RectInt GetRegionBounds(
+            DungeonMakerTunnelingResult layout,
+            DungeonMakerRegion region,
+            Dictionary<int, RectInt> cache)
+        {
+            if (region != null && cache.TryGetValue(region.Id, out RectInt cachedBounds))
+                return cachedBounds;
+
+            int minX = int.MaxValue;
+            int minY = int.MaxValue;
+            int maxX = int.MinValue;
+            int maxY = int.MinValue;
+            if (region?.TileIndices != null)
+            {
+                for (int i = 0; i < region.TileIndices.Length; i++)
+                {
+                    int tileIndex = region.TileIndices[i];
+                    int sourceX = tileIndex / layout.SourceHeight;
+                    int sourceY = tileIndex % layout.SourceHeight;
+                    minX = Mathf.Min(minX, sourceY);
+                    minY = Mathf.Min(minY, sourceX);
+                    maxX = Mathf.Max(maxX, sourceY);
+                    maxY = Mathf.Max(maxY, sourceX);
+                }
+            }
+
+            RectInt bounds = minX == int.MaxValue
+                ? new RectInt(0, 0, 1, 1)
+                : new RectInt(minX, minY, maxX - minX + 1, maxY - minY + 1);
+            if (region != null)
+                cache[region.Id] = bounds;
+            return bounds;
+        }
+
+        private static DungeonMakerRegion FindAdjacentRegion(DungeonMakerRegion[,] regionMap, int x, int y)
+        {
+            int width = regionMap.GetLength(0);
+            int height = regionMap.GetLength(1);
+            return TryGetRegion(regionMap, x, y + 1, width, height)
+                ?? TryGetRegion(regionMap, x + 1, y, width, height)
+                ?? TryGetRegion(regionMap, x, y - 1, width, height)
+                ?? TryGetRegion(regionMap, x - 1, y, width, height);
+        }
+
+        private static DungeonMakerRegion TryGetRegion(
+            DungeonMakerRegion[,] regionMap,
+            int x,
+            int y,
+            int width,
+            int height)
+        {
+            return x >= 0 && x < width && y >= 0 && y < height ? regionMap[x, y] : null;
+        }
+
+        private static int ResolveTiledGridCoordinate(int coordinate, int gridLength, bool hasMinimumBoundary, bool hasMaximumBoundary)
+        {
+            if (gridLength <= 1)
+                return 0;
+            if (hasMinimumBoundary)
+                return 0;
+            if (hasMaximumBoundary)
+                return gridLength - 1;
+
+            int repeatLength = gridLength - 2;
+            if (repeatLength <= 0)
+                return 0;
+
+            return 1 + PositiveModulo(coordinate - 1, repeatLength);
+        }
+
+        private static int PositiveModulo(int value, int divisor)
+        {
+            int modulo = value % divisor;
+            return modulo < 0 ? modulo + divisor : modulo;
+        }
+
+        private static bool IsWalkableDisplayTile(DungeonMakerTunnelingResult layout, int x, int y)
+        {
+            return IsDisplayCoordinateInBounds(layout, x, y) && IsWalkableTile(layout.GetDisplayTile(x, y));
+        }
+
+        private static bool IsDisplayCoordinateInBounds(DungeonMakerTunnelingResult layout, int x, int y)
+        {
+            return x >= 0 && x < layout.DisplayWidth && y >= 0 && y < layout.DisplayHeight;
+        }
+
+        private static Vector3 GetWorldPositionForTile(
+            int x,
+            int y,
+            int displayWidth,
+            int displayHeight,
+            float cellWorldSize,
+            float z)
+        {
+            float halfWidth = displayWidth * 0.5f;
+            float halfHeight = displayHeight * 0.5f;
+            return new Vector3(
+                (x + 0.5f - halfWidth) * cellWorldSize,
+                (y + 0.5f - halfHeight) * cellWorldSize,
+                z);
+        }
+
+        private static int GetRegionVisualWidth(DungeonMakerTunnelingResult layout, DungeonMakerRegion region)
+        {
+            if (region == null)
+                return 1;
+            if (region.CorridorWidth > 0)
+                return region.CorridorWidth;
+            if (region.TileIndices == null || region.TileIndices.Length == 0)
+                return 1;
+
+            int minX = int.MaxValue;
+            int minY = int.MaxValue;
+            int maxX = int.MinValue;
+            int maxY = int.MinValue;
+            for (int i = 0; i < region.TileIndices.Length; i++)
+            {
+                int tileIndex = region.TileIndices[i];
+                int sourceX = tileIndex / layout.SourceHeight;
+                int sourceY = tileIndex % layout.SourceHeight;
+                minX = Mathf.Min(minX, sourceY);
+                minY = Mathf.Min(minY, sourceX);
+                maxX = Mathf.Max(maxX, sourceY);
+                maxY = Mathf.Max(maxY, sourceX);
+            }
+
+            return Mathf.Max(1, Mathf.Min(maxX - minX + 1, maxY - minY + 1));
+        }
+
+        private static DungeonMakerRegion[,] BuildRegionMap(DungeonMakerTunnelingResult layout)
         {
             int sourceWidth = layout.SourceWidth;
             int sourceHeight = layout.SourceHeight;
-            DungeonMakerRegionKind?[,] map = new DungeonMakerRegionKind?[layout.DisplayWidth, layout.DisplayHeight];
+            DungeonMakerRegion[,] map = new DungeonMakerRegion[layout.DisplayWidth, layout.DisplayHeight];
             IReadOnlyList<DungeonMakerRegion> regions = layout.Regions;
 
             for (int i = 0; i < regions.Count; i++)
@@ -2316,76 +2823,18 @@ namespace CrystalMagic.Core
                     if (sourceX < 0 || sourceX >= sourceWidth || sourceY < 0 || sourceY >= sourceHeight)
                         continue;
 
-                    map[sourceY, sourceX] = region.Kind;
+                    map[sourceY, sourceX] = region;
                 }
             }
 
             return map;
         }
-
-        private static bool[,] BuildWalkableMask(
-            DungeonMakerTunnelingResult layout,
-            DungeonMakerRegionKind?[,] regionKinds,
-            DungeonMakerRegionKind targetKind)
-        {
-            int width = layout.DisplayWidth;
-            int height = layout.DisplayHeight;
-            bool[,] mask = new bool[width, height];
-
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    if (!IsWalkableTile(layout.GetDisplayTile(x, y)))
-                        continue;
-
-                    DungeonMakerRegionKind resolvedKind = regionKinds[x, y] ?? DungeonMakerRegionKind.Corridor;
-                    mask[x, y] = resolvedKind == targetKind;
-                }
-            }
-
-            return mask;
-        }
-
-        private static bool[,] BuildSurfaceMask(DungeonMakerTunnelingResult layout, Func<DungeonMakerSquareData, bool> predicate)
-        {
-            int width = layout.DisplayWidth;
-            int height = layout.DisplayHeight;
-            bool[,] sourceMask = new bool[width, height];
-            bool[,] surfaceMask = new bool[width, height];
-
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                    sourceMask[x, y] = predicate(layout.GetDisplayTile(x, y));
-            }
-
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                    surfaceMask[x, y] = IsSurfaceMask(sourceMask, x, y, width, height);
-            }
-
-            return surfaceMask;
-        }
-
-        private static List<RectInt> BuildRectangles(bool[,] targetMask, bool surfaceOnly)
+        private static List<RectInt> BuildRectangles(bool[,] targetMask)
         {
             int width = targetMask.GetLength(0);
             int height = targetMask.GetLength(1);
             bool[,] used = new bool[width, height];
             List<RectInt> rectangles = new();
-
-            if (surfaceOnly)
-            {
-                bool[,] sourceMask = targetMask;
-                targetMask = new bool[width, height];
-                for (int y = 0; y < height; y++)
-                {
-                    for (int x = 0; x < width; x++)
-                        targetMask[x, y] = IsSurfaceMask(sourceMask, x, y, width, height);
-                }
-            }
 
             for (int y = 0; y < height; y++)
             {
@@ -2426,20 +2875,6 @@ namespace CrystalMagic.Core
             }
 
             return rectangles;
-        }
-
-        private static bool IsSurfaceMask(bool[,] mask, int x, int y, int width, int height)
-        {
-            if (!mask[x, y])
-                return false;
-
-            if (x == 0 || y == 0 || x == width - 1 || y == height - 1)
-                return true;
-
-            return !mask[x - 1, y]
-                || !mask[x + 1, y]
-                || !mask[x, y - 1]
-                || !mask[x, y + 1];
         }
 
         private static Vector3 GetWorldPositionForRectangle(
@@ -2486,6 +2921,20 @@ namespace CrystalMagic.Core
             public EncounterCountRange SmallRoomMonsterCountRange = new(1, 2);
             public EncounterCountRange MediumRoomMonsterCountRange = new(2, 4);
             public EncounterCountRange LargeRoomMonsterCountRange = new(4, 7);
+        }
+
+        private sealed class DungeonTilePlacement
+        {
+            public DungeonTilePlacement(Vector2Int position, DungeonTileGridData grid, int priority)
+            {
+                Position = position;
+                Grid = grid;
+                Priority = priority;
+            }
+
+            public Vector2Int Position { get; }
+            public DungeonTileGridData Grid { get; }
+            public int Priority { get; }
         }
 
         private sealed class CandidateGenerationContext

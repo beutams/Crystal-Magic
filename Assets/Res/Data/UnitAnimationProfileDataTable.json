@@ -1,41 +1,42 @@
 ﻿{
   "Rows": [
     {
-      "UnitDataId": 12,
-      "UnitName": "PlayerDungeon",
+      "UnitDataId": 6,
+      "UnitName": "MonsterStraw",
       "PlaybackSpeed": 1.0,
       "Animations": [
         {
-          "StateName": "MoveState",
+          "StateName": "IdleState",
           "AnimationName": "",
-          "FrontAtlasTexturePath": "Assets/Res/Sprites/Units/Player/Front.png",
-          "BackAtlasTexturePath": "Assets/Res/Sprites/Units/Player/Back.png",
-          "LeftAtlasTexturePath": "Assets/Res/Sprites/Units/Player/Left.png",
-          "FramesPerSecond": 12.0,
-          "Loop": true,
-          "GridColumns": 9,
-          "GridRows": 1,
-          "FrameCount": 9
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterStraw_Idle_Default.asset"
         }
       ],
       "Id": 1
     },
     {
-      "UnitDataId": 13,
-      "UnitName": "PlayerTown",
+      "UnitDataId": 2,
+      "UnitName": "MonsterGoblinWarrior",
       "PlaybackSpeed": 1.0,
       "Animations": [
         {
+          "StateName": "IdleState",
+          "AnimationName": "",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterGoblinWarrior_Idle_Default.asset"
+        },
+        {
           "StateName": "MoveState",
           "AnimationName": "",
-          "FrontAtlasTexturePath": "Assets/Res/Sprites/Units/Player/Front_4x.png",
-          "BackAtlasTexturePath": "Assets/Res/Sprites/Units/Player/Back_4x.png",
-          "LeftAtlasTexturePath": "Assets/Res/Sprites/Units/Player/Left_4x.png",
-          "FramesPerSecond": 12.0,
-          "Loop": true,
-          "GridColumns": 9,
-          "GridRows": 1,
-          "FrameCount": 9
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterGoblinWarrior_Run_Default.asset"
+        },
+        {
+          "StateName": "UnitCastState",
+          "AnimationName": "哥布林横扫",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterGoblinWarrior_Cast_哥布林横扫.asset"
+        },
+        {
+          "StateName": "DeathState",
+          "AnimationName": "",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterGoblinWarrior_DeathState_Default.asset"
         }
       ],
       "Id": 2

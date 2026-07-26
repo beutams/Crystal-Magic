@@ -24,6 +24,7 @@ partial class UnitCastAvailabilitySystem : SystemBase
         foreach (var (unitSkillRef, availabilityRef, intentRef, perceptionRef, entity) in
                  SystemAPI.Query<RefRW<UnitSkillComponent>, RefRW<UnitCastAvailabilityComponent>, RefRO<UnitIntentComponent>, RefRO<UnitPerceptionComponent>>()
                      .WithNone<PlayerTag>()
+                     .WithNone<UnitDeathComponent>()
                      .WithEntityAccess())
         {
             UnitSkillComponent unitSkill = unitSkillRef.ValueRW;
@@ -39,6 +40,7 @@ partial class UnitCastAvailabilitySystem : SystemBase
         foreach (var (availabilityRef, entity) in
                  SystemAPI.Query<RefRW<UnitCastAvailabilityComponent>>()
                      .WithAll<PlayerTag>()
+                     .WithNone<UnitDeathComponent>()
                      .WithEntityAccess())
         {
             UnitCastAvailabilityComponent availability = availabilityRef.ValueRW;

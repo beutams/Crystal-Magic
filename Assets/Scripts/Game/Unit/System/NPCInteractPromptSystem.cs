@@ -61,7 +61,7 @@ partial class NPCInteractPromptSystem : SystemBase
 
         CollectDropCandidate(playerPosition, interactionRange, ref bestTarget, ref bestKind, ref bestDistanceSq);
         CollectTreasureCandidate(playerPosition, interactionRangeSq, ref bestTarget, ref bestKind, ref bestDistanceSq);
-        CollectNpcCandidate(playerPosition, interactionRangeSq, ref bestTarget, ref bestKind, ref bestDistanceSq);
+        CollectNpcCandidate(playerPosition, ref bestTarget, ref bestKind, ref bestDistanceSq);
 
         runtime.ValueRW.CurrentTarget = bestTarget;
         runtime.ValueRW.CurrentKind = bestKind;
@@ -119,12 +119,11 @@ partial class NPCInteractPromptSystem : SystemBase
 
     private void CollectNpcCandidate(
         float3 playerPosition,
-        float interactionRangeSq,
         ref Entity bestTarget,
         ref PlayerInteractionKind bestKind,
         ref float bestDistanceSq)
     {
-        foreach ((RefRO<NPCInteractableComponent> _, RefRO<LocalTransform> transformRef, Entity entity) in
+        foreach ((RefRO<NPCInteractableComponent> interactableRef, RefRO<LocalTransform> transformRef, Entity entity) in
                  SystemAPI.Query<RefRO<NPCInteractableComponent>, RefRO<LocalTransform>>().WithEntityAccess())
         {
             if (EntityManager.HasComponent<DungeonExitComponent>(entity))
@@ -135,7 +134,7 @@ partial class NPCInteractPromptSystem : SystemBase
             }
 
             float distanceSq = math.lengthsq((playerPosition - transformRef.ValueRO.Position).xy);
-            if (distanceSq > interactionRangeSq)
+            if (distanceSq > math.max(0f, interactableRef.ValueRO.InteractRangeSq))
                 continue;
 
             TrySelectCandidate(entity, PlayerInteractionKind.Npc, distanceSq, ref bestTarget, ref bestKind, ref bestDistanceSq);

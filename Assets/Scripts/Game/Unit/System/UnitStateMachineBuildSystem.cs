@@ -62,6 +62,19 @@ partial class UnitStateMachineBuildSystem : SystemBase
                 stateMap[config.StateType] = state;
         }
 
+        const string deathStateType = "DeathState";
+        if (!stateMap.ContainsKey(deathStateType))
+        {
+            AUnitState deathState = _factory.CreateState(deathStateType);
+            if (deathState == null)
+            {
+                Debug.LogError("[StateMachine] DeathState is not registered.");
+                return;
+            }
+
+            stateMap.Add(deathStateType, deathState);
+        }
+
         foreach (AUnitState state in stateMap.Values)
             state.OnInitialize(entity, EntityManager);
 

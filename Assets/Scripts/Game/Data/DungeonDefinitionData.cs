@@ -13,11 +13,8 @@ namespace CrystalMagic.Game.Data
         public int FloorStart = 1;
         public int FloorEnd = 10;
 
-        public string CorridorMaterialPath;
-        public string RoomMaterialPath;
-        public string AnteRoomMaterialPath;
-        public string WallMaterialPath;
-        public string StartMarkerMaterialPath;
+        public int RootVisualStyleId = 1;
+        public List<DungeonVisualStyleData> VisualStyles = new();
 
         public int Mob1PoolId = -1;
         public int Mob2PoolId = -1;
@@ -34,6 +31,33 @@ namespace CrystalMagic.Game.Data
             FloorStart = Mathf.Max(1, FloorStart);
             FloorEnd = Mathf.Max(FloorStart, FloorEnd);
             BossRoomIds ??= new List<int>();
+            VisualStyles ??= new List<DungeonVisualStyleData>();
+            for (int i = 0; i < VisualStyles.Count; i++)
+            {
+                VisualStyles[i] ??= new DungeonVisualStyleData();
+                VisualStyles[i].EnsureValid();
+            }
+
+            if (RootVisualStyleId <= 0 && VisualStyles.Count > 0)
+                RootVisualStyleId = VisualStyles[0].Id;
+        }
+
+        public DungeonVisualStyleData GetVisualStyle(int styleId)
+        {
+            for (int i = 0; i < VisualStyles.Count; i++)
+            {
+                DungeonVisualStyleData style = VisualStyles[i];
+                if (style != null && style.Id == styleId)
+                    return style;
+            }
+
+            return null;
+        }
+
+        public DungeonVisualStyleData GetRootVisualStyle()
+        {
+            return GetVisualStyle(RootVisualStyleId)
+                ?? (VisualStyles.Count > 0 ? VisualStyles[0] : null);
         }
     }
 

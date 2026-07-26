@@ -20,6 +20,7 @@ partial class UnitPerceptionSystem : SystemBase
 
         foreach (var (perception, faction, transform, entity) in
                  SystemAPI.Query<RefRW<UnitPerceptionComponent>, RefRO<UnitFactionComponent>, RefRO<LocalTransform>>()
+                     .WithNone<UnitDeathComponent>()
                      .WithEntityAccess())
         {
             UnitPerceptionComponent perceptionValue = perception.ValueRW;
@@ -49,6 +50,8 @@ partial class UnitPerceptionSystem : SystemBase
                 if (!UnitFactionUtility.IsEnemy(faction.ValueRO.Value,EntityManager.GetComponentData<UnitFactionComponent>(hit.Entity).Value))
                     continue;
                 if (EntityManager.HasComponent<DestroyEntityFlag>(hit.Entity) && EntityManager.IsComponentEnabled<DestroyEntityFlag>(hit.Entity))
+                    continue;
+                if (EntityManager.HasComponent<UnitDeathComponent>(hit.Entity) && EntityManager.IsComponentEnabled<UnitDeathComponent>(hit.Entity))
                     continue;
 
                 float2 diff = hit.Position.xy - center.xy;
