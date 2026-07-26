@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d27de32c69246628b80e3f7ce5dc6b2, type: 3}
+  m_Name: MonsterTroll_Cast_MonsterTroll_Attack
+  m_EditorClassIdentifier: 
+  _framesPerSecond: 6
+  _loop: 0
+  _referenceFrameSizePixels: {x: 48, y: 48}
+  _referenceFrameWorldSize: {x: 1, y: 1}
+  _frontFrames:
+  - {fileID: -830041271, guid: f5784799209213f488df505c0f25600b, type: 3}
+  - {fileID: -1363572112, guid: f5784799209213f488df505c0f25600b, type: 3}
+  - {fileID: 1253792601, guid: f5784799209213f488df505c0f25600b, type: 3}
+  - {fileID: 1003823011, guid: f5784799209213f488df505c0f25600b, type: 3}
+  _backFrames:
+  - {fileID: 579853573, guid: f5784799209213f488df505c0f25600b, type: 3}
+  - {fileID: -1340077842, guid: f5784799209213f488df505c0f25600b, type: 3}
+  - {fileID: 1595849964, guid: f5784799209213f488df505c0f25600b, type: 3}
+  - {fileID: -199650546, guid: f5784799209213f488df505c0f25600b, type: 3}
+  _leftFrames:
+  - {fileID: 920891464, guid: f5784799209213f488df505c0f25600b, type: 3}
+  - {fileID: -1093426342, guid: f5784799209213f488df505c0f25600b, type: 3}
+  - {fileID: 986384989, guid: f5784799209213f488df505c0f25600b, type: 3}
+  - {fileID: -11267886, guid: f5784799209213f488df505c0f25600b, type: 3}

@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d27de32c69246628b80e3f7ce5dc6b2, type: 3}
+  m_Name: MonsterRat_DeathState_Default
+  m_EditorClassIdentifier: 
+  _framesPerSecond: 6
+  _loop: 0
+  _referenceFrameSizePixels: {x: 48, y: 48}
+  _referenceFrameWorldSize: {x: 1, y: 1}
+  _frontFrames:
+  - {fileID: 1333009131, guid: 5bcb6db8f8d29174da438750a5c7a871, type: 3}
+  - {fileID: -1588294596, guid: 5bcb6db8f8d29174da438750a5c7a871, type: 3}
+  - {fileID: 477545666, guid: 5bcb6db8f8d29174da438750a5c7a871, type: 3}
+  _backFrames:
+  - {fileID: 1790449638, guid: 5bcb6db8f8d29174da438750a5c7a871, type: 3}
+  - {fileID: -1403806322, guid: 5bcb6db8f8d29174da438750a5c7a871, type: 3}
+  - {fileID: 84355193, guid: 5bcb6db8f8d29174da438750a5c7a871, type: 3}
+  _leftFrames:
+  - {fileID: 2089609325, guid: 5bcb6db8f8d29174da438750a5c7a871, type: 3}
+  - {fileID: -461779747, guid: 5bcb6db8f8d29174da438750a5c7a871, type: 3}
+  - {fileID: -236144902, guid: 5bcb6db8f8d29174da438750a5c7a871, type: 3}

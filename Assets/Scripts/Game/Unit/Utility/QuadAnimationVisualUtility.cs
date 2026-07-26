@@ -13,26 +13,28 @@ public static class QuadAnimationVisualUtility
     private static readonly Dictionary<string, Material> s_overrideMaterials = new();
     private static readonly HashSet<string> s_loggedMissingVisuals = new();
 
-    public static bool ApplyVisual(
-        EntityManager entityManager,
-        Entity entity,
+    public static bool TryResolveVisual(
         QuadAnimationVisualKind visualKind,
         string prefabName,
-        Texture2D texture)
+        Texture2D texture,
+        out Mesh mesh,
+        out Material material)
     {
-        if (texture == null || !entityManager.HasComponent<MaterialMeshInfo>(entity))
+        mesh = null;
+        material = null;
+
+        if (texture == null)
             return false;
 
         string visualKey = GetVisualKey(visualKind, prefabName);
         if (!TryGetVisualSource(visualKind, prefabName, out VisualSource source))
             return false;
 
-        Material material = GetOrCreateOverrideMaterial(visualKey, source.BaseMaterial, texture);
+        material = GetOrCreateOverrideMaterial(visualKey, source.BaseMaterial, texture);
         if (material == null || source.Mesh == null)
             return false;
 
-        entityManager.SetSharedComponentManaged(entity, new RenderMeshArray(new[] { material }, new[] { source.Mesh }));
-        entityManager.SetComponentData(entity, MaterialMeshInfo.FromRenderMeshArrayIndices(0, 0));
+        mesh = source.Mesh;
         return true;
     }
 

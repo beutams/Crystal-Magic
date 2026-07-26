@@ -1,22 +1,9 @@
-﻿{
+{
   "Rows": [
-    {
-      "UnitDataId": 6,
-      "UnitName": "MonsterStraw",
-      "PlaybackSpeed": 1.0,
-      "Animations": [
-        {
-          "StateName": "IdleState",
-          "AnimationName": "",
-          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterStraw_Idle_Default.asset"
-        }
-      ],
-      "Id": 1
-    },
     {
       "UnitDataId": 2,
       "UnitName": "MonsterGoblinWarrior",
-      "PlaybackSpeed": 1.0,
+      "PlaybackSpeed": 1,
       "Animations": [
         {
           "StateName": "IdleState",
@@ -30,8 +17,8 @@
         },
         {
           "StateName": "UnitCastState",
-          "AnimationName": "哥布林横扫",
-          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterGoblinWarrior_Cast_哥布林横扫.asset"
+          "AnimationName": "MonsterGoblinWarrior_Attack",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterGoblinWarrior_Cast_MonsterGoblinWarrior_Attack.asset"
         },
         {
           "StateName": "DeathState",
@@ -39,7 +26,203 @@
           "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterGoblinWarrior_DeathState_Default.asset"
         }
       ],
+      "Id": 1
+    },
+    {
+      "UnitDataId": 1,
+      "UnitName": "MonsterGoblinArcher",
+      "PlaybackSpeed": 1,
+      "Animations": [
+        {
+          "StateName": "IdleState",
+          "AnimationName": "",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterGoblinArcher_Idle_Default.asset"
+        },
+        {
+          "StateName": "MoveState",
+          "AnimationName": "",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterGoblinArcher_Run_Default.asset"
+        },
+        {
+          "StateName": "UnitCastState",
+          "AnimationName": "MonsterGoblinArcher_Attack",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterGoblinArcher_Cast_MonsterGoblinArcher_Attack.asset"
+        },
+        {
+          "StateName": "DeathState",
+          "AnimationName": "",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterGoblinArcher_DeathState_Default.asset"
+        }
+      ],
       "Id": 2
+    },
+    {
+      "UnitDataId": 3,
+      "UnitName": "MonsterSlime",
+      "PlaybackSpeed": 1,
+      "Animations": [
+        {
+          "StateName": "IdleState",
+          "AnimationName": "",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterSlime_Idle_Default.asset"
+        },
+        {
+          "StateName": "MoveState",
+          "AnimationName": "",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterSlime_Run_Default.asset"
+        },
+        {
+          "StateName": "UnitCastState",
+          "AnimationName": "MonsterSlime_Attack",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterSlime_Cast_MonsterSlime_Attack.asset"
+        },
+        {
+          "StateName": "DeathState",
+          "AnimationName": "",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterSlime_DeathState_Default.asset"
+        }
+      ],
+      "Id": 3
+    },
+    {
+      "UnitDataId": 14,
+      "UnitName": "MonsterSpider",
+      "PlaybackSpeed": 1,
+      "Animations": [
+        {
+          "StateName": "IdleState",
+          "AnimationName": "",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterSpider_Idle_Default.asset"
+        },
+        {
+          "StateName": "MoveState",
+          "AnimationName": "",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterSpider_Run_Default.asset"
+        },
+        {
+          "StateName": "UnitCastState",
+          "AnimationName": "MonsterSpider_Attack",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterSpider_Cast_MonsterSpider_Attack.asset"
+        },
+        {
+          "StateName": "DeathState",
+          "AnimationName": "",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterSpider_DeathState_Default.asset"
+        }
+      ],
+      "Id": 4
+    },
+    {
+      "UnitDataId": 18,
+      "UnitName": "MonsterBat",
+      "PlaybackSpeed": 1,
+      "Animations": [
+        {
+          "StateName": "IdleState",
+          "AnimationName": "",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterBat_Idle_Default.asset"
+        },
+        {
+          "StateName": "MoveState",
+          "AnimationName": "",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterBat_Run_Default.asset"
+        },
+        {
+          "StateName": "UnitCastState",
+          "AnimationName": "MonsterBat_Attack",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterBat_Cast_MonsterBat_Attack.asset"
+        },
+        {
+          "StateName": "DeathState",
+          "AnimationName": "",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterBat_DeathState_Default.asset"
+        }
+      ],
+      "Id": 5
+    },
+    {
+      "UnitDataId": 19,
+      "UnitName": "MonsterRat",
+      "PlaybackSpeed": 1,
+      "Animations": [
+        {
+          "StateName": "IdleState",
+          "AnimationName": "",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterRat_Idle_Default.asset"
+        },
+        {
+          "StateName": "MoveState",
+          "AnimationName": "",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterRat_Run_Default.asset"
+        },
+        {
+          "StateName": "UnitCastState",
+          "AnimationName": "MonsterRat_Attack",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterRat_Cast_MonsterRat_Attack.asset"
+        },
+        {
+          "StateName": "DeathState",
+          "AnimationName": "",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterRat_DeathState_Default.asset"
+        }
+      ],
+      "Id": 6
+    },
+    {
+      "UnitDataId": 20,
+      "UnitName": "MonsterOrc",
+      "PlaybackSpeed": 1,
+      "Animations": [
+        {
+          "StateName": "IdleState",
+          "AnimationName": "",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterOrc_Idle_Default.asset"
+        },
+        {
+          "StateName": "MoveState",
+          "AnimationName": "",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterOrc_Run_Default.asset"
+        },
+        {
+          "StateName": "UnitCastState",
+          "AnimationName": "MonsterOrc_Attack",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterOrc_Cast_MonsterOrc_Attack.asset"
+        },
+        {
+          "StateName": "DeathState",
+          "AnimationName": "",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterOrc_DeathState_Default.asset"
+        }
+      ],
+      "Id": 7
+    },
+    {
+      "UnitDataId": 21,
+      "UnitName": "MonsterTroll",
+      "PlaybackSpeed": 1,
+      "Animations": [
+        {
+          "StateName": "IdleState",
+          "AnimationName": "",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterTroll_Idle_Default.asset"
+        },
+        {
+          "StateName": "MoveState",
+          "AnimationName": "",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterTroll_Run_Default.asset"
+        },
+        {
+          "StateName": "UnitCastState",
+          "AnimationName": "MonsterTroll_Attack",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterTroll_Cast_MonsterTroll_Attack.asset"
+        },
+        {
+          "StateName": "DeathState",
+          "AnimationName": "",
+          "SpriteClipPath": "Assets/Res/Data/UnitAnimationClips/MonsterTroll_DeathState_Default.asset"
+        }
+      ],
+      "Id": 8
     }
   ]
 }

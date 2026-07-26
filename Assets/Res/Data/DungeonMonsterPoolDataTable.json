@@ -4,10 +4,24 @@
       "Name": "Cavern Mob1",
       "Entries": [
         {
-          "UnitName": "MonsterGoblinWarrior",
+          "UnitName": "MonsterBat",
+          "Weight": 2,
+          "MinFloor": 1,
+          "MaxFloor": 3,
+          "BossOnly": false
+        },
+        {
+          "UnitName": "MonsterRat",
+          "Weight": 2,
+          "MinFloor": 1,
+          "MaxFloor": 4,
+          "BossOnly": false
+        },
+        {
+          "UnitName": "MonsterSlime",
           "Weight": 1,
           "MinFloor": 1,
-          "MaxFloor": 10,
+          "MaxFloor": 5,
           "BossOnly": false
         }
       ],
@@ -18,8 +32,22 @@
       "Entries": [
         {
           "UnitName": "MonsterGoblinWarrior",
-          "Weight": 1,
+          "Weight": 2,
           "MinFloor": 1,
+          "MaxFloor": 10,
+          "BossOnly": false
+        },
+        {
+          "UnitName": "MonsterGoblinArcher",
+          "Weight": 1,
+          "MinFloor": 2,
+          "MaxFloor": 10,
+          "BossOnly": false
+        },
+        {
+          "UnitName": "MonsterSpider",
+          "Weight": 1,
+          "MinFloor": 2,
           "MaxFloor": 10,
           "BossOnly": false
         }
@@ -30,9 +58,16 @@
       "Name": "Cavern Mob3",
       "Entries": [
         {
-          "UnitName": "MonsterGoblinWarrior",
+          "UnitName": "MonsterOrc",
+          "Weight": 2,
+          "MinFloor": 3,
+          "MaxFloor": 10,
+          "BossOnly": false
+        },
+        {
+          "UnitName": "MonsterTroll",
           "Weight": 1,
-          "MinFloor": 1,
+          "MinFloor": 5,
           "MaxFloor": 10,
           "BossOnly": false
         }

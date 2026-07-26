@@ -1,6 +1,9 @@
+using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Rendering;
 using Unity.Transforms;
+using UnityEngine;
 
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(UnitAnimationSystem))]
@@ -11,14 +14,26 @@ public partial class QuadAnimationSystem : SystemBase
     protected override void OnUpdate()
     {
         float deltaTime = SystemAPI.Time.DeltaTime;
+        List<PendingVisualApply> pendingVisualApplies = null;
+        List<PendingFramePropertiesApply> pendingFramePropertyApplies = null;
+        List<Entity> pendingDestroyFlags = null;
 
         foreach ((RefRW<QuadAnimationComponent> animation, RefRW<LocalTransform> transform, Entity entity) in
                  SystemAPI.Query<RefRW<QuadAnimationComponent>, RefRW<LocalTransform>>().WithEntityAccess())
         {
             UpdateFollowTarget(entity, ref transform.ValueRW);
-            ApplyVisualIfNeeded(entity, ref animation.ValueRW);
-            AdvanceAnimation(entity, deltaTime, ref animation.ValueRW);
+            QueueVisualApplyIfNeeded(entity, ref animation.ValueRW, ref pendingVisualApplies);
+            AdvanceAnimation(
+                entity,
+                deltaTime,
+                ref animation.ValueRW,
+                ref pendingFramePropertyApplies,
+                ref pendingDestroyFlags);
         }
+
+        ApplyPendingVisuals(pendingVisualApplies);
+        ApplyPendingFrameProperties(pendingFramePropertyApplies);
+        ApplyPendingDestroyFlags(pendingDestroyFlags);
     }
 
     private void UpdateFollowTarget(Entity entity, ref LocalTransform transform)
@@ -44,9 +59,13 @@ public partial class QuadAnimationSystem : SystemBase
             transform.Rotation = rotation;
     }
 
-    private void ApplyVisualIfNeeded(Entity entity, ref QuadAnimationComponent animation)
+    private void QueueVisualApplyIfNeeded(
+        Entity entity,
+        ref QuadAnimationComponent animation,
+        ref List<PendingVisualApply> pendingVisualApplies)
     {
-        if (!EntityManager.HasComponent<QuadAnimationVisualComponent>(entity))
+        if (!EntityManager.HasComponent<MaterialMeshInfo>(entity) ||
+            !EntityManager.HasComponent<QuadAnimationVisualComponent>(entity))
             return;
 
         QuadAnimationVisualComponent visual = EntityManager.GetComponentObject<QuadAnimationVisualComponent>(entity);
@@ -61,14 +80,26 @@ public partial class QuadAnimationSystem : SystemBase
             return;
         }
 
-        if (!QuadAnimationVisualUtility.ApplyVisual(EntityManager, entity, visual.VisualKind, visual.PrefabName, visual.Texture))
-            return;
+        if (!QuadAnimationVisualUtility.TryResolveVisual(
+                visual.VisualKind,
+                visual.PrefabName,
+                visual.Texture,
+                out Mesh mesh,
+                out Material material))
+        return;
 
+        pendingVisualApplies ??= new List<PendingVisualApply>();
+        pendingVisualApplies.Add(new PendingVisualApply(entity, mesh, material));
         animation.LastTextureInstanceId = textureInstanceId;
         animation.LastVisualKeyHash = visualKeyHash;
     }
 
-    private void AdvanceAnimation(Entity entity, float deltaTime, ref QuadAnimationComponent animation)
+    private void AdvanceAnimation(
+        Entity entity,
+        float deltaTime,
+        ref QuadAnimationComponent animation,
+        ref List<PendingFramePropertiesApply> pendingFramePropertyApplies,
+        ref List<Entity> pendingDestroyFlags)
     {
         int gridColumns = math.max(1, animation.GridColumns);
         int gridRows = math.max(1, animation.GridRows);
@@ -84,7 +115,7 @@ public partial class QuadAnimationSystem : SystemBase
             if (animation.RemainingLifetimeSeconds <= 0f)
             {
                 animation.IsPlaying = 0;
-                TriggerCompletion(entity, ref animation);
+                QueueCompletion(entity, ref animation, ref pendingDestroyFlags);
                 return;
             }
         }
@@ -93,7 +124,15 @@ public partial class QuadAnimationSystem : SystemBase
         if (nextFrameIndex != animation.FrameIndex)
         {
             animation.FrameIndex = nextFrameIndex;
-            ApplyFrameProperties(entity, gridColumns, gridRows, nextFrameIndex, animation.Width, animation.Height, animation.PivotOffset);
+            QueueFrameProperties(
+                entity,
+                gridColumns,
+                gridRows,
+                nextFrameIndex,
+                animation.Width,
+                animation.Height,
+                animation.PivotOffset,
+                ref pendingFramePropertyApplies);
         }
 
         if (animation.IsPlaying == 0 || animation.Loop != 0)
@@ -104,28 +143,30 @@ public partial class QuadAnimationSystem : SystemBase
             return;
 
         animation.IsPlaying = 0;
-        TriggerCompletion(entity, ref animation);
+        QueueCompletion(entity, ref animation, ref pendingDestroyFlags);
     }
 
-    private void TriggerCompletion(Entity entity, ref QuadAnimationComponent animation)
+    private static void QueueCompletion(
+        Entity entity,
+        ref QuadAnimationComponent animation,
+        ref List<Entity> pendingDestroyFlags)
     {
         if (animation.AutoDestroyOnComplete == 0)
             return;
 
-        if (!EntityManager.HasComponent<DestroyEntityFlag>(entity))
-            EntityManager.AddComponent<DestroyEntityFlag>(entity);
-
-        EntityManager.SetComponentEnabled<DestroyEntityFlag>(entity, true);
+        pendingDestroyFlags ??= new List<Entity>();
+        pendingDestroyFlags.Add(entity);
     }
 
-    private void ApplyFrameProperties(
+    private static void QueueFrameProperties(
         Entity entity,
         int gridColumns,
         int gridRows,
         int frameIndex,
         float width,
         float height,
-        float2 pivotOffset)
+        float2 pivotOffset,
+        ref List<PendingFramePropertiesApply> pendingFramePropertyApplies)
     {
         float uvWidth = 1f / gridColumns;
         float uvHeight = 1f / gridRows;
@@ -136,22 +177,13 @@ public partial class QuadAnimationSystem : SystemBase
         float uvMinX = col * uvWidth;
         float uvMinY = row * uvHeight;
 
-        SetOrAddProperty(entity, new UnitAnimationFrameUvMinProperty
-        {
-            Value = new float4(uvMinX, uvMinY, 0f, 0f),
-        });
-        SetOrAddProperty(entity, new UnitAnimationFrameUvSizeProperty
-        {
-            Value = new float4(uvWidth, uvHeight, 0f, 0f),
-        });
-        SetOrAddProperty(entity, new UnitAnimationFrameWorldSizeProperty
-        {
-            Value = new float4(math.max(0.01f, width), math.max(0.01f, height), 0f, 0f),
-        });
-        SetOrAddProperty(entity, new UnitAnimationFramePivotOffsetProperty
-        {
-            Value = new float4(pivotOffset.x, pivotOffset.y, 0f, 0f),
-        });
+        pendingFramePropertyApplies ??= new List<PendingFramePropertiesApply>();
+        pendingFramePropertyApplies.Add(new PendingFramePropertiesApply(
+            entity,
+            new float4(uvMinX, uvMinY, 0f, 0f),
+            new float4(uvWidth, uvHeight, 0f, 0f),
+            new float4(math.max(0.01f, width), math.max(0.01f, height), 0f, 0f),
+            new float4(pivotOffset.x, pivotOffset.y, 0f, 0f)));
     }
 
     private static int ResolveFrameIndex(int frameCount, float fps, float elapsedSeconds, bool loop)
@@ -170,5 +202,99 @@ public partial class QuadAnimationSystem : SystemBase
             EntityManager.SetComponentData(entity, value);
         else
             EntityManager.AddComponentData(entity, value);
+    }
+
+    private void ApplyPendingVisuals(List<PendingVisualApply> pendingVisualApplies)
+    {
+        if (pendingVisualApplies == null)
+            return;
+
+        for (int i = 0; i < pendingVisualApplies.Count; i++)
+        {
+            PendingVisualApply pending = pendingVisualApplies[i];
+            if (!EntityManager.Exists(pending.Entity) ||
+                !EntityManager.HasComponent<MaterialMeshInfo>(pending.Entity))
+            {
+                continue;
+            }
+
+            EntityManager.SetSharedComponentManaged(
+                pending.Entity,
+                new RenderMeshArray(new[] { pending.Material }, new[] { pending.Mesh }));
+            EntityManager.SetComponentData(pending.Entity, MaterialMeshInfo.FromRenderMeshArrayIndices(0, 0));
+        }
+    }
+
+    private void ApplyPendingFrameProperties(List<PendingFramePropertiesApply> pendingFramePropertyApplies)
+    {
+        if (pendingFramePropertyApplies == null)
+            return;
+
+        for (int i = 0; i < pendingFramePropertyApplies.Count; i++)
+        {
+            PendingFramePropertiesApply pending = pendingFramePropertyApplies[i];
+            if (!EntityManager.Exists(pending.Entity))
+                continue;
+
+            SetOrAddProperty(pending.Entity, new UnitAnimationFrameUvMinProperty { Value = pending.UvMin });
+            SetOrAddProperty(pending.Entity, new UnitAnimationFrameUvSizeProperty { Value = pending.UvSize });
+            SetOrAddProperty(pending.Entity, new UnitAnimationFrameWorldSizeProperty { Value = pending.WorldSize });
+            SetOrAddProperty(pending.Entity, new UnitAnimationFramePivotOffsetProperty { Value = pending.PivotOffset });
+        }
+    }
+
+    private void ApplyPendingDestroyFlags(List<Entity> pendingDestroyFlags)
+    {
+        if (pendingDestroyFlags == null)
+            return;
+
+        for (int i = 0; i < pendingDestroyFlags.Count; i++)
+        {
+            Entity entity = pendingDestroyFlags[i];
+            if (!EntityManager.Exists(entity))
+                continue;
+
+            if (!EntityManager.HasComponent<DestroyEntityFlag>(entity))
+                EntityManager.AddComponent<DestroyEntityFlag>(entity);
+
+            EntityManager.SetComponentEnabled<DestroyEntityFlag>(entity, true);
+        }
+    }
+
+    private readonly struct PendingVisualApply
+    {
+        public PendingVisualApply(Entity entity, Mesh mesh, Material material)
+        {
+            Entity = entity;
+            Mesh = mesh;
+            Material = material;
+        }
+
+        public Entity Entity { get; }
+        public Mesh Mesh { get; }
+        public Material Material { get; }
+    }
+
+    private readonly struct PendingFramePropertiesApply
+    {
+        public PendingFramePropertiesApply(
+            Entity entity,
+            float4 uvMin,
+            float4 uvSize,
+            float4 worldSize,
+            float4 pivotOffset)
+        {
+            Entity = entity;
+            UvMin = uvMin;
+            UvSize = uvSize;
+            WorldSize = worldSize;
+            PivotOffset = pivotOffset;
+        }
+
+        public Entity Entity { get; }
+        public float4 UvMin { get; }
+        public float4 UvSize { get; }
+        public float4 WorldSize { get; }
+        public float4 PivotOffset { get; }
     }
 }

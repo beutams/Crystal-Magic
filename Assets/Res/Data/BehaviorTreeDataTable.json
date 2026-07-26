@@ -370,356 +370,6 @@
       "Id": 4
     },
     {
-      "Name": "MonsterStraw",
-      "Description": "",
-      "RootNodeGuid": "ce4cca7248cd4e8f866b2f589938e87f",
-      "Nodes": [
-        {
-          "Type": "Root",
-          "Guid": "ce4cca7248cd4e8f866b2f589938e87f",
-          "EditorPosition": {
-            "x": 80,
-            "y": 120
-          },
-          "ChildGuids": [
-            "e8068f84c1874d4d86b1c7ca4d79820e"
-          ]
-        },
-        {
-          "Type": "Idle",
-          "Guid": "e8068f84c1874d4d86b1c7ca4d79820e",
-          "EditorPosition": {
-            "x": 360,
-            "y": 120
-          },
-          "ChildGuids": []
-        }
-      ],
-      "Id": 5
-    },
-    {
-      "Name": "MonsterStoneGolem",
-      "Description": "",
-      "RootNodeGuid": "stone_root",
-      "Nodes": [
-        {
-          "Type": "Root",
-          "Guid": "stone_root",
-          "EditorPosition": {
-            "x": 80,
-            "y": 120
-          },
-          "ChildGuids": [
-            "stone_selector"
-          ]
-        },
-        {
-          "Type": "Selector",
-          "Guid": "stone_selector",
-          "EditorPosition": {
-            "x": 80,
-            "y": 240
-          },
-          "ChildGuids": [
-            "stone_phase2_rage",
-            "stone_phase2_attack",
-            "stone_phase1_attack",
-            "stone_wander"
-          ]
-        },
-        {
-          "Type": "Sequence",
-          "Guid": "stone_phase2_rage",
-          "EditorPosition": {
-            "x": -320,
-            "y": 380
-          },
-          "ChildGuids": [
-            "stone_has_target_rage",
-            "stone_half_hp_rage",
-            "stone_no_rage_buff",
-            "stone_cast_rage"
-          ]
-        },
-        {
-          "Type": "CheckCondition",
-          "Guid": "stone_has_target_rage",
-          "EditorPosition": {
-            "x": -480,
-            "y": 520
-          },
-          "Conditions": [
-            {
-              "ConditionType": 0,
-              "SourceType": "UnitHasTargetSource",
-              "SourceParam": -1,
-              "CompareType": "IsTrue",
-              "CompareValue": 0
-            }
-          ],
-          "ChildGuids": []
-        },
-        {
-          "Type": "CheckCondition",
-          "Guid": "stone_half_hp_rage",
-          "EditorPosition": {
-            "x": -320,
-            "y": 520
-          },
-          "Conditions": [
-            {
-              "ConditionType": 0,
-              "SourceType": "UnitHealthRatioSource",
-              "SourceParam": -1,
-              "CompareType": "LessThan",
-              "CompareValue": 0.5
-            }
-          ],
-          "ChildGuids": []
-        },
-        {
-          "Type": "CheckCondition",
-          "Guid": "stone_no_rage_buff",
-          "EditorPosition": {
-            "x": -160,
-            "y": 520
-          },
-          "Conditions": [
-            {
-              "ConditionType": 0,
-              "SourceType": "UnitBuffStackSource",
-              "SourceParam": 6,
-              "CompareType": "LessThan",
-              "CompareValue": 1
-            }
-          ],
-          "ChildGuids": []
-        },
-        {
-          "Type": "CastToTarget",
-          "Guid": "stone_cast_rage",
-          "EditorPosition": {
-            "x": 0,
-            "y": 520
-          },
-          "SelectionMode": 2,
-          "SkillId": -1,
-          "SkillTagMask": 1,
-          "ChildGuids": []
-        },
-        {
-          "Type": "Sequence",
-          "Guid": "stone_phase2_attack",
-          "EditorPosition": {
-            "x": 40,
-            "y": 380
-          },
-          "ChildGuids": [
-            "stone_has_target_p2",
-            "stone_half_hp_p2",
-            "stone_cast_p2"
-          ]
-        },
-        {
-          "Type": "CheckCondition",
-          "Guid": "stone_has_target_p2",
-          "EditorPosition": {
-            "x": -40,
-            "y": 520
-          },
-          "Conditions": [
-            {
-              "ConditionType": 0,
-              "SourceType": "UnitHasTargetSource",
-              "SourceParam": -1,
-              "CompareType": "IsTrue",
-              "CompareValue": 0
-            }
-          ],
-          "ChildGuids": []
-        },
-        {
-          "Type": "CheckCondition",
-          "Guid": "stone_half_hp_p2",
-          "EditorPosition": {
-            "x": 120,
-            "y": 520
-          },
-          "Conditions": [
-            {
-              "ConditionType": 0,
-              "SourceType": "UnitHealthRatioSource",
-              "SourceParam": -1,
-              "CompareType": "LessThan",
-              "CompareValue": 0.5
-            }
-          ],
-          "ChildGuids": []
-        },
-        {
-          "Type": "CastToTarget",
-          "Guid": "stone_cast_p2",
-          "EditorPosition": {
-            "x": 280,
-            "y": 520
-          },
-          "SelectionMode": 2,
-          "SkillId": -1,
-          "SkillTagMask": 4,
-          "ChildGuids": []
-        },
-        {
-          "Type": "Sequence",
-          "Guid": "stone_phase1_attack",
-          "EditorPosition": {
-            "x": 360,
-            "y": 380
-          },
-          "ChildGuids": [
-            "stone_has_target_p1",
-            "stone_cast_p1"
-          ]
-        },
-        {
-          "Type": "CheckCondition",
-          "Guid": "stone_has_target_p1",
-          "EditorPosition": {
-            "x": 360,
-            "y": 520
-          },
-          "Conditions": [
-            {
-              "ConditionType": 0,
-              "SourceType": "UnitHasTargetSource",
-              "SourceParam": -1,
-              "CompareType": "IsTrue",
-              "CompareValue": 0
-            }
-          ],
-          "ChildGuids": []
-        },
-        {
-          "Type": "CastToTarget",
-          "Guid": "stone_cast_p1",
-          "EditorPosition": {
-            "x": 520,
-            "y": 520
-          },
-          "SelectionMode": 2,
-          "SkillId": -1,
-          "SkillTagMask": 2,
-          "ChildGuids": []
-        },
-        {
-          "Type": "Wander",
-          "Guid": "stone_wander",
-          "EditorPosition": {
-            "x": 680,
-            "y": 380
-          },
-          "MinDurationSeconds": 0.6,
-          "MaxDurationSeconds": 1.2,
-          "ChildGuids": []
-        }
-      ],
-      "Id": 6
-    },
-    {
-      "Name": "MonsterStoneGolemMinion",
-      "Description": "",
-      "RootNodeGuid": "stone_minion_root",
-      "Nodes": [
-        {
-          "Type": "Root",
-          "Guid": "stone_minion_root",
-          "EditorPosition": {
-            "x": 80,
-            "y": 120
-          },
-          "ChildGuids": [
-            "stone_minion_selector"
-          ]
-        },
-        {
-          "Type": "Selector",
-          "Guid": "stone_minion_selector",
-          "EditorPosition": {
-            "x": 80,
-            "y": 240
-          },
-          "ChildGuids": [
-            "stone_minion_engage",
-            "stone_minion_wander"
-          ]
-        },
-        {
-          "Type": "Sequence",
-          "Guid": "stone_minion_engage",
-          "EditorPosition": {
-            "x": -120,
-            "y": 380
-          },
-          "ChildGuids": [
-            "stone_minion_has_target",
-            "stone_minion_move",
-            "stone_minion_cast"
-          ]
-        },
-        {
-          "Type": "CheckCondition",
-          "Guid": "stone_minion_has_target",
-          "EditorPosition": {
-            "x": -240,
-            "y": 520
-          },
-          "Conditions": [
-            {
-              "ConditionType": 0,
-              "SourceType": "UnitHasTargetSource",
-              "SourceParam": -1,
-              "CompareType": "IsTrue",
-              "CompareValue": 0
-            }
-          ],
-          "ChildGuids": []
-        },
-        {
-          "Type": "MoveToTarget",
-          "Guid": "stone_minion_move",
-          "EditorPosition": {
-            "x": -80,
-            "y": 520
-          },
-          "StopDistance": 2.1,
-          "ChildGuids": []
-        },
-        {
-          "Type": "CastToTarget",
-          "Guid": "stone_minion_cast",
-          "EditorPosition": {
-            "x": 80,
-            "y": 520
-          },
-          "SelectionMode": 1,
-          "SkillId": -1,
-          "SkillTagMask": 0,
-          "ChildGuids": []
-        },
-        {
-          "Type": "Wander",
-          "Guid": "stone_minion_wander",
-          "EditorPosition": {
-            "x": 280,
-            "y": 380
-          },
-          "MinDurationSeconds": 0.5,
-          "MaxDurationSeconds": 1,
-          "ChildGuids": []
-        }
-      ],
-      "Id": 7
-    },
-    {
       "Name": "MonsterSpider",
       "Description": "",
       "RootNodeGuid": "spider_root",
@@ -743,29 +393,28 @@
             "y": 240
           },
           "ChildGuids": [
-            "spider_ranged_sequence",
-            "spider_melee_sequence",
+            "spider_engage",
             "spider_wander"
           ]
         },
         {
           "Type": "Sequence",
-          "Guid": "spider_ranged_sequence",
+          "Guid": "spider_engage",
           "EditorPosition": {
-            "x": -220,
+            "x": -120,
             "y": 380
           },
           "ChildGuids": [
-            "spider_has_target_ranged",
-            "spider_move_ranged",
-            "spider_cast_ranged"
+            "spider_has_target",
+            "spider_move",
+            "spider_cast"
           ]
         },
         {
           "Type": "CheckCondition",
-          "Guid": "spider_has_target_ranged",
+          "Guid": "spider_has_target",
           "EditorPosition": {
-            "x": -360,
+            "x": -240,
             "y": 520
           },
           "Conditions": [
@@ -781,564 +430,86 @@
         },
         {
           "Type": "MoveToTarget",
-          "Guid": "spider_move_ranged",
+          "Guid": "spider_move",
           "EditorPosition": {
-            "x": -200,
+            "x": -80,
             "y": 520
           },
-          "StopDistance": 8,
+          "StopDistance": 2.2,
           "ChildGuids": []
         },
         {
           "Type": "CastToTarget",
-          "Guid": "spider_cast_ranged",
+          "Guid": "spider_cast",
           "EditorPosition": {
-            "x": -40,
+            "x": 80,
             "y": 520
           },
-          "SelectionMode": 2,
+          "SelectionMode": 1,
           "SkillId": -1,
-          "SkillTagMask": 2,
-          "ChildGuids": []
-        },
-        {
-          "Type": "Sequence",
-          "Guid": "spider_melee_sequence",
-          "EditorPosition": {
-            "x": 140,
-            "y": 380
-          },
-          "ChildGuids": [
-            "spider_has_target_melee",
-            "spider_move_melee",
-            "spider_cast_melee"
-          ]
-        },
-        {
-          "Type": "CheckCondition",
-          "Guid": "spider_has_target_melee",
-          "EditorPosition": {
-            "x": 40,
-            "y": 520
-          },
-          "Conditions": [
-            {
-              "ConditionType": 0,
-              "SourceType": "UnitHasTargetSource",
-              "SourceParam": -1,
-              "CompareType": "IsTrue",
-              "CompareValue": 0
-            }
-          ],
-          "ChildGuids": []
-        },
-        {
-          "Type": "MoveToTarget",
-          "Guid": "spider_move_melee",
-          "EditorPosition": {
-            "x": 200,
-            "y": 520
-          },
-          "StopDistance": 2.1,
-          "ChildGuids": []
-        },
-        {
-          "Type": "CastToTarget",
-          "Guid": "spider_cast_melee",
-          "EditorPosition": {
-            "x": 360,
-            "y": 520
-          },
-          "SelectionMode": 2,
-          "SkillId": -1,
-          "SkillTagMask": 1,
+          "SkillTagMask": 0,
           "ChildGuids": []
         },
         {
           "Type": "Wander",
           "Guid": "spider_wander",
           "EditorPosition": {
-            "x": 520,
+            "x": 280,
             "y": 380
           },
           "MinDurationSeconds": 0.5,
-          "MaxDurationSeconds": 1.1,
+          "MaxDurationSeconds": 1,
           "ChildGuids": []
         }
       ],
       "Id": 8
     },
     {
-      "Name": "MonsterGoblinShield",
+      "Name": "MonsterBat",
       "Description": "",
-      "RootNodeGuid": "goblin_shield_root",
+      "RootNodeGuid": "bat_root",
       "Nodes": [
         {
           "Type": "Root",
-          "Guid": "goblin_shield_root",
+          "Guid": "bat_root",
           "EditorPosition": {
             "x": 80,
             "y": 120
           },
           "ChildGuids": [
-            "goblin_shield_selector"
+            "bat_selector"
           ]
         },
         {
           "Type": "Selector",
-          "Guid": "goblin_shield_selector",
+          "Guid": "bat_selector",
           "EditorPosition": {
             "x": 80,
             "y": 240
           },
           "ChildGuids": [
-            "goblin_shield_leap_sequence",
-            "goblin_shield_slash_sequence",
-            "goblin_shield_wander"
+            "bat_engage",
+            "bat_wander"
           ]
         },
         {
           "Type": "Sequence",
-          "Guid": "goblin_shield_leap_sequence",
-          "EditorPosition": {
-            "x": -180,
-            "y": 380
-          },
-          "ChildGuids": [
-            "goblin_shield_has_target_leap",
-            "goblin_shield_broken_check",
-            "goblin_shield_move_leap",
-            "goblin_shield_cast_leap"
-          ]
-        },
-        {
-          "Type": "CheckCondition",
-          "Guid": "goblin_shield_has_target_leap",
-          "EditorPosition": {
-            "x": -340,
-            "y": 520
-          },
-          "Conditions": [
-            {
-              "ConditionType": 0,
-              "SourceType": "UnitHasTargetSource",
-              "SourceParam": -1,
-              "CompareType": "IsTrue",
-              "CompareValue": 0
-            }
-          ],
-          "ChildGuids": []
-        },
-        {
-          "Type": "CheckCondition",
-          "Guid": "goblin_shield_broken_check",
-          "EditorPosition": {
-            "x": -180,
-            "y": 520
-          },
-          "Conditions": [
-            {
-              "ConditionType": 0,
-              "SourceType": "UnitHealthRatioSource",
-              "SourceParam": -1,
-              "CompareType": "LessThan",
-              "CompareValue": 0.5001
-            }
-          ],
-          "ChildGuids": []
-        },
-        {
-          "Type": "MoveToTarget",
-          "Guid": "goblin_shield_move_leap",
-          "EditorPosition": {
-            "x": -20,
-            "y": 520
-          },
-          "StopDistance": 5.5,
-          "ChildGuids": []
-        },
-        {
-          "Type": "CastToTarget",
-          "Guid": "goblin_shield_cast_leap",
-          "EditorPosition": {
-            "x": 140,
-            "y": 520
-          },
-          "SelectionMode": 2,
-          "SkillId": -1,
-          "SkillTagMask": 2,
-          "ChildGuids": []
-        },
-        {
-          "Type": "Sequence",
-          "Guid": "goblin_shield_slash_sequence",
-          "EditorPosition": {
-            "x": 220,
-            "y": 380
-          },
-          "ChildGuids": [
-            "goblin_shield_has_target_slash",
-            "goblin_shield_move_slash",
-            "goblin_shield_cast_slash"
-          ]
-        },
-        {
-          "Type": "CheckCondition",
-          "Guid": "goblin_shield_has_target_slash",
-          "EditorPosition": {
-            "x": 120,
-            "y": 520
-          },
-          "Conditions": [
-            {
-              "ConditionType": 0,
-              "SourceType": "UnitHasTargetSource",
-              "SourceParam": -1,
-              "CompareType": "IsTrue",
-              "CompareValue": 0
-            }
-          ],
-          "ChildGuids": []
-        },
-        {
-          "Type": "MoveToTarget",
-          "Guid": "goblin_shield_move_slash",
-          "EditorPosition": {
-            "x": 280,
-            "y": 520
-          },
-          "StopDistance": 2.1,
-          "ChildGuids": []
-        },
-        {
-          "Type": "CastToTarget",
-          "Guid": "goblin_shield_cast_slash",
-          "EditorPosition": {
-            "x": 440,
-            "y": 520
-          },
-          "SelectionMode": 2,
-          "SkillId": -1,
-          "SkillTagMask": 1,
-          "ChildGuids": []
-        },
-        {
-          "Type": "Wander",
-          "Guid": "goblin_shield_wander",
-          "EditorPosition": {
-            "x": 620,
-            "y": 380
-          },
-          "MinDurationSeconds": 0.5,
-          "MaxDurationSeconds": 1.0,
-          "ChildGuids": []
-        }
-      ],
-      "Id": 9
-    },
-    {
-      "Name": "MonsterSpiderGuard",
-      "Description": "",
-      "RootNodeGuid": "spider_guard_root",
-      "Nodes": [
-        {
-          "Type": "Root",
-          "Guid": "spider_guard_root",
-          "EditorPosition": {
-            "x": 80,
-            "y": 120
-          },
-          "ChildGuids": [
-            "spider_guard_selector"
-          ]
-        },
-        {
-          "Type": "Selector",
-          "Guid": "spider_guard_selector",
-          "EditorPosition": {
-            "x": 80,
-            "y": 240
-          },
-          "ChildGuids": [
-            "spider_guard_pounce_sequence",
-            "spider_guard_predation_sequence",
-            "spider_guard_wander"
-          ]
-        },
-        {
-          "Type": "Sequence",
-          "Guid": "spider_guard_pounce_sequence",
-          "EditorPosition": {
-            "x": -220,
-            "y": 380
-          },
-          "ChildGuids": [
-            "spider_guard_has_target_pounce",
-            "spider_guard_move_pounce",
-            "spider_guard_cast_pounce"
-          ]
-        },
-        {
-          "Type": "CheckCondition",
-          "Guid": "spider_guard_has_target_pounce",
-          "EditorPosition": {
-            "x": -360,
-            "y": 520
-          },
-          "Conditions": [
-            {
-              "ConditionType": 0,
-              "SourceType": "UnitHasTargetSource",
-              "SourceParam": -1,
-              "CompareType": "IsTrue",
-              "CompareValue": 0
-            }
-          ],
-          "ChildGuids": []
-        },
-        {
-          "Type": "MoveToTarget",
-          "Guid": "spider_guard_move_pounce",
-          "EditorPosition": {
-            "x": -200,
-            "y": 520
-          },
-          "StopDistance": 6.2,
-          "ChildGuids": []
-        },
-        {
-          "Type": "CastToTarget",
-          "Guid": "spider_guard_cast_pounce",
-          "EditorPosition": {
-            "x": -40,
-            "y": 520
-          },
-          "SelectionMode": 2,
-          "SkillId": -1,
-          "SkillTagMask": 2,
-          "ChildGuids": []
-        },
-        {
-          "Type": "Sequence",
-          "Guid": "spider_guard_predation_sequence",
-          "EditorPosition": {
-            "x": 140,
-            "y": 380
-          },
-          "ChildGuids": [
-            "spider_guard_has_target_predation",
-            "spider_guard_move_predation",
-            "spider_guard_cast_predation"
-          ]
-        },
-        {
-          "Type": "CheckCondition",
-          "Guid": "spider_guard_has_target_predation",
-          "EditorPosition": {
-            "x": 40,
-            "y": 520
-          },
-          "Conditions": [
-            {
-              "ConditionType": 0,
-              "SourceType": "UnitHasTargetSource",
-              "SourceParam": -1,
-              "CompareType": "IsTrue",
-              "CompareValue": 0
-            }
-          ],
-          "ChildGuids": []
-        },
-        {
-          "Type": "MoveToTarget",
-          "Guid": "spider_guard_move_predation",
-          "EditorPosition": {
-            "x": 200,
-            "y": 520
-          },
-          "StopDistance": 2.0,
-          "ChildGuids": []
-        },
-        {
-          "Type": "CastToTarget",
-          "Guid": "spider_guard_cast_predation",
-          "EditorPosition": {
-            "x": 360,
-            "y": 520
-          },
-          "SelectionMode": 2,
-          "SkillId": -1,
-          "SkillTagMask": 1,
-          "ChildGuids": []
-        },
-        {
-          "Type": "Wander",
-          "Guid": "spider_guard_wander",
-          "EditorPosition": {
-            "x": 520,
-            "y": 380
-          },
-          "MinDurationSeconds": 0.5,
-          "MaxDurationSeconds": 1.0,
-          "ChildGuids": []
-        }
-      ],
-      "Id": 10
-    },
-    {
-      "Name": "MonsterGoblinMage",
-      "Description": "",
-      "RootNodeGuid": "goblin_mage_root",
-      "Nodes": [
-        {
-          "Type": "Root",
-          "Guid": "goblin_mage_root",
-          "EditorPosition": {
-            "x": 80,
-            "y": 120
-          },
-          "ChildGuids": [
-            "goblin_mage_selector"
-          ]
-        },
-        {
-          "Type": "Selector",
-          "Guid": "goblin_mage_selector",
-          "EditorPosition": {
-            "x": 80,
-            "y": 240
-          },
-          "ChildGuids": [
-            "goblin_mage_summon_shield_sequence",
-            "goblin_mage_summon_goblins_sequence",
-            "goblin_mage_projectile_sequence",
-            "goblin_mage_wander"
-          ]
-        },
-        {
-          "Type": "Sequence",
-          "Guid": "goblin_mage_summon_shield_sequence",
-          "EditorPosition": {
-            "x": -380,
-            "y": 380
-          },
-          "ChildGuids": [
-            "goblin_mage_has_target_shield",
-            "goblin_mage_move_shield",
-            "goblin_mage_cast_shield"
-          ]
-        },
-        {
-          "Type": "CheckCondition",
-          "Guid": "goblin_mage_has_target_shield",
-          "EditorPosition": {
-            "x": -520,
-            "y": 520
-          },
-          "Conditions": [
-            {
-              "ConditionType": 0,
-              "SourceType": "UnitHasTargetSource",
-              "SourceParam": -1,
-              "CompareType": "IsTrue",
-              "CompareValue": 0
-            }
-          ],
-          "ChildGuids": []
-        },
-        {
-          "Type": "MoveToTarget",
-          "Guid": "goblin_mage_move_shield",
-          "EditorPosition": {
-            "x": -360,
-            "y": 520
-          },
-          "StopDistance": 10.0,
-          "ChildGuids": []
-        },
-        {
-          "Type": "CastToTarget",
-          "Guid": "goblin_mage_cast_shield",
-          "EditorPosition": {
-            "x": -200,
-            "y": 520
-          },
-          "SelectionMode": 2,
-          "SkillId": -1,
-          "SkillTagMask": 4,
-          "ChildGuids": []
-        },
-        {
-          "Type": "Sequence",
-          "Guid": "goblin_mage_summon_goblins_sequence",
-          "EditorPosition": {
-            "x": -20,
-            "y": 380
-          },
-          "ChildGuids": [
-            "goblin_mage_has_target_goblins",
-            "goblin_mage_move_goblins",
-            "goblin_mage_cast_goblins"
-          ]
-        },
-        {
-          "Type": "CheckCondition",
-          "Guid": "goblin_mage_has_target_goblins",
+          "Guid": "bat_engage",
           "EditorPosition": {
             "x": -120,
-            "y": 520
-          },
-          "Conditions": [
-            {
-              "ConditionType": 0,
-              "SourceType": "UnitHasTargetSource",
-              "SourceParam": -1,
-              "CompareType": "IsTrue",
-              "CompareValue": 0
-            }
-          ],
-          "ChildGuids": []
-        },
-        {
-          "Type": "MoveToTarget",
-          "Guid": "goblin_mage_move_goblins",
-          "EditorPosition": {
-            "x": 40,
-            "y": 520
-          },
-          "StopDistance": 10.0,
-          "ChildGuids": []
-        },
-        {
-          "Type": "CastToTarget",
-          "Guid": "goblin_mage_cast_goblins",
-          "EditorPosition": {
-            "x": 200,
-            "y": 520
-          },
-          "SelectionMode": 2,
-          "SkillId": -1,
-          "SkillTagMask": 2,
-          "ChildGuids": []
-        },
-        {
-          "Type": "Sequence",
-          "Guid": "goblin_mage_projectile_sequence",
-          "EditorPosition": {
-            "x": 340,
             "y": 380
           },
           "ChildGuids": [
-            "goblin_mage_has_target_projectile",
-            "goblin_mage_move_projectile",
-            "goblin_mage_cast_projectile"
+            "bat_has_target",
+            "bat_move",
+            "bat_cast"
           ]
         },
         {
           "Type": "CheckCondition",
-          "Guid": "goblin_mage_has_target_projectile",
+          "Guid": "bat_has_target",
           "EditorPosition": {
-            "x": 240,
+            "x": -240,
             "y": 520
           },
           "Conditions": [
@@ -1354,39 +525,324 @@
         },
         {
           "Type": "MoveToTarget",
-          "Guid": "goblin_mage_move_projectile",
+          "Guid": "bat_move",
           "EditorPosition": {
-            "x": 400,
+            "x": -80,
             "y": 520
           },
-          "StopDistance": 12.0,
+          "StopDistance": 2.2,
           "ChildGuids": []
         },
         {
           "Type": "CastToTarget",
-          "Guid": "goblin_mage_cast_projectile",
+          "Guid": "bat_cast",
           "EditorPosition": {
-            "x": 560,
+            "x": 80,
             "y": 520
           },
-          "SelectionMode": 2,
+          "SelectionMode": 1,
           "SkillId": -1,
-          "SkillTagMask": 1,
+          "SkillTagMask": 0,
           "ChildGuids": []
         },
         {
           "Type": "Wander",
-          "Guid": "goblin_mage_wander",
+          "Guid": "bat_wander",
           "EditorPosition": {
-            "x": 760,
+            "x": 280,
             "y": 380
           },
           "MinDurationSeconds": 0.5,
-          "MaxDurationSeconds": 1.0,
+          "MaxDurationSeconds": 1,
           "ChildGuids": []
         }
       ],
-      "Id": 11
+      "Id": 12
+    },
+    {
+      "Name": "MonsterRat",
+      "Description": "",
+      "RootNodeGuid": "rat_root",
+      "Nodes": [
+        {
+          "Type": "Root",
+          "Guid": "rat_root",
+          "EditorPosition": {
+            "x": 80,
+            "y": 120
+          },
+          "ChildGuids": [
+            "rat_selector"
+          ]
+        },
+        {
+          "Type": "Selector",
+          "Guid": "rat_selector",
+          "EditorPosition": {
+            "x": 80,
+            "y": 240
+          },
+          "ChildGuids": [
+            "rat_engage",
+            "rat_wander"
+          ]
+        },
+        {
+          "Type": "Sequence",
+          "Guid": "rat_engage",
+          "EditorPosition": {
+            "x": -120,
+            "y": 380
+          },
+          "ChildGuids": [
+            "rat_has_target",
+            "rat_move",
+            "rat_cast"
+          ]
+        },
+        {
+          "Type": "CheckCondition",
+          "Guid": "rat_has_target",
+          "EditorPosition": {
+            "x": -240,
+            "y": 520
+          },
+          "Conditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitHasTargetSource",
+              "SourceParam": -1,
+              "CompareType": "IsTrue",
+              "CompareValue": 0
+            }
+          ],
+          "ChildGuids": []
+        },
+        {
+          "Type": "MoveToTarget",
+          "Guid": "rat_move",
+          "EditorPosition": {
+            "x": -80,
+            "y": 520
+          },
+          "StopDistance": 2.2,
+          "ChildGuids": []
+        },
+        {
+          "Type": "CastToTarget",
+          "Guid": "rat_cast",
+          "EditorPosition": {
+            "x": 80,
+            "y": 520
+          },
+          "SelectionMode": 1,
+          "SkillId": -1,
+          "SkillTagMask": 0,
+          "ChildGuids": []
+        },
+        {
+          "Type": "Wander",
+          "Guid": "rat_wander",
+          "EditorPosition": {
+            "x": 280,
+            "y": 380
+          },
+          "MinDurationSeconds": 0.5,
+          "MaxDurationSeconds": 1,
+          "ChildGuids": []
+        }
+      ],
+      "Id": 13
+    },
+    {
+      "Name": "MonsterOrc",
+      "Description": "",
+      "RootNodeGuid": "orc_root",
+      "Nodes": [
+        {
+          "Type": "Root",
+          "Guid": "orc_root",
+          "EditorPosition": {
+            "x": 80,
+            "y": 120
+          },
+          "ChildGuids": [
+            "orc_selector"
+          ]
+        },
+        {
+          "Type": "Selector",
+          "Guid": "orc_selector",
+          "EditorPosition": {
+            "x": 80,
+            "y": 240
+          },
+          "ChildGuids": [
+            "orc_engage",
+            "orc_wander"
+          ]
+        },
+        {
+          "Type": "Sequence",
+          "Guid": "orc_engage",
+          "EditorPosition": {
+            "x": -120,
+            "y": 380
+          },
+          "ChildGuids": [
+            "orc_has_target",
+            "orc_move",
+            "orc_cast"
+          ]
+        },
+        {
+          "Type": "CheckCondition",
+          "Guid": "orc_has_target",
+          "EditorPosition": {
+            "x": -240,
+            "y": 520
+          },
+          "Conditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitHasTargetSource",
+              "SourceParam": -1,
+              "CompareType": "IsTrue",
+              "CompareValue": 0
+            }
+          ],
+          "ChildGuids": []
+        },
+        {
+          "Type": "MoveToTarget",
+          "Guid": "orc_move",
+          "EditorPosition": {
+            "x": -80,
+            "y": 520
+          },
+          "StopDistance": 2.2,
+          "ChildGuids": []
+        },
+        {
+          "Type": "CastToTarget",
+          "Guid": "orc_cast",
+          "EditorPosition": {
+            "x": 80,
+            "y": 520
+          },
+          "SelectionMode": 1,
+          "SkillId": -1,
+          "SkillTagMask": 0,
+          "ChildGuids": []
+        },
+        {
+          "Type": "Wander",
+          "Guid": "orc_wander",
+          "EditorPosition": {
+            "x": 280,
+            "y": 380
+          },
+          "MinDurationSeconds": 0.5,
+          "MaxDurationSeconds": 1,
+          "ChildGuids": []
+        }
+      ],
+      "Id": 14
+    },
+    {
+      "Name": "MonsterTroll",
+      "Description": "",
+      "RootNodeGuid": "troll_root",
+      "Nodes": [
+        {
+          "Type": "Root",
+          "Guid": "troll_root",
+          "EditorPosition": {
+            "x": 80,
+            "y": 120
+          },
+          "ChildGuids": [
+            "troll_selector"
+          ]
+        },
+        {
+          "Type": "Selector",
+          "Guid": "troll_selector",
+          "EditorPosition": {
+            "x": 80,
+            "y": 240
+          },
+          "ChildGuids": [
+            "troll_engage",
+            "troll_wander"
+          ]
+        },
+        {
+          "Type": "Sequence",
+          "Guid": "troll_engage",
+          "EditorPosition": {
+            "x": -120,
+            "y": 380
+          },
+          "ChildGuids": [
+            "troll_has_target",
+            "troll_move",
+            "troll_cast"
+          ]
+        },
+        {
+          "Type": "CheckCondition",
+          "Guid": "troll_has_target",
+          "EditorPosition": {
+            "x": -240,
+            "y": 520
+          },
+          "Conditions": [
+            {
+              "ConditionType": 0,
+              "SourceType": "UnitHasTargetSource",
+              "SourceParam": -1,
+              "CompareType": "IsTrue",
+              "CompareValue": 0
+            }
+          ],
+          "ChildGuids": []
+        },
+        {
+          "Type": "MoveToTarget",
+          "Guid": "troll_move",
+          "EditorPosition": {
+            "x": -80,
+            "y": 520
+          },
+          "StopDistance": 2.2,
+          "ChildGuids": []
+        },
+        {
+          "Type": "CastToTarget",
+          "Guid": "troll_cast",
+          "EditorPosition": {
+            "x": 80,
+            "y": 520
+          },
+          "SelectionMode": 1,
+          "SkillId": -1,
+          "SkillTagMask": 0,
+          "ChildGuids": []
+        },
+        {
+          "Type": "Wander",
+          "Guid": "troll_wander",
+          "EditorPosition": {
+            "x": 280,
+            "y": 380
+          },
+          "MinDurationSeconds": 0.5,
+          "MaxDurationSeconds": 1,
+          "ChildGuids": []
+        }
+      ],
+      "Id": 15
     }
   ]
 }

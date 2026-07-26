@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d27de32c69246628b80e3f7ce5dc6b2, type: 3}
+  m_Name: MonsterOrc_DeathState_Default
+  m_EditorClassIdentifier: 
+  _framesPerSecond: 6
+  _loop: 0
+  _referenceFrameSizePixels: {x: 48, y: 48}
+  _referenceFrameWorldSize: {x: 1, y: 1}
+  _frontFrames:
+  - {fileID: 156851665, guid: 6720c6b4332a565479accdb5a3554457, type: 3}
+  - {fileID: -468109021, guid: 6720c6b4332a565479accdb5a3554457, type: 3}
+  - {fileID: 363636242, guid: 6720c6b4332a565479accdb5a3554457, type: 3}
+  _backFrames:
+  - {fileID: 1896000927, guid: 6720c6b4332a565479accdb5a3554457, type: 3}
+  - {fileID: -1922400112, guid: 6720c6b4332a565479accdb5a3554457, type: 3}
+  - {fileID: 142324057, guid: 6720c6b4332a565479accdb5a3554457, type: 3}
+  _leftFrames:
+  - {fileID: -1012313879, guid: 6720c6b4332a565479accdb5a3554457, type: 3}
+  - {fileID: -498261730, guid: 6720c6b4332a565479accdb5a3554457, type: 3}
+  - {fileID: -222133170, guid: 6720c6b4332a565479accdb5a3554457, type: 3}
