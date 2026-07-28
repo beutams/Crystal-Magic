@@ -1,34 +1,38 @@
 ﻿{
-  "Rows": [
-    {
-      "Name": "小型HP回复",
-      "Description": "回血",
-      "TargetType": 0,
-      "CarryLimit": 10,
-      "EffectChain": [
-        {
-          "$type": "CrystalMagic.Game.Data.Effects.HealEffectData, Assembly-CSharp",
-          "HealCoefficient": 0.0,
-          "FlatHealBonus": 50.0,
-          "Conditions": []
-        }
-      ],
-      "Id": 1
-    },
-    {
-      "Name": "小型MP回复",
-      "Description": "回蓝",
-      "TargetType": 0,
-      "CarryLimit": 10,
-      "EffectChain": [
-        {
-          "$type": "CrystalMagic.Game.Data.Effects.RestoreManaEffectData, Assembly-CSharp",
-          "ManaRestoreCoefficient": 0.0,
-          "FlatManaRestoreBonus": 50.0,
-          "Conditions": []
-        }
-      ],
-      "Id": 2
-    }
-  ]
+    "Rows":  [
+                 {
+                     "TargetType":  0,
+                     "CarryLimit":  10,
+                     "EffectChain":  [
+                                         {
+                                             "$type":  "CrystalMagic.Game.Data.Effects.HealEffectData, Assembly-CSharp",
+                                             "HealCoefficient":  0.0,
+                                             "FlatHealBonus":  50.0,
+                                             "Conditions":  [
+
+                                                            ]
+                                         }
+                                     ],
+                     "Id":  1,
+                     "NameKey":  "prop.small_health.name",
+                     "DescriptionKey":  "prop.small_health.description"
+                 },
+                 {
+                     "TargetType":  0,
+                     "CarryLimit":  10,
+                     "EffectChain":  [
+                                         {
+                                             "$type":  "CrystalMagic.Game.Data.Effects.RestoreManaEffectData, Assembly-CSharp",
+                                             "ManaRestoreCoefficient":  0.0,
+                                             "FlatManaRestoreBonus":  50.0,
+                                             "Conditions":  [
+
+                                                            ]
+                                         }
+                                     ],
+                     "Id":  2,
+                     "NameKey":  "prop.small_mana.name",
+                     "DescriptionKey":  "prop.small_mana.description"
+                 }
+             ]
 }

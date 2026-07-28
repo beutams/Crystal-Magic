@@ -19,7 +19,7 @@ namespace CrystalMagic.Game.Skill
         {
             return context.SkillAdditionData != null &&
                    !string.IsNullOrWhiteSpace(followup.SkillAdditionName) &&
-                   string.Equals(context.SkillAdditionData.Name, followup.SkillAdditionName, StringComparison.Ordinal);
+                   string.Equals(context.SkillAdditionData.NameKey, followup.SkillAdditionName, StringComparison.Ordinal);
         }
     }
 }

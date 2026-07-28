@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using CrystalMagic.Core;
+using Newtonsoft.Json;
 
 namespace CrystalMagic.Game.Data
 {
@@ -20,9 +21,15 @@ namespace CrystalMagic.Game.Data
     [System.Serializable]
     public class ItemData : DataRow
     {
-        public string Name;
-        public string Description;
+        public string NameKey;
+        public string DescriptionKey;
         public ItemType ItemType;
+
+        [JsonIgnore]
+        public string Name => LocalizationComponent.Resolve(NameKey);
+
+        [JsonIgnore]
+        public string Description => LocalizationComponent.Resolve(DescriptionKey);
 
         /// <summary>
         /// 额外关联数据的 Id。

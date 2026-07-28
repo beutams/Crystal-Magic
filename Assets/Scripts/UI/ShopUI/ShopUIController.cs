@@ -144,20 +144,20 @@ namespace CrystalMagic.UI
             tipMessage = string.Empty;
             if (data == null)
             {
-                tipMessage = "该商品当前无法购买。";
+                tipMessage = CrystalMagic.Core.LocalizationComponent.Instance.Get("ui.shop.purchase_unavailable");
                 return false;
             }
 
             if (data.Price < 0)
             {
-                tipMessage = "该商品当前无法购买。";
+                tipMessage = CrystalMagic.Core.LocalizationComponent.Instance.Get("ui.shop.purchase_unavailable");
                 return false;
             }
 
             long money = CrystalMagic.Core.SaveDataComponent.Instance.GetTownData()?.StashMoney ?? 0;
             if (money < data.Price)
             {
-                tipMessage = "金币不足，无法购买。";
+                tipMessage = CrystalMagic.Core.LocalizationComponent.Instance.Get("ui.shop.insufficient_money");
                 return false;
             }
 
@@ -167,7 +167,7 @@ namespace CrystalMagic.UI
                     data.ItemId,
                     1))
             {
-                tipMessage = "背包或道具槽位已满，无法购买。";
+                tipMessage = CrystalMagic.Core.LocalizationComponent.Instance.Get("ui.shop.inventory_full");
                 return false;
             }
 

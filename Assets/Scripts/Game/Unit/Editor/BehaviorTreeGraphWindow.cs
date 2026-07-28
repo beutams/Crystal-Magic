@@ -574,7 +574,7 @@ namespace CrystalMagic.Editor.Unit
             {
                 if (File.Exists(DataPath))
                 {
-                    string json = File.ReadAllText(DataPath);
+                    string json = DataFileUtility.ReadJsonText(DataPath);
                     TableWrapper wrapper = JsonConvert.DeserializeObject<TableWrapper>(json, JsonSettings);
                     if (wrapper?.Rows != null)
                         _rows.AddRange(wrapper.Rows);
@@ -627,7 +627,7 @@ namespace CrystalMagic.Editor.Unit
             {
                 EnsureStableTreeIds();
                 string json = JsonConvert.SerializeObject(new TableWrapper { Rows = _rows }, JsonSettings);
-                File.WriteAllText(DataPath, json, Encoding.UTF8);
+                DataFileUtility.WriteJsonText(DataPath, json);
                 AssetDatabase.Refresh();
                 _isDirty = false;
                 if (updateStatus)

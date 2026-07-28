@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Data.Effects;
 using CrystalMagic.Game.Skill;
@@ -209,7 +210,7 @@ namespace CrystalMagic.Editor.Data
 
             try
             {
-                string json = File.ReadAllText(DataPath);
+                string json = DataFileUtility.ReadJsonText(DataPath);
                 TableWrapper wrapper = JsonConvert.DeserializeObject<TableWrapper>(json, JsonSettings);
                 if (wrapper?.Rows != null)
                     _rows = wrapper.Rows;
@@ -235,7 +236,7 @@ namespace CrystalMagic.Editor.Data
             {
                 NormalizeRowIds();
                 string json = JsonConvert.SerializeObject(new TableWrapper { Rows = _rows }, JsonSettings);
-                File.WriteAllText(DataPath, json, Encoding.UTF8);
+                DataFileUtility.WriteJsonText(DataPath, json);
                 AssetDatabase.Refresh();
                 _isDirty = false;
                 _statusText = $"Saved {_rows.Count} rows";
@@ -252,8 +253,8 @@ namespace CrystalMagic.Editor.Data
             _rows.Add(new SkillAdditionData
             {
                 Id = _rows.Count,
-                Name = $"New Skill Effect {_rows.Count}",
-                Description = string.Empty,
+                NameKey = $"skill_addition.new_{_rows.Count}.name",
+                DescriptionKey = string.Empty,
                 IconPath = string.Empty,
                 Modifiers = new List<SkillModifierEntry>(),
                 FollowupEffects = new List<SkillFollowupEffectData>(),
@@ -292,7 +293,7 @@ namespace CrystalMagic.Editor.Data
                 return;
 
             copy.Id = _rows.Count;
-            copy.Name = string.IsNullOrWhiteSpace(source.Name) ? $"Skill Effect {copy.Id}" : $"{source.Name}_Copy";
+            copy.NameKey = string.IsNullOrWhiteSpace(source.NameKey) ? $"skill_addition.new_{copy.Id}.name" : $"{source.NameKey}_copy";
             copy.Modifiers ??= new List<SkillModifierEntry>();
             copy.FollowupEffects ??= new List<SkillFollowupEffectData>();
             copy.CastTasks ??= new List<SkillCastTaskData>();
@@ -489,10 +490,10 @@ namespace CrystalMagic.Editor.Data
             DrawSectionHeader("Basic");
             using (new EditorGUI.DisabledScope(true))
                 EditorGUILayout.IntField("Id", row.Id);
-            row.Name = EditorGUILayout.TextField("Name", row.Name ?? string.Empty);
+            row.NameKey = EditorGUILayout.TextField("Name Key", row.NameKey ?? string.Empty);
             row.IconPath = EditorGUILayout.TextField("Icon Path", row.IconPath ?? string.Empty);
-            EditorGUILayout.LabelField("Description");
-            row.Description = EditorGUILayout.TextArea(row.Description ?? string.Empty, GUILayout.MinHeight(48f), GUILayout.MaxHeight(80f));
+            EditorGUILayout.LabelField("Description Key");
+            row.DescriptionKey = EditorGUILayout.TextArea(row.DescriptionKey ?? string.Empty, GUILayout.MinHeight(48f), GUILayout.MaxHeight(80f));
             if (EditorGUI.EndChangeCheck())
                 _isDirty = true;
 

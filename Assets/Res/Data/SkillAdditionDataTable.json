@@ -1,8 +1,6 @@
 ﻿{
     "Rows":  [
                  {
-                     "Name":  "增幅",
-                     "Description":  "当前技能伤害提高25%，下一个技能伤害降低50%",
                      "IconPath":  "Assets/Res/Sprites/SkillEffect/Damage Increase.png",
                      "Modifiers":  [
                                        {
@@ -38,11 +36,11 @@
                      "EffectChain":  [
 
                                      ],
-                     "Id":  0
+                     "Id":  0,
+                     "NameKey":  "skill_addition.amplify.name",
+                     "DescriptionKey":  "skill_addition.amplify.description"
                  },
                  {
-                     "Name":  "广域",
-                     "Description":  "当前技能范围提高20%，下一个技能伤害降低50%",
                      "IconPath":  "Assets/Res/Sprites/Item/Thunder Field.png",
                      "Modifiers":  [
                                        {
@@ -78,11 +76,11 @@
                      "EffectChain":  [
 
                                      ],
-                     "Id":  1
+                     "Id":  1,
+                     "NameKey":  "skill_addition.area.name",
+                     "DescriptionKey":  "skill_addition.area.description"
                  },
                  {
-                     "Name":  "急速",
-                     "Description":  "当前技能行动速度提高50%",
                      "IconPath":  "Assets/Res/Sprites/SkillEffect/Action Speed.png",
                      "Modifiers":  [
                                        {
@@ -100,11 +98,11 @@
                      "EffectChain":  [
 
                                      ],
-                     "Id":  2
+                     "Id":  2,
+                     "NameKey":  "skill_addition.haste.name",
+                     "DescriptionKey":  "skill_addition.haste.description"
                  },
                  {
-                     "Name":  "格挡",
-                     "Description":  "技能期间第一次受到的伤害为0",
                      "IconPath":  "Assets/Res/Sprites/Item/Shield.png",
                      "Modifiers":  [
 
@@ -123,11 +121,11 @@
                      "EffectChain":  [
 
                                      ],
-                     "Id":  3
+                     "Id":  3,
+                     "NameKey":  "skill_addition.guard.name",
+                     "DescriptionKey":  "skill_addition.guard.description"
                  },
                  {
-                     "Name":  "不完全",
-                     "Description":  "后续三次携带该加成的技能分别减少300/200/100 MP，并降低30%/20%/10%伤害",
                      "IconPath":  "Assets/Res/Sprites/Item/Charging.png",
                      "Modifiers":  [
 
@@ -136,7 +134,7 @@
                                              {
                                                  "Filter":  {
                                                                 "$type":  "CrystalMagic.Game.Data.SkillAdditionNameFollowupFilterData, Assembly-CSharp",
-                                                                "SkillAdditionName":  "不完全"
+                                                                "SkillAdditionName":  "skill_addition.incomplete.name"
                                                             },
                                                  "ConsumeRule":  {
                                                                      "$type":  "CrystalMagic.Game.Data.UseCountSkillFollowupConsumeRuleData, Assembly-CSharp",
@@ -197,11 +195,11 @@
                      "EffectChain":  [
 
                                      ],
-                     "Id":  4
+                     "Id":  4,
+                     "NameKey":  "skill_addition.incomplete.name",
+                     "DescriptionKey":  "skill_addition.incomplete.description"
                  },
                  {
-                     "Name":  "爆发",
-                     "Description":  "扣除10%最大生命但不会致死，当前技能伤害提高50%，范围提高25%",
                      "IconPath":  "Assets/Res/Sprites/Item/Detonate.png",
                      "Modifiers":  [
                                        {
@@ -231,11 +229,11 @@
                                                             ]
                                          }
                                      ],
-                     "Id":  5
+                     "Id":  5,
+                     "NameKey":  "skill_addition.burst.name",
+                     "DescriptionKey":  "skill_addition.burst.description"
                  },
                  {
-                     "Name":  "连发",
-                     "Description":  "0.1秒后追加一次同技能执行，第二次伤害降低20%",
                      "IconPath":  "Assets/Res/Sprites/Item/Lightning.png",
                      "Modifiers":  [
 
@@ -260,11 +258,11 @@
                      "EffectChain":  [
 
                                      ],
-                     "Id":  6
+                     "Id":  6,
+                     "NameKey":  "skill_addition.repeat.name",
+                     "DescriptionKey":  "skill_addition.repeat.description"
                  },
                  {
-                     "Name":  "反魔",
-                     "Description":  "当前技能和咏唱时间增加50%、伤害降低30%、蓝耗翻倍；下一个技能不耗蓝",
                      "IconPath":  "Assets/Res/Sprites/SkillEffect/Chant Speed Up.png",
                      "Modifiers":  [
                                        {
@@ -310,7 +308,9 @@
                      "EffectChain":  [
 
                                      ],
-                     "Id":  7
+                     "Id":  7,
+                     "NameKey":  "skill_addition.anti_magic.name",
+                     "DescriptionKey":  "skill_addition.anti_magic.description"
                  }
              ]
 }

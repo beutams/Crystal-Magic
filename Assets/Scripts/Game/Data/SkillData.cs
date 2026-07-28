@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data.Effects;
+using Newtonsoft.Json;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -11,9 +12,9 @@ namespace CrystalMagic.Game.Data
     [ReadOnlyData]
     public class SkillData : DataRow
     {
-        public string Name;
+        public string NameKey;
         public bool IsMonsterSkill;
-        public string Description;
+        public string DescriptionKey;
         public string RuntimeType;
         public int MpCost;
         public float WindupDuration;
@@ -30,7 +31,11 @@ namespace CrystalMagic.Game.Data
         public List<SkillCastTaskData> CastTasks = new();
         public List<SkillFollowupEffectData> FollowupEffects = new();
 
-        public string DisplayName => Name ?? string.Empty;
+        [JsonIgnore]
+        public string DisplayName => LocalizationComponent.Resolve(NameKey);
+
+        [JsonIgnore]
+        public string Description => LocalizationComponent.Resolve(DescriptionKey);
         public string EffectiveRuntimeType => GetEffectiveRuntimeType(RuntimeType);
 
         public static string GetEffectiveRuntimeType(string runtimeType)

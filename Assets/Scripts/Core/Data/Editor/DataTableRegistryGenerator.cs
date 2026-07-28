@@ -76,7 +76,7 @@ namespace CrystalMagic.Editor.Data
                 string resourcePath = $"{type.Name}Table"; // 只传表名，路径由 AssetPathHelper 统一处理
                 if (!File.Exists(fullPath))
                 {
-                    File.WriteAllText(fullPath, "{\n  \"Rows\": []\n}", Encoding.UTF8);
+                    DataFileUtility.WriteJsonText(fullPath, "{\n  \"Rows\": []\n}");
                     Debug.Log($"[DataTableRegistryGenerator] Created empty table: {fullPath}");
                 }
                 result.Add((type, resourcePath));

@@ -492,7 +492,7 @@ namespace CrystalMagic.Editor.Data
 
             try
             {
-                ProfileTableWrapper wrapper = JsonConvert.DeserializeObject<ProfileTableWrapper>(File.ReadAllText(ProfileDataPath), JsonSettings);
+                ProfileTableWrapper wrapper = JsonConvert.DeserializeObject<ProfileTableWrapper>(DataFileUtility.ReadJsonText(ProfileDataPath), JsonSettings);
                 if (wrapper?.Rows != null)
                     _rows.AddRange(wrapper.Rows);
 
@@ -513,7 +513,7 @@ namespace CrystalMagic.Editor.Data
 
             try
             {
-                UnitTableWrapper wrapper = JsonConvert.DeserializeObject<UnitTableWrapper>(File.ReadAllText(UnitDataPath), JsonSettings);
+                UnitTableWrapper wrapper = JsonConvert.DeserializeObject<UnitTableWrapper>(DataFileUtility.ReadJsonText(UnitDataPath), JsonSettings);
                 if (wrapper?.Rows != null)
                     _units.AddRange(wrapper.Rows);
             }
@@ -536,7 +536,7 @@ namespace CrystalMagic.Editor.Data
                     row?.Normalize();
 
                 string json = JsonConvert.SerializeObject(new ProfileTableWrapper { Rows = _rows }, JsonSettings);
-                File.WriteAllText(ProfileDataPath, json, Encoding.UTF8);
+                DataFileUtility.WriteJsonText(ProfileDataPath, json);
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
                 _isDirty = false;

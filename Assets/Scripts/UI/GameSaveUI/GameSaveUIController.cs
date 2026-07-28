@@ -32,10 +32,12 @@ namespace CrystalMagic.UI
                 ? Model.SaveRecords[slotIndex]
                 : null;
 
-            string content = record == null ? "是否创建新存档？" : "是否覆盖该存档？";
+            string contentKey = record == null
+                ? "ui.confirm.create_save.content"
+                : "ui.confirm.overwrite_save.content";
             ConfirmUIOpenData openData = new(
-                "保存",
-                content,
+                LocalizationComponent.Instance.Get("ui.confirm.save"),
+                LocalizationComponent.Instance.Get(contentKey),
                 () => ConfirmSave(slotIndex),
                 null);
 
@@ -53,8 +55,8 @@ namespace CrystalMagic.UI
             CloseOpenedTip();
 
             ConfirmUIOpenData openData = new(
-                "删除存档",
-                "是否删除该存档？",
+                LocalizationComponent.Instance.Get("ui.confirm.delete_save"),
+                LocalizationComponent.Instance.Get("ui.confirm.delete_save.content"),
                 () => ConfirmDelete(slotIndex),
                 null);
 

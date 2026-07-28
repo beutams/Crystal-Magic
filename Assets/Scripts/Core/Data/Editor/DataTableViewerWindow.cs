@@ -106,7 +106,7 @@ namespace CrystalMagic.Editor.Data
             _statusText = "";
 
             string path = GetFilePath(rowType);
-            string json = File.Exists(path) ? File.ReadAllText(path) : null;
+            string json = File.Exists(path) ? DataFileUtility.ReadJsonText(path) : null;
 
             if (!string.IsNullOrEmpty(json))
             {
@@ -152,7 +152,7 @@ namespace CrystalMagic.Editor.Data
             object wrapper = Activator.CreateInstance(wrapperType);
             wrapperType.GetField("Rows").SetValue(wrapper, typedList);
 
-            File.WriteAllText(path, JsonUtility.ToJson(wrapper, true), Encoding.UTF8);
+            DataFileUtility.WriteJsonText(path, JsonUtility.ToJson(wrapper, true));
             AssetDatabase.Refresh();
 
             _isDirty = false;

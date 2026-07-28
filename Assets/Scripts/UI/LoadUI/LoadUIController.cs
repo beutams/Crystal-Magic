@@ -34,8 +34,8 @@
             CloseOpenedTip();
 
             ConfirmUIOpenData openData = new(
-                "读取",
-                "是否读取该存档？",
+                CrystalMagic.Core.LocalizationComponent.Instance.Get("ui.confirm.load"),
+                CrystalMagic.Core.LocalizationComponent.Instance.Get("ui.confirm.load_save.content"),
                 () => CrystalMagic.Core.EventComponent.Instance.Publish(new CrystalMagic.Core.MainMenuLoadRequestedEvent(slotIndex)),
                 null);
 
@@ -47,8 +47,8 @@
             CloseOpenedTip();
 
             ConfirmUIOpenData openData = new(
-                "删除存档",
-                "是否删除该存档？",
+                CrystalMagic.Core.LocalizationComponent.Instance.Get("ui.confirm.delete_save"),
+                CrystalMagic.Core.LocalizationComponent.Instance.Get("ui.confirm.delete_save.content"),
                 () => ConfirmDelete(slotIndex),
                 null);
 

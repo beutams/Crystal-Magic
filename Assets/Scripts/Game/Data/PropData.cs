@@ -1,5 +1,6 @@
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data.Effects;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace CrystalMagic.Game.Data
@@ -18,9 +19,15 @@ namespace CrystalMagic.Game.Data
     [ReadOnlyData]
     public sealed class PropData : DataRow
     {
-        public string Name;
-        public string Description;
+        public string NameKey;
+        public string DescriptionKey;
         public PropTargetType TargetType;
+
+        [JsonIgnore]
+        public string Name => LocalizationComponent.Resolve(NameKey);
+
+        [JsonIgnore]
+        public string Description => LocalizationComponent.Resolve(DescriptionKey);
 
         [EditorLabel("携带上限")]
         public int CarryLimit = 10;

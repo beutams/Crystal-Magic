@@ -84,7 +84,7 @@ public class TransitionUI : UIBase<TransitionUIData>
         RectTransform rectTransform = GetOrCreateRect(parent, nodeName, anchorMin, anchorMax, anchoredPosition, sizeDelta);
         TextMeshProUGUI text = rectTransform.GetComponent<TextMeshProUGUI>();
         if (text == null)
-            text = rectTransform.gameObject.AddComponent<TextMeshProUGUI>();
+            text = rectTransform.gameObject.AddComponent<LocalizedTextMeshProUGUI>();
 
         if (fontAsset != null)
             text.font = fontAsset;
@@ -92,7 +92,7 @@ public class TransitionUI : UIBase<TransitionUIData>
         text.fontStyle = fontStyle;
         text.alignment = TextAlignmentOptions.Center;
         text.color = Color.white;
-        text.enableWordWrapping = true;
+        text.textWrappingMode = TextWrappingModes.Normal;
         text.raycastTarget = false;
         return text;
     }

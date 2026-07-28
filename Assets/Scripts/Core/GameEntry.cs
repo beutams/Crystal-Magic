@@ -22,6 +22,7 @@ namespace CrystalMagic.Core
         public CameraComponent CameraComponent { get; private set; }
         public SaveDataComponent SaveDataComponent { get; private set; }
         public GameSettingsComponent GameSettingsComponent { get; private set; }
+        public LocalizationComponent LocalizationComponent { get; private set; }
         public AudioComponent AudioComponent { get; private set; }
         public InputComponent InputComponent { get; private set; }
         public GameGateComponent GameGateComponent { get; private set; }
@@ -97,6 +98,9 @@ namespace CrystalMagic.Core
 
             GameSettingsComponent = GameSettingsComponent.Instance;
             _components.Add(GameSettingsComponent);
+
+            LocalizationComponent = LocalizationComponent.Instance;
+            _components.Add(LocalizationComponent);
 
             AudioComponent = AudioComponent.Instance;
             _components.Add(AudioComponent);

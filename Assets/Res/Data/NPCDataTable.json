@@ -1,250 +1,282 @@
 ﻿{
-  "Rows": [
-    {
-      "NPC": "NPCEquipShop",
-      "DisplayName": "装备商店",
-      "Interactions": [
-        {
-          "Key": "OpenEquipShop",
-          "DisplayName": "装备商店",
-          "EnableExpression": "",
-          "EntryNodeGuid": "3d73650e10a542518488b999161e168f",
-          "Nodes": [
-            {
-              "UIName": "ShopUI",
-              "OpenData": "EquipShop",
-              "WaitUntilClosed": true,
-              "Guid": "3d73650e10a542518488b999161e168f",
-              "Branches": [],
-              "Type": "OpenUI"
-            }
-          ]
-        }
-      ],
-      "Id": 0
-    },
-    {
-      "NPC": "NPCPropShop",
-      "DisplayName": "道具商店",
-      "Interactions": [
-        {
-          "Key": "OpenPropShop",
-          "DisplayName": "道具商店",
-          "EnableExpression": "",
-          "EntryNodeGuid": "14dfb732e88441b099f7fe7cb07fe71f",
-          "Nodes": [
-            {
-              "UIName": "ShopUI",
-              "OpenData": "PropShop",
-              "WaitUntilClosed": true,
-              "Guid": "14dfb732e88441b099f7fe7cb07fe71f",
-              "Branches": [],
-              "Type": "OpenUI"
-            }
-          ]
-        }
-      ],
-      "Id": 1
-    },
-    {
-      "NPC": "NPCSkillShop",
-      "DisplayName": "技能商店",
-      "Interactions": [
-        {
-          "Key": "OpenSkillShop",
-          "DisplayName": "技能商店",
-          "EnableExpression": "",
-          "EntryNodeGuid": "14dfb732e88441b099f7fe7cb07fe71f",
-          "Nodes": [
-            {
-              "UIName": "ShopUI",
-              "OpenData": "SkillShop",
-              "WaitUntilClosed": true,
-              "Guid": "14dfb732e88441b099f7fe7cb07fe71f",
-              "Branches": [],
-              "Type": "OpenUI"
-            }
-          ]
-        }
-      ],
-      "Id": 2
-    },
-    {
-      "NPC": "NPCStash",
-      "DisplayName": "仓库",
-      "Interactions": [
-        {
-          "Key": "Stash",
-          "DisplayName": "仓库",
-          "EnableExpression": "",
-          "EntryNodeGuid": "e1683275aaa04ce5a827d9fd8e45c10b",
-          "Nodes": [
-            {
-              "UIName": "StashUI",
-              "OpenData": "",
-              "WaitUntilClosed": true,
-              "Guid": "e1683275aaa04ce5a827d9fd8e45c10b",
-              "Branches": [],
-              "Type": "OpenUI"
-            }
-          ]
-        }
-      ],
-      "Id": 3
-    },
-    {
-      "NPC": "NPCTraining",
-      "DisplayName": "训练场",
-      "Interactions": [
-        {
-          "Key": "Training",
-          "DisplayName": "训练场",
-          "EnableExpression": "",
-          "EntryNodeGuid": "9fa755485fd94a18b7e4b386a3b5307a",
-          "Nodes": [
-            {
-              "Options": [
-                {
-                  "DisplayName": "进入地牢",
-                  "EnableExpression": "",
-                  "NextNodeGuid": "6d0a28f1c4c14e89a514e6de07be4b91"
-                },
-                {
-                  "DisplayName": "进入训练营",
-                  "EnableExpression": "",
-                  "NextNodeGuid": "3d003138da8c4619980f4cf904066d0d"
-                }
-              ],
-              "Guid": "9fa755485fd94a18b7e4b386a3b5307a",
-              "Branches": [],
-              "Type": "Select"
-            },
-            {
-              "Options": [
-                {
-                  "DisplayName": "第1层",
-                  "EnableExpression": "",
-                  "NextNodeGuid": "c1a95e3707ff40248bb5153c55295ff8"
-                },
-                {
-                  "DisplayName": "第21层",
-                  "EnableExpression": "DungeonUnlockedStartFloor_21 > 0",
-                  "NextNodeGuid": "dungeon_floor_21"
-                },
-                {
-                  "DisplayName": "第41层",
-                  "EnableExpression": "DungeonUnlockedStartFloor_41 > 0",
-                  "NextNodeGuid": "dungeon_floor_41"
-                },
-                {
-                  "DisplayName": "第61层",
-                  "EnableExpression": "DungeonUnlockedStartFloor_61 > 0",
-                  "NextNodeGuid": "dungeon_floor_61"
-                },
-                {
-                  "DisplayName": "第81层",
-                  "EnableExpression": "DungeonUnlockedStartFloor_81 > 0",
-                  "NextNodeGuid": "dungeon_floor_81"
-                },
-                {
-                  "DisplayName": "第101层",
-                  "EnableExpression": "DungeonUnlockedStartFloor_101 > 0",
-                  "NextNodeGuid": "dungeon_floor_101"
-                }
-              ],
-              "Guid": "6d0a28f1c4c14e89a514e6de07be4b91",
-              "Branches": [],
-              "Type": "Select"
-            },
-            {
-              "DungeonFloor": 1,
-              "Guid": "c1a95e3707ff40248bb5153c55295ff8",
-              "Branches": [],
-              "Type": "EnterDungeon"
-            },
-            {
-              "DungeonFloor": 21,
-              "Guid": "dungeon_floor_21",
-              "Branches": [],
-              "Type": "EnterDungeon"
-            },
-            {
-              "DungeonFloor": 41,
-              "Guid": "dungeon_floor_41",
-              "Branches": [],
-              "Type": "EnterDungeon"
-            },
-            {
-              "DungeonFloor": 61,
-              "Guid": "dungeon_floor_61",
-              "Branches": [],
-              "Type": "EnterDungeon"
-            },
-            {
-              "DungeonFloor": 81,
-              "Guid": "dungeon_floor_81",
-              "Branches": [],
-              "Type": "EnterDungeon"
-            },
-            {
-              "DungeonFloor": 101,
-              "Guid": "dungeon_floor_101",
-              "Branches": [],
-              "Type": "EnterDungeon"
-            },
-            {
-              "Guid": "3d003138da8c4619980f4cf904066d0d",
-              "Branches": [],
-              "Type": "EnterTrainingGround"
-            }
-          ]
-        }
-      ],
-      "Id": 4
-    },
-    {
-      "NPC": "Exit",
-      "PrefabPath": "Assets/Res/Prefab/Environment/Exit.prefab",
-      "DisplayName": "出口",
-      "Interactions": [
-        {
-          "Key": "DungeonExit",
-          "DisplayName": "出口",
-          "EnableExpression": "",
-          "EntryNodeGuid": "exit_select",
-          "Nodes": [
-            {
-              "Options": [
-                {
-                  "DisplayName": "继续下一层",
-                  "EnableExpression": "",
-                  "NextNodeGuid": "exit_next_floor"
-                },
-                {
-                  "DisplayName": "撤离地牢",
-                  "EnableExpression": "",
-                  "NextNodeGuid": "exit_retreat"
-                }
-              ],
-              "Guid": "exit_select",
-              "Branches": [],
-              "Type": "Select"
-            },
-            {
-              "DungeonFloor": 1,
-              "Guid": "exit_next_floor",
-              "Branches": [],
-              "Type": "EnterDungeon"
-            },
-            {
-              "Guid": "exit_retreat",
-              "Branches": [],
-              "Type": "EnterTown"
-            }
-          ]
-        }
-      ],
-      "Id": 5
-    }
-  ]
+    "Rows":  [
+                 {
+                     "NPC":  "NPCEquipShop",
+                     "Interactions":  [
+                                          {
+                                              "Key":  "OpenEquipShop",
+                                              "EnableExpression":  "",
+                                              "EntryNodeGuid":  "3d73650e10a542518488b999161e168f",
+                                              "Nodes":  [
+                                                            {
+                                                                "UIName":  "ShopUI",
+                                                                "OpenData":  "EquipShop",
+                                                                "WaitUntilClosed":  true,
+                                                                "Guid":  "3d73650e10a542518488b999161e168f",
+                                                                "Branches":  [
+
+                                                                             ],
+                                                                "Type":  "OpenUI"
+                                                            }
+                                                        ],
+                                              "DisplayNameKey":  "npc.equipment_shop.name"
+                                          }
+                                      ],
+                     "Id":  0,
+                     "DisplayNameKey":  "npc.equipment_shop.name"
+                 },
+                 {
+                     "NPC":  "NPCPropShop",
+                     "Interactions":  [
+                                          {
+                                              "Key":  "OpenPropShop",
+                                              "EnableExpression":  "",
+                                              "EntryNodeGuid":  "14dfb732e88441b099f7fe7cb07fe71f",
+                                              "Nodes":  [
+                                                            {
+                                                                "UIName":  "ShopUI",
+                                                                "OpenData":  "PropShop",
+                                                                "WaitUntilClosed":  true,
+                                                                "Guid":  "14dfb732e88441b099f7fe7cb07fe71f",
+                                                                "Branches":  [
+
+                                                                             ],
+                                                                "Type":  "OpenUI"
+                                                            }
+                                                        ],
+                                              "DisplayNameKey":  "npc.prop_shop.name"
+                                          }
+                                      ],
+                     "Id":  1,
+                     "DisplayNameKey":  "npc.prop_shop.name"
+                 },
+                 {
+                     "NPC":  "NPCSkillShop",
+                     "Interactions":  [
+                                          {
+                                              "Key":  "OpenSkillShop",
+                                              "EnableExpression":  "",
+                                              "EntryNodeGuid":  "14dfb732e88441b099f7fe7cb07fe71f",
+                                              "Nodes":  [
+                                                            {
+                                                                "UIName":  "ShopUI",
+                                                                "OpenData":  "SkillShop",
+                                                                "WaitUntilClosed":  true,
+                                                                "Guid":  "14dfb732e88441b099f7fe7cb07fe71f",
+                                                                "Branches":  [
+
+                                                                             ],
+                                                                "Type":  "OpenUI"
+                                                            }
+                                                        ],
+                                              "DisplayNameKey":  "npc.skill_shop.name"
+                                          }
+                                      ],
+                     "Id":  2,
+                     "DisplayNameKey":  "npc.skill_shop.name"
+                 },
+                 {
+                     "NPC":  "NPCStash",
+                     "Interactions":  [
+                                          {
+                                              "Key":  "Stash",
+                                              "EnableExpression":  "",
+                                              "EntryNodeGuid":  "e1683275aaa04ce5a827d9fd8e45c10b",
+                                              "Nodes":  [
+                                                            {
+                                                                "UIName":  "StashUI",
+                                                                "OpenData":  "",
+                                                                "WaitUntilClosed":  true,
+                                                                "Guid":  "e1683275aaa04ce5a827d9fd8e45c10b",
+                                                                "Branches":  [
+
+                                                                             ],
+                                                                "Type":  "OpenUI"
+                                                            }
+                                                        ],
+                                              "DisplayNameKey":  "npc.stash.name"
+                                          }
+                                      ],
+                     "Id":  3,
+                     "DisplayNameKey":  "npc.stash.name"
+                 },
+                 {
+                     "NPC":  "NPCTraining",
+                     "Interactions":  [
+                                          {
+                                              "Key":  "Training",
+                                              "EnableExpression":  "",
+                                              "EntryNodeGuid":  "9fa755485fd94a18b7e4b386a3b5307a",
+                                              "Nodes":  [
+                                                            {
+                                                                "Options":  [
+                                                                                {
+                                                                                    "EnableExpression":  "",
+                                                                                    "NextNodeGuid":  "6d0a28f1c4c14e89a514e6de07be4b91",
+                                                                                    "DisplayNameKey":  "npc.option.enter_dungeon"
+                                                                                },
+                                                                                {
+                                                                                    "EnableExpression":  "",
+                                                                                    "NextNodeGuid":  "3d003138da8c4619980f4cf904066d0d",
+                                                                                    "DisplayNameKey":  "npc.option.enter_training_ground"
+                                                                                }
+                                                                            ],
+                                                                "Guid":  "9fa755485fd94a18b7e4b386a3b5307a",
+                                                                "Branches":  [
+
+                                                                             ],
+                                                                "Type":  "Select"
+                                                            },
+                                                            {
+                                                                "Options":  [
+                                                                                {
+                                                                                    "EnableExpression":  "",
+                                                                                    "NextNodeGuid":  "c1a95e3707ff40248bb5153c55295ff8",
+                                                                                    "DisplayNameKey":  "npc.option.floor_1"
+                                                                                },
+                                                                                {
+                                                                                    "EnableExpression":  "DungeonUnlockedStartFloor_21 \u003e 0",
+                                                                                    "NextNodeGuid":  "dungeon_floor_21",
+                                                                                    "DisplayNameKey":  "npc.option.floor_21"
+                                                                                },
+                                                                                {
+                                                                                    "EnableExpression":  "DungeonUnlockedStartFloor_41 \u003e 0",
+                                                                                    "NextNodeGuid":  "dungeon_floor_41",
+                                                                                    "DisplayNameKey":  "npc.option.floor_41"
+                                                                                },
+                                                                                {
+                                                                                    "EnableExpression":  "DungeonUnlockedStartFloor_61 \u003e 0",
+                                                                                    "NextNodeGuid":  "dungeon_floor_61",
+                                                                                    "DisplayNameKey":  "npc.option.floor_61"
+                                                                                },
+                                                                                {
+                                                                                    "EnableExpression":  "DungeonUnlockedStartFloor_81 \u003e 0",
+                                                                                    "NextNodeGuid":  "dungeon_floor_81",
+                                                                                    "DisplayNameKey":  "npc.option.floor_81"
+                                                                                },
+                                                                                {
+                                                                                    "EnableExpression":  "DungeonUnlockedStartFloor_101 \u003e 0",
+                                                                                    "NextNodeGuid":  "dungeon_floor_101",
+                                                                                    "DisplayNameKey":  "npc.option.floor_101"
+                                                                                }
+                                                                            ],
+                                                                "Guid":  "6d0a28f1c4c14e89a514e6de07be4b91",
+                                                                "Branches":  [
+
+                                                                             ],
+                                                                "Type":  "Select"
+                                                            },
+                                                            {
+                                                                "DungeonFloor":  1,
+                                                                "Guid":  "c1a95e3707ff40248bb5153c55295ff8",
+                                                                "Branches":  [
+
+                                                                             ],
+                                                                "Type":  "EnterDungeon"
+                                                            },
+                                                            {
+                                                                "DungeonFloor":  21,
+                                                                "Guid":  "dungeon_floor_21",
+                                                                "Branches":  [
+
+                                                                             ],
+                                                                "Type":  "EnterDungeon"
+                                                            },
+                                                            {
+                                                                "DungeonFloor":  41,
+                                                                "Guid":  "dungeon_floor_41",
+                                                                "Branches":  [
+
+                                                                             ],
+                                                                "Type":  "EnterDungeon"
+                                                            },
+                                                            {
+                                                                "DungeonFloor":  61,
+                                                                "Guid":  "dungeon_floor_61",
+                                                                "Branches":  [
+
+                                                                             ],
+                                                                "Type":  "EnterDungeon"
+                                                            },
+                                                            {
+                                                                "DungeonFloor":  81,
+                                                                "Guid":  "dungeon_floor_81",
+                                                                "Branches":  [
+
+                                                                             ],
+                                                                "Type":  "EnterDungeon"
+                                                            },
+                                                            {
+                                                                "DungeonFloor":  101,
+                                                                "Guid":  "dungeon_floor_101",
+                                                                "Branches":  [
+
+                                                                             ],
+                                                                "Type":  "EnterDungeon"
+                                                            },
+                                                            {
+                                                                "Guid":  "3d003138da8c4619980f4cf904066d0d",
+                                                                "Branches":  [
+
+                                                                             ],
+                                                                "Type":  "EnterTrainingGround"
+                                                            }
+                                                        ],
+                                              "DisplayNameKey":  "npc.training_ground.name"
+                                          }
+                                      ],
+                     "Id":  4,
+                     "DisplayNameKey":  "npc.training_ground.name"
+                 },
+                 {
+                     "NPC":  "Exit",
+                     "PrefabPath":  "Assets/Res/Prefab/Environment/Exit.prefab",
+                     "Interactions":  [
+                                          {
+                                              "Key":  "DungeonExit",
+                                              "EnableExpression":  "",
+                                              "EntryNodeGuid":  "exit_select",
+                                              "Nodes":  [
+                                                            {
+                                                                "Options":  [
+                                                                                {
+                                                                                    "EnableExpression":  "",
+                                                                                    "NextNodeGuid":  "exit_next_floor",
+                                                                                    "DisplayNameKey":  "npc.option.continue_next_floor"
+                                                                                },
+                                                                                {
+                                                                                    "EnableExpression":  "",
+                                                                                    "NextNodeGuid":  "exit_retreat",
+                                                                                    "DisplayNameKey":  "npc.option.withdraw_dungeon"
+                                                                                }
+                                                                            ],
+                                                                "Guid":  "exit_select",
+                                                                "Branches":  [
+
+                                                                             ],
+                                                                "Type":  "Select"
+                                                            },
+                                                            {
+                                                                "DungeonFloor":  1,
+                                                                "Guid":  "exit_next_floor",
+                                                                "Branches":  [
+
+                                                                             ],
+                                                                "Type":  "EnterDungeon"
+                                                            },
+                                                            {
+                                                                "Guid":  "exit_retreat",
+                                                                "Branches":  [
+
+                                                                             ],
+                                                                "Type":  "EnterTown"
+                                                            }
+                                                        ],
+                                              "DisplayNameKey":  "npc.dungeon_exit.name"
+                                          }
+                                      ],
+                     "Id":  5,
+                     "DisplayNameKey":  "npc.dungeon_exit.name"
+                 }
+             ]
 }

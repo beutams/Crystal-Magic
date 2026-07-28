@@ -101,6 +101,13 @@ namespace CrystalMagic.Core
             SetSettings(settings);
         }
 
+        public void SetLanguage(GameLanguage language, bool saveToDisk = true)
+        {
+            GameSettingsData settings = GetSettingsCopy();
+            settings.Language = language;
+            SetSettings(settings, saveToDisk);
+        }
+
         private void LoadSettingsOrCreateDefault()
         {
             if (TryLoadSettings(out GameSettingsData loadedSettings))

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using CrystalMagic.Core;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
@@ -219,7 +220,7 @@ namespace CrystalMagic.Editor.Data
 
             try
             {
-                string json    = File.ReadAllText(DataPath);
+                string json    = DataFileUtility.ReadJsonText(DataPath);
                 var    wrapper = JsonConvert.DeserializeObject<TableWrapper>(json, JsonSettings);
                 if (wrapper?.Rows != null) _rows = wrapper.Rows;
                 NormalizeRowIds();
@@ -242,7 +243,7 @@ namespace CrystalMagic.Editor.Data
             {
                 NormalizeRowIds();
                 string json = JsonConvert.SerializeObject(new TableWrapper { Rows = _rows }, JsonSettings);
-                File.WriteAllText(DataPath, json, Encoding.UTF8);
+                DataFileUtility.WriteJsonText(DataPath, json);
                 AssetDatabase.Refresh();
                 _isDirty    = false;
                 _statusText = $"已保存 {_rows.Count} 条 · {DataPath}";
@@ -262,7 +263,7 @@ namespace CrystalMagic.Editor.Data
         {
             BuffData newBuff = (BuffData)Activator.CreateInstance(KnownBuffTypes[_addBuffTypeIndex]);
             newBuff.Id       = _rows.Count;
-            newBuff.Name     = $"新 Buff {_rows.Count}";
+            newBuff.NameKey  = $"buff.new_{_rows.Count}.name";
             newBuff.MaxStacks = 1;
 
             if (newBuff is EffectBuffData te)
@@ -296,7 +297,7 @@ namespace CrystalMagic.Editor.Data
             if (copy == null) return;
 
             copy.Id = _rows.Count;
-            copy.Name = string.IsNullOrWhiteSpace(source.Name) ? $"复制 Buff {copy.Id}" : $"{source.Name}_Copy";
+            copy.NameKey = string.IsNullOrWhiteSpace(source.NameKey) ? $"buff.new_{copy.Id}.name" : $"{source.NameKey}_copy";
             _rows.Add(copy);
             NormalizeRowIds();
             _selectedIndex = _rows.Count - 1;
@@ -519,7 +520,7 @@ namespace CrystalMagic.Editor.Data
             DrawSectionHeader("基础信息");
             using (new EditorGUI.DisabledScope(true))
                 EditorGUILayout.IntField("Id", buff.Id);
-            buff.Name      = EditorGUILayout.TextField("名称", buff.Name ?? "");
+            buff.NameKey   = EditorGUILayout.TextField("名称 Key", buff.NameKey ?? "");
             buff.CanStack  = EditorGUILayout.Toggle("可叠层", buff.CanStack);
             using (new EditorGUI.DisabledScope(!buff.CanStack))
                 buff.MaxStacks = EditorGUILayout.IntField("最大叠层数", buff.MaxStacks);

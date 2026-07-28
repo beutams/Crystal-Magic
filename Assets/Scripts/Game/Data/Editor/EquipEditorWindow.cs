@@ -237,7 +237,7 @@ namespace CrystalMagic.Editor.Data
             {
                 if (File.Exists(DataPath))
                 {
-                    TableWrapper wrapper = JsonConvert.DeserializeObject<TableWrapper>(File.ReadAllText(DataPath), JsonSettings);
+                    TableWrapper wrapper = JsonConvert.DeserializeObject<TableWrapper>(DataFileUtility.ReadJsonText(DataPath), JsonSettings);
                     if (wrapper?.Rows != null)
                         _rows.AddRange(wrapper.Rows);
                 }
@@ -265,7 +265,7 @@ namespace CrystalMagic.Editor.Data
                 SyncRowsWithEquipItems();
                 int syncedItemCount = SyncLinkedItemExtraIdsFromEquipItems();
                 string json = JsonConvert.SerializeObject(new TableWrapper { Rows = _rows }, JsonSettings);
-                File.WriteAllText(DataPath, json, Encoding.UTF8);
+                DataFileUtility.WriteJsonText(DataPath, json);
                 AssetDatabase.Refresh();
                 RefreshItemCache();
                 _isDirty = false;
@@ -326,7 +326,7 @@ namespace CrystalMagic.Editor.Data
             if (!File.Exists(ItemDataPath))
                 return 0;
 
-            ItemTableWrapper wrapper = JsonConvert.DeserializeObject<ItemTableWrapper>(File.ReadAllText(ItemDataPath), JsonSettings);
+            ItemTableWrapper wrapper = JsonConvert.DeserializeObject<ItemTableWrapper>(DataFileUtility.ReadJsonText(ItemDataPath), JsonSettings);
             if (wrapper?.Rows == null || wrapper.Rows.Count == 0)
                 return 0;
 
@@ -354,7 +354,7 @@ namespace CrystalMagic.Editor.Data
                 return 0;
 
             string itemJson = JsonConvert.SerializeObject(wrapper, JsonSettings);
-            File.WriteAllText(ItemDataPath, itemJson, Encoding.UTF8);
+            DataFileUtility.WriteJsonText(ItemDataPath, itemJson);
             return updatedCount;
         }
 

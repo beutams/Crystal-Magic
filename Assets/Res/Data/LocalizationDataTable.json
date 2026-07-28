@@ -1,0 +1,934 @@
+﻿{
+    "Rows":  [
+                 {
+                     "Id":  1,
+                     "Key":  "ui.confirm.save",
+                     "ChineseSimplified":  "保存",
+                     "English":  "Save"
+                 },
+                 {
+                     "Id":  2,
+                     "Key":  "ui.confirm.load",
+                     "ChineseSimplified":  "读取",
+                     "English":  "Load"
+                 },
+                 {
+                     "Id":  3,
+                     "Key":  "ui.confirm.delete_save",
+                     "ChineseSimplified":  "删除存档",
+                     "English":  "Delete Save"
+                 },
+                 {
+                     "Id":  4,
+                     "Key":  "ui.confirm.create_save.content",
+                     "ChineseSimplified":  "是否创建新存档？",
+                     "English":  "Create a new save?"
+                 },
+                 {
+                     "Id":  5,
+                     "Key":  "ui.confirm.overwrite_save.content",
+                     "ChineseSimplified":  "是否覆盖该存档？",
+                     "English":  "Overwrite this save?"
+                 },
+                 {
+                     "Id":  6,
+                     "Key":  "ui.confirm.load_save.content",
+                     "ChineseSimplified":  "是否读取该存档？",
+                     "English":  "Load this save?"
+                 },
+                 {
+                     "Id":  7,
+                     "Key":  "ui.confirm.delete_save.content",
+                     "ChineseSimplified":  "是否删除该存档？",
+                     "English":  "Delete this save?"
+                 },
+                 {
+                     "Id":  8,
+                     "Key":  "ui.shop.purchase_unavailable",
+                     "ChineseSimplified":  "该商品当前无法购买。",
+                     "English":  "This item cannot be purchased right now."
+                 },
+                 {
+                     "Id":  9,
+                     "Key":  "ui.shop.insufficient_money",
+                     "ChineseSimplified":  "金币不足，无法购买。",
+                     "English":  "Not enough money."
+                 },
+                 {
+                     "Id":  10,
+                     "Key":  "ui.shop.inventory_full",
+                     "ChineseSimplified":  "背包或道具槽位已满，无法购买。",
+                     "English":  "Backpack or prop slots are full."
+                 },
+                 {
+                     "Id":  11,
+                     "Key":  "world.drop.money",
+                     "ChineseSimplified":  "金币",
+                     "English":  "Money"
+                 },
+                 {
+                     "Id":  12,
+                     "Key":  "world.drop.treasure",
+                     "ChineseSimplified":  "宝箱",
+                     "English":  "Treasure"
+                 },
+                 {
+                     "Id":  13,
+                     "Key":  "ui.training.stats.missing",
+                     "ChineseSimplified":  "训练场数据\n未找到训练目标",
+                     "English":  "Training Data\nTraining target was not found."
+                 },
+                 {
+                     "Id":  14,
+                     "Key":  "ui.training.stats.header",
+                     "ChineseSimplified":  "训练场数据",
+                     "English":  "Training Data"
+                 },
+                 {
+                     "Id":  15,
+                     "Key":  "ui.training.stats.target",
+                     "ChineseSimplified":  "目标: {0}",
+                     "English":  "Target: {0}"
+                 },
+                 {
+                     "Id":  16,
+                     "Key":  "ui.training.stats.health",
+                     "ChineseSimplified":  "生命: {0} / {1}",
+                     "English":  "Health: {0} / {1}"
+                 },
+                 {
+                     "Id":  17,
+                     "Key":  "ui.training.stats.mana",
+                     "ChineseSimplified":  "法力: {0} / {1}",
+                     "English":  "Mana: {0} / {1}"
+                 },
+                 {
+                     "Id":  18,
+                     "Key":  "ui.training.stats.mana_missing",
+                     "ChineseSimplified":  "法力: 无",
+                     "English":  "Mana: None"
+                 },
+                 {
+                     "Id":  19,
+                     "Key":  "ui.training.stats.attack",
+                     "ChineseSimplified":  "攻击: {0}",
+                     "English":  "Attack: {0}"
+                 },
+                 {
+                     "Id":  20,
+                     "Key":  "ui.training.stats.defense",
+                     "ChineseSimplified":  "防御: {0}",
+                     "English":  "Defense: {0}"
+                 },
+                 {
+                     "Id":  21,
+                     "Key":  "ui.training.stats.move_speed",
+                     "ChineseSimplified":  "移速: {0}",
+                     "English":  "Move Speed: {0}"
+                 },
+                 {
+                     "Id":  22,
+                     "Key":  "ui.training.stats.max_acceleration",
+                     "ChineseSimplified":  "加速度: {0}",
+                     "English":  "Acceleration: {0}"
+                 },
+                 {
+                     "Id":  23,
+                     "Key":  "ui.training.stats.skill_range",
+                     "ChineseSimplified":  "技能范围: {0}",
+                     "English":  "Skill Range: {0}"
+                 },
+                 {
+                     "Id":  24,
+                     "Key":  "ui.training.stats.action_speed_bonus",
+                     "ChineseSimplified":  "行动速度加成: {0}%",
+                     "English":  "Action Speed Bonus: {0}%"
+                 },
+                 {
+                     "Id":  25,
+                     "Key":  "ui.training.stats.chant_speed_bonus",
+                     "ChineseSimplified":  "咏唱速度加成: {0}%",
+                     "English":  "Cast Speed Bonus: {0}%"
+                 },
+                 {
+                     "Id":  26,
+                     "Key":  "ui.training.stats.health_regen",
+                     "ChineseSimplified":  "生命回复: {0}",
+                     "English":  "Health Regen: {0}"
+                 },
+                 {
+                     "Id":  27,
+                     "Key":  "ui.training.stats.mana_regen",
+                     "ChineseSimplified":  "法力回复: {0}",
+                     "English":  "Mana Regen: {0}"
+                 },
+                 {
+                     "Id":  28,
+                     "Key":  "ui.training.stats.active_buff_count",
+                     "ChineseSimplified":  "当前 Buff 数: {0}",
+                     "English":  "Active Buffs: {0}"
+                 },
+                 {
+                     "Id":  29,
+                     "Key":  "ui.training.stats.total_damage",
+                     "ChineseSimplified":  "累计伤害: {0}",
+                     "English":  "Total Damage: {0}"
+                 },
+                 {
+                     "Id":  30,
+                     "Key":  "ui.training.stats.window_dps",
+                     "ChineseSimplified":  "近5秒 DPS: {0}",
+                     "English":  "Last 5s DPS: {0}"
+                 },
+                 {
+                     "Id":  31,
+                     "Key":  "ui.training.stats.average_dps",
+                     "ChineseSimplified":  "平均 DPS: {0}",
+                     "English":  "Average DPS: {0}"
+                 },
+                 {
+                     "Id":  32,
+                     "Key":  "ui.common.all",
+                     "ChineseSimplified":  "全部",
+                     "English":  "All"
+                 },
+                 {
+                     "Id":  33,
+                     "Key":  "ui.main_menu.load",
+                     "ChineseSimplified":  "加载",
+                     "English":  "Load"
+                 },
+                 {
+                     "Id":  34,
+                     "Key":  "ui.game_menu.save",
+                     "ChineseSimplified":  "存档",
+                     "English":  "Save"
+                 },
+                 {
+                     "Id":  35,
+                     "Key":  "ui.main_menu.start",
+                     "ChineseSimplified":  "开始",
+                     "English":  "Start"
+                 },
+                 {
+                     "Id":  36,
+                     "Key":  "ui.inventory.skills",
+                     "ChineseSimplified":  "技能",
+                     "English":  "Skills"
+                 },
+                 {
+                     "Id":  37,
+                     "Key":  "ui.property.skill_range",
+                     "ChineseSimplified":  "技能范围",
+                     "English":  "Skill Range"
+                 },
+                 {
+                     "Id":  38,
+                     "Key":  "ui.shop.owned",
+                     "ChineseSimplified":  "拥有:",
+                     "English":  "Owned:"
+                 },
+                 {
+                     "Id":  39,
+                     "Key":  "ui.property.attack_power",
+                     "ChineseSimplified":  "攻击力",
+                     "English":  "Attack Power"
+                 },
+                 {
+                     "Id":  40,
+                     "Key":  "ui.property.water_power",
+                     "ChineseSimplified":  "水属性加成",
+                     "English":  "Water Power"
+                 },
+                 {
+                     "Id":  41,
+                     "Key":  "ui.property.fire_power",
+                     "ChineseSimplified":  "火属性加成",
+                     "English":  "Fire Power"
+                 },
+                 {
+                     "Id":  42,
+                     "Key":  "ui.property.health",
+                     "ChineseSimplified":  "生命",
+                     "English":  "Health"
+                 },
+                 {
+                     "Id":  43,
+                     "Key":  "ui.property.health_regen",
+                     "ChineseSimplified":  "生命恢复",
+                     "English":  "Health Regen"
+                 },
+                 {
+                     "Id":  44,
+                     "Key":  "ui.property.lightning_power",
+                     "ChineseSimplified":  "电属性加成",
+                     "English":  "Lightning Power"
+                 },
+                 {
+                     "Id":  45,
+                     "Key":  "ui.property.move_speed",
+                     "ChineseSimplified":  "移动速度",
+                     "English":  "Move Speed"
+                 },
+                 {
+                     "Id":  46,
+                     "Key":  "ui.property.action_speed",
+                     "ChineseSimplified":  "行动速度",
+                     "English":  "Action Speed"
+                 },
+                 {
+                     "Id":  47,
+                     "Key":  "ui.inventory.equipment",
+                     "ChineseSimplified":  "装备",
+                     "English":  "Equipment"
+                 },
+                 {
+                     "Id":  48,
+                     "Key":  "ui.main_menu.settings",
+                     "ChineseSimplified":  "设置",
+                     "English":  "Settings"
+                 },
+                 {
+                     "Id":  49,
+                     "Key":  "ui.main_menu.exit",
+                     "ChineseSimplified":  "退出",
+                     "English":  "Exit"
+                 },
+                 {
+                     "Id":  50,
+                     "Key":  "ui.inventory.props",
+                     "ChineseSimplified":  "道具",
+                     "English":  "Items"
+                 },
+                 {
+                     "Id":  51,
+                     "Key":  "ui.item.name",
+                     "ChineseSimplified":  "名称",
+                     "English":  "Name"
+                 },
+                 {
+                     "Id":  52,
+                     "Key":  "ui.item.description",
+                     "ChineseSimplified":  "道具描述",
+                     "English":  "Item Description"
+                 },
+                 {
+                     "Id":  53,
+                     "Key":  "ui.property.wind_power",
+                     "ChineseSimplified":  "风属性加成",
+                     "English":  "Wind Power"
+                 },
+                 {
+                     "Id":  54,
+                     "Key":  "ui.property.mana",
+                     "ChineseSimplified":  "魔力",
+                     "English":  "Mana"
+                 },
+                 {
+                     "Id":  55,
+                     "Key":  "ui.property.mana_regen",
+                     "ChineseSimplified":  "魔力恢复",
+                     "English":  "Mana Regen"
+                 },
+                 {
+                     "Id":  56,
+                     "Key":  "ui.confirm.cancel",
+                     "ChineseSimplified":  "取消",
+                     "English":  "Cancel"
+                 },
+                 {
+                     "Id":  57,
+                     "Key":  "ui.confirm.content",
+                     "ChineseSimplified":  "内容",
+                     "English":  "Content"
+                 },
+                 {
+                     "Id":  58,
+                     "Key":  "ui.common.title",
+                     "ChineseSimplified":  "标题",
+                     "English":  "Title"
+                 },
+                 {
+                     "Id":  59,
+                     "Key":  "ui.confirm.confirm",
+                     "ChineseSimplified":  "确认",
+                     "English":  "Confirm"
+                 },
+                 {
+                     "Id":  60,
+                     "Key":  "ui.interaction.option",
+                     "ChineseSimplified":  "选项",
+                     "English":  "Option"
+                 },
+                 {
+                     "Id":  61,
+                     "Key":  "ui.tip.message",
+                     "ChineseSimplified":  "提示",
+                     "English":  "Tip"
+                 },
+                 {
+                     "Id":  62,
+                     "Key":  "skill.monster.troll_attack.name",
+                     "ChineseSimplified":  "巨魔攻击",
+                     "English":  "Troll Attack"
+                 },
+                 {
+                     "Id":  63,
+                     "Key":  "skill.monster.orc_attack.name",
+                     "ChineseSimplified":  "兽人攻击",
+                     "English":  "Orc Attack"
+                 },
+                 {
+                     "Id":  64,
+                     "Key":  "skill.monster.rat_attack.name",
+                     "ChineseSimplified":  "老鼠攻击",
+                     "English":  "Rat Attack"
+                 },
+                 {
+                     "Id":  65,
+                     "Key":  "skill.monster.bat_attack.name",
+                     "ChineseSimplified":  "蝙蝠攻击",
+                     "English":  "Bat Attack"
+                 },
+                 {
+                     "Id":  66,
+                     "Key":  "skill.monster.spider_attack.name",
+                     "ChineseSimplified":  "蜘蛛攻击",
+                     "English":  "Spider Attack"
+                 },
+                 {
+                     "Id":  67,
+                     "Key":  "skill.monster.slime_attack.name",
+                     "ChineseSimplified":  "史莱姆攻击",
+                     "English":  "Slime Attack"
+                 },
+                 {
+                     "Id":  68,
+                     "Key":  "skill.monster.goblin_archer_attack.name",
+                     "ChineseSimplified":  "哥布林弓箭手攻击",
+                     "English":  "Goblin Archer Attack"
+                 },
+                 {
+                     "Id":  69,
+                     "Key":  "skill.monster.goblin_warrior_attack.name",
+                     "ChineseSimplified":  "哥布林战士攻击",
+                     "English":  "Goblin Warrior Attack"
+                 },
+                 {
+                     "Id":  70,
+                     "Key":  "skill.barrier.name",
+                     "ChineseSimplified":  "屏障",
+                     "English":  "Barrier"
+                 },
+                 {
+                     "Id":  71,
+                     "Key":  "skill.restore.name",
+                     "ChineseSimplified":  "回复",
+                     "English":  "Restore"
+                 },
+                 {
+                     "Id":  72,
+                     "Key":  "skill.haste.name",
+                     "ChineseSimplified":  "加速",
+                     "English":  "Haste"
+                 },
+                 {
+                     "Id":  73,
+                     "Key":  "skill.thunder_burst.name",
+                     "ChineseSimplified":  "雷爆",
+                     "English":  "Thunder Burst"
+                 },
+                 {
+                     "Id":  74,
+                     "Key":  "skill.thunder_field.name",
+                     "ChineseSimplified":  "雷域",
+                     "English":  "Thunder Field"
+                 },
+                 {
+                     "Id":  75,
+                     "Key":  "skill.lightning_strike.name",
+                     "ChineseSimplified":  "雷击",
+                     "English":  "Lightning Strike"
+                 },
+                 {
+                     "Id":  76,
+                     "Key":  "skill.freeze.name",
+                     "ChineseSimplified":  "冻结",
+                     "English":  "Freeze"
+                 },
+                 {
+                     "Id":  77,
+                     "Key":  "skill.ice_spike.name",
+                     "ChineseSimplified":  "冰刺",
+                     "English":  "Ice Spike"
+                 },
+                 {
+                     "Id":  78,
+                     "Key":  "skill.water_vortex.name",
+                     "ChineseSimplified":  "水涡",
+                     "English":  "Water Vortex"
+                 },
+                 {
+                     "Id":  79,
+                     "Key":  "skill.detonate.name",
+                     "ChineseSimplified":  "引爆",
+                     "English":  "Detonate"
+                 },
+                 {
+                     "Id":  80,
+                     "Key":  "skill.flame_impact.name",
+                     "ChineseSimplified":  "火焰冲击",
+                     "English":  "Flame Impact"
+                 },
+                 {
+                     "Id":  81,
+                     "Key":  "skill.fireball.name",
+                     "ChineseSimplified":  "火球",
+                     "English":  "Fireball"
+                 },
+                 {
+                     "Id":  82,
+                     "Key":  "skill.charge.name",
+                     "ChineseSimplified":  "蓄能",
+                     "English":  "Charge"
+                 },
+                 {
+                     "Id":  83,
+                     "Key":  "item.lightning_spirit.name",
+                     "ChineseSimplified":  "电精灵",
+                     "English":  "Lightning Spirit"
+                 },
+                 {
+                     "Id":  84,
+                     "Key":  "item.water_spirit.name",
+                     "ChineseSimplified":  "水精灵",
+                     "English":  "Water Spirit"
+                 },
+                 {
+                     "Id":  85,
+                     "Key":  "item.fire_spirit.name",
+                     "ChineseSimplified":  "火精灵",
+                     "English":  "Fire Spirit"
+                 },
+                 {
+                     "Id":  86,
+                     "Key":  "item.sustained_recovery.name",
+                     "ChineseSimplified":  "持续恢复",
+                     "English":  "Sustained Recovery"
+                 },
+                 {
+                     "Id":  87,
+                     "Key":  "item.vitality_boost.name",
+                     "ChineseSimplified":  "生命提升",
+                     "English":  "Vitality Boost"
+                 },
+                 {
+                     "Id":  88,
+                     "Key":  "item.magic_boost.name",
+                     "ChineseSimplified":  "魔力增强",
+                     "English":  "Magic Boost"
+                 },
+                 {
+                     "Id":  89,
+                     "Key":  "item.addition.guard.name",
+                     "ChineseSimplified":  "强化:格挡",
+                     "English":  "Enhancement: Guard"
+                 },
+                 {
+                     "Id":  90,
+                     "Key":  "item.addition.haste.name",
+                     "ChineseSimplified":  "强化:急速",
+                     "English":  "Enhancement: Haste"
+                 },
+                 {
+                     "Id":  91,
+                     "Key":  "item.addition.area.name",
+                     "ChineseSimplified":  "强化:广域",
+                     "English":  "Enhancement: Area"
+                 },
+                 {
+                     "Id":  92,
+                     "Key":  "item.addition.amplify.name",
+                     "ChineseSimplified":  "强化:增幅",
+                     "English":  "Enhancement: Amplify"
+                 },
+                 {
+                     "Id":  93,
+                     "Key":  "item.overpowered_staff.name",
+                     "ChineseSimplified":  "OP法杖",
+                     "English":  "Overpowered Staff"
+                 },
+                 {
+                     "Id":  94,
+                     "Key":  "item.addition.anti_magic.name",
+                     "ChineseSimplified":  "强化:反魔",
+                     "English":  "Enhancement: Anti-Magic"
+                 },
+                 {
+                     "Id":  95,
+                     "Key":  "item.addition.repeat.name",
+                     "ChineseSimplified":  "强化:连发",
+                     "English":  "Enhancement: Repeat"
+                 },
+                 {
+                     "Id":  96,
+                     "Key":  "item.addition.burst.name",
+                     "ChineseSimplified":  "强化:爆发",
+                     "English":  "Enhancement: Burst"
+                 },
+                 {
+                     "Id":  97,
+                     "Key":  "item.addition.incomplete.name",
+                     "ChineseSimplified":  "强化:不完全",
+                     "English":  "Enhancement: Incomplete"
+                 },
+                 {
+                     "Id":  98,
+                     "Key":  "item.wind_spirit.name",
+                     "ChineseSimplified":  "风精灵",
+                     "English":  "Wind Spirit"
+                 },
+                 {
+                     "Id":  99,
+                     "Key":  "skill_addition.anti_magic.name",
+                     "ChineseSimplified":  "反魔",
+                     "English":  "Anti-Magic"
+                 },
+                 {
+                     "Id":  100,
+                     "Key":  "skill_addition.anti_magic.description",
+                     "ChineseSimplified":  "当前技能和咏唱时间增加50%、伤害降低30%、蓝耗翻倍；下一个技能不耗蓝",
+                     "English":  "Current skill cast time +50%, damage -30%, and mana cost doubled; the next skill costs no mana."
+                 },
+                 {
+                     "Id":  101,
+                     "Key":  "skill_addition.repeat.name",
+                     "ChineseSimplified":  "连发",
+                     "English":  "Repeat"
+                 },
+                 {
+                     "Id":  102,
+                     "Key":  "skill_addition.repeat.description",
+                     "ChineseSimplified":  "0.1秒后追加一次同技能执行，第二次伤害降低20%",
+                     "English":  "Execute the same skill again after 0.1 seconds; the second hit deals 20% less damage."
+                 },
+                 {
+                     "Id":  103,
+                     "Key":  "skill_addition.burst.name",
+                     "ChineseSimplified":  "爆发",
+                     "English":  "Burst"
+                 },
+                 {
+                     "Id":  104,
+                     "Key":  "skill_addition.burst.description",
+                     "ChineseSimplified":  "扣除10%最大生命但不会致死，当前技能伤害提高50%，范围提高25%",
+                     "English":  "Lose 10% max health without dying; current skill damage +50% and area +25%."
+                 },
+                 {
+                     "Id":  105,
+                     "Key":  "skill_addition.incomplete.name",
+                     "ChineseSimplified":  "不完全",
+                     "English":  "Incomplete"
+                 },
+                 {
+                     "Id":  106,
+                     "Key":  "skill_addition.incomplete.description",
+                     "ChineseSimplified":  "后续三次携带该加成的技能分别减少300/200/100 MP，并降低30%/20%/10%伤害",
+                     "English":  "The next three skills with this addition cost 300/200/100 less mana and deal 30%/20%/10% less damage."
+                 },
+                 {
+                     "Id":  107,
+                     "Key":  "skill_addition.guard.name",
+                     "ChineseSimplified":  "格挡",
+                     "English":  "Guard"
+                 },
+                 {
+                     "Id":  108,
+                     "Key":  "skill_addition.guard.description",
+                     "ChineseSimplified":  "技能期间第一次受到的伤害为0",
+                     "English":  "The first hit taken during the skill deals no damage."
+                 },
+                 {
+                     "Id":  109,
+                     "Key":  "skill_addition.haste.name",
+                     "ChineseSimplified":  "急速",
+                     "English":  "Haste"
+                 },
+                 {
+                     "Id":  110,
+                     "Key":  "skill_addition.haste.description",
+                     "ChineseSimplified":  "当前技能行动速度提高50%",
+                     "English":  "Current skill action speed +50%."
+                 },
+                 {
+                     "Id":  111,
+                     "Key":  "skill_addition.area.name",
+                     "ChineseSimplified":  "广域",
+                     "English":  "Area"
+                 },
+                 {
+                     "Id":  112,
+                     "Key":  "skill_addition.area.description",
+                     "ChineseSimplified":  "当前技能范围提高20%，下一个技能伤害降低50%",
+                     "English":  "Current skill area +20%; next skill damage -50%."
+                 },
+                 {
+                     "Id":  113,
+                     "Key":  "skill_addition.amplify.name",
+                     "ChineseSimplified":  "增幅",
+                     "English":  "Amplify"
+                 },
+                 {
+                     "Id":  114,
+                     "Key":  "skill_addition.amplify.description",
+                     "ChineseSimplified":  "当前技能伤害提高25%，下一个技能伤害降低50%",
+                     "English":  "Current skill damage +25%; next skill damage -50%."
+                 },
+                 {
+                     "Id":  115,
+                     "Key":  "prop.small_health.name",
+                     "ChineseSimplified":  "小型HP回复",
+                     "English":  "Small Health Potion"
+                 },
+                 {
+                     "Id":  116,
+                     "Key":  "prop.small_health.description",
+                     "ChineseSimplified":  "回血",
+                     "English":  "Restore health."
+                 },
+                 {
+                     "Id":  117,
+                     "Key":  "prop.small_mana.name",
+                     "ChineseSimplified":  "小型MP回复",
+                     "English":  "Small Mana Potion"
+                 },
+                 {
+                     "Id":  118,
+                     "Key":  "prop.small_mana.description",
+                     "ChineseSimplified":  "回蓝",
+                     "English":  "Restore mana."
+                 },
+                 {
+                     "Id":  119,
+                     "Key":  "item.magic_boost.description",
+                     "ChineseSimplified":  "增加伤害",
+                     "English":  "Increase damage."
+                 },
+                 {
+                     "Id":  120,
+                     "Key":  "item.vitality_boost.description",
+                     "ChineseSimplified":  "增加最大生命MP",
+                     "English":  "Increase maximum health and mana."
+                 },
+                 {
+                     "Id":  121,
+                     "Key":  "item.sustained_recovery.description",
+                     "ChineseSimplified":  "增加回血回蓝",
+                     "English":  "Increase health and mana regeneration."
+                 },
+                 {
+                     "Id":  122,
+                     "Key":  "item.fire_spirit.description",
+                     "ChineseSimplified":  "火属性提升",
+                     "English":  "Increase fire power."
+                 },
+                 {
+                     "Id":  123,
+                     "Key":  "item.water_spirit.description",
+                     "ChineseSimplified":  "水属性提升",
+                     "English":  "Increase water power."
+                 },
+                 {
+                     "Id":  124,
+                     "Key":  "item.lightning_spirit.description",
+                     "ChineseSimplified":  "电属性提升",
+                     "English":  "Increase lightning power."
+                 },
+                 {
+                     "Id":  125,
+                     "Key":  "item.wind_spirit.description",
+                     "ChineseSimplified":  "风属性提升",
+                     "English":  "Increase wind power."
+                 },
+                 {
+                     "Id":  126,
+                     "Key":  "item.overpowered_staff.description",
+                     "ChineseSimplified":  "增加1000点最大MP和1000点MP恢复",
+                     "English":  "Increase maximum mana and mana regeneration by 1000."
+                 },
+                 {
+                     "Id":  127,
+                     "Key":  "buff.guard.name",
+                     "ChineseSimplified":  "格挡",
+                     "English":  "Guard"
+                 },
+                 {
+                     "Id":  128,
+                     "Key":  "buff.water_vortex.name",
+                     "ChineseSimplified":  "水涡",
+                     "English":  "Water Vortex"
+                 },
+                 {
+                     "Id":  129,
+                     "Key":  "buff.burning.name",
+                     "ChineseSimplified":  "燃烧",
+                     "English":  "Burning"
+                 },
+                 {
+                     "Id":  130,
+                     "Key":  "buff.freeze.name",
+                     "ChineseSimplified":  "冻结",
+                     "English":  "Freeze"
+                 },
+                 {
+                     "Id":  131,
+                     "Key":  "buff.paralyze.name",
+                     "ChineseSimplified":  "麻痹",
+                     "English":  "Paralyze"
+                 },
+                 {
+                     "Id":  132,
+                     "Key":  "buff.charge.name",
+                     "ChineseSimplified":  "蓄能",
+                     "English":  "Charge"
+                 },
+                 {
+                     "Id":  133,
+                     "Key":  "buff.berserk.name",
+                     "ChineseSimplified":  "狂暴",
+                     "English":  "Berserk"
+                 },
+                 {
+                     "Id":  134,
+                     "Key":  "buff.web_slow.name",
+                     "ChineseSimplified":  "蛛网减速",
+                     "English":  "Web Slow"
+                 },
+                 {
+                     "Id":  135,
+                     "Key":  "buff.heavy_shield_drive.name",
+                     "ChineseSimplified":  "重装举盾驱动",
+                     "English":  "Heavy Shield Drive"
+                 },
+                 {
+                     "Id":  136,
+                     "Key":  "buff.heavy_shield.name",
+                     "ChineseSimplified":  "重装举盾",
+                     "English":  "Heavy Shield"
+                 },
+                 {
+                     "Id":  137,
+                     "Key":  "buff.shield_break_haste.name",
+                     "ChineseSimplified":  "破盾提速",
+                     "English":  "Shield Break Haste"
+                 },
+                 {
+                     "Id":  138,
+                     "Key":  "buff.spider_venom.name",
+                     "ChineseSimplified":  "蜘蛛毒素",
+                     "English":  "Spider Venom"
+                 },
+                 {
+                     "Id":  139,
+                     "Key":  "npc.equipment_shop.name",
+                     "ChineseSimplified":  "装备商店",
+                     "English":  "Equipment Shop"
+                 },
+                 {
+                     "Id":  140,
+                     "Key":  "npc.prop_shop.name",
+                     "ChineseSimplified":  "道具商店",
+                     "English":  "Item Shop"
+                 },
+                 {
+                     "Id":  141,
+                     "Key":  "npc.skill_shop.name",
+                     "ChineseSimplified":  "技能商店",
+                     "English":  "Skill Shop"
+                 },
+                 {
+                     "Id":  142,
+                     "Key":  "npc.stash.name",
+                     "ChineseSimplified":  "仓库",
+                     "English":  "Stash"
+                 },
+                 {
+                     "Id":  143,
+                     "Key":  "npc.training_ground.name",
+                     "ChineseSimplified":  "训练场",
+                     "English":  "Training Ground"
+                 },
+                 {
+                     "Id":  144,
+                     "Key":  "npc.dungeon_exit.name",
+                     "ChineseSimplified":  "出口",
+                     "English":  "Exit"
+                 },
+                 {
+                     "Id":  145,
+                     "Key":  "npc.option.enter_dungeon",
+                     "ChineseSimplified":  "进入地牢",
+                     "English":  "Enter Dungeon"
+                 },
+                 {
+                     "Id":  146,
+                     "Key":  "npc.option.enter_training_ground",
+                     "ChineseSimplified":  "进入训练营",
+                     "English":  "Enter Training Ground"
+                 },
+                 {
+                     "Id":  147,
+                     "Key":  "npc.option.floor_1",
+                     "ChineseSimplified":  "第1层",
+                     "English":  "Floor 1"
+                 },
+                 {
+                     "Id":  148,
+                     "Key":  "npc.option.floor_21",
+                     "ChineseSimplified":  "第21层",
+                     "English":  "Floor 21"
+                 },
+                 {
+                     "Id":  149,
+                     "Key":  "npc.option.floor_41",
+                     "ChineseSimplified":  "第41层",
+                     "English":  "Floor 41"
+                 },
+                 {
+                     "Id":  150,
+                     "Key":  "npc.option.floor_61",
+                     "ChineseSimplified":  "第61层",
+                     "English":  "Floor 61"
+                 },
+                 {
+                     "Id":  151,
+                     "Key":  "npc.option.floor_81",
+                     "ChineseSimplified":  "第81层",
+                     "English":  "Floor 81"
+                 },
+                 {
+                     "Id":  152,
+                     "Key":  "npc.option.floor_101",
+                     "ChineseSimplified":  "第101层",
+                     "English":  "Floor 101"
+                 },
+                 {
+                     "Id":  153,
+                     "Key":  "npc.option.continue_next_floor",
+                     "ChineseSimplified":  "继续下一层",
+                     "English":  "Continue to Next Floor"
+                 },
+                 {
+                     "Id":  154,
+                     "Key":  "npc.option.withdraw_dungeon",
+                     "ChineseSimplified":  "撤离地牢",
+                     "English":  "Withdraw from Dungeon"
+                 },
+                 {
+                     "Id":  155,
+                     "Key":  "ui.property.chant_speed",
+                     "ChineseSimplified":  "咏唱速度",
+                     "English":  "Cast Speed"
+                 }
+             ]
+}

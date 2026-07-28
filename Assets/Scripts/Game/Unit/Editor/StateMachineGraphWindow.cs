@@ -9,6 +9,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 
 namespace CrystalMagic.Editor.Unit
@@ -176,7 +177,7 @@ namespace CrystalMagic.Editor.Unit
             try
             {
                 var wrapper = JsonConvert.DeserializeObject<TableWrapper>(
-                    File.ReadAllText(DataPath), s_json);
+                    DataFileUtility.ReadJsonText(DataPath), s_json);
                 if (wrapper?.Rows != null) _rows = wrapper.Rows;
                 foreach (var row in _rows) row?.NormalizeModules();
                 SetStatus($"已加载 {_rows.Count} 条");
@@ -197,9 +198,8 @@ namespace CrystalMagic.Editor.Unit
 
             try
             {
-                File.WriteAllText(DataPath,
-                    JsonConvert.SerializeObject(new TableWrapper { Rows = _rows }, s_json),
-                    Encoding.UTF8);
+                DataFileUtility.WriteJsonText(DataPath,
+                    JsonConvert.SerializeObject(new TableWrapper { Rows = _rows }, s_json));
                 AssetDatabase.Refresh();
                 SetStatus($"已保存 {_rows.Count} 条");
             }

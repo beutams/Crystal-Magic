@@ -3,6 +3,7 @@ using CrystalMagic.Core;
 using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data.Effects;
 using CrystalMagic.Game.Skill;
+using Newtonsoft.Json;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -18,13 +19,16 @@ namespace CrystalMagic.Game.Data
     [System.Serializable]
     public abstract class BuffData : DataRow
     {
-        public string Name;
+        public string NameKey;
         public bool CanStack;
         public int MaxStacks = 1;
         public List<PropertyModifierEntry> PropertyModifiers = new();
         public List<SkillModifierEntry> SkillModifiers = new();
         public List<BuffTriggerEntry> TriggerEntries = new();
         public abstract BuffCategory Category { get; }
+
+        [JsonIgnore]
+        public string Name => LocalizationComponent.Resolve(NameKey);
 
         public List<BuffTriggerEntry> CreateEffectiveTriggerEntries()
         {

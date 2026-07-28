@@ -165,7 +165,7 @@ namespace CrystalMagic.Editor.Data
                 EditorGUILayout.TextField("NPC", row.NPC ?? string.Empty);
                 EditorGUILayout.TextField("Prefab Path", row.PrefabPath ?? string.Empty);
             }
-            row.DisplayName = EditorGUILayout.TextField("Display Name", row.DisplayName ?? string.Empty);
+            row.DisplayNameKey = EditorGUILayout.TextField("Display Name Key", row.DisplayNameKey ?? string.Empty);
             if (EditorGUI.EndChangeCheck())
             {
                 _isDirty = true;
@@ -246,7 +246,7 @@ namespace CrystalMagic.Editor.Data
 
             EditorGUI.BeginChangeCheck();
             interaction.Key = EditorGUILayout.TextField("Key", interaction.Key ?? string.Empty);
-            interaction.DisplayName = EditorGUILayout.TextField("Display Name", interaction.DisplayName ?? string.Empty);
+            interaction.DisplayNameKey = EditorGUILayout.TextField("Display Name Key", interaction.DisplayNameKey ?? string.Empty);
             interaction.EnableExpression = EditorGUILayout.TextField("Enable Expression", interaction.EnableExpression ?? string.Empty);
             if (EditorGUI.EndChangeCheck())
             {
@@ -331,7 +331,7 @@ namespace CrystalMagic.Editor.Data
 
             try
             {
-                string json = File.ReadAllText(DataPath);
+                string json = DataFileUtility.ReadJsonText(DataPath);
                 TableWrapper wrapper = JsonConvert.DeserializeObject<TableWrapper>(json, JsonSettings);
                 if (wrapper?.Rows != null)
                 {
@@ -370,7 +370,7 @@ namespace CrystalMagic.Editor.Data
                 RefreshRowsFromPrefabs(markDirtyWhenChanged: false);
                 NormalizeRowIds();
                 string json = JsonConvert.SerializeObject(new TableWrapper { Rows = _rows }, JsonSettings);
-                File.WriteAllText(DataPath, json, Encoding.UTF8);
+                DataFileUtility.WriteJsonText(DataPath, json);
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
                 _isDirty = false;
@@ -435,7 +435,7 @@ namespace CrystalMagic.Editor.Data
                     {
                         row = new NPCData
                         {
-                            DisplayName = npcName,
+                            DisplayNameKey = $"npc.{npcName}.name",
                             Interactions = new List<NPCInteractionData>(),
                         };
                         changed = true;
@@ -483,7 +483,7 @@ namespace CrystalMagic.Editor.Data
             row.Interactions.Add(new NPCInteractionData
             {
                 Key = $"Interaction_{row.Interactions.Count + 1}",
-                DisplayName = $"Interaction {row.Interactions.Count + 1}",
+                DisplayNameKey = $"npc.interaction_{row.Interactions.Count + 1}.name",
                 EnableExpression = string.Empty,
                 Nodes = new List<NPCInteractionNodeData>(),
             });
@@ -742,7 +742,7 @@ namespace CrystalMagic.Editor.Data
             {
                 select.Options.Add(new NPCSelectOptionData
                 {
-                    DisplayName = $"Option {select.Options.Count + 1}",
+                    DisplayNameKey = $"npc.option_{select.Options.Count + 1}.name",
                 });
                 _isDirty = true;
             }
@@ -770,7 +770,7 @@ namespace CrystalMagic.Editor.Data
                 }
                 EditorGUILayout.EndHorizontal();
 
-                option.DisplayName = EditorGUILayout.TextField("Display Name", option.DisplayName ?? string.Empty);
+                option.DisplayNameKey = EditorGUILayout.TextField("Display Name Key", option.DisplayNameKey ?? string.Empty);
                 option.EnableExpression = EditorGUILayout.TextField("Enable Expression", option.EnableExpression ?? string.Empty);
                 option.NextNodeGuid = DrawNodeGuidPopup("Next Node", interaction, option.NextNodeGuid, parentNode.Guid);
                 EditorGUILayout.EndVertical();
@@ -970,7 +970,7 @@ namespace CrystalMagic.Editor.Data
             {
                 select.Options.Add(new NPCSelectOptionData
                 {
-                    DisplayName = $"Option {select.Options.Count + 1}",
+                    DisplayNameKey = $"npc.option_{select.Options.Count + 1}.name",
                     NextNodeGuid = node.Guid,
                 });
             }

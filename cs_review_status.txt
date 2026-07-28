@@ -14,12 +14,14 @@
     ModifierConfig.cs TRUE
   Data\
     Editor\
+      DataFileEncodingValidator.cs FALSE
       DataTableRegistryGenerator.cs FALSE
       DataTableViewerWindow.cs FALSE
     DataComponent.cs TRUE
+    DataFileUtility.cs FALSE
     DataRow.cs TRUE
     DataTable.cs TRUE
-    DataTableRegistry.cs TRUE
+    DataTableRegistry.cs TRUE DIRTY
     ReadOnlyDataAttribute.cs TRUE
     UnityObjectPathJsonConverter.cs TRUE
   Editor\
@@ -57,6 +59,13 @@
     GameGateComponent.cs FALSE
   Input\
     InputComponent.cs TRUE DIRTY
+  Localization\
+    Editor\
+      LocalizedTextMeshProUGUIEditor.cs FALSE
+    GameLanguage.cs FALSE
+    LocalizationComponent.cs FALSE
+    LocalizationEditorPreviewUtility.cs FALSE
+    LocalizedTextMeshProUGUI.cs FALSE
   Pool\
     GameObjectPool.cs TRUE
     IObjectPool.cs TRUE
@@ -97,8 +106,8 @@
     AutoOpen.cs FALSE
     SceneComponent.cs WAIT
   Settings\
-    GameSettingsComponent.cs TRUE
-    GameSettingsData.cs TRUE
+    GameSettingsComponent.cs TRUE DIRTY
+    GameSettingsData.cs TRUE DIRTY
   Timer\
     TimerComponent.cs TRUE
   Transition\
@@ -132,7 +141,7 @@
   EditorComponents.cs FALSE
   EditorLabelAttribute.cs FALSE
   GameComponent.cs TRUE
-  GameEntry.cs TRUE
+  GameEntry.cs TRUE DIRTY
   IGameComponent.cs TRUE
   PersistentEventSystem.cs TRUE
   Singleton.cs TRUE
@@ -187,8 +196,9 @@ Game\
     BuffData.cs FALSE
     DropData.cs FALSE
     DungeonDefinitionData.cs FALSE
-    ItemData.cs TRUE
-    NPCData.cs TRUE
+    ItemData.cs TRUE DIRTY
+    LocalizationData.cs FALSE
+    NPCData.cs TRUE DIRTY
     PropData.cs FALSE
     ShopData.cs FALSE
     SkillAdditionData.cs FALSE

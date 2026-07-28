@@ -170,7 +170,7 @@ namespace CrystalMagic.Editor.Data
             {
                 if (File.Exists(DataPath))
                 {
-                    string json = File.ReadAllText(DataPath);
+                    string json = DataFileUtility.ReadJsonText(DataPath);
                     TableWrapper wrapper = JsonConvert.DeserializeObject<TableWrapper>(json, JsonSettings);
                     if (wrapper?.Rows != null)
                         _rows = wrapper.Rows;
@@ -199,7 +199,7 @@ namespace CrystalMagic.Editor.Data
                 SyncRowsWithPropItems();
                 int linkedItemCount = SyncLinkedItemExtraIdsFromPropItems();
                 string json = JsonConvert.SerializeObject(new TableWrapper { Rows = _rows }, JsonSettings);
-                File.WriteAllText(DataPath, json, Encoding.UTF8);
+                DataFileUtility.WriteJsonText(DataPath, json);
                 AssetDatabase.Refresh();
                 RefreshItemCache();
                 _isDirty = false;
@@ -306,9 +306,9 @@ namespace CrystalMagic.Editor.Data
             DrawSectionHeader("Basic");
             using (new EditorGUI.DisabledScope(true))
                 EditorGUILayout.IntField("Id", row.Id);
-            row.Name = EditorGUILayout.TextField("Name", row.Name ?? string.Empty);
-            EditorGUILayout.LabelField("Description");
-            row.Description = EditorGUILayout.TextArea(row.Description ?? string.Empty, GUILayout.MinHeight(48f), GUILayout.MaxHeight(80f));
+            row.NameKey = EditorGUILayout.TextField("Name Key", row.NameKey ?? string.Empty);
+            EditorGUILayout.LabelField("Description Key");
+            row.DescriptionKey = EditorGUILayout.TextArea(row.DescriptionKey ?? string.Empty, GUILayout.MinHeight(48f), GUILayout.MaxHeight(80f));
             using (new EditorGUI.DisabledScope(true))
                 EditorGUILayout.TextField("Linked Item", GetLinkedItemsLabel(row.Id));
 
@@ -814,8 +814,8 @@ namespace CrystalMagic.Editor.Data
                     row = new PropData
                     {
                         Id = item.ExtraId,
-                        Name = item.Name,
-                        Description = item.Description,
+                        NameKey = item.NameKey,
+                        DescriptionKey = item.DescriptionKey,
                         TargetType = PropTargetType.Self,
                         EffectChain = Array.Empty<EffectData>(),
                     };
@@ -841,7 +841,7 @@ namespace CrystalMagic.Editor.Data
             if (!File.Exists(ItemDataPath))
                 return 0;
 
-            string json = File.ReadAllText(ItemDataPath);
+            string json = DataFileUtility.ReadJsonText(ItemDataPath);
             ItemTableWrapper wrapper = JsonConvert.DeserializeObject<ItemTableWrapper>(json, JsonSettings);
             if (wrapper?.Rows == null)
                 return 0;
@@ -865,7 +865,7 @@ namespace CrystalMagic.Editor.Data
                 return 0;
 
             string updatedJson = JsonConvert.SerializeObject(wrapper, JsonSettings);
-            File.WriteAllText(ItemDataPath, updatedJson, Encoding.UTF8);
+            DataFileUtility.WriteJsonText(ItemDataPath, updatedJson);
             return updatedCount;
         }
 

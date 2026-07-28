@@ -13,9 +13,12 @@ namespace CrystalMagic.Game.Data
 
         public string PrefabPath;
 
-        public string DisplayName;
+        public string DisplayNameKey;
 
         public List<NPCInteractionData> Interactions = new();
+
+        [JsonIgnore]
+        public string DisplayName => LocalizationComponent.Resolve(DisplayNameKey);
 
         public IEnumerable<NPCInteractionData> GetEnabledInteractions()
         {
@@ -35,13 +38,16 @@ namespace CrystalMagic.Game.Data
     {
         public string Key;
 
-        public string DisplayName;
+        public string DisplayNameKey;
 
         public string EnableExpression;
 
         public string EntryNodeGuid;
 
         public List<NPCInteractionNodeData> Nodes = new();
+
+        [JsonIgnore]
+        public string DisplayName => LocalizationComponent.Resolve(DisplayNameKey);
 
         public bool IsEnabled()
         {
@@ -184,11 +190,14 @@ namespace CrystalMagic.Game.Data
     [Serializable]
     public sealed class NPCSelectOptionData
     {
-        public string DisplayName;
+        public string DisplayNameKey;
 
         public string EnableExpression;
 
         public string NextNodeGuid;
+
+        [JsonIgnore]
+        public string DisplayName => LocalizationComponent.Resolve(DisplayNameKey);
 
         public bool IsEnabled()
         {

@@ -13,8 +13,8 @@ namespace CrystalMagic.UI
         private const string GroupName = "Bottom";
         private const float DefaultWorldYOffset = 0.8f;
         private const float CharacterWorldYOffset = 1.2f;
-        private const string MoneyDisplayName = "\u91d1\u5e01";
-        private const string TreasureDisplayName = "\u5b9d\u7bb1";
+        private const string MoneyDisplayNameKey = "world.drop.money";
+        private const string TreasureDisplayNameKey = "world.drop.treasure";
 
         private RectTransform _rootRect;
         private Camera _currentCamera;
@@ -117,7 +117,7 @@ namespace CrystalMagic.UI
             _promptRoot.localScale = Vector3.one;
             _promptRoot.localRotation = Quaternion.identity;
 
-            GameObject labelObject = new("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+            GameObject labelObject = new("Label", typeof(RectTransform), typeof(LocalizedTextMeshProUGUI));
             _labelRect = labelObject.GetComponent<RectTransform>();
             _labelRect.SetParent(_promptRoot, false);
             _labelRect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -238,7 +238,7 @@ namespace CrystalMagic.UI
                     return true;
 
                 case PlayerInteractionKind.Treasure:
-                    displayName = $"E {TreasureDisplayName}";
+                    displayName = $"E {LocalizationComponent.Instance.Get(TreasureDisplayNameKey)}";
                     return true;
 
                 case PlayerInteractionKind.Npc:
@@ -273,7 +273,8 @@ namespace CrystalMagic.UI
             string name;
             if (drop.DropType == DropRewardType.Money)
             {
-                name = drop.Amount > 1 ? $"{MoneyDisplayName} x{drop.Amount}" : MoneyDisplayName;
+                string moneyDisplayName = LocalizationComponent.Instance.Get(MoneyDisplayNameKey);
+                name = drop.Amount > 1 ? $"{moneyDisplayName} x{drop.Amount}" : moneyDisplayName;
                 return $"E {name}";
             }
 

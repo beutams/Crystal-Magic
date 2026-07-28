@@ -269,8 +269,9 @@ namespace CrystalMagic.UI
 
         private string BuildDisplayText(TrainingDummySnapshot snapshot, float now)
         {
+            LocalizationComponent localization = LocalizationComponent.Instance;
             if (!snapshot.Exists)
-                return "训练场数据\n未找到训练目标";
+                return localization.Get("ui.training.stats.missing");
 
             float windowDamage = 0f;
             for (int i = 0; i < _damageSamples.Count; i++)
@@ -285,28 +286,27 @@ namespace CrystalMagic.UI
             }
 
             StringBuilder builder = new(512);
-            builder.AppendLine("训练场数据");
-            builder.Append("目标: ").AppendLine(snapshot.UnitName);
-            builder.Append("生命: ").Append(Format(snapshot.CurrentHealth)).Append(" / ").AppendLine(Format(snapshot.MaxHealth));
-            builder.Append("法力: ");
+            builder.AppendLine(localization.Get("ui.training.stats.header"));
+            builder.AppendLine(localization.Format("ui.training.stats.target", snapshot.UnitName));
+            builder.AppendLine(localization.Format("ui.training.stats.health", Format(snapshot.CurrentHealth), Format(snapshot.MaxHealth)));
             if (snapshot.HasMana)
-                builder.Append(Format(snapshot.CurrentMana)).Append(" / ").AppendLine(Format(snapshot.MaxMana));
+                builder.AppendLine(localization.Format("ui.training.stats.mana", Format(snapshot.CurrentMana), Format(snapshot.MaxMana)));
             else
-                builder.AppendLine("无");
+                builder.AppendLine(localization.Get("ui.training.stats.mana_missing"));
 
-            builder.Append("攻击: ").AppendLine(Format(snapshot.AttackPower));
-            builder.Append("防御: ").AppendLine(Format(snapshot.Defense));
-            builder.Append("移速: ").AppendLine(Format(snapshot.MoveSpeed));
-            builder.Append("加速度: ").AppendLine(Format(snapshot.MaxAcceleration));
-            builder.Append("技能范围: ").AppendLine(Format(snapshot.SkillRange));
-            builder.Append("行动速度加成: ").Append(Format(snapshot.ActionSpeedBonus)).AppendLine("%");
-            builder.Append("咏唱速度加成: ").Append(Format(snapshot.ChantSpeedBonus)).AppendLine("%");
-            builder.Append("生命回复: ").AppendLine(Format(snapshot.HealthRegen));
-            builder.Append("法力回复: ").AppendLine(Format(snapshot.ManaRegen));
-            builder.Append("当前 Buff 数: ").AppendLine(snapshot.ActiveBuffCount.ToString());
-            builder.Append("累计伤害: ").AppendLine(Format(_totalDamage));
-            builder.Append("近5秒 DPS: ").AppendLine(Format(windowDps));
-            builder.Append("平均 DPS: ").AppendLine(Format(averageDps));
+            builder.AppendLine(localization.Format("ui.training.stats.attack", Format(snapshot.AttackPower)));
+            builder.AppendLine(localization.Format("ui.training.stats.defense", Format(snapshot.Defense)));
+            builder.AppendLine(localization.Format("ui.training.stats.move_speed", Format(snapshot.MoveSpeed)));
+            builder.AppendLine(localization.Format("ui.training.stats.max_acceleration", Format(snapshot.MaxAcceleration)));
+            builder.AppendLine(localization.Format("ui.training.stats.skill_range", Format(snapshot.SkillRange)));
+            builder.AppendLine(localization.Format("ui.training.stats.action_speed_bonus", Format(snapshot.ActionSpeedBonus)));
+            builder.AppendLine(localization.Format("ui.training.stats.chant_speed_bonus", Format(snapshot.ChantSpeedBonus)));
+            builder.AppendLine(localization.Format("ui.training.stats.health_regen", Format(snapshot.HealthRegen)));
+            builder.AppendLine(localization.Format("ui.training.stats.mana_regen", Format(snapshot.ManaRegen)));
+            builder.AppendLine(localization.Format("ui.training.stats.active_buff_count", snapshot.ActiveBuffCount));
+            builder.AppendLine(localization.Format("ui.training.stats.total_damage", Format(_totalDamage)));
+            builder.AppendLine(localization.Format("ui.training.stats.window_dps", Format(windowDps)));
+            builder.AppendLine(localization.Format("ui.training.stats.average_dps", Format(averageDps)));
             return builder.ToString();
         }
 

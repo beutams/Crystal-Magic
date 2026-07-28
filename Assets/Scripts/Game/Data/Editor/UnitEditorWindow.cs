@@ -235,7 +235,7 @@ namespace CrystalMagic.Editor.Data
 
             try
             {
-                string json = File.ReadAllText(DataPath);
+                string json = DataFileUtility.ReadJsonText(DataPath);
                 TableWrapper wrapper = JsonConvert.DeserializeObject<TableWrapper>(json, JsonSettings);
                 if (wrapper?.Rows != null)
                 {
@@ -279,7 +279,7 @@ namespace CrystalMagic.Editor.Data
                 }
 
                 string json = JsonConvert.SerializeObject(new TableWrapper { Rows = _rows }, JsonSettings);
-                File.WriteAllText(DataPath, json, Encoding.UTF8);
+                DataFileUtility.WriteJsonText(DataPath, json);
                 SaveDropData();
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
@@ -303,7 +303,7 @@ namespace CrystalMagic.Editor.Data
 
             try
             {
-                string json = File.ReadAllText(DropDataPath);
+                string json = DataFileUtility.ReadJsonText(DropDataPath);
                 DropTableWrapper wrapper = JsonConvert.DeserializeObject<DropTableWrapper>(json, JsonSettings);
                 if (wrapper?.Rows != null)
                     _dropRows.AddRange(wrapper.Rows);
@@ -329,7 +329,7 @@ namespace CrystalMagic.Editor.Data
                 row?.EnsureValid();
 
             string json = JsonConvert.SerializeObject(new DropTableWrapper { Rows = _dropRows }, JsonSettings);
-            File.WriteAllText(DropDataPath, json, Encoding.UTF8);
+            DataFileUtility.WriteJsonText(DropDataPath, json);
         }
 
         private List<UnitData> BuildSaveRowsFromPrefabs()

@@ -1056,7 +1056,7 @@ namespace CrystalMagic.Editor.Data
             if (!File.Exists(dataPath))
                 return new T();
 
-            string json = File.ReadAllText(dataPath);
+            string json = DataFileUtility.ReadJsonText(dataPath);
             return JsonConvert.DeserializeObject<T>(json, JsonSettings) ?? new T();
         }
 
@@ -1067,7 +1067,7 @@ namespace CrystalMagic.Editor.Data
                 Directory.CreateDirectory(directory);
 
             string json = JsonConvert.SerializeObject(wrapper, JsonSettings);
-            File.WriteAllText(dataPath, json, Encoding.UTF8);
+            DataFileUtility.WriteJsonText(dataPath, json);
         }
 
         private static T DeepCopy<T>(T source)

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Data.Effects;
 using CrystalMagic.Game.Skill;
@@ -206,7 +207,7 @@ namespace CrystalMagic.Editor.Skill
 
             try
             {
-                string json = File.ReadAllText(DataPath);
+                string json = DataFileUtility.ReadJsonText(DataPath);
                 TableWrapper wrapper = JsonConvert.DeserializeObject<TableWrapper>(json, JsonSettings);
                 if (wrapper?.Rows != null)
                     _rows = wrapper.Rows;
@@ -233,7 +234,7 @@ namespace CrystalMagic.Editor.Skill
             {
                 NormalizeRowIds();
                 string json = JsonConvert.SerializeObject(new TableWrapper { Rows = _rows }, JsonSettings);
-                File.WriteAllText(DataPath, json, Encoding.UTF8);
+                DataFileUtility.WriteJsonText(DataPath, json);
                 AssetDatabase.Refresh();
                 _isDirty = false;
                 _statusText = $"Saved {_rows.Count} rows";
@@ -256,9 +257,9 @@ namespace CrystalMagic.Editor.Skill
             _rows.Add(new SkillData
             {
                 Id = nextIndex,
-                Name = $"New Skill {nextIndex}",
+                NameKey = $"skill.new_{nextIndex}.name",
                 IsMonsterSkill = isMonsterSkill,
-                Description = string.Empty,
+                DescriptionKey = string.Empty,
                 RuntimeType = SkillRegistry.DefaultSkillRuntimeTypeKey,
                 IconPath = string.Empty,
                 MoveSpeedMultiplier = 1f,
@@ -301,7 +302,7 @@ namespace CrystalMagic.Editor.Skill
                 return;
 
             copy.Id = _rows.Count;
-            copy.Name = string.IsNullOrWhiteSpace(source.Name) ? $"Skill {copy.Id}" : $"{source.Name}_Copy";
+            copy.NameKey = string.IsNullOrWhiteSpace(source.NameKey) ? $"skill.new_{copy.Id}.name" : $"{source.NameKey}_copy";
             copy.Conditions ??= new List<ConditionConfig>();
             copy.EffectChain ??= Array.Empty<EffectData>();
             copy.CastTasks ??= new List<SkillCastTaskData>();
@@ -645,11 +646,9 @@ namespace CrystalMagic.Editor.Skill
                 EnsureSelectedSkillVisible();
             }
 
-            string displayName = EditorGUILayout.TextField("Name", skill.DisplayName);
-            if (!string.Equals(displayName, skill.DisplayName, StringComparison.Ordinal))
-                skill.Name = displayName;
-            EditorGUILayout.LabelField("Description");
-            skill.Description = EditorGUILayout.TextArea(skill.Description ?? string.Empty, GUILayout.MinHeight(48f), GUILayout.MaxHeight(80f));
+            skill.NameKey = EditorGUILayout.TextField("Name Key", skill.NameKey ?? string.Empty);
+            EditorGUILayout.LabelField("Description Key");
+            skill.DescriptionKey = EditorGUILayout.TextArea(skill.DescriptionKey ?? string.Empty, GUILayout.MinHeight(48f), GUILayout.MaxHeight(80f));
             DrawRuntimeTypeField(skill);
             skill.IconPath = EditorGUILayout.TextField("Icon Path", skill.IconPath ?? string.Empty);
 
