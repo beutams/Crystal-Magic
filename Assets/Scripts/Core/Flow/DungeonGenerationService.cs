@@ -91,20 +91,7 @@ namespace CrystalMagic.Core
                 "Searching dungeon layout",
                 $"Floor {dungeonFloor} MasterSeed {masterSeed}");
 
-            int maxAttemptCount = Mathf.Max(1, dungeonConfig?.LayoutSearchAttemptLimit ?? 100);
-            bool useBestCandidateFallback = dungeonConfig?.UseBestCandidateFallback ?? true;
-            DungeonGenerationAttemptRecorder.BeginSession(
-                dungeonFloor,
-                masterSeed,
-                maxAttemptCount,
-                useBestCandidateFallback,
-                config,
-                rules.LargeRoomRange,
-                rules.MediumRoomRange,
-                rules.SmallRoomRange,
-                rules.WalkableTileRange);
             int attemptIndex = 0;
-            CandidateSelection bestCandidate = null;
             while (true)
             {
                 int candidateSeed = DeriveCandidateSeed(masterSeed, attemptIndex);
@@ -117,32 +104,9 @@ namespace CrystalMagic.Core
                     targetSceneName,
                     candidateContext);
 
-                int candidateScore = ScoreCandidate(candidateContext.Result.Stats, rules);
-                if (bestCandidate == null || candidateScore > bestCandidate.Score)
-                {
-                    bestCandidate = new CandidateSelection(candidateContext.Result, candidateSeed, attemptIndex, candidateScore);
-                }
-
                 bool isQualified = IsMapQualified(candidateContext.Result.Stats, rules);
-                DungeonGenerationAttemptRecorder.RecordAttempt(
-                    attemptIndex + 1,
-                    candidateSeed,
-                    candidateScore,
-                    bestCandidate.Score,
-                    candidateContext.Result.Stats,
-                    isQualified,
-                    rules.LargeRoomRange,
-                    rules.MediumRoomRange,
-                    rules.SmallRoomRange,
-                    rules.WalkableTileRange);
-
                 if (isQualified)
                 {
-                    DungeonGenerationAttemptRecorder.RecordAccepted(
-                        attemptIndex + 1,
-                        candidateSeed,
-                        candidateScore,
-                        candidateContext.Result.Stats);
                     yield return AcceptCandidateCoroutine(
                         runData,
                         candidateContext.Result,
@@ -153,39 +117,7 @@ namespace CrystalMagic.Core
                         candidateSeed,
                         attemptIndex + 1,
                         "Dungeon layout ready",
-                        $"Accepted attempt {attemptIndex + 1} Seed {candidateSeed} Score {candidateScore}");
-                    yield break;
-                }
-
-                int attemptCount = attemptIndex + 1;
-                if (useBestCandidateFallback && attemptCount >= maxAttemptCount && bestCandidate != null)
-                {
-                    if (bestCandidate.Score <= 0)
-                    {
-                        string errorDetail = $"No valid dungeon layout found in {attemptCount} attempts for floor {dungeonFloor}. Best score was {bestCandidate.Score}.";
-                        DungeonGenerationAttemptRecorder.RecordFailure(attemptCount, bestCandidate.Score);
-                        PublishProgress(targetSceneName, 0.35f, "Dungeon layout search failed", errorDetail);
-                        Debug.LogError($"[DungeonGenerationService] {errorDetail}");
-                        throw new InvalidOperationException(errorDetail);
-                    }
-
-                    DungeonGenerationAttemptRecorder.RecordFallbackAccepted(
-                        bestCandidate.AttemptIndex + 1,
-                        bestCandidate.Seed,
-                        bestCandidate.Score,
-                        attemptCount,
-                        bestCandidate.Result.Stats);
-                    yield return AcceptCandidateCoroutine(
-                        runData,
-                        bestCandidate.Result,
-                        dungeonFloor,
-                        theme,
-                        dungeonConfig,
-                        targetSceneName,
-                        bestCandidate.Seed,
-                        bestCandidate.AttemptIndex + 1,
-                        "Dungeon fallback layout ready",
-                        $"No qualified layout in {attemptCount} attempts, using best attempt {bestCandidate.AttemptIndex + 1} Seed {bestCandidate.Seed} Score {bestCandidate.Score}");
+                        $"Accepted attempt {attemptIndex + 1} Seed {candidateSeed}");
                     yield break;
                 }
 
@@ -194,9 +126,7 @@ namespace CrystalMagic.Core
                     targetSceneName,
                     0.32f,
                     "Searching dungeon layout",
-                    useBestCandidateFallback
-                        ? $"Attempt {attemptIndex} rejected, continuing search (best score {bestCandidate?.Score ?? int.MinValue}/{maxAttemptCount})"
-                        : $"Attempt {attemptIndex} rejected, continuing search");
+                    $"Attempt {attemptIndex} rejected, continuing search");
                 yield return null;
             }
         }
@@ -384,9 +314,9 @@ namespace CrystalMagic.Core
             config.MinRoomWidth = generationConfig.MinRoomWidth;
             config.MaxRoomWidth = generationConfig.MaxRoomWidth;
             ApplyVisualStyleRules(config, theme);
-            config.MaxSmallDungeonRooms = Mathf.Max(generationConfig.MinSmallDungeonRooms, generationConfig.MaxSmallDungeonRooms + Mathf.Max(0, (dungeonFloor - 1) * generationConfig.SmallRoomAddPerFloor));
-            config.MaxMediumDungeonRooms = Mathf.Max(generationConfig.MinMediumDungeonRooms, generationConfig.MaxMediumDungeonRooms + GetFloorScaledIncrement(dungeonFloor, generationConfig.MediumRoomAddFloorInterval));
-            config.MaxLargeDungeonRooms = Mathf.Max(generationConfig.MinLargeDungeonRooms, generationConfig.MaxLargeDungeonRooms + GetFloorScaledIncrement(dungeonFloor, generationConfig.LargeRoomAddFloorInterval));
+            config.MaxSmallDungeonRooms = Mathf.Max(generationConfig.SmallRoomMin, generationConfig.MaxSmallDungeonRooms + Mathf.Max(0, (dungeonFloor - 1) * generationConfig.SmallRoomAddPerFloor));
+            config.MaxMediumDungeonRooms = Mathf.Max(generationConfig.MediumRoomMin, generationConfig.MaxMediumDungeonRooms + GetFloorScaledIncrement(dungeonFloor, generationConfig.MediumRoomAddFloorInterval));
+            config.MaxLargeDungeonRooms = Mathf.Max(generationConfig.LargeRoomMin, generationConfig.MaxLargeDungeonRooms + GetFloorScaledIncrement(dungeonFloor, generationConfig.LargeRoomAddFloorInterval));
             config.SmallRoomWeightMin = generationConfig.SmallRoomMin;
             config.SmallRoomWeightMax = generationConfig.SmallRoomMax;
             config.MediumRoomWeightMin = generationConfig.MediumRoomMin;
@@ -1081,35 +1011,6 @@ namespace CrystalMagic.Core
         private static bool HasRequiredEntryExitRooms(DungeonMakerTunnelingStats stats)
         {
             return stats != null && stats.LargeRooms > 0 && stats.SmallRooms > 0;
-        }
-
-        private static int ScoreCandidate(DungeonMakerTunnelingStats stats, DungeonGenerationRules rules)
-        {
-            if (stats == null)
-                return int.MinValue;
-
-            if (!HasRequiredEntryExitRooms(stats))
-                return 0;
-
-            int score = 0;
-            score += ScoreRangeFit(stats.LargeRooms, rules.LargeRoomRange, 10000, 2400);
-            score += ScoreRangeFit(stats.MediumRooms, rules.MediumRoomRange, 5000, 900);
-            score += ScoreRangeFit(stats.SmallRooms, rules.SmallRoomRange, 5000, 900);
-            score += ScoreRangeFit(stats.WalkableTiles, rules.WalkableTileRange, 8000, 8);
-            return score;
-        }
-
-        private static int ScoreRangeFit(int value, Vector2Int range, int inRangeScore, int distancePenalty)
-        {
-            Vector2Int normalized = NormalizeRange(range);
-            if (value < normalized.x)
-                return -((normalized.x - value) * distancePenalty);
-
-            if (value > normalized.y)
-                return -((value - normalized.y) * distancePenalty);
-
-            int center = (normalized.x + normalized.y) / 2;
-            return inRangeScore - Mathf.Abs(value - center);
         }
 
         private static bool IsWithinRange(int value, Vector2Int range)
@@ -2920,6 +2821,18 @@ namespace CrystalMagic.Core
             }
         }
 
+        private readonly struct EncounterCountRange
+        {
+            public EncounterCountRange(int min, int max)
+            {
+                Min = min;
+                Max = max;
+            }
+
+            public int Min { get; }
+            public int Max { get; }
+        }
+
         private sealed class DungeonGenerationRules
         {
             public Vector2Int LargeRoomRange = new(5, 7);
@@ -2952,22 +2865,6 @@ namespace CrystalMagic.Core
         private sealed class CandidateGenerationContext
         {
             public DungeonMakerTunnelingResult Result;
-        }
-
-        private sealed class CandidateSelection
-        {
-            public CandidateSelection(DungeonMakerTunnelingResult result, int seed, int attemptIndex, int score)
-            {
-                Result = result;
-                Seed = seed;
-                AttemptIndex = attemptIndex;
-                Score = score;
-            }
-
-            public DungeonMakerTunnelingResult Result { get; }
-            public int Seed { get; }
-            public int AttemptIndex { get; }
-            public int Score { get; }
         }
 
         private readonly struct GeneratedDungeonPayload

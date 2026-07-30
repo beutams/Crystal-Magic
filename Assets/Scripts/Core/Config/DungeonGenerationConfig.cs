@@ -35,15 +35,6 @@ namespace CrystalMagic.Game.Config
         [EditorLabel("Base Max Large Rooms")]
         public int MaxLargeDungeonRooms = 2;
 
-        [EditorLabel("Min Small Room Cap")]
-        public int MinSmallDungeonRooms = 12;
-
-        [EditorLabel("Min Medium Room Cap")]
-        public int MinMediumDungeonRooms = 6;
-
-        [EditorLabel("Min Large Room Cap")]
-        public int MinLargeDungeonRooms = 1;
-
         [EditorLabel("Small Room Add Per Floor")]
         public int SmallRoomAddPerFloor = 1;
 

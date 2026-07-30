@@ -64,8 +64,11 @@ partial struct DungeonTreasureSystem : ISystem
 
         targetTreasure.IsOpened = 1;
         state.EntityManager.SetComponentData(target, targetTreasure);
-        runtime.ValueRW.CurrentTarget = Entity.Null;
-        runtime.ValueRW.CurrentKind = PlayerInteractionKind.None;
+
+        // Spawning drops changes entity structure and invalidates the RefRW acquired above.
+        RefRW<PlayerInteractionRuntimeComponent> refreshedRuntime = SystemAPI.GetSingletonRW<PlayerInteractionRuntimeComponent>();
+        refreshedRuntime.ValueRW.CurrentTarget = Entity.Null;
+        refreshedRuntime.ValueRW.CurrentKind = PlayerInteractionKind.None;
         ConsumeInteract(ref state, playerEntity);
     }
 
