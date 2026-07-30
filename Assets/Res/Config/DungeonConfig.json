@@ -1,7 +1,7 @@
 {
     "BossFloorInterval": 10,
     "ThemeBandSize": 10,
-    "CellWorldSize": 1.0,
+    "CellWorldSize": 1.5,
     "LayoutSearchAttemptLimit": 100,
     "UseBestCandidateFallback": true,
     "FallbackMob1PoolId": 1,
