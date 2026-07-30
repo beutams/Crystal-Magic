@@ -929,6 +929,62 @@ namespace CrystalMagic.Game.MapDemo
                 };
             }
 
+            public RoomSize SelectBalancedRoomSize(
+                int baseSmallWeight,
+                int baseMediumWeight,
+                int baseLargeWeight,
+                int randomRoll)
+            {
+                float smallWeight = GetBalancedRoomSizeWeight(RoomSize.SMALL, baseSmallWeight);
+                float mediumWeight = GetBalancedRoomSizeWeight(RoomSize.MEDIUM, baseMediumWeight);
+                float largeWeight = GetBalancedRoomSizeWeight(RoomSize.LARGE, baseLargeWeight);
+                float totalWeight = smallWeight + mediumWeight + largeWeight;
+                if (totalWeight <= 0f)
+                    return RoomSize.SMALL;
+
+                float roll = Math.Clamp(randomRoll, 0, 99) / 100f * totalWeight;
+                if (roll < smallWeight)
+                    return RoomSize.SMALL;
+                if (roll < smallWeight + mediumWeight)
+                    return RoomSize.MEDIUM;
+                return RoomSize.LARGE;
+            }
+
+            private float GetBalancedRoomSizeWeight(RoomSize roomSize, int baseWeight)
+            {
+                if (baseWeight <= 0 || !WantsMoreRoomsD(roomSize))
+                    return 0f;
+
+                return baseWeight * GetRoomSizeDecayFactor(roomSize);
+            }
+
+            private float GetRoomSizeDecayFactor(RoomSize roomSize)
+            {
+                return roomSize switch
+                {
+                    RoomSize.SMALL => GetRoomSizeDecayFactor(
+                        _currentSmallRooms,
+                        _config.SmallRoomWeightMin,
+                        _config.SmallRoomWeightMax),
+                    RoomSize.MEDIUM => GetRoomSizeDecayFactor(
+                        _currentMediumRooms,
+                        _config.MediumRoomWeightMin,
+                        _config.MediumRoomWeightMax),
+                    _ => GetRoomSizeDecayFactor(
+                        _currentLargeRooms,
+                        _config.LargeRoomWeightMin,
+                        _config.LargeRoomWeightMax),
+                };
+            }
+
+            private static float GetRoomSizeDecayFactor(int currentCount, int minimumCount, int maximumCount)
+            {
+                if (maximumCount <= minimumCount || currentCount <= minimumCount)
+                    return 1f;
+
+                return Math.Max(0f, Math.Min(1f, (maximumCount - currentCount) / (float)(maximumCount - minimumCount)));
+            }
+
             // 读取 Roomie 子代延迟表。
             public int GetBabyDelayProbsForGenerationR(int generation)
             {
@@ -1571,21 +1627,14 @@ namespace CrystalMagic.Game.MapDemo
                 // 根据当前隧道宽度，决定这次侧房/分叉房更倾向生成什么尺寸。
                 int probMS = Dungeon.GetRoomSizeProbS(_tunnelWidth, RoomSize.MEDIUM);
                 int probSS = Dungeon.GetRoomSizeProbS(_tunnelWidth, RoomSize.SMALL);
+                int probLS = Dungeon.GetRoomSizeProbS(_tunnelWidth, RoomSize.LARGE);
                 int probMB = Dungeon.GetRoomSizeProbB(_tunnelWidth, RoomSize.MEDIUM);
                 int probSB = Dungeon.GetRoomSizeProbB(_tunnelWidth, RoomSize.SMALL);
+                int probLB = Dungeon.GetRoomSizeProbB(_tunnelWidth, RoomSize.LARGE);
 
                 int diceRoll = Dungeon.Next100();
-                RoomSize sideRoomSize = diceRoll < probSS
-                    ? RoomSize.SMALL
-                    : diceRoll < probSS + probMS
-                        ? RoomSize.MEDIUM
-                        : RoomSize.LARGE;
-
-                RoomSize branchingRoomSize = diceRoll < probSB
-                    ? RoomSize.SMALL
-                    : diceRoll < probSB + probMB
-                        ? RoomSize.MEDIUM
-                        : RoomSize.LARGE;
+                RoomSize sideRoomSize = Dungeon.SelectBalancedRoomSize(probSS, probMS, probLS, diceRoll);
+                RoomSize branchingRoomSize = Dungeon.SelectBalancedRoomSize(probSB, probMB, probLB, diceRoll);
 
                 // 计算 Roomie 子代应该延迟到哪一代激活。
                 diceRoll = Dungeon.Next101();
@@ -2835,6 +2884,14 @@ namespace CrystalMagic.Game.MapDemo
             // 地图中大房数量上限。
             public int MaxLargeDungeonRooms;
 
+            // 房型概率衰减使用的目标区间。区间无效时保留原始概率。
+            public int SmallRoomWeightMin;
+            public int SmallRoomWeightMax;
+            public int MediumRoomWeightMin;
+            public int MediumRoomWeightMax;
+            public int LargeRoomWeightMin;
+            public int LargeRoomWeightMax;
+
             // 额外 TunnelCrawler 后处理从哪一代开始；-1 表示关闭。
             public int TunnelCrawlerGeneration;
             // 末路补救时生成的特殊 Tunneler 配置。
@@ -2890,6 +2947,12 @@ namespace CrystalMagic.Game.MapDemo
                     MaxSmallDungeonRooms = source.MaxSmallDungeonRooms,
                     MaxMediumDungeonRooms = source.MaxMediumDungeonRooms,
                     MaxLargeDungeonRooms = source.MaxLargeDungeonRooms,
+                    SmallRoomWeightMin = source.SmallRoomWeightMin,
+                    SmallRoomWeightMax = source.SmallRoomWeightMax,
+                    MediumRoomWeightMin = source.MediumRoomWeightMin,
+                    MediumRoomWeightMax = source.MediumRoomWeightMax,
+                    LargeRoomWeightMin = source.LargeRoomWeightMin,
+                    LargeRoomWeightMax = source.LargeRoomWeightMax,
                     TunnelCrawlerGeneration = source.TunnelCrawlerGeneration,
                     LastChanceTunneler = ConvertSeed(source.LastChanceTunneler),
                     LastChanceGenerationalDelay = source.LastChanceGenerationalDelay,

@@ -169,6 +169,14 @@ namespace CrystalMagic.Game.MapDemo
         public int MaxMediumDungeonRooms = 20;
         public int MaxLargeDungeonRooms = 2;
 
+        [Header("Room Count Weighting")]
+        public int SmallRoomWeightMin;
+        public int SmallRoomWeightMax;
+        public int MediumRoomWeightMin;
+        public int MediumRoomWeightMax;
+        public int LargeRoomWeightMin;
+        public int LargeRoomWeightMax;
+
         [Header("额外链路")]
         public int TunnelCrawlerGeneration = -1;
         public DungeonMakerTunnelerSeedData LastChanceTunneler = new(

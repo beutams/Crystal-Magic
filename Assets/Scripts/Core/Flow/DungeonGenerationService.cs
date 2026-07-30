@@ -387,6 +387,12 @@ namespace CrystalMagic.Core
             config.MaxSmallDungeonRooms = Mathf.Max(generationConfig.MinSmallDungeonRooms, generationConfig.MaxSmallDungeonRooms + Mathf.Max(0, (dungeonFloor - 1) * generationConfig.SmallRoomAddPerFloor));
             config.MaxMediumDungeonRooms = Mathf.Max(generationConfig.MinMediumDungeonRooms, generationConfig.MaxMediumDungeonRooms + GetFloorScaledIncrement(dungeonFloor, generationConfig.MediumRoomAddFloorInterval));
             config.MaxLargeDungeonRooms = Mathf.Max(generationConfig.MinLargeDungeonRooms, generationConfig.MaxLargeDungeonRooms + GetFloorScaledIncrement(dungeonFloor, generationConfig.LargeRoomAddFloorInterval));
+            config.SmallRoomWeightMin = generationConfig.SmallRoomMin;
+            config.SmallRoomWeightMax = generationConfig.SmallRoomMax;
+            config.MediumRoomWeightMin = generationConfig.MediumRoomMin;
+            config.MediumRoomWeightMax = generationConfig.MediumRoomMax;
+            config.LargeRoomWeightMin = generationConfig.LargeRoomMin;
+            config.LargeRoomWeightMax = generationConfig.LargeRoomMax;
             ApplyRoomSizeProbabilityProfile(config);
             ApplyTunnelGrowthProbabilityProfile(config);
             return config;
@@ -506,6 +512,12 @@ namespace CrystalMagic.Core
             config.MaxRoomLength = Mathf.Max(config.MinRoomLength, config.MaxRoomLength);
             config.MinRoomWidth = Mathf.Max(1, config.MinRoomWidth);
             config.MaxRoomWidth = Mathf.Max(config.MinRoomWidth, config.MaxRoomWidth);
+            config.SmallRoomWeightMin = Mathf.Max(0, config.SmallRoomWeightMin);
+            config.SmallRoomWeightMax = Mathf.Max(config.SmallRoomWeightMin, config.SmallRoomWeightMax);
+            config.MediumRoomWeightMin = Mathf.Max(0, config.MediumRoomWeightMin);
+            config.MediumRoomWeightMax = Mathf.Max(config.MediumRoomWeightMin, config.MediumRoomWeightMax);
+            config.LargeRoomWeightMin = Mathf.Max(0, config.LargeRoomWeightMin);
+            config.LargeRoomWeightMax = Mathf.Max(config.LargeRoomWeightMin, config.LargeRoomWeightMax);
             config.BabyDelayProbsTunneler ??= new List<int>();
             config.BabyDelayProbsRoomie ??= new List<int>();
             config.MaxAgesT ??= new List<int>();
