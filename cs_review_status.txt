@@ -1,4 +1,4 @@
-﻿Core\
+Core\
   Audio\
     AudioComponent.cs TRUE
   Camera\
@@ -212,10 +212,12 @@ Game\
     UnitData.cs TRUE DIRTY
   MapDemo\
     Editor\
-      TunnelingMapDemoEditor.cs FALSE
-    DungeonMakerTunnelingConfig.cs FALSE
+      TunnelingMapDemoEditor.cs TRUE
+      OpenFieldMapTestDemoEditor.cs TRUE DIRTY
+    DungeonMakerTunnelingConfig.cs TRUE
     DungeonMakerTunnelingGenerator.cs FALSE
-    TunnelingMapDemo.cs FALSE
+    OpenFieldMapTestDemo.cs TRUE DIRTY
+    TunnelingMapDemo.cs TRUE
   Skill\
     Editor\
       SkillEditorWindow.cs FALSE
