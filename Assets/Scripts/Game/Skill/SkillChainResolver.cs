@@ -114,36 +114,5 @@ namespace CrystalMagic.Game.Skill
             return merged;
         }
 
-        public static SkillModifierSet CollectModifiers(
-            EntityManager entityManager,
-            Entity entity,
-            SkillData skillData = null,
-            SkillAdditionData skillAdditionData = null)
-        {
-            return UnitSkillModifierUtility.CreateCastModifiers(entityManager, entity, skillData, skillAdditionData);
-        }
-
-        public static bool MatchesFollowupEffect(SkillFollowupRuntime followupEffect, SkillData skillData, SkillAdditionData skillAdditionData)
-        {
-            if (skillData == null || followupEffect == null)
-                return false;
-
-            SkillFollowupContext context = new(default, Entity.Null, skillData, null, skillAdditionData);
-            return followupEffect.IsMatch(context);
-        }
-
-        public static void ApplyFollowupModifiers(ref SkillModifierSet modifiers, SkillFollowupRuntime followupEffect, in SkillFollowupContext context)
-        {
-            if (followupEffect == null)
-                return;
-
-            if (!followupEffect.IsMatch(context))
-                return;
-
-            if (!followupEffect.CanApply(context))
-                return;
-
-            followupEffect.GetModifier(ref modifiers, context);
-        }
     }
 }

@@ -11,9 +11,11 @@ public sealed class DungeonTreasureAuthoring : MonoBehaviour
             AddComponent(entity, new DungeonTreasureComponent
             {
                 RegionId = -1,
+                RandomSeed = 1u,
+                InterestSize = 0,
                 IsOpened = 0,
             });
-            AddBuffer<DungeonTreasureRewardElement>(entity);
+            AddBuffer<DungeonTreasureCandidateItemElement>(entity);
         }
     }
 }
@@ -21,5 +23,7 @@ public sealed class DungeonTreasureAuthoring : MonoBehaviour
 public struct DungeonTreasureComponent : IComponentData
 {
     public int RegionId;
+    public uint RandomSeed;
+    public byte InterestSize;
     public byte IsOpened;
 }

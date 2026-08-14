@@ -1,14 +1,15 @@
-{
-    "BossFloorInterval": 10,
-    "ThemeBandSize": 10,
-    "CellWorldSize": 1.0,
-    "LayoutSearchAttemptLimit": 100,
-    "UseBestCandidateFallback": true,
-    "FallbackMob1PoolId": 1,
-    "FallbackMob2PoolId": 2,
-    "FallbackMob3PoolId": 3,
-    "FallbackTreasure1PoolId": 1,
-    "FallbackTreasure2PoolId": 2,
-    "FallbackTreasure3PoolId": 3,
-    "FallbackBossRoomId": 1
+﻿{
+  "MapWidth": 200,
+  "MapHeight": 200,
+  "BossFloorInterval": 10,
+  "ChestRewardCountRange": { "x": 3, "y": 4 },
+  "SmallChestLuckRange": { "x": 0.0, "y": 0.35 },
+  "MediumChestLuckRange": { "x": 0.25, "y": 0.7 },
+  "LargeChestLuckRange": { "x": 0.55, "y": 1.0 },
+  "ChestRarity0Weight": { "x": 10.0, "y": 0.0 },
+  "ChestRarity1Weight": { "x": 8.0, "y": 0.0 },
+  "ChestRarity2Weight": { "x": 6.0, "y": 0.0 },
+  "ChestRarity3Weight": { "x": 4.0, "y": 5.0 },
+  "ChestRarity4Weight": { "x": 2.0, "y": 4.0 },
+  "ChestRarity5Weight": { "x": 1.0, "y": 1.0 }
 }

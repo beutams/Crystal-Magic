@@ -1,14 +1,16 @@
-{
-    "StartingGold": 500,
-    "MoneyIconPath": "Assets/Res/Sprites/Buy.png",
-    "InitialBackpackSize": 20,
-    "InitialStashSize": -1,
-    "MaxSaveSlots": 20,
-    "BattlePropSharedCooldownSeconds": 3.0,
-    "BattlePropSlotCount": 4,
-    "BattlePropShortcutSlotCount": 4,
-    "SinglePoolMaxSize": 1,
-    "SmallPoolMaxSize": 100,
-    "MediumPoolMaxSize": 30,
-    "LargePoolMaxSize": 10
+﻿{
+  "StartingGold": 500,
+  "MoneyIconPath": "Assets/Res/Sprites/Buy.png",
+  "InitialBackpackSize": 20,
+  "InitialStashSize": -1,
+  "MaxSaveSlots": 20,
+  "BattlePropSharedCooldownSeconds": 3.0,
+  "BattlePropSlotCount": 4,
+  "BattlePropShortcutSlotCount": 4,
+  "InteractionRange": 2.0,
+  "BehaviorTreeMaxImmediateIterationsPerTick": 256,
+  "SinglePoolMaxSize": 1,
+  "SmallPoolMaxSize": 100,
+  "MediumPoolMaxSize": 30,
+  "LargePoolMaxSize": 10
 }

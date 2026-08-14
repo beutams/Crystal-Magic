@@ -46,13 +46,6 @@ public class UnitAttackAuthoring : MonoBehaviour
                 ChantSpeedFactor = 1f,
                 ChantSpeedBonus = 0f,
             });
-            AddComponent(entity, new UnitElementComponent
-            {
-                WaterPower = 0f,
-                FirePower = 0f,
-                LightningPower = 0f,
-                WindPower = 0f,
-            });
         }
     }
 }
@@ -89,5 +82,47 @@ public struct UnitAttackComponent : IComponentData
     public static float GetDurationMultiplier(float speedBonus)
     {
         return speedBonus >= 0f ? 1f / (1f + speedBonus / 100f) : 1f - speedBonus / 100f;
+    }
+}
+
+[UnitSourceAuthoring(typeof(UnitAttackAuthoring))]
+public sealed class UnitAttackSource : UnitComponentSource<UnitAttackComponent>
+{
+    protected override void Define(UnitSourceDefinitionBuilder<UnitAttackComponent> builder)
+    {
+        builder.AddGet("unit.attack.baseAttackPower", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.BaseAttackPower));
+        builder.AddGet("unit.attack.baseAttackPowerOffset", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.BaseAttackPowerOffset));
+        builder.AddGet("unit.attack.attackFactor", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.AttackFactor));
+        builder.AddGet("unit.attack.attackBonus", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.AttackBonus));
+        builder.AddGet("unit.attack.realAttackPower", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.RealAttackPower));
+        builder.AddGet("unit.attack.baseSkillRange", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.BaseSkillRange));
+        builder.AddGet("unit.attack.baseSkillRangeOffset", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.BaseSkillRangeOffset));
+        builder.AddGet("unit.attack.rangeFactor", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.RangeFactor));
+        builder.AddGet("unit.attack.rangeBonus", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.RangeBonus));
+        builder.AddGet("unit.attack.realSkillRange", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.RealSkillRange));
+        builder.AddGet("unit.attack.baseActionSpeedBonus", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.BaseActionSpeedBonus));
+        builder.AddGet("unit.attack.baseActionSpeedBonusOffset", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.BaseActionSpeedBonusOffset));
+        builder.AddGet("unit.attack.actionSpeedFactor", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.ActionSpeedFactor));
+        builder.AddGet("unit.attack.actionSpeedBonus", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.ActionSpeedBonus));
+        builder.AddGet("unit.attack.realActionSpeedBonus", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.RealActionSpeedBonus));
+        builder.AddGet("unit.attack.actionDurationMultiplier", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.ActionDurationMultiplier));
+        builder.AddGet("unit.attack.baseChantSpeedBonus", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.BaseChantSpeedBonus));
+        builder.AddGet("unit.attack.baseChantSpeedBonusOffset", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.BaseChantSpeedBonusOffset));
+        builder.AddGet("unit.attack.chantSpeedFactor", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.ChantSpeedFactor));
+        builder.AddGet("unit.attack.chantSpeedBonus", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.ChantSpeedBonus));
+        builder.AddGet("unit.attack.realChantSpeedBonus", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.RealChantSpeedBonus));
+        builder.AddGet("unit.attack.chantDurationMultiplier", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.ChantDurationMultiplier));
+    }
+}
+
+[UnitSourceAuthoring(typeof(UnitElementAuthoring))]
+public sealed class UnitElementSource : UnitComponentSource<UnitElementComponent>
+{
+    protected override void Define(UnitSourceDefinitionBuilder<UnitElementComponent> builder)
+    {
+        builder.AddGet("unit.element.waterPower", UnitValueCategory.Number, (in UnitElementComponent value) => UnitValue.FromFloat(value.WaterPower));
+        builder.AddGet("unit.element.firePower", UnitValueCategory.Number, (in UnitElementComponent value) => UnitValue.FromFloat(value.FirePower));
+        builder.AddGet("unit.element.lightningPower", UnitValueCategory.Number, (in UnitElementComponent value) => UnitValue.FromFloat(value.LightningPower));
+        builder.AddGet("unit.element.windPower", UnitValueCategory.Number, (in UnitElementComponent value) => UnitValue.FromFloat(value.WindPower));
     }
 }

@@ -95,3 +95,61 @@ public struct UnitMoveComponent : IComponentData
         DesiredAcceleration = math.max(0f, RealMaxAcceleration);
     }
 }
+
+[UnitSourceAuthoring(typeof(UnitMoveAuthoring))]
+public sealed class UnitMoveSource : UnitComponentSource<UnitMoveComponent>
+{
+    private static readonly ComparatorParameterDefinition[] s_setTargetMovementParameters =
+    {
+        new ComparatorParameterDefinition("Direction", UnitValueCategory.Float2),
+        new ComparatorParameterDefinition("MaxSpeed", UnitValueCategory.Number),
+        new ComparatorParameterDefinition("Acceleration", UnitValueCategory.Number),
+    };
+
+    private static readonly ComparatorParameterDefinition[] s_setTargetMovementByFactorParameters =
+    {
+        new ComparatorParameterDefinition("Direction", UnitValueCategory.Float2),
+        new ComparatorParameterDefinition("SpeedFactor", UnitValueCategory.Number),
+    };
+
+    protected override void Define(UnitSourceDefinitionBuilder<UnitMoveComponent> builder)
+    {
+        builder.AddGet("unit.move.baseMoveSpeed", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.BaseMoveSpeed));
+        builder.AddGet("unit.move.baseMoveSpeedOffset", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.BaseMoveSpeedOffset));
+        builder.AddGet("unit.move.baseMaxAcceleration", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.BaseMaxAcceleration));
+        builder.AddGet("unit.move.speedFactor", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.SpeedFactor));
+        builder.AddGet("unit.move.speedBonus", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.SpeedBonus));
+        builder.AddGet("unit.move.realMoveSpeed", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.RealMoveSpeed));
+        builder.AddGet("unit.move.realMaxAcceleration", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.RealMaxAcceleration));
+        builder.AddGet("unit.move.desiredDirection", UnitValueCategory.Float2, (in UnitMoveComponent value) => UnitValue.FromFloat2(value.DesiredDirection));
+        builder.AddGet("unit.move.desiredMaxSpeed", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.DesiredMaxSpeed));
+        builder.AddGet("unit.move.desiredAcceleration", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.DesiredAcceleration));
+        builder.AddGet("unit.move.velocity", UnitValueCategory.Float2, (in UnitMoveComponent value) => UnitValue.FromFloat2(value.Velocity));
+        builder.AddGet("unit.move.isMoving", UnitValueCategory.Bool, (in UnitMoveComponent value) => UnitValue.FromBool(math.lengthsq(value.Velocity) > 0.0001f));
+
+        builder.AddSet("unit.move.setTargetMovement", s_setTargetMovementParameters,
+            (ref UnitMoveComponent value, UnitValue[] input) =>
+            {
+                if (!input[1].TryGetNumber(out float maxSpeed) || !input[2].TryGetNumber(out float acceleration))
+                    return false;
+
+                value.SetTargetMovement(input[0].Float2, maxSpeed, acceleration);
+                return true;
+            });
+        builder.AddSet("unit.move.setTargetMovementByFactor", s_setTargetMovementByFactorParameters,
+            (ref UnitMoveComponent value, UnitValue[] input) =>
+            {
+                if (!input[1].TryGetNumber(out float speedFactor))
+                    return false;
+
+                value.SetTargetMovementByFactor(input[0].Float2, speedFactor);
+                return true;
+            });
+        builder.AddSet("unit.move.clearTargetMovement", System.Array.Empty<ComparatorParameterDefinition>(),
+            (ref UnitMoveComponent value, UnitValue[] _) =>
+            {
+                value.ClearTargetMovement();
+                return true;
+            });
+    }
+}

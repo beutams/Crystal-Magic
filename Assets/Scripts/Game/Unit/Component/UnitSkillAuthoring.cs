@@ -19,11 +19,7 @@ public class UnitSkillAuthoring : MonoBehaviour
                 return;
 
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
-            UnitSkillComponent component = new UnitSkillComponent
-            {
-                HasPendingCast = false,
-                PendingSkillIndex = -1,
-            };
+            UnitSkillComponent component = new();
 
             if (data.Skills != null)
             {
@@ -50,7 +46,6 @@ public class UnitSkillAuthoring : MonoBehaviour
             }
 
             AddComponent(entity, component);
-            AddComponentObject(entity, new UnitSkillModifierRuntimeComponent());
         }
     }
 }
@@ -81,12 +76,4 @@ namespace CrystalMagic.Game.Data
 public struct UnitSkillComponent : IComponentData
 {
     public FixedList512Bytes<UnitSkillEntry> Skills;
-    public bool HasPendingCast;
-    public int PendingSkillIndex;
-
-    public void ClearPending()
-    {
-        HasPendingCast = false;
-        PendingSkillIndex = -1;
-    }
 }

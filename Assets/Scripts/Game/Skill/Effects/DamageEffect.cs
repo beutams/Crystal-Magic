@@ -25,7 +25,8 @@ namespace CrystalMagic.Game.Skill.Effects
             Entity target = context.TargetEntity;
             if (target == Entity.Null ||
                 !entityManager.Exists(target) ||
-                !entityManager.HasComponent<UnitVitalityComponent>(target))
+                !entityManager.HasComponent<UnitVitalityComponent>(target) ||
+                EffectTargetUtility.IsDead(entityManager, target))
                 return;
 
             UnitVitalityComponent vitality = entityManager.GetComponentData<UnitVitalityComponent>(target);
@@ -38,16 +39,23 @@ namespace CrystalMagic.Game.Skill.Effects
             float previousHealth = vitality.CurrentHealth;
             vitality.CurrentHealth = math.max(0f, vitality.CurrentHealth - damage);
             entityManager.SetComponentData(target, vitality);
-            QuadOverlayPulseUtility.PlayHit(entityManager, target);
-            UnitBuffHookUtility.Dispatch(
-                entityManager,
-                target,
-                SkillHookType.OnDamaged,
-                context.TriggerSource,
-                context.HasOriginEntity,
-                context.OriginEntity,
-                context.SourceSkillId,
-                triggerValue: damage);
+            bool died = vitality.CurrentHealth <= 0f;
+            if (died && entityManager.HasComponent<UnitDeathComponent>(target))
+                entityManager.SetComponentEnabled<UnitDeathComponent>(target, true);
+
+            if (!died)
+            {
+                QuadOverlayPulseUtility.PlayHit(entityManager, target);
+                UnitBuffHookUtility.Dispatch(
+                    entityManager,
+                    target,
+                    SkillHookType.OnDamaged,
+                    context.TriggerSource,
+                    context.HasOriginEntity,
+                    context.OriginEntity,
+                    context.SourceSkillId,
+                    triggerValue: damage);
+            }
 
             Debug.Log(
                 $"[DamageEffect] Damage={damage:0.##} | Formula=max(0, AttackPower*Coeff+Flat-Defense) | " +
@@ -111,6 +119,7 @@ namespace CrystalMagic.Game.Skill.Effects
                 origin == Entity.Null ||
                 !entityManager.Exists(target) ||
                 !entityManager.Exists(origin) ||
+                EffectTargetUtility.IsDead(entityManager, target) ||
                 !entityManager.HasComponent<LocalTransform>(target) ||
                 !entityManager.HasComponent<LocalTransform>(origin))
             {
@@ -139,6 +148,9 @@ namespace CrystalMagic.Game.Skill.Effects
 
             EntityManager entityManager = context.EntityManager;
             Entity target = context.TargetEntity;
+            if (EffectTargetUtility.IsDead(entityManager, target))
+                return;
+
             Entity source = context.HasOriginEntity ? context.OriginEntity : Entity.Null;
             UnitControlUtility.ApplyStun(entityManager, target, source, Data.DurationSeconds);
         }
@@ -157,8 +169,22 @@ namespace CrystalMagic.Game.Skill.Effects
 
             EntityManager entityManager = context.EntityManager;
             Entity target = context.TargetEntity;
+            if (EffectTargetUtility.IsDead(entityManager, target))
+                return;
+
             Entity source = context.OriginEntity;
             UnitControlUtility.ApplyFear(entityManager, target, source, Data.DurationSeconds);
+        }
+    }
+
+    internal static class EffectTargetUtility
+    {
+        public static bool IsDead(EntityManager entityManager, Entity entity)
+        {
+            return entity == Entity.Null ||
+                   !entityManager.Exists(entity) ||
+                   (entityManager.HasComponent<UnitDeathComponent>(entity) &&
+                    entityManager.IsComponentEnabled<UnitDeathComponent>(entity));
         }
     }
 }

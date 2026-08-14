@@ -12,6 +12,7 @@ namespace CrystalMagic.Game.Data
     [ReadOnlyData]
     public sealed class BehaviorTreeData : DataRow
     {
+        public int UnitDataId = -1;
         public string Name;
         public string Description;
         public string RootNodeGuid;
@@ -77,11 +78,9 @@ namespace CrystalMagic.Game.Data
         public const string UntilFailure = "UntilFailure";
         public const string Cooldown = "Cooldown";
         public const string Timeout = "Timeout";
-        public const string CheckCondition = "CheckCondition";
-        public const string MoveToTarget = "MoveToTarget";
-        public const string CastToTarget = "CastToTarget";
-        public const string Wander = "Wander";
-        public const string Idle = "Idle";
+        public const string Check = "Check";
+        public const string Set = "Set";
+        public const string Wait = "Wait";
     }
 
     public enum ParallelSuccessPolicy
@@ -233,63 +232,39 @@ namespace CrystalMagic.Game.Data
     }
 
     [Serializable]
-    [FactoryKey(BehaviorNodeTypes.CheckCondition, 10, "Check Condition")]
-    public sealed class CheckConditionBehaviorNodeData : BehaviorNodeData
+    [FactoryKey(BehaviorNodeTypes.Check, 10, "Check")]
+    public sealed class CheckBehaviorNodeData : BehaviorNodeData
     {
         public List<ConditionConfig> Conditions = new();
 
-        public CheckConditionBehaviorNodeData()
+        public CheckBehaviorNodeData()
         {
-            Type = BehaviorNodeTypes.CheckCondition;
+            Type = BehaviorNodeTypes.Check;
         }
     }
 
     [Serializable]
-    [FactoryKey(BehaviorNodeTypes.MoveToTarget, 13, "Move To Target")]
-    public sealed class MoveToTargetBehaviorNodeData : BehaviorNodeData
+    [FactoryKey(BehaviorNodeTypes.Set, 11, "Set")]
+    public sealed class SetBehaviorNodeData : BehaviorNodeData
     {
-        public float StopDistance = 0.05f;
+        public string SetKey = string.Empty;
+        public List<ValueExpression> Inputs = new();
 
-        public MoveToTargetBehaviorNodeData()
+        public SetBehaviorNodeData()
         {
-            Type = BehaviorNodeTypes.MoveToTarget;
+            Type = BehaviorNodeTypes.Set;
         }
     }
 
     [Serializable]
-    [FactoryKey(BehaviorNodeTypes.CastToTarget, 14, "Cast To Target")]
-    public sealed class CastToTargetBehaviorNodeData : BehaviorNodeData
+    [FactoryKey(BehaviorNodeTypes.Wait, 12, "Wait")]
+    public sealed class WaitBehaviorNodeData : BehaviorNodeData
     {
-        public UnitSkillSelectionMode SelectionMode = UnitSkillSelectionMode.RandomAll;
-        public int SkillId = -1;
-        public int SkillTagMask;
+        public float DurationSeconds = 1f;
 
-        public CastToTargetBehaviorNodeData()
+        public WaitBehaviorNodeData()
         {
-            Type = BehaviorNodeTypes.CastToTarget;
-        }
-    }
-
-    [Serializable]
-    [FactoryKey(BehaviorNodeTypes.Wander, 15, "Wander")]
-    public sealed class WanderBehaviorNodeData : BehaviorNodeData
-    {
-        public float MinDurationSeconds = 1f;
-        public float MaxDurationSeconds = 2f;
-
-        public WanderBehaviorNodeData()
-        {
-            Type = BehaviorNodeTypes.Wander;
-        }
-    }
-
-    [Serializable]
-    [FactoryKey(BehaviorNodeTypes.Idle, 16, "Idle")]
-    public sealed class IdleBehaviorNodeData : BehaviorNodeData
-    {
-        public IdleBehaviorNodeData()
-        {
-            Type = BehaviorNodeTypes.Idle;
+            Type = BehaviorNodeTypes.Wait;
         }
     }
 
@@ -344,17 +319,16 @@ namespace CrystalMagic.Game.Data
                 RepeaterBehaviorNodeData repeater => $"{GetDisplayName(repeater.Type)} | {repeater.ExecutionMode} | Count {repeater.RepeatCount}",
                 CooldownBehaviorNodeData cooldown => $"{GetDisplayName(cooldown.Type)} | {cooldown.CooldownSeconds:0.##}s",
                 TimeoutBehaviorNodeData timeout => $"{GetDisplayName(timeout.Type)} | {timeout.TimeoutSeconds:0.##}s",
-                CheckConditionBehaviorNodeData condition => $"{GetDisplayName(condition.Type)} | Conditions {condition.Conditions?.Count ?? 0}",
-                MoveToTargetBehaviorNodeData move => $"{GetDisplayName(move.Type)} | Stop {move.StopDistance:0.##}",
-                CastToTargetBehaviorNodeData cast => $"{GetDisplayName(cast.Type)} | {cast.SelectionMode}",
-                WanderBehaviorNodeData wander => $"{GetDisplayName(wander.Type)} | {wander.MinDurationSeconds:0.##}-{wander.MaxDurationSeconds:0.##}s",
+                CheckBehaviorNodeData condition => $"{GetDisplayName(condition.Type)} | Conditions {condition.Conditions?.Count ?? 0}",
+                SetBehaviorNodeData set => $"{GetDisplayName(set.Type)} | {set.SetKey}",
+                WaitBehaviorNodeData wait => $"{GetDisplayName(wait.Type)} | {wait.DurationSeconds:0.##}s",
                 _ => GetDisplayName(ResolveTypeName(node)),
             };
         }
 
         private static string DefaultTypeName =>
             string.IsNullOrWhiteSpace(BehaviorTreeRegistry.DefaultBehaviorNodeDataKey)
-                ? BehaviorNodeTypes.Idle
+                ? BehaviorNodeTypes.Root
                 : BehaviorTreeRegistry.DefaultBehaviorNodeDataKey;
 
         private static BehaviorNodeDataFactory CreateFactory()

@@ -1,4 +1,4 @@
-﻿{
+{
     "Rows":  [
                  {
                      "$type":  "CrystalMagic.Game.Data.PropertyBuffData, Assembly-CSharp",
@@ -213,26 +213,6 @@
                      "Id":  10,
                      "Category":  0,
                      "NameKey":  "buff.shield_break_haste.name"
-                 },
-                 {
-                     "$type":  "CrystalMagic.Game.Data.EffectBuffData, Assembly-CSharp",
-                     "TickIntervalSeconds":  1.0,
-                     "EffectChain":  [
-                                         {
-                                             "$type":  "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
-                                             "DamageCoefficient":  0.35,
-                                             "FlatDamageBonus":  4.0,
-                                             "Element":  0,
-                                             "Conditions":  [
-
-                                                            ]
-                                         }
-                                     ],
-                     "CanStack":  false,
-                     "MaxStacks":  1,
-                     "Id":  11,
-                     "Category":  1,
-                     "NameKey":  "buff.spider_venom.name"
                  }
              ]
 }

@@ -52,9 +52,6 @@ namespace CrystalMagic.Game.Data
             {
                 switch (Modules[i])
                 {
-                    case UnitStateMachineModuleData stateMachine:
-                        stateMachine.States ??= new List<UnitStateConfig>();
-                        break;
                     case UnitSkillModuleData skillModule:
                         skillModule.Skills ??= new List<UnitSkillSlotData>();
                         break;
@@ -146,27 +143,10 @@ namespace CrystalMagic.Game.Data
     }
 
     [System.Serializable]
-    public sealed class UnitStateMachineModuleData : UnitModuleData
-    {
-        public List<UnitStateConfig> States = new();
-    }
-
-    [System.Serializable]
-    public class UnitStateConfig
-    {
-        public string StateType = "";
-        public List<UnitTransitionConfig> Transitions = new();
-    }
-
-    [System.Serializable]
-    public class UnitTransitionConfig
-    {
-        public string TargetStateType = "";
-        public List<ConditionConfig> Conditions = new();
-    }
-    [System.Serializable]
     public class UnitDropModuleData : UnitModuleData
     {
         public int DropDataId = -1;
     }
+
+    [System.Serializable] public sealed class UnitDungeonFootprintModuleData : UnitModuleData { public int Width = 1; public int Height = 1; }
 }

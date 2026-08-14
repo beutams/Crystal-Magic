@@ -52,32 +52,12 @@ public static class UnitSkillModifierUtility
         runtimeComponent.Modifiers.Add(entry, stacks);
     }
 
-    public static SkillModifierSet CreateCastModifiers(
-        EntityManager entityManager,
-        Entity entity,
-        SkillData skillData = null,
-        SkillAdditionData skillAdditionData = null)
+    public static SkillModifierSet CreateSnapshot(EntityManager entityManager, Entity entity)
     {
         SkillModifierSet modifiers = new();
 
         if (TryGetRuntimeComponent(entityManager, entity, out UnitSkillModifierRuntimeComponent runtimeComponent))
             modifiers.Add(runtimeComponent.Modifiers);
-
-        if (skillAdditionData != null)
-            modifiers.Add(skillAdditionData.Modifiers);
-
-        if (skillData != null && SkillExecutionUtility.SupportsFollowupEffects(entityManager, entity) &&
-            entityManager.HasComponent<UnitCastFollowupRuntimeComponent>(entity))
-        {
-            SkillFollowupContext context = new(entityManager, entity, skillData, null, skillAdditionData);
-            UnitCastFollowupRuntimeComponent followupComponent = entityManager.GetComponentObject<UnitCastFollowupRuntimeComponent>(entity);
-            System.Collections.Generic.List<SkillFollowupRuntime> followupEffects = followupComponent?.Followups;
-            if (followupEffects == null)
-                return modifiers;
-
-            for (int i = 0; i < followupEffects.Count; i++)
-                CrystalMagic.Game.Skill.SkillResolver.ApplyFollowupModifiers(ref modifiers, followupEffects[i], context);
-        }
 
         return modifiers;
     }

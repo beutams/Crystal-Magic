@@ -1,6 +1,5 @@
 using CrystalMagic.Game;
 using CrystalMagic.UI;
-using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 
@@ -222,48 +221,40 @@ namespace CrystalMagic.Core
         protected override void OnEnterBattle()
         {
             _isProcessingDefeat = false;
+            EventComponent.Instance?.Subscribe<UnitDiedEvent>(HandleUnitDied);
             Debug.Log("[DungeonState] Entered Dungeon");
             LoadGameContext context = StateData as LoadGameContext;
             int dungeonFloor = PrepareDungeonRun(context);
             Debug.Log($"[DungeonState] Resuming dungeon at floor: {dungeonFloor}");
         }
 
-        protected override void OnUpdateBattle()
+        private void HandleUnitDied(UnitDiedEvent gameEvent)
         {
-            if (_isProcessingDefeat)
-                return;
-
-            if (TransitionComponent.Instance != null && TransitionComponent.Instance.IsTransitioning)
-                return;
+            if (_isProcessingDefeat ||
+                TransitionComponent.Instance != null && TransitionComponent.Instance.IsTransitioning)
+            return;
 
             World world = World.DefaultGameObjectInjectionWorld;
             if (world == null || !world.IsCreated)
                 return;
 
             EntityManager entityManager = world.EntityManager;
-
-            EntityQuery playerQuery = entityManager.CreateEntityQuery(
-                ComponentType.ReadOnly<PlayerTag>(),
-                ComponentType.ReadOnly<UnitDeathComponent>());
-            if (playerQuery.IsEmptyIgnoreFilter)
-                return;
-
-            using NativeArray<UnitDeathComponent> deaths = playerQuery.ToComponentDataArray<UnitDeathComponent>(Allocator.Temp);
-            for (int i = 0; i < deaths.Length; i++)
+            if (gameEvent.Entity == Entity.Null ||
+                !entityManager.Exists(gameEvent.Entity) ||
+                !entityManager.HasComponent<PlayerTag>(gameEvent.Entity))
             {
-                if (deaths[i].Phase != UnitDeathPhase.Completed)
-                    continue;
-
-                _isProcessingDefeat = true;
-                SaveDataComponent.Instance.ApplyDungeonDeathAndCommit();
-                LoadGameContext context = SaveDataComponent.Instance.CreateLoadGameContext(SaveAreaType.Town);
-                GameFlowComponent.Instance.SetState<ResultState>(ResultStateData.Create(ResultOutcome.Failure, context));
-                break;
+                return;
             }
+
+            _isProcessingDefeat = true;
+            SaveDataComponent.Instance.ApplyDungeonDeathAndCommit();
+            LoadGameContext context = SaveDataComponent.Instance.CreateLoadGameContext(SaveAreaType.Town);
+            GameFlowComponent.Instance.SetState<ResultState>(ResultStateData.Create(ResultOutcome.Failure, context));
         }
 
         protected override void OnExitBattle()
         {
+            EventComponent.Instance?.Unsubscribe<UnitDiedEvent>(HandleUnitDied);
             Debug.Log("[DungeonState] Exited Dungeon");
         }
     }

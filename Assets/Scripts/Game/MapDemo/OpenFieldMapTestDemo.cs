@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CrystalMagic.Game.OpenField;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -196,61 +197,6 @@ namespace CrystalMagic.Game.MapDemo
             }
         }
 
-        private sealed class FbmPerlinTerrainStep : ITerrainGenerationStep
-        {
-            private readonly FbmPerlinTerrainSettings _settings;
-
-            public FbmPerlinTerrainStep(FbmPerlinTerrainSettings settings)
-            {
-                _settings = settings;
-            }
-
-            public bool IsWalkable(ElevationBand band)
-            {
-                return band == ElevationBand.Middle;
-            }
-
-            public void Generate(OpenFieldMapData mapData, int seed)
-            {
-                System.Random random = new(seed);
-                float offsetX = random.Next(-10000, 10001);
-                float offsetY = random.Next(-10000, 10001);
-                float baseScale = Mathf.Clamp(Mathf.Min(mapData.Width, mapData.Height) * 0.65f, 30f, 64f);
-
-                for (int y = 0; y < mapData.Height; y++)
-                {
-                    for (int x = 0; x < mapData.Width; x++)
-                    {
-                        int index = mapData.GetIndex(x, y);
-                        float height = SampleFbmPerlin(x, y, offsetX, offsetY, baseScale);
-                        mapData.GroundY[index] = height;
-                        mapData.ElevationBands[index] = GetElevationBand(height);
-                    }
-                }
-            }
-
-            private float SampleFbmPerlin(float x, float y, float offsetX, float offsetY, float baseScale)
-            {
-                float macro = Mathf.PerlinNoise((x + offsetX) / baseScale, (y + offsetY) / baseScale);
-                float medium = Mathf.PerlinNoise((x + offsetX) * 2f / baseScale, (y + offsetY) * 2f / baseScale);
-                float detail = Mathf.PerlinNoise(
-                    (x + offsetX) * _settings.HighFrequencyMultiplier / baseScale,
-                    (y + offsetY) * _settings.HighFrequencyMultiplier / baseScale);
-                return (macro + medium * 0.5f + detail * _settings.HighFrequencyAmplitude) /
-                       (1.5f + _settings.HighFrequencyAmplitude);
-            }
-
-            private ElevationBand GetElevationBand(float height)
-            {
-                if (height < _settings.LowToMiddleHeight)
-                    return ElevationBand.Low;
-                if (height < _settings.MiddleToHighHeight)
-                    return ElevationBand.Middle;
-
-                return ElevationBand.High;
-            }
-        }
-
         private sealed class VoronoiTerrainStep : ITerrainGenerationStep
         {
             private readonly VoronoiTerrainSettings _settings;
@@ -356,7 +302,7 @@ namespace CrystalMagic.Game.MapDemo
         [SerializeField, Min(MinimumMapSide)] private int _mapWidth = 80;
         [SerializeField, Min(MinimumMapSide)] private int _mapHeight = 200;
         [Header("Terrain Generation")]
-        [SerializeField] private TerrainGenerationMethod _terrainGenerationMethod = TerrainGenerationMethod.Voronoi;
+        [SerializeField] private TerrainGenerationMethod _terrainGenerationMethod = TerrainGenerationMethod.FbmPerlin;
         [SerializeField] private FbmPerlinTerrainSettings _fbmPerlinTerrain = new();
         [SerializeField] private VoronoiTerrainSettings _voronoiTerrain = new();
         [Header("Gameplay Content")]
@@ -422,6 +368,12 @@ namespace CrystalMagic.Game.MapDemo
         [ContextMenu("Generate Open Field Map")]
         public void GenerateDemo()
         {
+            if (_terrainGenerationMethod == TerrainGenerationMethod.FbmPerlin)
+            {
+                GenerateFbmPreviewFromCore();
+                return;
+            }
+
             OpenFieldMapData mapData;
             int seed;
             do
@@ -436,20 +388,137 @@ namespace CrystalMagic.Game.MapDemo
                    !CanReachAllAnchors(mapData) ||
                    !TryPopulateGameplayContent(mapData, seed));
 
+            ApplyGeneratedPreview(mapData, seed);
+        }
+
+        private void GenerateFbmPreviewFromCore()
+        {
+            while (true)
+            {
+                int seed = NextSeed();
+                OpenFieldDungeonTerrainConfig terrainConfig = new()
+                {
+                    Width = _mapWidth,
+                    Height = _mapHeight,
+                    LowToGroundThreshold = _fbmPerlinTerrain.LowToMiddleHeight,
+                    GroundToObstacleThreshold = _fbmPerlinTerrain.MiddleToHighHeight,
+                    DetailFrequencyMultiplier = _fbmPerlinTerrain.HighFrequencyMultiplier,
+                    DetailAmplitude = _fbmPerlinTerrain.HighFrequencyAmplitude,
+                };
+                OpenFieldDungeonLayout layout = OpenFieldDungeonTerrainGenerator.Generate(seed, terrainConfig);
+                OpenFieldDungeonAnchorConfig anchorConfig = new();
+                OpenFieldDungeonContentConfig contentConfig = new()
+                {
+                    ChestCounts = Vector3Int.RoundToInt(_gameplayContent.ChestCounts),
+                    WildSquadCount = _gameplayContent.WildMonsterCount,
+                };
+                if (!OpenFieldDungeonAnchorGenerator.TryPlace(layout, seed, anchorConfig)
+                    || !OpenFieldDungeonContentGenerator.TryPlace(layout, seed, contentConfig))
+                {
+                    continue;
+                }
+
+                ApplyGeneratedPreview(ConvertCoreLayoutToPreview(layout), seed);
+                return;
+            }
+        }
+
+        private void ApplyGeneratedPreview(OpenFieldMapData mapData, int seed)
+        {
             _lastMapData = mapData;
             _previewSeed = seed;
             BuildTexture(mapData);
             RequestPreviewRepaint();
         }
 
+        private static OpenFieldMapData ConvertCoreLayoutToPreview(OpenFieldDungeonLayout layout)
+        {
+            OpenFieldMapData mapData = CreateEmptyMapData(layout.Width, layout.Height);
+            for (int y = 0; y < layout.Height; y++)
+            {
+                for (int x = 0; x < layout.Width; x++)
+                {
+                    int index = mapData.GetIndex(x, y);
+                    OpenFieldTerrainCell terrain = layout.GetTerrainCell(x, y);
+                    mapData.GroundY[index] = layout.GetTerrainValue(x, y);
+                    mapData.ElevationBands[index] = terrain switch
+                    {
+                        OpenFieldTerrainCell.Void => ElevationBand.Low,
+                        OpenFieldTerrainCell.Ground => ElevationBand.Middle,
+                        _ => ElevationBand.High,
+                    };
+                    mapData.WalkableMask[index] = layout.IsWalkable(x, y);
+                    mapData.LineOfSightBlockerMask[index] = layout.BlocksLineOfSight(x, y);
+                    mapData.ReachableFromSpawnMask[index] = layout.IsReachable(x, y);
+                }
+            }
+
+            mapData.Anchors.Add(new MapAnchor(
+                MapAnchorType.Spawn,
+                ToVector2Int(layout.Entrance),
+                layout.EntranceRadius));
+            foreach (OpenFieldInterestPoint point in layout.InterestPoints)
+            {
+                MapAnchorType type = point.IsExitInterestPoint
+                    ? MapAnchorType.Exit
+                    : point.Size switch
+                    {
+                        OpenFieldInterestSize.Large => MapAnchorType.LargeInterest,
+                        OpenFieldInterestSize.Medium => MapAnchorType.MediumInterest,
+                        _ => MapAnchorType.SmallInterest,
+                    };
+                mapData.Anchors.Add(new MapAnchor(type, ToVector2Int(point.Center), point.Radius));
+            }
+
+            foreach (OpenFieldContentPlacement placement in layout.ContentPlacements)
+            {
+                Vector2Int cell = ToVector2Int(placement.Cell);
+                switch (placement.Type)
+                {
+                    case OpenFieldContentType.Chest:
+                        AddContentSpawn(mapData, new MapContentSpawn(MapContentType.Chest, MonsterLevel.None, cell));
+                        break;
+                    case OpenFieldContentType.InterestSquad:
+                        AddContentSpawn(mapData, new MapContentSpawn(
+                            MapContentType.InterestMonster,
+                            GetInterestPointPreviewLevel(layout, placement.EncounterId),
+                            cell));
+                        break;
+                    case OpenFieldContentType.WildSquad:
+                        AddContentSpawn(mapData, new MapContentSpawn(MapContentType.WildMonster, MonsterLevel.Level1, cell));
+                        break;
+                }
+            }
+
+            return mapData;
+        }
+
+        private static MonsterLevel GetInterestPointPreviewLevel(OpenFieldDungeonLayout layout, int encounterId)
+        {
+            foreach (OpenFieldInterestPoint point in layout.InterestPoints)
+            {
+                if (point.EncounterId != encounterId)
+                    continue;
+
+                return point.Size switch
+                {
+                    OpenFieldInterestSize.Large => MonsterLevel.Level3,
+                    OpenFieldInterestSize.Medium => MonsterLevel.Level2,
+                    _ => MonsterLevel.Level1,
+                };
+            }
+
+            return MonsterLevel.Level1;
+        }
+
+        private static Vector2Int ToVector2Int(OpenFieldGridPosition position)
+        {
+            return new Vector2Int(position.X, position.Y);
+        }
+
         private ITerrainGenerationStep GetTerrainGenerationStep()
         {
-            return _terrainGenerationMethod switch
-            {
-                TerrainGenerationMethod.FbmPerlin => new FbmPerlinTerrainStep(_fbmPerlinTerrain),
-                TerrainGenerationMethod.Voronoi => new VoronoiTerrainStep(_voronoiTerrain),
-                _ => new VoronoiTerrainStep(_voronoiTerrain),
-            };
+            return new VoronoiTerrainStep(_voronoiTerrain);
         }
 
         private int NextSeed()

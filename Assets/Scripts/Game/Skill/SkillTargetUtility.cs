@@ -11,12 +11,6 @@ namespace CrystalMagic.Game.Skill
             if (entity == Entity.Null || !entityManager.Exists(entity))
                 return false;
 
-            if (entityManager.HasComponent<UnitIntentComponent>(entity))
-            {
-                targetPosition = entityManager.GetComponentData<UnitIntentComponent>(entity).CastTargetPosition;
-                return true;
-            }
-
             if (entityManager.HasComponent<UnitPerceptionComponent>(entity))
             {
                 UnitPerceptionComponent perception = entityManager.GetComponentData<UnitPerceptionComponent>(entity);
