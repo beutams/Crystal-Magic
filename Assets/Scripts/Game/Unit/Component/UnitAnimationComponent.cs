@@ -14,7 +14,6 @@ public struct UnitAnimationComponent : IComponentData
     public int LastStateHash;
     public int LastSkillId;
     public int SelectionCursor;
-    public int LastTextureInstanceId;
     public int LastDirectionalVariantHash;
     public byte IsCurrentClipFinished;
     public byte IsCurrentClipLooping;
@@ -32,7 +31,6 @@ public struct UnitAnimationComponent : IComponentData
             LastStateHash = 0,
             LastSkillId = -1,
             SelectionCursor = 0,
-            LastTextureInstanceId = 0,
             LastDirectionalVariantHash = 0,
             IsCurrentClipFinished = 0,
             IsCurrentClipLooping = 0,
@@ -60,18 +58,6 @@ public struct UnitAnimationFrameWorldSizeProperty : IComponentData
 
 [MaterialProperty("_FramePivotOffset")]
 public struct UnitAnimationFramePivotOffsetProperty : IComponentData
-{
-    public float4 Value;
-}
-
-[MaterialProperty("_OverlayColor")]
-public struct UnitAnimationOverlayColorProperty : IComponentData
-{
-    public float4 Value;
-}
-
-[MaterialProperty("_OverlayStrength")]
-public struct UnitAnimationOverlayStrengthProperty : IComponentData
 {
     public float4 Value;
 }

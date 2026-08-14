@@ -1,5 +1,6 @@
 using Unity.Entities;
 using Unity.Mathematics;
+using UnityEngine;
 
 public static class QuadOverlayPulseUtility
 {
@@ -16,7 +17,7 @@ public static class QuadOverlayPulseUtility
     {
         if (entity == Entity.Null ||
             !entityManager.Exists(entity) ||
-            !entityManager.HasComponent<Unity.Rendering.MaterialMeshInfo>(entity))
+            !entityManager.HasComponent<QuadOverlayPulseComponent>(entity))
         {
             return;
         }
@@ -37,7 +38,7 @@ public static class QuadOverlayPulseUtility
         else
             entityManager.AddComponentData(entity, pulse);
 
-        ApplyOverlayProperties(entityManager, entity, overlayColor, pulse.PeakStrength);
+        ApplySpriteColor(entityManager, entity, overlayColor, pulse.PeakStrength);
     }
 
     public static void PlayHit(EntityManager entityManager, Entity entity)
@@ -60,37 +61,30 @@ public static class QuadOverlayPulseUtility
 
         float normalized = remaining / duration;
         float strength = math.saturate(normalized) * math.clamp(pulse.PeakStrength, 0f, 1f);
-        ApplyOverlayProperties(entityManager, entity, pulse.OverlayColor, strength);
+        ApplySpriteColor(entityManager, entity, pulse.OverlayColor, strength);
 
         if (remaining > 0f)
             return;
 
+        ApplySpriteColor(entityManager, entity, pulse.OverlayColor, 0f);
         if (entityManager.HasComponent<QuadOverlayPulseComponent>(entity))
             entityManager.SetComponentEnabled<QuadOverlayPulseComponent>(entity, false);
     }
 
-    private static void ApplyOverlayProperties(
+    private static void ApplySpriteColor(
         EntityManager entityManager,
         Entity entity,
         float4 overlayColor,
         float strength)
     {
-        SetOrAddProperty(entityManager, entity, new UnitAnimationOverlayColorProperty
-        {
-            Value = overlayColor,
-        });
-        SetOrAddProperty(entityManager, entity, new UnitAnimationOverlayStrengthProperty
-        {
-            Value = new float4(math.clamp(strength, 0f, 1f), 0f, 0f, 0f),
-        });
-    }
+        if (!entityManager.HasComponent<SpriteRenderer>(entity))
+            return;
 
-    private static void SetOrAddProperty<T>(EntityManager entityManager, Entity entity, T value)
-        where T : unmanaged, IComponentData
-    {
-        if (entityManager.HasComponent<T>(entity))
-            entityManager.SetComponentData(entity, value);
-        else
-            entityManager.AddComponentData(entity, value);
+        SpriteRenderer spriteRenderer = entityManager.GetComponentObject<SpriteRenderer>(entity);
+        if (spriteRenderer == null)
+            return;
+
+        Color overlay = new(overlayColor.x, overlayColor.y, overlayColor.z, overlayColor.w);
+        spriteRenderer.color = Color.Lerp(Color.white, overlay, math.clamp(strength, 0f, 1f));
     }
 }

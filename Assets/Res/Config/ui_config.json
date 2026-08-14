@@ -42,6 +42,7 @@
             "order": 10000,
             "uiNames": [
                 "TrainingDummyStatsUI",
+                "TrainingDebugUI",
                 "TransitionUI",
                 "TransitionMaskUI"
             ]

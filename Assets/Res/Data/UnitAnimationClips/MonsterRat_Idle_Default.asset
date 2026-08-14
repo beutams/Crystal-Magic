@@ -23,5 +23,5 @@ MonoBehaviour:
   - {fileID: 2062500185, guid: 5bcb6db8f8d29174da438750a5c7a871, type: 3}
   _backFrames:
   - {fileID: 392233921, guid: 5bcb6db8f8d29174da438750a5c7a871, type: 3}
-  _leftFrames:
+  _rightFrames:
   - {fileID: -523918756, guid: 5bcb6db8f8d29174da438750a5c7a871, type: 3}

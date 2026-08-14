@@ -13,6 +13,7 @@ namespace CrystalMagic.Game.Data
     public class SkillData : DataRow
     {
         public string NameKey;
+        public string AnimationName;
         public bool IsMonsterSkill;
         public string DescriptionKey;
         public string RuntimeType;

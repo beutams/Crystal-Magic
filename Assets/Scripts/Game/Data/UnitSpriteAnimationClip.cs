@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace CrystalMagic.Game.Data
 {
@@ -12,7 +13,8 @@ namespace CrystalMagic.Game.Data
         [SerializeField] private Vector2 _referenceFrameWorldSize = Vector2.one;
         [SerializeField] private Sprite[] _frontFrames = Array.Empty<Sprite>();
         [SerializeField] private Sprite[] _backFrames = Array.Empty<Sprite>();
-        [SerializeField] private Sprite[] _leftFrames = Array.Empty<Sprite>();
+        [FormerlySerializedAs("_leftFrames")]
+        [SerializeField] private Sprite[] _rightFrames = Array.Empty<Sprite>();
 
         public float FramesPerSecond => Mathf.Max(0.01f, _framesPerSecond);
         public bool Loop => _loop;
@@ -65,12 +67,12 @@ namespace CrystalMagic.Game.Data
                 case UnitAnimationDirection.Back when HasFrames(_backFrames):
                     return _backFrames;
 
-                case UnitAnimationDirection.Right when HasFrames(_leftFrames):
-                    return _leftFrames;
+                case UnitAnimationDirection.Right when HasFrames(_rightFrames):
+                    return _rightFrames;
 
-                case UnitAnimationDirection.Left when HasFrames(_leftFrames):
+                case UnitAnimationDirection.Left when HasFrames(_rightFrames):
                     mirrorX = true;
-                    return _leftFrames;
+                    return _rightFrames;
 
                 case UnitAnimationDirection.Front when HasFrames(_frontFrames):
                     return _frontFrames;
@@ -78,8 +80,8 @@ namespace CrystalMagic.Game.Data
 
             if (HasFrames(_frontFrames))
                 return _frontFrames;
-            if (HasFrames(_leftFrames))
-                return _leftFrames;
+            if (HasFrames(_rightFrames))
+                return _rightFrames;
             return _backFrames;
         }
 
@@ -97,7 +99,7 @@ namespace CrystalMagic.Game.Data
             _referenceFrameWorldSize.y = Mathf.Max(0.0001f, _referenceFrameWorldSize.y);
             _frontFrames ??= Array.Empty<Sprite>();
             _backFrames ??= Array.Empty<Sprite>();
-            _leftFrames ??= Array.Empty<Sprite>();
+            _rightFrames ??= Array.Empty<Sprite>();
         }
     }
 }

@@ -12,7 +12,7 @@ namespace CrystalMagic.Editor.Data
         private SerializedProperty _referenceFrameWorldSize;
         private SerializedProperty _frontFrames;
         private SerializedProperty _backFrames;
-        private SerializedProperty _leftFrames;
+        private SerializedProperty _rightFrames;
 
         private void OnEnable()
         {
@@ -22,7 +22,7 @@ namespace CrystalMagic.Editor.Data
             _referenceFrameWorldSize = serializedObject.FindProperty("_referenceFrameWorldSize");
             _frontFrames = serializedObject.FindProperty("_frontFrames");
             _backFrames = serializedObject.FindProperty("_backFrames");
-            _leftFrames = serializedObject.FindProperty("_leftFrames");
+            _rightFrames = serializedObject.FindProperty("_rightFrames");
         }
 
         public override void OnInspectorGUI()
@@ -36,9 +36,9 @@ namespace CrystalMagic.Editor.Data
             EditorGUILayout.Space();
             EditorGUILayout.PropertyField(_frontFrames, new UnityEngine.GUIContent("Front Frames"), true);
             EditorGUILayout.PropertyField(_backFrames, new UnityEngine.GUIContent("Back Frames"), true);
-            EditorGUILayout.PropertyField(_leftFrames, new UnityEngine.GUIContent("Left Frames"), true);
+            EditorGUILayout.PropertyField(_rightFrames, new UnityEngine.GUIContent("Right Frames"), true);
             EditorGUILayout.HelpBox(
-                "Drag sliced Sprites into each list in playback order. Set every Sprite pivot to the same ground point. Right direction mirrors Left automatically.",
+                "Drag sliced Sprites into each list in playback order. Set every Sprite pivot to the same ground point. Left direction mirrors Right automatically.",
                 MessageType.Info);
 
             serializedObject.ApplyModifiedProperties();

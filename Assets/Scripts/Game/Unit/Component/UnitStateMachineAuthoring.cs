@@ -36,22 +36,6 @@ public class UnitStateMachineAuthoring : MonoBehaviour
                 UnitName = data?.Name ?? root.name,
             });
             AddComponent(entity, UnitAnimationComponent.CreateDefault(new Unity.Collections.FixedString128Bytes(root.name)));
-            AddComponent(entity, new UnitAnimationFrameUvMinProperty
-            {
-                Value = new float4(0f, 0f, 0f, 0f),
-            });
-            AddComponent(entity, new UnitAnimationFrameUvSizeProperty
-            {
-                Value = new float4(1f, 1f, 0f, 0f),
-            });
-            AddComponent(entity, new UnitAnimationFrameWorldSizeProperty
-            {
-                Value = new float4(1f, 1f, 0f, 0f),
-            });
-            AddComponent(entity, new UnitAnimationFramePivotOffsetProperty
-            {
-                Value = new float4(0f, 0f, 0f, 0f),
-            });
         }
     }
 }

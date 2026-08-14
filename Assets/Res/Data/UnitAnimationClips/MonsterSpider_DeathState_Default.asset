@@ -24,7 +24,7 @@ MonoBehaviour:
   - {fileID: 97848657, guid: 17f2bc41e1ca5a34088d5ad5d104d078, type: 3}
   - {fileID: -349343866, guid: 17f2bc41e1ca5a34088d5ad5d104d078, type: 3}
   - {fileID: -180871592, guid: 17f2bc41e1ca5a34088d5ad5d104d078, type: 3}
-  _leftFrames:
+  _rightFrames:
   - {fileID: -1212738505, guid: 17f2bc41e1ca5a34088d5ad5d104d078, type: 3}
   - {fileID: -1397799989, guid: 17f2bc41e1ca5a34088d5ad5d104d078, type: 3}
   - {fileID: -1135132297, guid: 17f2bc41e1ca5a34088d5ad5d104d078, type: 3}

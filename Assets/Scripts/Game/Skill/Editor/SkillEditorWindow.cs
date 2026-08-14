@@ -647,6 +647,7 @@ namespace CrystalMagic.Editor.Skill
             }
 
             skill.NameKey = EditorGUILayout.TextField("Name Key", skill.NameKey ?? string.Empty);
+            skill.AnimationName = EditorGUILayout.TextField("Animation Name", skill.AnimationName ?? string.Empty);
             EditorGUILayout.LabelField("Description Key");
             skill.DescriptionKey = EditorGUILayout.TextArea(skill.DescriptionKey ?? string.Empty, GUILayout.MinHeight(48f), GUILayout.MaxHeight(80f));
             DrawRuntimeTypeField(skill);

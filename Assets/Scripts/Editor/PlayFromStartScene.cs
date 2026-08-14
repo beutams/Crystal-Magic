@@ -13,8 +13,8 @@ namespace CrystalMagic.Editor
 
         static PlayFromStartScene()
         {
-            EditorSceneManager.playModeStartScene =
-                AssetDatabase.LoadAssetAtPath<SceneAsset>(StartScenePath);
+            // EditorSceneManager.playModeStartScene =
+            //     AssetDatabase.LoadAssetAtPath<SceneAsset>(StartScenePath);
         }
     }
 }

@@ -26,7 +26,7 @@ MonoBehaviour:
   - {fileID: 190697943, guid: 57cc686dfc7127046899a9722febf5db, type: 3}
   - {fileID: 201217357, guid: 57cc686dfc7127046899a9722febf5db, type: 3}
   - {fileID: -1023787670, guid: 57cc686dfc7127046899a9722febf5db, type: 3}
-  _leftFrames:
+  _rightFrames:
   - {fileID: 905656669, guid: 57cc686dfc7127046899a9722febf5db, type: 3}
   - {fileID: -1189939372, guid: 57cc686dfc7127046899a9722febf5db, type: 3}
   - {fileID: -635285280, guid: 57cc686dfc7127046899a9722febf5db, type: 3}

@@ -186,22 +186,8 @@ public static class UnitFeatureBakeUtility
     {
         Transform root = authoringTransform.root != null ? authoringTransform.root : authoringTransform;
         baker.AddComponent(entity, UnitAnimationComponent.CreateDefault(new FixedString128Bytes(root.name)));
-        baker.AddComponent(entity, new UnitAnimationFrameUvMinProperty
-        {
-            Value = new float4(0f, 0f, 0f, 0f),
-        });
-        baker.AddComponent(entity, new UnitAnimationFrameUvSizeProperty
-        {
-            Value = new float4(1f, 1f, 0f, 0f),
-        });
-        baker.AddComponent(entity, new UnitAnimationFrameWorldSizeProperty
-        {
-            Value = new float4(1f, 1f, 0f, 0f),
-        });
-        baker.AddComponent(entity, new UnitAnimationFramePivotOffsetProperty
-        {
-            Value = new float4(0f, 0f, 0f, 0f),
-        });
+        baker.AddComponent(entity, new QuadOverlayPulseComponent());
+        baker.SetComponentEnabled<QuadOverlayPulseComponent>(entity, false);
     }
 
     public static void AddPlayerComponents<T>(this Baker<T> baker, Entity entity) where T : Component

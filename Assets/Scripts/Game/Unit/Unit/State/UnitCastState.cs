@@ -9,14 +9,26 @@ public class UnitCastState : AUnitState
 {
     public override void OnEnter()
     {
-        if (!EntityManager.HasComponent<UnitSkillComponent>(Entity) ||
-            !EntityManager.HasComponent<UnitCastAvailabilityComponent>(Entity) ||
-            !EntityManager.HasComponent<UnitCastComponent>(Entity))
+        if (!EntityManager.HasComponent<UnitCastComponent>(Entity))
             return;
+
+        UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
+        if (cast.HasPreparedCast || cast.IsCasting)
+        {
+            if (SkillTargetUtility.TryGetTargetPosition(EntityManager, Entity, out float2 preparedTargetPosition))
+                UpdateFacing(preparedTargetPosition);
+
+            return;
+        }
+
+        if (!EntityManager.HasComponent<UnitSkillComponent>(Entity) ||
+            !EntityManager.HasComponent<UnitCastAvailabilityComponent>(Entity))
+        {
+            return;
+        }
 
         UnitSkillComponent unitSkill = EntityManager.GetComponentData<UnitSkillComponent>(Entity);
         UnitCastAvailabilityComponent availability = EntityManager.GetComponentData<UnitCastAvailabilityComponent>(Entity);
-        UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(Entity);
 
         int selectedIndex = SelectSkillIndex(unitSkill, availability);
         if (selectedIndex < 0)

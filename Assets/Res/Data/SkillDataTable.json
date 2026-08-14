@@ -1048,6 +1048,7 @@
                                          ],
                      "Id":  22,
                      "NameKey":  "skill.monster.goblin_warrior_attack.name",
+                     "AnimationName":  "MonsterGoblinWarrior_Attack",
                      "DescriptionKey":  ""
                  },
                  {
@@ -1132,6 +1133,7 @@
                                          ],
                      "Id":  23,
                      "NameKey":  "skill.monster.goblin_archer_attack.name",
+                     "AnimationName":  "MonsterGoblinArcher_Attack",
                      "DescriptionKey":  ""
                  },
                  {
@@ -1202,6 +1204,7 @@
                                          ],
                      "Id":  24,
                      "NameKey":  "skill.monster.slime_attack.name",
+                     "AnimationName":  "MonsterSlime_Attack",
                      "DescriptionKey":  ""
                  },
                  {
@@ -1255,6 +1258,7 @@
                                          ],
                      "Id":  26,
                      "NameKey":  "skill.monster.spider_attack.name",
+                     "AnimationName":  "MonsterSpider_Attack",
                      "DescriptionKey":  ""
                  },
                  {
@@ -1308,6 +1312,7 @@
                                          ],
                      "Id":  34,
                      "NameKey":  "skill.monster.bat_attack.name",
+                     "AnimationName":  "MonsterBat_Attack",
                      "DescriptionKey":  ""
                  },
                  {
@@ -1361,6 +1366,7 @@
                                          ],
                      "Id":  35,
                      "NameKey":  "skill.monster.rat_attack.name",
+                     "AnimationName":  "MonsterRat_Attack",
                      "DescriptionKey":  ""
                  },
                  {
@@ -1414,6 +1420,7 @@
                                          ],
                      "Id":  36,
                      "NameKey":  "skill.monster.orc_attack.name",
+                     "AnimationName":  "MonsterOrc_Attack",
                      "DescriptionKey":  ""
                  },
                  {
@@ -1467,6 +1474,7 @@
                                          ],
                      "Id":  37,
                      "NameKey":  "skill.monster.troll_attack.name",
+                     "AnimationName":  "MonsterTroll_Attack",
                      "DescriptionKey":  ""
                  }
              ]

@@ -4,7 +4,6 @@ using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Rendering;
 using UnityEngine;
 
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
@@ -24,18 +23,11 @@ partial class UnitAnimationSystem : SystemBase
             return;
 
         float deltaTime = SystemAPI.Time.DeltaTime;
-        List<PendingAnimatedSpriteApply> pendingSpriteApplies = null;
         foreach ((RefRW<UnitAnimationComponent> animation, UnitStateMachineComponent stateMachine, Entity entity) in
                  SystemAPI.Query<RefRW<UnitAnimationComponent>, UnitStateMachineComponent>().WithEntityAccess())
         {
-            UpdateAnimation(entity, stateMachine, profileTable, deltaTime, ref animation.ValueRW, ref pendingSpriteApplies);
+            UpdateAnimation(entity, stateMachine, profileTable, deltaTime, ref animation.ValueRW);
         }
-
-        if (pendingSpriteApplies == null)
-            return;
-
-        for (int i = 0; i < pendingSpriteApplies.Count; i++)
-            ApplyQueuedSprite(pendingSpriteApplies[i]);
     }
 
     protected override void OnDestroy()
@@ -56,13 +48,12 @@ partial class UnitAnimationSystem : SystemBase
         UnitStateMachineComponent stateMachine,
         DataTable<UnitAnimationProfileData> profileTable,
         float deltaTime,
-        ref UnitAnimationComponent animation,
-        ref List<PendingAnimatedSpriteApply> pendingSpriteApplies)
+        ref UnitAnimationComponent animation)
     {
         UnitAnimationProfileData profile = FindProfile(profileTable, stateMachine);
         if (profile == null)
         {
-            ResetAnimation(entity, ref animation, 0, -1);
+            ResetAnimation(ref animation, 0, -1);
             return;
         }
 
@@ -71,16 +62,23 @@ partial class UnitAnimationSystem : SystemBase
         string activeSkillName = ResolveActiveSkillName(entity, stateName);
         int activeSkillHash = GetStableHash(activeSkillName);
         UnitAnimationEntryData entry = ResolveAnimationEntry(profile, stateName, activeSkillName);
+        if (entry == null &&
+            string.IsNullOrWhiteSpace(activeSkillName) &&
+            stateName.IndexOf("CastState", StringComparison.Ordinal) >= 0)
+        {
+            entry = ResolveAnimationEntry(profile, "IdleState", string.Empty);
+        }
+
         if (entry == null || string.IsNullOrWhiteSpace(entry.SpriteClipPath))
         {
-            ResetAnimation(entity, ref animation, stateHash, activeSkillHash);
+            ResetAnimation(ref animation, stateHash, activeSkillHash);
             return;
         }
 
         UnitSpriteAnimationClip clip = GetClip(entry.SpriteClipPath);
         if (clip == null)
         {
-            ResetAnimation(entity, ref animation, stateHash, activeSkillHash);
+            ResetAnimation(ref animation, stateHash, activeSkillHash);
             return;
         }
 
@@ -103,31 +101,17 @@ partial class UnitAnimationSystem : SystemBase
         UnitAnimationDirection direction = ResolveAnimationDirection(entity, EntityManager);
         if (!clip.TryGetFrame(direction, animation.ElapsedSeconds, out Sprite sprite, out int frameIndex, out bool mirrorX))
         {
-            ResetAnimation(entity, ref animation, stateHash, activeSkillHash);
+            ResetAnimation(ref animation, stateHash, activeSkillHash);
             return;
         }
 
         animation.IsCurrentClipFinished = clip.IsFinished(direction, animation.ElapsedSeconds) ? (byte)1 : (byte)0;
 
-        int textureInstanceId = sprite.texture.GetInstanceID();
-        if (clipChanged || animation.LastTextureInstanceId != textureInstanceId)
-        {
-            if (!UnitAnimationVisualUtility.TryResolveAnimatedSprite(animation.VisualKey, sprite, out Mesh mesh, out Material material))
-            {
-                ResetAnimation(entity, ref animation, stateHash, activeSkillHash);
-                return;
-            }
-
-            pendingSpriteApplies ??= new List<PendingAnimatedSpriteApply>();
-            pendingSpriteApplies.Add(new PendingAnimatedSpriteApply(entity, mesh, material));
-            animation.LastTextureInstanceId = textureInstanceId;
-        }
-
         int directionalVariantHash = GetDirectionalVariantHash(direction, mirrorX);
         if (frameIndex != animation.FrameIndex || animation.LastDirectionalVariantHash != directionalVariantHash)
         {
             animation.FrameIndex = frameIndex;
-            ApplyFrameProperties(entity, clip, sprite, mirrorX);
+            ApplySpriteRendererFrame(entity, sprite, mirrorX);
         }
 
         animation.LastStateHash = stateHash;
@@ -152,21 +136,6 @@ partial class UnitAnimationSystem : SystemBase
 
         _clipCache[path] = clip;
         return clip;
-    }
-
-    private void ApplyQueuedSprite(PendingAnimatedSpriteApply pending)
-    {
-        if (pending.Entity == Entity.Null ||
-            !EntityManager.Exists(pending.Entity) ||
-            !EntityManager.HasComponent<MaterialMeshInfo>(pending.Entity))
-        {
-            return;
-        }
-
-        EntityManager.SetSharedComponentManaged(
-            pending.Entity,
-            new RenderMeshArray(new[] { pending.Material }, new[] { pending.Mesh }));
-        EntityManager.SetComponentData(pending.Entity, MaterialMeshInfo.FromRenderMeshArrayIndices(0, 0));
     }
 
     private static UnitAnimationEntryData ResolveAnimationEntry(
@@ -259,7 +228,7 @@ partial class UnitAnimationSystem : SystemBase
             return string.Empty;
 
         SkillData skillData = DataComponent.Instance.Get<SkillData>(cast.CurrentSkillId);
-        return skillData?.DisplayName ?? string.Empty;
+        return skillData?.AnimationName?.Trim() ?? string.Empty;
     }
 
     private static UnitAnimationProfileData FindProfile(DataTable<UnitAnimationProfileData> profileTable, UnitStateMachineComponent stateMachine)
@@ -300,98 +269,29 @@ partial class UnitAnimationSystem : SystemBase
         return ((int)direction * 2) + (mirrorX ? 1 : 0) + 1;
     }
 
-    private void ApplyFrameProperties(Entity entity, UnitSpriteAnimationClip clip, Sprite sprite, bool mirrorX)
+    private void ApplySpriteRendererFrame(Entity entity, Sprite sprite, bool mirrorX)
     {
-        if (entity == Entity.Null || !EntityManager.Exists(entity) || sprite.texture == null)
+        if (entity == Entity.Null ||
+            !EntityManager.Exists(entity) ||
+            !EntityManager.HasComponent<SpriteRenderer>(entity))
+        return;
+
+        SpriteRenderer spriteRenderer = EntityManager.GetComponentObject<SpriteRenderer>(entity);
+        if (spriteRenderer == null)
             return;
 
-        Rect textureRect = sprite.textureRect;
-        Vector2 referencePixels = clip.ReferenceFrameSizePixels;
-        Vector2 referenceWorldSize = clip.ReferenceFrameWorldSize;
-        Vector2 spriteSize = sprite.rect.size;
-        Vector2 worldSize = new(
-            spriteSize.x / referencePixels.x * referenceWorldSize.x,
-            spriteSize.y / referencePixels.y * referenceWorldSize.y);
-        Vector2 pivotOffset = new(
-            worldSize.x * 0.5f - sprite.pivot.x / referencePixels.x * referenceWorldSize.x,
-            worldSize.y * 0.5f - sprite.pivot.y / referencePixels.y * referenceWorldSize.y);
-
-        float uvWidth = textureRect.width / sprite.texture.width;
-        float uvHeight = textureRect.height / sprite.texture.height;
-        float uvMinX = textureRect.x / sprite.texture.width;
-        float uvMinY = textureRect.y / sprite.texture.height;
-        if (mirrorX)
-        {
-            uvMinX += uvWidth;
-            uvWidth = -uvWidth;
-            pivotOffset.x = -pivotOffset.x;
-        }
-
-        EntityManager.SetComponentData(entity, new UnitAnimationFrameUvMinProperty
-        {
-            Value = new float4(uvMinX, uvMinY, 0f, 0f),
-        });
-        EntityManager.SetComponentData(entity, new UnitAnimationFrameUvSizeProperty
-        {
-            Value = new float4(uvWidth, uvHeight, 0f, 0f),
-        });
-        EntityManager.SetComponentData(entity, new UnitAnimationFrameWorldSizeProperty
-        {
-            Value = new float4(worldSize.x, worldSize.y, 0f, 0f),
-        });
-        EntityManager.SetComponentData(entity, new UnitAnimationFramePivotOffsetProperty
-        {
-            Value = new float4(pivotOffset.x, pivotOffset.y, 0f, 0f),
-        });
+        spriteRenderer.sprite = sprite;
+        spriteRenderer.flipX = mirrorX;
     }
 
-    private void ResetAnimation(Entity entity, ref UnitAnimationComponent animation, int stateHash, int skillHash)
+    private static void ResetAnimation(ref UnitAnimationComponent animation, int stateHash, int skillHash)
     {
-        ResetFrameProperties(entity);
         animation.ClipId = -1;
         animation.FrameIndex = -1;
-        animation.LastTextureInstanceId = 0;
         animation.LastStateHash = stateHash;
         animation.LastSkillId = skillHash;
         animation.LastDirectionalVariantHash = 0;
         animation.IsCurrentClipFinished = 0;
         animation.IsCurrentClipLooping = 0;
-    }
-
-    private void ResetFrameProperties(Entity entity)
-    {
-        if (entity == Entity.Null || !EntityManager.Exists(entity))
-            return;
-
-        EntityManager.SetComponentData(entity, new UnitAnimationFrameUvMinProperty
-        {
-            Value = new float4(0f, 0f, 0f, 0f),
-        });
-        EntityManager.SetComponentData(entity, new UnitAnimationFrameUvSizeProperty
-        {
-            Value = new float4(1f, 1f, 0f, 0f),
-        });
-        EntityManager.SetComponentData(entity, new UnitAnimationFrameWorldSizeProperty
-        {
-            Value = new float4(1f, 1f, 0f, 0f),
-        });
-        EntityManager.SetComponentData(entity, new UnitAnimationFramePivotOffsetProperty
-        {
-            Value = new float4(0f, 0f, 0f, 0f),
-        });
-    }
-
-    private readonly struct PendingAnimatedSpriteApply
-    {
-        public PendingAnimatedSpriteApply(Entity entity, Mesh mesh, Material material)
-        {
-            Entity = entity;
-            Mesh = mesh;
-            Material = material;
-        }
-
-        public Entity Entity { get; }
-        public Mesh Mesh { get; }
-        public Material Material { get; }
     }
 }

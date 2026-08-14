@@ -176,7 +176,7 @@ namespace CrystalMagic.Editor.Data
             profile.Normalize();
 
             EditorGUILayout.HelpBox(
-                "Rule: regular states use the default animation whose Animation Name is empty. Skill casts match by skill display name and Animation Name.",
+                "Rule: regular states use the default animation whose Animation Name is empty. Skill casts match the skill Animation Name, which is a stable English identifier.",
                 MessageType.None);
 
             EditorGUI.BeginChangeCheck();
@@ -289,7 +289,7 @@ namespace CrystalMagic.Editor.Data
             }
 
             animation.AnimationName = EditorGUILayout.TextField("Animation Name", animation.AnimationName ?? string.Empty);
-            DrawSkillNameHelper(unitData, ref animation.AnimationName);
+            DrawSkillAnimationNameHelper(unitData, ref animation.AnimationName);
 
             UnitSpriteAnimationClip currentClip = string.IsNullOrWhiteSpace(animation.SpriteClipPath)
                 ? null
@@ -361,23 +361,23 @@ namespace CrystalMagic.Editor.Data
             return string.IsNullOrWhiteSpace(value) ? "UnitSpriteAnimationClip" : value;
         }
 
-        private void DrawSkillNameHelper(UnitData unitData, ref string animationName)
+        private void DrawSkillAnimationNameHelper(UnitData unitData, ref string animationName)
         {
-            List<string> skillNames = CollectSkillDisplayNames(unitData);
-            if (skillNames.Count == 0)
+            List<string> animationNames = CollectSkillAnimationNames(unitData);
+            if (animationNames.Count == 0)
                 return;
 
-            string[] options = new string[skillNames.Count + 1];
-            options[0] = "(No Skill Name)";
-            for (int i = 0; i < skillNames.Count; i++)
-                options[i + 1] = skillNames[i];
+            string[] options = new string[animationNames.Count + 1];
+            options[0] = "(No Animation Name)";
+            for (int i = 0; i < animationNames.Count; i++)
+                options[i + 1] = animationNames[i];
 
             int selectedIndex = 0;
             if (!string.IsNullOrWhiteSpace(animationName))
             {
-                for (int i = 0; i < skillNames.Count; i++)
+                for (int i = 0; i < animationNames.Count; i++)
                 {
-                    if (!string.Equals(skillNames[i], animationName, StringComparison.Ordinal))
+                    if (!string.Equals(animationNames[i], animationName, StringComparison.Ordinal))
                         continue;
 
                     selectedIndex = i + 1;
@@ -385,11 +385,11 @@ namespace CrystalMagic.Editor.Data
                 }
             }
 
-            int nextIndex = EditorGUILayout.Popup("Skill Name Helper", selectedIndex, options);
-            animationName = nextIndex <= 0 ? animationName : skillNames[nextIndex - 1];
+            int nextIndex = EditorGUILayout.Popup("Skill Animation Helper", selectedIndex, options);
+            animationName = nextIndex <= 0 ? animationName : animationNames[nextIndex - 1];
         }
 
-        private List<string> CollectSkillDisplayNames(UnitData unitData)
+        private List<string> CollectSkillAnimationNames(UnitData unitData)
         {
             List<string> names = new();
             UnitSkillModuleData skillModule = unitData?.GetModule<UnitSkillModuleData>();
@@ -403,7 +403,7 @@ namespace CrystalMagic.Editor.Data
                     continue;
 
                 SkillData skillData = EditorComponents.Data.Get<SkillData>(slot.SkillId);
-                string name = skillData?.DisplayName;
+                string name = skillData?.AnimationName;
                 if (string.IsNullOrWhiteSpace(name) || names.Contains(name))
                     continue;
 

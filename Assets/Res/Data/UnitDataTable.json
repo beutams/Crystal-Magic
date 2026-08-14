@@ -172,6 +172,58 @@
       "Id": 0
     },
     {
+      "Name": "MonsterStraw",
+      "Description": "训练稻草人",
+      "PrefabPath": "Assets/Res/Prefab/Unit/MonsterStraw.prefab",
+      "Modules": [
+        {
+          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
+          "BaseMoveSpeed": 0.0,
+          "BaseMaxAcceleration": 10000.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
+          "BaseMaxHealth": 120000.0,
+          "BaseHealthRegenPerSecond": 50.0,
+          "BaseDefense": 0.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
+          "BaseAttackPower": 10.0,
+          "BaseSkillRange": 0.0,
+          "BaseActionSpeedBonus": 0.0,
+          "BaseChantSpeedBonus": 0.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
+          "BaseMaxMp": 0.0,
+          "BaseMpRegenPerSecond": 0.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+          "Faction": 2
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitSkillModuleData, Assembly-CSharp",
+          "Skills": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitStateMachineModuleData, Assembly-CSharp",
+          "States": [
+            {
+              "StateType": "IdleState",
+              "Transitions": []
+            }
+          ]
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
+          "DropDataId": -1
+        }
+      ],
+      "Id": 22
+    },
+    {
       "Name": "MonsterGoblinArcher",
       "Description": "哥布林弓箭手",
       "PrefabPath": "Assets/Res/Prefab/Unit/MonsterGoblinArcher.prefab",
