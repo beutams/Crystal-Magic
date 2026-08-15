@@ -109,9 +109,6 @@ namespace CrystalMagic.UI
                 UnitName = PreferredDummyUnitName,
             };
 
-            if (entityManager.HasComponent<UnitStateMachineComponent>(dummyEntity))
-                snapshot.UnitName = entityManager.GetComponentObject<UnitStateMachineComponent>(dummyEntity)?.UnitName ?? PreferredDummyUnitName;
-
             if (entityManager.HasComponent<UnitVitalityComponent>(dummyEntity))
             {
                 UnitVitalityComponent vitality = entityManager.GetComponentData<UnitVitalityComponent>(dummyEntity);
@@ -175,13 +172,9 @@ namespace CrystalMagic.UI
             entityManager = world.EntityManager;
             if (_cachedDummyEntity != Entity.Null &&
                 entityManager.Exists(_cachedDummyEntity) &&
-                entityManager.HasComponent<UnitFactionComponent>(_cachedDummyEntity) &&
-                entityManager.HasComponent<UnitStateMachineComponent>(_cachedDummyEntity))
+                entityManager.HasComponent<UnitFactionComponent>(_cachedDummyEntity))
             {
-                UnitStateMachineComponent cachedStateMachine = entityManager.GetComponentObject<UnitStateMachineComponent>(_cachedDummyEntity);
-                if (cachedStateMachine != null &&
-                    entityManager.GetComponentData<UnitFactionComponent>(_cachedDummyEntity).Value == UnitFactionType.Enemy &&
-                    (cachedStateMachine.UnitName == PreferredDummyUnitName || !string.IsNullOrWhiteSpace(cachedStateMachine.UnitName)))
+                if (entityManager.GetComponentData<UnitFactionComponent>(_cachedDummyEntity).Value == UnitFactionType.Enemy)
                 {
                     dummyEntity = _cachedDummyEntity;
                     return true;
@@ -199,25 +192,11 @@ namespace CrystalMagic.UI
             for (int i = 0; i < entities.Length; i++)
             {
                 Entity entity = entities[i];
-                if (!entityManager.HasComponent<UnitStateMachineComponent>(entity))
-                    continue;
-
                 if (entityManager.GetComponentData<UnitFactionComponent>(entity).Value != UnitFactionType.Enemy)
-                    continue;
-
-                UnitStateMachineComponent stateMachine = entityManager.GetComponentObject<UnitStateMachineComponent>(entity);
-                if (stateMachine == null)
                     continue;
 
                 if (fallbackEnemy == Entity.Null)
                     fallbackEnemy = entity;
-
-                if (stateMachine.UnitName != PreferredDummyUnitName)
-                    continue;
-
-                _cachedDummyEntity = entity;
-                dummyEntity = entity;
-                return true;
             }
 
             if (fallbackEnemy != Entity.Null)

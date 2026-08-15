@@ -3,7 +3,6 @@ using Unity.Mathematics;
 
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateAfter(typeof(UnitControlSystem))]
-[UpdateBefore(typeof(UnitStateTransitionSystem))]
 partial class UnitSkillSystem : SystemBase
 {
     protected override void OnUpdate()

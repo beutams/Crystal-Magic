@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using CrystalMagic.Core;
+using CrystalMagic.Game.OpenField;
 using UnityEngine;
 
 namespace CrystalMagic.Game.Data
@@ -12,160 +13,147 @@ namespace CrystalMagic.Game.Data
         public string ThemeKey;
         public int FloorStart = 1;
         public int FloorEnd = 10;
-
-        public int RootVisualStyleId = 1;
-        public List<DungeonVisualStyleData> VisualStyles = new();
-
-        public int Mob1PoolId = -1;
-        public int Mob2PoolId = -1;
-        public int Mob3PoolId = -1;
-
-        public int Treasure1PoolId = -1;
-        public int Treasure2PoolId = -1;
-        public int Treasure3PoolId = -1;
-
-        public List<int> BossRoomIds = new();
+        public OpenFieldDungeonThemeData OpenField = new();
 
         public void EnsureValid()
         {
+            Name ??= string.Empty;
+            ThemeKey ??= string.Empty;
             FloorStart = Mathf.Max(1, FloorStart);
             FloorEnd = Mathf.Max(FloorStart, FloorEnd);
-            BossRoomIds ??= new List<int>();
-            VisualStyles ??= new List<DungeonVisualStyleData>();
-            for (int i = 0; i < VisualStyles.Count; i++)
-            {
-                VisualStyles[i] ??= new DungeonVisualStyleData();
-                VisualStyles[i].EnsureValid();
-            }
-
-            if (RootVisualStyleId <= 0 && VisualStyles.Count > 0)
-                RootVisualStyleId = VisualStyles[0].Id;
-        }
-
-        public DungeonVisualStyleData GetVisualStyle(int styleId)
-        {
-            for (int i = 0; i < VisualStyles.Count; i++)
-            {
-                DungeonVisualStyleData style = VisualStyles[i];
-                if (style != null && style.Id == styleId)
-                    return style;
-            }
-
-            return null;
-        }
-
-        public DungeonVisualStyleData GetRootVisualStyle()
-        {
-            return GetVisualStyle(RootVisualStyleId)
-                ?? (VisualStyles.Count > 0 ? VisualStyles[0] : null);
+            OpenField ??= new OpenFieldDungeonThemeData();
+            OpenField.EnsureValid();
         }
     }
 
     [Serializable]
-    public sealed class DungeonMonsterPoolData : DataRow
+    public sealed class OpenFieldDungeonThemeData
     {
-        public string Name;
-        public List<DungeonMonsterPoolEntryData> Entries = new();
+        public OpenFieldDungeonTerrainConfig Terrain = new();
+        public OpenFieldDungeonAnchorConfig Anchors = new();
+        public OpenFieldDungeonContentConfig Content = new();
+        public OpenFieldDungeonVisualData Visual = new();
+        public List<OpenFieldDungeonLandmarkEntryData> Landmarks = new();
+        public List<OpenFieldDungeonEncounterPoolData> EncounterPools = new();
+        public List<int> TreasureItemIds = new();
 
         public void EnsureValid()
         {
-            Entries ??= new List<DungeonMonsterPoolEntryData>();
-            for (int i = 0; i < Entries.Count; i++)
-            {
-                Entries[i] ??= new DungeonMonsterPoolEntryData();
-                Entries[i].Weight = Mathf.Max(1, Entries[i].Weight);
-                Entries[i].MinFloor = Mathf.Max(1, Entries[i].MinFloor);
-                Entries[i].MaxFloor = Mathf.Max(Entries[i].MinFloor, Entries[i].MaxFloor);
-            }
+            Terrain ??= new OpenFieldDungeonTerrainConfig();
+            Terrain.EnsureValid();
+            Anchors ??= new OpenFieldDungeonAnchorConfig();
+            Anchors.EnsureValid();
+            Content ??= new OpenFieldDungeonContentConfig();
+            Content.EnsureValid();
+            Visual ??= new OpenFieldDungeonVisualData();
+            Visual.EnsureValid();
+            Landmarks ??= new List<OpenFieldDungeonLandmarkEntryData>();
+            EncounterPools ??= new List<OpenFieldDungeonEncounterPoolData>();
+            TreasureItemIds ??= new List<int>();
+
+            foreach (OpenFieldDungeonLandmarkEntryData entry in Landmarks)
+                entry?.EnsureValid();
+            foreach (OpenFieldDungeonEncounterPoolData pool in EncounterPools)
+                pool?.EnsureValid();
+        }
+    }
+    [Serializable]
+    public sealed class OpenFieldDungeonVisualData
+    {
+        public DungeonTileGridData VoidTileGrid = new();
+        public DungeonTileGridData GroundTileGrid = new();
+        public DungeonTileGridData ObstacleTileGrid = new();
+
+        public void EnsureValid()
+        {
+            VoidTileGrid ??= new DungeonTileGridData();
+            GroundTileGrid ??= new DungeonTileGridData();
+            ObstacleTileGrid ??= new DungeonTileGridData();
+            VoidTileGrid.EnsureSize(3, 3);
+            GroundTileGrid.EnsureSize(3, 3);
+            ObstacleTileGrid.EnsureSize(3, 3);
         }
     }
 
     [Serializable]
-    public sealed class DungeonMonsterPoolEntryData
+    public sealed class OpenFieldDungeonLandmarkEntryData
+    {
+        public string PrefabName;
+        public int Weight = 1;
+        public int FootprintWidth = 1;
+        public int FootprintHeight = 1;
+        public bool ApplyCollider = true;
+        public int MinInstances;
+        public int MaxInstances = 1;
+
+        public void EnsureValid()
+        {
+            PrefabName ??= string.Empty;
+            Weight = Mathf.Max(1, Weight);
+            FootprintWidth = Mathf.Max(1, FootprintWidth);
+            FootprintHeight = Mathf.Max(1, FootprintHeight);
+            MinInstances = Mathf.Max(0, MinInstances);
+            MaxInstances = Mathf.Max(MinInstances, MaxInstances);
+        }
+    }
+
+    public enum OpenFieldInterestSizeData : byte
+    {
+        Small,
+        Medium,
+        Large,
+    }
+
+    [Serializable]
+    public sealed class OpenFieldDungeonEncounterPoolData
+    {
+        public string Name;
+        public OpenFieldInterestSizeData InterestSize;
+        public List<OpenFieldDungeonSquadData> Squads = new();
+
+        public void EnsureValid()
+        {
+            Name ??= string.Empty;
+            Squads ??= new List<OpenFieldDungeonSquadData>();
+            foreach (OpenFieldDungeonSquadData squad in Squads)
+                squad?.EnsureValid();
+        }
+    }
+
+    [Serializable]
+    public sealed class OpenFieldDungeonSquadData
+    {
+        public string Name;
+        public int Weight = 1;
+        public int MonsterLevel = 1;
+        public bool IsBossSquad;
+        public int Width = 3;
+        public int Height = 3;
+        public List<OpenFieldDungeonSquadMemberData> Members = new();
+
+        public void EnsureValid()
+        {
+            Name ??= string.Empty;
+            Weight = Mathf.Max(1, Weight);
+            MonsterLevel = Mathf.Clamp(MonsterLevel, 1, 3);
+            Width = Mathf.Max(1, Width);
+            Height = Mathf.Max(1, Height);
+            Members ??= new List<OpenFieldDungeonSquadMemberData>();
+            foreach (OpenFieldDungeonSquadMemberData member in Members)
+                member?.EnsureValid();
+        }
+    }
+
+    [Serializable]
+    public sealed class OpenFieldDungeonSquadMemberData
     {
         public string UnitName;
-        public int Weight = 1;
-        public int MinFloor = 1;
-        public int MaxFloor = 9999;
-        public bool BossOnly;
-    }
-
-    [Serializable]
-    public sealed class DungeonBossRoomData : DataRow
-    {
-        public string Name;
-        public string ThemeKey;
-        public int FloorBandStart = 1;
-        public int FloorBandEnd = 1;
-        public int Width = 24;
-        public int Height = 18;
-        public Int2Data PlayerSpawn = new(3, 3);
-        public Int2Data ExitSpawn = new(20, 14);
-        public Int2Data RewardSpawn = new(12, 14);
-        public Int2Data BossSpawn = new(12, 9);
-        public List<Int2Data> SupportSpawnPoints = new();
-        public List<int> BossPoolIds = new();
-        public int RewardTreasurePoolId = -1;
+        public int Count = 1;
 
         public void EnsureValid()
         {
-            FloorBandStart = Mathf.Max(1, FloorBandStart);
-            FloorBandEnd = Mathf.Max(FloorBandStart, FloorBandEnd);
-            Width = Mathf.Max(8, Width);
-            Height = Mathf.Max(8, Height);
-            SupportSpawnPoints ??= new List<Int2Data>();
-            BossPoolIds ??= new List<int>();
-        }
-    }
-
-    [Serializable]
-    public sealed class DungeonTreasurePoolData : DataRow
-    {
-        public string Name;
-        public List<DungeonTreasurePoolEntryData> Entries = new();
-
-        public void EnsureValid()
-        {
-            Entries ??= new List<DungeonTreasurePoolEntryData>();
-            for (int i = 0; i < Entries.Count; i++)
-            {
-                Entries[i] ??= new DungeonTreasurePoolEntryData();
-                Entries[i].Weight = Mathf.Max(1, Entries[i].Weight);
-                Entries[i].MinFloor = Mathf.Max(1, Entries[i].MinFloor);
-                Entries[i].MaxFloor = Mathf.Max(Entries[i].MinFloor, Entries[i].MaxFloor);
-                Entries[i].Rewards ??= new List<DropEntryData>();
-                for (int rewardIndex = 0; rewardIndex < Entries[i].Rewards.Count; rewardIndex++)
-                {
-                    Entries[i].Rewards[rewardIndex] ??= new DropEntryData();
-                    Entries[i].Rewards[rewardIndex].Chance = Mathf.Clamp01(Entries[i].Rewards[rewardIndex].Chance);
-                    Entries[i].Rewards[rewardIndex].MinQuantity = Mathf.Max(0, Entries[i].Rewards[rewardIndex].MinQuantity);
-                    Entries[i].Rewards[rewardIndex].MaxQuantity = Mathf.Max(
-                        Entries[i].Rewards[rewardIndex].MinQuantity,
-                        Entries[i].Rewards[rewardIndex].MaxQuantity);
-                }
-            }
-        }
-    }
-
-    [Serializable]
-    public sealed class DungeonTreasurePoolEntryData
-    {
-        public int Weight = 1;
-        public int MinFloor = 1;
-        public int MaxFloor = 9999;
-        public List<DropEntryData> Rewards = new();
-    }
-
-    [Serializable]
-    public struct Int2Data
-    {
-        public int X;
-        public int Y;
-
-        public Int2Data(int x, int y)
-        {
-            X = x;
-            Y = y;
+            UnitName ??= string.Empty;
+            Count = Mathf.Max(1, Count);
         }
     }
 }

@@ -15,24 +15,22 @@ namespace CrystalMagic.Game.Skill
 
         public virtual bool TryExecute(
             EntityManager entityManager,
-            Entity entity,
-            in UnitCastComponent cast,
-            SkillContent context,
-            SkillModifierSet runtimeModifiers = null)
+            in SkillReleaseRequest request,
+            SkillContent context)
         {
             if (context == null)
                 return false;
 
-            ResetContext(context, entityManager, entity, runtimeModifiers);
+            ResetContext(context, entityManager, request);
             context.SourceSkillId = Data != null ? Data.Id : -1;
-            if (!BuildContext(entityManager, entity, cast, context))
+            if (!BuildContext(request, context))
                 return false;
 
             Execute(context);
             return true;
         }
 
-        protected virtual bool BuildContext(EntityManager entityManager, Entity entity, in UnitCastComponent cast, SkillContent context)
+        protected virtual bool BuildContext(in SkillReleaseRequest request, SkillContent context)
         {
             return true;
         }
@@ -63,14 +61,11 @@ namespace CrystalMagic.Game.Skill
         private static void ResetContext(
             SkillContent context,
             EntityManager entityManager,
-            Entity entity,
-            SkillModifierSet runtimeModifiers)
+            in SkillReleaseRequest request)
         {
-            bool preserveHookContext = context.TriggerSource != SkillTriggerSource.None;
-
             context.EntityManager = entityManager;
             context.HasOriginEntity = true;
-            context.OriginEntity = entity;
+            context.OriginEntity = request.OriginEntity;
             context.HasTargetEntity = false;
             context.TargetEntity = Entity.Null;
             context.HasTarget = false;
@@ -78,18 +73,12 @@ namespace CrystalMagic.Game.Skill
             context.Origin = null;
             context.HasPosition = false;
             context.Position = Vector3.zero;
-            context.RuntimeModifiers = runtimeModifiers?.Clone();
-
-            if (!preserveHookContext)
-                context.TriggerSource = SkillTriggerSource.ActiveCast;
-
-            if (context.TriggerSource == SkillTriggerSource.ActiveCast)
-            {
-                context.HookType = SkillHookType.None;
-                context.HasOtherEntity = false;
-                context.OtherEntity = Entity.Null;
-                context.TriggerValue = 0f;
-            }
+            context.RuntimeModifiers = null;
+            context.TriggerSource = SkillTriggerSource.ActiveCast;
+            context.HookType = SkillHookType.None;
+            context.HasOtherEntity = false;
+            context.OtherEntity = Entity.Null;
+            context.TriggerValue = 0f;
         }
     }
 }

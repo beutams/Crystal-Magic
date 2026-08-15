@@ -39,3 +39,16 @@ public struct UnitPerceptionComponent : IComponentData
     public float2 TargetPosition;
     public float TargetDistance;
 }
+
+[UnitSourceAuthoring(typeof(UnitPerceptionAuthoring))]
+public sealed class UnitPerceptionSource : UnitComponentSource<UnitPerceptionComponent>
+{
+    protected override void Define(UnitSourceDefinitionBuilder<UnitPerceptionComponent> builder)
+    {
+        builder.AddGet("unit.perception.searchRadius", UnitValueCategory.Number, (in UnitPerceptionComponent value) => UnitValue.FromFloat(value.SearchRadius));
+        builder.AddGet("unit.perception.hasTarget", UnitValueCategory.Bool, (in UnitPerceptionComponent value) => UnitValue.FromBool(value.HasTarget));
+        builder.AddGet("unit.perception.targetEntity", UnitValueCategory.Entity, (in UnitPerceptionComponent value) => UnitValue.FromEntity(value.TargetEntity));
+        builder.AddGet("unit.perception.targetPosition", UnitValueCategory.Float2, (in UnitPerceptionComponent value) => UnitValue.FromFloat2(value.TargetPosition));
+        builder.AddGet("unit.perception.targetDistance", UnitValueCategory.Number, (in UnitPerceptionComponent value) => UnitValue.FromFloat(value.TargetDistance));
+    }
+}

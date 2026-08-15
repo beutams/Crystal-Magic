@@ -8,33 +8,45 @@ partial class BehaviorTreeInitSystem : SystemBase
 {
     protected override void OnUpdate()
     {
-        foreach (UnitBehaviorTreeComponent behaviorTree in
-                 SystemAPI.Query<UnitBehaviorTreeComponent>())
+        foreach ((UnitBehaviorTreeComponent behaviorTree, Entity entity) in
+                 SystemAPI.Query<UnitBehaviorTreeComponent>().WithEntityAccess())
         {
             if (behaviorTree == null || behaviorTree.IsInitialized)
                 continue;
 
-            behaviorTree.Blackboard = new BehaviorBlackboard();
+            behaviorTree.Context = new BehaviorContext();
             behaviorTree.Runtime = null;
             behaviorTree.CurrentNodeName = "None";
             behaviorTree.LastStatus = "None";
+            behaviorTree.InitializationError = string.Empty;
 
-            if (string.IsNullOrWhiteSpace(behaviorTree.UnitName))
+            if (!EntityManager.HasComponent<UnitSourceRuntimeComponent>(entity))
+                continue;
+
+            if (behaviorTree.UnitDataId < 0)
             {
+                behaviorTree.InitializationError = "Unit has no UnitDataId for behavior tree binding.";
                 behaviorTree.IsInitialized = true;
                 continue;
             }
 
             BehaviorTreeData data = DataComponent.Instance.Find<BehaviorTreeData>(
-                row => string.Equals(row.Name, behaviorTree.UnitName, System.StringComparison.Ordinal));
+                row => row.UnitDataId == behaviorTree.UnitDataId);
             if (data == null)
             {
-                Debug.LogWarning($"[BehaviorTreeInit] BehaviorTreeData not found for unit: {behaviorTree.UnitName}");
+                behaviorTree.InitializationError = $"BehaviorTreeData not found for UnitDataId: {behaviorTree.UnitDataId}";
+                Debug.LogWarning($"[BehaviorTreeInit] {behaviorTree.InitializationError}");
                 behaviorTree.IsInitialized = true;
                 continue;
             }
 
-            behaviorTree.Runtime = BehaviorTreeBuilder.Build(data);
+            UnitSourceRuntimeComponent sourceRuntime = EntityManager.GetComponentObject<UnitSourceRuntimeComponent>(entity);
+            behaviorTree.Runtime = BehaviorTreeBuilder.Build(data, sourceRuntime?.Table, out string error);
+            if (behaviorTree.Runtime == null)
+            {
+                behaviorTree.InitializationError = error;
+                Debug.LogWarning($"[BehaviorTreeInit] Failed to bind UnitDataId {behaviorTree.UnitDataId}: {error}");
+            }
             behaviorTree.IsInitialized = true;
         }
     }

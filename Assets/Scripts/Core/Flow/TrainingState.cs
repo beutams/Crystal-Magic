@@ -8,7 +8,6 @@ namespace CrystalMagic.Core
         public const string SceneName = "TrainingScene";
         protected override string BattleSceneName => SceneName;
         private TrainingDummyStatsUI _trainingDummyStatsUI;
-        private TrainingDebugUI _trainingDebugUI;
 
         protected override void OnEnterBattle()
         {
@@ -18,10 +17,6 @@ namespace CrystalMagic.Core
             _trainingDummyStatsUI = UIComponent.Instance.Open<TrainingDummyStatsUI>();
             if (_trainingDummyStatsUI != null)
                 UIComponent.Instance.SetLifetime(_trainingDummyStatsUI, UILifetime.Manual);
-
-            _trainingDebugUI = UIComponent.Instance.Open<TrainingDebugUI>();
-            if (_trainingDebugUI != null)
-                UIComponent.Instance.SetLifetime(_trainingDebugUI, UILifetime.Manual);
 
             if (StateData is LoadGameContext context)
             {
@@ -35,12 +30,6 @@ namespace CrystalMagic.Core
             {
                 UIComponent.Instance.ReleaseUI(_trainingDummyStatsUI);
                 _trainingDummyStatsUI = null;
-            }
-
-            if (_trainingDebugUI != null)
-            {
-                UIComponent.Instance.ReleaseUI(_trainingDebugUI);
-                _trainingDebugUI = null;
             }
 
             Debug.Log("[TrainingState] Exited Training Ground");

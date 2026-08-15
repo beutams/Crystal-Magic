@@ -12,7 +12,7 @@ namespace CrystalMagic.Editor.Data
     {
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasFeature<UnitBattleFeatureAuthoring>();
+            return context.HasAuthoring<UnitFactionAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -33,7 +33,7 @@ namespace CrystalMagic.Editor.Data
     {
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasFeature<UnitMovementFeatureAuthoring>();
+            return context.HasAuthoring<UnitMoveAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -54,7 +54,7 @@ namespace CrystalMagic.Editor.Data
     {
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasFeature<UnitBattleFeatureAuthoring>();
+            return context.HasAuthoring<UnitVitalityAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -76,7 +76,7 @@ namespace CrystalMagic.Editor.Data
     {
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasFeature<UnitBattleFeatureAuthoring>();
+            return context.HasAuthoring<UnitAttackAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -99,7 +99,7 @@ namespace CrystalMagic.Editor.Data
     {
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasFeature<UnitBattleFeatureAuthoring>();
+            return context.HasAuthoring<UnitManaAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -126,7 +126,7 @@ namespace CrystalMagic.Editor.Data
 
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasFeature<UnitSkillFeatureAuthoring>();
+            return context.HasAuthoring<UnitSkillAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -234,7 +234,7 @@ namespace CrystalMagic.Editor.Data
     {
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasFeature<UnitAIFeatureAuthoring>();
+            return context.HasAuthoring<UnitPerceptionAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -261,7 +261,7 @@ namespace CrystalMagic.Editor.Data
 
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasFeature<UnitBattleFeatureAuthoring>();
+            return context.HasAuthoring<UnitBuffRuntimeAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -366,7 +366,7 @@ namespace CrystalMagic.Editor.Data
     {
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasFeature<UnitDropFeatureAuthoring>();
+            return context.HasAuthoring<UnitDropAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -387,12 +387,12 @@ namespace CrystalMagic.Editor.Data
     {
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasFeature<NPCInteractionFeatureAuthoring>();
+            return context.HasAuthoring<NPCInteractableAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
         {
-            NPCInteractionFeatureAuthoring npcAuthoring = context.GetFeature<NPCInteractionFeatureAuthoring>();
+            NPCInteractableAuthoring npcAuthoring = context.GetAuthoring<NPCInteractableAuthoring>();
             if (npcAuthoring == null)
                 return;
 
@@ -420,6 +420,26 @@ namespace CrystalMagic.Editor.Data
                 npcAuthoring.InteractRange = newRange;
                 context.MarkPrefabDirty(npcAuthoring);
             }
+        }
+    }
+    [FactoryKey("Dungeon Footprint", 60)]
+    public sealed class UnitDungeonFootprintAttributeDrawer : IUnitEditorAttributeDrawer
+    {
+        public bool CanDraw(UnitEditorDrawerContext context)
+        {
+            return context.HasAuthoring<UnitDungeonFootprintAuthoring>();
+        }
+
+        public void Draw(UnitEditorDrawerContext context)
+        {
+            UnitDungeonFootprintModuleData module = context.GetOrCreateModule<UnitDungeonFootprintModuleData>();
+            if (module == null)
+                return;
+
+            GUILayout.Space(8f);
+            UnitEditorWindow.DrawSectionHeader("Dungeon Footprint");
+            module.Width = Mathf.Max(1, EditorGUILayout.IntField("Width", module.Width));
+            module.Height = Mathf.Max(1, EditorGUILayout.IntField("Height", module.Height));
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿// AUTO-GENERATED — DO NOT EDIT MANUALLY
+// AUTO-GENERATED — DO NOT EDIT MANUALLY
 // Use menu: Crystal Magic / Generate Data Registry
 // Generated: 2026-04-15 13:35:06
 
@@ -13,9 +13,6 @@ namespace CrystalMagic.Core
         {
             component.LoadTable<BehaviorTreeData>("BehaviorTreeDataTable");
             component.LoadTable<BuffData>("BuffDataTable");
-            component.LoadTable<DungeonBossRoomData>("DungeonBossRoomDataTable");
-            component.LoadTable<DungeonMonsterPoolData>("DungeonMonsterPoolDataTable");
-            component.LoadTable<DungeonTreasurePoolData>("DungeonTreasurePoolDataTable");
             component.LoadTable<DungeonThemeData>("DungeonThemeDataTable");
             component.LoadTable<DropData>("DropDataTable");
             component.LoadTable<EquipData>("EquipDataTable");
@@ -26,6 +23,7 @@ namespace CrystalMagic.Core
             component.LoadTable<ShopData>("ShopDataTable");
             component.LoadTable<SkillAdditionData>("SkillAdditionDataTable");
             component.LoadTable<SkillData>("SkillDataTable");
+            component.LoadTable<StateScriptData>("StateScriptDataTable");
             component.LoadTable<UnitAnimationProfileData>("UnitAnimationProfileDataTable");
             component.LoadTable<UnitData>("UnitDataTable");
         }

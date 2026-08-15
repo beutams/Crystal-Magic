@@ -28,10 +28,38 @@ public abstract class ABehaviorNode
             Children.Add(child);
     }
 
-    public BehaviorNodeStatus Tick(BehaviorBlackboard blackboard)
+    public BehaviorNodeStatus Tick(BehaviorContext context)
     {
-        blackboard?.SetCurrentNode(this);
-        return OnTick(blackboard);
+        context?.SetCurrentNode(this);
+        return OnTick(context);
+    }
+
+    public bool TryBind(UnitSourceAccessTable sources, out string error)
+    {
+        if (sources == null)
+        {
+            error = $"{DisplayName} requires a unit source table.";
+            return false;
+        }
+
+        if (!OnBind(sources, out error))
+            return false;
+
+        for (int i = 0; i < Children.Count; i++)
+        {
+            ABehaviorNode child = Children[i];
+            if (child == null)
+            {
+                error = $"{DisplayName} has an empty child at index {i}.";
+                return false;
+            }
+
+            if (!child.TryBind(sources, out error))
+                return false;
+        }
+
+        error = string.Empty;
+        return true;
     }
 
     public virtual void Reset()
@@ -40,7 +68,13 @@ public abstract class ABehaviorNode
             Children[i]?.Reset();
     }
 
-    protected abstract BehaviorNodeStatus OnTick(BehaviorBlackboard blackboard);
+    protected virtual bool OnBind(UnitSourceAccessTable sources, out string error)
+    {
+        error = string.Empty;
+        return true;
+    }
+
+    protected abstract BehaviorNodeStatus OnTick(BehaviorContext context);
 }
 
 public abstract class CompositeBehaviorNode : ABehaviorNode

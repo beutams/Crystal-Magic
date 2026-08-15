@@ -7,9 +7,13 @@ using Unity.Mathematics;
 using UnityEngine;
 
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
-[UpdateAfter(typeof(UnitSkillExecuteSystem))]
+[UpdateAfter(typeof(StateScriptSystem))]
 partial class UnitAnimationSystem : SystemBase
 {
+    private const string AnimationStateVariableKey = "var.animation.state";
+    private const string AnimationClipVariableKey = "var.animation.clip";
+    private const string DefaultStateName = "IdleState";
+
     private readonly Dictionary<string, UnitSpriteAnimationClip> _clipCache = new(StringComparer.Ordinal);
     private readonly HashSet<string> _missingClipPaths = new(StringComparer.Ordinal);
 
@@ -23,10 +27,10 @@ partial class UnitAnimationSystem : SystemBase
             return;
 
         float deltaTime = SystemAPI.Time.DeltaTime;
-        foreach ((RefRW<UnitAnimationComponent> animation, UnitStateMachineComponent stateMachine, Entity entity) in
-                 SystemAPI.Query<RefRW<UnitAnimationComponent>, UnitStateMachineComponent>().WithEntityAccess())
+        foreach ((RefRW<UnitAnimationComponent> animation, Entity entity) in
+                 SystemAPI.Query<RefRW<UnitAnimationComponent>>().WithEntityAccess())
         {
-            UpdateAnimation(entity, stateMachine, profileTable, deltaTime, ref animation.ValueRW);
+            UpdateAnimation(entity, profileTable, deltaTime, ref animation.ValueRW);
         }
     }
 
@@ -45,21 +49,21 @@ partial class UnitAnimationSystem : SystemBase
 
     private void UpdateAnimation(
         Entity entity,
-        UnitStateMachineComponent stateMachine,
         DataTable<UnitAnimationProfileData> profileTable,
         float deltaTime,
         ref UnitAnimationComponent animation)
     {
-        UnitAnimationProfileData profile = FindProfile(profileTable, stateMachine);
+        UnitAnimationProfileData profile = FindProfile(profileTable, entity, animation);
         if (profile == null)
         {
             ResetAnimation(ref animation, 0, -1);
             return;
         }
 
-        string stateName = stateMachine.CurrentStateName ?? "None";
+        // StateScript owns intent; animation only translates its two explicit variables into frames.
+        string stateName = ResolveAnimationVariable(entity, AnimationStateVariableKey, DefaultStateName);
         int stateHash = StringComparer.Ordinal.GetHashCode(stateName);
-        string activeSkillName = ResolveActiveSkillName(entity, stateName);
+        string activeSkillName = ResolveAnimationVariable(entity, AnimationClipVariableKey, string.Empty);
         int activeSkillHash = GetStableHash(activeSkillName);
         UnitAnimationEntryData entry = ResolveAnimationEntry(profile, stateName, activeSkillName);
         if (entry == null &&
@@ -215,37 +219,49 @@ partial class UnitAnimationSystem : SystemBase
         bestDirection = candidate;
     }
 
-    private string ResolveActiveSkillName(Entity entity, string stateName)
+    private string ResolveAnimationVariable(Entity entity, string key, string fallback)
     {
-        if (stateName.IndexOf("CastState", StringComparison.Ordinal) < 0 ||
-            !EntityManager.HasComponent<UnitCastComponent>(entity))
+        if (!EntityManager.HasComponent<UnitVariableComponent>(entity))
+            return fallback;
+
+        UnitVariableComponent variables = EntityManager.GetComponentObject<UnitVariableComponent>(entity);
+        if (variables?.Values == null ||
+            !variables.Values.TryGetValue(key, out UnitValue value) ||
+            !value.TryGetString(out string result) ||
+            string.IsNullOrWhiteSpace(result))
         {
-            return string.Empty;
+            return fallback;
         }
 
-        UnitCastComponent cast = EntityManager.GetComponentData<UnitCastComponent>(entity);
-        if (!cast.IsCasting || cast.CurrentSkillId < 0)
-            return string.Empty;
-
-        SkillData skillData = DataComponent.Instance.Get<SkillData>(cast.CurrentSkillId);
-        return skillData?.AnimationName?.Trim() ?? string.Empty;
+        return result.Trim();
     }
 
-    private static UnitAnimationProfileData FindProfile(DataTable<UnitAnimationProfileData> profileTable, UnitStateMachineComponent stateMachine)
+    private UnitAnimationProfileData FindProfile(
+        DataTable<UnitAnimationProfileData> profileTable,
+        Entity entity,
+        UnitAnimationComponent animation)
     {
         UnitAnimationProfileData fallback = null;
+        int unitDataId = -1;
+        if (EntityManager.HasComponent<UnitStateScriptComponent>(entity))
+        {
+            UnitStateScriptComponent stateScript = EntityManager.GetComponentObject<UnitStateScriptComponent>(entity);
+            unitDataId = stateScript?.UnitDataId ?? -1;
+        }
+
+        string unitName = animation.VisualKey.ToString();
         foreach (UnitAnimationProfileData row in profileTable.GetAll())
         {
             if (row == null)
                 continue;
 
             row.Normalize();
-            if (row.UnitDataId >= 0 && row.UnitDataId == stateMachine.UnitDataId)
+            if (unitDataId >= 0 && row.UnitDataId == unitDataId)
                 return row;
 
             if (fallback == null &&
                 !string.IsNullOrWhiteSpace(row.UnitName) &&
-                string.Equals(row.UnitName, stateMachine.UnitName, StringComparison.Ordinal))
+                string.Equals(row.UnitName, unitName, StringComparison.Ordinal))
             {
                 fallback = row;
             }

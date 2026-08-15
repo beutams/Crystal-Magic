@@ -1,1984 +1,221 @@
-﻿{
-  "Rows": [
-    {
-      "Name": "Enemy",
-      "Description": "通用敌人父本",
-      "PrefabPath": "Assets/Res/Prefab/Unit/Enemy.prefab",
-      "Modules": [
-        {
-          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 6.0,
-          "BaseMaxAcceleration": 10000.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 120000.0,
-          "BaseHealthRegenPerSecond": 50.0,
-          "BaseDefense": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-          "BaseAttackPower": 10.0,
-          "BaseSkillRange": 0.0,
-          "BaseActionSpeedBonus": 0.0,
-          "BaseChantSpeedBonus": 0.0,
-          "BaseWaterPowerBonus": 0.0,
-          "BaseFirePowerBonus": 0.0,
-          "BaseLightningPowerBonus": 0.0,
-          "BaseWindPowerBonus": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-          "BaseMaxMp": 0.0,
-          "BaseMpRegenPerSecond": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-          "Faction": 2
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 16.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitSkillModuleData, Assembly-CSharp",
-          "Skills": []
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitStateMachineModuleData, Assembly-CSharp",
-          "States": [
-            {
-              "StateType": "IdleState",
-              "Transitions": [
-                {
-                  "TargetStateType": "UnitCastState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitWantToCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitCanStartCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "MoveState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "GreaterThan",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "StateType": "MoveState",
-              "Transitions": [
-                {
-                  "TargetStateType": "UnitCastState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitWantToCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitCanStartCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "IdleState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "LessThan",
-                      "CompareValue": 0.1
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "StateType": "UnitCastState",
-              "Transitions": [
-                {
-                  "TargetStateType": "MoveState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitIsCastingSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsFalse",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "GreaterThan",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "IdleState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitIsCastingSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsFalse",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "LessThan",
-                      "CompareValue": 0.1
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": -1
-        }
-      ],
-      "Id": 0
-    },
-    {
-      "Name": "MonsterStraw",
-      "Description": "训练稻草人",
-      "PrefabPath": "Assets/Res/Prefab/Unit/MonsterStraw.prefab",
-      "Modules": [
-        {
-          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 0.0,
-          "BaseMaxAcceleration": 10000.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 120000.0,
-          "BaseHealthRegenPerSecond": 50.0,
-          "BaseDefense": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-          "BaseAttackPower": 10.0,
-          "BaseSkillRange": 0.0,
-          "BaseActionSpeedBonus": 0.0,
-          "BaseChantSpeedBonus": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-          "BaseMaxMp": 0.0,
-          "BaseMpRegenPerSecond": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-          "Faction": 2
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitSkillModuleData, Assembly-CSharp",
-          "Skills": []
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitStateMachineModuleData, Assembly-CSharp",
-          "States": [
-            {
-              "StateType": "IdleState",
-              "Transitions": []
-            }
-          ]
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": -1
-        }
-      ],
-      "Id": 22
-    },
-    {
-      "Name": "MonsterGoblinArcher",
-      "Description": "哥布林弓箭手",
-      "PrefabPath": "Assets/Res/Prefab/Unit/MonsterGoblinArcher.prefab",
-      "Modules": [
-        {
-          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 6.0,
-          "BaseMaxAcceleration": 10000.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 120.0,
-          "BaseHealthRegenPerSecond": 0.0,
-          "BaseDefense": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-          "BaseAttackPower": 15.0,
-          "BaseSkillRange": 0.0,
-          "BaseActionSpeedBonus": 0.0,
-          "BaseChantSpeedBonus": 0.0,
-          "BaseWaterPowerBonus": 0.0,
-          "BaseFirePowerBonus": 0.0,
-          "BaseLightningPowerBonus": 0.0,
-          "BaseWindPowerBonus": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-          "BaseMaxMp": 0.0,
-          "BaseMpRegenPerSecond": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-          "Faction": 2
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 20.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitSkillModuleData, Assembly-CSharp",
-          "Skills": [
-            {
-              "SkillId": 23,
-              "SkillAdditionId": -1,
-              "TagMask": 0,
-              "MinDistance": 6.0,
-              "MaxDistance": 24.0,
-              "CooldownSeconds": 1.8,
-              "Weight": 1
-            }
-          ]
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitStateMachineModuleData, Assembly-CSharp",
-          "States": [
-            {
-              "StateType": "IdleState",
-              "Transitions": [
-                {
-                  "TargetStateType": "UnitCastState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitWantToCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitCanStartCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "MoveState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "GreaterThan",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "StateType": "MoveState",
-              "Transitions": [
-                {
-                  "TargetStateType": "UnitCastState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitWantToCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitCanStartCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "IdleState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "LessThan",
-                      "CompareValue": 0.1
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "StateType": "UnitCastState",
-              "Transitions": [
-                {
-                  "TargetStateType": "MoveState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitIsCastingSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsFalse",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "GreaterThan",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "IdleState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitIsCastingSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsFalse",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "LessThan",
-                      "CompareValue": 0.1
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 0
-        }
-      ],
-      "Id": 1
-    },
-    {
-      "Name": "MonsterGoblinWarrior",
-      "Description": "哥布林战士",
-      "PrefabPath": "Assets/Res/Prefab/Unit/MonsterGoblinWarrior.prefab",
-      "Modules": [
-        {
-          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 6.0,
-          "BaseMaxAcceleration": 10000.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 200.0,
-          "BaseHealthRegenPerSecond": 0.0,
-          "BaseDefense": 10.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-          "BaseAttackPower": 10.0,
-          "BaseSkillRange": 0.0,
-          "BaseActionSpeedBonus": 0.0,
-          "BaseChantSpeedBonus": 0.0,
-          "BaseWaterPowerBonus": 0.0,
-          "BaseFirePowerBonus": 0.0,
-          "BaseLightningPowerBonus": 0.0,
-          "BaseWindPowerBonus": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-          "BaseMaxMp": 0.0,
-          "BaseMpRegenPerSecond": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-          "Faction": 2
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 16.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitSkillModuleData, Assembly-CSharp",
-          "Skills": [
-            {
-              "SkillId": 22,
-              "SkillAdditionId": -1,
-              "TagMask": 0,
-              "MinDistance": 0.0,
-              "MaxDistance": 3.2,
-              "CooldownSeconds": 1.8,
-              "Weight": 1
-            }
-          ]
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitStateMachineModuleData, Assembly-CSharp",
-          "States": [
-            {
-              "StateType": "IdleState",
-              "Transitions": [
-                {
-                  "TargetStateType": "UnitCastState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitWantToCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitCanStartCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "MoveState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "GreaterThan",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "StateType": "MoveState",
-              "Transitions": [
-                {
-                  "TargetStateType": "UnitCastState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitWantToCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitCanStartCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "IdleState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "LessThan",
-                      "CompareValue": 0.1
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "StateType": "UnitCastState",
-              "Transitions": [
-                {
-                  "TargetStateType": "MoveState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitIsCastingSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsFalse",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "GreaterThan",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "IdleState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitIsCastingSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsFalse",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "LessThan",
-                      "CompareValue": 0.1
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 1
-        }
-      ],
-      "Id": 2
-    },
-    {
-      "Name": "MonsterSlime",
-      "Description": "史莱姆",
-      "PrefabPath": "Assets/Res/Prefab/Unit/MonsterSlime.prefab",
-      "Modules": [
-        {
-          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 6.0,
-          "BaseMaxAcceleration": 10000.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 100.0,
-          "BaseHealthRegenPerSecond": 0.0,
-          "BaseDefense": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-          "BaseAttackPower": 10.0,
-          "BaseSkillRange": 0.0,
-          "BaseActionSpeedBonus": 0.0,
-          "BaseChantSpeedBonus": 0.0,
-          "BaseWaterPowerBonus": 0.0,
-          "BaseFirePowerBonus": 0.0,
-          "BaseLightningPowerBonus": 0.0,
-          "BaseWindPowerBonus": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-          "BaseMaxMp": 0.0,
-          "BaseMpRegenPerSecond": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-          "Faction": 2
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 16.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitSkillModuleData, Assembly-CSharp",
-          "Skills": [
-            {
-              "SkillId": 24,
-              "SkillAdditionId": -1,
-              "TagMask": 0,
-              "MinDistance": 2.0,
-              "MaxDistance": 12.0,
-              "CooldownSeconds": 3.2,
-              "Weight": 1
-            }
-          ]
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitStateMachineModuleData, Assembly-CSharp",
-          "States": [
-            {
-              "StateType": "IdleState",
-              "Transitions": [
-                {
-                  "TargetStateType": "UnitCastState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitWantToCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitCanStartCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "MoveState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "GreaterThan",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "StateType": "MoveState",
-              "Transitions": [
-                {
-                  "TargetStateType": "UnitCastState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitWantToCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitCanStartCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "IdleState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "LessThan",
-                      "CompareValue": 0.1
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "StateType": "UnitCastState",
-              "Transitions": [
-                {
-                  "TargetStateType": "MoveState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitIsCastingSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsFalse",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "GreaterThan",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "IdleState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitIsCastingSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsFalse",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "LessThan",
-                      "CompareValue": 0.1
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 2
-        }
-      ],
-      "Id": 3
-    },
-    {
-      "Name": "NPCEquipShop",
-      "Description": "装备商店",
-      "PrefabPath": "Assets/Res/Prefab/Unit/NPCEquipShop.prefab",
-      "Modules": [
-        {
-          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-          "Faction": 1
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 5.0,
-          "BaseMaxAcceleration": 30.0
-        }
-      ],
-      "Id": 7
-    },
-    {
-      "Name": "NPCPropShop",
-      "Description": "道具商店",
-      "PrefabPath": "Assets/Res/Prefab/Unit/NPCPropShop.prefab",
-      "Modules": [
-        {
-          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-          "Faction": 1
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 5.0,
-          "BaseMaxAcceleration": 30.0
-        }
-      ],
-      "Id": 8
-    },
-    {
-      "Name": "NPCSkillShop",
-      "Description": "技能商店NPC",
-      "PrefabPath": "Assets/Res/Prefab/Unit/NPCSkillShop.prefab",
-      "Modules": [
-        {
-          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-          "Faction": 1
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 5.0,
-          "BaseMaxAcceleration": 30.0
-        }
-      ],
-      "Id": 9
-    },
-    {
-      "Name": "NPCStash",
-      "Description": "仓库NPC",
-      "PrefabPath": "Assets/Res/Prefab/Unit/NPCStash.prefab",
-      "Modules": [
-        {
-          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-          "Faction": 1
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 5.0,
-          "BaseMaxAcceleration": 30.0
-        }
-      ],
-      "Id": 10
-    },
-    {
-      "Name": "NPCTraining",
-      "Description": "训练场NPC",
-      "PrefabPath": "Assets/Res/Prefab/Unit/NPCTraining.prefab",
-      "Modules": [
-        {
-          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-          "Faction": 1
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 5.0,
-          "BaseMaxAcceleration": 30.0
-        }
-      ],
-      "Id": 11
-    },
-    {
-      "Name": "PlayerDungeon",
-      "Description": "战斗主角",
-      "PrefabPath": "Assets/Res/Prefab/Unit/PlayerDungeon.prefab",
-      "Modules": [
-        {
-          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 10.0,
-          "BaseMaxAcceleration": 10000.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 100.0,
-          "BaseHealthRegenPerSecond": 10.0,
-          "BaseDefense": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-          "BaseAttackPower": 10.0,
-          "BaseSkillRange": 0.0,
-          "BaseActionSpeedBonus": 0.0,
-          "BaseChantSpeedBonus": 0.0,
-          "BaseWaterPowerBonus": 0.0,
-          "BaseFirePowerBonus": 0.0,
-          "BaseLightningPowerBonus": 0.0,
-          "BaseWindPowerBonus": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-          "BaseMaxMp": 100.0,
-          "BaseMpRegenPerSecond": 10.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-          "Faction": 0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitStateMachineModuleData, Assembly-CSharp",
-          "States": [
-            {
-              "StateType": "IdleState",
-              "Transitions": [
-                {
-                  "TargetStateType": "MoveState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "GreaterThan",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "PlayerCastState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitWantToCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitCanStartCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "StateType": "MoveState",
-              "Transitions": [
-                {
-                  "TargetStateType": "IdleState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "LessThan",
-                      "CompareValue": 0.1
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "PlayerCastState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitWantToCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitCanStartCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "StateType": "PlayerCastState",
-              "Transitions": [
-                {
-                  "TargetStateType": "IdleState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitIsCastingSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsFalse",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "LessThan",
-                      "CompareValue": 0.1
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "MoveState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitIsCastingSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsFalse",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "GreaterThan",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ],
-      "Id": 12
-    },
-    {
-      "Name": "PlayerTown",
-      "Description": "城镇主角",
-      "PrefabPath": "Assets/Res/Prefab/Unit/PlayerTown.prefab",
-      "Modules": [
-        {
-          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 10.0,
-          "BaseMaxAcceleration": 10000.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 0.0,
-          "BaseHealthRegenPerSecond": 0.0,
-          "BaseDefense": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-          "BaseAttackPower": 0.0,
-          "BaseSkillRange": 0.0,
-          "BaseActionSpeedBonus": 0.0,
-          "BaseChantSpeedBonus": 0.0,
-          "BaseWaterPowerBonus": 0.0,
-          "BaseFirePowerBonus": 0.0,
-          "BaseLightningPowerBonus": 0.0,
-          "BaseWindPowerBonus": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-          "BaseMaxMp": 0.0,
-          "BaseMpRegenPerSecond": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitStateMachineModuleData, Assembly-CSharp",
-          "States": [
-            {
-              "StateType": "IdleState",
-              "Transitions": [
-                {
-                  "TargetStateType": "MoveState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "GreaterThan",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "StateType": "MoveState",
-              "Transitions": [
-                {
-                  "TargetStateType": "IdleState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "LessThan",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-          "Faction": 0
-        }
-      ],
-      "Id": 13
-    },
-    {
-      "Name": "MonsterSpider",
-      "Description": "蜘蛛",
-      "PrefabPath": "Assets/Res/Prefab/Unit/MonsterSpider.prefab",
-      "Modules": [
-        {
-          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 6.5,
-          "BaseMaxAcceleration": 10000.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 140.0,
-          "BaseHealthRegenPerSecond": 0.0,
-          "BaseDefense": 2.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-          "BaseAttackPower": 12.0,
-          "BaseSkillRange": 0.0,
-          "BaseActionSpeedBonus": 0.0,
-          "BaseChantSpeedBonus": 0.0,
-          "BaseWaterPowerBonus": 0.0,
-          "BaseFirePowerBonus": 0.0,
-          "BaseLightningPowerBonus": 0.0,
-          "BaseWindPowerBonus": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-          "BaseMaxMp": 0.0,
-          "BaseMpRegenPerSecond": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-          "Faction": 2
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 18.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitSkillModuleData, Assembly-CSharp",
-          "Skills": [
-            {
-              "SkillId": 26,
-              "SkillAdditionId": -1,
-              "TagMask": 1,
-              "MinDistance": 0.0,
-              "MaxDistance": 2.8,
-              "CooldownSeconds": 1.5,
-              "Weight": 1
-            }
-          ]
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitStateMachineModuleData, Assembly-CSharp",
-          "States": [
-            {
-              "StateType": "IdleState",
-              "Transitions": [
-                {
-                  "TargetStateType": "UnitCastState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitWantToCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "MoveState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "GreaterThan",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "StateType": "MoveState",
-              "Transitions": [
-                {
-                  "TargetStateType": "UnitCastState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitWantToCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "IdleState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "LessThan",
-                      "CompareValue": 0.1
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "StateType": "UnitCastState",
-              "Transitions": [
-                {
-                  "TargetStateType": "MoveState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitIsCastingSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsFalse",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "GreaterThan",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "IdleState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitIsCastingSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsFalse",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "LessThan",
-                      "CompareValue": 0.1
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": -1
-        }
-      ],
-      "Id": 14
-    },
-    {
-      "Name": "MonsterBat",
-      "Description": "哥布林战士",
-      "PrefabPath": "Assets/Res/Prefab/Unit/MonsterBat.prefab",
-      "Modules": [
-        {
-          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 7.6,
-          "BaseMaxAcceleration": 10000.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 90.0,
-          "BaseHealthRegenPerSecond": 0.0,
-          "BaseDefense": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-          "BaseAttackPower": 8.0,
-          "BaseSkillRange": 0.0,
-          "BaseActionSpeedBonus": 0.0,
-          "BaseChantSpeedBonus": 0.0,
-          "BaseWaterPowerBonus": 0.0,
-          "BaseFirePowerBonus": 0.0,
-          "BaseLightningPowerBonus": 0.0,
-          "BaseWindPowerBonus": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-          "BaseMaxMp": 0.0,
-          "BaseMpRegenPerSecond": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-          "Faction": 2
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 18.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitSkillModuleData, Assembly-CSharp",
-          "Skills": [
-            {
-              "SkillId": 34,
-              "SkillAdditionId": -1,
-              "TagMask": 0,
-              "MinDistance": 0.0,
-              "MaxDistance": 2.1,
-              "CooldownSeconds": 1.2,
-              "Weight": 1
-            }
-          ]
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitStateMachineModuleData, Assembly-CSharp",
-          "States": [
-            {
-              "StateType": "IdleState",
-              "Transitions": [
-                {
-                  "TargetStateType": "UnitCastState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitWantToCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitCanStartCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "MoveState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "GreaterThan",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "StateType": "MoveState",
-              "Transitions": [
-                {
-                  "TargetStateType": "UnitCastState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitWantToCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitCanStartCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "IdleState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "LessThan",
-                      "CompareValue": 0.1
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "StateType": "UnitCastState",
-              "Transitions": [
-                {
-                  "TargetStateType": "MoveState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitIsCastingSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsFalse",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "GreaterThan",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "IdleState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitIsCastingSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsFalse",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "LessThan",
-                      "CompareValue": 0.1
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 0
-        }
-      ],
-      "Id": 18
-    },
-    {
-      "Name": "MonsterRat",
-      "Description": "哥布林战士",
-      "PrefabPath": "Assets/Res/Prefab/Unit/MonsterRat.prefab",
-      "Modules": [
-        {
-          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 6.8,
-          "BaseMaxAcceleration": 10000.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 110.0,
-          "BaseHealthRegenPerSecond": 0.0,
-          "BaseDefense": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-          "BaseAttackPower": 10.0,
-          "BaseSkillRange": 0.0,
-          "BaseActionSpeedBonus": 0.0,
-          "BaseChantSpeedBonus": 0.0,
-          "BaseWaterPowerBonus": 0.0,
-          "BaseFirePowerBonus": 0.0,
-          "BaseLightningPowerBonus": 0.0,
-          "BaseWindPowerBonus": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-          "BaseMaxMp": 0.0,
-          "BaseMpRegenPerSecond": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-          "Faction": 2
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 16.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitSkillModuleData, Assembly-CSharp",
-          "Skills": [
-            {
-              "SkillId": 35,
-              "SkillAdditionId": -1,
-              "TagMask": 0,
-              "MinDistance": 0.0,
-              "MaxDistance": 2.3,
-              "CooldownSeconds": 1.4,
-              "Weight": 1
-            }
-          ]
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitStateMachineModuleData, Assembly-CSharp",
-          "States": [
-            {
-              "StateType": "IdleState",
-              "Transitions": [
-                {
-                  "TargetStateType": "UnitCastState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitWantToCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitCanStartCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "MoveState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "GreaterThan",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "StateType": "MoveState",
-              "Transitions": [
-                {
-                  "TargetStateType": "UnitCastState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitWantToCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitCanStartCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "IdleState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "LessThan",
-                      "CompareValue": 0.1
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "StateType": "UnitCastState",
-              "Transitions": [
-                {
-                  "TargetStateType": "MoveState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitIsCastingSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsFalse",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "GreaterThan",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "IdleState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitIsCastingSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsFalse",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "LessThan",
-                      "CompareValue": 0.1
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 0
-        }
-      ],
-      "Id": 19
-    },
-    {
-      "Name": "MonsterOrc",
-      "Description": "哥布林战士",
-      "PrefabPath": "Assets/Res/Prefab/Unit/MonsterOrc.prefab",
-      "Modules": [
-        {
-          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 5.6,
-          "BaseMaxAcceleration": 10000.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 260.0,
-          "BaseHealthRegenPerSecond": 0.0,
-          "BaseDefense": 8.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-          "BaseAttackPower": 18.0,
-          "BaseSkillRange": 0.0,
-          "BaseActionSpeedBonus": 0.0,
-          "BaseChantSpeedBonus": 0.0,
-          "BaseWaterPowerBonus": 0.0,
-          "BaseFirePowerBonus": 0.0,
-          "BaseLightningPowerBonus": 0.0,
-          "BaseWindPowerBonus": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-          "BaseMaxMp": 0.0,
-          "BaseMpRegenPerSecond": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-          "Faction": 2
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 18.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitSkillModuleData, Assembly-CSharp",
-          "Skills": [
-            {
-              "SkillId": 36,
-              "SkillAdditionId": -1,
-              "TagMask": 0,
-              "MinDistance": 0.0,
-              "MaxDistance": 3.0,
-              "CooldownSeconds": 1.8,
-              "Weight": 1
-            }
-          ]
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitStateMachineModuleData, Assembly-CSharp",
-          "States": [
-            {
-              "StateType": "IdleState",
-              "Transitions": [
-                {
-                  "TargetStateType": "UnitCastState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitWantToCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitCanStartCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "MoveState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "GreaterThan",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "StateType": "MoveState",
-              "Transitions": [
-                {
-                  "TargetStateType": "UnitCastState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitWantToCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitCanStartCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "IdleState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "LessThan",
-                      "CompareValue": 0.1
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "StateType": "UnitCastState",
-              "Transitions": [
-                {
-                  "TargetStateType": "MoveState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitIsCastingSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsFalse",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "GreaterThan",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "IdleState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitIsCastingSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsFalse",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "LessThan",
-                      "CompareValue": 0.1
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 1
-        }
-      ],
-      "Id": 20
-    },
-    {
-      "Name": "MonsterTroll",
-      "Description": "哥布林战士",
-      "PrefabPath": "Assets/Res/Prefab/Unit/MonsterTroll.prefab",
-      "Modules": [
-        {
-          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 4.6,
-          "BaseMaxAcceleration": 10000.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 900.0,
-          "BaseHealthRegenPerSecond": 0.0,
-          "BaseDefense": 15.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-          "BaseAttackPower": 30.0,
-          "BaseSkillRange": 0.0,
-          "BaseActionSpeedBonus": 0.0,
-          "BaseChantSpeedBonus": 0.0,
-          "BaseWaterPowerBonus": 0.0,
-          "BaseFirePowerBonus": 0.0,
-          "BaseLightningPowerBonus": 0.0,
-          "BaseWindPowerBonus": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-          "BaseMaxMp": 0.0,
-          "BaseMpRegenPerSecond": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-          "Faction": 2
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 20.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitSkillModuleData, Assembly-CSharp",
-          "Skills": [
-            {
-              "SkillId": 37,
-              "SkillAdditionId": -1,
-              "TagMask": 0,
-              "MinDistance": 0.0,
-              "MaxDistance": 3.4,
-              "CooldownSeconds": 2.2,
-              "Weight": 1
-            }
-          ]
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitStateMachineModuleData, Assembly-CSharp",
-          "States": [
-            {
-              "StateType": "IdleState",
-              "Transitions": [
-                {
-                  "TargetStateType": "UnitCastState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitWantToCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitCanStartCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "MoveState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "GreaterThan",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "StateType": "MoveState",
-              "Transitions": [
-                {
-                  "TargetStateType": "UnitCastState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitWantToCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitCanStartCastSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsTrue",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "IdleState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "LessThan",
-                      "CompareValue": 0.1
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "StateType": "UnitCastState",
-              "Transitions": [
-                {
-                  "TargetStateType": "MoveState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitIsCastingSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsFalse",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "GreaterThan",
-                      "CompareValue": 0.0
-                    }
-                  ]
-                },
-                {
-                  "TargetStateType": "IdleState",
-                  "Conditions": [
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitIsCastingSource",
-                      "SourceParam": -1,
-                      "CompareType": "IsFalse",
-                      "CompareValue": 0.0
-                    },
-                    {
-                      "ConditionType": 0,
-                      "SourceType": "UnitVelocitySource",
-                      "SourceParam": -1,
-                      "CompareType": "LessThan",
-                      "CompareValue": 0.1
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 2
-        }
-      ],
-      "Id": 21
-    }
-  ]
-}
+{
+    "Rows":  [
+                 {
+                     "Name":  "MonsterStraw",
+                     "Description":  "Test strawman",
+      "PrefabPath":  "Assets/Res/Prefab/Unit/MonsterStraw.prefab",
+                     "Modules":  [
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
+                                         "BaseMoveSpeed":  6.0,
+                                         "BaseMaxAcceleration":  10000.0
+                                     },
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
+                                         "BaseMaxHealth":  120000.0,
+                                         "BaseHealthRegenPerSecond":  50.0,
+                                         "BaseDefense":  0.0
+                                     },
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
+                                         "BaseAttackPower":  10.0,
+                                         "BaseSkillRange":  0.0,
+                                         "BaseActionSpeedBonus":  0.0,
+                                         "BaseChantSpeedBonus":  0.0,
+                                         "BaseWaterPowerBonus":  0.0,
+                                         "BaseFirePowerBonus":  0.0,
+                                         "BaseLightningPowerBonus":  0.0,
+                                         "BaseWindPowerBonus":  0.0
+                                     },
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
+                                         "BaseMaxMp":  0.0,
+                                         "BaseMpRegenPerSecond":  0.0
+                                     },
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+                                         "Faction":  2
+                                     },
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
+                                         "SearchRadius":  16.0
+                                     },
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitSkillModuleData, Assembly-CSharp",
+                                         "Skills":  [
 
+                                                    ]
+                                     },
+
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
+                                         "DropDataId":  -1
+                                     }
+                                 ],
+                     "Id":  0
+                 },
+                 {
+                     "Name":  "NPCEquipShop",
+                     "Description":  "装备商店",
+                     "PrefabPath":  "Assets/Res/Prefab/Unit/NPCEquipShop.prefab",
+                     "Modules":  [
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+                                         "Faction":  1
+                                     },
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
+                                         "BaseMoveSpeed":  5.0,
+                                         "BaseMaxAcceleration":  30.0
+                                     }
+                                 ],
+                     "Id":  7
+                 },
+                 {
+                     "Name":  "NPCPropShop",
+                     "Description":  "道具商店",
+                     "PrefabPath":  "Assets/Res/Prefab/Unit/NPCPropShop.prefab",
+                     "Modules":  [
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+                                         "Faction":  1
+                                     },
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
+                                         "BaseMoveSpeed":  5.0,
+                                         "BaseMaxAcceleration":  30.0
+                                     }
+                                 ],
+                     "Id":  8
+                 },
+                 {
+                     "Name":  "NPCSkillShop",
+                     "Description":  "技能商店NPC",
+                     "PrefabPath":  "Assets/Res/Prefab/Unit/NPCSkillShop.prefab",
+                     "Modules":  [
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+                                         "Faction":  1
+                                     },
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
+                                         "BaseMoveSpeed":  5.0,
+                                         "BaseMaxAcceleration":  30.0
+                                     }
+                                 ],
+                     "Id":  9
+                 },
+                 {
+                     "Name":  "NPCStash",
+                     "Description":  "仓库NPC",
+                     "PrefabPath":  "Assets/Res/Prefab/Unit/NPCStash.prefab",
+                     "Modules":  [
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+                                         "Faction":  1
+                                     },
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
+                                         "BaseMoveSpeed":  5.0,
+                                         "BaseMaxAcceleration":  30.0
+                                     }
+                                 ],
+                     "Id":  10
+                 },
+                 {
+                     "Name":  "NPCTraining",
+                     "Description":  "训练场NPC",
+                     "PrefabPath":  "Assets/Res/Prefab/Unit/NPCTraining.prefab",
+                     "Modules":  [
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+                                         "Faction":  1
+                                     },
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
+                                         "BaseMoveSpeed":  5.0,
+                                         "BaseMaxAcceleration":  30.0
+                                     }
+                                 ],
+                     "Id":  11
+                 },
+                 {
+                     "Name":  "PlayerDungeon",
+                     "Description":  "战斗主角",
+                     "PrefabPath":  "Assets/Res/Prefab/Unit/PlayerDungeon.prefab",
+                     "Modules":  [
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
+                                         "BaseMoveSpeed":  10.0,
+                                         "BaseMaxAcceleration":  10000.0
+                                     },
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
+                                         "BaseMaxHealth":  100.0,
+                                         "BaseHealthRegenPerSecond":  10.0,
+                                         "BaseDefense":  0.0
+                                     },
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
+                                         "BaseAttackPower":  10.0,
+                                         "BaseSkillRange":  0.0,
+                                         "BaseActionSpeedBonus":  0.0,
+                                         "BaseChantSpeedBonus":  0.0,
+                                         "BaseWaterPowerBonus":  0.0,
+                                         "BaseFirePowerBonus":  0.0,
+                                         "BaseLightningPowerBonus":  0.0,
+                                         "BaseWindPowerBonus":  0.0
+                                     },
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
+                                         "BaseMaxMp":  100.0,
+                                         "BaseMpRegenPerSecond":  10.0
+                                     },
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+                                         "Faction":  0
+                                     }],
+                     "Id":  12
+                 },
+                 {
+                     "Name":  "PlayerTown",
+                     "Description":  "城镇主角",
+                     "PrefabPath":  "Assets/Res/Prefab/Unit/PlayerTown.prefab",
+                     "Modules":  [
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
+                                         "BaseMoveSpeed":  10.0,
+                                         "BaseMaxAcceleration":  10000.0
+                                     },
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
+                                         "BaseMaxHealth":  0.0,
+                                         "BaseHealthRegenPerSecond":  0.0,
+                                         "BaseDefense":  0.0
+                                     },
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
+                                         "BaseAttackPower":  0.0,
+                                         "BaseSkillRange":  0.0,
+                                         "BaseActionSpeedBonus":  0.0,
+                                         "BaseChantSpeedBonus":  0.0,
+                                         "BaseWaterPowerBonus":  0.0,
+                                         "BaseFirePowerBonus":  0.0,
+                                         "BaseLightningPowerBonus":  0.0,
+                                         "BaseWindPowerBonus":  0.0
+                                     },
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
+                                         "BaseMaxMp":  0.0,
+                                         "BaseMpRegenPerSecond":  0.0
+                                     },
+
+                                     {
+                                         "$type":  "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+                                         "Faction":  0
+                                     }
+                                 ],
+                     "Id":  13
+                 }
+             ]
+}

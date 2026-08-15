@@ -14,17 +14,17 @@ public class UnitIsCastingSource : ISource
     public bool CanUse()
     {
         if (_context.HasRuntimeEntity)
-            return _context.EntityManager.HasComponent<UnitCastComponent>(_context.Entity);
+            return _context.EntityManager.HasComponent<UnitSkillReleaseComponent>(_context.Entity);
 
-        return _context.UnitPrefab != null && _context.UnitPrefab.GetComponent<UnitCastAuthoring>() != null;
+        return _context.UnitPrefab != null && _context.UnitPrefab.GetComponent<UnitSkillReleaseAuthoring>() != null;
     }
 
     public float GetValue()
     {
-        if (!_context.HasRuntimeEntity || !_context.EntityManager.HasComponent<UnitCastComponent>(_context.Entity))
+        if (!_context.HasRuntimeEntity || !_context.EntityManager.HasComponent<UnitSkillReleaseComponent>(_context.Entity))
             return 0f;
 
-        UnitCastComponent cast = _context.EntityManager.GetComponentData<UnitCastComponent>(_context.Entity);
-        return cast.IsCasting || cast.HasPreparedCast ? 1f : 0f;
+        UnitSkillReleaseComponent release = _context.EntityManager.GetComponentObject<UnitSkillReleaseComponent>(_context.Entity);
+        return release?.PendingRequests?.Count > 0 ? 1f : 0f;
     }
 }

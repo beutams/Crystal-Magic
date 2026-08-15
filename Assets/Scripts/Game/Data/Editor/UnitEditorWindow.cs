@@ -492,7 +492,7 @@ namespace CrystalMagic.Editor.Data
             GUILayout.Space(4f);
             EditorGUILayout.BeginHorizontal();
             GUILayout.Space(8f);
-            string[] tabs = { "属性", "状态", "行为" };
+            string[] tabs = { "属性", "行为" };
             _selectedTab = Mathf.Clamp(_selectedTab, 0, tabs.Length - 1);
             int newTab = GUILayout.Toolbar(_selectedTab, tabs, GUILayout.Width(260f), GUILayout.Height(24f));
             if (newTab != _selectedTab)
@@ -517,10 +517,7 @@ namespace CrystalMagic.Editor.Data
                     DrawAttributePanel(entry, unit);
                     break;
                 case 1:
-                    DrawStatePreviewPanel(entry, unit);
-                    break;
-                case 2:
-                    DrawBehaviorPreviewPanel(entry);
+                    DrawBehaviorPreviewPanel(entry, unit);
                     break;
             }
 
@@ -609,67 +606,7 @@ namespace CrystalMagic.Editor.Data
             }
         }
 
-        private void DrawStatePreviewPanel(UnitPrefabEntry entry, UnitData unit)
-        {
-            DrawSectionHeader("State");
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.Label("State Machine", EditorStyles.boldLabel);
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Open State Editor", GUILayout.Width(140f)))
-            {
-                StateMachineGraphWindow.Open();
-            }
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.HelpBox("这里只预览状态数据，修改请到 State Machine 编辑器。", MessageType.Info);
-
-            if (!HasAuthoring<UnitDecisionFeatureAuthoring>(entry))
-            {
-                EditorGUILayout.HelpBox("当前 Prefab 没有挂 UnitDecisionFeatureAuthoring。", MessageType.Warning);
-                return;
-            }
-
-            UnitStateMachineModuleData stateModule = unit?.GetModule<UnitStateMachineModuleData>();
-            List<UnitStateConfig> states = stateModule?.States ?? new List<UnitStateConfig>();
-            EditorGUILayout.LabelField("State Count", states.Count.ToString());
-            EditorGUILayout.LabelField("Initial State", states.Count > 0 ? states[0].StateType : "None");
-
-            if (states.Count == 0)
-            {
-                EditorGUILayout.HelpBox("当前 UnitData 没有状态配置。", MessageType.Info);
-                return;
-            }
-
-            GUILayout.Space(6f);
-            for (int stateIndex = 0; stateIndex < states.Count; stateIndex++)
-            {
-                UnitStateConfig state = states[stateIndex];
-                List<UnitTransitionConfig> transitions = state?.Transitions ?? new List<UnitTransitionConfig>();
-
-                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-                EditorGUILayout.LabelField(stateIndex == 0 ? $"{state.StateType} (Default)" : state.StateType, EditorStyles.boldLabel);
-                EditorGUILayout.LabelField("Transitions", transitions.Count.ToString());
-
-                if (transitions.Count == 0)
-                {
-                    EditorGUILayout.LabelField("No outgoing transitions.", EditorStyles.miniLabel);
-                }
-                else
-                {
-                    for (int transitionIndex = 0; transitionIndex < transitions.Count; transitionIndex++)
-                    {
-                        UnitTransitionConfig transition = transitions[transitionIndex];
-                        EditorGUILayout.LabelField($"-> {transition.TargetStateType}");
-                        EditorGUILayout.LabelField(GetTransitionPreviewText(transition), EditorStyles.wordWrappedMiniLabel);
-                    }
-                }
-
-                EditorGUILayout.EndVertical();
-                GUILayout.Space(4f);
-            }
-        }
-
-        private void DrawBehaviorPreviewPanel(UnitPrefabEntry entry)
+        private void DrawBehaviorPreviewPanel(UnitPrefabEntry entry, UnitData unit)
         {
             DrawSectionHeader("Behavior");
             EditorGUILayout.BeginHorizontal();
@@ -683,20 +620,24 @@ namespace CrystalMagic.Editor.Data
 
             EditorGUILayout.HelpBox("这里只预览行为树数据，修改请到 Behavior Tree 编辑器。", MessageType.Info);
 
-            UnitAIFeatureAuthoring authoring = entry.Prefab.GetComponent<UnitAIFeatureAuthoring>();
+            UnitBehaviorTreeAuthoring authoring = entry.Prefab.GetComponent<UnitBehaviorTreeAuthoring>();
             if (authoring == null)
             {
-                EditorGUILayout.HelpBox("当前 Prefab 没有挂 UnitAIFeatureAuthoring。", MessageType.Warning);
+                EditorGUILayout.HelpBox("当前 Prefab 没有挂 UnitBehaviorTreeAuthoring。", MessageType.Warning);
+                return;
+            }
+
+            if (unit == null)
+            {
+                EditorGUILayout.HelpBox("当前 Prefab 没有对应的 UnitData，无法关联行为树。", MessageType.Warning);
                 return;
             }
 
             using (new EditorGUI.DisabledScope(true))
-            {
-                EditorGUILayout.TextField("Unit Name", entry.DisplayName);
-            }
+                EditorGUILayout.IntField("Unit Data Id", unit.Id);
 
             BehaviorTreeData tree = EditorComponents.Data.Find<BehaviorTreeData>(
-                row => string.Equals(row.Name, entry.DisplayName, StringComparison.Ordinal));
+                row => row.UnitDataId == unit.Id);
             if (tree == null)
             {
                 EditorGUILayout.HelpBox("没有找到对应的 BehaviorTreeData。", MessageType.Warning);
@@ -735,39 +676,6 @@ namespace CrystalMagic.Editor.Data
                 EditorGUILayout.EndVertical();
                 GUILayout.Space(4f);
             }
-        }
-
-        private static string GetTransitionPreviewText(UnitTransitionConfig transition)
-        {
-            List<ConditionConfig> conditions = transition?.Conditions ?? new List<ConditionConfig>();
-            if (conditions.Count == 0)
-            {
-                return "Always";
-            }
-
-            return string.Join(" | ", conditions.Select(GetConditionPreviewText));
-        }
-
-        private static string GetConditionPreviewText(ConditionConfig condition)
-        {
-            if (condition == null)
-            {
-                return "None";
-            }
-
-            string sourceType = string.IsNullOrWhiteSpace(condition.SourceType)
-                ? "?"
-                : EditorLabelUtility.GetTypeDisplayName(condition.SourceType, typeof(ISource));
-            string compareType = string.IsNullOrWhiteSpace(condition.CompareType)
-                ? "?"
-                : EditorLabelUtility.GetTypeDisplayName(condition.CompareType, typeof(ICompareType));
-            string valueText = condition.CompareType is "GreaterThan" or "LessThan" or "Equal"
-                ? $" {condition.CompareValue:0.##}"
-                : string.Empty;
-            string sourceParamText = condition.SourceParam >= 0
-                ? $"({condition.SourceParam})"
-                : string.Empty;
-            return $"{condition.ConditionType}: {sourceType}{sourceParamText} {compareType}{valueText}";
         }
 
         private static string GetBehaviorTreePreviewName(BehaviorTreeData tree)

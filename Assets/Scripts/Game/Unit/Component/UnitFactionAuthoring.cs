@@ -37,3 +37,13 @@ public struct UnitFactionComponent : IComponentData
 {
     public UnitFactionType Value;
 }
+
+[UnitSourceAuthoring(typeof(UnitFactionAuthoring))]
+public sealed class UnitFactionSource : UnitComponentSource<UnitFactionComponent>
+{
+    protected override void Define(UnitSourceDefinitionBuilder<UnitFactionComponent> builder)
+    {
+        builder.AddGet("unit.faction.value", UnitValueCategory.Number,
+            (in UnitFactionComponent value) => UnitValue.FromInt((int)value.Value));
+    }
+}

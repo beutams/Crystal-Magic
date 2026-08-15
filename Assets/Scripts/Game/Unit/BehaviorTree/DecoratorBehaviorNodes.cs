@@ -1,4 +1,4 @@
-using CrystalMagic.Core;
+﻿using CrystalMagic.Core;
 using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data;
 using UnityEngine;
@@ -11,12 +11,12 @@ public sealed class InverterBehaviorNode : DecoratorBehaviorNode
     {
     }
 
-    protected override BehaviorNodeStatus OnTick(BehaviorBlackboard blackboard)
+    protected override BehaviorNodeStatus OnTick(BehaviorContext context)
     {
         if (Child == null)
             return BehaviorNodeStatus.Failure;
 
-        BehaviorNodeStatus status = Child.Tick(blackboard);
+        BehaviorNodeStatus status = Child.Tick(context);
         return status switch
         {
             BehaviorNodeStatus.Success => BehaviorNodeStatus.Failure,
@@ -34,12 +34,12 @@ public sealed class SucceederBehaviorNode : DecoratorBehaviorNode
     {
     }
 
-    protected override BehaviorNodeStatus OnTick(BehaviorBlackboard blackboard)
+    protected override BehaviorNodeStatus OnTick(BehaviorContext context)
     {
         if (Child == null)
             return BehaviorNodeStatus.Success;
 
-        BehaviorNodeStatus status = Child.Tick(blackboard);
+        BehaviorNodeStatus status = Child.Tick(context);
         return status == BehaviorNodeStatus.Running
             ? BehaviorNodeStatus.Running
             : BehaviorNodeStatus.Success;
@@ -54,12 +54,12 @@ public sealed class FailerBehaviorNode : DecoratorBehaviorNode
     {
     }
 
-    protected override BehaviorNodeStatus OnTick(BehaviorBlackboard blackboard)
+    protected override BehaviorNodeStatus OnTick(BehaviorContext context)
     {
         if (Child == null)
             return BehaviorNodeStatus.Failure;
 
-        BehaviorNodeStatus status = Child.Tick(blackboard);
+        BehaviorNodeStatus status = Child.Tick(context);
         return status == BehaviorNodeStatus.Running
             ? BehaviorNodeStatus.Running
             : BehaviorNodeStatus.Failure;
@@ -78,7 +78,7 @@ public sealed class RepeaterBehaviorNode : DecoratorBehaviorNode
         _data = data;
     }
 
-    protected override BehaviorNodeStatus OnTick(BehaviorBlackboard blackboard)
+    protected override BehaviorNodeStatus OnTick(BehaviorContext context)
     {
         if (Child == null)
             return BehaviorNodeStatus.Failure;
@@ -87,18 +87,18 @@ public sealed class RepeaterBehaviorNode : DecoratorBehaviorNode
             return BehaviorNodeStatus.Success;
 
         return _data.ExecutionMode == RepeaterExecutionMode.OncePerTick
-            ? TickOncePerTick(blackboard)
-            : TickImmediate(blackboard);
+            ? TickOncePerTick(context)
+            : TickImmediate(context);
     }
 
-    private BehaviorNodeStatus TickImmediate(BehaviorBlackboard blackboard)
+    private BehaviorNodeStatus TickImmediate(BehaviorContext context)
     {
-        int maxImmediateIterationsPerTick = Mathf.Max(1,ConfigComponent.Instance.Get<BehaviorTreeRuntimeConfig>().MaxImmediateIterationsPerTick);
+        int maxImmediateIterationsPerTick = Mathf.Max(1,ConfigComponent.Instance.Get<GameConfig>().BehaviorTreeMaxImmediateIterationsPerTick);
         int maxIterations = _data.RepeatCount < 0? maxImmediateIterationsPerTick: Mathf.Max(0, _data.RepeatCount - _completedCount);
 
         for (int iteration = 0; iteration < maxIterations; iteration++)
         {
-            BehaviorNodeStatus status = Child.Tick(blackboard);
+            BehaviorNodeStatus status = Child.Tick(context);
             switch (status)
             {
                 case BehaviorNodeStatus.Running:
@@ -143,9 +143,9 @@ public sealed class RepeaterBehaviorNode : DecoratorBehaviorNode
         return BehaviorNodeStatus.Running;
     }
 
-    private BehaviorNodeStatus TickOncePerTick(BehaviorBlackboard blackboard)
+    private BehaviorNodeStatus TickOncePerTick(BehaviorContext context)
     {
-        BehaviorNodeStatus status = Child.Tick(blackboard);
+        BehaviorNodeStatus status = Child.Tick(context);
         switch (status)
         {
             case BehaviorNodeStatus.Running:
@@ -190,15 +190,15 @@ public sealed class UntilSuccessBehaviorNode : DecoratorBehaviorNode
     {
     }
 
-    protected override BehaviorNodeStatus OnTick(BehaviorBlackboard blackboard)
+    protected override BehaviorNodeStatus OnTick(BehaviorContext context)
     {
         if (Child == null)
             return BehaviorNodeStatus.Failure;
 
-        int maxImmediateIterationsPerTick = Mathf.Max(1,ConfigComponent.Instance.Get<BehaviorTreeRuntimeConfig>().MaxImmediateIterationsPerTick);
+        int maxImmediateIterationsPerTick = Mathf.Max(1,ConfigComponent.Instance.Get<GameConfig>().BehaviorTreeMaxImmediateIterationsPerTick);
         for (int iteration = 0; iteration < maxImmediateIterationsPerTick; iteration++)
         {
-            BehaviorNodeStatus status = Child.Tick(blackboard);
+            BehaviorNodeStatus status = Child.Tick(context);
             if (status == BehaviorNodeStatus.Success)
                 return BehaviorNodeStatus.Success;
 
@@ -220,15 +220,15 @@ public sealed class UntilFailureBehaviorNode : DecoratorBehaviorNode
     {
     }
 
-    protected override BehaviorNodeStatus OnTick(BehaviorBlackboard blackboard)
+    protected override BehaviorNodeStatus OnTick(BehaviorContext context)
     {
         if (Child == null)
             return BehaviorNodeStatus.Failure;
 
-        int maxImmediateIterationsPerTick = Mathf.Max(1,ConfigComponent.Instance.Get<BehaviorTreeRuntimeConfig>().MaxImmediateIterationsPerTick);
+        int maxImmediateIterationsPerTick = Mathf.Max(1,ConfigComponent.Instance.Get<GameConfig>().BehaviorTreeMaxImmediateIterationsPerTick);
         for (int iteration = 0; iteration < maxImmediateIterationsPerTick; iteration++)
         {
-            BehaviorNodeStatus status = Child.Tick(blackboard);
+            BehaviorNodeStatus status = Child.Tick(context);
             if (status == BehaviorNodeStatus.Failure)
                 return BehaviorNodeStatus.Success;
 
@@ -259,19 +259,19 @@ public sealed class CooldownBehaviorNode : DecoratorBehaviorNode
         _data = data;
     }
 
-    protected override BehaviorNodeStatus OnTick(BehaviorBlackboard blackboard)
+    protected override BehaviorNodeStatus OnTick(BehaviorContext context)
     {
         if (Child == null)
             return BehaviorNodeStatus.Failure;
 
         if (_cooldownRemaining > 0f)
         {
-            _cooldownRemaining = Mathf.Max(0f, _cooldownRemaining - Mathf.Max(0f, blackboard?.Runtime.DeltaTime ?? 0f));
+            _cooldownRemaining = Mathf.Max(0f, _cooldownRemaining - Mathf.Max(0f, context?.DeltaTime ?? 0f));
             if (_cooldownRemaining > 0f)
                 return BehaviorNodeStatus.Failure;
         }
 
-        BehaviorNodeStatus status = Child.Tick(blackboard);
+        BehaviorNodeStatus status = Child.Tick(context);
         if (status != BehaviorNodeStatus.Running)
             _cooldownRemaining = Mathf.Max(0f, _data.CooldownSeconds);
 
@@ -298,7 +298,7 @@ public sealed class TimeoutBehaviorNode : DecoratorBehaviorNode
         _data = data;
     }
 
-    protected override BehaviorNodeStatus OnTick(BehaviorBlackboard blackboard)
+    protected override BehaviorNodeStatus OnTick(BehaviorContext context)
     {
         if (Child == null)
             return BehaviorNodeStatus.Failure;
@@ -306,11 +306,11 @@ public sealed class TimeoutBehaviorNode : DecoratorBehaviorNode
         if (!_timing)
             _elapsed = 0f;
 
-        BehaviorNodeStatus status = Child.Tick(blackboard);
+        BehaviorNodeStatus status = Child.Tick(context);
         if (status == BehaviorNodeStatus.Running)
         {
             _timing = true;
-            _elapsed += Mathf.Max(0f, blackboard?.Runtime.DeltaTime ?? 0f);
+            _elapsed += Mathf.Max(0f, context?.DeltaTime ?? 0f);
             if (_data.TimeoutSeconds > 0f && _elapsed >= _data.TimeoutSeconds)
             {
                 Child.Reset();

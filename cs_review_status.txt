@@ -1,4 +1,4 @@
-﻿Core\
+Core\
   Audio\
     AudioComponent.cs TRUE
   Camera\
@@ -6,12 +6,12 @@
     SceneCamera.cs WAIT
   Config\
     Editor\
-      ConfigEditorWindow.cs FALSE
+      ConfigEditorWindow.cs TRUE DIRTY
     ConfigComponent.cs TRUE
-    DungeonConfig.cs TRUE DIRTY           
-    GameConfig.cs TRUE DIRTY
+    DungeonConfig.cs TRUE DIRTY
+        GameConfig.cs TRUE DIRTY
     GameConfigAttribute.cs TRUE
-    ModifierConfig.cs TRUE
+    ModifierConfig.cs TRUE DIRTY
   Data\
     Editor\
       DataFileEncodingValidator.cs FALSE
@@ -29,7 +29,7 @@
   Events\
     CommonGameEvent.cs TRUE
     EventComponent.cs TRUE
-    GameEvents.cs TRUE
+    GameEvents.cs TRUE DIRTY
     GameGateChangedEvent.cs TRUE
     MainMenuConfigRequestedEvent.cs TRUE
     MainMenuExitRequestedEvent.cs TRUE
@@ -43,7 +43,7 @@
       FactoryRegistryGeneratorUtility.cs FALSE
       RegistryGeneratorUtility.cs FALSE
     FactoryKeyAttribute.cs TRUE
-    GeneratedFactory.cs TRUE
+    GeneratedFactory.cs TRUE DIRTY
   Flow\
     DungeonGenerationService.cs TRUE DIRTY
     DungeonState.cs TRUE DIRTY
@@ -53,7 +53,7 @@
     MainMenuState.cs FALSE
     ResultState.cs FALSE
     TownState.cs TRUE DIRTY
-    TrainingState.cs FALSE
+    TrainingState.cs TRUE
     TransitionState.cs FALSE
   GameGate\
     GameGateComponent.cs FALSE
@@ -89,10 +89,11 @@
     ResourceComponent.cs FALSE
     ResourceLoadMode.cs FALSE
   Runtime\
-    DungeonSceneRuntimeBuilder.cs WAIT
+    DungeonSceneRuntimeBuilder.cs TRUE DIRTY
+    OpenFieldDungeonSceneDataBuilder.cs TRUE DIRTY
     DungeonSceneRuntimeRoot.cs WAIT
     DungeonSceneVisualUtility.cs WAIT
-    RuntimeDataComponent.cs WAIT
+    RuntimeDataComponent.cs TRUE DIRTY
   SaveData\
     CurrencyUtility.cs WAIT
     InventoryUtility.cs WAIT
@@ -151,19 +152,20 @@ Editor\
 Game\
   Comparator\
     Editor\
-      ComparatorRegistryGenerator.cs TRUE
-    Comparator.cs TRUE
-    ComparatorFactory.cs TRUE
-    ComparatorRegistry.cs TRUE
-    Condition.cs TRUE
-    ConditionConfig.cs TRUE
-    ICompareType.cs TRUE
-    ISource.cs TRUE
+      ComparatorRegistryGenerator.cs TRUE DIRTY
+    Comparator.cs TRUE DIRTY
+    ComparatorFactory.cs TRUE DIRTY
+    ComparatorRegistry.cs TRUE DIRTY
+    Condition.cs TRUE DIRTY
+    ConditionConfig.cs TRUE DIRTY
+    ICompareType.cs TRUE DIRTY
+    ISource.cs TRUE DIRTY
   Config\
   Data\
     Editor\
       BuffEditorWindow.cs FALSE
       DungeonEditorWindow.cs TRUE DIRTY
+      DungeonEditorWindow.OpenField.cs TRUE DIRTY
       EquipEditorWindow.cs FALSE
       NPCEditorWindow.cs FALSE
       PropEditorWindow.cs FALSE
@@ -192,18 +194,22 @@ Game\
       SpawnSoundEffectData.cs FALSE
       SpawnUnitEffectData.cs TRUE
       SpawnVfxEffectData.cs FALSE
-    BehaviorTreeData.cs FALSE
+    BehaviorTreeData.cs TRUE DIRTY
+    StateScript\
+      StateScriptData.cs TRUE DIRTY
+      StateScriptNodeDataConverter.cs TRUE DIRTY
     BuffData.cs FALSE
     DropData.cs FALSE
-    DungeonDefinitionData.cs FALSE
+    DungeonDefinitionData.cs TRUE DIRTY
+    DungeonTileGridData.cs TRUE
     ItemData.cs TRUE DIRTY
     LocalizationData.cs FALSE
     NPCData.cs TRUE DIRTY
     PropData.cs FALSE
     ShopData.cs FALSE
     SkillAdditionData.cs FALSE
-    SkillCastTaskData.cs FALSE
-    SkillData.cs FALSE
+    SkillCastTaskData.cs TRUE
+    SkillData.cs TRUE
     SkillFollowupConsumeRuleData.cs FALSE
     SkillFollowupEffectData.cs FALSE
     SkillFollowupFilterData.cs FALSE
@@ -212,10 +218,18 @@ Game\
     UnitData.cs TRUE DIRTY
   MapDemo\
     Editor\
-      TunnelingMapDemoEditor.cs FALSE
-    DungeonMakerTunnelingConfig.cs FALSE
+      TunnelingMapDemoEditor.cs TRUE
+      OpenFieldMapTestDemoEditor.cs TRUE DIRTY
+    DungeonMakerTunnelingConfig.cs TRUE
     DungeonMakerTunnelingGenerator.cs FALSE
-    TunnelingMapDemo.cs FALSE
+    OpenFieldMapTestDemo.cs TRUE DIRTY
+    TunnelingMapDemo.cs TRUE
+  OpenField\
+    OpenFieldDungeonAnchors.cs TRUE
+    OpenFieldDungeonContent.cs TRUE
+    OpenFieldDungeonLayout.cs TRUE
+    OpenFieldDungeonTerrainConfig.cs TRUE
+    OpenFieldDungeonTerrainGenerator.cs TRUE
   Skill\
     Editor\
       SkillEditorWindow.cs FALSE
@@ -234,13 +248,13 @@ Game\
       Effect.cs FALSE
       ForwardRectSearchEffect.cs FALSE
       PersistentEffect.cs TRUE
-        持续性效果，添加一个持续任务到系统
+        闁归晲鑳堕悽濠氬箑瑜庨弲銉╁几濠婃劗绀夋繛锝堫嚙婵偞绋夐埀顒佺▔椤忓懎鐦紓渚囧幒閹广垽宕濋垾鍐茬厒缂侇垵宕电划?
       RandomAreaPointEffect.cs FALSE
       RecoverEffect.cs FALSE
       SpawnProjectileEffect.cs FALSE
       SpawnSoundEffect.cs FALSE
       SpawnUnitEffect.cs TRUE
-      SpawnVfxEffect.cs FALSE
+      SpawnVfxEffect.cs TRUE
     Followup\
       Consume\
         UseCountSkillFollowupConsumeRule.cs FALSE
@@ -254,12 +268,12 @@ Game\
         SequenceSkillFollowupModifierRule.cs FALSE
         StaticSkillFollowupModifierRule.cs FALSE
     Skills\
-      PositionSkill.cs TRUE
-      SelfSkill.cs TRUE
-      Skill.cs TRUE
-    SkillAnalysisUtility.cs FALSE
-    SkillCastTasks.cs FALSE
-    SkillChainResolver.cs FALSE
+      PositionSkill.cs TRUE DIRTY
+      SelfSkill.cs TRUE DIRTY
+      Skill.cs TRUE DIRTY
+    SkillAnalysisUtility.cs TRUE DIRTY
+    SkillCastTasks.cs TRUE DIRTY
+    SkillChainResolver.cs TRUE DIRTY
     SkillContent.cs TRUE
     SkillExecutor.cs TRUE DIRTY
     SkillFactory.cs FALSE
@@ -276,114 +290,157 @@ Game\
     SkillFollowupModifierRuntimeUtility.cs FALSE
     SkillFollowupRuntimeFactories.cs FALSE
     SkillRegistry.cs FALSE
-    SkillTargetUtility.cs FALSE
   Unit\
+    Source\
+      Editor\
+        UnitComponentSourceRegistryGenerator.cs TRUE
+      UnitComponentSource.cs TRUE DIRTY
+      UnitComponentSourceRegistry.cs TRUE DIRTY
+      UnitSourceAccessTable.cs TRUE DIRTY
+      UnitSourceInitializationSystem.cs TRUE DIRTY
+      UnitSourceRuntimeComponent.cs TRUE
+      UnitSourceSchema.cs TRUE DIRTY
+      UnitTransformSource.cs TRUE DIRTY
     BehaviorTree\
-      ActionBehaviorNodes.cs TRUE
-        行为节点
+      ActionBehaviorNodes.cs TRUE DIRTY
+        閻炴稑濂旂拹鐔兼嚍閸屾粌浠?
+      LeafBehaviorNodes.cs TRUE
       BehaviorNodeFactory.cs TRUE
-        行为树工厂
-      BehaviorNodes.cs TRUE
-        行为树节点基类
-      BehaviorTreeRegistry.cs TRUE
-        工厂注册器
-      BehaviorTreeRuntime.cs TRUE
-      ==没有多态，全部写死
-        行为树节点数据，黑板数据存放处
-      CommonBehaviorNodes.cs TRUE
-        组合节点+条件节点
-      DecoratorBehaviorNodes.cs TRUE
-        修饰节点
+        閻炴稑濂旂拹鐔煎冀閹存繀绱ｉ柛?
+      BehaviorNodes.cs TRUE DIRTY
+        閻炴稑濂旂拹鐔煎冀閹达絽螡闁绘劗鎳撻悢鈧紒?
+      BehaviorTreeRegistry.cs TRUE DIRTY
+        鐎规悶鍎卞璺衡枖閵娿儱鏂€闁?
+      BehaviorTreeRuntime.cs TRUE DIRTY
+      ==婵炲备鍓濆﹢浣瑰緞濮橆厸鍋撴笟濠勭闁稿繈鍔戦崕鎾礃濞嗘劦鍔?
+        閻炴稑濂旂拹鐔煎冀閹达絽螡闁绘劘顫夐弳鐔煎箲椤曞棛绀夊娑欏灦濠㈡﹢寮悧鍫濈ウ閻庢稒蓱閺備焦寰?
+      CommonBehaviorNodes.cs TRUE DIRTY
+        缂備礁瀚幃搴ㄦ嚍閸屾粌浠?闁哄鈧弶顐介柤鍝勫€婚崑?
+      DecoratorBehaviorNodes.cs TRUE DIRTY
+        濞ｅ浂鍣ｉ妶浼存嚍閸屾粌浠?
+    StateScript\
+      Nodes\
+        CompareStateScriptNode.cs TRUE
+        StateScriptActionNode.cs TRUE
+        StateScriptBoolNode.cs TRUE
+        StateScriptEntryNode.cs TRUE
+        StateScriptNode.cs TRUE DIRTY
+        StateScriptStateNode.cs TRUE DIRTY
+        SetValueStateScriptNode.cs TRUE DIRTY
+        RequestSkillActionNode.cs FALSE
+        TimerStateScriptNode.cs TRUE
+        KeepStateScriptNode.cs TRUE DIRTY
+        MonitorStateScriptNode.cs TRUE DIRTY
+      StateScriptInitSystem.cs TRUE
+      StateScriptNodeFactory.cs TRUE
+      StateScriptPort.cs TRUE
+      StateScriptRegistry.cs TRUE DIRTY
+      StateScriptRuntime.cs TRUE DIRTY
+      StateScriptSystem.cs TRUE DIRTY
+      UnitStateScriptAuthoring.cs TRUE
     Component\
       Tag\
         NPCTagAuthoring.cs TRUE
           Tag
-        PlayerTagAuthoring.cs TRUE
+        PlayerTagAuthoring.cs TRUE DIRTY
           Tag
       DestroyEntityFlag.cs TRUE
-        死亡标记
+      DestroyEntityFlagAuthoring.cs TRUE
+        婵繆顔婃鎼佸冀閸ヮ亶鍞?
       DropEntityPrefabRegistryEntry.cs FALSE
       DungeonExitAuthoring.cs TRUE
-        地牢出口组件        
-      DungeonMonsterSpawnComponent.cs TRUE
+        闁革附澹嗘晶鐑藉礄閸濆嫬缍撶紓浣稿濞?
+      DungeonMonsterSpawnComponent.cs TRUE DIRTY
       DungeonTreasureAuthoring.cs TRUE DIRTY
-        宝箱标记
-      DungeonTreasureRewardElement.cs FALSE
+        閻庤绻勯鍫ュ冀閸ヮ亶鍞?
+      DungeonTreasureCandidateItemElement.cs TRUE DIRTY
       EntitySpawnRegistryAuthoring.cs TRUE DIRTY
       EnvironmentEntityPrefabRegistryEntry.cs FALSE
       NPCInteractableAuthoring.cs TRUE
-        NPC交互组件
-      NPCInteractionRuntimeComponent.cs TRUE
-        运行时NPC交互请求单例
-      PendingEffectExecutionQueueComponent.cs FALSE
-      PersistentEffectQueueComponent.cs FALSE
-      PlayerSkillComponent.cs TRUE
-        施法请求组件，存放待释放技能链原始数据
+        NPC濞存嚎鍊撶花鎵磼閸曨亝顐?
+        閺夆晜鍔橀、鎴﹀籍缁傤敹C濞存嚎鍊撶花鎵嫚闁垮婀撮柛妤佹磻缁?
+      PendingEffectExecutionQueueComponent.cs TRUE
+      PersistentEffectQueueComponent.cs TRUE
+      PlayerSkillComponent.cs TRUE DIRTY
+      PlayerPhysicsAuthoring.cs TRUE
+      PlayerSkillAuthoring.cs TRUE DIRTY
+        闁哄倽濮ょ涵鍓佹嫚闁垮婀寸紓浣稿濞嗐垽鏁嶇仦鐣屾憼闁衡偓閹呯闂佹彃锕ラ弬渚€骞庨埀顒勬嚄娴犲鎳犻柛妯煎枎椤劙寮悧鍫濈ウ
       ProjectileEntityPrefabRegistryEntry.cs FALSE
-      QuadAnimationComponent.cs FALSE
+      QuadAnimationComponent.cs TRUE
       SkillProjectileAuthoring.cs FALSE
-      SkillProjectileComponent.cs FALSE
-      UnitAnimationComponent.cs FALSE
-      UnitAttackAuthoring.cs TRUE
-        技能攻击相关数据
-      PlayerInteractionRuntimeComponent.cs FALSE
-      UnitBehaviorTreeAuthoring.cs TRUE
-        行为树组件，携带黑板
-      UnitCastAvailabilityAuthoring.cs FALSE
-      UnitBuffRuntimeAuthoring.cs TRUE
-        存储运行时Buff数据，以及Tick/Hook调用时发送施法请求
-      UnitCastAuthoring.cs FALSE
+      SkillProjectileComponent.cs TRUE
+      UnitAnimationComponent.cs TRUE
+      UnitAnimationAuthoring.cs TRUE DIRTY
+      UnitAttackAuthoring.cs TRUE DIRTY
+        闁瑰灈鍋撻柤瀹犲Г閺侀箖宕欓懡銈嗙ゲ闁稿繗娅曢弳鐔煎箲?
+      PlayerInteractionRuntimeComponent.cs TRUE
+      UnitBehaviorTreeAuthoring.cs TRUE DIRTY
+        閻炴稑濂旂拹鐔煎冀閹寸姷鐭嬪ù鐘侯啇缁辨繈骞栭崫鍕暔濮掓稒鍨跺?
+      UnitCastAvailabilityAuthoring.cs TRUE
+      UnitBuffRuntimeAuthoring.cs TRUE DIRTY
+        閻庢稒锚閸嬪秵娼婚幇顖ｆ斀闁哄啰顩簎ff闁轰胶澧楀畵渚€鏁嶇仦闂寸鞍闁告瑥銈ck/Hook閻犲鍟伴弫銈夊籍鐠哄搫绲洪梺顐＄劍閺岋箑鈻旈弴鈽嗗殲婵?
+      UnitCastAuthoring.cs TRUE DIRTY
       UnitCastFollowupRuntimeComponent.cs FALSE
       UnitCastSkillPayloadComponent.cs FALSE
       UnitCastTaskPayloadComponent.cs FALSE
-      UnitControlComponent.cs TRUE
-        控制组件，存储当前受控信息
+      UnitControlComponent.cs TRUE DIRTY
+      UnitControlAuthoring.cs TRUE
+        闁硅矇鍐ㄧ厬缂備礁瀚▎銏ゆ晬鐏炵晫鎽犻柛灞诲妼缂嶅宕滃鍛秬闁硅矇鍌欑箚闁?
       UnitDropAuthoring.cs TRUE
-        掉落物数据
-      UnitElementComponent.cs TRUE
-        元素属性数据
-      UnitFacingComponent.cs TRUE
-        朝向数据
-      UnitFactionAuthoring.cs TRUE
-        阵营数据
-      UnitIntentAuthoring.cs TRUE DIRTY
-        ==没有多态
-        单位意图集合
-      UnitJumpArcComponent.cs FALSE
-      UnitManaAuthoring.cs TRUE
-        魔法数据
-      UnitMoveAuthoring.cs TRUE
-        移动数据
-      UnitPerceptionAuthoring.cs TRUE
-        索敌组件，适配unit编辑器
+        闁瑰搫顦抽幆銈夋偋閳哄倹娈堕柟?
+      UnitDungeonFootprintAuthoring.cs TRUE
+      UnitDeathComponent.cs TRUE DIRTY
+      UnitDeathAuthoring.cs TRUE DIRTY
+      UnitElementComponent.cs TRUE DIRTY
+      UnitElementAuthoring.cs TRUE
+        闁稿繐鍟扮粈宀€浠﹂悙绮瑰亾瑜庨弳鐔煎箲?
+      UnitFacingComponent.cs TRUE DIRTY
+        闁哄牊绻傞幃婊堝极閻楀牆绁?
+      UnitFactionAuthoring.cs TRUE DIRTY
+        闂傚啩绲婚幆鈧柡浣哄瀹?
+        ==婵炲备鍓濆﹢浣瑰緞濮橆厸鍋?
+        闁告娲戠紞鍛村箛韫囨挻绂堥梻鍡楁閹?
+      UnitJumpArcComponent.cs TRUE
+      UnitManaAuthoring.cs TRUE DIRTY
+        濮掑嫭姊圭涵鍫曞极閻楀牆绁?
+      UnitMoveAuthoring.cs TRUE DIRTY
+        缂佸顕ф慨鈺呭极閻楀牆绁?
+      UnitPerceptionAuthoring.cs TRUE DIRTY
+        缂佷究鍨洪弲顐ょ磼閸曨亝顐介柨娑樼焸閳ь剙鍊块崢顦沶it缂傚倹鐗炵欢顐﹀闯?
       UnitSkillAuthoring.cs TRUE DIRTY
-        单位所有技能数据
-      UnitSkillModifierRuntimeComponent.cs FALSE
-      UnitStateMachineAuthoring.cs FALSE
-      ========太多组件在这里添加
+        闁告娲戠紞鍛村箥閳ь剟寮垫径瀣楅柤瀹犲Г閺嗙喖骞?
+      UnitSkillReleaseAuthoring.cs FALSE
+      UnitSkillModifierRuntimeComponent.cs TRUE
+      UnitSkillModifierRuntimeAuthoring.cs TRUE
+      ========濠㈤浜滈ˇ璺ㄧ磼閸曨亝顐介柛锔哄姀缁绘牠鏌岀仦鎯ф綉闁?
       UnitEntityPrefabRegistryEntry.cs FALSE
-      UnitVitalityAuthoring.cs TRUE
-        生命数据
+      UnitVitalityAuthoring.cs TRUE DIRTY
+      UnitVariableAuthoring.cs TRUE DIRTY
+        闁汇垻鍠庨幊锟犲极閻楀牆绁?
       VfxEntityPrefabRegistryEntry.cs FALSE
-      WorldDropComponent.cs FALSE
+      WorldDropComponent.cs TRUE
     Feature\
       NPCInteractionFeatureAuthoring.cs FALSE
       PlayerFeatureAuthoring.cs FALSE
       UnitAIFeatureAuthoring.cs FALSE
+      UnitDungeonFootprintFeatureAuthoring.cs TRUE
       UnitBattleFeatureAuthoring.cs FALSE
       UnitControlFeatureAuthoring.cs FALSE
       UnitDecisionFeatureAuthoring.cs FALSE
       UnitDropFeatureAuthoring.cs FALSE
       UnitJumpFeatureAuthoring.cs FALSE
       UnitMovementFeatureAuthoring.cs FALSE
-      UnitSkillFeatureAuthoring.cs FALSE
+      UnitSkillFeatureAuthoring.cs TRUE
       UnitVisualFeatureAuthoring.cs FALSE
     Editor\
-      BehaviorTreeGraphWindow.cs FALSE
+      BehaviorTreeGraphWindow.cs TRUE DIRTY
+      StateScriptEditorWindow.cs TRUE DIRTY
+      StateScriptGraphView.cs TRUE DIRTY
+      StateScriptNodeInspector.cs TRUE DIRTY
+      StateScriptRegistryGenerator.cs TRUE
+      StateScriptValueExpressionDrawer.cs TRUE DIRTY
       BehaviorTreeRegistryGenerator.cs FALSE
       NPCInteractionNodeRegistryGenerator.cs FALSE
-      StateMachineGraphWindow.cs FALSE
-      StateMachineRegistryGenerator.cs FALSE
       UnitRuntimeAttributeDrawerFactory.cs FALSE
       UnitRuntimeAttributeDrawers.cs FALSE
       UnitRuntimeDebugWindow.cs FALSE
@@ -395,84 +452,73 @@ Game\
       NPCInteractionStartedEvent.cs FALSE
     NPCInteraction\
       NPCInteractionNodeDataConverter.cs TRUE
-        JSON转化
+        JSON閺夌儐鍓欑€?
       NPCInteractionNodeDataFactory.cs TRUE
-        工厂
+        鐎规悶鍎卞?
      NPCInteractionNodeDataRegistry.cs TRUE
-        工厂注册器
+        鐎规悶鍎卞璺衡枖閵娿儱鏂€闁?
       NPCInteractionNodeRunnerFactory.cs FALSE
-        工厂
+        鐎规悶鍎卞?
       NPCInteractionNodeRunnerRegistry.cs TRUE
-        工厂注册器
+        鐎规悶鍎卞璺衡枖閵娿儱鏂€闁?
       NPCInteractionNodeRunner.cs TRUE
-        交互节点父类
-      NPCInteractionNodeRunners.cs TRUE DIRTY   
-        交互节点子类
+        濞存嚎鍊撶花浼存嚍閸屾粌浠柣鏍у鐞?
+      NPCInteractionNodeRunners.cs TRUE DIRTY
+        濞存嚎鍊撶花浼存嚍閸屾粌浠悗娑欏姉鐞?
       NPCInteractionSession.cs FALSE
     System\
-      BehaviorTreeInitSystem.cs TRUE
-        用数据构建出行为树节点对象
-      BehaviorTreeSystem.cs TRUE
-        参数写入黑板，执行行为树
+      BehaviorTreeInitSystem.cs TRUE DIRTY
+        闁活潿鍔嶉弳鐔煎箲椤旂晫鈧垰顕欓崫鍕瘔閻炴稑濂旂拹鐔煎冀閹达絽螡闁绘劗鎳撻顔炬寬?
+      BehaviorTreeSystem.cs TRUE DIRTY
+        闁告瑥鍊归弳鐔煎礃濞嗗繐寮冲娑欏灦濠㈡﹢鏁嶇仦鎯р挃閻炴稑鐭侀、鎴炵▔閻戞鍩?
       DestroyEntitySystem.cs TRUE
-        删除带死亡标记的实体
+        闁告帞濞€濞呭海鏁敂绛嬪姤濞存壕鍓濋悥锝囨媼閹殿喗鐣遍悗鍦仒缂?
       DungeonExitSystem.cs TRUE
-        刷新出口解锁状态
-      DungeonTreasureSystem.cs TRUE DIRTY
-        打开宝箱生成掉落物
+        闁告帡鏀遍弻濠囧礄閸濆嫬缍撻悷娆欑秮閺€锝夋偐閼哥鍋?
+        闁瑰灚鎸哥槐鎴犫偓瑙勭箘椤斿牓鎮介悢绋跨亣闁瑰搫顦抽幆銈夋偋?
       EffectExecutionSystem.cs TRUE
-        上层buff之类的释放effect，通过请求推迟到执行层释放
-      NPCInteractionSystem.cs TRUE
-        真实交互系统，执行交互节点链到结束。
+        濞戞挸锕ら惇鐧皍ff濞戞柨顑囩悮顐︽儍閸曨垰娅為柡鈧欢鈧琭fect闁挎稑鐭傞埀顒佷亢缁诲啰鎷犻柨瀣勾闁规亽鍔忕换婊堝礆閻楀牆鈷旈悶娑樿嫰閻即鏌屾繝鍐╂澒
+        闁活亞鍠庨悿鍕閵堝嫮闉嶇紒顖濆吹缁椽鏁嶇仦鎯р挃閻炴稑濂斿锔界閹烘洖螡闁绘劕缍婇幗濂稿礆閹殿喚娉㈤柡澶屽枂閳?
       NPCInteractPromptSystem.cs TRUE DIRTY
-        统计所有可交互种类，选出最近的
+        缂備胶鍠曢鎼佸箥閳ь剟寮垫径濠傝濞存嚎鍊撶花鎵矓瀹ュ洩顫﹂柨娑樼焸閳ь剙顦崵顓㈠嫉閳ь剚娼婚幋鐘崇暠
       PersistentEffectSystem.cs TRUE
-        加入持续效果请求，然后计时释放持续性效果
+        闁告梻濮撮崣鍡涘箰娴ｈ櫣鏁鹃柡浣哥墛閻忓鎷犻柨瀣勾闁挎稑鐬奸崝褔宕ユ惔銈庡悁闁哄啫鐖奸崳鎾绩閻愵剙鐦紓渚囧幗閳ь儸鍕珡闁?
       PlayerEquipmentPropertySystem.cs TRUE DIRTY
-        统计装备属性写入属性组件中
-      PlayerInputSystem.cs TRUE
-        用户输入存值
-      PlayerPropUseSystem.cs TRUE
-        使用道具
-      PlayerSkillAnalysisSystem.cs TRUE
-        生成具体技能请求
+        缂備胶鍠曢鍝ユ啑閸涱収妲甸悘鐐靛仦閳ь儸鍐ㄦ櫢闁稿繈鍎遍惈姗€骞€瑜忕划宥嗙閺堜絻鍘?
+        闁活潿鍔嶉崺娑欐綇閹惧啿寮抽悗娑櫭埀?
+        濞达綀娉曢弫銈夋焼閹惧啿寰?
+      PlayerSkillAnalysisSystem.cs TRUE DIRTY
+        闁汇垻鍠愰崹姘跺礂閾氬倻绉奸柟鍨涘亾闁煎啿鈧噥鍤炴慨?
       QuadAnimationSystem.cs FALSE
+      SkillReleaseSystem.cs FALSE
       SkillProjectileSpawnSystem.cs FALSE
       SkillProjectileSystem.cs FALSE
-      UnitAnimationSystem.cs FALSE
       UnitBuffSystem.cs TRUE
-        统计Buff写入属性和技能修正，轮询技能时间
-      UnitControlSystem.cs TRUE
-        刷新受控数据
+        缂備胶鍠曢绐ff闁告劖鐟ラ崣鍡欎沪閻愮补鍋撹閹蜂即骞庨埀顒勬嚄閹存帗鍙忔慨婵撶秶缁辨繃娼娆惧殑闁瑰灈鍋撻柤瀹犲Г濡炲倿姊?
+      UnitControlSystem.cs TRUE DIRTY
+        闁告帡鏀遍弻濠囧矗濡や礁浠橀柡浣哄瀹?
+      UnitDeathFinalizeSystem.cs TRUE
       UnitDropOnDestroySystem.cs TRUE
-        怪物死亡掉落物
+        闁诡剦浜炴晶鍨潰鐠佹娊顎楅柟鍝勵槼閹倝鎮?
       UnitJumpArcSystem.cs FALSE
       UnitMoveSystem.cs TRUE
-        应用移动
+        閹煎瓨姊婚弫銈囩矓鐠囨彃袟
       UnitResetSystem.cs TRUE
-        重置每帧数据
+        闂佹彃绉堕悿鍡椥掕箛鎾村闁轰胶澧楀畵?
       UnitPerceptionSystem.cs TRUE
-        查询最近的敌人写入索敌组件
+        闁哄被鍎撮妤呭嫉閳ь剚娼婚幋鐘崇暠闁轰礁濂斿Ч澶愬礃濞嗗繐寮崇紒渚垮灪閺咁偆绱掗崟顏咁偨
       UnitQuerySystem.cs TRUE DIRTY
-        数据化单位位置，提供快速查询接口
+        闁轰胶澧楀畵渚€宕犻弽褍绀嬪ù锝呯С缂嶅懐绱旈鍡欑闁圭粯鍔掔欢浣冪疀椤愶腹鍋撻悢鍝ュ弨閻犲洢鍨虹敮鎾矗?
       UnitRecoverySystem.cs TRUE
-        应用生命恢复
-      UnitSkillAnalysisSystem.cs FALSE
-        重置SkillModifier
-      UnitSkillExecuteSystem.cs FALSE
+        閹煎瓨姊婚弫銈夋偨閻旈攱鍤掗柟顓滃灩椤?
+      UnitSkillAnalysisSystem.cs TRUE DIRTY
+        闂佹彃绉堕悿鍝爇illModifier
+      UnitSkillExecuteSystem.cs TRUE DIRTY
       UnitSkillSystem.cs TRUE
-        只是计算冷却
+        闁告瑯浜濆Σ鍝ユ媼閿涘嫮鏆柛鎰槻瀹?
       UnitSystemGroups.cs TRUE
-        分类
-      UnitStateMachineBuildSystem.cs TRUE
-        构建状态机数据结构
-      UnitStateMachineSystem.cs TRUE
-        执行状态轮询
-      UnitStateTransitionSystem.cs TRUE
-        计算并执行状态转换
-      UnitCastAvailabilitySystem.cs FALSE
-      WorldDropPickupSystem.cs TRUE
-        拾取掉落物
+        闁告帒妫涚悮?
+        闁归攱鍎宠ぐ鍥箳婢跺孩鍎伴柣?
     Utility\
       EntitySpawnRegistryUtility.cs FALSE
       NPCAuthoringUtility.cs FALSE
@@ -480,7 +526,8 @@ Game\
       PropUseUtility.cs FALSE
       QuadAnimationVisualUtility.cs FALSE
       QuadOverlayPulseUtility.cs FALSE
-      SkillExecutionUtility.cs FALSE
+      SkillExecutionUtility.cs TRUE DIRTY
+      SkillReleaseUtility.cs FALSE
       UnitAnimationVisualUtility.cs FALSE
       UnitAuthoringUtility.cs FALSE
       UnitBuffHookUtility.cs FALSE
@@ -489,36 +536,20 @@ Game\
       UnitFacingUtility.cs FALSE
       WorldDropSpawnUtility.cs FALSE
       UnitFactionUtility.cs FALSE
-      UnitFeatureBakeUtility.cs FALSE
+      UnitFeatureBakeUtility.cs TRUE
       UnitModifierUtility.cs FALSE
       UnitQueryUtility.cs FALSE
       UnitSkillModifierUtility.cs FALSE
     Unit\
       CompareSource\
-        UnitBuffStackSource.cs FALSE
-        UnitCanStartCastSource.cs FALSE
-        UnitHasTargetSource.cs FALSE
-        UnitHealthRatioSource.cs FALSE
-        UnitIsCastingSource.cs FALSE
-        UnitIsControlledSource.cs FALSE
-        UnitTargetCastRangeMarginSource.cs FALSE
-        UnitVelocitySource.cs FALSE
-        UnitWantToCastSource.cs FALSE
+        UnitBuffStackSource.cs TRUE
+        UnitCanStartCastSource.cs TRUE
+        UnitHasTargetSource.cs TRUE
+        UnitHealthRatioSource.cs TRUE
+        UnitIsCastingSource.cs TRUE DIRTY
+        UnitIsControlledSource.cs TRUE
+        UnitTargetCastRangeMarginSource.cs TRUE
       State\
-        AUnitState.cs TRUE
-            状态基类
-        ControlledState.cs TRUE
-            受控状态，计算受控移动
-        IdleState.cs TRUE
-            啥都不干
-        MoveState.cs TRUE
-            写入移动方向
-        PlayerCastState.cs TRUE
-            将施法请求写入技能组件
-        UnitCastState.cs TRUE
-            从可用技能中随机选择一个发送释放请求
-    StateMachineFactory.cs FALSE
-    StateMachineRegistry.cs FALSE
 UI\
   BattleUI\
     Sub\

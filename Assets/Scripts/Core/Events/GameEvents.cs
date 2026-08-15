@@ -31,4 +31,14 @@ namespace CrystalMagic.Core {
         public float MaxHealth { get; }
     }
 
+    public readonly struct UnitDiedEvent : IGameEvent
+    {
+        public UnitDiedEvent(Entity entity)
+        {
+            Entity = entity;
+        }
+
+        public Entity Entity { get; }
+    }
+
 }

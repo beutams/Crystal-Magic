@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
@@ -21,13 +21,13 @@ namespace CrystalMagic.Game.Config
 
     [Serializable]
     [GameConfig]
-    [EditorLabel("倍率保底配置")]
+    [EditorLabel("Modifier Config")]
     public class ModifierConfig
     {
-        [EditorLabel("属性倍率保底")]
+        [EditorLabel("Property Modifier Minimum Factors")]
         public List<PropertyModifierMinimumFactorEntry> PropertyModifierMinimumFactors = CreateDefaultPropertyModifierMinimumFactors();
 
-        [EditorLabel("技能倍率保底")]
+        [EditorLabel("Skill Modifier Minimum Factors")]
         public List<SkillModifierMinimumFactorEntry> SkillModifierMinimumFactors = CreateDefaultSkillModifierMinimumFactors();
 
         public float GetPropertyModifierMinimumFactor(PropertyModifierChannel channel)

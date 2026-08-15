@@ -7,10 +7,7 @@ using Unity.Transforms;
 
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(UnitMoveSystem))]
-[UpdateBefore(typeof(WorldDropPickupSystem))]
-[UpdateBefore(typeof(DungeonTreasureSystem))]
 [UpdateBefore(typeof(DungeonExitSystem))]
-[UpdateBefore(typeof(NPCInteractionSystem))]
 partial class NPCInteractPromptSystem : SystemBase
 {
     private readonly List<UnitQueryHit> _dropHits = new();
@@ -40,7 +37,7 @@ partial class NPCInteractPromptSystem : SystemBase
         foreach ((RefRO<PlayerTag> _, RefRO<LocalTransform> transform, Entity entity) in
                  SystemAPI.Query<RefRO<PlayerTag>, RefRO<LocalTransform>>().WithEntityAccess())
         {
-            if (UnitControlUtility.IsInControlledState(EntityManager, entity))
+            if (UnitControlUtility.HasActiveControl(EntityManager, entity))
                 break;
 
             playerPosition = transform.ValueRO.Position;

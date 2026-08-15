@@ -18,7 +18,6 @@ namespace CrystalMagic.Editor.Data
         private const string UnitPrefabDirectory = "Assets/Res/Prefab/Unit";
         private const string SpriteClipDirectory = "Assets/Res/Data/UnitAnimationClips";
         private const float ListPanelWidth = 260f;
-        private static readonly string[] KnownStateNames = { "IdleState", "MoveState", "ControlledState", "UnitCastState", "PlayerCastState", "DeathState" };
 
         private sealed class UnitPrefabEntry
         {
@@ -277,16 +276,7 @@ namespace CrystalMagic.Editor.Data
 
             EditorGUILayout.EndHorizontal();
 
-            int stateIndex = Array.IndexOf(KnownStateNames, animation.StateName);
-            if (stateIndex >= 0)
-            {
-                int nextStateIndex = EditorGUILayout.Popup("State", stateIndex, KnownStateNames);
-                animation.StateName = KnownStateNames[nextStateIndex];
-            }
-            else
-            {
-                animation.StateName = EditorGUILayout.TextField("State", animation.StateName);
-            }
+            animation.StateName = EditorGUILayout.TextField("State", animation.StateName);
 
             animation.AnimationName = EditorGUILayout.TextField("Animation Name", animation.AnimationName ?? string.Empty);
             DrawSkillAnimationNameHelper(unitData, ref animation.AnimationName);

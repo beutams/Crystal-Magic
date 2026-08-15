@@ -422,7 +422,7 @@ namespace CrystalMagic.Editor.Data
                     if (prefab == null)
                         continue;
 
-                    NPCInteractionFeatureAuthoring authoring = prefab.GetComponent<NPCInteractionFeatureAuthoring>();
+                    NPCInteractableAuthoring authoring = prefab.GetComponent<NPCInteractableAuthoring>();
                     if (authoring == null)
                         continue;
 

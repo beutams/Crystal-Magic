@@ -6,7 +6,6 @@ using Unity.Transforms;
 using UnityEngine;
 
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
-[UpdateAfter(typeof(UnitAnimationSystem))]
 [UpdateAfter(typeof(SkillProjectileSystem))]
 [UpdateBefore(typeof(DestroyEntitySystem))]
 public partial class QuadAnimationSystem : SystemBase

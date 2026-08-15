@@ -1,4 +1,4 @@
-﻿{
+{
     "Rows":  [
                  {
                      "Id":  0,
@@ -243,39 +243,6 @@
                      "DescriptionKey":  "item.water_spirit.description"
                  },
                  {
-                     "Id":  22,
-                     "ItemType":  4,
-                     "ExtraId":  106,
-                     "Rarity":  1,
-                     "MaxStack":  1,
-                     "SellPrice":  100,
-                     "IconPath":  "Assets/Res/Sprites/Item/LightningSpirit.png",
-                     "NameKey":  "skill.monster.goblin_warrior_attack.name",
-                     "DescriptionKey":  "item.lightning_spirit.description"
-                 },
-                 {
-                     "Id":  23,
-                     "ItemType":  4,
-                     "ExtraId":  107,
-                     "Rarity":  1,
-                     "MaxStack":  1,
-                     "SellPrice":  100,
-                     "IconPath":  "Assets/Res/Sprites/Item/WindSpirit.png",
-                     "NameKey":  "skill.monster.goblin_archer_attack.name",
-                     "DescriptionKey":  "item.wind_spirit.description"
-                 },
-                 {
-                     "Id":  24,
-                     "ItemType":  2,
-                     "ExtraId":  1,
-                     "Rarity":  1,
-                     "MaxStack":  10,
-                     "SellPrice":  10,
-                     "IconPath":  "Assets/Res/Sprites/Item/SmallHpPotion.png",
-                     "NameKey":  "skill.monster.slime_attack.name",
-                     "DescriptionKey":  ""
-                 },
-                 {
                      "Id":  25,
                      "ItemType":  2,
                      "ExtraId":  2,
@@ -285,17 +252,6 @@
                      "IconPath":  "Assets/Res/Sprites/Item/SmallMpPotion.png",
                      "NameKey":  "prop.small_mana.name",
                      "DescriptionKey":  "prop.small_mana.description"
-                 },
-                 {
-                     "Id":  26,
-                     "ItemType":  3,
-                     "ExtraId":  4,
-                     "Rarity":  1,
-                     "MaxStack":  1,
-                     "SellPrice":  100,
-                     "IconPath":  "Assets/Res/Sprites/Item/ModifierIncomplete.png",
-                     "NameKey":  "skill.monster.spider_attack.name",
-                     "DescriptionKey":  "skill_addition.incomplete.description"
                  },
                  {
                      "Id":  27,

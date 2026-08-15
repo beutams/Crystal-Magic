@@ -130,23 +130,4 @@ namespace CrystalMagic.Editor.Unit
         }
     }
 
-    [FactoryKey("Cast", 80)]
-    public sealed class UnitCastRuntimeDrawer : IUnitRuntimeAttributeDrawer
-    {
-        public bool CanDraw(UnitRuntimeDrawerContext context) => context.HasComponent<UnitCastComponent>();
-
-        public void Draw(UnitRuntimeDrawerContext context)
-        {
-            UnitCastComponent cast = context.GetComponent<UnitCastComponent>();
-            UnitEditorWindow.DrawSectionHeader("Cast");
-            EditorGUILayout.Toggle("Has Prepared Cast", cast.HasPreparedCast);
-            EditorGUILayout.Toggle("Is Casting", cast.IsCasting);
-            EditorGUILayout.Toggle("Force Interrupt", cast.ForceInterrupt);
-            EditorGUILayout.IntField("Skill Id", cast.CurrentSkillId);
-            EditorGUILayout.IntField("Skill Addition Id", cast.CurrentSkillAdditionId);
-            EditorGUILayout.TextField("Phase", cast.Phase.ToString());
-            EditorGUILayout.FloatField("Phase Elapsed", cast.PhaseElapsed);
-            EditorGUILayout.FloatField("Phase Duration", cast.PhaseDuration);
-        }
-    }
 }

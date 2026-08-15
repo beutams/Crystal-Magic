@@ -1,35 +1,23 @@
+using System;
 using System.Collections.Generic;
 using CrystalMagic.Game.Data;
 using Unity.Entities;
-using Unity.Mathematics;
 
-public sealed class BehaviorBlackboard
+// Per-unit execution context. It never mirrors unit component data.
+public sealed class BehaviorContext
 {
-    public BehaviorBlackboardRuntime Runtime;
-    public BehaviorBlackboardSense Sense;
-    public BehaviorBlackboardIntent Intent;
-    public BehaviorBlackboardDebug Debug;
+    public Entity Entity { get; private set; }
+    public EntityManager EntityManager { get; private set; }
+    public float DeltaTime { get; private set; }
+    public UnitSourceAccessTable Sources { get; private set; }
+    public BehaviorDebugState Debug;
 
-    public void ResetFrame()
+    public void BeginFrame(Entity entity, EntityManager entityManager, float deltaTime, UnitSourceAccessTable sources)
     {
-        Runtime.Entity = Entity.Null;
-        Runtime.EntityManager = default;
-        Runtime.DeltaTime = 0f;
-
-        Sense.HasSelfPosition = false;
-        Sense.SelfPosition = float2.zero;
-        Sense.HasTarget = false;
-        Sense.TargetEntity = Entity.Null;
-        Sense.TargetPosition = float2.zero;
-        Sense.TargetDistance = 0f;
-
-        Intent.MoveDirection = float2.zero;
-        Intent.WantToCast = false;
-        Intent.CastTargetPosition = float2.zero;
-        Intent.SkillRequestMode = UnitSkillSelectionMode.None;
-        Intent.RequestedSkillId = -1;
-        Intent.RequestedTagMask = 0;
-
+        Entity = entity;
+        EntityManager = entityManager;
+        DeltaTime = deltaTime;
+        Sources = sources;
         Debug.CurrentNodeName = "None";
         Debug.LastStatus = "None";
     }
@@ -39,94 +27,9 @@ public sealed class BehaviorBlackboard
         if (node != null)
             Debug.CurrentNodeName = node.DisplayName;
     }
-
-    public void SetMoveDirection(float2 direction)
-    {
-        Intent.MoveDirection = direction;
-    }
-
-    public void SetCastTarget(float2 position)
-    {
-        Intent.CastTargetPosition = position;
-    }
-
-    public void SetWantToCast()
-    {
-        Intent.WantToCast = true;
-    }
-
-    public void SetSkillRequest(UnitSkillSelectionMode requestMode, int requestedSkillId, int requestedTagMask)
-    {
-        Intent.SkillRequestMode = requestMode;
-        Intent.RequestedSkillId = requestedSkillId;
-        Intent.RequestedTagMask = requestedTagMask;
-    }
-
-    public bool TryGetSelfPosition(out float2 position)
-    {
-        if (Sense.HasSelfPosition)
-        {
-            position = Sense.SelfPosition;
-            return true;
-        }
-
-        position = float2.zero;
-        return false;
-    }
-
-    public bool TryGetTargetPosition(out float2 position)
-    {
-        if (Sense.HasTarget)
-        {
-            position = Sense.TargetPosition;
-            return true;
-        }
-
-        position = float2.zero;
-        return false;
-    }
-
-    public bool TryGetTargetEntity(out Entity targetEntity)
-    {
-        if (Sense.HasTarget)
-        {
-            targetEntity = Sense.TargetEntity;
-            return true;
-        }
-
-        targetEntity = Entity.Null;
-        return false;
-    }
 }
 
-public struct BehaviorBlackboardRuntime
-{
-    public Entity Entity;
-    public EntityManager EntityManager;
-    public float DeltaTime;
-}
-
-public struct BehaviorBlackboardSense
-{
-    public bool HasSelfPosition;
-    public float2 SelfPosition;
-    public bool HasTarget;
-    public Entity TargetEntity;
-    public float2 TargetPosition;
-    public float TargetDistance;
-}
-
-public struct BehaviorBlackboardIntent
-{
-    public float2 MoveDirection;
-    public bool WantToCast;
-    public float2 CastTargetPosition;
-    public UnitSkillSelectionMode SkillRequestMode;
-    public int RequestedSkillId;
-    public int RequestedTagMask;
-}
-
-public struct BehaviorBlackboardDebug
+public struct BehaviorDebugState
 {
     public string CurrentNodeName;
     public string LastStatus;
@@ -142,15 +45,31 @@ public sealed class BehaviorTreeRuntime
     }
 
     public bool IsValid => _root != null;
+    public bool IsBound { get; private set; }
+    public string BindingError { get; private set; } = string.Empty;
 
-    public BehaviorNodeStatus Tick(BehaviorBlackboard blackboard)
+    public bool TryBind(UnitSourceAccessTable sources, out string error)
     {
         if (_root == null)
+        {
+            IsBound = false;
+            error = "Behavior tree root is missing.";
+            BindingError = error;
+            return false;
+        }
+
+        IsBound = _root.TryBind(sources, out error);
+        BindingError = error ?? string.Empty;
+        return IsBound;
+    }
+
+    public BehaviorNodeStatus Tick(BehaviorContext context)
+    {
+        if (_root == null || !IsBound || context?.Sources == null)
             return BehaviorNodeStatus.Failure;
 
-        BehaviorNodeStatus status = _root.Tick(blackboard);
-        if (blackboard != null)
-            blackboard.Debug.LastStatus = status.ToString();
+        BehaviorNodeStatus status = _root.Tick(context);
+        context.Debug.LastStatus = status.ToString();
         return status;
     }
 
@@ -164,14 +83,20 @@ public static class BehaviorTreeBuilder
 {
     private static BehaviorNodeFactory s_factory;
 
-    public static BehaviorTreeRuntime Build(BehaviorTreeData data)
+    public static BehaviorTreeRuntime Build(
+        BehaviorTreeData data,
+        UnitSourceAccessTable sources,
+        out string error)
     {
+        error = string.Empty;
         if (data == null || data.Nodes == null || data.Nodes.Count == 0)
+        {
+            error = "Behavior tree has no nodes.";
             return null;
+        }
 
         BehaviorNodeFactory factory = GetFactory();
-
-        var runtimeNodes = new Dictionary<string, ABehaviorNode>(System.StringComparer.Ordinal);
+        Dictionary<string, ABehaviorNode> runtimeNodes = new(StringComparer.Ordinal);
         for (int i = 0; i < data.Nodes.Count; i++)
         {
             BehaviorNodeData nodeData = data.Nodes[i];
@@ -186,19 +111,17 @@ public static class BehaviorTreeBuilder
         for (int i = 0; i < data.Nodes.Count; i++)
         {
             BehaviorNodeData nodeData = data.Nodes[i];
-            if (nodeData == null || string.IsNullOrWhiteSpace(nodeData.Guid))
+            if (nodeData == null || string.IsNullOrWhiteSpace(nodeData.Guid) ||
+                !runtimeNodes.TryGetValue(nodeData.Guid, out ABehaviorNode node))
+            {
                 continue;
-            if (!runtimeNodes.TryGetValue(nodeData.Guid, out ABehaviorNode node))
-                continue;
+            }
 
             nodeData.ChildGuids ??= new List<string>();
             for (int childIndex = 0; childIndex < nodeData.ChildGuids.Count; childIndex++)
             {
                 string childGuid = nodeData.ChildGuids[childIndex];
-                if (string.IsNullOrWhiteSpace(childGuid))
-                    continue;
-
-                if (runtimeNodes.TryGetValue(childGuid, out ABehaviorNode child))
+                if (!string.IsNullOrWhiteSpace(childGuid) && runtimeNodes.TryGetValue(childGuid, out ABehaviorNode child))
                     node.AddChild(child);
             }
         }
@@ -206,10 +129,15 @@ public static class BehaviorTreeBuilder
         if (string.IsNullOrWhiteSpace(data.RootNodeGuid) ||
             !runtimeNodes.TryGetValue(data.RootNodeGuid, out ABehaviorNode root))
         {
+            error = "Behavior tree root is missing.";
             return null;
         }
 
-        return new BehaviorTreeRuntime(root);
+        BehaviorTreeRuntime runtime = new(root);
+        if (!runtime.TryBind(sources, out error))
+            return null;
+
+        return runtime;
     }
 
     private static BehaviorNodeFactory GetFactory()

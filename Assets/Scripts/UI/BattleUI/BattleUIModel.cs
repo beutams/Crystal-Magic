@@ -50,11 +50,10 @@ namespace CrystalMagic.UI
             CharacterPropData propConfig = SaveDataComponent.Instance.GetCharacterPropData();
             RuntimeSkillData runtimeSkillData = RuntimeDataComponent.Instance.GetSkillData();
             RuntimePropData runtimePropData = RuntimeDataComponent.Instance.GetPropData();
-            List<BattleSkillDisplayData> nextItems = BuildSkillItems(skillConfig, runtimeSkillData, out int selectedChainIndex);
+            List<BattleSkillDisplayData> nextItems = BuildSkillItems(skillConfig, runtimeSkillData);
             List<BattlePropShortcutDisplayData> nextPropItems = BuildPropShortcutItems(propConfig, runtimePropData);
 
-            PlayerCombatSnapshot snapshot = ReadPlayerSnapshot(selectedChainIndex);
-            ApplyRuntimeState(nextItems, snapshot);
+            PlayerCombatSnapshot snapshot = ReadPlayerSnapshot();
 
             float nextHpRatio = snapshot.HasHealth ? snapshot.HpRatio : 1f;
             float nextMpRatio = snapshot.HasMana ? snapshot.MpRatio : 1f;
@@ -90,15 +89,14 @@ namespace CrystalMagic.UI
                 PublishChanged();
         }
 
-        private static List<BattleSkillDisplayData> BuildSkillItems(SkillCData skillConfig, RuntimeSkillData runtimeSkillData, out int selectedChainIndex)
+        private static List<BattleSkillDisplayData> BuildSkillItems(SkillCData skillConfig, RuntimeSkillData runtimeSkillData)
         {
-            selectedChainIndex = 0;
             List<BattleSkillDisplayData> items = new();
 
             if (skillConfig?.Chains == null || skillConfig.Chains.Length == 0)
                 return items;
 
-            selectedChainIndex = Mathf.Clamp(runtimeSkillData?.CurrentSkillChainIndex ?? 0, 0, skillConfig.Chains.Length - 1);
+            int selectedChainIndex = Mathf.Clamp(runtimeSkillData?.CurrentSkillChainIndex ?? 0, 0, skillConfig.Chains.Length - 1);
             SkillChainData chain = skillConfig.Chains[selectedChainIndex];
             chain?.EnsureSlots();
             if (chain?.Slots == null)
@@ -168,55 +166,12 @@ namespace CrystalMagic.UI
             return items;
         }
 
-        private static void ApplyRuntimeState(List<BattleSkillDisplayData> items, PlayerCombatSnapshot snapshot)
+        private PlayerCombatSnapshot ReadPlayerSnapshot()
         {
-            if (!snapshot.HasCast ||
-                !snapshot.IsCasting ||
-                snapshot.CurrentSkillIndex < 0 ||
-                snapshot.ActiveChainIndex != snapshot.SelectedChainIndex)
-                return;
-
-            for (int i = 0; i < items.Count; i++)
-            {
-                BattleSkillDisplayData item = items[i];
-                bool isSelected = item.SkillIndex == snapshot.CurrentSkillIndex;
-                item.IsSelected = isSelected;
-                item.ShowChantProgress = isSelected && snapshot.Phase == SkillCastPhase.Chanting && snapshot.PhaseDuration > 0f;
-                item.ChantProgress = item.ShowChantProgress
-                    ? Mathf.Clamp01(snapshot.PhaseElapsed / snapshot.PhaseDuration)
-                    : 0f;
-            }
-        }
-
-        private PlayerCombatSnapshot ReadPlayerSnapshot(int selectedChainIndex)
-        {
-            PlayerCombatSnapshot snapshot = new PlayerCombatSnapshot
-            {
-                SelectedChainIndex = selectedChainIndex,
-            };
+            PlayerCombatSnapshot snapshot = new();
 
             if (!TryGetPlayerEntity(out EntityManager entityManager, out Entity player))
                 return snapshot;
-
-            if (entityManager.HasComponent<UnitCastComponent>(player))
-            {
-                UnitCastComponent cast = entityManager.GetComponentData<UnitCastComponent>(player);
-                snapshot.HasCast = true;
-                snapshot.IsCasting = cast.IsCasting;
-                snapshot.Phase = cast.Phase;
-                snapshot.PhaseElapsed = cast.PhaseElapsed;
-                snapshot.PhaseDuration = cast.PhaseDuration;
-            }
-
-            if (entityManager.HasComponent<PlayerSkillComponent>(player))
-            {
-                PlayerSkillComponent request = entityManager.GetComponentData<PlayerSkillComponent>(player);
-                if (request.HasActiveChain)
-                {
-                    snapshot.ActiveChainIndex = request.ActiveChainIndex;
-                    snapshot.CurrentSkillIndex = request.CurrentSkillIndex;
-                }
-            }
 
             if (entityManager.HasComponent<UnitVitalityComponent>(player))
             {
@@ -379,14 +334,6 @@ namespace CrystalMagic.UI
 
     internal struct PlayerCombatSnapshot
     {
-        public int SelectedChainIndex;
-        public int ActiveChainIndex;
-        public bool HasCast;
-        public bool IsCasting;
-        public int CurrentSkillIndex;
-        public SkillCastPhase Phase;
-        public float PhaseElapsed;
-        public float PhaseDuration;
         public bool HasHealth;
         public float CurrentHealth;
         public float MaxHealth;

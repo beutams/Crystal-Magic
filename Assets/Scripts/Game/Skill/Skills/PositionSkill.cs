@@ -11,14 +11,13 @@ namespace CrystalMagic.Game.Skill
         {
         }
 
-        protected override bool BuildContext(EntityManager entityManager, Entity entity, in UnitCastComponent cast, SkillContent context)
+        protected override bool BuildContext(in SkillReleaseRequest request, SkillContent context)
         {
-            bool hasTargetPosition = SkillTargetUtility.TryGetTargetPosition(entityManager, entity, out Unity.Mathematics.float2 targetPosition);
             SetPosition(
                 context,
-                hasTargetPosition,
-                new Vector3(targetPosition.x, targetPosition.y, 0f));
-            SetTargetEntity(context, false, Entity.Null);
+                request.HasTargetPosition,
+                new Vector3(request.TargetPosition.x, request.TargetPosition.y, request.TargetPosition.z));
+            SetTargetEntity(context, request.HasTargetEntity, request.TargetEntity);
             return true;
         }
     }

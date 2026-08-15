@@ -1,4 +1,4 @@
-﻿{
+{
     "Rows":  [
                  {
                      "Id":  1,
@@ -365,54 +365,6 @@
                      "Key":  "ui.tip.message",
                      "ChineseSimplified":  "提示",
                      "English":  "Tip"
-                 },
-                 {
-                     "Id":  62,
-                     "Key":  "skill.monster.troll_attack.name",
-                     "ChineseSimplified":  "巨魔攻击",
-                     "English":  "Troll Attack"
-                 },
-                 {
-                     "Id":  63,
-                     "Key":  "skill.monster.orc_attack.name",
-                     "ChineseSimplified":  "兽人攻击",
-                     "English":  "Orc Attack"
-                 },
-                 {
-                     "Id":  64,
-                     "Key":  "skill.monster.rat_attack.name",
-                     "ChineseSimplified":  "老鼠攻击",
-                     "English":  "Rat Attack"
-                 },
-                 {
-                     "Id":  65,
-                     "Key":  "skill.monster.bat_attack.name",
-                     "ChineseSimplified":  "蝙蝠攻击",
-                     "English":  "Bat Attack"
-                 },
-                 {
-                     "Id":  66,
-                     "Key":  "skill.monster.spider_attack.name",
-                     "ChineseSimplified":  "蜘蛛攻击",
-                     "English":  "Spider Attack"
-                 },
-                 {
-                     "Id":  67,
-                     "Key":  "skill.monster.slime_attack.name",
-                     "ChineseSimplified":  "史莱姆攻击",
-                     "English":  "Slime Attack"
-                 },
-                 {
-                     "Id":  68,
-                     "Key":  "skill.monster.goblin_archer_attack.name",
-                     "ChineseSimplified":  "哥布林弓箭手攻击",
-                     "English":  "Goblin Archer Attack"
-                 },
-                 {
-                     "Id":  69,
-                     "Key":  "skill.monster.goblin_warrior_attack.name",
-                     "ChineseSimplified":  "哥布林战士攻击",
-                     "English":  "Goblin Warrior Attack"
                  },
                  {
                      "Id":  70,
@@ -821,12 +773,6 @@
                      "Key":  "buff.shield_break_haste.name",
                      "ChineseSimplified":  "破盾提速",
                      "English":  "Shield Break Haste"
-                 },
-                 {
-                     "Id":  138,
-                     "Key":  "buff.spider_venom.name",
-                     "ChineseSimplified":  "蜘蛛毒素",
-                     "English":  "Spider Venom"
                  },
                  {
                      "Id":  139,
