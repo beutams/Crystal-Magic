@@ -68,7 +68,6 @@ namespace CrystalMagic.Game.Skill.Effects
             if (entityManager.HasComponent<QuadAnimationVisualComponent>(entity))
             {
                 QuadAnimationVisualComponent visual = entityManager.GetComponentObject<QuadAnimationVisualComponent>(entity);
-                visual.VisualKind = QuadAnimationVisualKind.Vfx;
                 visual.PrefabName = QuadAnimationVisualUtility.GenericVfxPrefabName;
                 visual.Texture = Data.VfxTexture;
             }
@@ -78,7 +77,6 @@ namespace CrystalMagic.Game.Skill.Effects
                     entity,
                     new QuadAnimationVisualComponent
                     {
-                        VisualKind = QuadAnimationVisualKind.Vfx,
                         PrefabName = QuadAnimationVisualUtility.GenericVfxPrefabName,
                         Texture = Data.VfxTexture,
                     });
@@ -110,10 +108,10 @@ namespace CrystalMagic.Game.Skill.Effects
 
         private static void EnsureAnimationPropertyComponents(EntityManager entityManager, Entity entity)
         {
-            SetOrAddComponentData(entityManager, entity, new UnitAnimationFrameUvMinProperty { Value = new float4(0f, 0f, 0f, 0f) });
-            SetOrAddComponentData(entityManager, entity, new UnitAnimationFrameUvSizeProperty { Value = new float4(1f, 1f, 0f, 0f) });
-            SetOrAddComponentData(entityManager, entity, new UnitAnimationFrameWorldSizeProperty { Value = new float4(1f, 1f, 0f, 0f) });
-            SetOrAddComponentData(entityManager, entity, new UnitAnimationFramePivotOffsetProperty { Value = new float4(0f, 0f, 0f, 0f) });
+            SetOrAddComponentData(entityManager, entity, new QuadAnimationFrameUvMinProperty { Value = new float4(0f, 0f, 0f, 0f) });
+            SetOrAddComponentData(entityManager, entity, new QuadAnimationFrameUvSizeProperty { Value = new float4(1f, 1f, 0f, 0f) });
+            SetOrAddComponentData(entityManager, entity, new QuadAnimationFrameWorldSizeProperty { Value = new float4(1f, 1f, 0f, 0f) });
+            SetOrAddComponentData(entityManager, entity, new QuadAnimationFramePivotOffsetProperty { Value = new float4(0f, 0f, 0f, 0f) });
         }
 
         private static void SetOrAddComponentData<T>(EntityManager entityManager, Entity entity, T value)

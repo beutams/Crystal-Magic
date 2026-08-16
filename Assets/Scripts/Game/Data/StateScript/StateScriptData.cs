@@ -10,7 +10,6 @@ namespace CrystalMagic.Game.Data
     [ReadOnlyData]
     public sealed class StateScriptData : DataRow
     {
-        public int UnitDataId = -1;
         public List<StateScriptInstanceData> Graphs = new();
 
         public void EnsureValid()
@@ -39,6 +38,38 @@ namespace CrystalMagic.Game.Data
             Nodes ??= new List<StateScriptNodeData>();
             Edges ??= new List<StateScriptEdgeData>();
             ViewScale = Mathf.Max(0.1f, ViewScale);
+
+            for (int i = 0; i < Nodes.Count; i++)
+            {
+                switch (Nodes[i])
+                {
+                    case SetValueStateScriptNodeData setValue:
+                        setValue.Value ??= new ValueExpression();
+                        break;
+                    case CompareStateScriptNodeData compare:
+                        compare.Condition = EnsureNecessaryCondition(compare.Condition);
+                        break;
+                    case MonitorStateScriptNodeData monitor:
+                        monitor.Condition = EnsureNecessaryCondition(monitor.Condition);
+                        break;
+                    case RequestSkillActionNodeData requestSkill:
+                        requestSkill.SkillId ??= RequestSkillActionNodeData.CreateDefaultSkillIdExpression();
+                        break;
+                    case TimerStateScriptNodeData timer:
+                        timer.Duration ??= TimerStateScriptNodeData.CreateDefaultDurationExpression();
+                        break;
+                    case NumberMonitorStateScriptNodeData numberMonitor:
+                        numberMonitor.Value ??= NumberMonitorStateScriptNodeData.CreateDefaultValueExpression();
+                        break;
+                }
+            }
+        }
+
+        private static ConditionConfig EnsureNecessaryCondition(ConditionConfig condition)
+        {
+            condition ??= new ConditionConfig();
+            condition.ConditionType = ConditionType.Necessary;
+            return condition;
         }
     }
 
@@ -84,7 +115,7 @@ namespace CrystalMagic.Game.Data
     [FactoryKey("Compare", 0, "Compare")]
     public sealed class CompareStateScriptNodeData : BoolStateScriptNodeData
     {
-        public List<ConditionConfig> Conditions = new();
+        public ConditionConfig Condition = new();
 
         public CompareStateScriptNodeData()
         {
@@ -96,12 +127,9 @@ namespace CrystalMagic.Game.Data
     [FactoryKey("SetValue", 10, "Set Value")]
     public sealed class SetValueStateScriptNodeData : ActionStateScriptNodeData
     {
-        public string SetterKey = "unit.variables.set";
-        public List<UnitValue> Arguments = new()
-        {
-            UnitValue.FromString(string.Empty),
-            UnitValue.FromFloat(0f),
-        };
+        public string SetterKey = string.Empty;
+        public string Key = string.Empty;
+        public ValueExpression Value = new();
 
         public SetValueStateScriptNodeData()
         {
@@ -109,27 +137,23 @@ namespace CrystalMagic.Game.Data
         }
     }
 
-    public enum SkillReleaseTargetMode : byte
-    {
-        None = 0,
-        Self = 1,
-        Variables = 2,
-        PerceptionTarget = 3,
-    }
-
     [Serializable]
     [FactoryKey("RequestSkill", 11, "Request Skill")]
     public sealed class RequestSkillActionNodeData : ActionStateScriptNodeData
     {
-        public int SkillId = -1;
-        public int SkillAdditionId = -1;
-        public SkillReleaseTargetMode TargetMode = SkillReleaseTargetMode.Variables;
-        public string TargetPositionVariableKey = "skill.targetPosition";
-        public string TargetEntityVariableKey = "skill.targetEntity";
+        public ValueExpression SkillId = CreateDefaultSkillIdExpression();
 
         public RequestSkillActionNodeData()
         {
             Type = "RequestSkill";
+        }
+
+        public static ValueExpression CreateDefaultSkillIdExpression()
+        {
+            return new ValueExpression
+            {
+                Literal = UnitValue.FromInt(-1),
+            };
         }
     }
 
@@ -137,11 +161,19 @@ namespace CrystalMagic.Game.Data
     [FactoryKey("Timer", 20, "Timer")]
     public sealed class TimerStateScriptNodeData : StateStateScriptNodeData
     {
-        public float DurationSeconds = 1f;
+        public ValueExpression Duration = CreateDefaultDurationExpression();
 
         public TimerStateScriptNodeData()
         {
             Type = "Timer";
+        }
+
+        public static ValueExpression CreateDefaultDurationExpression()
+        {
+            return new ValueExpression
+            {
+                Literal = UnitValue.FromFloat(1f),
+            };
         }
     }
 
@@ -161,11 +193,31 @@ namespace CrystalMagic.Game.Data
     [FactoryKey("Monitor", 22, "Monitor")]
     public sealed class MonitorStateScriptNodeData : StateStateScriptNodeData
     {
-        public List<ConditionConfig> Conditions = new();
+        public ConditionConfig Condition = new();
 
         public MonitorStateScriptNodeData()
         {
             Type = "Monitor";
+        }
+    }
+
+    [Serializable]
+    [FactoryKey("NumberMonitor", 23, "Number Monitor")]
+    public sealed class NumberMonitorStateScriptNodeData : StateStateScriptNodeData
+    {
+        public ValueExpression Value = CreateDefaultValueExpression();
+
+        public NumberMonitorStateScriptNodeData()
+        {
+            Type = "NumberMonitor";
+        }
+
+        public static ValueExpression CreateDefaultValueExpression()
+        {
+            return new ValueExpression
+            {
+                Literal = UnitValue.FromFloat(0f),
+            };
         }
     }
 

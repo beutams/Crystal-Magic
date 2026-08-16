@@ -106,6 +106,45 @@ namespace CrystalMagic.Editor.Unit
             return changed;
         }
 
+        // The graph view is the editing surface. Commit its current nodes, edges, and view
+        // before persistence so the saved data always represents what is currently visible.
+        public void SynchronizeToData(StateScriptInstanceData graph)
+        {
+            if (graph == null)
+                return;
+
+            graph.EnsureValid();
+            SaveViewTransform(graph);
+
+            List<StateScriptNodeData> visibleNodes = _nodeViews.Values
+                .Select(view => view.NodeData)
+                .Where(node => node != null)
+                .ToList();
+            HashSet<StateScriptNodeData> visibleNodeSet = new(visibleNodes);
+
+            // Keep the existing node order stable while dropping only nodes deleted from the view.
+            graph.Nodes = graph.Nodes
+                .Where(node => node != null && visibleNodeSet.Contains(node))
+                .ToList();
+            for (int i = 0; i < visibleNodes.Count; i++)
+            {
+                StateScriptNodeData node = visibleNodes[i];
+                if (!graph.Nodes.Contains(node))
+                    graph.Nodes.Add(node);
+            }
+
+            List<StateScriptEdgeData> visibleEdges = new();
+            foreach (Edge edge in edges)
+            {
+                if (!TryCreateEdgeData(edge, out StateScriptEdgeData edgeData) || ContainsEdge(visibleEdges, edgeData))
+                    continue;
+
+                visibleEdges.Add(edgeData);
+            }
+
+            graph.Edges = visibleEdges;
+        }
+
         public void RefreshRuntimeDebug(StateScriptRuntime runtime)
         {
             foreach (StateScriptNodeView view in _nodeViews.Values)
@@ -252,6 +291,11 @@ namespace CrystalMagic.Editor.Unit
         private static bool ContainsEdge(StateScriptInstanceData graph, StateScriptEdgeData candidate)
         {
             return graph.Edges.Any(edge => IsSameEdge(edge, candidate));
+        }
+
+        private static bool ContainsEdge(List<StateScriptEdgeData> edges, StateScriptEdgeData candidate)
+        {
+            return edges.Any(edge => IsSameEdge(edge, candidate));
         }
 
         private static bool IsSameEdge(StateScriptEdgeData left, StateScriptEdgeData right)

@@ -15,7 +15,8 @@ namespace CrystalMagic.Editor.Unit
         public static void Draw(
             ValueExpression expression,
             UnitValueCategory expectedCategory,
-            UnitSourceSchema sourceSchema)
+            UnitSourceSchema sourceSchema,
+            Action onChanged = null)
         {
             if (expression == null)
                 return;
@@ -25,9 +26,9 @@ namespace CrystalMagic.Editor.Unit
             if (expression.Kind == ValueExpressionKind.Literal)
                 DrawLiteral(expression, expectedCategory);
             else if (expression.Kind == ValueExpressionKind.Getter)
-                DrawGetter(expression, expectedCategory, 0, sourceSchema);
+                DrawGetter(expression, expectedCategory, 0, sourceSchema, onChanged);
             else if (expression.Kind == ValueExpressionKind.Operation)
-                DrawOperation(expression, expectedCategory, 0, sourceSchema);
+                DrawOperation(expression, expectedCategory, 0, sourceSchema, onChanged);
 
             EditorGUILayout.EndVertical();
         }
@@ -42,37 +43,19 @@ namespace CrystalMagic.Editor.Unit
             return expression.Literal;
         }
 
-        public static void DrawConditionList(List<ConditionConfig> conditions, UnitSourceSchema sourceSchema)
+        public static void DrawCondition(
+            ConditionConfig condition,
+            UnitSourceSchema sourceSchema,
+            Action onChanged = null)
         {
-            if (conditions == null)
+            if (condition == null)
                 return;
 
-            EditorGUILayout.LabelField("Conditions", EditorStyles.boldLabel);
-            for (int i = 0; i < conditions.Count; i++)
-            {
-                ConditionConfig condition = conditions[i] ?? new ConditionConfig();
-                conditions[i] = condition;
-
-                EditorGUILayout.BeginVertical("box");
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField($"Condition {i + 1}", EditorStyles.boldLabel);
-                bool delete = GUILayout.Button("Delete", GUILayout.Width(60f));
-                EditorGUILayout.EndHorizontal();
-
-                if (delete)
-                {
-                    conditions.RemoveAt(i);
-                    EditorGUILayout.EndVertical();
-                    return;
-                }
-
-                condition.ConditionType = (ConditionType)EditorGUILayout.EnumPopup("Condition Type", condition.ConditionType);
-                DrawCompareInputs(condition, sourceSchema);
-                EditorGUILayout.EndVertical();
-            }
-
-            if (GUILayout.Button("Add Condition"))
-                conditions.Add(new ConditionConfig());
+            condition.ConditionType = ConditionType.Necessary;
+            EditorGUILayout.LabelField("Condition", EditorStyles.boldLabel);
+            EditorGUILayout.BeginVertical("box");
+            DrawCompareInputs(condition, sourceSchema, onChanged);
+            EditorGUILayout.EndVertical();
         }
 
         private static void DrawLiteral(ValueExpression expression, UnitValueCategory expectedCategory)
@@ -126,7 +109,8 @@ namespace CrystalMagic.Editor.Unit
             ValueExpression expression,
             UnitValueCategory expectedCategory,
             int depth,
-            UnitSourceSchema sourceSchema)
+            UnitSourceSchema sourceSchema,
+            Action onChanged)
         {
             if (depth >= 6)
             {
@@ -144,28 +128,45 @@ namespace CrystalMagic.Editor.Unit
                 return;
             }
 
-            string[] options = new string[entries.Count + 1];
-            options[0] = "(Select getter)";
-            for (int i = 0; i < entries.Count; i++)
-                options[i + 1] = entries[i].Key;
+            StateScriptAccessorDropdown.Draw(
+                "Getter",
+                expression.GetterKey,
+                entries.Select(entry => entry.Key),
+                "(Select getter)",
+                selectedKey =>
+                {
+                    if (string.Equals(expression.GetterKey, selectedKey, StringComparison.Ordinal))
+                        return;
 
-            int index = entries.FindIndex(entry => string.Equals(entry.Key, expression.GetterKey, StringComparison.Ordinal)) + 1;
-            index = EditorGUILayout.Popup("Getter", Mathf.Max(0, index), options);
-            if (index <= 0)
+                    expression.GetterKey = selectedKey;
+                    expression.Inputs = new List<ValueExpression>();
+                    GUI.changed = true;
+                    onChanged?.Invoke();
+                });
+            if (string.IsNullOrWhiteSpace(expression.GetterKey))
             {
-                if (!string.IsNullOrWhiteSpace(expression.GetterKey))
-                    EditorGUILayout.HelpBox($"'{expression.GetterKey}' is not available on this unit.", MessageType.Warning);
                 return;
             }
 
-            UnitSourceGetSchemaEntry selected = entries[index - 1];
+            int selectedIndex = entries.FindIndex(entry =>
+                string.Equals(entry.Key, expression.GetterKey, StringComparison.Ordinal));
+            if (selectedIndex < 0)
+            {
+                EditorGUILayout.HelpBox($"'{expression.GetterKey}' is not available on this unit.", MessageType.Warning);
+                return;
+            }
+
+            UnitSourceGetSchemaEntry selected = entries[selectedIndex];
             expression.GetterKey = selected.Key;
             EnsureExpressionCount(ref expression.Inputs, selected.Parameters);
             for (int i = 0; i < selected.Parameters.Count; i++)
-                DrawInput(expression.Inputs[i], selected.Parameters[i], depth + 1, sourceSchema);
+                DrawInput(expression.Inputs[i], selected.Parameters[i], depth + 1, sourceSchema, onChanged);
         }
 
-        private static void DrawCompareInputs(ConditionConfig condition, UnitSourceSchema sourceSchema)
+        private static void DrawCompareInputs(
+            ConditionConfig condition,
+            UnitSourceSchema sourceSchema,
+            Action onChanged)
         {
             List<string> compareKeys = s_expressionFactory.CompareTypeKeys
                 .OrderBy(key => key, StringComparer.Ordinal)
@@ -187,14 +188,15 @@ namespace CrystalMagic.Editor.Unit
 
             EnsureExpressionCount(ref condition.Inputs, compareType.Parameters);
             for (int i = 0; i < compareType.Parameters.Count; i++)
-                DrawInput(condition.Inputs[i], compareType.Parameters[i], 0, sourceSchema);
+                DrawInput(condition.Inputs[i], compareType.Parameters[i], 0, sourceSchema, onChanged);
         }
 
         private static void DrawOperation(
             ValueExpression expression,
             UnitValueCategory expectedCategory,
             int depth,
-            UnitSourceSchema sourceSchema)
+            UnitSourceSchema sourceSchema,
+            Action onChanged)
         {
             if (depth >= 6)
             {
@@ -221,14 +223,15 @@ namespace CrystalMagic.Editor.Unit
             expression.OperationType = GetOperationKey(selected);
             EnsureExpressionCount(ref expression.Inputs, selected.Parameters);
             for (int i = 0; i < selected.Parameters.Count; i++)
-                DrawInput(expression.Inputs[i], selected.Parameters[i], depth + 1, sourceSchema);
+                DrawInput(expression.Inputs[i], selected.Parameters[i], depth + 1, sourceSchema, onChanged);
         }
 
         private static void DrawInput(
             ValueExpression expression,
             ComparatorParameterDefinition parameter,
             int depth,
-            UnitSourceSchema sourceSchema)
+            UnitSourceSchema sourceSchema,
+            Action onChanged)
         {
             EditorGUILayout.BeginVertical("box");
             EditorGUILayout.LabelField($"{parameter.Name} ({parameter.Category})", EditorStyles.miniBoldLabel);
@@ -236,9 +239,9 @@ namespace CrystalMagic.Editor.Unit
             if (expression.Kind == ValueExpressionKind.Literal)
                 DrawLiteral(expression, parameter.Category);
             else if (expression.Kind == ValueExpressionKind.Getter)
-                DrawGetter(expression, parameter.Category, depth, sourceSchema);
+                DrawGetter(expression, parameter.Category, depth, sourceSchema, onChanged);
             else if (expression.Kind == ValueExpressionKind.Operation)
-                DrawOperation(expression, parameter.Category, depth, sourceSchema);
+                DrawOperation(expression, parameter.Category, depth, sourceSchema, onChanged);
             else
                 expression.Kind = ValueExpressionKind.Literal;
             EditorGUILayout.EndVertical();

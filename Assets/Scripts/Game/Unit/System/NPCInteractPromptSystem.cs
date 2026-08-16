@@ -14,7 +14,7 @@ partial class NPCInteractPromptSystem : SystemBase
 
     protected override void OnCreate()
     {
-        RequireForUpdate<PlayerTag>();
+        RequireForUpdate<UnitFactionComponent>();
 
         Entity singletonEntity = EntityManager.CreateEntity();
         EntityManager.AddComponentData(singletonEntity, new PlayerInteractionRuntimeComponent
@@ -34,9 +34,12 @@ partial class NPCInteractPromptSystem : SystemBase
         float3 playerPosition = float3.zero;
         Entity playerEntity = Entity.Null;
 
-        foreach ((RefRO<PlayerTag> _, RefRO<LocalTransform> transform, Entity entity) in
-                 SystemAPI.Query<RefRO<PlayerTag>, RefRO<LocalTransform>>().WithEntityAccess())
+        foreach ((RefRO<UnitFactionComponent> factionRef, RefRO<LocalTransform> transform, Entity entity) in
+                 SystemAPI.Query<RefRO<UnitFactionComponent>, RefRO<LocalTransform>>().WithEntityAccess())
         {
+            if (!UnitFactionUtility.IsPlayer(factionRef.ValueRO.Value))
+                continue;
+
             if (UnitControlUtility.HasActiveControl(EntityManager, entity))
                 break;
 

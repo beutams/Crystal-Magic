@@ -44,9 +44,8 @@ namespace CrystalMagic.Editor.Unit
             UnitEditorWindow.DrawSectionHeader("Move");
             EditorGUILayout.FloatField("Move Speed", move.RealMoveSpeed);
             EditorGUILayout.FloatField("Acceleration", move.RealMaxAcceleration);
-            EditorGUILayout.Vector2Field("Desired Direction", move.DesiredDirection);
-            EditorGUILayout.FloatField("Desired Max Speed", move.DesiredMaxSpeed);
-            EditorGUILayout.FloatField("Desired Acceleration", move.DesiredAcceleration);
+            EditorGUILayout.Vector2Field("Direction", move.Direction);
+            EditorGUILayout.FloatField("State Move Multiplier", move.StateMoveMultiplier);
             EditorGUILayout.Vector2Field("Velocity", move.Velocity);
         }
     }

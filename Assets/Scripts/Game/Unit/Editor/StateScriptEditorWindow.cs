@@ -18,6 +18,7 @@ namespace CrystalMagic.Editor.Unit
     {
         private const string DataPath = "Assets/Res/Data/StateScriptDataTable.json";
         private const string UnitPrefabDirectory = "Assets/Res/Prefab/Unit";
+        private const string GraphDragDataKey = "CrystalMagic.StateScriptGraph";
         private const float ListPanelWidth = 270f;
         private const float InspectorPanelWidth = 300f;
 
@@ -25,6 +26,7 @@ namespace CrystalMagic.Editor.Unit
         private readonly List<UnitPrefabEntry> _unitEntries = new();
         private int _selectedUnitDataId = -1;
         private string _selectedGraphGuid;
+        private StateScriptGraphDragData _pendingGraphDrag;
         private UnitSourceSchema _selectedSourceSchema;
         private bool _isDirty;
         private string _statusText = string.Empty;
@@ -181,7 +183,10 @@ namespace CrystalMagic.Editor.Unit
                 UnitPrefabEntry entry = _unitEntries[i];
                 bool selected = entry.UnitData != null && entry.UnitData.Id == _selectedUnitDataId;
                 GUIStyle style = selected ? EditorStyles.toolbarButton : EditorStyles.miniButton;
-                if (!GUILayout.Button(entry.DisplayName, style))
+                Rect unitRect = GUILayoutUtility.GetRect(new GUIContent(entry.DisplayName), style, GUILayout.ExpandWidth(true));
+                HandleGraphDrop(entry, unitRect);
+                bool clicked = GUI.Button(unitRect, entry.DisplayName, style);
+                if (!clicked)
                     continue;
 
                 if (entry.UnitData == null)
@@ -217,8 +222,11 @@ namespace CrystalMagic.Editor.Unit
                         continue;
 
                     bool selected = string.Equals(graph.Guid, _selectedGraphGuid, StringComparison.Ordinal);
-                    if (GUILayout.Button(string.IsNullOrWhiteSpace(graph.Name) ? "Unnamed Graph" : graph.Name,
-                        selected ? EditorStyles.toolbarButton : EditorStyles.miniButton))
+                    GUIStyle graphStyle = selected ? EditorStyles.toolbarButton : EditorStyles.miniButton;
+                    string graphName = string.IsNullOrWhiteSpace(graph.Name) ? "Unnamed Graph" : graph.Name;
+                    Rect graphRect = GUILayoutUtility.GetRect(new GUIContent(graphName), graphStyle, GUILayout.ExpandWidth(true));
+                    BeginGraphDrag(graph, graphRect);
+                    if (GUI.Button(graphRect, graphName, graphStyle))
                     {
                         SelectGraph(graph.Guid);
                     }
@@ -285,16 +293,57 @@ namespace CrystalMagic.Editor.Unit
 
         private void SaveData()
         {
-            SaveGraphViewTransform();
-            for (int i = 0; i < _rows.Count; i++)
-                _rows[i].EnsureValid();
+            try
+            {
+                // First collect the entire visible graph, then persist the complete table snapshot.
+                _graphView?.SynchronizeToData(SelectedGraph);
+                for (int i = 0; i < _rows.Count; i++)
+                    _rows[i].EnsureValid();
 
-            TableWrapper wrapper = new() { Rows = _rows };
-            string json = JsonConvert.SerializeObject(wrapper, JsonSettings);
-            DataFileUtility.WriteJsonText(DataPath, json);
-            AssetDatabase.Refresh();
-            _isDirty = false;
-            SetStatus("Saved.");
+                TableWrapper wrapper = new() { Rows = _rows };
+                string json = JsonConvert.SerializeObject(wrapper, JsonSettings);
+                ValidateSaveSnapshot(wrapper, json);
+
+                DataFileUtility.WriteJsonText(DataPath, json);
+                AssetDatabase.Refresh();
+                _isDirty = false;
+                SetStatus("Saved.");
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"[StateScriptEditor] Failed to save data: {exception}");
+                SetStatus("Save failed. See console.");
+            }
+        }
+
+        private static void ValidateSaveSnapshot(TableWrapper source, string json)
+        {
+            TableWrapper snapshot = JsonConvert.DeserializeObject<TableWrapper>(json, JsonSettings);
+            if (snapshot?.Rows == null || snapshot.Rows.Count != source.Rows.Count)
+                throw new InvalidDataException("StateScript table snapshot did not preserve every row.");
+
+            for (int rowIndex = 0; rowIndex < source.Rows.Count; rowIndex++)
+            {
+                StateScriptData sourceRow = source.Rows[rowIndex];
+                StateScriptData savedRow = snapshot.Rows[rowIndex];
+                if (sourceRow == null || savedRow == null || sourceRow.Id != savedRow.Id ||
+                    sourceRow.Graphs.Count != savedRow.Graphs.Count)
+                {
+                    throw new InvalidDataException("StateScript table snapshot did not preserve row data.");
+                }
+
+                for (int graphIndex = 0; graphIndex < sourceRow.Graphs.Count; graphIndex++)
+                {
+                    StateScriptInstanceData sourceGraph = sourceRow.Graphs[graphIndex];
+                    StateScriptInstanceData savedGraph = savedRow.Graphs[graphIndex];
+                    if (sourceGraph == null || savedGraph == null ||
+                        sourceGraph.Nodes.Count != savedGraph.Nodes.Count ||
+                        sourceGraph.Edges.Count != savedGraph.Edges.Count)
+                    {
+                        throw new InvalidDataException("StateScript table snapshot did not preserve graph data.");
+                    }
+                }
+            }
         }
 
         private void AddGraph()
@@ -311,8 +360,7 @@ namespace CrystalMagic.Editor.Unit
             {
                 data = new StateScriptData
                 {
-                    Id = GetNextDataId(),
-                    UnitDataId = entry.UnitData.Id,
+                    Id = entry.UnitData.Id,
                 };
                 _rows.Add(data);
             }
@@ -355,6 +403,117 @@ namespace CrystalMagic.Editor.Unit
             _selectedGraphGuid = data.Graphs.FirstOrDefault(candidate => candidate != null)?.Guid;
             MarkDirty();
             RebuildGraph();
+        }
+
+        private void BeginGraphDrag(StateScriptInstanceData graph, Rect graphRect)
+        {
+            Event currentEvent = Event.current;
+            if (currentEvent.type == EventType.MouseDown && currentEvent.button == 0 && graphRect.Contains(currentEvent.mousePosition))
+            {
+                _pendingGraphDrag = new StateScriptGraphDragData(_selectedUnitDataId, graph.Guid);
+                return;
+            }
+
+            if (currentEvent.type == EventType.MouseUp && currentEvent.button == 0)
+            {
+                _pendingGraphDrag = null;
+                return;
+            }
+
+            if (currentEvent.type != EventType.MouseDrag || currentEvent.button != 0 ||
+                _pendingGraphDrag == null ||
+                !string.Equals(_pendingGraphDrag.SourceGraphGuid, graph.Guid, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            DragAndDrop.PrepareStartDrag();
+            DragAndDrop.SetGenericData(GraphDragDataKey, _pendingGraphDrag);
+            DragAndDrop.StartDrag($"Copy StateScript Graph '{graph.Name}'");
+            _pendingGraphDrag = null;
+            currentEvent.Use();
+        }
+
+        private void HandleGraphDrop(UnitPrefabEntry targetEntry, Rect targetRect)
+        {
+            if (!TryGetDraggedGraph(out StateScriptGraphDragData dragData) || targetEntry?.UnitData == null ||
+                !targetRect.Contains(Event.current.mousePosition))
+            {
+                return;
+            }
+
+            switch (Event.current.type)
+            {
+                case EventType.DragUpdated:
+                    DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+                    Event.current.Use();
+                    break;
+                case EventType.DragPerform:
+                    DragAndDrop.AcceptDrag();
+                    CopyGraphToUnit(dragData, targetEntry);
+                    Event.current.Use();
+                    break;
+            }
+        }
+
+        private bool TryGetDraggedGraph(out StateScriptGraphDragData dragData)
+        {
+            dragData = DragAndDrop.GetGenericData(GraphDragDataKey) as StateScriptGraphDragData;
+            return dragData != null;
+        }
+
+        private void CopyGraphToUnit(StateScriptGraphDragData dragData, UnitPrefabEntry targetEntry)
+        {
+            _graphView?.SynchronizeToData(SelectedGraph);
+            StateScriptData sourceData = _rows.FirstOrDefault(row => row.Id == dragData.SourceUnitDataId);
+            StateScriptInstanceData sourceGraph = sourceData?.Graphs?.FirstOrDefault(graph =>
+                graph != null && string.Equals(graph.Guid, dragData.SourceGraphGuid, StringComparison.Ordinal));
+            if (sourceGraph == null)
+            {
+                SetStatus("The dragged graph no longer exists.");
+                return;
+            }
+
+            UnitSourceSchema targetSchema = UnitSourceSchemaFactory.CreateForPrefab(targetEntry.Prefab);
+            StateScriptGraphCopyResult result = StateScriptGraphCopyUtility.CreateCopy(sourceGraph, targetEntry.Prefab, targetSchema);
+            StateScriptInstanceData copiedGraph = result.Graph;
+            StateScriptData targetData = GetOrCreateData(targetEntry.UnitData.Id);
+            copiedGraph.Name = GetUniqueGraphName(targetData, copiedGraph.Name);
+            targetData.Graphs.Add(copiedGraph);
+
+            _selectedUnitDataId = targetEntry.UnitData.Id;
+            _selectedSourceSchema = targetSchema;
+            _selectedGraphGuid = copiedGraph.Guid;
+            MarkDirty();
+            RebuildGraph();
+            SetStatus(result.ResetNodeCount == 0
+                ? $"Copied graph '{copiedGraph.Name}' to {targetEntry.DisplayName}."
+                : $"Copied graph '{copiedGraph.Name}' to {targetEntry.DisplayName}; reset {result.ResetNodeCount} unsupported node(s).");
+        }
+
+        private StateScriptData GetOrCreateData(int unitDataId)
+        {
+            StateScriptData data = _rows.FirstOrDefault(row => row.Id == unitDataId);
+            if (data != null)
+                return data;
+
+            data = new StateScriptData { Id = unitDataId };
+            _rows.Add(data);
+            return data;
+        }
+
+        private static string GetUniqueGraphName(StateScriptData targetData, string sourceName)
+        {
+            string baseName = string.IsNullOrWhiteSpace(sourceName) ? "Copied Graph" : sourceName;
+            if (targetData.Graphs.All(graph => graph == null || !string.Equals(graph.Name, baseName, StringComparison.Ordinal)))
+                return baseName;
+
+            for (int copyIndex = 2; ; copyIndex++)
+            {
+                string candidate = $"{baseName} {copyIndex}";
+                if (targetData.Graphs.All(graph => graph == null || !string.Equals(graph.Name, candidate, StringComparison.Ordinal)))
+                    return candidate;
+            }
         }
 
         private void ValidateSelectedGraph()
@@ -422,7 +581,7 @@ namespace CrystalMagic.Editor.Unit
 
         private StateScriptData GetSelectedData()
         {
-            return _rows.FirstOrDefault(row => row.UnitDataId == _selectedUnitDataId);
+            return _rows.FirstOrDefault(row => row.Id == _selectedUnitDataId);
         }
 
         private UnitPrefabEntry GetSelectedUnitEntry()
@@ -485,18 +644,21 @@ namespace CrystalMagic.Editor.Unit
             return null;
         }
 
-        private int GetNextDataId()
-        {
-            int id = 1;
-            HashSet<int> ids = new(_rows.Select(row => row.Id));
-            while (ids.Contains(id))
-                id++;
-            return id;
-        }
-
         private static ToolbarButton CreateToolbarButton(string text, float width, Action action)
         {
             return new ToolbarButton(action) { text = text, style = { width = width } };
+        }
+
+        private sealed class StateScriptGraphDragData
+        {
+            public StateScriptGraphDragData(int sourceUnitDataId, string sourceGraphGuid)
+            {
+                SourceUnitDataId = sourceUnitDataId;
+                SourceGraphGuid = sourceGraphGuid ?? string.Empty;
+            }
+
+            public int SourceUnitDataId { get; }
+            public string SourceGraphGuid { get; }
         }
 
         private static VisualElement CreateDivider()
@@ -516,6 +678,266 @@ namespace CrystalMagic.Editor.Unit
             _statusText = text ?? string.Empty;
             if (_statusLabel != null)
                 _statusLabel.text = _statusText + (_isDirty ? " *" : string.Empty);
+        }
+    }
+
+    internal readonly struct StateScriptGraphCopyResult
+    {
+        public StateScriptGraphCopyResult(StateScriptInstanceData graph, int resetNodeCount)
+        {
+            Graph = graph;
+            ResetNodeCount = resetNodeCount;
+        }
+
+        public StateScriptInstanceData Graph { get; }
+        public int ResetNodeCount { get; }
+    }
+
+    internal static class StateScriptGraphCopyUtility
+    {
+        private const int MaxExpressionDepth = 32;
+
+        private static readonly ComparatorFactory s_comparatorFactory = CreateComparatorFactory();
+        private static readonly JsonSerializerSettings s_jsonSettings = new()
+        {
+            NullValueHandling = NullValueHandling.Ignore,
+            Converters = new List<JsonConverter>
+            {
+                new StateScriptVector2Converter(),
+                new StateScriptUnitValueConverter(),
+            },
+        };
+
+        public static StateScriptGraphCopyResult CreateCopy(
+            StateScriptInstanceData source,
+            GameObject targetPrefab,
+            UnitSourceSchema targetSchema)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+
+            StateScriptInstanceData copy = Clone(source);
+            copy.EnsureValid();
+            AssignNewIdentifiers(copy);
+            int resetNodeCount = ResetUnsupportedNodeData(copy, targetPrefab, targetSchema);
+            copy.EnsureValid();
+            return new StateScriptGraphCopyResult(copy, resetNodeCount);
+        }
+
+        private static StateScriptInstanceData Clone(StateScriptInstanceData source)
+        {
+            string json = JsonConvert.SerializeObject(source, s_jsonSettings);
+            StateScriptInstanceData copy = JsonConvert.DeserializeObject<StateScriptInstanceData>(json, s_jsonSettings);
+            if (copy == null)
+                throw new InvalidOperationException("Failed to clone StateScript graph data.");
+
+            return copy;
+        }
+
+        private static void AssignNewIdentifiers(StateScriptInstanceData graph)
+        {
+            Dictionary<string, string> nodeGuidMap = new(StringComparer.Ordinal);
+            for (int i = 0; i < graph.Nodes.Count; i++)
+            {
+                StateScriptNodeData node = graph.Nodes[i];
+                if (node == null)
+                    continue;
+
+                string oldGuid = node.Guid ?? string.Empty;
+                string newGuid = Guid.NewGuid().ToString("N");
+                nodeGuidMap[oldGuid] = newGuid;
+                node.Guid = newGuid;
+            }
+
+            if (nodeGuidMap.TryGetValue(graph.EntryNodeGuid ?? string.Empty, out string entryGuid))
+                graph.EntryNodeGuid = entryGuid;
+
+            for (int i = 0; i < graph.Edges.Count; i++)
+            {
+                StateScriptEdgeData edge = graph.Edges[i];
+                if (edge == null)
+                    continue;
+
+                if (nodeGuidMap.TryGetValue(edge.OutputNodeGuid ?? string.Empty, out string outputGuid))
+                    edge.OutputNodeGuid = outputGuid;
+                if (nodeGuidMap.TryGetValue(edge.InputNodeGuid ?? string.Empty, out string inputGuid))
+                    edge.InputNodeGuid = inputGuid;
+            }
+
+            graph.Guid = Guid.NewGuid().ToString("N");
+        }
+
+        private static int ResetUnsupportedNodeData(
+            StateScriptInstanceData graph,
+            GameObject targetPrefab,
+            UnitSourceSchema targetSchema)
+        {
+            int resetNodeCount = 0;
+            for (int i = 0; i < graph.Nodes.Count; i++)
+            {
+                StateScriptNodeData node = graph.Nodes[i];
+                if (node == null || IsNodeDataSupported(node, targetPrefab, targetSchema))
+                    continue;
+
+                StateScriptNodeData resetNode = StateScriptNodeDataRegistry.Create(node.Type, assignGuid: false);
+                if (resetNode == null)
+                    continue;
+
+                resetNode.Guid = node.Guid;
+                resetNode.EditorPosition = node.EditorPosition;
+                graph.Nodes[i] = resetNode;
+                resetNodeCount++;
+            }
+
+            return resetNodeCount;
+        }
+
+        private static bool IsNodeDataSupported(
+            StateScriptNodeData node,
+            GameObject targetPrefab,
+            UnitSourceSchema targetSchema)
+        {
+            switch (node)
+            {
+                case SetValueStateScriptNodeData setValue:
+                    return IsSetValueSupported(setValue, targetSchema);
+                case CompareStateScriptNodeData compare:
+                    return IsConditionSupported(compare.Condition, targetSchema);
+                case MonitorStateScriptNodeData monitor:
+                    return IsConditionSupported(monitor.Condition, targetSchema);
+                case RequestSkillActionNodeData requestSkill:
+                    return IsRequestSkillSupported(requestSkill, targetPrefab, targetSchema);
+                case TimerStateScriptNodeData timer:
+                    return IsTimerSupported(timer, targetSchema);
+                case NumberMonitorStateScriptNodeData numberMonitor:
+                    return IsNumberMonitorSupported(numberMonitor, targetSchema);
+                default:
+                    // Nodes without source or component dependencies can retain their data unchanged.
+                    return true;
+            }
+        }
+
+        private static bool IsSetValueSupported(SetValueStateScriptNodeData setValue, UnitSourceSchema schema)
+        {
+            if (setValue == null || schema == null ||
+                !schema.TryGet(setValue.SetterKey, out UnitSourceSetSchemaEntry setter) ||
+                setter.Parameters.Count != 1 ||
+                (setter.RequiresKey && string.IsNullOrWhiteSpace(setValue.Key)) ||
+                !TryGetExpressionCategory(setValue.Value, schema, 0, out UnitValueCategory valueCategory))
+            {
+                return false;
+            }
+
+            return setter.Parameters[0].Accepts(valueCategory);
+        }
+
+        private static bool IsConditionSupported(ConditionConfig condition, UnitSourceSchema schema)
+        {
+            if (condition == null || schema == null ||
+                !s_comparatorFactory.TryCreateCompareType(condition.CompareType, out ICompareType compareType))
+            {
+                return false;
+            }
+
+            return HasCompatibleInputs(condition.Inputs, compareType.Parameters, schema, 0);
+        }
+
+        private static bool IsRequestSkillSupported(
+            RequestSkillActionNodeData requestSkill,
+            GameObject targetPrefab,
+            UnitSourceSchema targetSchema)
+        {
+            if (requestSkill == null || targetPrefab == null ||
+                targetPrefab.GetComponentInChildren<UnitSkillReleaseAuthoring>(true) == null)
+            {
+                return false;
+            }
+
+            return TryGetExpressionCategory(requestSkill.SkillId, targetSchema, 0, out UnitValueCategory category) &&
+                   category == UnitValueCategory.Number;
+        }
+
+        private static bool IsTimerSupported(TimerStateScriptNodeData timer, UnitSourceSchema schema)
+        {
+            return timer != null &&
+                   TryGetExpressionCategory(timer.Duration, schema, 0, out UnitValueCategory category) &&
+                   category == UnitValueCategory.Number;
+        }
+
+        private static bool IsNumberMonitorSupported(NumberMonitorStateScriptNodeData numberMonitor, UnitSourceSchema schema)
+        {
+            return numberMonitor != null &&
+                   TryGetExpressionCategory(numberMonitor.Value, schema, 0, out UnitValueCategory category) &&
+                   category == UnitValueCategory.Number;
+        }
+
+        private static bool TryGetExpressionCategory(
+            ValueExpression expression,
+            UnitSourceSchema schema,
+            int depth,
+            out UnitValueCategory category)
+        {
+            category = UnitValueCategory.None;
+            if (expression == null || depth >= MaxExpressionDepth)
+                return false;
+
+            switch (expression.Kind)
+            {
+                case ValueExpressionKind.Literal:
+                    category = expression.Literal.Category;
+                    return category != UnitValueCategory.None;
+
+                case ValueExpressionKind.Getter:
+                    if (!schema.TryGet(expression.GetterKey, out UnitSourceGetSchemaEntry getter) ||
+                        !HasCompatibleInputs(expression.Inputs, getter.Parameters, schema, depth + 1))
+                    {
+                        return false;
+                    }
+
+                    category = getter.ReturnType;
+                    return category != UnitValueCategory.None;
+
+                case ValueExpressionKind.Operation:
+                    if (!s_comparatorFactory.TryCreateValueOperation(expression.OperationType, out IValueOperation operation) ||
+                        !HasCompatibleInputs(expression.Inputs, operation.Parameters, schema, depth + 1))
+                    {
+                        return false;
+                    }
+
+                    category = operation.ResultCategory;
+                    return category != UnitValueCategory.None;
+
+                default:
+                    return false;
+            }
+        }
+
+        private static bool HasCompatibleInputs(
+            IReadOnlyList<ValueExpression> expressions,
+            IReadOnlyList<ComparatorParameterDefinition> parameters,
+            UnitSourceSchema schema,
+            int depth)
+        {
+            if (expressions == null || parameters == null || expressions.Count != parameters.Count)
+                return false;
+
+            for (int i = 0; i < parameters.Count; i++)
+            {
+                if (!TryGetExpressionCategory(expressions[i], schema, depth + 1, out UnitValueCategory category) ||
+                    !parameters[i].Accepts(category))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static ComparatorFactory CreateComparatorFactory()
+        {
+            ComparatorFactory factory = new();
+            ComparatorRegistry.RegisterAll(factory);
+            return factory;
         }
     }
 

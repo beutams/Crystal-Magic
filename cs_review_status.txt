@@ -170,11 +170,10 @@ Game\
       NPCEditorWindow.cs FALSE
       PropEditorWindow.cs FALSE
       SkillAdditionEditorWindow.cs FALSE
-      UnitAnimationProfileEditorWindow.cs FALSE
       UnitEditorAttributeDrawerFactory.cs FALSE
       UnitEditorAttributeDrawers.cs TRUE DIRTY
       UnitEditorDrawerContext.cs FALSE
-      UnitEditorWindow.cs FALSE
+      UnitEditorWindow.cs TRUE
     Effects\
       ApplyBuffEffectData.cs FALSE
       AreaSearchEffectData.cs FALSE
@@ -190,7 +189,7 @@ Game\
       PersistentEffectData.cs FALSE
       RandomAreaPointEffectData.cs FALSE
       RecoverEffectData.cs FALSE
-      SpawnProjectileEffectData.cs FALSE
+      SpawnProjectileEffectData.cs TRUE
       SpawnSoundEffectData.cs FALSE
       SpawnUnitEffectData.cs TRUE
       SpawnVfxEffectData.cs FALSE
@@ -214,7 +213,7 @@ Game\
     SkillFollowupEffectData.cs FALSE
     SkillFollowupFilterData.cs FALSE
     SkillFollowupModifierRuleData.cs FALSE
-    UnitAnimationClipData.cs FALSE
+    UnitAnimationClipData.cs TRUE
     UnitData.cs TRUE DIRTY
   MapDemo\
     Editor\
@@ -251,10 +250,10 @@ Game\
         闁归晲鑳堕悽濠氬箑瑜庨弲銉╁几濠婃劗绀夋繛锝堫嚙婵偞绋夐埀顒佺▔椤忓懎鐦紓渚囧幒閹广垽宕濋垾鍐茬厒缂侇垵宕电划?
       RandomAreaPointEffect.cs FALSE
       RecoverEffect.cs FALSE
-      SpawnProjectileEffect.cs FALSE
+      SpawnProjectileEffect.cs TRUE
       SpawnSoundEffect.cs FALSE
       SpawnUnitEffect.cs TRUE
-      SpawnVfxEffect.cs TRUE
+      SpawnVfxEffect.cs TRUE DIRTY
     Followup\
       Consume\
         UseCountSkillFollowupConsumeRule.cs FALSE
@@ -301,10 +300,11 @@ Game\
       UnitSourceRuntimeComponent.cs TRUE
       UnitSourceSchema.cs TRUE DIRTY
       UnitTransformSource.cs TRUE DIRTY
+    Editor\
     BehaviorTree\
       ActionBehaviorNodes.cs TRUE DIRTY
         閻炴稑濂旂拹鐔兼嚍閸屾粌浠?
-      LeafBehaviorNodes.cs TRUE
+      LeafBehaviorNodes.cs TRUE DIRTY
       BehaviorNodeFactory.cs TRUE
         閻炴稑濂旂拹鐔煎冀閹存繀绱ｉ柛?
       BehaviorNodes.cs TRUE DIRTY
@@ -320,18 +320,19 @@ Game\
         濞ｅ浂鍣ｉ妶浼存嚍閸屾粌浠?
     StateScript\
       Nodes\
-        CompareStateScriptNode.cs TRUE
+        CompareStateScriptNode.cs TRUE DIRTY
         StateScriptActionNode.cs TRUE
         StateScriptBoolNode.cs TRUE
         StateScriptEntryNode.cs TRUE
         StateScriptNode.cs TRUE DIRTY
         StateScriptStateNode.cs TRUE DIRTY
         SetValueStateScriptNode.cs TRUE DIRTY
-        RequestSkillActionNode.cs FALSE
-        TimerStateScriptNode.cs TRUE
+        RequestSkillActionNode.cs TRUE
+        TimerStateScriptNode.cs TRUE DIRTY
         KeepStateScriptNode.cs TRUE DIRTY
         MonitorStateScriptNode.cs TRUE DIRTY
-      StateScriptInitSystem.cs TRUE
+        NumberMonitorStateScriptNode.cs TRUE
+      StateScriptInitSystem.cs TRUE DIRTY
       StateScriptNodeFactory.cs TRUE
       StateScriptPort.cs TRUE
       StateScriptRegistry.cs TRUE DIRTY
@@ -366,52 +367,45 @@ Game\
       PlayerSkillAuthoring.cs TRUE DIRTY
         闁哄倽濮ょ涵鍓佹嫚闁垮婀寸紓浣稿濞嗐垽鏁嶇仦鐣屾憼闁衡偓閹呯闂佹彃锕ラ弬渚€骞庨埀顒勬嚄娴犲鎳犻柛妯煎枎椤劙寮悧鍫濈ウ
       ProjectileEntityPrefabRegistryEntry.cs FALSE
-      QuadAnimationComponent.cs TRUE
-      SkillProjectileAuthoring.cs FALSE
-      SkillProjectileComponent.cs TRUE
-      UnitAnimationComponent.cs TRUE
+      QuadAnimationComponent.cs TRUE DIRTY
+      SkillProjectileAuthoring.cs TRUE DIRTY
+      SkillProjectileRuntime.cs TRUE
       UnitAnimationAuthoring.cs TRUE DIRTY
       UnitAttackAuthoring.cs TRUE DIRTY
         闁瑰灈鍋撻柤瀹犲Г閺侀箖宕欓懡銈嗙ゲ闁稿繗娅曢弳鐔煎箲?
       PlayerInteractionRuntimeComponent.cs TRUE
       UnitBehaviorTreeAuthoring.cs TRUE DIRTY
         閻炴稑濂旂拹鐔煎冀閹寸姷鐭嬪ù鐘侯啇缁辨繈骞栭崫鍕暔濮掓稒鍨跺?
-      UnitCastAvailabilityAuthoring.cs TRUE
       UnitBuffRuntimeAuthoring.cs TRUE DIRTY
         閻庢稒锚閸嬪秵娼婚幇顖ｆ斀闁哄啰顩簎ff闁轰胶澧楀畵渚€鏁嶇仦闂寸鞍闁告瑥銈ck/Hook閻犲鍟伴弫銈夊籍鐠哄搫绲洪梺顐＄劍閺岋箑鈻旈弴鈽嗗殲婵?
       UnitCastAuthoring.cs TRUE DIRTY
       UnitCastFollowupRuntimeComponent.cs FALSE
       UnitCastSkillPayloadComponent.cs FALSE
       UnitCastTaskPayloadComponent.cs FALSE
-      UnitControlComponent.cs TRUE DIRTY
-      UnitControlAuthoring.cs TRUE
+      UnitControlAuthoring.cs TRUE DIRTY
         闁硅矇鍐ㄧ厬缂備礁瀚▎銏ゆ晬鐏炵晫鎽犻柛灞诲妼缂嶅宕滃鍛秬闁硅矇鍌欑箚闁?
       UnitDropAuthoring.cs TRUE
         闁瑰搫顦抽幆銈夋偋閳哄倹娈堕柟?
       UnitDungeonFootprintAuthoring.cs TRUE
-      UnitDeathComponent.cs TRUE DIRTY
       UnitDeathAuthoring.cs TRUE DIRTY
-      UnitElementComponent.cs TRUE DIRTY
-      UnitElementAuthoring.cs TRUE
+      UnitElementAuthoring.cs TRUE DIRTY
         闁稿繐鍟扮粈宀€浠﹂悙绮瑰亾瑜庨弳鐔煎箲?
-      UnitFacingComponent.cs TRUE DIRTY
+      UnitFacingAuthoring.cs TRUE
         闁哄牊绻傞幃婊堝极閻楀牆绁?
       UnitFactionAuthoring.cs TRUE DIRTY
         闂傚啩绲婚幆鈧柡浣哄瀹?
         ==婵炲备鍓濆﹢浣瑰緞濮橆厸鍋?
         闁告娲戠紞鍛村箛韫囨挻绂堥梻鍡楁閹?
-      UnitJumpArcComponent.cs TRUE
+      UnitJumpArcAuthoring.cs TRUE DIRTY
       UnitManaAuthoring.cs TRUE DIRTY
         濮掑嫭姊圭涵鍫曞极閻楀牆绁?
       UnitMoveAuthoring.cs TRUE DIRTY
         缂佸顕ф慨鈺呭极閻楀牆绁?
       UnitPerceptionAuthoring.cs TRUE DIRTY
         缂佷究鍨洪弲顐ょ磼閸曨亝顐介柨娑樼焸閳ь剙鍊块崢顦沶it缂傚倹鐗炵欢顐﹀闯?
-      UnitSkillAuthoring.cs TRUE DIRTY
         闁告娲戠紞鍛村箥閳ь剟寮垫径瀣楅柤瀹犲Г閺嗙喖骞?
-      UnitSkillReleaseAuthoring.cs FALSE
-      UnitSkillModifierRuntimeComponent.cs TRUE
-      UnitSkillModifierRuntimeAuthoring.cs TRUE
+      UnitSkillReleaseAuthoring.cs TRUE
+      UnitSkillModifierRuntimeAuthoring.cs TRUE DIRTY
       ========濠㈤浜滈ˇ璺ㄧ磼閸曨亝顐介柛锔哄姀缁绘牠鏌岀仦鎯ф綉闁?
       UnitEntityPrefabRegistryEntry.cs FALSE
       UnitVitalityAuthoring.cs TRUE DIRTY
@@ -439,10 +433,11 @@ Game\
       StateScriptNodeInspector.cs TRUE DIRTY
       StateScriptRegistryGenerator.cs TRUE
       StateScriptValueExpressionDrawer.cs TRUE DIRTY
+      StateScriptAccessorDropdown.cs TRUE
       BehaviorTreeRegistryGenerator.cs FALSE
       NPCInteractionNodeRegistryGenerator.cs FALSE
       UnitRuntimeAttributeDrawerFactory.cs FALSE
-      UnitRuntimeAttributeDrawers.cs FALSE
+      UnitRuntimeAttributeDrawers.cs TRUE
       UnitRuntimeDebugWindow.cs FALSE
       UnitRuntimeDrawerContext.cs FALSE
     Event\
@@ -487,23 +482,26 @@ Game\
         缂備胶鍠曢鍝ユ啑閸涱収妲甸悘鐐靛仦閳ь儸鍐ㄦ櫢闁稿繈鍎遍惈姗€骞€瑜忕划宥嗙閺堜絻鍘?
         闁活潿鍔嶉崺娑欐綇閹惧啿寮抽悗娑櫭埀?
         濞达綀娉曢弫銈夋焼閹惧啿寰?
+      PlayerMovementCollisionSystem.cs TRUE
       PlayerSkillAnalysisSystem.cs TRUE DIRTY
         闁汇垻鍠愰崹姘跺礂閾氬倻绉奸柟鍨涘亾闁煎啿鈧噥鍤炴慨?
-      QuadAnimationSystem.cs FALSE
+      QuadAnimationSystem.cs TRUE DIRTY
       SkillReleaseSystem.cs FALSE
-      SkillProjectileSpawnSystem.cs FALSE
-      SkillProjectileSystem.cs FALSE
+      SkillProjectileSpawnSystem.cs TRUE DIRTY
+      SkillProjectileSystem.cs TRUE
       UnitBuffSystem.cs TRUE
         缂備胶鍠曢绐ff闁告劖鐟ラ崣鍡欎沪閻愮补鍋撹閹蜂即骞庨埀顒勬嚄閹存帗鍙忔慨婵撶秶缁辨繃娼娆惧殑闁瑰灈鍋撻柤瀹犲Г濡炲倿姊?
+      UnitAnimationSystem.cs TRUE DIRTY
+      UnitSpriteRendererSortingSystem.cs TRUE
       UnitControlSystem.cs TRUE DIRTY
         闁告帡鏀遍弻濠囧矗濡や礁浠橀柡浣哄瀹?
       UnitDeathFinalizeSystem.cs TRUE
       UnitDropOnDestroySystem.cs TRUE
         闁诡剦浜炴晶鍨潰鐠佹娊顎楅柟鍝勵槼閹倝鎮?
       UnitJumpArcSystem.cs FALSE
-      UnitMoveSystem.cs TRUE
+      UnitMoveSystem.cs TRUE DIRTY
         閹煎瓨姊婚弫銈囩矓鐠囨彃袟
-      UnitResetSystem.cs TRUE
+      UnitResetSystem.cs TRUE DIRTY
         闂佹彃绉堕悿鍡椥掕箛鎾村闁轰胶澧楀畵?
       UnitPerceptionSystem.cs TRUE
         闁哄被鍎撮妤呭嫉閳ь剚娼婚幋鐘崇暠闁轰礁濂斿Ч澶愬礃濞嗗繐寮崇紒渚垮灪閺咁偆绱掗崟顏咁偨
@@ -514,7 +512,6 @@ Game\
       UnitSkillAnalysisSystem.cs TRUE DIRTY
         闂佹彃绉堕悿鍝爇illModifier
       UnitSkillExecuteSystem.cs TRUE DIRTY
-      UnitSkillSystem.cs TRUE
         闁告瑯浜濆Σ鍝ユ媼閿涘嫮鏆柛鎰槻瀹?
       UnitSystemGroups.cs TRUE
         闁告帒妫涚悮?
@@ -523,9 +520,9 @@ Game\
       EntitySpawnRegistryUtility.cs FALSE
       NPCAuthoringUtility.cs FALSE
       PendingEffectExecutionQueueUtility.cs FALSE
-      PropUseUtility.cs FALSE
-      QuadAnimationVisualUtility.cs FALSE
-      QuadOverlayPulseUtility.cs FALSE
+      PropUseUtility.cs TRUE
+      QuadAnimationVisualUtility.cs TRUE
+      QuadOverlayPulseUtility.cs TRUE
       SkillExecutionUtility.cs TRUE DIRTY
       SkillReleaseUtility.cs FALSE
       UnitAnimationVisualUtility.cs FALSE
@@ -535,7 +532,7 @@ Game\
       UnitControlUtility.cs FALSE
       UnitFacingUtility.cs FALSE
       WorldDropSpawnUtility.cs FALSE
-      UnitFactionUtility.cs FALSE
+      UnitFactionUtility.cs TRUE
       UnitFeatureBakeUtility.cs TRUE
       UnitModifierUtility.cs FALSE
       UnitQueryUtility.cs FALSE
@@ -543,20 +540,25 @@ Game\
     Unit\
       CompareSource\
         UnitBuffStackSource.cs TRUE
-        UnitCanStartCastSource.cs TRUE
         UnitHasTargetSource.cs TRUE
         UnitHealthRatioSource.cs TRUE
         UnitIsCastingSource.cs TRUE DIRTY
         UnitIsControlledSource.cs TRUE
         UnitTargetCastRangeMarginSource.cs TRUE
       State\
+  World\
+    WorldInputComponent.cs TRUE
+    WorldSkillDataComponent.cs TRUE
+    WorldStateComponent.cs TRUE
+    WorldStateSystem.cs TRUE DIRTY
+    WorldVariableComponent.cs TRUE DIRTY
 UI\
   BattleUI\
     Sub\
     BattleUI.cs FALSE
     BattleUIController.cs FALSE
     BattleUIData.cs FALSE
-    BattleUIModel.cs FALSE
+    BattleUIModel.cs TRUE
   CharacterUI\
     Sub\
       CharacterUI_InventoryItemData.cs FALSE
@@ -625,7 +627,7 @@ UI\
     PropertyUI.cs FALSE
     PropertyUIController.cs FALSE
     PropertyUIData.cs FALSE
-    PropertyUIModel.cs FALSE
+    PropertyUIModel.cs TRUE
   SaveUI\
     Sub\
       SaveUI_OpenData.cs FALSE
@@ -697,7 +699,7 @@ UI\
     TransitionUIData.cs FALSE
     TransitionUIModel.cs FALSE
   UnitHealthBarUI\
-    UnitHealthBarManager.cs FALSE
+    UnitHealthBarManager.cs TRUE
     UnitHealthBarUI.cs FALSE
     UnitHealthBarUIController.cs FALSE
     UnitHealthBarUIData.cs FALSE

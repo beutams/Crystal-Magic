@@ -1,3 +1,4 @@
+using CrystalMagic.Game.Data;
 using Unity.Entities;
 using UnityEngine;
 
@@ -11,4 +12,9 @@ public sealed class UnitSkillModifierRuntimeAuthoring : MonoBehaviour
             AddComponentObject(entity, new UnitSkillModifierRuntimeComponent());
         }
     }
+}
+
+public sealed class UnitSkillModifierRuntimeComponent : IComponentData
+{
+    public SkillModifierSet Modifiers = new();
 }

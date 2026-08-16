@@ -4,9 +4,11 @@ using UnityEngine;
 
 public enum UnitFactionType
 {
-    Protagonist = 0,
-    Friendly = 1,
+    Player = 0,
+    Friend = 1,
     Enemy = 2,
+    Boss = 3,
+    Npc = 4,
 }
 
 public class UnitFactionAuthoring : MonoBehaviour
@@ -19,7 +21,7 @@ public class UnitFactionAuthoring : MonoBehaviour
             if (unitDataAsset != null)
                 DependsOn(unitDataAsset);
 
-            UnitFactionType faction = UnitFactionType.Friendly;
+            UnitFactionType faction = UnitFactionType.Friend;
             UnitFactionModuleData data = UnitAuthoringUtility.ResolveModuleData<UnitFactionModuleData>(authoring);
             if (data != null)
                 faction = data.Faction;

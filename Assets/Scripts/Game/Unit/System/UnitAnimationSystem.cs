@@ -10,12 +10,9 @@ using UnityEngine;
 [UpdateAfter(typeof(StateScriptSystem))]
 partial class UnitAnimationSystem : SystemBase
 {
-    private const string AnimationStateVariableKey = "var.animation.state";
-    private const string AnimationClipVariableKey = "var.animation.clip";
-    private const string DefaultStateName = "IdleState";
-
-    private readonly Dictionary<string, UnitSpriteAnimationClip> _clipCache = new(StringComparer.Ordinal);
-    private readonly HashSet<string> _missingClipPaths = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, AnimationClip> _clipCache = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _missingResources = new(StringComparer.Ordinal);
+    private readonly HashSet<Entity> _missingRenderers = new();
 
     protected override void OnUpdate()
     {
@@ -27,10 +24,10 @@ partial class UnitAnimationSystem : SystemBase
             return;
 
         float deltaTime = SystemAPI.Time.DeltaTime;
-        foreach ((RefRW<UnitAnimationComponent> animation, Entity entity) in
-                 SystemAPI.Query<RefRW<UnitAnimationComponent>>().WithEntityAccess())
+        foreach ((UnitAnimationComponent animation, Entity entity) in
+                 SystemAPI.Query<UnitAnimationComponent>().WithEntityAccess())
         {
-            UpdateAnimation(entity, profileTable, deltaTime, ref animation.ValueRW);
+            UpdateAnimation(entity, profileTable, deltaTime, animation);
         }
     }
 
@@ -43,7 +40,8 @@ partial class UnitAnimationSystem : SystemBase
         }
 
         _clipCache.Clear();
-        _missingClipPaths.Clear();
+        _missingResources.Clear();
+        _missingRenderers.Clear();
         base.OnDestroy();
     }
 
@@ -51,90 +49,78 @@ partial class UnitAnimationSystem : SystemBase
         Entity entity,
         DataTable<UnitAnimationProfileData> profileTable,
         float deltaTime,
-        ref UnitAnimationComponent animation)
+        UnitAnimationComponent animation)
     {
-        UnitAnimationProfileData profile = FindProfile(profileTable, entity, animation);
+        SpriteRenderer spriteRenderer = animation.Renderer;
+        if (spriteRenderer == null)
+        {
+            if (_missingRenderers.Add(entity))
+                Debug.LogWarning($"[UnitAnimationSystem] {entity} has UnitAnimationAuthoring but no SpriteRenderer on the same GameObject.");
+            return;
+        }
+
+        string animationName = animation.Name.ToString();
+        if (string.IsNullOrWhiteSpace(animationName))
+        {
+            ResetPlayback(animation);
+            return;
+        }
+
+        UnitAnimationProfileData profile = FindProfile(profileTable, entity);
         if (profile == null)
         {
-            ResetAnimation(ref animation, 0, -1);
+            LogMissingOnce($"profile:{entity}", $"[UnitAnimationSystem] Missing animation profile for {entity}.");
             return;
         }
 
-        // StateScript owns intent; animation only translates its two explicit variables into frames.
-        string stateName = ResolveAnimationVariable(entity, AnimationStateVariableKey, DefaultStateName);
-        int stateHash = StringComparer.Ordinal.GetHashCode(stateName);
-        string activeSkillName = ResolveAnimationVariable(entity, AnimationClipVariableKey, string.Empty);
-        int activeSkillHash = GetStableHash(activeSkillName);
-        UnitAnimationEntryData entry = ResolveAnimationEntry(profile, stateName, activeSkillName);
-        if (entry == null &&
-            string.IsNullOrWhiteSpace(activeSkillName) &&
-            stateName.IndexOf("CastState", StringComparison.Ordinal) >= 0)
+        UnitAnimationEntryData entry = FindEntry(profile, animationName);
+        if (entry == null)
         {
-            entry = ResolveAnimationEntry(profile, "IdleState", string.Empty);
-        }
-
-        if (entry == null || string.IsNullOrWhiteSpace(entry.SpriteClipPath))
-        {
-            ResetAnimation(ref animation, stateHash, activeSkillHash);
+            LogMissingOnce(
+                $"entry:{profile.UnitDataId}:{animationName}",
+                $"[UnitAnimationSystem] UnitData {profile.UnitDataId} has no animation named '{animationName}'.");
             return;
-        }
-
-        UnitSpriteAnimationClip clip = GetClip(entry.SpriteClipPath);
-        if (clip == null)
-        {
-            ResetAnimation(ref animation, stateHash, activeSkillHash);
-            return;
-        }
-
-        int entryHash = GetEntryHash(stateName, entry);
-        bool clipChanged = animation.ClipId != entryHash;
-        bool stateChanged = animation.LastStateHash != stateHash || animation.LastSkillId != activeSkillHash;
-        if (clipChanged || stateChanged)
-        {
-            animation.ClipId = entryHash;
-            animation.FrameIndex = -1;
-            animation.ElapsedSeconds = 0f;
-            animation.IsCurrentClipFinished = 0;
-            animation.IsCurrentClipLooping = clip.Loop ? (byte)1 : (byte)0;
-        }
-        else
-        {
-            animation.ElapsedSeconds += deltaTime * math.max(0.01f, profile.PlaybackSpeed * animation.SpeedMultiplier);
         }
 
         UnitAnimationDirection direction = ResolveAnimationDirection(entity, EntityManager);
-        if (!clip.TryGetFrame(direction, animation.ElapsedSeconds, out Sprite sprite, out int frameIndex, out bool mirrorX))
+        string clipPath = entry.GetClipPath(direction);
+        if (string.IsNullOrWhiteSpace(clipPath))
         {
-            ResetAnimation(ref animation, stateHash, activeSkillHash);
+            LogMissingOnce(
+                $"direction:{profile.UnitDataId}:{animationName}:{direction}",
+                $"[UnitAnimationSystem] UnitData {profile.UnitDataId} animation '{animationName}' has no {direction} AnimationClip.");
             return;
         }
 
-        animation.IsCurrentClipFinished = clip.IsFinished(direction, animation.ElapsedSeconds) ? (byte)1 : (byte)0;
+        AnimationClip clip = GetClip(clipPath);
+        if (clip == null)
+            return;
 
-        int directionalVariantHash = GetDirectionalVariantHash(direction, mirrorX);
-        if (frameIndex != animation.FrameIndex || animation.LastDirectionalVariantHash != directionalVariantHash)
+        if (!animation.PlayingName.Equals(animation.Name))
         {
-            animation.FrameIndex = frameIndex;
-            ApplySpriteRendererFrame(entity, sprite, mirrorX);
+            animation.PlayingName = animation.Name;
+            animation.ElapsedSeconds = 0f;
+        }
+        else
+        {
+            animation.ElapsedSeconds += deltaTime;
         }
 
-        animation.LastStateHash = stateHash;
-        animation.LastSkillId = activeSkillHash;
-        animation.LastDirectionalVariantHash = directionalVariantHash;
+        float sampleTime = GetSampleTime(clip, animation.ElapsedSeconds);
+        clip.SampleAnimation(spriteRenderer.gameObject, sampleTime);
     }
 
-    private UnitSpriteAnimationClip GetClip(string path)
+    private AnimationClip GetClip(string path)
     {
-        if (_clipCache.TryGetValue(path, out UnitSpriteAnimationClip cachedClip))
+        if (_clipCache.TryGetValue(path, out AnimationClip cachedClip))
             return cachedClip;
-        if (_missingClipPaths.Contains(path))
+        if (_missingResources.Contains(path))
             return null;
 
-        UnitSpriteAnimationClip clip = ResourceComponent.Instance.Load<UnitSpriteAnimationClip>(path);
+        AnimationClip clip = ResourceComponent.Instance.Load<AnimationClip>(path);
         if (clip == null)
         {
-            _missingClipPaths.Add(path);
-            Debug.LogWarning($"[UnitAnimationSystem] Missing sprite animation clip: {path}");
+            LogMissingOnce(path, $"[UnitAnimationSystem] Missing AnimationClip: {path}");
             return null;
         }
 
@@ -142,42 +128,44 @@ partial class UnitAnimationSystem : SystemBase
         return clip;
     }
 
-    private static UnitAnimationEntryData ResolveAnimationEntry(
-        UnitAnimationProfileData profile,
-        string stateName,
-        string activeSkillName)
+    private static float GetSampleTime(AnimationClip clip, float elapsedSeconds)
     {
-        if (profile?.Animations == null)
-            return null;
+        float length = math.max(0f, clip.length);
+        if (length <= 0f)
+            return 0f;
 
-        if (!string.IsNullOrWhiteSpace(activeSkillName))
-        {
-            for (int i = 0; i < profile.Animations.Count; i++)
-            {
-                UnitAnimationEntryData entry = profile.Animations[i];
-                if (entry == null)
-                    continue;
-                if (!string.IsNullOrWhiteSpace(entry.StateName) &&
-                    !string.Equals(entry.StateName, stateName, StringComparison.Ordinal))
-                {
-                    continue;
-                }
-                if (string.Equals(entry.AnimationName, activeSkillName, StringComparison.Ordinal))
-                    return entry;
-            }
-        }
+        float elapsed = math.max(0f, elapsedSeconds);
+        return clip.isLooping
+            ? elapsed % length
+            : math.min(elapsed, length);
+    }
 
+    private static UnitAnimationEntryData FindEntry(UnitAnimationProfileData profile, string animationName)
+    {
+        profile.Normalize();
         for (int i = 0; i < profile.Animations.Count; i++)
         {
             UnitAnimationEntryData entry = profile.Animations[i];
-            if (entry == null ||
-                !string.Equals(entry.StateName, stateName, StringComparison.Ordinal) ||
-                !string.IsNullOrWhiteSpace(entry.AnimationName))
-            {
-                continue;
-            }
+            if (entry != null && string.Equals(entry.Name, animationName, StringComparison.Ordinal))
+                return entry;
+        }
 
-            return entry;
+        return null;
+    }
+
+    private UnitAnimationProfileData FindProfile(DataTable<UnitAnimationProfileData> profileTable, Entity entity)
+    {
+        if (!EntityManager.HasComponent<UnitStateScriptComponent>(entity))
+            return null;
+
+        UnitStateScriptComponent stateScript = EntityManager.GetComponentObject<UnitStateScriptComponent>(entity);
+        if (stateScript == null || stateScript.UnitDataId < 0)
+            return null;
+
+        foreach (UnitAnimationProfileData profile in profileTable.GetAll())
+        {
+            if (profile != null && profile.UnitDataId == stateScript.UnitDataId)
+                return profile;
         }
 
         return null;
@@ -188,15 +176,9 @@ partial class UnitAnimationSystem : SystemBase
         if (!UnitFacingUtility.TryGetFacing(entityManager, entity, out float2 facingDirection))
             return UnitAnimationDirection.Front;
 
-        return QuantizeToFourDirections(facingDirection);
-    }
-
-    private static UnitAnimationDirection QuantizeToFourDirections(float2 rawDirection)
-    {
-        float2 direction = math.normalizesafe(rawDirection, new float2(0f, -1f));
+        float2 direction = math.normalizesafe(facingDirection, new float2(0f, -1f));
         float bestDot = float.NegativeInfinity;
         UnitAnimationDirection bestDirection = UnitAnimationDirection.Front;
-
         EvaluateCardinal(direction, new float2(0f, -1f), UnitAnimationDirection.Front, ref bestDot, ref bestDirection);
         EvaluateCardinal(direction, new float2(0f, 1f), UnitAnimationDirection.Back, ref bestDot, ref bestDirection);
         EvaluateCardinal(direction, new float2(-1f, 0f), UnitAnimationDirection.Left, ref bestDot, ref bestDirection);
@@ -219,95 +201,15 @@ partial class UnitAnimationSystem : SystemBase
         bestDirection = candidate;
     }
 
-    private string ResolveAnimationVariable(Entity entity, string key, string fallback)
+    private void LogMissingOnce(string key, string message)
     {
-        if (!EntityManager.HasComponent<UnitVariableComponent>(entity))
-            return fallback;
-
-        UnitVariableComponent variables = EntityManager.GetComponentObject<UnitVariableComponent>(entity);
-        if (variables?.Values == null ||
-            !variables.Values.TryGetValue(key, out UnitValue value) ||
-            !value.TryGetString(out string result) ||
-            string.IsNullOrWhiteSpace(result))
-        {
-            return fallback;
-        }
-
-        return result.Trim();
+        if (_missingResources.Add(key))
+            Debug.LogWarning(message);
     }
 
-    private UnitAnimationProfileData FindProfile(
-        DataTable<UnitAnimationProfileData> profileTable,
-        Entity entity,
-        UnitAnimationComponent animation)
+    private static void ResetPlayback(UnitAnimationComponent animation)
     {
-        UnitAnimationProfileData fallback = null;
-        int unitDataId = -1;
-        if (EntityManager.HasComponent<UnitStateScriptComponent>(entity))
-        {
-            UnitStateScriptComponent stateScript = EntityManager.GetComponentObject<UnitStateScriptComponent>(entity);
-            unitDataId = stateScript?.UnitDataId ?? -1;
-        }
-
-        string unitName = animation.VisualKey.ToString();
-        foreach (UnitAnimationProfileData row in profileTable.GetAll())
-        {
-            if (row == null)
-                continue;
-
-            row.Normalize();
-            if (unitDataId >= 0 && row.UnitDataId == unitDataId)
-                return row;
-
-            if (fallback == null &&
-                !string.IsNullOrWhiteSpace(row.UnitName) &&
-                string.Equals(row.UnitName, unitName, StringComparison.Ordinal))
-            {
-                fallback = row;
-            }
-        }
-
-        return fallback;
-    }
-
-    private static int GetEntryHash(string stateName, UnitAnimationEntryData entry)
-    {
-        return GetStableHash($"{stateName}|{entry.AnimationName}|{entry.SpriteClipPath}");
-    }
-
-    private static int GetStableHash(string value)
-    {
-        return string.IsNullOrEmpty(value) ? 0 : StringComparer.Ordinal.GetHashCode(value);
-    }
-
-    private static int GetDirectionalVariantHash(UnitAnimationDirection direction, bool mirrorX)
-    {
-        return ((int)direction * 2) + (mirrorX ? 1 : 0) + 1;
-    }
-
-    private void ApplySpriteRendererFrame(Entity entity, Sprite sprite, bool mirrorX)
-    {
-        if (entity == Entity.Null ||
-            !EntityManager.Exists(entity) ||
-            !EntityManager.HasComponent<SpriteRenderer>(entity))
-        return;
-
-        SpriteRenderer spriteRenderer = EntityManager.GetComponentObject<SpriteRenderer>(entity);
-        if (spriteRenderer == null)
-            return;
-
-        spriteRenderer.sprite = sprite;
-        spriteRenderer.flipX = mirrorX;
-    }
-
-    private static void ResetAnimation(ref UnitAnimationComponent animation, int stateHash, int skillHash)
-    {
-        animation.ClipId = -1;
-        animation.FrameIndex = -1;
-        animation.LastStateHash = stateHash;
-        animation.LastSkillId = skillHash;
-        animation.LastDirectionalVariantHash = 0;
-        animation.IsCurrentClipFinished = 0;
-        animation.IsCurrentClipLooping = 0;
+        animation.PlayingName = default;
+        animation.ElapsedSeconds = 0f;
     }
 }

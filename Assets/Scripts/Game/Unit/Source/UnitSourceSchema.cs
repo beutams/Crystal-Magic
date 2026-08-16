@@ -26,16 +26,19 @@ public readonly struct UnitSourceSetSchemaEntry
     public UnitSourceSetSchemaEntry(
         string key,
         Type componentType,
-        IReadOnlyList<ComparatorParameterDefinition> parameters)
+        IReadOnlyList<ComparatorParameterDefinition> parameters,
+        bool requiresKey)
     {
         Key = key;
         ComponentType = componentType;
         Parameters = parameters ?? Array.Empty<ComparatorParameterDefinition>();
+        RequiresKey = requiresKey;
     }
 
     public string Key { get; }
     public Type ComponentType { get; }
     public IReadOnlyList<ComparatorParameterDefinition> Parameters { get; }
+    public bool RequiresKey { get; }
 }
 
 public sealed class UnitSourceSchema
@@ -92,7 +95,8 @@ public sealed class UnitSourceSchemaBuilder
     public void AddSet(
         string key,
         Type componentType,
-        IReadOnlyList<ComparatorParameterDefinition> parameters)
+        IReadOnlyList<ComparatorParameterDefinition> parameters,
+        bool requiresKey = false)
     {
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentException("Unit source set key cannot be empty.", nameof(key));
@@ -100,7 +104,10 @@ public sealed class UnitSourceSchemaBuilder
         if (componentType == null)
             throw new ArgumentNullException(nameof(componentType));
 
-        if (!_sets.TryAdd(key, new UnitSourceSetSchemaEntry(key, componentType, parameters)))
+        if (parameters == null || parameters.Count != 1 || parameters[0].Category == UnitValueCategory.None)
+            throw new ArgumentException("Unit source setters must define exactly one value parameter.", nameof(parameters));
+
+        if (!_sets.TryAdd(key, new UnitSourceSetSchemaEntry(key, componentType, parameters, requiresKey)))
             throw new InvalidOperationException($"Unit source set is already defined: {key}");
     }
 

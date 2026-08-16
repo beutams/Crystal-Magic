@@ -248,6 +248,7 @@ namespace CrystalMagic.Game.Data
     public sealed class SetBehaviorNodeData : BehaviorNodeData
     {
         public string SetKey = string.Empty;
+        public string Key = string.Empty;
         public List<ValueExpression> Inputs = new();
 
         public SetBehaviorNodeData()

@@ -174,6 +174,18 @@ public struct UnitValue
         return false;
     }
 
+    public bool TryGetFloat2(out float2 value)
+    {
+        if (Type == UnitValueType.Float2)
+        {
+            value = Float2;
+            return true;
+        }
+
+        value = float2.zero;
+        return false;
+    }
+
     public bool TryGetString(out string value)
     {
         if (Type == UnitValueType.String)

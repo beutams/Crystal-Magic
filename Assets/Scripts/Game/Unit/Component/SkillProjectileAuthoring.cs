@@ -20,8 +20,18 @@ public class SkillProjectileAuthoring : MonoBehaviour
                 HitRadius = 0f,
                 CanPierce = 0,
                 TriggerDestroyEffectsOnMaxRange = 0,
-                IsDestroying = 0,
             });
         }
     }
+}
+
+public struct SkillProjectileComponent : IComponentData
+{
+    public float3 Direction;
+    public float Speed;
+    public float MaxRange;
+    public float TraveledDistance;
+    public float HitRadius;
+    public byte CanPierce;
+    public byte TriggerDestroyEffectsOnMaxRange;
 }

@@ -4,7 +4,6 @@ using Unity.Entities;
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateAfter(typeof(BehaviorTreeSystem))]
 [UpdateAfter(typeof(UnitControlSystem))]
-[UpdateBefore(typeof(UnitSkillSystem))]
 public partial class StateScriptSystem : SystemBase
 {
     protected override void OnUpdate()

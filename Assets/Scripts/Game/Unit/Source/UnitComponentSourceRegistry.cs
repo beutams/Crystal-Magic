@@ -13,7 +13,9 @@ public static class UnitComponentSourceRegistry
         new UnitControlSource(),
         new UnitDeathSource(),
         new UnitElementSource(),
+        new UnitAnimationSource(),
         new UnitFacingSource(),
+        new UnitJumpArcSource(),
         new UnitFactionSource(),
         new UnitManaSource(),
         new UnitMoveSource(),
@@ -21,6 +23,9 @@ public static class UnitComponentSourceRegistry
         new UnitTransformSource(),
         new UnitVariableSource(),
         new UnitVitalitySource(),
+        new WorldInputSource(),
+        new WorldSkillSource(),
+        new WorldVariableSource(),
     };
 
     public static IReadOnlyList<UnitComponentSource> Sources => s_sources;

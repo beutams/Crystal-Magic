@@ -26,7 +26,9 @@ public sealed class MonitorStateScriptNode : StateScriptStateNode
 
     protected override bool OnBind(out string error)
     {
-        _comparator = s_comparatorFactory.BuildComparator(_data.Conditions, Runtime.Sources);
+        _data.Condition ??= new ConditionConfig();
+        _data.Condition.ConditionType = ConditionType.Necessary;
+        _comparator = s_comparatorFactory.BuildComparator(new[] { _data.Condition }, Runtime.Sources);
         if (!_comparator.IsValid)
         {
             error = "Monitor comparator is invalid.";

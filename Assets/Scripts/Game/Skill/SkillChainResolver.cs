@@ -10,15 +10,6 @@ namespace CrystalMagic.Game.Skill
 {
     public static class SkillChainResolver
     {
-        public static SkillAdditionData GetSkillAdditionData(int skillAdditionId)
-        {
-            if (skillAdditionId < 0)
-                return null;
-
-            DataComponent dataComponent = DataComponent.Instance;
-            return dataComponent == null ? null : dataComponent.Get<SkillAdditionData>(skillAdditionId);
-        }
-
         public static SkillData GetSkillDataBySkillStoneItemId(int skillStoneItemId)
         {
             DataComponent dataComponent = DataComponent.Instance;
@@ -62,7 +53,7 @@ namespace CrystalMagic.Game.Skill
 
     public static class SkillResolver
     {
-        public static ResolvedSkillData Resolve(SkillData skillData, SkillModifierSet modifiers, SkillAdditionData skillAdditionData = null, UnitAttackComponent? attackComponent = null, UnitElementComponent? elementComponent = null)
+        public static ResolvedSkillData Resolve(SkillData skillData, SkillModifierSet modifiers, UnitAttackComponent? attackComponent = null, UnitElementComponent? elementComponent = null)
         {
             if (skillData == null)
                 return null;
@@ -76,8 +67,6 @@ namespace CrystalMagic.Game.Skill
             float chantSpeedMultiplier = UnitAttackComponent.GetDurationMultiplier(chantSpeedValue);
             float moveSpeedMultiplier = math.min(1f, math.max(0f, skillData.MoveSpeedMultiplier) * modifiers.GetMoveSpeedMultiplier());
 
-            EffectData[] mergedEffectChain = MergeEffectChains(skillData.EffectChain, skillAdditionData?.EffectChain);
-
             return new ResolvedSkillData
             {
                 Source = skillData,
@@ -90,29 +79,8 @@ namespace CrystalMagic.Game.Skill
                 RecoveryDuration = math.max(0f, skillData.RecoveryDuration * actionSpeedMultiplier),
                 CanMoveWhileCasting = skillData.CanMoveWhileCasting,
                 MoveSpeedMultiplier = moveSpeedMultiplier,
-                EffectChain = EffectData.CreateRuntimeCopies(mergedEffectChain, modifiers, elementComponent),
+                EffectChain = EffectData.CreateRuntimeCopies(skillData.EffectChain, modifiers, elementComponent),
             };
         }
-
-        private static EffectData[] MergeEffectChains(EffectData[] baseEffects, EffectData[] additionEffects)
-        {
-            bool hasBaseEffects = baseEffects != null && baseEffects.Length > 0;
-            bool hasAdditionEffects = additionEffects != null && additionEffects.Length > 0;
-
-            if (!hasBaseEffects && !hasAdditionEffects)
-                return System.Array.Empty<EffectData>();
-
-            if (!hasAdditionEffects)
-                return baseEffects;
-
-            if (!hasBaseEffects)
-                return additionEffects;
-
-            EffectData[] merged = new EffectData[baseEffects.Length + additionEffects.Length];
-            System.Array.Copy(baseEffects, 0, merged, 0, baseEffects.Length);
-            System.Array.Copy(additionEffects, 0, merged, baseEffects.Length, additionEffects.Length);
-            return merged;
-        }
-
     }
 }

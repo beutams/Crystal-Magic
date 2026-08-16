@@ -199,7 +199,7 @@ namespace CrystalMagic.UI
                 return false;
             }
 
-            return entityManager.GetComponentData<UnitFactionComponent>(entity).Value == UnitFactionType.Enemy;
+            return UnitFactionUtility.IsHostile(entityManager.GetComponentData<UnitFactionComponent>(entity).Value);
         }
 
         private void ReleaseBar(Entity entity)
@@ -300,7 +300,8 @@ namespace CrystalMagic.UI
 
                 if (entry.OriginEntity == Entity.Null ||
                     !entityManager.Exists(entry.OriginEntity) ||
-                    !entityManager.HasComponent<PlayerTag>(entry.OriginEntity))
+                    !entityManager.HasComponent<UnitFactionComponent>(entry.OriginEntity) ||
+                    !UnitFactionUtility.IsPlayer(entityManager.GetComponentData<UnitFactionComponent>(entry.OriginEntity).Value))
                 {
                     continue;
                 }

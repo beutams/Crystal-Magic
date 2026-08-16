@@ -142,15 +142,19 @@ namespace CrystalMagic.Game
             }
 
             EntityManager entityManager = world.EntityManager;
-            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<PlayerTag>());
+            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<UnitFactionComponent>());
             using NativeArray<Entity> entities = query.ToEntityArray(Allocator.Temp);
-            if (entities.Length <= 0)
+            for (int i = 0; i < entities.Length; i++)
             {
-                failureReason = PropUseFailureReason.PlayerNotFound;
-                return false;
+                Entity entity = entities[i];
+                if (!UnitFactionUtility.IsPlayer(entityManager.GetComponentData<UnitFactionComponent>(entity).Value))
+                    continue;
+
+                return TryBuildContext(entityManager, entity, out context, out failureReason);
             }
 
-            return TryBuildContext(entityManager, entities[0], out context, out failureReason);
+            failureReason = PropUseFailureReason.PlayerNotFound;
+            return false;
         }
 
         public static bool TryBuildContext(

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 public delegate UnitValue UnitSourceGetHandler(UnitValue[] parameters);
 public delegate bool UnitSourceSetHandler(UnitValue[] parameters);
+public delegate bool UnitSourceKeyedSetHandler(string key, UnitValue value);
 
 public sealed class UnitSourceGet : IParameterizedUnitValueGetter
 {
@@ -68,17 +69,42 @@ public sealed class UnitSourceSet
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentException("Unit source set key cannot be empty.", nameof(key));
 
+        if (parameters == null || parameters.Count != 1 || parameters[0].Category == UnitValueCategory.None)
+            throw new ArgumentException("Unit source setters must accept exactly one value parameter.", nameof(parameters));
+
         Key = key;
-        Parameters = parameters ?? Array.Empty<ComparatorParameterDefinition>();
+        Parameters = parameters;
         Invoke = invoke ?? throw new ArgumentNullException(nameof(invoke));
+    }
+
+    public UnitSourceSet(
+        string key,
+        IReadOnlyList<ComparatorParameterDefinition> parameters,
+        UnitSourceKeyedSetHandler invoke)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+            throw new ArgumentException("Unit source set key cannot be empty.", nameof(key));
+
+        if (parameters == null || parameters.Count != 1 || parameters[0].Category == UnitValueCategory.None)
+            throw new ArgumentException("Unit source setters must accept exactly one value parameter.", nameof(parameters));
+
+        Key = key;
+        Parameters = parameters;
+        RequiresKey = true;
+        KeyedInvoke = invoke ?? throw new ArgumentNullException(nameof(invoke));
     }
 
     public string Key { get; }
     public IReadOnlyList<ComparatorParameterDefinition> Parameters { get; }
     public UnitSourceSetHandler Invoke { get; }
+    public UnitSourceKeyedSetHandler KeyedInvoke { get; }
+    public bool RequiresKey { get; }
 
     public bool TrySet(UnitValue[] parameters)
     {
+        if (RequiresKey)
+            return false;
+
         UnitValue[] input = parameters ?? Array.Empty<UnitValue>();
         if (input.Length != Parameters.Count)
             return false;
@@ -90,6 +116,14 @@ public sealed class UnitSourceSet
         }
 
         return Invoke(input);
+    }
+
+    public bool TrySet(string key, UnitValue value)
+    {
+        return RequiresKey &&
+               !string.IsNullOrWhiteSpace(key) &&
+               Parameters[0].Accepts(value.Category) &&
+               KeyedInvoke(key, value);
     }
 }
 

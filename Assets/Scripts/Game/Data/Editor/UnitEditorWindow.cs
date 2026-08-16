@@ -16,7 +16,9 @@ namespace CrystalMagic.Editor.Data
     {
         private const string DataPath = "Assets/Res/Data/UnitDataTable.json";
         private const string DropDataPath = "Assets/Res/Data/DropDataTable.json";
+        private const string AnimationProfileDataPath = "Assets/Res/Data/UnitAnimationProfileDataTable.json";
         private const string UnitPrefabDirectory = "Assets/Res/Prefab/Unit";
+        private const string AnimationClipDirectory = "Assets/Res/Data/UnitAnimationClips";
         private const float ListPanelWidth = 220f;
         private const float ItemHeight = 26f;
         private const float LabelWidth = 140f;
@@ -37,6 +39,11 @@ namespace CrystalMagic.Editor.Data
         private sealed class DropTableWrapper
         {
             public List<DropData> Rows = new();
+        }
+
+        private sealed class AnimationProfileTableWrapper
+        {
+            public List<UnitAnimationProfileData> Rows = new();
         }
 
         private sealed class IntOption
@@ -61,6 +68,7 @@ namespace CrystalMagic.Editor.Data
 
         private List<UnitData> _rows = new();
         private readonly List<DropData> _dropRows = new();
+        private readonly List<UnitAnimationProfileData> _animationProfiles = new();
         private readonly List<UnitPrefabEntry> _prefabEntries = new();
         private bool _isDirty;
         private string _statusText = string.Empty;
@@ -82,6 +90,7 @@ namespace CrystalMagic.Editor.Data
         {
             LoadData();
             LoadDropData();
+            LoadAnimationProfiles();
             RefreshPrefabEntries();
         }
 
@@ -281,6 +290,7 @@ namespace CrystalMagic.Editor.Data
                 string json = JsonConvert.SerializeObject(new TableWrapper { Rows = _rows }, JsonSettings);
                 DataFileUtility.WriteJsonText(DataPath, json);
                 SaveDropData();
+                SaveAnimationProfiles();
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
                 _isDirty = false;
@@ -332,6 +342,80 @@ namespace CrystalMagic.Editor.Data
             DataFileUtility.WriteJsonText(DropDataPath, json);
         }
 
+        private void LoadAnimationProfiles()
+        {
+            _animationProfiles.Clear();
+            if (!File.Exists(AnimationProfileDataPath))
+                return;
+
+            try
+            {
+                string json = DataFileUtility.ReadJsonText(AnimationProfileDataPath);
+                AnimationProfileTableWrapper wrapper = JsonConvert.DeserializeObject<AnimationProfileTableWrapper>(json, JsonSettings);
+                if (wrapper?.Rows != null)
+                    _animationProfiles.AddRange(wrapper.Rows);
+
+                NormalizeAnimationProfiles();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[UnitEditor] Animation profile load error:\n{ex}");
+            }
+        }
+
+        private void SaveAnimationProfiles()
+        {
+            string directory = Path.GetDirectoryName(AnimationProfileDataPath);
+            if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
+
+            SynchronizeAnimationProfiles();
+            string json = JsonConvert.SerializeObject(
+                new AnimationProfileTableWrapper { Rows = _animationProfiles },
+                JsonSettings);
+            DataFileUtility.WriteJsonText(AnimationProfileDataPath, json);
+        }
+
+        private void SynchronizeAnimationProfiles()
+        {
+            for (int i = _animationProfiles.Count - 1; i >= 0; i--)
+            {
+                UnitAnimationProfileData profile = _animationProfiles[i];
+                if (profile == null)
+                {
+                    _animationProfiles.RemoveAt(i);
+                    continue;
+                }
+
+                UnitData unit = _rows.FirstOrDefault(row =>
+                    row != null &&
+                    (!string.IsNullOrWhiteSpace(profile.UnitName)
+                        ? string.Equals(row.Name, profile.UnitName, StringComparison.Ordinal)
+                        : row.Id == profile.UnitDataId));
+                if (unit == null)
+                {
+                    _animationProfiles.RemoveAt(i);
+                    continue;
+                }
+
+                profile.UnitDataId = unit.Id;
+                profile.UnitName = unit.Name;
+                profile.Normalize();
+            }
+
+            NormalizeAnimationProfiles();
+        }
+
+        private void NormalizeAnimationProfiles()
+        {
+            for (int i = 0; i < _animationProfiles.Count; i++)
+            {
+                _animationProfiles[i] ??= new UnitAnimationProfileData();
+                _animationProfiles[i].Id = i;
+                _animationProfiles[i].Normalize();
+            }
+        }
+
         private List<UnitData> BuildSaveRowsFromPrefabs()
         {
             List<UnitData> rows = new();
@@ -376,6 +460,8 @@ namespace CrystalMagic.Editor.Data
             if (GUILayout.Button("加载", EditorStyles.toolbarButton, GUILayout.Width(44f)))
             {
                 LoadData();
+                LoadDropData();
+                LoadAnimationProfiles();
                 RefreshPrefabEntries();
             }
 
@@ -492,7 +578,7 @@ namespace CrystalMagic.Editor.Data
             GUILayout.Space(4f);
             EditorGUILayout.BeginHorizontal();
             GUILayout.Space(8f);
-            string[] tabs = { "属性", "行为" };
+            string[] tabs = { "属性", "行为", "动画" };
             _selectedTab = Mathf.Clamp(_selectedTab, 0, tabs.Length - 1);
             int newTab = GUILayout.Toolbar(_selectedTab, tabs, GUILayout.Width(260f), GUILayout.Height(24f));
             if (newTab != _selectedTab)
@@ -518,6 +604,9 @@ namespace CrystalMagic.Editor.Data
                     break;
                 case 1:
                     DrawBehaviorPreviewPanel(entry, unit);
+                    break;
+                case 2:
+                    DrawAnimationPanel(entry, unit);
                     break;
             }
 
@@ -676,6 +765,190 @@ namespace CrystalMagic.Editor.Data
                 EditorGUILayout.EndVertical();
                 GUILayout.Space(4f);
             }
+        }
+
+        private void DrawAnimationPanel(UnitPrefabEntry entry, UnitData unit)
+        {
+            DrawSectionHeader("Animation");
+            if (entry.Prefab.GetComponent<UnitAnimationAuthoring>() == null)
+            {
+                EditorGUILayout.HelpBox("当前 Prefab 没有 UnitAnimationAuthoring，不能配置单位动画。", MessageType.Warning);
+                return;
+            }
+
+            if (entry.Prefab.GetComponent<SpriteRenderer>() == null)
+            {
+                EditorGUILayout.HelpBox(
+                    "AnimationClip 直接驱动同一 GameObject 上的 SpriteRenderer.sprite。请先将该单位的视觉组件改为 SpriteRenderer。",
+                    MessageType.Warning);
+            }
+
+            UnitAnimationProfileData profile = GetAnimationProfile(unit);
+            if (profile == null)
+            {
+                EditorGUILayout.HelpBox("当前单位还没有动画配置。", MessageType.Info);
+                if (GUILayout.Button("创建动画配置", GUILayout.Width(160f)))
+                {
+                    profile = new UnitAnimationProfileData
+                    {
+                        UnitDataId = unit.Id,
+                        UnitName = unit.Name,
+                    };
+                    _animationProfiles.Add(profile);
+                    NormalizeAnimationProfiles();
+                    _isDirty = true;
+                }
+
+                return;
+            }
+
+            if (GUILayout.Button("删除动画配置", GUILayout.Width(160f)))
+            {
+                _animationProfiles.Remove(profile);
+                NormalizeAnimationProfiles();
+                _isDirty = true;
+                return;
+            }
+
+            profile.UnitDataId = unit.Id;
+            profile.UnitName = unit.Name;
+            profile.Normalize();
+
+            EditorGUILayout.LabelField("Unit Data", $"[{unit.Id}] {unit.Name}");
+            EditorGUILayout.HelpBox(
+                "StateScript writes unit.animation.setName. Each name requires four explicit AnimationClips; the clips may animate SpriteRenderer.flipX themselves.",
+                MessageType.None);
+
+            EditorGUI.BeginChangeCheck();
+            for (int i = 0; i < profile.Animations.Count; i++)
+            {
+                UnitAnimationEntryData animation = profile.Animations[i];
+                if (animation == null)
+                {
+                    animation = new UnitAnimationEntryData();
+                    profile.Animations[i] = animation;
+                }
+
+                DrawAnimationEntry(entry, profile, animation, i);
+                if (i >= profile.Animations.Count)
+                    break;
+            }
+
+            if (GUILayout.Button("新增动画", GUILayout.Width(120f)))
+            {
+                profile.Animations.Add(new UnitAnimationEntryData
+                {
+                    Name = "NewAnimation",
+                });
+                _isDirty = true;
+            }
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                profile.Normalize();
+                _isDirty = true;
+            }
+        }
+
+        private void DrawAnimationEntry(
+            UnitPrefabEntry entry,
+            UnitAnimationProfileData profile,
+            UnitAnimationEntryData animation,
+            int index)
+        {
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField($"Animation {index + 1}", EditorStyles.boldLabel);
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("删除", GUILayout.Width(60f)))
+            {
+                profile.Animations.RemoveAt(index);
+                _isDirty = true;
+                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.EndVertical();
+                return;
+            }
+            EditorGUILayout.EndHorizontal();
+
+            animation.Name = EditorGUILayout.TextField("Animation Name", animation.Name ?? string.Empty);
+            DrawAnimationClipField(entry, animation.Name, "Down / Front", "Front", ref animation.FrontClipPath);
+            DrawAnimationClipField(entry, animation.Name, "Up / Back", "Back", ref animation.BackClipPath);
+            DrawAnimationClipField(entry, animation.Name, "Left", "Left", ref animation.LeftClipPath);
+            DrawAnimationClipField(entry, animation.Name, "Right", "Right", ref animation.RightClipPath);
+            EditorGUILayout.EndVertical();
+            GUILayout.Space(4f);
+        }
+
+        private static void DrawAnimationClipField(
+            UnitPrefabEntry entry,
+            string animationName,
+            string label,
+            string directionName,
+            ref string path)
+        {
+            AnimationClip current = string.IsNullOrWhiteSpace(path)
+                ? null
+                : AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
+            EditorGUILayout.BeginHorizontal();
+            AnimationClip next = (AnimationClip)EditorGUILayout.ObjectField(label, current, typeof(AnimationClip), false);
+            if (next != current)
+            {
+                path = next != null ? AssetDatabase.GetAssetPath(next) : string.Empty;
+                GUI.changed = true;
+            }
+
+            if (GUILayout.Button("新建", GUILayout.Width(50f)))
+            {
+                AnimationClip clip = CreateAnimationClip(entry, animationName, directionName);
+                path = AssetDatabase.GetAssetPath(clip);
+                Selection.activeObject = clip;
+                EditorGUIUtility.PingObject(clip);
+                GUI.changed = true;
+            }
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private static AnimationClip CreateAnimationClip(UnitPrefabEntry entry, string animationName, string directionName)
+        {
+            EnsureAnimationClipDirectory();
+            string unitName = SanitizeFileName(entry?.DisplayName ?? "Unit");
+            string clipName = SanitizeFileName(string.IsNullOrWhiteSpace(animationName) ? "Animation" : animationName);
+            string direction = SanitizeFileName(directionName);
+            string path = AssetDatabase.GenerateUniqueAssetPath(
+                $"{AnimationClipDirectory}/{unitName}_{clipName}_{direction}.anim");
+            AnimationClip clip = new() { frameRate = 12f };
+            AssetDatabase.CreateAsset(clip, path);
+            AssetDatabase.SaveAssets();
+            return clip;
+        }
+
+        private static void EnsureAnimationClipDirectory()
+        {
+            string[] segments = AnimationClipDirectory.Split('/');
+            string current = segments[0];
+            for (int i = 1; i < segments.Length; i++)
+            {
+                string next = $"{current}/{segments[i]}";
+                if (!AssetDatabase.IsValidFolder(next))
+                    AssetDatabase.CreateFolder(current, segments[i]);
+                current = next;
+            }
+        }
+
+        private static string SanitizeFileName(string value)
+        {
+            foreach (char invalidCharacter in Path.GetInvalidFileNameChars())
+                value = value.Replace(invalidCharacter, '_');
+            return string.IsNullOrWhiteSpace(value) ? "Animation" : value;
+        }
+
+        private UnitAnimationProfileData GetAnimationProfile(UnitData unit)
+        {
+            if (unit == null)
+                return null;
+
+            return _animationProfiles.FirstOrDefault(profile => profile != null && profile.UnitDataId == unit.Id);
         }
 
         private static string GetBehaviorTreePreviewName(BehaviorTreeData tree)

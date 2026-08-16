@@ -110,23 +110,28 @@ namespace CrystalMagic.UI
             entityManager = world.EntityManager;
             if (_cachedPlayerEntity != Entity.Null &&
                 entityManager.Exists(_cachedPlayerEntity) &&
-                entityManager.HasComponent<PlayerTag>(_cachedPlayerEntity))
+                entityManager.HasComponent<UnitFactionComponent>(_cachedPlayerEntity) &&
+                UnitFactionUtility.IsPlayer(entityManager.GetComponentData<UnitFactionComponent>(_cachedPlayerEntity).Value))
             {
                 player = _cachedPlayerEntity;
                 return true;
             }
 
-            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<PlayerTag>());
+            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<UnitFactionComponent>());
             using NativeArray<Entity> entities = query.ToEntityArray(Allocator.Temp);
-            if (entities.Length <= 0)
+            for (int i = 0; i < entities.Length; i++)
             {
-                player = Entity.Null;
-                return false;
+                Entity entity = entities[i];
+                if (!UnitFactionUtility.IsPlayer(entityManager.GetComponentData<UnitFactionComponent>(entity).Value))
+                    continue;
+
+                _cachedPlayerEntity = entity;
+                player = entity;
+                return true;
             }
 
-            _cachedPlayerEntity = entities[0];
-            player = _cachedPlayerEntity;
-            return true;
+            player = Entity.Null;
+            return false;
         }
 
         private void PublishChanged()

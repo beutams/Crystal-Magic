@@ -41,13 +41,6 @@
                                          "SearchRadius":  16.0
                                      },
                                      {
-                                         "$type":  "CrystalMagic.Game.Data.UnitSkillModuleData, Assembly-CSharp",
-                                         "Skills":  [
-
-                                                    ]
-                                     },
-
-                                     {
                                          "$type":  "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
                                          "DropDataId":  -1
                                      }
@@ -57,11 +50,11 @@
                  {
                      "Name":  "NPCEquipShop",
                      "Description":  "装备商店",
-                     "PrefabPath":  "Assets/Res/Prefab/Unit/NPCEquipShop.prefab",
+                    "PrefabPath":  "Assets/Res/Prefab/Unit/NPCEquipShop.prefab",
                      "Modules":  [
                                      {
                                          "$type":  "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-                                         "Faction":  1
+                                         "Faction":  4
                                      },
                                      {
                                          "$type":  "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
@@ -74,11 +67,11 @@
                  {
                      "Name":  "NPCPropShop",
                      "Description":  "道具商店",
-                     "PrefabPath":  "Assets/Res/Prefab/Unit/NPCPropShop.prefab",
+                    "PrefabPath":  "Assets/Res/Prefab/Unit/NPCPropShop.prefab",
                      "Modules":  [
                                      {
                                          "$type":  "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-                                         "Faction":  1
+                                         "Faction":  4
                                      },
                                      {
                                          "$type":  "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
@@ -91,11 +84,11 @@
                  {
                      "Name":  "NPCSkillShop",
                      "Description":  "技能商店NPC",
-                     "PrefabPath":  "Assets/Res/Prefab/Unit/NPCSkillShop.prefab",
+                    "PrefabPath":  "Assets/Res/Prefab/Unit/NPCSkillShop.prefab",
                      "Modules":  [
                                      {
                                          "$type":  "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-                                         "Faction":  1
+                                         "Faction":  4
                                      },
                                      {
                                          "$type":  "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
@@ -108,11 +101,11 @@
                  {
                      "Name":  "NPCStash",
                      "Description":  "仓库NPC",
-                     "PrefabPath":  "Assets/Res/Prefab/Unit/NPCStash.prefab",
+                    "PrefabPath":  "Assets/Res/Prefab/Unit/NPCStash.prefab",
                      "Modules":  [
                                      {
                                          "$type":  "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-                                         "Faction":  1
+                                         "Faction":  4
                                      },
                                      {
                                          "$type":  "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
@@ -125,11 +118,11 @@
                  {
                      "Name":  "NPCTraining",
                      "Description":  "训练场NPC",
-                     "PrefabPath":  "Assets/Res/Prefab/Unit/NPCTraining.prefab",
+                    "PrefabPath":  "Assets/Res/Prefab/Unit/NPCTraining.prefab",
                      "Modules":  [
                                      {
                                          "$type":  "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-                                         "Faction":  1
+                                         "Faction":  4
                                      },
                                      {
                                          "$type":  "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",

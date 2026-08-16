@@ -6,7 +6,6 @@ using Unity.Transforms;
 using UnityEngine;
 
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
-[UpdateAfter(typeof(SkillProjectileSystem))]
 [UpdateBefore(typeof(DestroyEntitySystem))]
 public partial class QuadAnimationSystem : SystemBase
 {
@@ -72,7 +71,7 @@ public partial class QuadAnimationSystem : SystemBase
             return;
 
         int textureInstanceId = visual.Texture.GetInstanceID();
-        int visualKeyHash = QuadAnimationVisualUtility.GetVisualKeyHash(visual.VisualKind, visual.PrefabName);
+        int visualKeyHash = QuadAnimationVisualUtility.GetVisualKeyHash(visual.PrefabName);
         if (animation.LastTextureInstanceId == textureInstanceId &&
             animation.LastVisualKeyHash == visualKeyHash)
         {
@@ -80,7 +79,6 @@ public partial class QuadAnimationSystem : SystemBase
         }
 
         if (!QuadAnimationVisualUtility.TryResolveVisual(
-                visual.VisualKind,
                 visual.PrefabName,
                 visual.Texture,
                 out Mesh mesh,
@@ -235,10 +233,10 @@ public partial class QuadAnimationSystem : SystemBase
             if (!EntityManager.Exists(pending.Entity))
                 continue;
 
-            SetOrAddProperty(pending.Entity, new UnitAnimationFrameUvMinProperty { Value = pending.UvMin });
-            SetOrAddProperty(pending.Entity, new UnitAnimationFrameUvSizeProperty { Value = pending.UvSize });
-            SetOrAddProperty(pending.Entity, new UnitAnimationFrameWorldSizeProperty { Value = pending.WorldSize });
-            SetOrAddProperty(pending.Entity, new UnitAnimationFramePivotOffsetProperty { Value = pending.PivotOffset });
+            SetOrAddProperty(pending.Entity, new QuadAnimationFrameUvMinProperty { Value = pending.UvMin });
+            SetOrAddProperty(pending.Entity, new QuadAnimationFrameUvSizeProperty { Value = pending.UvSize });
+            SetOrAddProperty(pending.Entity, new QuadAnimationFrameWorldSizeProperty { Value = pending.WorldSize });
+            SetOrAddProperty(pending.Entity, new QuadAnimationFramePivotOffsetProperty { Value = pending.PivotOffset });
         }
     }
 

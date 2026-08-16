@@ -77,10 +77,11 @@ public static class QuadOverlayPulseUtility
         float4 overlayColor,
         float strength)
     {
-        if (!entityManager.HasComponent<SpriteRenderer>(entity))
+        if (!entityManager.HasComponent<UnitAnimationComponent>(entity))
             return;
 
-        SpriteRenderer spriteRenderer = entityManager.GetComponentObject<SpriteRenderer>(entity);
+        UnitAnimationComponent animation = entityManager.GetComponentObject<UnitAnimationComponent>(entity);
+        SpriteRenderer spriteRenderer = animation?.Renderer;
         if (spriteRenderer == null)
             return;
 

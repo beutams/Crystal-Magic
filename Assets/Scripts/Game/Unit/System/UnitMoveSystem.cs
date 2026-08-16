@@ -31,10 +31,11 @@ public partial struct UnitMoveJob : IJobEntity
         ref PhysicsVelocity physicsVelocity,
         ref LocalTransform transform)
     {
-        float2 targetDirection = math.normalizesafe(move.DesiredDirection, float2.zero);
-        float maxSpeed = math.max(0f, move.DesiredMaxSpeed);
-        float maxAcceleration = math.max(0f, move.DesiredAcceleration);
-        float2 targetVel = targetDirection * maxSpeed;
+        float2 targetDirection = math.normalizesafe(move.Direction, float2.zero);
+        float targetSpeed = move.RealMoveSpeed * move.StateMoveMultiplier;
+        float maxSpeed = math.abs(targetSpeed);
+        float maxAcceleration = math.max(0f, move.RealMaxAcceleration);
+        float2 targetVel = targetDirection * targetSpeed;
         UpdateMoveVelocity(ref move, targetVel, maxAcceleration, maxSpeed);
         ApplyPlanarTransform(ref physicsVelocity, ref transform, move.Velocity);
     }

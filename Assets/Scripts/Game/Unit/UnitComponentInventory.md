@@ -27,7 +27,7 @@ becoming a second copy of every unit component.
 
 | Scope | Owner | Read/write policy | Examples |
 | --- | --- | --- | --- |
-| `unit.*` | Existing ECS component | The component Source explicitly declares each read/write permission | `unit.vitality.currentHealthPercentage`, `unit.perception.targetDistance`, `unit.move.setTargetMovement(...)` |
+| `unit.*` | Existing ECS component | The component Source explicitly declares each read/write permission | `unit.vitality.currentHealthPercentage`, `unit.perception.targetDistance`, `unit.move.setDirection(...)` |
 | `var.*` | `UnitVariableComponent` | Shared read/write state for BT, StateScript, and gameplay systems | `var.input.castHeld`, `var.cooldown.shieldSlam`, `var.animation.clip` |
 | `script.*` | One running StateScript graph | Local graph state; never used as cross-graph communication | local timer, local branch flag, temporary loop counter |
 
@@ -208,7 +208,7 @@ runtime that will take over its former producer responsibilities.
 | `UnitManaComponent` | Current mana, max mana, and mana regeneration formula. | `UnitManaSource`: exposes every stored and calculated field. | Keep. Skill execution consumes mana directly; no `var.mana` duplicate. |
 | `UnitAttackComponent` | Attack, range, action speed, chant speed, and their modifier formulas. | `UnitAttackSource`: exposes every stored and calculated field. | Keep. It is the canonical stat source. |
 | `UnitElementComponent` | Water, fire, lightning, and wind values. | `UnitElementSource`: exposes every element field. | Keep. Buffs change element attributes here; skills read the resolved value here. |
-| `UnitFactionComponent` | Universal unit identity: `Protagonist`, `Ally`, `Enemy`, `Npc`, or `Other`. | `UnitFactionSource`: exposes faction and relation queries. | Keep and expand. It replaces `PlayerTag`; every unit has exactly one faction identity. |
+| `UnitFactionComponent` | Universal unit identity: `Player`, `Friend`, `Enemy`, `Boss`, or `Npc`. | `UnitFactionSource`: exposes faction and relation queries. | Keep. Every unit has exactly one faction identity. |
 
 ### Perception, Control, And Movement
 
@@ -216,7 +216,7 @@ runtime that will take over its former producer responsibilities.
 | --- | --- | --- | --- |
 | `UnitPerceptionComponent` + `DynamicBuffer<UnitPerceptionEntityElement>` | Search radius plus all unit entities within that radius. It does not select a target. | `UnitPerceptionSource` exposes search radius and count; `UnitPerceptionUtility` exposes all units, all enemies, all friendlies, nearest enemy/friendly, and distance queries. | Keep, but redesign. The buffer contains only `Entity` values. Faction, transform, distance, and ordering are calculated on demand from the authoritative components. A locked-target skill explicitly writes its chosen entity to `var.skill.lockedTarget`. |
 | `UnitControlRuntimeComponent` | Active stun, knockback, fear, movement/cast locks, and interruption data. | `UnitControlSource`: exposes every entry field and every resolved active-control field. | Keep. Its application can stop a StateScript graph through a dedicated interrupt action. |
-| `UnitMoveComponent` | Desired movement command, velocity, speed, acceleration. | `UnitMoveSource`: exposes every stored field and every calculated movement value. | Keep. BT or StateScript uses a `SetMovement` action to write it; `UnitMoveSystem` remains the only integrator. |
+| `UnitMoveComponent` | Direction command, StateScript movement multiplier, velocity, speed, and acceleration. | `UnitMoveSource`: exposes every stored field and every calculated movement value. | Keep. StateScript writes direction and multiplier independently; `UnitMoveSystem` remains the only integrator. |
 | `UnitFacingComponent` | The current facing direction. | `UnitFacingSource`: exposes the complete direction value and scalar projections/angle. | Keep. Graph actions set facing explicitly when a skill needs it. |
 | `UnitJumpArcComponent` | Runtime jump trajectory. | `UnitJumpArcSource`: exposes every stored field and calculated progress. | Keep as an optional ability component. A jump action owns its lifecycle. |
 
@@ -225,10 +225,7 @@ runtime that will take over its former producer responsibilities.
 | Component | Current role | Source | Decision |
 | --- | --- | --- | --- |
 | `UnitBehaviorTreeComponent` | Managed Behavior Tree runtime, blackboard, debug state. | Not decided yet. | Defer. Do not design or change it in this migration pass. |
-| `PlayerTag` | Old player-only query marker. | None. | Remove. Player-only systems query `UnitFactionComponent.Value == Protagonist` instead. |
-| `UnitSkillComponent` | Old runtime skill slots, cooldown, availability, and pending cast state. | Static skill ownership comes from unit data; StateScript graph nodes reference the skill data they execute. | Remove. Skills are data/configuration, not runtime unit state. Cooldowns use `var.cooldown.*`. |
 | `PlayerSkillComponent` | Old runtime copy of the selected player skill chain and its current index. | Player loadout/skill-chain data remains in save data or graph configuration. | Remove. StateScript owns an executing graph's local progress; no runtime chain component is needed. |
-| `UnitCastAvailabilityComponent` | Old cached castable slot indexes and `CanStartCast`. | A StateScript/skill node evaluates its own data, mana, control, target query, and `var.cooldown.*` when it starts. | Remove. The cache exists only for the old skill-slot and state-machine flow. |
 | `UnitIntentComponent` | Per-frame move, cast, target, interaction, and prop requests. | Replace old intent Sources with `UnitVariableSource` and direct component Sources. | Remove. Player input and BT should write namespaced variables such as `var.input.move`, `var.input.aim`, and `var.input.castPressed`; StateScript consumes them. Movement/skill actions then write the real components. |
 | `UnitCastComponent` | Old prepared-cast state, cast phase timer, hook continuation, current skill id, interruption flags. | `UnitStateScriptSource`: graph running, graph name, cancellation state. | Remove. These fields belong to the StateScript graph runtime rather than a second phase state machine. |
 | `UnitCastTaskPayloadComponent` | Old hook-task payload carrier. | None. | Remove with the hook/phase machine. A StateScript node owns its own task state. |
@@ -248,19 +245,13 @@ runtime that will take over its former producer responsibilities.
 
 | Component | Current role | Source | Decision |
 | --- | --- | --- | --- |
-| `UnitAnimationComponent` | Current clip/frame/timing and directional animation result. | `UnitAnimationSource`: finished, looping, current clip. | Keep as-is for now. Animation design will be redone later. |
-| `UnitAnimationFrameUvMinProperty` | Material UV origin for the sprite frame. | No gameplay Source. | Keep as-is for now. Animation design will be redone later. |
-| `UnitAnimationFrameUvSizeProperty` | Material UV size for the sprite frame. | No gameplay Source. | Keep as-is for now. Animation design will be redone later. |
-| `UnitAnimationFrameWorldSizeProperty` | Material world size for the frame. | No gameplay Source. | Keep as-is for now. Animation design will be redone later. |
-| `UnitAnimationFramePivotOffsetProperty` | Material pivot offset for the frame. | No gameplay Source. | Keep as-is for now. Animation design will be redone later. |
-| `UnitAnimationOverlayColorProperty` / `UnitAnimationOverlayStrengthProperty` | Optional overlay visual material data. | No gameplay Source. | Keep as-is for now. Animation design will be redone later. |
+| `UnitAnimationComponent` | Requested animation name plus private playback time. | `unit.animation.name` and `unit.animation.setName`. | StateScript controls only the name; the animation system selects and samples the directional Unity AnimationClip. |
 
 ### Optional Unit Features
 
 | Component | Current role | Source | Decision |
 | --- | --- | --- | --- |
 | `UnitDropComponent` | References drop data for a defeated unit. | No regular Source. | Keep only on units with a drop module. |
-| `NPCTag` | Old NPC identity marker. | None. | Remove. NPC identity is `UnitFactionComponent.Value == Npc`. |
 | `NPCInteractableComponent` | NPC interaction configuration. | `NPCInteractionSource` where a graph needs it. | Keep only on interactable NPCs. |
 | Dungeon treasure/exit components | Environment interaction, not ordinary unit state. | Environment-specific Sources. | Keep outside the base-unit component set. |
 
@@ -286,8 +277,8 @@ interaction systems.
 
 | Component | Current role | Decision |
 | --- | --- | --- |
-| `SkillProjectileComponent` + `SkillProjectileHitEntityElement` + `SkillProjectilePayloadComponent` | Projectile motion, hit history, destroy state, and managed visual/effect payload. | Keep unchanged. |
-| `QuadAnimationComponent` + `QuadAnimationVisualComponent` | Generic frame-animation runtime and managed visual resource for projectile/VFX quads. | Keep unchanged. |
+| `SkillProjectileComponent` + `SkillProjectileHitEntityElement` + `SkillProjectilePayloadComponent` | Projectile motion, hit history, and managed effect payload. It has no animation state. | Keep. Flight and impact visuals belong to the projectile prefab and SpawnVfx effects, not skill data. |
+| `QuadAnimationComponent` + `QuadAnimationVisualComponent` | Generic frame-animation runtime and managed visual resource for VFX quads. | Keep. Projectiles no longer use this path. |
 | `FollowEntityComponent` | Makes an effect quad follow an entity, with offset and optional rotation alignment. | Keep unchanged. |
 | `QuadOverlayPulseComponent` | Timed material overlay pulse on a quad. | Keep unchanged. |
 | `WorldDropComponent` | Drop type, item id, and amount for a spawned world drop. | Keep unchanged. |
@@ -313,8 +304,7 @@ Use namespaced keys so a graph cannot accidentally share an unrelated state.
 | `var.input.aim` | Player input bridge | Position-targeted skill nodes | `float2`; it is real-time mouse position, not a locked target. |
 | `var.input.castPressed` / `var.input.castHeld` | Player input bridge | Player graphs | Keep pressed and held distinct. |
 | `var.cooldown.<skillKey>` | Skill completion/effect action | StateScript skill-start condition or a later BT condition | A shared cooldown can deliberately use one common key. |
-| `var.animation.state` | BT or StateScript action | Future animation system | Reserved for the animation redesign. |
-| `var.animation.clip` | StateScript skill action | Animation system | Empty means use the state default animation. |
+| `unit.animation.name` | StateScript setter | UnitAnimationSystem | The exact animation name configured in the unit animation profile. |
 | `var.ai.<custom>` | BT action | StateScript or other BT nodes | Use only for authored cross-system decisions, not perception copies. |
 
 ## Existing Source Migration
@@ -324,7 +314,6 @@ Use namespaced keys so a graph cannot accidentally share an unrelated state.
 | `UnitWantToCastSource` | Reads old `UnitIntentComponent`. | Replace with `UnitVariableSource("input.castPressed")` or a typed input Source. |
 | `UnitVelocitySource` | Its name says velocity but it reads old intent direction. | Change it to read `UnitMoveComponent.Velocity`; provide a separate input-direction Source if needed. |
 | `UnitIsCastingSource` | Reads old `UnitCastComponent`. | Replace with `UnitStateScriptSource` that checks whether an ability graph is running. |
-| `UnitCanStartCastSource` | Reads the old availability cache. | Remove. A StateScript skill node evaluates its own start conditions from authoritative Sources and `var.cooldown.*`. |
 | `UnitHasTargetSource`, `UnitTargetCastRangeMarginSource` | Depend on the old single-target `UnitPerceptionComponent` fields. | Remove. Replace them with explicit perception utility queries, such as `HasEnemyInRange`, `GetNearestEnemy`, and `GetDistance`. |
 | `UnitHealthRatioSource`, `UnitIsControlledSource`, `UnitBuffStackSource` | Already read authoritative component data. | Keep the pattern, but group them under their component-specific Sources and expose all relevant properties. |
 
@@ -365,9 +354,8 @@ of a special second skill-flow system.
    completes/cancels itself. Do not recreate Hook points.
 5. Make death/control cancel the active graph; remove all old state-machine
    dependencies from death and animation.
-6. Remove `PlayerTag`, `UnitSkillComponent`, `PlayerSkillComponent`,
-   `UnitIntentComponent`, `UnitCastAvailabilityComponent`,
-   `UnitCastComponent`,
+6. `UnitSkillComponent` and `UnitCastAvailabilityComponent` are removed.
+   Remove `PlayerSkillComponent`, `UnitIntentComponent`, `UnitCastComponent`,
    `UnitCastFollowupRuntimeComponent`, and the old cast payload components only
    after no system queries them.
 

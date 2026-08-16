@@ -182,6 +182,31 @@ public sealed class LengthOperation : IValueOperation
     }
 }
 
+[FactoryKey("Length2")]
+[EditorLabel("Length (Float2)")]
+public sealed class Length2Operation : IValueOperation
+{
+    private static readonly ComparatorParameterDefinition[] s_parameters =
+    {
+        new("Vector", UnitValueCategory.Float2),
+    };
+
+    public IReadOnlyList<ComparatorParameterDefinition> Parameters => s_parameters;
+    public UnitValueCategory ResultCategory => UnitValueCategory.Number;
+
+    public bool TryEvaluate(UnitValue[] values, out UnitValue result)
+    {
+        if (values == null || values.Length != 1 || !values[0].TryGetFloat2(out float2 vector))
+        {
+            result = UnitValue.None;
+            return false;
+        }
+
+        result = UnitValue.FromFloat(math.length(vector));
+        return true;
+    }
+}
+
 [FactoryKey("LengthSquared")]
 [EditorLabel("Length squared")]
 public sealed class LengthSquaredOperation : IValueOperation

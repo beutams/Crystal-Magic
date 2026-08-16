@@ -241,7 +241,8 @@ namespace CrystalMagic.Core
             EntityManager entityManager = world.EntityManager;
             if (gameEvent.Entity == Entity.Null ||
                 !entityManager.Exists(gameEvent.Entity) ||
-                !entityManager.HasComponent<PlayerTag>(gameEvent.Entity))
+                !entityManager.HasComponent<UnitFactionComponent>(gameEvent.Entity) ||
+                !UnitFactionUtility.IsPlayer(entityManager.GetComponentData<UnitFactionComponent>(gameEvent.Entity).Value))
             {
                 return;
             }

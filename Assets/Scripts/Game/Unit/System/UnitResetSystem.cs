@@ -1,5 +1,6 @@
 using CrystalMagic.Game.Data;
 using Unity.Entities;
+using Unity.Mathematics;
 
 [UpdateInGroup(typeof(UnitInitializationSystemGroup))]
 [UpdateAfter(typeof(UnitQueryBuildSystem))]
@@ -12,7 +13,7 @@ partial class UnitResetSystem : SystemBase
         foreach (RefRW<UnitMoveComponent> moveRef in SystemAPI.Query<RefRW<UnitMoveComponent>>())
         {
             UnitMoveComponent move = moveRef.ValueRW;
-            move.ClearTargetMovement();
+            move.Direction = float2.zero;
             moveRef.ValueRW = move;
         }
 

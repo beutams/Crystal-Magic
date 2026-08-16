@@ -23,7 +23,16 @@ namespace CrystalMagic.Editor.Unit
             if (node is SetValueStateScriptNodeData setValue)
             {
                 EditorGUI.BeginChangeCheck();
-                DrawSetValue(setValue, sourceSchema);
+                DrawSetValue(setValue, sourceSchema, onChanged);
+                if (EditorGUI.EndChangeCheck())
+                    onChanged?.Invoke();
+                return;
+            }
+
+            if (node is RequestSkillActionNodeData requestSkill)
+            {
+                EditorGUI.BeginChangeCheck();
+                DrawRequestSkill(requestSkill, sourceSchema, onChanged);
                 if (EditorGUI.EndChangeCheck())
                     onChanged?.Invoke();
                 return;
@@ -32,7 +41,20 @@ namespace CrystalMagic.Editor.Unit
             if (node is TimerStateScriptNodeData timer)
             {
                 EditorGUI.BeginChangeCheck();
-                timer.DurationSeconds = Mathf.Max(0f, EditorGUILayout.FloatField("Duration Seconds", timer.DurationSeconds));
+                timer.Duration ??= TimerStateScriptNodeData.CreateDefaultDurationExpression();
+                EditorGUILayout.LabelField("Duration (Seconds)", EditorStyles.miniBoldLabel);
+                StateScriptValueExpressionDrawer.Draw(timer.Duration, UnitValueCategory.Number, sourceSchema, onChanged);
+                if (EditorGUI.EndChangeCheck())
+                    onChanged?.Invoke();
+                return;
+            }
+
+            if (node is NumberMonitorStateScriptNodeData numberMonitor)
+            {
+                EditorGUI.BeginChangeCheck();
+                numberMonitor.Value ??= NumberMonitorStateScriptNodeData.CreateDefaultValueExpression();
+                EditorGUILayout.LabelField("Observed Value (Number)", EditorStyles.miniBoldLabel);
+                StateScriptValueExpressionDrawer.Draw(numberMonitor.Value, UnitValueCategory.Number, sourceSchema, onChanged);
                 if (EditorGUI.EndChangeCheck())
                     onChanged?.Invoke();
                 return;
@@ -50,22 +72,25 @@ namespace CrystalMagic.Editor.Unit
 
             if (node is CompareStateScriptNodeData compare)
             {
-                compare.Conditions ??= new List<ConditionConfig>();
-                DrawComparatorConditions(compare.Conditions, sourceSchema, onChanged);
+                compare.Condition ??= new ConditionConfig();
+                DrawComparatorCondition(compare.Condition, sourceSchema, onChanged);
                 return;
             }
 
             if (node is MonitorStateScriptNodeData monitor)
             {
-                monitor.Conditions ??= new List<ConditionConfig>();
-                DrawComparatorConditions(monitor.Conditions, sourceSchema, onChanged);
+                monitor.Condition ??= new ConditionConfig();
+                DrawComparatorCondition(monitor.Condition, sourceSchema, onChanged);
                 return;
             }
 
             EditorGUILayout.HelpBox("This first version only provides the StateScript structure. Concrete State, Bool, and Action nodes will add their own configuration here.", MessageType.Info);
         }
 
-        private static void DrawSetValue(SetValueStateScriptNodeData setValue, UnitSourceSchema sourceSchema)
+        private static void DrawSetValue(
+            SetValueStateScriptNodeData setValue,
+            UnitSourceSchema sourceSchema,
+            Action onChanged)
         {
             List<UnitSourceSetSchemaEntry> entries = (sourceSchema?.Sets ?? Enumerable.Empty<UnitSourceSetSchemaEntry>())
                 .OrderBy(entry => entry.Key, StringComparer.Ordinal)
@@ -76,48 +101,77 @@ namespace CrystalMagic.Editor.Unit
                 return;
             }
 
-            string[] options = new string[entries.Count + 1];
-            options[0] = "(Select setter)";
-            for (int i = 0; i < entries.Count; i++)
-                options[i + 1] = entries[i].Key;
+            StateScriptAccessorDropdown.Draw(
+                "Setter",
+                setValue.SetterKey,
+                entries.Select(entry => entry.Key),
+                "(Select setter)",
+                selectedKey =>
+                {
+                    if (string.Equals(setValue.SetterKey, selectedKey, StringComparison.Ordinal))
+                        return;
 
-            int selectedIndex = entries.FindIndex(entry => string.Equals(entry.Key, setValue.SetterKey, StringComparison.Ordinal)) + 1;
-            selectedIndex = EditorGUILayout.Popup("Setter", Mathf.Max(0, selectedIndex), options);
-            if (selectedIndex <= 0)
+                    setValue.SetterKey = selectedKey;
+                    GUI.changed = true;
+                    onChanged?.Invoke();
+                });
+            if (string.IsNullOrWhiteSpace(setValue.SetterKey))
             {
-                if (!string.IsNullOrWhiteSpace(setValue.SetterKey))
-                    EditorGUILayout.HelpBox($"'{setValue.SetterKey}' is not writable by this unit.", MessageType.Warning);
                 return;
             }
 
-            UnitSourceSetSchemaEntry setter = entries[selectedIndex - 1];
+            int setterIndex = entries.FindIndex(entry =>
+                string.Equals(entry.Key, setValue.SetterKey, StringComparison.Ordinal));
+            if (setterIndex < 0)
+            {
+                EditorGUILayout.HelpBox($"'{setValue.SetterKey}' is not writable by this unit.", MessageType.Warning);
+                return;
+            }
+
+            UnitSourceSetSchemaEntry setter = entries[setterIndex];
             setValue.SetterKey = setter.Key;
-            setValue.Arguments ??= new List<UnitValue>();
-            while (setValue.Arguments.Count < setter.Parameters.Count)
+            if (setter.Parameters.Count != 1)
             {
-                setValue.Arguments.Add(StateScriptValueExpressionDrawer.CreateDefaultLiteral(
-                    setter.Parameters[setValue.Arguments.Count].Category));
+                EditorGUILayout.HelpBox(
+                    $"Setter '{setter.Key}' is invalid. StateScript setters require exactly one value parameter.",
+                    MessageType.Error);
+                return;
             }
 
-            if (setValue.Arguments.Count > setter.Parameters.Count)
-                setValue.Arguments.RemoveRange(setter.Parameters.Count, setValue.Arguments.Count - setter.Parameters.Count);
-
-            for (int i = 0; i < setter.Parameters.Count; i++)
+            if (setter.RequiresKey)
             {
-                ComparatorParameterDefinition parameter = setter.Parameters[i];
-                EditorGUILayout.LabelField($"{parameter.Name} ({parameter.Category})", EditorStyles.miniBoldLabel);
-                setValue.Arguments[i] = StateScriptValueExpressionDrawer.DrawLiteralValue(
-                    setValue.Arguments[i], parameter.Category);
+                setValue.Key = EditorGUILayout.TextField("Key", setValue.Key ?? string.Empty);
+                if (string.IsNullOrWhiteSpace(setValue.Key))
+                    EditorGUILayout.HelpBox($"Setter '{setter.Key}' requires a key.", MessageType.Warning);
             }
+
+            ComparatorParameterDefinition parameter = setter.Parameters[0];
+            setValue.Value ??= new ValueExpression
+            {
+                Literal = StateScriptValueExpressionDrawer.CreateDefaultLiteral(parameter.Category),
+            };
+            EditorGUILayout.LabelField($"{parameter.Name} ({parameter.Category})", EditorStyles.miniBoldLabel);
+            StateScriptValueExpressionDrawer.Draw(setValue.Value, parameter.Category, sourceSchema, onChanged);
         }
 
-        private static void DrawComparatorConditions(
-            List<ConditionConfig> conditions,
+        private static void DrawRequestSkill(
+            RequestSkillActionNodeData requestSkill,
+            UnitSourceSchema sourceSchema,
+            Action onChanged)
+        {
+            requestSkill.SkillId ??= RequestSkillActionNodeData.CreateDefaultSkillIdExpression();
+            EditorGUILayout.LabelField("Skill ID (Number)", EditorStyles.miniBoldLabel);
+            StateScriptValueExpressionDrawer.Draw(requestSkill.SkillId, UnitValueCategory.Number, sourceSchema, onChanged);
+        }
+
+        private static void DrawComparatorCondition(
+            ConditionConfig condition,
             UnitSourceSchema sourceSchema,
             Action onChanged)
         {
             EditorGUI.BeginChangeCheck();
-            StateScriptValueExpressionDrawer.DrawConditionList(conditions, sourceSchema);
+            condition.ConditionType = ConditionType.Necessary;
+            StateScriptValueExpressionDrawer.DrawCondition(condition, sourceSchema, onChanged);
             if (EditorGUI.EndChangeCheck())
                 onChanged?.Invoke();
         }

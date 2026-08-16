@@ -1,3 +1,4 @@
+using System;
 using CrystalMagic.Game.Data;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -6,8 +7,14 @@ using Unity.Transforms;
 [FactoryKey("RequestSkill", 11, "Request Skill")]
 public sealed class RequestSkillActionNode : StateScriptActionNode
 {
+    private const string TargetPositionVariableKey = "skill.targetPosition";
+    private const string TargetEntityVariableKey = "skill.targetEntity";
+
+    private static readonly ComparatorFactory s_expressionFactory = CreateExpressionFactory();
+
     private readonly RequestSkillActionNodeData _data;
     private readonly StateScriptOutputPort _output;
+    private Func<UnitValue> _skillIdGetter;
 
     public RequestSkillActionNode(RequestSkillActionNodeData data, StateScriptRuntime runtime)
         : base(data, runtime)
@@ -19,9 +26,21 @@ public sealed class RequestSkillActionNode : StateScriptActionNode
 
     protected override bool OnBind(out string error)
     {
-        if (_data.SkillId < 0)
+        _skillIdGetter = null;
+        _data.SkillId ??= RequestSkillActionNodeData.CreateDefaultSkillIdExpression();
+        if (!s_expressionFactory.TryBuildValueExpression(
+                _data.SkillId,
+                Runtime.Sources,
+                out UnitValueCategory category,
+                out Func<UnitValue> skillIdGetter,
+                out error))
         {
-            error = "RequestSkill requires a valid SkillId.";
+            return false;
+        }
+
+        if (category != UnitValueCategory.Number)
+        {
+            error = $"RequestSkill SkillId requires Number, but received {category}.";
             return false;
         }
 
@@ -31,12 +50,16 @@ public sealed class RequestSkillActionNode : StateScriptActionNode
             return false;
         }
 
+        _skillIdGetter = skillIdGetter;
         error = string.Empty;
         return true;
     }
 
     private void RequestSkill()
     {
+        if (!TryGetSkillId(out int skillId))
+            return;
+
         EntityManager entityManager = Runtime.EntityManager;
         Entity entity = Runtime.Entity;
         if (!entityManager.HasComponent<UnitSkillReleaseComponent>(entity))
@@ -46,17 +69,36 @@ public sealed class RequestSkillActionNode : StateScriptActionNode
         if (releaseComponent == null)
             return;
 
-        SkillReleaseRequest request = CreateRequest(entityManager, entity);
+        SkillReleaseRequest request = CreateRequest(entityManager, entity, skillId);
         releaseComponent.PendingRequests.Add(request);
         _output.Pulse();
     }
 
-    private SkillReleaseRequest CreateRequest(EntityManager entityManager, Entity entity)
+    private bool TryGetSkillId(out int skillId)
+    {
+        skillId = -1;
+        if (_skillIdGetter == null || !_skillIdGetter().TryGetNumber(out float rawSkillId) || !math.isfinite(rawSkillId))
+        {
+            UnityEngine.Debug.LogWarning("[RequestSkill] SkillId expression did not return a number.");
+            return false;
+        }
+
+        float roundedSkillId = math.round(rawSkillId);
+        if (roundedSkillId < 0f || roundedSkillId > int.MaxValue || math.abs(rawSkillId - roundedSkillId) > 0.0001f)
+        {
+            UnityEngine.Debug.LogWarning($"[RequestSkill] SkillId must be a non-negative integer, received {rawSkillId}.");
+            return false;
+        }
+
+        skillId = (int)roundedSkillId;
+        return true;
+    }
+
+    private SkillReleaseRequest CreateRequest(EntityManager entityManager, Entity entity, int skillId)
     {
         SkillReleaseRequest request = new()
         {
-            SkillId = _data.SkillId,
-            SkillAdditionId = _data.SkillAdditionId,
+            SkillId = skillId,
             OriginEntity = entity,
         };
 
@@ -90,33 +132,18 @@ public sealed class RequestSkillActionNode : StateScriptActionNode
 
     private void CaptureTarget(EntityManager entityManager, Entity entity, SkillReleaseRequest request)
     {
-        switch (_data.TargetMode)
-        {
-            case SkillReleaseTargetMode.Self:
-                request.HasTargetEntity = true;
-                request.TargetEntity = entity;
-                request.HasTargetPosition = true;
-                request.TargetPosition = request.OriginPosition;
-                break;
+        CaptureVariableTarget(entityManager, entity, request);
+        if (request.HasTargetEntity || request.HasTargetPosition || !entityManager.HasComponent<UnitPerceptionComponent>(entity))
+            return;
 
-            case SkillReleaseTargetMode.Variables:
-                CaptureVariableTarget(entityManager, entity, request);
-                break;
+        UnitPerceptionComponent perception = entityManager.GetComponentData<UnitPerceptionComponent>(entity);
+        if (!perception.HasTarget)
+            return;
 
-            case SkillReleaseTargetMode.PerceptionTarget:
-                if (entityManager.HasComponent<UnitPerceptionComponent>(entity))
-                {
-                    UnitPerceptionComponent perception = entityManager.GetComponentData<UnitPerceptionComponent>(entity);
-                    if (perception.HasTarget)
-                    {
-                        request.HasTargetEntity = true;
-                        request.TargetEntity = perception.TargetEntity;
-                        request.HasTargetPosition = true;
-                        request.TargetPosition = new float3(perception.TargetPosition.x, perception.TargetPosition.y, 0f);
-                    }
-                }
-                break;
-        }
+        request.HasTargetEntity = true;
+        request.TargetEntity = perception.TargetEntity;
+        request.HasTargetPosition = true;
+        request.TargetPosition = new float3(perception.TargetPosition.x, perception.TargetPosition.y, 0f);
     }
 
     private void CaptureVariableTarget(EntityManager entityManager, Entity entity, SkillReleaseRequest request)
@@ -128,7 +155,7 @@ public sealed class RequestSkillActionNode : StateScriptActionNode
         if (variables?.Values == null)
             return;
 
-        if (variables.Values.TryGetValue(_data.TargetPositionVariableKey ?? string.Empty, out UnitValue position))
+        if (variables.Values.TryGetValue(TargetPositionVariableKey, out UnitValue position))
         {
             switch (position.Type)
             {
@@ -144,7 +171,7 @@ public sealed class RequestSkillActionNode : StateScriptActionNode
             }
         }
 
-        if (variables.Values.TryGetValue(_data.TargetEntityVariableKey ?? string.Empty, out UnitValue target) &&
+        if (variables.Values.TryGetValue(TargetEntityVariableKey, out UnitValue target) &&
             target.Type == UnitValueType.Entity &&
             target.Entity != Entity.Null)
         {
@@ -159,5 +186,12 @@ public sealed class RequestSkillActionNode : StateScriptActionNode
                 request.TargetPosition = entityManager.GetComponentData<LocalTransform>(target.Entity).Position;
             }
         }
+    }
+
+    private static ComparatorFactory CreateExpressionFactory()
+    {
+        ComparatorFactory factory = new();
+        ComparatorRegistry.RegisterAll(factory);
+        return factory;
     }
 }

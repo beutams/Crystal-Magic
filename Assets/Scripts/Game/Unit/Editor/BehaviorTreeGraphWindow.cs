@@ -461,6 +461,13 @@ namespace CrystalMagic.Editor.Unit
 
             UnitSourceSetSchemaEntry selectedEntry = entries[selectedIndex - 1];
             node.SetKey = selectedEntry.Key;
+            if (selectedEntry.RequiresKey)
+            {
+                node.Key = EditorGUILayout.TextField("Key", node.Key ?? string.Empty);
+                if (string.IsNullOrWhiteSpace(node.Key))
+                    EditorGUILayout.HelpBox($"Set '{selectedEntry.Key}' requires a key.", MessageType.Warning);
+            }
+
             EnsureExpressionCount(ref node.Inputs, selectedEntry.Parameters);
             for (int i = 0; i < selectedEntry.Parameters.Count; i++)
                 DrawValueExpression(node.Inputs[i], selectedEntry.Parameters[i], 0);

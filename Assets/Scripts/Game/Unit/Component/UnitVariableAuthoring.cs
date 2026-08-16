@@ -28,12 +28,6 @@ public sealed class UnitVariableSource : UnitManagedComponentSource<UnitVariable
         new ComparatorParameterDefinition("Key", UnitValueCategory.String),
     };
 
-    private static readonly ComparatorParameterDefinition[] s_keyAndValueParameters =
-    {
-        new ComparatorParameterDefinition("Key", UnitValueCategory.String),
-        new ComparatorParameterDefinition("Value", UnitValueCategory.Any),
-    };
-
     protected override void Define(UnitSourceDefinitionBuilder<UnitVariableComponent> builder)
     {
         builder.AddGet("unit.variables.count", UnitValueCategory.Number,
@@ -55,12 +49,10 @@ public sealed class UnitVariableSource : UnitManagedComponentSource<UnitVariable
         builder.AddGet("unit.variables.getString", UnitValueCategory.String, s_keyParameter,
             (in UnitVariableComponent component, UnitValue[] input) => GetCategory(component, input[0], UnitValueCategory.String));
 
-        builder.AddSet("unit.variables.set", s_keyAndValueParameters,
-            (ref UnitVariableComponent component, UnitValue[] input) => Set(component, input[0], input[1]));
-        builder.AddSet("unit.variables.remove", s_keyParameter,
-            (ref UnitVariableComponent component, UnitValue[] input) => Remove(component, input[0]));
-        builder.AddSet("unit.variables.clear", Array.Empty<ComparatorParameterDefinition>(),
-            (ref UnitVariableComponent component, UnitValue[] _) => Clear(component));
+        builder.AddKeyedSet("unit.variables.set", UnitValueCategory.Any,
+            (ref UnitVariableComponent component, string key, UnitValue value) => Set(component, key, value));
+        builder.AddSet("unit.variables.remove", UnitValueCategory.String,
+            (ref UnitVariableComponent component, UnitValue key) => Remove(component, key));
     }
 
     private static bool Contains(UnitVariableComponent component, UnitValue keyValue)
@@ -88,16 +80,6 @@ public sealed class UnitVariableSource : UnitManagedComponentSource<UnitVariable
         return value.Category == category ? value : UnitValue.None;
     }
 
-    private static bool Set(UnitVariableComponent component, UnitValue keyValue, UnitValue value)
-    {
-        if (!TryGetKey(keyValue, out string key) || value.Category == UnitValueCategory.None)
-            return false;
-
-        component.Values ??= new Dictionary<string, UnitValue>(StringComparer.Ordinal);
-        component.Values[key] = value;
-        return true;
-    }
-
     private static bool Remove(UnitVariableComponent component, UnitValue keyValue)
     {
         return TryGetKey(keyValue, out string key) &&
@@ -105,12 +87,13 @@ public sealed class UnitVariableSource : UnitManagedComponentSource<UnitVariable
                component.Values.Remove(key);
     }
 
-    private static bool Clear(UnitVariableComponent component)
+    private static bool Set(UnitVariableComponent component, string key, UnitValue value)
     {
-        if (component?.Values == null || component.Values.Count == 0)
+        if (string.IsNullOrWhiteSpace(key) || value.Category == UnitValueCategory.None)
             return false;
 
-        component.Values.Clear();
+        component.Values ??= new Dictionary<string, UnitValue>(StringComparer.Ordinal);
+        component.Values[key] = value;
         return true;
     }
 

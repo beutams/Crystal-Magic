@@ -16,6 +16,7 @@ public static class StateScriptRegistry
         { "Timer", typeof(TimerStateScriptNodeData) },
         { "Keep", typeof(KeepStateScriptNodeData) },
         { "Monitor", typeof(MonitorStateScriptNodeData) },
+        { "NumberMonitor", typeof(NumberMonitorStateScriptNodeData) },
     };
 
     private static readonly Dictionary<Type, string> s_nodeDataKeys = new()
@@ -27,6 +28,7 @@ public static class StateScriptRegistry
         { typeof(TimerStateScriptNodeData), "Timer" },
         { typeof(KeepStateScriptNodeData), "Keep" },
         { typeof(MonitorStateScriptNodeData), "Monitor" },
+        { typeof(NumberMonitorStateScriptNodeData), "NumberMonitor" },
     };
 
     private static readonly Dictionary<string, string> s_nodeDataDisplayNames = new(StringComparer.Ordinal)
@@ -38,6 +40,7 @@ public static class StateScriptRegistry
         { "Timer", "Timer" },
         { "Keep", "Keep" },
         { "Monitor", "Monitor" },
+        { "NumberMonitor", "Number Monitor" },
     };
 
     private static readonly FactoryTypeInfo[] s_nodeDataTypeInfos =
@@ -49,6 +52,7 @@ public static class StateScriptRegistry
         new("Timer", "Timer", typeof(TimerStateScriptNodeData), 20),
         new("Keep", "Keep", typeof(KeepStateScriptNodeData), 21),
         new("Monitor", "Monitor", typeof(MonitorStateScriptNodeData), 22),
+        new("NumberMonitor", "Number Monitor", typeof(NumberMonitorStateScriptNodeData), 23),
     };
 
     public static string DefaultNodeDataKey => "Entry";
@@ -71,6 +75,7 @@ public static class StateScriptRegistry
         factory.Register("Timer", static () => new TimerStateScriptNodeData());
         factory.Register("Keep", static () => new KeepStateScriptNodeData());
         factory.Register("Monitor", static () => new MonitorStateScriptNodeData());
+        factory.Register("NumberMonitor", static () => new NumberMonitorStateScriptNodeData());
     }
 
     public static void RegisterAll(StateScriptNodeRuntimeFactory factory)
@@ -92,5 +97,7 @@ public static class StateScriptRegistry
             new KeepStateScriptNode((KeepStateScriptNodeData)request.Data, request.Runtime));
         factory.Register(typeof(MonitorStateScriptNodeData), static request =>
             new MonitorStateScriptNode((MonitorStateScriptNodeData)request.Data, request.Runtime));
+        factory.Register(typeof(NumberMonitorStateScriptNodeData), static request =>
+            new NumberMonitorStateScriptNode((NumberMonitorStateScriptNodeData)request.Data, request.Runtime));
     }
 }

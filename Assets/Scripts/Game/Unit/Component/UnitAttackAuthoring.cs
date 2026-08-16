@@ -114,15 +114,3 @@ public sealed class UnitAttackSource : UnitComponentSource<UnitAttackComponent>
         builder.AddGet("unit.attack.chantDurationMultiplier", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.ChantDurationMultiplier));
     }
 }
-
-[UnitSourceAuthoring(typeof(UnitElementAuthoring))]
-public sealed class UnitElementSource : UnitComponentSource<UnitElementComponent>
-{
-    protected override void Define(UnitSourceDefinitionBuilder<UnitElementComponent> builder)
-    {
-        builder.AddGet("unit.element.waterPower", UnitValueCategory.Number, (in UnitElementComponent value) => UnitValue.FromFloat(value.WaterPower));
-        builder.AddGet("unit.element.firePower", UnitValueCategory.Number, (in UnitElementComponent value) => UnitValue.FromFloat(value.FirePower));
-        builder.AddGet("unit.element.lightningPower", UnitValueCategory.Number, (in UnitElementComponent value) => UnitValue.FromFloat(value.LightningPower));
-        builder.AddGet("unit.element.windPower", UnitValueCategory.Number, (in UnitElementComponent value) => UnitValue.FromFloat(value.WindPower));
-    }
-}

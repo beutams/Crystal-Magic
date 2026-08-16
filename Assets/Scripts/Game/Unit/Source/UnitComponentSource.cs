@@ -41,6 +41,12 @@ public static class UnitSourceSchemaFactory
             if (source == null)
                 continue;
 
+            if (source.IsGlobal)
+            {
+                source.Describe(builder);
+                continue;
+            }
+
             UnitSourceAuthoringAttribute[] bindings = (UnitSourceAuthoringAttribute[])Attribute.GetCustomAttributes(
                 source.GetType(), typeof(UnitSourceAuthoringAttribute), inherit: false);
             for (int bindingIndex = 0; bindingIndex < bindings.Length; bindingIndex++)
@@ -61,6 +67,7 @@ public static class UnitSourceSchemaFactory
 public abstract class UnitComponentSource
 {
     public abstract Type ComponentType { get; }
+    public virtual bool IsGlobal => false;
     public abstract void Describe(UnitSourceSchemaBuilder schema);
     public abstract void Bind(in UnitSourceBindingContext context, UnitSourceAccessTable table);
 }
@@ -68,7 +75,7 @@ public abstract class UnitComponentSource
 public delegate UnitValue ComponentValueGetter<TComponent>(in TComponent component);
 public delegate UnitValue ComponentGetter<TComponent>(in TComponent component, UnitValue[] parameters);
 public delegate bool ComponentValueSetter<TComponent>(ref TComponent component, UnitValue value);
-public delegate bool ComponentSetter<TComponent>(ref TComponent component, UnitValue[] parameters);
+public delegate bool ComponentKeyedValueSetter<TComponent>(ref TComponent component, string key, UnitValue value);
 
 public sealed class UnitSourceDefinitionBuilder<TComponent>
 {
@@ -108,24 +115,24 @@ public sealed class UnitSourceDefinitionBuilder<TComponent>
         if (setter == null)
             throw new ArgumentNullException(nameof(setter));
 
-        ComparatorParameterDefinition[] parameters =
-        {
-            new ComparatorParameterDefinition("Value", valueType),
-        };
-        AddSet(key, parameters, (ref TComponent component, UnitValue[] input) => setter(ref component, input[0]));
+        ValidateKey(key, "set");
+        if (valueType == UnitValueCategory.None)
+            throw new ArgumentOutOfRangeException(nameof(valueType));
+
+        if (!_sets.TryAdd(key, new UnitSourceSetDefinition<TComponent>(key, valueType, setter)))
+            throw new InvalidOperationException($"Unit source set is already defined: {key}");
     }
 
-    public void AddSet(
-        string key,
-        IReadOnlyList<ComparatorParameterDefinition> parameters,
-        ComponentSetter<TComponent> setter)
+    public void AddKeyedSet(string key, UnitValueCategory valueType, ComponentKeyedValueSetter<TComponent> setter)
     {
         if (setter == null)
             throw new ArgumentNullException(nameof(setter));
 
         ValidateKey(key, "set");
-        ValidateParameters(parameters);
-        if (!_sets.TryAdd(key, new UnitSourceSetDefinition<TComponent>(key, parameters, setter)))
+        if (valueType == UnitValueCategory.None)
+            throw new ArgumentOutOfRangeException(nameof(valueType));
+
+        if (!_sets.TryAdd(key, new UnitSourceSetDefinition<TComponent>(key, valueType, setter)))
             throw new InvalidOperationException($"Unit source set is already defined: {key}");
     }
 
@@ -181,7 +188,7 @@ public abstract class UnitComponentSource<TComponent> : UnitComponentSource
 
         UnitSourceSetDefinition<TComponent>[] sets = GetSets();
         for (int i = 0; i < sets.Length; i++)
-            schema.AddSet(sets[i].Key, ComponentType, sets[i].Parameters);
+            schema.AddSet(sets[i].Key, ComponentType, sets[i].Parameters, sets[i].RequiresKey);
     }
 
     public sealed override void Bind(in UnitSourceBindingContext context, UnitSourceAccessTable table)
@@ -254,6 +261,26 @@ public abstract class UnitComponentSource<TComponent> : UnitComponentSource
         Entity entity,
         UnitSourceSetDefinition<TComponent> definition)
     {
+        if (definition.RequiresKey)
+        {
+            table.AddSet(new UnitSourceSet(
+                definition.Key,
+                definition.Parameters,
+                (string key, UnitValue value) =>
+                {
+                    if (!entityManager.Exists(entity) || !entityManager.HasComponent<TComponent>(entity))
+                        return false;
+
+                    TComponent component = entityManager.GetComponentData<TComponent>(entity);
+                    if (!definition.KeyedInvoke(ref component, key, value))
+                        return false;
+
+                    entityManager.SetComponentData(entity, component);
+                    return true;
+                }));
+            return;
+        }
+
         table.AddSet(new UnitSourceSet(
             definition.Key,
             definition.Parameters,
@@ -263,7 +290,7 @@ public abstract class UnitComponentSource<TComponent> : UnitComponentSource
                     return false;
 
                 TComponent component = entityManager.GetComponentData<TComponent>(entity);
-                if (!definition.Invoke(ref component, parameters))
+                if (!definition.Invoke(ref component, parameters[0]))
                     return false;
 
                 entityManager.SetComponentData(entity, component);
@@ -291,7 +318,7 @@ public abstract class UnitManagedComponentSource<TComponent> : UnitComponentSour
 
         UnitSourceSetDefinition<TComponent>[] sets = GetSets();
         for (int i = 0; i < sets.Length; i++)
-            schema.AddSet(sets[i].Key, ComponentType, sets[i].Parameters);
+            schema.AddSet(sets[i].Key, ComponentType, sets[i].Parameters, sets[i].RequiresKey);
     }
 
     public sealed override void Bind(in UnitSourceBindingContext context, UnitSourceAccessTable table)
@@ -364,6 +391,22 @@ public abstract class UnitManagedComponentSource<TComponent> : UnitComponentSour
         Entity entity,
         UnitSourceSetDefinition<TComponent> definition)
     {
+        if (definition.RequiresKey)
+        {
+            table.AddSet(new UnitSourceSet(
+                definition.Key,
+                definition.Parameters,
+                (string key, UnitValue value) =>
+                {
+                    if (!entityManager.Exists(entity) || !entityManager.HasComponent<TComponent>(entity))
+                        return false;
+
+                    TComponent component = entityManager.GetComponentObject<TComponent>(entity);
+                    return definition.KeyedInvoke(ref component, key, value);
+                }));
+            return;
+        }
+
         table.AddSet(new UnitSourceSet(
             definition.Key,
             definition.Parameters,
@@ -373,7 +416,7 @@ public abstract class UnitManagedComponentSource<TComponent> : UnitComponentSour
                     return false;
 
                 TComponent component = entityManager.GetComponentObject<TComponent>(entity);
-                if (!definition.Invoke(ref component, parameters))
+                if (!definition.Invoke(ref component, parameters[0]))
                     return false;
 
                 // Managed components are reference objects already owned by the entity.
@@ -407,15 +450,28 @@ internal sealed class UnitSourceSetDefinition<TComponent>
 {
     public UnitSourceSetDefinition(
         string key,
-        IReadOnlyList<ComparatorParameterDefinition> parameters,
-        ComponentSetter<TComponent> invoke)
+        UnitValueCategory valueType,
+        ComponentValueSetter<TComponent> invoke)
     {
         Key = key;
-        Parameters = parameters ?? Array.Empty<ComparatorParameterDefinition>();
-        Invoke = invoke;
+        Parameters = new[] { new ComparatorParameterDefinition("Value", valueType) };
+        Invoke = invoke ?? throw new ArgumentNullException(nameof(invoke));
+    }
+
+    public UnitSourceSetDefinition(
+        string key,
+        UnitValueCategory valueType,
+        ComponentKeyedValueSetter<TComponent> keyedInvoke)
+    {
+        Key = key;
+        Parameters = new[] { new ComparatorParameterDefinition("Value", valueType) };
+        RequiresKey = true;
+        KeyedInvoke = keyedInvoke ?? throw new ArgumentNullException(nameof(keyedInvoke));
     }
 
     public string Key { get; }
     public IReadOnlyList<ComparatorParameterDefinition> Parameters { get; }
-    public ComponentSetter<TComponent> Invoke { get; }
+    public ComponentValueSetter<TComponent> Invoke { get; }
+    public ComponentKeyedValueSetter<TComponent> KeyedInvoke { get; }
+    public bool RequiresKey { get; }
 }

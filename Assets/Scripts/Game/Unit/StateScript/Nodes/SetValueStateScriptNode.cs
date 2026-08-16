@@ -1,12 +1,16 @@
+using System;
 using CrystalMagic.Game.Data;
 
 [FactoryKey("SetValue", 10, "Set Value")]
 public sealed class SetValueStateScriptNode : StateScriptActionNode
 {
+    private static readonly ComparatorFactory s_expressionFactory = CreateExpressionFactory();
+
     private readonly SetValueStateScriptNodeData _data;
     private readonly StateScriptOutputPort _output;
     private UnitSourceSet _set;
-    private UnitValue[] _inputs;
+    private string _key;
+    private Func<UnitValue> _valueGetter;
 
     public SetValueStateScriptNode(SetValueStateScriptNodeData data, StateScriptRuntime runtime)
         : base(data, runtime)
@@ -19,7 +23,8 @@ public sealed class SetValueStateScriptNode : StateScriptActionNode
     protected override bool OnBind(out string error)
     {
         _set = null;
-        _inputs = null;
+        _key = string.Empty;
+        _valueGetter = null;
         if (string.IsNullOrWhiteSpace(_data.SetterKey))
         {
             error = "SetValue setter key is empty.";
@@ -32,34 +37,60 @@ public sealed class SetValueStateScriptNode : StateScriptActionNode
             return false;
         }
 
-        _data.Arguments ??= new System.Collections.Generic.List<UnitValue>();
-        if (_data.Arguments.Count != set.Parameters.Count)
+        if (set.Parameters.Count != 1)
         {
-            error = $"Setter '{_data.SetterKey}' requires {set.Parameters.Count} argument(s), but received {_data.Arguments.Count}.";
+            error = $"Setter '{_data.SetterKey}' must define exactly one input.";
             return false;
         }
 
-        for (int i = 0; i < set.Parameters.Count; i++)
+        if (set.RequiresKey && string.IsNullOrWhiteSpace(_data.Key))
         {
-            if (!set.Parameters[i].Accepts(_data.Arguments[i].Category))
-            {
-                error = $"Setter '{_data.SetterKey}' argument '{set.Parameters[i].Name}' requires {set.Parameters[i].Category}, but received {_data.Arguments[i].Category}.";
-                return false;
-            }
+            error = $"Setter '{_data.SetterKey}' requires a configured key.";
+            return false;
+        }
+
+        _data.Value ??= new ValueExpression();
+        ComparatorParameterDefinition parameter = set.Parameters[0];
+        if (!s_expressionFactory.TryBuildValueExpression(
+                _data.Value,
+                Runtime.Sources,
+                out UnitValueCategory category,
+                out Func<UnitValue> valueGetter,
+                out error))
+        {
+            return false;
+        }
+
+        if (!parameter.Accepts(category))
+        {
+            error = $"Setter '{_data.SetterKey}' input '{parameter.Name}' requires {parameter.Category}, but received {category}.";
+            return false;
         }
 
         _set = set;
-        _inputs = _data.Arguments.ToArray();
+        _key = _data.Key ?? string.Empty;
+        _valueGetter = valueGetter;
         error = string.Empty;
         return true;
     }
 
     private void Execute()
     {
-        if (_set == null)
+        if (_set == null || _valueGetter == null)
             return;
 
-        if (_set.TrySet(_inputs))
+        UnitValue value = _valueGetter();
+        bool didSet = _set.RequiresKey
+            ? _set.TrySet(_key, value)
+            : _set.TrySet(new[] { value });
+        if (didSet)
             _output.Pulse();
+    }
+
+    private static ComparatorFactory CreateExpressionFactory()
+    {
+        ComparatorFactory factory = new();
+        ComparatorRegistry.RegisterAll(factory);
+        return factory;
     }
 }

@@ -9,7 +9,6 @@ public static class ComparatorRegistry
             return;
 
         factory.RegisterSource("UnitBuffStackSource", static () => new UnitBuffStackSource());
-        factory.RegisterSource("UnitCanStartCastSource", static () => new UnitCanStartCastSource());
         factory.RegisterSource("UnitHealthRatioSource", static () => new UnitHealthRatioSource());
         factory.RegisterSource("UnitHasTargetSource", static () => new UnitHasTargetSource());
         factory.RegisterSource("UnitIsCastingSource", static () => new UnitIsCastingSource());
@@ -32,6 +31,7 @@ public static class ComparatorRegistry
         factory.RegisterValueOperation("Divide", static () => new DivideOperation());
         factory.RegisterValueOperation("Dot", static () => new DotOperation());
         factory.RegisterValueOperation("Length", static () => new LengthOperation());
+        factory.RegisterValueOperation("Length2", static () => new Length2Operation());
         factory.RegisterValueOperation("LengthSquared", static () => new LengthSquaredOperation());
         factory.RegisterValueOperation("Max", static () => new MaxOperation());
         factory.RegisterValueOperation("Min", static () => new MinOperation());

@@ -17,14 +17,11 @@ namespace CrystalMagic.Game.Skill
             if (baseSkill == null)
                 return false;
 
-            SkillAdditionData skillAdditionData = SkillChainResolver.GetSkillAdditionData(request.SkillAdditionId);
             SkillModifierSet modifiers = request.ModifierSnapshot?.Clone() ?? new SkillModifierSet();
-            if (skillAdditionData != null)
-                modifiers.Add(skillAdditionData.Modifiers);
 
             UnitAttackComponent? attack = request.HasAttackSnapshot ? request.AttackSnapshot : null;
             UnitElementComponent? element = request.HasElementSnapshot ? request.ElementSnapshot : null;
-            resolvedSkill = SkillResolver.Resolve(baseSkill, modifiers, skillAdditionData, attack, element);
+            resolvedSkill = SkillResolver.Resolve(baseSkill, modifiers, attack, element);
             return resolvedSkill != null;
         }
     }

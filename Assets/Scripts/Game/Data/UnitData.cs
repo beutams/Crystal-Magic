@@ -50,15 +50,8 @@ namespace CrystalMagic.Game.Data
 
             for (int i = 0; i < Modules.Count; i++)
             {
-                switch (Modules[i])
-                {
-                    case UnitSkillModuleData skillModule:
-                        skillModule.Skills ??= new List<UnitSkillSlotData>();
-                        break;
-                    case UnitBuffModuleData buffModule:
-                        buffModule.Buffs ??= new List<UnitInitialBuffEntry>();
-                        break;
-                }
+                if (Modules[i] is UnitBuffModuleData buffModule)
+                    buffModule.Buffs ??= new List<UnitInitialBuffEntry>();
             }
         }
     }
@@ -102,7 +95,7 @@ namespace CrystalMagic.Game.Data
     [System.Serializable]
     public sealed class UnitFactionModuleData : UnitModuleData
     {
-        public UnitFactionType Faction = UnitFactionType.Friendly;
+        public UnitFactionType Faction = UnitFactionType.Friend;
     }
 
     [System.Serializable]
@@ -123,23 +116,6 @@ namespace CrystalMagic.Game.Data
         public int BuffId = -1;
         public float DurationSeconds = -1f;
         public int StackCount = 1;
-    }
-
-    [System.Serializable]
-    public sealed class UnitSkillModuleData : UnitModuleData
-    {
-        public List<UnitSkillSlotData> Skills = new();
-    }
-
-    [System.Serializable]
-    public sealed class UnitSkillSlotData
-    {
-        public int SkillId = -1;
-        public int TagMask;
-        public float MinDistance;
-        public float MaxDistance = 99f;
-        public float CooldownSeconds;
-        public int Weight = 1;
     }
 
     [System.Serializable]

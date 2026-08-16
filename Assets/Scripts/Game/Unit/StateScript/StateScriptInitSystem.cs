@@ -27,7 +27,7 @@ public partial class StateScriptInitSystem : SystemBase
             if (!EntityManager.HasComponent<UnitSourceRuntimeComponent>(entity))
                 continue;
 
-            StateScriptData data = DataComponent.Instance.Find<StateScriptData>(row => row.UnitDataId == component.UnitDataId);
+            StateScriptData data = DataComponent.Instance.Find<StateScriptData>(row => row.Id == component.UnitDataId);
             if (data == null)
             {
                 component.InitializationError = $"StateScriptData not found for UnitData.Id: {component.UnitDataId}";

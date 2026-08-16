@@ -8,6 +8,7 @@ public sealed class SetBehaviorNode : ActionBehaviorNode
     private static readonly ComparatorFactory s_expressionFactory = CreateExpressionFactory();
     private readonly SetBehaviorNodeData _data;
     private UnitSourceSet _set;
+    private string _key;
     private Func<UnitValue>[] _inputGetters;
     private UnitValue[] _inputValues;
 
@@ -20,6 +21,7 @@ public sealed class SetBehaviorNode : ActionBehaviorNode
     protected override bool OnBind(UnitSourceAccessTable sources, out string error)
     {
         _set = null;
+        _key = string.Empty;
         _inputGetters = null;
         _inputValues = null;
         if (_data == null || string.IsNullOrWhiteSpace(_data.SetKey))
@@ -37,6 +39,12 @@ public sealed class SetBehaviorNode : ActionBehaviorNode
         if (_data.Inputs == null || _data.Inputs.Count != set.Parameters.Count)
         {
             error = $"Set '{_data.SetKey}' requires {set.Parameters.Count} input(s).";
+            return false;
+        }
+
+        if (set.RequiresKey && string.IsNullOrWhiteSpace(_data.Key))
+        {
+            error = $"Set '{_data.SetKey}' requires a configured key.";
             return false;
         }
 
@@ -63,6 +71,7 @@ public sealed class SetBehaviorNode : ActionBehaviorNode
         }
 
         _set = set;
+        _key = _data.Key ?? string.Empty;
         _inputGetters = inputGetters;
         _inputValues = new UnitValue[inputGetters.Length];
         error = string.Empty;
@@ -83,7 +92,10 @@ public sealed class SetBehaviorNode : ActionBehaviorNode
             _inputValues[i] = getter();
         }
 
-        return _set.TrySet(_inputValues)
+        bool didSet = _set.RequiresKey
+            ? _set.TrySet(_key, _inputValues[0])
+            : _set.TrySet(_inputValues);
+        return didSet
             ? BehaviorNodeStatus.Success
             : BehaviorNodeStatus.Failure;
     }

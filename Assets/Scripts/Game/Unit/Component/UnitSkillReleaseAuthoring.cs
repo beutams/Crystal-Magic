@@ -25,7 +25,6 @@ public sealed class UnitSkillReleaseComponent : IComponentData
 public sealed class SkillReleaseRequest
 {
     public int SkillId = -1;
-    public int SkillAdditionId = -1;
     public Entity OriginEntity = Entity.Null;
     public float3 OriginPosition;
     public float2 OriginFacing = new(1f, 0f);

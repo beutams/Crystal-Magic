@@ -1,6 +1,6 @@
+using CrystalMagic.Game.Data;
 using Unity.Collections;
 using Unity.Entities;
-using Unity.Mathematics;
 using UnityEngine;
 
 public sealed class UnitAnimationAuthoring : MonoBehaviour
@@ -9,17 +9,47 @@ public sealed class UnitAnimationAuthoring : MonoBehaviour
     {
         public override void Bake(UnitAnimationAuthoring authoring)
         {
-            Transform root = authoring.transform.root != null ? authoring.transform.root : authoring.transform;
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
-            AddComponent(entity, UnitAnimationComponent.CreateDefault(new FixedString128Bytes(root.name)));
-            AddComponent(entity, new UnitAnimationFrameUvMinProperty { Value = float4.zero });
-            AddComponent(entity, new UnitAnimationFrameUvSizeProperty { Value = new float4(1f, 1f, 0f, 0f) });
-            AddComponent(entity, new UnitAnimationFrameWorldSizeProperty { Value = new float4(1f, 1f, 0f, 0f) });
-            AddComponent(entity, new UnitAnimationFramePivotOffsetProperty { Value = float4.zero });
-
             SpriteRenderer spriteRenderer = authoring.GetComponent<SpriteRenderer>();
-            if (spriteRenderer != null)
-                AddComponentObject(entity, spriteRenderer);
+            AddComponentObject(entity, UnitAnimationComponent.CreateDefault(spriteRenderer));
         }
+    }
+}
+
+public sealed class UnitAnimationComponent : IComponentData
+{
+    internal SpriteRenderer Renderer;
+    internal FixedString64Bytes Name;
+    internal FixedString64Bytes PlayingName;
+    internal float ElapsedSeconds;
+
+    internal static UnitAnimationComponent CreateDefault(SpriteRenderer renderer)
+    {
+        return new UnitAnimationComponent
+        {
+            Renderer = renderer,
+            Name = default,
+            PlayingName = default,
+            ElapsedSeconds = 0f,
+        };
+    }
+}
+
+[UnitSourceAuthoring(typeof(UnitAnimationAuthoring))]
+public sealed class UnitAnimationSource : UnitManagedComponentSource<UnitAnimationComponent>
+{
+    protected override void Define(UnitSourceDefinitionBuilder<UnitAnimationComponent> builder)
+    {
+        builder.AddGet("unit.animation.name", UnitValueCategory.String,
+            (in UnitAnimationComponent value) => UnitValue.FromString(value?.Name.ToString() ?? string.Empty));
+        builder.AddSet("unit.animation.setName", UnitValueCategory.String,
+            (ref UnitAnimationComponent value, UnitValue input) =>
+            {
+                if (value == null || !input.TryGetString(out string name))
+                    return false;
+
+                value.Name = new FixedString64Bytes(name.Trim());
+                return true;
+            });
     }
 }
