@@ -41,7 +41,8 @@ public sealed class MonitorStateScriptNode : StateScriptStateNode
 
     protected override void OnActivate()
     {
-        _hasLastValue = false;
+        _lastValue = _comparator.GetResult();
+        _hasLastValue = true;
     }
 
     protected override void OnUpdate()

@@ -128,7 +128,6 @@ public abstract class StateScriptStateNode : StateScriptNode
 
     private void Start()
     {
-        OnStartPulse();
         if (Status != StateScriptStateStatus.Stop)
             return;
 
@@ -137,10 +136,6 @@ public abstract class StateScriptStateNode : StateScriptNode
         OnActivate();
         if (Status != StateScriptStateStatus.Stop)
             _onStartOutput.Pulse();
-    }
-
-    protected virtual void OnStartPulse()
-    {
     }
 
 }

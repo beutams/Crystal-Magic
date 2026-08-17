@@ -55,6 +55,9 @@ namespace CrystalMagic.Game.Data
                     case RequestSkillActionNodeData requestSkill:
                         requestSkill.SkillId ??= RequestSkillActionNodeData.CreateDefaultSkillIdExpression();
                         break;
+                    case PublishGameEventStateScriptNodeData publishGameEvent:
+                        publishGameEvent.Payload ??= PublishGameEventStateScriptNodeData.CreateDefaultPayloadExpression();
+                        break;
                     case TimerStateScriptNodeData timer:
                         timer.Duration ??= TimerStateScriptNodeData.CreateDefaultDurationExpression();
                         break;
@@ -153,6 +156,27 @@ namespace CrystalMagic.Game.Data
             return new ValueExpression
             {
                 Literal = UnitValue.FromInt(-1),
+            };
+        }
+    }
+
+    [Serializable]
+    [FactoryKey("PublishGameEvent", 12, "Publish Game Event")]
+    public sealed class PublishGameEventStateScriptNodeData : ActionStateScriptNodeData
+    {
+        public string EventName = string.Empty;
+        public ValueExpression Payload = CreateDefaultPayloadExpression();
+
+        public PublishGameEventStateScriptNodeData()
+        {
+            Type = "PublishGameEvent";
+        }
+
+        public static ValueExpression CreateDefaultPayloadExpression()
+        {
+            return new ValueExpression
+            {
+                Literal = UnitValue.None,
             };
         }
     }

@@ -56,14 +56,11 @@ namespace CrystalMagic.Editor.Unit
                 if (nodeData == null || prototype == null)
                     continue;
 
-                StateScriptNodeView view = new(nodeData, prototype);
                 Rect position = new(nodeData.EditorPosition, Vector2.zero);
                 if (position.position == Vector2.zero && i > 0)
                     position.position = new Vector2(260f + i * 40f, 150f + i * 30f);
 
-                view.SetPosition(position);
-                AddElement(view);
-                _nodeViews[nodeData.Guid] = view;
+                AddNodeView(nodeData, prototype, position);
             }
 
             var savedCallback = graphViewChanged;
@@ -90,6 +87,21 @@ namespace CrystalMagic.Editor.Unit
         public StateScriptNodeData GetSelectedNodeData()
         {
             return selection?.OfType<StateScriptNodeView>().FirstOrDefault()?.NodeData;
+        }
+
+        private bool AddNode(StateScriptNodeData nodeData)
+        {
+            if (nodeData == null || string.IsNullOrWhiteSpace(nodeData.Guid) || _nodeViews.ContainsKey(nodeData.Guid))
+                return false;
+
+            StateScriptNode prototype = StateScriptRuntimeBuilder.CreatePrototype(nodeData);
+            if (prototype == null)
+                return false;
+
+            StateScriptNodeView view = AddNodeView(nodeData, prototype, new Rect(nodeData.EditorPosition, Vector2.zero));
+            ClearSelection();
+            AddToSelection(view);
+            return true;
         }
 
         public bool SaveViewTransform(StateScriptInstanceData graph)
@@ -181,12 +193,15 @@ namespace CrystalMagic.Editor.Unit
                             return;
 
                         node.EditorPosition = position;
+
+                        if (!AddNode(node))
+                            return;
+
                         selectedGraph.Nodes.Add(node);
                         if (node is StateScriptEntryNodeData)
                             selectedGraph.EntryNodeGuid = node.Guid;
 
                         _window.MarkDirty();
-                        BuildFromData(selectedGraph);
                     });
                 }
             }
@@ -207,6 +222,15 @@ namespace CrystalMagic.Editor.Unit
 
             _nodeViews.Clear();
             graphViewChanged = savedCallback;
+        }
+
+        private StateScriptNodeView AddNodeView(StateScriptNodeData nodeData, StateScriptNode prototype, Rect position)
+        {
+            StateScriptNodeView view = new(nodeData, prototype);
+            view.SetPosition(position);
+            AddElement(view);
+            _nodeViews.Add(nodeData.Guid, view);
+            return view;
         }
 
         private GraphViewChange OnGraphViewChanged(GraphViewChange change)

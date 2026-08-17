@@ -38,6 +38,15 @@ namespace CrystalMagic.Editor.Unit
                 return;
             }
 
+            if (node is PublishGameEventStateScriptNodeData publishGameEvent)
+            {
+                EditorGUI.BeginChangeCheck();
+                DrawPublishGameEvent(publishGameEvent, sourceSchema, onChanged);
+                if (EditorGUI.EndChangeCheck())
+                    onChanged?.Invoke();
+                return;
+            }
+
             if (node is TimerStateScriptNodeData timer)
             {
                 EditorGUI.BeginChangeCheck();
@@ -162,6 +171,17 @@ namespace CrystalMagic.Editor.Unit
             requestSkill.SkillId ??= RequestSkillActionNodeData.CreateDefaultSkillIdExpression();
             EditorGUILayout.LabelField("Skill ID (Number)", EditorStyles.miniBoldLabel);
             StateScriptValueExpressionDrawer.Draw(requestSkill.SkillId, UnitValueCategory.Number, sourceSchema, onChanged);
+        }
+
+        private static void DrawPublishGameEvent(
+            PublishGameEventStateScriptNodeData publishGameEvent,
+            UnitSourceSchema sourceSchema,
+            Action onChanged)
+        {
+            publishGameEvent.EventName = EditorGUILayout.TextField("Event Name", publishGameEvent.EventName ?? string.Empty);
+            publishGameEvent.Payload ??= PublishGameEventStateScriptNodeData.CreateDefaultPayloadExpression();
+            EditorGUILayout.LabelField("Payload", EditorStyles.miniBoldLabel);
+            StateScriptValueExpressionDrawer.Draw(publishGameEvent.Payload, UnitValueCategory.Any, sourceSchema, onChanged);
         }
 
         private static void DrawComparatorCondition(

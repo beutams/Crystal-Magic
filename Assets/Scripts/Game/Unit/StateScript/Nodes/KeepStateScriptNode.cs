@@ -5,38 +5,79 @@ using UnityEngine;
 public sealed class KeepStateScriptNode : StateScriptStateNode
 {
     private readonly KeepStateScriptNodeData _data;
+    private readonly StateScriptOutputPort _onTimeStartOutput;
+    private readonly StateScriptOutputPort _onTimeTickOutput;
+    private readonly StateScriptOutputPort _onTimeCompleteOutput;
+    private readonly StateScriptOutputPort _onTimeStopOutput;
     private float _elapsedSeconds;
-    private long _activationTick;
-    private long _lastStartPulseTick = long.MinValue;
+    private long _timingStartTick;
+    private long _lastKeepTick;
+    private bool _isTiming;
 
     public KeepStateScriptNode(KeepStateScriptNodeData data, StateScriptRuntime runtime)
         : base(data, runtime)
     {
         _data = data;
+        AddInput("Keep", Keep);
+        _onTimeStartOutput = AddOutput("OnTimeStart");
+        _onTimeTickOutput = AddOutput("OnTimeTick");
+        _onTimeCompleteOutput = AddOutput("OnTimeComplete");
+        _onTimeStopOutput = AddOutput("OnTimeStop");
     }
 
     protected override void OnActivate()
     {
         _elapsedSeconds = 0f;
-        _activationTick = Runtime.TickVersion;
+        _timingStartTick = long.MinValue;
+        _lastKeepTick = long.MinValue;
+        _isTiming = false;
     }
 
     protected override void OnUpdate()
     {
-        long requiredKeepTick = System.Math.Max(_activationTick, Runtime.TickVersion - 1);
-        if (_lastStartPulseTick < requiredKeepTick)
+        if (!_isTiming)
+            return;
+
+        long requiredKeepTick = System.Math.Max(_timingStartTick, Runtime.TickVersion - 1);
+        if (_lastKeepTick < requiredKeepTick)
         {
+            _isTiming = false;
+            _onTimeStopOutput.Pulse();
+            if (Status == StateScriptStateStatus.Stop)
+                return;
+
             Stop();
             return;
         }
 
         _elapsedSeconds += Runtime.DeltaTime;
+        _onTimeTickOutput.Pulse();
+        if (Status == StateScriptStateStatus.Stop)
+            return;
+
         if (_elapsedSeconds >= Mathf.Max(0f, _data.DurationSeconds))
+        {
+            _isTiming = false;
+            _onTimeCompleteOutput.Pulse();
+            if (Status == StateScriptStateStatus.Stop)
+                return;
+
             Complete();
+        }
     }
 
-    protected override void OnStartPulse()
+    private void Keep()
     {
-        _lastStartPulseTick = Runtime?.TickVersion ?? long.MinValue;
+        if (Status == StateScriptStateStatus.Stop)
+            return;
+
+        long tickVersion = Runtime.TickVersion;
+        _lastKeepTick = tickVersion;
+        if (_isTiming)
+            return;
+
+        _isTiming = true;
+        _timingStartTick = tickVersion;
+        _onTimeStartOutput.Pulse();
     }
 }

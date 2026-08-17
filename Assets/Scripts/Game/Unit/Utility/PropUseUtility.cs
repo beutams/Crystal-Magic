@@ -247,7 +247,9 @@ namespace CrystalMagic.Game
 
             SkillExecutor.ExecuteEffects(propData.EffectChain, skillContent);
             SaveDataComponent.Instance.NotifyCharacterPropDataChanged();
-            RuntimeDataComponent.Instance.StartPropSharedCooldown(GetSharedCooldownSeconds());
+            EventComponent.Instance.Publish(new CommonGameEvent(
+                GameplayEventNames.PropUsed,
+                new GameplayEventPayload(context.UserEntity, UnitValue.FromFloat(GetSharedCooldownSeconds()))));
             return true;
         }
 

@@ -809,8 +809,8 @@
               "Type": "SetValue",
               "Guid": "d63e770aac2749409cb87a3d46c62517",
               "EditorPosition": {
-                "x": 548.6666,
-                "y": 287.3333
+                "x": 719.0,
+                "y": 287.0
               }
             },
             {
@@ -1109,8 +1109,8 @@
               "Type": "SetValue",
               "Guid": "1d3fee866cc0474fa77258d352cdd2f1",
               "EditorPosition": {
-                "x": 548.6666,
-                "y": 183.333344
+                "x": 719.0,
+                "y": 183.0
               }
             },
             {
@@ -1241,8 +1241,166 @@
               "Type": "SetValue",
               "Guid": "2c19fa621b454a5ea108fb36633ca3db",
               "EditorPosition": {
+                "x": 555.0,
+                "y": 326.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsTrue",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 1,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "unit.control.lockMove",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ],
+                "SourceType": "",
+                "SourceParam": -1,
+                "CompareValue": 0.0
+              },
+              "Type": "Monitor",
+              "Guid": "3e1c7aee2f114ac49a98f70f77de45a6",
+              "EditorPosition": {
+                "x": 263.333344,
+                "y": 780.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsFalse",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 1,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "unit.control.lockMove",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ],
+                "SourceType": "",
+                "SourceParam": -1,
+                "CompareValue": 0.0
+              },
+              "Type": "Compare",
+              "Guid": "afc587aab4e04322a5d42945a6e0c4f0",
+              "EditorPosition": {
+                "x": 555.0,
+                "y": 186.0
+              }
+            },
+            {
+              "SetterKey": "unit.move.setDirection",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 4,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Type": "SetValue",
+              "Guid": "e6a4f5d19e194470a22de1ef847e5c9b",
+              "EditorPosition": {
                 "x": 548.6666,
-                "y": 380.0
+                "y": 780.0
+              }
+            },
+            {
+              "SetterKey": "unit.move.setVelocity",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 4,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Type": "SetValue",
+              "Guid": "8b49d33a7d1b4b7e8b98dc2f6e995b53",
+              "EditorPosition": {
+                "x": 719.3334,
+                "y": 780.0
               }
             }
           ],
@@ -1256,8 +1414,8 @@
             {
               "OutputNodeGuid": "8f0550915e5d43d3855071af18b9f8f0",
               "OutputPortName": "True",
-              "InputNodeGuid": "d63e770aac2749409cb87a3d46c62517",
-              "InputPortName": "In"
+              "InputNodeGuid": "afc587aab4e04322a5d42945a6e0c4f0",
+              "InputPortName": "Check"
             },
             {
               "OutputNodeGuid": "f21d6e3440144c2b894276e8da98de31",
@@ -1272,7 +1430,7 @@
               "InputPortName": "In"
             },
             {
-              "OutputNodeGuid": "8f0550915e5d43d3855071af18b9f8f0",
+              "OutputNodeGuid": "afc587aab4e04322a5d42945a6e0c4f0",
               "OutputPortName": "True",
               "InputNodeGuid": "1d3fee866cc0474fa77258d352cdd2f1",
               "InputPortName": "In"
@@ -1300,11 +1458,35 @@
               "OutputPortName": "False",
               "InputNodeGuid": "2c19fa621b454a5ea108fb36633ca3db",
               "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "825384f2bd554ce2850e442495427730",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "3e1c7aee2f114ac49a98f70f77de45a6",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "afc587aab4e04322a5d42945a6e0c4f0",
+              "OutputPortName": "True",
+              "InputNodeGuid": "d63e770aac2749409cb87a3d46c62517",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "3e1c7aee2f114ac49a98f70f77de45a6",
+              "OutputPortName": "True",
+              "InputNodeGuid": "e6a4f5d19e194470a22de1ef847e5c9b",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "e6a4f5d19e194470a22de1ef847e5c9b",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "8b49d33a7d1b4b7e8b98dc2f6e995b53",
+              "InputPortName": "In"
             }
           ],
           "ViewPosition": {
-            "x": -178.0,
-            "y": -25.333334
+            "x": -57.0,
+            "y": -78.0
           },
           "ViewScale": 0.8695652
         },
@@ -1430,8 +1612,8 @@
               "Type": "Compare",
               "Guid": "59b2058254c84bd99e3ecdff8f84421d",
               "EditorPosition": {
-                "x": 392.666656,
-                "y": 346.666656
+                "x": 398.0,
+                "y": 347.0
               }
             },
             {
@@ -1466,8 +1648,8 @@
               "Type": "SetValue",
               "Guid": "c25a5f0de2b64a8eaf0536591f5e6366",
               "EditorPosition": {
-                "x": 546.0,
-                "y": 346.666656
+                "x": 710.0,
+                "y": 347.0
               }
             },
             {
@@ -1543,7 +1725,7 @@
             {
               "Condition": {
                 "ConditionType": 0,
-                "CompareType": "IsTrue",
+                "CompareType": "IsFalse",
                 "Inputs": [
                   {
                     "Kind": 1,
@@ -1567,36 +1749,9 @@
                       },
                       "String": ""
                     },
-                    "GetterKey": "world.skill.hasChain",
+                    "GetterKey": "world.skill.isCurrentChainEmpty",
                     "OperationType": "",
-                    "Inputs": [
-                      {
-                        "Kind": 1,
-                        "Literal": {
-                          "Type": 3,
-                          "Bool": false,
-                          "Int": 0,
-                          "Float": 0.0,
-                          "Float2": {
-                            "x": 0.0,
-                            "y": 0.0
-                          },
-                          "Float3": {
-                            "x": 0.0,
-                            "y": 0.0,
-                            "z": 0.0
-                          },
-                          "Entity": {
-                            "Index": 0,
-                            "Version": 0
-                          },
-                          "String": ""
-                        },
-                        "GetterKey": "world.skill.getCurrentChainId",
-                        "OperationType": "",
-                        "Inputs": []
-                      }
-                    ]
+                    "Inputs": []
                   }
                 ],
                 "SourceType": "",
@@ -1607,7 +1762,7 @@
               "Guid": "7aa301ef3adc4b34b8fbe56f4a210ca1",
               "EditorPosition": {
                 "x": 228.0,
-                "y": 346.666656
+                "y": 347.0
               }
             },
             {
@@ -1642,104 +1797,8 @@
               "Type": "SetValue",
               "Guid": "52f1da8897804f14af5d8caee987d4ad",
               "EditorPosition": {
-                "x": 228.0,
-                "y": 694.6667
-              }
-            },
-            {
-              "Condition": {
-                "ConditionType": 0,
-                "CompareType": "NotEqual",
-                "Inputs": [
-                  {
-                    "Kind": 1,
-                    "Literal": {
-                      "Type": 3,
-                      "Bool": false,
-                      "Int": 0,
-                      "Float": 0.0,
-                      "Float2": {
-                        "x": 0.0,
-                        "y": 0.0
-                      },
-                      "Float3": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                      },
-                      "Entity": {
-                        "Index": 0,
-                        "Version": 0
-                      },
-                      "String": ""
-                    },
-                    "GetterKey": "unit.variables.getNumber",
-                    "OperationType": "",
-                    "Inputs": [
-                      {
-                        "Kind": 0,
-                        "Literal": {
-                          "Type": 7,
-                          "Bool": false,
-                          "Int": 0,
-                          "Float": 0.0,
-                          "Float2": {
-                            "x": 0.0,
-                            "y": 0.0
-                          },
-                          "Float3": {
-                            "x": 0.0,
-                            "y": 0.0,
-                            "z": 0.0
-                          },
-                          "Entity": {
-                            "Index": 0,
-                            "Version": 0
-                          },
-                          "String": "skillindex"
-                        },
-                        "GetterKey": "",
-                        "OperationType": "",
-                        "Inputs": []
-                      }
-                    ]
-                  },
-                  {
-                    "Kind": 0,
-                    "Literal": {
-                      "Type": 3,
-                      "Bool": false,
-                      "Int": 0,
-                      "Float": -1.0,
-                      "Float2": {
-                        "x": 0.0,
-                        "y": 0.0
-                      },
-                      "Float3": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                      },
-                      "Entity": {
-                        "Index": 0,
-                        "Version": 0
-                      },
-                      "String": ""
-                    },
-                    "GetterKey": "",
-                    "OperationType": "",
-                    "Inputs": []
-                  }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
-              },
-              "Type": "Compare",
-              "Guid": "7008146af8804db4896e07835bfa3949",
-              "EditorPosition": {
-                "x": 228.0,
-                "y": 550.0
+                "x": 648.0,
+                "y": 555.0
               }
             },
             {
@@ -1906,8 +1965,8 @@
               "Type": "Timer",
               "Guid": "8c7c2c43f1ed42dc8b3d06fd3619cacc",
               "EditorPosition": {
-                "x": 672.0,
-                "y": 558.399963
+                "x": 1117.0,
+                "y": 671.0
               }
             },
             {
@@ -1967,15 +2026,15 @@
               "Type": "NumberMonitor",
               "Guid": "b13b0bbf83e9442c9b42ed2411c8c375",
               "EditorPosition": {
-                "x": 410.399963,
-                "y": 548.0
+                "x": 398.0,
+                "y": 555.0
               }
             },
             {
-              "SetterKey": "world.variables.set",
+              "SetterKey": "unit.variables.set",
               "Key": "skillchainindex",
               "Value": {
-                "Kind": 0,
+                "Kind": 1,
                 "Literal": {
                   "Type": 3,
                   "Bool": false,
@@ -1996,15 +2055,15 @@
                   },
                   "String": ""
                 },
-                "GetterKey": "",
+                "GetterKey": "world.skill.getCurrentChainId",
                 "OperationType": "",
                 "Inputs": []
               },
               "Type": "SetValue",
               "Guid": "cbac06d94bde419999fec5d558d31d18",
               "EditorPosition": {
-                "x": 228.799988,
-                "y": 784.8
+                "x": 228.0,
+                "y": 555.0
               }
             },
             {
@@ -2144,8 +2203,8 @@
               "Type": "RequestSkill",
               "Guid": "7c8a9665ce7c45f191a0d5e5c4b521d0",
               "EditorPosition": {
-                "x": 903.2,
-                "y": 558.399963
+                "x": 1325.0,
+                "y": 671.0
               }
             },
             {
@@ -2260,17 +2319,17 @@
               "Type": "SetValue",
               "Guid": "6f88f1092b5a403fa7c5e159bdd768e6",
               "EditorPosition": {
-                "x": 1284.8,
-                "y": 558.399963
+                "x": 1699.0,
+                "y": 671.0
               }
             },
             {
               "Condition": {
                 "ConditionType": 0,
-                "CompareType": "GreaterOrEqual",
+                "CompareType": "LessThan",
                 "Inputs": [
                   {
-                    "Kind": 1,
+                    "Kind": 2,
                     "Literal": {
                       "Type": 3,
                       "Bool": false,
@@ -2292,12 +2351,12 @@
                       "String": ""
                     },
                     "GetterKey": "unit.variables.getNumber",
-                    "OperationType": "",
+                    "OperationType": "Add",
                     "Inputs": [
                       {
-                        "Kind": 0,
+                        "Kind": 1,
                         "Literal": {
-                          "Type": 7,
+                          "Type": 3,
                           "Bool": false,
                           "Int": 0,
                           "Float": 0.0,
@@ -2314,7 +2373,60 @@
                             "Index": 0,
                             "Version": 0
                           },
-                          "String": "skillindex"
+                          "String": ""
+                        },
+                        "GetterKey": "unit.variables.getNumber",
+                        "OperationType": "",
+                        "Inputs": [
+                          {
+                            "Kind": 0,
+                            "Literal": {
+                              "Type": 7,
+                              "Bool": false,
+                              "Int": 0,
+                              "Float": 0.0,
+                              "Float2": {
+                                "x": 0.0,
+                                "y": 0.0
+                              },
+                              "Float3": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 0.0
+                              },
+                              "Entity": {
+                                "Index": 0,
+                                "Version": 0
+                              },
+                              "String": "skillindex"
+                            },
+                            "GetterKey": "",
+                            "OperationType": "",
+                            "Inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 3,
+                          "Bool": false,
+                          "Int": 0,
+                          "Float": 1.0,
+                          "Float2": {
+                            "x": 0.0,
+                            "y": 0.0
+                          },
+                          "Float3": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "Entity": {
+                            "Index": 0,
+                            "Version": 0
+                          },
+                          "String": ""
                         },
                         "GetterKey": "",
                         "OperationType": "",
@@ -2410,44 +2522,104 @@
               "Type": "Compare",
               "Guid": "a75bb15a3efd47a1afd0717cf8092c92",
               "EditorPosition": {
-                "x": 1073.6001,
-                "y": 558.399963
+                "x": 1502.0,
+                "y": 671.0
               }
             },
             {
-              "SetterKey": "unit.variables.set",
-              "Key": "skillindex",
-              "Value": {
-                "Kind": 0,
-                "Literal": {
-                  "Type": 3,
-                  "Bool": false,
-                  "Int": 0,
-                  "Float": -1.0,
-                  "Float2": {
-                    "x": 0.0,
-                    "y": 0.0
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "NotEqual",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "unit.variables.getNumber",
+                    "OperationType": "",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 7,
+                          "Bool": false,
+                          "Int": 0,
+                          "Float": 0.0,
+                          "Float2": {
+                            "x": 0.0,
+                            "y": 0.0
+                          },
+                          "Float3": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "Entity": {
+                            "Index": 0,
+                            "Version": 0
+                          },
+                          "String": "skillindex"
+                        },
+                        "GetterKey": "",
+                        "OperationType": "",
+                        "Inputs": []
+                      }
+                    ]
                   },
-                  "Float3": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
-                  },
-                  "Entity": {
-                    "Index": 0,
-                    "Version": 0
-                  },
-                  "String": ""
-                },
-                "GetterKey": "",
-                "OperationType": "",
-                "Inputs": []
+                  {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": -1.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ],
+                "SourceType": "",
+                "SourceParam": -1,
+                "CompareValue": 0.0
               },
-              "Type": "SetValue",
-              "Guid": "286bcd12ddc34479bd604ad3261f9834",
+              "Type": "Compare",
+              "Guid": "4421b6b78d1345148ae0c6bdd0090dd0",
               "EditorPosition": {
-                "x": 672.0,
-                "y": 744.8
+                "x": 943.0,
+                "y": 669.0
               }
             },
             {
@@ -2480,10 +2652,505 @@
                 "Inputs": []
               },
               "Type": "SetValue",
-              "Guid": "bcb796088ca54896969199c36cc04cda",
+              "Guid": "8ade1650842a4e2784c90b6ffd75a441",
               "EditorPosition": {
-                "x": 801.600037,
-                "y": 745.6
+                "x": 1699.0,
+                "y": 806.0
+              }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "skillindex",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": -1.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Type": "SetValue",
+              "Guid": "70ec76c749d84d3fb0e21f7454c798f7",
+              "EditorPosition": {
+                "x": 1839.0,
+                "y": 807.0
+              }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "skillchainindex",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": -1.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Type": "SetValue",
+              "Guid": "651258af3a084260a229975f3b2e8a77",
+              "EditorPosition": {
+                "x": 1994.0,
+                "y": 808.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "GreaterThan",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "unit.mana.currentMana",
+                    "OperationType": "",
+                    "Inputs": []
+                  },
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "unit.skillModifier.getMpCost",
+                    "OperationType": "",
+                    "Inputs": [
+                      {
+                        "Kind": 1,
+                        "Literal": {
+                          "Type": 3,
+                          "Bool": false,
+                          "Int": 0,
+                          "Float": 0.0,
+                          "Float2": {
+                            "x": 0.0,
+                            "y": 0.0
+                          },
+                          "Float3": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "Entity": {
+                            "Index": 0,
+                            "Version": 0
+                          },
+                          "String": ""
+                        },
+                        "GetterKey": "world.skill.getSkillMpCost",
+                        "OperationType": "",
+                        "Inputs": [
+                          {
+                            "Kind": 1,
+                            "Literal": {
+                              "Type": 3,
+                              "Bool": false,
+                              "Int": 0,
+                              "Float": 0.0,
+                              "Float2": {
+                                "x": 0.0,
+                                "y": 0.0
+                              },
+                              "Float3": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 0.0
+                              },
+                              "Entity": {
+                                "Index": 0,
+                                "Version": 0
+                              },
+                              "String": ""
+                            },
+                            "GetterKey": "unit.variables.getNumber",
+                            "OperationType": "",
+                            "Inputs": [
+                              {
+                                "Kind": 0,
+                                "Literal": {
+                                  "Type": 7,
+                                  "Bool": false,
+                                  "Int": 0,
+                                  "Float": 0.0,
+                                  "Float2": {
+                                    "x": 0.0,
+                                    "y": 0.0
+                                  },
+                                  "Float3": {
+                                    "x": 0.0,
+                                    "y": 0.0,
+                                    "z": 0.0
+                                  },
+                                  "Entity": {
+                                    "Index": 0,
+                                    "Version": 0
+                                  },
+                                  "String": "skillindex"
+                                },
+                                "GetterKey": "",
+                                "OperationType": "",
+                                "Inputs": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "SourceType": "",
+                "SourceParam": -1,
+                "CompareValue": 0.0
+              },
+              "Type": "Compare",
+              "Guid": "6242611392b04e54bdc35a28ad8f5c92",
+              "EditorPosition": {
+                "x": 615.0,
+                "y": 671.0
+              }
+            },
+            {
+              "SetterKey": "unit.mana.cost",
+              "Key": "",
+              "Value": {
+                "Kind": 1,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "unit.skillModifier.getMpCost",
+                "OperationType": "",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "world.skill.getSkillMpCost",
+                    "OperationType": "",
+                    "Inputs": [
+                      {
+                        "Kind": 1,
+                        "Literal": {
+                          "Type": 3,
+                          "Bool": false,
+                          "Int": 0,
+                          "Float": 0.0,
+                          "Float2": {
+                            "x": 0.0,
+                            "y": 0.0
+                          },
+                          "Float3": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "Entity": {
+                            "Index": 0,
+                            "Version": 0
+                          },
+                          "String": ""
+                        },
+                        "GetterKey": "world.variables.getNumber",
+                        "OperationType": "",
+                        "Inputs": [
+                          {
+                            "Kind": 0,
+                            "Literal": {
+                              "Type": 7,
+                              "Bool": false,
+                              "Int": 0,
+                              "Float": 0.0,
+                              "Float2": {
+                                "x": 0.0,
+                                "y": 0.0
+                              },
+                              "Float3": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 0.0
+                              },
+                              "Entity": {
+                                "Index": 0,
+                                "Version": 0
+                              },
+                              "String": "skillindex"
+                            },
+                            "GetterKey": "",
+                            "OperationType": "",
+                            "Inputs": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "Type": "SetValue",
+              "Guid": "c782a7f4f83a4e848baa7f9c849af0d2",
+              "EditorPosition": {
+                "x": 783.0,
+                "y": 671.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsTrue",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "unit.control.lockCast",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ],
+                "SourceType": "",
+                "SourceParam": -1,
+                "CompareValue": 0.0
+              },
+              "Type": "Monitor",
+              "Guid": "339387cbfc64496c8820fb1e214a9158",
+              "EditorPosition": {
+                "x": 5.0,
+                "y": 868.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsTrue",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "unit.variables.getBool",
+                    "OperationType": "",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 7,
+                          "Bool": false,
+                          "Int": 0,
+                          "Float": 0.0,
+                          "Float2": {
+                            "x": 0.0,
+                            "y": 0.0
+                          },
+                          "Float3": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "Entity": {
+                            "Index": 0,
+                            "Version": 0
+                          },
+                          "String": "casting"
+                        },
+                        "GetterKey": "",
+                        "OperationType": "",
+                        "Inputs": []
+                      }
+                    ]
+                  }
+                ],
+                "SourceType": "",
+                "SourceParam": -1,
+                "CompareValue": 0.0
+              },
+              "Type": "Compare",
+              "Guid": "05b666a487b8448db838a84b6d9a2ea2",
+              "EditorPosition": {
+                "x": 228.0,
+                "y": 844.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsFalse",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "unit.control.lockCast",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ],
+                "SourceType": "",
+                "SourceParam": -1,
+                "CompareValue": 0.0
+              },
+              "Type": "Compare",
+              "Guid": "0798beea61a3475f9910dc61b8bb543d",
+              "EditorPosition": {
+                "x": 548.0,
+                "y": 347.0
               }
             }
           ],
@@ -2501,12 +3168,6 @@
               "InputPortName": "Start"
             },
             {
-              "OutputNodeGuid": "59b2058254c84bd99e3ecdff8f84421d",
-              "OutputPortName": "True",
-              "InputNodeGuid": "c25a5f0de2b64a8eaf0536591f5e6366",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "79e975ab68c34db195c675eab876aef6",
               "OutputPortName": "True",
               "InputNodeGuid": "7aa301ef3adc4b34b8fbe56f4a210ca1",
@@ -2521,24 +3182,6 @@
             {
               "OutputNodeGuid": "013437695ee946a780043d9e2af0e68f",
               "OutputPortName": "OnChangeTrue",
-              "InputNodeGuid": "52f1da8897804f14af5d8caee987d4ad",
-              "InputPortName": "In"
-            },
-            {
-              "OutputNodeGuid": "7008146af8804db4896e07835bfa3949",
-              "OutputPortName": "True",
-              "InputNodeGuid": "b13b0bbf83e9442c9b42ed2411c8c375",
-              "InputPortName": "Start"
-            },
-            {
-              "OutputNodeGuid": "b13b0bbf83e9442c9b42ed2411c8c375",
-              "OutputPortName": "OnValueChange",
-              "InputNodeGuid": "8c7c2c43f1ed42dc8b3d06fd3619cacc",
-              "InputPortName": "Start"
-            },
-            {
-              "OutputNodeGuid": "013437695ee946a780043d9e2af0e68f",
-              "OutputPortName": "OnChangeTrue",
               "InputNodeGuid": "cbac06d94bde419999fec5d558d31d18",
               "InputPortName": "In"
             },
@@ -2549,16 +3192,52 @@
               "InputPortName": "In"
             },
             {
-              "OutputNodeGuid": "013437695ee946a780043d9e2af0e68f",
-              "OutputPortName": "OnChangeTrue",
-              "InputNodeGuid": "7008146af8804db4896e07835bfa3949",
-              "InputPortName": "Check"
-            },
-            {
               "OutputNodeGuid": "7c8a9665ce7c45f191a0d5e5c4b521d0",
               "OutputPortName": "Out",
               "InputNodeGuid": "a75bb15a3efd47a1afd0717cf8092c92",
               "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "cbac06d94bde419999fec5d558d31d18",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "b13b0bbf83e9442c9b42ed2411c8c375",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "b13b0bbf83e9442c9b42ed2411c8c375",
+              "OutputPortName": "OnStart",
+              "InputNodeGuid": "52f1da8897804f14af5d8caee987d4ad",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "4421b6b78d1345148ae0c6bdd0090dd0",
+              "OutputPortName": "True",
+              "InputNodeGuid": "8c7c2c43f1ed42dc8b3d06fd3619cacc",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "013437695ee946a780043d9e2af0e68f",
+              "OutputPortName": "OnChangeFalse",
+              "InputNodeGuid": "b13b0bbf83e9442c9b42ed2411c8c375",
+              "InputPortName": "Abort"
+            },
+            {
+              "OutputNodeGuid": "a75bb15a3efd47a1afd0717cf8092c92",
+              "OutputPortName": "False",
+              "InputNodeGuid": "8ade1650842a4e2784c90b6ffd75a441",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "8ade1650842a4e2784c90b6ffd75a441",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "70ec76c749d84d3fb0e21f7454c798f7",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "70ec76c749d84d3fb0e21f7454c798f7",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "651258af3a084260a229975f3b2e8a77",
+              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "a75bb15a3efd47a1afd0717cf8092c92",
@@ -2567,29 +3246,98 @@
               "InputPortName": "In"
             },
             {
-              "OutputNodeGuid": "a75bb15a3efd47a1afd0717cf8092c92",
+              "OutputNodeGuid": "b13b0bbf83e9442c9b42ed2411c8c375",
+              "OutputPortName": "OnValueChange",
+              "InputNodeGuid": "6242611392b04e54bdc35a28ad8f5c92",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "6242611392b04e54bdc35a28ad8f5c92",
               "OutputPortName": "False",
+              "InputNodeGuid": "8ade1650842a4e2784c90b6ffd75a441",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "c782a7f4f83a4e848baa7f9c849af0d2",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "4421b6b78d1345148ae0c6bdd0090dd0",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "6242611392b04e54bdc35a28ad8f5c92",
+              "OutputPortName": "True",
+              "InputNodeGuid": "c782a7f4f83a4e848baa7f9c849af0d2",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "98cce61a1a104d39b6e60a85066754aa",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "339387cbfc64496c8820fb1e214a9158",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "339387cbfc64496c8820fb1e214a9158",
+              "OutputPortName": "OnChangeTrue",
+              "InputNodeGuid": "05b666a487b8448db838a84b6d9a2ea2",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "05b666a487b8448db838a84b6d9a2ea2",
+              "OutputPortName": "True",
               "InputNodeGuid": "b13b0bbf83e9442c9b42ed2411c8c375",
               "InputPortName": "Abort"
             },
             {
-              "OutputNodeGuid": "b13b0bbf83e9442c9b42ed2411c8c375",
-              "OutputPortName": "OnStop",
-              "InputNodeGuid": "286bcd12ddc34479bd604ad3261f9834",
+              "OutputNodeGuid": "05b666a487b8448db838a84b6d9a2ea2",
+              "OutputPortName": "True",
+              "InputNodeGuid": "8c7c2c43f1ed42dc8b3d06fd3619cacc",
+              "InputPortName": "Abort"
+            },
+            {
+              "OutputNodeGuid": "59b2058254c84bd99e3ecdff8f84421d",
+              "OutputPortName": "True",
+              "InputNodeGuid": "0798beea61a3475f9910dc61b8bb543d",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "0798beea61a3475f9910dc61b8bb543d",
+              "OutputPortName": "True",
+              "InputNodeGuid": "c25a5f0de2b64a8eaf0536591f5e6366",
               "InputPortName": "In"
             },
             {
-              "OutputNodeGuid": "286bcd12ddc34479bd604ad3261f9834",
-              "OutputPortName": "Out",
-              "InputNodeGuid": "bcb796088ca54896969199c36cc04cda",
+              "OutputNodeGuid": "05b666a487b8448db838a84b6d9a2ea2",
+              "OutputPortName": "True",
+              "InputNodeGuid": "8ade1650842a4e2784c90b6ffd75a441",
               "InputPortName": "In"
             }
           ],
           "ViewPosition": {
-            "x": -281.6,
-            "y": -62.4
+            "x": -405.0,
+            "y": -232.0
           },
-          "ViewScale": 0.7561437
+          "ViewScale": 0.8695652
+        },
+        {
+          "Guid": "401a6ec57a204d869887712463f38f54",
+          "Name": "UseProp",
+          "EntryNodeGuid": "04bd5a6ddb864d328873df2c6f7b3b01",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "04bd5a6ddb864d328873df2c6f7b3b01",
+              "EditorPosition": {
+                "x": 120.0,
+                "y": 180.0
+              }
+            }
+          ],
+          "Edges": [],
+          "ViewPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "ViewScale": 1.0
         }
       ],
       "Id": 12

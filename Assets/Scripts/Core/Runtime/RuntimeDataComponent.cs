@@ -15,6 +15,13 @@ namespace CrystalMagic.Core
         private readonly RuntimePropData _propData = new();
         private readonly RuntimeDungeonMapData _dungeonMapData = new();
 
+        protected override void Initialize()
+        {
+            EventComponent.Instance.Subscribe(
+                new CommonGameEvent(GameplayEventNames.PropUsed),
+                HandlePropUsed);
+        }
+
         public RuntimeSkillData GetSkillData()
         {
             return _skillData;
@@ -137,6 +144,18 @@ namespace CrystalMagic.Core
             _dungeonMapData.Floor = Mathf.Max(1, floor);
             _dungeonMapData.Seed = seed;
             _dungeonMapData.AttemptCount = Mathf.Max(1, attemptCount);
+        }
+
+        private void HandlePropUsed(CommonGameEvent gameEvent)
+        {
+            GameplayEventPayload payload = gameEvent.GetData<GameplayEventPayload>();
+            if (!payload.Value.TryGetNumber(out float cooldownSeconds))
+            {
+                Debug.LogError("[RuntimeDataComponent] Gameplay.Prop.Used requires a numeric cooldown payload.");
+                return;
+            }
+
+            StartPropSharedCooldown(cooldownSeconds);
         }
 
         private void StopPropSharedCooldown(bool notify = true)

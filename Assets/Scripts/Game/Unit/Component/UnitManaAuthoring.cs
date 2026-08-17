@@ -71,6 +71,22 @@ public sealed class UnitManaSource : UnitComponentSource<UnitManaComponent>
         builder.AddGet("unit.mana.mpRegenFactor", UnitValueCategory.Number, (in UnitManaComponent value) => UnitValue.FromFloat(value.MpRegenFactor));
         builder.AddGet("unit.mana.mpRegenBonus", UnitValueCategory.Number, (in UnitManaComponent value) => UnitValue.FromFloat(value.MpRegenBonus));
         builder.AddGet("unit.mana.realMpRegenPerSecond", UnitValueCategory.Number, (in UnitManaComponent value) => UnitValue.FromFloat(value.RealMpRegenPerSecond));
+
+        builder.AddSet("unit.mana.cost", UnitValueCategory.Number,
+            (ref UnitManaComponent value, UnitValue input) =>
+            {
+                if (!input.TryGetNumber(out float cost) ||
+                    float.IsNaN(cost) ||
+                    float.IsInfinity(cost) ||
+                    cost < 0f ||
+                    value.CurrentMana < cost)
+                {
+                    return false;
+                }
+
+                value.CurrentMana -= cost;
+                return true;
+            });
     }
 
     private static float GetManaPercentage(in UnitManaComponent value)

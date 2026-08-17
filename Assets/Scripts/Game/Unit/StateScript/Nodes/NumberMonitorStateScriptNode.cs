@@ -46,7 +46,7 @@ public sealed class NumberMonitorStateScriptNode : StateScriptStateNode
 
     protected override void OnActivate()
     {
-        _hasLastValue = false;
+        _hasLastValue = TryGetValue(out _lastValue);
     }
 
     protected override void OnUpdate()

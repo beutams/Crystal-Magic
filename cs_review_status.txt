@@ -16,9 +16,9 @@ Core\
     Editor\
       DataFileEncodingValidator.cs FALSE
       DataTableRegistryGenerator.cs FALSE
-      DataTableViewerWindow.cs FALSE
+      DataTableViewerWindow.cs TRUE DIRTY
     DataComponent.cs TRUE
-    DataFileUtility.cs FALSE
+    DataFileUtility.cs TRUE
     DataRow.cs TRUE
     DataTable.cs TRUE
     DataTableRegistry.cs TRUE DIRTY
@@ -29,6 +29,8 @@ Core\
   Events\
     CommonGameEvent.cs TRUE
     EventComponent.cs TRUE
+    GameplayEventNames.cs FALSE
+    GameplayEventPayload.cs FALSE
     GameEvents.cs TRUE DIRTY
     GameGateChangedEvent.cs TRUE
     MainMenuConfigRequestedEvent.cs TRUE
@@ -64,7 +66,7 @@ Core\
       LocalizedTextMeshProUGUIEditor.cs FALSE
     GameLanguage.cs FALSE
     LocalizationComponent.cs FALSE
-    LocalizationEditorPreviewUtility.cs FALSE
+    LocalizationEditorPreviewUtility.cs TRUE
     LocalizedTextMeshProUGUI.cs FALSE
   Pool\
     GameObjectPool.cs TRUE
@@ -327,11 +329,12 @@ Game\
         StateScriptNode.cs TRUE DIRTY
         StateScriptStateNode.cs TRUE DIRTY
         SetValueStateScriptNode.cs TRUE DIRTY
+        PublishGameEventStateScriptNode.cs FALSE
         RequestSkillActionNode.cs TRUE
         TimerStateScriptNode.cs TRUE DIRTY
         KeepStateScriptNode.cs TRUE DIRTY
         MonitorStateScriptNode.cs TRUE DIRTY
-        NumberMonitorStateScriptNode.cs TRUE
+        NumberMonitorStateScriptNode.cs TRUE DIRTY
       StateScriptInitSystem.cs TRUE DIRTY
       StateScriptNodeFactory.cs TRUE
       StateScriptPort.cs TRUE
@@ -520,7 +523,7 @@ Game\
       EntitySpawnRegistryUtility.cs FALSE
       NPCAuthoringUtility.cs FALSE
       PendingEffectExecutionQueueUtility.cs FALSE
-      PropUseUtility.cs TRUE
+      PropUseUtility.cs TRUE DIRTY
       QuadAnimationVisualUtility.cs TRUE
       QuadOverlayPulseUtility.cs TRUE
       SkillExecutionUtility.cs TRUE DIRTY
@@ -548,7 +551,7 @@ Game\
       State\
   World\
     WorldInputComponent.cs TRUE
-    WorldSkillDataComponent.cs TRUE
+    WorldSkillDataComponent.cs TRUE DIRTY
     WorldStateComponent.cs TRUE
     WorldStateSystem.cs TRUE DIRTY
     WorldVariableComponent.cs TRUE DIRTY

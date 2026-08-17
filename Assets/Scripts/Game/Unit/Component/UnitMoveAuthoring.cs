@@ -77,6 +77,12 @@ public sealed class UnitMoveSource : UnitComponentSource<UnitMoveComponent>
                 value.Direction = input.Float2;
                 return true;
             });
+        builder.AddSet("unit.move.setVelocity", UnitValueCategory.Float2,
+            (ref UnitMoveComponent value, UnitValue input) =>
+            {
+                value.Velocity = input.Float2;
+                return true;
+            });
         builder.AddSet("unit.move.setStateMoveMultiplier", UnitValueCategory.Number,
             (ref UnitMoveComponent value, UnitValue input) =>
             {

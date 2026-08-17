@@ -58,29 +58,29 @@ public sealed class WorldSkillDataComponent : IComponentData
         }
     }
 
-    public bool HasChain(int chainId)
+    public bool IsChainEmpty(int chainId)
     {
-        return chainId >= 0 && chainId < Chains.Count && Chains[chainId]?.Id == chainId;
+        return Chains[chainId].Slots.Count == 0;
     }
 
     public bool TryGetChainLength(int chainId, out int length)
     {
         length = 0;
-        if (!HasChain(chainId))
+        if (chainId < 0 || chainId >= Chains.Count)
             return false;
 
-        length = Chains[chainId].Slots?.Count ?? 0;
+        length = Chains[chainId].Slots.Count;
         return true;
     }
 
     public bool TryGetChainSlot(int chainId, int slotIndex, out WorldSkillChainSlotData slot)
     {
         slot = default;
-        if (!HasChain(chainId) || slotIndex < 0)
+        if (chainId < 0 || chainId >= Chains.Count || slotIndex < 0)
             return false;
 
         List<WorldSkillChainSlotData> slots = Chains[chainId].Slots;
-        if (slots == null || slotIndex >= slots.Count)
+        if (slotIndex >= slots.Count)
             return false;
 
         slot = slots[slotIndex];
@@ -191,6 +191,10 @@ public sealed class WorldSkillSource : UnitComponentSource
         new ComparatorParameterDefinition("Chain ID", UnitValueCategory.Number),
         new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number),
     };
+    private static readonly ComparatorParameterDefinition[] s_currentSkillSlotParameter =
+    {
+        new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number),
+    };
     private static readonly ComparatorParameterDefinition[] s_skillIdParameter =
     {
         new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number),
@@ -202,8 +206,20 @@ public sealed class WorldSkillSource : UnitComponentSource
     public override void Describe(UnitSourceSchemaBuilder schema)
     {
         schema.AddGet("world.skill.getCurrentChainId", ComponentType, UnitValueCategory.Number, s_noParameters);
-        schema.AddGet("world.skill.getChainCount", ComponentType, UnitValueCategory.Number, s_noParameters);
-        schema.AddGet("world.skill.hasChain", ComponentType, UnitValueCategory.Bool, s_chainIdParameter);
+        schema.AddGet("world.skill.isCurrentChainEmpty", ComponentType, UnitValueCategory.Bool, s_noParameters);
+        schema.AddGet("world.skill.getCurrentChainLength", ComponentType, UnitValueCategory.Number, s_noParameters);
+        schema.AddGet("world.skill.getCurrentSkillId", ComponentType, UnitValueCategory.Number, s_currentSkillSlotParameter);
+        schema.AddGet("world.skill.getCurrentSkillAdditionId", ComponentType, UnitValueCategory.Number, s_currentSkillSlotParameter);
+        schema.AddGet("world.skill.hasCurrentSkill", ComponentType, UnitValueCategory.Bool, s_currentSkillSlotParameter);
+        schema.AddGet("world.skill.getCurrentSkillMpCost", ComponentType, UnitValueCategory.Number, s_currentSkillSlotParameter);
+        schema.AddGet("world.skill.getCurrentSkillWindupDuration", ComponentType, UnitValueCategory.Number, s_currentSkillSlotParameter);
+        schema.AddGet("world.skill.getCurrentSkillChantDuration", ComponentType, UnitValueCategory.Number, s_currentSkillSlotParameter);
+        schema.AddGet("world.skill.getCurrentSkillRecoveryDuration", ComponentType, UnitValueCategory.Number, s_currentSkillSlotParameter);
+        schema.AddGet("world.skill.getCurrentSkillCanMoveWhileCasting", ComponentType, UnitValueCategory.Bool, s_currentSkillSlotParameter);
+        schema.AddGet("world.skill.getCurrentSkillMoveSpeedMultiplier", ComponentType, UnitValueCategory.Number, s_currentSkillSlotParameter);
+        schema.AddGet("world.skill.getCurrentSkillAnimationName", ComponentType, UnitValueCategory.String, s_currentSkillSlotParameter);
+        schema.AddGet("world.skill.getCurrentSkillRuntimeType", ComponentType, UnitValueCategory.String, s_currentSkillSlotParameter);
+        schema.AddGet("world.skill.isChainEmpty", ComponentType, UnitValueCategory.Bool, s_chainIdParameter);
         schema.AddGet("world.skill.getChainLength", ComponentType, UnitValueCategory.Number, s_chainIdParameter);
         schema.AddGet("world.skill.getChainSkillId", ComponentType, UnitValueCategory.Number, s_chainSlotParameters);
         schema.AddGet("world.skill.getChainSkillAdditionId", ComponentType, UnitValueCategory.Number, s_chainSlotParameters);
@@ -232,19 +248,54 @@ public sealed class WorldSkillSource : UnitComponentSource
                 ? UnitValue.FromInt(data.CurrentChainId)
                 : UnitValue.None));
         table.AddGet(new UnitSourceGet(
-            "world.skill.getChainCount",
-            UnitValueCategory.Number,
+            "world.skill.isCurrentChainEmpty",
+            UnitValueCategory.Bool,
             s_noParameters,
             _ => TryGetData(entityManager, worldEntity, out WorldSkillDataComponent data)
-                ? UnitValue.FromInt(data.Chains?.Count ?? 0)
+                ? UnitValue.FromBool(data.IsChainEmpty(data.CurrentChainId))
                 : UnitValue.None));
         table.AddGet(new UnitSourceGet(
-            "world.skill.hasChain",
+            "world.skill.getCurrentChainLength",
+            UnitValueCategory.Number,
+            s_noParameters,
+            _ => TryGetData(entityManager, worldEntity, out WorldSkillDataComponent data) &&
+                 data.TryGetChainLength(data.CurrentChainId, out int length)
+                ? UnitValue.FromInt(length)
+                : UnitValue.None));
+        AddCurrentChainSlotGet(table, entityManager, worldEntity, "world.skill.getCurrentSkillId",
+            slot => UnitValue.FromInt(slot.SkillId));
+        AddCurrentChainSlotGet(table, entityManager, worldEntity, "world.skill.getCurrentSkillAdditionId",
+            slot => UnitValue.FromInt(slot.SkillAdditionId));
+        table.AddGet(new UnitSourceGet(
+            "world.skill.hasCurrentSkill",
+            UnitValueCategory.Bool,
+            s_currentSkillSlotParameter,
+            input => TryGetCurrentSkill(entityManager, worldEntity, input, out _)
+                ? UnitValue.FromBool(true)
+                : UnitValue.FromBool(false)));
+        AddCurrentSkillGet(table, entityManager, worldEntity, "world.skill.getCurrentSkillMpCost", UnitValueCategory.Number,
+            skill => UnitValue.FromInt(skill.MpCost));
+        AddCurrentSkillGet(table, entityManager, worldEntity, "world.skill.getCurrentSkillWindupDuration", UnitValueCategory.Number,
+            skill => UnitValue.FromFloat(skill.WindupDuration));
+        AddCurrentSkillGet(table, entityManager, worldEntity, "world.skill.getCurrentSkillChantDuration", UnitValueCategory.Number,
+            skill => UnitValue.FromFloat(skill.ChantDuration));
+        AddCurrentSkillGet(table, entityManager, worldEntity, "world.skill.getCurrentSkillRecoveryDuration", UnitValueCategory.Number,
+            skill => UnitValue.FromFloat(skill.RecoveryDuration));
+        AddCurrentSkillGet(table, entityManager, worldEntity, "world.skill.getCurrentSkillCanMoveWhileCasting", UnitValueCategory.Bool,
+            skill => UnitValue.FromBool(skill.CanMoveWhileCasting));
+        AddCurrentSkillGet(table, entityManager, worldEntity, "world.skill.getCurrentSkillMoveSpeedMultiplier", UnitValueCategory.Number,
+            skill => UnitValue.FromFloat(skill.MoveSpeedMultiplier));
+        AddCurrentSkillGet(table, entityManager, worldEntity, "world.skill.getCurrentSkillAnimationName", UnitValueCategory.String,
+            skill => UnitValue.FromString(skill.AnimationName));
+        AddCurrentSkillGet(table, entityManager, worldEntity, "world.skill.getCurrentSkillRuntimeType", UnitValueCategory.String,
+            skill => UnitValue.FromString(skill.RuntimeType));
+        table.AddGet(new UnitSourceGet(
+            "world.skill.isChainEmpty",
             UnitValueCategory.Bool,
             s_chainIdParameter,
             input => TryGetData(entityManager, worldEntity, out WorldSkillDataComponent data) &&
                      TryGetInt(input[0], out int chainId)
-                ? UnitValue.FromBool(data.HasChain(chainId))
+                ? UnitValue.FromBool(data.IsChainEmpty(chainId))
                 : UnitValue.None));
         table.AddGet(new UnitSourceGet(
             "world.skill.getChainLength",
@@ -326,6 +377,39 @@ public sealed class WorldSkillSource : UnitComponentSource
                 : UnitValue.None));
     }
 
+    private static void AddCurrentChainSlotGet(
+        UnitSourceAccessTable table,
+        EntityManager entityManager,
+        Entity worldEntity,
+        string key,
+        Func<WorldSkillChainSlotData, UnitValue> getter)
+    {
+        table.AddGet(new UnitSourceGet(
+            key,
+            UnitValueCategory.Number,
+            s_currentSkillSlotParameter,
+            input => TryGetCurrentChainSlot(entityManager, worldEntity, input, out WorldSkillChainSlotData slot)
+                ? getter(slot)
+                : UnitValue.None));
+    }
+
+    private static void AddCurrentSkillGet(
+        UnitSourceAccessTable table,
+        EntityManager entityManager,
+        Entity worldEntity,
+        string key,
+        UnitValueCategory category,
+        Func<WorldSkillInfo, UnitValue> getter)
+    {
+        table.AddGet(new UnitSourceGet(
+            key,
+            category,
+            s_currentSkillSlotParameter,
+            input => TryGetCurrentSkill(entityManager, worldEntity, input, out WorldSkillInfo skill)
+                ? getter(skill)
+                : UnitValue.None));
+    }
+
     private static bool TryGetChainSlot(
         EntityManager entityManager,
         Entity worldEntity,
@@ -340,12 +424,37 @@ public sealed class WorldSkillSource : UnitComponentSource
                data.TryGetChainSlot(chainId, slotIndex, out slot);
     }
 
+    private static bool TryGetCurrentChainSlot(
+        EntityManager entityManager,
+        Entity worldEntity,
+        UnitValue[] input,
+        out WorldSkillChainSlotData slot)
+    {
+        slot = default;
+        return input.Length == 1 &&
+               TryGetData(entityManager, worldEntity, out WorldSkillDataComponent data) &&
+               TryGetInt(input[0], out int slotIndex) &&
+               data.TryGetChainSlot(data.CurrentChainId, slotIndex, out slot);
+    }
+
     private static bool TryGetSkill(EntityManager entityManager, Entity worldEntity, UnitValue skillIdValue, out WorldSkillInfo skill)
     {
         skill = null;
         return TryGetData(entityManager, worldEntity, out WorldSkillDataComponent data) &&
                TryGetInt(skillIdValue, out int skillId) &&
                data.TryGetSkill(skillId, out skill);
+    }
+
+    private static bool TryGetCurrentSkill(
+        EntityManager entityManager,
+        Entity worldEntity,
+        UnitValue[] input,
+        out WorldSkillInfo skill)
+    {
+        skill = null;
+        return TryGetCurrentChainSlot(entityManager, worldEntity, input, out WorldSkillChainSlotData slot) &&
+               TryGetData(entityManager, worldEntity, out WorldSkillDataComponent data) &&
+               data.TryGetSkill(slot.SkillId, out skill);
     }
 
     private static bool TryGetData(EntityManager entityManager, Entity worldEntity, out WorldSkillDataComponent data)

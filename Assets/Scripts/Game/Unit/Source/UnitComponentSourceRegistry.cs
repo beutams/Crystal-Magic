@@ -19,6 +19,7 @@ public static class UnitComponentSourceRegistry
         new UnitFactionSource(),
         new UnitManaSource(),
         new UnitMoveSource(),
+        new UnitSkillModifierRuntimeSource(),
         new UnitPerceptionSource(),
         new UnitTransformSource(),
         new UnitVariableSource(),

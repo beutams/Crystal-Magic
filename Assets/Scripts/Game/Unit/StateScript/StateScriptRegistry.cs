@@ -13,6 +13,7 @@ public static class StateScriptRegistry
         { "Compare", typeof(CompareStateScriptNodeData) },
         { "SetValue", typeof(SetValueStateScriptNodeData) },
         { "RequestSkill", typeof(RequestSkillActionNodeData) },
+        { "PublishGameEvent", typeof(PublishGameEventStateScriptNodeData) },
         { "Timer", typeof(TimerStateScriptNodeData) },
         { "Keep", typeof(KeepStateScriptNodeData) },
         { "Monitor", typeof(MonitorStateScriptNodeData) },
@@ -25,6 +26,7 @@ public static class StateScriptRegistry
         { typeof(CompareStateScriptNodeData), "Compare" },
         { typeof(SetValueStateScriptNodeData), "SetValue" },
         { typeof(RequestSkillActionNodeData), "RequestSkill" },
+        { typeof(PublishGameEventStateScriptNodeData), "PublishGameEvent" },
         { typeof(TimerStateScriptNodeData), "Timer" },
         { typeof(KeepStateScriptNodeData), "Keep" },
         { typeof(MonitorStateScriptNodeData), "Monitor" },
@@ -37,6 +39,7 @@ public static class StateScriptRegistry
         { "Compare", "Compare" },
         { "SetValue", "Set Value" },
         { "RequestSkill", "Request Skill" },
+        { "PublishGameEvent", "Publish Game Event" },
         { "Timer", "Timer" },
         { "Keep", "Keep" },
         { "Monitor", "Monitor" },
@@ -49,6 +52,7 @@ public static class StateScriptRegistry
         new("Compare", "Compare", typeof(CompareStateScriptNodeData), 0),
         new("SetValue", "Set Value", typeof(SetValueStateScriptNodeData), 10),
         new("RequestSkill", "Request Skill", typeof(RequestSkillActionNodeData), 11),
+        new("PublishGameEvent", "Publish Game Event", typeof(PublishGameEventStateScriptNodeData), 12),
         new("Timer", "Timer", typeof(TimerStateScriptNodeData), 20),
         new("Keep", "Keep", typeof(KeepStateScriptNodeData), 21),
         new("Monitor", "Monitor", typeof(MonitorStateScriptNodeData), 22),
@@ -72,6 +76,7 @@ public static class StateScriptRegistry
         factory.Register("Compare", static () => new CompareStateScriptNodeData());
         factory.Register("SetValue", static () => new SetValueStateScriptNodeData());
         factory.Register("RequestSkill", static () => new RequestSkillActionNodeData());
+        factory.Register("PublishGameEvent", static () => new PublishGameEventStateScriptNodeData());
         factory.Register("Timer", static () => new TimerStateScriptNodeData());
         factory.Register("Keep", static () => new KeepStateScriptNodeData());
         factory.Register("Monitor", static () => new MonitorStateScriptNodeData());
@@ -91,6 +96,8 @@ public static class StateScriptRegistry
             new SetValueStateScriptNode((SetValueStateScriptNodeData)request.Data, request.Runtime));
         factory.Register(typeof(RequestSkillActionNodeData), static request =>
             new RequestSkillActionNode((RequestSkillActionNodeData)request.Data, request.Runtime));
+        factory.Register(typeof(PublishGameEventStateScriptNodeData), static request =>
+            new PublishGameEventStateScriptNode((PublishGameEventStateScriptNodeData)request.Data, request.Runtime));
         factory.Register(typeof(TimerStateScriptNodeData), static request =>
             new TimerStateScriptNode((TimerStateScriptNodeData)request.Data, request.Runtime));
         factory.Register(typeof(KeepStateScriptNodeData), static request =>

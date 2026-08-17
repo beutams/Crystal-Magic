@@ -1,9 +1,19 @@
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Skill;
 using Unity.Entities;
+using Unity.Mathematics;
 
 public static class UnitSkillModifierUtility
 {
+    public static int GetModifiedMpCost(SkillModifierSet modifiers, float baseMpCost)
+    {
+        if (!math.isfinite(baseMpCost))
+            return 0;
+
+        float modifiedMpCost = modifiers?.Apply(SkillModifierChannel.MpCost, baseMpCost) ?? baseMpCost;
+        return math.max(0, (int)math.round(modifiedMpCost));
+    }
+
     public static UnitSkillModifierRuntimeComponent GetOrCreateRuntimeComponent(EntityManager entityManager, Entity entity)
     {
         if (entityManager.HasComponent<UnitSkillModifierRuntimeComponent>(entity))

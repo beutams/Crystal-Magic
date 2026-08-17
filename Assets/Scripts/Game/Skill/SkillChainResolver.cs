@@ -73,7 +73,7 @@ namespace CrystalMagic.Game.Skill
                 Id = skillData.Id,
                 Name = skillData.DisplayName,
                 RuntimeType = skillData.EffectiveRuntimeType,
-                MpCost = math.max(0, (int)math.round(modifiers.Apply(SkillModifierChannel.MpCost, skillData.MpCost))),
+                MpCost = UnitSkillModifierUtility.GetModifiedMpCost(modifiers, skillData.MpCost),
                 WindupDuration = math.max(0f, skillData.WindupDuration * actionSpeedMultiplier),
                 ChantDuration = math.max(0f, skillData.ChantDuration * chantSpeedMultiplier),
                 RecoveryDuration = math.max(0f, skillData.RecoveryDuration * actionSpeedMultiplier),
