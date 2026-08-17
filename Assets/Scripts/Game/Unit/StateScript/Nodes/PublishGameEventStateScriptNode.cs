@@ -10,7 +10,7 @@ public sealed class PublishGameEventStateScriptNode : StateScriptActionNode
     private readonly PublishGameEventStateScriptNodeData _data;
     private readonly StateScriptOutputPort _output;
     private string _eventName;
-    private Func<UnitValue> _payloadGetter;
+    private Func<UnitValue> _referenceGetter;
 
     public PublishGameEventStateScriptNode(PublishGameEventStateScriptNodeData data, StateScriptRuntime runtime)
         : base(data, runtime)
@@ -23,37 +23,37 @@ public sealed class PublishGameEventStateScriptNode : StateScriptActionNode
     protected override bool OnBind(out string error)
     {
         _eventName = (_data.EventName ?? string.Empty).Trim();
-        _payloadGetter = null;
+        _referenceGetter = null;
         if (string.IsNullOrWhiteSpace(_eventName))
         {
             error = "PublishGameEvent event name is empty.";
             return false;
         }
 
-        _data.Payload ??= PublishGameEventStateScriptNodeData.CreateDefaultPayloadExpression();
+        _data.Reference ??= PublishGameEventStateScriptNodeData.CreateDefaultReferenceExpression();
         if (!s_expressionFactory.TryBuildValueExpression(
-                _data.Payload,
+                _data.Reference,
                 Runtime.Sources,
                 out _,
-                out Func<UnitValue> payloadGetter,
+                out Func<UnitValue> referenceGetter,
                 out error))
         {
             return false;
         }
 
-        _payloadGetter = payloadGetter;
+        _referenceGetter = referenceGetter;
         error = string.Empty;
         return true;
     }
 
     private void Publish()
     {
-        if (_payloadGetter == null || !EventComponent.TryGetInstance(out EventComponent eventComponent))
+        if (_referenceGetter == null || !EventComponent.TryGetInstance(out EventComponent eventComponent))
             return;
 
         eventComponent.Publish(new CommonGameEvent(
             _eventName,
-            new GameplayEventPayload(Runtime.Entity, _payloadGetter())));
+            new GameplayEventReference(Runtime.Entity, _referenceGetter())));
         _output.Pulse();
     }
 

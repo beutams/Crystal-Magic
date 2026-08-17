@@ -148,10 +148,10 @@ namespace CrystalMagic.Core
 
         private void HandlePropUsed(CommonGameEvent gameEvent)
         {
-            GameplayEventPayload payload = gameEvent.GetData<GameplayEventPayload>();
-            if (!payload.Value.TryGetNumber(out float cooldownSeconds))
+            GameplayEventReference reference = gameEvent.GetData<GameplayEventReference>();
+            if (!reference.Value.TryGetNumber(out float cooldownSeconds))
             {
-                Debug.LogError("[RuntimeDataComponent] Gameplay.Prop.Used requires a numeric cooldown payload.");
+                Debug.LogError("[RuntimeDataComponent] Gameplay.Prop.Used requires a numeric reference.");
                 return;
             }
 

@@ -30,7 +30,7 @@ Core\
     CommonGameEvent.cs TRUE
     EventComponent.cs TRUE
     GameplayEventNames.cs FALSE
-    GameplayEventPayload.cs FALSE
+    GameplayEventReference.cs FALSE
     GameEvents.cs TRUE DIRTY
     GameGateChangedEvent.cs TRUE
     MainMenuConfigRequestedEvent.cs TRUE

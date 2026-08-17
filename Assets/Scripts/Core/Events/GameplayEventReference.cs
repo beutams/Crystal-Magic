@@ -2,9 +2,9 @@ using Unity.Entities;
 
 namespace CrystalMagic.Core
 {
-    public readonly struct GameplayEventPayload
+    public readonly struct GameplayEventReference
     {
-        public GameplayEventPayload(Entity sourceEntity, UnitValue value)
+        public GameplayEventReference(Entity sourceEntity, UnitValue value)
         {
             SourceEntity = sourceEntity;
             Value = value;

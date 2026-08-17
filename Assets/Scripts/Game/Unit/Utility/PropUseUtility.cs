@@ -249,7 +249,7 @@ namespace CrystalMagic.Game
             SaveDataComponent.Instance.NotifyCharacterPropDataChanged();
             EventComponent.Instance.Publish(new CommonGameEvent(
                 GameplayEventNames.PropUsed,
-                new GameplayEventPayload(context.UserEntity, UnitValue.FromFloat(GetSharedCooldownSeconds()))));
+                new GameplayEventReference(context.UserEntity, UnitValue.FromFloat(GetSharedCooldownSeconds()))));
             return true;
         }
 

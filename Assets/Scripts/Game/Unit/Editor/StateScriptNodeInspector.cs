@@ -179,9 +179,9 @@ namespace CrystalMagic.Editor.Unit
             Action onChanged)
         {
             publishGameEvent.EventName = EditorGUILayout.TextField("Event Name", publishGameEvent.EventName ?? string.Empty);
-            publishGameEvent.Payload ??= PublishGameEventStateScriptNodeData.CreateDefaultPayloadExpression();
-            EditorGUILayout.LabelField("Payload", EditorStyles.miniBoldLabel);
-            StateScriptValueExpressionDrawer.Draw(publishGameEvent.Payload, UnitValueCategory.Any, sourceSchema, onChanged);
+            publishGameEvent.Reference ??= PublishGameEventStateScriptNodeData.CreateDefaultReferenceExpression();
+            EditorGUILayout.LabelField("Reference", EditorStyles.miniBoldLabel);
+            StateScriptValueExpressionDrawer.Draw(publishGameEvent.Reference, UnitValueCategory.Any, sourceSchema, onChanged);
         }
 
         private static void DrawComparatorCondition(
