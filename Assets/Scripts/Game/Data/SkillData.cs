@@ -18,11 +18,7 @@ namespace CrystalMagic.Game.Data
         public string DescriptionKey;
         public string RuntimeType;
         public int MpCost;
-        public float WindupDuration;
         public float ChantDuration;
-        public float RecoveryDuration;
-        public bool CanMoveWhileCasting;
-        public float MoveSpeedMultiplier;
         public string IconPath;
         public List<ConditionConfig> Conditions = new();
 
@@ -49,14 +45,8 @@ namespace CrystalMagic.Game.Data
     {
         [EditorLabel("MP Cost")]
         MpCost = 0,
-        [EditorLabel("Action Speed")]
-        ActionSpeed = 1,
-        [EditorLabel("Chant Speed")]
-        ChantSpeed = 2,
         [EditorLabel("Reserved")]
         Reserved = 3,
-        [EditorLabel("Cast Move Speed Multiplier")]
-        MoveSpeedMultiplier = 4,
 
         [EditorLabel("Damage Multiplier")]
         Damage = 100,
@@ -165,21 +155,6 @@ namespace CrystalMagic.Game.Data
             return baseValue * GetFactor(channel) + GetBonus(channel);
         }
 
-        public float GetActionSpeedValue(float baseValue)
-        {
-            return math.clamp(Apply(SkillModifierChannel.ActionSpeed, baseValue), -100f, 100f);
-        }
-
-        public float GetChantSpeedValue(float baseValue)
-        {
-            return math.clamp(Apply(SkillModifierChannel.ChantSpeed, baseValue), -100f, 100f);
-        }
-
-        public float GetMoveSpeedMultiplier()
-        {
-            return math.max(0f, Apply(SkillModifierChannel.MoveSpeedMultiplier, 1f));
-        }
-
         public float GetAttributePowerValue()
         {
             return Apply(SkillModifierChannel.AttributePower, 0f);
@@ -280,11 +255,6 @@ namespace CrystalMagic.Game.Data
         public string Name;
         public string RuntimeType;
         public int MpCost;
-        public float WindupDuration;
-        public float ChantDuration;
-        public float RecoveryDuration;
-        public bool CanMoveWhileCasting;
-        public float MoveSpeedMultiplier;
         public EffectData[] EffectChain = System.Array.Empty<EffectData>();
     }
 }

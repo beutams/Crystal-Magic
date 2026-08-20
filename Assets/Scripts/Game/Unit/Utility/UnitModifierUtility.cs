@@ -47,7 +47,6 @@ public static class UnitModifierUtility
             UnitAttackComponent attack = entityManager.GetComponentData<UnitAttackComponent>(entity);
             attack.BaseAttackPowerOffset = modifiers.GetBonus(PropertyModifierChannel.AttackPower);
             attack.BaseSkillRangeOffset = modifiers.GetBonus(PropertyModifierChannel.SkillRange);
-            attack.BaseActionSpeedBonusOffset = modifiers.GetBonus(PropertyModifierChannel.ActionSpeed);
             attack.BaseChantSpeedBonusOffset = modifiers.GetBonus(PropertyModifierChannel.ChantSpeed);
             entityManager.SetComponentData(entity, attack);
         }
@@ -84,8 +83,6 @@ public static class UnitModifierUtility
             attack.AttackBonus = modifiers.GetBonus(PropertyModifierChannel.AttackPower);
             attack.RangeFactor = modifiers.GetFactor(PropertyModifierChannel.SkillRange);
             attack.RangeBonus = modifiers.GetBonus(PropertyModifierChannel.SkillRange);
-            attack.ActionSpeedFactor = modifiers.GetFactor(PropertyModifierChannel.ActionSpeed);
-            attack.ActionSpeedBonus = modifiers.GetBonus(PropertyModifierChannel.ActionSpeed);
             attack.ChantSpeedFactor = modifiers.GetFactor(PropertyModifierChannel.ChantSpeed);
             attack.ChantSpeedBonus = modifiers.GetBonus(PropertyModifierChannel.ChantSpeed);
             entityManager.SetComponentData(entity, attack);

@@ -111,12 +111,6 @@ public sealed class RequestSkillActionNode : StateScriptActionNode
             request.OriginFacing = math.normalizesafe(facing.Direction, new float2(1f, 0f));
         }
 
-        if (entityManager.HasComponent<UnitAttackComponent>(entity))
-        {
-            request.HasAttackSnapshot = true;
-            request.AttackSnapshot = entityManager.GetComponentData<UnitAttackComponent>(entity);
-        }
-
         if (entityManager.HasComponent<UnitElementComponent>(entity))
         {
             request.HasElementSnapshot = true;
@@ -126,24 +120,8 @@ public sealed class RequestSkillActionNode : StateScriptActionNode
         if (entityManager.HasComponent<UnitSkillModifierRuntimeComponent>(entity))
             request.ModifierSnapshot = UnitSkillModifierUtility.CreateSnapshot(entityManager, entity);
 
-        CaptureTarget(entityManager, entity, request);
-        return request;
-    }
-
-    private void CaptureTarget(EntityManager entityManager, Entity entity, SkillReleaseRequest request)
-    {
         CaptureVariableTarget(entityManager, entity, request);
-        if (request.HasTargetEntity || request.HasTargetPosition || !entityManager.HasComponent<UnitPerceptionComponent>(entity))
-            return;
-
-        UnitPerceptionComponent perception = entityManager.GetComponentData<UnitPerceptionComponent>(entity);
-        if (!perception.HasTarget)
-            return;
-
-        request.HasTargetEntity = true;
-        request.TargetEntity = perception.TargetEntity;
-        request.HasTargetPosition = true;
-        request.TargetPosition = new float3(perception.TargetPosition.x, perception.TargetPosition.y, 0f);
+        return request;
     }
 
     private void CaptureVariableTarget(EntityManager entityManager, Entity entity, SkillReleaseRequest request)

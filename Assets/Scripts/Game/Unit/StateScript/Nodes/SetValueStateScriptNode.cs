@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CrystalMagic.Game.Data;
 
 [FactoryKey("SetValue", 10, "Set Value")]
@@ -10,7 +11,7 @@ public sealed class SetValueStateScriptNode : StateScriptActionNode
     private readonly StateScriptOutputPort _output;
     private UnitSourceSet _set;
     private string _key;
-    private Func<UnitValue> _valueGetter;
+    private Func<UnitValue>[] _valueGetters;
 
     public SetValueStateScriptNode(SetValueStateScriptNodeData data, StateScriptRuntime runtime)
         : base(data, runtime)
@@ -24,7 +25,7 @@ public sealed class SetValueStateScriptNode : StateScriptActionNode
     {
         _set = null;
         _key = string.Empty;
-        _valueGetter = null;
+        _valueGetters = null;
         if (string.IsNullOrWhiteSpace(_data.SetterKey))
         {
             error = "SetValue setter key is empty.";
@@ -37,52 +38,63 @@ public sealed class SetValueStateScriptNode : StateScriptActionNode
             return false;
         }
 
-        if (set.Parameters.Count != 1)
-        {
-            error = $"Setter '{_data.SetterKey}' must define exactly one input.";
-            return false;
-        }
-
         if (set.RequiresKey && string.IsNullOrWhiteSpace(_data.Key))
         {
             error = $"Setter '{_data.SetterKey}' requires a configured key.";
             return false;
         }
 
-        _data.Value ??= new ValueExpression();
-        ComparatorParameterDefinition parameter = set.Parameters[0];
-        if (!s_expressionFactory.TryBuildValueExpression(
-                _data.Value,
-                Runtime.Sources,
-                out UnitValueCategory category,
-                out Func<UnitValue> valueGetter,
-                out error))
+        List<ValueExpression> values = _data.GetOrCreateValues(set.Parameters.Count);
+        if (values.Count != set.Parameters.Count)
         {
+            error = $"Setter '{_data.SetterKey}' requires {set.Parameters.Count} inputs, but has {values.Count}.";
             return false;
         }
 
-        if (!parameter.Accepts(category))
+        Func<UnitValue>[] valueGetters = new Func<UnitValue>[set.Parameters.Count];
+        for (int i = 0; i < set.Parameters.Count; i++)
         {
-            error = $"Setter '{_data.SetterKey}' input '{parameter.Name}' requires {parameter.Category}, but received {category}.";
-            return false;
+            ComparatorParameterDefinition parameter = set.Parameters[i];
+            ValueExpression value = values[i] ?? new ValueExpression();
+            values[i] = value;
+            if (!s_expressionFactory.TryBuildValueExpression(
+                    value,
+                    Runtime.Sources,
+                    out UnitValueCategory category,
+                    out Func<UnitValue> valueGetter,
+                    out error))
+            {
+                return false;
+            }
+
+            if (!parameter.Accepts(category))
+            {
+                error = $"Setter '{_data.SetterKey}' input '{parameter.Name}' requires {parameter.Category}, but received {category}.";
+                return false;
+            }
+
+            valueGetters[i] = valueGetter;
         }
 
         _set = set;
         _key = _data.Key ?? string.Empty;
-        _valueGetter = valueGetter;
+        _valueGetters = valueGetters;
         error = string.Empty;
         return true;
     }
 
     private void Execute()
     {
-        if (_set == null || _valueGetter == null)
+        if (_set == null || _valueGetters == null)
             return;
 
-        UnitValue value = _valueGetter();
+        UnitValue[] values = new UnitValue[_valueGetters.Length];
+        for (int i = 0; i < _valueGetters.Length; i++)
+            values[i] = _valueGetters[i]();
+
         bool didSet = _set.RequiresKey
-            ? _set.TrySet(_key, value)
-            : _set.TrySet(new[] { value });
+            ? _set.TrySet(_key, values[0])
+            : _set.TrySet(values);
         if (didSet)
             _output.Pulse();
     }

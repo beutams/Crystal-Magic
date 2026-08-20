@@ -19,9 +19,8 @@ namespace CrystalMagic.Game.Skill
 
             SkillModifierSet modifiers = request.ModifierSnapshot?.Clone() ?? new SkillModifierSet();
 
-            UnitAttackComponent? attack = request.HasAttackSnapshot ? request.AttackSnapshot : null;
             UnitElementComponent? element = request.HasElementSnapshot ? request.ElementSnapshot : null;
-            resolvedSkill = SkillResolver.Resolve(baseSkill, modifiers, attack, element);
+            resolvedSkill = SkillResolver.Resolve(baseSkill, modifiers, element);
             return resolvedSkill != null;
         }
     }

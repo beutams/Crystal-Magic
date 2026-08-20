@@ -69,8 +69,7 @@ public sealed class UnitSourceSet
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentException("Unit source set key cannot be empty.", nameof(key));
 
-        if (parameters == null || parameters.Count != 1 || parameters[0].Category == UnitValueCategory.None)
-            throw new ArgumentException("Unit source setters must accept exactly one value parameter.", nameof(parameters));
+        ValidateParameters(parameters);
 
         Key = key;
         Parameters = parameters;
@@ -85,8 +84,7 @@ public sealed class UnitSourceSet
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentException("Unit source set key cannot be empty.", nameof(key));
 
-        if (parameters == null || parameters.Count != 1 || parameters[0].Category == UnitValueCategory.None)
-            throw new ArgumentException("Unit source setters must accept exactly one value parameter.", nameof(parameters));
+        ValidateParameters(parameters);
 
         Key = key;
         Parameters = parameters;
@@ -124,6 +122,18 @@ public sealed class UnitSourceSet
                !string.IsNullOrWhiteSpace(key) &&
                Parameters[0].Accepts(value.Category) &&
                KeyedInvoke(key, value);
+    }
+
+    private static void ValidateParameters(IReadOnlyList<ComparatorParameterDefinition> parameters)
+    {
+        if (parameters == null || parameters.Count == 0)
+            throw new ArgumentException("Unit source setters must accept at least one value parameter.", nameof(parameters));
+
+        for (int i = 0; i < parameters.Count; i++)
+        {
+            if (parameters[i].Category == UnitValueCategory.None)
+                throw new ArgumentException("Unit source setter parameters must have a value category.", nameof(parameters));
+        }
     }
 }
 

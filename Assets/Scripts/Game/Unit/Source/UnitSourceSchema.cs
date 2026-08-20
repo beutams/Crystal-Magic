@@ -104,8 +104,14 @@ public sealed class UnitSourceSchemaBuilder
         if (componentType == null)
             throw new ArgumentNullException(nameof(componentType));
 
-        if (parameters == null || parameters.Count != 1 || parameters[0].Category == UnitValueCategory.None)
-            throw new ArgumentException("Unit source setters must define exactly one value parameter.", nameof(parameters));
+        if (parameters == null || parameters.Count == 0)
+            throw new ArgumentException("Unit source setters must define at least one value parameter.", nameof(parameters));
+
+        for (int i = 0; i < parameters.Count; i++)
+        {
+            if (parameters[i].Category == UnitValueCategory.None)
+                throw new ArgumentException("Unit source setter parameters must have a value category.", nameof(parameters));
+        }
 
         if (!_sets.TryAdd(key, new UnitSourceSetSchemaEntry(key, componentType, parameters, requiresKey)))
             throw new InvalidOperationException($"Unit source set is already defined: {key}");

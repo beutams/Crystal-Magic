@@ -20,7 +20,6 @@ namespace CrystalMagic.UI
         public float MaxMana => _snapshot.MaxMana;
         public float ManaRegen => _snapshot.ManaRegen;
         public float AttackPower => _snapshot.AttackPower;
-        public float ActionSpeed => _snapshot.ActionSpeed;
         public float ChantSpeed => _snapshot.ChantSpeed;
         public float Fire => _snapshot.Fire;
         public float Water => _snapshot.Water;
@@ -80,7 +79,6 @@ namespace CrystalMagic.UI
             {
                 UnitAttackComponent attack = entityManager.GetComponentData<UnitAttackComponent>(player);
                 snapshot.AttackPower = attack.RealAttackPower;
-                snapshot.ActionSpeed = attack.RealActionSpeedBonus;
                 snapshot.ChantSpeed = attack.RealChantSpeedBonus;
                 snapshot.SkillRange = attack.RealSkillRange;
             }
@@ -148,7 +146,6 @@ namespace CrystalMagic.UI
         public float MaxMana;
         public float ManaRegen;
         public float AttackPower;
-        public float ActionSpeed;
         public float ChantSpeed;
         public float Fire;
         public float Water;
@@ -164,7 +161,6 @@ namespace CrystalMagic.UI
                 && Mathf.Approximately(MaxMana, other.MaxMana)
                 && Mathf.Approximately(ManaRegen, other.ManaRegen)
                 && Mathf.Approximately(AttackPower, other.AttackPower)
-                && Mathf.Approximately(ActionSpeed, other.ActionSpeed)
                 && Mathf.Approximately(ChantSpeed, other.ChantSpeed)
                 && Mathf.Approximately(Fire, other.Fire)
                 && Mathf.Approximately(Water, other.Water)

@@ -68,11 +68,7 @@
                  {
                      "$type":  "CrystalMagic.Game.Data.PropertyBuffData, Assembly-CSharp",
                      "PropertyModifiers":  [
-                                               {
-                                                   "Channel":  8,
-                                                   "Factor":  -0.5,
-                                                   "Bonus":  0
-                                               }
+
                                            ],
                      "CanStack":  false,
                      "MaxStacks":  1,
@@ -98,11 +94,6 @@
                                                    "Channel":  0,
                                                    "Factor":  0.25,
                                                    "Bonus":  0
-                                               },
-                                               {
-                                                   "Channel":  8,
-                                                   "Factor":  0,
-                                                   "Bonus":  40
                                                },
                                                {
                                                    "Channel":  9,

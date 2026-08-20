@@ -70,7 +70,6 @@ namespace CrystalMagic.Game.Config
                 new() { Channel = PropertyModifierChannel.MaxMp, MinimumFactor = 0.2f },
                 new() { Channel = PropertyModifierChannel.HealthRegen, MinimumFactor = 0f },
                 new() { Channel = PropertyModifierChannel.MpRegen, MinimumFactor = 0f },
-                new() { Channel = PropertyModifierChannel.ActionSpeed, MinimumFactor = 0.3f },
                 new() { Channel = PropertyModifierChannel.ChantSpeed, MinimumFactor = 0.3f },
                 new() { Channel = PropertyModifierChannel.WaterPower, MinimumFactor = 0f },
                 new() { Channel = PropertyModifierChannel.FirePower, MinimumFactor = 0f },
@@ -85,10 +84,7 @@ namespace CrystalMagic.Game.Config
             return new List<SkillModifierMinimumFactorEntry>
             {
                 new() { Channel = SkillModifierChannel.MpCost, MinimumFactor = 0f },
-                new() { Channel = SkillModifierChannel.ActionSpeed, MinimumFactor = 0.3f },
-                new() { Channel = SkillModifierChannel.ChantSpeed, MinimumFactor = 0.3f },
                 new() { Channel = SkillModifierChannel.Reserved, MinimumFactor = 0f },
-                new() { Channel = SkillModifierChannel.MoveSpeedMultiplier, MinimumFactor = 0.3f },
                 new() { Channel = SkillModifierChannel.Damage, MinimumFactor = 0.2f },
                 new() { Channel = SkillModifierChannel.FlatDamage, MinimumFactor = 0f },
                 new() { Channel = SkillModifierChannel.KnockbackForce, MinimumFactor = 0f },

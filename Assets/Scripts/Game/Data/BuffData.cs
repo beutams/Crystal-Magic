@@ -73,8 +73,6 @@ namespace CrystalMagic.Game.Data
         HealthRegen = 6,
         [EditorLabel("法力回复")]
         MpRegen = 7,
-        [EditorLabel("动作速度")]
-        ActionSpeed = 8,
         [EditorLabel("吟唱速度")]
         ChantSpeed = 9,
         [EditorLabel("水元素强度")]

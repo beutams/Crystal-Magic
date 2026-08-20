@@ -10,10 +10,8 @@ public static class ComparatorRegistry
 
         factory.RegisterSource("UnitBuffStackSource", static () => new UnitBuffStackSource());
         factory.RegisterSource("UnitHealthRatioSource", static () => new UnitHealthRatioSource());
-        factory.RegisterSource("UnitHasTargetSource", static () => new UnitHasTargetSource());
         factory.RegisterSource("UnitIsCastingSource", static () => new UnitIsCastingSource());
         factory.RegisterSource("UnitIsControlledSource", static () => new UnitIsControlledSource());
-        factory.RegisterSource("UnitTargetCastRangeMarginSource", static () => new UnitTargetCastRangeMarginSource());
         factory.RegisterCompareType("Equal", static () => new Equal());
         factory.RegisterCompareType("GreaterOrEqual", static () => new GreaterOrEqual());
         factory.RegisterCompareType("GreaterThan", static () => new GreaterThan());

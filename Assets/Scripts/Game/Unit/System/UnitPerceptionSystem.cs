@@ -18,28 +18,20 @@ partial class UnitPerceptionSystem : SystemBase
             return;
         }
 
-        foreach (var (perception, faction, transform, entity) in
-                 SystemAPI.Query<RefRW<UnitPerceptionComponent>, RefRO<UnitFactionComponent>, RefRO<LocalTransform>>()
+        foreach (var (perception, transform, nearbyEntities, entity) in
+                 SystemAPI.Query<RefRO<UnitPerceptionComponent>, RefRO<LocalTransform>, DynamicBuffer<UnitPerceptionEntityElement>>()
                      .WithNone<UnitDeathComponent>()
                      .WithEntityAccess())
         {
-            UnitPerceptionComponent perceptionValue = perception.ValueRW;
-            perceptionValue.HasTarget = false;
-            perceptionValue.TargetEntity = Entity.Null;
-            perceptionValue.TargetPosition = float2.zero;
-            perceptionValue.TargetDistance = 0f;
+            nearbyEntities.Clear();
 
-            float radius = math.max(0f, perceptionValue.SearchRadius);
+            float radius = math.max(0f, perception.ValueRO.SearchRadius);
             if (radius <= 0f)
-            {
-                perception.ValueRW = perceptionValue;
                 continue;
-            }
 
             float3 center = transform.ValueRO.Position;
             unitTree.QueryCircle(center, radius, _hits);
 
-            float bestDistanceSq = float.MaxValue;
             for (int i = 0; i < _hits.Count; i++)
             {
                 UnitQueryHit hit = _hits[i];
@@ -47,26 +39,12 @@ partial class UnitPerceptionSystem : SystemBase
                     continue;
                 if (!EntityManager.Exists(hit.Entity) || !EntityManager.HasComponent<UnitFactionComponent>(hit.Entity))
                     continue;
-                if (!UnitFactionUtility.IsEnemy(faction.ValueRO.Value,EntityManager.GetComponentData<UnitFactionComponent>(hit.Entity).Value))
-                    continue;
                 if (EntityManager.HasComponent<DestroyEntityFlag>(hit.Entity) && EntityManager.IsComponentEnabled<DestroyEntityFlag>(hit.Entity))
                     continue;
                 if (EntityManager.HasComponent<UnitDeathComponent>(hit.Entity) && EntityManager.IsComponentEnabled<UnitDeathComponent>(hit.Entity))
                     continue;
-
-                float2 diff = hit.Position.xy - center.xy;
-                float distanceSq = math.lengthsq(diff);
-                if (distanceSq >= bestDistanceSq)
-                    continue;
-
-                bestDistanceSq = distanceSq;
-                perceptionValue.HasTarget = true;
-                perceptionValue.TargetEntity = hit.Entity;
-                perceptionValue.TargetPosition = hit.Position.xy;
-                perceptionValue.TargetDistance = math.sqrt(distanceSq);
+                nearbyEntities.Add(new UnitPerceptionEntityElement { Value = hit.Entity });
             }
-
-            perception.ValueRW = perceptionValue;
         }
     }
 }

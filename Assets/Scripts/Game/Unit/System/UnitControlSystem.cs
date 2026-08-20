@@ -1,8 +1,8 @@
 using Unity.Entities;
 
-[UpdateInGroup(typeof(UnitExecutionSystemGroup))]
-[UpdateAfter(typeof(EffectExecutionSystem))]
-[UpdateBefore(typeof(UnitMoveSystem))]
+[UpdateInGroup(typeof(UnitDecisionSystemGroup))]
+[UpdateAfter(typeof(BehaviorTreeSystem))]
+[UpdateBefore(typeof(StateScriptSystem))]
 partial struct UnitControlSystem : ISystem
 {
     public void OnUpdate(ref SystemState state)

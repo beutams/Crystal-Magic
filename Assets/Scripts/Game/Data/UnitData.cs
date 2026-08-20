@@ -81,7 +81,6 @@ namespace CrystalMagic.Game.Data
     {
         public float BaseAttackPower = 10f;
         public float BaseSkillRange = 1f;
-        public float BaseActionSpeedBonus;
         public float BaseChantSpeedBonus;
     }
 

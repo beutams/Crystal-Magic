@@ -1,4 +1,4 @@
-﻿{
+{
   "Rows": [
     {
       "Graphs": [
@@ -412,7 +412,7 @@
               }
             },
             {
-              "SetterKey": "unit.facing.direction",
+              "SetterKey": "unit.move.setDirection",
               "Key": "",
               "Value": {
                 "Kind": 1,
@@ -499,7 +499,7 @@
                           },
                           "String": ""
                         },
-                        "GetterKey": "unit.move.velocity",
+                        "GetterKey": "unit.move.direction",
                         "OperationType": "",
                         "Inputs": []
                       }
@@ -1078,7 +1078,7 @@
               }
             },
             {
-              "SetterKey": "unit.facing.direction",
+              "SetterKey": "unit.move.setDirection",
               "Key": "",
               "Value": {
                 "Kind": 1,
@@ -1165,7 +1165,7 @@
                           },
                           "String": ""
                         },
-                        "GetterKey": "unit.move.velocity",
+                        "GetterKey": "unit.move.direction",
                         "OperationType": "",
                         "Inputs": []
                       }
@@ -1824,8 +1824,8 @@
                   },
                   "String": ""
                 },
-                "GetterKey": "world.skill.getSkillWindupDuration",
-                "OperationType": "",
+                "GetterKey": "world.skill.getSkillChantDuration",
+                "OperationType": "Multiply",
                 "Inputs": [
                   {
                     "Kind": 1,
@@ -1959,6 +1959,32 @@
                         ]
                       }
                     ]
+                  },
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "unit.attack.chantDurationMultiplier",
+                    "OperationType": "",
+                    "Inputs": []
                   }
                 ]
               },

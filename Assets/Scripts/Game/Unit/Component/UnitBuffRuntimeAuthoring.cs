@@ -59,6 +59,12 @@ public sealed class UnitBuffSource : UnitManagedComponentSource<UnitBuffRuntimeC
         new ComparatorParameterDefinition("BuffId", UnitValueCategory.Number),
     };
 
+    private static readonly ComparatorParameterDefinition[] s_removeStacksParameters =
+    {
+        new ComparatorParameterDefinition("BuffId", UnitValueCategory.Number),
+        new ComparatorParameterDefinition("StackCount", UnitValueCategory.Number),
+    };
+
     protected override void Define(UnitSourceDefinitionBuilder<UnitBuffRuntimeComponent> builder)
     {
         builder.AddGet("unit.buffs.count", UnitValueCategory.Number,
@@ -84,6 +90,8 @@ public sealed class UnitBuffSource : UnitManagedComponentSource<UnitBuffRuntimeC
 
         builder.AddSet("unit.buffs.remove", UnitValueCategory.Number,
             (ref UnitBuffRuntimeComponent component, UnitValue buffId) => Remove(component, buffId));
+        builder.AddSet("unit.buffs.removeStacks", s_removeStacksParameters,
+            (ref UnitBuffRuntimeComponent component, UnitValue[] input) => TryRemoveStacks(component, input));
     }
 
     private static bool GetEntry(UnitBuffRuntimeComponent component, UnitValue[] input, out UnitBuffRuntimeEntry entry)
@@ -134,6 +142,37 @@ public sealed class UnitBuffSource : UnitManagedComponentSource<UnitBuffRuntimeC
         }
 
         return removed;
+    }
+
+    public static bool TryRemoveStacks(UnitBuffRuntimeComponent component, int buffId, int stackCount)
+    {
+        if (component?.Buffs == null || stackCount <= 0)
+            return false;
+
+        for (int i = 0; i < component.Buffs.Count; i++)
+        {
+            UnitBuffRuntimeEntry entry = component.Buffs[i];
+            if (entry?.BuffId != buffId)
+                continue;
+
+            if (entry.StackCount < stackCount)
+                return false;
+
+            entry.StackCount -= stackCount;
+            if (entry.StackCount == 0)
+                component.Buffs.RemoveAt(i);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool TryRemoveStacks(UnitBuffRuntimeComponent component, UnitValue[] input)
+    {
+        return TryGetInt(input, 0, out int buffId) &&
+               TryGetInt(input, 1, out int stackCount) &&
+               TryRemoveStacks(component, buffId, stackCount);
     }
 
     private static bool TryGetInt(UnitValue[] input, int index, out int value)

@@ -821,14 +821,25 @@ namespace CrystalMagic.Editor.Unit
         {
             if (setValue == null || schema == null ||
                 !schema.TryGet(setValue.SetterKey, out UnitSourceSetSchemaEntry setter) ||
-                setter.Parameters.Count != 1 ||
-                (setter.RequiresKey && string.IsNullOrWhiteSpace(setValue.Key)) ||
-                !TryGetExpressionCategory(setValue.Value, schema, 0, out UnitValueCategory valueCategory))
+                (setter.RequiresKey && string.IsNullOrWhiteSpace(setValue.Key)))
             {
                 return false;
             }
 
-            return setter.Parameters[0].Accepts(valueCategory);
+            List<ValueExpression> values = setValue.GetOrCreateValues(setter.Parameters.Count);
+            if (values.Count != setter.Parameters.Count)
+                return false;
+
+            for (int i = 0; i < setter.Parameters.Count; i++)
+            {
+                if (!TryGetExpressionCategory(values[i], schema, 0, out UnitValueCategory valueCategory) ||
+                    !setter.Parameters[i].Accepts(valueCategory))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private static bool IsConditionSupported(ConditionConfig condition, UnitSourceSchema schema)

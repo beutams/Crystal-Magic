@@ -89,7 +89,6 @@ namespace CrystalMagic.Editor.Data
             UnitEditorWindow.DrawSectionHeader("Attack");
             module.BaseAttackPower = EditorGUILayout.FloatField("Base Attack Power", module.BaseAttackPower);
             module.BaseSkillRange = EditorGUILayout.FloatField("Base Skill Range", module.BaseSkillRange);
-            module.BaseActionSpeedBonus = EditorGUILayout.FloatField("Action Speed (-100~100)", module.BaseActionSpeedBonus);
             module.BaseChantSpeedBonus = EditorGUILayout.FloatField("Chant Speed (-100~100)", module.BaseChantSpeedBonus);
         }
     }

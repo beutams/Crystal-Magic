@@ -50,7 +50,8 @@ public struct UnitMoveComponent : IComponentData
     public float StateMoveMultiplier;
     public float2 Velocity;
 
-    public float RealMoveSpeed => (BaseMoveSpeed + BaseMoveSpeedOffset) * SpeedFactor + SpeedBonus;
+    public float BaseMoveSpeedValue => BaseMoveSpeed + BaseMoveSpeedOffset;
+    public float RealMoveSpeed => BaseMoveSpeedValue * SpeedFactor + SpeedBonus;
     public float RealMaxAcceleration => BaseMaxAcceleration * SpeedFactor + SpeedBonus;
 }
 
@@ -59,17 +60,12 @@ public sealed class UnitMoveSource : UnitComponentSource<UnitMoveComponent>
 {
     protected override void Define(UnitSourceDefinitionBuilder<UnitMoveComponent> builder)
     {
-        builder.AddGet("unit.move.baseMoveSpeed", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.BaseMoveSpeed));
-        builder.AddGet("unit.move.baseMoveSpeedOffset", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.BaseMoveSpeedOffset));
+        builder.AddGet("unit.move.baseMoveSpeed", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.BaseMoveSpeedValue));
         builder.AddGet("unit.move.baseMaxAcceleration", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.BaseMaxAcceleration));
-        builder.AddGet("unit.move.speedFactor", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.SpeedFactor));
-        builder.AddGet("unit.move.speedBonus", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.SpeedBonus));
         builder.AddGet("unit.move.realMoveSpeed", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.RealMoveSpeed));
         builder.AddGet("unit.move.realMaxAcceleration", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.RealMaxAcceleration));
         builder.AddGet("unit.move.direction", UnitValueCategory.Float2, (in UnitMoveComponent value) => UnitValue.FromFloat2(value.Direction));
         builder.AddGet("unit.move.stateMoveMultiplier", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.StateMoveMultiplier));
-        builder.AddGet("unit.move.velocity", UnitValueCategory.Float2, (in UnitMoveComponent value) => UnitValue.FromFloat2(value.Velocity));
-        builder.AddGet("unit.move.isMoving", UnitValueCategory.Bool, (in UnitMoveComponent value) => UnitValue.FromBool(math.lengthsq(value.Velocity) > 0.0001f));
 
         builder.AddSet("unit.move.setDirection", UnitValueCategory.Float2,
             (ref UnitMoveComponent value, UnitValue input) =>

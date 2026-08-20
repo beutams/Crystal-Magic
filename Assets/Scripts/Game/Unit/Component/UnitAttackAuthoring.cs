@@ -15,14 +15,12 @@ public class UnitAttackAuthoring : MonoBehaviour
 
             float baseAttack = 10f;
             float baseRange  = 1f;
-            float baseActionSpeedBonus = 0f;
             float baseChantSpeedBonus = 0f;
             UnitAttackModuleData data = UnitAuthoringUtility.ResolveModuleData<UnitAttackModuleData>(authoring);
             if (data != null)
             {
                 baseAttack = data.BaseAttackPower;
                 baseRange  = data.BaseSkillRange;
-                baseActionSpeedBonus = data.BaseActionSpeedBonus;
                 baseChantSpeedBonus = data.BaseChantSpeedBonus;
             }
 
@@ -37,10 +35,6 @@ public class UnitAttackAuthoring : MonoBehaviour
                 BaseSkillRangeOffset = 0f,
                 RangeFactor     = 1f,
                 RangeBonus      = 0f,
-                BaseActionSpeedBonus = baseActionSpeedBonus,
-                BaseActionSpeedBonusOffset = 0f,
-                ActionSpeedFactor = 1f,
-                ActionSpeedBonus = 0f,
                 BaseChantSpeedBonus = baseChantSpeedBonus,
                 BaseChantSpeedBonusOffset = 0f,
                 ChantSpeedFactor = 1f,
@@ -62,21 +56,17 @@ public struct UnitAttackComponent : IComponentData
     public float RangeFactor;
     public float RangeBonus;
 
-    public float BaseActionSpeedBonus;
-    public float BaseActionSpeedBonusOffset;
-    public float ActionSpeedFactor;
-    public float ActionSpeedBonus;
-
     public float BaseChantSpeedBonus;
     public float BaseChantSpeedBonusOffset;
     public float ChantSpeedFactor;
     public float ChantSpeedBonus;
 
-    public float RealAttackPower => (BaseAttackPower + BaseAttackPowerOffset) * AttackFactor + AttackBonus;
-    public float RealSkillRange => (BaseSkillRange + BaseSkillRangeOffset) * RangeFactor + RangeBonus;
-    public float RealActionSpeedBonus => math.clamp((BaseActionSpeedBonus + BaseActionSpeedBonusOffset) * ActionSpeedFactor + ActionSpeedBonus, -100f, 100f);
-    public float RealChantSpeedBonus => math.clamp((BaseChantSpeedBonus + BaseChantSpeedBonusOffset) * ChantSpeedFactor + ChantSpeedBonus, -100f, 100f);
-    public float ActionDurationMultiplier => GetDurationMultiplier(RealActionSpeedBonus);
+    public float BaseAttackPowerValue => BaseAttackPower + BaseAttackPowerOffset;
+    public float BaseSkillRangeValue => BaseSkillRange + BaseSkillRangeOffset;
+    public float BaseChantSpeedBonusValue => BaseChantSpeedBonus + BaseChantSpeedBonusOffset;
+    public float RealAttackPower => BaseAttackPowerValue * AttackFactor + AttackBonus;
+    public float RealSkillRange => BaseSkillRangeValue * RangeFactor + RangeBonus;
+    public float RealChantSpeedBonus => math.clamp(BaseChantSpeedBonusValue * ChantSpeedFactor + ChantSpeedBonus, -100f, 100f);
     public float ChantDurationMultiplier => GetDurationMultiplier(RealChantSpeedBonus);
 
     public static float GetDurationMultiplier(float speedBonus)
@@ -90,26 +80,11 @@ public sealed class UnitAttackSource : UnitComponentSource<UnitAttackComponent>
 {
     protected override void Define(UnitSourceDefinitionBuilder<UnitAttackComponent> builder)
     {
-        builder.AddGet("unit.attack.baseAttackPower", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.BaseAttackPower));
-        builder.AddGet("unit.attack.baseAttackPowerOffset", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.BaseAttackPowerOffset));
-        builder.AddGet("unit.attack.attackFactor", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.AttackFactor));
-        builder.AddGet("unit.attack.attackBonus", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.AttackBonus));
+        builder.AddGet("unit.attack.baseAttackPower", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.BaseAttackPowerValue));
         builder.AddGet("unit.attack.realAttackPower", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.RealAttackPower));
-        builder.AddGet("unit.attack.baseSkillRange", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.BaseSkillRange));
-        builder.AddGet("unit.attack.baseSkillRangeOffset", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.BaseSkillRangeOffset));
-        builder.AddGet("unit.attack.rangeFactor", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.RangeFactor));
-        builder.AddGet("unit.attack.rangeBonus", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.RangeBonus));
+        builder.AddGet("unit.attack.baseSkillRange", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.BaseSkillRangeValue));
         builder.AddGet("unit.attack.realSkillRange", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.RealSkillRange));
-        builder.AddGet("unit.attack.baseActionSpeedBonus", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.BaseActionSpeedBonus));
-        builder.AddGet("unit.attack.baseActionSpeedBonusOffset", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.BaseActionSpeedBonusOffset));
-        builder.AddGet("unit.attack.actionSpeedFactor", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.ActionSpeedFactor));
-        builder.AddGet("unit.attack.actionSpeedBonus", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.ActionSpeedBonus));
-        builder.AddGet("unit.attack.realActionSpeedBonus", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.RealActionSpeedBonus));
-        builder.AddGet("unit.attack.actionDurationMultiplier", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.ActionDurationMultiplier));
-        builder.AddGet("unit.attack.baseChantSpeedBonus", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.BaseChantSpeedBonus));
-        builder.AddGet("unit.attack.baseChantSpeedBonusOffset", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.BaseChantSpeedBonusOffset));
-        builder.AddGet("unit.attack.chantSpeedFactor", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.ChantSpeedFactor));
-        builder.AddGet("unit.attack.chantSpeedBonus", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.ChantSpeedBonus));
+        builder.AddGet("unit.attack.baseChantSpeedBonus", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.BaseChantSpeedBonusValue));
         builder.AddGet("unit.attack.realChantSpeedBonus", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.RealChantSpeedBonus));
         builder.AddGet("unit.attack.chantDurationMultiplier", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.ChantDurationMultiplier));
     }

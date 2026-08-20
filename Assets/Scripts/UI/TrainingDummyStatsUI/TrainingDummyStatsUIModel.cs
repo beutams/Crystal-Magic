@@ -132,7 +132,6 @@ namespace CrystalMagic.UI
                 UnitAttackComponent attack = entityManager.GetComponentData<UnitAttackComponent>(dummyEntity);
                 snapshot.AttackPower = attack.RealAttackPower;
                 snapshot.SkillRange = attack.RealSkillRange;
-                snapshot.ActionSpeedBonus = attack.RealActionSpeedBonus;
                 snapshot.ChantSpeedBonus = attack.RealChantSpeedBonus;
             }
 
@@ -278,7 +277,6 @@ namespace CrystalMagic.UI
             builder.AppendLine(localization.Format("ui.training.stats.move_speed", Format(snapshot.MoveSpeed)));
             builder.AppendLine(localization.Format("ui.training.stats.max_acceleration", Format(snapshot.MaxAcceleration)));
             builder.AppendLine(localization.Format("ui.training.stats.skill_range", Format(snapshot.SkillRange)));
-            builder.AppendLine(localization.Format("ui.training.stats.action_speed_bonus", Format(snapshot.ActionSpeedBonus)));
             builder.AppendLine(localization.Format("ui.training.stats.chant_speed_bonus", Format(snapshot.ChantSpeedBonus)));
             builder.AppendLine(localization.Format("ui.training.stats.health_regen", Format(snapshot.HealthRegen)));
             builder.AppendLine(localization.Format("ui.training.stats.mana_regen", Format(snapshot.ManaRegen)));
@@ -318,7 +316,6 @@ namespace CrystalMagic.UI
             public float ManaRegen;
             public float AttackPower;
             public float SkillRange;
-            public float ActionSpeedBonus;
             public float ChantSpeedBonus;
             public float MoveSpeed;
             public float MaxAcceleration;

@@ -132,11 +132,25 @@ namespace CrystalMagic.Game.Data
     {
         public string SetterKey = string.Empty;
         public string Key = string.Empty;
+        // Legacy one-input data; runtime migrates it into Values when binding old graphs.
         public ValueExpression Value = new();
+        public List<ValueExpression> Values = new();
 
         public SetValueStateScriptNodeData()
         {
             Type = "SetValue";
+        }
+
+        public List<ValueExpression> GetOrCreateValues(int count)
+        {
+            Values ??= new List<ValueExpression>();
+            if (Values.Count == 0 && Value != null)
+                Values.Add(Value);
+
+            while (Values.Count < count)
+                Values.Add(new ValueExpression());
+
+            return Values;
         }
     }
 

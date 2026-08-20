@@ -77,7 +77,6 @@ namespace CrystalMagic.Editor.Unit
             UnitEditorWindow.DrawSectionHeader("Attack");
             EditorGUILayout.FloatField("Attack Power", attack.RealAttackPower);
             EditorGUILayout.FloatField("Skill Range", attack.RealSkillRange);
-            EditorGUILayout.FloatField("Action Speed (-100~100)", attack.RealActionSpeedBonus);
             EditorGUILayout.FloatField("Chant Speed (-100~100)", attack.RealChantSpeedBonus);
         }
     }
@@ -120,12 +119,11 @@ namespace CrystalMagic.Editor.Unit
 
         public void Draw(UnitRuntimeDrawerContext context)
         {
-            UnitPerceptionComponent perception = context.GetComponent<UnitPerceptionComponent>();
             UnitEditorWindow.DrawSectionHeader("Perception");
+            UnitPerceptionComponent perception = context.GetComponent<UnitPerceptionComponent>();
             EditorGUILayout.FloatField("Search Radius", perception.SearchRadius);
-            EditorGUILayout.Toggle("Has Target", perception.HasTarget);
-            EditorGUILayout.Vector2Field("Target Position", perception.TargetPosition);
-            EditorGUILayout.FloatField("Target Distance", perception.TargetDistance);
+            if (context.EntityManager.HasBuffer<UnitPerceptionEntityElement>(context.Entity))
+                EditorGUILayout.IntField("Nearby Unit Count", context.EntityManager.GetBuffer<UnitPerceptionEntityElement>(context.Entity).Length);
         }
     }
 

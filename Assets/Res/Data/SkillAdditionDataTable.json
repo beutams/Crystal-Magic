@@ -81,28 +81,6 @@
                      "DescriptionKey":  "skill_addition.area.description"
                  },
                  {
-                     "IconPath":  "Assets/Res/Sprites/SkillEffect/Action Speed.png",
-                     "Modifiers":  [
-                                       {
-                                           "Channel":  1,
-                                           "Factor":  0,
-                                           "Bonus":  50
-                                       }
-                                   ],
-                     "FollowupEffects":  [
-
-                                         ],
-                     "CastTasks":  [
-
-                                   ],
-                     "EffectChain":  [
-
-                                     ],
-                     "Id":  2,
-                     "NameKey":  "skill_addition.haste.name",
-                     "DescriptionKey":  "skill_addition.haste.description"
-                 },
-                 {
                      "IconPath":  "Assets/Res/Sprites/Item/Shield.png",
                      "Modifiers":  [
 
@@ -265,11 +243,6 @@
                  {
                      "IconPath":  "Assets/Res/Sprites/SkillEffect/Chant Speed Up.png",
                      "Modifiers":  [
-                                       {
-                                           "Channel":  2,
-                                           "Factor":  0,
-                                           "Bonus":  -50
-                                       },
                                        {
                                            "Channel":  100,
                                            "Factor":  -0.3,

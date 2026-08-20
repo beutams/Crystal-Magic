@@ -3,7 +3,6 @@ using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Data.Effects;
 using Unity.Entities;
-using Unity.Mathematics;
 using UnityEngine;
 
 namespace CrystalMagic.Game.Skill
@@ -53,20 +52,12 @@ namespace CrystalMagic.Game.Skill
 
     public static class SkillResolver
     {
-        public static ResolvedSkillData Resolve(SkillData skillData, SkillModifierSet modifiers, UnitAttackComponent? attackComponent = null, UnitElementComponent? elementComponent = null)
+        public static ResolvedSkillData Resolve(SkillData skillData, SkillModifierSet modifiers, UnitElementComponent? elementComponent = null)
         {
             if (skillData == null)
                 return null;
 
             modifiers ??= new SkillModifierSet();
-            float actionSpeedBonus = attackComponent?.RealActionSpeedBonus ?? 0f;
-            float chantSpeedBonus = attackComponent?.RealChantSpeedBonus ?? 0f;
-            float actionSpeedValue = modifiers.GetActionSpeedValue(actionSpeedBonus);
-            float chantSpeedValue = modifiers.GetChantSpeedValue(chantSpeedBonus);
-            float actionSpeedMultiplier = UnitAttackComponent.GetDurationMultiplier(actionSpeedValue);
-            float chantSpeedMultiplier = UnitAttackComponent.GetDurationMultiplier(chantSpeedValue);
-            float moveSpeedMultiplier = math.min(1f, math.max(0f, skillData.MoveSpeedMultiplier) * modifiers.GetMoveSpeedMultiplier());
-
             return new ResolvedSkillData
             {
                 Source = skillData,
@@ -74,11 +65,6 @@ namespace CrystalMagic.Game.Skill
                 Name = skillData.DisplayName,
                 RuntimeType = skillData.EffectiveRuntimeType,
                 MpCost = UnitSkillModifierUtility.GetModifiedMpCost(modifiers, skillData.MpCost),
-                WindupDuration = math.max(0f, skillData.WindupDuration * actionSpeedMultiplier),
-                ChantDuration = math.max(0f, skillData.ChantDuration * chantSpeedMultiplier),
-                RecoveryDuration = math.max(0f, skillData.RecoveryDuration * actionSpeedMultiplier),
-                CanMoveWhileCasting = skillData.CanMoveWhileCasting,
-                MoveSpeedMultiplier = moveSpeedMultiplier,
                 EffectChain = EffectData.CreateRuntimeCopies(skillData.EffectChain, modifiers, elementComponent),
             };
         }

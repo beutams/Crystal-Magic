@@ -1,14 +1,10 @@
-﻿{
+{
     "Rows":  [
                  {
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "SelfSkill",
                      "MpCost":  100,
-                     "WindupDuration":  0.25,
                      "ChantDuration":  0,
-                     "RecoveryDuration":  0.25,
-                     "CanMoveWhileCasting":  true,
-                     "MoveSpeedMultiplier":  0.5,
                      "IconPath":  "Assets/Res/Sprites/Item/Charging.png",
                      "Conditions":  [
 
@@ -53,11 +49,7 @@
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "PositionSkill",
                      "MpCost":  100,
-                     "WindupDuration":  0.25,
                      "ChantDuration":  0.5,
-                     "RecoveryDuration":  0.25,
-                     "CanMoveWhileCasting":  true,
-                     "MoveSpeedMultiplier":  0.5,
                      "IconPath":  "Assets/Res/Sprites/Item/FireBall.png",
                      "Conditions":  [
 
@@ -159,11 +151,7 @@
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "PositionSkill",
                      "MpCost":  200,
-                     "WindupDuration":  0.25,
                      "ChantDuration":  0.5,
-                     "RecoveryDuration":  0.25,
-                     "CanMoveWhileCasting":  true,
-                     "MoveSpeedMultiplier":  0.5,
                      "IconPath":  "Assets/Res/Sprites/Item/FlameStream.png",
                      "Conditions":  [
 
@@ -255,11 +243,7 @@
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "PositionSkill",
                      "MpCost":  200,
-                     "WindupDuration":  0.1,
                      "ChantDuration":  0,
-                     "RecoveryDuration":  0.1,
-                     "CanMoveWhileCasting":  true,
-                     "MoveSpeedMultiplier":  0.5,
                      "IconPath":  "Assets/Res/Sprites/Item/Detonate.png",
                      "Conditions":  [
 
@@ -364,11 +348,7 @@
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "PositionSkill",
                      "MpCost":  100,
-                     "WindupDuration":  0.25,
                      "ChantDuration":  0.5,
-                     "RecoveryDuration":  0.25,
-                     "CanMoveWhileCasting":  true,
-                     "MoveSpeedMultiplier":  0.5,
                      "IconPath":  "Assets/Res/Sprites/Item/Eddies.png",
                      "Conditions":  [
 
@@ -487,11 +467,7 @@
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "PositionSkill",
                      "MpCost":  200,
-                     "WindupDuration":  0.25,
                      "ChantDuration":  0.5,
-                     "RecoveryDuration":  0.25,
-                     "CanMoveWhileCasting":  true,
-                     "MoveSpeedMultiplier":  0.5,
                      "IconPath":  "Assets/Res/Sprites/Item/IceGland.png",
                      "Conditions":  [
 
@@ -593,11 +569,7 @@
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "PositionSkill",
                      "MpCost":  100,
-                     "WindupDuration":  0.25,
                      "ChantDuration":  0,
-                     "RecoveryDuration":  0.25,
-                     "CanMoveWhileCasting":  true,
-                     "MoveSpeedMultiplier":  0.5,
                      "IconPath":  "Assets/Res/Sprites/Item/Freeze.png",
                      "Conditions":  [
 
@@ -667,11 +639,7 @@
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "PositionSkill",
                      "MpCost":  100,
-                     "WindupDuration":  0.25,
                      "ChantDuration":  0.5,
-                     "RecoveryDuration":  0.25,
-                     "CanMoveWhileCasting":  true,
-                     "MoveSpeedMultiplier":  0.5,
                      "IconPath":  "Assets/Res/Sprites/Item/Lightning.png",
                      "Conditions":  [
 
@@ -707,11 +675,7 @@
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "PositionSkill",
                      "MpCost":  100,
-                     "WindupDuration":  0.25,
                      "ChantDuration":  0.5,
-                     "RecoveryDuration":  0.25,
-                     "CanMoveWhileCasting":  true,
-                     "MoveSpeedMultiplier":  0.5,
                      "IconPath":  "Assets/Res/Sprites/Item/Thunder Field.png",
                      "Conditions":  [
 
@@ -781,11 +745,7 @@
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "PositionSkill",
                      "MpCost":  300,
-                     "WindupDuration":  0.1,
                      "ChantDuration":  0,
-                     "RecoveryDuration":  0.1,
-                     "CanMoveWhileCasting":  true,
-                     "MoveSpeedMultiplier":  0.5,
                      "IconPath":  "Assets/Res/Sprites/Item/Thunderstorm.png",
                      "Conditions":  [
 
@@ -821,11 +781,7 @@
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "SelfSkill",
                      "MpCost":  100,
-                     "WindupDuration":  0.1,
                      "ChantDuration":  0,
-                     "RecoveryDuration":  0.1,
-                     "CanMoveWhileCasting":  true,
-                     "MoveSpeedMultiplier":  1,
                      "IconPath":  "Assets/Res/Sprites/Item/SpeedUp.png",
                      "Conditions":  [
 
@@ -861,11 +817,7 @@
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "SelfSkill",
                      "MpCost":  200,
-                     "WindupDuration":  0.5,
                      "ChantDuration":  1,
-                     "RecoveryDuration":  0.5,
-                     "CanMoveWhileCasting":  true,
-                     "MoveSpeedMultiplier":  0.5,
                      "IconPath":  "Assets/Res/Sprites/Item/Heal.png",
                      "Conditions":  [
 
@@ -901,11 +853,7 @@
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "PositionSkill",
                      "MpCost":  200,
-                     "WindupDuration":  0.25,
                      "ChantDuration":  1,
-                     "RecoveryDuration":  0.25,
-                     "CanMoveWhileCasting":  false,
-                     "MoveSpeedMultiplier":  1,
                      "IconPath":  "Assets/Res/Sprites/Item/Shield.png",
                      "Conditions":  [
 

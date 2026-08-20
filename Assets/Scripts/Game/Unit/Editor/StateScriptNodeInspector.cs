@@ -139,14 +139,6 @@ namespace CrystalMagic.Editor.Unit
 
             UnitSourceSetSchemaEntry setter = entries[setterIndex];
             setValue.SetterKey = setter.Key;
-            if (setter.Parameters.Count != 1)
-            {
-                EditorGUILayout.HelpBox(
-                    $"Setter '{setter.Key}' is invalid. StateScript setters require exactly one value parameter.",
-                    MessageType.Error);
-                return;
-            }
-
             if (setter.RequiresKey)
             {
                 setValue.Key = EditorGUILayout.TextField("Key", setValue.Key ?? string.Empty);
@@ -154,13 +146,25 @@ namespace CrystalMagic.Editor.Unit
                     EditorGUILayout.HelpBox($"Setter '{setter.Key}' requires a key.", MessageType.Warning);
             }
 
-            ComparatorParameterDefinition parameter = setter.Parameters[0];
-            setValue.Value ??= new ValueExpression
+            List<ValueExpression> values = setValue.GetOrCreateValues(setter.Parameters.Count);
+            if (values.Count != setter.Parameters.Count)
             {
-                Literal = StateScriptValueExpressionDrawer.CreateDefaultLiteral(parameter.Category),
-            };
-            EditorGUILayout.LabelField($"{parameter.Name} ({parameter.Category})", EditorStyles.miniBoldLabel);
-            StateScriptValueExpressionDrawer.Draw(setValue.Value, parameter.Category, sourceSchema, onChanged);
+                EditorGUILayout.HelpBox(
+                    $"Setter '{setter.Key}' requires {setter.Parameters.Count} inputs, but this node has {values.Count}.",
+                    MessageType.Error);
+                return;
+            }
+
+            for (int i = 0; i < setter.Parameters.Count; i++)
+            {
+                ComparatorParameterDefinition parameter = setter.Parameters[i];
+                values[i] ??= new ValueExpression
+                {
+                    Literal = StateScriptValueExpressionDrawer.CreateDefaultLiteral(parameter.Category),
+                };
+                EditorGUILayout.LabelField($"{parameter.Name} ({parameter.Category})", EditorStyles.miniBoldLabel);
+                StateScriptValueExpressionDrawer.Draw(values[i], parameter.Category, sourceSchema, onChanged);
+            }
         }
 
         private static void DrawRequestSkill(

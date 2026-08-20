@@ -32,8 +32,6 @@ public sealed class SkillReleaseRequest
     public Entity TargetEntity = Entity.Null;
     public bool HasTargetPosition;
     public float3 TargetPosition;
-    public bool HasAttackSnapshot;
-    public UnitAttackComponent AttackSnapshot;
     public bool HasElementSnapshot;
     public UnitElementComponent ElementSnapshot;
     public SkillModifierSet ModifierSnapshot = new();

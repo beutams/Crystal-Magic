@@ -168,7 +168,7 @@ Game\
       BuffEditorWindow.cs FALSE
       DungeonEditorWindow.cs TRUE DIRTY
       DungeonEditorWindow.OpenField.cs TRUE DIRTY
-      EquipEditorWindow.cs FALSE
+      EquipEditorWindow.cs TRUE
       NPCEditorWindow.cs FALSE
       PropEditorWindow.cs FALSE
       SkillAdditionEditorWindow.cs FALSE
@@ -199,7 +199,7 @@ Game\
     StateScript\
       StateScriptData.cs TRUE DIRTY
       StateScriptNodeDataConverter.cs TRUE DIRTY
-    BuffData.cs FALSE
+    BuffData.cs TRUE
     DropData.cs FALSE
     DungeonDefinitionData.cs TRUE DIRTY
     DungeonTileGridData.cs TRUE
@@ -210,7 +210,7 @@ Game\
     ShopData.cs FALSE
     SkillAdditionData.cs FALSE
     SkillCastTaskData.cs TRUE
-    SkillData.cs TRUE
+    SkillData.cs TRUE DIRTY
     SkillFollowupConsumeRuleData.cs FALSE
     SkillFollowupEffectData.cs FALSE
     SkillFollowupFilterData.cs FALSE
@@ -233,7 +233,7 @@ Game\
     OpenFieldDungeonTerrainGenerator.cs TRUE
   Skill\
     Editor\
-      SkillEditorWindow.cs FALSE
+      SkillEditorWindow.cs TRUE
       SkillFollowupConsumeRuleRegistryGenerator.cs FALSE
       SkillFollowupFilterRegistryGenerator.cs FALSE
       SkillFollowupModifierRuleRegistryGenerator.cs FALSE
@@ -330,7 +330,7 @@ Game\
         StateScriptStateNode.cs TRUE DIRTY
         SetValueStateScriptNode.cs TRUE DIRTY
         PublishGameEventStateScriptNode.cs FALSE
-        RequestSkillActionNode.cs TRUE
+        RequestSkillActionNode.cs TRUE DIRTY
         TimerStateScriptNode.cs TRUE DIRTY
         KeepStateScriptNode.cs TRUE DIRTY
         MonitorStateScriptNode.cs TRUE DIRTY
@@ -393,7 +393,7 @@ Game\
       UnitDeathAuthoring.cs TRUE DIRTY
       UnitElementAuthoring.cs TRUE DIRTY
         闁稿繐鍟扮粈宀€浠﹂悙绮瑰亾瑜庨弳鐔煎箲?
-      UnitFacingAuthoring.cs TRUE
+      UnitFacingAuthoring.cs TRUE DIRTY
         闁哄牊绻傞幃婊堝极閻楀牆绁?
       UnitFactionAuthoring.cs TRUE DIRTY
         闂傚啩绲婚幆鈧柡浣哄瀹?
@@ -407,7 +407,7 @@ Game\
       UnitPerceptionAuthoring.cs TRUE DIRTY
         缂佷究鍨洪弲顐ょ磼閸曨亝顐介柨娑樼焸閳ь剙鍊块崢顦沶it缂傚倹鐗炵欢顐﹀闯?
         闁告娲戠紞鍛村箥閳ь剟寮垫径瀣楅柤瀹犲Г閺嗙喖骞?
-      UnitSkillReleaseAuthoring.cs TRUE
+      UnitSkillReleaseAuthoring.cs TRUE DIRTY
       UnitSkillModifierRuntimeAuthoring.cs TRUE DIRTY
       ========濠㈤浜滈ˇ璺ㄧ磼閸曨亝顐介柛锔哄姀缁绘牠鏌岀仦鎯ф綉闁?
       UnitEntityPrefabRegistryEntry.cs FALSE
@@ -440,7 +440,7 @@ Game\
       BehaviorTreeRegistryGenerator.cs FALSE
       NPCInteractionNodeRegistryGenerator.cs FALSE
       UnitRuntimeAttributeDrawerFactory.cs FALSE
-      UnitRuntimeAttributeDrawers.cs TRUE
+      UnitRuntimeAttributeDrawers.cs TRUE DIRTY
       UnitRuntimeDebugWindow.cs FALSE
       UnitRuntimeDrawerContext.cs FALSE
     Event\
@@ -489,7 +489,7 @@ Game\
       PlayerSkillAnalysisSystem.cs TRUE DIRTY
         闁汇垻鍠愰崹姘跺礂閾氬倻绉奸柟鍨涘亾闁煎啿鈧噥鍤炴慨?
       QuadAnimationSystem.cs TRUE DIRTY
-      SkillReleaseSystem.cs FALSE
+      SkillReleaseSystem.cs TRUE
       SkillProjectileSpawnSystem.cs TRUE DIRTY
       SkillProjectileSystem.cs TRUE
       UnitBuffSystem.cs TRUE
@@ -506,7 +506,7 @@ Game\
         閹煎瓨姊婚弫銈囩矓鐠囨彃袟
       UnitResetSystem.cs TRUE DIRTY
         闂佹彃绉堕悿鍡椥掕箛鎾村闁轰胶澧楀畵?
-      UnitPerceptionSystem.cs TRUE
+      UnitPerceptionSystem.cs TRUE DIRTY
         闁哄被鍎撮妤呭嫉閳ь剚娼婚幋鐘崇暠闁轰礁濂斿Ч澶愬礃濞嗗繐寮崇紒渚垮灪閺咁偆绱掗崟顏咁偨
       UnitQuerySystem.cs TRUE DIRTY
         闁轰胶澧楀畵渚€宕犻弽褍绀嬪ù锝呯С缂嶅懐绱旈鍡欑闁圭粯鍔掔欢浣冪疀椤愶腹鍋撻悢鍝ュ弨閻犲洢鍨虹敮鎾矗?
@@ -537,17 +537,15 @@ Game\
       WorldDropSpawnUtility.cs FALSE
       UnitFactionUtility.cs TRUE
       UnitFeatureBakeUtility.cs TRUE
-      UnitModifierUtility.cs FALSE
+      UnitModifierUtility.cs TRUE
       UnitQueryUtility.cs FALSE
       UnitSkillModifierUtility.cs FALSE
     Unit\
       CompareSource\
         UnitBuffStackSource.cs TRUE
-        UnitHasTargetSource.cs TRUE
         UnitHealthRatioSource.cs TRUE
         UnitIsCastingSource.cs TRUE DIRTY
         UnitIsControlledSource.cs TRUE
-        UnitTargetCastRangeMarginSource.cs TRUE
       State\
   World\
     WorldInputComponent.cs TRUE
@@ -627,10 +625,10 @@ UI\
     MainMenuUIData.cs FALSE
     MainMenuUIModel.cs FALSE
   PropertyUI\
-    PropertyUI.cs FALSE
+    PropertyUI.cs TRUE DIRTY
     PropertyUIController.cs FALSE
-    PropertyUIData.cs FALSE
-    PropertyUIModel.cs TRUE
+    PropertyUIData.cs TRUE
+    PropertyUIModel.cs TRUE DIRTY
   SaveUI\
     Sub\
       SaveUI_OpenData.cs FALSE
@@ -690,7 +688,7 @@ UI\
     TrainingDummyStatsUI.cs FALSE
     TrainingDummyStatsUIController.cs FALSE
     TrainingDummyStatsUIData.cs FALSE
-    TrainingDummyStatsUIModel.cs FALSE
+    TrainingDummyStatsUIModel.cs TRUE
   TransitionMaskUI\
     TransitionMaskUI.cs FALSE
     TransitionMaskUIController.cs FALSE

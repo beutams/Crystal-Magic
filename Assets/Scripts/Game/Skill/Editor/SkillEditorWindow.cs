@@ -262,7 +262,6 @@ namespace CrystalMagic.Editor.Skill
                 DescriptionKey = string.Empty,
                 RuntimeType = SkillRegistry.DefaultSkillRuntimeTypeKey,
                 IconPath = string.Empty,
-                MoveSpeedMultiplier = 1f,
                 Conditions = new List<ConditionConfig>(),
                 EffectChain = Array.Empty<EffectData>(),
                 CastTasks = new List<SkillCastTaskData>(),
@@ -655,12 +654,7 @@ namespace CrystalMagic.Editor.Skill
 
             DrawSectionHeader("Cast");
             skill.MpCost = EditorGUILayout.IntField("MP Cost", skill.MpCost);
-            skill.WindupDuration = EditorGUILayout.FloatField("Windup (s)", skill.WindupDuration);
             skill.ChantDuration = EditorGUILayout.FloatField("Chant (s)", skill.ChantDuration);
-            skill.RecoveryDuration = EditorGUILayout.FloatField("Recovery (s)", skill.RecoveryDuration);
-            skill.CanMoveWhileCasting = EditorGUILayout.Toggle("Can Move While Casting", skill.CanMoveWhileCasting);
-            using (new EditorGUI.DisabledScope(!skill.CanMoveWhileCasting))
-                skill.MoveSpeedMultiplier = EditorGUILayout.Slider("Move Speed Multiplier", skill.MoveSpeedMultiplier, 0f, 1f);
 
             if (EditorGUI.EndChangeCheck())
                 _isDirty = true;

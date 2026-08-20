@@ -28,10 +28,13 @@ public partial struct UnitMoveJob : IJobEntity
 
     public void Execute(
         ref UnitMoveComponent move,
+        ref UnitFacingComponent facing,
         ref PhysicsVelocity physicsVelocity,
         ref LocalTransform transform)
     {
         float2 targetDirection = math.normalizesafe(move.Direction, float2.zero);
+        if (math.lengthsq(targetDirection) > 0.0001f)
+            facing.Direction = targetDirection;
         float targetSpeed = move.RealMoveSpeed * move.StateMoveMultiplier;
         float maxSpeed = math.abs(targetSpeed);
         float maxAcceleration = math.max(0f, move.RealMaxAcceleration);

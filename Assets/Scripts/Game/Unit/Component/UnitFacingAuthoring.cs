@@ -1,5 +1,4 @@
 using Unity.Entities;
-using Unity.Mathematics;
 using UnityEngine;
 
 public sealed class UnitFacingAuthoring : MonoBehaviour
@@ -29,17 +28,5 @@ public sealed class UnitFacingSource : UnitComponentSource<UnitFacingComponent>
     {
         builder.AddGet("unit.facing.direction", UnitValueCategory.Float2,
             (in UnitFacingComponent value) => UnitValue.FromFloat2(value.Direction));
-        builder.AddGet("unit.facing.x", UnitValueCategory.Number,
-            (in UnitFacingComponent value) => UnitValue.FromFloat(value.Direction.x));
-        builder.AddGet("unit.facing.y", UnitValueCategory.Number,
-            (in UnitFacingComponent value) => UnitValue.FromFloat(value.Direction.y));
-        builder.AddGet("unit.facing.angleDegrees", UnitValueCategory.Number,
-            (in UnitFacingComponent value) => UnitValue.FromFloat(math.degrees(math.atan2(value.Direction.y, value.Direction.x))));
-        builder.AddSet("unit.facing.direction", UnitValueCategory.Float2,
-            (ref UnitFacingComponent value, UnitValue input) =>
-            {
-                value.Direction = math.normalizesafe(input.Float2, value.Direction);
-                return true;
-            });
     }
 }

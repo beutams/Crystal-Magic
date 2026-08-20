@@ -1,4 +1,4 @@
-﻿{
+{
     "Rows":  [
                  {
                      "Name":  "MonsterStraw",
@@ -20,7 +20,6 @@
                                          "$type":  "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
                                          "BaseAttackPower":  10.0,
                                          "BaseSkillRange":  0.0,
-                                         "BaseActionSpeedBonus":  0.0,
                                          "BaseChantSpeedBonus":  0.0,
                                          "BaseWaterPowerBonus":  0.0,
                                          "BaseFirePowerBonus":  0.0,
@@ -152,7 +151,6 @@
                                          "$type":  "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
                                          "BaseAttackPower":  10.0,
                                          "BaseSkillRange":  0.0,
-                                         "BaseActionSpeedBonus":  0.0,
                                          "BaseChantSpeedBonus":  0.0,
                                          "BaseWaterPowerBonus":  0.0,
                                          "BaseFirePowerBonus":  0.0,
@@ -190,7 +188,6 @@
                                          "$type":  "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
                                          "BaseAttackPower":  0.0,
                                          "BaseSkillRange":  0.0,
-                                         "BaseActionSpeedBonus":  0.0,
                                          "BaseChantSpeedBonus":  0.0,
                                          "BaseWaterPowerBonus":  0.0,
                                          "BaseFirePowerBonus":  0.0,
