@@ -164,10 +164,12 @@ system must assign its element contribution instead of accumulating it every
 frame.
 
 Final-value unit Sources gain contextual getters so they can invoke the
-resolver with the entity and `EntityManager`. Existing public Source keys remain
-stable where practical, but their implementation reads the resolver. Raw
-values, Buff counts, Buff stacks, and base values remain direct component
-getters.
+resolver with the entity and `EntityManager`. Contextual setters are added as
+well: the player chain-and-slot setter and Buff mutation setters call their
+respective utilities with the bound entity instead of mutating managed
+component lists directly. Existing public Source keys remain stable where
+practical, but their implementation reads the resolver. Raw values, Buff
+counts, Buff stacks, and base values remain direct component getters.
 
 All gameplay and presentation consumers of `Real*` move to the resolver:
 movement, recovery, damage, healing, mana restoration, health costs, health
