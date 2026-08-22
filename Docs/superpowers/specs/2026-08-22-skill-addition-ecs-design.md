@@ -20,25 +20,28 @@ or aggregated skill-modifier state.
    a graph port.
 2. Property Buff modifiers are resolved from the active Buff list at the point
    of use. No frame-wide aggregated property cache exists.
-3. Addition modifiers belong only to one player-chain submission. They never
-   become a Buff modifier or a unit-wide modifier.
+3. Extra skill modifiers belong only to one release request. Addition is one
+   producer of them; monster, passive, or future systems may explicitly supply
+   their own request-owned extra modifiers. They never become Buff modifiers or
+   unit-wide modifiers.
 4. Buff skill modifiers persist with the unit's active Buff state and are
    rebuilt for each release snapshot.
 5. `SkillReleaseSystem` creates the final immutable `ResolvedSkillData`.
-6. A generic request, monster request, passive request, or Buff Tick request
-   always has an empty submitted-Addition modifier set.
+6. A generic request starts with an empty extra-modifier set. Other producers
+   may populate it explicitly for their own request; no request reads another
+   producer's pending state.
 
 ## Target Release Flow
 
 `RequestSkillActionNode` remains the generic node. It writes a raw
 `SkillReleaseRequest`: skill ID, origin, origin transform/facing, and configured
-target data. It always creates an empty `SubmittedAdditionModifiers` set. It no
+target data. It always creates an empty `ExtraModifiers` set. It no
 longer captures an element or modifier snapshot.
 
-`SubmitCurrentChainSkillActionNode` is the player-only node. It resolves the
-selected current-chain skill ID, consumes a clone of that player's pending
-Addition modifiers, and enqueues one raw request. It does not inspect Buffs or
-resolve a skill.
+`RequestSkillWithAdditionActionNode` is the player-chain node. It resolves the
+selected current skill from the stored chain and slot, consumes a clone of that
+player's pending extra modifiers, and enqueues one raw request. It does not
+inspect Buffs or resolve a skill.
 
 `SkillReleaseSystem` removes requests from `UnitSkillReleaseComponent` and uses
 `SkillReleaseSnapshotUtility.TryCreate` before calling `SkillReleaseUtility`.
@@ -46,7 +49,7 @@ The utility:
 
 1. reads `SkillData` from the request skill ID;
 2. builds persistent skill modifiers from the caster's current Buffs;
-3. adds the request-owned `SubmittedAdditionModifiers`;
+3. adds the request-owned `ExtraModifiers`;
 4. captures the caster's current resolved element values; and
 5. calls `SkillResolver.Resolve` once.
 
@@ -63,14 +66,18 @@ Add `PlayerCurrentSkillAuthoring`, `PlayerCurrentSkillComponent`,
 `SkillModifierSet`:
 
 ```csharp
+public int CurrentChainId = -1;
 public int CurrentSlotIndex = -1;
-public SkillModifierSet PendingAdditionModifiers = new();
+public SkillModifierSet PendingExtraModifiers = new();
 ```
 
-Skill ID and Addition ID are derived from `WorldSkillDataComponent.CurrentChainId`
-and that slot index. They are not copied into component fields. Changing the
-slot clears pending Addition modifiers. Only `SubmitCurrentChainSkill` may
-consume the pending set. The configured cleanup path calls `ClearCurrentSlot`.
+Skill ID and Addition ID are derived from the component's `CurrentChainId` and
+`CurrentSlotIndex`, not from the mutable `WorldSkillDataComponent.CurrentChainId`.
+This preserves an in-progress chain submission when the world's selected chain
+changes. A single atomic setter validates and assigns the chain-and-slot pair;
+changing either value clears pending extra modifiers. Only
+`RequestSkillWithAddition` may consume the pending set. The configured cleanup
+path clears both IDs and the pending set.
 
 Add two StateScript node types and refresh the generated StateScript registry:
 
@@ -78,12 +85,13 @@ Add two StateScript node types and refresh the generated StateScript registry:
   `EventName`. It creates matching Addition actions on activation, ticks only
   actions that report `Running`, stops running actions on abort/stop, and never
   removes Buffs implicitly.
-- `SubmitCurrentChainSkillActionNode` is an action node with `In` and `Out`.
-  It submits the selected player-chain skill with the consumed local modifiers.
+- `RequestSkillWithAdditionActionNode` is an action node with `In` and `Out`.
+  It submits the selected player-chain skill with the consumed request-local
+  extra modifiers.
 
-The source surface is limited to the selected slot getters plus a setter for
-the slot and an append-only pending-modifier setter. No graph-visible clear or
-consume operation is exposed.
+The source surface is limited to current chain/slot getters, an atomic setter
+for the selected chain-and-slot pair, and an append-only pending-extra-modifier
+setter. No graph-visible clear or consume operation is exposed.
 
 No `StateScriptDataTable.json` node, edge, or expression is changed in this
 migration. A player prefab must receive `PlayerCurrentSkillAuthoring` before a
@@ -111,13 +119,13 @@ behavior switch is introduced.
 
 Initial actions are:
 
-- `ModifyCurrentSkill`: resolves modifier expressions and appends local pending
+- `ModifyCurrentSkill`: resolves modifier expressions and appends pending extra
   modifiers; it completes immediately.
 - `SetSourceValue`: evaluates arguments and invokes a normal source setter.
 - `ExecuteEffects`: executes ordinary `EffectData` through the normal effect
   execution path.
-- `ReplayCurrentSkill`: schedules raw replay requests with an empty submitted
-  Addition modifier set. A replay never redispatches Addition events.
+- `ReplayCurrentSkill`: schedules raw replay requests with an empty extra-
+  modifier set. A replay never redispatches Addition events.
 
 `SkillAdditionEventDispatcher` collects callbacks in this order: the Addition
 on the selected player-chain slot, then Addition IDs granted by active
@@ -186,8 +194,10 @@ cost, and effect data remain intact.
 ## Implementation Order
 
 1. Create raw-request and release-snapshot classes, move release-time
-   resolution, and change generic `RequestSkill` to submit empty local Addition
-   modifiers.
+   resolution, and change generic `RequestSkill` to submit an empty
+   `ExtraModifiers` set. Add a shared request creator that clones an explicitly
+   supplied extra-modifier set so future monster/passive producers can populate
+   only their own request safely.
 2. Add `UnitModifierResolver`; update all consuming systems, effects, Sources,
    UI, and editor runtime drawers; then remove the aggregation writes and
    obsolete component fields.
@@ -205,10 +215,12 @@ cost, and effect data remain intact.
 
 Editor tests must cover:
 
-- generic requests contain empty submitted Addition modifiers;
-- player current-slot selection clears pending modifiers and submit consumes
-  them exactly once;
-- an Addition modifier is isolated to its one request;
+- generic requests contain empty extra modifiers;
+- player chain-and-slot selection clears pending modifiers, remains stable when
+  the world chain changes, and `RequestSkillWithAddition` consumes them exactly
+  once;
+- an Addition modifier is isolated to its one request, while another explicit
+  producer can safely supply different request-local extra modifiers;
 - Buff property modifiers are visible immediately to later Effects in one
   effect chain;
 - Buff skill modifiers affect a newly created release snapshot but cannot alter
