@@ -6,13 +6,15 @@ using CrystalMagic.Core;
 
 public class StashUI_InventoryItemData : UIData
 {
-    public UINode Icon;
+    public UINode Mask;
+    public UINode Mask_Icon;
     public UINode Count;
     public UINode Name;
 
     public override void Bind(Transform root)
     {
-        Icon = UINode.From(Find(root, "Icon"));
+        Mask = UINode.From(Find(root, "Mask"));
+        Mask_Icon = UINode.From(Find(root, "Mask/Icon"));
         Count = UINode.From(Find(root, "Count"));
         Name = UINode.From(Find(root, "Name"));
     }

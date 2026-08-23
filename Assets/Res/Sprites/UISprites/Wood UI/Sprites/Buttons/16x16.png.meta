@@ -163,7 +163,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: 16x16_3
+      name: g
       rect:
         serializedVersion: 2
         x: 48
@@ -251,7 +251,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: 16x16_7
+      name: green1
       rect:
         serializedVersion: 2
         x: 112
@@ -361,7 +361,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: 16x16_12
+      name: green3
       rect:
         serializedVersion: 2
         x: 192
@@ -370,7 +370,7 @@ TextureImporter:
         height: 16
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      border: {x: 2, y: 4, z: 2, w: 2}
       customData: 
       outline: []
       physicsShape: []
@@ -383,7 +383,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: 16x16_13
+      name: or3
       rect:
         serializedVersion: 2
         x: 208
@@ -392,7 +392,7 @@ TextureImporter:
         height: 16
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      border: {x: 2, y: 4, z: 2, w: 2}
       customData: 
       outline: []
       physicsShape: []
@@ -625,7 +625,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: 16x16_24
+      name: green2
       rect:
         serializedVersion: 2
         x: 112
@@ -700,7 +700,7 @@ TextureImporter:
         height: 16
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 2, y: 4, z: 2, w: 2}
+      border: {x: 2, y: 2, z: 2, w: 4}
       customData: 
       outline: []
       physicsShape: []
@@ -722,7 +722,7 @@ TextureImporter:
         height: 16
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 2, y: 4, z: 2, w: 2}
+      border: {x: 2, y: 2, z: 2, w: 4}
       customData: 
       outline: []
       physicsShape: []
@@ -735,7 +735,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: 16x16_29
+      name: green4
       rect:
         serializedVersion: 2
         x: 192
@@ -744,7 +744,7 @@ TextureImporter:
         height: 16
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      border: {x: 2, y: 2, z: 2, w: 4}
       customData: 
       outline: []
       physicsShape: []
@@ -757,7 +757,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: 16x16_30
+      name: or4
       rect:
         serializedVersion: 2
         x: 208
@@ -766,7 +766,7 @@ TextureImporter:
         height: 16
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      border: {x: 2, y: 2, z: 2, w: 4}
       customData: 
       outline: []
       physicsShape: []
@@ -864,8 +864,6 @@ TextureImporter:
       16x16_1: -532366893
       16x16_10: 1058813376
       16x16_11: 560978095
-      16x16_12: 1133455282
-      16x16_13: -1841716678
       16x16_14: -1304314877
       16x16_15: -214327934
       16x16_16: -2128681374
@@ -877,23 +875,25 @@ TextureImporter:
       16x16_21: 2046207011
       16x16_22: -1527998339
       16x16_23: -1539533186
-      16x16_24: -620830335
       16x16_25: 1703914684
       16x16_26: -229154816
       16x16_27: 349152089
       16x16_28: -820285666
-      16x16_29: -77710187
-      16x16_3: -1581145100
-      16x16_30: -260300058
       16x16_31: -643745732
       16x16_32: 1032408574
       16x16_33: -1526417102
       16x16_4: -1247241079
       16x16_5: -1399279469
       16x16_6: 699991063
-      16x16_7: 643331245
       16x16_8: 278786780
       16x16_9: -862789207
+      g: -1581145100
+      green1: 643331245
+      green2: -620830335
+      green3: 1133455282
+      green4: -77710187
+      or3: -1841716678
+      or4: -260300058
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

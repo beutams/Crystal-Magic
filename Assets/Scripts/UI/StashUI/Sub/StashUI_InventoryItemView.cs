@@ -21,13 +21,13 @@ public class StashUI_InventoryItemView : UISubView<StashUI_InventoryItemData>, I
 
         if (data == null)
         {
-            UI.Icon.Image.sprite = null;
+            UI.Mask_Icon.Image.sprite = null;
             UI.Count.TextMeshProUGUI.text = string.Empty;
             UI.Name.TextMeshProUGUI.text = string.Empty;
             return;
         }
 
-        UI.Icon.Image.sprite = LoadIcon(data.IconPath);
+        UI.Mask_Icon.Image.sprite = LoadIcon(data.IconPath);
         UI.Count.TextMeshProUGUI.text = data.Count.ToString();
         UI.Name.TextMeshProUGUI.text = data.Name;
     }

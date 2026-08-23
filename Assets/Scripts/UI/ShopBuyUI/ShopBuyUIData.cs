@@ -8,7 +8,8 @@ public class ShopBuyUIData : UIData
 {
     public UINode Background;
     public UINode IconBack;
-    public UINode IconBack_Icon;
+    public UINode IconBack_Mask;
+    public UINode IconBack_Mask_Icon;
     public UINode Name;
     public UINode Have;
     public UINode HaveCount;
@@ -19,13 +20,16 @@ public class ShopBuyUIData : UIData
     public UINode Input_TextArea;
     public UINode Input_TextArea_Text;
     public UINode Sure;
+    public UINode Sure_Text;
     public UINode Cancel;
+    public UINode Cancel_Text;
 
     public override void Bind(Transform root)
     {
         Background = UINode.From(Find(root, "Background"));
         IconBack = UINode.From(Find(root, "IconBack"));
-        IconBack_Icon = UINode.From(Find(root, "IconBack/Icon"));
+        IconBack_Mask = UINode.From(Find(root, "IconBack/Mask"));
+        IconBack_Mask_Icon = UINode.From(Find(root, "IconBack/Mask/Icon"));
         Name = UINode.From(Find(root, "Name"));
         Have = UINode.From(Find(root, "Have"));
         HaveCount = UINode.From(Find(root, "HaveCount"));
@@ -36,6 +40,8 @@ public class ShopBuyUIData : UIData
         Input_TextArea = UINode.From(Find(root, "Input/Text Area"));
         Input_TextArea_Text = UINode.From(Find(root, "Input/Text Area/Text"));
         Sure = UINode.From(Find(root, "Sure"));
+        Sure_Text = UINode.From(Find(root, "Sure/Text"));
         Cancel = UINode.From(Find(root, "Cancel"));
+        Cancel_Text = UINode.From(Find(root, "Cancel/Text"));
     }
 }

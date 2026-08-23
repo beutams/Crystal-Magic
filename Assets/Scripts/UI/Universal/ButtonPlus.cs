@@ -4,7 +4,7 @@ using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
 [DisallowMultipleComponent]
-public class ButtonPlus : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
+public class ButtonPlus : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField] private float _clickStateDuration = 0.2f;
     [SerializeField] private bool _canClickInDuration = true;
@@ -18,6 +18,7 @@ public class ButtonPlus : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
 
     private ButtonState _state = ButtonState.Default;
     private bool _pointerInside;
+    private bool _clickAccepted;
     private Coroutine _clickRoutine;
     private Vector3 _defaultScale;
 
@@ -39,13 +40,19 @@ public class ButtonPlus : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
             _clickRoutine = null;
         }
 
+        _clickAccepted = false;
         transform.localScale = _defaultScale;
     }
 
-    public void OnPointerClick(PointerEventData eventData)
+    public void OnPointerDown(PointerEventData eventData)
     {
         if (!_canClickInDuration && _clickRoutine != null)
+        {
+            _clickAccepted = false;
             return;
+        }
+
+        _clickAccepted = true;
 
         if (_clickRoutine != null)
         {
@@ -53,15 +60,23 @@ public class ButtonPlus : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
             _clickRoutine = null;
         }
 
-        onClick?.Invoke();
-
-        if (!this || !isActiveAndEnabled)
-            return;
-
         if (clickTransforms == null)
             return;
 
-        _clickRoutine = StartCoroutine(ClickStateRoutine());
+        SetState(ButtonState.Click);
+    }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (!_clickAccepted)
+            return;
+
+        _clickAccepted = false;
+
+        if (clickTransforms != null)
+            _clickRoutine = StartCoroutine(ClickStateRoutine());
+
+        onClick?.Invoke();
     }
 
     public void OnPointerEnter(PointerEventData eventData)
@@ -84,7 +99,6 @@ public class ButtonPlus : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
 
     private IEnumerator ClickStateRoutine()
     {
-        SetState(ButtonState.Click);
         yield return new WaitForSeconds(_clickStateDuration);
         _clickRoutine = null;
         SetState(_pointerInside && enterTransforms != null ? ButtonState.Enter : ButtonState.Default);

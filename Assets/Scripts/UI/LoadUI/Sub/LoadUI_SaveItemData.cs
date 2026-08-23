@@ -12,6 +12,7 @@ public class LoadUI_SaveItemData : UIData
     public UINode Open_Index;
     public UINode Open_Delete;
     public UINode Close;
+    public UINode Close_Empty;
 
     public override void Bind(Transform root)
     {
@@ -21,5 +22,6 @@ public class LoadUI_SaveItemData : UIData
         Open_Index = UINode.From(Find(root, "Open/Index"));
         Open_Delete = UINode.From(Find(root, "Open/Delete"));
         Close = UINode.From(Find(root, "Close"));
+        Close_Empty = UINode.From(Find(root, "Close/Empty"));
     }
 }

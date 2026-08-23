@@ -55,9 +55,6 @@ public class SaveUI : UIBase<SaveUIData, SaveUIModel>
         }
 
         SaveUI_SaveItemView templateView = UI.ScrollView_Viewport_Content_SaveItem.GameObject.GetComponent<SaveUI_SaveItemView>();
-        if (templateView == null)
-            return;
-
         UISubViewBase.EnsurePoolCapacity(templateView, slotCount, slotCount);
 
         while (_itemViews.Count < slotCount)
@@ -65,9 +62,6 @@ public class SaveUI : UIBase<SaveUIData, SaveUIModel>
             SaveUI_SaveItemView itemView = UISubViewBase.AcquireFromPool(
                 templateView,
                 UI.ScrollView_Viewport_Content.GameObject.transform);
-            if (itemView == null)
-                break;
-
             itemView.Clicked -= HandleItemClicked;
             itemView.DeleteClicked -= HandleItemDeleteClicked;
             itemView.Clicked += HandleItemClicked;

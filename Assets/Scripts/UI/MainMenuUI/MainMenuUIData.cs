@@ -7,6 +7,8 @@ using CrystalMagic.Core;
 public class MainMenuUIData : UIData
 {
     public UINode MenuBack;
+    public UINode MenuBack_Menu;
+    public UINode MenuBack_Menu_Text;
     public UINode MenuBack_Start;
     public UINode MenuBack_Start_Default;
     public UINode MenuBack_Start_Default_TextTMP;
@@ -31,6 +33,8 @@ public class MainMenuUIData : UIData
     public override void Bind(Transform root)
     {
         MenuBack = UINode.From(Find(root, "MenuBack"));
+        MenuBack_Menu = UINode.From(Find(root, "MenuBack/Menu"));
+        MenuBack_Menu_Text = UINode.From(Find(root, "MenuBack/Menu/Text"));
         MenuBack_Start = UINode.From(Find(root, "MenuBack/Start"));
         MenuBack_Start_Default = UINode.From(Find(root, "MenuBack/Start/Default"));
         MenuBack_Start_Default_TextTMP = UINode.From(Find(root, "MenuBack/Start/Default/Text (TMP)"));

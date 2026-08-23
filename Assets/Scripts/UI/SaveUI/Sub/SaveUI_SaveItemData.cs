@@ -10,7 +10,6 @@ public class SaveUI_SaveItemData : UIData
     public UINode Open_CreateTime;
     public UINode Open_Money;
     public UINode Open_Index;
-    public UINode Open_DeleteBtn;
     public UINode Open_Delete;
     public UINode Close;
 
@@ -20,7 +19,6 @@ public class SaveUI_SaveItemData : UIData
         Open_CreateTime = UINode.From(Find(root, "Open/CreateTime"));
         Open_Money = UINode.From(Find(root, "Open/Money"));
         Open_Index = UINode.From(Find(root, "Open/Index"));
-        Open_DeleteBtn = UINode.From(Find(root, "Open/DeleteBtn"));
         Open_Delete = UINode.From(Find(root, "Open/Delete"));
         Close = UINode.From(Find(root, "Close"));
     }

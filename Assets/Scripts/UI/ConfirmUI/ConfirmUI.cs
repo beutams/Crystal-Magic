@@ -9,7 +9,7 @@ public class ConfirmUI : UIBase<ConfirmUIData>
 
     public void SetTitle(string title)
     {
-        UI.Title.TextMeshProUGUI.text = title ?? string.Empty;
+        UI.TitleBG_Title.TextMeshProUGUI.text = title ?? string.Empty;
     }
 
     public void SetContent(string content)

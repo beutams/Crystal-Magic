@@ -7,7 +7,7 @@
   "BattlePropSharedCooldownSeconds": 3.0,
   "BattlePropSlotCount": 4,
   "BattlePropShortcutSlotCount": 4,
-  "InteractionRange": 2.0,
+  "InteractionRange": 4.0,
   "BehaviorTreeMaxImmediateIterationsPerTick": 256,
   "SinglePoolMaxSize": 1,
   "SmallPoolMaxSize": 100,
