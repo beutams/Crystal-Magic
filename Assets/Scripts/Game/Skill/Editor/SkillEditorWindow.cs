@@ -112,7 +112,6 @@ namespace CrystalMagic.Editor.Skill
 
         private int _selectedIndex = -1;
         private int _addEffectTypeIndex;
-        private int _addCastTaskTypeIndex;
         private Vector2 _listScrollPos;
         private Vector2 _detailScrollPos;
         private readonly Dictionary<SkillData, string> _insertTexts = new();
@@ -137,24 +136,6 @@ namespace CrystalMagic.Editor.Skill
         private static readonly Color DividerColor = new(0.15f, 0.15f, 0.15f, 1f);
         private static readonly Color ConditionAddHeaderColor = new(0.15f, 0.15f, 0.15f, 1f);
         private static readonly Color ConditionAddBodyColor = new(0.18f, 0.18f, 0.18f, 1f);
-        private static readonly Type[] CastTaskTypes =
-        {
-            typeof(DoubleExecuteSkillCastTaskData),
-            typeof(ApplyRuntimeBuffSkillCastTaskData),
-            typeof(JumpArcSkillCastTaskData),
-            typeof(RepeatCastWithRetargetSkillCastTaskData),
-        };
-
-        private static readonly string[] CastTaskNames =
-        {
-            "Double Execute",
-            "Apply Runtime Buff",
-            "Jump Arc",
-            "Repeat Cast With Retarget",
-        };
-        private static readonly SkillCastHookPoint[] SkillCastHookPointValues = (SkillCastHookPoint[])Enum.GetValues(typeof(SkillCastHookPoint));
-        private static readonly string[] SkillCastHookPointDisplayNames = EditorLabelUtility.GetEnumDisplayNames<SkillCastHookPoint>();
-
         private static JsonSerializerSettings JsonSettings => new()
         {
             TypeNameHandling = TypeNameHandling.Auto,
@@ -264,8 +245,6 @@ namespace CrystalMagic.Editor.Skill
                 IconPath = string.Empty,
                 Conditions = new List<ConditionConfig>(),
                 EffectChain = Array.Empty<EffectData>(),
-                CastTasks = new List<SkillCastTaskData>(),
-                FollowupEffects = new List<SkillFollowupEffectData>(),
             });
 
             NormalizeRowIds();
@@ -304,8 +283,6 @@ namespace CrystalMagic.Editor.Skill
             copy.NameKey = string.IsNullOrWhiteSpace(source.NameKey) ? $"skill.new_{copy.Id}.name" : $"{source.NameKey}_copy";
             copy.Conditions ??= new List<ConditionConfig>();
             copy.EffectChain ??= Array.Empty<EffectData>();
-            copy.CastTasks ??= new List<SkillCastTaskData>();
-            copy.FollowupEffects ??= new List<SkillFollowupEffectData>();
             _rows.Add(copy);
             NormalizeRowIds();
             _selectedIndex = _rows.Count - 1;
@@ -538,36 +515,6 @@ namespace CrystalMagic.Editor.Skill
             skill.RuntimeType = nextKey;
         }
 
-        private void DrawFollowupRuntimeTypeField(RuntimeTypeFollowupFilterData filter)
-        {
-            string currentKey = filter.EffectiveRuntimeType;
-            IReadOnlyList<FactoryTypeInfo> runtimeTypeInfos = SkillRegistry.SkillRuntimeTypeInfos;
-            if (runtimeTypeInfos == null || runtimeTypeInfos.Count == 0)
-            {
-                filter.RuntimeType = EditorGUILayout.TextField("Runtime Type", currentKey);
-                return;
-            }
-
-            string[] displayNames = new string[runtimeTypeInfos.Count];
-            int selectedIndex = -1;
-            for (int i = 0; i < runtimeTypeInfos.Count; i++)
-            {
-                FactoryTypeInfo info = runtimeTypeInfos[i];
-                displayNames[i] = $"{info.DisplayName} ({info.Key})";
-                if (string.Equals(info.Key, currentKey, StringComparison.Ordinal))
-                    selectedIndex = i;
-            }
-
-            if (selectedIndex < 0)
-            {
-                filter.RuntimeType = EditorGUILayout.TextField("Runtime Type", currentKey);
-                return;
-            }
-
-            int nextIndex = EditorGUILayout.Popup("Runtime Type", selectedIndex, displayNames);
-            filter.RuntimeType = runtimeTypeInfos[Mathf.Clamp(nextIndex, 0, runtimeTypeInfos.Count - 1)].Key;
-        }
-
         private List<int> GetVisibleRowIndices()
         {
             List<int> indices = new();
@@ -663,16 +610,8 @@ namespace CrystalMagic.Editor.Skill
             skill.Conditions ??= new List<ConditionConfig>();
             DrawConditionList(skill.Conditions, "__skill_conditions__");
 
-            DrawSectionHeader("Cast Tasks");
-            skill.CastTasks ??= new List<SkillCastTaskData>();
-            DrawCastTaskList(skill.CastTasks);
-
             DrawSectionHeader("Effect Chain");
             DrawEffectChain(skill);
-
-            DrawSectionHeader("Followup Effects");
-            skill.FollowupEffects ??= new List<SkillFollowupEffectData>();
-            DrawFollowupEffectList(skill.FollowupEffects);
 
             EditorGUIUtility.labelWidth = previousLabelWidth;
             EditorGUILayout.EndScrollView();
@@ -683,90 +622,6 @@ namespace CrystalMagic.Editor.Skill
         {
             skill.EffectChain ??= Array.Empty<EffectData>();
             skill.EffectChain = DrawEffectChainInline("__root__", skill.EffectChain, ref _addEffectTypeIndex);
-        }
-
-        private void DrawCastTaskList(List<SkillCastTaskData> castTasks)
-        {
-            castTasks ??= new List<SkillCastTaskData>();
-
-            EditorGUILayout.BeginHorizontal();
-            _addCastTaskTypeIndex = EditorGUILayout.Popup(_addCastTaskTypeIndex, CastTaskNames, GUILayout.Width(190f));
-            if (GUILayout.Button("+ Add", GUILayout.Width(66f)))
-            {
-                castTasks.Add((SkillCastTaskData)Activator.CreateInstance(CastTaskTypes[_addCastTaskTypeIndex]));
-                _isDirty = true;
-            }
-
-            EditorGUILayout.EndHorizontal();
-            GUILayout.Space(2f);
-
-            int removeAt = -1;
-            for (int i = 0; i < castTasks.Count; i++)
-            {
-                SkillCastTaskData task = castTasks[i];
-                if (task == null)
-                    continue;
-
-                EditorGUI.BeginChangeCheck();
-                EditorGUILayout.BeginVertical("box");
-                EditorGUILayout.BeginHorizontal();
-                int taskTypeIndex = Mathf.Max(0, Array.IndexOf(CastTaskTypes, task.GetType()));
-                EditorGUILayout.LabelField($"{CastTaskNames[taskTypeIndex]} #{i + 1}", EditorStyles.boldLabel);
-                if (GUILayout.Button("Delete Task", GUILayout.Width(92f)))
-                    removeAt = i;
-                EditorGUILayout.EndHorizontal();
-
-                DrawHookPointField(task);
-                DrawCastTaskFields(task);
-                EditorGUILayout.EndVertical();
-
-                if (EditorGUI.EndChangeCheck())
-                {
-                    castTasks[i] = task;
-                    _isDirty = true;
-                }
-            }
-
-            if (removeAt >= 0)
-            {
-                castTasks.RemoveAt(removeAt);
-                _isDirty = true;
-            }
-        }
-
-        private void DrawHookPointField(SkillCastTaskData task)
-        {
-            int hookIndex = Mathf.Max(0, Array.IndexOf(SkillCastHookPointValues, task.HookPoint));
-            hookIndex = EditorGUILayout.Popup("Hook Point", hookIndex, SkillCastHookPointDisplayNames);
-            task.HookPoint = SkillCastHookPointValues[Mathf.Clamp(hookIndex, 0, SkillCastHookPointValues.Length - 1)];
-        }
-
-        private void DrawCastTaskFields(SkillCastTaskData task)
-        {
-            switch (task)
-            {
-                case DoubleExecuteSkillCastTaskData doubleExecuteTaskData:
-                    doubleExecuteTaskData.DelaySeconds = Mathf.Max(0f, EditorGUILayout.FloatField("Delay Seconds", doubleExecuteTaskData.DelaySeconds));
-                    doubleExecuteTaskData.RuntimeModifiers ??= new List<SkillModifierEntry>();
-                    DrawSkillModifierList("Runtime Modifiers", doubleExecuteTaskData.RuntimeModifiers);
-                    break;
-
-                case ApplyRuntimeBuffSkillCastTaskData runtimeBuffTaskData:
-                    runtimeBuffTaskData.BuffId = EditorGUILayout.IntField("Buff Id", runtimeBuffTaskData.BuffId);
-                    runtimeBuffTaskData.StackCount = Mathf.Max(1, EditorGUILayout.IntField("Stack Count", runtimeBuffTaskData.StackCount));
-                    break;
-
-                case JumpArcSkillCastTaskData jumpArcTaskData:
-                    jumpArcTaskData.DurationSeconds = Mathf.Max(0f, EditorGUILayout.FloatField("Duration Seconds", jumpArcTaskData.DurationSeconds));
-                    jumpArcTaskData.ArcHeight = Mathf.Max(0f, EditorGUILayout.FloatField("Arc Height", jumpArcTaskData.ArcHeight));
-                    break;
-
-                case RepeatCastWithRetargetSkillCastTaskData repeatCastTaskData:
-                    repeatCastTaskData.AdditionalCastCount = Mathf.Max(0, EditorGUILayout.IntField("Additional Cast Count", repeatCastTaskData.AdditionalCastCount));
-                    repeatCastTaskData.IntervalSeconds = Mathf.Max(0f, EditorGUILayout.FloatField("Interval Seconds", repeatCastTaskData.IntervalSeconds));
-                    repeatCastTaskData.RetargetBeforeEachCast = EditorGUILayout.Toggle("Retarget Before Each Cast", repeatCastTaskData.RetargetBeforeEachCast);
-                    break;
-            }
         }
 
         private EffectData[] DrawEffectChainInline(string stateKey, EffectData[] chain, ref int typeIndex)
@@ -947,13 +802,6 @@ namespace CrystalMagic.Editor.Skill
                 return modifiers;
             }
 
-            if (fieldType == typeof(List<SkillFollowupModifierSetData>))
-            {
-                List<SkillFollowupModifierSetData> modifierSets = value as List<SkillFollowupModifierSetData> ?? new List<SkillFollowupModifierSetData>();
-                DrawSequenceModifierSets(modifierSets);
-                return modifierSets;
-            }
-
             if (fieldType == typeof(EffectData[]) || (fieldType.IsArray && typeof(EffectData).IsAssignableFrom(fieldType.GetElementType())))
             {
                 string stateKey = $"{parentKey}/{label}";
@@ -1043,186 +891,6 @@ namespace CrystalMagic.Editor.Skill
             }
 
             EditorGUI.indentLevel--;
-        }
-
-        private void DrawFollowupEffectList(List<SkillFollowupEffectData> followupEffects)
-        {
-            int removeAt = -1;
-            for (int i = 0; i < followupEffects.Count; i++)
-            {
-                SkillFollowupEffectData followup = followupEffects[i] ?? new SkillFollowupEffectData();
-                followup.EnsureDefaults();
-                EditorGUI.BeginChangeCheck();
-
-                EditorGUILayout.BeginVertical("box");
-                DrawFollowupFilter(followup);
-                DrawFollowupConsumeRule(followup);
-                DrawFollowupModifierRule(followup);
-
-                GUI.color = new Color(1f, 0.5f, 0.5f);
-                if (GUILayout.Button("Delete Followup Effect", GUILayout.Width(148f)))
-                    removeAt = i;
-                GUI.color = Color.white;
-
-                EditorGUILayout.EndVertical();
-
-                if (EditorGUI.EndChangeCheck())
-                {
-                    followupEffects[i] = followup;
-                    _isDirty = true;
-                }
-            }
-
-            if (GUILayout.Button("+ Add Followup Effect", GUILayout.Width(140f)))
-            {
-                followupEffects.Add(new SkillFollowupEffectData());
-                _isDirty = true;
-            }
-
-            if (removeAt >= 0)
-            {
-                followupEffects.RemoveAt(removeAt);
-                _isDirty = true;
-            }
-        }
-
-        private void DrawFollowupFilter(SkillFollowupEffectData followup)
-        {
-            followup.EnsureDefaults();
-
-            IReadOnlyList<FactoryTypeInfo> filterTypeInfos = SkillFollowupFilterRegistry.FilterTypeInfos;
-            if (filterTypeInfos == null || filterTypeInfos.Count == 0)
-            {
-                EditorGUILayout.HelpBox("No followup filters registered.", MessageType.Warning);
-                return;
-            }
-
-            string currentKey = SkillFollowupFilterRegistry.GetFilterKey(followup.Filter);
-            int selectedIndex = GetFactoryTypeIndex(filterTypeInfos, currentKey);
-            string[] displayNames = GetFactoryDisplayNames(filterTypeInfos);
-            int nextIndex = EditorGUILayout.Popup("Filter", selectedIndex, displayNames);
-            if (nextIndex != selectedIndex)
-            {
-                followup.Filter = SkillFollowupFilterRegistry.CreateFilterData(filterTypeInfos[Mathf.Clamp(nextIndex, 0, filterTypeInfos.Count - 1)].Key);
-                followup.Filter?.EnsureDefaults();
-                _isDirty = true;
-            }
-
-            if (followup.Filter is RuntimeTypeFollowupFilterData runtimeTypeFilter)
-                DrawFollowupRuntimeTypeField(runtimeTypeFilter);
-            else
-                DrawSerializableObjectFields(followup.Filter, "FollowupFilter");
-
-            followup.Filter?.EnsureDefaults();
-        }
-
-        private void DrawFollowupConsumeRule(SkillFollowupEffectData followup)
-        {
-            followup.EnsureDefaults();
-
-            IReadOnlyList<FactoryTypeInfo> ruleTypeInfos = SkillFollowupConsumeRuleRegistry.RuleTypeInfos;
-            if (ruleTypeInfos == null || ruleTypeInfos.Count == 0)
-            {
-                EditorGUILayout.HelpBox("No consume rules registered.", MessageType.Warning);
-                return;
-            }
-
-            string currentKey = SkillFollowupConsumeRuleRegistry.GetRuleKey(followup.ConsumeRule);
-            int selectedIndex = GetFactoryTypeIndex(ruleTypeInfos, currentKey);
-            string[] displayNames = GetFactoryDisplayNames(ruleTypeInfos);
-            int nextIndex = EditorGUILayout.Popup("Consume Rule", selectedIndex, displayNames);
-            if (nextIndex != selectedIndex)
-            {
-                followup.ConsumeRule = SkillFollowupConsumeRuleRegistry.CreateRuleData(ruleTypeInfos[Mathf.Clamp(nextIndex, 0, ruleTypeInfos.Count - 1)].Key);
-                followup.ConsumeRule?.EnsureDefaults();
-                _isDirty = true;
-            }
-
-            DrawSerializableObjectFields(followup.ConsumeRule, "FollowupConsumeRule");
-            followup.ConsumeRule?.EnsureDefaults();
-        }
-
-        private void DrawFollowupModifierRule(SkillFollowupEffectData followup)
-        {
-            followup.EnsureDefaults();
-
-            IReadOnlyList<FactoryTypeInfo> ruleTypeInfos = SkillFollowupModifierRuleRegistry.RuleTypeInfos;
-            if (ruleTypeInfos == null || ruleTypeInfos.Count == 0)
-            {
-                EditorGUILayout.HelpBox("No modifier rules registered.", MessageType.Warning);
-                return;
-            }
-
-            string currentKey = SkillFollowupModifierRuleRegistry.GetRuleKey(followup.ModifierRule);
-            int selectedIndex = GetFactoryTypeIndex(ruleTypeInfos, currentKey);
-            string[] displayNames = GetFactoryDisplayNames(ruleTypeInfos);
-            int nextIndex = EditorGUILayout.Popup("Modifier Rule", selectedIndex, displayNames);
-            if (nextIndex != selectedIndex)
-            {
-                followup.ModifierRule = SkillFollowupModifierRuleRegistry.CreateRuleData(ruleTypeInfos[Mathf.Clamp(nextIndex, 0, ruleTypeInfos.Count - 1)].Key);
-                followup.ModifierRule?.EnsureDefaults();
-                _isDirty = true;
-            }
-
-            DrawSerializableObjectFields(followup.ModifierRule, "FollowupModifierRule");
-            followup.ModifierRule?.EnsureDefaults();
-        }
-
-        private static int GetFactoryTypeIndex(IReadOnlyList<FactoryTypeInfo> typeInfos, string key)
-        {
-            if (typeInfos == null || typeInfos.Count == 0)
-                return 0;
-
-            for (int i = 0; i < typeInfos.Count; i++)
-            {
-                if (string.Equals(typeInfos[i].Key, key, StringComparison.Ordinal))
-                    return i;
-            }
-
-            return 0;
-        }
-
-        private static string[] GetFactoryDisplayNames(IReadOnlyList<FactoryTypeInfo> typeInfos)
-        {
-            string[] displayNames = new string[typeInfos.Count];
-            for (int i = 0; i < typeInfos.Count; i++)
-                displayNames[i] = $"{typeInfos[i].DisplayName} ({typeInfos[i].Key})";
-
-            return displayNames;
-        }
-
-        private void DrawSequenceModifierSets(List<SkillFollowupModifierSetData> modifierSets)
-        {
-            int removeAt = -1;
-            for (int i = 0; i < modifierSets.Count; i++)
-            {
-                modifierSets[i] ??= new SkillFollowupModifierSetData();
-                modifierSets[i].Modifiers ??= new List<SkillModifierEntry>();
-
-                EditorGUILayout.BeginVertical("box");
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField($"Set {i}", EditorStyles.boldLabel);
-                GUI.color = new Color(1f, 0.5f, 0.5f);
-                if (GUILayout.Button("Delete Set", GUILayout.Width(88f)))
-                    removeAt = i;
-                GUI.color = Color.white;
-                EditorGUILayout.EndHorizontal();
-
-                DrawSkillModifierList("Modifiers", modifierSets[i].Modifiers);
-                EditorGUILayout.EndVertical();
-            }
-
-            if (GUILayout.Button("+ Add Modifier Set", GUILayout.Width(140f)))
-            {
-                modifierSets.Add(new SkillFollowupModifierSetData());
-                _isDirty = true;
-            }
-
-            if (removeAt >= 0)
-            {
-                modifierSets.RemoveAt(removeAt);
-                _isDirty = true;
-            }
         }
 
         private void DrawConditionList(List<ConditionConfig> conditions, string keyPrefix)

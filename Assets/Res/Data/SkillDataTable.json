@@ -1,4 +1,4 @@
-﻿{
+{
     "Rows":  [
                  {
                      "IsMonsterSkill":  false,
@@ -38,9 +38,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  0,
                      "NameKey":  "skill.charge.name",
                      "DescriptionKey":  ""
@@ -140,9 +137,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  1,
                      "NameKey":  "skill.fireball.name",
                      "DescriptionKey":  ""
@@ -232,9 +226,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  2,
                      "NameKey":  "skill.flame_impact.name",
                      "DescriptionKey":  ""
@@ -337,9 +328,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  3,
                      "NameKey":  "skill.detonate.name",
                      "DescriptionKey":  ""
@@ -456,9 +444,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  4,
                      "NameKey":  "skill.water_vortex.name",
                      "DescriptionKey":  ""
@@ -558,9 +543,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  5,
                      "NameKey":  "skill.ice_spike.name",
                      "DescriptionKey":  ""
@@ -628,9 +610,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  6,
                      "NameKey":  "skill.freeze.name",
                      "DescriptionKey":  ""
@@ -664,9 +643,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  7,
                      "NameKey":  "skill.lightning_strike.name",
                      "DescriptionKey":  ""
@@ -734,9 +710,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  8,
                      "NameKey":  "skill.thunder_field.name",
                      "DescriptionKey":  ""
@@ -770,9 +743,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  9,
                      "NameKey":  "skill.thunder_burst.name",
                      "DescriptionKey":  ""
@@ -806,9 +776,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  10,
                      "NameKey":  "skill.haste.name",
                      "DescriptionKey":  ""
@@ -842,9 +809,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  11,
                      "NameKey":  "skill.restore.name",
                      "DescriptionKey":  ""
@@ -930,9 +894,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  12,
                      "NameKey":  "skill.barrier.name",
                      "DescriptionKey":  ""

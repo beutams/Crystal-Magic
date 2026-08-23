@@ -1,65 +1,64 @@
-using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
 
-[BurstCompile]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(SkillReleaseSystem))]
-partial struct UnitMoveSystem : ISystem
+partial class UnitMoveSystem : SystemBase
 {
-    [BurstCompile]
-    public void OnUpdate(ref SystemState state)
+    protected override void OnUpdate()
     {
-        float dt = SystemAPI.Time.DeltaTime;
-        new UnitMoveJob
+        float deltaTime = SystemAPI.Time.DeltaTime;
+        foreach ((RefRW<UnitMoveComponent> moveRef,
+                  RefRW<UnitFacingComponent> facingRef,
+                  RefRW<PhysicsVelocity> physicsVelocityRef,
+                  RefRW<LocalTransform> transformRef,
+                  Entity entity) in
+                 SystemAPI.Query<RefRW<UnitMoveComponent>, RefRW<UnitFacingComponent>, RefRW<PhysicsVelocity>, RefRW<LocalTransform>>()
+                     .WithNone<UnitDeathComponent>()
+                     .WithEntityAccess())
         {
-            DeltaTime = dt,
-        }.ScheduleParallel();
-    }
-}
+            UnitMoveComponent move = moveRef.ValueRO;
+            UnitFacingComponent facing = facingRef.ValueRO;
+            float2 targetDirection = math.normalizesafe(move.Direction, float2.zero);
+            if (math.lengthsq(targetDirection) > 0.0001f)
+                facing.Direction = targetDirection;
 
-[BurstCompile]
-[WithNone(typeof(UnitDeathComponent))]
-public partial struct UnitMoveJob : IJobEntity
-{
-    public float DeltaTime;
+            float targetSpeed = UnitModifierResolver.GetMoveSpeed(EntityManager, entity) * move.StateMoveMultiplier;
+            float maxSpeed = math.abs(targetSpeed);
+            float maxAcceleration = math.max(0f, UnitModifierResolver.GetMaxAcceleration(EntityManager, entity));
+            float2 targetVelocity = targetDirection * targetSpeed;
+            UpdateMoveVelocity(ref move, targetVelocity, maxAcceleration, maxSpeed, deltaTime);
 
-    public void Execute(
-        ref UnitMoveComponent move,
-        ref UnitFacingComponent facing,
-        ref PhysicsVelocity physicsVelocity,
-        ref LocalTransform transform)
-    {
-        float2 targetDirection = math.normalizesafe(move.Direction, float2.zero);
-        if (math.lengthsq(targetDirection) > 0.0001f)
-            facing.Direction = targetDirection;
-        float targetSpeed = move.RealMoveSpeed * move.StateMoveMultiplier;
-        float maxSpeed = math.abs(targetSpeed);
-        float maxAcceleration = math.max(0f, move.RealMaxAcceleration);
-        float2 targetVel = targetDirection * targetSpeed;
-        UpdateMoveVelocity(ref move, targetVel, maxAcceleration, maxSpeed);
-        ApplyPlanarTransform(ref physicsVelocity, ref transform, move.Velocity);
+            PhysicsVelocity physicsVelocity = physicsVelocityRef.ValueRO;
+            LocalTransform transform = transformRef.ValueRO;
+            ApplyPlanarTransform(ref physicsVelocity, ref transform, move.Velocity);
+
+            moveRef.ValueRW = move;
+            facingRef.ValueRW = facing;
+            physicsVelocityRef.ValueRW = physicsVelocity;
+            transformRef.ValueRW = transform;
+        }
     }
 
-    private void UpdateMoveVelocity(ref UnitMoveComponent move, float2 targetVel, float maxAccel, float maxSpeed)
+    private static void UpdateMoveVelocity(ref UnitMoveComponent move, float2 targetVelocity, float maxAcceleration, float maxSpeed, float deltaTime)
     {
-        float2 diff = targetVel - move.Velocity;
-        float diffLen = math.length(diff);
+        float2 difference = targetVelocity - move.Velocity;
+        float differenceLength = math.length(difference);
 
-        if (diffLen > 0.0001f)
+        if (differenceLength > 0.0001f)
         {
-            float step = maxAccel * DeltaTime;
-            if (step >= diffLen)
-                move.Velocity = targetVel;
+            float step = maxAcceleration * deltaTime;
+            if (step >= differenceLength)
+                move.Velocity = targetVelocity;
             else
-                move.Velocity += (diff / diffLen) * step;
+                move.Velocity += difference / differenceLength * step;
         }
 
-        float velLen = math.length(move.Velocity);
-        if (velLen > maxSpeed && velLen > 0.0001f)
-            move.Velocity = (move.Velocity / velLen) * maxSpeed;
+        float velocityLength = math.length(move.Velocity);
+        if (velocityLength > maxSpeed && velocityLength > 0.0001f)
+            move.Velocity = move.Velocity / velocityLength * maxSpeed;
     }
 
     private static void ApplyPlanarTransform(ref PhysicsVelocity physicsVelocity, ref LocalTransform transform, float2 planarVelocity)

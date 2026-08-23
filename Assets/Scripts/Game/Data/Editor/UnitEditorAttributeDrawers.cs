@@ -267,7 +267,7 @@ namespace CrystalMagic.Editor.Data
         }
     }
 
-    [FactoryKey("NPCInteractableComponent", 70)]
+    [FactoryKey("NPCInteraction", 70)]
     public sealed class NPCInteractableAttributeDrawer : IUnitEditorAttributeDrawer
     {
         public bool CanDraw(UnitEditorDrawerContext context)

@@ -20,25 +20,18 @@ public class NPCInteractableAuthoring : MonoBehaviour
             DependsOn(NPCAuthoringUtility.GetNpcDataTableAsset());
 #endif
 
-            Transform interact = authoring.transform.Find("Interact");
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
-            Entity interactEntity = interact != null
-                ? GetEntity(interact, TransformUsageFlags.Dynamic)
-                : Entity.Null;
             NPCData npcData = NPCAuthoringUtility.ResolveNpcData(authoring);
-            AddComponent(entity, new NPCInteractableComponent
+            AddComponent(entity, new UnitInteractableComponent
             {
-                NpcId = npcData?.Id ?? -1,
-                InteractEntity = interactEntity,
-                InteractRangeSq = authoring.InteractRange * authoring.InteractRange,
+                Data = new UnitInteractionData
+                {
+                    Kind = InteractionKind.Npc,
+                    DataId = npcData?.Id ?? -1,
+                },
+                RangeSq = authoring.InteractRange * authoring.InteractRange,
+                IsEnabled = 1,
             });
         }
     }
-}
-
-public struct NPCInteractableComponent : IComponentData
-{
-    public int NpcId;
-    public Entity InteractEntity;
-    public float InteractRangeSq;
 }

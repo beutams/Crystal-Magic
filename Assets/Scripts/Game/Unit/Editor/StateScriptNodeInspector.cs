@@ -38,6 +38,15 @@ namespace CrystalMagic.Editor.Unit
                 return;
             }
 
+            if (node is RequestInteractionActionNodeData requestInteraction)
+            {
+                EditorGUI.BeginChangeCheck();
+                DrawRequestInteraction(requestInteraction, sourceSchema, onChanged);
+                if (EditorGUI.EndChangeCheck())
+                    onChanged?.Invoke();
+                return;
+            }
+
             if (node is PublishGameEventStateScriptNodeData publishGameEvent)
             {
                 EditorGUI.BeginChangeCheck();
@@ -175,6 +184,58 @@ namespace CrystalMagic.Editor.Unit
             requestSkill.SkillId ??= RequestSkillActionNodeData.CreateDefaultSkillIdExpression();
             EditorGUILayout.LabelField("Skill ID (Number)", EditorStyles.miniBoldLabel);
             StateScriptValueExpressionDrawer.Draw(requestSkill.SkillId, UnitValueCategory.Number, sourceSchema, onChanged);
+        }
+
+        private static void DrawRequestInteraction(
+            RequestInteractionActionNodeData requestInteraction,
+            UnitSourceSchema sourceSchema,
+            Action onChanged)
+        {
+            requestInteraction.Interaction ??= RequestInteractionActionNodeData.CreateDefaultInteraction();
+            InteractionRequestInput interaction = requestInteraction.Interaction;
+            interaction.EnsureValid();
+            interaction.Source = (InteractionRequestSource)EditorGUILayout.EnumPopup("Source", interaction.Source);
+
+            if (interaction.Source == InteractionRequestSource.Getter)
+            {
+                List<InteractionRequestGetSchemaEntry> entries = (sourceSchema?.InteractionGets ??
+                                                                   Enumerable.Empty<InteractionRequestGetSchemaEntry>())
+                    .OrderBy(entry => entry.Key, StringComparer.Ordinal)
+                    .ToList();
+                if (entries.Count == 0)
+                {
+                    EditorGUILayout.HelpBox("No interaction request getters are registered.", MessageType.Warning);
+                    return;
+                }
+
+                StateScriptAccessorDropdown.Draw(
+                    "Getter",
+                    interaction.GetterKey,
+                    entries.Select(entry => entry.Key),
+                    "(Select interaction getter)",
+                    selectedKey =>
+                    {
+                        if (string.Equals(interaction.GetterKey, selectedKey, StringComparison.Ordinal))
+                            return;
+
+                        interaction.GetterKey = selectedKey;
+                        GUI.changed = true;
+                        onChanged?.Invoke();
+                    });
+                if (entries.All(entry => !string.Equals(entry.Key, interaction.GetterKey, StringComparison.Ordinal)))
+                    EditorGUILayout.HelpBox($"'{interaction.GetterKey}' is not available on this unit.", MessageType.Warning);
+
+                return;
+            }
+
+            EditorGUILayout.LabelField("Target (Entity)", EditorStyles.miniBoldLabel);
+            StateScriptValueExpressionDrawer.Draw(interaction.Target, UnitValueCategory.Entity, sourceSchema, onChanged);
+            EditorGUILayout.Space(4f);
+            EditorGUILayout.LabelField("Fixed Interaction Data", EditorStyles.miniBoldLabel);
+            interaction.FixedData.Kind = (InteractionKind)EditorGUILayout.EnumPopup("Kind", interaction.FixedData.Kind);
+            interaction.FixedData.DataId = EditorGUILayout.IntField("Data ID", interaction.FixedData.DataId);
+            interaction.FixedData.Amount = EditorGUILayout.IntField("Amount", interaction.FixedData.Amount);
+            interaction.FixedData.Variant = EditorGUILayout.IntField("Variant", interaction.FixedData.Variant);
         }
 
         private static void DrawPublishGameEvent(

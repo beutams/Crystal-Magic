@@ -17,16 +17,5 @@ partial class UnitResetSystem : SystemBase
             moveRef.ValueRW = move;
         }
 
-        foreach ((RefRW<UnitElementComponent> _, Entity entity) in
-                 SystemAPI.Query<RefRW<UnitElementComponent>>().WithEntityAccess())
-        {
-            UnitModifierUtility.ResetFrameProperties(EntityManager, entity);
-        }
-
-        foreach (UnitSkillModifierRuntimeComponent runtimeComponent in
-                 SystemAPI.Query<UnitSkillModifierRuntimeComponent>())
-        {
-            runtimeComponent.Modifiers = new SkillModifierSet();
-        }
     }
 }

@@ -25,9 +25,6 @@ namespace CrystalMagic.Game.Data
         [SerializeReference]
         public EffectData[] EffectChain = System.Array.Empty<EffectData>();
 
-        public List<SkillCastTaskData> CastTasks = new();
-        public List<SkillFollowupEffectData> FollowupEffects = new();
-
         [JsonIgnore]
         public string DisplayName => LocalizationComponent.Resolve(NameKey);
 

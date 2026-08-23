@@ -174,7 +174,7 @@ namespace CrystalMagic.UI
 
                 if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_rootRect, screenPosition, _currentCamera, out Vector2 localPoint))
                 {
-                    _rootView?.UpdateBar(bar.Handle, vitality.CurrentHealth, vitality.RealMaxHealth, localPoint, true);
+                    _rootView?.UpdateBar(bar.Handle, vitality.CurrentHealth, UnitModifierResolver.GetMaxHealth(entityManager, entity), localPoint, true);
                     UpdateBuffDisplay(bar, signature);
                 }
             }

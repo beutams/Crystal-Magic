@@ -14,10 +14,13 @@ public static class StateScriptRegistry
         { "SetValue", typeof(SetValueStateScriptNodeData) },
         { "RequestSkill", typeof(RequestSkillActionNodeData) },
         { "PublishGameEvent", typeof(PublishGameEventStateScriptNodeData) },
+        { "RequestSkillWithAddition", typeof(RequestSkillWithAdditionActionNodeData) },
+        { "RequestInteraction", typeof(RequestInteractionActionNodeData) },
         { "Timer", typeof(TimerStateScriptNodeData) },
         { "Keep", typeof(KeepStateScriptNodeData) },
         { "Monitor", typeof(MonitorStateScriptNodeData) },
         { "NumberMonitor", typeof(NumberMonitorStateScriptNodeData) },
+        { "Addition", typeof(AdditionStateScriptNodeData) },
     };
 
     private static readonly Dictionary<Type, string> s_nodeDataKeys = new()
@@ -27,10 +30,13 @@ public static class StateScriptRegistry
         { typeof(SetValueStateScriptNodeData), "SetValue" },
         { typeof(RequestSkillActionNodeData), "RequestSkill" },
         { typeof(PublishGameEventStateScriptNodeData), "PublishGameEvent" },
+        { typeof(RequestSkillWithAdditionActionNodeData), "RequestSkillWithAddition" },
+        { typeof(RequestInteractionActionNodeData), "RequestInteraction" },
         { typeof(TimerStateScriptNodeData), "Timer" },
         { typeof(KeepStateScriptNodeData), "Keep" },
         { typeof(MonitorStateScriptNodeData), "Monitor" },
         { typeof(NumberMonitorStateScriptNodeData), "NumberMonitor" },
+        { typeof(AdditionStateScriptNodeData), "Addition" },
     };
 
     private static readonly Dictionary<string, string> s_nodeDataDisplayNames = new(StringComparer.Ordinal)
@@ -40,10 +46,13 @@ public static class StateScriptRegistry
         { "SetValue", "Set Value" },
         { "RequestSkill", "Request Skill" },
         { "PublishGameEvent", "Publish Game Event" },
+        { "RequestSkillWithAddition", "Request Skill With Addition" },
+        { "RequestInteraction", "Request Interaction" },
         { "Timer", "Timer" },
         { "Keep", "Keep" },
         { "Monitor", "Monitor" },
         { "NumberMonitor", "Number Monitor" },
+        { "Addition", "Addition" },
     };
 
     private static readonly FactoryTypeInfo[] s_nodeDataTypeInfos =
@@ -53,10 +62,13 @@ public static class StateScriptRegistry
         new("SetValue", "Set Value", typeof(SetValueStateScriptNodeData), 10),
         new("RequestSkill", "Request Skill", typeof(RequestSkillActionNodeData), 11),
         new("PublishGameEvent", "Publish Game Event", typeof(PublishGameEventStateScriptNodeData), 12),
+        new("RequestSkillWithAddition", "Request Skill With Addition", typeof(RequestSkillWithAdditionActionNodeData), 13),
+        new("RequestInteraction", "Request Interaction", typeof(RequestInteractionActionNodeData), 14),
         new("Timer", "Timer", typeof(TimerStateScriptNodeData), 20),
         new("Keep", "Keep", typeof(KeepStateScriptNodeData), 21),
         new("Monitor", "Monitor", typeof(MonitorStateScriptNodeData), 22),
         new("NumberMonitor", "Number Monitor", typeof(NumberMonitorStateScriptNodeData), 23),
+        new("Addition", "Addition", typeof(AdditionStateScriptNodeData), 24),
     };
 
     public static string DefaultNodeDataKey => "Entry";
@@ -77,10 +89,13 @@ public static class StateScriptRegistry
         factory.Register("SetValue", static () => new SetValueStateScriptNodeData());
         factory.Register("RequestSkill", static () => new RequestSkillActionNodeData());
         factory.Register("PublishGameEvent", static () => new PublishGameEventStateScriptNodeData());
+        factory.Register("RequestSkillWithAddition", static () => new RequestSkillWithAdditionActionNodeData());
+        factory.Register("RequestInteraction", static () => new RequestInteractionActionNodeData());
         factory.Register("Timer", static () => new TimerStateScriptNodeData());
         factory.Register("Keep", static () => new KeepStateScriptNodeData());
         factory.Register("Monitor", static () => new MonitorStateScriptNodeData());
         factory.Register("NumberMonitor", static () => new NumberMonitorStateScriptNodeData());
+        factory.Register("Addition", static () => new AdditionStateScriptNodeData());
     }
 
     public static void RegisterAll(StateScriptNodeRuntimeFactory factory)
@@ -98,6 +113,10 @@ public static class StateScriptRegistry
             new RequestSkillActionNode((RequestSkillActionNodeData)request.Data, request.Runtime));
         factory.Register(typeof(PublishGameEventStateScriptNodeData), static request =>
             new PublishGameEventStateScriptNode((PublishGameEventStateScriptNodeData)request.Data, request.Runtime));
+        factory.Register(typeof(RequestSkillWithAdditionActionNodeData), static request =>
+            new RequestSkillWithAdditionActionNode((RequestSkillWithAdditionActionNodeData)request.Data, request.Runtime));
+        factory.Register(typeof(RequestInteractionActionNodeData), static request =>
+            new RequestInteractionActionNode((RequestInteractionActionNodeData)request.Data, request.Runtime));
         factory.Register(typeof(TimerStateScriptNodeData), static request =>
             new TimerStateScriptNode((TimerStateScriptNodeData)request.Data, request.Runtime));
         factory.Register(typeof(KeepStateScriptNodeData), static request =>
@@ -106,5 +125,7 @@ public static class StateScriptRegistry
             new MonitorStateScriptNode((MonitorStateScriptNodeData)request.Data, request.Runtime));
         factory.Register(typeof(NumberMonitorStateScriptNodeData), static request =>
             new NumberMonitorStateScriptNode((NumberMonitorStateScriptNodeData)request.Data, request.Runtime));
+        factory.Register(typeof(AdditionStateScriptNodeData), static request =>
+            new AdditionStateScriptNode((AdditionStateScriptNodeData)request.Data, request.Runtime));
     }
 }

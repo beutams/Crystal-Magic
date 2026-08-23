@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using CrystalMagic.Core;
 using Newtonsoft.Json;
+using Unity.Entities;
 using UnityEngine;
 
 namespace CrystalMagic.Game.Data
@@ -54,6 +55,10 @@ namespace CrystalMagic.Game.Data
                         break;
                     case RequestSkillActionNodeData requestSkill:
                         requestSkill.SkillId ??= RequestSkillActionNodeData.CreateDefaultSkillIdExpression();
+                        break;
+                    case RequestInteractionActionNodeData requestInteraction:
+                        requestInteraction.Interaction ??= RequestInteractionActionNodeData.CreateDefaultInteraction();
+                        requestInteraction.Interaction.EnsureValid();
                         break;
                     case PublishGameEventStateScriptNodeData publishGameEvent:
                         publishGameEvent.Reference ??= PublishGameEventStateScriptNodeData.CreateDefaultReferenceExpression();
@@ -175,6 +180,63 @@ namespace CrystalMagic.Game.Data
     }
 
     [Serializable]
+    [FactoryKey("RequestSkillWithAddition", 13, "Request Skill With Addition")]
+    public sealed class RequestSkillWithAdditionActionNodeData : ActionStateScriptNodeData
+    {
+        public RequestSkillWithAdditionActionNodeData()
+        {
+            Type = "RequestSkillWithAddition";
+        }
+    }
+
+    [Serializable]
+    public enum InteractionRequestSource : byte
+    {
+        Getter = 0,
+        Fixed = 1,
+    }
+
+    [Serializable]
+    public sealed class InteractionRequestInput
+    {
+        public InteractionRequestSource Source = InteractionRequestSource.Getter;
+        public string GetterKey = "game.interaction.candidate";
+        public ValueExpression Target = CreateDefaultTargetExpression();
+        public UnitInteractionData FixedData;
+
+        public void EnsureValid()
+        {
+            GetterKey ??= string.Empty;
+            Target ??= CreateDefaultTargetExpression();
+        }
+
+        public static ValueExpression CreateDefaultTargetExpression()
+        {
+            return new ValueExpression
+            {
+                Literal = UnitValue.FromEntity(Entity.Null),
+            };
+        }
+    }
+
+    [Serializable]
+    [FactoryKey("RequestInteraction", 14, "Request Interaction")]
+    public sealed class RequestInteractionActionNodeData : ActionStateScriptNodeData
+    {
+        public InteractionRequestInput Interaction = CreateDefaultInteraction();
+
+        public RequestInteractionActionNodeData()
+        {
+            Type = "RequestInteraction";
+        }
+
+        public static InteractionRequestInput CreateDefaultInteraction()
+        {
+            return new InteractionRequestInput();
+        }
+    }
+
+    [Serializable]
     [FactoryKey("PublishGameEvent", 12, "Publish Game Event")]
     public sealed class PublishGameEventStateScriptNodeData : ActionStateScriptNodeData
     {
@@ -256,6 +318,18 @@ namespace CrystalMagic.Game.Data
             {
                 Literal = UnitValue.FromFloat(0f),
             };
+        }
+    }
+
+    [Serializable]
+    [FactoryKey("Addition", 24, "Addition")]
+    public sealed class AdditionStateScriptNodeData : StateStateScriptNodeData
+    {
+        public string EventName = string.Empty;
+
+        public AdditionStateScriptNodeData()
+        {
+            Type = "Addition";
         }
     }
 

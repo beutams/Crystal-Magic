@@ -20,7 +20,7 @@ namespace CrystalMagic.Editor.Unit
         private const string UnitPrefabDirectory = "Assets/Res/Prefab/Unit";
         private const string GraphDragDataKey = "CrystalMagic.StateScriptGraph";
         private const float ListPanelWidth = 270f;
-        private const float InspectorPanelWidth = 300f;
+        private const float InspectorPanelMinWidth = 300f;
 
         private readonly List<StateScriptData> _rows = new();
         private readonly List<UnitPrefabEntry> _unitEntries = new();
@@ -134,21 +134,27 @@ namespace CrystalMagic.Editor.Unit
             });
             body.Add(CreateDivider());
 
+            TwoPaneSplitView graphAndInspectorSplit = new(
+                1,
+                InspectorPanelMinWidth,
+                TwoPaneSplitViewOrientation.Horizontal)
+            {
+                style = { flexGrow = 1f },
+            };
+
             _graphView = new StateScriptGraphView(this)
             {
                 style = { flexGrow = 1f },
             };
             _graphView.RegisterCallback<MouseUpEvent>(_ => _inspectorContainer?.MarkDirtyRepaint());
             _graphView.RegisterCallback<KeyUpEvent>(_ => _inspectorContainer?.MarkDirtyRepaint());
-            body.Add(_graphView);
-            body.Add(CreateDivider());
+            graphAndInspectorSplit.Add(_graphView);
 
             VisualElement inspectorPanel = new()
             {
                 style =
                 {
-                    width = InspectorPanelWidth,
-                    minWidth = InspectorPanelWidth,
+                    minWidth = InspectorPanelMinWidth,
                     backgroundColor = new Color(0.17f, 0.17f, 0.17f, 1f),
                 },
             };
@@ -168,7 +174,8 @@ namespace CrystalMagic.Editor.Unit
                 style = { flexGrow = 1f },
             };
             inspectorPanel.Add(_inspectorContainer);
-            body.Add(inspectorPanel);
+            graphAndInspectorSplit.Add(inspectorPanel);
+            body.Add(graphAndInspectorSplit);
             root.Add(body);
         }
 

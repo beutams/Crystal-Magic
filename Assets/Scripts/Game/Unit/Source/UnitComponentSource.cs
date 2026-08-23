@@ -74,8 +74,16 @@ public abstract class UnitComponentSource
 
 public delegate UnitValue ComponentValueGetter<TComponent>(in TComponent component);
 public delegate UnitValue ComponentGetter<TComponent>(in TComponent component, UnitValue[] parameters);
+public delegate UnitValue ContextualComponentGetter<TComponent>(
+    in UnitSourceBindingContext context,
+    in TComponent component,
+    UnitValue[] parameters);
 public delegate bool ComponentValueSetter<TComponent>(ref TComponent component, UnitValue value);
 public delegate bool ComponentSetter<TComponent>(ref TComponent component, UnitValue[] values);
+public delegate bool ContextualComponentSetter<TComponent>(
+    in UnitSourceBindingContext context,
+    ref TComponent component,
+    UnitValue[] values);
 public delegate bool ComponentKeyedValueSetter<TComponent>(ref TComponent component, string key, UnitValue value);
 
 public sealed class UnitSourceDefinitionBuilder<TComponent>
@@ -111,6 +119,24 @@ public sealed class UnitSourceDefinitionBuilder<TComponent>
             throw new InvalidOperationException($"Unit source get is already defined: {key}");
     }
 
+    public void AddContextGet(
+        string key,
+        UnitValueCategory returnType,
+        IReadOnlyList<ComparatorParameterDefinition> parameters,
+        ContextualComponentGetter<TComponent> getter)
+    {
+        if (getter == null)
+            throw new ArgumentNullException(nameof(getter));
+
+        ValidateKey(key, "get");
+        if (returnType == UnitValueCategory.None)
+            throw new ArgumentOutOfRangeException(nameof(returnType));
+
+        ValidateParameters(parameters);
+        if (!_gets.TryAdd(key, new UnitSourceGetDefinition<TComponent>(key, returnType, parameters, getter)))
+            throw new InvalidOperationException($"Unit source get is already defined: {key}");
+    }
+
     public void AddSet(string key, UnitValueCategory valueType, ComponentValueSetter<TComponent> setter)
     {
         if (setter == null)
@@ -130,6 +156,20 @@ public sealed class UnitSourceDefinitionBuilder<TComponent>
         string key,
         IReadOnlyList<ComparatorParameterDefinition> parameters,
         ComponentSetter<TComponent> setter)
+    {
+        if (setter == null)
+            throw new ArgumentNullException(nameof(setter));
+
+        ValidateKey(key, "set");
+        ValidateSetParameters(parameters);
+        if (!_sets.TryAdd(key, new UnitSourceSetDefinition<TComponent>(key, parameters, setter)))
+            throw new InvalidOperationException($"Unit source set is already defined: {key}");
+    }
+
+    public void AddContextSet(
+        string key,
+        IReadOnlyList<ComparatorParameterDefinition> parameters,
+        ContextualComponentSetter<TComponent> setter)
     {
         if (setter == null)
             throw new ArgumentNullException(nameof(setter));
@@ -276,7 +316,10 @@ public abstract class UnitComponentSource<TComponent> : UnitComponentSource
                     return UnitValue.None;
 
                 TComponent component = entityManager.GetComponentData<TComponent>(entity);
-                return definition.Invoke(in component, parameters);
+                UnitSourceBindingContext context = new(entity, entityManager);
+                return definition.ContextualInvoke != null
+                    ? definition.ContextualInvoke(in context, in component, parameters)
+                    : definition.Invoke(in component, parameters);
             }));
     }
 
@@ -315,7 +358,11 @@ public abstract class UnitComponentSource<TComponent> : UnitComponentSource
                     return false;
 
                 TComponent component = entityManager.GetComponentData<TComponent>(entity);
-                if (!definition.Invoke(ref component, parameters))
+                UnitSourceBindingContext context = new(entity, entityManager);
+                bool succeeded = definition.ContextualInvoke != null
+                    ? definition.ContextualInvoke(in context, ref component, parameters)
+                    : definition.Invoke(ref component, parameters);
+                if (!succeeded)
                     return false;
 
                 entityManager.SetComponentData(entity, component);
@@ -406,7 +453,10 @@ public abstract class UnitManagedComponentSource<TComponent> : UnitComponentSour
                     return UnitValue.None;
 
                 TComponent component = entityManager.GetComponentObject<TComponent>(entity);
-                return definition.Invoke(in component, parameters);
+                UnitSourceBindingContext context = new(entity, entityManager);
+                return definition.ContextualInvoke != null
+                    ? definition.ContextualInvoke(in context, in component, parameters)
+                    : definition.Invoke(in component, parameters);
             }));
     }
 
@@ -441,7 +491,11 @@ public abstract class UnitManagedComponentSource<TComponent> : UnitComponentSour
                     return false;
 
                 TComponent component = entityManager.GetComponentObject<TComponent>(entity);
-                if (!definition.Invoke(ref component, parameters))
+                UnitSourceBindingContext context = new(entity, entityManager);
+                bool succeeded = definition.ContextualInvoke != null
+                    ? definition.ContextualInvoke(in context, ref component, parameters)
+                    : definition.Invoke(ref component, parameters);
+                if (!succeeded)
                     return false;
 
                 // Managed components are reference objects already owned by the entity.
@@ -465,10 +519,23 @@ internal sealed class UnitSourceGetDefinition<TComponent>
         Invoke = invoke;
     }
 
+    public UnitSourceGetDefinition(
+        string key,
+        UnitValueCategory returnType,
+        IReadOnlyList<ComparatorParameterDefinition> parameters,
+        ContextualComponentGetter<TComponent> invoke)
+    {
+        Key = key;
+        ReturnType = returnType;
+        Parameters = parameters ?? Array.Empty<ComparatorParameterDefinition>();
+        ContextualInvoke = invoke;
+    }
+
     public string Key { get; }
     public UnitValueCategory ReturnType { get; }
     public IReadOnlyList<ComparatorParameterDefinition> Parameters { get; }
     public ComponentGetter<TComponent> Invoke { get; }
+    public ContextualComponentGetter<TComponent> ContextualInvoke { get; }
 }
 
 internal sealed class UnitSourceSetDefinition<TComponent>
@@ -485,6 +552,16 @@ internal sealed class UnitSourceSetDefinition<TComponent>
 
     public UnitSourceSetDefinition(
         string key,
+        IReadOnlyList<ComparatorParameterDefinition> parameters,
+        ContextualComponentSetter<TComponent> invoke)
+    {
+        Key = key;
+        Parameters = parameters ?? throw new ArgumentNullException(nameof(parameters));
+        ContextualInvoke = invoke ?? throw new ArgumentNullException(nameof(invoke));
+    }
+
+    public UnitSourceSetDefinition(
+        string key,
         UnitValueCategory valueType,
         ComponentKeyedValueSetter<TComponent> keyedInvoke)
     {
@@ -497,6 +574,7 @@ internal sealed class UnitSourceSetDefinition<TComponent>
     public string Key { get; }
     public IReadOnlyList<ComparatorParameterDefinition> Parameters { get; }
     public ComponentSetter<TComponent> Invoke { get; }
+    public ContextualComponentSetter<TComponent> ContextualInvoke { get; }
     public ComponentKeyedValueSetter<TComponent> KeyedInvoke { get; }
     public bool RequiresKey { get; }
 }

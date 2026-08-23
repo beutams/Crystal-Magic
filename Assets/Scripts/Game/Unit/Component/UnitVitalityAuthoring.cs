@@ -28,17 +28,11 @@ public class UnitVitalityAuthoring : MonoBehaviour
             {
                 BaseMaxHealth = baseHealth,
                 BaseMaxHealthOffset = 0f,
-                HealthFactor = 1f,
-                HealthBonus = 0f,
                 CurrentHealth = baseHealth,
                 BaseHealthRegenPerSecond = baseHealthRegenPerSecond,
                 BaseHealthRegenOffset = 0f,
-                HealthRegenFactor = 1f,
-                HealthRegenBonus = 0f,
                 BaseDefense = baseDefense,
                 BaseDefenseOffset = 0f,
-                DefenseFactor = 1f,
-                DefenseBonus = 0f,
             });
 
         }
@@ -49,43 +43,41 @@ public struct UnitVitalityComponent : IComponentData
 {
     public float BaseMaxHealth;
     public float BaseMaxHealthOffset;
-    public float HealthFactor;
-    public float HealthBonus;
     public float CurrentHealth;
     public float BaseHealthRegenPerSecond;
     public float BaseHealthRegenOffset;
-    public float HealthRegenFactor;
-    public float HealthRegenBonus;
     public float BaseDefense;
     public float BaseDefenseOffset;
-    public float DefenseFactor;
-    public float DefenseBonus;
 
     public float BaseMaxHealthValue => BaseMaxHealth + BaseMaxHealthOffset;
     public float BaseHealthRegenPerSecondValue => BaseHealthRegenPerSecond + BaseHealthRegenOffset;
     public float BaseDefenseValue => BaseDefense + BaseDefenseOffset;
-    public float RealMaxHealth => BaseMaxHealthValue * HealthFactor + HealthBonus;
-    public float RealHealthRegenPerSecond => BaseHealthRegenPerSecondValue * HealthRegenFactor + HealthRegenBonus;
-    public float RealDefense => BaseDefenseValue * DefenseFactor + DefenseBonus;
 }
 
 [UnitSourceAuthoring(typeof(UnitVitalityAuthoring))]
 public sealed class UnitVitalitySource : UnitComponentSource<UnitVitalityComponent>
 {
+    private static readonly ComparatorParameterDefinition[] s_noParameters = System.Array.Empty<ComparatorParameterDefinition>();
+
     protected override void Define(UnitSourceDefinitionBuilder<UnitVitalityComponent> builder)
     {
         builder.AddGet("unit.vitality.baseMaxHealth", UnitValueCategory.Number, (in UnitVitalityComponent value) => UnitValue.FromFloat(value.BaseMaxHealthValue));
         builder.AddGet("unit.vitality.currentHealth", UnitValueCategory.Number, (in UnitVitalityComponent value) => UnitValue.FromFloat(value.CurrentHealth));
-        builder.AddGet("unit.vitality.realMaxHealth", UnitValueCategory.Number, (in UnitVitalityComponent value) => UnitValue.FromFloat(value.RealMaxHealth));
-        builder.AddGet("unit.vitality.currentHealthPercentage", UnitValueCategory.Number, (in UnitVitalityComponent value) => UnitValue.FromFloat(GetHealthPercentage(value)));
+        builder.AddContextGet("unit.vitality.realMaxHealth", UnitValueCategory.Number, s_noParameters,
+            (in UnitSourceBindingContext context, in UnitVitalityComponent _, UnitValue[] _) => UnitValue.FromFloat(UnitModifierResolver.GetMaxHealth(context.EntityManager, context.Entity)));
+        builder.AddContextGet("unit.vitality.currentHealthPercentage", UnitValueCategory.Number, s_noParameters,
+            (in UnitSourceBindingContext context, in UnitVitalityComponent value, UnitValue[] _) => UnitValue.FromFloat(GetHealthPercentage(context, value)));
         builder.AddGet("unit.vitality.baseHealthRegenPerSecond", UnitValueCategory.Number, (in UnitVitalityComponent value) => UnitValue.FromFloat(value.BaseHealthRegenPerSecondValue));
-        builder.AddGet("unit.vitality.realHealthRegenPerSecond", UnitValueCategory.Number, (in UnitVitalityComponent value) => UnitValue.FromFloat(value.RealHealthRegenPerSecond));
+        builder.AddContextGet("unit.vitality.realHealthRegenPerSecond", UnitValueCategory.Number, s_noParameters,
+            (in UnitSourceBindingContext context, in UnitVitalityComponent _, UnitValue[] _) => UnitValue.FromFloat(UnitModifierResolver.GetHealthRegen(context.EntityManager, context.Entity)));
         builder.AddGet("unit.vitality.baseDefense", UnitValueCategory.Number, (in UnitVitalityComponent value) => UnitValue.FromFloat(value.BaseDefenseValue));
-        builder.AddGet("unit.vitality.realDefense", UnitValueCategory.Number, (in UnitVitalityComponent value) => UnitValue.FromFloat(value.RealDefense));
+        builder.AddContextGet("unit.vitality.realDefense", UnitValueCategory.Number, s_noParameters,
+            (in UnitSourceBindingContext context, in UnitVitalityComponent _, UnitValue[] _) => UnitValue.FromFloat(UnitModifierResolver.GetDefense(context.EntityManager, context.Entity)));
     }
 
-    private static float GetHealthPercentage(in UnitVitalityComponent value)
+    private static float GetHealthPercentage(in UnitSourceBindingContext context, in UnitVitalityComponent value)
     {
-        return value.RealMaxHealth > 0f ? Mathf.Clamp01(value.CurrentHealth / value.RealMaxHealth) : 0f;
+        float maxHealth = UnitModifierResolver.GetMaxHealth(context.EntityManager, context.Entity);
+        return maxHealth > 0f ? Mathf.Clamp01(value.CurrentHealth / maxHealth) : 0f;
     }
 }

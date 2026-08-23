@@ -57,39 +57,34 @@ namespace CrystalMagic.UI
 
             if (entityManager.HasComponent<UnitMoveComponent>(player))
             {
-                UnitMoveComponent move = entityManager.GetComponentData<UnitMoveComponent>(player);
-                snapshot.Speed = move.RealMoveSpeed;
+                snapshot.Speed = UnitModifierResolver.GetMoveSpeed(entityManager, player);
             }
 
             if (entityManager.HasComponent<UnitVitalityComponent>(player))
             {
-                UnitVitalityComponent vitality = entityManager.GetComponentData<UnitVitalityComponent>(player);
-                snapshot.MaxHealth = vitality.RealMaxHealth;
-                snapshot.HealthRegen = vitality.RealHealthRegenPerSecond;
+                snapshot.MaxHealth = UnitModifierResolver.GetMaxHealth(entityManager, player);
+                snapshot.HealthRegen = UnitModifierResolver.GetHealthRegen(entityManager, player);
             }
 
             if (entityManager.HasComponent<UnitManaComponent>(player))
             {
-                UnitManaComponent mana = entityManager.GetComponentData<UnitManaComponent>(player);
-                snapshot.MaxMana = mana.RealMaxMp;
-                snapshot.ManaRegen = mana.RealMpRegenPerSecond;
+                snapshot.MaxMana = UnitModifierResolver.GetMaxMp(entityManager, player);
+                snapshot.ManaRegen = UnitModifierResolver.GetMpRegen(entityManager, player);
             }
 
             if (entityManager.HasComponent<UnitAttackComponent>(player))
             {
-                UnitAttackComponent attack = entityManager.GetComponentData<UnitAttackComponent>(player);
-                snapshot.AttackPower = attack.RealAttackPower;
-                snapshot.ChantSpeed = attack.RealChantSpeedBonus;
-                snapshot.SkillRange = attack.RealSkillRange;
+                snapshot.AttackPower = UnitModifierResolver.GetAttackPower(entityManager, player);
+                snapshot.ChantSpeed = UnitModifierResolver.GetChantSpeedBonus(entityManager, player);
+                snapshot.SkillRange = UnitModifierResolver.GetSkillRange(entityManager, player);
             }
 
             if (entityManager.HasComponent<UnitElementComponent>(player))
             {
-                UnitElementComponent element = entityManager.GetComponentData<UnitElementComponent>(player);
-                snapshot.Water = element.WaterPower;
-                snapshot.Fire = element.FirePower;
-                snapshot.Lighting = element.LightningPower;
-                snapshot.Wind = element.WindPower;
+                snapshot.Water = UnitModifierResolver.GetElementPower(entityManager, player, CrystalMagic.Game.Data.Effects.ElementType.Water);
+                snapshot.Fire = UnitModifierResolver.GetElementPower(entityManager, player, CrystalMagic.Game.Data.Effects.ElementType.Fire);
+                snapshot.Lighting = UnitModifierResolver.GetElementPower(entityManager, player, CrystalMagic.Game.Data.Effects.ElementType.Lightning);
+                snapshot.Wind = UnitModifierResolver.GetElementPower(entityManager, player, CrystalMagic.Game.Data.Effects.ElementType.Wind);
             }
 
             return snapshot;

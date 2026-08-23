@@ -9,12 +9,18 @@ namespace CrystalMagic.Editor.Unit
 {
     internal sealed class StateScriptAccessorDropdown : AdvancedDropdown
     {
+        private const float MinimumMenuWidth = 420f;
+        private const float MenuHorizontalPadding = 64f;
+
         private static StateScriptAccessorDropdown s_activeDropdown;
 
         private readonly List<string> _keys;
         private readonly Action<string> _onSelected;
 
-        private StateScriptAccessorDropdown(IEnumerable<string> keys, Action<string> onSelected)
+        private StateScriptAccessorDropdown(
+            IEnumerable<string> keys,
+            Action<string> onSelected,
+            float inspectorWidth)
             : base(new AdvancedDropdownState())
         {
             _keys = keys?
@@ -23,7 +29,9 @@ namespace CrystalMagic.Editor.Unit
                 .OrderBy(key => key, StringComparer.Ordinal)
                 .ToList() ?? new List<string>();
             _onSelected = onSelected;
-            minimumSize = new Vector2(420f, 320f);
+            minimumSize = new Vector2(
+                Mathf.Max(MinimumMenuWidth, inspectorWidth, GetRequiredMenuWidth(_keys)),
+                320f);
         }
 
         public static void Draw(
@@ -43,8 +51,17 @@ namespace CrystalMagic.Editor.Unit
             {
                 s_activeDropdown = null;
                 onSelected?.Invoke(selectedKey);
-            });
+            }, EditorGUIUtility.currentViewWidth);
             s_activeDropdown.Show(buttonRect);
+        }
+
+        private static float GetRequiredMenuWidth(IEnumerable<string> keys)
+        {
+            float widestItem = EditorStyles.label.CalcSize(new GUIContent("Select Accessor")).x;
+            foreach (string key in keys)
+                widestItem = Mathf.Max(widestItem, EditorStyles.label.CalcSize(new GUIContent(key)).x);
+
+            return widestItem + MenuHorizontalPadding;
         }
 
         protected override AdvancedDropdownItem BuildRoot()

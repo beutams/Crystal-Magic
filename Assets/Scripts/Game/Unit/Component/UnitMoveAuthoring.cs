@@ -29,8 +29,6 @@ public class UnitMoveAuthoring : MonoBehaviour
                 BaseMoveSpeed = baseSpeed,
                 BaseMoveSpeedOffset = 0f,
                 BaseMaxAcceleration = baseAccel,
-                SpeedFactor = 1f,
-                SpeedBonus = 0f,
                 Direction = float2.zero,
                 StateMoveMultiplier = 1f,
                 Velocity = float2.zero,
@@ -44,26 +42,26 @@ public struct UnitMoveComponent : IComponentData
     public float BaseMoveSpeed;
     public float BaseMoveSpeedOffset;
     public float BaseMaxAcceleration;
-    public float SpeedFactor;
-    public float SpeedBonus;
     public float2 Direction;
     public float StateMoveMultiplier;
     public float2 Velocity;
 
     public float BaseMoveSpeedValue => BaseMoveSpeed + BaseMoveSpeedOffset;
-    public float RealMoveSpeed => BaseMoveSpeedValue * SpeedFactor + SpeedBonus;
-    public float RealMaxAcceleration => BaseMaxAcceleration * SpeedFactor + SpeedBonus;
 }
 
 [UnitSourceAuthoring(typeof(UnitMoveAuthoring))]
 public sealed class UnitMoveSource : UnitComponentSource<UnitMoveComponent>
 {
+    private static readonly ComparatorParameterDefinition[] s_noParameters = System.Array.Empty<ComparatorParameterDefinition>();
+
     protected override void Define(UnitSourceDefinitionBuilder<UnitMoveComponent> builder)
     {
         builder.AddGet("unit.move.baseMoveSpeed", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.BaseMoveSpeedValue));
         builder.AddGet("unit.move.baseMaxAcceleration", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.BaseMaxAcceleration));
-        builder.AddGet("unit.move.realMoveSpeed", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.RealMoveSpeed));
-        builder.AddGet("unit.move.realMaxAcceleration", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.RealMaxAcceleration));
+        builder.AddContextGet("unit.move.realMoveSpeed", UnitValueCategory.Number, s_noParameters,
+            (in UnitSourceBindingContext context, in UnitMoveComponent _, UnitValue[] _) => UnitValue.FromFloat(UnitModifierResolver.GetMoveSpeed(context.EntityManager, context.Entity)));
+        builder.AddContextGet("unit.move.realMaxAcceleration", UnitValueCategory.Number, s_noParameters,
+            (in UnitSourceBindingContext context, in UnitMoveComponent _, UnitValue[] _) => UnitValue.FromFloat(UnitModifierResolver.GetMaxAcceleration(context.EntityManager, context.Entity)));
         builder.AddGet("unit.move.direction", UnitValueCategory.Float2, (in UnitMoveComponent value) => UnitValue.FromFloat2(value.Direction));
         builder.AddGet("unit.move.stateMoveMultiplier", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.StateMoveMultiplier));
 

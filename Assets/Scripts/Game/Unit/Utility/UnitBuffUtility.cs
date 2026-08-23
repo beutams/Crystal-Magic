@@ -6,89 +6,172 @@ using Unity.Mathematics;
 
 public static class UnitBuffUtility
 {
-    public static void AddRuntimeBuff(
+    public static bool Apply(
         EntityManager entityManager,
         Entity entity,
         int buffId,
+        float durationSeconds,
+        int stackCount,
+        Entity originEntity,
         int sourceSkillId,
-        int stackCount = 1)
+        List<BuffTriggerRuntimeEntry> runtimeTriggerEntries = null)
     {
-        if (buffId < 0 || sourceSkillId < 0 || entity == Entity.Null || !entityManager.Exists(entity))
-            return;
+        if (buffId < 0 || entity == Entity.Null || !entityManager.Exists(entity))
+            return false;
 
         BuffData buffData = DataComponent.Instance?.Get<BuffData>(buffId);
         if (buffData == null)
-            return;
+            return false;
 
         UnitBuffRuntimeComponent runtimeComponent = GetOrCreateRuntimeComponent(entityManager, entity);
         if (runtimeComponent == null)
-            return;
+            return false;
+
+        int stackToApply = math.max(1, stackCount);
+        float duration = durationSeconds < 0f ? -1f : math.max(0f, durationSeconds);
+        bool hasOriginEntity = originEntity != Entity.Null;
 
         List<UnitBuffRuntimeEntry> buffs = runtimeComponent.Buffs;
         for (int i = 0; i < buffs.Count; i++)
         {
             UnitBuffRuntimeEntry entry = buffs[i];
-            // Cast-task temporary buffs intentionally omit origin info so they do not collide with regular applied buffs.
-            if (entry.BuffId != buffId || entry.SourceSkillId != sourceSkillId || entry.HasOriginEntity)
+            if (entry == null || entry.BuffId != buffId)
                 continue;
 
-            entry.StackCount = math.max(1, stackCount);
-            entry.RemainingTime = -1f;
-            entry.InitializeFromDefinition(buffData);
-            return;
+            entry.RemainingTime = GetPreferredDuration(entry.RemainingTime, duration);
+            entry.StackCount = buffData.CanStack
+                ? math.min(math.max(1, buffData.MaxStacks), math.max(1, entry.StackCount) + stackToApply)
+                : 1;
+            entry.HasOriginEntity = hasOriginEntity;
+            entry.OriginEntity = hasOriginEntity ? originEntity : Entity.Null;
+            entry.SourceSkillId = sourceSkillId;
+            entry.InitializeFromDefinition(buffData, runtimeTriggerEntries);
+            return true;
         }
 
         UnitBuffRuntimeEntry newEntry = new()
         {
             BuffId = buffId,
-            RemainingTime = -1f,
-            StackCount = math.max(1, stackCount),
-            HasOriginEntity = false,
-            OriginEntity = Entity.Null,
+            RemainingTime = duration,
+            StackCount = buffData.CanStack
+                ? math.min(math.max(1, buffData.MaxStacks), stackToApply)
+                : 1,
+            HasOriginEntity = hasOriginEntity,
+            OriginEntity = hasOriginEntity ? originEntity : Entity.Null,
             SourceSkillId = sourceSkillId,
         };
-        newEntry.InitializeFromDefinition(buffData);
+        newEntry.InitializeFromDefinition(buffData, runtimeTriggerEntries);
         buffs.Add(newEntry);
+        return true;
     }
 
-    public static void RemoveRuntimeBuffsBySourceSkillId(EntityManager entityManager, Entity entity, int sourceSkillId)
+    public static bool Remove(EntityManager entityManager, Entity entity, int buffId, bool removeAllStacks, int removeStackCount = 1)
     {
-        if (sourceSkillId < 0 ||
+        if (buffId < 0 ||
             entity == Entity.Null ||
             !entityManager.Exists(entity) ||
             !TryGetRuntimeComponent(entityManager, entity, out UnitBuffRuntimeComponent runtimeComponent))
         {
-            return;
+            return false;
         }
 
+        List<UnitBuffRuntimeEntry> buffs = runtimeComponent.Buffs;
+        for (int i = 0; i < buffs.Count; i++)
+        {
+            UnitBuffRuntimeEntry entry = buffs[i];
+            if (entry == null || entry.BuffId != buffId)
+                continue;
+
+            if (removeAllStacks)
+            {
+                buffs.RemoveAt(i);
+                return true;
+            }
+
+            entry.StackCount -= math.max(1, removeStackCount);
+            if (entry.StackCount <= 0)
+                buffs.RemoveAt(i);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public static bool RemoveAll(EntityManager entityManager, Entity entity, int buffId)
+    {
+        if (buffId < 0 ||
+            entity == Entity.Null ||
+            !entityManager.Exists(entity) ||
+            !TryGetRuntimeComponent(entityManager, entity, out UnitBuffRuntimeComponent runtimeComponent))
+        {
+            return false;
+        }
+
+        bool removed = false;
         List<UnitBuffRuntimeEntry> buffs = runtimeComponent.Buffs;
         for (int i = buffs.Count - 1; i >= 0; i--)
         {
-            if (!buffs[i].HasOriginEntity && buffs[i].SourceSkillId == sourceSkillId)
-                buffs.RemoveAt(i);
+            if (buffs[i]?.BuffId != buffId)
+                continue;
+
+            buffs.RemoveAt(i);
+            removed = true;
         }
+
+        return removed;
     }
 
-    public static float ApplyDamageTakenRuntimeBuffs(EntityManager entityManager, Entity entity, float damage)
+    public static bool TryRemoveStacks(EntityManager entityManager, Entity entity, int buffId, int stackCount)
     {
-        if (damage <= 0f ||
+        if (buffId < 0 ||
+            stackCount <= 0 ||
             entity == Entity.Null ||
             !entityManager.Exists(entity) ||
             !TryGetRuntimeComponent(entityManager, entity, out UnitBuffRuntimeComponent runtimeComponent))
         {
-            return damage;
+            return false;
         }
 
         List<UnitBuffRuntimeEntry> buffs = runtimeComponent.Buffs;
-        PropertyModifierSet modifiers = new();
         for (int i = 0; i < buffs.Count; i++)
-            buffs[i].ContributePropertyModifiers(modifiers);
+        {
+            UnitBuffRuntimeEntry entry = buffs[i];
+            if (entry?.BuffId != buffId)
+                continue;
 
-        float finalDamage = math.max(
-            0f,
-            damage * modifiers.GetFactor(PropertyModifierChannel.DamageTakenMultiplier) +
-            modifiers.GetBonus(PropertyModifierChannel.DamageTakenMultiplier));
-        return finalDamage;
+            if (entry.StackCount < stackCount)
+                return false;
+
+            entry.StackCount -= stackCount;
+            if (entry.StackCount == 0)
+                buffs.RemoveAt(i);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public static int GetStackCount(EntityManager entityManager, Entity entity, int buffId)
+    {
+        if (buffId < 0 ||
+            entity == Entity.Null ||
+            !entityManager.Exists(entity) ||
+            !TryGetRuntimeComponent(entityManager, entity, out UnitBuffRuntimeComponent runtimeComponent))
+        {
+            return 0;
+        }
+
+        List<UnitBuffRuntimeEntry> buffs = runtimeComponent.Buffs;
+        for (int i = 0; i < buffs.Count; i++)
+        {
+            UnitBuffRuntimeEntry entry = buffs[i];
+            if (entry?.BuffId == buffId)
+                return math.max(0, entry.StackCount);
+        }
+
+        return 0;
     }
 
     public static UnitBuffRuntimeComponent GetOrCreateRuntimeComponent(EntityManager entityManager, Entity entity)
@@ -112,5 +195,13 @@ public static class UnitBuffUtility
 
         runtimeComponent = entityManager.GetComponentObject<UnitBuffRuntimeComponent>(entity);
         return runtimeComponent != null;
+    }
+
+    private static float GetPreferredDuration(float currentDuration, float incomingDuration)
+    {
+        if (currentDuration < 0f || incomingDuration < 0f)
+            return -1f;
+
+        return math.max(currentDuration, incomingDuration);
     }
 }

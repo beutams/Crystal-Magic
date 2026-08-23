@@ -153,6 +153,7 @@ When modifying or extending an existing UI, inspect generated bindings before ad
 - Avoid `transform.Find` and other string-based hierarchy lookups unless there is no generated binding and no practical alternative.
 - When using a component exposed through `UIData` such as `UI.Confirm.ButtonPlus`, do not add defensive null checks. If the component is missing, the prefab/setup is wrong and the failure should be visible instead of silently continuing.
 - Do not cache component references that `UIData` already stores. Use the generated `UIData` fields directly as the canonical references.
+- Treat `ButtonPlus` state roots (`defaultTransforms`, `enterTransforms`, and `clickTransforms`) as optional prefab configuration. Only switch to a visual state when its root is assigned in the Inspector; an unassigned state must leave the current visual state intact while the button click event still fires.
 
 Keep responsibilities separated:
 

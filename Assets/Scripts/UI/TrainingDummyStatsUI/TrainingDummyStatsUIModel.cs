@@ -113,9 +113,9 @@ namespace CrystalMagic.UI
             {
                 UnitVitalityComponent vitality = entityManager.GetComponentData<UnitVitalityComponent>(dummyEntity);
                 snapshot.CurrentHealth = vitality.CurrentHealth;
-                snapshot.MaxHealth = vitality.RealMaxHealth;
-                snapshot.HealthRegen = vitality.RealHealthRegenPerSecond;
-                snapshot.Defense = vitality.RealDefense;
+                snapshot.MaxHealth = UnitModifierResolver.GetMaxHealth(entityManager, dummyEntity);
+                snapshot.HealthRegen = UnitModifierResolver.GetHealthRegen(entityManager, dummyEntity);
+                snapshot.Defense = UnitModifierResolver.GetDefense(entityManager, dummyEntity);
             }
 
             if (entityManager.HasComponent<UnitManaComponent>(dummyEntity))
@@ -123,23 +123,21 @@ namespace CrystalMagic.UI
                 UnitManaComponent mana = entityManager.GetComponentData<UnitManaComponent>(dummyEntity);
                 snapshot.HasMana = true;
                 snapshot.CurrentMana = mana.CurrentMana;
-                snapshot.MaxMana = mana.RealMaxMp;
-                snapshot.ManaRegen = mana.RealMpRegenPerSecond;
+                snapshot.MaxMana = UnitModifierResolver.GetMaxMp(entityManager, dummyEntity);
+                snapshot.ManaRegen = UnitModifierResolver.GetMpRegen(entityManager, dummyEntity);
             }
 
             if (entityManager.HasComponent<UnitAttackComponent>(dummyEntity))
             {
-                UnitAttackComponent attack = entityManager.GetComponentData<UnitAttackComponent>(dummyEntity);
-                snapshot.AttackPower = attack.RealAttackPower;
-                snapshot.SkillRange = attack.RealSkillRange;
-                snapshot.ChantSpeedBonus = attack.RealChantSpeedBonus;
+                snapshot.AttackPower = UnitModifierResolver.GetAttackPower(entityManager, dummyEntity);
+                snapshot.SkillRange = UnitModifierResolver.GetSkillRange(entityManager, dummyEntity);
+                snapshot.ChantSpeedBonus = UnitModifierResolver.GetChantSpeedBonus(entityManager, dummyEntity);
             }
 
             if (entityManager.HasComponent<UnitMoveComponent>(dummyEntity))
             {
-                UnitMoveComponent move = entityManager.GetComponentData<UnitMoveComponent>(dummyEntity);
-                snapshot.MoveSpeed = move.RealMoveSpeed;
-                snapshot.MaxAcceleration = move.RealMaxAcceleration;
+                snapshot.MoveSpeed = UnitModifierResolver.GetMoveSpeed(entityManager, dummyEntity);
+                snapshot.MaxAcceleration = UnitModifierResolver.GetMaxAcceleration(entityManager, dummyEntity);
             }
 
             if (entityManager.HasComponent<UnitBuffRuntimeComponent>(dummyEntity))

@@ -1,29 +1,55 @@
-// AUTO-GENERATED — DO NOT EDIT MANUALLY
-// 输出目录：Assets/Scripts/UI/{Prefab名}/ — 右键 Prefab → Assets/Tools/Generate UIData 重新生成
+﻿// AUTO-GENERATED — DO NOT EDIT MANUALLY
+// Right-click Prefab → Assets/Tools/Generate UIData to regenerate
 
 using UnityEngine;
 using CrystalMagic.Core;
 
 public class MainMenuUIData : UIData
 {
-    public UINode Start;
-    public UINode Start_TextTMP;
-    public UINode Load;
-    public UINode Load_TextTMP;
-    public UINode Config;
-    public UINode Config_TextTMP;
-    public UINode Exit;
-    public UINode Exit_TextTMP;
+    public UINode MenuBack;
+    public UINode MenuBack_Start;
+    public UINode MenuBack_Start_Default;
+    public UINode MenuBack_Start_Default_TextTMP;
+    public UINode MenuBack_Start_Select;
+    public UINode MenuBack_Start_Select_TextTMP;
+    public UINode MenuBack_Load;
+    public UINode MenuBack_Load_Default;
+    public UINode MenuBack_Load_Default_TextTMP;
+    public UINode MenuBack_Load_Select;
+    public UINode MenuBack_Load_Select_TextTMP;
+    public UINode MenuBack_Config;
+    public UINode MenuBack_Config_Default;
+    public UINode MenuBack_Config_Default_TextTMP;
+    public UINode MenuBack_Config_Select;
+    public UINode MenuBack_Config_Select_TextTMP;
+    public UINode MenuBack_Exit;
+    public UINode MenuBack_Exit_Default;
+    public UINode MenuBack_Exit_Default_TextTMP;
+    public UINode MenuBack_Exit_Select;
+    public UINode MenuBack_Exit_Select_TextTMP;
 
     public override void Bind(Transform root)
     {
-        Start = UINode.From(Find(root, "Start"));
-        Start_TextTMP = UINode.From(Find(root, "Start/Text (TMP)"));
-        Load = UINode.From(Find(root, "Load"));
-        Load_TextTMP = UINode.From(Find(root, "Load/Text (TMP)"));
-        Config = UINode.From(Find(root, "Config"));
-        Config_TextTMP = UINode.From(Find(root, "Config/Text (TMP)"));
-        Exit = UINode.From(Find(root, "Exit"));
-        Exit_TextTMP = UINode.From(Find(root, "Exit/Text (TMP)"));
+        MenuBack = UINode.From(Find(root, "MenuBack"));
+        MenuBack_Start = UINode.From(Find(root, "MenuBack/Start"));
+        MenuBack_Start_Default = UINode.From(Find(root, "MenuBack/Start/Default"));
+        MenuBack_Start_Default_TextTMP = UINode.From(Find(root, "MenuBack/Start/Default/Text (TMP)"));
+        MenuBack_Start_Select = UINode.From(Find(root, "MenuBack/Start/Select"));
+        MenuBack_Start_Select_TextTMP = UINode.From(Find(root, "MenuBack/Start/Select/Text (TMP)"));
+        MenuBack_Load = UINode.From(Find(root, "MenuBack/Load"));
+        MenuBack_Load_Default = UINode.From(Find(root, "MenuBack/Load/Default"));
+        MenuBack_Load_Default_TextTMP = UINode.From(Find(root, "MenuBack/Load/Default/Text (TMP)"));
+        MenuBack_Load_Select = UINode.From(Find(root, "MenuBack/Load/Select"));
+        MenuBack_Load_Select_TextTMP = UINode.From(Find(root, "MenuBack/Load/Select/Text (TMP)"));
+        MenuBack_Config = UINode.From(Find(root, "MenuBack/Config"));
+        MenuBack_Config_Default = UINode.From(Find(root, "MenuBack/Config/Default"));
+        MenuBack_Config_Default_TextTMP = UINode.From(Find(root, "MenuBack/Config/Default/Text (TMP)"));
+        MenuBack_Config_Select = UINode.From(Find(root, "MenuBack/Config/Select"));
+        MenuBack_Config_Select_TextTMP = UINode.From(Find(root, "MenuBack/Config/Select/Text (TMP)"));
+        MenuBack_Exit = UINode.From(Find(root, "MenuBack/Exit"));
+        MenuBack_Exit_Default = UINode.From(Find(root, "MenuBack/Exit/Default"));
+        MenuBack_Exit_Default_TextTMP = UINode.From(Find(root, "MenuBack/Exit/Default/Text (TMP)"));
+        MenuBack_Exit_Select = UINode.From(Find(root, "MenuBack/Exit/Select"));
+        MenuBack_Exit_Select_TextTMP = UINode.From(Find(root, "MenuBack/Exit/Select/Text (TMP)"));
     }
 }

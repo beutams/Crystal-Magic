@@ -45,17 +45,21 @@ public sealed class UnitSourceSchema
 {
     private readonly Dictionary<string, UnitSourceGetSchemaEntry> _gets;
     private readonly Dictionary<string, UnitSourceSetSchemaEntry> _sets;
+    private readonly Dictionary<string, InteractionRequestGetSchemaEntry> _interactionGets;
 
     internal UnitSourceSchema(
         Dictionary<string, UnitSourceGetSchemaEntry> gets,
-        Dictionary<string, UnitSourceSetSchemaEntry> sets)
+        Dictionary<string, UnitSourceSetSchemaEntry> sets,
+        Dictionary<string, InteractionRequestGetSchemaEntry> interactionGets)
     {
         _gets = gets;
         _sets = sets;
+        _interactionGets = interactionGets;
     }
 
     public IEnumerable<UnitSourceGetSchemaEntry> Gets => _gets.Values;
     public IEnumerable<UnitSourceSetSchemaEntry> Sets => _sets.Values;
+    public IEnumerable<InteractionRequestGetSchemaEntry> InteractionGets => _interactionGets.Values;
 
     public bool TryGet(string key, out UnitSourceGetSchemaEntry entry)
     {
@@ -66,12 +70,18 @@ public sealed class UnitSourceSchema
     {
         return _sets.TryGetValue(key ?? string.Empty, out entry);
     }
+
+    public bool TryGetInteraction(string key, out InteractionRequestGetSchemaEntry entry)
+    {
+        return _interactionGets.TryGetValue(key ?? string.Empty, out entry);
+    }
 }
 
 public sealed class UnitSourceSchemaBuilder
 {
     private readonly Dictionary<string, UnitSourceGetSchemaEntry> _gets = new(StringComparer.Ordinal);
     private readonly Dictionary<string, UnitSourceSetSchemaEntry> _sets = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, InteractionRequestGetSchemaEntry> _interactionGets = new(StringComparer.Ordinal);
 
     public void AddGet(
         string key,
@@ -117,10 +127,23 @@ public sealed class UnitSourceSchemaBuilder
             throw new InvalidOperationException($"Unit source set is already defined: {key}");
     }
 
+    public void AddInteractionGet(string key, Type componentType)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+            throw new ArgumentException("Interaction request source key cannot be empty.", nameof(key));
+
+        if (componentType == null)
+            throw new ArgumentNullException(nameof(componentType));
+
+        if (!_interactionGets.TryAdd(key, new InteractionRequestGetSchemaEntry(key, componentType)))
+            throw new InvalidOperationException($"Interaction request source get is already defined: {key}");
+    }
+
     public UnitSourceSchema Build()
     {
         return new UnitSourceSchema(
             new Dictionary<string, UnitSourceGetSchemaEntry>(_gets, StringComparer.Ordinal),
-            new Dictionary<string, UnitSourceSetSchemaEntry>(_sets, StringComparer.Ordinal));
+            new Dictionary<string, UnitSourceSetSchemaEntry>(_sets, StringComparer.Ordinal),
+            new Dictionary<string, InteractionRequestGetSchemaEntry>(_interactionGets, StringComparer.Ordinal));
     }
 }

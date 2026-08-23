@@ -88,10 +88,15 @@ public sealed class UnitBuffSource : UnitManagedComponentSource<UnitBuffRuntimeC
         builder.AddGet("unit.buffs.stackCount", UnitValueCategory.Number, s_buffIdParameter,
             (in UnitBuffRuntimeComponent component, UnitValue[] input) => UnitValue.FromInt(GetStackCount(component, input)));
 
-        builder.AddSet("unit.buffs.remove", UnitValueCategory.Number,
-            (ref UnitBuffRuntimeComponent component, UnitValue buffId) => Remove(component, buffId));
-        builder.AddSet("unit.buffs.removeStacks", s_removeStacksParameters,
-            (ref UnitBuffRuntimeComponent component, UnitValue[] input) => TryRemoveStacks(component, input));
+        builder.AddContextSet("unit.buffs.remove", s_buffIdParameter,
+            (in UnitSourceBindingContext context, ref UnitBuffRuntimeComponent component, UnitValue[] input) =>
+                TryGetInt(input, 0, out int buffId) &&
+                UnitBuffUtility.RemoveAll(context.EntityManager, context.Entity, buffId));
+        builder.AddContextSet("unit.buffs.removeStacks", s_removeStacksParameters,
+            (in UnitSourceBindingContext context, ref UnitBuffRuntimeComponent component, UnitValue[] input) =>
+                TryGetInt(input, 0, out int buffId) &&
+                TryGetInt(input, 1, out int stackCount) &&
+                UnitBuffUtility.TryRemoveStacks(context.EntityManager, context.Entity, buffId, stackCount));
     }
 
     private static bool GetEntry(UnitBuffRuntimeComponent component, UnitValue[] input, out UnitBuffRuntimeEntry entry)
@@ -122,57 +127,6 @@ public sealed class UnitBuffSource : UnitManagedComponentSource<UnitBuffRuntimeC
     {
         int index = FindIndex(component, input);
         return index >= 0 ? component.Buffs[index].StackCount : 0;
-    }
-
-    private static bool Remove(UnitBuffRuntimeComponent component, UnitValue buffIdValue)
-    {
-        if (!buffIdValue.TryGetNumber(out float buffIdNumber) ||
-            !TryConvertToInt(buffIdNumber, out int buffId) ||
-            component?.Buffs == null)
-            return false;
-
-        bool removed = false;
-        for (int i = component.Buffs.Count - 1; i >= 0; i--)
-        {
-            if (component.Buffs[i]?.BuffId != buffId)
-                continue;
-
-            component.Buffs.RemoveAt(i);
-            removed = true;
-        }
-
-        return removed;
-    }
-
-    public static bool TryRemoveStacks(UnitBuffRuntimeComponent component, int buffId, int stackCount)
-    {
-        if (component?.Buffs == null || stackCount <= 0)
-            return false;
-
-        for (int i = 0; i < component.Buffs.Count; i++)
-        {
-            UnitBuffRuntimeEntry entry = component.Buffs[i];
-            if (entry?.BuffId != buffId)
-                continue;
-
-            if (entry.StackCount < stackCount)
-                return false;
-
-            entry.StackCount -= stackCount;
-            if (entry.StackCount == 0)
-                component.Buffs.RemoveAt(i);
-
-            return true;
-        }
-
-        return false;
-    }
-
-    private static bool TryRemoveStacks(UnitBuffRuntimeComponent component, UnitValue[] input)
-    {
-        return TryGetInt(input, 0, out int buffId) &&
-               TryGetInt(input, 1, out int stackCount) &&
-               TryRemoveStacks(component, buffId, stackCount);
     }
 
     private static bool TryGetInt(UnitValue[] input, int index, out int value)

@@ -231,7 +231,7 @@ runtime that will take over its former producer responsibilities.
 | `UnitCastTaskPayloadComponent` | Old hook-task payload carrier. | None. | Remove with the hook/phase machine. A StateScript node owns its own task state. |
 | `UnitCastSkillPayloadComponent` | Current resolved-skill snapshot carrier. | Typed `ActiveSkillExecutionSource` if external systems need the snapshot. | Remove as a cast-specific carrier. Keep the single resolved-skill snapshot concept inside `UnitStateScriptRuntimeComponent` or a narrowly scoped `UnitSkillExecutionRuntimeComponent`; it must not become free-form variables. |
 | `UnitCastFollowupRuntimeComponent` | Old long-lived follow-up rule instances for the current chain. | None. | Remove. Followup becomes a temporary chain-lifecycle buff: add it when the chain graph starts and remove it when that graph ends, is cancelled, or the unit dies. |
-| `UnitSkillModifierRuntimeComponent` | Runtime skill modifier set produced by buffs/additions. | `UnitSkillModifierSource` for scalar condition-facing results when required. | Keep. It is part of resolved-skill calculation, not graph flow state. |
+| `PlayerCurrentSkillComponent` | Stable selected chain/slot pair plus pending request-local extra modifiers. | `PlayerCurrentSkillSource`: exposes the stored pair, derives current skill/Addition IDs, validates atomic selection, and appends pending modifiers. | Keep. The stored pair is independent from the world's mutable selected chain, so an in-progress chain release remains stable. |
 
 ### Buff, Death, And Destruction
 
@@ -252,7 +252,7 @@ runtime that will take over its former producer responsibilities.
 | Component | Current role | Source | Decision |
 | --- | --- | --- | --- |
 | `UnitDropComponent` | References drop data for a defeated unit. | No regular Source. | Keep only on units with a drop module. |
-| `NPCInteractableComponent` | NPC interaction configuration. | `NPCInteractionSource` where a graph needs it. | Keep only on interactable NPCs. |
+| `UnitInteractableComponent` | Common descriptor for drop, treasure, NPC, and future interaction targets. | `game.interaction.*` reads the singleton candidate; execution uses `GameInteractionSystem`. | Keep only on entities that can receive an interaction request. |
 | Dungeon treasure/exit components | Environment interaction, not ordinary unit state. | Environment-specific Sources. | Keep outside the base-unit component set. |
 
 ## Supporting Global Components
@@ -262,8 +262,9 @@ because unit perception, interaction, or effect execution use them.
 
 | Component | Current role | Source / access | Decision |
 | --- | --- | --- | --- |
-| `UnitQuerySingleton` + `UnitQueryRuntimeComponent` | World singleton that rebuilds spatial trees for all living entities with `UnitFactionComponent`, plus world drops. Perception, projectiles, and shape-search effects query it. | `UnitQueryUtility` query functions, not a per-unit Source. | Keep unchanged. It is the backing service for the redesigned perception buffer. |
-| `PlayerInteractionRuntimeComponent` | World singleton holding the currently prompted player interaction target and kind: drop, treasure, or NPC. | Direct singleton access for interaction UI/systems. | Keep unchanged. It is not a component on the protagonist entity and should not become `UnitVariableComponent`. |
+| `UnitQuerySingleton` + `UnitQueryRuntimeComponent` | World singleton that rebuilds spatial trees for living units and generic interactables. Perception, projectiles, shape-search effects, and interaction selection query it. | `UnitQueryUtility` query functions, not a per-unit Source. | Keep unchanged. |
+| `InteractionCandidateComponent` | World singleton holding the current front-end candidate descriptor and persistent-interaction flag. | `game.interaction.hasCandidate`, `game.interaction.candidateKind`, `game.interaction.candidateTarget`, `game.interaction.candidate`, and `world.interaction.isInteracting`; prompt UI only reads it. | Keep. It rejects new candidate selection and requests while a persistent interaction is active. |
+| `GameInteractionRequest` | World singleton request snapshot containing actor, target, and descriptor. | Written by `RequestInteraction` or other game systems; consumed only by `GameInteractionSystem`. | Keep. |
 | `NPCInteractionRuntimeComponent` | Declared interaction request state: current target, requested target, pending flag. No current system reads or writes it. | None currently. | Delete. It is unused. |
 | `PendingEffectExecutionQueueComponent` | World managed queue of effects that must execute in the execution phase. Buffs currently enqueue trigger effects here. | Queue utility only; not a Source. | Keep unchanged. It is not unit state. Hook-related fields require a separate later review after Hook removal. |
 | `PersistentEffectQueueComponent` | World managed queue for persistent-effect requests. | Queue utility only; not a Source. | Keep unchanged. It is not unit state. |
@@ -281,9 +282,9 @@ interaction systems.
 | `QuadAnimationComponent` + `QuadAnimationVisualComponent` | Generic frame-animation runtime and managed visual resource for VFX quads. | Keep. Projectiles no longer use this path. |
 | `FollowEntityComponent` | Makes an effect quad follow an entity, with offset and optional rotation alignment. | Keep unchanged. |
 | `QuadOverlayPulseComponent` | Timed material overlay pulse on a quad. | Keep unchanged. |
-| `WorldDropComponent` | Drop type, item id, and amount for a spawned world drop. | Keep unchanged. |
+| `UnitInteractableComponent` | Generic kind, ID, amount, variant, range, and availability for spawned drops and other targets. | Keep. |
 | `DungeonMonsterSpawnComponent` | Dungeon region, squad, and boss identity for a spawned monster. | Keep unchanged. |
-| `DungeonTreasureComponent` + `DungeonTreasureCandidateItemElement` | Dungeon chest state and its generated candidate rewards. | Keep unchanged. |
+| `TreasureComponent` + `DungeonTreasureCandidateItemElement` | Chest state and its generated candidate rewards. | Keep. |
 | `DungeonExitComponent` | Dungeon exit region, target floor, room-clear requirement, and open state. | Keep unchanged. |
 
 ## New Components To Add

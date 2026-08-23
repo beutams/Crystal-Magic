@@ -181,14 +181,26 @@ namespace CrystalMagic.Core
                     break;
 
                 case RuntimeDungeonSceneObjectType.Treasure:
-                    if (entityManager.HasComponent<DungeonTreasureComponent>(entity))
+                    if (entityManager.HasComponent<TreasureComponent>(entity))
                     {
-                        DungeonTreasureComponent treasure = entityManager.GetComponentData<DungeonTreasureComponent>(entity);
+                        TreasureComponent treasure = entityManager.GetComponentData<TreasureComponent>(entity);
                         treasure.RegionId = sceneObject.RegionId;
                         treasure.RandomSeed = sceneObject.RandomSeed == 0 ? 1u : sceneObject.RandomSeed;
                         treasure.InterestSize = sceneObject.InterestSize;
                         treasure.IsOpened = 0;
                         entityManager.SetComponentData(entity, treasure);
+                    }
+
+                    if (entityManager.HasComponent<UnitInteractableComponent>(entity))
+                    {
+                        UnitInteractableComponent interactable = entityManager.GetComponentData<UnitInteractableComponent>(entity);
+                        interactable.Data = new UnitInteractionData
+                        {
+                            Kind = InteractionKind.Treasure,
+                            DataId = sceneObject.RegionId,
+                        };
+                        interactable.IsEnabled = 1;
+                        entityManager.SetComponentData(entity, interactable);
                     }
 
                     if (!entityManager.HasBuffer<DungeonTreasureCandidateItemElement>(entity))

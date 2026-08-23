@@ -140,6 +140,7 @@
                 "OperationType": "",
                 "Inputs": []
               },
+              "Values": [],
               "Type": "SetValue",
               "Guid": "be078000b5da40518ffb05cf852989fb",
               "EditorPosition": {
@@ -272,6 +273,7 @@
                 "OperationType": "",
                 "Inputs": []
               },
+              "Values": [],
               "Type": "SetValue",
               "Guid": "f77fbdec209a4218ab5ceabffb4f74c7",
               "EditorPosition": {
@@ -404,6 +406,7 @@
                 "OperationType": "",
                 "Inputs": []
               },
+              "Values": [],
               "Type": "SetValue",
               "Guid": "0b09a2fb498841e6ac64aafec177dbb4",
               "EditorPosition": {
@@ -440,6 +443,7 @@
                 "OperationType": "",
                 "Inputs": []
               },
+              "Values": [],
               "Type": "SetValue",
               "Guid": "24acec5d189344b9b1938b67bb60858e",
               "EditorPosition": {
@@ -572,6 +576,7 @@
                 "OperationType": "",
                 "Inputs": []
               },
+              "Values": [],
               "Type": "SetValue",
               "Guid": "34a869493d824526a7c12b1b987d85a0",
               "EditorPosition": {
@@ -644,7 +649,7 @@
         },
         {
           "Guid": "d3a1cadbe18e413ca53c0079ff363368",
-          "Name": "Interacte",
+          "Name": "Interaction",
           "EntryNodeGuid": "f9ff2d7b159743d589c10da0bf3b8ec0",
           "Nodes": [
             {
@@ -654,12 +659,211 @@
                 "x": 120.0,
                 "y": 180.0
               }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsTrue",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "world.input.interactHeld",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ],
+                "SourceType": "",
+                "SourceParam": -1,
+                "CompareValue": 0.0
+              },
+              "Type": "Monitor",
+              "Guid": "ab5a14342f1b48179aa6a8c8f4de78c1",
+              "EditorPosition": {
+                "x": 350.0,
+                "y": 180.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsTrue",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "game.interaction.hasCandidate",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ],
+                "SourceType": "",
+                "SourceParam": -1,
+                "CompareValue": 0.0
+              },
+              "Type": "Compare",
+              "Guid": "5ce0fe3e1c8f4e11af7a97ce07944979",
+              "EditorPosition": {
+                "x": 600.0,
+                "y": 180.0
+              }
+            },
+            {
+              "Interaction": {
+                "Source": 0,
+                "GetterKey": "game.interaction.candidate",
+                "Target": {
+                  "Kind": 0,
+                  "Literal": {
+                    "Type": 6,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "",
+                  "OperationType": "",
+                  "Inputs": []
+                },
+                "FixedData": {
+                  "Kind": 0,
+                  "DataId": 0,
+                  "Amount": 0,
+                  "Variant": 0,
+                  "IsValid": false
+                }
+              },
+              "Type": "RequestInteraction",
+              "Guid": "5897add0f36b4c9f86a68ce00d1bd5fd",
+              "EditorPosition": {
+                "x": 928.0,
+                "y": 180.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsFalse",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "world.interaction.isInteracting",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ],
+                "SourceType": "",
+                "SourceParam": -1,
+                "CompareValue": 0.0
+              },
+              "Type": "Compare",
+              "Guid": "c89876cda97e470b8ce46cae628db140",
+              "EditorPosition": {
+                "x": 758.0,
+                "y": 180.0
+              }
             }
           ],
-          "Edges": [],
+          "Edges": [
+            {
+              "OutputNodeGuid": "f9ff2d7b159743d589c10da0bf3b8ec0",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "ab5a14342f1b48179aa6a8c8f4de78c1",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "ab5a14342f1b48179aa6a8c8f4de78c1",
+              "OutputPortName": "OnChangeTrue",
+              "InputNodeGuid": "5ce0fe3e1c8f4e11af7a97ce07944979",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "5ce0fe3e1c8f4e11af7a97ce07944979",
+              "OutputPortName": "True",
+              "InputNodeGuid": "c89876cda97e470b8ce46cae628db140",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "c89876cda97e470b8ce46cae628db140",
+              "OutputPortName": "True",
+              "InputNodeGuid": "5897add0f36b4c9f86a68ce00d1bd5fd",
+              "InputPortName": "In"
+            }
+          ],
           "ViewPosition": {
-            "x": 0.0,
-            "y": 0.0
+            "x": -322.0,
+            "y": 103.333336
           },
           "ViewScale": 1.0
         }
@@ -806,6 +1010,7 @@
                 "OperationType": "",
                 "Inputs": []
               },
+              "Values": [],
               "Type": "SetValue",
               "Guid": "d63e770aac2749409cb87a3d46c62517",
               "EditorPosition": {
@@ -938,6 +1143,7 @@
                 "OperationType": "",
                 "Inputs": []
               },
+              "Values": [],
               "Type": "SetValue",
               "Guid": "2752a5278894499a862df4b130387a49",
               "EditorPosition": {
@@ -1070,6 +1276,7 @@
                 "OperationType": "",
                 "Inputs": []
               },
+              "Values": [],
               "Type": "SetValue",
               "Guid": "e01e7f803a904c76a34a15d369b31855",
               "EditorPosition": {
@@ -1106,6 +1313,7 @@
                 "OperationType": "",
                 "Inputs": []
               },
+              "Values": [],
               "Type": "SetValue",
               "Guid": "1d3fee866cc0474fa77258d352cdd2f1",
               "EditorPosition": {
@@ -1238,6 +1446,7 @@
                 "OperationType": "",
                 "Inputs": []
               },
+              "Values": [],
               "Type": "SetValue",
               "Guid": "2c19fa621b454a5ea108fb36633ca3db",
               "EditorPosition": {
@@ -1360,6 +1569,7 @@
                 "OperationType": "",
                 "Inputs": []
               },
+              "Values": [],
               "Type": "SetValue",
               "Guid": "e6a4f5d19e194470a22de1ef847e5c9b",
               "EditorPosition": {
@@ -1396,6 +1606,7 @@
                 "OperationType": "",
                 "Inputs": []
               },
+              "Values": [],
               "Type": "SetValue",
               "Guid": "8b49d33a7d1b4b7e8b98dc2f6e995b53",
               "EditorPosition": {
@@ -1485,7 +1696,7 @@
             }
           ],
           "ViewPosition": {
-            "x": -57.0,
+            "x": -57.3333321,
             "y": -78.0
           },
           "ViewScale": 0.8695652
@@ -1645,6 +1856,7 @@
                 "OperationType": "",
                 "Inputs": []
               },
+              "Values": [],
               "Type": "SetValue",
               "Guid": "c25a5f0de2b64a8eaf0536591f5e6366",
               "EditorPosition": {
@@ -1794,6 +2006,7 @@
                 "OperationType": "",
                 "Inputs": []
               },
+              "Values": [],
               "Type": "SetValue",
               "Guid": "52f1da8897804f14af5d8caee987d4ad",
               "EditorPosition": {
@@ -2085,6 +2298,7 @@
                 "OperationType": "",
                 "Inputs": []
               },
+              "Values": [],
               "Type": "SetValue",
               "Guid": "cbac06d94bde419999fec5d558d31d18",
               "EditorPosition": {
@@ -2342,6 +2556,7 @@
                   }
                 ]
               },
+              "Values": [],
               "Type": "SetValue",
               "Guid": "6f88f1092b5a403fa7c5e159bdd768e6",
               "EditorPosition": {
@@ -2677,6 +2892,7 @@
                 "OperationType": "",
                 "Inputs": []
               },
+              "Values": [],
               "Type": "SetValue",
               "Guid": "8ade1650842a4e2784c90b6ffd75a441",
               "EditorPosition": {
@@ -2713,6 +2929,7 @@
                 "OperationType": "",
                 "Inputs": []
               },
+              "Values": [],
               "Type": "SetValue",
               "Guid": "70ec76c749d84d3fb0e21f7454c798f7",
               "EditorPosition": {
@@ -2749,6 +2966,7 @@
                 "OperationType": "",
                 "Inputs": []
               },
+              "Values": [],
               "Type": "SetValue",
               "Guid": "651258af3a084260a229975f3b2e8a77",
               "EditorPosition": {
@@ -3016,6 +3234,7 @@
                   }
                 ]
               },
+              "Values": [],
               "Type": "SetValue",
               "Guid": "c782a7f4f83a4e848baa7f9c849af0d2",
               "EditorPosition": {
@@ -3362,6 +3581,177 @@
           "ViewPosition": {
             "x": 0.0,
             "y": 0.0
+          },
+          "ViewScale": 1.0
+        },
+        {
+          "Guid": "b43d5a04427549cd865621ebc82a56dd",
+          "Name": "Interaction",
+          "EntryNodeGuid": "149e6a412bca443c8de3adf715a21a3a",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "149e6a412bca443c8de3adf715a21a3a",
+              "EditorPosition": {
+                "x": 120.0,
+                "y": 180.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsTrue",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "world.input.interactHeld",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ],
+                "SourceType": "",
+                "SourceParam": -1,
+                "CompareValue": 0.0
+              },
+              "Type": "Monitor",
+              "Guid": "e17763e4cc344b8ba012afedbcacd46d",
+              "EditorPosition": {
+                "x": 350.0,
+                "y": 180.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsTrue",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "game.interaction.hasCandidate",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ],
+                "SourceType": "",
+                "SourceParam": -1,
+                "CompareValue": 0.0
+              },
+              "Type": "Compare",
+              "Guid": "8887ea79cf8f4f45943ba1ab192192a1",
+              "EditorPosition": {
+                "x": 600.0,
+                "y": 180.0
+              }
+            },
+            {
+              "Interaction": {
+                "Source": 0,
+                "GetterKey": "game.interaction.candidate",
+                "Target": {
+                  "Kind": 0,
+                  "Literal": {
+                    "Type": 6,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "",
+                  "OperationType": "",
+                  "Inputs": []
+                },
+                "FixedData": {
+                  "Kind": 0,
+                  "DataId": 0,
+                  "Amount": 0,
+                  "Variant": 0,
+                  "IsValid": false
+                }
+              },
+              "Type": "RequestInteraction",
+              "Guid": "8ec8b1ff44ba4ec49d3d70d999c8ef00",
+              "EditorPosition": {
+                "x": 850.0,
+                "y": 180.0
+              }
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "149e6a412bca443c8de3adf715a21a3a",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "e17763e4cc344b8ba012afedbcacd46d",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "e17763e4cc344b8ba012afedbcacd46d",
+              "OutputPortName": "OnChangeTrue",
+              "InputNodeGuid": "8887ea79cf8f4f45943ba1ab192192a1",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "8887ea79cf8f4f45943ba1ab192192a1",
+              "OutputPortName": "True",
+              "InputNodeGuid": "8ec8b1ff44ba4ec49d3d70d999c8ef00",
+              "InputPortName": "In"
+            }
+          ],
+          "ViewPosition": {
+            "x": -160.0,
+            "y": -9.333333
           },
           "ViewScale": 1.0
         }

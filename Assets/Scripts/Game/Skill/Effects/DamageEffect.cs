@@ -30,9 +30,9 @@ namespace CrystalMagic.Game.Skill.Effects
                 return;
 
             UnitVitalityComponent vitality = entityManager.GetComponentData<UnitVitalityComponent>(target);
-            DamageBreakdown breakdown = CalculateDamage(context, entityManager, vitality);
+            DamageBreakdown breakdown = CalculateDamage(context, entityManager, target);
             float damage = breakdown.FinalDamage;
-            damage = UnitBuffUtility.ApplyDamageTakenRuntimeBuffs(entityManager, target, damage);
+            damage = UnitModifierResolver.ApplyDamageTakenModifiers(entityManager, target, damage);
             if (damage <= 0f)
                 return;
 
@@ -63,10 +63,10 @@ namespace CrystalMagic.Game.Skill.Effects
                 $"Raw={breakdown.RawDamage:0.##} Defense={breakdown.Defense:0.##} Final={breakdown.FinalDamage:0.##} " +
                 $"Target={target.Index}:{target.Version} HP={previousHealth:0.##}->{vitality.CurrentHealth:0.##}");
 
-            EventComponent.Instance.Publish(new UnitDamagedEvent(target, vitality.CurrentHealth, vitality.RealMaxHealth));
+            EventComponent.Instance.Publish(new UnitDamagedEvent(target, vitality.CurrentHealth, UnitModifierResolver.GetMaxHealth(entityManager, target)));
         }
 
-        private DamageBreakdown CalculateDamage(SkillContent context, EntityManager entityManager, UnitVitalityComponent targetVitality)
+        private DamageBreakdown CalculateDamage(SkillContent context, EntityManager entityManager, Entity target)
         {
             float attackPower = 0f;
             if (context.HasOriginEntity &&
@@ -74,16 +74,17 @@ namespace CrystalMagic.Game.Skill.Effects
                 entityManager.Exists(context.OriginEntity) &&
                 entityManager.HasComponent<UnitAttackComponent>(context.OriginEntity))
             {
-                attackPower = entityManager.GetComponentData<UnitAttackComponent>(context.OriginEntity).RealAttackPower;
+                attackPower = UnitModifierResolver.GetAttackPower(entityManager, context.OriginEntity);
             }
 
             float rawDamage = attackPower * Data.DamageCoefficient + Data.FlatDamageBonus;
+            float defense = UnitModifierResolver.GetDefense(entityManager, target);
             return new DamageBreakdown
             {
                 AttackPower = attackPower,
                 RawDamage = rawDamage,
-                Defense = targetVitality.RealDefense,
-                FinalDamage = math.max(0f, rawDamage - targetVitality.RealDefense),
+                Defense = defense,
+                FinalDamage = math.max(0f, rawDamage - defense),
             };
         }
 

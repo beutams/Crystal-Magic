@@ -42,11 +42,21 @@ public struct UnitElementComponent : IComponentData
 [UnitSourceAuthoring(typeof(UnitElementAuthoring))]
 public sealed class UnitElementSource : UnitComponentSource<UnitElementComponent>
 {
+    private static readonly ComparatorParameterDefinition[] s_noParameters = System.Array.Empty<ComparatorParameterDefinition>();
+
     protected override void Define(UnitSourceDefinitionBuilder<UnitElementComponent> builder)
     {
-        builder.AddGet("unit.element.waterPower", UnitValueCategory.Number, (in UnitElementComponent value) => UnitValue.FromFloat(value.WaterPower));
-        builder.AddGet("unit.element.firePower", UnitValueCategory.Number, (in UnitElementComponent value) => UnitValue.FromFloat(value.FirePower));
-        builder.AddGet("unit.element.lightningPower", UnitValueCategory.Number, (in UnitElementComponent value) => UnitValue.FromFloat(value.LightningPower));
-        builder.AddGet("unit.element.windPower", UnitValueCategory.Number, (in UnitElementComponent value) => UnitValue.FromFloat(value.WindPower));
+        builder.AddContextGet("unit.element.waterPower", UnitValueCategory.Number, s_noParameters,
+            (in UnitSourceBindingContext context, in UnitElementComponent _, UnitValue[] _) =>
+                UnitValue.FromFloat(UnitModifierResolver.GetElementPower(context.EntityManager, context.Entity, CrystalMagic.Game.Data.Effects.ElementType.Water)));
+        builder.AddContextGet("unit.element.firePower", UnitValueCategory.Number, s_noParameters,
+            (in UnitSourceBindingContext context, in UnitElementComponent _, UnitValue[] _) =>
+                UnitValue.FromFloat(UnitModifierResolver.GetElementPower(context.EntityManager, context.Entity, CrystalMagic.Game.Data.Effects.ElementType.Fire)));
+        builder.AddContextGet("unit.element.lightningPower", UnitValueCategory.Number, s_noParameters,
+            (in UnitSourceBindingContext context, in UnitElementComponent _, UnitValue[] _) =>
+                UnitValue.FromFloat(UnitModifierResolver.GetElementPower(context.EntityManager, context.Entity, CrystalMagic.Game.Data.Effects.ElementType.Lightning)));
+        builder.AddContextGet("unit.element.windPower", UnitValueCategory.Number, s_noParameters,
+            (in UnitSourceBindingContext context, in UnitElementComponent _, UnitValue[] _) =>
+                UnitValue.FromFloat(UnitModifierResolver.GetElementPower(context.EntityManager, context.Entity, CrystalMagic.Game.Data.Effects.ElementType.Wind)));
     }
 }

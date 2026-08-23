@@ -3,6 +3,7 @@ using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Data.Effects;
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace CrystalMagic.Game.Skill
@@ -64,9 +65,18 @@ namespace CrystalMagic.Game.Skill
                 Id = skillData.Id,
                 Name = skillData.DisplayName,
                 RuntimeType = skillData.EffectiveRuntimeType,
-                MpCost = UnitSkillModifierUtility.GetModifiedMpCost(modifiers, skillData.MpCost),
+                MpCost = GetModifiedMpCost(modifiers, skillData.MpCost),
                 EffectChain = EffectData.CreateRuntimeCopies(skillData.EffectChain, modifiers, elementComponent),
             };
+        }
+
+        private static int GetModifiedMpCost(SkillModifierSet modifiers, float baseMpCost)
+        {
+            if (!math.isfinite(baseMpCost))
+                return 0;
+
+            float modifiedMpCost = modifiers?.Apply(SkillModifierChannel.MpCost, baseMpCost) ?? baseMpCost;
+            return math.max(0, (int)math.round(modifiedMpCost));
         }
     }
 }

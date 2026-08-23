@@ -26,47 +26,21 @@ namespace CrystalMagic.Game.Skill.Effects
             if (buffData == null)
                 return;
 
-            UnitBuffRuntimeComponent runtimeComponent = UnitBuffUtility.GetOrCreateRuntimeComponent(entityManager, target);
-            if (runtimeComponent == null)
-                return;
-
             int stackToApply = math.max(1, Data.StackCount);
             float duration = Data.DurationSeconds < 0f ? -1f : math.max(0f, Data.DurationSeconds);
             System.Collections.Generic.List<BuffTriggerRuntimeEntry> runtimeTriggerEntries = CreateRuntimeTriggerEntries(context, buffData);
             bool hasOriginEntity = context.HasOriginEntity && context.OriginEntity != Entity.Null;
             Entity originEntity = hasOriginEntity ? context.OriginEntity : Entity.Null;
             int sourceSkillId = context.SourceSkillId;
-
-            for (int i = 0; i < runtimeComponent.Buffs.Count; i++)
-            {
-                UnitBuffRuntimeEntry entry = runtimeComponent.Buffs[i];
-                if (entry.BuffId != Data.BuffId)
-                    continue;
-
-                entry.RemainingTime = GetPreferredDuration(entry.RemainingTime, duration);
-                entry.StackCount = buffData.CanStack
-                    ? math.min(math.max(1, buffData.MaxStacks), math.max(1, entry.StackCount) + stackToApply)
-                    : 1;
-                entry.HasOriginEntity = hasOriginEntity;
-                entry.OriginEntity = originEntity;
-                entry.SourceSkillId = sourceSkillId;
-                entry.InitializeFromDefinition(buffData, runtimeTriggerEntries);
-                return;
-            }
-
-            UnitBuffRuntimeEntry newEntry = new()
-            {
-                BuffId = Data.BuffId,
-                RemainingTime = duration,
-                StackCount = buffData.CanStack
-                    ? math.min(math.max(1, buffData.MaxStacks), stackToApply)
-                    : 1,
-                HasOriginEntity = hasOriginEntity,
-                OriginEntity = originEntity,
-                SourceSkillId = sourceSkillId,
-            };
-            newEntry.InitializeFromDefinition(buffData, runtimeTriggerEntries);
-            runtimeComponent.Buffs.Add(newEntry);
+            UnitBuffUtility.Apply(
+                entityManager,
+                target,
+                Data.BuffId,
+                duration,
+                stackToApply,
+                originEntity,
+                sourceSkillId,
+                runtimeTriggerEntries);
         }
 
         private static System.Collections.Generic.List<BuffTriggerRuntimeEntry> CreateRuntimeTriggerEntries(SkillContent context, BuffData buffData)
@@ -106,14 +80,6 @@ namespace CrystalMagic.Game.Skill.Effects
             }
 
             return runtimeEntries;
-        }
-
-        private static float GetPreferredDuration(float currentDuration, float incomingDuration)
-        {
-            if (currentDuration < 0f || incomingDuration < 0f)
-                return -1f;
-
-            return math.max(currentDuration, incomingDuration);
         }
     }
 }

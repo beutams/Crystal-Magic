@@ -14,6 +14,7 @@ namespace CrystalMagic.Game.Data
         PropertyModifier = 0,
         Effect = 1,
         SkillModifier = 2,
+        SkillAdditionGrant = 3,
     }
 
     [System.Serializable]
@@ -169,5 +170,14 @@ namespace CrystalMagic.Game.Data
     public class SkillModifierBuffData : BuffData
     {
         public override BuffCategory Category => BuffCategory.SkillModifier;
+    }
+
+    [ReadOnlyData]
+    [System.Serializable]
+    public sealed class SkillAdditionGrantBuffData : BuffData
+    {
+        public List<int> SkillAdditionIds = new();
+
+        public override BuffCategory Category => BuffCategory.SkillAdditionGrant;
     }
 }

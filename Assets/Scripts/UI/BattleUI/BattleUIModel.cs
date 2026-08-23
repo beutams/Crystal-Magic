@@ -176,20 +176,22 @@ namespace CrystalMagic.UI
             if (entityManager.HasComponent<UnitVitalityComponent>(player))
             {
                 UnitVitalityComponent vitality = entityManager.GetComponentData<UnitVitalityComponent>(player);
-                float maxHealth = Mathf.Max(vitality.RealMaxHealth, 0.0001f);
+                float resolvedMaxHealth = UnitModifierResolver.GetMaxHealth(entityManager, player);
+                float maxHealth = Mathf.Max(resolvedMaxHealth, 0.0001f);
                 snapshot.HasHealth = true;
                 snapshot.CurrentHealth = vitality.CurrentHealth;
-                snapshot.MaxHealth = vitality.RealMaxHealth;
+                snapshot.MaxHealth = resolvedMaxHealth;
                 snapshot.HpRatio = Mathf.Clamp01(vitality.CurrentHealth / maxHealth);
             }
 
             if (entityManager.HasComponent<UnitManaComponent>(player))
             {
                 UnitManaComponent mana = entityManager.GetComponentData<UnitManaComponent>(player);
-                float maxMana = Mathf.Max(mana.RealMaxMp, 0.0001f);
+                float resolvedMaxMana = UnitModifierResolver.GetMaxMp(entityManager, player);
+                float maxMana = Mathf.Max(resolvedMaxMana, 0.0001f);
                 snapshot.HasMana = true;
                 snapshot.CurrentMana = mana.CurrentMana;
-                snapshot.MaxMana = mana.RealMaxMp;
+                snapshot.MaxMana = resolvedMaxMana;
                 snapshot.MpRatio = Mathf.Clamp01(mana.CurrentMana / maxMana);
             }
 

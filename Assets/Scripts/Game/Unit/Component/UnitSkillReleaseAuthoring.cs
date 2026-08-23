@@ -21,7 +21,7 @@ public sealed class UnitSkillReleaseComponent : IComponentData
     public List<SkillReleaseRequest> PendingRequests = new();
 }
 
-// This is a release-time snapshot. The execution layer never reads the caster's unit components again.
+// This is a raw release request. SkillReleaseSystem creates the immutable release snapshot.
 public sealed class SkillReleaseRequest
 {
     public int SkillId = -1;
@@ -32,7 +32,5 @@ public sealed class SkillReleaseRequest
     public Entity TargetEntity = Entity.Null;
     public bool HasTargetPosition;
     public float3 TargetPosition;
-    public bool HasElementSnapshot;
-    public UnitElementComponent ElementSnapshot;
-    public SkillModifierSet ModifierSnapshot = new();
+    public SkillModifierSet ExtraModifiers = new();
 }

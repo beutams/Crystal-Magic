@@ -25,7 +25,7 @@ public class UnitHealthRatioSource : ISource
             return 0f;
 
         UnitVitalityComponent vitality = _context.EntityManager.GetComponentData<UnitVitalityComponent>(_context.Entity);
-        float maxHealth = math.max(0f, vitality.RealMaxHealth);
+        float maxHealth = math.max(0f, UnitModifierResolver.GetMaxHealth(_context.EntityManager, _context.Entity));
         if (maxHealth <= 0f)
             return 0f;
 

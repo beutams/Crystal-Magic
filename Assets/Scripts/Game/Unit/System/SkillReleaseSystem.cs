@@ -22,7 +22,7 @@ public partial class SkillReleaseSystem : SystemBase
                 SkillReleaseRequest request = releaseComponent.PendingRequests[0];
                 releaseComponent.PendingRequests.RemoveAt(0);
 
-                if (!SkillAnalysisUtility.TryAnalyzeSkill(request, out ResolvedSkillData resolvedSkill))
+                if (!SkillReleaseSnapshotUtility.TryCreate(EntityManager, request, out ResolvedSkillData resolvedSkill))
                 {
                     Debug.LogError($"[SkillReleaseSystem] Failed to analyze SkillId={request?.SkillId ?? -1}.");
                     continue;

@@ -142,9 +142,11 @@ public sealed class UnitSourceAccessTable : IComparatorValueResolver
 {
     private readonly Dictionary<string, UnitSourceGet> _gets = new(StringComparer.Ordinal);
     private readonly Dictionary<string, UnitSourceSet> _sets = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, InteractionRequestSourceGet> _interactionGets = new(StringComparer.Ordinal);
 
     public IEnumerable<UnitSourceGet> Gets => _gets.Values;
     public IEnumerable<UnitSourceSet> Sets => _sets.Values;
+    public IEnumerable<InteractionRequestSourceGet> InteractionGets => _interactionGets.Values;
 
     internal void AddGet(UnitSourceGet sourceGet)
     {
@@ -164,6 +166,15 @@ public sealed class UnitSourceAccessTable : IComparatorValueResolver
             throw new InvalidOperationException($"Unit source set is already registered: {sourceSet.Key}");
     }
 
+    internal void AddInteractionGet(InteractionRequestSourceGet sourceGet)
+    {
+        if (sourceGet == null)
+            throw new ArgumentNullException(nameof(sourceGet));
+
+        if (!_interactionGets.TryAdd(sourceGet.Key, sourceGet))
+            throw new InvalidOperationException($"Interaction request source get is already registered: {sourceGet.Key}");
+    }
+
     public bool TryGet(string key, UnitValue[] parameters, out UnitValue value)
     {
         if (_gets.TryGetValue(key ?? string.Empty, out UnitSourceGet sourceGet))
@@ -179,6 +190,15 @@ public sealed class UnitSourceAccessTable : IComparatorValueResolver
                sourceSet.TrySet(parameters);
     }
 
+    public bool TryGetInteraction(string key, out InteractionRequestSnapshot request)
+    {
+        if (_interactionGets.TryGetValue(key ?? string.Empty, out InteractionRequestSourceGet sourceGet))
+            return sourceGet.TryGet(out request);
+
+        request = default;
+        return false;
+    }
+
     public bool TryGetDefinition(string key, out UnitSourceGet sourceGet)
     {
         return _gets.TryGetValue(key ?? string.Empty, out sourceGet);
@@ -187,6 +207,11 @@ public sealed class UnitSourceAccessTable : IComparatorValueResolver
     public bool TryGetDefinition(string key, out UnitSourceSet sourceSet)
     {
         return _sets.TryGetValue(key ?? string.Empty, out sourceSet);
+    }
+
+    public bool TryGetInteractionDefinition(string key, out InteractionRequestSourceGet sourceGet)
+    {
+        return _interactionGets.TryGetValue(key ?? string.Empty, out sourceGet);
     }
 
     bool IComparatorValueResolver.TryGet(string key, out IParameterizedUnitValueGetter getter)
