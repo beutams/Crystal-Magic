@@ -16,7 +16,7 @@ public struct UnitQuerySingleton : IComponentData
 public sealed class UnitQueryRuntimeComponent : IComponentData
 {
     public UnitQueryTree UnitTree = new();
-    public UnitQueryTree WorldDropTree = new();
+    public UnitQueryTree InteractableTree = new();
 }
 
 [UpdateInGroup(typeof(UnitInitializationSystemGroup), OrderFirst = true)]
@@ -26,7 +26,7 @@ partial class UnitQueryBuildSystem : SystemBase
 {
     private Entity _singletonEntity;
     private readonly List<UnitQueryHit> _unitEntries = new();
-    private readonly List<UnitQueryHit> _worldDropEntries = new();
+    private readonly List<UnitQueryHit> _interactableEntries = new();
 
     protected override void OnCreate()
     {
@@ -37,7 +37,7 @@ partial class UnitQueryBuildSystem : SystemBase
     protected override void OnUpdate()
     {
         _unitEntries.Clear();
-        _worldDropEntries.Clear();
+        _interactableEntries.Clear();
 
         foreach ((RefRO<LocalTransform> transform, Entity entity) in
                  SystemAPI.Query<RefRO<LocalTransform>>()
@@ -54,10 +54,10 @@ partial class UnitQueryBuildSystem : SystemBase
 
         foreach ((RefRO<LocalTransform> transform, Entity entity) in
                  SystemAPI.Query<RefRO<LocalTransform>>()
-                     .WithAll<WorldDropComponent>()
+                     .WithAll<UnitInteractableComponent>()
                      .WithEntityAccess())
         {
-            _worldDropEntries.Add(new UnitQueryHit
+            _interactableEntries.Add(new UnitQueryHit
             {
                 Entity = entity,
                 Position = transform.ValueRO.Position,
@@ -66,6 +66,6 @@ partial class UnitQueryBuildSystem : SystemBase
 
         UnitQueryRuntimeComponent runtime = EntityManager.GetComponentObject<UnitQueryRuntimeComponent>(_singletonEntity);
         runtime.UnitTree.Rebuild(_unitEntries);
-        runtime.WorldDropTree.Rebuild(_worldDropEntries);
+        runtime.InteractableTree.Rebuild(_interactableEntries);
     }
 }

@@ -10,7 +10,7 @@ partial struct PlayerMovementCollisionSystem : ISystem
 {
     public void OnCreate(ref SystemState state)
     {
-        state.RequireForUpdate<PlayerTag>();
+        state.RequireForUpdate<UnitFactionComponent>();
         state.RequireForUpdate<PhysicsWorldSingleton>();
     }
 
@@ -23,13 +23,15 @@ partial struct PlayerMovementCollisionSystem : ISystem
         PhysicsWorldSingleton physicsWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>();
         NativeList<ColliderCastHit> hits = new(Allocator.Temp);
 
-        foreach ((RefRW<UnitMoveComponent> moveRef, RefRW<PhysicsVelocity> velocityRef,
+        foreach ((RefRO<UnitFactionComponent> factionRef, RefRW<UnitMoveComponent> moveRef, RefRW<PhysicsVelocity> velocityRef,
             RefRO<PhysicsCollider> colliderRef, RefRO<LocalTransform> transformRef, Entity entity) in
-            SystemAPI.Query<RefRW<UnitMoveComponent>, RefRW<PhysicsVelocity>, RefRO<PhysicsCollider>, RefRO<LocalTransform>>()
-                .WithAll<PlayerTag>()
+            SystemAPI.Query<RefRO<UnitFactionComponent>, RefRW<UnitMoveComponent>, RefRW<PhysicsVelocity>, RefRO<PhysicsCollider>, RefRO<LocalTransform>>()
                 .WithNone<UnitDeathComponent>()
                 .WithEntityAccess())
         {
+            if (!UnitFactionUtility.IsPlayer(factionRef.ValueRO.Value))
+                continue;
+
             PhysicsCollider collider = colliderRef.ValueRO;
             PhysicsVelocity velocity = velocityRef.ValueRO;
             float3 displacement = velocity.Linear * deltaTime;

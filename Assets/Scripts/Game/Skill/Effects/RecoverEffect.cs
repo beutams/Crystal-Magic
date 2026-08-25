@@ -30,9 +30,10 @@ namespace CrystalMagic.Game.Skill.Effects
             if (healAmount <= 0f)
                 return;
 
-            vitality.CurrentHealth = math.min(vitality.RealMaxHealth, vitality.CurrentHealth + healAmount);
+            float maxHealth = UnitModifierResolver.GetMaxHealth(entityManager, target);
+            vitality.CurrentHealth = math.min(maxHealth, vitality.CurrentHealth + healAmount);
             entityManager.SetComponentData(target, vitality);
-            EventComponent.Instance.Publish(new UnitDamagedEvent(target, vitality.CurrentHealth, vitality.RealMaxHealth));
+            EventComponent.Instance.Publish(new UnitDamagedEvent(target, vitality.CurrentHealth, maxHealth));
         }
 
         private float CalculateHealAmount(SkillContent context, EntityManager entityManager)
@@ -43,7 +44,7 @@ namespace CrystalMagic.Game.Skill.Effects
                 entityManager.Exists(context.OriginEntity) &&
                 entityManager.HasComponent<UnitAttackComponent>(context.OriginEntity))
             {
-                attackPower = entityManager.GetComponentData<UnitAttackComponent>(context.OriginEntity).RealAttackPower;
+                attackPower = UnitModifierResolver.GetAttackPower(entityManager, context.OriginEntity);
             }
 
             return math.max(0f, attackPower * Data.HealCoefficient + Data.FlatHealBonus);
@@ -75,7 +76,7 @@ namespace CrystalMagic.Game.Skill.Effects
             if (manaRestoreAmount <= 0f)
                 return;
 
-            mana.CurrentMana = math.min(mana.RealMaxMp, mana.CurrentMana + manaRestoreAmount);
+            mana.CurrentMana = math.min(UnitModifierResolver.GetMaxMp(entityManager, target), mana.CurrentMana + manaRestoreAmount);
             entityManager.SetComponentData(target, mana);
         }
 
@@ -87,7 +88,7 @@ namespace CrystalMagic.Game.Skill.Effects
                 entityManager.Exists(context.OriginEntity) &&
                 entityManager.HasComponent<UnitAttackComponent>(context.OriginEntity))
             {
-                attackPower = entityManager.GetComponentData<UnitAttackComponent>(context.OriginEntity).RealAttackPower;
+                attackPower = UnitModifierResolver.GetAttackPower(entityManager, context.OriginEntity);
             }
 
             return math.max(0f, attackPower * Data.ManaRestoreCoefficient + Data.FlatManaRestoreBonus);
@@ -118,13 +119,14 @@ namespace CrystalMagic.Game.Skill.Effects
             if (vitality.CurrentHealth <= 0f)
                 return;
 
-            float healthCost = math.max(0f, vitality.RealMaxHealth * Data.MaxHealthCoefficient + Data.FlatHealthCost);
+            float maxHealth = UnitModifierResolver.GetMaxHealth(entityManager, origin);
+            float healthCost = math.max(0f, maxHealth * Data.MaxHealthCoefficient + Data.FlatHealthCost);
             if (healthCost <= 0f)
                 return;
 
             vitality.CurrentHealth = math.max(1f, vitality.CurrentHealth - healthCost);
             entityManager.SetComponentData(origin, vitality);
-            EventComponent.Instance.Publish(new UnitDamagedEvent(origin, vitality.CurrentHealth, vitality.RealMaxHealth));
+            EventComponent.Instance.Publish(new UnitDamagedEvent(origin, vitality.CurrentHealth, maxHealth));
         }
     }
 }

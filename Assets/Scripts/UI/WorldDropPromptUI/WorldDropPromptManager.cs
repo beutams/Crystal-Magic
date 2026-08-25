@@ -106,7 +106,7 @@ namespace CrystalMagic.UI
             if (_rootRect == null)
                 return false;
 
-            GameObject rootObject = new("WorldDropPrompt", typeof(RectTransform));
+            GameObject rootObject = new("InteractionPrompt", typeof(RectTransform));
             _promptRoot = rootObject.GetComponent<RectTransform>();
             _promptRoot.SetParent(_rootRect, false);
             _promptRoot.anchorMin = Vector2.zero;
@@ -159,12 +159,12 @@ namespace CrystalMagic.UI
             if (_runtimeQuery.IsEmptyIgnoreFilter)
                 return false;
 
-            PlayerInteractionRuntimeComponent runtime = _runtimeQuery.GetSingleton<PlayerInteractionRuntimeComponent>();
-            if (runtime.CurrentTarget == Entity.Null || runtime.CurrentKind == PlayerInteractionKind.None)
+            InteractionCandidateComponent candidate = _runtimeQuery.GetSingleton<InteractionCandidateComponent>();
+            if (candidate.Target == Entity.Null || !candidate.Data.IsValid)
                 return false;
 
             EntityManager entityManager = world.EntityManager;
-            Entity target = runtime.CurrentTarget;
+            Entity target = candidate.Target;
             if (!entityManager.Exists(target) ||
                 !entityManager.HasComponent<LocalToWorld>(target))
             {
@@ -178,7 +178,7 @@ namespace CrystalMagic.UI
             }
 
             LocalToWorld localToWorld = entityManager.GetComponentData<LocalToWorld>(target);
-            if (!TryBuildDisplayName(entityManager, target, runtime.CurrentKind, out displayName, out worldYOffset))
+            if (!TryBuildDisplayName(entityManager, target, candidate.Data, out displayName, out worldYOffset))
                 return false;
 
             if (string.IsNullOrWhiteSpace(displayName))
@@ -198,7 +198,7 @@ namespace CrystalMagic.UI
 
             ReleaseRuntimeQuery();
             _runtimeQueryWorld = world;
-            _runtimeQuery = world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<PlayerInteractionRuntimeComponent>());
+            _runtimeQuery = world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<InteractionCandidateComponent>());
             return true;
         }
 
@@ -219,40 +219,26 @@ namespace CrystalMagic.UI
         private static bool TryBuildDisplayName(
             EntityManager entityManager,
             Entity target,
-            PlayerInteractionKind interactionKind,
+            UnitInteractionData interaction,
             out string displayName,
             out float worldYOffset)
         {
             worldYOffset = DefaultWorldYOffset;
-            switch (interactionKind)
+            switch (interaction.Kind)
             {
-                case PlayerInteractionKind.Drop:
-                    if (!entityManager.HasComponent<WorldDropComponent>(target))
-                    {
-                        displayName = string.Empty;
-                        return false;
-                    }
-
-                    WorldDropComponent drop = entityManager.GetComponentData<WorldDropComponent>(target);
-                    displayName = BuildDropDisplayName(drop);
+                case InteractionKind.Drop:
+                    displayName = BuildDropDisplayName(interaction);
                     return true;
 
-                case PlayerInteractionKind.Treasure:
+                case InteractionKind.Treasure:
                     displayName = $"E {LocalizationComponent.Instance.Get(TreasureDisplayNameKey)}";
                     return true;
 
-                case PlayerInteractionKind.Npc:
-                    if (!entityManager.HasComponent<NPCInteractableComponent>(target))
-                    {
-                        displayName = string.Empty;
-                        return false;
-                    }
-
+                case InteractionKind.Npc:
                     worldYOffset = entityManager.HasComponent<DungeonExitComponent>(target)
                         ? DefaultWorldYOffset
                         : CharacterWorldYOffset;
-                    NPCInteractableComponent interactable = entityManager.GetComponentData<NPCInteractableComponent>(target);
-                    NPCData npcData = DataComponent.Instance.Get<NPCData>(interactable.NpcId);
+                    NPCData npcData = DataComponent.Instance.Get<NPCData>(interaction.DataId);
                     string npcName = npcData?.DisplayName;
                     if (string.IsNullOrWhiteSpace(npcName))
                         npcName = npcData?.NPC;
@@ -268,20 +254,20 @@ namespace CrystalMagic.UI
             }
         }
 
-        private static string BuildDropDisplayName(in WorldDropComponent drop)
+        private static string BuildDropDisplayName(in UnitInteractionData drop)
         {
             string name;
-            if (drop.DropType == DropRewardType.Money)
+            if ((DropRewardType)drop.Variant == DropRewardType.Money)
             {
                 string moneyDisplayName = LocalizationComponent.Instance.Get(MoneyDisplayNameKey);
                 name = drop.Amount > 1 ? $"{moneyDisplayName} x{drop.Amount}" : moneyDisplayName;
                 return $"E {name}";
             }
 
-            ItemData itemData = DataComponent.Instance.Get<ItemData>(drop.ItemId);
+            ItemData itemData = DataComponent.Instance.Get<ItemData>(drop.DataId);
             name = itemData?.Name;
             if (string.IsNullOrWhiteSpace(name))
-                name = $"Item {drop.ItemId}";
+                name = $"Item {drop.DataId}";
 
             if (drop.Amount > 1)
                 name = $"{name} x{drop.Amount}";

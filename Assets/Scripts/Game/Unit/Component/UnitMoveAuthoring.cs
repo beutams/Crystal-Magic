@@ -3,6 +3,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 
+[RequireComponent(typeof(UnitFacingAuthoring))]
 public class UnitMoveAuthoring : MonoBehaviour
 {
     class UnitMoveBaker : Baker<UnitMoveAuthoring>
@@ -28,16 +29,9 @@ public class UnitMoveAuthoring : MonoBehaviour
                 BaseMoveSpeed = baseSpeed,
                 BaseMoveSpeedOffset = 0f,
                 BaseMaxAcceleration = baseAccel,
-                SpeedFactor = 1f,
-                SpeedBonus = 0f,
-                DesiredDirection = float2.zero,
-                DesiredMaxSpeed = 0f,
-                DesiredAcceleration = math.max(0f, baseAccel),
+                Direction = float2.zero,
+                StateMoveMultiplier = 1f,
                 Velocity = float2.zero,
-            });
-            AddComponent(entity, new UnitFacingComponent
-            {
-                Direction = new float2(1f, 0f),
             });
         }
     }
@@ -48,50 +42,49 @@ public struct UnitMoveComponent : IComponentData
     public float BaseMoveSpeed;
     public float BaseMoveSpeedOffset;
     public float BaseMaxAcceleration;
-    public float SpeedFactor;
-    public float SpeedBonus;
-    public float2 DesiredDirection;
-    public float DesiredMaxSpeed;
-    public float DesiredAcceleration;
+    public float2 Direction;
+    public float StateMoveMultiplier;
     public float2 Velocity;
 
-    public float RealMoveSpeed => (BaseMoveSpeed + BaseMoveSpeedOffset) * SpeedFactor + SpeedBonus;
-    public float RealMaxAcceleration => BaseMaxAcceleration * SpeedFactor + SpeedBonus;
+    public float BaseMoveSpeedValue => BaseMoveSpeed + BaseMoveSpeedOffset;
+}
 
-    public float GetRealMoveSpeed(float commandSpeedFactor)
+[UnitSourceAuthoring(typeof(UnitMoveAuthoring))]
+public sealed class UnitMoveSource : UnitComponentSource<UnitMoveComponent>
+{
+    private static readonly ComparatorParameterDefinition[] s_noParameters = System.Array.Empty<ComparatorParameterDefinition>();
+
+    protected override void Define(UnitSourceDefinitionBuilder<UnitMoveComponent> builder)
     {
-        return RealMoveSpeed * math.max(0f, commandSpeedFactor);
-    }
+        builder.AddGet("unit.move.baseMoveSpeed", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.BaseMoveSpeedValue));
+        builder.AddGet("unit.move.baseMaxAcceleration", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.BaseMaxAcceleration));
+        builder.AddContextGet("unit.move.realMoveSpeed", UnitValueCategory.Number, s_noParameters,
+            (in UnitSourceBindingContext context, in UnitMoveComponent _, UnitValue[] _) => UnitValue.FromFloat(UnitModifierResolver.GetMoveSpeed(context.EntityManager, context.Entity)));
+        builder.AddContextGet("unit.move.realMaxAcceleration", UnitValueCategory.Number, s_noParameters,
+            (in UnitSourceBindingContext context, in UnitMoveComponent _, UnitValue[] _) => UnitValue.FromFloat(UnitModifierResolver.GetMaxAcceleration(context.EntityManager, context.Entity)));
+        builder.AddGet("unit.move.direction", UnitValueCategory.Float2, (in UnitMoveComponent value) => UnitValue.FromFloat2(value.Direction));
+        builder.AddGet("unit.move.stateMoveMultiplier", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.StateMoveMultiplier));
 
-    public float GetRealMaxAcceleration(float commandSpeedFactor)
-    {
-        return RealMaxAcceleration * math.max(0f, commandSpeedFactor);
-    }
+        builder.AddSet("unit.move.setDirection", UnitValueCategory.Float2,
+            (ref UnitMoveComponent value, UnitValue input) =>
+            {
+                value.Direction = input.Float2;
+                return true;
+            });
+        builder.AddSet("unit.move.setVelocity", UnitValueCategory.Float2,
+            (ref UnitMoveComponent value, UnitValue input) =>
+            {
+                value.Velocity = input.Float2;
+                return true;
+            });
+        builder.AddSet("unit.move.setStateMoveMultiplier", UnitValueCategory.Number,
+            (ref UnitMoveComponent value, UnitValue input) =>
+            {
+                if (!input.TryGetNumber(out float multiplier))
+                    return false;
 
-    public void SetTargetMovement(float2 direction, float maxSpeed, float acceleration)
-    {
-        float2 normalizedDirection = math.normalizesafe(direction, float2.zero);
-        DesiredDirection = normalizedDirection;
-        DesiredMaxSpeed = math.max(0f, maxSpeed);
-        DesiredAcceleration = math.max(0f, acceleration);
-
-        if (math.lengthsq(normalizedDirection) <= 0.0001f || DesiredMaxSpeed <= 0.0001f)
-        {
-            DesiredDirection = float2.zero;
-            DesiredMaxSpeed = 0f;
-        }
-    }
-
-    public void SetTargetMovementByFactor(float2 direction, float speedFactor = 1f)
-    {
-        float safeSpeedFactor = math.max(0f, speedFactor);
-        SetTargetMovement(direction,GetRealMoveSpeed(safeSpeedFactor),GetRealMaxAcceleration(safeSpeedFactor));
-    }
-
-    public void ClearTargetMovement()
-    {
-        DesiredDirection = float2.zero;
-        DesiredMaxSpeed = 0f;
-        DesiredAcceleration = math.max(0f, RealMaxAcceleration);
+                value.StateMoveMultiplier = multiplier;
+                return true;
+            });
     }
 }

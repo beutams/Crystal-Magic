@@ -92,17 +92,11 @@ public class StashUI : UIBase<StashUIData, CrystalMagic.UI.StashUIModel>
         }
 
         StashUI_InventoryItemView templateView = UI.InventoryView_Viewport_Content_InventoryItem.GameObject.GetComponent<StashUI_InventoryItemView>();
-        if (templateView == null)
-            return;
-
         UISubViewBase.EnsurePoolCapacity(templateView, itemCount, itemCount);
 
         while (_inventoryItemViews.Count < itemCount)
         {
             StashUI_InventoryItemView itemView = UISubViewBase.AcquireFromPool(templateView, UI.InventoryView_Viewport_Content.GameObject.transform);
-            if (itemView == null)
-                break;
-
             BindInventoryItemView(itemView);
             _inventoryItemViews.Add(itemView);
         }
@@ -121,17 +115,11 @@ public class StashUI : UIBase<StashUIData, CrystalMagic.UI.StashUIModel>
         }
 
         StashUI_StashItemView templateView = UI.StashView_Viewport_Content_StashItem.GameObject.GetComponent<StashUI_StashItemView>();
-        if (templateView == null)
-            return;
-
         UISubViewBase.EnsurePoolCapacity(templateView, itemCount, itemCount);
 
         while (_stashItemViews.Count < itemCount)
         {
             StashUI_StashItemView itemView = UISubViewBase.AcquireFromPool(templateView, UI.StashView_Viewport_Content.GameObject.transform);
-            if (itemView == null)
-                break;
-
             BindStashItemView(itemView);
             _stashItemViews.Add(itemView);
         }

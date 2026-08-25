@@ -2,6 +2,7 @@ using CrystalMagic.Game.MapDemo;
 using UnityEngine;
 using System.Collections.Generic;
 using CrystalMagic.Game.Data;
+using CrystalMagic.Game.OpenField;
 
 namespace CrystalMagic.Core
 {
@@ -13,6 +14,13 @@ namespace CrystalMagic.Core
         private readonly RuntimeSkillData _skillData = new();
         private readonly RuntimePropData _propData = new();
         private readonly RuntimeDungeonMapData _dungeonMapData = new();
+
+        protected override void Initialize()
+        {
+            EventComponent.Instance.Subscribe(
+                new CommonGameEvent(GameplayEventNames.PropUsed),
+                HandlePropUsed);
+        }
 
         public RuntimeSkillData GetSkillData()
         {
@@ -124,18 +132,30 @@ namespace CrystalMagic.Core
             EventComponent.Instance.Publish(new CommonGameEvent(PropRuntimeDataChangedEventName, _propData));
         }
 
-        public void SetCurrentDungeonLayout(
-            DungeonMakerTunnelingResult layout,
+        public void SetCurrentOpenFieldDungeonLayout(
+            OpenFieldDungeonLayout layout,
             RuntimeDungeonSceneData sceneData,
             int floor,
             int seed,
             int attemptCount)
         {
-            _dungeonMapData.Layout = layout;
+            _dungeonMapData.OpenFieldLayout = layout;
             _dungeonMapData.SceneData = sceneData;
             _dungeonMapData.Floor = Mathf.Max(1, floor);
             _dungeonMapData.Seed = seed;
             _dungeonMapData.AttemptCount = Mathf.Max(1, attemptCount);
+        }
+
+        private void HandlePropUsed(CommonGameEvent gameEvent)
+        {
+            GameplayEventReference reference = gameEvent.GetData<GameplayEventReference>();
+            if (!reference.Value.TryGetNumber(out float cooldownSeconds))
+            {
+                Debug.LogError("[RuntimeDataComponent] Gameplay.Prop.Used requires a numeric reference.");
+                return;
+            }
+
+            StartPropSharedCooldown(cooldownSeconds);
         }
 
         private void StopPropSharedCooldown(bool notify = true)
@@ -166,17 +186,17 @@ namespace CrystalMagic.Core
 
     public sealed class RuntimeDungeonMapData
     {
-        public DungeonMakerTunnelingResult Layout;
+        public OpenFieldDungeonLayout OpenFieldLayout;
         public RuntimeDungeonSceneData SceneData;
         public int Floor;
         public int Seed;
         public int AttemptCount;
 
-        public bool HasLayout => Layout != null;
+        public bool HasLayout => OpenFieldLayout != null;
 
         public void Clear()
         {
-            Layout = null;
+            OpenFieldLayout = null;
             SceneData = null;
             Floor = 0;
             Seed = 0;
@@ -237,15 +257,18 @@ namespace CrystalMagic.Core
         public Vector3 WorldPosition;
         public Vector3 Size = Vector3.one;
         public bool RequiresRoomClear;
+        public bool ApplyCollider = true;
         public int TargetFloor;
-        public List<RuntimeDungeonTreasureRewardData> Rewards = new();
+        public byte InterestSize;
+        public uint RandomSeed;
+        public List<int> TreasureCandidateItemIds = new();
     }
-
     public sealed class RuntimeDungeonMonsterSpawnData
     {
         public int RegionId;
         public int TileIndex;
         public int Level;
+        public int SquadId;
         public bool IsBoss;
         public string PrefabName;
         public Vector2Int SourceCoordinate;
@@ -253,12 +276,5 @@ namespace CrystalMagic.Core
         public Vector3 WorldPosition;
     }
 
-    public sealed class RuntimeDungeonTreasureRewardData
-    {
-        public DropRewardType RewardType;
-        public int ItemId = -1;
-        public float Chance = 1f;
-        public int MinQuantity = 1;
-        public int MaxQuantity = 1;
-    }
+
 }

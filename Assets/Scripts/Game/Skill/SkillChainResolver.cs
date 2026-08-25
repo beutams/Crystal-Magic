@@ -10,15 +10,6 @@ namespace CrystalMagic.Game.Skill
 {
     public static class SkillChainResolver
     {
-        public static SkillAdditionData GetSkillAdditionData(int skillAdditionId)
-        {
-            if (skillAdditionId < 0)
-                return null;
-
-            DataComponent dataComponent = DataComponent.Instance;
-            return dataComponent == null ? null : dataComponent.Get<SkillAdditionData>(skillAdditionId);
-        }
-
         public static SkillData GetSkillDataBySkillStoneItemId(int skillStoneItemId)
         {
             DataComponent dataComponent = DataComponent.Instance;
@@ -62,88 +53,30 @@ namespace CrystalMagic.Game.Skill
 
     public static class SkillResolver
     {
-        public static ResolvedSkillData Resolve(SkillData skillData, SkillModifierSet modifiers, SkillAdditionData skillAdditionData = null, UnitAttackComponent? attackComponent = null, UnitElementComponent? elementComponent = null)
+        public static ResolvedSkillData Resolve(SkillData skillData, SkillModifierSet modifiers, UnitElementComponent? elementComponent = null)
         {
             if (skillData == null)
                 return null;
 
             modifiers ??= new SkillModifierSet();
-            float actionSpeedBonus = attackComponent?.RealActionSpeedBonus ?? 0f;
-            float chantSpeedBonus = attackComponent?.RealChantSpeedBonus ?? 0f;
-            float actionSpeedValue = modifiers.GetActionSpeedValue(actionSpeedBonus);
-            float chantSpeedValue = modifiers.GetChantSpeedValue(chantSpeedBonus);
-            float actionSpeedMultiplier = UnitAttackComponent.GetDurationMultiplier(actionSpeedValue);
-            float chantSpeedMultiplier = UnitAttackComponent.GetDurationMultiplier(chantSpeedValue);
-            float moveSpeedMultiplier = math.min(1f, math.max(0f, skillData.MoveSpeedMultiplier) * modifiers.GetMoveSpeedMultiplier());
-
-            EffectData[] mergedEffectChain = MergeEffectChains(skillData.EffectChain, skillAdditionData?.EffectChain);
-
             return new ResolvedSkillData
             {
                 Source = skillData,
                 Id = skillData.Id,
                 Name = skillData.DisplayName,
                 RuntimeType = skillData.EffectiveRuntimeType,
-                MpCost = math.max(0, (int)math.round(modifiers.Apply(SkillModifierChannel.MpCost, skillData.MpCost))),
-                WindupDuration = math.max(0f, skillData.WindupDuration * actionSpeedMultiplier),
-                ChantDuration = math.max(0f, skillData.ChantDuration * chantSpeedMultiplier),
-                RecoveryDuration = math.max(0f, skillData.RecoveryDuration * actionSpeedMultiplier),
-                CanMoveWhileCasting = skillData.CanMoveWhileCasting,
-                MoveSpeedMultiplier = moveSpeedMultiplier,
-                EffectChain = EffectData.CreateRuntimeCopies(mergedEffectChain, modifiers, elementComponent),
+                MpCost = GetModifiedMpCost(modifiers, skillData.MpCost),
+                EffectChain = EffectData.CreateRuntimeCopies(skillData.EffectChain, modifiers, elementComponent),
             };
         }
 
-        private static EffectData[] MergeEffectChains(EffectData[] baseEffects, EffectData[] additionEffects)
+        private static int GetModifiedMpCost(SkillModifierSet modifiers, float baseMpCost)
         {
-            bool hasBaseEffects = baseEffects != null && baseEffects.Length > 0;
-            bool hasAdditionEffects = additionEffects != null && additionEffects.Length > 0;
+            if (!math.isfinite(baseMpCost))
+                return 0;
 
-            if (!hasBaseEffects && !hasAdditionEffects)
-                return System.Array.Empty<EffectData>();
-
-            if (!hasAdditionEffects)
-                return baseEffects;
-
-            if (!hasBaseEffects)
-                return additionEffects;
-
-            EffectData[] merged = new EffectData[baseEffects.Length + additionEffects.Length];
-            System.Array.Copy(baseEffects, 0, merged, 0, baseEffects.Length);
-            System.Array.Copy(additionEffects, 0, merged, baseEffects.Length, additionEffects.Length);
-            return merged;
-        }
-
-        public static SkillModifierSet CollectModifiers(
-            EntityManager entityManager,
-            Entity entity,
-            SkillData skillData = null,
-            SkillAdditionData skillAdditionData = null)
-        {
-            return UnitSkillModifierUtility.CreateCastModifiers(entityManager, entity, skillData, skillAdditionData);
-        }
-
-        public static bool MatchesFollowupEffect(SkillFollowupRuntime followupEffect, SkillData skillData, SkillAdditionData skillAdditionData)
-        {
-            if (skillData == null || followupEffect == null)
-                return false;
-
-            SkillFollowupContext context = new(default, Entity.Null, skillData, null, skillAdditionData);
-            return followupEffect.IsMatch(context);
-        }
-
-        public static void ApplyFollowupModifiers(ref SkillModifierSet modifiers, SkillFollowupRuntime followupEffect, in SkillFollowupContext context)
-        {
-            if (followupEffect == null)
-                return;
-
-            if (!followupEffect.IsMatch(context))
-                return;
-
-            if (!followupEffect.CanApply(context))
-                return;
-
-            followupEffect.GetModifier(ref modifiers, context);
+            float modifiedMpCost = modifiers?.Apply(SkillModifierChannel.MpCost, baseMpCost) ?? baseMpCost;
+            return math.max(0, (int)math.round(modifiedMpCost));
         }
     }
 }

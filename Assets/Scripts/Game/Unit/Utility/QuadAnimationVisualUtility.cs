@@ -6,7 +6,6 @@ using UnityEngine;
 
 public static class QuadAnimationVisualUtility
 {
-    public const string GenericProjectilePrefabName = "Projectile";
     public const string GenericVfxPrefabName = "VFX";
 
     private static readonly Dictionary<string, VisualSource> s_visualSources = new();
@@ -14,7 +13,6 @@ public static class QuadAnimationVisualUtility
     private static readonly HashSet<string> s_loggedMissingVisuals = new();
 
     public static bool TryResolveVisual(
-        QuadAnimationVisualKind visualKind,
         string prefabName,
         Texture2D texture,
         out Mesh mesh,
@@ -26,8 +24,8 @@ public static class QuadAnimationVisualUtility
         if (texture == null)
             return false;
 
-        string visualKey = GetVisualKey(visualKind, prefabName);
-        if (!TryGetVisualSource(visualKind, prefabName, out VisualSource source))
+        string visualKey = GetVisualKey(prefabName);
+        if (!TryGetVisualSource(prefabName, out VisualSource source))
             return false;
 
         material = GetOrCreateOverrideMaterial(visualKey, source.BaseMaterial, texture);
@@ -38,11 +36,11 @@ public static class QuadAnimationVisualUtility
         return true;
     }
 
-    public static int GetVisualKeyHash(QuadAnimationVisualKind visualKind, string prefabName)
+    public static int GetVisualKeyHash(string prefabName)
     {
         return string.IsNullOrWhiteSpace(prefabName)
             ? 0
-            : System.StringComparer.Ordinal.GetHashCode(GetVisualKey(visualKind, prefabName));
+            : System.StringComparer.Ordinal.GetHashCode(GetVisualKey(prefabName));
     }
 
     private static Material GetOrCreateOverrideMaterial(string visualKey, Material baseMaterial, Texture2D texture)
@@ -61,11 +59,10 @@ public static class QuadAnimationVisualUtility
     }
 
     private static bool TryGetVisualSource(
-        QuadAnimationVisualKind visualKind,
         string prefabName,
         out VisualSource source)
     {
-        string visualKey = GetVisualKey(visualKind, prefabName);
+        string visualKey = GetVisualKey(prefabName);
         if (s_visualSources.TryGetValue(visualKey, out source) &&
             source.Mesh != null &&
             source.BaseMaterial != null)
@@ -73,12 +70,12 @@ public static class QuadAnimationVisualUtility
             return true;
         }
 
-        GameObject prefab = ResourceComponent.Instance.Load<GameObject>(ResolvePrefabAssetPath(visualKind, prefabName));
+        GameObject prefab = ResourceComponent.Instance.Load<GameObject>(ResolvePrefabAssetPath(prefabName));
         Mesh mesh = prefab != null ? prefab.GetComponent<MeshFilter>()?.sharedMesh : null;
         Material material = prefab != null ? prefab.GetComponent<MeshRenderer>()?.sharedMaterial : null;
         if (mesh == null || material == null)
         {
-            LogMissingVisualOnce(visualKind, prefabName);
+            LogMissingVisualOnce(prefabName);
             source = default;
             return false;
         }
@@ -88,28 +85,24 @@ public static class QuadAnimationVisualUtility
         return true;
     }
 
-    private static string ResolvePrefabAssetPath(QuadAnimationVisualKind visualKind, string prefabName)
+    private static string ResolvePrefabAssetPath(string prefabName)
     {
-        return visualKind switch
-        {
-            QuadAnimationVisualKind.Vfx => AssetPathHelper.GetVfxPrefabAsset(prefabName),
-            _ => AssetPathHelper.GetProjectilePrefabAsset(prefabName),
-        };
+        return AssetPathHelper.GetVfxPrefabAsset(prefabName);
     }
 
-    private static string GetVisualKey(QuadAnimationVisualKind visualKind, string prefabName)
+    private static string GetVisualKey(string prefabName)
     {
-        return $"{(int)visualKind}|{prefabName}";
+        return prefabName;
     }
 
-    private static void LogMissingVisualOnce(QuadAnimationVisualKind visualKind, string prefabName)
+    private static void LogMissingVisualOnce(string prefabName)
     {
-        string key = GetVisualKey(visualKind, prefabName);
+        string key = GetVisualKey(prefabName);
         if (!s_loggedMissingVisuals.Add(key))
             return;
 
         Debug.LogWarning(
-            $"[QuadAnimationVisualUtility] Could not resolve visual source for '{prefabName}' ({visualKind}). " +
+            $"[QuadAnimationVisualUtility] Could not resolve VFX visual source for '{prefabName}'. " +
             "Make sure the prefab exists and has a MeshFilter and MeshRenderer.");
     }
 

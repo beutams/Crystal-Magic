@@ -14,15 +14,31 @@ namespace CrystalMagic.Game.Data
     [System.Serializable]
     public sealed class UnitAnimationEntryData
     {
-        public string StateName;
-        public string AnimationName;
-        public string SpriteClipPath;
+        public string Name;
+        public string FrontClipPath;
+        public string BackClipPath;
+        public string LeftClipPath;
+        public string RightClipPath;
 
         public void Normalize()
         {
-            StateName ??= string.Empty;
-            AnimationName ??= string.Empty;
-            SpriteClipPath ??= string.Empty;
+            Name ??= string.Empty;
+            FrontClipPath ??= string.Empty;
+            BackClipPath ??= string.Empty;
+            LeftClipPath ??= string.Empty;
+            RightClipPath ??= string.Empty;
+        }
+
+        public string GetClipPath(UnitAnimationDirection direction)
+        {
+            return direction switch
+            {
+                UnitAnimationDirection.Front => FrontClipPath,
+                UnitAnimationDirection.Back => BackClipPath,
+                UnitAnimationDirection.Left => LeftClipPath,
+                UnitAnimationDirection.Right => RightClipPath,
+                _ => string.Empty,
+            };
         }
     }
 
@@ -32,12 +48,11 @@ namespace CrystalMagic.Game.Data
     {
         public int UnitDataId = -1;
         public string UnitName;
-        public float PlaybackSpeed = 1f;
         public List<UnitAnimationEntryData> Animations = new();
 
         public void Normalize()
         {
-            PlaybackSpeed = UnityEngine.Mathf.Max(0.01f, PlaybackSpeed);
+            UnitName ??= string.Empty;
             Animations ??= new List<UnitAnimationEntryData>();
             for (int i = 0; i < Animations.Count; i++)
             {

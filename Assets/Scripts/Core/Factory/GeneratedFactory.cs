@@ -57,6 +57,8 @@ public class GeneratedFactory<TKey, TValue>
 
     public bool Contains(TKey key) => _factories.ContainsKey(key);
 
+    public ICollection<TKey> Keys => _factories.Keys;
+
     public void Clear() => _factories.Clear();
 
     public int Count => _factories.Count;
@@ -113,6 +115,8 @@ public class GeneratedFactory<TKey, TInput, TValue>
     }
 
     public bool Contains(TKey key) => _factories.ContainsKey(key);
+
+    public ICollection<TKey> Keys => _factories.Keys;
 
     public void Clear() => _factories.Clear();
 

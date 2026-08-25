@@ -142,15 +142,19 @@ namespace CrystalMagic.Game
             }
 
             EntityManager entityManager = world.EntityManager;
-            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<PlayerTag>());
+            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<UnitFactionComponent>());
             using NativeArray<Entity> entities = query.ToEntityArray(Allocator.Temp);
-            if (entities.Length <= 0)
+            for (int i = 0; i < entities.Length; i++)
             {
-                failureReason = PropUseFailureReason.PlayerNotFound;
-                return false;
+                Entity entity = entities[i];
+                if (!UnitFactionUtility.IsPlayer(entityManager.GetComponentData<UnitFactionComponent>(entity).Value))
+                    continue;
+
+                return TryBuildContext(entityManager, entity, out context, out failureReason);
             }
 
-            return TryBuildContext(entityManager, entities[0], out context, out failureReason);
+            failureReason = PropUseFailureReason.PlayerNotFound;
+            return false;
         }
 
         public static bool TryBuildContext(
@@ -173,17 +177,6 @@ namespace CrystalMagic.Game
                 UserEntity = userEntity,
             };
 
-            if (!entityManager.HasComponent<UnitPerceptionComponent>(userEntity))
-                return true;
-
-            UnitPerceptionComponent perception = entityManager.GetComponentData<UnitPerceptionComponent>(userEntity);
-            if (!perception.HasTarget || perception.TargetEntity == Entity.Null || !entityManager.Exists(perception.TargetEntity))
-                return true;
-
-            context.HasTargetEntity = true;
-            context.TargetEntity = perception.TargetEntity;
-            context.HasTargetPosition = true;
-            context.TargetPosition = new Vector3(perception.TargetPosition.x, perception.TargetPosition.y, 0f);
             return true;
         }
 
@@ -243,7 +236,9 @@ namespace CrystalMagic.Game
 
             SkillExecutor.ExecuteEffects(propData.EffectChain, skillContent);
             SaveDataComponent.Instance.NotifyCharacterPropDataChanged();
-            RuntimeDataComponent.Instance.StartPropSharedCooldown(GetSharedCooldownSeconds());
+            EventComponent.Instance.Publish(new CommonGameEvent(
+                GameplayEventNames.PropUsed,
+                new GameplayEventReference(context.UserEntity, UnitValue.FromFloat(GetSharedCooldownSeconds()))));
             return true;
         }
 

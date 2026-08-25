@@ -12,7 +12,7 @@ namespace CrystalMagic.Editor.Data
     {
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasFeature<UnitBattleFeatureAuthoring>();
+            return context.HasAuthoring<UnitFactionAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -33,7 +33,7 @@ namespace CrystalMagic.Editor.Data
     {
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasFeature<UnitMovementFeatureAuthoring>();
+            return context.HasAuthoring<UnitMoveAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -54,7 +54,7 @@ namespace CrystalMagic.Editor.Data
     {
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasFeature<UnitBattleFeatureAuthoring>();
+            return context.HasAuthoring<UnitVitalityAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -76,7 +76,7 @@ namespace CrystalMagic.Editor.Data
     {
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasFeature<UnitBattleFeatureAuthoring>();
+            return context.HasAuthoring<UnitAttackAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -89,7 +89,6 @@ namespace CrystalMagic.Editor.Data
             UnitEditorWindow.DrawSectionHeader("Attack");
             module.BaseAttackPower = EditorGUILayout.FloatField("Base Attack Power", module.BaseAttackPower);
             module.BaseSkillRange = EditorGUILayout.FloatField("Base Skill Range", module.BaseSkillRange);
-            module.BaseActionSpeedBonus = EditorGUILayout.FloatField("Action Speed (-100~100)", module.BaseActionSpeedBonus);
             module.BaseChantSpeedBonus = EditorGUILayout.FloatField("Chant Speed (-100~100)", module.BaseChantSpeedBonus);
         }
     }
@@ -99,7 +98,7 @@ namespace CrystalMagic.Editor.Data
     {
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasFeature<UnitBattleFeatureAuthoring>();
+            return context.HasAuthoring<UnitManaAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -115,126 +114,12 @@ namespace CrystalMagic.Editor.Data
         }
     }
 
-    [FactoryKey("Skill", 45)]
-    public sealed class UnitSkillAttributeDrawer : IUnitEditorAttributeDrawer
-    {
-        private sealed class SkillOption
-        {
-            public int Id;
-            public string Label;
-        }
-
-        public bool CanDraw(UnitEditorDrawerContext context)
-        {
-            return context.HasFeature<UnitSkillFeatureAuthoring>();
-        }
-
-        public void Draw(UnitEditorDrawerContext context)
-        {
-            UnitSkillModuleData module = context.GetOrCreateModule<UnitSkillModuleData>();
-            if (module == null)
-                return;
-
-            module.Skills ??= new List<UnitSkillSlotData>();
-            List<SkillOption> skillOptions = BuildSkillOptions();
-
-            GUILayout.Space(8f);
-            UnitEditorWindow.DrawSectionHeader("Skills");
-
-            for (int i = 0; i < module.Skills.Count; i++)
-            {
-                UnitSkillSlotData slot = module.Skills[i] ?? new UnitSkillSlotData();
-                EditorGUILayout.BeginVertical("box");
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField(BuildSlotHeader(i, slot), EditorStyles.boldLabel);
-                GUILayout.FlexibleSpace();
-                if (GUILayout.Button("Up", GUILayout.Width(40f)) && i > 0)
-                {
-                    (module.Skills[i - 1], module.Skills[i]) = (module.Skills[i], module.Skills[i - 1]);
-                }
-                if (GUILayout.Button("Down", GUILayout.Width(52f)) && i < module.Skills.Count - 1)
-                {
-                    (module.Skills[i + 1], module.Skills[i]) = (module.Skills[i], module.Skills[i + 1]);
-                }
-                if (GUILayout.Button("Delete", GUILayout.Width(56f)))
-                {
-                    module.Skills.RemoveAt(i);
-                    EditorGUILayout.EndHorizontal();
-                    EditorGUILayout.EndVertical();
-                    break;
-                }
-                EditorGUILayout.EndHorizontal();
-
-                slot.SkillId = DrawOptionPopup("Skill", slot.SkillId, skillOptions);
-                slot.TagMask = EditorGUILayout.IntField("Tag Mask", slot.TagMask);
-                slot.MinDistance = EditorGUILayout.FloatField("Min Distance", slot.MinDistance);
-                slot.MaxDistance = EditorGUILayout.FloatField("Max Distance", slot.MaxDistance);
-                slot.CooldownSeconds = EditorGUILayout.FloatField("Cooldown Seconds", slot.CooldownSeconds);
-                slot.Weight = Mathf.Max(1, EditorGUILayout.IntField("Weight", slot.Weight));
-                module.Skills[i] = slot;
-                EditorGUILayout.EndVertical();
-            }
-
-            if (GUILayout.Button("Add Skill"))
-                module.Skills.Add(new UnitSkillSlotData());
-        }
-
-        private static List<SkillOption> BuildSkillOptions()
-        {
-            List<SkillOption> options = new()
-            {
-                new SkillOption { Id = -1, Label = "None" }
-            };
-
-            foreach (SkillData row in EditorComponents.Data.FindAll<SkillData>(_ => true).OrderBy(row => row.Id))
-            {
-                options.Add(new SkillOption
-                {
-                    Id = row.Id,
-                    Label = $"[{row.Id}] {row.DisplayName}",
-                });
-            }
-
-            return options;
-        }
-
-        private static int DrawOptionPopup(string label, int currentId, List<SkillOption> options)
-        {
-            int selectedIndex = 0;
-            for (int i = 0; i < options.Count; i++)
-            {
-                if (options[i].Id == currentId)
-                {
-                    selectedIndex = i;
-                    break;
-                }
-            }
-
-            string[] labels = options.Select(option => option.Label).ToArray();
-            int newIndex = EditorGUILayout.Popup(label, selectedIndex, labels);
-            return newIndex >= 0 && newIndex < options.Count ? options[newIndex].Id : currentId;
-        }
-
-        private static string BuildSlotHeader(int index, UnitSkillSlotData slot)
-        {
-            string label = $"Skill {index + 1}";
-            if (slot == null || slot.SkillId < 0)
-                return label;
-
-            SkillData skill = EditorComponents.Data.Get<SkillData>(slot.SkillId);
-            if (skill == null)
-                return $"{label} | Skill {slot.SkillId}";
-
-            return $"{label} | {skill.DisplayName}";
-        }
-    }
-
     [FactoryKey("Perception", 50)]
     public sealed class UnitPerceptionAttributeDrawer : IUnitEditorAttributeDrawer
     {
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasFeature<UnitAIFeatureAuthoring>();
+            return context.HasAuthoring<UnitPerceptionAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -261,7 +146,7 @@ namespace CrystalMagic.Editor.Data
 
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasFeature<UnitBattleFeatureAuthoring>();
+            return context.HasAuthoring<UnitBuffRuntimeAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -366,7 +251,7 @@ namespace CrystalMagic.Editor.Data
     {
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasFeature<UnitDropFeatureAuthoring>();
+            return context.HasAuthoring<UnitDropAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
@@ -382,17 +267,17 @@ namespace CrystalMagic.Editor.Data
         }
     }
 
-    [FactoryKey("NPCInteractableComponent", 70)]
+    [FactoryKey("NPCInteraction", 70)]
     public sealed class NPCInteractableAttributeDrawer : IUnitEditorAttributeDrawer
     {
         public bool CanDraw(UnitEditorDrawerContext context)
         {
-            return context.HasFeature<NPCInteractionFeatureAuthoring>();
+            return context.HasAuthoring<NPCInteractableAuthoring>();
         }
 
         public void Draw(UnitEditorDrawerContext context)
         {
-            NPCInteractionFeatureAuthoring npcAuthoring = context.GetFeature<NPCInteractionFeatureAuthoring>();
+            NPCInteractableAuthoring npcAuthoring = context.GetAuthoring<NPCInteractableAuthoring>();
             if (npcAuthoring == null)
                 return;
 
@@ -420,6 +305,26 @@ namespace CrystalMagic.Editor.Data
                 npcAuthoring.InteractRange = newRange;
                 context.MarkPrefabDirty(npcAuthoring);
             }
+        }
+    }
+    [FactoryKey("Dungeon Footprint", 60)]
+    public sealed class UnitDungeonFootprintAttributeDrawer : IUnitEditorAttributeDrawer
+    {
+        public bool CanDraw(UnitEditorDrawerContext context)
+        {
+            return context.HasAuthoring<UnitDungeonFootprintAuthoring>();
+        }
+
+        public void Draw(UnitEditorDrawerContext context)
+        {
+            UnitDungeonFootprintModuleData module = context.GetOrCreateModule<UnitDungeonFootprintModuleData>();
+            if (module == null)
+                return;
+
+            GUILayout.Space(8f);
+            UnitEditorWindow.DrawSectionHeader("Dungeon Footprint");
+            module.Width = Mathf.Max(1, EditorGUILayout.IntField("Width", module.Width));
+            module.Height = Mathf.Max(1, EditorGUILayout.IntField("Height", module.Height));
         }
     }
 }

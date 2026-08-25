@@ -109,16 +109,13 @@ namespace CrystalMagic.UI
                 UnitName = PreferredDummyUnitName,
             };
 
-            if (entityManager.HasComponent<UnitStateMachineComponent>(dummyEntity))
-                snapshot.UnitName = entityManager.GetComponentObject<UnitStateMachineComponent>(dummyEntity)?.UnitName ?? PreferredDummyUnitName;
-
             if (entityManager.HasComponent<UnitVitalityComponent>(dummyEntity))
             {
                 UnitVitalityComponent vitality = entityManager.GetComponentData<UnitVitalityComponent>(dummyEntity);
                 snapshot.CurrentHealth = vitality.CurrentHealth;
-                snapshot.MaxHealth = vitality.RealMaxHealth;
-                snapshot.HealthRegen = vitality.RealHealthRegenPerSecond;
-                snapshot.Defense = vitality.RealDefense;
+                snapshot.MaxHealth = UnitModifierResolver.GetMaxHealth(entityManager, dummyEntity);
+                snapshot.HealthRegen = UnitModifierResolver.GetHealthRegen(entityManager, dummyEntity);
+                snapshot.Defense = UnitModifierResolver.GetDefense(entityManager, dummyEntity);
             }
 
             if (entityManager.HasComponent<UnitManaComponent>(dummyEntity))
@@ -126,24 +123,21 @@ namespace CrystalMagic.UI
                 UnitManaComponent mana = entityManager.GetComponentData<UnitManaComponent>(dummyEntity);
                 snapshot.HasMana = true;
                 snapshot.CurrentMana = mana.CurrentMana;
-                snapshot.MaxMana = mana.RealMaxMp;
-                snapshot.ManaRegen = mana.RealMpRegenPerSecond;
+                snapshot.MaxMana = UnitModifierResolver.GetMaxMp(entityManager, dummyEntity);
+                snapshot.ManaRegen = UnitModifierResolver.GetMpRegen(entityManager, dummyEntity);
             }
 
             if (entityManager.HasComponent<UnitAttackComponent>(dummyEntity))
             {
-                UnitAttackComponent attack = entityManager.GetComponentData<UnitAttackComponent>(dummyEntity);
-                snapshot.AttackPower = attack.RealAttackPower;
-                snapshot.SkillRange = attack.RealSkillRange;
-                snapshot.ActionSpeedBonus = attack.RealActionSpeedBonus;
-                snapshot.ChantSpeedBonus = attack.RealChantSpeedBonus;
+                snapshot.AttackPower = UnitModifierResolver.GetAttackPower(entityManager, dummyEntity);
+                snapshot.SkillRange = UnitModifierResolver.GetSkillRange(entityManager, dummyEntity);
+                snapshot.ChantSpeedBonus = UnitModifierResolver.GetChantSpeedBonus(entityManager, dummyEntity);
             }
 
             if (entityManager.HasComponent<UnitMoveComponent>(dummyEntity))
             {
-                UnitMoveComponent move = entityManager.GetComponentData<UnitMoveComponent>(dummyEntity);
-                snapshot.MoveSpeed = move.RealMoveSpeed;
-                snapshot.MaxAcceleration = move.RealMaxAcceleration;
+                snapshot.MoveSpeed = UnitModifierResolver.GetMoveSpeed(entityManager, dummyEntity);
+                snapshot.MaxAcceleration = UnitModifierResolver.GetMaxAcceleration(entityManager, dummyEntity);
             }
 
             if (entityManager.HasComponent<UnitBuffRuntimeComponent>(dummyEntity))
@@ -175,13 +169,9 @@ namespace CrystalMagic.UI
             entityManager = world.EntityManager;
             if (_cachedDummyEntity != Entity.Null &&
                 entityManager.Exists(_cachedDummyEntity) &&
-                entityManager.HasComponent<UnitFactionComponent>(_cachedDummyEntity) &&
-                entityManager.HasComponent<UnitStateMachineComponent>(_cachedDummyEntity))
+                entityManager.HasComponent<UnitFactionComponent>(_cachedDummyEntity))
             {
-                UnitStateMachineComponent cachedStateMachine = entityManager.GetComponentObject<UnitStateMachineComponent>(_cachedDummyEntity);
-                if (cachedStateMachine != null &&
-                    entityManager.GetComponentData<UnitFactionComponent>(_cachedDummyEntity).Value == UnitFactionType.Enemy &&
-                    (cachedStateMachine.UnitName == PreferredDummyUnitName || !string.IsNullOrWhiteSpace(cachedStateMachine.UnitName)))
+                if (entityManager.GetComponentData<UnitFactionComponent>(_cachedDummyEntity).Value == UnitFactionType.Enemy)
                 {
                     dummyEntity = _cachedDummyEntity;
                     return true;
@@ -199,25 +189,11 @@ namespace CrystalMagic.UI
             for (int i = 0; i < entities.Length; i++)
             {
                 Entity entity = entities[i];
-                if (!entityManager.HasComponent<UnitStateMachineComponent>(entity))
-                    continue;
-
                 if (entityManager.GetComponentData<UnitFactionComponent>(entity).Value != UnitFactionType.Enemy)
-                    continue;
-
-                UnitStateMachineComponent stateMachine = entityManager.GetComponentObject<UnitStateMachineComponent>(entity);
-                if (stateMachine == null)
                     continue;
 
                 if (fallbackEnemy == Entity.Null)
                     fallbackEnemy = entity;
-
-                if (stateMachine.UnitName != PreferredDummyUnitName)
-                    continue;
-
-                _cachedDummyEntity = entity;
-                dummyEntity = entity;
-                return true;
             }
 
             if (fallbackEnemy != Entity.Null)
@@ -299,7 +275,6 @@ namespace CrystalMagic.UI
             builder.AppendLine(localization.Format("ui.training.stats.move_speed", Format(snapshot.MoveSpeed)));
             builder.AppendLine(localization.Format("ui.training.stats.max_acceleration", Format(snapshot.MaxAcceleration)));
             builder.AppendLine(localization.Format("ui.training.stats.skill_range", Format(snapshot.SkillRange)));
-            builder.AppendLine(localization.Format("ui.training.stats.action_speed_bonus", Format(snapshot.ActionSpeedBonus)));
             builder.AppendLine(localization.Format("ui.training.stats.chant_speed_bonus", Format(snapshot.ChantSpeedBonus)));
             builder.AppendLine(localization.Format("ui.training.stats.health_regen", Format(snapshot.HealthRegen)));
             builder.AppendLine(localization.Format("ui.training.stats.mana_regen", Format(snapshot.ManaRegen)));
@@ -339,7 +314,6 @@ namespace CrystalMagic.UI
             public float ManaRegen;
             public float AttackPower;
             public float SkillRange;
-            public float ActionSpeedBonus;
             public float ChantSpeedBonus;
             public float MoveSpeed;
             public float MaxAcceleration;

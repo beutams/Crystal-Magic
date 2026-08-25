@@ -1,19 +1,33 @@
+using System;
 using System.Collections.Generic;
 
-/// <summary>
-/// 通用条件配置
-/// 运行时由 ComparatorFactory.BuildComparator 构建为 Comparator 实例
-/// </summary>
-[System.Serializable]
+[Serializable]
+public class ValueExpression
+{
+    public ValueExpressionKind Kind = ValueExpressionKind.Literal;
+    public UnitValue Literal = UnitValue.FromFloat(0f);
+    public string GetterKey = string.Empty;
+    public string OperationType = string.Empty;
+    public List<ValueExpression> Inputs = new();
+}
+
+public enum ValueExpressionKind
+{
+    Literal,
+    Getter,
+    Operation,
+}
+
+// Serialized condition tree. Each input may be a literal, a bound getter, or another operation.
+[Serializable]
 public class ConditionConfig
 {
-    /// <summary>Necessary = 必须满足；Unallowed = 不能满足</summary>
     public ConditionType ConditionType = ConditionType.Necessary;
-    /// <summary>ISource 实现类名称</summary>
-    public string SourceType = "";
+    public string CompareType = string.Empty;
+    public List<ValueExpression> Inputs = new();
+
+    // Temporary serialized fields for callers that have not migrated to Inputs yet.
+    public string SourceType = string.Empty;
     public int SourceParam = -1;
-    /// <summary>ICompareType 实现类名称（GreaterThan / LessThan / Equal / IsTrue / IsFalse）</summary>
-    public string CompareType = "";
-    /// <summary>比较阈值（GreaterThan / LessThan / Equal 有效）</summary>
     public float CompareValue;
 }

@@ -17,12 +17,12 @@ public sealed class RootBehaviorNode : ABehaviorNode
         Children.Add(child);
     }
 
-    protected override BehaviorNodeStatus OnTick(BehaviorBlackboard blackboard)
+    protected override BehaviorNodeStatus OnTick(BehaviorContext context)
     {
         if (Children.Count == 0 || Children[0] == null)
             return BehaviorNodeStatus.Failure;
 
-        return Children[0].Tick(blackboard);
+        return Children[0].Tick(context);
     }
 }
 
@@ -36,12 +36,12 @@ public sealed class SelectorBehaviorNode : CompositeBehaviorNode
     {
     }
 
-    protected override BehaviorNodeStatus OnTick(BehaviorBlackboard blackboard)
+    protected override BehaviorNodeStatus OnTick(BehaviorContext context)
     {
         int startIndex = _runningChildIndex >= 0 ? _runningChildIndex : 0;
         for (int i = startIndex; i < Children.Count; i++)
         {
-            BehaviorNodeStatus status = Children[i].Tick(blackboard);
+            BehaviorNodeStatus status = Children[i].Tick(context);
             if (status == BehaviorNodeStatus.Failure)
                 continue;
 
@@ -70,12 +70,12 @@ public sealed class SequenceBehaviorNode : CompositeBehaviorNode
     {
     }
 
-    protected override BehaviorNodeStatus OnTick(BehaviorBlackboard blackboard)
+    protected override BehaviorNodeStatus OnTick(BehaviorContext context)
     {
         int startIndex = _runningChildIndex >= 0 ? _runningChildIndex : 0;
         for (int i = startIndex; i < Children.Count; i++)
         {
-            BehaviorNodeStatus status = Children[i].Tick(blackboard);
+            BehaviorNodeStatus status = Children[i].Tick(context);
             if (status == BehaviorNodeStatus.Success)
                 continue;
 
@@ -105,7 +105,7 @@ public sealed class ParallelBehaviorNode : CompositeBehaviorNode
         _data = data;
     }
 
-    protected override BehaviorNodeStatus OnTick(BehaviorBlackboard blackboard)
+    protected override BehaviorNodeStatus OnTick(BehaviorContext context)
     {
         if (Children.Count == 0)
             return BehaviorNodeStatus.Failure;
@@ -116,7 +116,7 @@ public sealed class ParallelBehaviorNode : CompositeBehaviorNode
 
         for (int i = 0; i < Children.Count; i++)
         {
-            BehaviorNodeStatus status = Children[i].Tick(blackboard);
+            BehaviorNodeStatus status = Children[i].Tick(context);
             switch (status)
             {
                 case BehaviorNodeStatus.Success:
@@ -149,28 +149,35 @@ public sealed class ParallelBehaviorNode : CompositeBehaviorNode
     }
 }
 
-[FactoryKey(BehaviorNodeTypes.CheckCondition, 10, "Check Condition")]
-public sealed class CheckConditionBehaviorNode : ABehaviorNode
+[FactoryKey(BehaviorNodeTypes.Check, 10, "Check")]
+public sealed class CheckBehaviorNode : ABehaviorNode
 {
     private static readonly ComparatorFactory s_comparatorFactory = CreateComparatorFactory();
-    private readonly CheckConditionBehaviorNodeData _data;
+    private readonly CheckBehaviorNodeData _data;
+    private Comparator _comparator;
 
-    public CheckConditionBehaviorNode(CheckConditionBehaviorNodeData data)
+    public CheckBehaviorNode(CheckBehaviorNodeData data)
         : base(data)
     {
         _data = data;
     }
 
-    protected override BehaviorNodeStatus OnTick(BehaviorBlackboard blackboard)
+    protected override bool OnBind(UnitSourceAccessTable sources, out string error)
     {
-        if (blackboard == null)
-            return BehaviorNodeStatus.Failure;
+        _comparator = s_comparatorFactory.BuildComparator(_data?.Conditions, sources);
+        if (_comparator == null || !_comparator.IsValid)
+        {
+            error = "Check contains an invalid comparator expression.";
+            return false;
+        }
 
-        Comparator comparator = s_comparatorFactory.BuildComparator(
-            _data.Conditions,
-            blackboard.Runtime.Entity,
-            blackboard.Runtime.EntityManager);
-        return comparator.GetResult()
+        error = string.Empty;
+        return true;
+    }
+
+    protected override BehaviorNodeStatus OnTick(BehaviorContext context)
+    {
+        return _comparator != null && _comparator.GetResult()
             ? BehaviorNodeStatus.Success
             : BehaviorNodeStatus.Failure;
     }

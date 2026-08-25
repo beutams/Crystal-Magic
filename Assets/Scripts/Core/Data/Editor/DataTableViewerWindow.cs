@@ -106,29 +106,40 @@ namespace CrystalMagic.Editor.Data
             _statusText = "";
 
             string path = GetFilePath(rowType);
-            string json = File.Exists(path) ? DataFileUtility.ReadJsonText(path) : null;
-
-            if (!string.IsNullOrEmpty(json))
+            try
             {
-                Type wrapperType = typeof(TableWrapper<>).MakeGenericType(rowType);
-                object wrapper = JsonUtility.FromJson(json, wrapperType);
-                IList rowList = wrapperType.GetField("Rows").GetValue(wrapper) as IList;
-                if (rowList != null)
-                    foreach (object r in rowList) _rows.Add(r);
+                string json = File.Exists(path) ? DataFileUtility.ReadJsonText(path) : null;
+
+                if (!string.IsNullOrEmpty(json))
+                {
+                    Type wrapperType = typeof(TableWrapper<>).MakeGenericType(rowType);
+                    object wrapper = JsonUtility.FromJson(json, wrapperType);
+                    IList rowList = wrapperType.GetField("Rows").GetValue(wrapper) as IList;
+                    if (rowList != null)
+                        foreach (object r in rowList) _rows.Add(r);
+                }
+
+                _loadedType = rowType;
+                NormalizeRowIds();
+                _fields = rowType.GetFields(BindingFlags.Public | BindingFlags.Instance);
+                Array.Sort(_fields, (a, b) =>
+                {
+                    bool aIsId = a.Name == nameof(DataRow.Id);
+                    bool bIsId = b.Name == nameof(DataRow.Id);
+                    if (aIsId && !bIsId) return -1;
+                    if (!aIsId && bIsId) return 1;
+                    return a.MetadataToken.CompareTo(b.MetadataToken);
+                });
+                _statusText = $"已加载 {_rows.Count} 条  ·  {path}";
             }
-
-            _loadedType = rowType;
-            NormalizeRowIds();
-            _fields = rowType.GetFields(BindingFlags.Public | BindingFlags.Instance);
-            Array.Sort(_fields, (a, b) =>
+            catch (Exception exception)
             {
-                bool aIsId = a.Name == nameof(DataRow.Id);
-                bool bIsId = b.Name == nameof(DataRow.Id);
-                if (aIsId && !bIsId) return -1;
-                if (!aIsId && bIsId) return 1;
-                return a.MetadataToken.CompareTo(b.MetadataToken);
-            });
-            _statusText = $"已加载 {_rows.Count} 条  ·  {path}";
+                _rows.Clear();
+                _fields = null;
+                _loadedType = null;
+                _statusText = $"加载失败 · {path}";
+                Debug.LogError($"[DataTableViewer] Failed to load {path}: {exception.Message}");
+            }
         }
 
         // ─────────────────────────────────────────

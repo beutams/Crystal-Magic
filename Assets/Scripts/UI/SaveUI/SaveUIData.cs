@@ -6,6 +6,7 @@ using CrystalMagic.Core;
 
 public class SaveUIData : UIData
 {
+    public UINode Background;
     public UINode ScrollView;
     public UINode ScrollView_Viewport;
     public UINode ScrollView_Viewport_Content;
@@ -20,6 +21,7 @@ public class SaveUIData : UIData
 
     public override void Bind(Transform root)
     {
+        Background = UINode.From(Find(root, "Background"));
         ScrollView = UINode.From(Find(root, "Scroll View"));
         ScrollView_Viewport = UINode.From(Find(root, "Scroll View/Viewport"));
         ScrollView_Viewport_Content = UINode.From(Find(root, "Scroll View/Viewport/Content"));

@@ -41,9 +41,6 @@ public partial class SkillProjectileSystem : SystemBase
             {
                 Entity entity = entities[i];
                 SkillProjectileComponent projectile = projectiles[i];
-                if (projectile.IsDestroying != 0)
-                    continue;
-
                 LocalTransform transform = transforms[i];
                 SkillProjectilePayloadComponent payload = EntityManager.GetComponentObject<SkillProjectilePayloadComponent>(entity);
                 DynamicBuffer<SkillProjectileHitEntityElement> hitEntities = EntityManager.GetBuffer<SkillProjectileHitEntityElement>(entity);
@@ -65,7 +62,7 @@ public partial class SkillProjectileSystem : SystemBase
 
                     if (projectile.CanPierce == 0)
                     {
-                        DestroyProjectile(entity, payload, transform.Position, transform.Rotation, true, hitContext);
+                        DestroyProjectile(entity, payload, transform.Position, true, hitContext);
                         continue;
                     }
                 }
@@ -76,7 +73,6 @@ public partial class SkillProjectileSystem : SystemBase
                         entity,
                         payload,
                         transform.Position,
-                        transform.Rotation,
                         projectile.TriggerDestroyEffectsOnMaxRange != 0,
                         null);
                 }
@@ -141,7 +137,6 @@ public partial class SkillProjectileSystem : SystemBase
         Entity entity,
         SkillProjectilePayloadComponent payload,
         float3 destroyPosition,
-        quaternion destroyRotation,
         bool triggerDestroyEffects,
         SkillContent destroyContext)
     {
@@ -157,53 +152,10 @@ public partial class SkillProjectileSystem : SystemBase
         if (!EntityManager.Exists(entity))
             return;
 
-        if (payload.DestroyTexture == null || payload.DestroyFrameCount <= 0)
-        {
-            if (!EntityManager.HasComponent<DestroyEntityFlag>(entity))
-                EntityManager.AddComponent<DestroyEntityFlag>(entity);
+        if (!EntityManager.HasComponent<DestroyEntityFlag>(entity))
+            EntityManager.AddComponent<DestroyEntityFlag>(entity);
 
-            EntityManager.SetComponentEnabled<DestroyEntityFlag>(entity, true);
-            return;
-        }
-
-        LocalTransform transform = EntityManager.GetComponentData<LocalTransform>(entity);
-        transform.Position = destroyPosition;
-        transform.Rotation = destroyRotation;
-        EntityManager.SetComponentData(entity, transform);
-
-        SkillProjectileComponent projectile = EntityManager.GetComponentData<SkillProjectileComponent>(entity);
-        projectile.IsDestroying = 1;
-        projectile.Speed = 0f;
-        EntityManager.SetComponentData(entity, projectile);
-
-        EntityManager.SetComponentData(
-            entity,
-            new QuadAnimationComponent
-            {
-                GridColumns = math.max(1, payload.DestroyGridColumns),
-                GridRows = math.max(1, payload.DestroyGridRows),
-                FrameCount = math.max(1, payload.DestroyFrameCount),
-                FramesPerSecond = math.max(0.01f, payload.DestroyFramesPerSecond),
-                ElapsedSeconds = 0f,
-                Width = math.max(0.01f, payload.DestroyWidth),
-                Height = math.max(0.01f, payload.DestroyHeight),
-                PivotOffset = float2.zero,
-                RemainingLifetimeSeconds = 0f,
-                FrameIndex = -1,
-                LastTextureInstanceId = 0,
-                LastVisualKeyHash = 0,
-                Loop = 0,
-                AutoDestroyOnComplete = 1,
-                IsPlaying = 1,
-            });
-
-        if (EntityManager.HasComponent<QuadAnimationVisualComponent>(entity))
-        {
-            QuadAnimationVisualComponent visual = EntityManager.GetComponentObject<QuadAnimationVisualComponent>(entity);
-            visual.VisualKind = QuadAnimationVisualKind.Projectile;
-            visual.PrefabName = payload.ProjectileName.ToString();
-            visual.Texture = payload.DestroyTexture;
-        }
+        EntityManager.SetComponentEnabled<DestroyEntityFlag>(entity, true);
     }
 
     private SkillContent BuildHitContext(SkillContent baseContext, Entity hitEntity, float3 hitPosition)

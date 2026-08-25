@@ -15,13 +15,11 @@ namespace CrystalMagic.Editor.Unit
     public class UnitRuntimeDebugWindow : EditorWindow
     {
         private const float UnitListWidth = 220f;
-        private const float StatePanelWidth = 320f;
         private const float BehaviorPanelWidth = 360f;
 
         private readonly List<UnitRuntimeEntry> _unitEntries = new();
         private Vector2 _unitListScrollPos;
         private Vector2 _valueScrollPos;
-        private Vector2 _stateScrollPos;
         private Vector2 _behaviorScrollPos;
         private int _selectedIndex = -1;
         private string _statusText = "Enter Play Mode and refresh to inspect runtime units.";
@@ -72,9 +70,6 @@ namespace CrystalMagic.Editor.Unit
             DrawUnitListPanel();
             DrawPanelDivider();
             DrawRuntimeValuePanel();
-            DrawPanelDivider();
-            DrawStateMachinePanel();
-            DrawPanelDivider();
             DrawBehaviorTreePanel();
             EditorGUILayout.EndHorizontal();
         }
@@ -149,41 +144,6 @@ namespace CrystalMagic.Editor.Unit
             EditorGUILayout.EndVertical();
         }
 
-        private void DrawStateMachinePanel()
-        {
-            EditorGUILayout.BeginVertical(GUILayout.Width(StatePanelWidth));
-            EditorGUILayout.LabelField("State Machine", EditorStyles.boldLabel);
-
-            if (!TryGetSelectedEntityManager(out EntityManager entityManager, out Entity entity))
-            {
-                EditorGUILayout.HelpBox("Select a live unit to inspect state machine runtime state.", MessageType.Info);
-                EditorGUILayout.EndVertical();
-                return;
-            }
-
-            _stateScrollPos = EditorGUILayout.BeginScrollView(_stateScrollPos);
-            if (!entityManager.Exists(entity) || !entityManager.HasComponent<UnitStateMachineComponent>(entity))
-            {
-                EditorGUILayout.HelpBox("This unit has no runtime state machine component.", MessageType.Info);
-            }
-            else
-            {
-                UnitStateMachineComponent stateMachine = entityManager.GetComponentObject<UnitStateMachineComponent>(entity);
-                using (new EditorGUI.DisabledScope(true))
-                {
-                    EditorGUILayout.TextField("Unit Name", stateMachine.UnitName ?? string.Empty);
-                    EditorGUILayout.TextField("Current State", stateMachine.CurrentStateName ?? "None");
-                    EditorGUILayout.TextField("Previous State", stateMachine.PreviousStateName ?? "None");
-                    EditorGUILayout.FloatField("State Time", stateMachine.StateTime);
-                }
-
-                GUILayout.Space(8f);
-                EditorGUILayout.HelpBox("State machine real-time graph highlighting will be wired into this panel next.", MessageType.None);
-            }
-            EditorGUILayout.EndScrollView();
-            EditorGUILayout.EndVertical();
-        }
-
         private void DrawBehaviorTreePanel()
         {
             EditorGUILayout.BeginVertical(GUILayout.Width(BehaviorPanelWidth));
@@ -206,7 +166,7 @@ namespace CrystalMagic.Editor.Unit
                 UnitBehaviorTreeComponent behaviorTree = entityManager.GetComponentObject<UnitBehaviorTreeComponent>(entity);
                 using (new EditorGUI.DisabledScope(true))
                 {
-                    EditorGUILayout.TextField("Unit Name", behaviorTree.UnitName ?? string.Empty);
+                    EditorGUILayout.IntField("Unit Data Id", behaviorTree.UnitDataId);
                     EditorGUILayout.Toggle("Initialized", behaviorTree.IsInitialized);
                     EditorGUILayout.TextField("Current Node", behaviorTree.CurrentNodeName ?? "None");
                     EditorGUILayout.TextField("Last Status", behaviorTree.LastStatus ?? "None");
@@ -268,7 +228,6 @@ namespace CrystalMagic.Editor.Unit
                    entityManager.HasComponent<UnitMoveComponent>(entity) ||
                    entityManager.HasComponent<UnitManaComponent>(entity) ||
                    entityManager.HasComponent<UnitPerceptionComponent>(entity) ||
-                   entityManager.HasComponent<UnitStateMachineComponent>(entity) ||
                    entityManager.HasComponent<UnitBehaviorTreeComponent>(entity);
         }
 
@@ -280,8 +239,9 @@ namespace CrystalMagic.Editor.Unit
                 return false;
             }
 
-            string unitName = GetUnitName(entityManager, entity);
-            UnitData unitData = ResolveUnitData(unitName);
+            int unitDataId = GetUnitDataId(entityManager, entity);
+            UnitData unitData = ResolveUnitData(unitDataId);
+            string unitName = unitData?.Name ?? string.Empty;
             context = new UnitRuntimeDrawerContext(entityManager, entity, unitName, unitData);
             return true;
         }
@@ -305,29 +265,34 @@ namespace CrystalMagic.Editor.Unit
 
         private static string GetUnitName(EntityManager entityManager, Entity entity)
         {
-            if (entityManager.HasComponent<UnitStateMachineComponent>(entity))
-            {
-                UnitStateMachineComponent stateMachine = entityManager.GetComponentObject<UnitStateMachineComponent>(entity);
-                if (!string.IsNullOrWhiteSpace(stateMachine?.UnitName))
-                    return stateMachine.UnitName;
-            }
+            return ResolveUnitData(GetUnitDataId(entityManager, entity))?.Name ?? string.Empty;
+        }
 
+        private static int GetUnitDataId(EntityManager entityManager, Entity entity)
+        {
             if (entityManager.HasComponent<UnitBehaviorTreeComponent>(entity))
             {
                 UnitBehaviorTreeComponent behaviorTree = entityManager.GetComponentObject<UnitBehaviorTreeComponent>(entity);
-                if (!string.IsNullOrWhiteSpace(behaviorTree?.UnitName))
-                    return behaviorTree.UnitName;
+                if (behaviorTree?.UnitDataId >= 0)
+                    return behaviorTree.UnitDataId;
             }
 
-            return string.Empty;
+            if (entityManager.HasComponent<UnitStateScriptComponent>(entity))
+            {
+                UnitStateScriptComponent stateScript = entityManager.GetComponentObject<UnitStateScriptComponent>(entity);
+                if (stateScript?.UnitDataId >= 0)
+                    return stateScript.UnitDataId;
+            }
+
+            return -1;
         }
 
-        private static UnitData ResolveUnitData(string unitName)
+        private static UnitData ResolveUnitData(int unitDataId)
         {
-            if (string.IsNullOrWhiteSpace(unitName))
+            if (unitDataId < 0)
                 return null;
 
-            return EditorComponents.Data.Find<UnitData>(row => string.Equals(row.Name, unitName, StringComparison.Ordinal));
+            return EditorComponents.Data.Find<UnitData>(row => row.Id == unitDataId);
         }
 
         private static void DrawPanelDivider()

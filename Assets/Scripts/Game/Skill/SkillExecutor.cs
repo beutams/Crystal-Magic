@@ -27,7 +27,7 @@ namespace CrystalMagic.Game.Skill
 
         public static void ExecuteEffects(EffectData[] effects, SkillContent context)
         {
-            if (effects == null)
+            if (effects == null || IsContextDead(context))
                 return;
 
             foreach (EffectData effectData in effects)
@@ -42,6 +42,20 @@ namespace CrystalMagic.Game.Skill
                 Effect effect = CreateEffect(runtimeEffectData);
                 effect?.Execute(context);
             }
+        }
+
+        private static bool IsContextDead(SkillContent context)
+        {
+            if (context == null)
+                return false;
+
+            EntityManager entityManager = GetEntityManager(context);
+            if (context.HasTargetEntity && EffectTargetUtility.IsDead(entityManager, context.TargetEntity))
+                return true;
+
+            return !context.HasTargetEntity &&
+                   context.HasOriginEntity &&
+                   EffectTargetUtility.IsDead(entityManager, context.OriginEntity);
         }
 
         private static bool PassEffectConditions(EffectData effectData, SkillContent context)

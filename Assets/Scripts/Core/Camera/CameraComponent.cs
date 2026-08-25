@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -176,7 +177,7 @@ namespace CrystalMagic.Core {
             {
                 _followQueryWorld = world;
                 _playerFollowQuery = world.EntityManager.CreateEntityQuery(
-                    ComponentType.ReadOnly<PlayerTag>(),
+                    ComponentType.ReadOnly<UnitFactionComponent>(),
                     ComponentType.ReadOnly<LocalToWorld>()
                 );
             }
@@ -184,14 +185,22 @@ namespace CrystalMagic.Core {
             if (_playerFollowQuery.IsEmptyIgnoreFilter)
                 return false;
 
-            if (_playerFollowQuery.CalculateEntityCount() != 1)
-                return false;
+            EntityManager entityManager = world.EntityManager;
+            using NativeArray<Entity> entities = _playerFollowQuery.ToEntityArray(Allocator.Temp);
+            for (int i = 0; i < entities.Length; i++)
+            {
+                Entity entity = entities[i];
+                UnitFactionType faction = entityManager.GetComponentData<UnitFactionComponent>(entity).Value;
+                if (!UnitFactionUtility.IsPlayer(faction))
+                    continue;
 
-            LocalToWorld localToWorld = _playerFollowQuery.GetSingleton<LocalToWorld>();
-            float3 position = localToWorld.Position;
-            targetPosition = new Vector3(position.x, position.y, position.z);
+                LocalToWorld localToWorld = entityManager.GetComponentData<LocalToWorld>(entity);
+                float3 position = localToWorld.Position;
+                targetPosition = new Vector3(position.x, position.y, position.z);
+                return true;
+            }
 
-            return true;
+            return false;
         }
 
         #endregion

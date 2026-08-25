@@ -1,4 +1,4 @@
-{
+﻿{
     "PropertyModifierMinimumFactors": [
         { "Channel": 0, "MinimumFactor": 0.3 },
         { "Channel": 1, "MinimumFactor": 0.2 },

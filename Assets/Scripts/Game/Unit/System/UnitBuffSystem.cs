@@ -28,10 +28,6 @@ partial class UnitBuffSystem : SystemBase
                 continue;
 
             UpdateBuffEntries(entity, runtimeComponent, effectExecutionQueue, dt);
-            PropertyModifierSet modifiers = BuildPropertyModifiers(runtimeComponent.Buffs);
-            SkillModifierSet skillModifiers = BuildSkillModifiers(runtimeComponent.Buffs);
-            UnitModifierUtility.ApplyRuntimePropertyModifiers(EntityManager, entity, modifiers);
-            UnitSkillModifierUtility.AddRuntimeModifiers(EntityManager, entity, skillModifiers);
         }
     }
 
@@ -51,29 +47,5 @@ partial class UnitBuffSystem : SystemBase
             if (!entry.Update(_updateContext, deltaTime))
                 buffs.RemoveAt(i);
         }
-    }
-
-    private static PropertyModifierSet BuildPropertyModifiers(List<UnitBuffRuntimeEntry> buffs)
-    {
-        PropertyModifierSet modifiers = new();
-        if (buffs == null)
-            return modifiers;
-
-        for (int i = 0; i < buffs.Count; i++)
-            buffs[i].ContributePropertyModifiers(modifiers);
-
-        return modifiers;
-    }
-
-    private static SkillModifierSet BuildSkillModifiers(List<UnitBuffRuntimeEntry> buffs)
-    {
-        SkillModifierSet modifiers = new();
-        if (buffs == null)
-            return modifiers;
-
-        for (int i = 0; i < buffs.Count; i++)
-            buffs[i].ContributeSkillModifiers(modifiers);
-
-        return modifiers;
     }
 }

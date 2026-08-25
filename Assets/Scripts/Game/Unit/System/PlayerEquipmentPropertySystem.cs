@@ -8,15 +8,20 @@ partial class PlayerEquipmentPropertySystem : SystemBase
 {
     protected override void OnCreate()
     {
-        RequireForUpdate<PlayerTag>();
+        RequireForUpdate<UnitFactionComponent>();
     }
 
     protected override void OnUpdate()
     {
         PropertyModifierSet totals = BuildTotals(SaveDataComponent.Instance.GetEquipmentData());
 
-        foreach ((RefRO<PlayerTag> _, Entity entity) in SystemAPI.Query<RefRO<PlayerTag>>().WithEntityAccess())
+        foreach ((RefRO<UnitFactionComponent> factionRef, Entity entity) in SystemAPI.Query<RefRO<UnitFactionComponent>>().WithEntityAccess())
+        {
+            if (!UnitFactionUtility.IsPlayer(factionRef.ValueRO.Value))
+                continue;
+
             UnitModifierUtility.ApplyEquipmentPropertyModifiers(EntityManager, entity, totals);
+        }
     }
 
     private static PropertyModifierSet BuildTotals(EquipmentData equipmentData)

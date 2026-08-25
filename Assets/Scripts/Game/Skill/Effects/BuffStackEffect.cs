@@ -18,14 +18,10 @@ namespace CrystalMagic.Game.Skill.Effects
 
             EntityManager entityManager = context.EntityManager;
             Entity target = context.TargetEntity;
-            if (target == Entity.Null ||
-                !entityManager.Exists(target) ||
-                !UnitBuffUtility.TryGetRuntimeComponent(entityManager, target, out UnitBuffRuntimeComponent runtimeComponent))
-            {
+            if (target == Entity.Null || !entityManager.Exists(target))
                 return;
-            }
 
-            int stackCount = GetBuffStackCount(runtimeComponent, Data.BuffId);
+            int stackCount = UnitBuffUtility.GetStackCount(entityManager, target, Data.BuffId);
             if (stackCount <= 0)
                 return;
 
@@ -33,21 +29,6 @@ namespace CrystalMagic.Game.Skill.Effects
             childContext.RuntimeModifiers ??= new SkillModifierSet();
             childContext.RuntimeModifiers.Add(Data.PerStackModifiers, stackCount);
             SkillExecutor.ExecuteEffects(Data.OnAfterRead, childContext);
-        }
-
-        private static int GetBuffStackCount(UnitBuffRuntimeComponent runtimeComponent, int buffId)
-        {
-            if (runtimeComponent?.Buffs == null)
-                return 0;
-
-            for (int i = 0; i < runtimeComponent.Buffs.Count; i++)
-            {
-                UnitBuffRuntimeEntry entry = runtimeComponent.Buffs[i];
-                if (entry.BuffId == buffId)
-                    return math.max(0, entry.StackCount);
-            }
-
-            return 0;
         }
     }
 
@@ -64,33 +45,15 @@ namespace CrystalMagic.Game.Skill.Effects
 
             EntityManager entityManager = context.EntityManager;
             Entity target = context.TargetEntity;
-            if (target == Entity.Null ||
-                !entityManager.Exists(target) ||
-                !UnitBuffUtility.TryGetRuntimeComponent(entityManager, target, out UnitBuffRuntimeComponent runtimeComponent))
-            {
+            if (target == Entity.Null || !entityManager.Exists(target))
                 return;
-            }
 
-            for (int i = 0; i < runtimeComponent.Buffs.Count; i++)
-            {
-                UnitBuffRuntimeEntry entry = runtimeComponent.Buffs[i];
-                if (entry.BuffId != Data.BuffId)
-                    continue;
-
-                if (Data.RemoveAllStacks)
-                {
-                    runtimeComponent.Buffs.RemoveAt(i);
-                    return;
-                }
-
-                int remainStack = entry.StackCount - math.max(1, Data.RemoveStackCount);
-                if (remainStack <= 0)
-                    runtimeComponent.Buffs.RemoveAt(i);
-                else
-                    entry.StackCount = remainStack;
-
-                return;
-            }
+            UnitBuffUtility.Remove(
+                entityManager,
+                target,
+                Data.BuffId,
+                Data.RemoveAllStacks,
+                Data.RemoveStackCount);
         }
     }
 }

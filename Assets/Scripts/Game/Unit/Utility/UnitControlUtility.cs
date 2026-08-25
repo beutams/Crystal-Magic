@@ -100,17 +100,17 @@ public static class UnitControlUtility
         entityManager.SetComponentData(entity, runtime);
     }
 
-    public static bool IsInControlledState(EntityManager entityManager, Entity entity)
+    public static bool HasActiveControl(EntityManager entityManager, Entity entity)
     {
         if (entity == Entity.Null ||
             !entityManager.Exists(entity) ||
-            !entityManager.HasComponent<UnitStateMachineComponent>(entity))
+            !entityManager.HasComponent<UnitControlRuntimeComponent>(entity))
         {
             return false;
         }
 
-        UnitStateMachineComponent stateMachine = entityManager.GetComponentObject<UnitStateMachineComponent>(entity);
-        return stateMachine != null && stateMachine.CurrentStateName == nameof(ControlledState);
+        UnitControlRuntimeComponent control = entityManager.GetComponentData<UnitControlRuntimeComponent>(entity);
+        return control.HasControl != 0;
     }
 
     private static void ApplyOrRefreshControl(
@@ -163,13 +163,6 @@ public static class UnitControlUtility
                 MotionVelocity = motionVelocity,
                 MotionDamping = math.max(0f, motionDamping),
             });
-        }
-
-        if (interruptOnApply && entityManager.HasComponent<UnitCastComponent>(target))
-        {
-            UnitCastComponent cast = entityManager.GetComponentData<UnitCastComponent>(target);
-            cast.ForceInterrupt = true;
-            entityManager.SetComponentData(target, cast);
         }
 
         RefreshResolvedState(ref runtime);

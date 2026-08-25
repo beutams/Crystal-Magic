@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -10,27 +11,27 @@ using CrystalMagic.Core;
 namespace CrystalMagic.Editor.Config
 {
     /// <summary>
-    /// Config 配置编辑器
-    /// 扫描所有标记 [GameConfig] 的配置类，以 Inspector 形式展示并支持保存
-    /// 菜单路径：Crystal Magic / Config Editor
+    /// Config Editor
+    /// 扫描所有标记 [GameConfig] 的Config Class，以 Inspector 形式展示并支持Save
+    /// Menu path: Tools / Config / Config Editor
     /// </summary>
     public class ConfigEditorWindow : EditorWindow
     {
         private const string ConfigDir = "Assets/Res/Config";
 
-        // ===== 类型列表 =====
+        // ===== Type List =====
         private List<Type> _configTypes = new();
         private string[] _typeNames;
         private int _selectedIndex;
 
-        // ===== 当前配置 =====
+        // ===== Current Config =====
         private Type _loadedType;
         private object _configObj;
         private FieldInfo[] _fields;
         private bool _isDirty;
         private string _statusText = "";
 
-        // ===== 滚动 =====
+        // ===== Scroll =====
         private Vector2 _scrollPos;
 
         // ─────────────────────────────────────────
@@ -45,7 +46,7 @@ namespace CrystalMagic.Editor.Config
         private void OnEnable() => ScanConfigTypes();
 
         // ─────────────────────────────────────────
-        //  扫描带 [GameConfig] 特性的类
+        //  Scan types marked with [GameConfig]
         // ─────────────────────────────────────────
         private void ScanConfigTypes()
         {
@@ -65,11 +66,11 @@ namespace CrystalMagic.Editor.Config
             _configTypes.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
             _typeNames = _configTypes.Count > 0
                 ? _configTypes.ConvertAll(t => EditorLabelUtility.GetLabel(t, t.Name)).ToArray()
-                : new[] { "（未找到 [GameConfig] 类）" };
+                : new[] { "(No [GameConfig] types found)" };
         }
 
         // ─────────────────────────────────────────
-        //  加载
+        //  Load
         // ─────────────────────────────────────────
         private void LoadConfig(Type type)
         {
@@ -81,11 +82,11 @@ namespace CrystalMagic.Editor.Config
             _fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
             _loadedType = type;
             _isDirty = false;
-            _statusText = File.Exists(path) ? $"已加载  ·  {path}" : $"使用默认值（文件不存在）  ·  {path}";
+            _statusText = File.Exists(path) ? $"已Load  ·  {path}" : $"Using defaults (file not found)  |  {path}";
         }
 
         // ─────────────────────────────────────────
-        //  保存
+        //  Save
         // ─────────────────────────────────────────
         private void SaveConfig()
         {
@@ -98,7 +99,7 @@ namespace CrystalMagic.Editor.Config
             File.WriteAllText(path, JsonUtility.ToJson(_configObj, true), Encoding.UTF8);
             AssetDatabase.Refresh();
             _isDirty = false;
-            _statusText = $"已保存  ·  {path}";
+            _statusText = $"已Save  ·  {path}";
             Debug.Log($"[ConfigEditor] Saved {path}");
         }
 
@@ -122,7 +123,7 @@ namespace CrystalMagic.Editor.Config
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            EditorGUILayout.LabelField("配置类", GUILayout.Width(42));
+            EditorGUILayout.LabelField("Config Class", GUILayout.Width(42));
             int newIdx = EditorGUILayout.Popup(_selectedIndex, _typeNames,
                 EditorStyles.toolbarDropDown, GUILayout.Width(200));
             if (newIdx != _selectedIndex)
@@ -133,17 +134,17 @@ namespace CrystalMagic.Editor.Config
                 _isDirty = false;
             }
 
-            if (GUILayout.Button("加载", EditorStyles.toolbarButton, GUILayout.Width(44))
+            if (GUILayout.Button("Load", EditorStyles.toolbarButton, GUILayout.Width(44))
                 && _configTypes.Count > 0)
                 LoadConfig(_configTypes[_selectedIndex]);
 
             GUI.enabled = _isDirty;
-            if (GUILayout.Button(_isDirty ? "保存 *" : "保存",
+            if (GUILayout.Button(_isDirty ? "Save *" : "Save",
                 EditorStyles.toolbarButton, GUILayout.Width(52)))
                 SaveConfig();
             GUI.enabled = true;
 
-            if (GUILayout.Button("刷新类型", EditorStyles.toolbarButton, GUILayout.Width(60)))
+            if (GUILayout.Button("Refresh Types", EditorStyles.toolbarButton, GUILayout.Width(60)))
                 ScanConfigTypes();
 
             GUILayout.FlexibleSpace();
@@ -155,7 +156,7 @@ namespace CrystalMagic.Editor.Config
         }
 
         // ─────────────────────────────────────────
-        //  字段列表（Inspector 风格）
+        //  Field List (Inspector Style)
         // ─────────────────────────────────────────
         private void DrawFields()
         {
@@ -165,8 +166,8 @@ namespace CrystalMagic.Editor.Config
             foreach (var field in _fields)
             {
                 object val = field.GetValue(_configObj);
-                object newVal = DrawField(EditorLabelUtility.GetLabel(field), field.FieldType, val);
-                if (!Equals(newVal, val))
+                object newVal = DrawField(EditorLabelUtility.GetLabel(field), field.FieldType, val, out bool changed);
+                if (changed)
                 {
                     field.SetValue(_configObj, newVal);
                     _isDirty = true;
@@ -178,26 +179,168 @@ namespace CrystalMagic.Editor.Config
         }
 
         // ─────────────────────────────────────────
-        //  字段控件
+        //  Field Controls
         // ─────────────────────────────────────────
-        private object DrawField(string label, Type type, object value)
+        private object DrawField(string label, Type type, object value, out bool changed)
         {
-            if (type == typeof(int))
-                return EditorGUILayout.IntField(label, (int)(value ?? 0));
-            if (type == typeof(float))
-                return EditorGUILayout.FloatField(label, (float)(value ?? 0f));
-            if (type == typeof(bool))
-                return EditorGUILayout.Toggle(label, (bool)(value ?? false));
-            if (type == typeof(string))
-                return EditorGUILayout.TextField(label, (string)(value ?? ""));
-            if (type.IsEnum)
-                return EditorGUILayout.EnumPopup(label, (Enum)value);
+            changed = false;
 
-            // 不支持的类型只读显示
-            EditorGUILayout.LabelField(label, value?.ToString() ?? "—");
+            if (type == typeof(int))
+            {
+                EditorGUI.BeginChangeCheck();
+                int result = EditorGUILayout.IntField(label, (int)(value ?? 0));
+                changed = EditorGUI.EndChangeCheck();
+                return result;
+            }
+            if (type == typeof(float))
+            {
+                EditorGUI.BeginChangeCheck();
+                float result = EditorGUILayout.FloatField(label, (float)(value ?? 0f));
+                changed = EditorGUI.EndChangeCheck();
+                return result;
+            }
+            if (type == typeof(bool))
+            {
+                EditorGUI.BeginChangeCheck();
+                bool result = EditorGUILayout.Toggle(label, (bool)(value ?? false));
+                changed = EditorGUI.EndChangeCheck();
+                return result;
+            }
+            if (type == typeof(Vector2))
+            {
+                Vector2 vector = value is Vector2 current ? current : Vector2.zero;
+                EditorGUI.BeginChangeCheck();
+                Vector2 result = EditorGUILayout.Vector2Field(label, vector);
+                changed = EditorGUI.EndChangeCheck();
+                return result;
+            }
+            if (type == typeof(Vector2Int))
+            {
+                Vector2Int vector = value is Vector2Int current ? current : Vector2Int.zero;
+                EditorGUI.BeginChangeCheck();
+                Vector2Int result = EditorGUILayout.Vector2IntField(label, vector);
+                changed = EditorGUI.EndChangeCheck();
+                return result;
+            }
+            if (type == typeof(string))
+            {
+                EditorGUI.BeginChangeCheck();
+                string result = EditorGUILayout.TextField(label, (string)(value ?? string.Empty));
+                changed = EditorGUI.EndChangeCheck();
+                return result;
+            }
+            if (type.IsEnum)
+            {
+                Enum current = value as Enum ?? (Enum)Activator.CreateInstance(type);
+                EditorGUI.BeginChangeCheck();
+                Enum result = EditorGUILayout.EnumPopup(label, current);
+                changed = EditorGUI.EndChangeCheck();
+                return result;
+            }
+            if (IsList(type))
+                return DrawList(label, type, value as IList, out changed);
+            if (CanDrawFields(type))
+                return DrawObject(label, type, value, out changed);
+
+            EditorGUILayout.LabelField(label, value?.ToString() ?? string.Empty);
             return value;
         }
 
+        private object DrawList(string label, Type listType, IList list, out bool changed)
+        {
+            changed = false;
+            Type elementType = listType.GetGenericArguments()[0];
+            if (list == null)
+            {
+                list = (IList)Activator.CreateInstance(listType);
+                changed = true;
+            }
+
+            EditorGUILayout.BeginVertical(GUI.skin.box);
+            EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
+
+            int removeIndex = -1;
+            for (int i = 0; i < list.Count; i++)
+            {
+                EditorGUILayout.BeginVertical(GUI.skin.box);
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField($"Element {i}", EditorStyles.miniBoldLabel);
+                if (GUILayout.Button("Remove", GUILayout.Width(64)))
+                    removeIndex = i;
+                EditorGUILayout.EndHorizontal();
+
+                object newValue = DrawField(string.Empty, elementType, list[i], out bool itemChanged);
+                if (itemChanged)
+                {
+                    list[i] = newValue;
+                    changed = true;
+                }
+
+                EditorGUILayout.EndVertical();
+            }
+
+            if (removeIndex >= 0)
+            {
+                list.RemoveAt(removeIndex);
+                changed = true;
+            }
+
+            if (GUILayout.Button("Add"))
+            {
+                list.Add(CreateDefaultValue(elementType));
+                changed = true;
+            }
+
+            EditorGUILayout.EndVertical();
+            return list;
+        }
+
+        private object DrawObject(string label, Type type, object value, out bool changed)
+        {
+            changed = false;
+            object instance = value ?? Activator.CreateInstance(type);
+            if (value == null)
+                changed = true;
+
+            EditorGUILayout.BeginVertical(GUI.skin.box);
+            if (!string.IsNullOrEmpty(label))
+                EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
+
+            FieldInfo[] fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
+            foreach (var field in fields)
+            {
+                if (field.IsInitOnly)
+                    continue;
+
+                object oldValue = field.GetValue(instance);
+                object newValue = DrawField(EditorLabelUtility.GetLabel(field), field.FieldType, oldValue, out bool fieldChanged);
+                if (fieldChanged)
+                {
+                    field.SetValue(instance, newValue);
+                    changed = true;
+                }
+            }
+
+            EditorGUILayout.EndVertical();
+            return instance;
+        }
+
+        private static bool IsList(Type type)
+        {
+            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>);
+        }
+
+        private static bool CanDrawFields(Type type)
+        {
+            return (type.IsClass || (type.IsValueType && !type.IsPrimitive))
+                && type != typeof(decimal)
+                && type.Namespace != "UnityEngine";
+        }
+
+        private static object CreateDefaultValue(Type type)
+        {
+            return type == typeof(string) ? string.Empty : Activator.CreateInstance(type);
+        }
         private static string GetFilePath(Type t) => $"{ConfigDir}/{t.Name}.json";
     }
 }

@@ -6,6 +6,7 @@ using CrystalMagic.Core;
 
 public class LoadUIData : UIData
 {
+    public UINode Background;
     public UINode ScrollView;
     public UINode ScrollView_Viewport;
     public UINode ScrollView_Viewport_Content;
@@ -16,10 +17,14 @@ public class LoadUIData : UIData
     public UINode ScrollView_Viewport_Content_SaveItem_Open_Index;
     public UINode ScrollView_Viewport_Content_SaveItem_Open_Delete;
     public UINode ScrollView_Viewport_Content_SaveItem_Close;
+    public UINode ScrollView_Viewport_Content_SaveItem_Close_Empty;
     public UINode Back;
+    public UINode Back_Default;
+    public UINode Back_Click;
 
     public override void Bind(Transform root)
     {
+        Background = UINode.From(Find(root, "Background"));
         ScrollView = UINode.From(Find(root, "Scroll View"));
         ScrollView_Viewport = UINode.From(Find(root, "Scroll View/Viewport"));
         ScrollView_Viewport_Content = UINode.From(Find(root, "Scroll View/Viewport/Content"));
@@ -30,6 +35,9 @@ public class LoadUIData : UIData
         ScrollView_Viewport_Content_SaveItem_Open_Index = UINode.From(Find(root, "Scroll View/Viewport/Content/SaveItem/Open/Index"));
         ScrollView_Viewport_Content_SaveItem_Open_Delete = UINode.From(Find(root, "Scroll View/Viewport/Content/SaveItem/Open/Delete"));
         ScrollView_Viewport_Content_SaveItem_Close = UINode.From(Find(root, "Scroll View/Viewport/Content/SaveItem/Close"));
+        ScrollView_Viewport_Content_SaveItem_Close_Empty = UINode.From(Find(root, "Scroll View/Viewport/Content/SaveItem/Close/Empty"));
         Back = UINode.From(Find(root, "Back"));
+        Back_Default = UINode.From(Find(root, "Back/Default"));
+        Back_Click = UINode.From(Find(root, "Back/Click"));
     }
 }

@@ -25,29 +25,37 @@ namespace CrystalMagic.Game.Skill.Effects
             Entity target = context.TargetEntity;
             if (target == Entity.Null ||
                 !entityManager.Exists(target) ||
-                !entityManager.HasComponent<UnitVitalityComponent>(target))
+                !entityManager.HasComponent<UnitVitalityComponent>(target) ||
+                EffectTargetUtility.IsDead(entityManager, target))
                 return;
 
             UnitVitalityComponent vitality = entityManager.GetComponentData<UnitVitalityComponent>(target);
-            DamageBreakdown breakdown = CalculateDamage(context, entityManager, vitality);
+            DamageBreakdown breakdown = CalculateDamage(context, entityManager, target);
             float damage = breakdown.FinalDamage;
-            damage = UnitBuffUtility.ApplyDamageTakenRuntimeBuffs(entityManager, target, damage);
+            damage = UnitModifierResolver.ApplyDamageTakenModifiers(entityManager, target, damage);
             if (damage <= 0f)
                 return;
 
             float previousHealth = vitality.CurrentHealth;
             vitality.CurrentHealth = math.max(0f, vitality.CurrentHealth - damage);
             entityManager.SetComponentData(target, vitality);
-            QuadOverlayPulseUtility.PlayHit(entityManager, target);
-            UnitBuffHookUtility.Dispatch(
-                entityManager,
-                target,
-                SkillHookType.OnDamaged,
-                context.TriggerSource,
-                context.HasOriginEntity,
-                context.OriginEntity,
-                context.SourceSkillId,
-                triggerValue: damage);
+            bool died = vitality.CurrentHealth <= 0f;
+            if (died && entityManager.HasComponent<UnitDeathComponent>(target))
+                entityManager.SetComponentEnabled<UnitDeathComponent>(target, true);
+
+            if (!died)
+            {
+                QuadOverlayPulseUtility.PlayHit(entityManager, target);
+                UnitBuffHookUtility.Dispatch(
+                    entityManager,
+                    target,
+                    SkillHookType.OnDamaged,
+                    context.TriggerSource,
+                    context.HasOriginEntity,
+                    context.OriginEntity,
+                    context.SourceSkillId,
+                    triggerValue: damage);
+            }
 
             Debug.Log(
                 $"[DamageEffect] Damage={damage:0.##} | Formula=max(0, AttackPower*Coeff+Flat-Defense) | " +
@@ -55,10 +63,10 @@ namespace CrystalMagic.Game.Skill.Effects
                 $"Raw={breakdown.RawDamage:0.##} Defense={breakdown.Defense:0.##} Final={breakdown.FinalDamage:0.##} " +
                 $"Target={target.Index}:{target.Version} HP={previousHealth:0.##}->{vitality.CurrentHealth:0.##}");
 
-            EventComponent.Instance.Publish(new UnitDamagedEvent(target, vitality.CurrentHealth, vitality.RealMaxHealth));
+            EventComponent.Instance.Publish(new UnitDamagedEvent(target, vitality.CurrentHealth, UnitModifierResolver.GetMaxHealth(entityManager, target)));
         }
 
-        private DamageBreakdown CalculateDamage(SkillContent context, EntityManager entityManager, UnitVitalityComponent targetVitality)
+        private DamageBreakdown CalculateDamage(SkillContent context, EntityManager entityManager, Entity target)
         {
             float attackPower = 0f;
             if (context.HasOriginEntity &&
@@ -66,16 +74,17 @@ namespace CrystalMagic.Game.Skill.Effects
                 entityManager.Exists(context.OriginEntity) &&
                 entityManager.HasComponent<UnitAttackComponent>(context.OriginEntity))
             {
-                attackPower = entityManager.GetComponentData<UnitAttackComponent>(context.OriginEntity).RealAttackPower;
+                attackPower = UnitModifierResolver.GetAttackPower(entityManager, context.OriginEntity);
             }
 
             float rawDamage = attackPower * Data.DamageCoefficient + Data.FlatDamageBonus;
+            float defense = UnitModifierResolver.GetDefense(entityManager, target);
             return new DamageBreakdown
             {
                 AttackPower = attackPower,
                 RawDamage = rawDamage,
-                Defense = targetVitality.RealDefense,
-                FinalDamage = math.max(0f, rawDamage - targetVitality.RealDefense),
+                Defense = defense,
+                FinalDamage = math.max(0f, rawDamage - defense),
             };
         }
 
@@ -111,6 +120,7 @@ namespace CrystalMagic.Game.Skill.Effects
                 origin == Entity.Null ||
                 !entityManager.Exists(target) ||
                 !entityManager.Exists(origin) ||
+                EffectTargetUtility.IsDead(entityManager, target) ||
                 !entityManager.HasComponent<LocalTransform>(target) ||
                 !entityManager.HasComponent<LocalTransform>(origin))
             {
@@ -139,6 +149,9 @@ namespace CrystalMagic.Game.Skill.Effects
 
             EntityManager entityManager = context.EntityManager;
             Entity target = context.TargetEntity;
+            if (EffectTargetUtility.IsDead(entityManager, target))
+                return;
+
             Entity source = context.HasOriginEntity ? context.OriginEntity : Entity.Null;
             UnitControlUtility.ApplyStun(entityManager, target, source, Data.DurationSeconds);
         }
@@ -157,8 +170,22 @@ namespace CrystalMagic.Game.Skill.Effects
 
             EntityManager entityManager = context.EntityManager;
             Entity target = context.TargetEntity;
+            if (EffectTargetUtility.IsDead(entityManager, target))
+                return;
+
             Entity source = context.OriginEntity;
             UnitControlUtility.ApplyFear(entityManager, target, source, Data.DurationSeconds);
+        }
+    }
+
+    internal static class EffectTargetUtility
+    {
+        public static bool IsDead(EntityManager entityManager, Entity entity)
+        {
+            return entity == Entity.Null ||
+                   !entityManager.Exists(entity) ||
+                   (entityManager.HasComponent<UnitDeathComponent>(entity) &&
+                    entityManager.IsComponentEnabled<UnitDeathComponent>(entity));
         }
     }
 }

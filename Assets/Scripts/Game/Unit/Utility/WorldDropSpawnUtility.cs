@@ -38,11 +38,12 @@ namespace CrystalMagic.Game.Unit
             }
 
             SetOrAddComponentData(entityManager, dropEntity, LocalTransform.FromPositionRotationScale(position, quaternion.identity, 1f));
-            SetOrAddComponentData(entityManager, dropEntity, new WorldDropComponent
+            float interactionRange = math.max(0f, ConfigComponent.Instance.Get<GameConfig>().InteractionRange);
+            SetOrAddComponentData(entityManager, dropEntity, new UnitInteractableComponent
             {
-                DropType = dropType,
-                ItemId = itemId,
-                Amount = amount,
+                Data = UnitInteractionData.CreateDrop(dropType, itemId, amount),
+                RangeSq = interactionRange * interactionRange,
+                IsEnabled = 1,
             });
 
             ApplyDropVisual(entityManager, dropEntity, dropType, itemId);

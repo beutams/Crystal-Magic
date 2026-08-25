@@ -1,6 +1,5 @@
 using CrystalMagic.Game.Data;
 using Unity.Entities;
-using Unity.Transforms;
 
 namespace CrystalMagic.Game.Skill
 {
@@ -11,19 +10,10 @@ namespace CrystalMagic.Game.Skill
         {
         }
 
-        protected override bool BuildContext(EntityManager entityManager, Entity entity, in UnitCastComponent cast, SkillContent context)
+        protected override bool BuildContext(in SkillReleaseRequest request, SkillContent context)
         {
-            if (entityManager.HasComponent<LocalTransform>(entity))
-            {
-                LocalTransform transform = entityManager.GetComponentData<LocalTransform>(entity);
-                SetPosition(context, true, transform.Position);
-            }
-            else
-            {
-                SetPosition(context, false, UnityEngine.Vector3.zero);
-            }
-
-            SetTargetEntity(context, true, entity);
+            SetPosition(context, true, request.OriginPosition);
+            SetTargetEntity(context, true, request.OriginEntity);
             return true;
         }
     }

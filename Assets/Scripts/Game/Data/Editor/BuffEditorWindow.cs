@@ -40,16 +40,21 @@ namespace CrystalMagic.Editor.Data
             typeof(PropertyBuffData),
             typeof(EffectBuffData),
             typeof(SkillModifierBuffData),
+            typeof(SkillAdditionGrantBuffData),
         };
         private static readonly string[] KnownBuffNames =
         {
             "属性修饰 (PropertyBuff)",
             "特效 (EffectBuff)",
+            "技能修正 (SkillModifierBuff)",
+            "技能附加授予 (SkillAdditionGrantBuff)",
         };
         private static readonly Color[] BuffColors =
         {
             new(0.14f, 0.50f, 0.24f),  // PropertyBuff - 绿
             new(0.60f, 0.18f, 0.14f),  // EffectBuff - 红
+            new(0.30f, 0.26f, 0.62f),  // SkillModifierBuff - 紫
+            new(0.52f, 0.36f, 0.08f),  // SkillAdditionGrantBuff - 金
         };
 
         // ===== Effect 子类注册（用于 Buff 触发条目）=====
@@ -531,6 +536,7 @@ namespace CrystalMagic.Editor.Data
             DrawPropertyBuffFields(buff);
             DrawSkillModifierFields(buff);
             DrawEffectBuffFields(buff);
+            DrawSkillAdditionGrantFields(buff);
 
             EditorGUIUtility.labelWidth = prevLabelWidth;
             EditorGUILayout.EndScrollView();
@@ -666,6 +672,37 @@ namespace CrystalMagic.Editor.Data
             if (removeAt >= 0)
             {
                 buff.SkillModifiers.RemoveAt(removeAt);
+                _isDirty = true;
+            }
+        }
+
+        private void DrawSkillAdditionGrantFields(BuffData buff)
+        {
+            if (buff is not SkillAdditionGrantBuffData additionGrant)
+                return;
+
+            DrawSectionHeader("技能附加授予");
+            additionGrant.SkillAdditionIds ??= new List<int>();
+
+            int removeAt = -1;
+            for (int i = 0; i < additionGrant.SkillAdditionIds.Count; i++)
+            {
+                EditorGUILayout.BeginHorizontal();
+                additionGrant.SkillAdditionIds[i] = EditorGUILayout.IntField("Addition Id", additionGrant.SkillAdditionIds[i]);
+                if (GUILayout.Button("删除", GUILayout.Width(44)))
+                    removeAt = i;
+                EditorGUILayout.EndHorizontal();
+            }
+
+            if (GUILayout.Button("+ 添加 Addition", GUILayout.Width(120)))
+            {
+                additionGrant.SkillAdditionIds.Add(-1);
+                _isDirty = true;
+            }
+
+            if (removeAt >= 0)
+            {
+                additionGrant.SkillAdditionIds.RemoveAt(removeAt);
                 _isDirty = true;
             }
         }

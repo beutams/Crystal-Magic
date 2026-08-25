@@ -68,11 +68,7 @@
                  {
                      "$type":  "CrystalMagic.Game.Data.PropertyBuffData, Assembly-CSharp",
                      "PropertyModifiers":  [
-                                               {
-                                                   "Channel":  8,
-                                                   "Factor":  -0.5,
-                                                   "Bonus":  0
-                                               }
+
                                            ],
                      "CanStack":  false,
                      "MaxStacks":  1,
@@ -98,11 +94,6 @@
                                                    "Channel":  0,
                                                    "Factor":  0.25,
                                                    "Bonus":  0
-                                               },
-                                               {
-                                                   "Channel":  8,
-                                                   "Factor":  0,
-                                                   "Bonus":  40
                                                },
                                                {
                                                    "Channel":  9,
@@ -213,26 +204,6 @@
                      "Id":  10,
                      "Category":  0,
                      "NameKey":  "buff.shield_break_haste.name"
-                 },
-                 {
-                     "$type":  "CrystalMagic.Game.Data.EffectBuffData, Assembly-CSharp",
-                     "TickIntervalSeconds":  1.0,
-                     "EffectChain":  [
-                                         {
-                                             "$type":  "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
-                                             "DamageCoefficient":  0.35,
-                                             "FlatDamageBonus":  4.0,
-                                             "Element":  0,
-                                             "Conditions":  [
-
-                                                            ]
-                                         }
-                                     ],
-                     "CanStack":  false,
-                     "MaxStacks":  1,
-                     "Id":  11,
-                     "Category":  1,
-                     "NameKey":  "buff.spider_venom.name"
                  }
              ]
 }

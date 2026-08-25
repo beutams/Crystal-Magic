@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Reflection;
 using System.Text;
 using CrystalMagic.Editor;
 using UnityEditor;
@@ -18,8 +17,10 @@ namespace CrystalMagic.Editor
                 FactoryRegistryGeneratorUtility.CollectMappedTypes(typeof(ISource), subclassOnly: false);
             List<FactoryRegistryGeneratorUtility.MappedType> compareTypes =
                 FactoryRegistryGeneratorUtility.CollectMappedTypes(typeof(ICompareType), subclassOnly: false);
+            List<FactoryRegistryGeneratorUtility.MappedType> operations =
+                FactoryRegistryGeneratorUtility.CollectMappedTypes(typeof(IValueOperation), subclassOnly: false);
 
-            string content = BuildRegistry(sources, compareTypes);
+            string content = BuildRegistry(sources, compareTypes, operations);
             RegistryGeneratorUtility.WriteFile(OutputPath, content);
             AssetDatabase.Refresh();
 
@@ -28,7 +29,8 @@ namespace CrystalMagic.Editor
 
         private static string BuildRegistry(
             List<FactoryRegistryGeneratorUtility.MappedType> sources,
-            List<FactoryRegistryGeneratorUtility.MappedType> compareTypes)
+            List<FactoryRegistryGeneratorUtility.MappedType> compareTypes,
+            List<FactoryRegistryGeneratorUtility.MappedType> operations)
         {
             StringBuilder sb = new();
             sb.AppendLine("// AUTO-GENERATED - DO NOT EDIT MANUALLY");
@@ -40,34 +42,30 @@ namespace CrystalMagic.Editor
             sb.AppendLine("    {");
             sb.AppendLine("        if (factory == null)");
             sb.AppendLine("            return;");
-            sb.AppendLine();
 
-            for (int i = 0; i < sources.Count; i++)
-            {
-                var source = sources[i];
-                sb.AppendLine($"        factory.RegisterSource({FactoryRegistryGeneratorUtility.Literal(source.Mapping.Key)}, static () => new {FactoryRegistryGeneratorUtility.TypeReference(source.Type)}());");
-            }
-
-            if (sources.Count > 0 && compareTypes.Count > 0)
-                sb.AppendLine();
-
-            for (int i = 0; i < compareTypes.Count; i++)
-            {
-                var compareType = compareTypes[i];
-                FactoryInputMemberAttribute input = compareType.Type.GetCustomAttribute<FactoryInputMemberAttribute>(false);
-                if (input != null && FactoryRegistryGeneratorUtility.HasWritableFloatMember(compareType.Type, input.MemberName))
-                {
-                    sb.AppendLine($"        factory.RegisterCompareType({FactoryRegistryGeneratorUtility.Literal(compareType.Mapping.Key)}, static value => new {FactoryRegistryGeneratorUtility.TypeReference(compareType.Type)} {{ {input.MemberName} = value }});");
-                }
-                else
-                {
-                    sb.AppendLine($"        factory.RegisterCompareType({FactoryRegistryGeneratorUtility.Literal(compareType.Mapping.Key)}, static _ => new {FactoryRegistryGeneratorUtility.TypeReference(compareType.Type)}());");
-                }
-            }
+            AppendFactories(sb, "RegisterSource", sources);
+            AppendFactories(sb, "RegisterCompareType", compareTypes);
+            AppendFactories(sb, "RegisterValueOperation", operations);
 
             sb.AppendLine("    }");
             sb.AppendLine("}");
             return sb.ToString();
+        }
+
+        private static void AppendFactories(
+            StringBuilder sb,
+            string registerMethod,
+            List<FactoryRegistryGeneratorUtility.MappedType> types)
+        {
+            if (types.Count == 0)
+                return;
+
+            sb.AppendLine();
+            for (int i = 0; i < types.Count; i++)
+            {
+                FactoryRegistryGeneratorUtility.MappedType type = types[i];
+                sb.AppendLine($"        factory.{registerMethod}({FactoryRegistryGeneratorUtility.Literal(type.Mapping.Key)}, static () => new {FactoryRegistryGeneratorUtility.TypeReference(type.Type)}());");
+            }
         }
     }
 }

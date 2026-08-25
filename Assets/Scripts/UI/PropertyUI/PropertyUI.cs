@@ -3,11 +3,6 @@ using CrystalMagic.UI;
 
 public class PropertyUI : UIBase<PropertyUIData, PropertyUIModel>
 {
-    protected override void OnInit()
-    {
-        base.OnInit();
-    }
-
     public override void OnOpen()
     {
         base.OnOpen();
@@ -33,7 +28,6 @@ public class PropertyUI : UIBase<PropertyUIData, PropertyUIModel>
         SetValue(UI.MaxMana_Value, FormatNumber(Model != null ? Model.MaxMana : 0f));
         SetValue(UI.ManaRegen_Value, FormatNumber(Model != null ? Model.ManaRegen : 0f));
         SetValue(UI.AttackPower_Value, FormatNumber(Model != null ? Model.AttackPower : 0f));
-        SetValue(UI.ActionSpeed_Value, FormatStatPercent(Model != null ? Model.ActionSpeed : 0f));
         SetValue(UI.ChantSpeed_Value, FormatStatPercent(Model != null ? Model.ChantSpeed : 0f));
         SetValue(UI.Fire_Value, FormatPercent(Model != null ? Model.Fire : 0f));
         SetValue(UI.Water_Value, FormatPercent(Model != null ? Model.Water : 0f));

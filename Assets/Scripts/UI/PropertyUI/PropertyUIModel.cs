@@ -20,7 +20,6 @@ namespace CrystalMagic.UI
         public float MaxMana => _snapshot.MaxMana;
         public float ManaRegen => _snapshot.ManaRegen;
         public float AttackPower => _snapshot.AttackPower;
-        public float ActionSpeed => _snapshot.ActionSpeed;
         public float ChantSpeed => _snapshot.ChantSpeed;
         public float Fire => _snapshot.Fire;
         public float Water => _snapshot.Water;
@@ -58,40 +57,34 @@ namespace CrystalMagic.UI
 
             if (entityManager.HasComponent<UnitMoveComponent>(player))
             {
-                UnitMoveComponent move = entityManager.GetComponentData<UnitMoveComponent>(player);
-                snapshot.Speed = move.RealMoveSpeed;
+                snapshot.Speed = UnitModifierResolver.GetMoveSpeed(entityManager, player);
             }
 
             if (entityManager.HasComponent<UnitVitalityComponent>(player))
             {
-                UnitVitalityComponent vitality = entityManager.GetComponentData<UnitVitalityComponent>(player);
-                snapshot.MaxHealth = vitality.RealMaxHealth;
-                snapshot.HealthRegen = vitality.RealHealthRegenPerSecond;
+                snapshot.MaxHealth = UnitModifierResolver.GetMaxHealth(entityManager, player);
+                snapshot.HealthRegen = UnitModifierResolver.GetHealthRegen(entityManager, player);
             }
 
             if (entityManager.HasComponent<UnitManaComponent>(player))
             {
-                UnitManaComponent mana = entityManager.GetComponentData<UnitManaComponent>(player);
-                snapshot.MaxMana = mana.RealMaxMp;
-                snapshot.ManaRegen = mana.RealMpRegenPerSecond;
+                snapshot.MaxMana = UnitModifierResolver.GetMaxMp(entityManager, player);
+                snapshot.ManaRegen = UnitModifierResolver.GetMpRegen(entityManager, player);
             }
 
             if (entityManager.HasComponent<UnitAttackComponent>(player))
             {
-                UnitAttackComponent attack = entityManager.GetComponentData<UnitAttackComponent>(player);
-                snapshot.AttackPower = attack.RealAttackPower;
-                snapshot.ActionSpeed = attack.RealActionSpeedBonus;
-                snapshot.ChantSpeed = attack.RealChantSpeedBonus;
-                snapshot.SkillRange = attack.RealSkillRange;
+                snapshot.AttackPower = UnitModifierResolver.GetAttackPower(entityManager, player);
+                snapshot.ChantSpeed = UnitModifierResolver.GetChantSpeedBonus(entityManager, player);
+                snapshot.SkillRange = UnitModifierResolver.GetSkillRange(entityManager, player);
             }
 
             if (entityManager.HasComponent<UnitElementComponent>(player))
             {
-                UnitElementComponent element = entityManager.GetComponentData<UnitElementComponent>(player);
-                snapshot.Water = element.WaterPower;
-                snapshot.Fire = element.FirePower;
-                snapshot.Lighting = element.LightningPower;
-                snapshot.Wind = element.WindPower;
+                snapshot.Water = UnitModifierResolver.GetElementPower(entityManager, player, CrystalMagic.Game.Data.Effects.ElementType.Water);
+                snapshot.Fire = UnitModifierResolver.GetElementPower(entityManager, player, CrystalMagic.Game.Data.Effects.ElementType.Fire);
+                snapshot.Lighting = UnitModifierResolver.GetElementPower(entityManager, player, CrystalMagic.Game.Data.Effects.ElementType.Lightning);
+                snapshot.Wind = UnitModifierResolver.GetElementPower(entityManager, player, CrystalMagic.Game.Data.Effects.ElementType.Wind);
             }
 
             return snapshot;
@@ -110,23 +103,28 @@ namespace CrystalMagic.UI
             entityManager = world.EntityManager;
             if (_cachedPlayerEntity != Entity.Null &&
                 entityManager.Exists(_cachedPlayerEntity) &&
-                entityManager.HasComponent<PlayerTag>(_cachedPlayerEntity))
+                entityManager.HasComponent<UnitFactionComponent>(_cachedPlayerEntity) &&
+                UnitFactionUtility.IsPlayer(entityManager.GetComponentData<UnitFactionComponent>(_cachedPlayerEntity).Value))
             {
                 player = _cachedPlayerEntity;
                 return true;
             }
 
-            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<PlayerTag>());
+            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<UnitFactionComponent>());
             using NativeArray<Entity> entities = query.ToEntityArray(Allocator.Temp);
-            if (entities.Length <= 0)
+            for (int i = 0; i < entities.Length; i++)
             {
-                player = Entity.Null;
-                return false;
+                Entity entity = entities[i];
+                if (!UnitFactionUtility.IsPlayer(entityManager.GetComponentData<UnitFactionComponent>(entity).Value))
+                    continue;
+
+                _cachedPlayerEntity = entity;
+                player = entity;
+                return true;
             }
 
-            _cachedPlayerEntity = entities[0];
-            player = _cachedPlayerEntity;
-            return true;
+            player = Entity.Null;
+            return false;
         }
 
         private void PublishChanged()
@@ -143,7 +141,6 @@ namespace CrystalMagic.UI
         public float MaxMana;
         public float ManaRegen;
         public float AttackPower;
-        public float ActionSpeed;
         public float ChantSpeed;
         public float Fire;
         public float Water;
@@ -159,7 +156,6 @@ namespace CrystalMagic.UI
                 && Mathf.Approximately(MaxMana, other.MaxMana)
                 && Mathf.Approximately(ManaRegen, other.ManaRegen)
                 && Mathf.Approximately(AttackPower, other.AttackPower)
-                && Mathf.Approximately(ActionSpeed, other.ActionSpeed)
                 && Mathf.Approximately(ChantSpeed, other.ChantSpeed)
                 && Mathf.Approximately(Fire, other.Fire)
                 && Mathf.Approximately(Water, other.Water)

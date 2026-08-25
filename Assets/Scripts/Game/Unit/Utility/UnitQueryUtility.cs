@@ -5,7 +5,7 @@ using Unity.Mathematics;
 public enum UnitQueryTreeKind
 {
     Unit,
-    WorldDrop,
+    Interactable,
 }
 
 public static class UnitQueryUtility
@@ -29,8 +29,8 @@ public static class UnitQueryUtility
             return false;
         }
 
-        tree = treeKind == UnitQueryTreeKind.WorldDrop
-            ? runtime.WorldDropTree
+        tree = treeKind == UnitQueryTreeKind.Interactable
+            ? runtime.InteractableTree
             : runtime.UnitTree;
         return tree != null;
     }

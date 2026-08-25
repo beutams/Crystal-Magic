@@ -1,23 +1,27 @@
+Comparator design
+
+UnitValue
+    Typed runtime value used by expressions.
+    Supports Bool, Int, Float, Float2, Float3, and Entity.
+
+ValueExpression
+    Serialized value tree node.
+    Literal: a fixed UnitValue.
+    Getter: resolves a string key to a cached getter delegate.
+    Operation: evaluates child expressions through IValueOperation.
+
 ICompareType
--内容
-    比较函数接口，实现具体的运算逻辑，可能会有一个目的比较值
-ISource
--内容
-    比较内容接口，实现数据获取的逻辑，获取源比较值
-Condition
--内容
-    一个条件，由比较内容+比较函数+比较目的值
-Comparator
--内容
-    多个条件的组合
--接口
-    GetResult() 获得条件组合的总结果
-ConditionConfig
--内容
-    供数据存储使用的条件配置数据类
-    运行时转化成Comparator
+    Declares an ordered parameter list and returns a boolean result.
+    Example: GreaterThan(Number left, Number right).
+
+IValueOperation
+    Declares an ordered parameter list and a result category.
+    Example: Distance(Float3 positionA, Float3 positionB) -> Number.
+
 ComparatorFactory
--内容
-    条件生成工厂类，自动由Registry注册构造函数
--接口
-    BuildComparator 由List<ConditionConfig>生成Comparator
+    Builds a Comparator from condition configuration and a value resolver.
+    It validates parameter counts and value categories once during construction.
+
+IComparatorValueResolver
+    Integration interface implemented later by the unit source access table.
+    It maps getter keys to typed delegates.

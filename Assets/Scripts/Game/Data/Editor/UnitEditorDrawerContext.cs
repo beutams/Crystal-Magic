@@ -36,19 +36,9 @@ namespace CrystalMagic.Editor.Data
             return GetAuthoring<T>() != null;
         }
 
-        public bool HasFeature<T>() where T : Component
-        {
-            return HasAuthoring<T>();
-        }
-
         public T GetAuthoring<T>() where T : Component
         {
             return Prefab != null ? Prefab.GetComponent<T>() : null;
-        }
-
-        public T GetFeature<T>() where T : Component
-        {
-            return GetAuthoring<T>();
         }
 
         public void MarkPrefabDirty(Object target)

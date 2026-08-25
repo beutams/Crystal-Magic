@@ -209,7 +209,7 @@ namespace CrystalMagic.Editor.Data
 
         private static bool IsSpeedPropertyChannel(PropertyModifierChannel channel)
         {
-            return channel is PropertyModifierChannel.ActionSpeed or PropertyModifierChannel.ChantSpeed;
+            return channel == PropertyModifierChannel.ChantSpeed;
         }
 
         private void RefreshItemCache()

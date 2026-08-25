@@ -46,6 +46,108 @@ public class UnitBuffRuntimeComponent : IComponentData
     public List<UnitBuffRuntimeEntry> Buffs = new();
 }
 
+[UnitSourceAuthoring(typeof(UnitBuffRuntimeAuthoring))]
+public sealed class UnitBuffSource : UnitManagedComponentSource<UnitBuffRuntimeComponent>
+{
+    private static readonly ComparatorParameterDefinition[] s_indexParameter =
+    {
+        new ComparatorParameterDefinition("Index", UnitValueCategory.Number),
+    };
+
+    private static readonly ComparatorParameterDefinition[] s_buffIdParameter =
+    {
+        new ComparatorParameterDefinition("BuffId", UnitValueCategory.Number),
+    };
+
+    private static readonly ComparatorParameterDefinition[] s_removeStacksParameters =
+    {
+        new ComparatorParameterDefinition("BuffId", UnitValueCategory.Number),
+        new ComparatorParameterDefinition("StackCount", UnitValueCategory.Number),
+    };
+
+    protected override void Define(UnitSourceDefinitionBuilder<UnitBuffRuntimeComponent> builder)
+    {
+        builder.AddGet("unit.buffs.count", UnitValueCategory.Number,
+            (in UnitBuffRuntimeComponent component) => UnitValue.FromInt(component.Buffs?.Count ?? 0));
+        builder.AddGet("unit.buffs.idAt", UnitValueCategory.Number, s_indexParameter,
+            (in UnitBuffRuntimeComponent component, UnitValue[] input) => GetEntry(component, input, out UnitBuffRuntimeEntry entry) ? UnitValue.FromInt(entry.BuffId) : UnitValue.None);
+        builder.AddGet("unit.buffs.remainingTimeAt", UnitValueCategory.Number, s_indexParameter,
+            (in UnitBuffRuntimeComponent component, UnitValue[] input) => GetEntry(component, input, out UnitBuffRuntimeEntry entry) ? UnitValue.FromFloat(entry.RemainingTime) : UnitValue.None);
+        builder.AddGet("unit.buffs.stackCountAt", UnitValueCategory.Number, s_indexParameter,
+            (in UnitBuffRuntimeComponent component, UnitValue[] input) => GetEntry(component, input, out UnitBuffRuntimeEntry entry) ? UnitValue.FromInt(entry.StackCount) : UnitValue.None);
+        builder.AddGet("unit.buffs.hasOriginAt", UnitValueCategory.Bool, s_indexParameter,
+            (in UnitBuffRuntimeComponent component, UnitValue[] input) => GetEntry(component, input, out UnitBuffRuntimeEntry entry) ? UnitValue.FromBool(entry.HasOriginEntity) : UnitValue.None);
+        builder.AddGet("unit.buffs.originEntityAt", UnitValueCategory.Entity, s_indexParameter,
+            (in UnitBuffRuntimeComponent component, UnitValue[] input) => GetEntry(component, input, out UnitBuffRuntimeEntry entry) ? UnitValue.FromEntity(entry.OriginEntity) : UnitValue.None);
+        builder.AddGet("unit.buffs.sourceSkillIdAt", UnitValueCategory.Number, s_indexParameter,
+            (in UnitBuffRuntimeComponent component, UnitValue[] input) => GetEntry(component, input, out UnitBuffRuntimeEntry entry) ? UnitValue.FromInt(entry.SourceSkillId) : UnitValue.None);
+        builder.AddGet("unit.buffs.findIndex", UnitValueCategory.Number, s_buffIdParameter,
+            (in UnitBuffRuntimeComponent component, UnitValue[] input) => UnitValue.FromInt(FindIndex(component, input)));
+        builder.AddGet("unit.buffs.has", UnitValueCategory.Bool, s_buffIdParameter,
+            (in UnitBuffRuntimeComponent component, UnitValue[] input) => UnitValue.FromBool(FindIndex(component, input) >= 0));
+        builder.AddGet("unit.buffs.stackCount", UnitValueCategory.Number, s_buffIdParameter,
+            (in UnitBuffRuntimeComponent component, UnitValue[] input) => UnitValue.FromInt(GetStackCount(component, input)));
+
+        builder.AddContextSet("unit.buffs.remove", s_buffIdParameter,
+            (in UnitSourceBindingContext context, ref UnitBuffRuntimeComponent component, UnitValue[] input) =>
+                TryGetInt(input, 0, out int buffId) &&
+                UnitBuffUtility.RemoveAll(context.EntityManager, context.Entity, buffId));
+        builder.AddContextSet("unit.buffs.removeStacks", s_removeStacksParameters,
+            (in UnitSourceBindingContext context, ref UnitBuffRuntimeComponent component, UnitValue[] input) =>
+                TryGetInt(input, 0, out int buffId) &&
+                TryGetInt(input, 1, out int stackCount) &&
+                UnitBuffUtility.TryRemoveStacks(context.EntityManager, context.Entity, buffId, stackCount));
+    }
+
+    private static bool GetEntry(UnitBuffRuntimeComponent component, UnitValue[] input, out UnitBuffRuntimeEntry entry)
+    {
+        entry = null;
+        if (!TryGetInt(input, 0, out int index) || component?.Buffs == null || index < 0 || index >= component.Buffs.Count)
+            return false;
+
+        entry = component.Buffs[index];
+        return entry != null;
+    }
+
+    private static int FindIndex(UnitBuffRuntimeComponent component, UnitValue[] input)
+    {
+        if (!TryGetInt(input, 0, out int buffId) || component?.Buffs == null)
+            return -1;
+
+        for (int i = 0; i < component.Buffs.Count; i++)
+        {
+            if (component.Buffs[i]?.BuffId == buffId)
+                return i;
+        }
+
+        return -1;
+    }
+
+    private static int GetStackCount(UnitBuffRuntimeComponent component, UnitValue[] input)
+    {
+        int index = FindIndex(component, input);
+        return index >= 0 ? component.Buffs[index].StackCount : 0;
+    }
+
+    private static bool TryGetInt(UnitValue[] input, int index, out int value)
+    {
+        value = 0;
+        return TryGetNumber(input, index, out float number) && TryConvertToInt(number, out value);
+    }
+
+    private static bool TryGetNumber(UnitValue[] input, int index, out float value)
+    {
+        value = 0f;
+        return input != null && index >= 0 && index < input.Length && input[index].TryGetNumber(out value);
+    }
+
+    private static bool TryConvertToInt(float value, out int result)
+    {
+        result = Mathf.RoundToInt(value);
+        return Mathf.Abs(value - result) <= 0.0001f;
+    }
+}
+
 public sealed class UnitBuffRuntimeEntry
 {
     public int BuffId = -1;

@@ -1,14 +1,10 @@
-﻿{
+{
     "Rows":  [
                  {
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "SelfSkill",
                      "MpCost":  100,
-                     "WindupDuration":  0.25,
                      "ChantDuration":  0,
-                     "RecoveryDuration":  0.25,
-                     "CanMoveWhileCasting":  true,
-                     "MoveSpeedMultiplier":  0.5,
                      "IconPath":  "Assets/Res/Sprites/Item/Charging.png",
                      "Conditions":  [
 
@@ -42,9 +38,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  0,
                      "NameKey":  "skill.charge.name",
                      "DescriptionKey":  ""
@@ -53,11 +46,7 @@
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "PositionSkill",
                      "MpCost":  100,
-                     "WindupDuration":  0.25,
                      "ChantDuration":  0.5,
-                     "RecoveryDuration":  0.25,
-                     "CanMoveWhileCasting":  true,
-                     "MoveSpeedMultiplier":  0.5,
                      "IconPath":  "Assets/Res/Sprites/Item/FireBall.png",
                      "Conditions":  [
 
@@ -68,11 +57,7 @@
                                              "Speed":  10,
                                              "MaxRange":  40,
                                              "SpawnOffsetDistance":  1,
-                                             "Scale":  1,
-                                             "FlightTexture":  "Assets/Res/Sprites/Skill/FireBall.png",
-                                             "FlightFrameCount":  16,
-                                             "DestroyTexture":  "Assets/Res/Sprites/Skill/FireBallDestory.png",
-                                             "DestroyFrameCount":  16,
+                                             "HitRadius":  0.75,
                                              "CanPierce":  false,
                                              "TriggerDestroyEffectsOnMaxRange":  false,
                                              "OnCollisionEffects":  null,
@@ -152,9 +137,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  1,
                      "NameKey":  "skill.fireball.name",
                      "DescriptionKey":  ""
@@ -163,11 +145,7 @@
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "PositionSkill",
                      "MpCost":  200,
-                     "WindupDuration":  0.25,
                      "ChantDuration":  0.5,
-                     "RecoveryDuration":  0.25,
-                     "CanMoveWhileCasting":  true,
-                     "MoveSpeedMultiplier":  0.5,
                      "IconPath":  "Assets/Res/Sprites/Item/FlameStream.png",
                      "Conditions":  [
 
@@ -248,9 +226,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  2,
                      "NameKey":  "skill.flame_impact.name",
                      "DescriptionKey":  ""
@@ -259,11 +234,7 @@
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "PositionSkill",
                      "MpCost":  200,
-                     "WindupDuration":  0.1,
                      "ChantDuration":  0,
-                     "RecoveryDuration":  0.1,
-                     "CanMoveWhileCasting":  true,
-                     "MoveSpeedMultiplier":  0.5,
                      "IconPath":  "Assets/Res/Sprites/Item/Detonate.png",
                      "Conditions":  [
 
@@ -357,9 +328,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  3,
                      "NameKey":  "skill.detonate.name",
                      "DescriptionKey":  ""
@@ -368,11 +336,7 @@
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "PositionSkill",
                      "MpCost":  100,
-                     "WindupDuration":  0.25,
                      "ChantDuration":  0.5,
-                     "RecoveryDuration":  0.25,
-                     "CanMoveWhileCasting":  true,
-                     "MoveSpeedMultiplier":  0.5,
                      "IconPath":  "Assets/Res/Sprites/Item/Eddies.png",
                      "Conditions":  [
 
@@ -480,9 +444,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  4,
                      "NameKey":  "skill.water_vortex.name",
                      "DescriptionKey":  ""
@@ -491,11 +452,7 @@
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "PositionSkill",
                      "MpCost":  200,
-                     "WindupDuration":  0.25,
                      "ChantDuration":  0.5,
-                     "RecoveryDuration":  0.25,
-                     "CanMoveWhileCasting":  true,
-                     "MoveSpeedMultiplier":  0.5,
                      "IconPath":  "Assets/Res/Sprites/Item/IceGland.png",
                      "Conditions":  [
 
@@ -506,11 +463,7 @@
                                              "Speed":  10,
                                              "MaxRange":  40,
                                              "SpawnOffsetDistance":  1,
-                                             "Scale":  1,
-                                             "FlightTexture":  "Assets/Res/Sprites/Skill/IceSpikeFlight.png",
-                                             "FlightFrameCount":  16,
-                                             "DestroyTexture":  "Assets/Res/Sprites/Skill/IceSpikeDestroy.png",
-                                             "DestroyFrameCount":  16,
+                                             "HitRadius":  0.75,
                                              "CanPierce":  false,
                                              "TriggerDestroyEffectsOnMaxRange":  true,
                                              "OnCollisionEffects":  null,
@@ -590,9 +543,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  5,
                      "NameKey":  "skill.ice_spike.name",
                      "DescriptionKey":  ""
@@ -601,11 +551,7 @@
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "PositionSkill",
                      "MpCost":  100,
-                     "WindupDuration":  0.25,
                      "ChantDuration":  0,
-                     "RecoveryDuration":  0.25,
-                     "CanMoveWhileCasting":  true,
-                     "MoveSpeedMultiplier":  0.5,
                      "IconPath":  "Assets/Res/Sprites/Item/Freeze.png",
                      "Conditions":  [
 
@@ -664,9 +610,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  6,
                      "NameKey":  "skill.freeze.name",
                      "DescriptionKey":  ""
@@ -675,11 +618,7 @@
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "PositionSkill",
                      "MpCost":  100,
-                     "WindupDuration":  0.25,
                      "ChantDuration":  0.5,
-                     "RecoveryDuration":  0.25,
-                     "CanMoveWhileCasting":  true,
-                     "MoveSpeedMultiplier":  0.5,
                      "IconPath":  "Assets/Res/Sprites/Item/Lightning.png",
                      "Conditions":  [
 
@@ -704,9 +643,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  7,
                      "NameKey":  "skill.lightning_strike.name",
                      "DescriptionKey":  ""
@@ -715,11 +651,7 @@
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "PositionSkill",
                      "MpCost":  100,
-                     "WindupDuration":  0.25,
                      "ChantDuration":  0.5,
-                     "RecoveryDuration":  0.25,
-                     "CanMoveWhileCasting":  true,
-                     "MoveSpeedMultiplier":  0.5,
                      "IconPath":  "Assets/Res/Sprites/Item/Thunder Field.png",
                      "Conditions":  [
 
@@ -778,9 +710,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  8,
                      "NameKey":  "skill.thunder_field.name",
                      "DescriptionKey":  ""
@@ -789,11 +718,7 @@
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "PositionSkill",
                      "MpCost":  300,
-                     "WindupDuration":  0.1,
                      "ChantDuration":  0,
-                     "RecoveryDuration":  0.1,
-                     "CanMoveWhileCasting":  true,
-                     "MoveSpeedMultiplier":  0.5,
                      "IconPath":  "Assets/Res/Sprites/Item/Thunderstorm.png",
                      "Conditions":  [
 
@@ -818,9 +743,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  9,
                      "NameKey":  "skill.thunder_burst.name",
                      "DescriptionKey":  ""
@@ -829,11 +751,7 @@
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "SelfSkill",
                      "MpCost":  100,
-                     "WindupDuration":  0.1,
                      "ChantDuration":  0,
-                     "RecoveryDuration":  0.1,
-                     "CanMoveWhileCasting":  true,
-                     "MoveSpeedMultiplier":  1,
                      "IconPath":  "Assets/Res/Sprites/Item/SpeedUp.png",
                      "Conditions":  [
 
@@ -858,9 +776,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  10,
                      "NameKey":  "skill.haste.name",
                      "DescriptionKey":  ""
@@ -869,11 +784,7 @@
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "SelfSkill",
                      "MpCost":  200,
-                     "WindupDuration":  0.5,
                      "ChantDuration":  1,
-                     "RecoveryDuration":  0.5,
-                     "CanMoveWhileCasting":  true,
-                     "MoveSpeedMultiplier":  0.5,
                      "IconPath":  "Assets/Res/Sprites/Item/Heal.png",
                      "Conditions":  [
 
@@ -898,9 +809,6 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  11,
                      "NameKey":  "skill.restore.name",
                      "DescriptionKey":  ""
@@ -909,11 +817,7 @@
                      "IsMonsterSkill":  false,
                      "RuntimeType":  "PositionSkill",
                      "MpCost":  200,
-                     "WindupDuration":  0.25,
                      "ChantDuration":  1,
-                     "RecoveryDuration":  0.25,
-                     "CanMoveWhileCasting":  false,
-                     "MoveSpeedMultiplier":  1,
                      "IconPath":  "Assets/Res/Sprites/Item/Shield.png",
                      "Conditions":  [
 
@@ -990,483 +894,8 @@
                                                             ]
                                          }
                                      ],
-                     "FollowupEffects":  [
-
-                                         ],
                      "Id":  12,
                      "NameKey":  "skill.barrier.name",
-                     "DescriptionKey":  ""
-                 },
-                 {
-                     "IsMonsterSkill":  true,
-                     "RuntimeType":  "PositionSkill",
-                     "MpCost":  0,
-                     "WindupDuration":  0.3,
-                     "ChantDuration":  0,
-                     "RecoveryDuration":  0.25,
-                     "CanMoveWhileCasting":  false,
-                     "MoveSpeedMultiplier":  1,
-                     "IconPath":  "",
-                     "Conditions":  [
-
-                                    ],
-                     "EffectChain":  [
-                                         {
-                                             "$type":  "CrystalMagic.Game.Data.Effects.ConeSearchEffectData, Assembly-CSharp",
-                                             "Radius":  3,
-                                             "AngleDegrees":  100,
-                                             "TargetConditions":  [
-                                                                      {
-                                                                          "ConditionType":  0,
-                                                                          "SourceType":  "UnitIsEnemySource",
-                                                                          "SourceParam":  -1,
-                                                                          "CompareType":  "IsTrue",
-                                                                          "CompareValue":  0
-                                                                      }
-                                                                  ],
-                                             "OnAfterSearch":  [
-                                                                   {
-                                                                       "$type":  "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
-                                                                       "DamageCoefficient":  1.8,
-                                                                       "FlatDamageBonus":  0,
-                                                                       "Element":  0,
-                                                                       "Conditions":  [
-
-                                                                                      ]
-                                                                   }
-                                                               ],
-                                             "Conditions":  [
-
-                                                            ]
-                                         }
-                                     ],
-                     "CastTasks":  [
-
-                                   ],
-                     "FollowupEffects":  [
-
-                                         ],
-                     "Id":  22,
-                     "NameKey":  "skill.monster.goblin_warrior_attack.name",
-                     "DescriptionKey":  ""
-                 },
-                 {
-                     "IsMonsterSkill":  true,
-                     "RuntimeType":  "PositionSkill",
-                     "MpCost":  0,
-                     "WindupDuration":  0.25,
-                     "ChantDuration":  0.15,
-                     "RecoveryDuration":  0.2,
-                     "CanMoveWhileCasting":  false,
-                     "MoveSpeedMultiplier":  1,
-                     "IconPath":  "",
-                     "Conditions":  [
-
-                                    ],
-                     "EffectChain":  [
-                                         {
-                                             "$type":  "CrystalMagic.Game.Data.Effects.SpawnProjectileEffectData, Assembly-CSharp",
-                                             "Speed":  14,
-                                             "MaxRange":  24,
-                                             "SpawnOffsetDistance":  0.8,
-                                             "Scale":  0.9,
-                                             "Width":  0.9,
-                                             "Height":  0.9,
-                                             "FlightTexture":  null,
-                                             "FlightGridColumns":  4,
-                                             "FlightGridRows":  4,
-                                             "FlightFrameCount":  16,
-                                             "FlightFramesPerSecond":  16,
-                                             "DestroyTexture":  null,
-                                             "DestroyGridColumns":  4,
-                                             "DestroyGridRows":  4,
-                                             "DestroyFrameCount":  16,
-                                             "DestroyFramesPerSecond":  16,
-                                             "CanPierce":  false,
-                                             "TriggerDestroyEffectsOnMaxRange":  true,
-                                             "OnCollisionEffects":  null,
-                                             "OnDestoryEffects":  [
-                                                                      {
-                                                                          "$type":  "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
-                                                                          "Radius":  1.2,
-                                                                          "CenterOffset":  {
-                                                                                               "x":  0,
-                                                                                               "y":  0,
-                                                                                               "z":  0
-                                                                                           },
-                                                                          "TargetConditions":  [
-                                                                                                   {
-                                                                                                       "ConditionType":  0,
-                                                                                                       "SourceType":  "UnitIsEnemySource",
-                                                                                                       "SourceParam":  -1,
-                                                                                                       "CompareType":  "IsTrue",
-                                                                                                       "CompareValue":  0
-                                                                                                   }
-                                                                                               ],
-                                                                          "OnAfterSearch":  [
-                                                                                                {
-                                                                                                    "$type":  "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
-                                                                                                    "DamageCoefficient":  1.6,
-                                                                                                    "FlatDamageBonus":  0,
-                                                                                                    "Element":  0,
-                                                                                                    "Conditions":  [
-
-                                                                                                                   ]
-                                                                                                }
-                                                                                            ],
-                                                                          "Conditions":  [
-
-                                                                                         ]
-                                                                      }
-                                                                  ],
-                                             "Conditions":  [
-
-                                                            ]
-                                         }
-                                     ],
-                     "CastTasks":  [
-
-                                   ],
-                     "FollowupEffects":  [
-
-                                         ],
-                     "Id":  23,
-                     "NameKey":  "skill.monster.goblin_archer_attack.name",
-                     "DescriptionKey":  ""
-                 },
-                 {
-                     "IsMonsterSkill":  true,
-                     "RuntimeType":  "PositionSkill",
-                     "MpCost":  0,
-                     "WindupDuration":  0.35,
-                     "ChantDuration":  0.55,
-                     "RecoveryDuration":  0.35,
-                     "CanMoveWhileCasting":  false,
-                     "MoveSpeedMultiplier":  1,
-                     "IconPath":  "",
-                     "Conditions":  [
-
-                                    ],
-                     "EffectChain":  [
-                                         {
-                                             "$type":  "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
-                                             "Radius":  3.2,
-                                             "CenterOffset":  {
-                                                                  "x":  0,
-                                                                  "y":  0,
-                                                                  "z":  0
-                                                              },
-                                             "TargetConditions":  [
-                                                                      {
-                                                                          "ConditionType":  0,
-                                                                          "SourceType":  "UnitIsEnemySource",
-                                                                          "SourceParam":  -1,
-                                                                          "CompareType":  "IsTrue",
-                                                                          "CompareValue":  0
-                                                                      }
-                                                                  ],
-                                             "OnAfterSearch":  [
-                                                                   {
-                                                                       "$type":  "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
-                                                                       "DamageCoefficient":  2.2,
-                                                                       "FlatDamageBonus":  0,
-                                                                       "Element":  0,
-                                                                       "Conditions":  [
-
-                                                                                      ]
-                                                                   },
-                                                                   {
-                                                                       "$type":  "CrystalMagic.Game.Data.Effects.KnockbackEffectData, Assembly-CSharp",
-                                                                       "Force":  6,
-                                                                       "DurationSeconds":  0.18,
-                                                                       "Conditions":  [
-
-                                                                                      ]
-                                                                   }
-                                                               ],
-                                             "Conditions":  [
-
-                                                            ]
-                                         }
-                                     ],
-                     "CastTasks":  [
-                                       {
-                                           "$type":  "CrystalMagic.Game.Data.JumpArcSkillCastTaskData, Assembly-CSharp",
-                                           "DurationSeconds":  0.35,
-                                           "ArcHeight":  1.6,
-                                           "HookPoint":  1
-                                       }
-                                   ],
-                     "FollowupEffects":  [
-
-                                         ],
-                     "Id":  24,
-                     "NameKey":  "skill.monster.slime_attack.name",
-                     "DescriptionKey":  ""
-                 },
-                 {
-                     "IsMonsterSkill":  true,
-                     "RuntimeType":  "PositionSkill",
-                     "MpCost":  0,
-                     "WindupDuration":  0.25,
-                     "ChantDuration":  0,
-                     "RecoveryDuration":  0.2,
-                     "CanMoveWhileCasting":  false,
-                     "MoveSpeedMultiplier":  1,
-                     "IconPath":  "",
-                     "Conditions":  [
-
-                                    ],
-                     "EffectChain":  [
-                                         {
-                                             "$type":  "CrystalMagic.Game.Data.Effects.ConeSearchEffectData, Assembly-CSharp",
-                                             "Radius":  2.6,
-                                             "AngleDegrees":  95,
-                                             "TargetConditions":  [
-                                                                      {
-                                                                          "ConditionType":  0,
-                                                                          "SourceType":  "UnitIsEnemySource",
-                                                                          "SourceParam":  -1,
-                                                                          "CompareType":  "IsTrue",
-                                                                          "CompareValue":  0
-                                                                      }
-                                                                  ],
-                                             "OnAfterSearch":  [
-                                                                   {
-                                                                       "$type":  "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
-                                                                       "DamageCoefficient":  1.7,
-                                                                       "FlatDamageBonus":  0,
-                                                                       "Element":  0,
-                                                                       "Conditions":  [
-
-                                                                                      ]
-                                                                   }
-                                                               ],
-                                             "Conditions":  [
-
-                                                            ]
-                                         }
-                                     ],
-                     "CastTasks":  [
-
-                                   ],
-                     "FollowupEffects":  [
-
-                                         ],
-                     "Id":  26,
-                     "NameKey":  "skill.monster.spider_attack.name",
-                     "DescriptionKey":  ""
-                 },
-                 {
-                     "IsMonsterSkill":  true,
-                     "RuntimeType":  "PositionSkill",
-                     "MpCost":  0,
-                     "WindupDuration":  0.3,
-                     "ChantDuration":  0,
-                     "RecoveryDuration":  0.25,
-                     "CanMoveWhileCasting":  false,
-                     "MoveSpeedMultiplier":  1,
-                     "IconPath":  "",
-                     "Conditions":  [
-
-                                    ],
-                     "EffectChain":  [
-                                         {
-                                             "$type":  "CrystalMagic.Game.Data.Effects.ConeSearchEffectData, Assembly-CSharp",
-                                             "Radius":  3,
-                                             "AngleDegrees":  100,
-                                             "TargetConditions":  [
-                                                                      {
-                                                                          "ConditionType":  0,
-                                                                          "SourceType":  "UnitIsEnemySource",
-                                                                          "SourceParam":  -1,
-                                                                          "CompareType":  "IsTrue",
-                                                                          "CompareValue":  0
-                                                                      }
-                                                                  ],
-                                             "OnAfterSearch":  [
-                                                                   {
-                                                                       "$type":  "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
-                                                                       "DamageCoefficient":  1.8,
-                                                                       "FlatDamageBonus":  0,
-                                                                       "Element":  0,
-                                                                       "Conditions":  [
-
-                                                                                      ]
-                                                                   }
-                                                               ],
-                                             "Conditions":  [
-
-                                                            ]
-                                         }
-                                     ],
-                     "CastTasks":  [
-
-                                   ],
-                     "FollowupEffects":  [
-
-                                         ],
-                     "Id":  34,
-                     "NameKey":  "skill.monster.bat_attack.name",
-                     "DescriptionKey":  ""
-                 },
-                 {
-                     "IsMonsterSkill":  true,
-                     "RuntimeType":  "PositionSkill",
-                     "MpCost":  0,
-                     "WindupDuration":  0.3,
-                     "ChantDuration":  0,
-                     "RecoveryDuration":  0.25,
-                     "CanMoveWhileCasting":  false,
-                     "MoveSpeedMultiplier":  1,
-                     "IconPath":  "",
-                     "Conditions":  [
-
-                                    ],
-                     "EffectChain":  [
-                                         {
-                                             "$type":  "CrystalMagic.Game.Data.Effects.ConeSearchEffectData, Assembly-CSharp",
-                                             "Radius":  3,
-                                             "AngleDegrees":  100,
-                                             "TargetConditions":  [
-                                                                      {
-                                                                          "ConditionType":  0,
-                                                                          "SourceType":  "UnitIsEnemySource",
-                                                                          "SourceParam":  -1,
-                                                                          "CompareType":  "IsTrue",
-                                                                          "CompareValue":  0
-                                                                      }
-                                                                  ],
-                                             "OnAfterSearch":  [
-                                                                   {
-                                                                       "$type":  "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
-                                                                       "DamageCoefficient":  1.8,
-                                                                       "FlatDamageBonus":  0,
-                                                                       "Element":  0,
-                                                                       "Conditions":  [
-
-                                                                                      ]
-                                                                   }
-                                                               ],
-                                             "Conditions":  [
-
-                                                            ]
-                                         }
-                                     ],
-                     "CastTasks":  [
-
-                                   ],
-                     "FollowupEffects":  [
-
-                                         ],
-                     "Id":  35,
-                     "NameKey":  "skill.monster.rat_attack.name",
-                     "DescriptionKey":  ""
-                 },
-                 {
-                     "IsMonsterSkill":  true,
-                     "RuntimeType":  "PositionSkill",
-                     "MpCost":  0,
-                     "WindupDuration":  0.3,
-                     "ChantDuration":  0,
-                     "RecoveryDuration":  0.25,
-                     "CanMoveWhileCasting":  false,
-                     "MoveSpeedMultiplier":  1,
-                     "IconPath":  "",
-                     "Conditions":  [
-
-                                    ],
-                     "EffectChain":  [
-                                         {
-                                             "$type":  "CrystalMagic.Game.Data.Effects.ConeSearchEffectData, Assembly-CSharp",
-                                             "Radius":  3,
-                                             "AngleDegrees":  100,
-                                             "TargetConditions":  [
-                                                                      {
-                                                                          "ConditionType":  0,
-                                                                          "SourceType":  "UnitIsEnemySource",
-                                                                          "SourceParam":  -1,
-                                                                          "CompareType":  "IsTrue",
-                                                                          "CompareValue":  0
-                                                                      }
-                                                                  ],
-                                             "OnAfterSearch":  [
-                                                                   {
-                                                                       "$type":  "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
-                                                                       "DamageCoefficient":  1.8,
-                                                                       "FlatDamageBonus":  0,
-                                                                       "Element":  0,
-                                                                       "Conditions":  [
-
-                                                                                      ]
-                                                                   }
-                                                               ],
-                                             "Conditions":  [
-
-                                                            ]
-                                         }
-                                     ],
-                     "CastTasks":  [
-
-                                   ],
-                     "FollowupEffects":  [
-
-                                         ],
-                     "Id":  36,
-                     "NameKey":  "skill.monster.orc_attack.name",
-                     "DescriptionKey":  ""
-                 },
-                 {
-                     "IsMonsterSkill":  true,
-                     "RuntimeType":  "PositionSkill",
-                     "MpCost":  0,
-                     "WindupDuration":  0.3,
-                     "ChantDuration":  0,
-                     "RecoveryDuration":  0.25,
-                     "CanMoveWhileCasting":  false,
-                     "MoveSpeedMultiplier":  1,
-                     "IconPath":  "",
-                     "Conditions":  [
-
-                                    ],
-                     "EffectChain":  [
-                                         {
-                                             "$type":  "CrystalMagic.Game.Data.Effects.ConeSearchEffectData, Assembly-CSharp",
-                                             "Radius":  3,
-                                             "AngleDegrees":  100,
-                                             "TargetConditions":  [
-                                                                      {
-                                                                          "ConditionType":  0,
-                                                                          "SourceType":  "UnitIsEnemySource",
-                                                                          "SourceParam":  -1,
-                                                                          "CompareType":  "IsTrue",
-                                                                          "CompareValue":  0
-                                                                      }
-                                                                  ],
-                                             "OnAfterSearch":  [
-                                                                   {
-                                                                       "$type":  "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
-                                                                       "DamageCoefficient":  1.8,
-                                                                       "FlatDamageBonus":  0,
-                                                                       "Element":  0,
-                                                                       "Conditions":  [
-
-                                                                                      ]
-                                                                   }
-                                                               ],
-                                             "Conditions":  [
-
-                                                            ]
-                                         }
-                                     ],
-                     "CastTasks":  [
-
-                                   ],
-                     "FollowupEffects":  [
-
-                                         ],
-                     "Id":  37,
-                     "NameKey":  "skill.monster.troll_attack.name",
                      "DescriptionKey":  ""
                  }
              ]

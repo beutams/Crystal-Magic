@@ -1,12 +1,7 @@
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Rendering;
 using UnityEngine;
-
-public enum QuadAnimationVisualKind : byte
-{
-    Projectile = 0,
-    Vfx = 1,
-}
 
 public struct QuadAnimationComponent : IComponentData
 {
@@ -44,7 +39,30 @@ public struct QuadOverlayPulseComponent : IComponentData, IEnableableComponent
 
 public sealed class QuadAnimationVisualComponent : IComponentData
 {
-    public QuadAnimationVisualKind VisualKind;
     public string PrefabName;
     public Texture2D Texture;
+}
+
+[MaterialProperty("_FrameUvMin")]
+public struct QuadAnimationFrameUvMinProperty : IComponentData
+{
+    public float4 Value;
+}
+
+[MaterialProperty("_FrameUvSize")]
+public struct QuadAnimationFrameUvSizeProperty : IComponentData
+{
+    public float4 Value;
+}
+
+[MaterialProperty("_FrameWorldSize")]
+public struct QuadAnimationFrameWorldSizeProperty : IComponentData
+{
+    public float4 Value;
+}
+
+[MaterialProperty("_FramePivotOffset")]
+public struct QuadAnimationFramePivotOffsetProperty : IComponentData
+{
+    public float4 Value;
 }

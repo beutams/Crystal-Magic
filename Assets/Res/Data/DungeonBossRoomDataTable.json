@@ -1,32 +1,3 @@
 ﻿{
-  "Rows": [
-    {
-      "Name": "Cavern Boss Room 1",
-      "ThemeKey": "Cavern",
-      "FloorBandStart": 1,
-      "FloorBandEnd": 1,
-      "Width": 24,
-      "Height": 18,
-      "PlayerSpawn": {
-        "X": 3,
-        "Y": 3
-      },
-      "ExitSpawn": {
-        "X": 20,
-        "Y": 14
-      },
-      "RewardSpawn": {
-        "X": 12,
-        "Y": 14
-      },
-      "BossSpawn": {
-        "X": 12,
-        "Y": 9
-      },
-      "SupportSpawnPoints": [],
-      "BossPoolIds": [],
-      "RewardTreasurePoolId": 2,
-      "Id": 0
-    }
-  ]
+  "Rows": []
 }

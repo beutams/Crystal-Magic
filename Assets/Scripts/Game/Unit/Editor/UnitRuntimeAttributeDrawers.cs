@@ -42,11 +42,10 @@ namespace CrystalMagic.Editor.Unit
         {
             UnitMoveComponent move = context.GetComponent<UnitMoveComponent>();
             UnitEditorWindow.DrawSectionHeader("Move");
-            EditorGUILayout.FloatField("Move Speed", move.RealMoveSpeed);
-            EditorGUILayout.FloatField("Acceleration", move.RealMaxAcceleration);
-            EditorGUILayout.Vector2Field("Desired Direction", move.DesiredDirection);
-            EditorGUILayout.FloatField("Desired Max Speed", move.DesiredMaxSpeed);
-            EditorGUILayout.FloatField("Desired Acceleration", move.DesiredAcceleration);
+            EditorGUILayout.FloatField("Move Speed", UnitModifierResolver.GetMoveSpeed(context.EntityManager, context.Entity));
+            EditorGUILayout.FloatField("Acceleration", UnitModifierResolver.GetMaxAcceleration(context.EntityManager, context.Entity));
+            EditorGUILayout.Vector2Field("Direction", move.Direction);
+            EditorGUILayout.FloatField("State Move Multiplier", move.StateMoveMultiplier);
             EditorGUILayout.Vector2Field("Velocity", move.Velocity);
         }
     }
@@ -61,9 +60,9 @@ namespace CrystalMagic.Editor.Unit
             UnitVitalityComponent vitality = context.GetComponent<UnitVitalityComponent>();
             UnitEditorWindow.DrawSectionHeader("Vitality");
             EditorGUILayout.FloatField("Current Health", vitality.CurrentHealth);
-            EditorGUILayout.FloatField("Max Health", vitality.RealMaxHealth);
-            EditorGUILayout.FloatField("Health Regen", vitality.RealHealthRegenPerSecond);
-            EditorGUILayout.FloatField("Defense", vitality.RealDefense);
+            EditorGUILayout.FloatField("Max Health", UnitModifierResolver.GetMaxHealth(context.EntityManager, context.Entity));
+            EditorGUILayout.FloatField("Health Regen", UnitModifierResolver.GetHealthRegen(context.EntityManager, context.Entity));
+            EditorGUILayout.FloatField("Defense", UnitModifierResolver.GetDefense(context.EntityManager, context.Entity));
         }
     }
 
@@ -74,12 +73,10 @@ namespace CrystalMagic.Editor.Unit
 
         public void Draw(UnitRuntimeDrawerContext context)
         {
-            UnitAttackComponent attack = context.GetComponent<UnitAttackComponent>();
             UnitEditorWindow.DrawSectionHeader("Attack");
-            EditorGUILayout.FloatField("Attack Power", attack.RealAttackPower);
-            EditorGUILayout.FloatField("Skill Range", attack.RealSkillRange);
-            EditorGUILayout.FloatField("Action Speed (-100~100)", attack.RealActionSpeedBonus);
-            EditorGUILayout.FloatField("Chant Speed (-100~100)", attack.RealChantSpeedBonus);
+            EditorGUILayout.FloatField("Attack Power", UnitModifierResolver.GetAttackPower(context.EntityManager, context.Entity));
+            EditorGUILayout.FloatField("Skill Range", UnitModifierResolver.GetSkillRange(context.EntityManager, context.Entity));
+            EditorGUILayout.FloatField("Chant Speed (-100~100)", UnitModifierResolver.GetChantSpeedBonus(context.EntityManager, context.Entity));
         }
     }
 
@@ -90,12 +87,11 @@ namespace CrystalMagic.Editor.Unit
 
         public void Draw(UnitRuntimeDrawerContext context)
         {
-            UnitElementComponent element = context.GetComponent<UnitElementComponent>();
             UnitEditorWindow.DrawSectionHeader("Element");
-            EditorGUILayout.FloatField("Water", element.WaterPower);
-            EditorGUILayout.FloatField("Fire", element.FirePower);
-            EditorGUILayout.FloatField("Lightning", element.LightningPower);
-            EditorGUILayout.FloatField("Wind", element.WindPower);
+            EditorGUILayout.FloatField("Water", UnitModifierResolver.GetElementPower(context.EntityManager, context.Entity, CrystalMagic.Game.Data.Effects.ElementType.Water));
+            EditorGUILayout.FloatField("Fire", UnitModifierResolver.GetElementPower(context.EntityManager, context.Entity, CrystalMagic.Game.Data.Effects.ElementType.Fire));
+            EditorGUILayout.FloatField("Lightning", UnitModifierResolver.GetElementPower(context.EntityManager, context.Entity, CrystalMagic.Game.Data.Effects.ElementType.Lightning));
+            EditorGUILayout.FloatField("Wind", UnitModifierResolver.GetElementPower(context.EntityManager, context.Entity, CrystalMagic.Game.Data.Effects.ElementType.Wind));
         }
     }
 
@@ -109,8 +105,8 @@ namespace CrystalMagic.Editor.Unit
             UnitManaComponent mana = context.GetComponent<UnitManaComponent>();
             UnitEditorWindow.DrawSectionHeader("Mana");
             EditorGUILayout.FloatField("Current Mana", mana.CurrentMana);
-            EditorGUILayout.FloatField("Max Mana", mana.RealMaxMp);
-            EditorGUILayout.FloatField("Mana Regen", mana.RealMpRegenPerSecond);
+            EditorGUILayout.FloatField("Max Mana", UnitModifierResolver.GetMaxMp(context.EntityManager, context.Entity));
+            EditorGUILayout.FloatField("Mana Regen", UnitModifierResolver.GetMpRegen(context.EntityManager, context.Entity));
         }
     }
 
@@ -121,32 +117,12 @@ namespace CrystalMagic.Editor.Unit
 
         public void Draw(UnitRuntimeDrawerContext context)
         {
-            UnitPerceptionComponent perception = context.GetComponent<UnitPerceptionComponent>();
             UnitEditorWindow.DrawSectionHeader("Perception");
+            UnitPerceptionComponent perception = context.GetComponent<UnitPerceptionComponent>();
             EditorGUILayout.FloatField("Search Radius", perception.SearchRadius);
-            EditorGUILayout.Toggle("Has Target", perception.HasTarget);
-            EditorGUILayout.Vector2Field("Target Position", perception.TargetPosition);
-            EditorGUILayout.FloatField("Target Distance", perception.TargetDistance);
+            if (context.EntityManager.HasBuffer<UnitPerceptionEntityElement>(context.Entity))
+                EditorGUILayout.IntField("Nearby Unit Count", context.EntityManager.GetBuffer<UnitPerceptionEntityElement>(context.Entity).Length);
         }
     }
 
-    [FactoryKey("Cast", 80)]
-    public sealed class UnitCastRuntimeDrawer : IUnitRuntimeAttributeDrawer
-    {
-        public bool CanDraw(UnitRuntimeDrawerContext context) => context.HasComponent<UnitCastComponent>();
-
-        public void Draw(UnitRuntimeDrawerContext context)
-        {
-            UnitCastComponent cast = context.GetComponent<UnitCastComponent>();
-            UnitEditorWindow.DrawSectionHeader("Cast");
-            EditorGUILayout.Toggle("Has Prepared Cast", cast.HasPreparedCast);
-            EditorGUILayout.Toggle("Is Casting", cast.IsCasting);
-            EditorGUILayout.Toggle("Force Interrupt", cast.ForceInterrupt);
-            EditorGUILayout.IntField("Skill Id", cast.CurrentSkillId);
-            EditorGUILayout.IntField("Skill Addition Id", cast.CurrentSkillAdditionId);
-            EditorGUILayout.TextField("Phase", cast.Phase.ToString());
-            EditorGUILayout.FloatField("Phase Elapsed", cast.PhaseElapsed);
-            EditorGUILayout.FloatField("Phase Duration", cast.PhaseDuration);
-        }
-    }
 }

@@ -3,8 +3,6 @@ using Unity.Collections;
 using Unity.Entities;
 
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
-[UpdateAfter(typeof(DungeonTreasureSystem))]
-[UpdateBefore(typeof(NPCInteractionSystem))]
 partial struct DungeonExitSystem : ISystem
 {
     public void OnCreate(ref SystemState state)

@@ -1,10 +1,8 @@
 using Unity.Entities;
-using Unity.Mathematics;
 
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
-[UpdateAfter(typeof(PlayerInputSystem))]
 [UpdateAfter(typeof(BehaviorTreeSystem))]
-[UpdateBefore(typeof(UnitSkillSystem))]
+[UpdateBefore(typeof(StateScriptSystem))]
 partial struct UnitControlSystem : ISystem
 {
     public void OnUpdate(ref SystemState state)
@@ -15,6 +13,8 @@ partial struct UnitControlSystem : ISystem
         foreach (var (_, entity) in SystemAPI.Query<RefRO<UnitControlRuntimeComponent>>()
                      .WithNone<UnitDeathComponent>()
                      .WithEntityAccess())
+        {
             UnitControlUtility.TickAndRefresh(entityManager, entity, deltaTime);
+        }
     }
 }

@@ -9,6 +9,8 @@ namespace CrystalMagic.Game.Skill.Effects
 {
     public sealed class SpawnProjectileEffect : Effect
     {
+        private const string GenericProjectilePrefabName = "Projectile";
+
         public new SpawnProjectileEffectData Data { get; }
 
         public SpawnProjectileEffect(SpawnProjectileEffectData data) : base(data) => Data = data;
@@ -63,9 +65,7 @@ namespace CrystalMagic.Game.Skill.Effects
 
         private void CreateProjectileSpawnRequest(SkillContent context, Vector3 startPosition, Vector3 direction)
         {
-            float width = math.max(Data.Width > 0f ? Data.Width : Data.Scale, 0.01f);
-            float height = math.max(Data.Height > 0f ? Data.Height : Data.Scale, 0.01f);
-            FixedString128Bytes projectileName = new(QuadAnimationVisualUtility.GenericProjectilePrefabName);
+            FixedString128Bytes projectileName = new(GenericProjectilePrefabName);
             SkillProjectileSpawnQueue.Enqueue(
                 new SkillProjectileSpawnRequest
                 {
@@ -75,22 +75,10 @@ namespace CrystalMagic.Game.Skill.Effects
                     Rotation = quaternion.identity,
                     Speed = Data.Speed,
                     MaxRange = Data.MaxRange,
-                    HitRadius = 0.75f * math.max(width, height),
-                    Width = width,
-                    Height = height,
+                    HitRadius = math.max(Data.HitRadius, 0.01f),
                     CanPierce = Data.CanPierce ? (byte)1 : (byte)0,
                     TriggerDestroyEffectsOnMaxRange = Data.TriggerDestroyEffectsOnMaxRange ? (byte)1 : (byte)0,
                     Context = context.Clone(),
-                    FlightTexture = Data.FlightTexture,
-                    FlightGridColumns = Data.FlightGridColumns,
-                    FlightGridRows = Data.FlightGridRows,
-                    FlightFrameCount = Data.FlightFrameCount,
-                    FlightFramesPerSecond = Data.FlightFramesPerSecond,
-                    DestroyTexture = Data.DestroyTexture,
-                    DestroyGridColumns = Data.DestroyGridColumns,
-                    DestroyGridRows = Data.DestroyGridRows,
-                    DestroyFrameCount = Data.DestroyFrameCount,
-                    DestroyFramesPerSecond = Data.DestroyFramesPerSecond,
                     OnCollisionEffects = Data.OnCollisionEffects,
                     OnDestroyEffects = Data.OnDestroyEffects,
                 });

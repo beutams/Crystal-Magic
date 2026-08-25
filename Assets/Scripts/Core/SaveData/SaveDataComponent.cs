@@ -880,7 +880,7 @@ namespace CrystalMagic.Core {
                 hash ^= (uint)(timestamp >> 32);
                 hash *= 16777619u;
 
-                int result = (int)(hash == 0 ? (uint)DungeonMakerTunnelingGenerator.DefaultSeed : hash);
+                int result = (int)(hash == 0 ? 19088743u : hash);
                 return result == 0 ? 1 : result;
             }
         }

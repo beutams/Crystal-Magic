@@ -49,6 +49,22 @@
       "Id": 3
     },
     {
+      "Properties": [],
+      "Id": 4
+    },
+    {
+      "Properties": [],
+      "Id": 5
+    },
+    {
+      "Properties": [],
+      "Id": 6
+    },
+    {
+      "Properties": [],
+      "Id": 7
+    },
+    {
       "Properties": [
         {
           "Channel": 3,
@@ -127,6 +143,14 @@
         },
         {
           "Channel": 7,
+          "BaseBonus": 1000.0
+        },
+        {
+          "Channel": 1,
+          "BaseBonus": 1000.0
+        },
+        {
+          "Channel": 6,
           "BaseBonus": 1000.0
         }
       ],

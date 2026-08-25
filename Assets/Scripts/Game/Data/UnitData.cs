@@ -50,18 +50,8 @@ namespace CrystalMagic.Game.Data
 
             for (int i = 0; i < Modules.Count; i++)
             {
-                switch (Modules[i])
-                {
-                    case UnitStateMachineModuleData stateMachine:
-                        stateMachine.States ??= new List<UnitStateConfig>();
-                        break;
-                    case UnitSkillModuleData skillModule:
-                        skillModule.Skills ??= new List<UnitSkillSlotData>();
-                        break;
-                    case UnitBuffModuleData buffModule:
-                        buffModule.Buffs ??= new List<UnitInitialBuffEntry>();
-                        break;
-                }
+                if (Modules[i] is UnitBuffModuleData buffModule)
+                    buffModule.Buffs ??= new List<UnitInitialBuffEntry>();
             }
         }
     }
@@ -91,7 +81,6 @@ namespace CrystalMagic.Game.Data
     {
         public float BaseAttackPower = 10f;
         public float BaseSkillRange = 1f;
-        public float BaseActionSpeedBonus;
         public float BaseChantSpeedBonus;
     }
 
@@ -105,7 +94,7 @@ namespace CrystalMagic.Game.Data
     [System.Serializable]
     public sealed class UnitFactionModuleData : UnitModuleData
     {
-        public UnitFactionType Faction = UnitFactionType.Friendly;
+        public UnitFactionType Faction = UnitFactionType.Friend;
     }
 
     [System.Serializable]
@@ -129,44 +118,10 @@ namespace CrystalMagic.Game.Data
     }
 
     [System.Serializable]
-    public sealed class UnitSkillModuleData : UnitModuleData
-    {
-        public List<UnitSkillSlotData> Skills = new();
-    }
-
-    [System.Serializable]
-    public sealed class UnitSkillSlotData
-    {
-        public int SkillId = -1;
-        public int TagMask;
-        public float MinDistance;
-        public float MaxDistance = 99f;
-        public float CooldownSeconds;
-        public int Weight = 1;
-    }
-
-    [System.Serializable]
-    public sealed class UnitStateMachineModuleData : UnitModuleData
-    {
-        public List<UnitStateConfig> States = new();
-    }
-
-    [System.Serializable]
-    public class UnitStateConfig
-    {
-        public string StateType = "";
-        public List<UnitTransitionConfig> Transitions = new();
-    }
-
-    [System.Serializable]
-    public class UnitTransitionConfig
-    {
-        public string TargetStateType = "";
-        public List<ConditionConfig> Conditions = new();
-    }
-    [System.Serializable]
     public class UnitDropModuleData : UnitModuleData
     {
         public int DropDataId = -1;
     }
+
+    [System.Serializable] public sealed class UnitDungeonFootprintModuleData : UnitModuleData { public int Width = 1; public int Height = 1; }
 }

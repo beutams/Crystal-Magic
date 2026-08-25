@@ -174,7 +174,7 @@ namespace CrystalMagic.UI
 
                 if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_rootRect, screenPosition, _currentCamera, out Vector2 localPoint))
                 {
-                    _rootView?.UpdateBar(bar.Handle, vitality.CurrentHealth, vitality.RealMaxHealth, localPoint, true);
+                    _rootView?.UpdateBar(bar.Handle, vitality.CurrentHealth, UnitModifierResolver.GetMaxHealth(entityManager, entity), localPoint, true);
                     UpdateBuffDisplay(bar, signature);
                 }
             }
@@ -199,7 +199,7 @@ namespace CrystalMagic.UI
                 return false;
             }
 
-            return entityManager.GetComponentData<UnitFactionComponent>(entity).Value == UnitFactionType.Enemy;
+            return UnitFactionUtility.IsHostile(entityManager.GetComponentData<UnitFactionComponent>(entity).Value);
         }
 
         private void ReleaseBar(Entity entity)
@@ -300,7 +300,8 @@ namespace CrystalMagic.UI
 
                 if (entry.OriginEntity == Entity.Null ||
                     !entityManager.Exists(entry.OriginEntity) ||
-                    !entityManager.HasComponent<PlayerTag>(entry.OriginEntity))
+                    !entityManager.HasComponent<UnitFactionComponent>(entry.OriginEntity) ||
+                    !UnitFactionUtility.IsPlayer(entityManager.GetComponentData<UnitFactionComponent>(entry.OriginEntity).Value))
                 {
                     continue;
                 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using CrystalMagic.Game.Unit;
@@ -148,7 +148,14 @@ namespace CrystalMagic.Core
                     string.Empty,
                     resourceOwnerKey,
                     new float3(sceneObject.Size.x, sceneObject.Size.y, sceneObject.Size.z));
-                ApplyBoxColliderSize(entityManager, entity, sceneObject.Size);
+                if (sceneObject.ApplyCollider)
+                {
+                    ApplyBoxColliderSize(entityManager, entity, sceneObject.Size);
+                }
+                else if (entityManager.HasComponent<PhysicsCollider>(entity))
+                {
+                    entityManager.RemoveComponent<PhysicsCollider>(entity);
+                }
                 ApplySceneObjectRuntimeData(entityManager, entity, sceneObject);
                 spawnedEntities.Add(entity);
             }
@@ -174,35 +181,39 @@ namespace CrystalMagic.Core
                     break;
 
                 case RuntimeDungeonSceneObjectType.Treasure:
-                    if (entityManager.HasComponent<DungeonTreasureComponent>(entity))
+                    if (entityManager.HasComponent<TreasureComponent>(entity))
                     {
-                        DungeonTreasureComponent treasure = entityManager.GetComponentData<DungeonTreasureComponent>(entity);
+                        TreasureComponent treasure = entityManager.GetComponentData<TreasureComponent>(entity);
                         treasure.RegionId = sceneObject.RegionId;
+                        treasure.RandomSeed = sceneObject.RandomSeed == 0 ? 1u : sceneObject.RandomSeed;
+                        treasure.InterestSize = sceneObject.InterestSize;
                         treasure.IsOpened = 0;
                         entityManager.SetComponentData(entity, treasure);
                     }
 
-                    if (!entityManager.HasBuffer<DungeonTreasureRewardElement>(entity))
-                        entityManager.AddBuffer<DungeonTreasureRewardElement>(entity);
-
-                    DynamicBuffer<DungeonTreasureRewardElement> rewardBuffer = entityManager.GetBuffer<DungeonTreasureRewardElement>(entity);
-                    rewardBuffer.Clear();
-                    if (sceneObject.Rewards != null)
+                    if (entityManager.HasComponent<UnitInteractableComponent>(entity))
                     {
-                        for (int rewardIndex = 0; rewardIndex < sceneObject.Rewards.Count; rewardIndex++)
+                        UnitInteractableComponent interactable = entityManager.GetComponentData<UnitInteractableComponent>(entity);
+                        interactable.Data = new UnitInteractionData
                         {
-                            RuntimeDungeonTreasureRewardData reward = sceneObject.Rewards[rewardIndex];
-                            if (reward == null)
-                                continue;
+                            Kind = InteractionKind.Treasure,
+                            DataId = sceneObject.RegionId,
+                        };
+                        interactable.IsEnabled = 1;
+                        entityManager.SetComponentData(entity, interactable);
+                    }
 
-                            rewardBuffer.Add(new DungeonTreasureRewardElement
-                            {
-                                RewardType = reward.RewardType,
-                                ItemId = reward.ItemId,
-                                Chance = reward.Chance,
-                                MinQuantity = reward.MinQuantity,
-                                MaxQuantity = reward.MaxQuantity,
-                            });
+                    if (!entityManager.HasBuffer<DungeonTreasureCandidateItemElement>(entity))
+                        entityManager.AddBuffer<DungeonTreasureCandidateItemElement>(entity);
+
+                    DynamicBuffer<DungeonTreasureCandidateItemElement> candidateBuffer = entityManager.GetBuffer<DungeonTreasureCandidateItemElement>(entity);
+                    candidateBuffer.Clear();
+                    if (sceneObject.TreasureCandidateItemIds != null)
+                    {
+                        foreach (int itemId in sceneObject.TreasureCandidateItemIds)
+                        {
+                            if (itemId >= 0)
+                                candidateBuffer.Add(new DungeonTreasureCandidateItemElement { ItemId = itemId });
                         }
                     }
                     break;
@@ -236,9 +247,9 @@ namespace CrystalMagic.Core
                     continue;
 
                 if (entityManager.HasComponent<DungeonMonsterSpawnComponent>(monster))
-                    entityManager.SetComponentData(monster, new DungeonMonsterSpawnComponent { RegionId = spawn.RegionId });
+                    entityManager.SetComponentData(monster, new DungeonMonsterSpawnComponent { RegionId = spawn.RegionId, SquadId = spawn.SquadId, IsBoss = spawn.IsBoss ? (byte)1 : (byte)0 });
                 else
-                    entityManager.AddComponentData(monster, new DungeonMonsterSpawnComponent { RegionId = spawn.RegionId });
+                    entityManager.AddComponentData(monster, new DungeonMonsterSpawnComponent { RegionId = spawn.RegionId, SquadId = spawn.SquadId, IsBoss = spawn.IsBoss ? (byte)1 : (byte)0 });
 
                 spawnedEntities.Add(monster);
             }

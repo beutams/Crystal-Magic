@@ -36,7 +36,7 @@ public class ShopSellUI : UIBase<ShopSellUIData, CrystalMagic.UI.ShopSellUIModel
         if (Model == null)
             return;
 
-        UI.IconBack_Icon.Image.sprite = LoadIcon(Model.IconPath);
+        UI.IconBack_Mask_Icon.Image.sprite = LoadIcon(Model.IconPath);
         UI.Name.TextMeshProUGUI.text = Model.Name;
         UI.HaveCount.TextMeshProUGUI.text = Model.HaveCount.ToString();
         UI.Description.TextMeshProUGUI.text = Model.Description;

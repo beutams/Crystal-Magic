@@ -24,9 +24,6 @@ public class PropertyUIData : UIData
     public UINode AttackPower;
     public UINode AttackPower_Name;
     public UINode AttackPower_Value;
-    public UINode ActionSpeed;
-    public UINode ActionSpeed_Name;
-    public UINode ActionSpeed_Value;
     public UINode ChantSpeed;
     public UINode ChantSpeed_Name;
     public UINode ChantSpeed_Value;
@@ -66,9 +63,6 @@ public class PropertyUIData : UIData
         AttackPower = UINode.From(Find(root, "AttackPower"));
         AttackPower_Name = UINode.From(Find(root, "AttackPower/Name"));
         AttackPower_Value = UINode.From(Find(root, "AttackPower/Value"));
-        ActionSpeed = UINode.From(Find(root, "ActionSpeed"));
-        ActionSpeed_Name = UINode.From(Find(root, "ActionSpeed/Name"));
-        ActionSpeed_Value = UINode.From(Find(root, "ActionSpeed/Value"));
         ChantSpeed = UINode.From(Find(root, "ChantSpeed"));
         ChantSpeed_Name = UINode.From(Find(root, "ChantSpeed/Name"));
         ChantSpeed_Value = UINode.From(Find(root, "ChantSpeed/Value"));
