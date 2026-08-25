@@ -7,6 +7,6 @@ namespace Server
     [Serializable]
     public class L2C_LeaveReturn : IMessage
     {
-        public bool success;
+        public LobbyRequestType type { get; set; }
     }
 }

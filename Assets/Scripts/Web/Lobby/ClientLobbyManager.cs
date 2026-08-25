@@ -15,7 +15,9 @@ namespace Server
         protected Connect lobbyConnect;
 
         public Action<RoomListData> onRoomRefresh;
-        public Action<bool,RoomData> onRoomInfoRefresh;
+        public Action<RoomData> onRoomInfoRefresh;
+        public Action onLeaveRoom;
+        public Action<LobbyRequestType> onRequestFail;
         protected override void Awake()
         {
             base.Awake();
@@ -23,6 +25,26 @@ namespace Server
             clientServic.Connect(ServerUtility.GetLobbyIPEndPoint(),out lobbyConnect);
 
             lobbyConnect.RegisterCallback(TCPPacketCode.GetOpcode<L2C_RefreshRoomList>(), OnRefreshRoomList);
+            lobbyConnect.RegisterCallback(TCPPacketCode.GetOpcode<L2C_RefreshRoomInfo>(), OnRefreshRoomInfo);
+            lobbyConnect.RegisterCallback(TCPPacketCode.GetOpcode<L2C_JoinReturn>(), OnJoinRoom);
+            lobbyConnect.RegisterCallback(TCPPacketCode.GetOpcode<L2C_CreateReturn>(), OnCreateRoom);
+            lobbyConnect.RegisterCallback(TCPPacketCode.GetOpcode<L2C_LeaveReturn>(), OnLeaveRoom);
+        }
+        public void OnDisconnected()
+        {
+            lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_RefreshRoomList>(), OnRefreshRoomList);
+            lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_RefreshRoomInfo>(), OnRefreshRoomInfo);
+            lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_JoinReturn>(), OnJoinRoom);
+            lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_CreateReturn>(), OnCreateRoom);
+            lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_LeaveReturn>(), OnLeaveRoom);
+        }
+        private void OnRefreshRoomInfo(IMessage message, Connect connect)
+        {
+            L2C_RefreshRoomInfo roomData = message as L2C_RefreshRoomInfo;
+            if(roomData != null)
+            {
+                onRoomInfoRefresh?.Invoke(roomData.roomData);
+            }
         }
         public void OnRefreshRoomList(IMessage message,Connect connect)
         {
@@ -41,14 +63,21 @@ namespace Server
         {
             L2C_JoinReturn joinReturn = message as L2C_JoinReturn;
             if (joinReturn == null) return;
-            if(joinReturn.success)
+            switch (joinReturn.type)
             {
-                room = joinReturn.roomData;
-                onRoomInfoRefresh?.Invoke(true,room);
-            }
-            else
-            {
-                onRoomInfoRefresh?.Invoke(false, null);
+                case LobbyRequestType.Success:
+                    room = joinReturn.roomData;
+                    onRoomInfoRefresh?.Invoke(room);
+                    break;
+                case LobbyRequestType.Fail:
+                    onRequestFail?.Invoke(LobbyRequestType.Fail);
+                    break;
+                case LobbyRequestType.RoomFull:
+                    onRequestFail?.Invoke(LobbyRequestType.RoomFull);
+                    break;
+                case LobbyRequestType.RoomClosed:
+                    onRequestFail?.Invoke(LobbyRequestType.RoomClosed);
+                    break;
             }
         }
         public void CreateRoom(string name)
@@ -59,14 +88,33 @@ namespace Server
         {
             L2C_CreateReturn createReturn = message as L2C_CreateReturn;
             if (createReturn == null) return;
-            if (createReturn.success)
+            switch (createReturn.type)
             {
-                room = createReturn.roomData;
-                onRoomInfoRefresh?.Invoke(true, room);
+                case LobbyRequestType.Success:
+                    room = createReturn.roomData;
+                    onRoomInfoRefresh?.Invoke(room);
+                    break;
+                case LobbyRequestType.Fail:
+                    onRequestFail?.Invoke(LobbyRequestType.Fail);
+                    break;
             }
-            else
+        }
+        public void LeaveRoom(string name)
+        {
+            lobbyConnect.Send(new C2L_LeaveRoom());
+        }
+        public void OnLeaveRoom(IMessage message, Connect connect)
+        {
+            L2C_LeaveReturn createReturn = message as L2C_LeaveReturn;
+            if (createReturn == null) return;
+            switch (createReturn.type)
             {
-                onRoomInfoRefresh?.Invoke(false, null);
+                case LobbyRequestType.Success:
+                    onLeaveRoom?.Invoke();
+                    break;
+                case LobbyRequestType.Fail:
+                    onRequestFail?.Invoke(LobbyRequestType.Fail);
+                    break;
             }
         }
     }

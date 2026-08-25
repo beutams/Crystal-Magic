@@ -6,7 +6,7 @@ namespace Server
     [Serializable]
     public class L2C_CreateReturn : IMessage
     {
-        public bool success;
+        public LobbyRequestType type;
         public RoomData roomData { get; set; }
     }
 }

@@ -70,10 +70,16 @@ RemovePlayerFromRoom(Player player, bool notifyLeavingPlayer)
 
 每个请求都必须有明确结果：
 
-- 创建成功：`L2C_CreateReturn { success = true, roomData }`。
-- 创建失败：`L2C_CreateReturn { success = false }`。
-- 加入成功或失败：`L2C_JoinReturn`。
-- 离开成功或失败：`L2C_LeaveReturn`。
+- `L2C_CreateReturn`、`L2C_JoinReturn` 与 `L2C_LeaveReturn` 都使用
+  `LobbyRequestType type` 表示结果，而不是 `bool success`。
+- `Success`：服务端已成功应用请求；创建和加入成功时会附带 `roomData`。
+- `Fail`：通用业务失败，例如玩家状态不满足操作条件。
+- `RoomClosed`：加入目标已不存在。
+- `RoomFull`：加入目标人数已满。
+- `Timeout`：仅由客户端在等待服务端响应超时时产生，服务端不发送该结果。
+
+枚举的默认值必须是非成功状态（例如 `Unknown = 0`），避免消息遗漏
+`type` 或协议版本不一致时被错误地视为成功。
 
 服务端需要校验：
 
@@ -96,16 +102,20 @@ RemovePlayerFromRoom(Player player, bool notifyLeavingPlayer)
 
 不广播的情况：
 
-- 客户端刚建立 TCP 连接。
-- 登录大厅时：只向该客户端单独发送当前房间列表。
 - 创建、加入、离开失败。
 - 不在房间的客户端断线。
 
+客户端建立 TCP 连接并被服务端 `Accept` 后，服务端会创建临时玩家并只向该
+客户端主动发送一次 `L2C_RefreshRoomList` 作为初始大厅快照；它不是面向所有
+客户端的房间列表广播。
+
 `L2C_RefreshRoomInfo`：
 
-- 房间创建后，发送给创建者。
 - 玩家加入、主动离开或断线后，发送给该房间全部剩余成员。
 - 房主发生转移后，发送给该房间全部剩余成员。
+
+创建者通过 `L2C_CreateReturn { type = Success, roomData }` 获得新房间详情；加入者
+通过 `L2C_JoinReturn { type = Success, roomData }` 获得加入后的房间详情。
 
 ## 4. 客户端大厅设计
 
@@ -117,16 +127,26 @@ RemovePlayerFromRoom(Player player, bool notifyLeavingPlayer)
 - 当前玩家 Id 与展示名。
 - 房间列表：`RoomListData`。
 - 当前所在房间：`RoomData`，未加入时为 `null`。
-- 最近一次操作错误或提示文本。
+- 当前待处理的大厅操作及其超时计时器。
 
 网络回调只能修改这些状态并发布状态变化事件；不得直接操作 Unity UI。
+
+当前 UI 所需的状态事件为：
+
+- `onRoomRefresh(RoomListData)`：收到新的房间列表快照时触发。
+- `onRoomInfoRefresh(RoomData)`：当前房间变化时触发；参数为 `null` 表示已离开房间。
+- `onRequestFail(LobbyRequestType)`：主动创建、加入或离开请求失败时触发；失败可以
+  来自服务端结果码或客户端超时。
+
+一个客户端同一时刻只允许一个待处理大厅操作。发送主动请求后启动超时计时器；收到
+对应响应后，无论结果是成功还是失败，都必须取消该计时器。底层断线不走
+`onRequestFail`，由网络层统一显示断线提示，`ClientLobbyManager` 只负责清空本地大厅状态。
 
 ### 4.2 客户端操作
 
 客户端对 UI 暴露以下方法：
 
 - `Connect(endpoint)`：建立 TCP 连接。
-- `LoginLobby()`：连接成功后发送 `C2L_LoginLobby`。
 - `CreateRoom(roomName)`：发送 `C2L_CreateRoom`。
 - `JoinRoom(roomId)`：发送 `C2L_JoinRoom`。
 - `LeaveRoom()`：发送 `C2L_LeaveRoom`。
@@ -138,54 +158,60 @@ UI 不直接构造或发送网络消息。
 
 | 服务端消息 | 客户端状态变化 |
 | --- | --- |
-| `L2C_RefreshRoomList` | 替换房间列表，通知房间列表 UI 刷新。 |
-| `L2C_CreateReturn` | 成功时设置当前房间并进入 `InRoom`；失败时记录错误。 |
-| `L2C_JoinReturn` | 成功时设置当前房间并进入 `InRoom`；失败时记录错误。 |
-| `L2C_LeaveReturn` | 成功时清空当前房间并进入 `InLobby`；失败时记录错误。 |
+| `L2C_RefreshRoomList` | 替换房间列表，触发 `onRoomRefresh`。首次收到该快照后进入 `InLobby`。 |
+| `L2C_CreateReturn` | 取消创建超时计时器。`Success` 时设置当前房间并进入 `InRoom`；其他结果触发 `onRequestFail`。 |
+| `L2C_JoinReturn` | 取消加入超时计时器。`Success` 时设置当前房间并进入 `InRoom`；其他结果触发 `onRequestFail`。 |
+| `L2C_LeaveReturn` | 取消离开超时计时器。`Success` 时清空当前房间并进入 `InLobby`；其他结果触发 `onRequestFail`。 |
 | `L2C_RefreshRoomInfo` | 替换当前房间详情，刷新成员、房主和人数。 |
-| 底层断线事件 | 清空当前房间与房间列表，进入 `Disconnected`，通知 UI 显示断线状态。 |
+| 底层断线事件 | 清空当前房间与房间列表，进入 `Disconnected`；断线提示由底层网络 UI 统一处理。 |
 
 服务端消息都是权威快照。客户端不根据本地点击预先修改人数、房主或成员列表，必须等待服务端响应。
 
 ### 4.4 UI 边界
 
-大厅 UI 只订阅 `ClientLobbyManager` 状态：
+大厅 UI 通过项目的 MVC 框架订阅 `ClientLobbyManager` 状态：
 
-- 房间列表变化：刷新搜索结果和房间列表。
-- 当前房间变化：刷新成员、人数、房主和离开按钮。
-- 状态变化：显示连接中、已连接、断线或操作失败提示。
+- `LobbyUIController` 将房间列表状态写入 `LobbyUIModel`；`LobbyUI` 刷新搜索结果、
+  房间列表，并将创建/加入点击意图交给 Controller。
+- `LobbyRoomUIController` 将当前房间状态写入 `LobbyRoomUIModel`；`LobbyRoomUI` 刷新
+  成员、人数、房主和离开按钮，并将离开点击意图交给 Controller。
+- 当前房间从 `null` 变为非空时打开 `LobbyRoomUI`；变回 `null` 时关闭它。
+- 两个 UI 不直接注册 TCP 协议回调、不直接发送网络消息，也不自行修改人数或房主。
+- `onRequestFail` 由 Controller 转换为对应提示文本和等待状态；断线提示不由大厅业务 UI 处理。
 
 当前阶段不实现准备、开始游戏和战斗入口，因此房间 UI 只提供成员展示与离开房间。
 
 ## 5. 大厅消息流
 
 ```text
-客户端连接成功
-  -> C2L_LoginLobby
-  <- L2C_RefreshRoomList
+客户端连接成功并被服务端 Accept
+  <- L2C_RefreshRoomList（初始大厅快照）
 
 客户端创建房间
   -> C2L_CreateRoom
-  <- L2C_CreateReturn
+  <- L2C_CreateReturn { type = Success | Fail }
   <- L2C_RefreshRoomList（所有大厅客户端）
 
 客户端加入房间
   -> C2L_JoinRoom
-  <- L2C_JoinReturn（加入者）
+  <- L2C_JoinReturn { type = Success | Fail | RoomClosed | RoomFull }（加入者）
   <- L2C_RefreshRoomInfo（原房间成员）
   <- L2C_RefreshRoomList（所有大厅客户端）
 
 客户端离开或断线
   -> C2L_LeaveRoom（主动离开时）
-  <- L2C_LeaveReturn（主动离开者）
+  <- L2C_LeaveReturn { type = Success | Fail }（主动离开者）
   <- L2C_RefreshRoomInfo（剩余成员，若房间仍存在）
   <- L2C_RefreshRoomList（所有大厅客户端，若状态变化）
+
+客户端主动请求超时
+  <- 本地触发 onRequestFail(Timeout)
 ```
 
 ## 6. 当前实施顺序
 
 1. 服务端提取并使用统一的移出房间方法。
-2. 补齐创建失败、房间参数和状态校验。
+2. 补齐房间参数和状态校验，并用 `LobbyRequestType` 返回失败原因。
 3. 收紧房间列表与房间详情广播条件。
-4. 实现 `ClientLobbyManager` 的状态和协议处理。
-5. 将大厅 UI 绑定到 `ClientLobbyManager` 状态。
+4. 完成 `ClientLobbyManager` 的全部大厅回包注册、当前房间更新、离开处理及主动请求超时清理。
+5. 通过 `LobbyUIModel`、`LobbyRoomUIModel` 和对应 Controller 将大厅状态绑定到 UI。

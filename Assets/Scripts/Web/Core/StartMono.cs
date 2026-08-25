@@ -24,7 +24,7 @@ namespace Server
             else
             {
                 ClientService service = new ClientService();
-                service.Connect(ServerUtility.GetLoginInIPEndPoint());
+                service.Connect(ServerUtility.GetLoginInIPEndPoint(),out _);
                 service.OnConnectedSuccess += (connect) =>
                 {
                     connect.RegisterCallback(TCPPacketCode.messages[typeof(S2C_Pong)], (message,connect) =>

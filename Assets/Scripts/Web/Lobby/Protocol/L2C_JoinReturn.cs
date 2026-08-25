@@ -6,7 +6,8 @@ namespace Server
     [Serializable]
     public class L2C_JoinReturn : IMessage
     {
-        public bool success;
         public RoomData roomData { get; set; }
+        public LobbyRequestType type {  get; set; }
     }
+
 }

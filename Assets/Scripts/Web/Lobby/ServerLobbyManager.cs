@@ -129,20 +129,32 @@ namespace Server
 
                 roomList.Add(room.roomId, room);
 
-                connect.Send(new L2C_CreateReturn() { success = true, roomData = roomData });
+                connect.Send(new L2C_CreateReturn() { type = LobbyRequestType.Success, roomData = roomData });
+            }
+            else
+            {
+                connect.Send(new L2C_CreateReturn() { type = LobbyRequestType.Fail});
             }
             BroadcastRoomListChanged();
         }
         private void OnClientJoinRoom(IMessage message, Connect connect)
         {
             C2L_JoinRoom data = message as C2L_JoinRoom;
-            if (!roomList.TryGetValue(data.roomId, out Room room)
-                || room.players.Count >= room.maxNum
-                || !connectPlayerDic.TryGetValue(connect, out long playerId)
+            if (!connectPlayerDic.TryGetValue(connect, out long playerId)
                 || !playerList.TryGetValue(playerId, out Player player)
                 || player.roomId != -1)
             {
-                connect.Send(new L2C_JoinReturn() { success = false });
+                connect.Send(new L2C_JoinReturn() { type = LobbyRequestType.Fail });
+                return;
+            }
+            if(!roomList.TryGetValue(data.roomId, out Room room))
+            {
+                connect.Send(new L2C_JoinReturn() { type = LobbyRequestType.RoomClosed });
+                return;
+            }
+            if (room.players.Count >= room.maxNum)
+            {
+                connect.Send(new L2C_JoinReturn() { type = LobbyRequestType.RoomFull });
                 return;
             }
 
@@ -153,7 +165,7 @@ namespace Server
 
             RoomData roomData = RoomData.CreateRoomData(room);
 
-            connect.Send(new L2C_JoinReturn() { success = true, roomData = roomData });
+            connect.Send(new L2C_JoinReturn() { type = LobbyRequestType.Success, roomData = roomData });
             foreach (var elsePlayer in room.players)
             {
                 if (elsePlayer.Key == playerId)
@@ -170,7 +182,7 @@ namespace Server
                 || player.roomId == -1
                 || !roomList.TryGetValue(player.roomId, out Room room))
             {
-                connect.Send(new L2C_LeaveReturn() { success = false });
+                connect.Send(new L2C_LeaveReturn() { type = LobbyRequestType.Fail });
                 return;
             }
             player.roomId = -1;
@@ -178,7 +190,7 @@ namespace Server
             room.enterNum = room.players.Count;
 
             RoomData roomData = RoomData.CreateRoomData(room);
-            connect.Send(new L2C_LeaveReturn() { success = true });
+            connect.Send(new L2C_LeaveReturn() { type = LobbyRequestType.Success });
 
             if(room.players.Count == 0)
             {
