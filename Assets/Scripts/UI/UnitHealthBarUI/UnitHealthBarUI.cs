@@ -7,8 +7,6 @@ namespace CrystalMagic.UI
 {
     public class UnitHealthBarUI : UIBase<UnitHealthBarUIData, UnitHealthBarUIModel>
     {
-        private const float BuffIconSpacing = 2f;
-
         private RectTransform _rectTransform;
         private RectTransform _templateRectTransform;
         private RectTransform _templateMaskRectTransform;
@@ -97,7 +95,6 @@ namespace CrystalMagic.UI
                 }
 
                 UnitHealthBarBuffDisplayData buff = buffs[i];
-                iconHandle.Root.anchoredPosition = new Vector2(i * (iconHandle.Size + BuffIconSpacing), 0f);
                 iconHandle.Icon.sprite = LoadIcon(buff.IconPath);
                 if (!iconHandle.Root.gameObject.activeSelf)
                     iconHandle.Root.gameObject.SetActive(true);
@@ -218,12 +215,8 @@ namespace CrystalMagic.UI
                 return null;
             }
 
-            float size = root.rect.width;
-            if (size <= 0f)
-                size = root.sizeDelta.x;
-
             root.gameObject.SetActive(false);
-            return new BuffIconHandle(root, image, size > 0f ? size : 10f);
+            return new BuffIconHandle(root, image);
         }
 
         private Sprite LoadIcon(string iconPath)
@@ -263,13 +256,11 @@ namespace CrystalMagic.UI
         {
             public RectTransform Root { get; }
             public Image Icon { get; }
-            public float Size { get; }
 
-            public BuffIconHandle(RectTransform root, Image icon, float size)
+            public BuffIconHandle(RectTransform root, Image icon)
             {
                 Root = root;
                 Icon = icon;
-                Size = size;
             }
         }
     }

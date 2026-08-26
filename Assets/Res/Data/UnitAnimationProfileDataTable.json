@@ -1,5 +1,27 @@
 ﻿{
-    "Rows":  [
-
-             ]
+  "Rows": [
+    {
+      "UnitDataId": 1,
+      "UnitName": "PlayerTown",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Player/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Player/IdleRight.anim"
+        },
+        {
+          "Name": "Move",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Player/WalkLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Player/WalkRight.anim"
+        }
+      ],
+      "Id": 0
+    }
+  ]
 }

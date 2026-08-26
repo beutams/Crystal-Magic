@@ -1,7 +1,7 @@
 ﻿{
     "Rows":  [
                  {
-                     "UnitDataId":  0,
+                     "UnitDataId":  3,
                      "Name":  "MonsterStraw",
                      "Description":  "Test strawman empty behavior tree",
                      "RootNodeGuid":  "monster_straw_root",

@@ -127,9 +127,13 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 9156467092889104552, guid: 40ceada06408de6499488919fb0cee84, type: 3}
-      propertyPath: m_IsActive
-      value: 1
+    - target: {fileID: 9070259497660912105, guid: 40ceada06408de6499488919fb0cee84, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 9070259497660912105, guid: 40ceada06408de6499488919fb0cee84, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 9070259497660912105, guid: 40ceada06408de6499488919fb0cee84, type: 3}
       propertyPath: m_LocalPosition.x
@@ -174,6 +178,10 @@ PrefabInstance:
     - target: {fileID: 9156467092889104552, guid: 40ceada06408de6499488919fb0cee84, type: 3}
       propertyPath: m_Name
       value: TownMap_Baked
+      objectReference: {fileID: 0}
+    - target: {fileID: 9156467092889104552, guid: 40ceada06408de6499488919fb0cee84, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -432,6 +440,13 @@ MonoBehaviour:
   - {fileID: 7099561344832099384, guid: e9fce668ff4692b4d9cfdf3fcdde1c5f, type: 3}
   _dropPrefabs:
   - {fileID: 6997506446576889114, guid: 7f68d8767cdb1bc4f98f1f7e878c7926, type: 3}
+  _environmentPrefabs:
+  - {fileID: 1687289814350733186, guid: c7ff54c629658124a8c980be240f8c0a, type: 3}
+  - {fileID: 1687289814350733186, guid: a14a5b290d48a294eacce71c5028c33f, type: 3}
+  - {fileID: 1687289814350733186, guid: b8670766a5ce8a54aae3c0316123e089, type: 3}
+  - {fileID: 1687289814350733186, guid: d33b58811d1998f4da043368af4895b5, type: 3}
+  _vfxPrefabs:
+  - {fileID: 7235333578086213319, guid: a974cf3c85010ed4ba72a03c5d296af9, type: 3}
 --- !u!1001 &1974628283
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -570,25 +585,21 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1342461631586848260, guid: 1751044ccf914c44f818fc9de5d17f8b, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5789166119428417417, guid: 1751044ccf914c44f818fc9de5d17f8b, type: 3}
       propertyPath: m_Name
       value: PlayerTown
       objectReference: {fileID: 0}
     - target: {fileID: 5817485185460318402, guid: 1751044ccf914c44f818fc9de5d17f8b, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 2.26
-      objectReference: {fileID: 0}
-    - target: {fileID: 5817485185460318402, guid: 1751044ccf914c44f818fc9de5d17f8b, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 2.56
-      objectReference: {fileID: 0}
-    - target: {fileID: 5817485185460318402, guid: 1751044ccf914c44f818fc9de5d17f8b, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.27
+      value: -8.45
       objectReference: {fileID: 0}
     - target: {fileID: 5817485185460318402, guid: 1751044ccf914c44f818fc9de5d17f8b, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -6.75
+      value: 9.74
       objectReference: {fileID: 0}
     - target: {fileID: 5817485185460318402, guid: 1751044ccf914c44f818fc9de5d17f8b, type: 3}
       propertyPath: m_LocalPosition.z
@@ -622,8 +633,7 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: 4490789776262760593, guid: 1751044ccf914c44f818fc9de5d17f8b, type: 3}
+    m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []

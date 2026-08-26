@@ -25,7 +25,10 @@ public static class UnitFacingUtility
         if (entity == Entity.Null || !entityManager.Exists(entity))
             return;
 
-        float2 direction = math.normalizesafe(fallbackDirection, DefaultFacing);
+        if (math.lengthsq(fallbackDirection) <= 0.0001f)
+            return;
+
+        float2 direction = math.normalize(fallbackDirection);
         if (!entityManager.HasComponent<UnitFacingComponent>(entity))
             return;
 

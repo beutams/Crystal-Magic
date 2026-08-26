@@ -1,211 +1,203 @@
 ﻿{
-    "Rows":  [
-                 {
-                     "Name":  "MonsterStraw",
-                     "Description":  "Test strawman",
-      "PrefabPath":  "Assets/Res/Prefab/Unit/MonsterStraw.prefab",
-                     "Modules":  [
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-                                         "BaseMoveSpeed":  6.0,
-                                         "BaseMaxAcceleration":  10000.0
-                                     },
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-                                         "BaseMaxHealth":  120000.0,
-                                         "BaseHealthRegenPerSecond":  50.0,
-                                         "BaseDefense":  0.0
-                                     },
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-                                         "BaseAttackPower":  10.0,
-                                         "BaseSkillRange":  0.0,
-                                         "BaseChantSpeedBonus":  0.0,
-                                         "BaseWaterPowerBonus":  0.0,
-                                         "BaseFirePowerBonus":  0.0,
-                                         "BaseLightningPowerBonus":  0.0,
-                                         "BaseWindPowerBonus":  0.0
-                                     },
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-                                         "BaseMaxMp":  0.0,
-                                         "BaseMpRegenPerSecond":  0.0
-                                     },
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-                                         "Faction":  2
-                                     },
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-                                         "SearchRadius":  16.0
-                                     },
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-                                         "DropDataId":  -1
-                                     }
-                                 ],
-                     "Id":  0
-                 },
-                 {
-                     "Name":  "NPCEquipShop",
-                     "Description":  "装备商店",
-                    "PrefabPath":  "Assets/Res/Prefab/Unit/NPCEquipShop.prefab",
-                     "Modules":  [
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-                                         "Faction":  4
-                                     },
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-                                         "BaseMoveSpeed":  5.0,
-                                         "BaseMaxAcceleration":  30.0
-                                     }
-                                 ],
-                     "Id":  7
-                 },
-                 {
-                     "Name":  "NPCPropShop",
-                     "Description":  "道具商店",
-                    "PrefabPath":  "Assets/Res/Prefab/Unit/NPCPropShop.prefab",
-                     "Modules":  [
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-                                         "Faction":  4
-                                     },
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-                                         "BaseMoveSpeed":  5.0,
-                                         "BaseMaxAcceleration":  30.0
-                                     }
-                                 ],
-                     "Id":  8
-                 },
-                 {
-                     "Name":  "NPCSkillShop",
-                     "Description":  "技能商店NPC",
-                    "PrefabPath":  "Assets/Res/Prefab/Unit/NPCSkillShop.prefab",
-                     "Modules":  [
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-                                         "Faction":  4
-                                     },
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-                                         "BaseMoveSpeed":  5.0,
-                                         "BaseMaxAcceleration":  30.0
-                                     }
-                                 ],
-                     "Id":  9
-                 },
-                 {
-                     "Name":  "NPCStash",
-                     "Description":  "仓库NPC",
-                    "PrefabPath":  "Assets/Res/Prefab/Unit/NPCStash.prefab",
-                     "Modules":  [
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-                                         "Faction":  4
-                                     },
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-                                         "BaseMoveSpeed":  5.0,
-                                         "BaseMaxAcceleration":  30.0
-                                     }
-                                 ],
-                     "Id":  10
-                 },
-                 {
-                     "Name":  "NPCTraining",
-                     "Description":  "训练场NPC",
-                    "PrefabPath":  "Assets/Res/Prefab/Unit/NPCTraining.prefab",
-                     "Modules":  [
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-                                         "Faction":  4
-                                     },
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-                                         "BaseMoveSpeed":  5.0,
-                                         "BaseMaxAcceleration":  30.0
-                                     }
-                                 ],
-                     "Id":  11
-                 },
-                 {
-                     "Name":  "PlayerDungeon",
-                     "Description":  "战斗主角",
-                     "PrefabPath":  "Assets/Res/Prefab/Unit/PlayerDungeon.prefab",
-                     "Modules":  [
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-                                         "BaseMoveSpeed":  10.0,
-                                         "BaseMaxAcceleration":  10000.0
-                                     },
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-                                         "BaseMaxHealth":  100.0,
-                                         "BaseHealthRegenPerSecond":  10.0,
-                                         "BaseDefense":  0.0
-                                     },
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-                                         "BaseAttackPower":  10.0,
-                                         "BaseSkillRange":  0.0,
-                                         "BaseChantSpeedBonus":  0.0,
-                                         "BaseWaterPowerBonus":  0.0,
-                                         "BaseFirePowerBonus":  0.0,
-                                         "BaseLightningPowerBonus":  0.0,
-                                         "BaseWindPowerBonus":  0.0
-                                     },
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-                                         "BaseMaxMp":  100.0,
-                                         "BaseMpRegenPerSecond":  10.0
-                                     },
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-                                         "Faction":  0
-                                     }],
-                     "Id":  12
-                 },
-                 {
-                     "Name":  "PlayerTown",
-                     "Description":  "城镇主角",
-                     "PrefabPath":  "Assets/Res/Prefab/Unit/PlayerTown.prefab",
-                     "Modules":  [
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-                                         "BaseMoveSpeed":  10.0,
-                                         "BaseMaxAcceleration":  10000.0
-                                     },
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-                                         "BaseMaxHealth":  0.0,
-                                         "BaseHealthRegenPerSecond":  0.0,
-                                         "BaseDefense":  0.0
-                                     },
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-                                         "BaseAttackPower":  0.0,
-                                         "BaseSkillRange":  0.0,
-                                         "BaseChantSpeedBonus":  0.0,
-                                         "BaseWaterPowerBonus":  0.0,
-                                         "BaseFirePowerBonus":  0.0,
-                                         "BaseLightningPowerBonus":  0.0,
-                                         "BaseWindPowerBonus":  0.0
-                                     },
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-                                         "BaseMaxMp":  0.0,
-                                         "BaseMpRegenPerSecond":  0.0
-                                     },
-
-                                     {
-                                         "$type":  "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-                                         "Faction":  0
-                                     }
-                                 ],
-                     "Id":  13
-                 }
-             ]
+  "Rows": [
+    {
+      "Name": "MonsterStraw",
+      "Description": "Test strawman",
+      "PrefabPath": "Assets/Res/Prefab/Unit/MonsterStraw.prefab",
+      "Modules": [
+        {
+          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
+          "BaseMoveSpeed": 6.0,
+          "BaseMaxAcceleration": 10000.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
+          "BaseMaxHealth": 120000.0,
+          "BaseHealthRegenPerSecond": 50.0,
+          "BaseDefense": 0.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
+          "BaseAttackPower": 10.0,
+          "BaseSkillRange": 0.0,
+          "BaseChantSpeedBonus": 0.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
+          "BaseMaxMp": 0.0,
+          "BaseMpRegenPerSecond": 0.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+          "Faction": 2
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
+          "SearchRadius": 16.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
+          "DropDataId": -1
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitBuffModuleData, Assembly-CSharp",
+          "Buffs": []
+        }
+      ],
+      "Id": 3
+    },
+    {
+      "Name": "NPCEquipShop",
+      "Description": "装备商店",
+      "PrefabPath": "Assets/Res/Prefab/Unit/NPCEquipShop.prefab",
+      "Modules": [
+        {
+          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+          "Faction": 4
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
+          "BaseMoveSpeed": 5.0,
+          "BaseMaxAcceleration": 30.0
+        }
+      ],
+      "Id": 4
+    },
+    {
+      "Name": "NPCPropShop",
+      "Description": "道具商店",
+      "PrefabPath": "Assets/Res/Prefab/Unit/NPCPropShop.prefab",
+      "Modules": [
+        {
+          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+          "Faction": 4
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
+          "BaseMoveSpeed": 5.0,
+          "BaseMaxAcceleration": 30.0
+        }
+      ],
+      "Id": 5
+    },
+    {
+      "Name": "NPCSkillShop",
+      "Description": "技能商店NPC",
+      "PrefabPath": "Assets/Res/Prefab/Unit/NPCSkillShop.prefab",
+      "Modules": [
+        {
+          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+          "Faction": 4
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
+          "BaseMoveSpeed": 5.0,
+          "BaseMaxAcceleration": 30.0
+        }
+      ],
+      "Id": 6
+    },
+    {
+      "Name": "NPCStash",
+      "Description": "仓库NPC",
+      "PrefabPath": "Assets/Res/Prefab/Unit/NPCStash.prefab",
+      "Modules": [
+        {
+          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+          "Faction": 4
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
+          "BaseMoveSpeed": 5.0,
+          "BaseMaxAcceleration": 30.0
+        }
+      ],
+      "Id": 7
+    },
+    {
+      "Name": "NPCTraining",
+      "Description": "训练场NPC",
+      "PrefabPath": "Assets/Res/Prefab/Unit/NPCTraining.prefab",
+      "Modules": [
+        {
+          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+          "Faction": 4
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
+          "BaseMoveSpeed": 5.0,
+          "BaseMaxAcceleration": 30.0
+        }
+      ],
+      "Id": 8
+    },
+    {
+      "Name": "PlayerDungeon",
+      "Description": "战斗主角",
+      "PrefabPath": "Assets/Res/Prefab/Unit/PlayerDungeon.prefab",
+      "Modules": [
+        {
+          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
+          "BaseMoveSpeed": 10.0,
+          "BaseMaxAcceleration": 10000.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
+          "BaseMaxHealth": 100.0,
+          "BaseHealthRegenPerSecond": 10.0,
+          "BaseDefense": 0.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
+          "BaseAttackPower": 10.0,
+          "BaseSkillRange": 0.0,
+          "BaseChantSpeedBonus": 0.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
+          "BaseMaxMp": 100.0,
+          "BaseMpRegenPerSecond": 10.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+          "Faction": 0
+        }
+      ],
+      "Id": 2
+    },
+    {
+      "Name": "PlayerTown",
+      "Description": "城镇主角",
+      "PrefabPath": "Assets/Res/Prefab/Unit/PlayerTown.prefab",
+      "Modules": [
+        {
+          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
+          "BaseMoveSpeed": 10.0,
+          "BaseMaxAcceleration": 10000.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
+          "BaseMaxHealth": 0.0,
+          "BaseHealthRegenPerSecond": 0.0,
+          "BaseDefense": 0.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
+          "BaseAttackPower": 0.0,
+          "BaseSkillRange": 0.0,
+          "BaseChantSpeedBonus": 0.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
+          "BaseMaxMp": 0.0,
+          "BaseMpRegenPerSecond": 0.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+          "Faction": 0
+        }
+      ],
+      "Id": 1
+    }
+  ]
 }

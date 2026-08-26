@@ -7,8 +7,9 @@ using CrystalMagic.Core;
 public class EffectItemInfoUIData : UIData
 {
     public UINode Back;
-    public UINode Solt;
-    public UINode Icon;
+    public UINode IconBack;
+    public UINode IconBack_Mask;
+    public UINode IconBack_Mask_Icon;
     public UINode Name;
     public UINode Divide;
     public UINode Description;
@@ -16,8 +17,9 @@ public class EffectItemInfoUIData : UIData
     public override void Bind(Transform root)
     {
         Back = UINode.From(Find(root, "Back"));
-        Solt = UINode.From(Find(root, "Solt"));
-        Icon = UINode.From(Find(root, "Icon"));
+        IconBack = UINode.From(Find(root, "IconBack"));
+        IconBack_Mask = UINode.From(Find(root, "IconBack/Mask"));
+        IconBack_Mask_Icon = UINode.From(Find(root, "IconBack/Mask/Icon"));
         Name = UINode.From(Find(root, "Name"));
         Divide = UINode.From(Find(root, "Divide"));
         Description = UINode.From(Find(root, "Description"));

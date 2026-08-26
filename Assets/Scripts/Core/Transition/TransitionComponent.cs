@@ -7,14 +7,14 @@ namespace CrystalMagic.Core {
     {
         private const string TransitionLockReason = "Transition";
         private TransitionData _activeTransitionData;
-        private ITransitionUI _activeTransitionMaskUI;
+        private ITransitionUI _activeTransitionUI;
         private bool _isTransitioning;
         private bool _loadSequenceStarted;
 
         public override int Priority => 25;
         public bool IsTransitioning => _isTransitioning;
 
-        public bool BeginFadeIn(TransitionData transitionData, ITransitionUI transitionMaskUI)
+        public bool BeginFadeIn(TransitionData transitionData, ITransitionUI transitionUI)
         {
             if (_isTransitioning)
             {
@@ -29,7 +29,7 @@ namespace CrystalMagic.Core {
             }
 
             _activeTransitionData = transitionData;
-            _activeTransitionMaskUI = transitionMaskUI;
+            _activeTransitionUI = transitionUI;
             _loadSequenceStarted = false;
             _isTransitioning = true;
 
@@ -38,7 +38,7 @@ namespace CrystalMagic.Core {
             gate.Lock(GameGateType.PlayerInput, TransitionLockReason);
             gate.Lock(GameGateType.UIInput, TransitionLockReason);
 
-            StartCoroutine(FadeInAsync(_activeTransitionMaskUI, transitionData.TargetSceneName));
+            StartCoroutine(FadeInAsync(_activeTransitionUI, transitionData.TargetSceneName));
             return true;
         }
 
@@ -63,7 +63,7 @@ namespace CrystalMagic.Core {
             }
 
             _loadSequenceStarted = true;
-            StartCoroutine(LoadAndFadeOutAsync(_activeTransitionData, _activeTransitionMaskUI));
+            StartCoroutine(LoadAndFadeOutAsync(_activeTransitionData, _activeTransitionUI));
             return true;
         }
 
@@ -78,7 +78,7 @@ namespace CrystalMagic.Core {
             EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.FadeInCompleted, targetSceneName));
         }
 
-        private IEnumerator LoadAndFadeOutAsync(TransitionData transitionData, ITransitionUI transitionMaskUI)
+        private IEnumerator LoadAndFadeOutAsync(TransitionData transitionData, ITransitionUI transitionUI)
         {
             EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.LoadStarted, transitionData.TargetSceneName));
             EventComponent.Instance?.Publish(new UISceneScopeChangedEvent(transitionData.TargetSceneName));
@@ -94,7 +94,7 @@ namespace CrystalMagic.Core {
 
             EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.LoadCompleted, transitionData.TargetSceneName, 1f));
             PublishLoadProgress(transitionData.TargetSceneName, 1f, "Load complete", transitionData.TargetSceneName);
-            yield return StartCoroutine(FadeOutAsync(transitionMaskUI, transitionData.TargetSceneName));
+            yield return StartCoroutine(FadeOutAsync(transitionUI, transitionData.TargetSceneName));
 
             GameGateComponent gate = GameGateComponent.Instance;
             gate?.Unlock(GameGateType.UIInput, TransitionLockReason);
@@ -102,7 +102,7 @@ namespace CrystalMagic.Core {
             gate?.Unlock(GameGateType.Simulation, TransitionLockReason);
 
             _activeTransitionData = null;
-            _activeTransitionMaskUI = null;
+            _activeTransitionUI = null;
             _loadSequenceStarted = false;
             _isTransitioning = false;
         }

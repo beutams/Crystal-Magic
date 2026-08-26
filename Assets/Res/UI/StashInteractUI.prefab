@@ -511,7 +511,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: stashinteractui.cancel
+  m_text: ui.confirm.cancel
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 99e11e9bbeda0844eb35c72e21403b1c, type: 2}
   m_sharedMaterial: {fileID: 1575911332751086639, guid: 99e11e9bbeda0844eb35c72e21403b1c, type: 2}
@@ -582,7 +582,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
-  _localizationKey: stashinteractui.cancel
+  _localizationKey: ui.confirm.cancel
 --- !u!1 &2345461775982274502
 GameObject:
   m_ObjectHideFlags: 0
@@ -648,7 +648,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: stashinteractui.sure
+  m_text: ui.confirm.confirm
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 99e11e9bbeda0844eb35c72e21403b1c, type: 2}
   m_sharedMaterial: {fileID: 1575911332751086639, guid: 99e11e9bbeda0844eb35c72e21403b1c, type: 2}
@@ -719,7 +719,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
-  _localizationKey: stashinteractui.sure
+  _localizationKey: ui.confirm.confirm
 --- !u!1 &2362694006281267459
 GameObject:
   m_ObjectHideFlags: 0

@@ -19,6 +19,9 @@ public class ShopSellUIData : UIData
     public UINode Input;
     public UINode Input_TextArea;
     public UINode Input_TextArea_Text;
+    public UINode Coin;
+    public UINode Coin_Money;
+    public UINode Coin_MoneyText;
     public UINode Sure;
     public UINode Sure_Text;
     public UINode Cancel;
@@ -39,6 +42,9 @@ public class ShopSellUIData : UIData
         Input = UINode.From(Find(root, "Input"));
         Input_TextArea = UINode.From(Find(root, "Input/Text Area"));
         Input_TextArea_Text = UINode.From(Find(root, "Input/Text Area/Text"));
+        Coin = UINode.From(Find(root, "Coin"));
+        Coin_Money = UINode.From(Find(root, "Coin/Money"));
+        Coin_MoneyText = UINode.From(Find(root, "Coin/MoneyText"));
         Sure = UINode.From(Find(root, "Sure"));
         Sure_Text = UINode.From(Find(root, "Sure/Text"));
         Cancel = UINode.From(Find(root, "Cancel"));

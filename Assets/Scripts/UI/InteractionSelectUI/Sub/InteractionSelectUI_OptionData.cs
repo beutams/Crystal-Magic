@@ -6,10 +6,12 @@ using CrystalMagic.Core;
 
 public class InteractionSelectUI_OptionData : UIData
 {
-    public UINode TextTMP;
+    public UINode Default_TextTMP;
+    public UINode Click_TextTMP;
 
     public override void Bind(Transform root)
     {
-        TextTMP = UINode.From(Find(root, "Text (TMP)"));
+        Default_TextTMP = UINode.From(Find(root, "Default/Text (TMP)"));
+        Click_TextTMP = UINode.From(Find(root, "Click/Text (TMP)"));
     }
 }

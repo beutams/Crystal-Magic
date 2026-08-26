@@ -21,20 +21,20 @@ public class EffectSelectUI_ItemView : UISubView<EffectSelectUI_ItemData>, IPoin
 
         if (data == null)
         {
-            UI.Icon.Image.sprite = null;
+            UI.IconBG_Mask_Icon.Image.sprite = null;
             UI.Name.TextMeshProUGUI.text = string.Empty;
             if (_selectableItem != null)
                 _selectableItem.SetSelected(false);
             return;
         }
 
-        UI.Icon.Image.sprite = LoadIcon(data.IconPath);
+        UI.IconBG_Mask_Icon.Image.sprite = LoadIcon(data.IconPath);
         UI.Name.TextMeshProUGUI.text = data.Name;
 
         if (_selectableItem != null)
             _selectableItem.SetSelected(data.IsSelected);
-        else if (UI.Background.Image != null)
-            UI.Background.Image.color = data.IsSelected ? Color.white : new Color(1f, 1f, 1f, 0.85f);
+        else
+            UI.IconBG.Image.color = data.IsSelected ? Color.white : new Color(1f, 1f, 1f, 0.85f);
     }
 
     public void OnPointerEnter(PointerEventData eventData)

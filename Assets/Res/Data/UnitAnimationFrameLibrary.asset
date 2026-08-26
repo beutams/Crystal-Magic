@@ -1,0 +1,117 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01777da34f90bed47b149e3609332438, type: 3}
+  m_Name: UnitAnimationFrameLibrary
+  m_EditorClassIdentifier: 
+  Tracks:
+  - ClipPath: Assets/Res/Animation/Player/IdleLeft.anim
+    SourceClip: {fileID: 7400000, guid: 5185da8580874c34ea7143ff0458e74d, type: 2}
+    Sprites:
+    - {fileID: 1959632017, guid: 28564dbd180382841bedccb883833dbb, type: 3}
+    - {fileID: -1585509690, guid: 28564dbd180382841bedccb883833dbb, type: 3}
+    - {fileID: 1627160456, guid: 28564dbd180382841bedccb883833dbb, type: 3}
+    - {fileID: -1266185242, guid: 28564dbd180382841bedccb883833dbb, type: 3}
+    - {fileID: -1683984207, guid: 28564dbd180382841bedccb883833dbb, type: 3}
+    - {fileID: -1496459408, guid: 28564dbd180382841bedccb883833dbb, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    FlipXTimes:
+    - 0
+    - 0.5
+    FlipXValues:
+    - 1
+    - 0
+    Length: 0.5
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Player/IdleRight.anim
+    SourceClip: {fileID: 7400000, guid: 645c1283b2a65de46b4b02a3fd98cdd9, type: 2}
+    Sprites:
+    - {fileID: 1959632017, guid: 28564dbd180382841bedccb883833dbb, type: 3}
+    - {fileID: -1585509690, guid: 28564dbd180382841bedccb883833dbb, type: 3}
+    - {fileID: 1627160456, guid: 28564dbd180382841bedccb883833dbb, type: 3}
+    - {fileID: -1266185242, guid: 28564dbd180382841bedccb883833dbb, type: 3}
+    - {fileID: -1683984207, guid: 28564dbd180382841bedccb883833dbb, type: 3}
+    - {fileID: -1496459408, guid: 28564dbd180382841bedccb883833dbb, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    FlipXTimes:
+    - 0
+    - 0.5
+    FlipXValues:
+    - 0
+    - 0
+    Length: 0.5
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Player/WalkLeft.anim
+    SourceClip: {fileID: 7400000, guid: 339830f365845384a91a39e0ff5cd57a, type: 2}
+    Sprites:
+    - {fileID: 772865672, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
+    - {fileID: 1573279784, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
+    - {fileID: -2099104035, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
+    - {fileID: -1262641449, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
+    - {fileID: 765145937, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
+    - {fileID: 7406337, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
+    - {fileID: 290908963, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
+    - {fileID: -1741107085, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    - 0.5833333
+    FlipXTimes:
+    - 0
+    - 0.6666667
+    FlipXValues:
+    - 1
+    - 0
+    Length: 0.6666667
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Player/WalkRight.anim
+    SourceClip: {fileID: 7400000, guid: 747d3a456da4e0e44acaff26ef423fd8, type: 2}
+    Sprites:
+    - {fileID: 772865672, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
+    - {fileID: 1573279784, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
+    - {fileID: -2099104035, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
+    - {fileID: -1262641449, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
+    - {fileID: 765145937, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
+    - {fileID: 7406337, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
+    - {fileID: 290908963, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
+    - {fileID: -1741107085, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    - 0.5833333
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 0
+    Length: 0.6666666
+    IsLooping: 1

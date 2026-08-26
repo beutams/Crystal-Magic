@@ -33,7 +33,8 @@ public class CharacterUIData : UIData
     public UINode InventoryView_Viewport;
     public UINode InventoryView_Viewport_Content;
     public UINode InventoryView_Viewport_Content_InventoryItem;
-    public UINode InventoryView_Viewport_Content_InventoryItem_Icon;
+    public UINode InventoryView_Viewport_Content_InventoryItem_Mask;
+    public UINode InventoryView_Viewport_Content_InventoryItem_Mask_Icon;
     public UINode InventoryView_Viewport_Content_InventoryItem_Count;
     public UINode InventoryView_Viewport_Content_InventoryItem_Name;
     public UINode ItemDrag;
@@ -75,7 +76,8 @@ public class CharacterUIData : UIData
         InventoryView_Viewport = UINode.From(Find(root, "InventoryView/Viewport"));
         InventoryView_Viewport_Content = UINode.From(Find(root, "InventoryView/Viewport/Content"));
         InventoryView_Viewport_Content_InventoryItem = UINode.From(Find(root, "InventoryView/Viewport/Content/InventoryItem"));
-        InventoryView_Viewport_Content_InventoryItem_Icon = UINode.From(Find(root, "InventoryView/Viewport/Content/InventoryItem/Icon"));
+        InventoryView_Viewport_Content_InventoryItem_Mask = UINode.From(Find(root, "InventoryView/Viewport/Content/InventoryItem/Mask"));
+        InventoryView_Viewport_Content_InventoryItem_Mask_Icon = UINode.From(Find(root, "InventoryView/Viewport/Content/InventoryItem/Mask/Icon"));
         InventoryView_Viewport_Content_InventoryItem_Count = UINode.From(Find(root, "InventoryView/Viewport/Content/InventoryItem/Count"));
         InventoryView_Viewport_Content_InventoryItem_Name = UINode.From(Find(root, "InventoryView/Viewport/Content/InventoryItem/Name"));
         ItemDrag = UINode.From(Find(root, "ItemDrag"));

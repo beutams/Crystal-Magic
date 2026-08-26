@@ -8,6 +8,9 @@ namespace CrystalMagic.Game.Config
     [EditorLabel("Global Config")]
     public class GameConfig
     {
+        [EditorLabel("Enable Debug")]
+        public bool EnableDebug = true;
+
         [EditorLabel("Starting Gold")]
         public int StartingGold = 100;
 

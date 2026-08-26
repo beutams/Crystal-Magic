@@ -19,13 +19,14 @@ public class ShopUI_InventoryItemView : UISubView<ShopUI_InventoryItemData>, IBe
 
         if (data == null)
         {
-            UI.Icon.Image.sprite = null;
+            UI.IconBG_Mask_Icon.GameObject.SetActive(false);
             UI.Count.TextMeshProUGUI.text = string.Empty;
             UI.Name.TextMeshProUGUI.text = string.Empty;
             return;
         }
 
-        UI.Icon.Image.sprite = LoadIcon(data.IconPath);
+        UI.IconBG_Mask_Icon.GameObject.SetActive(true);
+        UI.IconBG_Mask_Icon.Image.sprite = LoadIcon(data.IconPath);
         UI.Count.TextMeshProUGUI.text = data.Count.ToString();
         UI.Name.TextMeshProUGUI.text = data.Name;
     }

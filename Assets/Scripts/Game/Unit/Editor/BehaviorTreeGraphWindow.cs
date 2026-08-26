@@ -1067,7 +1067,15 @@ namespace CrystalMagic.Editor.Unit
                 });
             }
 
-            _unitEntries.Sort((left, right) => string.Compare(left.DisplayName, right.DisplayName, StringComparison.Ordinal));
+            _unitEntries.Sort((left, right) =>
+            {
+                int leftId = left.UnitData?.Id ?? int.MaxValue;
+                int rightId = right.UnitData?.Id ?? int.MaxValue;
+                int idComparison = leftId.CompareTo(rightId);
+                return idComparison != 0
+                    ? idComparison
+                    : string.Compare(left.DisplayName, right.DisplayName, StringComparison.Ordinal);
+            });
         }
 
         private bool MigrateLegacyTreeBindings()

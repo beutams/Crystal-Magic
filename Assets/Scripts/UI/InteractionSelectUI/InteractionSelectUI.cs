@@ -27,6 +27,7 @@ public class InteractionSelectUI : UIBase<InteractionSelectUIData, InteractionSe
 
     protected override void RefreshView()
     {
+        UI.Dialog.TextMeshProUGUI.text = Model.Dialog;
         RenderOptions(Model.Options);
     }
 

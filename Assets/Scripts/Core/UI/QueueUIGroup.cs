@@ -38,7 +38,7 @@ namespace CrystalMagic.Core {
                 UIBase head = _panels.First.Value;
                 if (Time.time - head.EnqueueTime >= _closeDuration)
                 {
-                    CloseUI(head);
+                    UIComponent.Instance?.CloseUI(head);
                 }
             }
         }

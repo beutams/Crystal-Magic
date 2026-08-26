@@ -27,6 +27,7 @@ namespace CrystalMagic.Editor.Unit
         private sealed class UnitRuntimeEntry
         {
             public Entity Entity;
+            public int UnitDataId;
             public string DisplayName;
             public string UnitName;
         }
@@ -210,12 +211,21 @@ namespace CrystalMagic.Editor.Unit
                 _unitEntries.Add(new UnitRuntimeEntry
                 {
                     Entity = entity,
+                    UnitDataId = GetUnitDataId(entityManager, entity),
                     UnitName = unitName,
                     DisplayName = string.IsNullOrWhiteSpace(unitName) ? entity.ToString() : $"{unitName} ({entity})",
                 });
             }
 
-            _unitEntries.Sort((left, right) => string.Compare(left.DisplayName, right.DisplayName, StringComparison.Ordinal));
+            _unitEntries.Sort((left, right) =>
+            {
+                int leftId = left.UnitDataId >= 0 ? left.UnitDataId : int.MaxValue;
+                int rightId = right.UnitDataId >= 0 ? right.UnitDataId : int.MaxValue;
+                int idComparison = leftId.CompareTo(rightId);
+                return idComparison != 0
+                    ? idComparison
+                    : string.Compare(left.DisplayName, right.DisplayName, StringComparison.Ordinal);
+            });
             _selectedIndex = _unitEntries.Count > 0 ? 0 : -1;
             _statusText = $"Loaded {_unitEntries.Count} live unit(s).";
         }

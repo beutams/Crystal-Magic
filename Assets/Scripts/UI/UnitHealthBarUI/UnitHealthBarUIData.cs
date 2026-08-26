@@ -10,6 +10,7 @@ public class UnitHealthBarUIData : UIData
     public UINode HP_BarBackground;
     public UINode HP_BarMask;
     public UINode HP_BarMask_Bar;
+    public UINode HP_BarBroder;
     public UINode HP_BuffRoot;
     public UINode HP_BuffRoot_BuffIcon;
 
@@ -19,6 +20,7 @@ public class UnitHealthBarUIData : UIData
         HP_BarBackground = UINode.From(Find(root, "HP/BarBackground"));
         HP_BarMask = UINode.From(Find(root, "HP/BarMask"));
         HP_BarMask_Bar = UINode.From(Find(root, "HP/BarMask/Bar"));
+        HP_BarBroder = UINode.From(Find(root, "HP/BarBroder"));
         HP_BuffRoot = UINode.From(Find(root, "HP/BuffRoot"));
         HP_BuffRoot_BuffIcon = UINode.From(Find(root, "HP/BuffRoot/BuffIcon"));
     }

@@ -10,9 +10,9 @@ using UnityEngine;
 [UpdateAfter(typeof(StateScriptSystem))]
 partial class UnitAnimationSystem : SystemBase
 {
-    private readonly Dictionary<string, AnimationClip> _clipCache = new(StringComparer.Ordinal);
     private readonly HashSet<string> _missingResources = new(StringComparer.Ordinal);
-    private readonly HashSet<Entity> _missingRenderers = new();
+    private UnitAnimationFrameLibrary _frameLibrary;
+    private const string FrameLibraryPath = "Assets/Res/Data/UnitAnimationFrameLibrary.asset";
 
     protected override void OnUpdate()
     {
@@ -33,15 +33,11 @@ partial class UnitAnimationSystem : SystemBase
 
     protected override void OnDestroy()
     {
-        if (ResourceComponent.Instance != null)
-        {
-            foreach (string path in _clipCache.Keys)
-                ResourceComponent.Instance.Unload(path);
-        }
+        if (ResourceComponent.Instance != null && _frameLibrary != null)
+            ResourceComponent.Instance.Unload(FrameLibraryPath);
 
-        _clipCache.Clear();
+        _frameLibrary = null;
         _missingResources.Clear();
-        _missingRenderers.Clear();
         base.OnDestroy();
     }
 
@@ -51,15 +47,10 @@ partial class UnitAnimationSystem : SystemBase
         float deltaTime,
         UnitAnimationComponent animation)
     {
-        SpriteRenderer spriteRenderer = animation.Renderer;
-        if (spriteRenderer == null)
-        {
-            if (_missingRenderers.Add(entity))
-                Debug.LogWarning($"[UnitAnimationSystem] {entity} has UnitAnimationAuthoring but no SpriteRenderer on the same GameObject.");
-            return;
-        }
+        SpriteRenderer spriteRenderer = EntityManager.GetComponentObject<SpriteRenderer>(entity);
+        animation.Renderer = spriteRenderer;
 
-        string animationName = animation.Name.ToString();
+        string animationName = animation.CurrentAnimationName.ToString();
         if (string.IsNullOrWhiteSpace(animationName))
         {
             ResetPlayback(animation);
@@ -82,7 +73,7 @@ partial class UnitAnimationSystem : SystemBase
             return;
         }
 
-        UnitAnimationDirection direction = ResolveAnimationDirection(entity, EntityManager);
+        UnitAnimationDirection direction = ResolveAnimationDirection(entity, EntityManager, entry, animation);
         string clipPath = entry.GetClipPath(direction);
         if (string.IsNullOrWhiteSpace(clipPath))
         {
@@ -92,13 +83,15 @@ partial class UnitAnimationSystem : SystemBase
             return;
         }
 
-        AnimationClip clip = GetClip(clipPath);
-        if (clip == null)
+        UnitAnimationFrameTrack track = GetFrameTrack(clipPath);
+        if (track == null)
             return;
 
-        if (!animation.PlayingName.Equals(animation.Name))
+        animation.CurrentAnimationClip = track.SourceClip;
+
+        if (!animation.PlayingAnimationName.Equals(animation.CurrentAnimationName))
         {
-            animation.PlayingName = animation.Name;
+            animation.PlayingAnimationName = animation.CurrentAnimationName;
             animation.ElapsedSeconds = 0f;
         }
         else
@@ -106,36 +99,43 @@ partial class UnitAnimationSystem : SystemBase
             animation.ElapsedSeconds += deltaTime;
         }
 
-        float sampleTime = GetSampleTime(clip, animation.ElapsedSeconds);
-        clip.SampleAnimation(spriteRenderer.gameObject, sampleTime);
+        float sampleTime = GetSampleTime(track.Length, track.IsLooping, animation.ElapsedSeconds);
+        animation.CurrentSampleTime = sampleTime;
+        spriteRenderer.sprite = track.SampleSprite(sampleTime);
+        if (track.TrySampleFlipX(sampleTime, out bool flipX))
+            spriteRenderer.flipX = flipX;
+        animation.CurrentSprite = spriteRenderer.sprite;
     }
 
-    private AnimationClip GetClip(string path)
+    private UnitAnimationFrameTrack GetFrameTrack(string clipPath)
     {
-        if (_clipCache.TryGetValue(path, out AnimationClip cachedClip))
-            return cachedClip;
-        if (_missingResources.Contains(path))
-            return null;
+        if (_frameLibrary == null)
+            _frameLibrary = ResourceComponent.Instance.Load<UnitAnimationFrameLibrary>(FrameLibraryPath);
 
-        AnimationClip clip = ResourceComponent.Instance.Load<AnimationClip>(path);
-        if (clip == null)
+        if (_frameLibrary == null)
         {
-            LogMissingOnce(path, $"[UnitAnimationSystem] Missing AnimationClip: {path}");
+            LogMissingOnce(FrameLibraryPath, $"[UnitAnimationSystem] Missing animation frame library: {FrameLibraryPath}");
             return null;
         }
 
-        _clipCache[path] = clip;
-        return clip;
+        UnitAnimationFrameTrack track = _frameLibrary.Find(clipPath);
+        if (track == null)
+        {
+            LogMissingOnce(clipPath, $"[UnitAnimationSystem] Missing animation frames for clip: {clipPath}");
+            return null;
+        }
+
+        return track;
     }
 
-    private static float GetSampleTime(AnimationClip clip, float elapsedSeconds)
+    private static float GetSampleTime(float length, bool isLooping, float elapsedSeconds)
     {
-        float length = math.max(0f, clip.length);
+        length = math.max(0f, length);
         if (length <= 0f)
             return 0f;
 
         float elapsed = math.max(0f, elapsedSeconds);
-        return clip.isLooping
+        return isLooping
             ? elapsed % length
             : math.min(elapsed, length);
     }
@@ -171,7 +171,34 @@ partial class UnitAnimationSystem : SystemBase
         return null;
     }
 
-    private static UnitAnimationDirection ResolveAnimationDirection(Entity entity, EntityManager entityManager)
+    private static UnitAnimationDirection ResolveAnimationDirection(
+        Entity entity,
+        EntityManager entityManager,
+        UnitAnimationEntryData entry,
+        UnitAnimationComponent animation)
+    {
+        return entry.DirectionMode == UnitAnimationDirectionMode.TwoDirections
+            ? ResolveTwoDirectionAnimationDirection(entity, entityManager, animation)
+            : ResolveFourDirectionAnimationDirection(entity, entityManager);
+    }
+
+    private static UnitAnimationDirection ResolveTwoDirectionAnimationDirection(
+        Entity entity,
+        EntityManager entityManager,
+        UnitAnimationComponent animation)
+    {
+        if (!UnitFacingUtility.TryGetFacing(entityManager, entity, out float2 facingDirection))
+            return animation.LastTwoDirectionFacing;
+
+        if (facingDirection.x < -0.0001f)
+            animation.LastTwoDirectionFacing = UnitAnimationDirection.Left;
+        else if (facingDirection.x > 0.0001f)
+            animation.LastTwoDirectionFacing = UnitAnimationDirection.Right;
+
+        return animation.LastTwoDirectionFacing;
+    }
+
+    private static UnitAnimationDirection ResolveFourDirectionAnimationDirection(Entity entity, EntityManager entityManager)
     {
         if (!UnitFacingUtility.TryGetFacing(entityManager, entity, out float2 facingDirection))
             return UnitAnimationDirection.Front;
@@ -209,7 +236,10 @@ partial class UnitAnimationSystem : SystemBase
 
     private static void ResetPlayback(UnitAnimationComponent animation)
     {
-        animation.PlayingName = default;
+        animation.PlayingAnimationName = default;
         animation.ElapsedSeconds = 0f;
+        animation.CurrentAnimationClip = null;
+        animation.CurrentSampleTime = 0f;
+        animation.CurrentSprite = null;
     }
 }

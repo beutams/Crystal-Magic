@@ -26,7 +26,7 @@ public class EffectItemInfoUI : UIBase<EffectItemInfoUIData, CrystalMagic.UI.Eff
     {
         UI.Name.TextMeshProUGUI.text = Model != null ? Model.Name : string.Empty;
         UI.Description.TextMeshProUGUI.text = Model != null ? Model.Description : string.Empty;
-        UI.Icon.Image.sprite = LoadIcon(Model != null ? Model.IconPath : string.Empty);
+        UI.IconBack_Mask_Icon.Image.sprite = LoadIcon(Model != null ? Model.IconPath : string.Empty);
     }
 
     private Sprite LoadIcon(string iconPath)

@@ -736,6 +736,8 @@ namespace CrystalMagic.Editor.Data
 
         private void DrawSelectNode(NPCInteractionData interaction, NPCInteractionNodeData parentNode, NPCSelectInteractionNodeData select)
         {
+            select.Dialog = EditorGUILayout.TextField("Dialog", select.Dialog ?? string.Empty);
+
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Options", EditorStyles.boldLabel);
             if (GUILayout.Button("Add Option", GUILayout.Width(92f)))

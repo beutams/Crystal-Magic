@@ -700,7 +700,7 @@ UI\
     TransitionUIData.cs FALSE
     TransitionUIModel.cs FALSE
   UnitHealthBarUI\
-    UnitHealthBarManager.cs TRUE
+    UnitHealthBarManager.cs TRUE DIRTY
     UnitHealthBarUI.cs FALSE
     UnitHealthBarUIController.cs FALSE
     UnitHealthBarUIData.cs FALSE

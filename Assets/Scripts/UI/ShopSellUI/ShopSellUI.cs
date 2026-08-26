@@ -40,6 +40,7 @@ public class ShopSellUI : UIBase<ShopSellUIData, CrystalMagic.UI.ShopSellUIModel
         UI.Name.TextMeshProUGUI.text = Model.Name;
         UI.HaveCount.TextMeshProUGUI.text = Model.HaveCount.ToString();
         UI.Description.TextMeshProUGUI.text = Model.Description;
+        UI.Coin_MoneyText.TextMeshProUGUI.text = Model.TotalSellPrice.ToString();
         SetQuantityInputText(Model.Quantity.ToString());
     }
 

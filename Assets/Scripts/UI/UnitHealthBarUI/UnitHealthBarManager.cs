@@ -12,7 +12,7 @@ namespace CrystalMagic.UI
     public sealed class UnitHealthBarManager : IDisposable
     {
         private const string GroupName = "Bottom";
-        private const float WorldYOffset = 1.4f;
+        private const float WorldYOffset = -1.4f;
 
         private readonly Dictionary<Entity, ActiveBar> _activeBars = new();
         private readonly List<Entity> _cleanupEntities = new();

@@ -6,8 +6,6 @@ namespace CrystalMagic.Core
 {
     public class GameFlowComponent : GameComponent<GameFlowComponent>
     {
-        private const string DefaultTransitionMaskUIName = "TransitionMaskUI";
-
         #region State Flow Fields
         private GameState _currentState;
         private readonly Dictionary<Type, GameState> _stateCache = new();
@@ -69,12 +67,12 @@ namespace CrystalMagic.Core
 
             _activeTransitionData = transitionData;
             _isTransitioning = true;
-            OpenTransitionMaskUI(transitionData);
+            OpenTransitionUI(transitionData);
 
             if (!TransitionComponent.Instance.BeginFadeIn(transitionData, _activeTransitionUI))
             {
                 Debug.LogError("[GameFlow] Failed to start transition fade-in.");
-                ReleaseTransitionMaskUI();
+                ReleaseTransitionUI();
                 _activeTransitionData = null;
                 _isTransitioning = false;
             }
@@ -100,7 +98,7 @@ namespace CrystalMagic.Core
         public override void Cleanup()
         {
             UnbindEvents();
-            ReleaseTransitionMaskUI();
+            ReleaseTransitionUI();
 
             _currentState?.OnExit();
             _currentState = null;
@@ -224,23 +222,24 @@ namespace CrystalMagic.Core
         private void CompleteTransition()
         {
             System.Action onComplete = _activeTransitionData?.OnComplete;
-            ReleaseTransitionMaskUI();
+            ReleaseTransitionUI();
             _activeTransitionData = null;
             _isTransitioning = false;
             onComplete?.Invoke();
         }
 
-        private void OpenTransitionMaskUI(TransitionData transitionData)
+        private void OpenTransitionUI(TransitionData transitionData)
         {
-            ReleaseTransitionMaskUI();
+            ReleaseTransitionUI();
 
-            if (UIComponent.Instance == null)
+            if (UIComponent.Instance == null || string.IsNullOrWhiteSpace(transitionData?.TransitionUIName))
                 return;
 
-            _activeTransitionPanel = UIComponent.Instance.Open(DefaultTransitionMaskUIName);
+            string transitionUIName = transitionData.TransitionUIName;
+            _activeTransitionPanel = UIComponent.Instance.Open(transitionUIName);
             if (_activeTransitionPanel == null)
             {
-                Debug.LogError($"[GameFlow] Failed to open transition mask UI: {DefaultTransitionMaskUIName}");
+                Debug.LogError($"[GameFlow] Failed to open transition UI: {transitionUIName}");
                 return;
             }
 
@@ -248,12 +247,12 @@ namespace CrystalMagic.Core
             _activeTransitionUI = _activeTransitionPanel.GetComponent<ITransitionUI>();
             if (_activeTransitionUI == null)
             {
-                Debug.LogError($"[GameFlow] Transition mask UI '{DefaultTransitionMaskUIName}' missing ITransitionUI.");
-                ReleaseTransitionMaskUI();
+                Debug.LogError($"[GameFlow] Transition UI '{transitionUIName}' missing ITransitionUI.");
+                ReleaseTransitionUI();
             }
         }
 
-        private void ReleaseTransitionMaskUI()
+        private void ReleaseTransitionUI()
         {
             if (_activeTransitionPanel != null && UIComponent.Instance != null)
             {

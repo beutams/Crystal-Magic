@@ -5,7 +5,6 @@ namespace CrystalMagic.Core {
     public class TransitionState : GameState
     {
         private TransitionData _transitionData;
-        private TransitionUI _transitionUI;
 
         public override void OnEnter()
         {
@@ -16,7 +15,6 @@ namespace CrystalMagic.Core {
                 return;
             }
 
-            OpenTransitionUI();
             if (!TransitionComponent.Instance.BeginLoadAndFadeOut(_transitionData))
             {
                 Debug.LogError("[TransitionState] Failed to start transition load sequence.");
@@ -25,33 +23,7 @@ namespace CrystalMagic.Core {
 
         public override void OnExit()
         {
-            CloseTransitionUI();
             _transitionData = null;
-        }
-
-        private void OpenTransitionUI()
-        {
-            if (string.IsNullOrWhiteSpace(_transitionData?.TransitionUIName) || UIComponent.Instance == null)
-                return;
-
-            string transitionUIName = _transitionData.TransitionUIName;
-            _transitionUI = UIComponent.Instance.Open(transitionUIName) as TransitionUI;
-            if (_transitionUI == null)
-            {
-                Debug.LogError($"[TransitionState] Failed to open transition UI: {transitionUIName}");
-                return;
-            }
-
-            UIComponent.Instance.SetLifetime(_transitionUI, UILifetime.Persistent);
-        }
-
-        private void CloseTransitionUI()
-        {
-            if (_transitionUI == null || UIComponent.Instance == null)
-                return;
-
-            UIComponent.Instance.ReleaseUI(_transitionUI);
-            _transitionUI = null;
         }
     }
     public class TransitionData

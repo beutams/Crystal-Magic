@@ -25,6 +25,7 @@ public class ShopUI : UIBase<ShopUIData, ShopUIModel>
     public override void OnOpen()
     {
         EnsureDragVisualInitialized();
+        ClearCommoditySelection();
         SetDragVisible(false);
         base.OnOpen();
     }
@@ -32,6 +33,7 @@ public class ShopUI : UIBase<ShopUIData, ShopUIModel>
     public override void OnClose()
     {
         CancelCommodityHover(true);
+        ClearCommoditySelection();
         _draggedCommodity = null;
         _draggedInventoryItem = null;
         SetDragVisible(false);
@@ -208,7 +210,7 @@ public class ShopUI : UIBase<ShopUIData, ShopUIModel>
         CancelCommodityHover(true);
         _draggedInventoryItem = null;
         _draggedCommodity = data;
-        UI.Drag_Icon.Image.sprite = LoadIcon(data.IconPath);
+        UI.Drag_Mask_Icon.Image.sprite = LoadIcon(data.IconPath);
         SetDragVisible(true);
         UpdateDragPosition(eventData);
     }
@@ -242,7 +244,7 @@ public class ShopUI : UIBase<ShopUIData, ShopUIModel>
         CancelCommodityHover(true);
         _draggedCommodity = null;
         _draggedInventoryItem = data;
-        UI.Drag_Icon.Image.sprite = LoadIcon(data.IconPath);
+        UI.Drag_Mask_Icon.Image.sprite = LoadIcon(data.IconPath);
         SetDragVisible(true);
         UpdateDragPosition(eventData);
     }
@@ -304,6 +306,13 @@ public class ShopUI : UIBase<ShopUIData, ShopUIModel>
             graphics[i].raycastTarget = false;
 
         _dragRaycastDisabled = true;
+    }
+
+    private void ClearCommoditySelection()
+    {
+        UI.ShopView_Viewport_Content.GameObject
+            .GetComponent<UISelectableListGroup>()
+            .ClearSelection();
     }
 
     private void SetDragVisible(bool visible)
