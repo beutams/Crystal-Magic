@@ -364,6 +364,6 @@ public class ShopUI : UIBase<ShopUIData, ShopUIModel>
         if (string.IsNullOrEmpty(iconPath))
             return null;
 
-        return LoadManagedResource<Sprite>(iconPath);
+        return LoadManagedSprite(iconPath);
     }
 }

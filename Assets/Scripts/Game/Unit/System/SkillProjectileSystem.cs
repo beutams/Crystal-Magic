@@ -152,6 +152,12 @@ public partial class SkillProjectileSystem : SystemBase
         if (!EntityManager.Exists(entity))
             return;
 
+        if (EntityManager.HasComponent<SkillProjectileVisualLinkComponent>(entity))
+        {
+            Entity visualEntity = EntityManager.GetComponentData<SkillProjectileVisualLinkComponent>(entity).VisualEntity;
+            SpriteEffectAnimationSystem.RequestEnd(EntityManager, visualEntity);
+        }
+
         if (!EntityManager.HasComponent<DestroyEntityFlag>(entity))
             EntityManager.AddComponent<DestroyEntityFlag>(entity);
 

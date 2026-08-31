@@ -1,4 +1,4 @@
-﻿namespace CrystalMagic.UI
+namespace CrystalMagic.UI
 {
     using CrystalMagic.Core;
 
@@ -12,19 +12,37 @@
         protected override void OnOpen()
         {
             View.BindModel(Model);
+            Bindings.Bind(() => View.ContinueRequested += OnContinueRequested, () => View.ContinueRequested -= OnContinueRequested);
             Bindings.Bind(() => View.SaveRequested += OnSaveRequested, () => View.SaveRequested -= OnSaveRequested);
+            Bindings.Bind(() => View.ReturnMainMenuRequested += OnReturnMainMenuRequested, () => View.ReturnMainMenuRequested -= OnReturnMainMenuRequested);
             Model.ReloadFromSettings();
+        }
+
+        private void OnContinueRequested()
+        {
+            View.Close();
         }
 
         private void OnSaveRequested()
         {
-            foreach (UIBase child in UIComponent.Instance.GetChildren(View))
-            {
-                if (child is GameSaveUI)
-                    return;
-            }
+            if (!SaveDataComponent.Instance.Save())
+                return;
 
-            UIComponent.Instance.OpenChild<GameSaveUI>(View);
+            ConfirmUIOpenData openData = new(
+                LocalizationComponent.Instance.Get("ui.confirm.save"),
+                LocalizationComponent.Instance.Get("ui.confirm.save_success.content"));
+            UIComponent.Instance.OpenChild<ConfirmUI>(View, openData);
+        }
+
+        private void OnReturnMainMenuRequested()
+        {
+            GameFlowComponent.Instance.BeginTransition(new TransitionData
+            {
+                TargetSceneName = "MainMenu",
+                TargetStateType = typeof(MainMenuState),
+                TransitionUIName = "TransitionUI",
+                ForceReloadTargetScene = true,
+            });
         }
     }
 }

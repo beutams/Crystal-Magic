@@ -7,19 +7,19 @@ using CrystalMagic.Core;
 public class CharacterUI_SkillItemData : UIData
 {
     public UINode Background;
-    public UINode Skill;
+    public UINode SkillMask;
+    public UINode SkillMask_Skill;
     public UINode Effect;
     public UINode Effect_EffectIcon;
-    public UINode Index;
-    public UINode Index_IndexNum;
+    public UINode IndexNum;
 
     public override void Bind(Transform root)
     {
         Background = UINode.From(Find(root, "Background"));
-        Skill = UINode.From(Find(root, "Skill"));
+        SkillMask = UINode.From(Find(root, "SkillMask"));
+        SkillMask_Skill = UINode.From(Find(root, "SkillMask/Skill"));
         Effect = UINode.From(Find(root, "Effect"));
         Effect_EffectIcon = UINode.From(Find(root, "Effect/EffectIcon"));
-        Index = UINode.From(Find(root, "Index"));
-        Index_IndexNum = UINode.From(Find(root, "Index/IndexNum"));
+        IndexNum = UINode.From(Find(root, "IndexNum"));
     }
 }

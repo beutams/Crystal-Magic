@@ -34,6 +34,6 @@ public class EffectItemInfoUI : UIBase<EffectItemInfoUIData, CrystalMagic.UI.Eff
         if (string.IsNullOrEmpty(iconPath))
             return null;
 
-        return LoadManagedResource<Sprite>(iconPath);
+        return LoadManagedSprite(iconPath);
     }
 }

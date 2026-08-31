@@ -41,6 +41,9 @@ public sealed class AdditionStateScriptNode : StateScriptStateNode
             if (action == null || action.Status != SkillAdditionActionStatus.Running)
                 _actions.RemoveAt(i);
         }
+
+        if (_actions.Count == 0)
+            Complete();
     }
 
     protected override void OnDeactivate()

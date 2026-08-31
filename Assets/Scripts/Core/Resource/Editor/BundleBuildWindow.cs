@@ -45,12 +45,6 @@ namespace CrystalMagic.Editor.Resource
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            if (GUILayout.Button("Load", EditorStyles.toolbarButton, GUILayout.Width(52f)))
-            {
-                _config = BundleBuildUtility.LoadConfig();
-                _statusText = $"Loaded: {BundleBuildUtility.ConfigPath}";
-            }
-
             if (GUILayout.Button("Save", EditorStyles.toolbarButton, GUILayout.Width(52f)))
             {
                 BundleBuildUtility.SaveConfig(_config);

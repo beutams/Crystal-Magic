@@ -104,6 +104,7 @@
                 "SourceParam": -1,
                 "CompareValue": 0.0
               },
+              "TickOrder": 0,
               "Type": "Monitor",
               "Guid": "e354f96e1123420db0039336b0fcf18e",
               "EditorPosition": {
@@ -454,7 +455,7 @@
             {
               "Condition": {
                 "ConditionType": 0,
-                "CompareType": "GreaterThan",
+        "CompareType": "GreaterThan",
                 "Inputs": [
                   {
                     "Kind": 2,
@@ -540,8 +541,9 @@
                 "SourceParam": -1,
                 "CompareValue": 0.0
               },
+              "TickOrder": 0,
               "Type": "Monitor",
-              "Guid": "717b9e3603714bff8e2777022fed1608",
+      "Guid": "717b9e3603714bff8e2777022fed1608",
               "EditorPosition": {
                 "x": 263.333344,
                 "y": 479.333344
@@ -696,6 +698,7 @@
                 "SourceParam": -1,
                 "CompareValue": 0.0
               },
+              "TickOrder": 0,
               "Type": "Monitor",
               "Guid": "ab5a14342f1b48179aa6a8c8f4de78c1",
               "EditorPosition": {
@@ -974,6 +977,7 @@
                 "SourceParam": -1,
                 "CompareValue": 0.0
               },
+              "TickOrder": 0,
               "Type": "Monitor",
               "Guid": "8f0550915e5d43d3855071af18b9f8f0",
               "EditorPosition": {
@@ -1410,6 +1414,7 @@
                 "SourceParam": -1,
                 "CompareValue": 0.0
               },
+              "TickOrder": 0,
               "Type": "Monitor",
               "Guid": "29dc32386d1741afa53606cca9da2a5d",
               "EditorPosition": {
@@ -1490,6 +1495,7 @@
                 "SourceParam": -1,
                 "CompareValue": 0.0
               },
+              "TickOrder": 0,
               "Type": "Monitor",
               "Guid": "3e1c7aee2f114ac49a98f70f77de45a6",
               "EditorPosition": {
@@ -1613,9 +1619,58 @@
                 "x": 719.3334,
                 "y": 780.0
               }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "noelseaction",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 1.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "a42b7a9e3abf4e94a747d9dd5fa2125b",
+              "EditorPosition": {
+                "x": 431.0,
+                "y": 88.0
+              }
             }
           ],
           "Edges": [
+            {
+              "OutputNodeGuid": "825384f2bd554ce2850e442495427730",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "e01e7f803a904c76a34a15d369b31855",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "825384f2bd554ce2850e442495427730",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "a42b7a9e3abf4e94a747d9dd5fa2125b",
+              "InputPortName": "In"
+            },
             {
               "OutputNodeGuid": "825384f2bd554ce2850e442495427730",
               "OutputPortName": "Out",
@@ -1696,10 +1751,10 @@
             }
           ],
           "ViewPosition": {
-            "x": -57.3333321,
-            "y": -78.0
+            "x": 97.6,
+            "y": 28.0
           },
-          "ViewScale": 0.8695652
+          "ViewScale": 0.497176737
         },
         {
           "Guid": "d7a919b143f042f693fa9199bccebf72",
@@ -1741,7 +1796,7 @@
                       },
                       "String": ""
                     },
-                    "GetterKey": "world.input.skillHeld",
+                    "GetterKey": "world.input.primaryHeld",
                     "OperationType": "",
                     "Inputs": []
                   }
@@ -1750,6 +1805,7 @@
                 "SourceParam": -1,
                 "CompareValue": 0.0
               },
+              "TickOrder": 0,
               "Type": "Monitor",
               "Guid": "79e975ab68c34db195c675eab876aef6",
               "EditorPosition": {
@@ -1856,11 +1912,38 @@
                 "OperationType": "",
                 "Inputs": []
               },
-              "Values": [],
+              "Values": [
+                {
+                  "Kind": 0,
+                  "Literal": {
+                    "Type": 1,
+                    "Bool": true,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "",
+                  "OperationType": "",
+                  "Inputs": []
+                }
+              ],
               "Type": "SetValue",
               "Guid": "c25a5f0de2b64a8eaf0536591f5e6366",
               "EditorPosition": {
-                "x": 710.0,
+                "x": 1370.0,
                 "y": 347.0
               }
             },
@@ -1927,6 +2010,7 @@
                 "SourceParam": -1,
                 "CompareValue": 0.0
               },
+              "TickOrder": -10,
               "Type": "Monitor",
               "Guid": "013437695ee946a780043d9e2af0e68f",
               "EditorPosition": {
@@ -1978,10 +2062,8 @@
               }
             },
             {
-              "SetterKey": "unit.variables.set",
-              "Key": "skillindex",
-              "Value": {
-                "Kind": 0,
+              "Duration": {
+                "Kind": 2,
                 "Literal": {
                   "Type": 3,
                   "Bool": false,
@@ -2003,41 +2085,6 @@
                   "String": ""
                 },
                 "GetterKey": "",
-                "OperationType": "",
-                "Inputs": []
-              },
-              "Values": [],
-              "Type": "SetValue",
-              "Guid": "52f1da8897804f14af5d8caee987d4ad",
-              "EditorPosition": {
-                "x": 648.0,
-                "y": 555.0
-              }
-            },
-            {
-              "Duration": {
-                "Kind": 1,
-                "Literal": {
-                  "Type": 3,
-                  "Bool": false,
-                  "Int": 0,
-                  "Float": 1.0,
-                  "Float2": {
-                    "x": 0.0,
-                    "y": 0.0
-                  },
-                  "Float3": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
-                  },
-                  "Entity": {
-                    "Index": 0,
-                    "Version": 0
-                  },
-                  "String": ""
-                },
-                "GetterKey": "world.skill.getSkillChantDuration",
                 "OperationType": "Multiply",
                 "Inputs": [
                   {
@@ -2062,7 +2109,7 @@
                       },
                       "String": ""
                     },
-                    "GetterKey": "world.skill.getChainSkillId",
+                    "GetterKey": "world.skill.getSkillChantDuration",
                     "OperationType": "",
                     "Inputs": [
                       {
@@ -2087,89 +2134,9 @@
                           },
                           "String": ""
                         },
-                        "GetterKey": "unit.variables.getNumber",
+                        "GetterKey": "player.skill.currentSkillId",
                         "OperationType": "",
-                        "Inputs": [
-                          {
-                            "Kind": 0,
-                            "Literal": {
-                              "Type": 7,
-                              "Bool": false,
-                              "Int": 0,
-                              "Float": 0.0,
-                              "Float2": {
-                                "x": 0.0,
-                                "y": 0.0
-                              },
-                              "Float3": {
-                                "x": 0.0,
-                                "y": 0.0,
-                                "z": 0.0
-                              },
-                              "Entity": {
-                                "Index": 0,
-                                "Version": 0
-                              },
-                              "String": "skillchainindex"
-                            },
-                            "GetterKey": "",
-                            "OperationType": "",
-                            "Inputs": []
-                          }
-                        ]
-                      },
-                      {
-                        "Kind": 1,
-                        "Literal": {
-                          "Type": 3,
-                          "Bool": false,
-                          "Int": 0,
-                          "Float": 0.0,
-                          "Float2": {
-                            "x": 0.0,
-                            "y": 0.0
-                          },
-                          "Float3": {
-                            "x": 0.0,
-                            "y": 0.0,
-                            "z": 0.0
-                          },
-                          "Entity": {
-                            "Index": 0,
-                            "Version": 0
-                          },
-                          "String": ""
-                        },
-                        "GetterKey": "unit.variables.getNumber",
-                        "OperationType": "",
-                        "Inputs": [
-                          {
-                            "Kind": 0,
-                            "Literal": {
-                              "Type": 7,
-                              "Bool": false,
-                              "Int": 0,
-                              "Float": 0.0,
-                              "Float2": {
-                                "x": 0.0,
-                                "y": 0.0
-                              },
-                              "Float3": {
-                                "x": 0.0,
-                                "y": 0.0,
-                                "z": 0.0
-                              },
-                              "Entity": {
-                                "Index": 0,
-                                "Version": 0
-                              },
-                              "String": "skillindex"
-                            },
-                            "GetterKey": "",
-                            "OperationType": "",
-                            "Inputs": []
-                          }
-                        ]
+                        "Inputs": []
                       }
                     ]
                   },
@@ -2201,6 +2168,7 @@
                   }
                 ]
               },
+              "TickOrder": 0,
               "Type": "Timer",
               "Guid": "8c7c2c43f1ed42dc8b3d06fd3619cacc",
               "EditorPosition": {
@@ -2231,37 +2199,11 @@
                   },
                   "String": ""
                 },
-                "GetterKey": "unit.variables.getNumber",
+                "GetterKey": "player.skill.currentSlotIndex",
                 "OperationType": "",
-                "Inputs": [
-                  {
-                    "Kind": 0,
-                    "Literal": {
-                      "Type": 7,
-                      "Bool": false,
-                      "Int": 0,
-                      "Float": 0.0,
-                      "Float2": {
-                        "x": 0.0,
-                        "y": 0.0
-                      },
-                      "Float3": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                      },
-                      "Entity": {
-                        "Index": 0,
-                        "Version": 0
-                      },
-                      "String": "skillindex"
-                    },
-                    "GetterKey": "",
-                    "OperationType": "",
-                    "Inputs": []
-                  }
-                ]
+                "Inputs": []
               },
+              "TickOrder": 0,
               "Type": "NumberMonitor",
               "Guid": "b13b0bbf83e9442c9b42ed2411c8c375",
               "EditorPosition": {
@@ -2270,8 +2212,8 @@
               }
             },
             {
-              "SetterKey": "unit.variables.set",
-              "Key": "skillchainindex",
+              "SetterKey": "player.skill.currentChainSlot.set",
+              "Key": "",
               "Value": {
                 "Kind": 1,
                 "Literal": {
@@ -2298,7 +2240,60 @@
                 "OperationType": "",
                 "Inputs": []
               },
-              "Values": [],
+              "Values": [
+                {
+                  "Kind": 1,
+                  "Literal": {
+                    "Type": 3,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "world.skill.getCurrentChainId",
+                  "OperationType": "",
+                  "Inputs": []
+                },
+                {
+                  "Kind": 0,
+                  "Literal": {
+                    "Type": 3,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "",
+                  "OperationType": "",
+                  "Inputs": []
+                }
+              ],
               "Type": "SetValue",
               "Guid": "cbac06d94bde419999fec5d558d31d18",
               "EditorPosition": {
@@ -2309,149 +2304,6 @@
             {
               "SkillId": {
                 "Kind": 1,
-                "Literal": {
-                  "Type": 3,
-                  "Bool": false,
-                  "Int": 0,
-                  "Float": -1.0,
-                  "Float2": {
-                    "x": 0.0,
-                    "y": 0.0
-                  },
-                  "Float3": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
-                  },
-                  "Entity": {
-                    "Index": 0,
-                    "Version": 0
-                  },
-                  "String": ""
-                },
-                "GetterKey": "world.skill.getChainSkillId",
-                "OperationType": "",
-                "Inputs": [
-                  {
-                    "Kind": 1,
-                    "Literal": {
-                      "Type": 3,
-                      "Bool": false,
-                      "Int": 0,
-                      "Float": 0.0,
-                      "Float2": {
-                        "x": 0.0,
-                        "y": 0.0
-                      },
-                      "Float3": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                      },
-                      "Entity": {
-                        "Index": 0,
-                        "Version": 0
-                      },
-                      "String": ""
-                    },
-                    "GetterKey": "unit.variables.getNumber",
-                    "OperationType": "",
-                    "Inputs": [
-                      {
-                        "Kind": 0,
-                        "Literal": {
-                          "Type": 7,
-                          "Bool": false,
-                          "Int": 0,
-                          "Float": 0.0,
-                          "Float2": {
-                            "x": 0.0,
-                            "y": 0.0
-                          },
-                          "Float3": {
-                            "x": 0.0,
-                            "y": 0.0,
-                            "z": 0.0
-                          },
-                          "Entity": {
-                            "Index": 0,
-                            "Version": 0
-                          },
-                          "String": "skillchainindex"
-                        },
-                        "GetterKey": "",
-                        "OperationType": "",
-                        "Inputs": []
-                      }
-                    ]
-                  },
-                  {
-                    "Kind": 1,
-                    "Literal": {
-                      "Type": 3,
-                      "Bool": false,
-                      "Int": 0,
-                      "Float": 0.0,
-                      "Float2": {
-                        "x": 0.0,
-                        "y": 0.0
-                      },
-                      "Float3": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                      },
-                      "Entity": {
-                        "Index": 0,
-                        "Version": 0
-                      },
-                      "String": ""
-                    },
-                    "GetterKey": "unit.variables.getNumber",
-                    "OperationType": "",
-                    "Inputs": [
-                      {
-                        "Kind": 0,
-                        "Literal": {
-                          "Type": 7,
-                          "Bool": false,
-                          "Int": 0,
-                          "Float": 0.0,
-                          "Float2": {
-                            "x": 0.0,
-                            "y": 0.0
-                          },
-                          "Float3": {
-                            "x": 0.0,
-                            "y": 0.0,
-                            "z": 0.0
-                          },
-                          "Entity": {
-                            "Index": 0,
-                            "Version": 0
-                          },
-                          "String": "skillindex"
-                        },
-                        "GetterKey": "",
-                        "OperationType": "",
-                        "Inputs": []
-                      }
-                    ]
-                  }
-                ]
-              },
-              "Type": "RequestSkill",
-              "Guid": "7c8a9665ce7c45f191a0d5e5c4b521d0",
-              "EditorPosition": {
-                "x": 1325.0,
-                "y": 671.0
-              }
-            },
-            {
-              "SetterKey": "unit.variables.set",
-              "Key": "skillindex",
-              "Value": {
-                "Kind": 2,
                 "Literal": {
                   "Type": 3,
                   "Bool": false,
@@ -2472,8 +2324,163 @@
                   },
                   "String": ""
                 },
-                "GetterKey": "",
-                "OperationType": "Add",
+                "GetterKey": "player.skill.currentSkillId",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Input": {
+                "Position": {
+                  "Kind": 1,
+                  "Literal": {
+                    "Type": 5,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "world.input.pointerWorldPosition",
+                  "OperationType": "",
+                  "Inputs": []
+                },
+                "TargetEntity": {
+                  "Kind": 0,
+                  "Literal": {
+                    "Type": 6,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "",
+                  "OperationType": "",
+                  "Inputs": []
+                }
+              },
+              "Type": "RequestSkillWithAddition",
+              "Guid": "7c8a9665ce7c45f191a0d5e5c4b521d0",
+              "EditorPosition": {
+                "x": 1715.0,
+                "y": 790.0
+              }
+            },
+            {
+              "SkillId": {
+                "Kind": 1,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "player.skill.currentSkillId",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Input": {
+                "Position": {
+                  "Kind": 1,
+                  "Literal": {
+                    "Type": 5,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "unit.transform.position",
+                  "OperationType": "",
+                  "Inputs": []
+                },
+                "TargetEntity": {
+                  "Kind": 1,
+                  "Literal": {
+                    "Type": 6,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "unit.self.entity",
+                  "OperationType": "",
+                  "Inputs": []
+                }
+              },
+              "Type": "RequestSkillWithAddition",
+              "Guid": "f9c8822bf7b1424dbcb37b570b1d2a99",
+              "EditorPosition": {
+                "x": 1715.0,
+                "y": 535.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "Equal",
                 "Inputs": [
                   {
                     "Kind": 1,
@@ -2497,44 +2504,17 @@
                       },
                       "String": ""
                     },
-                    "GetterKey": "unit.variables.getNumber",
+                    "GetterKey": "player.skill.currentInputType",
                     "OperationType": "",
-                    "Inputs": [
-                      {
-                        "Kind": 0,
-                        "Literal": {
-                          "Type": 7,
-                          "Bool": false,
-                          "Int": 0,
-                          "Float": 0.0,
-                          "Float2": {
-                            "x": 0.0,
-                            "y": 0.0
-                          },
-                          "Float3": {
-                            "x": 0.0,
-                            "y": 0.0,
-                            "z": 0.0
-                          },
-                          "Entity": {
-                            "Index": 0,
-                            "Version": 0
-                          },
-                          "String": "skillindex"
-                        },
-                        "GetterKey": "",
-                        "OperationType": "",
-                        "Inputs": []
-                      }
-                    ]
+                    "Inputs": []
                   },
                   {
                     "Kind": 0,
                     "Literal": {
-                      "Type": 3,
+                      "Type": 2,
                       "Bool": false,
-                      "Int": 0,
-                      "Float": 1.0,
+                      "Int": 1,
+                      "Float": 0.0,
                       "Float2": {
                         "x": 0.0,
                         "y": 0.0
@@ -2554,9 +2534,223 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ]
+                ],
+                "SourceType": "",
+                "SourceParam": -1,
+                "CompareValue": 0.0
               },
-              "Values": [],
+              "Type": "Compare",
+              "Guid": "a3f17db81df644b7a3a8a7aaf2e43210",
+              "EditorPosition": {
+                "x": 1425.0,
+                "y": 535.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "Equal",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "player.skill.currentInputType",
+                    "OperationType": "",
+                    "Inputs": []
+                  },
+                  {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 2,
+                      "Bool": false,
+                      "Int": 2,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ],
+                "SourceType": "",
+                "SourceParam": -1,
+                "CompareValue": 0.0
+              },
+              "Type": "Compare",
+              "Guid": "d7ae4f9f0dc144b4b7bcbe9b9af779c2",
+              "EditorPosition": {
+                "x": 1425.0,
+                "y": 790.0
+              }
+            },
+            {
+              "SetterKey": "player.skill.currentChainSlot.set",
+              "Key": "",
+              "Value": {
+                "Kind": 1,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "player.skill.currentChainId",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [
+                {
+                  "Kind": 1,
+                  "Literal": {
+                    "Type": 3,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "player.skill.currentChainId",
+                  "OperationType": "",
+                  "Inputs": []
+                },
+                {
+                  "Kind": 2,
+                  "Literal": {
+                    "Type": 3,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "",
+                  "OperationType": "Add",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "Literal": {
+                        "Type": 3,
+                        "Bool": false,
+                        "Int": 0,
+                        "Float": 0.0,
+                        "Float2": {
+                          "x": 0.0,
+                          "y": 0.0
+                        },
+                        "Float3": {
+                          "x": 0.0,
+                          "y": 0.0,
+                          "z": 0.0
+                        },
+                        "Entity": {
+                          "Index": 0,
+                          "Version": 0
+                        },
+                        "String": ""
+                      },
+                      "GetterKey": "player.skill.currentSlotIndex",
+                      "OperationType": "",
+                      "Inputs": []
+                    },
+                    {
+                      "Kind": 0,
+                      "Literal": {
+                        "Type": 3,
+                        "Bool": false,
+                        "Int": 0,
+                        "Float": 1.0,
+                        "Float2": {
+                          "x": 0.0,
+                          "y": 0.0
+                        },
+                        "Float3": {
+                          "x": 0.0,
+                          "y": 0.0,
+                          "z": 0.0
+                        },
+                        "Entity": {
+                          "Index": 0,
+                          "Version": 0
+                        },
+                        "String": ""
+                      },
+                      "GetterKey": "",
+                      "OperationType": "",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ],
               "Type": "SetValue",
               "Guid": "6f88f1092b5a403fa7c5e159bdd768e6",
               "EditorPosition": {
@@ -2591,7 +2785,7 @@
                       },
                       "String": ""
                     },
-                    "GetterKey": "unit.variables.getNumber",
+                    "GetterKey": "",
                     "OperationType": "Add",
                     "Inputs": [
                       {
@@ -2616,36 +2810,9 @@
                           },
                           "String": ""
                         },
-                        "GetterKey": "unit.variables.getNumber",
+                        "GetterKey": "player.skill.currentSlotIndex",
                         "OperationType": "",
-                        "Inputs": [
-                          {
-                            "Kind": 0,
-                            "Literal": {
-                              "Type": 7,
-                              "Bool": false,
-                              "Int": 0,
-                              "Float": 0.0,
-                              "Float2": {
-                                "x": 0.0,
-                                "y": 0.0
-                              },
-                              "Float3": {
-                                "x": 0.0,
-                                "y": 0.0,
-                                "z": 0.0
-                              },
-                              "Entity": {
-                                "Index": 0,
-                                "Version": 0
-                              },
-                              "String": "skillindex"
-                            },
-                            "GetterKey": "",
-                            "OperationType": "",
-                            "Inputs": []
-                          }
-                        ]
+                        "Inputs": []
                       },
                       {
                         "Kind": 0,
@@ -2722,36 +2889,9 @@
                           },
                           "String": ""
                         },
-                        "GetterKey": "unit.variables.getNumber",
+                        "GetterKey": "player.skill.currentChainId",
                         "OperationType": "",
-                        "Inputs": [
-                          {
-                            "Kind": 0,
-                            "Literal": {
-                              "Type": 7,
-                              "Bool": false,
-                              "Int": 0,
-                              "Float": 0.0,
-                              "Float2": {
-                                "x": 0.0,
-                                "y": 0.0
-                              },
-                              "Float3": {
-                                "x": 0.0,
-                                "y": 0.0,
-                                "z": 0.0
-                              },
-                              "Entity": {
-                                "Index": 0,
-                                "Version": 0
-                              },
-                              "String": "skillchainindex"
-                            },
-                            "GetterKey": "",
-                            "OperationType": "",
-                            "Inputs": []
-                          }
-                        ]
+                        "Inputs": []
                       }
                     ]
                   }
@@ -2770,7 +2910,7 @@
             {
               "Condition": {
                 "ConditionType": 0,
-                "CompareType": "NotEqual",
+                "CompareType": "IsTrue",
                 "Inputs": [
                   {
                     "Kind": 1,
@@ -2794,44 +2934,57 @@
                       },
                       "String": ""
                     },
-                    "GetterKey": "unit.variables.getNumber",
+                    "GetterKey": "player.skill.hasCurrentSkill",
                     "OperationType": "",
-                    "Inputs": [
-                      {
-                        "Kind": 0,
-                        "Literal": {
-                          "Type": 7,
-                          "Bool": false,
-                          "Int": 0,
-                          "Float": 0.0,
-                          "Float2": {
-                            "x": 0.0,
-                            "y": 0.0
-                          },
-                          "Float3": {
-                            "x": 0.0,
-                            "y": 0.0,
-                            "z": 0.0
-                          },
-                          "Entity": {
-                            "Index": 0,
-                            "Version": 0
-                          },
-                          "String": "skillindex"
-                        },
-                        "GetterKey": "",
-                        "OperationType": "",
-                        "Inputs": []
-                      }
-                    ]
+                    "Inputs": []
+                  }
+                ],
+                "SourceType": "",
+                "SourceParam": -1,
+                "CompareValue": 0.0
+              },
+              "Type": "Compare",
+              "Guid": "4421b6b78d1345148ae0c6bdd0090dd0",
+              "EditorPosition": {
+                "x": 943.0,
+                "y": 669.0
+              }
+            },
+            {
+              "SetterKey": "unit.move.setStateMoveMultiplier",
+              "Key": "",
+              "Value": {
+                "Kind": 1,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
                   },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "world.skill.getSkillCastingMoveMultiplier",
+                "OperationType": "",
+                "Inputs": [
                   {
-                    "Kind": 0,
+                    "Kind": 1,
                     "Literal": {
                       "Type": 3,
                       "Bool": false,
                       "Int": 0,
-                      "Float": -1.0,
+                      "Float": 0.0,
                       "Float2": {
                         "x": 0.0,
                         "y": 0.0
@@ -2847,20 +3000,82 @@
                       },
                       "String": ""
                     },
-                    "GetterKey": "",
+                    "GetterKey": "player.skill.currentSkillId",
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
-              "Type": "Compare",
-              "Guid": "4421b6b78d1345148ae0c6bdd0090dd0",
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "2ad24c3ce3d54d6c99ad7bd7c3b6f8e1",
               "EditorPosition": {
-                "x": 943.0,
-                "y": 669.0
+                "x": 615.0,
+                "y": 555.0
+              }
+            },
+            {
+              "SetterKey": "unit.move.setStateMoveMultiplier",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 1.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [
+                {
+                  "Kind": 0,
+                  "Literal": {
+                    "Type": 3,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 1.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "",
+                  "OperationType": "",
+                  "Inputs": []
+                }
+              ],
+              "Type": "SetValue",
+              "Guid": "d9c5135bd2b146cebf91b34859c80164",
+              "EditorPosition": {
+                "x": 1812.8,
+                "y": 936.0
               }
             },
             {
@@ -2892,24 +3107,51 @@
                 "OperationType": "",
                 "Inputs": []
               },
-              "Values": [],
+              "Values": [
+                {
+                  "Kind": 0,
+                  "Literal": {
+                    "Type": 1,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "",
+                  "OperationType": "",
+                  "Inputs": []
+                }
+              ],
               "Type": "SetValue",
               "Guid": "8ade1650842a4e2784c90b6ffd75a441",
               "EditorPosition": {
-                "x": 1699.0,
-                "y": 806.0
+                "x": 1699.2,
+                "y": 936.0
               }
             },
             {
-              "SetterKey": "unit.variables.set",
-              "Key": "skillindex",
+              "SetterKey": "player.skill.currentChainSlot.clear",
+              "Key": "",
               "Value": {
                 "Kind": 0,
                 "Literal": {
-                  "Type": 3,
-                  "Bool": false,
+                  "Type": 1,
+                  "Bool": true,
                   "Int": 0,
-                  "Float": -1.0,
+                  "Float": 0.0,
                   "Float2": {
                     "x": 0.0,
                     "y": 0.0
@@ -2929,55 +3171,45 @@
                 "OperationType": "",
                 "Inputs": []
               },
-              "Values": [],
+              "Values": [
+                {
+                  "Kind": 0,
+                  "Literal": {
+                    "Type": 1,
+                    "Bool": true,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "",
+                  "OperationType": "",
+                  "Inputs": []
+                }
+              ],
               "Type": "SetValue",
               "Guid": "70ec76c749d84d3fb0e21f7454c798f7",
               "EditorPosition": {
-                "x": 1839.0,
-                "y": 807.0
-              }
-            },
-            {
-              "SetterKey": "unit.variables.set",
-              "Key": "skillchainindex",
-              "Value": {
-                "Kind": 0,
-                "Literal": {
-                  "Type": 3,
-                  "Bool": false,
-                  "Int": 0,
-                  "Float": -1.0,
-                  "Float2": {
-                    "x": 0.0,
-                    "y": 0.0
-                  },
-                  "Float3": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
-                  },
-                  "Entity": {
-                    "Index": 0,
-                    "Version": 0
-                  },
-                  "String": ""
-                },
-                "GetterKey": "",
-                "OperationType": "",
-                "Inputs": []
-              },
-              "Values": [],
-              "Type": "SetValue",
-              "Guid": "651258af3a084260a229975f3b2e8a77",
-              "EditorPosition": {
-                "x": 1994.0,
-                "y": 808.0
+                "x": 1929.6001,
+                "y": 936.0
               }
             },
             {
               "Condition": {
                 "ConditionType": 0,
-                "CompareType": "GreaterThan",
+                "CompareType": "GreaterOrEqual",
                 "Inputs": [
                   {
                     "Kind": 1,
@@ -3027,7 +3259,7 @@
                       },
                       "String": ""
                     },
-                    "GetterKey": "unit.skillModifier.getMpCost",
+                    "GetterKey": "world.skill.getSkillMpCost",
                     "OperationType": "",
                     "Inputs": [
                       {
@@ -3052,63 +3284,9 @@
                           },
                           "String": ""
                         },
-                        "GetterKey": "world.skill.getSkillMpCost",
+                        "GetterKey": "player.skill.currentSkillId",
                         "OperationType": "",
-                        "Inputs": [
-                          {
-                            "Kind": 1,
-                            "Literal": {
-                              "Type": 3,
-                              "Bool": false,
-                              "Int": 0,
-                              "Float": 0.0,
-                              "Float2": {
-                                "x": 0.0,
-                                "y": 0.0
-                              },
-                              "Float3": {
-                                "x": 0.0,
-                                "y": 0.0,
-                                "z": 0.0
-                              },
-                              "Entity": {
-                                "Index": 0,
-                                "Version": 0
-                              },
-                              "String": ""
-                            },
-                            "GetterKey": "unit.variables.getNumber",
-                            "OperationType": "",
-                            "Inputs": [
-                              {
-                                "Kind": 0,
-                                "Literal": {
-                                  "Type": 7,
-                                  "Bool": false,
-                                  "Int": 0,
-                                  "Float": 0.0,
-                                  "Float2": {
-                                    "x": 0.0,
-                                    "y": 0.0
-                                  },
-                                  "Float3": {
-                                    "x": 0.0,
-                                    "y": 0.0,
-                                    "z": 0.0
-                                  },
-                                  "Entity": {
-                                    "Index": 0,
-                                    "Version": 0
-                                  },
-                                  "String": "skillindex"
-                                },
-                                "GetterKey": "",
-                                "OperationType": "",
-                                "Inputs": []
-                              }
-                            ]
-                          }
-                        ]
+                        "Inputs": []
                       }
                     ]
                   }
@@ -3149,7 +3327,7 @@
                   },
                   "String": ""
                 },
-                "GetterKey": "unit.skillModifier.getMpCost",
+                "GetterKey": "world.skill.getSkillMpCost",
                 "OperationType": "",
                 "Inputs": [
                   {
@@ -3174,72 +3352,72 @@
                       },
                       "String": ""
                     },
-                    "GetterKey": "world.skill.getSkillMpCost",
+                    "GetterKey": "player.skill.currentSkillId",
                     "OperationType": "",
-                    "Inputs": [
-                      {
-                        "Kind": 1,
-                        "Literal": {
-                          "Type": 3,
-                          "Bool": false,
-                          "Int": 0,
-                          "Float": 0.0,
-                          "Float2": {
-                            "x": 0.0,
-                            "y": 0.0
-                          },
-                          "Float3": {
-                            "x": 0.0,
-                            "y": 0.0,
-                            "z": 0.0
-                          },
-                          "Entity": {
-                            "Index": 0,
-                            "Version": 0
-                          },
-                          "String": ""
-                        },
-                        "GetterKey": "world.variables.getNumber",
-                        "OperationType": "",
-                        "Inputs": [
-                          {
-                            "Kind": 0,
-                            "Literal": {
-                              "Type": 7,
-                              "Bool": false,
-                              "Int": 0,
-                              "Float": 0.0,
-                              "Float2": {
-                                "x": 0.0,
-                                "y": 0.0
-                              },
-                              "Float3": {
-                                "x": 0.0,
-                                "y": 0.0,
-                                "z": 0.0
-                              },
-                              "Entity": {
-                                "Index": 0,
-                                "Version": 0
-                              },
-                              "String": "skillindex"
-                            },
-                            "GetterKey": "",
-                            "OperationType": "",
-                            "Inputs": []
-                          }
-                        ]
-                      }
-                    ]
+                    "Inputs": []
                   }
                 ]
               },
-              "Values": [],
+              "Values": [
+                {
+                  "Kind": 1,
+                  "Literal": {
+                    "Type": 3,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "world.skill.getSkillMpCost",
+                  "OperationType": "",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "Literal": {
+                        "Type": 3,
+                        "Bool": false,
+                        "Int": 0,
+                        "Float": 0.0,
+                        "Float2": {
+                          "x": 0.0,
+                          "y": 0.0
+                        },
+                        "Float3": {
+                          "x": 0.0,
+                          "y": 0.0,
+                          "z": 0.0
+                        },
+                        "Entity": {
+                          "Index": 0,
+                          "Version": 0
+                        },
+                        "String": ""
+                      },
+                      "GetterKey": "player.skill.currentSkillId",
+                      "OperationType": "",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ],
               "Type": "SetValue",
               "Guid": "c782a7f4f83a4e848baa7f9c849af0d2",
               "EditorPosition": {
-                "x": 783.0,
-                "y": 671.0
+                "x": 780.6666,
+                "y": 670.6667
               }
             },
             {
@@ -3278,6 +3456,7 @@
                 "SourceParam": -1,
                 "CompareValue": 0.0
               },
+              "TickOrder": 0,
               "Type": "Monitor",
               "Guid": "339387cbfc64496c8820fb1e214a9158",
               "EditorPosition": {
@@ -3397,6 +3576,491 @@
                 "x": 548.0,
                 "y": 347.0
               }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "casting",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "Abs",
+                "Inputs": [
+                  {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ]
+              },
+              "Values": [
+                {
+                  "Kind": 0,
+                  "Literal": {
+                    "Type": 1,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "",
+                  "OperationType": "Abs",
+                  "Inputs": [
+                    {
+                      "Kind": 0,
+                      "Literal": {
+                        "Type": 3,
+                        "Bool": false,
+                        "Int": 0,
+                        "Float": 0.0,
+                        "Float2": {
+                          "x": 0.0,
+                          "y": 0.0
+                        },
+                        "Float3": {
+                          "x": 0.0,
+                          "y": 0.0,
+                          "z": 0.0
+                        },
+                        "Entity": {
+                          "Index": 0,
+                          "Version": 0
+                        },
+                        "String": ""
+                      },
+                      "GetterKey": "",
+                      "OperationType": "",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ],
+              "Type": "SetValue",
+              "Guid": "28bae935fbf449adb454b96ff890adc6",
+              "EditorPosition": {
+                "x": 5.333313,
+                "y": 89.33334
+              }
+            },
+            {
+              "EventName": "skill.afterRequest",
+              "TickOrder": 0,
+              "Type": "Addition",
+              "Guid": "1ecaf766372b47c98f7d188ccb04ce71",
+              "EditorPosition": {
+                "x": 1945.0,
+                "y": 665.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsTrue",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "unit.variables.getBool",
+                    "OperationType": "",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 7,
+                          "Bool": false,
+                          "Int": 0,
+                          "Float": 0.0,
+                          "Float2": {
+                            "x": 0.0,
+                            "y": 0.0
+                          },
+                          "Float3": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "Entity": {
+                            "Index": 0,
+                            "Version": 0
+                          },
+                          "String": "extraCast.pending"
+                        },
+                        "GetterKey": "",
+                        "OperationType": "",
+                        "Inputs": []
+                      }
+                    ]
+                  }
+                ],
+                "SourceType": "",
+                "SourceParam": -1,
+                "CompareValue": 0.0
+              },
+              "Type": "Compare",
+              "Guid": "ae7dfd1376dc459f867fab373373c18d",
+              "EditorPosition": {
+                "x": 2185.0,
+                "y": 665.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsFalse",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "unit.variables.getBool",
+                    "OperationType": "",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 7,
+                          "Bool": false,
+                          "Int": 0,
+                          "Float": 0.0,
+                          "Float2": {
+                            "x": 0.0,
+                            "y": 0.0
+                          },
+                          "Float3": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "Entity": {
+                            "Index": 0,
+                            "Version": 0
+                          },
+                          "String": "extraCast.pending"
+                        },
+                        "GetterKey": "",
+                        "OperationType": "",
+                        "Inputs": []
+                      }
+                    ]
+                  }
+                ],
+                "SourceType": "",
+                "SourceParam": -1,
+                "CompareValue": 0.0
+              },
+              "TickOrder": 0,
+              "Type": "Monitor",
+              "Guid": "2ba1eecf523f4f3db2af683203a2d409",
+              "EditorPosition": {
+                "x": 2425.0,
+                "y": 790.0
+              }
+            },
+            {
+              "SetterKey": "player.skill.currentChainSlot.set",
+              "Key": "",
+              "Value": {
+                "Kind": 1,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "world.skill.getCurrentChainId",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [
+                {
+                  "Kind": 1,
+                  "Literal": {
+                    "Type": 3,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "world.skill.getCurrentChainId",
+                  "OperationType": "",
+                  "Inputs": []
+                },
+                {
+                  "Kind": 0,
+                  "Literal": {
+                    "Type": 3,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "",
+                  "OperationType": "",
+                  "Inputs": []
+                }
+              ],
+              "Type": "SetValue",
+              "Guid": "c6e4eb2746794d359897129af6f461b6",
+              "EditorPosition": {
+                "x": 710.0,
+                "y": 347.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "GreaterOrEqual",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "unit.mana.currentMana",
+                    "OperationType": "",
+                    "Inputs": []
+                  },
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "world.skill.getSkillMpCost",
+                    "OperationType": "",
+                    "Inputs": [
+                      {
+                        "Kind": 1,
+                        "Literal": {
+                          "Type": 3,
+                          "Bool": false,
+                          "Int": 0,
+                          "Float": 0.0,
+                          "Float2": {
+                            "x": 0.0,
+                            "y": 0.0
+                          },
+                          "Float3": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "Entity": {
+                            "Index": 0,
+                            "Version": 0
+                          },
+                          "String": ""
+                        },
+                        "GetterKey": "player.skill.currentSkillId",
+                        "OperationType": "",
+                        "Inputs": []
+                      }
+                    ]
+                  }
+                ],
+                "SourceType": "",
+                "SourceParam": -1,
+                "CompareValue": 0.0
+              },
+              "Type": "Compare",
+              "Guid": "c0c01666d8d54e11a3e5b28b10b49e76",
+              "EditorPosition": {
+                "x": 1150.0,
+                "y": 347.0
+              }
+            },
+            {
+              "EventName": "skill.beforeCast",
+              "TickOrder": 0,
+              "Type": "Addition",
+              "Guid": "901dca3961534b64a376bd2ee099a50e",
+              "EditorPosition": {
+                "x": 930.0,
+                "y": 347.0
+              }
+            },
+            {
+              "EventName": "skill.beforeRequest",
+              "TickOrder": 0,
+              "Type": "Addition",
+              "Guid": "47280a179d7b4a63804658a5e2058124",
+              "EditorPosition": {
+                "x": 1570.0,
+                "y": 535.0
+              }
+            },
+            {
+              "EventName": "skill.beforeRequest",
+              "TickOrder": 0,
+              "Type": "Addition",
+              "Guid": "39fda60ef3364b77bd3e1261227b36ec",
+              "EditorPosition": {
+                "x": 1570.0,
+                "y": 790.0
+              }
             }
           ],
           "Edges": [
@@ -3433,12 +4097,66 @@
             {
               "OutputNodeGuid": "8c7c2c43f1ed42dc8b3d06fd3619cacc",
               "OutputPortName": "OnComplete",
-              "InputNodeGuid": "7c8a9665ce7c45f191a0d5e5c4b521d0",
+              "InputNodeGuid": "a3f17db81df644b7a3a8a7aaf2e43210",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "a3f17db81df644b7a3a8a7aaf2e43210",
+              "OutputPortName": "True",
+              "InputNodeGuid": "47280a179d7b4a63804658a5e2058124",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "a3f17db81df644b7a3a8a7aaf2e43210",
+              "OutputPortName": "False",
+              "InputNodeGuid": "d7ae4f9f0dc144b4b7bcbe9b9af779c2",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "d7ae4f9f0dc144b4b7bcbe9b9af779c2",
+              "OutputPortName": "True",
+              "InputNodeGuid": "39fda60ef3364b77bd3e1261227b36ec",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "d7ae4f9f0dc144b4b7bcbe9b9af779c2",
+              "OutputPortName": "False",
+              "InputNodeGuid": "8ade1650842a4e2784c90b6ffd75a441",
               "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "7c8a9665ce7c45f191a0d5e5c4b521d0",
               "OutputPortName": "Out",
+              "InputNodeGuid": "1ecaf766372b47c98f7d188ccb04ce71",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "f9c8822bf7b1424dbcb37b570b1d2a99",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "1ecaf766372b47c98f7d188ccb04ce71",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "1ecaf766372b47c98f7d188ccb04ce71",
+              "OutputPortName": "OnStart",
+              "InputNodeGuid": "ae7dfd1376dc459f867fab373373c18d",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "ae7dfd1376dc459f867fab373373c18d",
+              "OutputPortName": "False",
+              "InputNodeGuid": "a75bb15a3efd47a1afd0717cf8092c92",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "ae7dfd1376dc459f867fab373373c18d",
+              "OutputPortName": "True",
+              "InputNodeGuid": "2ba1eecf523f4f3db2af683203a2d409",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "2ba1eecf523f4f3db2af683203a2d409",
+              "OutputPortName": "OnChangeTrue",
               "InputNodeGuid": "a75bb15a3efd47a1afd0717cf8092c92",
               "InputPortName": "Check"
             },
@@ -3451,7 +4169,7 @@
             {
               "OutputNodeGuid": "b13b0bbf83e9442c9b42ed2411c8c375",
               "OutputPortName": "OnStart",
-              "InputNodeGuid": "52f1da8897804f14af5d8caee987d4ad",
+              "InputNodeGuid": "2ad24c3ce3d54d6c99ad7bd7c3b6f8e1",
               "InputPortName": "In"
             },
             {
@@ -3475,13 +4193,13 @@
             {
               "OutputNodeGuid": "8ade1650842a4e2784c90b6ffd75a441",
               "OutputPortName": "Out",
-              "InputNodeGuid": "70ec76c749d84d3fb0e21f7454c798f7",
+              "InputNodeGuid": "d9c5135bd2b146cebf91b34859c80164",
               "InputPortName": "In"
             },
             {
-              "OutputNodeGuid": "70ec76c749d84d3fb0e21f7454c798f7",
+              "OutputNodeGuid": "d9c5135bd2b146cebf91b34859c80164",
               "OutputPortName": "Out",
-              "InputNodeGuid": "651258af3a084260a229975f3b2e8a77",
+              "InputNodeGuid": "70ec76c749d84d3fb0e21f7454c798f7",
               "InputPortName": "In"
             },
             {
@@ -3493,6 +4211,12 @@
             {
               "OutputNodeGuid": "b13b0bbf83e9442c9b42ed2411c8c375",
               "OutputPortName": "OnValueChange",
+              "InputNodeGuid": "2ad24c3ce3d54d6c99ad7bd7c3b6f8e1",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "2ad24c3ce3d54d6c99ad7bd7c3b6f8e1",
+              "OutputPortName": "Out",
               "InputNodeGuid": "6242611392b04e54bdc35a28ad8f5c92",
               "InputPortName": "Check"
             },
@@ -3547,7 +4271,43 @@
             {
               "OutputNodeGuid": "0798beea61a3475f9910dc61b8bb543d",
               "OutputPortName": "True",
+              "InputNodeGuid": "c6e4eb2746794d359897129af6f461b6",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "c6e4eb2746794d359897129af6f461b6",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "901dca3961534b64a376bd2ee099a50e",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "901dca3961534b64a376bd2ee099a50e",
+              "OutputPortName": "OnStart",
+              "InputNodeGuid": "c0c01666d8d54e11a3e5b28b10b49e76",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "47280a179d7b4a63804658a5e2058124",
+              "OutputPortName": "OnStart",
+              "InputNodeGuid": "f9c8822bf7b1424dbcb37b570b1d2a99",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "39fda60ef3364b77bd3e1261227b36ec",
+              "OutputPortName": "OnStart",
+              "InputNodeGuid": "7c8a9665ce7c45f191a0d5e5c4b521d0",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "c0c01666d8d54e11a3e5b28b10b49e76",
+              "OutputPortName": "True",
               "InputNodeGuid": "c25a5f0de2b64a8eaf0536591f5e6366",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "c0c01666d8d54e11a3e5b28b10b49e76",
+              "OutputPortName": "False",
+              "InputNodeGuid": "70ec76c749d84d3fb0e21f7454c798f7",
               "InputPortName": "In"
             },
             {
@@ -3555,13 +4315,19 @@
               "OutputPortName": "True",
               "InputNodeGuid": "8ade1650842a4e2784c90b6ffd75a441",
               "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "98cce61a1a104d39b6e60a85066754aa",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "28bae935fbf449adb454b96ff890adc6",
+              "InputPortName": "In"
             }
           ],
           "ViewPosition": {
-            "x": -405.0,
-            "y": -232.0
+            "x": -1391.2,
+            "y": -373.6
           },
-          "ViewScale": 0.8695652
+          "ViewScale": 1.0
         },
         {
           "Guid": "401a6ec57a204d869887712463f38f54",
@@ -3578,6 +4344,954 @@
             }
           ],
           "Edges": [],
+          "ViewPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "ViewScale": 1.0
+        },
+        {
+          "Guid": "cc6179eb6f1545078a49a0d7e4544a55",
+          "Name": "ExtraCast",
+          "EntryNodeGuid": "2f30fef31c424c99a7a0b7890df0b660",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "2f30fef31c424c99a7a0b7890df0b660",
+              "EditorPosition": {
+                "x": 80.0,
+                "y": 400.0
+              }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "extraCast.skillId",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [
+                {
+                  "Kind": 0,
+                  "Literal": {
+                    "Type": 2,
+                    "Bool": false,
+                    "Int": -1,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "",
+                  "OperationType": "",
+                  "Inputs": []
+                }
+              ],
+              "Type": "SetValue",
+              "Guid": "886b10f6ce794eb1a37499a8a31ba29f",
+              "EditorPosition": {
+                "x": 300.0,
+                "y": 360.0
+              }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "extraCast.pending",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [
+                {
+                  "Kind": 0,
+                  "Literal": {
+                    "Type": 1,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "",
+                  "OperationType": "",
+                  "Inputs": []
+                }
+              ],
+              "Type": "SetValue",
+              "Guid": "b2c4f8433b70468f834fa6c5b93f9474",
+              "EditorPosition": {
+                "x": 520.0,
+                "y": 360.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsTrue",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "unit.variables.getBool",
+                    "OperationType": "",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 7,
+                          "Bool": false,
+                          "Int": 0,
+                          "Float": 0.0,
+                          "Float2": {
+                            "x": 0.0,
+                            "y": 0.0
+                          },
+                          "Float3": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "Entity": {
+                            "Index": 0,
+                            "Version": 0
+                          },
+                          "String": "extraCast.pending"
+                        },
+                        "GetterKey": "",
+                        "OperationType": "",
+                        "Inputs": []
+                      }
+                    ]
+                  }
+                ],
+                "SourceType": "",
+                "SourceParam": -1,
+                "CompareValue": 0.0
+              },
+              "TickOrder": 0,
+              "Type": "Monitor",
+              "Guid": "1e103eb1ac174ccaad407a057f15fba9",
+              "EditorPosition": {
+                "x": 750.0,
+                "y": 400.0
+              }
+            },
+            {
+              "Duration": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.1,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "TickOrder": 0,
+              "Type": "Timer",
+              "Guid": "4f7ef8171ee54cb8a3de5bbef0a3f54e",
+              "EditorPosition": {
+                "x": 980.0,
+                "y": 400.0
+              }
+            },
+            {
+              "EventName": "skill.extraCast",
+              "TickOrder": 0,
+              "Type": "Addition",
+              "Guid": "4eef735cdca24f2e9f355adfd3c47d1a",
+              "EditorPosition": {
+                "x": 1210.0,
+                "y": 400.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "Equal",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "world.skill.getInputType",
+                    "OperationType": "",
+                    "Inputs": [
+                      {
+                        "Kind": 1,
+                        "Literal": {
+                          "Type": 3,
+                          "Bool": false,
+                          "Int": 0,
+                          "Float": 0.0,
+                          "Float2": {
+                            "x": 0.0,
+                            "y": 0.0
+                          },
+                          "Float3": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "Entity": {
+                            "Index": 0,
+                            "Version": 0
+                          },
+                          "String": ""
+                        },
+                        "GetterKey": "unit.variables.getNumber",
+                        "OperationType": "",
+                        "Inputs": [
+                          {
+                            "Kind": 0,
+                            "Literal": {
+                              "Type": 7,
+                              "Bool": false,
+                              "Int": 0,
+                              "Float": 0.0,
+                              "Float2": {
+                                "x": 0.0,
+                                "y": 0.0
+                              },
+                              "Float3": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 0.0
+                              },
+                              "Entity": {
+                                "Index": 0,
+                                "Version": 0
+                              },
+                              "String": "extraCast.skillId"
+                            },
+                            "GetterKey": "",
+                            "OperationType": "",
+                            "Inputs": []
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 2,
+                      "Bool": false,
+                      "Int": 1,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ],
+                "SourceType": "",
+                "SourceParam": -1,
+                "CompareValue": 0.0
+              },
+              "Type": "Compare",
+              "Guid": "855a0eaf62f948f7b93c067ccfaa2f31",
+              "EditorPosition": {
+                "x": 1435.0,
+                "y": 340.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "Equal",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "world.skill.getInputType",
+                    "OperationType": "",
+                    "Inputs": [
+                      {
+                        "Kind": 1,
+                        "Literal": {
+                          "Type": 3,
+                          "Bool": false,
+                          "Int": 0,
+                          "Float": 0.0,
+                          "Float2": {
+                            "x": 0.0,
+                            "y": 0.0
+                          },
+                          "Float3": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "Entity": {
+                            "Index": 0,
+                            "Version": 0
+                          },
+                          "String": ""
+                        },
+                        "GetterKey": "unit.variables.getNumber",
+                        "OperationType": "",
+                        "Inputs": [
+                          {
+                            "Kind": 0,
+                            "Literal": {
+                              "Type": 7,
+                              "Bool": false,
+                              "Int": 0,
+                              "Float": 0.0,
+                              "Float2": {
+                                "x": 0.0,
+                                "y": 0.0
+                              },
+                              "Float3": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 0.0
+                              },
+                              "Entity": {
+                                "Index": 0,
+                                "Version": 0
+                              },
+                              "String": "extraCast.skillId"
+                            },
+                            "GetterKey": "",
+                            "OperationType": "",
+                            "Inputs": []
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 2,
+                      "Bool": false,
+                      "Int": 2,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ],
+                "SourceType": "",
+                "SourceParam": -1,
+                "CompareValue": 0.0
+              },
+              "Type": "Compare",
+              "Guid": "bf72912e855f41caa2782448f5a4ca6c",
+              "EditorPosition": {
+                "x": 1435.0,
+                "y": 540.0
+              }
+            },
+            {
+              "SkillId": {
+                "Kind": 1,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "unit.variables.getNumber",
+                "OperationType": "",
+                "Inputs": [
+                  {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 7,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": "extraCast.skillId"
+                    },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ]
+              },
+              "Input": {
+                "Position": {
+                  "Kind": 1,
+                  "Literal": {
+                    "Type": 5,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "unit.transform.position",
+                  "OperationType": "",
+                  "Inputs": []
+                },
+                "TargetEntity": {
+                  "Kind": 1,
+                  "Literal": {
+                    "Type": 6,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "unit.self.entity",
+                  "OperationType": "",
+                  "Inputs": []
+                }
+              },
+              "Type": "RequestSkillWithAddition",
+              "Guid": "c3efb7a954ee48d49779c65ca3ec9ee8",
+              "EditorPosition": {
+                "x": 1660.0,
+                "y": 340.0
+              }
+            },
+            {
+              "SkillId": {
+                "Kind": 1,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "unit.variables.getNumber",
+                "OperationType": "",
+                "Inputs": [
+                  {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 7,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": "extraCast.skillId"
+                    },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ]
+              },
+              "Input": {
+                "Position": {
+                  "Kind": 1,
+                  "Literal": {
+                    "Type": 5,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "world.input.pointerWorldPosition",
+                  "OperationType": "",
+                  "Inputs": []
+                },
+                "TargetEntity": {
+                  "Kind": 0,
+                  "Literal": {
+                    "Type": 6,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "",
+                  "OperationType": "",
+                  "Inputs": []
+                }
+              },
+              "Type": "RequestSkillWithAddition",
+              "Guid": "85bdd7e6f8f544099baa866a5d1cc3cf",
+              "EditorPosition": {
+                "x": 1660.0,
+                "y": 540.0
+              }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "extraCast.skillId",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [
+                {
+                  "Kind": 0,
+                  "Literal": {
+                    "Type": 2,
+                    "Bool": false,
+                    "Int": -1,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "",
+                  "OperationType": "",
+                  "Inputs": []
+                }
+              ],
+              "Type": "SetValue",
+              "Guid": "7f1c4fe7245d4e14919420f0f941f944",
+              "EditorPosition": {
+                "x": 1900.0,
+                "y": 440.0
+              }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "extraCast.pending",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [
+                {
+                  "Kind": 0,
+                  "Literal": {
+                    "Type": 1,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "",
+                  "OperationType": "",
+                  "Inputs": []
+                }
+              ],
+              "Type": "SetValue",
+              "Guid": "a95a6b9a04a64e6e87a549e4cc4ecc04",
+              "EditorPosition": {
+                "x": 2120.0,
+                "y": 440.0
+              }
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "2f30fef31c424c99a7a0b7890df0b660",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "886b10f6ce794eb1a37499a8a31ba29f",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "886b10f6ce794eb1a37499a8a31ba29f",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "b2c4f8433b70468f834fa6c5b93f9474",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "b2c4f8433b70468f834fa6c5b93f9474",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "1e103eb1ac174ccaad407a057f15fba9",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "1e103eb1ac174ccaad407a057f15fba9",
+              "OutputPortName": "OnChangeTrue",
+              "InputNodeGuid": "4f7ef8171ee54cb8a3de5bbef0a3f54e",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "4f7ef8171ee54cb8a3de5bbef0a3f54e",
+              "OutputPortName": "OnComplete",
+              "InputNodeGuid": "4eef735cdca24f2e9f355adfd3c47d1a",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "4eef735cdca24f2e9f355adfd3c47d1a",
+              "OutputPortName": "OnStart",
+              "InputNodeGuid": "855a0eaf62f948f7b93c067ccfaa2f31",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "855a0eaf62f948f7b93c067ccfaa2f31",
+              "OutputPortName": "True",
+              "InputNodeGuid": "c3efb7a954ee48d49779c65ca3ec9ee8",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "855a0eaf62f948f7b93c067ccfaa2f31",
+              "OutputPortName": "False",
+              "InputNodeGuid": "bf72912e855f41caa2782448f5a4ca6c",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "bf72912e855f41caa2782448f5a4ca6c",
+              "OutputPortName": "True",
+              "InputNodeGuid": "85bdd7e6f8f544099baa866a5d1cc3cf",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "bf72912e855f41caa2782448f5a4ca6c",
+              "OutputPortName": "False",
+              "InputNodeGuid": "7f1c4fe7245d4e14919420f0f941f944",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "c3efb7a954ee48d49779c65ca3ec9ee8",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "7f1c4fe7245d4e14919420f0f941f944",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "85bdd7e6f8f544099baa866a5d1cc3cf",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "7f1c4fe7245d4e14919420f0f941f944",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "7f1c4fe7245d4e14919420f0f941f944",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "a95a6b9a04a64e6e87a549e4cc4ecc04",
+              "InputPortName": "In"
+            }
+          ],
           "ViewPosition": {
             "x": 0.0,
             "y": 0.0
@@ -3633,6 +5347,7 @@
                 "SourceParam": -1,
                 "CompareValue": 0.0
               },
+              "TickOrder": 0,
               "Type": "Monitor",
               "Guid": "e17763e4cc344b8ba012afedbcacd46d",
               "EditorPosition": {
@@ -3757,6 +5472,76 @@
         }
       ],
       "Id": 2
+    },
+    {
+      "Graphs": [
+        {
+          "Guid": "ce9e5fc4fd724521aa1c3aa4c1bb8eb2",
+          "Name": "Idle",
+          "EntryNodeGuid": "f87878e4a6f24d8598383b1a0f7a0ff1",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "f87878e4a6f24d8598383b1a0f7a0ff1",
+              "EditorPosition": {
+                "x": 120.0,
+                "y": 180.0
+              }
+            },
+            {
+              "SetterKey": "unit.animation.setName",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Idle"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "38c17f531d4a407096e94eab5cef73de",
+              "EditorPosition": {
+                "x": 400.0,
+                "y": 180.0
+              }
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "f87878e4a6f24d8598383b1a0f7a0ff1",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "38c17f531d4a407096e94eab5cef73de",
+              "InputPortName": "In"
+            }
+          ],
+          "ViewPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "ViewScale": 1.0
+        }
+      ],
+      "Id": 3
     }
   ]
 }

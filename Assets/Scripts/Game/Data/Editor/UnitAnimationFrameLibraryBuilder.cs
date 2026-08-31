@@ -13,6 +13,11 @@ namespace CrystalMagic.Editor.Data
     {
         internal const string AssetPath = "Assets/Res/Data/UnitAnimationFrameLibrary.asset";
         private const string ProfileDataPath = "Assets/Res/Data/UnitAnimationProfileDataTable.json";
+        internal static readonly string[] EffectVisualPrefabFolders =
+        {
+            "Assets/Res/Prefab/Projectile",
+            "Assets/Res/Prefab/VFX",
+        };
 
         [InitializeOnLoadMethod]
         private static void BuildMissingLibraryAfterDomainReload()
@@ -67,6 +72,8 @@ namespace CrystalMagic.Editor.Data
                     AddPath(paths, entry.RightClipPath);
                 }
             }
+
+            CollectEffectVisualClipPaths(paths);
 
             List<UnitAnimationFrameTrack> tracks = new(paths.Count);
             foreach (string path in paths)
@@ -136,6 +143,31 @@ namespace CrystalMagic.Editor.Data
                 paths.Add(path);
         }
 
+        private static void CollectEffectVisualClipPaths(HashSet<string> paths)
+        {
+            string[] guids = AssetDatabase.FindAssets("t:Prefab", EffectVisualPrefabFolders);
+            for (int index = 0; index < guids.Length; index++)
+            {
+                string prefabPath = AssetDatabase.GUIDToAssetPath(guids[index]);
+                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+                SpriteEffectAnimationAuthoring authoring = prefab != null
+                    ? prefab.GetComponent<SpriteEffectAnimationAuthoring>()
+                    : null;
+                if (authoring == null)
+                    continue;
+
+                AddClipPath(paths, authoring.EnterClip);
+                AddClipPath(paths, authoring.LoopClip);
+                AddClipPath(paths, authoring.ExitClip);
+            }
+        }
+
+        private static void AddClipPath(HashSet<string> paths, AnimationClip clip)
+        {
+            if (clip != null)
+                AddPath(paths, AssetDatabase.GetAssetPath(clip));
+        }
+
         [Serializable]
         private sealed class ProfileTable
         {
@@ -173,11 +205,26 @@ namespace CrystalMagic.Editor.Data
                 {
                     string path = paths[pathIndex];
                     if (path == "Assets/Res/Data/UnitAnimationProfileDataTable.json" ||
-                        path.EndsWith(".anim", StringComparison.OrdinalIgnoreCase))
+                        path.EndsWith(".anim", StringComparison.OrdinalIgnoreCase) ||
+                        IsEffectVisualPrefabPath(path))
                     {
                         return true;
                     }
                 }
+            }
+
+            return false;
+        }
+
+        private static bool IsEffectVisualPrefabPath(string path)
+        {
+            if (!path.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            for (int index = 0; index < UnitAnimationFrameLibraryBuilder.EffectVisualPrefabFolders.Length; index++)
+            {
+                if (path.StartsWith(UnitAnimationFrameLibraryBuilder.EffectVisualPrefabFolders[index] + "/", StringComparison.Ordinal))
+                    return true;
             }
 
             return false;

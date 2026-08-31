@@ -27,6 +27,7 @@ namespace CrystalMagic.Editor.Data
         private Type _loadedType;
         private FieldInfo[] _fields;
         private List<object> _rows = new();
+        private int _selectedRowIndex = -1;
         private bool _isDirty;
         private string _statusText = "";
 
@@ -37,7 +38,6 @@ namespace CrystalMagic.Editor.Data
         private string _searchText = "";
 
         // ===== 列宽 =====
-        private const float DeleteBtnWidth = 24f;
         private const float InsertColWidth = 36f;
         private const float RowHeight = 20f;
         private const float MinColWidth = 80f;
@@ -57,7 +57,15 @@ namespace CrystalMagic.Editor.Data
             w.Show();
         }
 
-        private void OnEnable() => ScanRowTypes();
+        private void OnEnable()
+        {
+            ScanRowTypes();
+            if (_rowTypes.Count == 0)
+                return;
+
+            _selectedTypeIndex = Mathf.Clamp(_selectedTypeIndex, 0, _rowTypes.Count - 1);
+            LoadTable(_rowTypes[_selectedTypeIndex]);
+        }
 
         // ─────────────────────────────────────────
         //  扫描 DataRow 子类
@@ -102,6 +110,7 @@ namespace CrystalMagic.Editor.Data
             _insertTexts.Clear();
             _fields = null;
             _loadedType = null;
+            _selectedRowIndex = -1;
             _isDirty = false;
             _statusText = "";
 
@@ -189,6 +198,35 @@ namespace CrystalMagic.Editor.Data
 
             _rows.Add(newRow);
             NormalizeRowIds();
+            _selectedRowIndex = _rows.Count - 1;
+            _isDirty = true;
+        }
+
+        private void DuplicateSelectedRow()
+        {
+            if (_selectedRowIndex < 0 || _selectedRowIndex >= _rows.Count || _loadedType == null)
+                return;
+
+            object copy = JsonUtility.FromJson(JsonUtility.ToJson(_rows[_selectedRowIndex]), _loadedType);
+            if (copy == null)
+                return;
+
+            _rows.Insert(_selectedRowIndex + 1, copy);
+            NormalizeRowIds();
+            _selectedRowIndex++;
+            _isDirty = true;
+        }
+
+        private void DeleteSelectedRow()
+        {
+            if (_selectedRowIndex < 0 || _selectedRowIndex >= _rows.Count)
+                return;
+
+            object removedRow = _rows[_selectedRowIndex];
+            _rows.RemoveAt(_selectedRowIndex);
+            _insertTexts.Remove(removedRow);
+            NormalizeRowIds();
+            _selectedRowIndex = _rows.Count == 0 ? -1 : Mathf.Min(_selectedRowIndex, _rows.Count - 1);
             _isDirty = true;
         }
 
@@ -213,11 +251,15 @@ namespace CrystalMagic.Editor.Data
                 return;
 
             object row = _rows[fromIndex];
+            object selectedRow = _selectedRowIndex >= 0 && _selectedRowIndex < _rows.Count
+                ? _rows[_selectedRowIndex]
+                : null;
             _rows.RemoveAt(fromIndex);
 
             insertIndex = Mathf.Clamp(insertIndex, 0, _rows.Count);
             _rows.Insert(insertIndex, row);
             NormalizeRowIds();
+            _selectedRowIndex = selectedRow == null ? -1 : _rows.IndexOf(selectedRow);
             _isDirty = true;
         }
 
@@ -243,26 +285,24 @@ namespace CrystalMagic.Editor.Data
             if (newIdx != _selectedTypeIndex)
             {
                 _selectedTypeIndex = newIdx;
-                _rows.Clear();
-                _loadedType = null;
-                _isDirty = false;
+                LoadTable(_rowTypes[_selectedTypeIndex]);
             }
 
-            if (GUILayout.Button("加载", EditorStyles.toolbarButton, GUILayout.Width(44))
-                && _rowTypes.Count > 0)
-                LoadTable(_rowTypes[_selectedTypeIndex]);
-
             GUI.enabled = _isDirty;
-            if (GUILayout.Button(_isDirty ? "保存 *" : "保存", EditorStyles.toolbarButton, GUILayout.Width(52)))
+            if (GUILayout.Button(_isDirty ? "Save *" : "Save", EditorStyles.toolbarButton, GUILayout.Width(52)))
                 SaveTable();
             GUI.enabled = true;
 
-            if (GUILayout.Button("+ 新增行", EditorStyles.toolbarButton, GUILayout.Width(62))
+            if (GUILayout.Button("Add", EditorStyles.toolbarButton, GUILayout.Width(52))
                 && _loadedType != null)
                 AddRow();
 
-            if (GUILayout.Button("刷新类型", EditorStyles.toolbarButton, GUILayout.Width(60)))
-                ScanRowTypes();
+            GUI.enabled = _selectedRowIndex >= 0;
+            if (GUILayout.Button("Copy", EditorStyles.toolbarButton, GUILayout.Width(56)))
+                DuplicateSelectedRow();
+            if (GUILayout.Button("Delete", EditorStyles.toolbarButton, GUILayout.Width(56)))
+                DeleteSelectedRow();
+            GUI.enabled = true;
 
             GUILayout.FlexibleSpace();
 
@@ -281,7 +321,7 @@ namespace CrystalMagic.Editor.Data
         // ─────────────────────────────────────────
         private void DrawTable()
         {
-            float totalWidth = position.width - InsertColWidth - DeleteBtnWidth - 24f;
+            float totalWidth = position.width - InsertColWidth - 24f;
             float colWidth = Mathf.Max(MinColWidth, totalWidth / _fields.Length);
 
             EditorGUILayout.BeginHorizontal(GUI.skin.box);
@@ -289,12 +329,10 @@ namespace CrystalMagic.Editor.Data
             foreach (var f in _fields)
                 EditorGUILayout.LabelField(f.Name, EditorStyles.boldLabel,
                     GUILayout.Width(colWidth), GUILayout.Height(RowHeight));
-            GUILayout.Label("", GUILayout.Width(DeleteBtnWidth));
             EditorGUILayout.EndHorizontal();
 
             _scrollPos = EditorGUILayout.BeginScrollView(_scrollPos);
 
-            int deleteIndex = -1;
             object moveRow = null;
             int moveToIndex = -1;
             Event evt = Event.current;
@@ -304,15 +342,19 @@ namespace CrystalMagic.Editor.Data
                 if (!string.IsNullOrEmpty(_searchText) && !RowMatchesSearch(row))
                     continue;
 
-                Color bg = i % 2 == 0
-                    ? new Color(0.22f, 0.22f, 0.22f)
-                    : new Color(0.28f, 0.28f, 0.28f);
+                Color bg = i == _selectedRowIndex
+                    ? new Color(0.20f, 0.38f, 0.62f)
+                    : i % 2 == 0
+                        ? new Color(0.22f, 0.22f, 0.22f)
+                        : new Color(0.28f, 0.28f, 0.28f);
                 Rect rowRect = GUILayoutUtility.GetRect(
-                    InsertColWidth + (_fields.Length * colWidth) + DeleteBtnWidth,
+                    InsertColWidth + (_fields.Length * colWidth),
                     RowHeight,
                     GUILayout.ExpandWidth(true));
 
                 EditorGUI.DrawRect(rowRect, bg);
+                if (evt.type == EventType.MouseDown && rowRect.Contains(evt.mousePosition))
+                    _selectedRowIndex = i;
 
                 Rect insertRect = new Rect(rowRect.x, rowRect.y, InsertColWidth, rowRect.height);
                 _insertTexts.TryGetValue(row, out string insertText);
@@ -364,11 +406,6 @@ namespace CrystalMagic.Editor.Data
                     currentX += colWidth;
                 }
 
-                Rect deleteRect = new Rect(rowRect.xMax - DeleteBtnWidth, rowRect.y, DeleteBtnWidth, rowRect.height);
-                GUI.color = new Color(1f, 0.4f, 0.4f);
-                if (GUI.Button(deleteRect, "X", EditorStyles.miniButton))
-                    deleteIndex = i;
-                GUI.color = Color.white;
             }
 
             EditorGUILayout.EndScrollView();
@@ -378,14 +415,6 @@ namespace CrystalMagic.Editor.Data
                 MoveRowToInsertIndex(_rows.IndexOf(moveRow), moveToIndex);
             }
 
-            if (deleteIndex >= 0)
-            {
-                object removedRow = _rows[deleteIndex];
-                _rows.RemoveAt(deleteIndex);
-                _insertTexts.Remove(removedRow);
-                NormalizeRowIds();
-                _isDirty = true;
-            }
         }
 
         private object DrawField(FieldInfo field, object value, Rect rect)

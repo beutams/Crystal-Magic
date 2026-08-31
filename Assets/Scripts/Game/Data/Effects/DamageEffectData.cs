@@ -1,4 +1,5 @@
 using CrystalMagic.Game.Data;
+using Unity.Mathematics;
 
 namespace CrystalMagic.Game.Data.Effects
 {
@@ -23,28 +24,15 @@ namespace CrystalMagic.Game.Data.Effects
         {
             float attributePower = ResolveAttributePower(elementComponent);
             SkillModifierSet runtimeModifiers = CreateModifiersWithAttributePower(modifiers, attributePower);
-            AppendElementModifiers(GetAttributePowerValue(runtimeModifiers), runtimeModifiers);
             DamageEffectData copy = (DamageEffectData)base.CreateRuntimeCopy(runtimeModifiers, elementComponent);
-            copy.DamageCoefficient = ApplyModifier(runtimeModifiers, SkillModifierChannel.Damage, DamageCoefficient);
+            float skillDamageFactor = runtimeModifiers?.GetFactor(SkillModifierChannel.Damage) ?? 1f;
+            float skillDamageBonus = runtimeModifiers?.GetBonus(SkillModifierChannel.Damage) ?? 0f;
+            float elementMultiplier = Element == ElementType.None
+                ? 1f
+                : math.max(0f, 1f + GetAttributePowerValue(runtimeModifiers));
+            copy.DamageCoefficient = DamageCoefficient * skillDamageFactor * elementMultiplier + skillDamageBonus;
             copy.FlatDamageBonus = ApplyModifier(runtimeModifiers, SkillModifierChannel.FlatDamage, FlatDamageBonus);
             return copy;
-        }
-
-        private void AppendElementModifiers(float elementBonus, SkillModifierSet modifiers)
-        {
-            if (Element == ElementType.None)
-                return;
-
-            modifiers.Add(new SkillModifierEntry
-            {
-                Channel = SkillModifierChannel.Damage,
-                Factor = elementBonus,
-            });
-            modifiers.Add(new SkillModifierEntry
-            {
-                Channel = SkillModifierChannel.FlatDamage,
-                Factor = elementBonus,
-            });
         }
     }
 

@@ -97,6 +97,6 @@ public class ShopSellUI : UIBase<ShopSellUIData, CrystalMagic.UI.ShopSellUIModel
         if (string.IsNullOrEmpty(iconPath))
             return null;
 
-        return LoadManagedResource<UnityEngine.Sprite>(iconPath);
+        return LoadManagedSprite(iconPath);
     }
 }

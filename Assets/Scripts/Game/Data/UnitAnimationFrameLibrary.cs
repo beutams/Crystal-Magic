@@ -20,6 +20,21 @@ namespace CrystalMagic.Game.Data
 
             return null;
         }
+
+        public UnitAnimationFrameTrack Find(AnimationClip clip)
+        {
+            if (clip == null)
+                return null;
+
+            for (int i = 0; i < Tracks.Count; i++)
+            {
+                UnitAnimationFrameTrack track = Tracks[i];
+                if (track != null && track.SourceClip == clip)
+                    return track;
+            }
+
+            return null;
+        }
     }
 
     [Serializable]

@@ -36,7 +36,7 @@
             ConfirmUIOpenData openData = new(
                 CrystalMagic.Core.LocalizationComponent.Instance.Get("ui.confirm.load"),
                 CrystalMagic.Core.LocalizationComponent.Instance.Get("ui.confirm.load_save.content"),
-                () => CrystalMagic.Core.EventComponent.Instance.Publish(new CrystalMagic.Core.MainMenuLoadRequestedEvent(slotIndex)),
+                () => Model.ConfirmLoad(slotIndex),
                 null);
 
             CrystalMagic.Core.UIComponent.Instance.OpenChild<ConfirmUI>(View, openData);

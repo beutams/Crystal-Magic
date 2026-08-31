@@ -28,3 +28,32 @@ public class UnitIsCastingSource : ISource
         return release?.PendingRequests?.Count > 0 ? 1f : 0f;
     }
 }
+
+[FactoryKey("UnitIsEnemySource")]
+[EditorLabel("是否敌对")]
+public sealed class UnitIsEnemySource : ISource
+{
+    private SourceContext _context;
+
+    public void Init(SourceContext context)
+    {
+        _context = context;
+    }
+
+    public float GetValue()
+    {
+        EntityManager entityManager = _context.EntityManager;
+        if (!_context.HasOriginEntity ||
+            !entityManager.Exists(_context.OriginEntity) ||
+            !entityManager.Exists(_context.Entity) ||
+            !entityManager.HasComponent<UnitFactionComponent>(_context.OriginEntity) ||
+            !entityManager.HasComponent<UnitFactionComponent>(_context.Entity))
+        {
+            return 0f;
+        }
+
+        UnitFactionType originFaction = entityManager.GetComponentData<UnitFactionComponent>(_context.OriginEntity).Value;
+        UnitFactionType targetFaction = entityManager.GetComponentData<UnitFactionComponent>(_context.Entity).Value;
+        return UnitFactionUtility.IsEnemy(originFaction, targetFaction) ? 1f : 0f;
+    }
+}

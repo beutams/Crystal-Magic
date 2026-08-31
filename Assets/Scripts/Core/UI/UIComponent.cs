@@ -26,6 +26,7 @@ namespace CrystalMagic.Core {
         private Dictionary<UIBase, UIMvcContext> _mvcContexts = new();
         private Dictionary<string, Type> _typeCache = new();
         private UIGroupConfig _config;
+        private UIBase _debugUI;
         private bool _uiInputLocked;
         private int _currentSceneScopeId;
         private string _currentSceneName = string.Empty;
@@ -60,6 +61,13 @@ namespace CrystalMagic.Core {
 
             _uiInputLocked = GameGateComponent.Instance.IsUIInputLocked;
             ApplyUIInputState();
+            OpenPersistentDebugUI();
+        }
+
+        private void OpenPersistentDebugUI()
+        {
+            _debugUI = Open<DebugUI>();
+            SetLifetime(_debugUI, UILifetime.Persistent);
         }
 
         private void LoadConfigFromPath()

@@ -188,9 +188,9 @@ TextureImporter:
       name: Colors_4
       rect:
         serializedVersion: 2
-        x: 67
+        x: 72
         y: 142
-        width: 41
+        width: 36
         height: 5
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -452,9 +452,9 @@ TextureImporter:
       name: Colors_16
       rect:
         serializedVersion: 2
-        x: 67
+        x: 72
         y: 126
-        width: 41
+        width: 36
         height: 5
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -474,10 +474,10 @@ TextureImporter:
       name: Colors_17
       rect:
         serializedVersion: 2
-        x: 131
-        y: 93
-        width: 43
-        height: 38
+        x: 132
+        y: 126
+        width: 42
+        height: 5
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -712,6 +712,50 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: Colors_28
+      rect:
+        serializedVersion: 2
+        x: 66
+        y: 142
+        width: 5
+        height: 5
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b415d7111d2b65c41812d686b94b91b3
+      internalID: -1086914880
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colors_29
+      rect:
+        serializedVersion: 2
+        x: 66
+        y: 126
+        width: 5
+        height: 5
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 341af9bd17a56ec49bfe8ba565520ee6
+      internalID: -767812563
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
@@ -749,6 +793,8 @@ TextureImporter:
       Colors_25: 1899342363
       Colors_26: 598725061
       Colors_27: 1796795222
+      Colors_28: -1086914880
+      Colors_29: -767812563
       Colors_3: 2123558022
       Colors_4: -541553442
       Colors_5: 1526714918

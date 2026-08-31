@@ -383,7 +383,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Sprites_13
+      name: op
       rect:
         serializedVersion: 2
         x: 416
@@ -3507,7 +3507,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Sprites_155
+      name: fire
       rect:
         serializedVersion: 2
         x: 864
@@ -7187,7 +7187,6 @@ TextureImporter:
       Sprites_127: 625510159
       Sprites_128: -17401507
       Sprites_129: 1137198946
-      Sprites_13: -153133045
       Sprites_130: 1390679745
       Sprites_131: 1886921921
       Sprites_132: -1157618817
@@ -7214,7 +7213,6 @@ TextureImporter:
       Sprites_152: -555683589
       Sprites_153: 738566226
       Sprites_154: -1466899038
-      Sprites_155: 193345117
       Sprites_156: 1097719163
       Sprites_157: 544825226
       Sprites_158: 1577169610
@@ -7469,7 +7467,9 @@ TextureImporter:
       Sprites_98: -1503701461
       Sprites_99: 2015249531
       bag: 467870148
+      fire: 193345117
       fz: 1954128151
+      op: -153133045
       sj: -87959490
       ys: -15186355
   mipmapLimitGroupName: 

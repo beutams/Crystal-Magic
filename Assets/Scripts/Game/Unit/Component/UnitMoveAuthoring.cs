@@ -83,7 +83,7 @@ public sealed class UnitMoveSource : UnitComponentSource<UnitMoveComponent>
                 if (!input.TryGetNumber(out float multiplier))
                     return false;
 
-                value.StateMoveMultiplier = multiplier;
+                value.StateMoveMultiplier = math.max(0f, multiplier);
                 return true;
             });
     }

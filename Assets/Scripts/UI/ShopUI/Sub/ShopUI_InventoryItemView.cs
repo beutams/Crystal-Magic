@@ -60,6 +60,6 @@ public class ShopUI_InventoryItemView : UISubView<ShopUI_InventoryItemData>, IBe
         if (string.IsNullOrEmpty(iconPath))
             return null;
 
-        return LoadManagedResource<Sprite>(iconPath);
+        return LoadManagedSprite(iconPath);
     }
 }

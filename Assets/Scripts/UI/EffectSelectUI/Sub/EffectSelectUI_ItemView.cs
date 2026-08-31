@@ -66,6 +66,6 @@ public class EffectSelectUI_ItemView : UISubView<EffectSelectUI_ItemData>, IPoin
         if (string.IsNullOrEmpty(iconPath))
             return null;
 
-        return LoadManagedResource<Sprite>(iconPath);
+        return LoadManagedSprite(iconPath);
     }
 }

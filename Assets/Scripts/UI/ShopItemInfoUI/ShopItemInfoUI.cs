@@ -24,7 +24,7 @@ public class ShopItemInfoUI : UIBase<ShopItemInfoUIData, CrystalMagic.UI.ShopIte
         UI.HaveCount.TextMeshProUGUI.text = Model != null ? Model.HaveCount.ToString() : "0";
         UI.Description.TextMeshProUGUI.text = Model != null ? Model.Description : string.Empty;
         UI.Price.TextMeshProUGUI.text = Model != null ? Model.Price.ToString() : string.Empty;
-        UI.Icon.Image.sprite = LoadIcon(Model != null ? Model.IconPath : string.Empty);
+        UI.IconBack_Mask_Icon.Image.sprite = LoadIcon(Model != null ? Model.IconPath : string.Empty);
     }
 
     private UnityEngine.Sprite LoadIcon(string iconPath)
@@ -32,6 +32,6 @@ public class ShopItemInfoUI : UIBase<ShopItemInfoUIData, CrystalMagic.UI.ShopIte
         if (string.IsNullOrEmpty(iconPath))
             return null;
 
-        return LoadManagedResource<UnityEngine.Sprite>(iconPath);
+        return LoadManagedSprite(iconPath);
     }
 }

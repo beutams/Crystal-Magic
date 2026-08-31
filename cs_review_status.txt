@@ -55,7 +55,7 @@ Core\
     MainMenuState.cs FALSE
     ResultState.cs FALSE
     TownState.cs TRUE DIRTY
-    TrainingState.cs TRUE
+    TrainingState.cs TRUE DIRTY
     TransitionState.cs FALSE
   GameGate\
     GameGateComponent.cs FALSE
@@ -79,14 +79,14 @@ Core\
     Editor\
       BundleBuildConfigData.cs FALSE
       BundleBuildUtility.cs FALSE
-      BundleBuildWindow.cs FALSE
+      BundleBuildWindow.cs TRUE
     AssetBundlePlatformUtility.cs FALSE
     AssetBundleResourceLoader.cs FALSE
     AssetPathHelper.cs TRUE
     BundleCatalog.cs FALSE
     BundleCatalogAsset.cs FALSE
     BundleCatalogData.cs FALSE
-    EditorResourceLoader.cs FALSE
+    EditorResourceLoader.cs TRUE
     IResourceLoader.cs FALSE
     ResourceComponent.cs FALSE
     ResourceLoadMode.cs FALSE
@@ -149,8 +149,8 @@ Core\
   PersistentEventSystem.cs TRUE
   Singleton.cs TRUE
 Editor\
-  PlayFromStartScene.cs FALSE
-  UIConfigWindow.cs FALSE
+  PlayFromStartScene.cs TRUE
+  UIConfigWindow.cs TRUE
 Game\
   Comparator\
     Editor\
@@ -165,13 +165,15 @@ Game\
   Config\
   Data\
     Editor\
-      BuffEditorWindow.cs FALSE
+      BuffEditorWindow.cs TRUE DIRTY
       DungeonEditorWindow.cs TRUE DIRTY
       DungeonEditorWindow.OpenField.cs TRUE DIRTY
-      EquipEditorWindow.cs TRUE
-      NPCEditorWindow.cs FALSE
-      PropEditorWindow.cs FALSE
-      SkillAdditionEditorWindow.cs FALSE
+      EquipEditorWindow.cs TRUE DIRTY
+      NPCEditorWindow.cs TRUE
+      PropEditorWindow.cs TRUE DIRTY
+      SkillAdditionEditorWindow.cs TRUE DIRTY
+      SpriteEffectAnimationAssetGenerator.cs TRUE
+      UnitAnimationFrameLibraryBuilder.cs TRUE
       UnitEditorAttributeDrawerFactory.cs FALSE
       UnitEditorAttributeDrawers.cs TRUE DIRTY
       UnitEditorDrawerContext.cs FALSE
@@ -184,7 +186,7 @@ Game\
       ChainSearchEffectData.cs FALSE
       ConeSearchEffectData.cs FALSE
       ControlEffectData.cs FALSE
-      DamageEffectData.cs FALSE
+      DamageEffectData.cs TRUE
       EffectData.cs FALSE
       ForwardRectSearchEffectData.cs FALSE
       HealthCostEffectData.cs FALSE
@@ -192,9 +194,10 @@ Game\
       RandomAreaPointEffectData.cs FALSE
       RecoverEffectData.cs FALSE
       SpawnProjectileEffectData.cs TRUE
+      SpawnFollowVfxEffectData.cs TRUE
       SpawnSoundEffectData.cs FALSE
       SpawnUnitEffectData.cs TRUE
-      SpawnVfxEffectData.cs FALSE
+      SpawnVfxEffectData.cs TRUE
     BehaviorTreeData.cs TRUE DIRTY
     StateScript\
       StateScriptData.cs TRUE DIRTY
@@ -216,6 +219,7 @@ Game\
     SkillFollowupFilterData.cs FALSE
     SkillFollowupModifierRuleData.cs FALSE
     UnitAnimationClipData.cs TRUE
+    UnitAnimationFrameLibrary.cs TRUE
     UnitData.cs TRUE DIRTY
   MapDemo\
     Editor\
@@ -233,7 +237,15 @@ Game\
     OpenFieldDungeonTerrainGenerator.cs TRUE
   Skill\
     Editor\
-      SkillEditorWindow.cs TRUE
+      EffectGraph\
+        EffectGraphBinding.cs TRUE
+        EffectGraphInspector.cs TRUE
+        EffectGraphLayoutStore.cs TRUE
+        EffectGraphModel.cs TRUE
+        EffectGraphTypeRegistry.cs TRUE DIRTY
+        EffectGraphView.cs TRUE
+        EffectGraphWindow.cs TRUE
+      SkillEditorWindow.cs TRUE DIRTY
       SkillFollowupConsumeRuleRegistryGenerator.cs FALSE
       SkillFollowupFilterRegistryGenerator.cs FALSE
       SkillFollowupModifierRuleRegistryGenerator.cs FALSE
@@ -245,14 +257,16 @@ Game\
       CameraShakeEffect.cs FALSE
       ChainSearchEffect.cs FALSE
       ConeSearchEffect.cs FALSE
-      DamageEffect.cs FALSE
+      DamageEffect.cs TRUE
       Effect.cs FALSE
       ForwardRectSearchEffect.cs FALSE
       PersistentEffect.cs TRUE
         闁归晲鑳堕悽濠氬箑瑜庨弲銉╁几濠婃劗绀夋繛锝堫嚙婵偞绋夐埀顒佺▔椤忓懎鐦紓渚囧幒閹广垽宕濋垾鍐茬厒缂侇垵宕电划?
       RandomAreaPointEffect.cs FALSE
       RecoverEffect.cs FALSE
-      SpawnProjectileEffect.cs TRUE
+      SpawnFollowVfxEffect.cs TRUE
+      SpawnProjectileEffect.cs TRUE DIRTY
+      SpriteEffectSpawnUtility.cs TRUE
       SpawnSoundEffect.cs FALSE
       SpawnUnitEffect.cs TRUE
       SpawnVfxEffect.cs TRUE DIRTY
@@ -372,7 +386,8 @@ Game\
       ProjectileEntityPrefabRegistryEntry.cs FALSE
       QuadAnimationComponent.cs TRUE DIRTY
       SkillProjectileAuthoring.cs TRUE DIRTY
-      SkillProjectileRuntime.cs TRUE
+      SkillProjectileRuntime.cs TRUE DIRTY
+      SpriteEffectAnimationAuthoring.cs TRUE
       UnitAnimationAuthoring.cs TRUE DIRTY
       UnitAttackAuthoring.cs TRUE DIRTY
         闁瑰灈鍋撻柤瀹犲Г閺侀箖宕欓懡銈嗙ゲ闁稿繗娅曢弳鐔煎箲?
@@ -441,7 +456,7 @@ Game\
       NPCInteractionNodeRegistryGenerator.cs FALSE
       UnitRuntimeAttributeDrawerFactory.cs FALSE
       UnitRuntimeAttributeDrawers.cs TRUE DIRTY
-      UnitRuntimeDebugWindow.cs FALSE
+      UnitRuntimeDebugWindow.cs TRUE
       UnitRuntimeDrawerContext.cs FALSE
     Event\
       NPCInteractionFinishedEvent.cs FALSE
@@ -488,10 +503,10 @@ Game\
       PlayerMovementCollisionSystem.cs TRUE
       PlayerSkillAnalysisSystem.cs TRUE DIRTY
         闁汇垻鍠愰崹姘跺礂閾氬倻绉奸柟鍨涘亾闁煎啿鈧噥鍤炴慨?
-      QuadAnimationSystem.cs TRUE DIRTY
       SkillReleaseSystem.cs TRUE
       SkillProjectileSpawnSystem.cs TRUE DIRTY
-      SkillProjectileSystem.cs TRUE
+      SkillProjectileSystem.cs TRUE DIRTY
+      SpriteEffectAnimationSystem.cs TRUE
       UnitBuffSystem.cs TRUE
         缂備胶鍠曢绐ff闁告劖鐟ラ崣鍡欎沪閻愮补鍋撹閹蜂即骞庨埀顒勬嚄閹存帗鍙忔慨婵撶秶缁辨繃娼娆惧殑闁瑰灈鍋撻柤瀹犲Г濡炲倿姊?
       UnitAnimationSystem.cs TRUE DIRTY
@@ -524,7 +539,6 @@ Game\
       NPCAuthoringUtility.cs FALSE
       PendingEffectExecutionQueueUtility.cs FALSE
       PropUseUtility.cs TRUE DIRTY
-      QuadAnimationVisualUtility.cs TRUE
       QuadOverlayPulseUtility.cs TRUE
       SkillExecutionUtility.cs TRUE DIRTY
       SkillReleaseUtility.cs FALSE
@@ -556,20 +570,20 @@ Game\
 UI\
   BattleUI\
     Sub\
-    BattleUI.cs FALSE
-    BattleUIController.cs FALSE
-    BattleUIData.cs FALSE
-    BattleUIModel.cs TRUE
+    BattleUI.cs TRUE DIRTY
+    BattleUIController.cs TRUE
+    BattleUIData.cs TRUE
+    BattleUIModel.cs TRUE DIRTY
   CharacterUI\
     Sub\
-      CharacterUI_InventoryItemData.cs FALSE
-      CharacterUI_InventoryItemView.cs FALSE
-      CharacterUI_SkillItemData.cs FALSE
-      CharacterUI_SkillItemView.cs FALSE
-    CharacterUI.cs FALSE
-    CharacterUIController.cs FALSE
-    CharacterUIData.cs FALSE
-    CharacterUIModel.cs FALSE
+      CharacterUI_InventoryItemData.cs TRUE
+      CharacterUI_InventoryItemView.cs TRUE
+      CharacterUI_SkillItemData.cs TRUE
+        CharacterUI_SkillItemView.cs TRUE DIRTY
+    CharacterUI.cs TRUE
+    CharacterUIController.cs TRUE DIRTY
+    CharacterUIData.cs TRUE
+    CharacterUIModel.cs TRUE DIRTY
   ConfirmUI\
     ConfirmUI.cs FALSE
     ConfirmUIController.cs FALSE
@@ -599,9 +613,9 @@ UI\
     GameSaveUIData.cs FALSE
     GameSaveUIModel.cs FALSE
   GameSettingUI\
-    GameMenuUI.cs FALSE
-    GameMenuUIController.cs FALSE
-    GameMenuUIData.cs FALSE
+    GameMenuUI.cs TRUE DIRTY
+    GameMenuUIController.cs TRUE DIRTY
+    GameMenuUIData.cs TRUE
     GameMenuUIModel.cs FALSE
   InteractionSelectUI\
     Sub\
@@ -616,19 +630,23 @@ UI\
       LoadUI_SaveItemData.cs FALSE
       LoadUI_SaveItemView.cs FALSE
     LoadUI.cs FALSE
-    LoadUIController.cs FALSE
+    LoadUIController.cs TRUE
     LoadUIData.cs FALSE
-    LoadUIModel.cs FALSE
+    LoadUIModel.cs TRUE
   MainMenuUI\
     MainMenuUI.cs FALSE
-    MainMenuUIController.cs FALSE
+    MainMenuUIController.cs TRUE
     MainMenuUIData.cs FALSE
     MainMenuUIModel.cs FALSE
-  PropertyUI\
-    PropertyUI.cs TRUE DIRTY
-    PropertyUIController.cs FALSE
-    PropertyUIData.cs TRUE
-    PropertyUIModel.cs TRUE DIRTY
+  DebugUI\
+    Sub\
+      DebugUI_NavigationItemData.cs FALSE
+      DebugUI_NavigationItemView.cs FALSE
+    DebugUI.cs FALSE
+    DebugUIController.cs FALSE
+    DebugUIData.cs FALSE
+    DebugUIModel.cs TRUE
+    DebugUI_LauncherDrag.cs FALSE
   SaveUI\
     Sub\
       SaveUI_OpenData.cs FALSE
@@ -645,7 +663,7 @@ UI\
     ShopBuyUIData.cs FALSE
     ShopBuyUIModel.cs FALSE
   ShopItemInfoUI\
-    ShopItemInfoUI.cs FALSE
+    ShopItemInfoUI.cs TRUE
     ShopItemInfoUIController.cs FALSE
     ShopItemInfoUIData.cs FALSE
     ShopItemInfoUIModel.cs FALSE
@@ -684,11 +702,6 @@ UI\
     TipFormController.cs FALSE
     TipFormData.cs FALSE
     TipFormModel.cs FALSE
-  TrainingDummyStatsUI\
-    TrainingDummyStatsUI.cs FALSE
-    TrainingDummyStatsUIController.cs FALSE
-    TrainingDummyStatsUIData.cs FALSE
-    TrainingDummyStatsUIModel.cs TRUE
   TransitionMaskUI\
     TransitionMaskUI.cs FALSE
     TransitionMaskUIController.cs FALSE

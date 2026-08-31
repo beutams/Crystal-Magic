@@ -34,7 +34,8 @@ namespace CrystalMagic.UI
 
         private void OnLoadRequested()
         {
-            UIComponent.Instance.OpenChild<LoadUI>(View);
+            UIComponent.Instance.OpenChild<LoadUI>(View, new LoadUIOpenData(
+                slotIndex => EventComponent.Instance.Publish(new MainMenuLoadRequestedEvent(slotIndex))));
         }
 
         private void OnConfigRequested()

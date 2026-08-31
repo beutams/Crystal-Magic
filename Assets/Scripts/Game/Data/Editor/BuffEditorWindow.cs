@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using CrystalMagic.Core;
+using CrystalMagic.Editor.EffectGraph;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
@@ -357,27 +358,24 @@ namespace CrystalMagic.Editor.Data
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            if (GUILayout.Button("加载", EditorStyles.toolbarButton, GUILayout.Width(44)))
-                LoadData();
-
             GUI.enabled = _isDirty;
-            if (GUILayout.Button(_isDirty ? "保存 *" : "保存", EditorStyles.toolbarButton, GUILayout.Width(52)))
+            if (GUILayout.Button(_isDirty ? "Save *" : "Save", EditorStyles.toolbarButton, GUILayout.Width(52)))
                 SaveData();
             GUI.enabled = true;
 
             // 先选择 Buff 子类，再执行新增
             _addBuffTypeIndex = EditorGUILayout.Popup(_addBuffTypeIndex, GetBuffTypeDisplayNames(),
                 EditorStyles.toolbarPopup, GUILayout.Width(180));
-            if (GUILayout.Button("+ 新增", EditorStyles.toolbarButton, GUILayout.Width(52)))
+            if (GUILayout.Button("Add", EditorStyles.toolbarButton, GUILayout.Width(52)))
                 AddBuff();
 
             GUI.enabled = _selectedIndex >= 0;
-            if (GUILayout.Button("复制当前", EditorStyles.toolbarButton, GUILayout.Width(64)))
+            if (GUILayout.Button("Copy", EditorStyles.toolbarButton, GUILayout.Width(64)))
                 DuplicateSelected();
 
             GUI.enabled = _selectedIndex >= 0;
             GUI.color   = _selectedIndex >= 0 ? new Color(1f, 0.55f, 0.55f) : Color.white;
-            if (GUILayout.Button("删除", EditorStyles.toolbarButton, GUILayout.Width(44)))
+            if (GUILayout.Button("Delete", EditorStyles.toolbarButton, GUILayout.Width(52)))
                 if (EditorUtility.DisplayDialog("删除 Buff",
                     $"确认删除「{_rows[_selectedIndex].Name}」？", "删除", "取消"))
                     DeleteSelected();
@@ -751,12 +749,13 @@ namespace CrystalMagic.Editor.Data
                     _isDirty = true;
                 }
 
-                string stateKey = $"__buff_trigger_{buff.Id}_{i}";
-                if (!_nestedTypeIndices.TryGetValue(stateKey, out int addEffectIndex))
-                    addEffectIndex = 0;
                 triggerEntry.Effects ??= Array.Empty<EffectData>();
-                triggerEntry.Effects = DrawEffectChainInline(stateKey, triggerEntry.Effects, ref addEffectIndex);
-                _nestedTypeIndices[stateKey] = addEffectIndex;
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField($"{triggerEntry.Effects.Length} effect(s)");
+                int capturedIndex = i;
+                if (GUILayout.Button("Edit Effect Graph", GUILayout.Width(150f)))
+                    EffectGraphWindow.Open(CreateEffectBinding(buff, capturedIndex, () => { _isDirty = true; Repaint(); }));
+                EditorGUILayout.EndHorizontal();
                 buff.TriggerEntries[i] = triggerEntry;
 
                 GUI.color = new Color(1f, 0.5f, 0.5f);
@@ -771,6 +770,32 @@ namespace CrystalMagic.Editor.Data
                 buff.TriggerEntries.RemoveAt(removeAt);
                 _isDirty = true;
             }
+        }
+
+        internal static EffectGraphBinding CreateEffectBinding(BuffData buff, int triggerIndex, Action markDirty)
+        {
+            return new EffectGraphBinding(
+                $"Buff:{buff?.Id ?? -1}:TriggerEntries[{triggerIndex}].Effects",
+                $"Buff [{buff?.Id ?? -1}] Trigger {triggerIndex}",
+                () => GetTriggerEffects(buff, triggerIndex),
+                effects => SetTriggerEffects(buff, triggerIndex, effects),
+                markDirty ?? (() => { }));
+        }
+
+        private static EffectData[] GetTriggerEffects(BuffData buff, int triggerIndex)
+        {
+            if (buff?.TriggerEntries == null || triggerIndex < 0 || triggerIndex >= buff.TriggerEntries.Count)
+                return Array.Empty<EffectData>();
+            return buff.TriggerEntries[triggerIndex]?.Effects ?? Array.Empty<EffectData>();
+        }
+
+        private static void SetTriggerEffects(BuffData buff, int triggerIndex, EffectData[] effects)
+        {
+            if (buff?.TriggerEntries == null || triggerIndex < 0 || triggerIndex >= buff.TriggerEntries.Count)
+                return;
+            BuffTriggerEntry entry = buff.TriggerEntries[triggerIndex] ?? new BuffTriggerEntry();
+            entry.Effects = effects ?? Array.Empty<EffectData>();
+            buff.TriggerEntries[triggerIndex] = entry;
         }
 
         // --------------------
@@ -878,18 +903,10 @@ namespace CrystalMagic.Editor.Data
                 GUILayout.Space(2);
                 foreach (FieldInfo field in effectType.GetFields(BindingFlags.Public | BindingFlags.Instance))
                 {
-                    bool disableField =
-                        effect is SpawnVfxEffectData spawnVfxEffect &&
-                        field.Name == nameof(SpawnVfxEffectData.Duration) &&
-                        !spawnVfxEffect.Loop;
-
                     EditorGUI.BeginChangeCheck();
                     object oldVal = field.GetValue(effect);
                     object newVal;
-                    using (new EditorGUI.DisabledScope(disableField))
-                    {
-                        newVal = DrawField(field.FieldType, EditorLabelUtility.GetLabel(field), oldVal, entryKey);
-                    }
+                    newVal = DrawField(field.FieldType, EditorLabelUtility.GetLabel(field), oldVal, entryKey);
 
                     if (EditorGUI.EndChangeCheck())
                     {

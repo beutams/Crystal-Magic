@@ -69,6 +69,6 @@ public class StashUI_InventoryItemView : UISubView<StashUI_InventoryItemData>, I
         if (string.IsNullOrEmpty(iconPath))
             return null;
 
-        return LoadManagedResource<Sprite>(iconPath);
+        return LoadManagedSprite(iconPath);
     }
 }

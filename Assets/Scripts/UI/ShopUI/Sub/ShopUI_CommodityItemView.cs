@@ -88,6 +88,6 @@ public class ShopUI_CommodityItemView : UISubView<ShopUI_CommodityItemData>, IPo
         if (string.IsNullOrEmpty(iconPath))
             return null;
 
-        return LoadManagedResource<Sprite>(iconPath);
+        return LoadManagedSprite(iconPath);
     }
 }

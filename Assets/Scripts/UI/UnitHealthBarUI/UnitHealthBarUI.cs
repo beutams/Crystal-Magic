@@ -227,7 +227,7 @@ namespace CrystalMagic.UI
             if (_iconCache.TryGetValue(iconPath, out Sprite cachedSprite))
                 return cachedSprite;
 
-            Sprite sprite = LoadManagedResource<Sprite>(iconPath);
+            Sprite sprite = LoadManagedSprite(iconPath);
             _iconCache[iconPath] = sprite;
             return sprite;
         }

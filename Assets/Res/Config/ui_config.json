@@ -16,8 +16,7 @@
                 "SaveUI",
                 "ConfirmUI",
                 "GameMenuUI",
-                "GameSaveUI",
-                "PropertyUI"
+                "GameSaveUI"
             ]
         },
         {
@@ -41,8 +40,15 @@
             "groupName": "Top",
             "order": 10000,
             "uiNames": [
-                "TrainingDummyStatsUI",
                 "TransitionUI"
+            ]
+        },
+        {
+            "groupType": 2,
+            "groupName": "Debug",
+            "order": 20000,
+            "uiNames": [
+                "DebugUI"
             ]
         }
     ]

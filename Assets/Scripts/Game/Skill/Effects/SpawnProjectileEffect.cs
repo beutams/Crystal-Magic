@@ -9,8 +9,6 @@ namespace CrystalMagic.Game.Skill.Effects
 {
     public sealed class SpawnProjectileEffect : Effect
     {
-        private const string GenericProjectilePrefabName = "Projectile";
-
         public new SpawnProjectileEffectData Data { get; }
 
         public SpawnProjectileEffect(SpawnProjectileEffectData data) : base(data) => Data = data;
@@ -23,7 +21,12 @@ namespace CrystalMagic.Game.Skill.Effects
             if (!TryGetSpawnPosition(context, out Vector3 spawnPosition))
                 return;
 
-            Vector3 direction = GetProjectileDirection(context, spawnPosition);
+            if (!TryGetProjectileDirection(context, spawnPosition, out Vector3 direction))
+            {
+                Debug.LogWarning($"[SpawnProjectileEffect] Skill {context.SourceSkillId} requires a target position different from its spawn position.");
+                return;
+            }
+
             Vector3 finalPosition = spawnPosition + direction * Data.SpawnOffsetDistance;
             CreateProjectileSpawnRequest(context, finalPosition, direction);
         }
@@ -50,29 +53,34 @@ namespace CrystalMagic.Game.Skill.Effects
             return false;
         }
 
-        private static Vector3 GetProjectileDirection(SkillContent context, Vector3 spawnPosition)
+        private static bool TryGetProjectileDirection(SkillContent context, Vector3 spawnPosition, out Vector3 direction)
         {
-            if (context.HasPosition)
-            {
-                Vector3 direction = context.Position - spawnPosition;
-                direction.z = 0f;
-                if (direction.sqrMagnitude > 0.0001f)
-                    return direction.normalized;
-            }
+            direction = Vector3.zero;
+            if (!context.HasPosition)
+                return false;
 
-            return Vector3.right;
+            direction = context.Position - spawnPosition;
+            direction.z = 0f;
+            if (direction.sqrMagnitude <= 0.0001f)
+                return false;
+
+            direction.Normalize();
+            return true;
         }
 
         private void CreateProjectileSpawnRequest(SkillContent context, Vector3 startPosition, Vector3 direction)
         {
-            FixedString128Bytes projectileName = new(GenericProjectilePrefabName);
+            FixedString128Bytes projectileName = new(string.IsNullOrWhiteSpace(Data.ProjectilePrefabName) ? "Projectile" : Data.ProjectilePrefabName);
             SkillProjectileSpawnQueue.Enqueue(
                 new SkillProjectileSpawnRequest
                 {
                     ProjectileName = projectileName,
+                    VisualPrefabName = new FixedString128Bytes(Data.VisualPrefabName ?? string.Empty),
                     StartPosition = new float3(startPosition.x, startPosition.y, startPosition.z),
                     Direction = new float3(direction.x, direction.y, direction.z),
                     Rotation = quaternion.identity,
+                    VisualScale = Data.VisualScale,
+                    VisualOffset = new float3(Data.VisualOffset.x, Data.VisualOffset.y, Data.VisualOffset.z),
                     Speed = Data.Speed,
                     MaxRange = Data.MaxRange,
                     HitRadius = math.max(Data.HitRadius, 0.01f),

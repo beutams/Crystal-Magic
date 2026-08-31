@@ -96,6 +96,6 @@ public class StashInteractUI : UIBase<StashInteractUIData, CrystalMagic.UI.Stash
         if (string.IsNullOrEmpty(iconPath))
             return null;
 
-        return LoadManagedResource<UnityEngine.Sprite>(iconPath);
+        return LoadManagedSprite(iconPath);
     }
 }

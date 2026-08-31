@@ -332,7 +332,7 @@ public class StashUI : UIBase<StashUIData, CrystalMagic.UI.StashUIModel>
         if (string.IsNullOrEmpty(iconPath))
             return null;
 
-        return LoadManagedResource<Sprite>(iconPath);
+        return LoadManagedSprite(iconPath);
     }
 
 }

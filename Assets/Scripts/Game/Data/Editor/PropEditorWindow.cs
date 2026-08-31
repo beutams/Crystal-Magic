@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using CrystalMagic.Core;
+using CrystalMagic.Editor.EffectGraph;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Data.Effects;
 using Newtonsoft.Json;
@@ -228,12 +229,6 @@ namespace CrystalMagic.Editor.Data
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            if (GUILayout.Button("Load", EditorStyles.toolbarButton, GUILayout.Width(44f)))
-            {
-                RefreshItemCache();
-                LoadData();
-            }
-
             GUI.enabled = _isDirty;
             if (GUILayout.Button(_isDirty ? "Save *" : "Save", EditorStyles.toolbarButton, GUILayout.Width(52f)))
                 SaveData();
@@ -322,11 +317,25 @@ namespace CrystalMagic.Editor.Data
 
             DrawSectionHeader("Effect Chain");
             row.EffectChain ??= Array.Empty<EffectData>();
-            row.EffectChain = DrawEffectChainInline("__root__", row.EffectChain, ref _addEffectTypeIndex);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField($"{row.EffectChain.Length} effect(s)");
+            if (GUILayout.Button("Edit Effect Graph", GUILayout.Width(150f)))
+                EffectGraphWindow.Open(CreateEffectBinding(row, () => { _isDirty = true; Repaint(); }));
+            EditorGUILayout.EndHorizontal();
 
             EditorGUIUtility.labelWidth = previousLabelWidth;
             EditorGUILayout.EndScrollView();
             EditorGUILayout.EndVertical();
+        }
+
+        internal static EffectGraphBinding CreateEffectBinding(PropData prop, Action markDirty)
+        {
+            return new EffectGraphBinding(
+                $"Prop:{prop?.Id ?? -1}:EffectChain",
+                $"Prop [{prop?.Id ?? -1}] {prop?.NameKey}",
+                () => prop?.EffectChain ?? Array.Empty<EffectData>(),
+                effects => { if (prop != null) prop.EffectChain = effects; },
+                markDirty ?? (() => { }));
         }
 
         private EffectData[] DrawEffectChainInline(string stateKey, EffectData[] chain, ref int typeIndex)
@@ -438,18 +447,10 @@ namespace CrystalMagic.Editor.Data
 
                 foreach (FieldInfo field in effectType.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
                 {
-                    bool disableField =
-                        effect is SpawnVfxEffectData spawnVfxEffect &&
-                        field.Name == nameof(SpawnVfxEffectData.Duration) &&
-                        !spawnVfxEffect.Loop;
-
                     EditorGUI.BeginChangeCheck();
                     object oldValue = field.GetValue(effect);
                     object newValue;
-                    using (new EditorGUI.DisabledScope(disableField))
-                    {
-                        newValue = DrawEffectField(field.FieldType, EditorLabelUtility.GetLabel(field), oldValue, entryKey);
-                    }
+                    newValue = DrawEffectField(field.FieldType, EditorLabelUtility.GetLabel(field), oldValue, entryKey);
 
                     if (EditorGUI.EndChangeCheck())
                     {

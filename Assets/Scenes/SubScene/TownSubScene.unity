@@ -177,7 +177,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9156467092889104552, guid: 40ceada06408de6499488919fb0cee84, type: 3}
       propertyPath: m_Name
-      value: TownMap_Baked
+      value: Plane
       objectReference: {fileID: 0}
     - target: {fileID: 9156467092889104552, guid: 40ceada06408de6499488919fb0cee84, type: 3}
       propertyPath: m_IsActive

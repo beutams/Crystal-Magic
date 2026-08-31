@@ -1,0 +1,15 @@
+LICENSE
+
+You may:
+- Use these assets in personal and commercial projects.
+- Modify the assets for your own project.
+- Use the assets in released games, prototypes, videos, marketing images, and UI mockups.
+
+You may not:
+- Resell, redistribute, repackage, or upload the raw asset files.
+- Include the raw files in another asset pack, tool, generator, or marketplace product.
+- Claim the original asset pack as your own.
+
+Credit is appreciated but not required.
+
+Creator: Dani Melich

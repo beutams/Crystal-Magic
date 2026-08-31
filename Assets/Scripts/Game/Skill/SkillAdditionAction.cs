@@ -2,6 +2,8 @@ using System;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Data.Effects;
 using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Transforms;
 
 namespace CrystalMagic.Game.Skill
 {
@@ -272,11 +274,17 @@ namespace CrystalMagic.Game.Skill
             if (releaseComponent == null)
                 return SkillAdditionActionStatus.Failed;
 
+            float3 targetPosition = float3.zero;
+            if (Context.EntityManager.HasComponent<LocalTransform>(Context.Entity))
+                targetPosition = Context.EntityManager.GetComponentData<LocalTransform>(Context.Entity).Position;
+
             releaseComponent.PendingRequests.Add(SkillReleaseRequestUtility.Create(
                 Context.EntityManager,
                 Context.Entity,
                 skillId,
-                new SkillModifierSet()));
+                new SkillModifierSet(),
+                targetPosition,
+                Entity.Null));
             return SkillAdditionActionStatus.Completed;
         }
     }

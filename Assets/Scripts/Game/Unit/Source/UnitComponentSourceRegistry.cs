@@ -20,6 +20,7 @@ public static class UnitComponentSourceRegistry
         new UnitFactionSource(),
         new UnitManaSource(),
         new PlayerCurrentSkillSource(),
+        new UnitSkillReleaseSource(),
         new UnitMoveSource(),
         new UnitPerceptionSource(),
         new UnitTransformSource(),

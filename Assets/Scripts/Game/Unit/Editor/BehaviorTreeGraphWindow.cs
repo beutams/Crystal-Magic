@@ -20,11 +20,13 @@ namespace CrystalMagic.Editor.Unit
     {
         private const string DataPath = "Assets/Res/Data/BehaviorTreeDataTable.json";
         private const string UnitPrefabDirectory = "Assets/Res/Prefab/Unit";
+        private const string TreeDragDataKey = "CrystalMagic.BehaviorTree";
         private const float ListPanelWidth = 240f;
 
         private readonly List<BehaviorTreeData> _rows = new();
         private readonly List<UnitPrefabEntry> _unitEntries = new();
         private string _selectedPrefabPath;
+        private BehaviorTreeDragData _pendingTreeDrag;
         private UnitSourceSchema _selectedSourceSchema;
         private bool _isDirty;
         private string _statusText = string.Empty;
@@ -59,6 +61,16 @@ namespace CrystalMagic.Editor.Unit
                 : Path.GetFileNameWithoutExtension(AssetPath);
         }
 
+        private sealed class BehaviorTreeDragData
+        {
+            public BehaviorTreeDragData(int sourceUnitDataId)
+            {
+                SourceUnitDataId = sourceUnitDataId;
+            }
+
+            public int SourceUnitDataId { get; }
+        }
+
         [MenuItem("Tools/Data/Behavior Tree Visual Editor")]
         public static void Open()
         {
@@ -84,12 +96,7 @@ namespace CrystalMagic.Editor.Unit
         private void BuildToolbar(VisualElement root)
         {
             var toolbar = new Toolbar();
-            toolbar.Add(MakeToolbarButton("Load", 48f, LoadData));
             toolbar.Add(MakeToolbarButton(_isDirty ? "Save *" : "Save", 58f, SaveData));
-            toolbar.Add(MakeToolbarButton("Create Tree", 82f, CreateTreeForSelectedUnit));
-            toolbar.Add(MakeToolbarButton("Delete", 58f, DeleteSelected));
-            toolbar.Add(MakeToolbarButton("Validate", 64f, ValidateSelected));
-            toolbar.Add(MakeToolbarButton("Generate Registry", 110f, BehaviorTreeRegistryGenerator.Generate));
             toolbar.Add(new VisualElement { style = { flexGrow = 1f } });
 
             _statusLabel = new Label(_statusText)
@@ -198,7 +205,11 @@ namespace CrystalMagic.Editor.Unit
                 string label = entry.UnitData == null
                     ? $"[No UnitData] {entry.DisplayName}"
                     : $"[{entry.UnitData.Id}] {entry.DisplayName}";
-                if (GUILayout.Toggle(isSelected, label, "Button"))
+                GUIStyle style = isSelected ? EditorStyles.toolbarButton : EditorStyles.miniButton;
+                Rect entryRect = GUILayoutUtility.GetRect(new GUIContent(label), style, GUILayout.ExpandWidth(true));
+                HandleTreeDrop(entry, entryRect);
+                BeginTreeDrag(entry, entryRect);
+                if (GUI.Button(entryRect, label, style))
                 {
                     if (!isSelected)
                         SelectUnit(entry);
@@ -218,14 +229,14 @@ namespace CrystalMagic.Editor.Unit
                 }
                 else if (SelectedTree == null)
                 {
-                    EditorGUILayout.HelpBox("No behavior tree has been created for this unit.", MessageType.Info);
-                    if (GUILayout.Button("Create Tree"))
-                        CreateTreeForSelectedUnit();
+                    EditorGUILayout.HelpBox("No behavior tree data is assigned to this unit.", MessageType.Info);
                 }
                 else
                 {
                     EditorGUILayout.LabelField($"Tree: [{SelectedTree.Id}] {GetTreeName(SelectedTree)}", EditorStyles.miniLabel);
                 }
+
+                EditorGUILayout.HelpBox("Drag a unit with behavior tree data onto another unit to copy it.", MessageType.None);
             }
 
             EditorGUILayout.EndVertical();
@@ -239,7 +250,7 @@ namespace CrystalMagic.Editor.Unit
             BehaviorTreeData tree = SelectedTree;
             if (tree == null)
             {
-                EditorGUILayout.HelpBox("Select a unit and create its behavior tree.", MessageType.Info);
+                EditorGUILayout.HelpBox("Select a unit with behavior tree data.", MessageType.Info);
                 return;
             }
 
@@ -690,9 +701,14 @@ namespace CrystalMagic.Editor.Unit
 
         internal BehaviorTreeData SelectedTree => SelectedUnitEntry?.UnitData == null
             ? null
-            : _rows.FirstOrDefault(row => row != null && row.UnitDataId == SelectedUnitEntry.UnitData.Id);
+            : GetTreeForUnit(SelectedUnitEntry.UnitData.Id);
 
         private UnitSourceSchema SelectedSourceSchema => _selectedSourceSchema ?? s_emptySourceSchema;
+
+        private BehaviorTreeData GetTreeForUnit(int unitDataId)
+        {
+            return _rows.FirstOrDefault(row => row != null && row.UnitDataId == unitDataId);
+        }
 
         internal void RebuildGraph()
         {
@@ -734,6 +750,104 @@ namespace CrystalMagic.Editor.Unit
             _selectedPrefabPath = entry?.AssetPath;
             _selectedSourceSchema = UnitSourceSchemaFactory.CreateForPrefab(entry?.Prefab);
             RebuildGraph();
+        }
+
+        private void BeginTreeDrag(UnitPrefabEntry entry, Rect entryRect)
+        {
+            Event currentEvent = Event.current;
+            if (currentEvent.type == EventType.MouseDown && currentEvent.button == 0 && entryRect.Contains(currentEvent.mousePosition))
+            {
+                _pendingTreeDrag = entry?.UnitData != null && GetTreeForUnit(entry.UnitData.Id) != null
+                    ? new BehaviorTreeDragData(entry.UnitData.Id)
+                    : null;
+                return;
+            }
+
+            if (currentEvent.type == EventType.MouseUp && currentEvent.button == 0)
+            {
+                _pendingTreeDrag = null;
+                return;
+            }
+
+            if (currentEvent.type != EventType.MouseDrag || currentEvent.button != 0 ||
+                _pendingTreeDrag == null || entry?.UnitData == null ||
+                entry.UnitData.Id != _pendingTreeDrag.SourceUnitDataId)
+            {
+                return;
+            }
+
+            DragAndDrop.PrepareStartDrag();
+            DragAndDrop.SetGenericData(TreeDragDataKey, _pendingTreeDrag);
+            DragAndDrop.StartDrag($"Copy behavior tree from {entry.DisplayName}");
+            _pendingTreeDrag = null;
+            currentEvent.Use();
+        }
+
+        private void HandleTreeDrop(UnitPrefabEntry targetEntry, Rect targetRect)
+        {
+            if (!TryGetDraggedTree(out BehaviorTreeDragData dragData) || targetEntry?.UnitData == null ||
+                targetEntry.UnitData.Id == dragData.SourceUnitDataId || !targetRect.Contains(Event.current.mousePosition))
+            {
+                return;
+            }
+
+            switch (Event.current.type)
+            {
+                case EventType.DragUpdated:
+                    DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+                    Event.current.Use();
+                    break;
+                case EventType.DragPerform:
+                    DragAndDrop.AcceptDrag();
+                    CopyTreeToUnit(dragData, targetEntry);
+                    Event.current.Use();
+                    break;
+            }
+        }
+
+        private static bool TryGetDraggedTree(out BehaviorTreeDragData dragData)
+        {
+            dragData = DragAndDrop.GetGenericData(TreeDragDataKey) as BehaviorTreeDragData;
+            return dragData != null;
+        }
+
+        private void CopyTreeToUnit(BehaviorTreeDragData dragData, UnitPrefabEntry targetEntry)
+        {
+            SyncNodePositionsFromGraph();
+            BehaviorTreeData sourceTree = GetTreeForUnit(dragData.SourceUnitDataId);
+            if (sourceTree == null)
+            {
+                UpdateStatus("The dragged unit no longer has behavior tree data.");
+                return;
+            }
+
+            BehaviorTreeData targetTree = GetTreeForUnit(targetEntry.UnitData.Id);
+            BehaviorTreeData copiedTree = CloneTree(sourceTree);
+            copiedTree.Id = targetTree?.Id ?? GetNextTreeId();
+            copiedTree.UnitDataId = targetEntry.UnitData.Id;
+            copiedTree.Name = targetEntry.DisplayName;
+            EnsureTreeValid(copiedTree, regenerateGuids: true);
+
+            if (targetTree == null)
+                _rows.Add(copiedTree);
+            else
+                _rows[_rows.IndexOf(targetTree)] = copiedTree;
+
+            _selectedPrefabPath = targetEntry.AssetPath;
+            _selectedSourceSchema = UnitSourceSchemaFactory.CreateForPrefab(targetEntry.Prefab);
+            MarkDirty();
+            RebuildGraph();
+            UpdateStatus($"Copied behavior tree from {sourceTree.Name} to {targetEntry.DisplayName}.");
+        }
+
+        private static BehaviorTreeData CloneTree(BehaviorTreeData sourceTree)
+        {
+            string json = JsonConvert.SerializeObject(sourceTree, JsonSettings);
+            BehaviorTreeData copiedTree = JsonConvert.DeserializeObject<BehaviorTreeData>(json, JsonSettings);
+            if (copiedTree == null)
+                throw new InvalidDataException("Failed to clone behavior tree data.");
+
+            return copiedTree;
         }
 
         private void LoadData()
@@ -817,72 +931,6 @@ namespace CrystalMagic.Editor.Unit
                 UpdateStatus(_statusText);
                 Debug.LogError($"[BehaviorTreeEditor] Save error:\n{ex}");
             }
-        }
-
-        private void CreateTreeForSelectedUnit()
-        {
-            UnitPrefabEntry entry = SelectedUnitEntry;
-            if (entry?.UnitData == null || SelectedTree != null)
-                return;
-
-            BehaviorTreeData tree = CreateDefaultTree(GetNextTreeId(), entry);
-            _rows.Add(tree);
-            MarkDirty();
-            RebuildGraph();
-        }
-
-        private void DeleteSelected()
-        {
-            BehaviorTreeData selected = SelectedTree;
-            if (selected == null)
-                return;
-
-            bool confirmed = EditorUtility.DisplayDialog(
-                "Delete Behavior Tree",
-                $"Delete '{GetTreeName(selected)}'?",
-                "Delete",
-                "Cancel");
-            if (!confirmed)
-                return;
-
-            _rows.Remove(selected);
-            MarkDirty();
-            RebuildGraph();
-        }
-
-        private void ValidateSelected()
-        {
-            BehaviorTreeData tree = SelectedTree;
-            if (tree == null)
-                return;
-
-            List<string> errors = ValidateTree(tree);
-            if (errors.Count == 0)
-            {
-                _statusText = $"Validation passed: {GetTreeName(tree)}";
-            }
-            else
-            {
-                _statusText = $"Validation failed: {errors[0]}";
-                Debug.LogWarning("[BehaviorTreeEditor] Validation errors:\n" + string.Join("\n", errors));
-            }
-            UpdateStatus(_statusText);
-        }
-
-        private static BehaviorTreeData CreateDefaultTree(int id, UnitPrefabEntry entry)
-        {
-            RootBehaviorNodeData root = (RootBehaviorNodeData)BehaviorNodeDataRegistry.Create(BehaviorNodeTypes.Root);
-            root.EditorPosition = new Vector2(80f, 120f);
-
-            return new BehaviorTreeData
-            {
-                Id = id,
-                UnitDataId = entry.UnitData.Id,
-                Name = entry.DisplayName,
-                Description = string.Empty,
-                RootNodeGuid = root.Guid,
-                Nodes = new List<BehaviorNodeData> { root },
-            };
         }
 
         private void EnsureStableTreeIds()
@@ -980,49 +1028,6 @@ namespace CrystalMagic.Editor.Unit
 
                 tree.RootNodeGuid = firstRoot.Guid;
             }
-        }
-
-        private List<string> ValidateTree(BehaviorTreeData tree)
-        {
-            var errors = new List<string>();
-            if (tree == null)
-            {
-                errors.Add("Tree is null.");
-                return errors;
-            }
-
-            if (tree.Nodes == null || tree.Nodes.Count == 0)
-                errors.Add("Tree has no nodes.");
-
-            RootBehaviorNodeData[] roots = tree.Nodes?.OfType<RootBehaviorNodeData>().ToArray() ?? Array.Empty<RootBehaviorNodeData>();
-            if (roots.Length != 1)
-                errors.Add($"Tree must contain exactly one root node. Current: {roots.Length}");
-
-            if (tree.GetNode(tree.RootNodeGuid) is not RootBehaviorNodeData)
-                errors.Add("RootNodeGuid does not point to a root node.");
-
-            for (int i = 0; i < tree.Nodes.Count; i++)
-            {
-                BehaviorNodeData node = tree.Nodes[i];
-                if (node == null)
-                {
-                    errors.Add($"Node #{i} is null.");
-                    continue;
-                }
-
-                if (BehaviorTreeGraphView.SupportsChildren(node))
-                {
-                    int maxChildren = BehaviorTreeGraphView.GetMaxChildCount(node);
-                    if (maxChildren >= 0 && node.ChildGuids.Count > maxChildren)
-                        errors.Add($"{BehaviorNodeDataRegistry.GetDisplayName(node.Type)} exceeds child limit {maxChildren}.");
-                }
-                else if (node.ChildGuids.Count > 0)
-                {
-                    errors.Add($"{BehaviorNodeDataRegistry.GetDisplayName(node.Type)} should not have children.");
-                }
-            }
-
-            return errors;
         }
 
         private void UpdateStatus(string text)

@@ -28,6 +28,16 @@ public sealed class UnitSourceAuthoringAttribute : Attribute
 
 public static class UnitSourceSchemaFactory
 {
+    public static UnitSourceSchema CreateForAllSources()
+    {
+        UnitSourceSchemaBuilder builder = new();
+        IReadOnlyList<UnitComponentSource> sources = UnitComponentSourceRegistry.Sources;
+        for (int i = 0; i < sources.Count; i++)
+            sources[i]?.Describe(builder);
+
+        return builder.Build();
+    }
+
     public static UnitSourceSchema CreateForPrefab(GameObject prefab)
     {
         UnitSourceSchemaBuilder builder = new();

@@ -7,17 +7,16 @@ using CrystalMagic.Core;
 public class CharacterUIData : UIData
 {
     public UINode Skill;
-    public UINode Skill_ChangeSkillBtn;
     public UINode Skill_SkillChain;
     public UINode Skill_SkillChain_Viewport;
     public UINode Skill_SkillChain_Viewport_Content;
     public UINode Skill_SkillChain_Viewport_Content_SkillItem;
     public UINode Skill_SkillChain_Viewport_Content_SkillItem_Background;
-    public UINode Skill_SkillChain_Viewport_Content_SkillItem_Skill;
+    public UINode Skill_SkillChain_Viewport_Content_SkillItem_SkillMask;
+    public UINode Skill_SkillChain_Viewport_Content_SkillItem_SkillMask_Skill;
     public UINode Skill_SkillChain_Viewport_Content_SkillItem_Effect;
     public UINode Skill_SkillChain_Viewport_Content_SkillItem_Effect_EffectIcon;
-    public UINode Skill_SkillChain_Viewport_Content_SkillItem_Index;
-    public UINode Skill_SkillChain_Viewport_Content_SkillItem_Index_IndexNum;
+    public UINode Skill_SkillChain_Viewport_Content_SkillItem_IndexNum;
     public UINode Equip;
     public UINode Equip_MagicStoneBorder;
     public UINode Equip_MagicStoneBorder_MagicStone;
@@ -38,29 +37,25 @@ public class CharacterUIData : UIData
     public UINode InventoryView_Viewport_Content_InventoryItem_Count;
     public UINode InventoryView_Viewport_Content_InventoryItem_Name;
     public UINode ItemDrag;
-    public UINode ItemDrag_Icon;
+    public UINode ItemDrag_Mask;
+    public UINode ItemDrag_Mask_Icon;
     public UINode SkillDrag;
-    public UINode SkillDrag_Background;
-    public UINode SkillDrag_Skill;
-    public UINode SkillDrag_Effect;
-    public UINode SkillDrag_Effect_EffectIcon;
-    public UINode SkillDrag_Index;
-    public UINode SkillDrag_Index_IndexNum;
+    public UINode SkillDrag_Mask;
+    public UINode SkillDrag_Mask_Icon;
 
     public override void Bind(Transform root)
     {
         Skill = UINode.From(Find(root, "Skill"));
-        Skill_ChangeSkillBtn = UINode.From(Find(root, "Skill/ChangeSkillBtn"));
         Skill_SkillChain = UINode.From(Find(root, "Skill/SkillChain"));
         Skill_SkillChain_Viewport = UINode.From(Find(root, "Skill/SkillChain/Viewport"));
         Skill_SkillChain_Viewport_Content = UINode.From(Find(root, "Skill/SkillChain/Viewport/Content"));
         Skill_SkillChain_Viewport_Content_SkillItem = UINode.From(Find(root, "Skill/SkillChain/Viewport/Content/SkillItem"));
         Skill_SkillChain_Viewport_Content_SkillItem_Background = UINode.From(Find(root, "Skill/SkillChain/Viewport/Content/SkillItem/Background"));
-        Skill_SkillChain_Viewport_Content_SkillItem_Skill = UINode.From(Find(root, "Skill/SkillChain/Viewport/Content/SkillItem/Skill"));
+        Skill_SkillChain_Viewport_Content_SkillItem_SkillMask = UINode.From(Find(root, "Skill/SkillChain/Viewport/Content/SkillItem/SkillMask"));
+        Skill_SkillChain_Viewport_Content_SkillItem_SkillMask_Skill = UINode.From(Find(root, "Skill/SkillChain/Viewport/Content/SkillItem/SkillMask/Skill"));
         Skill_SkillChain_Viewport_Content_SkillItem_Effect = UINode.From(Find(root, "Skill/SkillChain/Viewport/Content/SkillItem/Effect"));
         Skill_SkillChain_Viewport_Content_SkillItem_Effect_EffectIcon = UINode.From(Find(root, "Skill/SkillChain/Viewport/Content/SkillItem/Effect/EffectIcon"));
-        Skill_SkillChain_Viewport_Content_SkillItem_Index = UINode.From(Find(root, "Skill/SkillChain/Viewport/Content/SkillItem/Index"));
-        Skill_SkillChain_Viewport_Content_SkillItem_Index_IndexNum = UINode.From(Find(root, "Skill/SkillChain/Viewport/Content/SkillItem/Index/IndexNum"));
+        Skill_SkillChain_Viewport_Content_SkillItem_IndexNum = UINode.From(Find(root, "Skill/SkillChain/Viewport/Content/SkillItem/IndexNum"));
         Equip = UINode.From(Find(root, "Equip"));
         Equip_MagicStoneBorder = UINode.From(Find(root, "Equip/MagicStoneBorder"));
         Equip_MagicStoneBorder_MagicStone = UINode.From(Find(root, "Equip/MagicStoneBorder/MagicStone"));
@@ -81,13 +76,10 @@ public class CharacterUIData : UIData
         InventoryView_Viewport_Content_InventoryItem_Count = UINode.From(Find(root, "InventoryView/Viewport/Content/InventoryItem/Count"));
         InventoryView_Viewport_Content_InventoryItem_Name = UINode.From(Find(root, "InventoryView/Viewport/Content/InventoryItem/Name"));
         ItemDrag = UINode.From(Find(root, "ItemDrag"));
-        ItemDrag_Icon = UINode.From(Find(root, "ItemDrag/Icon"));
+        ItemDrag_Mask = UINode.From(Find(root, "ItemDrag/Mask"));
+        ItemDrag_Mask_Icon = UINode.From(Find(root, "ItemDrag/Mask/Icon"));
         SkillDrag = UINode.From(Find(root, "SkillDrag"));
-        SkillDrag_Background = UINode.From(Find(root, "SkillDrag/Background"));
-        SkillDrag_Skill = UINode.From(Find(root, "SkillDrag/Skill"));
-        SkillDrag_Effect = UINode.From(Find(root, "SkillDrag/Effect"));
-        SkillDrag_Effect_EffectIcon = UINode.From(Find(root, "SkillDrag/Effect/EffectIcon"));
-        SkillDrag_Index = UINode.From(Find(root, "SkillDrag/Index"));
-        SkillDrag_Index_IndexNum = UINode.From(Find(root, "SkillDrag/Index/IndexNum"));
+        SkillDrag_Mask = UINode.From(Find(root, "SkillDrag/Mask"));
+        SkillDrag_Mask_Icon = UINode.From(Find(root, "SkillDrag/Mask/Icon"));
     }
 }

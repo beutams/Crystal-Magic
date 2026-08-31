@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CrystalMagic.Game.Data;
 using UnityEngine;
 
@@ -79,5 +80,15 @@ public sealed class KeepStateScriptNode : StateScriptStateNode
         _isTiming = true;
         _timingStartTick = tickVersion;
         _onTimeStartOutput.Pulse();
+    }
+
+    public override void CollectRuntimeDebugData(List<StateScriptRuntimeDebugValue> values)
+    {
+        base.CollectRuntimeDebugData(values);
+        values.Add(new StateScriptRuntimeDebugValue("Timing", _isTiming.ToString()));
+        values.Add(new StateScriptRuntimeDebugValue("Elapsed", $"{_elapsedSeconds:0.###} s"));
+        values.Add(new StateScriptRuntimeDebugValue("Duration", $"{Mathf.Max(0f, _data.DurationSeconds):0.###} s"));
+        values.Add(new StateScriptRuntimeDebugValue("Timing Start Tick", _timingStartTick.ToString()));
+        values.Add(new StateScriptRuntimeDebugValue("Last Keep Tick", _lastKeepTick.ToString()));
     }
 }

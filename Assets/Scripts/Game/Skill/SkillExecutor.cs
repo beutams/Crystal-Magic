@@ -141,6 +141,7 @@ namespace CrystalMagic.Game.Skill
                 SpawnProjectileEffectData data => new SpawnProjectileEffect(data),
                 SpawnSoundEffectData data => new SpawnSoundEffect(data),
                 SpawnUnitEffectData data => new SpawnUnitEffect(data),
+                SpawnFollowVfxEffectData data => new SpawnFollowVfxEffect(data),
                 SpawnVfxEffectData data => new SpawnVfxEffect(data),
                 StunEffectData data => new StunEffect(data),
                 _ => null,

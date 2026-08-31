@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CrystalMagic.Game.Data;
 
 public enum StateScriptStateStatus
@@ -34,6 +35,12 @@ public abstract class StateScriptStateNode : StateScriptNode
     }
 
     public StateScriptStateStatus Status { get; private set; } = StateScriptStateStatus.Stop;
+
+    public override void CollectRuntimeDebugData(List<StateScriptRuntimeDebugValue> values)
+    {
+        base.CollectRuntimeDebugData(values);
+        values.Add(new StateScriptRuntimeDebugValue("Status", Status.ToString()));
+    }
 
     internal void TryEnterRunning(long tickVersion)
     {

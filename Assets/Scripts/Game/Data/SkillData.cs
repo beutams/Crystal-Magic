@@ -17,8 +17,10 @@ namespace CrystalMagic.Game.Data
         public bool IsMonsterSkill;
         public string DescriptionKey;
         public string RuntimeType;
+        public SkillInputType InputType;
         public int MpCost;
         public float ChantDuration;
+        public float CastingMoveMultiplier = 1f;
         public string IconPath;
         public List<ConditionConfig> Conditions = new();
 
@@ -36,6 +38,13 @@ namespace CrystalMagic.Game.Data
         {
             return runtimeType ?? string.Empty;
         }
+    }
+
+    public enum SkillInputType
+    {
+        None = 0,
+        Self = 1,
+        MousePosition = 2,
     }
 
     public enum SkillModifierChannel

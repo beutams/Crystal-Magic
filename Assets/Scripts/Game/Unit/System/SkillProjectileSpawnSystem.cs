@@ -1,4 +1,5 @@
 using CrystalMagic.Game.Unit;
+using CrystalMagic.Game.Skill.Effects;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -49,6 +50,35 @@ public partial class SkillProjectileSpawnSystem : SystemBase
             EntityManager.GetBuffer<SkillProjectileHitEntityElement>(projectileEntity).Clear();
 
         ApplyPayloadComponent(projectileEntity, request);
+        SpawnProjectileVisual(projectileEntity, request, rotation);
+    }
+
+    private void SpawnProjectileVisual(Entity projectileEntity, SkillProjectileSpawnRequest request, quaternion rotation)
+    {
+        if (request.VisualPrefabName.Length == 0 ||
+            !SpriteEffectSpawnUtility.TrySpawn(
+                EntityManager,
+                request.VisualPrefabName.ToString(),
+                request.StartPosition,
+                rotation,
+                request.VisualScale,
+                0f,
+                out Entity visualEntity))
+        {
+            return;
+        }
+
+        SpriteEffectSpawnUtility.SetOrAddComponentData(
+            EntityManager,
+            visualEntity,
+            new EffectVisualFollowComponent
+            {
+                Target = projectileEntity,
+                Offset = request.VisualOffset,
+                AlignRotation = 1,
+                EndWhenTargetMissing = 1,
+            });
+        SetOrAddComponentData(projectileEntity, new SkillProjectileVisualLinkComponent { VisualEntity = visualEntity });
     }
 
     private static quaternion CreateRotation(float3 direction)

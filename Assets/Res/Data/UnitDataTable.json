@@ -1,6 +1,74 @@
 ﻿{
   "Rows": [
     {
+      "Name": "PlayerTown",
+      "Description": "城镇主角",
+      "PrefabPath": "Assets/Res/Prefab/Unit/PlayerTown.prefab",
+      "Modules": [
+        {
+          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
+          "BaseMoveSpeed": 10.0,
+          "BaseMaxAcceleration": 10000.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
+          "BaseMaxHealth": 0.0,
+          "BaseHealthRegenPerSecond": 0.0,
+          "BaseDefense": 0.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
+          "BaseAttackPower": 0.0,
+          "BaseSkillRange": 0.0,
+          "BaseChantSpeedBonus": 0.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
+          "BaseMaxMp": 0.0,
+          "BaseMpRegenPerSecond": 0.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+          "Faction": 0
+        }
+      ],
+      "Id": 1
+    },
+    {
+      "Name": "PlayerDungeon",
+      "Description": "战斗主角",
+      "PrefabPath": "Assets/Res/Prefab/Unit/PlayerDungeon.prefab",
+      "Modules": [
+        {
+          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
+          "BaseMoveSpeed": 10.0,
+          "BaseMaxAcceleration": 10000.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
+          "BaseMaxHealth": 100.0,
+          "BaseHealthRegenPerSecond": 10.0,
+          "BaseDefense": 0.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
+          "BaseAttackPower": 10.0,
+          "BaseSkillRange": 0.0,
+          "BaseChantSpeedBonus": 0.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
+          "BaseMaxMp": 100.0,
+          "BaseMpRegenPerSecond": 10.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+          "Faction": 0
+        }
+      ],
+      "Id": 2
+    },
+    {
       "Name": "MonsterStraw",
       "Description": "Test strawman",
       "PrefabPath": "Assets/Res/Prefab/Unit/MonsterStraw.prefab",
@@ -130,74 +198,6 @@
         }
       ],
       "Id": 8
-    },
-    {
-      "Name": "PlayerDungeon",
-      "Description": "战斗主角",
-      "PrefabPath": "Assets/Res/Prefab/Unit/PlayerDungeon.prefab",
-      "Modules": [
-        {
-          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 10.0,
-          "BaseMaxAcceleration": 10000.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 100.0,
-          "BaseHealthRegenPerSecond": 10.0,
-          "BaseDefense": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-          "BaseAttackPower": 10.0,
-          "BaseSkillRange": 0.0,
-          "BaseChantSpeedBonus": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-          "BaseMaxMp": 100.0,
-          "BaseMpRegenPerSecond": 10.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-          "Faction": 0
-        }
-      ],
-      "Id": 2
-    },
-    {
-      "Name": "PlayerTown",
-      "Description": "城镇主角",
-      "PrefabPath": "Assets/Res/Prefab/Unit/PlayerTown.prefab",
-      "Modules": [
-        {
-          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 10.0,
-          "BaseMaxAcceleration": 10000.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 0.0,
-          "BaseHealthRegenPerSecond": 0.0,
-          "BaseDefense": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-          "BaseAttackPower": 0.0,
-          "BaseSkillRange": 0.0,
-          "BaseChantSpeedBonus": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-          "BaseMaxMp": 0.0,
-          "BaseMpRegenPerSecond": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-          "Faction": 0
-        }
-      ],
-      "Id": 1
     }
   ]
 }

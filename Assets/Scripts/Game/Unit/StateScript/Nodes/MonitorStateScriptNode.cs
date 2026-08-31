@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CrystalMagic.Game.Data;
 
 [FactoryKey("Monitor", 22, "Monitor")]
@@ -67,6 +68,15 @@ public sealed class MonitorStateScriptNode : StateScriptStateNode
 
         _lastValue = value;
         _hasLastValue = true;
+    }
+
+    public override void CollectRuntimeDebugData(List<StateScriptRuntimeDebugValue> values)
+    {
+        base.CollectRuntimeDebugData(values);
+        values.Add(new StateScriptRuntimeDebugValue("Has Last Value", _hasLastValue.ToString()));
+        values.Add(new StateScriptRuntimeDebugValue(
+            "Last Value",
+            _hasLastValue ? _lastValue.ToString() : "(none)"));
     }
 
     private static ComparatorFactory CreateComparatorFactory()

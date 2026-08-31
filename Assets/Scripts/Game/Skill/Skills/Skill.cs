@@ -81,4 +81,25 @@ namespace CrystalMagic.Game.Skill
             context.TriggerValue = 0f;
         }
     }
+
+    [FactoryKey(nameof(CommonSkill), 0, "Common Skill")]
+    public sealed class CommonSkill : Skill
+    {
+        public CommonSkill(ResolvedSkillData data) : base(data)
+        {
+        }
+
+        protected override bool BuildContext(in SkillReleaseRequest request, SkillContent context)
+        {
+            if (!request.HasTargetPosition)
+                return false;
+
+            SetPosition(
+                context,
+                true,
+                new Vector3(request.TargetPosition.x, request.TargetPosition.y, request.TargetPosition.z));
+            SetTargetEntity(context, request.HasTargetEntity, request.TargetEntity);
+            return true;
+        }
+    }
 }

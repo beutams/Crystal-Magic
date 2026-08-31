@@ -17,7 +17,6 @@ namespace CrystalMagic.UI
         protected override void OnOpen()
         {
             View.BindModel(Model);
-            View.ChangeSkillRequested += OnChangeSkillRequested;
             View.InventorySkillStoneDropped += OnInventorySkillStoneDropped;
             View.InventoryEquipDropped += OnInventoryEquipDropped;
             View.EquipReturnedToInventory += OnEquipReturnedToInventory;
@@ -25,7 +24,6 @@ namespace CrystalMagic.UI
             View.SkillAdditionRequested += OnSkillAdditionRequested;
             View.SkillReordered += OnSkillReordered;
             View.SkillReturnedToInventory += OnSkillReturnedToInventory;
-            View.PropShortcutBindRequested += OnPropShortcutBindRequested;
             BindEvent(new CommonGameEvent(RuntimeDataComponent.SkillRuntimeDataChangedEventName), _refreshHandler);
             BindEvent(new CommonGameEvent(SaveDataComponent.SkillDataChangedEventName), _refreshHandler);
             BindEvent(new CommonGameEvent(SaveDataComponent.BackpackDataChangedEventName), _refreshHandler);
@@ -36,7 +34,6 @@ namespace CrystalMagic.UI
 
         protected override void OnClose()
         {
-            View.ChangeSkillRequested -= OnChangeSkillRequested;
             View.InventorySkillStoneDropped -= OnInventorySkillStoneDropped;
             View.InventoryEquipDropped -= OnInventoryEquipDropped;
             View.EquipReturnedToInventory -= OnEquipReturnedToInventory;
@@ -44,13 +41,7 @@ namespace CrystalMagic.UI
             View.SkillAdditionRequested -= OnSkillAdditionRequested;
             View.SkillReordered -= OnSkillReordered;
             View.SkillReturnedToInventory -= OnSkillReturnedToInventory;
-            View.PropShortcutBindRequested -= OnPropShortcutBindRequested;
             CloseEffectSelectUI();
-        }
-
-        private void OnChangeSkillRequested()
-        {
-            RuntimeDataComponent.Instance.SelectNextSkillChain(SaveDataComponent.Instance.GetSkillData());
         }
 
         private void OnInventorySkillStoneDropped(CharacterInventoryDisplayData data, int insertIndex)
@@ -75,7 +66,6 @@ namespace CrystalMagic.UI
             {
                 SkillStoneItemId = data.ItemId,
             });
-            TrimSkillAdditionsToLimit(chain);
 
             SaveDataComponent.Instance.NotifyBackpackDataChanged();
             SaveDataComponent.Instance.NotifySkillDataChanged();
@@ -197,7 +187,6 @@ namespace CrystalMagic.UI
 
             int skillId = chain.Slots[data.SkillIndex].SkillStoneItemId;
             chain.Slots.RemoveAt(data.SkillIndex);
-            TrimSkillAdditionsToLimit(chain);
             AddItemToBackpack(backpackData, skillId, 1);
             SaveDataComponent.Instance.NotifyBackpackDataChanged();
             SaveDataComponent.Instance.NotifySkillDataChanged();
@@ -205,7 +194,7 @@ namespace CrystalMagic.UI
 
         private void OnSkillAdditionRequested(CharacterSkillDisplayData data)
         {
-            if (data == null)
+            if (data == null || data.SkillIndex <= 0)
                 return;
 
             SkillCData skillData = SaveDataComponent.Instance.GetSkillData();
@@ -220,11 +209,6 @@ namespace CrystalMagic.UI
                 return;
 
             SkillChainSlotData slot = chain.Slots[data.SkillIndex];
-            int allowedAdditionCount = GetAllowedAdditionCount(chain);
-            int assignedAdditionCount = GetAssignedAdditionCount(chain);
-            bool canAssignNewAddition = slot != null && slot.SkillAdditionId >= 0 || assignedAdditionCount < allowedAdditionCount;
-            if (!canAssignNewAddition)
-                return;
 
             CloseEffectSelectUI();
             _effectSelectUI = UIComponent.Instance.OpenChild<EffectSelectUI>(View, new EffectSelectUIOpenData
@@ -232,11 +216,6 @@ namespace CrystalMagic.UI
                 SkillSlotIndex = data.SkillIndex,
                 SelectedAdditionId = slot?.SkillAdditionId ?? -1,
             });
-        }
-
-        private void OnPropShortcutBindRequested(int propSlotIndex, int shortcutIndex)
-        {
-            CrystalMagic.Game.PropUseUtility.TryBindShortcutSlot(shortcutIndex, propSlotIndex);
         }
 
         private void CloseEffectSelectUI()
@@ -308,48 +287,6 @@ namespace CrystalMagic.UI
         private void AddItemToBackpack(BackpackData backpackData, int itemId, int quantity)
         {
             InventoryUtility.AddItemToBackpack(backpackData, itemId, quantity);
-        }
-
-        private static int GetAllowedAdditionCount(SkillChainData chain)
-        {
-            int skillCount = chain?.Slots?.Count ?? 0;
-            return skillCount / 2;
-        }
-
-        private static int GetAssignedAdditionCount(SkillChainData chain)
-        {
-            if (chain?.Slots == null)
-                return 0;
-
-            int count = 0;
-            for (int i = 0; i < chain.Slots.Count; i++)
-            {
-                SkillChainSlotData slot = chain.Slots[i];
-                if (slot != null && slot.SkillAdditionId >= 0)
-                    count++;
-            }
-
-            return count;
-        }
-
-        private static void TrimSkillAdditionsToLimit(SkillChainData chain)
-        {
-            if (chain?.Slots == null)
-                return;
-
-            int overflow = GetAssignedAdditionCount(chain) - GetAllowedAdditionCount(chain);
-            if (overflow <= 0)
-                return;
-
-            for (int i = chain.Slots.Count - 1; i >= 0 && overflow > 0; i--)
-            {
-                SkillChainSlotData slot = chain.Slots[i];
-                if (slot == null || slot.SkillAdditionId < 0)
-                    continue;
-
-                slot.SkillAdditionId = -1;
-                overflow--;
-            }
         }
 
     }

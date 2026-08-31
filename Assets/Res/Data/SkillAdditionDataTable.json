@@ -1,3 +1,147 @@
-{
-  "Rows": []
+﻿{
+  "Rows": [
+    {
+      "NameKey": "增幅",
+      "IconPath": "Assets/Res/Sprites/UISprites/240 Pixel Art Spell & Skill Icons - Dani Melich/Arcane/64x64 PNGs/arcane_skill_20.png",
+      "Callbacks": [
+        {
+          "EventName": "skill.beforeRequest",
+          "Conditions": [],
+          "Actions": [
+            {
+              "$type": "CrystalMagic.Game.Data.ModifyCurrentSkillAdditionActionData, Assembly-CSharp",
+              "Modifiers": [
+                {
+                  "Channel": 100,
+                  "Factor": {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.5,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  },
+                  "Bonus": {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "Id": 0
+    },
+    {
+      "NameKey": "双发",
+      "IconPath": "Assets/Res/Sprites/UISprites/240 Pixel Art Spell & Skill Icons - Dani Melich/Arcane/64x64 PNGs/arcane_skill_20.png",
+      "Callbacks": [
+        {
+          "EventName": "skill.afterRequest",
+          "Conditions": [],
+          "Actions": [
+            {
+              "$type": "CrystalMagic.Game.Data.SetSourceValueSkillAdditionActionData, Assembly-CSharp",
+              "SetterKey": "unit.variables.set",
+              "Key": "extraCast.skillId",
+              "Values": [
+                {
+                  "Kind": 1,
+                  "GetterKey": "player.skill.currentSkillId",
+                  "Inputs": []
+                }
+              ]
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.SetSourceValueSkillAdditionActionData, Assembly-CSharp",
+              "SetterKey": "unit.variables.set",
+              "Key": "extraCast.pending",
+              "Values": [
+                {
+                  "Kind": 0,
+                  "Literal": {
+                    "Type": 1,
+                    "Bool": true
+                  },
+                  "Inputs": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "EventName": "skill.extraCast",
+          "Conditions": [],
+          "Actions": [
+            {
+              "$type": "CrystalMagic.Game.Data.ModifyCurrentSkillAdditionActionData, Assembly-CSharp",
+              "Modifiers": [
+                {
+                  "Channel": 100,
+                  "Factor": {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 3,
+                      "Float": -0.9
+                    },
+                    "Inputs": []
+                  },
+                  "Bonus": {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 3,
+                      "Float": 0.0
+                    },
+                    "Inputs": []
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "Id": 1
+    }
+  ]
 }

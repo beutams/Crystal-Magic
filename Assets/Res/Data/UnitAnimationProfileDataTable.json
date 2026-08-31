@@ -22,6 +22,92 @@
         }
       ],
       "Id": 0
+    },
+    {
+      "UnitDataId": 2,
+      "UnitName": "PlayerDungeon",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Player/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Player/IdleRight.anim"
+        },
+        {
+          "Name": "Move",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Player/WalkLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Player/WalkRight.anim"
+        },
+        {
+          "Name": "Attack",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Player/AttackLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Player/AttackRight.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Player/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Player/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Player/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Player/DeathRight.anim"
+        }
+      ],
+      "Id": 1
+    },
+    {
+      "UnitDataId": 3,
+      "UnitName": "MonsterStraw",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/MonsterStraw/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/MonsterStraw/IdleRight.anim"
+        },
+        {
+          "Name": "Move",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/MonsterStraw/WalkLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/MonsterStraw/WalkRight.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/MonsterStraw/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/MonsterStraw/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/MonsterStraw/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/MonsterStraw/DeathRight.anim"
+        }
+      ],
+      "Id": 2
     }
   ]
 }

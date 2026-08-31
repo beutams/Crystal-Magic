@@ -77,12 +77,6 @@ namespace CrystalMagic.Editor.Data
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            if (GUILayout.Button("加载", EditorStyles.toolbarButton, GUILayout.Width(44f)))
-            {
-                RefreshItemCache();
-                LoadData();
-            }
-
             GUI.enabled = _isDirty;
             if (GUILayout.Button(_isDirty ? "保存 *" : "保存", EditorStyles.toolbarButton, GUILayout.Width(56f)))
                 SaveData();
