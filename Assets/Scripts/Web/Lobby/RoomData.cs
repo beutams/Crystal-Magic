@@ -6,13 +6,13 @@ namespace Server
     [Serializable]
     public class RoomData
     {
-        public long roomId;
-        public long ownerId;
+        public ulong roomId;
+        public ulong ownerAccountId;
         public string roomName;
         public int enterNum;
         public int maxNum;
-        public Dictionary<long, string> players = new Dictionary<long, string>();
-
+        public Dictionary<ulong, string> players = new Dictionary<ulong, string>();
+        public Dictionary<ulong, bool> playerready = new Dictionary<ulong, bool>();
         public static RoomData CreateRoomData(Room room)
         {
             RoomData roomData = new RoomData();
@@ -20,10 +20,11 @@ namespace Server
             roomData.roomName = room.roomName;
             roomData.enterNum = room.enterNum;
             roomData.maxNum = room.maxNum;
-            roomData.ownerId = room.ownerId;
+            roomData.ownerAccountId = room.ownerAccountId;
             foreach (var item in room.players)
             {
                 roomData.players.Add(item.Key, item.Value.username);
+                roomData.playerready.Add(item.Key, item.Value.ready);
             }
             return roomData;
         }
@@ -33,14 +34,14 @@ namespace Server
     {
         public List<SimpleRoomData> roomList = new List<SimpleRoomData>();
 
-        public static RoomListData CreateRoomData(Dictionary<long, Room> roomList)
+        public static RoomListData CreateRoomData(Dictionary<ulong, Room> roomList)
         {
             RoomListData listData = new RoomListData();
             foreach (var room in roomList.Values)
             {
                 SimpleRoomData data = new SimpleRoomData();
                 data.roomId = room.roomId;
-                data.ownerId = room.ownerId;
+                data.ownerAccountId = room.ownerAccountId;
                 data.roomName = room.roomName;
                 data.enterNum = room.enterNum;
                 data.maxNum = room.maxNum;
@@ -52,8 +53,8 @@ namespace Server
     [Serializable]
     public class SimpleRoomData
     {
-        public long roomId;
-        public long ownerId;
+        public ulong roomId;
+        public ulong ownerAccountId;
         public string roomName;
         public int enterNum;
         public int maxNum;

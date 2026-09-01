@@ -192,6 +192,23 @@ namespace CrystalMagic.Editor.Config
                 changed = EditorGUI.EndChangeCheck();
                 return result;
             }
+            if (type == typeof(ulong))
+            {
+                ulong current = value is ulong currentValue ? currentValue : 0UL;
+                EditorGUI.BeginChangeCheck();
+                string input = EditorGUILayout.TextField(label, current.ToString());
+                bool inputChanged = EditorGUI.EndChangeCheck();
+                if (!inputChanged)
+                    return current;
+
+                if (ulong.TryParse(input, out ulong result))
+                {
+                    changed = true;
+                    return result;
+                }
+
+                return current;
+            }
             if (type == typeof(float))
             {
                 EditorGUI.BeginChangeCheck();

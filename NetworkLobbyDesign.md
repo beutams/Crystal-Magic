@@ -17,7 +17,7 @@
 
 - TCP 长度帧协议与 opcode 消息注册。
 - 客户端 Ping、服务端 Pong、10 秒无消息超时断开。
-- 服务端创建临时玩家与房间。
+- 服务端创建玩家与房间。
 - 创建房间、加入房间、主动离房、断线离房。
 - 房主断线时转移房主。
 - 空房间删除。
@@ -28,20 +28,22 @@
 
 每个已连接客户端对应一个 `Player`：
 
-- `userId`：服务端分配的玩家标识。当前为临时自增 Id，后续登录系统接入后替换为账号 Id。
+- `ulong accountId`：玩家账号标识。测试时身份来自 `LobbyAccountConfig { accountId, username }`；生产环境由 Steam 认证提供 SteamID。
 - `username`：大厅展示名称。
-- `roomId`：当前房间 Id；`-1` 表示未加入房间。
-- `connect`：该玩家当前的网络连接。
+- `roomId`：当前房间 Id，类型为 `ulong`；`0UL` 表示未加入房间。
+- `connect`：该玩家当前的可替换传输网络连接，不承担身份认证职责。
 
 ### 2.2 Room
 
 每个房间包含：
 
-- `roomId`
+- `ulong roomId`
 - `roomName`
-- `ownerId`
+- `ulong ownerAccountId`
 - `maxNum`
 - `players`
+
+`roomId` 与 `battleId` 均为 `ulong`。`roomId == 0UL` 表示当前没有房间；房间实例 Id 由 `ServerUtility.CreateRoomId()` 统一分配。
 
 `enterNum` 为 `players.Count` 的镜像值。后续可以移除该冗余字段，或只通过统一方法更新它。
 
@@ -72,11 +74,14 @@ RemovePlayerFromRoom(Player player, bool notifyLeavingPlayer)
 
 - `L2C_CreateReturn`、`L2C_JoinReturn` 与 `L2C_LeaveReturn` 都使用
   `LobbyRequestType type` 表示结果，而不是 `bool success`。
-- `Success`：服务端已成功应用请求；创建和加入成功时会附带 `roomData`。
-- `Fail`：通用业务失败，例如玩家状态不满足操作条件。
-- `RoomClosed`：加入目标已不存在。
-- `RoomFull`：加入目标人数已满。
-- `Timeout`：仅由客户端在等待服务端响应超时时产生，服务端不发送该结果。
+- `CreateSuccess`、`JoinSuccess` 与 `LeaveSuccess`：服务端已成功应用对应请求；创建和
+  加入成功时会附带 `roomData`。
+- `CreateFail`、`JoinFail` 与 `LeaveFail`：对应操作的通用业务失败，例如玩家状态不满足
+  操作条件。
+- `JoinRoomClosed`：加入目标已不存在。
+- `JoinRoomFull`：加入目标人数已满。
+- `CreateTimeout`、`JoinTimeout` 与 `LeaveTimeout`：仅由客户端在等待服务端响应超时时
+  产生，服务端不发送该结果。
 
 枚举的默认值必须是非成功状态（例如 `Unknown = 0`），避免消息遗漏
 `type` 或协议版本不一致时被错误地视为成功。
@@ -105,9 +110,10 @@ RemovePlayerFromRoom(Player player, bool notifyLeavingPlayer)
 - 创建、加入、离开失败。
 - 不在房间的客户端断线。
 
-客户端建立 TCP 连接并被服务端 `Accept` 后，服务端会创建临时玩家并只向该
-客户端主动发送一次 `L2C_RefreshRoomList` 作为初始大厅快照；它不是面向所有
-客户端的房间列表广播。
+客户端 TCP 连接成功后，客户端发送 `C2L_LoginLobby`。服务端验证登录身份并创建
+`Player`，随后只向该客户端主动发送一次 `L2C_RefreshRoomList` 作为初始大厅快照；
+它不是面向所有客户端的房间列表广播。客户端在收到初始快照前不得发送创建、加入、
+离开等房间操作。
 
 `L2C_RefreshRoomInfo`：
 
@@ -121,10 +127,10 @@ RemovePlayerFromRoom(Player player, bool notifyLeavingPlayer)
 
 ### 4.1 ClientLobbyManager
 
-`ClientLobbyManager` 是客户端大厅的唯一状态入口。它持有 `ClientService`，注册大厅协议回调，并维护下列本地状态：
+`ClientLobbyManager` 是客户端大厅的唯一状态入口。它持有 `ClientService`，在 `Awake` 中自动建立连接并注册大厅协议回调；连接成功回调 `OnConnectedSuccess` 私下发送配置的登录消息。它维护下列本地状态：
 
-- `LobbyConnectionState`：`Disconnected`、`Connecting`、`InLobby`、`InRoom`。
-- 当前玩家 Id 与展示名。
+- `accountId`：配置的玩家账号标识；断线时重置为 `0`。
+- `loggedIn`：收到非空的初始房间列表快照后才置为 `true`，作为发送房间操作的门槛。
 - 房间列表：`RoomListData`。
 - 当前所在房间：`RoomData`，未加入时为 `null`。
 - 当前待处理的大厅操作及其超时计时器。
@@ -138,20 +144,22 @@ RemovePlayerFromRoom(Player player, bool notifyLeavingPlayer)
 - `onRequestFail(LobbyRequestType)`：主动创建、加入或离开请求失败时触发；失败可以
   来自服务端结果码或客户端超时。
 
-一个客户端同一时刻只允许一个待处理大厅操作。发送主动请求后启动超时计时器；收到
-对应响应后，无论结果是成功还是失败，都必须取消该计时器。底层断线不走
-`onRequestFail`，由网络层统一显示断线提示，`ClientLobbyManager` 只负责清空本地大厅状态。
+一个客户端同一时刻只允许一个待处理大厅操作。发送主动请求后，新的操作直接忽略；若
+500 ms 后仍未收到响应，则发布等待 Mask 事件并拦截 UI 操作。收到对应响应后，无论结果
+是成功还是失败，都必须取消等待与超时计时器。超时后关闭当前连接并进入底层断线恢复，
+在真正收到断线回调前保持请求门关闭，网络层也不再收发该连接的数据，防止迟到回包污染
+下一次操作。底层断线不走 `onRequestFail`，由网络层统一显示断线提示，
+`ClientLobbyManager` 只负责清空本地大厅状态。
 
 ### 4.2 客户端操作
 
-客户端对 UI 暴露以下方法：
+客户端对 UI 暴露以下方法；连接、登录和断开由 `ClientLobbyManager` 生命周期及网络回调内部处理，不暴露 `Connect`、`LoginLobby` 或 `Disconnect` 公共 API：
 
-- `Connect(endpoint)`：建立 TCP 连接。
 - `CreateRoom(roomName)`：发送 `C2L_CreateRoom`。
 - `JoinRoom(roomId)`：发送 `C2L_JoinRoom`。
 - `LeaveRoom()`：发送 `C2L_LeaveRoom`。
-- `Disconnect()`：关闭本地连接并清理大厅状态。
 
+客户端必须先完成内部登录并收到初始 `L2C_RefreshRoomList` 快照，才能发送任何房间操作。
 UI 不直接构造或发送网络消息。
 
 ### 4.3 客户端消息处理
@@ -159,9 +167,9 @@ UI 不直接构造或发送网络消息。
 | 服务端消息 | 客户端状态变化 |
 | --- | --- |
 | `L2C_RefreshRoomList` | 替换房间列表，触发 `onRoomRefresh`。首次收到该快照后进入 `InLobby`。 |
-| `L2C_CreateReturn` | 取消创建超时计时器。`Success` 时设置当前房间并进入 `InRoom`；其他结果触发 `onRequestFail`。 |
-| `L2C_JoinReturn` | 取消加入超时计时器。`Success` 时设置当前房间并进入 `InRoom`；其他结果触发 `onRequestFail`。 |
-| `L2C_LeaveReturn` | 取消离开超时计时器。`Success` 时清空当前房间并进入 `InLobby`；其他结果触发 `onRequestFail`。 |
+| `L2C_CreateReturn` | 取消创建等待与超时计时器。`CreateSuccess` 时设置当前房间并进入 `InRoom`；其他结果触发 `onRequestFail`。 |
+| `L2C_JoinReturn` | 取消加入等待与超时计时器。`JoinSuccess` 时设置当前房间并进入 `InRoom`；其他结果触发 `onRequestFail`。 |
+| `L2C_LeaveReturn` | 取消离开等待与超时计时器。`LeaveSuccess` 时清空当前房间并进入 `InLobby`；其他结果触发 `onRequestFail`。 |
 | `L2C_RefreshRoomInfo` | 替换当前房间详情，刷新成员、房主和人数。 |
 | 底层断线事件 | 清空当前房间与房间列表，进入 `Disconnected`；断线提示由底层网络 UI 统一处理。 |
 
@@ -185,27 +193,30 @@ UI 不直接构造或发送网络消息。
 
 ```text
 客户端连接成功并被服务端 Accept
+  -> C2L_LoginLobby
+服务端验证身份并创建 Player
   <- L2C_RefreshRoomList（初始大厅快照）
+（收到初始快照前不得发送房间操作）
 
 客户端创建房间
   -> C2L_CreateRoom
-  <- L2C_CreateReturn { type = Success | Fail }
+  <- L2C_CreateReturn { type = CreateSuccess | CreateFail }
   <- L2C_RefreshRoomList（所有大厅客户端）
 
 客户端加入房间
   -> C2L_JoinRoom
-  <- L2C_JoinReturn { type = Success | Fail | RoomClosed | RoomFull }（加入者）
+  <- L2C_JoinReturn { type = JoinSuccess | JoinFail | JoinRoomClosed | JoinRoomFull }（加入者）
   <- L2C_RefreshRoomInfo（原房间成员）
   <- L2C_RefreshRoomList（所有大厅客户端）
 
 客户端离开或断线
   -> C2L_LeaveRoom（主动离开时）
-  <- L2C_LeaveReturn { type = Success | Fail }（主动离开者）
+  <- L2C_LeaveReturn { type = LeaveSuccess | LeaveFail }（主动离开者）
   <- L2C_RefreshRoomInfo（剩余成员，若房间仍存在）
   <- L2C_RefreshRoomList（所有大厅客户端，若状态变化）
 
 客户端主动请求超时
-  <- 本地触发 onRequestFail(Timeout)
+  <- 本地触发 onRequestFail(CreateTimeout | JoinTimeout | LeaveTimeout)，并关闭连接
 ```
 
 ## 6. 当前实施顺序

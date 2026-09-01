@@ -7,7 +7,7 @@ namespace Server
     [Serializable]
     public class C2L_JoinRoom : IMessage
     {
-        public long roomId;
+        public ulong roomId;
 
     }
 }

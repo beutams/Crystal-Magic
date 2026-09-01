@@ -3,12 +3,12 @@ using System.Collections.Generic;
 
 public class Room
 {
-    public long roomId;
-    public long ownerId;
+    public ulong roomId;
+    public ulong ownerAccountId;
     public string roomName;
     public int enterNum;
     public int maxNum;
-    public Dictionary<long, Player> players = new Dictionary<long, Player>();
+    public Dictionary<ulong, Player> players = new Dictionary<ulong, Player>();
 
     public bool start;
 

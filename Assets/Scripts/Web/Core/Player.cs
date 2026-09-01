@@ -2,10 +2,11 @@ namespace Server
 {
     public class Player
     {
-        public long userId;
+        public ulong accountId;
         public string username;
 
-        public long roomId;
+        public ulong roomId;
+        public bool ready;
         public bool start;
 
         public Connect connect;

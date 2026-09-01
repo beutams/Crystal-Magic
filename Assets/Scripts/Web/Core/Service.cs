@@ -20,6 +20,28 @@ namespace Server
         public Action<Connect> OnDisconnected;
         public abstract void Init();
         public abstract void Update();
+        public void Disconnect(Connect connect)
+        {
+            if (connect == null)
+            {
+                return;
+            }
+
+            foreach (var pair in connects)
+            {
+                if (pair.Value.connect != connect)
+                {
+                    continue;
+                }
+
+                connect.State = ConnectState.Close;
+                if (!disconnectList.Contains(pair.Key))
+                {
+                    disconnectList.Add(pair.Key);
+                }
+                return;
+            }
+        }
         protected virtual void HandleSend()
         {
             foreach (var pair in connects)
@@ -29,6 +51,8 @@ namespace Server
                 Connect connect = pair.Value.connect;
                 MemoryStream sendStream = connect.sendSteam;
 
+                if (connect.State != ConnectState.Connected)
+                    continue;
                 if (sendStream.Length == 0)
                     continue;
                 if (!socket.Poll(0, SelectMode.SelectWrite))
@@ -72,6 +96,8 @@ namespace Server
                 Socket socket = pair.Value.socket;
                 MemoryStream readStream = connect.readSteam;
 
+                if (connect.State != ConnectState.Connected)
+                    continue;
                 if (!socket.Poll(0, SelectMode.SelectRead))
                     continue;
                 int count;

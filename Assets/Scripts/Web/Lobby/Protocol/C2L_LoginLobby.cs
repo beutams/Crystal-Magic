@@ -1,12 +1,12 @@
-
 using System;
 
 namespace Server
 {
-    [Message(Opcode = 11)]
+    [Message(Opcode = 10)]
     [Serializable]
     public class C2L_LoginLobby : IMessage
     {
-        
+        public ulong accountId;
+        public string username;
     }
 }
