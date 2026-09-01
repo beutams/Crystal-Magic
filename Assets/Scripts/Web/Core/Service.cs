@@ -13,6 +13,7 @@ namespace Server
         protected byte[] cache = new byte[8192];
         protected Dictionary<Guid,TCPPair> connects = new Dictionary<Guid, TCPPair>();
         protected List<Guid> disconnectList = new List<Guid>();
+        protected List<Guid> closeAfterSendList = new List<Guid>();
 
 
         public Action<Connect> OnSend;
@@ -42,6 +43,27 @@ namespace Server
                 return;
             }
         }
+        public void DisconnectAfterSend(Connect connect)
+        {
+            if (connect == null)
+            {
+                return;
+            }
+
+            foreach (var pair in connects)
+            {
+                if (pair.Value.connect != connect)
+                {
+                    continue;
+                }
+
+                if (!closeAfterSendList.Contains(pair.Key))
+                {
+                    closeAfterSendList.Add(pair.Key);
+                }
+                return;
+            }
+        }
         protected virtual void HandleSend()
         {
             foreach (var pair in connects)
@@ -54,7 +76,13 @@ namespace Server
                 if (connect.State != ConnectState.Connected)
                     continue;
                 if (sendStream.Length == 0)
+                {
+                    if (closeAfterSendList.Contains(id) && !disconnectList.Contains(id))
+                    {
+                        disconnectList.Add(id);
+                    }
                     continue;
+                }
                 if (!socket.Poll(0, SelectMode.SelectWrite))
                     continue;
 
@@ -78,6 +106,10 @@ namespace Server
                     sendStream.SetLength(remainLength);
                     sendStream.Position = remainLength;
                     Debug.Log($"[TCP][Send] Sent {sentLength} bytes, remaining={remainLength}, Connect={id}");
+                    if (remainLength == 0 && closeAfterSendList.Contains(id) && !disconnectList.Contains(id))
+                    {
+                        disconnectList.Add(id);
+                    }
                 }
                 catch (SocketException e) when (e.SocketErrorCode == SocketError.WouldBlock) { }
                 catch (SocketException e)
@@ -145,10 +177,12 @@ namespace Server
                     finally
                     {
                         OnDisconnected?.Invoke(pair.connect);
+                        pair.connect.OnDisconnected?.Invoke(pair.connect);
                         pair.socket.Close();
                         pair.socket.Dispose();
                         pair.connect.readSteam.Dispose();
                         pair.connect.Dispose();
+                        closeAfterSendList.Remove(id);
                     }
                 }
             }

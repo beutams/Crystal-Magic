@@ -16,6 +16,8 @@ namespace Server
         protected Dictionary<int,Action<IMessage,Connect>> callback = new Dictionary<int, Action<IMessage,Connect>>();
         public ConnectState State;
         public IPEndPoint IPEndPoint;
+        public Action<Connect> OnConnected;
+        public Action<Connect> OnDisconnected;
 
         public MemoryStream readSteam;
         public MemoryStream sendSteam;

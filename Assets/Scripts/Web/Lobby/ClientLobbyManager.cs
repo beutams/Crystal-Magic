@@ -26,17 +26,18 @@ namespace Server
         protected override void Awake()
         {
             base.Awake();
-            clientServic = new ClientService();
-            clientServic.Init();
-            clientServic.OnConnectedSuccess += OnLobbyConnected;
-            clientServic.OnDisconnected += OnDisconnected;
+            clientServic = ClientNetworkManager.Instance.clientServic;
             clientServic.Connect(ServerUtility.GetLobbyIPEndPoint(), out lobbyConnect);
+
+            lobbyConnect.OnConnected += OnLobbyConnected;
+            lobbyConnect.OnDisconnected += OnDisconnected;
 
             lobbyConnect.RegisterCallback(TCPPacketCode.GetOpcode<L2C_RefreshRoomList>(), OnRefreshRoomList);
             lobbyConnect.RegisterCallback(TCPPacketCode.GetOpcode<L2C_RefreshRoomInfo>(), OnRefreshRoomInfo);
             lobbyConnect.RegisterCallback(TCPPacketCode.GetOpcode<L2C_JoinReturn>(), OnJoinRoom);
             lobbyConnect.RegisterCallback(TCPPacketCode.GetOpcode<L2C_CreateReturn>(), OnCreateRoom);
             lobbyConnect.RegisterCallback(TCPPacketCode.GetOpcode<L2C_LeaveReturn>(), OnLeaveRoom);
+            lobbyConnect.RegisterCallback(TCPPacketCode.GetOpcode<L2C_StartTicket>(), OnStartTicket);
         }
         private void OnLobbyConnected(Connect connect)
         {
@@ -75,8 +76,9 @@ namespace Server
             lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_JoinReturn>(), OnJoinRoom);
             lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_CreateReturn>(), OnCreateRoom);
             lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_LeaveReturn>(), OnLeaveRoom);
-            clientServic.OnConnectedSuccess -= OnLobbyConnected;
-            clientServic.OnDisconnected -= OnDisconnected;
+            lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_StartTicket>(), OnStartTicket);
+            lobbyConnect.OnConnected -= OnLobbyConnected;
+            lobbyConnect.OnDisconnected -= OnDisconnected;
 
             if (request != null)
             {
@@ -98,6 +100,14 @@ namespace Server
             {
                 room = roomData.roomData;
                 onRoomInfoRefresh?.Invoke(room);
+            }
+        }
+        private void OnStartTicket(IMessage message, Connect connect)
+        {
+            L2C_StartTicket startTicket = message as L2C_StartTicket;
+            if (startTicket != null)
+            {
+                ClientBattleManager.Instance.ConnectWithTicket(startTicket.ticket);
             }
         }
         public void OnRefreshRoomList(IMessage message,Connect connect)
@@ -289,10 +299,6 @@ namespace Server
             }
 
             clientServic.Disconnect(lobbyConnect);
-        }
-        private void LateUpdate()
-        {
-            clientServic.Update();
         }
     }
 }

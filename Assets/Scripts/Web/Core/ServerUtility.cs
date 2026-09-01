@@ -25,10 +25,15 @@ namespace Server
             return new IPEndPoint(IPAddress.Parse(lobbyIP), lobbyPort);
         }
         public static string battleIP = "127.0.0.1";
-        public static int battlePort = 10002;
+        public static int battlePort = 10003;
         public static IPEndPoint GetBattleIPEndPoint()
         {
             return new IPEndPoint(IPAddress.Parse(battleIP), battlePort);
+        }
+        public static int battleLobbyPort = 10004;
+        public static IPEndPoint GetBattleLobbyIPEndPoint()
+        {
+            return new IPEndPoint(IPAddress.Parse(battleIP), battleLobbyPort);
         }
 
         public static ulong CreateRoomId()

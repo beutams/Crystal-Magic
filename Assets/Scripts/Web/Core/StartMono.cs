@@ -11,7 +11,7 @@ namespace Server
             Application.runInBackground = true;
             if (server)
             {
-                ServerService service = new ServerService();
+                ServerService service = new ServerService(ServerUtility.GetLoginInIPEndPoint());
                 service.OnAccept += (connect) =>
                 {
                     connect.RegisterCallback(TCPPacketCode.messages[typeof(C2S_Ping)], (message,connect) =>
@@ -24,8 +24,8 @@ namespace Server
             else
             {
                 ClientService service = new ClientService();
-                service.Connect(ServerUtility.GetLoginInIPEndPoint(),out _);
-                service.OnConnectedSuccess += (connect) =>
+                service.Connect(ServerUtility.GetLoginInIPEndPoint(),out Connect clientConnect);
+                clientConnect.OnConnected += (connect) =>
                 {
                     connect.RegisterCallback(TCPPacketCode.messages[typeof(S2C_Pong)], (message,connect) =>
                     {

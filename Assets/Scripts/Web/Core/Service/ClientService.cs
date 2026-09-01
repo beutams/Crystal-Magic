@@ -11,11 +11,12 @@ namespace Server
     public class ClientService : Service
     {
         public Action<Connect> OnConnecting;
-        public Action<Connect> OnConnectedSuccess;
+        private Action<Connect> OnConnectedSuccess;
         public Action<Connect> OnConnectedFail;
 
         protected Dictionary<Guid, Task> connectingTask;
         protected Dictionary<Connect, long> timerIds;
+        protected Dictionary<Guid, TCPPair> pendingConnects = new Dictionary<Guid, TCPPair>();
         public void Connect(IPEndPoint iPEndPoint,out Connect connect)
         {
             Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -24,7 +25,7 @@ namespace Server
 
             TCPPair pair = TCPPair.CreateTCPPair(socket, iPEndPoint, out Guid id);
             connect = pair.connect;
-            connects.Add(id, pair);
+            pendingConnects.Add(id, pair);
             Debug.Log($"[TCP][Client] Created Connect={id}, Target={iPEndPoint}");
         }
         public override void Init()
@@ -63,6 +64,12 @@ namespace Server
         }
         private void HandleConnect()
         {
+            foreach (var pair in pendingConnects)
+            {
+                connects.Add(pair.Key, pair.Value);
+            }
+            pendingConnects.Clear();
+
             foreach (var pair in connects)
             {
                 Guid id = pair.Key;
@@ -108,6 +115,7 @@ namespace Server
 
                     Debug.Log($"[TCP][Client] Connect succeeded: {connect.IPEndPoint}, Connect={id}");
                     OnConnectedSuccess.Invoke(connect);
+                    connect.OnConnected?.Invoke(connect);
                     completeList.Add(id);
                 }
                 catch(SocketException e) 

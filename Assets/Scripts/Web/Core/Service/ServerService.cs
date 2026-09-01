@@ -10,10 +10,16 @@ namespace Server
     public class ServerService : Service
     {
         protected Socket socket;
+        protected IPEndPoint iPEndPoint;
 
         public Action OnListening;
         public Action OnListeningFail;
         public Action<Connect> OnAccept;
+
+        public ServerService(IPEndPoint iPEndPoint)
+        {
+            this.iPEndPoint = iPEndPoint;
+        }
 
         protected ServerState state;
         public override void Init()
@@ -25,7 +31,7 @@ namespace Server
                 state = ServerState.CLOSED;
                 socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 socket.NoDelay = true;
-                socket.Bind(ServerUtility.GetLoginInIPEndPoint());
+                socket.Bind(iPEndPoint);
 
                 socket.Listen(128);
                 OnListening?.Invoke();
@@ -37,7 +43,7 @@ namespace Server
             }
             catch (SocketException e)
             {
-                Debug.LogError($"[TCP][Server] Listen failed at {ServerUtility.GetLoginInIPEndPoint()}: {e.SocketErrorCode} - {e.Message}");
+                Debug.LogError($"[TCP][Server] Listen failed at {iPEndPoint}: {e.SocketErrorCode} - {e.Message}");
                 OnListeningFail?.Invoke();
                 state = ServerState.CLOSED;
             }

@@ -11,21 +11,21 @@ namespace Server
         public Dictionary<ulong, Room> roomList = new Dictionary<ulong, Room>();
         public Dictionary<ulong, Player> playerList = new Dictionary<ulong, Player>();
         public Dictionary<Connect, ulong> connectAccountDic = new Dictionary<Connect, ulong>();
-        public Dictionary<ulong, Connect> accountConnectDic = new Dictionary<ulong, Connect>();
         public ClientService clientService;
         public Connect battleConnect;
 
         protected override void Awake()
         {
             base.Awake();
-            lobbyService = new ServerService();
+            lobbyService = new ServerService(ServerUtility.GetLobbyIPEndPoint());
             lobbyService.OnAccept += OnAccept;
             lobbyService.OnDisconnected += OnDisconnected;
 
             lobbyService.Init();
 
             clientService = new ClientService();
-            clientService.Connect(ServerUtility.GetBattleIPEndPoint(), out battleConnect);
+            clientService.Init();
+            clientService.Connect(ServerUtility.GetBattleLobbyIPEndPoint(), out battleConnect);
             battleConnect.RegisterCallback(TCPPacketCode.GetOpcode<B2L_StartRoomResult>(),OnBattleStart);
             battleConnect.RegisterCallback(TCPPacketCode.GetOpcode<B2L_ReloadRoomResult>(), OnBattleReload);
         }
@@ -274,6 +274,7 @@ namespace Server
         private void LateUpdate()
         {
             lobbyService.Update();
+            clientService.Update();
         }
         #endregion
         #region Client
@@ -282,14 +283,13 @@ namespace Server
             B2L_StartRoomResult realMessage = message as B2L_StartRoomResult;
             if (roomList.TryGetValue(realMessage.roomId,out Room room))
             {
-                foreach(var player in realMessage.secretKeys)
+                foreach(var item in realMessage.secretKeys)
                 {
-                    if(accountConnectDic.TryGetValue(player.Key,out Connect clientConnect))
+                    if(playerList.TryGetValue(item.Key,out Player player))
                     {
-                        clientConnect.Send(new L2C_StartTicket() { ticket = player.Value });
-                        playerList.Remove(player.Key);
-                        accountConnectDic.Remove(player.Key);
-                        connectAccountDic.Remove(clientConnect);
+                        player.connect.Send(new L2C_StartTicket() { ticket = item.Value });
+                        playerList.Remove(item.Key);
+                        connectAccountDic.Remove(player.connect);
                     }
                 }
                 roomList.Remove(realMessage.roomId);
