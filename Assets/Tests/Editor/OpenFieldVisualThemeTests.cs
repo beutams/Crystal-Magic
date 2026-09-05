@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.OpenField;
 using Newtonsoft.Json;
@@ -261,9 +262,10 @@ namespace CrystalMagic.Tests.Editor
                 CollisionMask = new List<bool> { true, false, true, true },
                 Weight = 1,
                 MinimumSpacing = 3f,
-                MaximumCount = 2,
-                AllowRotation = true,
-                AllowFlipX = true,
+                                         MaximumCount = 2,
+                                         AllowRotation = true,
+                                         AllowFlipX = true,
+                                         VisualSortAnchor = new Vector2(0.25f, -0.5f),
             };
             OpenFieldDungeonVisualData visual = new()
             {
@@ -564,6 +566,134 @@ namespace CrystalMagic.Tests.Editor
                 placement.Role == OpenFieldRuleTileRole.ObstacleTransition && placement.Cell == new Vector2Int(3, 0)), Is.True);
         }
 
+        [Test]
+        public void SceneData_EmitsTerrainVisualsAndKeepsObstacleCollisionsAwayFromProtectedContent()
+        {
+            OpenFieldDungeonLayout layout = CreateGroundLayout(48, 48, 481516);
+            layout.SetTerrain(0, 0, 0.1f, OpenFieldTerrainCell.Void, -1);
+            layout.SetTerrain(47, 47, 0.9f, OpenFieldTerrainCell.Obstacle, 2);
+            layout.SetEntrance(new OpenFieldGridPosition(5, 5), 1);
+            layout.AddInterestPoint(OpenFieldInterestSize.Large, new OpenFieldGridPosition(24, 24), 3);
+            layout.SetExitInterestPoint(layout.InterestPoints[0]);
+            layout.AddContent(OpenFieldContentType.Chest, new OpenFieldGridPosition(40, 40), layout.ExitInterestPoint.EncounterId, 0);
+
+            DungeonThemeData theme = new()
+            {
+                Id = 1,
+                ThemeKey = "SceneDataTest",
+                OpenField = new OpenFieldDungeonThemeData
+                {
+                    Visual = new OpenFieldDungeonVisualData
+                    {
+                        VoidVisual = new OpenFieldVoidVisualData
+                        {
+                            AbyssRuleTile = new OpenFieldRuleTileReferenceData { AssetPath = "Assets/Res/Tile/TestAbyss.asset" },
+                            WallRuleTile = new OpenFieldRuleTileReferenceData { AssetPath = "Assets/Res/Tile/TestVoidWall.asset" },
+                            TransitionRuleTile = new OpenFieldRuleTileReferenceData { AssetPath = "Assets/Res/Tile/TestVoidTransition.asset" },
+                        },
+                        ObstacleVisual = new OpenFieldObstacleVisualData
+                        {
+                            TopRuleTile = new OpenFieldRuleTileReferenceData { AssetPath = "Assets/Res/Tile/TestObstacleTop.asset" },
+                            WallRuleTile = new OpenFieldRuleTileReferenceData { AssetPath = "Assets/Res/Tile/TestObstacleWall.asset" },
+                            TransitionRuleTile = new OpenFieldRuleTileReferenceData { AssetPath = "Assets/Res/Tile/TestObstacleTransition.asset" },
+                        },
+                        GroundStyles = new List<OpenFieldGroundStyleData>
+                        {
+                            new()
+                            {
+                                Name = "TestGround",
+                                BaseRuleTile = new OpenFieldRuleTileReferenceData { AssetPath = "Assets/Res/Tile/TestGround.asset" },
+                                Obstacles = new List<OpenFieldObstacleData>
+                                {
+                                    new()
+                                    {
+                                        Name = "PartialCollisionObstacle",
+                                        Sprite = new OpenFieldSpriteReferenceData
+                                        {
+                                            AssetPath = "Assets/Res/Sprites/TestObstacle.png",
+                                            SpriteName = "TestObstacle_01",
+                                            SpriteUv = new Vector4(0f, 0f, 0.5f, 0.5f),
+                                            HasSpriteUv = true,
+                                        },
+                                        FootprintWidth = 2,
+                                        FootprintHeight = 2,
+                                        CollisionMask = new List<bool> { true, false, false, false },
+                                        Weight = 1,
+                                         MaximumCount = 2,
+                                         AllowRotation = true,
+                                         AllowFlipX = true,
+                                         VisualSortAnchor = new Vector2(0.25f, -0.5f),
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            };
+
+            RuntimeDungeonSceneData scene = OpenFieldDungeonSceneDataBuilder.Build(
+                layout,
+                theme,
+                new CrystalMagic.Game.Config.DungeonConfig(),
+                1,
+                false);
+
+            HashSet<Vector2Int> protectedCells = new()
+            {
+                new Vector2Int(layout.Entrance.X, layout.Entrance.Y),
+                new Vector2Int(layout.ExitInterestPoint.Center.X, layout.ExitInterestPoint.Center.Y),
+                new Vector2Int(40, 40),
+            };
+            OpenFieldDungeonVisualLayout sourceVisual = OpenFieldDungeonVisualLayoutBuilder.Build(
+                layout,
+                theme.OpenField.Visual,
+                protectedCells);
+
+            Assert.That(scene.TerrainVisual.Placements.Count, Is.GreaterThan(0));
+            Assert.That(scene.TileSpawns, Is.Empty);
+            Assert.That(scene.TerrainVisual.Placements.Any(placement =>
+                placement.Layer == RuntimeDungeonTilemapLayer.Void &&
+                placement.RuleTilePath == "Assets/Res/Tile/TestVoidWall.asset" &&
+                placement.HeightSteps == -1), Is.True);
+            Assert.That(scene.TerrainVisual.Placements.Any(placement =>
+                placement.Layer == RuntimeDungeonTilemapLayer.Obstacle &&
+                placement.RuleTilePath == "Assets/Res/Tile/TestObstacleWall.asset" &&
+                placement.HeightSteps == 2), Is.True);
+            Assert.That(scene.TerrainVisual.Placements, Has.Count.EqualTo(sourceVisual.RuleTilePlacements.Count));
+            for (int index = 0; index < sourceVisual.RuleTilePlacements.Count; index++)
+            {
+                OpenFieldRuleTilePlacement source = sourceVisual.RuleTilePlacements[index];
+                RuntimeDungeonRuleTilePlacement output = scene.TerrainVisual.Placements[index];
+                Assert.That(output.Layer, Is.EqualTo((RuntimeDungeonTilemapLayer)source.Layer));
+                Assert.That(output.RuleTilePath, Is.EqualTo(source.RuleTile.AssetPath));
+                Assert.That(output.Cell, Is.EqualTo(source.Cell));
+                Assert.That(output.HeightSteps, Is.EqualTo(source.HeightSteps));
+            }
+
+            Assert.That(scene.ObstacleSpawns, Is.Not.Empty);
+            Assert.That(scene.ObstacleSpawns, Has.Count.EqualTo(sourceVisual.Obstacles.Count));
+            Assert.That(scene.ObstacleSpawns.All(spawn => spawn.CollisionCells.Count == 1), Is.True);
+            for (int index = 0; index < sourceVisual.Obstacles.Count; index++)
+            {
+                OpenFieldObstaclePlacement source = sourceVisual.Obstacles[index];
+                RuntimeDungeonObstacleSpawnData output = scene.ObstacleSpawns[index];
+                Assert.That(output.SpritePath, Is.EqualTo(source.Sprite.AssetPath));
+                Assert.That(output.SpriteName, Is.EqualTo(source.Sprite.SpriteName));
+                Assert.That(output.SpriteUv, Is.EqualTo(source.Sprite.SpriteUv));
+                Assert.That(output.HasSpriteUv, Is.EqualTo(source.Sprite.HasSpriteUv));
+                Assert.That(output.VisualSortAnchor, Is.EqualTo(source.VisualSortAnchor));
+                Assert.That(output.RotationQuarterTurns, Is.EqualTo(source.RotationQuarterTurns));
+                Assert.That(output.FlippedX, Is.EqualTo(source.FlippedX));
+                Assert.That(output.CollisionCells, Is.EqualTo(source.CollisionCells));
+                Assert.That(output.WorldPosition, Is.EqualTo(GetExpectedObstacleWorldPosition(layout, source.OccupiedCells)));
+            }
+
+            Assert.That(scene.ObstacleSpawns.SelectMany(spawn => spawn.CollisionCells),
+                Has.None.Matches<Vector2Int>(protectedCells.Contains));
+            Assert.That(scene.SceneObjects.Any(spawn => spawn.ObjectType == RuntimeDungeonSceneObjectType.Exit), Is.True);
+            Assert.That(scene.SceneObjects.Any(spawn => spawn.ObjectType == RuntimeDungeonSceneObjectType.Treasure), Is.True);
+        }
+
         private static OpenFieldDungeonLayout CreateGroundLayout(int width, int height, int seed)
         {
             OpenFieldDungeonLayout layout = new(width, height, seed);
@@ -574,6 +704,22 @@ namespace CrystalMagic.Tests.Editor
             }
 
             return layout;
+        }
+
+        private static Vector3 GetExpectedObstacleWorldPosition(
+            OpenFieldDungeonLayout layout,
+            IReadOnlyList<Vector2Int> occupiedCells)
+        {
+            int minimumX = occupiedCells.Min(cell => cell.x);
+            int maximumX = occupiedCells.Max(cell => cell.x);
+            int minimumY = occupiedCells.Min(cell => cell.y);
+            int maximumY = occupiedCells.Max(cell => cell.y);
+            float width = maximumX - minimumX + 1;
+            float height = maximumY - minimumY + 1;
+            return new Vector3(
+                minimumX + width * 0.5f - layout.Width * 0.5f,
+                minimumY + height * 0.5f - layout.Height * 0.5f,
+                0f);
         }
 
         private static void AssertGroundRegionHasBothStyles(

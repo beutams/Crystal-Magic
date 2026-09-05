@@ -32,6 +32,14 @@ namespace CrystalMagic.Core
                 PlayerSpawnWorldPosition = ToWorld(layout, layout.Entrance),
             };
 
+            HashSet<Vector2Int> protectedCells = BuildProtectedCells(layout);
+            OpenFieldDungeonVisualLayout visualLayout = OpenFieldDungeonVisualLayoutBuilder.Build(
+                layout,
+                theme.OpenField.Visual,
+                protectedCells);
+            AddTerrainVisual(scene, visualLayout);
+            AddObstacleSpawns(scene, layout, visualLayout);
+
             bool[,] collisionMask = new bool[layout.Width, layout.Height];
             for (int y = 0; y < layout.Height; y++)
             for (int x = 0; x < layout.Width; x++)
@@ -73,11 +81,68 @@ namespace CrystalMagic.Core
                 });
             }
 
-            HashSet<Vector2Int> occupiedCells = BuildReservedCells(layout);
+            HashSet<Vector2Int> occupiedCells = new(protectedCells);
+            foreach (RuntimeDungeonObstacleSpawnData obstacle in scene.ObstacleSpawns)
+            {
+                foreach (Vector2Int collisionCell in obstacle.CollisionCells)
+                    occupiedCells.Add(collisionCell);
+            }
+
             AddLandmarks(scene, layout, theme.OpenField, occupiedCells);
             AddSquads(scene, layout, theme, isBossFloor, occupiedCells);
             ConfigureChestCandidates(scene, theme.OpenField.TreasureItemIds);
             return scene;
+        }
+
+        private static void AddTerrainVisual(
+            RuntimeDungeonSceneData scene,
+            OpenFieldDungeonVisualLayout visualLayout)
+        {
+            foreach (OpenFieldRuleTilePlacement placement in visualLayout.RuleTilePlacements)
+            {
+                scene.TerrainVisual.Placements.Add(new RuntimeDungeonRuleTilePlacement
+                {
+                    Layer = ToRuntimeTilemapLayer(placement.Layer),
+                    RuleTilePath = placement.RuleTile?.AssetPath ?? string.Empty,
+                    Cell = placement.Cell,
+                    HeightSteps = placement.HeightSteps,
+                });
+            }
+        }
+
+        private static void AddObstacleSpawns(
+            RuntimeDungeonSceneData scene,
+            OpenFieldDungeonLayout layout,
+            OpenFieldDungeonVisualLayout visualLayout)
+        {
+            foreach (OpenFieldObstaclePlacement placement in visualLayout.Obstacles)
+            {
+                OpenFieldSpriteReferenceData sprite = placement.Sprite;
+                scene.ObstacleSpawns.Add(new RuntimeDungeonObstacleSpawnData
+                {
+                    SpritePath = sprite?.AssetPath ?? string.Empty,
+                    SpriteName = sprite?.SpriteName ?? string.Empty,
+                    SpriteUv = sprite?.SpriteUv ?? default,
+                    HasSpriteUv = sprite?.HasSpriteUv ?? false,
+                    WorldPosition = ToWorldRectangle(layout, placement.OccupiedCells),
+                    VisualSortAnchor = placement.VisualSortAnchor,
+                    RotationQuarterTurns = placement.RotationQuarterTurns,
+                    FlippedX = placement.FlippedX,
+                    CollisionCells = new List<Vector2Int>(placement.CollisionCells),
+                });
+            }
+        }
+
+        private static RuntimeDungeonTilemapLayer ToRuntimeTilemapLayer(OpenFieldRuleTileLayer layer)
+        {
+            return layer switch
+            {
+                OpenFieldRuleTileLayer.Void => RuntimeDungeonTilemapLayer.Void,
+                OpenFieldRuleTileLayer.Ground => RuntimeDungeonTilemapLayer.Ground,
+                OpenFieldRuleTileLayer.Decoration => RuntimeDungeonTilemapLayer.Decoration,
+                OpenFieldRuleTileLayer.Obstacle => RuntimeDungeonTilemapLayer.Obstacle,
+                _ => throw new ArgumentOutOfRangeException(nameof(layer), layer, null),
+            };
         }
 
         private static void AddTerrain(OpenFieldDungeonLayout layout, int x, int y, bool[,] collisionMask)
@@ -311,7 +376,7 @@ namespace CrystalMagic.Core
             return null;
         }
 
-        private static HashSet<Vector2Int> BuildReservedCells(OpenFieldDungeonLayout layout)
+        private static HashSet<Vector2Int> BuildProtectedCells(OpenFieldDungeonLayout layout)
         {
             HashSet<Vector2Int> occupied = new();
             if (layout.HasEntrance)
@@ -481,6 +546,35 @@ namespace CrystalMagic.Core
                 (y + height * 0.5f - layout.Height * 0.5f) * CellWorldSize,
                 0f);
         }
+
+        private static Vector3 ToWorldRectangle(
+            OpenFieldDungeonLayout layout,
+            IReadOnlyList<Vector2Int> occupiedCells)
+        {
+            if (occupiedCells == null || occupiedCells.Count == 0)
+                return Vector3.zero;
+
+            int minimumX = occupiedCells[0].x;
+            int maximumX = occupiedCells[0].x;
+            int minimumY = occupiedCells[0].y;
+            int maximumY = occupiedCells[0].y;
+            for (int index = 1; index < occupiedCells.Count; index++)
+            {
+                Vector2Int cell = occupiedCells[index];
+                minimumX = Mathf.Min(minimumX, cell.x);
+                maximumX = Mathf.Max(maximumX, cell.x);
+                minimumY = Mathf.Min(minimumY, cell.y);
+                maximumY = Mathf.Max(maximumY, cell.y);
+            }
+
+            return ToWorldRectangle(
+                layout,
+                minimumX,
+                minimumY,
+                maximumX - minimumX + 1,
+                maximumY - minimumY + 1);
+        }
+
         private static Vector3 ToWorld(OpenFieldDungeonLayout layout, OpenFieldGridPosition position)
         {
             return new Vector3(

@@ -213,10 +213,49 @@ namespace CrystalMagic.Core
         public int DisplayWidth;
         public int DisplayHeight;
         public Vector3 PlayerSpawnWorldPosition;
+        public RuntimeDungeonTerrainVisualData TerrainVisual = new();
+        public List<RuntimeDungeonObstacleSpawnData> ObstacleSpawns = new();
+
+        // Kept temporarily so the legacy DungeonTileVisualBuilder can compile until Task 5
+        // replaces it with the RuleTile Tilemap compositor. New scene data never populates it.
         public List<RuntimeDungeonTileSpawnData> TileSpawns = new();
         public List<RuntimeDungeonEnvironmentSpawnData> EnvironmentSpawns = new();
         public List<RuntimeDungeonSceneObjectSpawnData> SceneObjects = new();
         public List<RuntimeDungeonMonsterSpawnData> MonsterSpawns = new();
+    }
+
+    public enum RuntimeDungeonTilemapLayer
+    {
+        Void,
+        Ground,
+        Decoration,
+        Obstacle,
+    }
+
+    public sealed class RuntimeDungeonTerrainVisualData
+    {
+        public List<RuntimeDungeonRuleTilePlacement> Placements = new();
+    }
+
+    public sealed class RuntimeDungeonRuleTilePlacement
+    {
+        public RuntimeDungeonTilemapLayer Layer;
+        public string RuleTilePath;
+        public Vector2Int Cell;
+        public int HeightSteps;
+    }
+
+    public sealed class RuntimeDungeonObstacleSpawnData
+    {
+        public string SpritePath;
+        public string SpriteName;
+        public Vector4 SpriteUv;
+        public bool HasSpriteUv;
+        public Vector3 WorldPosition;
+        public Vector2 VisualSortAnchor;
+        public int RotationQuarterTurns;
+        public bool FlippedX;
+        public List<Vector2Int> CollisionCells = new();
     }
 
     public sealed class RuntimeDungeonTileSpawnData
