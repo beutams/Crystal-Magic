@@ -35,7 +35,7 @@ namespace CrystalMagic.Core
             bool[,] collisionMask = new bool[layout.Width, layout.Height];
             for (int y = 0; y < layout.Height; y++)
             for (int x = 0; x < layout.Width; x++)
-                AddTerrain(scene, layout, theme.OpenField.Visual, x, y, collisionMask);
+                AddTerrain(layout, x, y, collisionMask);
             AddMergedTerrainColliders(scene, layout, collisionMask);
 
             if (layout.ExitInterestPoint != null)
@@ -80,31 +80,9 @@ namespace CrystalMagic.Core
             return scene;
         }
 
-        private static void AddTerrain(RuntimeDungeonSceneData scene, OpenFieldDungeonLayout layout, OpenFieldDungeonVisualData visual, int x, int y, bool[,] collisionMask)
+        private static void AddTerrain(OpenFieldDungeonLayout layout, int x, int y, bool[,] collisionMask)
         {
-            OpenFieldTerrainCell cell = layout.GetTerrainCell(x, y);
-            DungeonTileGridData grid = cell switch
-            {
-                OpenFieldTerrainCell.Void => visual.VoidTileGrid,
-                OpenFieldTerrainCell.Ground => visual.GroundTileGrid,
-                _ => visual.ObstacleTileGrid,
-            };
-            DungeonTileGridCellData tile = ResolveTerrainTile(layout, grid, cell, x, y);
-            OpenFieldGridPosition position = new(x, y);
-            if (tile != null && !string.IsNullOrWhiteSpace(tile.SpritePath) && !string.IsNullOrWhiteSpace(tile.SpriteName))
-            {
-                scene.TileSpawns.Add(new RuntimeDungeonTileSpawnData
-                {
-                    SpritePath = tile.SpritePath,
-                    SpriteName = tile.SpriteName,
-                    UvRect = new Vector4(tile.SpriteUvX, tile.SpriteUvY, tile.SpriteUvWidth, tile.SpriteUvHeight),
-                    WorldPosition = ToWorld(layout, position),
-                    CellWorldSize = CellWorldSize,
-                });
-            }
-
-            collisionMask[x, y] = cell != OpenFieldTerrainCell.Ground;
-
+            collisionMask[x, y] = layout.GetTerrainCell(x, y) != OpenFieldTerrainCell.Ground;
         }
 
         private static void AddMergedTerrainColliders(
@@ -325,47 +303,6 @@ namespace CrystalMagic.Core
             return false;
         }
 
-        private static DungeonTileGridCellData ResolveTerrainTile(
-            OpenFieldDungeonLayout layout,
-            DungeonTileGridData grid,
-            OpenFieldTerrainCell terrain,
-            int x,
-            int y)
-        {
-            if (grid == null)
-                return null;
-
-            bool hasLeft = IsSameTerrain(layout, terrain, x - 1, y);
-            bool hasRight = IsSameTerrain(layout, terrain, x + 1, y);
-            bool hasTop = IsSameTerrain(layout, terrain, x, y + 1);
-            bool hasBottom = IsSameTerrain(layout, terrain, x, y - 1);
-            int connectionCount = (hasLeft ? 1 : 0) + (hasRight ? 1 : 0) + (hasTop ? 1 : 0) + (hasBottom ? 1 : 0);
-            if (connectionCount == 4) return grid.GetCell(1, 1);
-            if (connectionCount == 3)
-            {
-                if (!hasTop) return grid.GetCell(1, 0);
-                if (!hasBottom) return grid.GetCell(1, 2);
-                if (!hasLeft) return grid.GetCell(0, 1);
-                return grid.GetCell(2, 1);
-            }
-            if (hasRight && hasBottom) return grid.GetCell(0, 0);
-            if (hasLeft && hasBottom) return grid.GetCell(2, 0);
-            if (hasRight && hasTop) return grid.GetCell(0, 2);
-            if (hasLeft && hasTop) return grid.GetCell(2, 2);
-            if (hasLeft && hasRight) return grid.GetCell(1, 0);
-            if (hasTop && hasBottom) return grid.GetCell(0, 1);
-            if (hasRight) return grid.GetCell(0, 1);
-            if (hasLeft) return grid.GetCell(2, 1);
-            if (hasBottom) return grid.GetCell(1, 0);
-            if (hasTop) return grid.GetCell(1, 2);
-            return grid.GetCell(1, 0);
-        }
-
-        private static bool IsSameTerrain(OpenFieldDungeonLayout layout, OpenFieldTerrainCell terrain, int x, int y)
-        {
-            return x >= 0 && x < layout.Width && y >= 0 && y < layout.Height
-                && layout.GetTerrainCell(x, y) == terrain;
-        }
         private static OpenFieldInterestPoint FindInterestPoint(OpenFieldDungeonLayout layout, int encounterId)
         {
             foreach (OpenFieldInterestPoint point in layout.InterestPoints)

@@ -61,18 +61,168 @@ namespace CrystalMagic.Game.Data
     [Serializable]
     public sealed class OpenFieldDungeonVisualData
     {
-        public DungeonTileGridData VoidTileGrid = new();
-        public DungeonTileGridData GroundTileGrid = new();
-        public DungeonTileGridData ObstacleTileGrid = new();
+        public OpenFieldVoidVisualData VoidVisual = new();
+        public OpenFieldObstacleVisualData ObstacleVisual = new();
+        public int GroundCellsPerStyleSeed = 480;
+        public List<OpenFieldGroundStyleData> GroundStyles = new();
 
         public void EnsureValid()
         {
-            VoidTileGrid ??= new DungeonTileGridData();
-            GroundTileGrid ??= new DungeonTileGridData();
-            ObstacleTileGrid ??= new DungeonTileGridData();
-            VoidTileGrid.EnsureSize(3, 3);
-            GroundTileGrid.EnsureSize(3, 3);
-            ObstacleTileGrid.EnsureSize(3, 3);
+            VoidVisual ??= new OpenFieldVoidVisualData();
+            VoidVisual.EnsureValid();
+            ObstacleVisual ??= new OpenFieldObstacleVisualData();
+            ObstacleVisual.EnsureValid();
+            GroundCellsPerStyleSeed = Mathf.Max(1, GroundCellsPerStyleSeed);
+            GroundStyles ??= new List<OpenFieldGroundStyleData>();
+            for (int i = 0; i < GroundStyles.Count; i++)
+            {
+                GroundStyles[i] ??= new OpenFieldGroundStyleData();
+                GroundStyles[i].EnsureValid();
+            }
+        }
+    }
+
+    [Serializable]
+    public sealed class OpenFieldRuleTileReferenceData
+    {
+        public string AssetPath;
+
+        public void EnsureValid()
+        {
+            AssetPath ??= string.Empty;
+        }
+    }
+
+    [Serializable]
+    public sealed class OpenFieldSpriteReferenceData
+    {
+        public string AssetPath;
+        public string SpriteName;
+        public Vector4 SpriteUv;
+        public bool HasSpriteUv;
+
+        public void EnsureValid()
+        {
+            AssetPath ??= string.Empty;
+            SpriteName ??= string.Empty;
+        }
+    }
+
+    [Serializable]
+    public sealed class OpenFieldVoidVisualData
+    {
+        public OpenFieldRuleTileReferenceData AbyssRuleTile = new();
+        public OpenFieldRuleTileReferenceData WallRuleTile = new();
+        public OpenFieldRuleTileReferenceData TransitionRuleTile = new();
+
+        public void EnsureValid()
+        {
+            AbyssRuleTile ??= new OpenFieldRuleTileReferenceData();
+            AbyssRuleTile.EnsureValid();
+            WallRuleTile ??= new OpenFieldRuleTileReferenceData();
+            WallRuleTile.EnsureValid();
+            TransitionRuleTile ??= new OpenFieldRuleTileReferenceData();
+            TransitionRuleTile.EnsureValid();
+        }
+    }
+
+    [Serializable]
+    public sealed class OpenFieldObstacleVisualData
+    {
+        public OpenFieldRuleTileReferenceData TopRuleTile = new();
+        public OpenFieldRuleTileReferenceData WallRuleTile = new();
+        public OpenFieldRuleTileReferenceData TransitionRuleTile = new();
+
+        public void EnsureValid()
+        {
+            TopRuleTile ??= new OpenFieldRuleTileReferenceData();
+            TopRuleTile.EnsureValid();
+            WallRuleTile ??= new OpenFieldRuleTileReferenceData();
+            WallRuleTile.EnsureValid();
+            TransitionRuleTile ??= new OpenFieldRuleTileReferenceData();
+            TransitionRuleTile.EnsureValid();
+        }
+    }
+
+    [Serializable]
+    public sealed class OpenFieldGroundStyleData
+    {
+        public string Name;
+        public OpenFieldRuleTileReferenceData BaseRuleTile = new();
+        public List<OpenFieldDecorationData> Decorations = new();
+        public List<OpenFieldObstacleData> Obstacles = new();
+
+        public void EnsureValid()
+        {
+            Name ??= string.Empty;
+            BaseRuleTile ??= new OpenFieldRuleTileReferenceData();
+            BaseRuleTile.EnsureValid();
+            Decorations ??= new List<OpenFieldDecorationData>();
+            for (int i = 0; i < Decorations.Count; i++)
+            {
+                Decorations[i] ??= new OpenFieldDecorationData();
+                Decorations[i].EnsureValid();
+            }
+
+            Obstacles ??= new List<OpenFieldObstacleData>();
+            for (int i = 0; i < Obstacles.Count; i++)
+            {
+                Obstacles[i] ??= new OpenFieldObstacleData();
+                Obstacles[i].EnsureValid();
+            }
+        }
+    }
+
+    [Serializable]
+    public sealed class OpenFieldDecorationData
+    {
+        public string Name;
+        public OpenFieldRuleTileReferenceData RuleTile = new();
+        public float Radius = 8f;
+        public int MaximumSpread = 8;
+
+        public void EnsureValid()
+        {
+            Name ??= string.Empty;
+            RuleTile ??= new OpenFieldRuleTileReferenceData();
+            RuleTile.EnsureValid();
+            Radius = Mathf.Max(0.01f, Radius);
+            MaximumSpread = Mathf.Max(0, MaximumSpread);
+        }
+    }
+
+    [Serializable]
+    public sealed class OpenFieldObstacleData
+    {
+        public string Name;
+        public OpenFieldSpriteReferenceData Sprite = new();
+        public int FootprintWidth = 1;
+        public int FootprintHeight = 1;
+        public List<bool> CollisionMask = new();
+        public int Weight = 1;
+        public float MinimumSpacing;
+        public int MaximumCount = 1;
+        public bool AllowRotation;
+        public bool AllowFlipX;
+        public Vector2 VisualSortAnchor;
+
+        public void EnsureValid()
+        {
+            Name ??= string.Empty;
+            Sprite ??= new OpenFieldSpriteReferenceData();
+            Sprite.EnsureValid();
+            FootprintWidth = Mathf.Max(1, FootprintWidth);
+            FootprintHeight = Mathf.Max(1, FootprintHeight);
+            Weight = Mathf.Max(1, Weight);
+            MinimumSpacing = Mathf.Max(0f, MinimumSpacing);
+            MaximumCount = Mathf.Max(0, MaximumCount);
+
+            int cellCount = FootprintWidth * FootprintHeight;
+            CollisionMask ??= new List<bool>();
+            while (CollisionMask.Count < cellCount)
+                CollisionMask.Add(false);
+            if (CollisionMask.Count > cellCount)
+                CollisionMask.RemoveRange(cellCount, CollisionMask.Count - cellCount);
         }
     }
 

@@ -22,10 +22,7 @@ namespace CrystalMagic.Editor.Data
             EditorGUILayout.LabelField($"{theme.Name} Open Field", EditorStyles.boldLabel);
 
             GUILayout.Space(8f);
-            EditorGUILayout.LabelField("Terrain Tiles", EditorStyles.boldLabel);
-            DrawTerrainGridButton("Void", data.Visual.VoidTileGrid, theme);
-            DrawTerrainGridButton("Ground", data.Visual.GroundTileGrid, theme);
-            DrawTerrainGridButton("Obstacle", data.Visual.ObstacleTileGrid, theme);
+            DrawVisualSettings(data.Visual, theme);
             DrawGenerationSettings(data);
 
             DrawLandmarks(data, theme);
@@ -38,25 +35,231 @@ namespace CrystalMagic.Editor.Data
             }
         }
 
-        private void DrawTerrainGridButton(string label, DungeonTileGridData grid, DungeonThemeData theme)
+        private void DrawVisualSettings(OpenFieldDungeonVisualData visual, DungeonThemeData theme)
         {
-            grid.EnsureSize(3, 3);
-            EditorGUILayout.BeginHorizontal("box");
-            EditorGUILayout.LabelField($"{label} 3 x 3 Tile Grid", EditorStyles.miniBoldLabel);
-            if (GUILayout.Button("Open Tile Grid", GUILayout.Width(108f)))
-            {
-                TileGridPreviewWindow.Open(
-                    $"{theme.Name} Open Field {label}",
-                    grid,
-                    false,
-                    () =>
-                    {
-                        grid.EnsureSize(3, 3);
-                        _isDirty = true;
-                        Repaint();
-                    });
-            }
+            visual.EnsureValid();
+            EditorGUILayout.BeginVertical("box");
+            EditorGUILayout.LabelField("Terrain Rule Tiles", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Each field stores a RuleTile asset path. Void and obstacle variants are resolved into their own runtime Tilemaps.", EditorStyles.wordWrappedMiniLabel);
+
+            EditorGUILayout.LabelField("Void", EditorStyles.miniBoldLabel);
+            visual.VoidVisual.AbyssRuleTile.AssetPath = DrawRuleTilePath("Abyss", visual.VoidVisual.AbyssRuleTile.AssetPath);
+            visual.VoidVisual.WallRuleTile.AssetPath = DrawRuleTilePath("Wall", visual.VoidVisual.WallRuleTile.AssetPath);
+            visual.VoidVisual.TransitionRuleTile.AssetPath = DrawRuleTilePath("Transition", visual.VoidVisual.TransitionRuleTile.AssetPath);
+
+            GUILayout.Space(3f);
+            EditorGUILayout.LabelField("Obstacle", EditorStyles.miniBoldLabel);
+            visual.ObstacleVisual.TopRuleTile.AssetPath = DrawRuleTilePath("Top", visual.ObstacleVisual.TopRuleTile.AssetPath);
+            visual.ObstacleVisual.WallRuleTile.AssetPath = DrawRuleTilePath("Wall", visual.ObstacleVisual.WallRuleTile.AssetPath);
+            visual.ObstacleVisual.TransitionRuleTile.AssetPath = DrawRuleTilePath("Transition", visual.ObstacleVisual.TransitionRuleTile.AssetPath);
+
+            GUILayout.Space(4f);
+            visual.GroundCellsPerStyleSeed = Mathf.Max(1, EditorGUILayout.IntField("Ground Cells Per Style Seed", visual.GroundCellsPerStyleSeed));
+            DrawGroundStyles(visual, theme);
+            EditorGUILayout.EndVertical();
+        }
+
+        private static string DrawRuleTilePath(string label, string path)
+        {
+            RuleTile current = string.IsNullOrWhiteSpace(path) ? null : AssetDatabase.LoadAssetAtPath<RuleTile>(path);
+            RuleTile next = (RuleTile)EditorGUILayout.ObjectField(label, current, typeof(RuleTile), false);
+            return next == null ? string.Empty : AssetDatabase.GetAssetPath(next);
+        }
+
+        private void DrawGroundStyles(OpenFieldDungeonVisualData visual, DungeonThemeData theme)
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Ground Styles", EditorStyles.miniBoldLabel);
+            if (GUILayout.Button("Add Ground Style", GUILayout.Width(118f)))
+                visual.GroundStyles.Add(new OpenFieldGroundStyleData { Name = $"Ground Style {visual.GroundStyles.Count + 1}" });
             EditorGUILayout.EndHorizontal();
+            EditorGUILayout.LabelField("Every ground region is divided among these styles before their decorations and obstacles are placed.", EditorStyles.wordWrappedMiniLabel);
+
+            for (int styleIndex = 0; styleIndex < visual.GroundStyles.Count; styleIndex++)
+            {
+                OpenFieldGroundStyleData style = visual.GroundStyles[styleIndex] ??= new OpenFieldGroundStyleData();
+                EditorGUILayout.BeginVertical("helpbox");
+                EditorGUILayout.BeginHorizontal();
+                string label = string.IsNullOrWhiteSpace(style.Name) ? $"Ground Style {styleIndex + 1}" : style.Name;
+                bool expanded = DrawSectionFoldout(GetSectionFoldoutKey(theme, "openfield-ground-style", styleIndex), label);
+                bool delete = GUILayout.Button("Delete", GUILayout.Width(56f));
+                EditorGUILayout.EndHorizontal();
+                if (delete)
+                {
+                    visual.GroundStyles.RemoveAt(styleIndex);
+                    EditorGUILayout.EndVertical();
+                    break;
+                }
+
+                if (expanded)
+                {
+                    style.Name = EditorGUILayout.TextField("Name", style.Name ?? string.Empty);
+                    style.BaseRuleTile.AssetPath = DrawRuleTilePath("Base Rule Tile", style.BaseRuleTile.AssetPath);
+                    DrawDecorations(style, theme, styleIndex);
+                    DrawObstacles(style, theme, styleIndex);
+                }
+                EditorGUILayout.EndVertical();
+            }
+        }
+
+        private void DrawDecorations(OpenFieldGroundStyleData style, DungeonThemeData theme, int styleIndex)
+        {
+            GUILayout.Space(3f);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Decorations", EditorStyles.miniBoldLabel);
+            if (GUILayout.Button("Add Decoration", GUILayout.Width(110f)))
+                style.Decorations.Add(new OpenFieldDecorationData { Name = $"Decoration {style.Decorations.Count + 1}" });
+            EditorGUILayout.EndHorizontal();
+
+            for (int decorationIndex = 0; decorationIndex < style.Decorations.Count; decorationIndex++)
+            {
+                OpenFieldDecorationData decoration = style.Decorations[decorationIndex] ??= new OpenFieldDecorationData();
+                EditorGUILayout.BeginVertical("box");
+                EditorGUILayout.BeginHorizontal();
+                string label = string.IsNullOrWhiteSpace(decoration.Name) ? $"Decoration {decorationIndex + 1}" : decoration.Name;
+                bool expanded = DrawSectionFoldout(GetSectionFoldoutKey(theme, $"openfield-decoration-{styleIndex}", decorationIndex), label);
+                bool delete = GUILayout.Button("Delete", GUILayout.Width(56f));
+                EditorGUILayout.EndHorizontal();
+                if (delete)
+                {
+                    style.Decorations.RemoveAt(decorationIndex);
+                    EditorGUILayout.EndVertical();
+                    break;
+                }
+
+                if (expanded)
+                {
+                    decoration.Name = EditorGUILayout.TextField("Name", decoration.Name ?? string.Empty);
+                    decoration.RuleTile.AssetPath = DrawRuleTilePath("Rule Tile", decoration.RuleTile.AssetPath);
+                    decoration.Radius = Mathf.Max(0.01f, EditorGUILayout.FloatField("Radius", decoration.Radius));
+                    decoration.MaximumSpread = Mathf.Max(0, EditorGUILayout.IntField("Maximum Spread", decoration.MaximumSpread));
+                }
+                EditorGUILayout.EndVertical();
+            }
+        }
+
+        private void DrawObstacles(OpenFieldGroundStyleData style, DungeonThemeData theme, int styleIndex)
+        {
+            GUILayout.Space(3f);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Obstacles", EditorStyles.miniBoldLabel);
+            if (GUILayout.Button("Add Obstacle", GUILayout.Width(100f)))
+                style.Obstacles.Add(new OpenFieldObstacleData { Name = $"Obstacle {style.Obstacles.Count + 1}" });
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.LabelField("Only checked collision-mask cells block movement. Each checked cell requires one clear Ground cell around it.", EditorStyles.wordWrappedMiniLabel);
+
+            for (int obstacleIndex = 0; obstacleIndex < style.Obstacles.Count; obstacleIndex++)
+            {
+                OpenFieldObstacleData obstacle = style.Obstacles[obstacleIndex] ??= new OpenFieldObstacleData();
+                obstacle.EnsureValid();
+                EditorGUILayout.BeginVertical("box");
+                EditorGUILayout.BeginHorizontal();
+                string label = string.IsNullOrWhiteSpace(obstacle.Name) ? $"Obstacle {obstacleIndex + 1}" : obstacle.Name;
+                bool expanded = DrawSectionFoldout(GetSectionFoldoutKey(theme, $"openfield-obstacle-{styleIndex}", obstacleIndex), label);
+                bool delete = GUILayout.Button("Delete", GUILayout.Width(56f));
+                EditorGUILayout.EndHorizontal();
+                if (delete)
+                {
+                    style.Obstacles.RemoveAt(obstacleIndex);
+                    EditorGUILayout.EndVertical();
+                    break;
+                }
+
+                if (expanded)
+                {
+                    obstacle.Name = EditorGUILayout.TextField("Name", obstacle.Name ?? string.Empty);
+                    DrawSpriteReference("Sprite", obstacle.Sprite);
+                    int width = Mathf.Max(1, EditorGUILayout.IntField("Footprint Width", obstacle.FootprintWidth));
+                    int height = Mathf.Max(1, EditorGUILayout.IntField("Footprint Height", obstacle.FootprintHeight));
+                    if (width != obstacle.FootprintWidth || height != obstacle.FootprintHeight)
+                    {
+                        obstacle.FootprintWidth = width;
+                        obstacle.FootprintHeight = height;
+                        obstacle.EnsureValid();
+                    }
+
+                    obstacle.Weight = Mathf.Max(1, EditorGUILayout.IntField("Probability Weight", obstacle.Weight));
+                    obstacle.MinimumSpacing = Mathf.Max(0f, EditorGUILayout.FloatField("Minimum Spacing", obstacle.MinimumSpacing));
+                    obstacle.MaximumCount = Mathf.Max(0, EditorGUILayout.IntField("Maximum Count", obstacle.MaximumCount));
+                    obstacle.AllowRotation = EditorGUILayout.Toggle("Allow Rotation", obstacle.AllowRotation);
+                    obstacle.AllowFlipX = EditorGUILayout.Toggle("Allow Flip X", obstacle.AllowFlipX);
+                    obstacle.VisualSortAnchor = EditorGUILayout.Vector2Field("Visual Sort Anchor", obstacle.VisualSortAnchor);
+                    DrawCollisionMask(obstacle);
+                }
+                EditorGUILayout.EndVertical();
+            }
+        }
+
+        private static void DrawSpriteReference(string label, OpenFieldSpriteReferenceData reference)
+        {
+            reference ??= new OpenFieldSpriteReferenceData();
+            Sprite current = LoadSprite(reference);
+            Sprite next = (Sprite)EditorGUILayout.ObjectField(label, current, typeof(Sprite), false);
+            if (next == current)
+                return;
+
+            if (next == null)
+            {
+                reference.AssetPath = string.Empty;
+                reference.SpriteName = string.Empty;
+                reference.SpriteUv = Vector4.zero;
+                reference.HasSpriteUv = false;
+                return;
+            }
+
+            reference.AssetPath = AssetDatabase.GetAssetPath(next);
+            reference.SpriteName = next.name;
+            Texture2D texture = next.texture;
+            if (texture == null || texture.width <= 0 || texture.height <= 0)
+            {
+                reference.SpriteUv = Vector4.zero;
+                reference.HasSpriteUv = false;
+                return;
+            }
+
+            Rect rect = next.textureRect;
+            reference.SpriteUv = new Vector4(
+                rect.x / texture.width,
+                rect.y / texture.height,
+                rect.width / texture.width,
+                rect.height / texture.height);
+            reference.HasSpriteUv = true;
+        }
+
+        private static Sprite LoadSprite(OpenFieldSpriteReferenceData reference)
+        {
+            if (reference == null
+                || string.IsNullOrWhiteSpace(reference.AssetPath)
+                || string.IsNullOrWhiteSpace(reference.SpriteName))
+            {
+                return null;
+            }
+
+            UnityEngine.Object[] assets = AssetDatabase.LoadAllAssetsAtPath(reference.AssetPath);
+            for (int i = 0; i < assets.Length; i++)
+            {
+                if (assets[i] is Sprite sprite && sprite.name == reference.SpriteName)
+                    return sprite;
+            }
+
+            return null;
+        }
+
+        private static void DrawCollisionMask(OpenFieldObstacleData obstacle)
+        {
+            obstacle.EnsureValid();
+            EditorGUILayout.LabelField("Collision Mask", EditorStyles.miniBoldLabel);
+            for (int y = obstacle.FootprintHeight - 1; y >= 0; y--)
+            {
+                EditorGUILayout.BeginHorizontal();
+                for (int x = 0; x < obstacle.FootprintWidth; x++)
+                {
+                    int index = y * obstacle.FootprintWidth + x;
+                    obstacle.CollisionMask[index] = GUILayout.Toggle(obstacle.CollisionMask[index], GUIContent.none, GUILayout.Width(20f));
+                }
+                GUILayout.FlexibleSpace();
+                EditorGUILayout.EndHorizontal();
+            }
         }
 
         private static void DrawGenerationSettings(OpenFieldDungeonThemeData data)
