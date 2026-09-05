@@ -346,123 +346,91 @@ namespace CrystalMagic.Core
 
     internal static class DungeonRuleTileVisualBuilder
     {
-        private const string TemporaryGridName = "__DungeonRuleTileResolver";
-        private const string BackRendererName = "DungeonTerrainBack";
-        private const string TopRendererName = "DungeonTerrainTop";
-        private const int BakeChunkCellSize = 32;
+        private const string RuntimeGridName = "__DungeonTerrainTilemaps";
         private const int BackSortingOrder = -32000;
         private const int TopSortingOrder = 32000;
-        private const float BackDepth = 0.02f;
-        private const float TopDepth = -0.02f;
 
-        public static IEnumerator BuildCoroutine(
+        public static void Build(
             DungeonSceneRuntimeRoot runtimeRoot,
             RuntimeDungeonTerrainVisualData terrainVisual,
             string resourceOwnerKey)
         {
             if (runtimeRoot == null || terrainVisual?.Placements == null || terrainVisual.Placements.Count == 0)
-                yield break;
+                return;
 
-            GameObject temporaryGridObject = new(TemporaryGridName)
-            {
-                hideFlags = HideFlags.HideAndDontSave,
-            };
-            try
-            {
-                Grid grid = temporaryGridObject.AddComponent<Grid>();
-                grid.cellSize = Vector3.one * Mathf.Max(0.01f, terrainVisual.CellWorldSize);
-                Dictionary<RuntimeDungeonTilemapLayer, Tilemap> tilemaps = CreateTemporaryTilemaps(grid.transform);
-                List<ResolvedDungeonTileSprite> resolvedSprites = ResolveSprites(
-                    terrainVisual.Placements,
-                    tilemaps,
-                    resourceOwnerKey);
-                Dictionary<Vector2Int, List<ResolvedDungeonTileSprite>> chunks = GroupSpritesByChunk(resolvedSprites);
-                List<Vector2Int> chunkCoordinates = new(chunks.Keys);
-                chunkCoordinates.Sort(CompareChunkCoordinates);
-                foreach (Vector2Int chunkCoordinate in chunkCoordinates)
-                {
-                    RuntimeDungeonBakedLayers bakedLayers = DungeonRuleTileBakeComposer.Compose(
-                        chunks[chunkCoordinate],
-                        terrainVisual.CellWorldSize);
-                    string chunkSuffix = $"_{chunkCoordinate.x}_{chunkCoordinate.y}";
-                    CreateLayerRenderer(
-                        runtimeRoot,
-                        BackRendererName + chunkSuffix,
-                        bakedLayers.BackTexture,
-                        bakedLayers.BackWorldOffset + terrainVisual.WorldOrigin,
-                        bakedLayers.BackWorldSize,
-                        BackDepth,
-                        BackSortingOrder);
-                    CreateLayerRenderer(
-                        runtimeRoot,
-                        TopRendererName + chunkSuffix,
-                        bakedLayers.TopTexture,
-                        bakedLayers.TopWorldOffset + terrainVisual.WorldOrigin,
-                        bakedLayers.TopWorldSize,
-                        TopDepth,
-                        TopSortingOrder);
-                    yield return null;
-                }
-            }
-            finally
-            {
-                UnityEngine.Object.Destroy(temporaryGridObject);
-            }
+            GameObject gridObject = new(RuntimeGridName);
+            gridObject.transform.SetParent(runtimeRoot.transform, false);
+            gridObject.transform.localPosition = new Vector3(
+                terrainVisual.WorldOrigin.x,
+                terrainVisual.WorldOrigin.y,
+                0f);
+            Grid grid = gridObject.AddComponent<Grid>();
+            grid.cellSize = Vector3.one * Mathf.Max(0.01f, terrainVisual.CellWorldSize);
+            Dictionary<RuntimeDungeonTilemapLayer, Tilemap> tilemaps = CreateRuntimeTilemaps(grid.transform);
+            PopulateRuleTiles(terrainVisual.Placements, tilemaps, resourceOwnerKey);
         }
 
-        private static Dictionary<Vector2Int, List<ResolvedDungeonTileSprite>> GroupSpritesByChunk(
-            IReadOnlyList<ResolvedDungeonTileSprite> resolvedSprites)
-        {
-            Dictionary<Vector2Int, List<ResolvedDungeonTileSprite>> chunks = new();
-            if (resolvedSprites == null)
-                return chunks;
-
-            for (int index = 0; index < resolvedSprites.Count; index++)
-            {
-                ResolvedDungeonTileSprite sprite = resolvedSprites[index];
-                if (sprite == null)
-                    continue;
-
-                Vector2Int chunkCoordinate = new(
-                    Mathf.FloorToInt(sprite.Cell.x / (float)BakeChunkCellSize),
-                    Mathf.FloorToInt(sprite.Cell.y / (float)BakeChunkCellSize));
-                if (!chunks.TryGetValue(chunkCoordinate, out List<ResolvedDungeonTileSprite> chunkSprites))
-                {
-                    chunkSprites = new List<ResolvedDungeonTileSprite>();
-                    chunks.Add(chunkCoordinate, chunkSprites);
-                }
-
-                chunkSprites.Add(sprite);
-            }
-
-            return chunks;
-        }
-
-        private static int CompareChunkCoordinates(Vector2Int left, Vector2Int right)
-        {
-            int byY = left.y.CompareTo(right.y);
-            return byY != 0 ? byY : left.x.CompareTo(right.x);
-        }
-
-        private static Dictionary<RuntimeDungeonTilemapLayer, Tilemap> CreateTemporaryTilemaps(Transform parent)
+        private static Dictionary<RuntimeDungeonTilemapLayer, Tilemap> CreateRuntimeTilemaps(Transform parent)
         {
             return new Dictionary<RuntimeDungeonTilemapLayer, Tilemap>
             {
-                { RuntimeDungeonTilemapLayer.Void, CreateTemporaryTilemap(parent, "Void") },
-                { RuntimeDungeonTilemapLayer.Ground, CreateTemporaryTilemap(parent, "Ground") },
-                { RuntimeDungeonTilemapLayer.Decoration, CreateTemporaryTilemap(parent, "Decoration") },
-                { RuntimeDungeonTilemapLayer.Obstacle, CreateTemporaryTilemap(parent, "Obstacle") },
+                { RuntimeDungeonTilemapLayer.Void, CreateRuntimeTilemap(parent, "Void", BackSortingOrder) },
+                { RuntimeDungeonTilemapLayer.Ground, CreateRuntimeTilemap(parent, "Ground", BackSortingOrder + 1) },
+                { RuntimeDungeonTilemapLayer.Decoration, CreateRuntimeTilemap(parent, "Decoration", BackSortingOrder + 2) },
+                { RuntimeDungeonTilemapLayer.Obstacle, CreateRuntimeTilemap(parent, "Obstacle", TopSortingOrder) },
             };
         }
 
-        private static Tilemap CreateTemporaryTilemap(Transform parent, string name)
+        private static Tilemap CreateRuntimeTilemap(Transform parent, string name, int sortingOrder)
         {
             GameObject mapObject = new(name);
             mapObject.transform.SetParent(parent, false);
             Tilemap tilemap = mapObject.AddComponent<Tilemap>();
             TilemapRenderer renderer = mapObject.AddComponent<TilemapRenderer>();
-            renderer.enabled = false;
+            renderer.mode = TilemapRenderer.Mode.Chunk;
+            renderer.sortingOrder = sortingOrder;
             return tilemap;
+        }
+
+        private static void PopulateRuleTiles(
+            IReadOnlyList<RuntimeDungeonRuleTilePlacement> placements,
+            IReadOnlyDictionary<RuntimeDungeonTilemapLayer, Tilemap> tilemaps,
+            string resourceOwnerKey)
+        {
+            ResourceComponent resourceComponent = ResourceComponent.Instance;
+            if (resourceComponent == null)
+            {
+                Debug.LogError("[DungeonRuleTileVisualBuilder] ResourceComponent is unavailable while building RuleTile Tilemaps.");
+                return;
+            }
+
+            Dictionary<string, RuleTile> ruleTiles = new(StringComparer.Ordinal);
+            for (int index = 0; index < placements.Count; index++)
+            {
+                RuntimeDungeonRuleTilePlacement placement = placements[index];
+                if (placement == null || string.IsNullOrWhiteSpace(placement.RuleTilePath) ||
+                    !tilemaps.TryGetValue(placement.Layer, out Tilemap tilemap))
+                {
+                    continue;
+                }
+
+                if (!ruleTiles.TryGetValue(placement.RuleTilePath, out RuleTile ruleTile))
+                {
+                    ruleTile = resourceComponent.Load<RuleTile>(placement.RuleTilePath, resourceOwnerKey);
+                    ruleTiles.Add(placement.RuleTilePath, ruleTile);
+                }
+
+                if (ruleTile == null)
+                {
+                    Debug.LogWarning($"[DungeonRuleTileVisualBuilder] Failed to load RuleTile: {placement.RuleTilePath}");
+                    continue;
+                }
+
+                tilemap.SetTile(new Vector3Int(placement.Cell.x, placement.Cell.y, 0), ruleTile);
+            }
+
+            foreach (Tilemap tilemap in tilemaps.Values)
+                tilemap.RefreshAllTiles();
         }
 
         private static List<ResolvedDungeonTileSprite> ResolveSprites(

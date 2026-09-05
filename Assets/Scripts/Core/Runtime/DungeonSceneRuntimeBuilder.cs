@@ -62,7 +62,8 @@ namespace CrystalMagic.Core
             }
 
             reportProgress?.Invoke(0.993f, "Building dungeon scene", "Building tile visuals");
-            yield return DungeonRuleTileVisualBuilder.BuildCoroutine(runtimeRoot, sceneData.TerrainVisual, resourceOwnerKey);
+            DungeonRuleTileVisualBuilder.Build(runtimeRoot, sceneData.TerrainVisual, resourceOwnerKey);
+            yield return null;
 
             reportProgress?.Invoke(0.994f, "Building dungeon scene", "Spawning obstacles");
             SpawnObstacles(entityManager, runtimeRoot, sceneData, resourceOwnerKey, spawnedEntities);
