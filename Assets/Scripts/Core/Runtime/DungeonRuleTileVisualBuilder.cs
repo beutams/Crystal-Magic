@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -348,18 +349,19 @@ namespace CrystalMagic.Core
         private const string TemporaryGridName = "__DungeonRuleTileResolver";
         private const string BackRendererName = "DungeonTerrainBack";
         private const string TopRendererName = "DungeonTerrainTop";
+        private const int BakeChunkCellSize = 32;
         private const int BackSortingOrder = -32000;
         private const int TopSortingOrder = 32000;
         private const float BackDepth = 0.02f;
         private const float TopDepth = -0.02f;
 
-        public static void Build(
+        public static IEnumerator BuildCoroutine(
             DungeonSceneRuntimeRoot runtimeRoot,
             RuntimeDungeonTerrainVisualData terrainVisual,
             string resourceOwnerKey)
         {
             if (runtimeRoot == null || terrainVisual?.Placements == null || terrainVisual.Placements.Count == 0)
-                return;
+                yield break;
 
             GameObject temporaryGridObject = new(TemporaryGridName)
             {
@@ -374,30 +376,72 @@ namespace CrystalMagic.Core
                     terrainVisual.Placements,
                     tilemaps,
                     resourceOwnerKey);
-                RuntimeDungeonBakedLayers bakedLayers = DungeonRuleTileBakeComposer.Compose(
-                    resolvedSprites,
-                    terrainVisual.CellWorldSize);
-                CreateLayerRenderer(
-                    runtimeRoot,
-                    BackRendererName,
-                    bakedLayers.BackTexture,
-                    bakedLayers.BackWorldOffset + terrainVisual.WorldOrigin,
-                    bakedLayers.BackWorldSize,
-                    BackDepth,
-                    BackSortingOrder);
-                CreateLayerRenderer(
-                    runtimeRoot,
-                    TopRendererName,
-                    bakedLayers.TopTexture,
-                    bakedLayers.TopWorldOffset + terrainVisual.WorldOrigin,
-                    bakedLayers.TopWorldSize,
-                    TopDepth,
-                    TopSortingOrder);
+                Dictionary<Vector2Int, List<ResolvedDungeonTileSprite>> chunks = GroupSpritesByChunk(resolvedSprites);
+                List<Vector2Int> chunkCoordinates = new(chunks.Keys);
+                chunkCoordinates.Sort(CompareChunkCoordinates);
+                foreach (Vector2Int chunkCoordinate in chunkCoordinates)
+                {
+                    RuntimeDungeonBakedLayers bakedLayers = DungeonRuleTileBakeComposer.Compose(
+                        chunks[chunkCoordinate],
+                        terrainVisual.CellWorldSize);
+                    string chunkSuffix = $"_{chunkCoordinate.x}_{chunkCoordinate.y}";
+                    CreateLayerRenderer(
+                        runtimeRoot,
+                        BackRendererName + chunkSuffix,
+                        bakedLayers.BackTexture,
+                        bakedLayers.BackWorldOffset + terrainVisual.WorldOrigin,
+                        bakedLayers.BackWorldSize,
+                        BackDepth,
+                        BackSortingOrder);
+                    CreateLayerRenderer(
+                        runtimeRoot,
+                        TopRendererName + chunkSuffix,
+                        bakedLayers.TopTexture,
+                        bakedLayers.TopWorldOffset + terrainVisual.WorldOrigin,
+                        bakedLayers.TopWorldSize,
+                        TopDepth,
+                        TopSortingOrder);
+                    yield return null;
+                }
             }
             finally
             {
                 UnityEngine.Object.Destroy(temporaryGridObject);
             }
+        }
+
+        private static Dictionary<Vector2Int, List<ResolvedDungeonTileSprite>> GroupSpritesByChunk(
+            IReadOnlyList<ResolvedDungeonTileSprite> resolvedSprites)
+        {
+            Dictionary<Vector2Int, List<ResolvedDungeonTileSprite>> chunks = new();
+            if (resolvedSprites == null)
+                return chunks;
+
+            for (int index = 0; index < resolvedSprites.Count; index++)
+            {
+                ResolvedDungeonTileSprite sprite = resolvedSprites[index];
+                if (sprite == null)
+                    continue;
+
+                Vector2Int chunkCoordinate = new(
+                    Mathf.FloorToInt(sprite.Cell.x / (float)BakeChunkCellSize),
+                    Mathf.FloorToInt(sprite.Cell.y / (float)BakeChunkCellSize));
+                if (!chunks.TryGetValue(chunkCoordinate, out List<ResolvedDungeonTileSprite> chunkSprites))
+                {
+                    chunkSprites = new List<ResolvedDungeonTileSprite>();
+                    chunks.Add(chunkCoordinate, chunkSprites);
+                }
+
+                chunkSprites.Add(sprite);
+            }
+
+            return chunks;
+        }
+
+        private static int CompareChunkCoordinates(Vector2Int left, Vector2Int right)
+        {
+            int byY = left.y.CompareTo(right.y);
+            return byY != 0 ? byY : left.x.CompareTo(right.x);
         }
 
         private static Dictionary<RuntimeDungeonTilemapLayer, Tilemap> CreateTemporaryTilemaps(Transform parent)
