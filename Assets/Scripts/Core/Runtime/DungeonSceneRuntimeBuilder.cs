@@ -115,7 +115,7 @@ namespace CrystalMagic.Core
                         }
 
                         Vector3 visualPosition = visual.WorldPosition;
-                        visualPosition.z = -visual.SortAnchorWorldY / 100f + visual.LayerIndex * 0.0001f;
+                        visualPosition.z = -visual.SortAnchorWorldY / 100f - visual.LayerIndex * 0.0001f;
                         SetOrAddLocalTransform(
                             entityManager,
                             visualEntity,

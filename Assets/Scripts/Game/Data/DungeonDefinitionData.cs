@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.OpenField;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace CrystalMagic.Game.Data
@@ -96,9 +97,17 @@ namespace CrystalMagic.Game.Data
     [Serializable]
     public struct OpenFieldSpriteUvData
     {
+        [JsonProperty("x")]
         public float X;
+
+        [JsonProperty("y")]
         public float Y;
+
+        // Keep the old Unity Vector4 JSON names so existing theme rows retain their UV size.
+        [JsonProperty("z")]
         public float Width;
+
+        [JsonProperty("w")]
         public float Height;
 
         public OpenFieldSpriteUvData(float x, float y, float width, float height)
@@ -118,7 +127,10 @@ namespace CrystalMagic.Game.Data
     [Serializable]
     public struct OpenFieldVector2Data
     {
+        [JsonProperty("x")]
         public float X;
+
+        [JsonProperty("y")]
         public float Y;
 
         public OpenFieldVector2Data(float x, float y)

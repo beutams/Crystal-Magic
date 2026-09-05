@@ -194,7 +194,7 @@ namespace CrystalMagic.Tests.Editor
                                 {
                                     AssetPath = "Assets/Res/Sprites/Tree.png",
                                     SpriteName = "Tree_01",
-                                    SpriteUv = new Vector4(0.1f, 0.2f, 0.3f, 0.4f),
+                                    SpriteUv = new OpenFieldSpriteUvData(0.1f, 0.2f, 0.3f, 0.4f),
                                     HasSpriteUv = true,
                                 },
                                 FootprintWidth = 2,
@@ -205,7 +205,7 @@ namespace CrystalMagic.Tests.Editor
                                 MaximumCount = 7,
                                 AllowRotation = true,
                                 AllowFlipX = true,
-                                VisualSortAnchor = new Vector2(0.25f, -0.5f),
+                                VisualSortAnchor = new OpenFieldVector2Data(0.25f, -0.5f),
                             },
                         },
                     },
@@ -219,8 +219,10 @@ namespace CrystalMagic.Tests.Editor
             Assert.That(json, Does.Not.Contain("UnityEngine.Object"));
             Assert.That(copy.GroundStyles[0].BaseRuleTile.AssetPath, Is.EqualTo("Assets/Res/Tile/Moss.asset"));
             Assert.That(copy.GroundStyles[0].Decorations[0].RuleTile.AssetPath, Is.EqualTo("Assets/Res/Tile/Pebbles.asset"));
-            Assert.That(copy.GroundStyles[0].Obstacles[0].Sprite.SpriteName, Is.EqualTo("Tree_01"));
-            Assert.That(copy.GroundStyles[0].Obstacles[0].Sprite.SpriteUv, Is.EqualTo(new Vector4(0.1f, 0.2f, 0.3f, 0.4f)));
+            OpenFieldObstacleSpriteCellData copiedTree = copy.GroundStyles[0].Obstacles[0].SpriteLayers[0].Cells[0];
+            Assert.That(copiedTree.Sprite.SpriteName, Is.EqualTo("Tree_01"));
+            Assert.That(copiedTree.Sprite.SpriteUv.ToVector4(), Is.EqualTo(new Vector4(0.1f, 0.2f, 0.3f, 0.4f)));
+            Assert.That(copiedTree.UseObstacleCenter, Is.True);
             Assert.That(copy.GroundStyles[0].Obstacles[0].CollisionMask,
                 Is.EqualTo(new[] { true, false, true, false }));
         }
@@ -265,7 +267,7 @@ namespace CrystalMagic.Tests.Editor
                                          MaximumCount = 2,
                                          AllowRotation = true,
                                          AllowFlipX = true,
-                                         VisualSortAnchor = new Vector2(0.25f, -0.5f),
+                                         VisualSortAnchor = new OpenFieldVector2Data(0.25f, -0.5f),
             };
             OpenFieldDungeonVisualData visual = new()
             {
@@ -612,7 +614,7 @@ namespace CrystalMagic.Tests.Editor
                                         {
                                             AssetPath = "Assets/Res/Sprites/TestObstacle.png",
                                             SpriteName = "TestObstacle_01",
-                                            SpriteUv = new Vector4(0f, 0f, 0.5f, 0.5f),
+                                            SpriteUv = new OpenFieldSpriteUvData(0f, 0f, 0.5f, 0.5f),
                                             HasSpriteUv = true,
                                         },
                                         FootprintWidth = 2,
@@ -622,7 +624,7 @@ namespace CrystalMagic.Tests.Editor
                                          MaximumCount = 2,
                                          AllowRotation = true,
                                          AllowFlipX = true,
-                                         VisualSortAnchor = new Vector2(0.25f, -0.5f),
+                                         VisualSortAnchor = new OpenFieldVector2Data(0.25f, -0.5f),
                                     },
                                 },
                             },
@@ -676,15 +678,22 @@ namespace CrystalMagic.Tests.Editor
             {
                 OpenFieldObstaclePlacement source = sourceVisual.Obstacles[index];
                 RuntimeDungeonObstacleSpawnData output = scene.ObstacleSpawns[index];
-                Assert.That(output.SpritePath, Is.EqualTo(source.Sprite.AssetPath));
-                Assert.That(output.SpriteName, Is.EqualTo(source.Sprite.SpriteName));
-                Assert.That(output.SpriteUv, Is.EqualTo(source.Sprite.SpriteUv));
-                Assert.That(output.HasSpriteUv, Is.EqualTo(source.Sprite.HasSpriteUv));
-                Assert.That(output.VisualSortAnchor, Is.EqualTo(source.VisualSortAnchor));
-                Assert.That(output.RotationQuarterTurns, Is.EqualTo(source.RotationQuarterTurns));
-                Assert.That(output.FlippedX, Is.EqualTo(source.FlippedX));
                 Assert.That(output.CollisionCells, Is.EqualTo(source.CollisionCells));
-                Assert.That(output.WorldPosition, Is.EqualTo(GetExpectedObstacleWorldPosition(layout, source.OccupiedCells)));
+                Assert.That(output.Visuals, Has.Count.EqualTo(source.VisualSprites.Count));
+                for (int visualIndex = 0; visualIndex < source.VisualSprites.Count; visualIndex++)
+                {
+                    OpenFieldObstacleVisualSpritePlacement sourceVisualSprite = source.VisualSprites[visualIndex];
+                    RuntimeDungeonObstacleVisualSpawnData outputVisual = output.Visuals[visualIndex];
+                    Assert.That(outputVisual.SpritePath, Is.EqualTo(sourceVisualSprite.Sprite.AssetPath));
+                    Assert.That(outputVisual.SpriteName, Is.EqualTo(sourceVisualSprite.Sprite.SpriteName));
+                    Assert.That(outputVisual.SortAnchorWorldY,
+                        Is.EqualTo(outputVisual.WorldPosition.y + source.VisualSortAnchor.y));
+                    Assert.That(outputVisual.RotationQuarterTurns, Is.EqualTo(source.RotationQuarterTurns));
+                    Assert.That(outputVisual.FlippedX, Is.EqualTo(source.FlippedX));
+                    Assert.That(outputVisual.LayerIndex, Is.EqualTo(sourceVisualSprite.LayerIndex));
+                    Assert.That(outputVisual.WorldPosition,
+                        Is.EqualTo(GetExpectedObstacleWorldPosition(layout, source.OccupiedCells)));
+                }
             }
 
             Assert.That(scene.ObstacleSpawns.SelectMany(spawn => spawn.CollisionCells),

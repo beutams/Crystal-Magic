@@ -310,17 +310,22 @@ namespace CrystalMagic.Editor.Data
 
         private static bool TryGetDraggedSprite(out Sprite sprite)
         {
+            sprite = null;
             foreach (UnityEngine.Object candidate in DragAndDrop.objectReferences)
             {
                 if (candidate is Sprite draggedSprite)
                 {
+                    if (sprite != null)
+                    {
+                        sprite = null;
+                        return false;
+                    }
+
                     sprite = draggedSprite;
-                    return true;
                 }
             }
 
-            sprite = null;
-            return false;
+            return sprite != null;
         }
 
         private static OpenFieldObstacleSpriteCellData FindSpriteCell(OpenFieldObstacleSpriteLayerData layer, int x, int y)

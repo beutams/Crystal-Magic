@@ -206,7 +206,7 @@ In `AddObstacleSpawns`, create one obstacle group per layout placement. Convert 
 
 - [x] **Step 3: Spawn all visual entities before the one collision pass**
 
-Replace the single visual spawn in `SpawnObstacles` with a loop over `obstacle.Visuals`. Apply the sprite material/mesh for each visual and set its z position from its normal sort anchor plus a fixed positive `LayerIndex` depth epsilon, so later layers are visibly in front without overriding normal character sorting. Leave the existing collision-cell loop outside that visual loop.
+Replace the single visual spawn in `SpawnObstacles` with a loop over `obstacle.Visuals`. Apply the sprite material/mesh for each visual and set its z position from its normal sort anchor minus a fixed `LayerIndex` depth epsilon, so later layers are visibly in front without overriding normal character sorting. Leave the existing collision-cell loop outside that visual loop.
 
 - [x] **Step 4: Static verification**
 
@@ -238,7 +238,7 @@ Expected: no whitespace errors. Do not stage unrelated scene, resource, or user 
 
 Confirm the diff covers: grid drag/drop, layer ordering, same-cell layering, per-cell collision, old single-Sprite migration, rotation/flip alignment, JSON-safe vectors and one-time collider spawning.
 
-- [ ] **Step 3: Commit only the implementation files**
+- [x] **Step 3: Commit only the implementation files**
 
 ```bash
 git add -- Assets/Scripts/Game/Data/DungeonDefinitionData.cs \
