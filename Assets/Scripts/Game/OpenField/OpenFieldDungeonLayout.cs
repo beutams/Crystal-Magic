@@ -14,6 +14,7 @@ namespace CrystalMagic.Game.OpenField
     {
         private readonly float[] _terrainValues;
         private readonly OpenFieldTerrainCell[] _terrainCells;
+        private readonly int[] _heightSteps;
         private readonly bool[] _reachableCells;
         private readonly List<OpenFieldInterestPoint> _interestPoints = new();
         private readonly List<OpenFieldContentPlacement> _contentPlacements = new();
@@ -25,6 +26,7 @@ namespace CrystalMagic.Game.OpenField
             Seed = seed;
             _terrainValues = new float[width * height];
             _terrainCells = new OpenFieldTerrainCell[width * height];
+            _heightSteps = new int[width * height];
             _reachableCells = new bool[width * height];
         }
 
@@ -60,6 +62,11 @@ namespace CrystalMagic.Game.OpenField
         public OpenFieldTerrainCell GetTerrainCell(int x, int y)
         {
             return _terrainCells[GetIndex(x, y)];
+        }
+
+        public int GetHeightSteps(int x, int y)
+        {
+            return _heightSteps[GetIndex(x, y)];
         }
 
         public bool IsWalkable(int x, int y)
@@ -140,11 +147,18 @@ namespace CrystalMagic.Game.OpenField
         {
             _contentPlacements.Clear();
         }
-        internal void SetTerrain(int x, int y, float terrainValue, OpenFieldTerrainCell terrainCell)
+        internal void SetTerrain(int x, int y, float terrainValue, OpenFieldTerrainCell terrainCell, int heightSteps)
         {
             int index = GetIndex(x, y);
             _terrainValues[index] = terrainValue;
             _terrainCells[index] = terrainCell;
+            _heightSteps[index] = terrainCell switch
+            {
+                OpenFieldTerrainCell.Void => -1,
+                OpenFieldTerrainCell.Ground => 0,
+                OpenFieldTerrainCell.Obstacle => Math.Max(1, heightSteps),
+                _ => throw new ArgumentOutOfRangeException(nameof(terrainCell), terrainCell, null),
+            };
         }
     }
 }
