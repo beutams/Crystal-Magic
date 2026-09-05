@@ -28,6 +28,15 @@ namespace CrystalMagic.Core
                 _runtimeAssets.Add(runtimeAsset);
         }
 
+        public void TrackRuntimeAssets(params Object[] runtimeAssets)
+        {
+            if (runtimeAssets == null)
+                return;
+
+            for (int i = 0; i < runtimeAssets.Length; i++)
+                TrackRuntimeAsset(runtimeAssets[i]);
+        }
+
         private void OnDestroy()
         {
             DestroyTrackedEntities();

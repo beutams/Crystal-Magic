@@ -650,7 +650,6 @@ namespace CrystalMagic.Tests.Editor
                 protectedCells);
 
             Assert.That(scene.TerrainVisual.Placements.Count, Is.GreaterThan(0));
-            Assert.That(scene.TileSpawns, Is.Empty);
             Assert.That(scene.TerrainVisual.Placements.Any(placement =>
                 placement.Layer == RuntimeDungeonTilemapLayer.Void &&
                 placement.RuleTilePath == "Assets/Res/Tile/TestVoidWall.asset" &&

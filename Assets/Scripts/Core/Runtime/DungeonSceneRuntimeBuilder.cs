@@ -62,7 +62,7 @@ namespace CrystalMagic.Core
             }
 
             reportProgress?.Invoke(0.993f, "Building dungeon scene", "Building tile visuals");
-            DungeonTileVisualBuilder.Build(runtimeRoot, sceneData, resourceOwnerKey);
+            DungeonRuleTileVisualBuilder.Build(runtimeRoot, sceneData.TerrainVisual, resourceOwnerKey);
             yield return null;
 
             reportProgress?.Invoke(0.994f, "Building dungeon scene", "Spawning environment");

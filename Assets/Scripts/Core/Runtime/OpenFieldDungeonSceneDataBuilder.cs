@@ -31,6 +31,10 @@ namespace CrystalMagic.Core
                 DisplayHeight = layout.Height,
                 PlayerSpawnWorldPosition = ToWorld(layout, layout.Entrance),
             };
+            scene.TerrainVisual.CellWorldSize = CellWorldSize;
+            scene.TerrainVisual.WorldOrigin = new Vector2(
+                -layout.Width * CellWorldSize * 0.5f,
+                -layout.Height * CellWorldSize * 0.5f);
 
             HashSet<Vector2Int> protectedCells = BuildProtectedCells(layout);
             OpenFieldDungeonVisualLayout visualLayout = OpenFieldDungeonVisualLayoutBuilder.Build(
@@ -103,6 +107,7 @@ namespace CrystalMagic.Core
                 scene.TerrainVisual.Placements.Add(new RuntimeDungeonRuleTilePlacement
                 {
                     Layer = ToRuntimeTilemapLayer(placement.Layer),
+                    Role = ToRuntimeTilemapRole(placement.Role),
                     RuleTilePath = placement.RuleTile?.AssetPath ?? string.Empty,
                     Cell = placement.Cell,
                     HeightSteps = placement.HeightSteps,
@@ -142,6 +147,22 @@ namespace CrystalMagic.Core
                 OpenFieldRuleTileLayer.Decoration => RuntimeDungeonTilemapLayer.Decoration,
                 OpenFieldRuleTileLayer.Obstacle => RuntimeDungeonTilemapLayer.Obstacle,
                 _ => throw new ArgumentOutOfRangeException(nameof(layer), layer, null),
+            };
+        }
+
+        private static RuntimeDungeonTilemapRole ToRuntimeTilemapRole(OpenFieldRuleTileRole role)
+        {
+            return role switch
+            {
+                OpenFieldRuleTileRole.Abyss => RuntimeDungeonTilemapRole.Abyss,
+                OpenFieldRuleTileRole.VoidWall => RuntimeDungeonTilemapRole.VoidWall,
+                OpenFieldRuleTileRole.VoidTransition => RuntimeDungeonTilemapRole.VoidTransition,
+                OpenFieldRuleTileRole.GroundBase => RuntimeDungeonTilemapRole.GroundBase,
+                OpenFieldRuleTileRole.Decoration => RuntimeDungeonTilemapRole.Decoration,
+                OpenFieldRuleTileRole.ObstacleTop => RuntimeDungeonTilemapRole.ObstacleTop,
+                OpenFieldRuleTileRole.ObstacleWall => RuntimeDungeonTilemapRole.ObstacleWall,
+                OpenFieldRuleTileRole.ObstacleTransition => RuntimeDungeonTilemapRole.ObstacleTransition,
+                _ => throw new ArgumentOutOfRangeException(nameof(role), role, null),
             };
         }
 
