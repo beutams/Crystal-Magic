@@ -1,254 +1,167 @@
-# Open Field Visual Theme Design
+# 开放场视觉主题设计
 
-> Status: approved implementation specification. The old visual-theme data is
-> deliberately discarded rather than migrated.
+> 状态：已确认的实施规格。旧视觉主题数据会直接废弃，不做迁移。
 
-## Goal
+## 目标
 
-Move open-field visuals from the MapTest colour-preview implementation into the
-formal Open Field generation path. Terrain appearance, ground variants,
-decorations, and obstacles must be configured per theme in the game editor;
-the map generator chooses positions and tiles from that configuration.
+将开放场的视觉效果从 MapTest 的色块预览，迁移到正式的 Open Field 地下城生成链路。地形外观、地皮变体、装饰和障碍物均按主题在游戏编辑器中配置；地图生成器只根据这些配置决定位置与写入的 Tile。
 
-## Height model
+## 高度模型
 
-| Terrain category | Logical height | Traversal | Visual responsibility |
+| 地形类别 | 逻辑高度 | 通行 | 视觉职责 |
 | --- | ---: | --- | --- |
-| Void | `-1` exactly | Blocked | Black abyss, void cliff wall, void transition layer |
-| Ground | `0` exactly | Walkable | One selected Ground Style's 15-tile base and its decorations |
-| Obstacle | `+1` to `+N` | Blocked | Obstacle top, obstacle wall, obstacle transition layer |
+| Void | 固定 `-1` | 阻挡 | 黑色深渊、悬崖墙、过渡层 |
+| Ground | 固定 `0` | 可通行 | 选中的 Ground Style 的基础地皮与装饰 |
+| Obstacle | `+1` 至 `+N` | 阻挡 | 障碍顶部、障碍墙、过渡层 |
 
-- Void depth is intentionally no longer variable. Every void cell is at `-1`.
-- Obstacle height remains stepped, so a taller obstacle may draw more than one
-  wall-height segment.
-- The MapTest Organic Terraces implementation has already been changed to use
-  fixed `-1` void cells.
+- Void 不再有不同深度，所有 Void 格恒为 `-1`。
+- Obstacle 保留离散高度；越高的障碍会绘制更多墙面段。
+- MapTest 的 Organic Terraces 已改为固定 `-1` 的 Void。
 
-## Theme visual configuration
+## 主题视觉配置
 
-The formal theme configuration owns the visual data. MapTest may later use the
-same configuration as a preview, but it is not the source of truth. The old
-theme rows are intentionally not migrated: `DungeonThemeDataTable.json` starts
-as an empty table and new themes are created in the editor after their assets
-exist.
+正式主题配置是唯一视觉数据源。MapTest 以后可以读取它做预览，但不能拥有另一套配置。旧主题行不会迁移：`DungeonThemeDataTable.json` 最终是空表，等美术资源就绪后由编辑器新建主题。
 
-### Terrain layers
+### 地形层
 
-`VoidVisual`
+`VoidVisual` 配置三张单图 RuleTile：
 
-- Abyss base tile: a pure black map.
-- Void cliff-wall tile.
-- Void transition tile.
+- 深渊底图：纯黑。
+- Void 悬崖墙。
+- Void 过渡图。
 
-`ObstacleVisual`
+`ObstacleVisual` 也配置三张单图 RuleTile：
 
-- Obstacle-top tile.
-- Obstacle-wall tile.
-- Obstacle transition tile.
+- 障碍顶部。
+- 障碍墙。
+- 障碍过渡图。
 
-Void base/wall/transition share one `Void Tilemap`; obstacle top/wall/transition
-share one `Obstacle Tilemap`. Each source image is a single-image RuleTile, not
-a 15- or 16-slot terrain rule set. The generator chooses which of the three
-RuleTiles occupies each Tilemap cell, then each Tilemap is baked as one layer.
+Void 的三种图共用一张 `Void Tilemap`；Obstacle 的三种图共用一张 `Obstacle Tilemap`。它们是单图 RuleTile，不是 15 格或 16 格的地形规则。生成器决定哪个 RuleTile 写入某一个 Tilemap 格，之后 Tilemap 会被烘焙。
 
-A Tilemap can contain only one tile at a grid coordinate. Therefore the three
-terrain visuals must be assigned to mutually exclusive cells (or use artwork
-whose visual extent reaches into neighbouring cells); they cannot be stacked at
-the same coordinate before baking.
+一张 Tilemap 的同一网格坐标只能放一个 Tile。因此这三种地形图必须写到互斥的格子；或者让美术图像本身延伸到相邻格，不能先在同一格叠三张图再烘焙。
 
-### Ground Style list
+### Ground Style 列表
 
-The theme contains a list of `GroundStyle` entries rather than one global
-ground tile grid. Each entry has:
+主题不再只有一张全局地皮，而是拥有 `GroundStyle` 列表。每个 Style 包含：
 
-- A name.
-- One 15-tile base-ground set.
-- A list of decoration definitions.
-- A list of allowed obstacle definitions.
+- 名称。
+- 一个基础地皮 RuleTile（其内部通常是 15 格，但不由代码判断）。
+- 多个装饰定义。
+- 允许出现的障碍物定义。
 
-Generation first partitions zero-height ground into style regions. A cell's
-style determines its base tile, its eligible decoration definitions, and its
-eligible obstacle definitions.
+生成时，所有高度为零的 Ground 会先被划分为若干 Style 区域。一个格子的 Style 决定它的基础 Tile、可以出现哪些装饰以及可以出现哪些障碍物。
 
-All 15-tile and 16-tile sets are Unity `RuleTile` assets. Generation only
-writes the appropriate RuleTile into cells selected for that terrain or
-decoration; Tilemap RuleTile neighbour matching selects the final sprite. The
-project must not add a parallel custom 15/16-slot resolver.
+所有 15 格、16 格或其他规格的图都只是 Unity `RuleTile` 资产。生成器只在选中的格子写入对应 RuleTile；最终应该显示哪张子图完全交给 Unity RuleTile 的邻居匹配。项目不能再维护一套自定义 15/16 格选图算法。
 
-### Decoration definitions
+### 装饰定义
 
-Each decoration definition belongs to one Ground Style and provides:
+每条装饰定义从属于一个 Ground Style，包含：
 
-- A Unity `RuleTile` asset, regardless of whether its art has one, 15, 16, or
-  another number of internal rule slots.
-- `R`: centre spacing / sampling radius.
-- Maximum spread count.
-- No visual-type switch. The single shared expansion algorithm determines the
-  occupied-cell mask from the centre and the maximum spread.
+- 一个 Unity `RuleTile`，不论其内部规则图数量是一张、15 张、16 张或其他。
+- `R`：种子中心之间的采样半径。
+- 最大蔓延次数。
+- 没有按美术类型分类的开关；所有装饰都使用同一套扩张方式生成占格。
 
-There is no visual-asset type field such as `Point`, `Patch-15`, or
-`Strip-16`. The generator only decides where cells exist and how many are
-claimed. Its number of candidate centres is derived from the owning style
-region's area and the decoration's `R`; a larger `R` makes fewer patches. A
-patch can stop immediately when its maximum spread is zero, which naturally
-produces a point decoration. It then writes the entry's RuleTile to the
-accepted cells; Unity RuleTile neighbour matching chooses the final sprite.
+不存在 `点缀`、`15 格块` 或 `16 格条` 这类美术类别字段。生成器只决定哪些格子被占用、占用多少；种子数由所属地皮区域面积和 `R` 推导，`R` 越大则簇越少。最大蔓延为零时，簇立即停止，天然就是单格点缀。随后把该装饰的 RuleTile 写入已接受的格子，由 Unity 决定最终图形。
 
-- Decorations render above their base ground.
-- Decorations are non-blocking; obstacle entries own collision.
-- Generated decoration cells must not cross into a different Ground Style.
-- Decorations with a positive maximum spread keep the existing one-pass
-  2x2-support clean-up rule, so isolated points or one-cell-wide artefacts are
-  not retained. A zero-spread decoration is deliberately exempt: it is the
-  configured single-cell point case.
+- 装饰渲染在基础地皮之上。
+- 装饰不碰撞；碰撞只来自障碍物。
+- 装饰不能蔓延到其他 Ground Style。
+- 最大蔓延大于零的装饰沿用现有的一轮 2×2 支撑清理，移除孤点和一格宽伪影；最大蔓延为零的单格点缀明确不参与该清理。
 
-### Obstacle definitions
+### 障碍物定义
 
-Each Ground Style chooses from its allowed obstacle list. An obstacle definition
-provides at least:
+每个 Ground Style 从其允许的障碍物列表中选择。一个障碍物定义至少包含：
 
-- A source sprite selected by drag-and-drop in the existing editor workflow;
-  the saved data is its sprite path, name, and UV information.
-- Width and height in grid cells.
-- A collision mask with one boolean per footprint cell.
-- Spawn weight, spacing, maximum count, rotation/flip permissions, and visual
-  sort anchor.
+- 通过现有编辑器拖拽流程选择的源 Sprite；保存 Sprite 路径、名称和 UV。
+- 占地的格宽和格高。
+- 每个占地格一个布尔值的碰撞掩码。
+- 生成权重、间距、最大数量、是否允许旋转/翻转，以及视觉排序锚点。
 
-Obstacle generation runs after ground decorations. The visual footprint may use
-non-colliding cells, but every footprint cell marked as colliding must be on
-ground and must have a one-cell clearance from void and obstacle terrain. In
-practice, its eight surrounding map cells must also be ground; this keeps the
-collision cell from directly touching those fixed terrain blockers. No
-post-generation flood-fill route repair is performed for obstacles.
+障碍物在地皮装饰之后生成。视觉占地允许有不碰撞的格，但每个标记为碰撞的格必须位于 Ground，并与 Void、Obstacle 地形保持一格间隔：它的八邻格也都必须是 Ground。这样碰撞格不会紧贴固定地形阻挡物。障碍物不再做生成后的全局洪泛连通修复。
 
-## Render and collision order
+## 渲染与碰撞顺序
 
-1. Void abyss base.
-2. Void transition and void wall.
-3. Ground Style base tile.
-4. Ground decorations.
-5. Obstacle transition and obstacle wall.
-6. Obstacle top.
-7. Obstacles and actors, with their visual sort position independent of their
-   footprint collision mask.
+1. Void 深渊底图。
+2. Void 过渡与悬崖墙。
+3. Ground Style 的基础地皮。
+4. 地皮装饰。
+5. Obstacle 过渡与墙面。
+6. Obstacle 顶部。
+7. 障碍物和角色；视觉排序锚点独立于其碰撞掩码。
 
-## End-to-end usage flow
+## 从资源到游戏的完整流程
 
-### 1. Prepare visual assets in Unity
+### 1. 在 Unity 中准备资源
 
-1. Import and slice every source image with the project's cell size, point
-   filtering, and a consistent pixels-per-unit value.
-2. Create single-image RuleTiles for void base/wall/transition and obstacle
-   top/wall/transition. Create one Unity RuleTile asset for every ground base
-   and decoration layer; its internal rule count is unrestricted.
-3. Configure every ground-base and decoration RuleTile,
-   regardless of its internal tile count. Configure its tiling rules in Unity's
-   RuleTile inspector/Tile Palette using the supplied images.
-4. Create each obstacle's visual asset (sprite or prefab) and decide its grid
-   footprint and per-cell collision mask.
+1. 按项目格尺寸切图；使用 Point 过滤和一致的 Pixels Per Unit。
+2. 为 Void 的底图/墙/过渡，以及 Obstacle 的顶/墙/过渡各建一个单图 RuleTile。每种基础地皮和装饰也各建一个 RuleTile，内部规则图数量不限。
+3. 在 Unity RuleTile 检视器或 Tile Palette 中配置每个基础地皮和装饰的邻居规则。
+4. 准备每个障碍物的 Sprite（或预制体），确定它的格占地和逐格碰撞掩码。
 
-### 2. Configure an Open Field theme
+### 2. 在 Open Field 主题编辑器中配置
 
-In the game's Open Field theme editor, the designer picks an asset in an object
-field for the six terrain-layer tiles, then adds Ground Styles. For every
-Ground Style, the designer assigns its base `RuleTile`, decoration entries, and
-allowed obstacle entries.
+编辑器为六张地形 RuleTile 提供对象选择器，然后可以添加 Ground Style。每个 Style 再配置基础 RuleTile、装饰条目和允许的障碍物。
 
-The data stores runtime-loadable asset paths, not Unity editor-only object
-references. The object picker writes the selected tile, RuleTile, or sprite's
-asset path into the JSON. At runtime, `ResourceComponent` resolves that path
-and tracks it under the dungeon scene owner.
+数据不直接保存 Unity 编辑器对象引用，而是保存可在运行时加载的资源路径。对象选择器选中 Tile、RuleTile 或 Sprite 后，把资产路径写入 JSON。运行时由 `ResourceComponent` 按地下城场景 owner 加载、引用计数并释放这些资源。
 
-### 3. Generate semantic map data
+### 3. 生成语义地图
 
-1. The formal Open Field terrain generator creates the terrain field.
-2. It writes a height-step map: void is always `-1`, ground is `0`, and
-   obstacles are positive steps.
-3. It validates walkability, places spawn/exit/interest points and content,
-   then retries the seed if the required points are not mutually reachable.
+1. 正式的 Open Field 地形生成器生成地形场。
+2. 它写入高度格：Void 恒为 `-1`，Ground 恒为 `0`，Obstacle 为正整数台阶。
+3. 校验可走区域，放置出生点、出口、兴趣点和内容；若必须的点无法互相到达，则换种子重试。
 
-The current formal `OpenFieldDungeonLayout` only distinguishes `Void`,
-`Ground`, and `Obstacle`; it must be extended to retain the height-step value
-before stepped obstacle walls can be rendered in the actual game.
+当前 `OpenFieldDungeonLayout` 只保存 `Void`、`Ground`、`Obstacle` 三个类别；必须扩展为保存高度整数，才能在正式游戏中绘制多段 Obstacle 墙面。
 
-### 4. Resolve Tilemaps, then bake the terrain
+### 4. 解析 Tilemap，再烘焙地形
 
-The formal scene builder creates a temporary runtime `Grid` and Tilemaps for:
+正式场景构建器创建临时的运行时 `Grid` 与 Tilemap：
 
-1. One Void Tilemap containing void base, transition, and wall cells.
-2. Ground base and ground-decoration Tilemaps.
-3. One Obstacle Tilemap containing obstacle transition, wall, and top cells.
+1. 一张包含 Void 底图、过渡和墙格的 Void Tilemap。
+2. 一张基础地皮 Tilemap 和一张地皮装饰 Tilemap。
+3. 一张包含 Obstacle 过渡、墙和顶部格的 Obstacle Tilemap。
 
-For every generated cell, the builder writes the selected layer RuleTile into
-the appropriate Tilemap cells. Unity RuleTile neighbour evaluation chooses the
-actual sprite. No custom 15/16 sprite resolver participates in this stage.
+构建器将所选 RuleTile 写入对应临时 Tilemap 格。Unity 的 RuleTile 邻居计算负责解析实际 Sprite；代码不参与 15/16 格选图。
 
-The baking stage reads those already-resolved sprites and composites a Back
-texture and a Top texture for the runtime mesh renderer. It does not choose
-RuleTile variants itself. It applies the established straight-up elevation
-projection (`x` remains fixed; positive height shifts upward) while composing:
-void is exactly one step down, and an exposed obstacle edge receives one wall
-segment for every positive height step. The temporary Grid is then released;
-only the two baked layers and dynamic obstacle visuals remain in the play
-scene.
+烘焙阶段只读取这些已经解析出的 Sprite，合成为运行时网格所需的 Back 与 Top 两张纹理，不再自行选 RuleTile 图。合成遵循已经采用的垂直高度投影：`x` 不偏移，正高度向上偏移；Void 向下一阶；一个暴露的 Obstacle 边会按正高度的每一阶绘制一段墙。临时 Grid 随后释放；实际 play 场景只保留两张烘焙层和可动态排序的障碍物。
 
-### 5. Populate ground and decorations
+### 5. 填充地皮与装饰
 
-1. Find four-way connected zero-height ground regions.
-2. Place Ground Style seeds and expand them fairly until every ground cell has
-   one style.
-3. Apply the one-pass no-2x2-support cleanup to remove narrow style spikes.
-4. Write each style's base RuleTile into the ground Tilemap.
-5. For every decoration entry, derive centre count from its R and the style's
-   area; grow a compact occupied-cell patch up to its maximum spread only
-   within its owning Ground Style, reserve accepted cells, then write its
-   RuleTile into the decoration Tilemap.
+1. 找出四方向连通的零高度 Ground 区域。
+2. 放置 Ground Style 种子，并以每轮每个种子最多扩一格的公平方式扩张，直到每个 Ground 格都有 Style。
+3. 对 Style 结果做一轮无 2×2 支撑清理，去掉细长尖端。
+4. 将每个 Style 的基础 RuleTile 写到基础地皮 Tilemap。
+5. 对每条装饰：按 `R` 和 Style 面积计算种子数，只在所属 Style 内紧凑蔓延到最大次数，保留成功占格，再将 RuleTile 写到装饰 Tilemap。
 
-### 6. Populate obstacles
+### 6. 填充障碍物
 
-1. Choose obstacle candidates from the Ground Style's allowed list.
-2. Validate collision-mask cells against the map boundary, already-reserved
-   cells, and the one-cell void/obstacle clearance ring.
-3. Instantiate its dragged-sprite visual and create collision only for
-   footprint cells marked true in its collision mask.
-4. Do not run a global connectivity repair pass; obstacle spacing and the local
-   terrain-clearance rule keep them out of terrain-constrained passages.
+1. 从该 Style 的允许障碍列表选择候选。
+2. 检验碰撞掩码格的地图边界、已预留格，以及与 Void/Obstacle 的一格间隔。
+3. 生成拖入的 Sprite 视觉，并只为碰撞掩码中为真的格生成碰撞。
+4. 不做全局连通修复；间距和局部地形间隔规则负责避免其出现在地形狭道中。
 
-### 7. Build final play scene
+### 7. 构建最终可玩场景
 
-1. Generate terrain collision from void and obstacle cells.
-2. Add the obstacles' individual collision cells.
-3. Spawn player, exits, encounters, and treasure through the existing runtime
-   scene/ECS path.
-4. Render obstacles and actors with their visual sort anchor; this is separate
-   from their collision footprint.
+1. 为 Void 与 Obstacle 语义格生成地形碰撞。
+2. 再添加障碍物自身的逐格碰撞。
+3. 延用现有运行时场景/ECS 链路生成玩家、出口、遭遇和宝箱。
+4. 角色与障碍物按视觉排序锚点排序，该排序不依赖其碰撞占地。
 
-## Required rendering migration
+## 必须完成的渲染迁移
 
-The current formal path uses `OpenFieldDungeonSceneDataBuilder.ResolveTerrainTile`
-to choose one sprite from a custom 3x3 grid, and `DungeonTileVisualBuilder`
-batches those sprite quads into meshes. That terrain-specific path must be
-replaced by the runtime Tilemap layers above. Existing ECS spawning for player,
-monsters, exits, treasure, and non-tile environment objects remains in place.
+当前正式链路用 `OpenFieldDungeonSceneDataBuilder.ResolveTerrainTile` 从自定义 3×3 格中挑一个 Sprite，并由 `DungeonTileVisualBuilder` 把 Sprite quad 批量合成网格。地形部分将改为以上的临时 Tilemap 解析与烘焙流程。玩家、怪物、出口、宝箱及非 Tile 环境对象的既有 ECS 生成保持不变。
 
-## Required future integration points
+## 必须修改的集成点
 
-- `OpenFieldDungeonVisualData`: replace the current fixed `Void / Ground /
-  Obstacle` 3x3 grids with the terrain-layer data and Ground Style list above.
-- `DungeonEditorWindow.OpenField`: expose the new lists and their tile/mask
-  editing UI.
-- `OpenFieldDungeonSceneDataBuilder`: select terrain, ground, decoration, and
-  obstacle visuals from the theme data and emit them into runtime scene data.
-- Runtime scene renderer: resolve temporary Tilemaps, bake their Unity-resolved
-  sprites into the Back/Top mesh layers, and create colliders from each
-  obstacle collision mask.
-- `OpenFieldMapTestDemo`: optionally consume the same theme data for preview;
-  it must not become a parallel source of visual configuration.
+- `OpenFieldDungeonVisualData`：以地形层数据和 Ground Style 列表替换固定的 Void/Ground/Obstacle 3×3 格。
+- `DungeonEditorWindow.OpenField`：提供新的列表、对象选择器与碰撞掩码编辑器。
+- `OpenFieldDungeonSceneDataBuilder`：从主题配置选择地形、地皮、装饰和障碍，输出运行时场景数据。
+- 运行时场景渲染器：解析临时 Tilemap，将 Unity 已选好的 Sprite 烘焙进 Back/Top 网格层，并从障碍物掩码生成碰撞。
+- `OpenFieldMapTestDemo`：以后可选地读取同一份主题配置预览；不能重新成为一套平行视觉配置。
 
-## Explicit non-migration
+## 明确不迁移的内容
 
-- `DungeonThemeDataTable.json` will be rewritten to an empty `Rows` table.
-- The MapTest persistent height-map cache is obsolete and will be removed.
-- The old fixed 3 x 3 terrain-grid data, preview window, and custom tile
-  resolver are deleted with the migration. Source sprites and RuleTile assets
-  are not deleted.
+- `DungeonThemeDataTable.json` 重写为 `Rows` 为空的表。
+- MapTest 持久化高度图缓存不再需要，会被删除。
+- 旧的固定 3×3 地形数据、预览窗口和自定义选图器随迁移删除。
+- 原始 Sprite 与 RuleTile 美术资产不删除。
