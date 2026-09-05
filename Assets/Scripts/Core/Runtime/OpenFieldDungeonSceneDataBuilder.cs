@@ -122,21 +122,29 @@ namespace CrystalMagic.Core
         {
             foreach (OpenFieldObstaclePlacement placement in visualLayout.Obstacles)
             {
-                OpenFieldSpriteReferenceData sprite = placement.Sprite;
-                Vector3 worldPosition = ToWorldRectangle(layout, placement.OccupiedCells);
-                scene.ObstacleSpawns.Add(new RuntimeDungeonObstacleSpawnData
+                RuntimeDungeonObstacleSpawnData obstacleSpawn = new()
                 {
-                    SpritePath = sprite?.AssetPath ?? string.Empty,
-                    SpriteName = sprite?.SpriteName ?? string.Empty,
-                    SpriteUv = sprite?.SpriteUv ?? default,
-                    HasSpriteUv = sprite?.HasSpriteUv ?? false,
-                    WorldPosition = worldPosition,
-                    VisualSortAnchor = placement.VisualSortAnchor,
-                    SortAnchorWorldY = worldPosition.y + placement.VisualSortAnchor.y,
-                    RotationQuarterTurns = placement.RotationQuarterTurns,
-                    FlippedX = placement.FlippedX,
                     CollisionCells = new List<Vector2Int>(placement.CollisionCells),
-                });
+                };
+                foreach (OpenFieldObstacleVisualSpritePlacement visual in placement.VisualSprites)
+                {
+                    OpenFieldSpriteReferenceData sprite = visual.Sprite;
+                    Vector3 worldPosition = visual.UseObstacleCenter
+                        ? ToWorldRectangle(layout, placement.OccupiedCells)
+                        : ToWorld(layout, placement.Origin + visual.LocalCell);
+                    obstacleSpawn.Visuals.Add(new RuntimeDungeonObstacleVisualSpawnData
+                    {
+                        SpritePath = sprite?.AssetPath ?? string.Empty,
+                        SpriteName = sprite?.SpriteName ?? string.Empty,
+                        WorldPosition = worldPosition,
+                        SortAnchorWorldY = worldPosition.y + placement.VisualSortAnchor.y,
+                        RotationQuarterTurns = placement.RotationQuarterTurns,
+                        FlippedX = placement.FlippedX,
+                        LayerIndex = visual.LayerIndex,
+                    });
+                }
+
+                scene.ObstacleSpawns.Add(obstacleSpawn);
             }
         }
 
@@ -603,6 +611,14 @@ namespace CrystalMagic.Core
             return new Vector3(
                 (position.X + 0.5f - layout.Width * 0.5f) * CellWorldSize,
                 (position.Y + 0.5f - layout.Height * 0.5f) * CellWorldSize,
+                0f);
+        }
+
+        private static Vector3 ToWorld(OpenFieldDungeonLayout layout, Vector2Int cell)
+        {
+            return new Vector3(
+                (cell.x + 0.5f - layout.Width * 0.5f) * CellWorldSize,
+                (cell.y + 0.5f - layout.Height * 0.5f) * CellWorldSize,
                 0f);
         }
         private static Vector2Int ToVector2Int(OpenFieldGridPosition position) => new(position.X, position.Y);

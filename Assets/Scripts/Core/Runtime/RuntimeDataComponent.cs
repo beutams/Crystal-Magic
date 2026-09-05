@@ -257,17 +257,20 @@ namespace CrystalMagic.Core
         public int HeightSteps;
     }
 
-    public sealed class RuntimeDungeonObstacleSpawnData
+    public sealed class RuntimeDungeonObstacleVisualSpawnData
     {
         public string SpritePath;
         public string SpriteName;
-        public Vector4 SpriteUv;
-        public bool HasSpriteUv;
         public Vector3 WorldPosition;
-        public Vector2 VisualSortAnchor;
         public float SortAnchorWorldY;
         public int RotationQuarterTurns;
         public bool FlippedX;
+        public int LayerIndex;
+    }
+
+    public sealed class RuntimeDungeonObstacleSpawnData
+    {
+        public List<RuntimeDungeonObstacleVisualSpawnData> Visuals = new();
         public List<Vector2Int> CollisionCells = new();
     }
 

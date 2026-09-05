@@ -101,27 +101,36 @@ namespace CrystalMagic.Core
                 if (obstacle == null)
                     continue;
 
-                if (EntitySpawnRegistryUtility.TryInstantiateEnvironment(
-                        entityManager,
-                        new FixedString128Bytes("Environment"),
-                        out Entity visualEntity))
+                if (obstacle.Visuals != null)
                 {
-                    Vector3 visualPosition = obstacle.WorldPosition;
-                    visualPosition.z = -obstacle.SortAnchorWorldY / 100f;
-                    SetOrAddLocalTransform(
-                        entityManager,
-                        visualEntity,
-                        visualPosition,
-                        obstacle.RotationQuarterTurns * 90f);
-                    DungeonSceneVisualUtility.ApplySpriteVisual(
-                        entityManager,
-                        visualEntity,
-                        obstacle.SpritePath,
-                        obstacle.SpriteName,
-                        obstacle.FlippedX,
-                        resourceOwnerKey,
-                        runtimeRoot);
-                    spawnedEntities.Add(visualEntity);
+                    for (int visualIndex = 0; visualIndex < obstacle.Visuals.Count; visualIndex++)
+                    {
+                        RuntimeDungeonObstacleVisualSpawnData visual = obstacle.Visuals[visualIndex];
+                        if (visual == null || !EntitySpawnRegistryUtility.TryInstantiateEnvironment(
+                                entityManager,
+                                new FixedString128Bytes("Environment"),
+                                out Entity visualEntity))
+                        {
+                            continue;
+                        }
+
+                        Vector3 visualPosition = visual.WorldPosition;
+                        visualPosition.z = -visual.SortAnchorWorldY / 100f + visual.LayerIndex * 0.0001f;
+                        SetOrAddLocalTransform(
+                            entityManager,
+                            visualEntity,
+                            visualPosition,
+                            visual.RotationQuarterTurns * 90f);
+                        DungeonSceneVisualUtility.ApplySpriteVisual(
+                            entityManager,
+                            visualEntity,
+                            visual.SpritePath,
+                            visual.SpriteName,
+                            visual.FlippedX,
+                            resourceOwnerKey,
+                            runtimeRoot);
+                        spawnedEntities.Add(visualEntity);
+                    }
                 }
 
                 if (obstacle.CollisionCells == null)

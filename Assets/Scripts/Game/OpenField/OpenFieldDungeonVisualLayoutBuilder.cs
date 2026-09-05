@@ -62,6 +62,26 @@ namespace CrystalMagic.Game.OpenField
         public int DecorationIndex { get; }
     }
 
+    public sealed class OpenFieldObstacleVisualSpritePlacement
+    {
+        public OpenFieldObstacleVisualSpritePlacement(
+            OpenFieldSpriteReferenceData sprite,
+            Vector2Int localCell,
+            int layerIndex,
+            bool useObstacleCenter)
+        {
+            Sprite = sprite;
+            LocalCell = localCell;
+            LayerIndex = layerIndex;
+            UseObstacleCenter = useObstacleCenter;
+        }
+
+        public OpenFieldSpriteReferenceData Sprite { get; }
+        public Vector2Int LocalCell { get; }
+        public int LayerIndex { get; }
+        public bool UseObstacleCenter { get; }
+    }
+
     /// <summary>
     /// An obstacle footprint after the configured rotation and flip have been applied.
     /// OccupiedCells contains all visual footprint cells; CollisionCells contains only
@@ -77,7 +97,8 @@ namespace CrystalMagic.Game.OpenField
             int rotationQuarterTurns,
             bool flippedX,
             IReadOnlyList<Vector2Int> occupiedCells,
-            IReadOnlyList<Vector2Int> collisionCells)
+            IReadOnlyList<Vector2Int> collisionCells,
+            IReadOnlyList<OpenFieldObstacleVisualSpritePlacement> visualSprites)
         {
             GroundStyleIndex = groundStyleIndex;
             ObstacleIndex = obstacleIndex;
@@ -87,19 +108,20 @@ namespace CrystalMagic.Game.OpenField
             FlippedX = flippedX;
             OccupiedCells = occupiedCells;
             CollisionCells = collisionCells;
+            VisualSprites = visualSprites;
         }
 
         public int GroundStyleIndex { get; }
         public int ObstacleIndex { get; }
         public OpenFieldObstacleData Obstacle { get; }
-        public OpenFieldSpriteReferenceData Sprite => Obstacle.Sprite;
         public Vector2Int Origin { get; }
         public int RotationQuarterTurns { get; }
         public bool FlippedX { get; }
-        public Vector2 VisualSortAnchor => Obstacle.VisualSortAnchor;
+        public Vector2 VisualSortAnchor => Obstacle.VisualSortAnchor.ToVector2();
         public float MinimumSpacing => Obstacle.MinimumSpacing;
         public IReadOnlyList<Vector2Int> OccupiedCells { get; }
         public IReadOnlyList<Vector2Int> CollisionCells { get; }
+        public IReadOnlyList<OpenFieldObstacleVisualSpritePlacement> VisualSprites { get; }
     }
 
     /// <summary>
@@ -855,6 +877,11 @@ namespace CrystalMagic.Game.OpenField
                         collisionCells.Add(cell);
                     }
 
+                    List<OpenFieldObstacleVisualSpritePlacement> visualSprites = TransformObstacleSprites(
+                        definition.Obstacle,
+                        rotationQuarterTurns,
+                        flippedX);
+
                     placements.Add(new OpenFieldObstaclePlacement(
                         styleIndex,
                         definition.ObstacleIndex,
@@ -863,7 +890,8 @@ namespace CrystalMagic.Game.OpenField
                         rotationQuarterTurns,
                         flippedX,
                         footprint,
-                        obstacleCollisionCells));
+                        obstacleCollisionCells,
+                        visualSprites));
                     definition.PlacedCount++;
                     remainingPlacementCount--;
                 }
@@ -912,21 +940,82 @@ namespace CrystalMagic.Game.OpenField
                 for (int x = 0; x < obstacle.FootprintWidth; x++)
                 {
                     int sourceX = x;
-                    int transformedX = flippedX ? obstacle.FootprintWidth - 1 - x : x;
-                    Vector2Int local = turns switch
-                    {
-                        0 => new Vector2Int(transformedX, y),
-                        1 => new Vector2Int(obstacle.FootprintHeight - 1 - y, transformedX),
-                        2 => new Vector2Int(obstacle.FootprintWidth - 1 - transformedX, obstacle.FootprintHeight - 1 - y),
-                        3 => new Vector2Int(y, obstacle.FootprintWidth - 1 - transformedX),
-                        _ => throw new ArgumentOutOfRangeException(),
-                    };
+                    Vector2Int local = TransformObstacleCell(
+                        x,
+                        y,
+                        obstacle.FootprintWidth,
+                        obstacle.FootprintHeight,
+                        turns,
+                        flippedX);
                     int sourceIndex = y * obstacle.FootprintWidth + sourceX;
                     cells.Add(new ObstacleMaskCell(local, obstacle.CollisionMask[sourceIndex]));
                 }
             }
 
             return cells;
+        }
+
+        private static List<OpenFieldObstacleVisualSpritePlacement> TransformObstacleSprites(
+            OpenFieldObstacleData obstacle,
+            int rotationQuarterTurns,
+            bool flippedX)
+        {
+            List<OpenFieldObstacleVisualSpritePlacement> results = new();
+            if (obstacle.SpriteLayers == null)
+                return results;
+
+            int turns = ((rotationQuarterTurns % 4) + 4) % 4;
+            for (int layerIndex = 0; layerIndex < obstacle.SpriteLayers.Count; layerIndex++)
+            {
+                OpenFieldObstacleSpriteLayerData layer = obstacle.SpriteLayers[layerIndex];
+                if (layer?.Cells == null)
+                    continue;
+
+                foreach (OpenFieldObstacleSpriteCellData spriteCell in layer.Cells)
+                {
+                    if (spriteCell?.Sprite == null || string.IsNullOrWhiteSpace(spriteCell.Sprite.AssetPath))
+                        continue;
+                    if (spriteCell.X < 0 || spriteCell.X >= obstacle.FootprintWidth ||
+                        spriteCell.Y < 0 || spriteCell.Y >= obstacle.FootprintHeight)
+                    {
+                        continue;
+                    }
+
+                    Vector2Int localCell = TransformObstacleCell(
+                        spriteCell.X,
+                        spriteCell.Y,
+                        obstacle.FootprintWidth,
+                        obstacle.FootprintHeight,
+                        turns,
+                        flippedX);
+                    results.Add(new OpenFieldObstacleVisualSpritePlacement(
+                        spriteCell.Sprite,
+                        localCell,
+                        layerIndex,
+                        spriteCell.UseObstacleCenter));
+                }
+            }
+
+            return results;
+        }
+
+        private static Vector2Int TransformObstacleCell(
+            int x,
+            int y,
+            int width,
+            int height,
+            int turns,
+            bool flippedX)
+        {
+            int transformedX = flippedX ? width - 1 - x : x;
+            return turns switch
+            {
+                0 => new Vector2Int(transformedX, y),
+                1 => new Vector2Int(height - 1 - y, transformedX),
+                2 => new Vector2Int(width - 1 - transformedX, height - 1 - y),
+                3 => new Vector2Int(y, width - 1 - transformedX),
+                _ => throw new ArgumentOutOfRangeException(nameof(turns)),
+            };
         }
 
         private static bool CanPlaceObstacle(

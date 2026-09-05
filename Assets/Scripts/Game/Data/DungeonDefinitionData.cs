@@ -94,17 +94,94 @@ namespace CrystalMagic.Game.Data
     }
 
     [Serializable]
+    public struct OpenFieldSpriteUvData
+    {
+        public float X;
+        public float Y;
+        public float Width;
+        public float Height;
+
+        public OpenFieldSpriteUvData(float x, float y, float width, float height)
+        {
+            X = x;
+            Y = y;
+            Width = width;
+            Height = height;
+        }
+
+        public Vector4 ToVector4()
+        {
+            return new Vector4(X, Y, Width, Height);
+        }
+    }
+
+    [Serializable]
+    public struct OpenFieldVector2Data
+    {
+        public float X;
+        public float Y;
+
+        public OpenFieldVector2Data(float x, float y)
+        {
+            X = x;
+            Y = y;
+        }
+
+        public Vector2 ToVector2()
+        {
+            return new Vector2(X, Y);
+        }
+    }
+
+    [Serializable]
     public sealed class OpenFieldSpriteReferenceData
     {
         public string AssetPath;
         public string SpriteName;
-        public Vector4 SpriteUv;
+        public OpenFieldSpriteUvData SpriteUv;
         public bool HasSpriteUv;
 
         public void EnsureValid()
         {
             AssetPath ??= string.Empty;
             SpriteName ??= string.Empty;
+        }
+    }
+
+    [Serializable]
+    public sealed class OpenFieldObstacleSpriteCellData
+    {
+        public int X;
+        public int Y;
+        public bool UseObstacleCenter;
+        public OpenFieldSpriteReferenceData Sprite = new();
+
+        public void EnsureValid()
+        {
+            Sprite ??= new OpenFieldSpriteReferenceData();
+            Sprite.EnsureValid();
+        }
+    }
+
+    [Serializable]
+    public sealed class OpenFieldObstacleSpriteLayerData
+    {
+        public string Name;
+        public List<OpenFieldObstacleSpriteCellData> Cells = new();
+
+        public void EnsureValid()
+        {
+            Name ??= string.Empty;
+            Cells ??= new List<OpenFieldObstacleSpriteCellData>();
+            HashSet<Vector2Int> occupiedCells = new();
+            for (int index = Cells.Count - 1; index >= 0; index--)
+            {
+                Cells[index] ??= new OpenFieldObstacleSpriteCellData();
+                Cells[index].EnsureValid();
+                Vector2Int cell = new(Cells[index].X, Cells[index].Y);
+                if (!occupiedCells.Add(cell))
+                    Cells.RemoveAt(index);
+            }
         }
     }
 
@@ -195,7 +272,9 @@ namespace CrystalMagic.Game.Data
     public sealed class OpenFieldObstacleData
     {
         public string Name;
+        // Legacy data is migrated into SpriteLayers the first time this row is validated.
         public OpenFieldSpriteReferenceData Sprite = new();
+        public List<OpenFieldObstacleSpriteLayerData> SpriteLayers = new();
         public int FootprintWidth = 1;
         public int FootprintHeight = 1;
         public List<bool> CollisionMask = new();
@@ -204,13 +283,33 @@ namespace CrystalMagic.Game.Data
         public int MaximumCount = 1;
         public bool AllowRotation;
         public bool AllowFlipX;
-        public Vector2 VisualSortAnchor;
+        public OpenFieldVector2Data VisualSortAnchor;
 
         public void EnsureValid()
         {
             Name ??= string.Empty;
             Sprite ??= new OpenFieldSpriteReferenceData();
             Sprite.EnsureValid();
+            SpriteLayers ??= new List<OpenFieldObstacleSpriteLayerData>();
+            if (SpriteLayers.Count == 0 && !string.IsNullOrWhiteSpace(Sprite.AssetPath))
+            {
+                SpriteLayers.Add(new OpenFieldObstacleSpriteLayerData
+                {
+                    Name = "Layer 1",
+                    Cells = new List<OpenFieldObstacleSpriteCellData>
+                    {
+                        new() { X = 0, Y = 0, UseObstacleCenter = true, Sprite = Sprite },
+                    },
+                });
+                Sprite = new OpenFieldSpriteReferenceData();
+            }
+
+            for (int index = 0; index < SpriteLayers.Count; index++)
+            {
+                SpriteLayers[index] ??= new OpenFieldObstacleSpriteLayerData();
+                SpriteLayers[index].EnsureValid();
+            }
+
             FootprintWidth = Mathf.Max(1, FootprintWidth);
             FootprintHeight = Mathf.Max(1, FootprintHeight);
             Weight = Mathf.Max(1, Weight);

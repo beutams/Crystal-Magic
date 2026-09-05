@@ -168,7 +168,6 @@ namespace CrystalMagic.Editor.Data
                 if (expanded)
                 {
                     obstacle.Name = EditorGUILayout.TextField("Name", obstacle.Name ?? string.Empty);
-                    DrawSpriteReference("Sprite", obstacle.Sprite);
                     int width = Mathf.Max(1, EditorGUILayout.IntField("Footprint Width", obstacle.FootprintWidth));
                     int height = Mathf.Max(1, EditorGUILayout.IntField("Footprint Height", obstacle.FootprintHeight));
                     if (width != obstacle.FootprintWidth || height != obstacle.FootprintHeight)
@@ -178,51 +177,217 @@ namespace CrystalMagic.Editor.Data
                         obstacle.EnsureValid();
                     }
 
+                    DrawObstacleSpriteLayers(obstacle);
                     obstacle.Weight = Mathf.Max(1, EditorGUILayout.IntField("Probability Weight", obstacle.Weight));
                     obstacle.MinimumSpacing = Mathf.Max(0f, EditorGUILayout.FloatField("Minimum Spacing", obstacle.MinimumSpacing));
                     obstacle.MaximumCount = Mathf.Max(0, EditorGUILayout.IntField("Maximum Count", obstacle.MaximumCount));
                     obstacle.AllowRotation = EditorGUILayout.Toggle("Allow Rotation", obstacle.AllowRotation);
                     obstacle.AllowFlipX = EditorGUILayout.Toggle("Allow Flip X", obstacle.AllowFlipX);
-                    obstacle.VisualSortAnchor = EditorGUILayout.Vector2Field("Visual Sort Anchor", obstacle.VisualSortAnchor);
+                    Vector2 sortAnchor = EditorGUILayout.Vector2Field("Visual Sort Anchor", obstacle.VisualSortAnchor.ToVector2());
+                    obstacle.VisualSortAnchor = new OpenFieldVector2Data(sortAnchor.x, sortAnchor.y);
                     DrawCollisionMask(obstacle);
                 }
                 EditorGUILayout.EndVertical();
             }
         }
 
-        private static void DrawSpriteReference(string label, OpenFieldSpriteReferenceData reference)
+        private void DrawObstacleSpriteLayers(OpenFieldObstacleData obstacle)
         {
-            reference ??= new OpenFieldSpriteReferenceData();
-            Sprite current = LoadSprite(reference);
-            Sprite next = (Sprite)EditorGUILayout.ObjectField(label, current, typeof(Sprite), false);
-            if (next == current)
+            obstacle.EnsureValid();
+            GUILayout.Space(3f);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Sprite Layers (Back To Front)", EditorStyles.miniBoldLabel);
+            if (GUILayout.Button("Add Layer", GUILayout.Width(84f)))
+            {
+                obstacle.SpriteLayers.Add(new OpenFieldObstacleSpriteLayerData
+                {
+                    Name = $"Layer {obstacle.SpriteLayers.Count + 1}",
+                });
+            }
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.LabelField("Drag Sprite assets into a cell. Later layers draw in front; the collision mask remains independent.", EditorStyles.wordWrappedMiniLabel);
+
+            for (int layerIndex = 0; layerIndex < obstacle.SpriteLayers.Count; layerIndex++)
+            {
+                OpenFieldObstacleSpriteLayerData layer = obstacle.SpriteLayers[layerIndex] ??= new OpenFieldObstacleSpriteLayerData();
+                layer.EnsureValid();
+                EditorGUILayout.BeginVertical("box");
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField($"Layer {layerIndex + 1}", EditorStyles.miniBoldLabel, GUILayout.Width(54f));
+                layer.Name = EditorGUILayout.TextField(layer.Name ?? string.Empty);
+                bool moveBackward = GUILayout.Button("↑", GUILayout.Width(24f));
+                bool moveForward = GUILayout.Button("↓", GUILayout.Width(24f));
+                bool delete = GUILayout.Button("Delete", GUILayout.Width(50f));
+                EditorGUILayout.EndHorizontal();
+
+                if (delete)
+                {
+                    obstacle.SpriteLayers.RemoveAt(layerIndex);
+                    EditorGUILayout.EndVertical();
+                    break;
+                }
+
+                if (moveBackward && layerIndex > 0)
+                {
+                    (obstacle.SpriteLayers[layerIndex - 1], obstacle.SpriteLayers[layerIndex]) =
+                        (obstacle.SpriteLayers[layerIndex], obstacle.SpriteLayers[layerIndex - 1]);
+                    EditorGUILayout.EndVertical();
+                    break;
+                }
+
+                if (moveForward && layerIndex < obstacle.SpriteLayers.Count - 1)
+                {
+                    (obstacle.SpriteLayers[layerIndex + 1], obstacle.SpriteLayers[layerIndex]) =
+                        (obstacle.SpriteLayers[layerIndex], obstacle.SpriteLayers[layerIndex + 1]);
+                    EditorGUILayout.EndVertical();
+                    break;
+                }
+
+                DrawObstacleSpriteLayerGrid(obstacle, layer);
+                EditorGUILayout.EndVertical();
+            }
+        }
+
+        private static void DrawObstacleSpriteLayerGrid(OpenFieldObstacleData obstacle, OpenFieldObstacleSpriteLayerData layer)
+        {
+            const float cellSize = 46f;
+            for (int y = obstacle.FootprintHeight - 1; y >= 0; y--)
+            {
+                EditorGUILayout.BeginHorizontal();
+                for (int x = 0; x < obstacle.FootprintWidth; x++)
+                {
+                    Rect rect = GUILayoutUtility.GetRect(cellSize, cellSize, GUILayout.Width(cellSize), GUILayout.Height(cellSize));
+                    DrawSpriteDropCell(layer, x, y, rect);
+                }
+                GUILayout.FlexibleSpace();
+                EditorGUILayout.EndHorizontal();
+            }
+        }
+
+        private static void DrawSpriteDropCell(OpenFieldObstacleSpriteLayerData layer, int x, int y, Rect rect)
+        {
+            OpenFieldObstacleSpriteCellData cell = FindSpriteCell(layer, x, y);
+            Sprite sprite = LoadSprite(cell?.Sprite);
+            EditorGUI.DrawRect(rect, new Color(0.12f, 0.12f, 0.12f, 1f));
+            GUI.Box(rect, GUIContent.none);
+            if (sprite == null || sprite.texture == null)
+            {
+                GUI.Label(rect, "Drop", EditorStyles.centeredGreyMiniLabel);
+            }
+            else
+            {
+                Rect previewRect = new(rect.x + 2f, rect.y + 2f, rect.width - 4f, rect.height - 4f);
+                Rect textureRect = sprite.textureRect;
+                Rect uv = new(
+                    textureRect.x / sprite.texture.width,
+                    textureRect.y / sprite.texture.height,
+                    textureRect.width / sprite.texture.width,
+                    textureRect.height / sprite.texture.height);
+                GUI.DrawTextureWithTexCoords(previewRect, sprite.texture, uv, true);
+                Rect clearRect = new(rect.xMax - 17f, rect.y + 1f, 16f, 16f);
+                if (GUI.Button(clearRect, "×", EditorStyles.miniButton))
+                    RemoveSpriteCell(layer, x, y);
+            }
+
+            Event currentEvent = Event.current;
+            if (!rect.Contains(currentEvent.mousePosition))
                 return;
 
-            if (next == null)
+            if (currentEvent.type == EventType.DragUpdated && TryGetDraggedSprite(out _))
+            {
+                DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+                currentEvent.Use();
+                return;
+            }
+
+            if (currentEvent.type == EventType.DragPerform && TryGetDraggedSprite(out Sprite draggedSprite))
+            {
+                DragAndDrop.AcceptDrag();
+                SetSpriteCell(layer, x, y, draggedSprite);
+                currentEvent.Use();
+            }
+        }
+
+        private static bool TryGetDraggedSprite(out Sprite sprite)
+        {
+            foreach (UnityEngine.Object candidate in DragAndDrop.objectReferences)
+            {
+                if (candidate is Sprite draggedSprite)
+                {
+                    sprite = draggedSprite;
+                    return true;
+                }
+            }
+
+            sprite = null;
+            return false;
+        }
+
+        private static OpenFieldObstacleSpriteCellData FindSpriteCell(OpenFieldObstacleSpriteLayerData layer, int x, int y)
+        {
+            for (int index = 0; index < layer.Cells.Count; index++)
+            {
+                OpenFieldObstacleSpriteCellData cell = layer.Cells[index];
+                if (cell != null && cell.X == x && cell.Y == y)
+                    return cell;
+            }
+
+            return null;
+        }
+
+        private static void SetSpriteCell(OpenFieldObstacleSpriteLayerData layer, int x, int y, Sprite sprite)
+        {
+            OpenFieldObstacleSpriteCellData cell = FindSpriteCell(layer, x, y);
+            if (cell == null)
+            {
+                cell = new OpenFieldObstacleSpriteCellData { X = x, Y = y };
+                layer.Cells.Add(cell);
+            }
+
+            cell.UseObstacleCenter = false;
+            SetSpriteReference(cell.Sprite, sprite);
+        }
+
+        private static void RemoveSpriteCell(OpenFieldObstacleSpriteLayerData layer, int x, int y)
+        {
+            for (int index = layer.Cells.Count - 1; index >= 0; index--)
+            {
+                OpenFieldObstacleSpriteCellData cell = layer.Cells[index];
+                if (cell != null && cell.X == x && cell.Y == y)
+                    layer.Cells.RemoveAt(index);
+            }
+        }
+
+        private static void SetSpriteReference(OpenFieldSpriteReferenceData reference, Sprite sprite)
+        {
+            if (reference == null)
+                return;
+
+            if (sprite == null)
             {
                 reference.AssetPath = string.Empty;
                 reference.SpriteName = string.Empty;
-                reference.SpriteUv = Vector4.zero;
+                reference.SpriteUv = default;
                 reference.HasSpriteUv = false;
                 return;
             }
 
-            reference.AssetPath = AssetDatabase.GetAssetPath(next);
-            reference.SpriteName = next.name;
-            Texture2D texture = next.texture;
+            reference.AssetPath = AssetDatabase.GetAssetPath(sprite);
+            reference.SpriteName = sprite.name;
+            Texture2D texture = sprite.texture;
             if (texture == null || texture.width <= 0 || texture.height <= 0)
             {
-                reference.SpriteUv = Vector4.zero;
+                reference.SpriteUv = default;
                 reference.HasSpriteUv = false;
                 return;
             }
 
-            Rect rect = next.textureRect;
-            reference.SpriteUv = new Vector4(
-                rect.x / texture.width,
-                rect.y / texture.height,
-                rect.width / texture.width,
-                rect.height / texture.height);
+            Rect textureRect = sprite.textureRect;
+            reference.SpriteUv = new OpenFieldSpriteUvData(
+                textureRect.x / texture.width,
+                textureRect.y / texture.height,
+                textureRect.width / texture.width,
+                textureRect.height / texture.height);
             reference.HasSpriteUv = true;
         }
 
