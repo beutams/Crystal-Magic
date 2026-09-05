@@ -276,14 +276,26 @@ namespace CrystalMagic.Editor.Data
             }
             else
             {
-                Rect previewRect = new(rect.x + 2f, rect.y + 2f, rect.width - 4f, rect.height - 4f);
+                Rect previewBounds = new(rect.x + 2f, rect.y + 2f, rect.width - 4f, rect.height - 4f);
+                Rect previewCanvas = GetSpritePreviewCanvasRect(sprite, previewBounds);
+                Rect sourceRect = sprite.rect;
                 Rect textureRect = sprite.textureRect;
+                Vector2 textureRectOffset = sprite.textureRectOffset;
+                float sourceWidth = Mathf.Max(1f, sourceRect.width);
+                float sourceHeight = Mathf.Max(1f, sourceRect.height);
+                float scale = previewCanvas.width / sourceWidth;
+                // Sprite offsets use a lower-left origin; IMGUI rectangles use a top-left origin.
+                Rect previewContent = new(
+                    previewCanvas.x + textureRectOffset.x * scale,
+                    previewCanvas.y + (sourceHeight - textureRectOffset.y - textureRect.height) * scale,
+                    textureRect.width * scale,
+                    textureRect.height * scale);
                 Rect uv = new(
                     textureRect.x / sprite.texture.width,
                     textureRect.y / sprite.texture.height,
                     textureRect.width / sprite.texture.width,
                     textureRect.height / sprite.texture.height);
-                GUI.DrawTextureWithTexCoords(previewRect, sprite.texture, uv, true);
+                GUI.DrawTextureWithTexCoords(previewContent, sprite.texture, uv, true);
                 Rect clearRect = new(rect.xMax - 17f, rect.y + 1f, 16f, 16f);
                 if (GUI.Button(clearRect, "×", EditorStyles.miniButton))
                     RemoveSpriteCell(layer, x, y);
@@ -306,6 +318,20 @@ namespace CrystalMagic.Editor.Data
                 SetSpriteCell(layer, x, y, draggedSprite);
                 currentEvent.Use();
             }
+        }
+
+        private static Rect GetSpritePreviewCanvasRect(Sprite sprite, Rect previewBounds)
+        {
+            float sourceWidth = Mathf.Max(1f, sprite.rect.width);
+            float sourceHeight = Mathf.Max(1f, sprite.rect.height);
+            float scale = Mathf.Min(previewBounds.width / sourceWidth, previewBounds.height / sourceHeight);
+            float width = sourceWidth * scale;
+            float height = sourceHeight * scale;
+            return new Rect(
+                previewBounds.x + (previewBounds.width - width) * 0.5f,
+                previewBounds.y + (previewBounds.height - height) * 0.5f,
+                width,
+                height);
         }
 
         private static bool TryGetDraggedSprite(out Sprite sprite)
