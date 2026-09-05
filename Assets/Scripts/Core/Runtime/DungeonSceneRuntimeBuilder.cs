@@ -65,7 +65,11 @@ namespace CrystalMagic.Core
             DungeonRuleTileVisualBuilder.Build(runtimeRoot, sceneData.TerrainVisual, resourceOwnerKey);
             yield return null;
 
-            reportProgress?.Invoke(0.994f, "Building dungeon scene", "Spawning environment");
+            reportProgress?.Invoke(0.994f, "Building dungeon scene", "Spawning obstacles");
+            SpawnObstacles(entityManager, runtimeRoot, sceneData, resourceOwnerKey, spawnedEntities);
+            yield return null;
+
+            reportProgress?.Invoke(0.995f, "Building dungeon scene", "Spawning environment");
             SpawnEnvironment(entityManager, sceneData, resourceOwnerKey, spawnedEntities);
             yield return null;
 
@@ -81,6 +85,65 @@ namespace CrystalMagic.Core
             SpawnMonsters(entityManager, sceneData, spawnedEntities);
 
             runtimeRoot.Initialize(resourceOwnerKey, spawnedEntities);
+        }
+
+        private static void SpawnObstacles(
+            EntityManager entityManager,
+            DungeonSceneRuntimeRoot runtimeRoot,
+            RuntimeDungeonSceneData sceneData,
+            string resourceOwnerKey,
+            List<Entity> spawnedEntities)
+        {
+            List<RuntimeDungeonObstacleSpawnData> obstacleSpawns = sceneData.ObstacleSpawns;
+            for (int obstacleIndex = 0; obstacleIndex < obstacleSpawns.Count; obstacleIndex++)
+            {
+                RuntimeDungeonObstacleSpawnData obstacle = obstacleSpawns[obstacleIndex];
+                if (obstacle == null)
+                    continue;
+
+                if (EntitySpawnRegistryUtility.TryInstantiateEnvironment(
+                        entityManager,
+                        new FixedString128Bytes("Environment"),
+                        out Entity visualEntity))
+                {
+                    Vector3 visualPosition = obstacle.WorldPosition;
+                    visualPosition.z = -obstacle.SortAnchorWorldY / 100f;
+                    SetOrAddLocalTransform(
+                        entityManager,
+                        visualEntity,
+                        visualPosition,
+                        obstacle.RotationQuarterTurns * 90f);
+                    DungeonSceneVisualUtility.ApplySpriteVisual(
+                        entityManager,
+                        visualEntity,
+                        obstacle.SpritePath,
+                        obstacle.SpriteName,
+                        obstacle.FlippedX,
+                        resourceOwnerKey,
+                        runtimeRoot);
+                    spawnedEntities.Add(visualEntity);
+                }
+
+                if (obstacle.CollisionCells == null)
+                    continue;
+
+                for (int cellIndex = 0; cellIndex < obstacle.CollisionCells.Count; cellIndex++)
+                {
+                    if (!EntitySpawnRegistryUtility.TryInstantiateEnvironment(
+                            entityManager,
+                            new FixedString128Bytes("Collider"),
+                            out Entity colliderEntity))
+                    {
+                        continue;
+                    }
+
+                    Vector3 colliderPosition = ToWorldCell(sceneData, obstacle.CollisionCells[cellIndex]);
+                    SetOrAddLocalTransform(entityManager, colliderEntity, colliderPosition);
+                    DungeonSceneVisualUtility.HideVisual(entityManager, colliderEntity);
+                    ApplyBoxColliderSize(entityManager, colliderEntity, new Vector3(1f, 1f, 1.6f));
+                    spawnedEntities.Add(colliderEntity);
+                }
+            }
         }
 
         private static void SpawnEnvironment(
@@ -286,6 +349,18 @@ namespace CrystalMagic.Core
                     rotation,
                     1f));
             }
+        }
+
+        private static Vector3 ToWorldCell(RuntimeDungeonSceneData sceneData, Vector2Int cell)
+        {
+            float cellSize = sceneData.CellWorldSize > 0f
+                ? sceneData.CellWorldSize
+                : 1f;
+            Vector2 worldOrigin = sceneData.TerrainVisual?.WorldOrigin ?? Vector2.zero;
+            return new Vector3(
+                worldOrigin.x + (cell.x + 0.5f) * cellSize,
+                worldOrigin.y + (cell.y + 0.5f) * cellSize,
+                0f);
         }
 
         private static void ApplyBoxColliderSize(EntityManager entityManager, Entity entity, Vector3 size)

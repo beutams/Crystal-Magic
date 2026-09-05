@@ -30,6 +30,44 @@ namespace CrystalMagic.Core
             ApplySharedMaterial(entityManager, entity, material, mesh);
         }
 
+        public static void ApplySpriteVisual(
+            EntityManager entityManager,
+            Entity entity,
+            string spritePath,
+            string spriteName,
+            bool flippedX,
+            string ownerKey,
+            DungeonSceneRuntimeRoot runtimeRoot)
+        {
+            if (string.IsNullOrWhiteSpace(spritePath))
+            {
+                HideVisual(entityManager, entity);
+                return;
+            }
+
+            string spriteReference = string.IsNullOrWhiteSpace(spriteName)
+                ? spritePath
+                : $"{spritePath}|{spriteName}";
+            Sprite sprite = ResourceComponent.Instance?.LoadSprite(spriteReference, ownerKey);
+            if (sprite == null || sprite.texture == null)
+            {
+                HideVisual(entityManager, entity);
+                return;
+            }
+
+            Mesh mesh = CreateSpriteQuadMesh(sprite, flippedX);
+            Material material = CreateSpriteMaterial(sprite.texture, sprite.name);
+            if (material == null)
+            {
+                Object.Destroy(mesh);
+                HideVisual(entityManager, entity);
+                return;
+            }
+
+            ApplySharedMaterial(entityManager, entity, material, mesh);
+            runtimeRoot?.TrackRuntimeAssets(mesh, material);
+        }
+
         public static void ApplyNonUniformScale(EntityManager entityManager, Entity entity, float3 size)
         {
             PostTransformMatrix matrix = new()
@@ -72,6 +110,73 @@ namespace CrystalMagic.Core
                 s_meshCache[prefabName] = mesh;
 
             return mesh;
+        }
+
+        private static Mesh CreateSpriteQuadMesh(Sprite sprite, bool flippedX)
+        {
+            float pixelsPerUnit = Mathf.Max(0.0001f, sprite.pixelsPerUnit);
+            Vector2 size = sprite.rect.size / pixelsPerUnit;
+            Vector2 pivot = sprite.pivot / pixelsPerUnit;
+            float minimumX = -pivot.x;
+            float minimumY = -pivot.y;
+            float maximumX = minimumX + size.x;
+            float maximumY = minimumY + size.y;
+
+            Vector2[] spriteUvs = sprite.uv;
+            Vector2[] uvs = spriteUvs != null && spriteUvs.Length >= 4
+                ? new[] { spriteUvs[0], spriteUvs[1], spriteUvs[2], spriteUvs[3] }
+                : new[]
+                {
+                    new Vector2(0f, 0f),
+                    new Vector2(0f, 1f),
+                    new Vector2(1f, 1f),
+                    new Vector2(1f, 0f),
+                };
+            if (flippedX)
+            {
+                (uvs[0], uvs[3]) = (uvs[3], uvs[0]);
+                (uvs[1], uvs[2]) = (uvs[2], uvs[1]);
+            }
+
+            Mesh mesh = new()
+            {
+                name = $"{sprite.name}SpriteMesh",
+                vertices = new[]
+                {
+                    new Vector3(minimumX, minimumY, 0f),
+                    new Vector3(minimumX, maximumY, 0f),
+                    new Vector3(maximumX, maximumY, 0f),
+                    new Vector3(maximumX, minimumY, 0f),
+                },
+                uv = uvs,
+                triangles = new[] { 0, 1, 2, 0, 2, 3 },
+            };
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        private static Material CreateSpriteMaterial(Texture2D texture, string spriteName)
+        {
+            Shader shader = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default")
+                ?? Shader.Find("Sprites/Default")
+                ?? Shader.Find("Universal Render Pipeline/Unlit")
+                ?? Shader.Find("Unlit/Texture");
+            if (shader == null)
+            {
+                Debug.LogError("[DungeonSceneVisualUtility] No compatible sprite shader is available for an obstacle.");
+                return null;
+            }
+
+            Material material = new(shader)
+            {
+                name = $"{spriteName}SpriteMaterial",
+                mainTexture = texture,
+            };
+            if (material.HasProperty("_BaseMap"))
+                material.SetTexture("_BaseMap", texture);
+            if (material.HasProperty("_MainTex"))
+                material.SetTexture("_MainTex", texture);
+            return material;
         }
     }
 }

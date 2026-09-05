@@ -265,6 +265,7 @@ namespace CrystalMagic.Core
         public bool HasSpriteUv;
         public Vector3 WorldPosition;
         public Vector2 VisualSortAnchor;
+        public float SortAnchorWorldY;
         public int RotationQuarterTurns;
         public bool FlippedX;
         public List<Vector2Int> CollisionCells = new();

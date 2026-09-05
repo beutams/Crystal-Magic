@@ -123,14 +123,16 @@ namespace CrystalMagic.Core
             foreach (OpenFieldObstaclePlacement placement in visualLayout.Obstacles)
             {
                 OpenFieldSpriteReferenceData sprite = placement.Sprite;
+                Vector3 worldPosition = ToWorldRectangle(layout, placement.OccupiedCells);
                 scene.ObstacleSpawns.Add(new RuntimeDungeonObstacleSpawnData
                 {
                     SpritePath = sprite?.AssetPath ?? string.Empty,
                     SpriteName = sprite?.SpriteName ?? string.Empty,
                     SpriteUv = sprite?.SpriteUv ?? default,
                     HasSpriteUv = sprite?.HasSpriteUv ?? false,
-                    WorldPosition = ToWorldRectangle(layout, placement.OccupiedCells),
+                    WorldPosition = worldPosition,
                     VisualSortAnchor = placement.VisualSortAnchor,
+                    SortAnchorWorldY = worldPosition.y + placement.VisualSortAnchor.y,
                     RotationQuarterTurns = placement.RotationQuarterTurns,
                     FlippedX = placement.FlippedX,
                     CollisionCells = new List<Vector2Int>(placement.CollisionCells),
