@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.OpenField;
 using Newtonsoft.Json;
@@ -231,6 +232,447 @@ namespace CrystalMagic.Tests.Editor
 
             Assert.That(table, Is.Not.Null);
             Assert.That(table.Rows, Is.Empty);
+        }
+
+        [Test]
+        public void VisualLayout_AssignsStylesDecorationsAndObstacleClearance()
+        {
+            const int mapSize = 48;
+            OpenFieldDungeonLayout layout = new(mapSize, mapSize, 934217);
+            for (int y = 0; y < mapSize; y++)
+            {
+                for (int x = 0; x < mapSize; x++)
+                {
+                    OpenFieldTerrainCell terrain = x == 0
+                        ? OpenFieldTerrainCell.Void
+                        : x == mapSize - 1
+                            ? OpenFieldTerrainCell.Obstacle
+                            : OpenFieldTerrainCell.Ground;
+                    layout.SetTerrain(x, y, 0.5f, terrain, terrain == OpenFieldTerrainCell.Obstacle ? 2 : 0);
+                }
+            }
+
+            OpenFieldObstacleData obstacle = new()
+            {
+                Name = "TwoByTwo",
+                Sprite = new OpenFieldSpriteReferenceData { AssetPath = "Assets/Res/Sprites/TwoByTwo.png" },
+                FootprintWidth = 2,
+                FootprintHeight = 2,
+                CollisionMask = new List<bool> { true, false, true, true },
+                Weight = 1,
+                MinimumSpacing = 3f,
+                MaximumCount = 2,
+                AllowRotation = true,
+                AllowFlipX = true,
+            };
+            OpenFieldDungeonVisualData visual = new()
+            {
+                GroundCellsPerStyleSeed = 360,
+                VoidVisual = new OpenFieldVoidVisualData
+                {
+                    AbyssRuleTile = new OpenFieldRuleTileReferenceData { AssetPath = "Assets/Res/Tile/Abyss.asset" },
+                    WallRuleTile = new OpenFieldRuleTileReferenceData { AssetPath = "Assets/Res/Tile/VoidWall.asset" },
+                    TransitionRuleTile = new OpenFieldRuleTileReferenceData { AssetPath = "Assets/Res/Tile/VoidTransition.asset" },
+                },
+                ObstacleVisual = new OpenFieldObstacleVisualData
+                {
+                    TopRuleTile = new OpenFieldRuleTileReferenceData { AssetPath = "Assets/Res/Tile/ObstacleTop.asset" },
+                    WallRuleTile = new OpenFieldRuleTileReferenceData { AssetPath = "Assets/Res/Tile/ObstacleWall.asset" },
+                    TransitionRuleTile = new OpenFieldRuleTileReferenceData { AssetPath = "Assets/Res/Tile/ObstacleTransition.asset" },
+                },
+                GroundStyles = new List<OpenFieldGroundStyleData>
+                {
+                    new()
+                    {
+                        Name = "Meadow",
+                        BaseRuleTile = new OpenFieldRuleTileReferenceData { AssetPath = "Assets/Res/Tile/Meadow.asset" },
+                        Decorations = new List<OpenFieldDecorationData>
+                        {
+                            new()
+                            {
+                                Name = "MeadowPebbles",
+                                RuleTile = new OpenFieldRuleTileReferenceData { AssetPath = "Assets/Res/Tile/MeadowPebbles.asset" },
+                                Radius = 5f,
+                                MaximumSpread = 6,
+                            },
+                        },
+                        Obstacles = new List<OpenFieldObstacleData> { obstacle },
+                    },
+                    new()
+                    {
+                        Name = "Forest",
+                        BaseRuleTile = new OpenFieldRuleTileReferenceData { AssetPath = "Assets/Res/Tile/Forest.asset" },
+                        Decorations = new List<OpenFieldDecorationData>
+                        {
+                            new()
+                            {
+                                Name = "ForestGrass",
+                                RuleTile = new OpenFieldRuleTileReferenceData { AssetPath = "Assets/Res/Tile/ForestGrass.asset" },
+                                Radius = 5f,
+                                MaximumSpread = 6,
+                            },
+                        },
+                        Obstacles = new List<OpenFieldObstacleData> { obstacle },
+                    },
+                },
+            };
+            HashSet<Vector2Int> protectedCells = new()
+            {
+                new Vector2Int(5, 5),
+                new Vector2Int(24, 24),
+                new Vector2Int(40, 40),
+            };
+
+            OpenFieldDungeonVisualLayout result = OpenFieldDungeonVisualLayoutBuilder.Build(layout, visual, protectedCells);
+            OpenFieldDungeonVisualLayout repeated = OpenFieldDungeonVisualLayoutBuilder.Build(layout, visual, protectedCells);
+
+            AssertLayoutsAreIdentical(layout, result, repeated);
+
+            for (int y = 0; y < mapSize; y++)
+            {
+                for (int x = 0; x < mapSize; x++)
+                {
+                    if (layout.GetTerrainCell(x, y) == OpenFieldTerrainCell.Ground)
+                        Assert.That(result.GetGroundStyleIndex(x, y), Is.GreaterThanOrEqualTo(0));
+                }
+            }
+
+            List<OpenFieldRuleTilePlacement> decorations = result.RuleTilePlacements
+                .Where(placement => placement.Role == OpenFieldRuleTileRole.Decoration)
+                .ToList();
+            Assert.That(decorations, Is.Not.Empty);
+            foreach (OpenFieldRuleTilePlacement placement in decorations)
+                Assert.That(result.IsStyleInterior(placement.Cell, placement.GroundStyleIndex), Is.True);
+
+            Assert.That(result.Obstacles, Is.Not.Empty);
+            Assert.That(result.Obstacles, Has.Count.GreaterThanOrEqualTo(2));
+            Assert.That(result.Obstacles, Has.Count.EqualTo(repeated.Obstacles.Count));
+            HashSet<Vector2Int> collisionCells = new();
+            foreach (OpenFieldObstaclePlacement placement in result.Obstacles)
+            {
+                foreach (Vector2Int cell in placement.CollisionCells)
+                {
+                    Assert.That(layout.GetTerrainCell(cell.x, cell.y), Is.EqualTo(OpenFieldTerrainCell.Ground));
+                    Assert.That(protectedCells, Has.No.Member(cell));
+                    Assert.That(collisionCells.Add(cell), Is.True, $"Collision cell {cell} was claimed twice.");
+                    for (int deltaY = -1; deltaY <= 1; deltaY++)
+                    {
+                        for (int deltaX = -1; deltaX <= 1; deltaX++)
+                        {
+                            if (deltaX == 0 && deltaY == 0)
+                                continue;
+
+                            int neighbourX = cell.x + deltaX;
+                            int neighbourY = cell.y + deltaY;
+                            Assert.That(layout.IsInside(neighbourX, neighbourY), Is.True);
+                            Assert.That(layout.GetTerrainCell(neighbourX, neighbourY), Is.EqualTo(OpenFieldTerrainCell.Ground));
+                        }
+                    }
+                }
+            }
+
+            for (int i = 0; i < result.Obstacles.Count; i++)
+            {
+                OpenFieldObstaclePlacement first = result.Obstacles[i];
+                OpenFieldObstaclePlacement repeatedFirst = repeated.Obstacles[i];
+                Assert.That(first.Origin, Is.EqualTo(repeatedFirst.Origin));
+                Assert.That(first.RotationQuarterTurns, Is.EqualTo(repeatedFirst.RotationQuarterTurns));
+                Assert.That(first.FlippedX, Is.EqualTo(repeatedFirst.FlippedX));
+
+                for (int j = i + 1; j < result.Obstacles.Count; j++)
+                {
+                    OpenFieldObstaclePlacement second = result.Obstacles[j];
+                    float minimumSpacing = Mathf.Max(first.MinimumSpacing, second.MinimumSpacing);
+                    foreach (Vector2Int firstCell in first.OccupiedCells)
+                    {
+                        foreach (Vector2Int secondCell in second.OccupiedCells)
+                        {
+                            float deltaX = firstCell.x - secondCell.x;
+                            float deltaY = firstCell.y - secondCell.y;
+                            Assert.That(deltaX * deltaX + deltaY * deltaY,
+                                Is.GreaterThanOrEqualTo(minimumSpacing * minimumSpacing));
+                        }
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public void VisualLayout_AssignsBothStylesInsideEachVoidSeparatedGroundRegion()
+        {
+            const int regionWidth = 20;
+            const int regionHeight = 24;
+            const int voidColumn = regionWidth;
+            const int cellsPerStyleSeed = 64;
+            OpenFieldDungeonLayout layout = new(regionWidth * 2 + 1, regionHeight, 618731);
+            for (int y = 0; y < layout.Height; y++)
+            {
+                for (int x = 0; x < layout.Width; x++)
+                {
+                    OpenFieldTerrainCell terrain = x == voidColumn
+                        ? OpenFieldTerrainCell.Void
+                        : OpenFieldTerrainCell.Ground;
+                    layout.SetTerrain(x, y, 0.5f, terrain, terrain == OpenFieldTerrainCell.Void ? -1 : 0);
+                }
+            }
+
+            OpenFieldDungeonVisualData visual = new()
+            {
+                GroundCellsPerStyleSeed = cellsPerStyleSeed,
+                GroundStyles = new List<OpenFieldGroundStyleData>
+                {
+                    new() { Name = "Meadow" },
+                    new() { Name = "Forest" },
+                },
+            };
+
+            OpenFieldDungeonVisualLayout result = OpenFieldDungeonVisualLayoutBuilder.Build(
+                layout,
+                visual,
+                new HashSet<Vector2Int>());
+
+            int regionArea = regionWidth * regionHeight;
+            int seedCountPerRegion = (regionArea + cellsPerStyleSeed - 1) / cellsPerStyleSeed;
+            Assert.That(seedCountPerRegion, Is.GreaterThan(visual.GroundStyles.Count));
+
+            AssertGroundRegionHasBothStyles(result, 0, regionWidth - 1, regionHeight);
+            AssertGroundRegionHasBothStyles(result, voidColumn + 1, layout.Width - 1, regionHeight);
+        }
+
+        [Test]
+        public void VisualLayout_UsesActualRotationAndFlipForEachObstacleCollisionMask()
+        {
+            OpenFieldObstacleData hook = new()
+            {
+                Name = "Hook",
+                Sprite = new OpenFieldSpriteReferenceData { AssetPath = "Assets/Res/Sprites/Hook.png" },
+                FootprintWidth = 2,
+                FootprintHeight = 3,
+                CollisionMask = new List<bool> { true, false, false, true, true, false },
+                Weight = 1,
+                MaximumCount = 4,
+                AllowRotation = true,
+                AllowFlipX = true,
+            };
+            OpenFieldObstacleData stair = new()
+            {
+                Name = "Stair",
+                Sprite = new OpenFieldSpriteReferenceData { AssetPath = "Assets/Res/Sprites/Stair.png" },
+                FootprintWidth = 3,
+                FootprintHeight = 2,
+                CollisionMask = new List<bool> { false, true, true, true, false, false },
+                Weight = 5,
+                MaximumCount = 4,
+                AllowRotation = true,
+                AllowFlipX = true,
+            };
+            OpenFieldDungeonVisualData visual = new()
+            {
+                GroundStyles = new List<OpenFieldGroundStyleData>
+                {
+                    new()
+                    {
+                        Name = "Ground",
+                        Obstacles = new List<OpenFieldObstacleData> { hook, stair },
+                    },
+                },
+            };
+
+            int[] layoutSeeds = { 71, 193, 307, 449, 587, 733, 887, 991 };
+            bool sawHook = false;
+            bool sawStair = false;
+            bool sawRotation = false;
+            bool sawFlip = false;
+            foreach (int layoutSeed in layoutSeeds)
+            {
+                OpenFieldDungeonLayout layout = CreateGroundLayout(48, 48, layoutSeed);
+                OpenFieldDungeonVisualLayout result = OpenFieldDungeonVisualLayoutBuilder.Build(
+                    layout,
+                    visual,
+                    new HashSet<Vector2Int>());
+
+                Assert.That(result.Obstacles, Is.Not.Empty, $"Seed {layoutSeed} produced no obstacles.");
+                foreach (OpenFieldObstaclePlacement placement in result.Obstacles)
+                {
+                    OpenFieldObstacleData obstacle = visual.GroundStyles[placement.GroundStyleIndex]
+                        .Obstacles[placement.ObstacleIndex];
+                    List<Vector2Int> expectedFootprint = GetExpectedObstacleCells(
+                        obstacle,
+                        placement.Origin,
+                        placement.RotationQuarterTurns,
+                        placement.FlippedX,
+                        false);
+                    List<Vector2Int> expectedCollisionCells = GetExpectedObstacleCells(
+                        obstacle,
+                        placement.Origin,
+                        placement.RotationQuarterTurns,
+                        placement.FlippedX,
+                        true);
+
+                    Assert.That(placement.OccupiedCells, Has.Count.EqualTo(obstacle.FootprintWidth * obstacle.FootprintHeight));
+                    Assert.That(placement.CollisionCells,
+                        Has.Count.EqualTo(obstacle.CollisionMask.Count(isCollision => isCollision)));
+                    Assert.That(placement.OccupiedCells, Is.EquivalentTo(expectedFootprint));
+                    Assert.That(placement.CollisionCells, Is.EquivalentTo(expectedCollisionCells));
+
+                    sawHook |= placement.ObstacleIndex == 0;
+                    sawStair |= placement.ObstacleIndex == 1;
+                    sawRotation |= placement.RotationQuarterTurns != 0;
+                    sawFlip |= placement.FlippedX;
+                }
+            }
+
+            Assert.That(sawHook, Is.True, "The lower-weight asymmetric obstacle was never exercised.");
+            Assert.That(sawStair, Is.True, "The higher-weight asymmetric obstacle was never exercised.");
+            Assert.That(sawRotation, Is.True, "No rotated placement was exercised.");
+            Assert.That(sawFlip, Is.True, "No horizontally flipped placement was exercised.");
+        }
+
+        [Test]
+        public void VisualLayout_UsesWallsAtVoidEdgesAndTransitionsOnlyOnGround()
+        {
+            OpenFieldDungeonLayout layout = new(4, 3, 27);
+            for (int y = 0; y < layout.Height; y++)
+            {
+                for (int x = 0; x < layout.Width; x++)
+                    layout.SetTerrain(x, y, 0.5f, OpenFieldTerrainCell.Ground, 0);
+            }
+
+            layout.SetTerrain(0, 0, 0.1f, OpenFieldTerrainCell.Void, -1);
+            layout.SetTerrain(1, 1, 0.1f, OpenFieldTerrainCell.Void, -1);
+            layout.SetTerrain(2, 1, 0.1f, OpenFieldTerrainCell.Void, -1);
+            layout.SetTerrain(2, 0, 0.9f, OpenFieldTerrainCell.Obstacle, 2);
+            layout.SetTerrain(3, 1, 0.9f, OpenFieldTerrainCell.Obstacle, 2);
+
+            OpenFieldDungeonVisualData visual = new()
+            {
+                GroundStyles = new List<OpenFieldGroundStyleData> { new() { Name = "Ground" } },
+            };
+
+            OpenFieldDungeonVisualLayout result = OpenFieldDungeonVisualLayoutBuilder.Build(
+                layout,
+                visual,
+                new HashSet<Vector2Int>());
+
+            Assert.That(result.RuleTilePlacements.Any(placement =>
+                placement.Role == OpenFieldRuleTileRole.VoidWall && placement.Cell == new Vector2Int(0, 0)), Is.True);
+            Assert.That(result.RuleTilePlacements.Any(placement =>
+                placement.Role == OpenFieldRuleTileRole.VoidTransition && placement.Cell == new Vector2Int(1, 0)), Is.True);
+            Assert.That(result.RuleTilePlacements.Any(placement =>
+                placement.Role == OpenFieldRuleTileRole.VoidTransition && placement.Cell == new Vector2Int(2, 0)), Is.False);
+            Assert.That(result.RuleTilePlacements.Any(placement =>
+                placement.Role == OpenFieldRuleTileRole.ObstacleTransition && placement.Cell == new Vector2Int(3, 0)), Is.True);
+        }
+
+        private static OpenFieldDungeonLayout CreateGroundLayout(int width, int height, int seed)
+        {
+            OpenFieldDungeonLayout layout = new(width, height, seed);
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                    layout.SetTerrain(x, y, 0.5f, OpenFieldTerrainCell.Ground, 0);
+            }
+
+            return layout;
+        }
+
+        private static void AssertGroundRegionHasBothStyles(
+            OpenFieldDungeonVisualLayout layout,
+            int minimumX,
+            int maximumX,
+            int height)
+        {
+            HashSet<int> assignedStyles = new();
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = minimumX; x <= maximumX; x++)
+                {
+                    int styleIndex = layout.GetGroundStyleIndex(x, y);
+                    Assert.That(styleIndex, Is.GreaterThanOrEqualTo(0), $"Ground cell ({x}, {y}) was not assigned a style.");
+                    assignedStyles.Add(styleIndex);
+                }
+            }
+
+            Assert.That(assignedStyles, Is.EquivalentTo(new[] { 0, 1 }));
+        }
+
+        private static List<Vector2Int> GetExpectedObstacleCells(
+            OpenFieldObstacleData obstacle,
+            Vector2Int origin,
+            int rotationQuarterTurns,
+            bool flippedX,
+            bool collisionOnly)
+        {
+            List<Vector2Int> cells = new();
+            int turns = ((rotationQuarterTurns % 4) + 4) % 4;
+            for (int sourceY = 0; sourceY < obstacle.FootprintHeight; sourceY++)
+            {
+                for (int sourceX = 0; sourceX < obstacle.FootprintWidth; sourceX++)
+                {
+                    int maskIndex = sourceY * obstacle.FootprintWidth + sourceX;
+                    if (collisionOnly && !obstacle.CollisionMask[maskIndex])
+                        continue;
+
+                    int localX = flippedX ? obstacle.FootprintWidth - 1 - sourceX : sourceX;
+                    Vector2Int rotatedCell = turns switch
+                    {
+                        0 => new Vector2Int(localX, sourceY),
+                        1 => new Vector2Int(obstacle.FootprintHeight - 1 - sourceY, localX),
+                        2 => new Vector2Int(obstacle.FootprintWidth - 1 - localX, obstacle.FootprintHeight - 1 - sourceY),
+                        3 => new Vector2Int(sourceY, obstacle.FootprintWidth - 1 - localX),
+                        _ => throw new System.ArgumentOutOfRangeException(nameof(rotationQuarterTurns)),
+                    };
+                    cells.Add(origin + rotatedCell);
+                }
+            }
+
+            return cells;
+        }
+
+        private static void AssertLayoutsAreIdentical(
+            OpenFieldDungeonLayout layout,
+            OpenFieldDungeonVisualLayout expected,
+            OpenFieldDungeonVisualLayout actual)
+        {
+            for (int y = 0; y < layout.Height; y++)
+            {
+                for (int x = 0; x < layout.Width; x++)
+                {
+                    if (layout.GetTerrainCell(x, y) == OpenFieldTerrainCell.Ground)
+                    {
+                        Assert.That(actual.GetGroundStyleIndex(x, y),
+                            Is.EqualTo(expected.GetGroundStyleIndex(x, y)),
+                            $"Ground style differed at ({x}, {y}).");
+                    }
+                }
+            }
+
+            Assert.That(actual.RuleTilePlacements, Has.Count.EqualTo(expected.RuleTilePlacements.Count));
+            for (int index = 0; index < expected.RuleTilePlacements.Count; index++)
+            {
+                OpenFieldRuleTilePlacement expectedPlacement = expected.RuleTilePlacements[index];
+                OpenFieldRuleTilePlacement actualPlacement = actual.RuleTilePlacements[index];
+                Assert.That(actualPlacement.Role, Is.EqualTo(expectedPlacement.Role), $"Rule tile role differed at index {index}.");
+                Assert.That(actualPlacement.Layer, Is.EqualTo(expectedPlacement.Layer), $"Rule tile layer differed at index {index}.");
+                Assert.That(actualPlacement.Cell, Is.EqualTo(expectedPlacement.Cell), $"Rule tile cell differed at index {index}.");
+                Assert.That(actualPlacement.HeightSteps, Is.EqualTo(expectedPlacement.HeightSteps), $"Rule tile height differed at index {index}.");
+                Assert.That(actualPlacement.GroundStyleIndex, Is.EqualTo(expectedPlacement.GroundStyleIndex), $"Rule tile style differed at index {index}.");
+                Assert.That(actualPlacement.DecorationIndex, Is.EqualTo(expectedPlacement.DecorationIndex), $"Rule tile decoration differed at index {index}.");
+            }
+
+            Assert.That(actual.Obstacles, Has.Count.EqualTo(expected.Obstacles.Count));
+            for (int index = 0; index < expected.Obstacles.Count; index++)
+            {
+                OpenFieldObstaclePlacement expectedPlacement = expected.Obstacles[index];
+                OpenFieldObstaclePlacement actualPlacement = actual.Obstacles[index];
+                Assert.That(actualPlacement.GroundStyleIndex, Is.EqualTo(expectedPlacement.GroundStyleIndex), $"Obstacle style differed at index {index}.");
+                Assert.That(actualPlacement.ObstacleIndex, Is.EqualTo(expectedPlacement.ObstacleIndex), $"Obstacle definition differed at index {index}.");
+                Assert.That(actualPlacement.Origin, Is.EqualTo(expectedPlacement.Origin), $"Obstacle origin differed at index {index}.");
+                Assert.That(actualPlacement.RotationQuarterTurns, Is.EqualTo(expectedPlacement.RotationQuarterTurns), $"Obstacle rotation differed at index {index}.");
+                Assert.That(actualPlacement.FlippedX, Is.EqualTo(expectedPlacement.FlippedX), $"Obstacle flip differed at index {index}.");
+                Assert.That(actualPlacement.OccupiedCells, Is.EqualTo(expectedPlacement.OccupiedCells), $"Obstacle footprint differed at index {index}.");
+                Assert.That(actualPlacement.CollisionCells, Is.EqualTo(expectedPlacement.CollisionCells), $"Obstacle collision cells differed at index {index}.");
+            }
         }
     }
 }
