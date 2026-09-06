@@ -157,7 +157,8 @@ namespace CrystalMagic.Core
 
         private static Material CreateSpriteMaterial(Texture2D texture, string spriteName)
         {
-            Shader shader = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default")
+            Shader shader = Shader.Find("CrystalMagic/TransparentSpriteMesh")
+                ?? Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default")
                 ?? Shader.Find("Sprites/Default")
                 ?? Shader.Find("Universal Render Pipeline/Unlit")
                 ?? Shader.Find("Unlit/Texture");
@@ -171,6 +172,7 @@ namespace CrystalMagic.Core
             {
                 name = $"{spriteName}SpriteMaterial",
                 mainTexture = texture,
+                enableInstancing = true,
             };
             if (material.HasProperty("_BaseMap"))
                 material.SetTexture("_BaseMap", texture);
