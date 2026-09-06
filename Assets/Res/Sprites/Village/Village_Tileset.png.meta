@@ -48,7 +48,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 25
+  spritePixelsToUnits: 64
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -97,7 +97,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Village_Tileset_0
+      name: g1_1
       rect:
         serializedVersion: 2
         x: 0
@@ -119,7 +119,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_1
+      name: g1_2
       rect:
         serializedVersion: 2
         x: 64
@@ -141,7 +141,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_2
+      name: g1_3
       rect:
         serializedVersion: 2
         x: 128
@@ -163,7 +163,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_3
+      name: g1_10
       rect:
         serializedVersion: 2
         x: 192
@@ -185,7 +185,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_4
+      name: g1_11
       rect:
         serializedVersion: 2
         x: 256
@@ -207,7 +207,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: g1
+      name: g2_1
       rect:
         serializedVersion: 2
         x: 320
@@ -229,7 +229,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: g2
+      name: g2_2
       rect:
         serializedVersion: 2
         x: 384
@@ -251,7 +251,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: g3
+      name: g2_3
       rect:
         serializedVersion: 2
         x: 448
@@ -273,7 +273,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_8
+      name: g2_10
       rect:
         serializedVersion: 2
         x: 512
@@ -295,7 +295,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_9
+      name: g2_11
       rect:
         serializedVersion: 2
         x: 576
@@ -317,7 +317,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_10
+      name: g3_1
       rect:
         serializedVersion: 2
         x: 640
@@ -339,7 +339,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_11
+      name: g3_2
       rect:
         serializedVersion: 2
         x: 704
@@ -361,7 +361,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_12
+      name: g3_3
       rect:
         serializedVersion: 2
         x: 768
@@ -383,7 +383,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_13
+      name: g3_10
       rect:
         serializedVersion: 2
         x: 832
@@ -405,7 +405,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_14
+      name: g3_11
       rect:
         serializedVersion: 2
         x: 896
@@ -801,7 +801,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_32
+      name: g1_4
       rect:
         serializedVersion: 2
         x: 0
@@ -823,7 +823,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_33
+      name: g1_5
       rect:
         serializedVersion: 2
         x: 64
@@ -845,7 +845,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_34
+      name: g1_6
       rect:
         serializedVersion: 2
         x: 128
@@ -867,7 +867,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_35
+      name: g1_12
       rect:
         serializedVersion: 2
         x: 192
@@ -889,7 +889,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_36
+      name: g1_13
       rect:
         serializedVersion: 2
         x: 256
@@ -911,11 +911,11 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: g4
+      name: g2_4
       rect:
         serializedVersion: 2
         x: 320
-        y: 1921
+        y: 1920
         width: 64
         height: 64
       alignment: 0
@@ -933,11 +933,11 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: g5
+      name: g2_5
       rect:
         serializedVersion: 2
-        x: 383
-        y: 1923
+        x: 384
+        y: 1920
         width: 64
         height: 64
       alignment: 0
@@ -955,11 +955,11 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: g6
+      name: g2_6
       rect:
         serializedVersion: 2
         x: 448
-        y: 1921
+        y: 1920
         width: 64
         height: 64
       alignment: 0
@@ -977,7 +977,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_40
+      name: g2_12
       rect:
         serializedVersion: 2
         x: 512
@@ -999,7 +999,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_41
+      name: g2_13
       rect:
         serializedVersion: 2
         x: 576
@@ -1021,7 +1021,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_42
+      name: g3_4
       rect:
         serializedVersion: 2
         x: 640
@@ -1043,7 +1043,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_43
+      name: g3_5
       rect:
         serializedVersion: 2
         x: 704
@@ -1065,7 +1065,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_44
+      name: g3_6
       rect:
         serializedVersion: 2
         x: 768
@@ -1087,7 +1087,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_45
+      name: g3_12
       rect:
         serializedVersion: 2
         x: 832
@@ -1109,7 +1109,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_46
+      name: g3_13
       rect:
         serializedVersion: 2
         x: 896
@@ -1505,7 +1505,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_64
+      name: g1_7
       rect:
         serializedVersion: 2
         x: 0
@@ -1527,7 +1527,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_65
+      name: g1_8
       rect:
         serializedVersion: 2
         x: 64
@@ -1549,7 +1549,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_66
+      name: g1_9
       rect:
         serializedVersion: 2
         x: 128
@@ -1571,7 +1571,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_67
+      name: g1_14
       rect:
         serializedVersion: 2
         x: 192
@@ -1593,7 +1593,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_68
+      name: g1_15
       rect:
         serializedVersion: 2
         x: 256
@@ -1615,7 +1615,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: g
+      name: g2_7
       rect:
         serializedVersion: 2
         x: 320
@@ -1637,7 +1637,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: g7
+      name: g2_8
       rect:
         serializedVersion: 2
         x: 384
@@ -1659,7 +1659,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: g8
+      name: g2_9
       rect:
         serializedVersion: 2
         x: 448
@@ -1681,11 +1681,11 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_39
+      name: g2_14
       rect:
         serializedVersion: 2
-        x: 511
-        y: 1858
+        x: 512
+        y: 1856
         width: 64
         height: 64
       alignment: 0
@@ -1703,7 +1703,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_73
+      name: g2_15
       rect:
         serializedVersion: 2
         x: 576
@@ -1725,7 +1725,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_74
+      name: g3_7
       rect:
         serializedVersion: 2
         x: 640
@@ -1747,7 +1747,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_75
+      name: g3_8
       rect:
         serializedVersion: 2
         x: 704
@@ -1769,7 +1769,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_76
+      name: g3_9
       rect:
         serializedVersion: 2
         x: 768
@@ -1791,7 +1791,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_77
+      name: g3_14
       rect:
         serializedVersion: 2
         x: 832
@@ -1813,7 +1813,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_78
+      name: g3_15
       rect:
         serializedVersion: 2
         x: 896
@@ -2209,7 +2209,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_96
+      name: g_base
       rect:
         serializedVersion: 2
         x: 0
@@ -3991,7 +3991,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_177
+      name: dg_1
       rect:
         serializedVersion: 2
         x: 896
@@ -4013,7 +4013,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_178
+      name: dg_2
       rect:
         serializedVersion: 2
         x: 960
@@ -4035,7 +4035,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_179
+      name: dg_3
       rect:
         serializedVersion: 2
         x: 1024
@@ -4057,7 +4057,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_180
+      name: dg_4
       rect:
         serializedVersion: 2
         x: 1088
@@ -4629,7 +4629,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_206
+      name: dg_5
       rect:
         serializedVersion: 2
         x: 896
@@ -4651,7 +4651,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_207
+      name: dg_6
       rect:
         serializedVersion: 2
         x: 960
@@ -4673,7 +4673,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_208
+      name: dg_7
       rect:
         serializedVersion: 2
         x: 1024
@@ -4695,7 +4695,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_209
+      name: dg_8
       rect:
         serializedVersion: 2
         x: 1088
@@ -5267,7 +5267,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_235
+      name: dg_9
       rect:
         serializedVersion: 2
         x: 896
@@ -5289,7 +5289,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_236
+      name: dg_10
       rect:
         serializedVersion: 2
         x: 960
@@ -5311,7 +5311,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_237
+      name: dg_11
       rect:
         serializedVersion: 2
         x: 1024
@@ -5333,7 +5333,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_238
+      name: dg_12
       rect:
         serializedVersion: 2
         x: 1088
@@ -5883,7 +5883,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_263
+      name: dg_13
       rect:
         serializedVersion: 2
         x: 896
@@ -5905,7 +5905,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_264
+      name: dg_14
       rect:
         serializedVersion: 2
         x: 960
@@ -5927,7 +5927,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_265
+      name: dg_15
       rect:
         serializedVersion: 2
         x: 1024
@@ -5949,7 +5949,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_266
+      name: dg_16
       rect:
         serializedVersion: 2
         x: 1088
@@ -8083,7 +8083,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_363
+      name: stump1
       rect:
         serializedVersion: 2
         x: 0
@@ -8105,7 +8105,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_364
+      name: tree1_10
       rect:
         serializedVersion: 2
         x: 64
@@ -8127,7 +8127,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_365
+      name: stump2
       rect:
         serializedVersion: 2
         x: 128
@@ -8787,7 +8787,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_395
+      name: tree1_11
       rect:
         serializedVersion: 2
         x: 0
@@ -8809,7 +8809,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_396
+      name: tree1_12
       rect:
         serializedVersion: 2
         x: 64
@@ -8831,7 +8831,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_397
+      name: tree1_13
       rect:
         serializedVersion: 2
         x: 128
@@ -9403,7 +9403,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_423
+      name: stump3
       rect:
         serializedVersion: 2
         x: 0
@@ -9425,7 +9425,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_424
+      name: tree1_14
       rect:
         serializedVersion: 2
         x: 64
@@ -9447,7 +9447,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_425
+      name: stump4
       rect:
         serializedVersion: 2
         x: 128
@@ -10569,7 +10569,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_476
+      name: flower1_1
       rect:
         serializedVersion: 2
         x: 192
@@ -10591,7 +10591,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_477
+      name: flower1_2
       rect:
         serializedVersion: 2
         x: 256
@@ -10613,7 +10613,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_478
+      name: flower2_1
       rect:
         serializedVersion: 2
         x: 320
@@ -10635,11 +10635,11 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_479
+      name: flower2_2
       rect:
         serializedVersion: 2
         x: 384
-        y: 896
+        y: 897
         width: 64
         height: 64
       alignment: 0
@@ -11097,7 +11097,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_500
+      name: tree1_1
       rect:
         serializedVersion: 2
         x: 0
@@ -11119,7 +11119,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_501
+      name: tree1_2
       rect:
         serializedVersion: 2
         x: 64
@@ -11141,7 +11141,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_502
+      name: tree1_3
       rect:
         serializedVersion: 2
         x: 128
@@ -11163,7 +11163,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_503
+      name: flower1_3
       rect:
         serializedVersion: 2
         x: 192
@@ -11185,7 +11185,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_504
+      name: flower1_4
       rect:
         serializedVersion: 2
         x: 256
@@ -11207,7 +11207,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_505
+      name: flower2_3
       rect:
         serializedVersion: 2
         x: 320
@@ -11229,7 +11229,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_506
+      name: flower2_4
       rect:
         serializedVersion: 2
         x: 384
@@ -11669,7 +11669,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_526
+      name: tree1_4
       rect:
         serializedVersion: 2
         x: 0
@@ -11691,7 +11691,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_527
+      name: tree1_5
       rect:
         serializedVersion: 2
         x: 64
@@ -11713,7 +11713,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_528
+      name: tree1_6
       rect:
         serializedVersion: 2
         x: 128
@@ -11735,7 +11735,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_529
+      name: flower3_1
       rect:
         serializedVersion: 2
         x: 192
@@ -11757,7 +11757,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_530
+      name: flower3_2
       rect:
         serializedVersion: 2
         x: 256
@@ -12153,7 +12153,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_548
+      name: tree1_7
       rect:
         serializedVersion: 2
         x: 0
@@ -12175,7 +12175,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_549
+      name: tree1_8
       rect:
         serializedVersion: 2
         x: 64
@@ -12197,7 +12197,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_550
+      name: tree1_9
       rect:
         serializedVersion: 2
         x: 128
@@ -12219,7 +12219,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_551
+      name: flower3_3
       rect:
         serializedVersion: 2
         x: 192
@@ -12241,7 +12241,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Village_Tileset_552
+      name: flower3_4
       rect:
         serializedVersion: 2
         x: 256
@@ -17778,9 +17778,6 @@ TextureImporter:
       - key: SpriteEditor.SliceSettings
         value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":16.0,"y":16.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      Village_Tileset_0: 289408192
-      Village_Tileset_1: 1819084594
-      Village_Tileset_10: -153039843
       Village_Tileset_100: 511337254
       Village_Tileset_101: 1897535469
       Village_Tileset_102: 518120120
@@ -17791,7 +17788,6 @@ TextureImporter:
       Village_Tileset_107: -1953305790
       Village_Tileset_108: 736366550
       Village_Tileset_109: -948739728
-      Village_Tileset_11: 1676640695
       Village_Tileset_110: 1123602736
       Village_Tileset_111: -177422561
       Village_Tileset_112: 1645884031
@@ -17802,7 +17798,6 @@ TextureImporter:
       Village_Tileset_117: 1058443514
       Village_Tileset_118: 799779111
       Village_Tileset_119: -1146846578
-      Village_Tileset_12: -812316826
       Village_Tileset_120: 148479619
       Village_Tileset_121: 1874319052
       Village_Tileset_122: -1593450742
@@ -17813,7 +17808,6 @@ TextureImporter:
       Village_Tileset_127: -1034470545
       Village_Tileset_128: 659027778
       Village_Tileset_129: 466848730
-      Village_Tileset_13: 1144550161
       Village_Tileset_130: 1374240287
       Village_Tileset_131: 252258390
       Village_Tileset_132: 1973468742
@@ -17824,7 +17818,6 @@ TextureImporter:
       Village_Tileset_137: -1979649810
       Village_Tileset_138: 1552531941
       Village_Tileset_139: -1981535036
-      Village_Tileset_14: 1413998755
       Village_Tileset_140: 590693772
       Village_Tileset_141: 476184192
       Village_Tileset_142: 440336285
@@ -17862,11 +17855,7 @@ TextureImporter:
       Village_Tileset_174: 1177859327
       Village_Tileset_175: 2048743828
       Village_Tileset_176: 1538776785
-      Village_Tileset_177: -1117803995
-      Village_Tileset_178: 284612079
-      Village_Tileset_179: 914093805
       Village_Tileset_18: -1235783860
-      Village_Tileset_180: -215245910
       Village_Tileset_181: -1377575794
       Village_Tileset_182: -1524920126
       Village_Tileset_183: 1673202292
@@ -17887,7 +17876,6 @@ TextureImporter:
       Village_Tileset_197: 1850710572
       Village_Tileset_198: 1864987780
       Village_Tileset_199: -1624588725
-      Village_Tileset_2: -408264201
       Village_Tileset_20: -171345464
       Village_Tileset_200: -1705134350
       Village_Tileset_201: -182261952
@@ -17895,10 +17883,6 @@ TextureImporter:
       Village_Tileset_203: 1233941641
       Village_Tileset_204: -221099378
       Village_Tileset_205: -134761861
-      Village_Tileset_206: -891341821
-      Village_Tileset_207: -1771232607
-      Village_Tileset_208: -1345013481
-      Village_Tileset_209: -1535956502
       Village_Tileset_21: 1265943376
       Village_Tileset_210: -497966040
       Village_Tileset_211: -1261997583
@@ -17927,10 +17911,6 @@ TextureImporter:
       Village_Tileset_232: -1610138319
       Village_Tileset_233: -400489336
       Village_Tileset_234: 729910679
-      Village_Tileset_235: 1292707090
-      Village_Tileset_236: -746889181
-      Village_Tileset_237: -1111001548
-      Village_Tileset_238: 326590052
       Village_Tileset_239: 1841415421
       Village_Tileset_24: 557897056
       Village_Tileset_240: 1860368924
@@ -17958,10 +17938,6 @@ TextureImporter:
       Village_Tileset_260: -345051307
       Village_Tileset_261: 1011944016
       Village_Tileset_262: -922999704
-      Village_Tileset_263: 1541637
-      Village_Tileset_264: -549637759
-      Village_Tileset_265: 2097816772
-      Village_Tileset_266: 2045177708
       Village_Tileset_267: 1451685792
       Village_Tileset_268: -1941278761
       Village_Tileset_269: -2114335487
@@ -17998,7 +17974,6 @@ TextureImporter:
       Village_Tileset_297: 1129238992
       Village_Tileset_298: 1677864286
       Village_Tileset_299: 653983990
-      Village_Tileset_3: 1679204973
       Village_Tileset_30: -1171539266
       Village_Tileset_300: -740637569
       Village_Tileset_301: -790089682
@@ -18021,7 +17996,6 @@ TextureImporter:
       Village_Tileset_317: -312444513
       Village_Tileset_318: -37019298
       Village_Tileset_319: -564946198
-      Village_Tileset_32: 304817088
       Village_Tileset_320: 964426642
       Village_Tileset_321: 10148905
       Village_Tileset_322: 391147900
@@ -18032,7 +18006,6 @@ TextureImporter:
       Village_Tileset_327: -1300415748
       Village_Tileset_328: -1134848017
       Village_Tileset_329: 587820410
-      Village_Tileset_33: 1142026085
       Village_Tileset_330: 1884798821
       Village_Tileset_331: -662359194
       Village_Tileset_332: 1113379098
@@ -18043,7 +18016,6 @@ TextureImporter:
       Village_Tileset_337: -1967754575
       Village_Tileset_338: -611183959
       Village_Tileset_339: 382485500
-      Village_Tileset_34: -1847696401
       Village_Tileset_340: 92875907
       Village_Tileset_341: -1826863289
       Village_Tileset_342: 1362742067
@@ -18054,7 +18026,6 @@ TextureImporter:
       Village_Tileset_347: 2079232439
       Village_Tileset_348: 1848181123
       Village_Tileset_349: 755756392
-      Village_Tileset_35: -2002662079
       Village_Tileset_350: 236605342
       Village_Tileset_351: -1676111093
       Village_Tileset_352: 907097196
@@ -18065,13 +18036,9 @@ TextureImporter:
       Village_Tileset_357: -1163946308
       Village_Tileset_358: -288838751
       Village_Tileset_359: 857961614
-      Village_Tileset_36: -1474213156
       Village_Tileset_360: 972936933
       Village_Tileset_361: 585859801
       Village_Tileset_362: 198834271
-      Village_Tileset_363: -1798114799
-      Village_Tileset_364: 140360812
-      Village_Tileset_365: -104323861
       Village_Tileset_366: -1044895510
       Village_Tileset_367: -1010713306
       Village_Tileset_368: 1325308553
@@ -18096,19 +18063,13 @@ TextureImporter:
       Village_Tileset_387: 1500654301
       Village_Tileset_388: 1054174800
       Village_Tileset_389: -2026496762
-      Village_Tileset_39: -193328284
       Village_Tileset_390: 202746425
       Village_Tileset_391: -1646308083
       Village_Tileset_392: -1205019981
       Village_Tileset_393: 1270020249
       Village_Tileset_394: -412139277
-      Village_Tileset_395: 948454719
-      Village_Tileset_396: 1636115248
-      Village_Tileset_397: 1338089793
       Village_Tileset_398: -1229528759
       Village_Tileset_399: -1662933162
-      Village_Tileset_4: -1365141977
-      Village_Tileset_40: 1715285110
       Village_Tileset_400: 2033052014
       Village_Tileset_401: 1594346502
       Village_Tileset_402: 2023461202
@@ -18119,7 +18080,6 @@ TextureImporter:
       Village_Tileset_407: 945163445
       Village_Tileset_408: -832242176
       Village_Tileset_409: 593891976
-      Village_Tileset_41: -1327474664
       Village_Tileset_410: -666347147
       Village_Tileset_411: 1263294047
       Village_Tileset_412: 742875099
@@ -18130,18 +18090,13 @@ TextureImporter:
       Village_Tileset_417: -1961368651
       Village_Tileset_418: -2108983951
       Village_Tileset_419: -1563652569
-      Village_Tileset_42: 1900541115
       Village_Tileset_420: -11432308
       Village_Tileset_421: -597634664
       Village_Tileset_422: -1794052423
-      Village_Tileset_423: 1056147927
-      Village_Tileset_424: 1500105923
-      Village_Tileset_425: 624145765
       Village_Tileset_426: 714541443
       Village_Tileset_427: -1102147276
       Village_Tileset_428: -1904544816
       Village_Tileset_429: 1873705484
-      Village_Tileset_43: -938271549
       Village_Tileset_430: 990437695
       Village_Tileset_431: -28283995
       Village_Tileset_432: -1008930578
@@ -18152,7 +18107,6 @@ TextureImporter:
       Village_Tileset_437: 1729271999
       Village_Tileset_438: -989957448
       Village_Tileset_439: 1653104580
-      Village_Tileset_44: 1685917813
       Village_Tileset_440: 1872382902
       Village_Tileset_441: -1063024455
       Village_Tileset_442: 999394412
@@ -18163,7 +18117,6 @@ TextureImporter:
       Village_Tileset_447: 1544244419
       Village_Tileset_448: -2084833005
       Village_Tileset_449: 620800880
-      Village_Tileset_45: -1457005381
       Village_Tileset_450: 1464488874
       Village_Tileset_451: -1350901653
       Village_Tileset_452: 847582403
@@ -18174,7 +18127,6 @@ TextureImporter:
       Village_Tileset_457: 215583887
       Village_Tileset_458: 832806834
       Village_Tileset_459: 863340613
-      Village_Tileset_46: -465560875
       Village_Tileset_460: 1775037008
       Village_Tileset_461: 621035907
       Village_Tileset_462: -1908339036
@@ -18191,10 +18143,6 @@ TextureImporter:
       Village_Tileset_473: -813387797
       Village_Tileset_474: 273332991
       Village_Tileset_475: -1329099753
-      Village_Tileset_476: 1597405510
-      Village_Tileset_477: -1179368943
-      Village_Tileset_478: 1131951482
-      Village_Tileset_479: 787508562
       Village_Tileset_480: -1544707616
       Village_Tileset_481: -81050305
       Village_Tileset_482: -1233937610
@@ -18216,13 +18164,6 @@ TextureImporter:
       Village_Tileset_498: -960280561
       Village_Tileset_499: -864125939
       Village_Tileset_50: -2142036018
-      Village_Tileset_500: 942793705
-      Village_Tileset_501: -656296305
-      Village_Tileset_502: 1591814687
-      Village_Tileset_503: -1267158429
-      Village_Tileset_504: -1227071140
-      Village_Tileset_505: -1940455349
-      Village_Tileset_506: 190425047
       Village_Tileset_507: -1523351158
       Village_Tileset_508: -646470211
       Village_Tileset_509: -498058165
@@ -18244,12 +18185,7 @@ TextureImporter:
       Village_Tileset_523: -1493438992
       Village_Tileset_524: 378984084
       Village_Tileset_525: -1091245093
-      Village_Tileset_526: -195289972
-      Village_Tileset_527: -422142253
-      Village_Tileset_528: -980277714
-      Village_Tileset_529: 294767041
       Village_Tileset_53: -2103412126
-      Village_Tileset_530: 1230475458
       Village_Tileset_531: -1745122170
       Village_Tileset_532: 1298912646
       Village_Tileset_533: -659461518
@@ -18268,12 +18204,7 @@ TextureImporter:
       Village_Tileset_545: 1162917302
       Village_Tileset_546: -1858168785
       Village_Tileset_547: -675146257
-      Village_Tileset_548: -903635368
-      Village_Tileset_549: -445472689
       Village_Tileset_55: 152323959
-      Village_Tileset_550: 1450389815
-      Village_Tileset_551: -1974725184
-      Village_Tileset_552: 1927811598
       Village_Tileset_553: -1767565744
       Village_Tileset_554: -46496960
       Village_Tileset_555: 360410097
@@ -18369,7 +18300,6 @@ TextureImporter:
       Village_Tileset_637: 2128238352
       Village_Tileset_638: -1848533992
       Village_Tileset_639: 1863432546
-      Village_Tileset_64: 1804752467
       Village_Tileset_640: -2001657179
       Village_Tileset_641: -601666462
       Village_Tileset_642: -1994553369
@@ -18380,7 +18310,6 @@ TextureImporter:
       Village_Tileset_647: 1006572409
       Village_Tileset_648: -2048095974
       Village_Tileset_649: -630346728
-      Village_Tileset_65: -335728333
       Village_Tileset_650: 362550220
       Village_Tileset_651: 636056244
       Village_Tileset_652: 1301318130
@@ -18391,7 +18320,6 @@ TextureImporter:
       Village_Tileset_657: 1012436030
       Village_Tileset_658: 1864562507
       Village_Tileset_659: 771458801
-      Village_Tileset_66: -1483584423
       Village_Tileset_660: -1905554892
       Village_Tileset_661: 1558854726
       Village_Tileset_662: 1068327108
@@ -18402,7 +18330,6 @@ TextureImporter:
       Village_Tileset_667: 931432860
       Village_Tileset_668: 1315050883
       Village_Tileset_669: -807491173
-      Village_Tileset_67: 27416284
       Village_Tileset_670: -17987105
       Village_Tileset_671: -1236666206
       Village_Tileset_672: 1120307531
@@ -18413,7 +18340,6 @@ TextureImporter:
       Village_Tileset_677: -1832782560
       Village_Tileset_678: -846654767
       Village_Tileset_679: -864207199
-      Village_Tileset_68: -213949846
       Village_Tileset_680: -245656235
       Village_Tileset_681: 1236491683
       Village_Tileset_682: 1542800612
@@ -18464,7 +18390,6 @@ TextureImporter:
       Village_Tileset_727: -488572453
       Village_Tileset_728: -1854822516
       Village_Tileset_729: 1150427379
-      Village_Tileset_73: -2095368589
       Village_Tileset_730: -929633141
       Village_Tileset_731: -26201819
       Village_Tileset_732: 1185762384
@@ -18475,7 +18400,6 @@ TextureImporter:
       Village_Tileset_737: 113783787
       Village_Tileset_738: -1583698901
       Village_Tileset_739: -806557431
-      Village_Tileset_74: -392524387
       Village_Tileset_740: -2067267857
       Village_Tileset_741: -394675343
       Village_Tileset_742: 664695491
@@ -18486,7 +18410,6 @@ TextureImporter:
       Village_Tileset_747: 349195080
       Village_Tileset_748: -2012929828
       Village_Tileset_749: -1001915801
-      Village_Tileset_75: 1356373619
       Village_Tileset_750: -506067029
       Village_Tileset_751: 1042657739
       Village_Tileset_752: -618419525
@@ -18497,7 +18420,6 @@ TextureImporter:
       Village_Tileset_757: 1304733341
       Village_Tileset_758: 1043849432
       Village_Tileset_759: -2119267740
-      Village_Tileset_76: -1306230373
       Village_Tileset_760: 554048540
       Village_Tileset_761: -2008378255
       Village_Tileset_762: -1550994382
@@ -18508,7 +18430,6 @@ TextureImporter:
       Village_Tileset_767: 1405190991
       Village_Tileset_768: -123323955
       Village_Tileset_769: -1080498944
-      Village_Tileset_77: 1433932123
       Village_Tileset_770: 1839505788
       Village_Tileset_771: -107156945
       Village_Tileset_772: -1960269414
@@ -18519,7 +18440,6 @@ TextureImporter:
       Village_Tileset_777: 1158294221
       Village_Tileset_778: 25423235
       Village_Tileset_779: -1599526804
-      Village_Tileset_78: -786479874
       Village_Tileset_780: 2014332621
       Village_Tileset_781: -383248602
       Village_Tileset_782: 1653047273
@@ -18540,7 +18460,6 @@ TextureImporter:
       Village_Tileset_797: 1056590633
       Village_Tileset_798: 1684910968
       Village_Tileset_799: -1678178832
-      Village_Tileset_8: 1205656963
       Village_Tileset_800: -1423846977
       Village_Tileset_801: 1668026886
       Village_Tileset_802: 547366068
@@ -18552,26 +18471,89 @@ TextureImporter:
       Village_Tileset_87: -1296680394
       Village_Tileset_88: -1285194650
       Village_Tileset_89: 1569820563
-      Village_Tileset_9: -1775474628
       Village_Tileset_90: -1788119040
       Village_Tileset_91: -659925950
       Village_Tileset_92: 863244476
       Village_Tileset_93: -1892520229
       Village_Tileset_94: -291191306
       Village_Tileset_95: 1579327595
-      Village_Tileset_96: 1984307675
       Village_Tileset_97: 451979493
       Village_Tileset_98: -533804956
       Village_Tileset_99: -770570411
-      g: 575735580
-      g1: 1319919748
-      g2: 550913166
-      g3: 1405182939
-      g4: -38048252
-      g5: 640626808
-      g6: -1874370959
-      g7: 532718107
-      g8: 2023344689
+      dg_1: -1117803995
+      dg_10: -746889181
+      dg_11: -1111001548
+      dg_12: 326590052
+      dg_13: 1541637
+      dg_14: -549637759
+      dg_15: 2097816772
+      dg_16: 2045177708
+      dg_2: 284612079
+      dg_3: 914093805
+      dg_4: -215245910
+      dg_5: -891341821
+      dg_6: -1771232607
+      dg_7: -1345013481
+      dg_8: -1535956502
+      dg_9: 1292707090
+      flower1_1: 1597405510
+      flower1_2: -1179368943
+      flower1_3: -1267158429
+      flower1_4: -1227071140
+      flower2_1: 1131951482
+      flower2_2: 787508562
+      flower2_3: -1940455349
+      flower2_4: 190425047
+      flower3_1: 294767041
+      flower3_2: 1230475458
+      flower3_3: -1974725184
+      flower3_4: 1927811598
+      g1_1: 289408192
+      g1_10: 1679204973
+      g1_11: -1365141977
+      g1_12: -2002662079
+      g1_13: -1474213156
+      g1_14: 27416284
+      g1_15: -213949846
+      g1_2: 1819084594
+      g1_3: -408264201
+      g1_4: 304817088
+      g1_5: 1142026085
+      g1_6: -1847696401
+      g1_7: 1804752467
+      g1_8: -335728333
+      g1_9: -1483584423
+      g2_1: 1319919748
+      g2_10: 1205656963
+      g2_11: -1775474628
+      g2_12: 1715285110
+      g2_13: -1327474664
+      g2_14: -193328284
+      g2_15: -2095368589
+      g2_2: 550913166
+      g2_3: 1405182939
+      g2_4: -38048252
+      g2_5: 640626808
+      g2_6: -1874370959
+      g2_7: 575735580
+      g2_8: 532718107
+      g2_9: 2023344689
+      g3_1: -153039843
+      g3_10: 1144550161
+      g3_11: 1413998755
+      g3_12: -1457005381
+      g3_13: -465560875
+      g3_14: 1433932123
+      g3_15: -786479874
+      g3_2: 1676640695
+      g3_3: -812316826
+      g3_4: 1900541115
+      g3_5: -938271549
+      g3_6: 1685917813
+      g3_7: -392524387
+      g3_8: 1356373619
+      g3_9: -1306230373
+      g_base: 1984307675
       m1: -618408914
       m2: -465978306
       m3: -698374588
@@ -18581,6 +18563,24 @@ TextureImporter:
       m7: -1295579976
       m8: 1723367646
       m9: -1241726340
+      stump1: -1798114799
+      stump2: -104323861
+      stump3: 1056147927
+      stump4: 624145765
+      tree1_1: 942793705
+      tree1_10: 140360812
+      tree1_11: 948454719
+      tree1_12: 1636115248
+      tree1_13: 1338089793
+      tree1_14: 1500105923
+      tree1_2: -656296305
+      tree1_3: 1591814687
+      tree1_4: -195289972
+      tree1_5: -422142253
+      tree1_6: -980277714
+      tree1_7: -903635368
+      tree1_8: -445472689
+      tree1_9: 1450389815
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

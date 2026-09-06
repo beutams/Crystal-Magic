@@ -2,7 +2,7 @@ Core\
   Audio\
     AudioComponent.cs TRUE
   Camera\
-    CameraComponent.cs WAIT
+    CameraComponent.cs TRUE DIRTY
     SceneCamera.cs WAIT
   Config\
     Editor\
@@ -93,7 +93,7 @@ Core\
   Runtime\
     DungeonSceneRuntimeBuilder.cs TRUE DIRTY
     OpenFieldDungeonSceneDataBuilder.cs TRUE DIRTY
-    DungeonSceneRuntimeRoot.cs WAIT
+    DungeonSceneRuntimeRoot.cs TRUE DIRTY
     DungeonSceneVisualUtility.cs WAIT
     RuntimeDataComponent.cs TRUE DIRTY
   SaveData\
@@ -380,7 +380,7 @@ Game\
       PendingEffectExecutionQueueComponent.cs TRUE
       PersistentEffectQueueComponent.cs TRUE
       PlayerSkillComponent.cs TRUE DIRTY
-      PlayerPhysicsAuthoring.cs TRUE
+      PlayerPhysicsAuthoring.cs TRUE DIRTY
       PlayerSkillAuthoring.cs TRUE DIRTY
         闁哄倽濮ょ涵鍓佹嫚闁垮婀寸紓浣稿濞嗐垽鏁嶇仦鐣屾憼闁衡偓閹呯闂佹彃锕ラ弬渚€骞庨埀顒勬嚄娴犲鎳犻柛妯煎枎椤劙寮悧鍫濈ウ
       ProjectileEntityPrefabRegistryEntry.cs FALSE
@@ -500,7 +500,7 @@ Game\
         缂備胶鍠曢鍝ユ啑閸涱収妲甸悘鐐靛仦閳ь儸鍐ㄦ櫢闁稿繈鍎遍惈姗€骞€瑜忕划宥嗙閺堜絻鍘?
         闁活潿鍔嶉崺娑欐綇閹惧啿寮抽悗娑櫭埀?
         濞达綀娉曢弫銈夋焼閹惧啿寰?
-      PlayerMovementCollisionSystem.cs TRUE
+      PlayerPhysicsRotationLockSystem.cs FALSE
       PlayerSkillAnalysisSystem.cs TRUE DIRTY
         闁汇垻鍠愰崹姘跺礂閾氬倻绉奸柟鍨涘亾闁煎啿鈧噥鍤炴慨?
       SkillReleaseSystem.cs TRUE
@@ -633,6 +633,13 @@ UI\
     LoadUIController.cs TRUE
     LoadUIData.cs FALSE
     LoadUIModel.cs TRUE
+  MinimapUI\
+    MinimapUI.cs TRUE DIRTY
+    MinimapUIController.cs TRUE
+    MinimapUIData.cs TRUE DIRTY
+    MinimapUIModel.cs TRUE DIRTY
+    MinimapInterestPointData.cs TRUE
+    MinimapInterestPointView.cs TRUE
   MainMenuUI\
     MainMenuUI.cs FALSE
     MainMenuUIController.cs TRUE
@@ -708,7 +715,7 @@ UI\
     TransitionMaskUIData.cs FALSE
     TransitionMaskUIModel.cs FALSE
   TransitionUI\
-    TransitionUI.cs FALSE
+    TransitionUI.cs TRUE
     TransitionUIController.cs FALSE
     TransitionUIData.cs FALSE
     TransitionUIModel.cs FALSE

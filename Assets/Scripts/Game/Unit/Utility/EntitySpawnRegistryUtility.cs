@@ -60,7 +60,7 @@ namespace CrystalMagic.Game.Unit
             }
 
             instance = entityManager.Instantiate(prefab);
-            InitializeDestroyFlag(entityManager, instance);
+            InitializeInstantiatedEntity(entityManager, instance, unitName);
             return instance != Entity.Null;
         }
 
@@ -73,7 +73,7 @@ namespace CrystalMagic.Game.Unit
             }
 
             instance = entityManager.Instantiate(prefab);
-            InitializeDestroyFlag(entityManager, instance);
+            InitializeInstantiatedEntity(entityManager, instance, projectileName);
             return instance != Entity.Null;
         }
 
@@ -109,7 +109,7 @@ namespace CrystalMagic.Game.Unit
             }
 
             instance = entityManager.Instantiate(prefab);
-            InitializeDestroyFlag(entityManager, instance);
+            InitializeInstantiatedEntity(entityManager, instance, dropName);
             return instance != Entity.Null;
         }
 
@@ -145,7 +145,7 @@ namespace CrystalMagic.Game.Unit
             }
 
             instance = entityManager.Instantiate(prefab);
-            InitializeDestroyFlag(entityManager, instance);
+            InitializeInstantiatedEntity(entityManager, instance, prefabName);
             return instance != Entity.Null;
         }
 
@@ -181,8 +181,20 @@ namespace CrystalMagic.Game.Unit
             }
 
             instance = entityManager.Instantiate(prefab);
-            InitializeDestroyFlag(entityManager, instance);
+            InitializeInstantiatedEntity(entityManager, instance, prefabName);
             return instance != Entity.Null;
+        }
+
+        private static void InitializeInstantiatedEntity(
+            EntityManager entityManager,
+            Entity entity,
+            in FixedString128Bytes prefabName)
+        {
+            InitializeDestroyFlag(entityManager, entity);
+#if UNITY_EDITOR
+            if (entity != Entity.Null && entityManager.Exists(entity))
+                entityManager.SetName(entity, new FixedString64Bytes(prefabName.ToString()));
+#endif
         }
 
         public static void InitializeDestroyFlag(EntityManager entityManager, Entity entity)

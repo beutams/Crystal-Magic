@@ -134,7 +134,7 @@ namespace CrystalMagic.Core
         private void RefreshUIInputLock()
         {
             bool shouldLock = UIComponent.Instance != null
-                && UIComponent.Instance.HasActiveSceneScopedPanel(BattleSceneName, BattleUIName);
+                && UIComponent.Instance.HasActiveSceneScopedPanel(BattleSceneName, BattleUIName, "MinimapUI");
             if (shouldLock == _playerInputLockedByUI)
                 return;
 
@@ -163,6 +163,7 @@ namespace CrystalMagic.Core
         public const string SceneName = "DungeonScene";
         protected override string BattleSceneName => SceneName;
         private bool _isProcessingDefeat;
+        private MinimapUI _minimapUI;
 
         public static TransitionData CreateEnterTransitionData(LoadGameContext context)
         {
@@ -205,6 +206,8 @@ namespace CrystalMagic.Core
             LoadGameContext context = StateData as LoadGameContext;
             int dungeonFloor = PrepareDungeonRun(context);
             Debug.Log($"[DungeonState] Resuming dungeon at floor: {dungeonFloor}");
+            _minimapUI = UIComponent.Instance.Open<MinimapUI>();
+            UIComponent.Instance.SetLifetime(_minimapUI, UILifetime.SceneScoped);
         }
 
         private void HandleUnitDied(UnitDiedEvent gameEvent)
@@ -234,6 +237,9 @@ namespace CrystalMagic.Core
 
         protected override void OnExitBattle()
         {
+            if (_minimapUI != null && UIComponent.Instance.IsManaged(_minimapUI))
+                UIComponent.Instance.CloseUI(_minimapUI);
+            _minimapUI = null;
             EventComponent.Instance?.Unsubscribe<UnitDiedEvent>(HandleUnitDied);
             Debug.Log("[DungeonState] Exited Dungeon");
         }

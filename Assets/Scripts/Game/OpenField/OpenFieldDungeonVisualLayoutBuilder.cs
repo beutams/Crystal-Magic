@@ -16,18 +16,7 @@ namespace CrystalMagic.Game.OpenField
         Ground,
         Decoration,
         Obstacle,
-    }
-
-    public enum OpenFieldRuleTileRole : byte
-    {
-        Abyss,
-        VoidWall,
-        VoidTransition,
-        GroundBase,
-        Decoration,
-        ObstacleTop,
-        ObstacleWall,
-        ObstacleTransition,
+        Boundary,
     }
 
     /// <summary>
@@ -37,29 +26,17 @@ namespace CrystalMagic.Game.OpenField
     {
         public OpenFieldRuleTilePlacement(
             OpenFieldRuleTileLayer layer,
-            OpenFieldRuleTileRole role,
             OpenFieldRuleTileReferenceData ruleTile,
-            Vector2Int cell,
-            int heightSteps,
-            int groundStyleIndex = -1,
-            int decorationIndex = -1)
+            Vector2Int cell)
         {
             Layer = layer;
-            Role = role;
             RuleTile = ruleTile;
             Cell = cell;
-            HeightSteps = heightSteps;
-            GroundStyleIndex = groundStyleIndex;
-            DecorationIndex = decorationIndex;
         }
 
         public OpenFieldRuleTileLayer Layer { get; }
-        public OpenFieldRuleTileRole Role { get; }
         public OpenFieldRuleTileReferenceData RuleTile { get; }
         public Vector2Int Cell { get; }
-        public int HeightSteps { get; }
-        public int GroundStyleIndex { get; }
-        public int DecorationIndex { get; }
     }
 
     public sealed class OpenFieldObstacleVisualSpritePlacement
@@ -507,11 +484,8 @@ namespace CrystalMagic.Game.OpenField
                             int styleIndex = groundStyleIndices[layout.GetIndex(x, y)];
                             placements.Add(new OpenFieldRuleTilePlacement(
                                 OpenFieldRuleTileLayer.Ground,
-                                OpenFieldRuleTileRole.GroundBase,
                                 visual.GroundStyles[styleIndex].BaseRuleTile,
-                                cell,
-                                0,
-                                styleIndex));
+                                cell));
                             break;
                         }
 
@@ -520,18 +494,14 @@ namespace CrystalMagic.Game.OpenField
                             bool exposedFront = !hasFrontCell || frontTerrain != OpenFieldTerrainCell.Void;
                             placements.Add(new OpenFieldRuleTilePlacement(
                                 OpenFieldRuleTileLayer.Void,
-                                exposedFront ? OpenFieldRuleTileRole.VoidWall : OpenFieldRuleTileRole.Abyss,
                                 exposedFront ? visual.VoidVisual.WallRuleTile : visual.VoidVisual.AbyssRuleTile,
-                                cell,
-                                -1));
+                                cell));
                             if (hasFrontCell && frontTerrain == OpenFieldTerrainCell.Ground)
                             {
                                 placements.Add(new OpenFieldRuleTilePlacement(
                                     OpenFieldRuleTileLayer.Void,
-                                    OpenFieldRuleTileRole.VoidTransition,
                                     visual.VoidVisual.TransitionRuleTile,
-                                    frontCell,
-                                    0));
+                                    frontCell));
                             }
 
                             break;
@@ -540,23 +510,23 @@ namespace CrystalMagic.Game.OpenField
                         case OpenFieldTerrainCell.Obstacle:
                         {
                             int height = layout.GetHeightSteps(x, y);
+                            Vector2Int topCell = cell + Vector2Int.up * height;
                             bool exposedFront = !hasFrontCell ||
                                                 frontTerrain != OpenFieldTerrainCell.Obstacle ||
                                                 layout.GetHeightSteps(frontCell.x, frontCell.y) < height;
                             placements.Add(new OpenFieldRuleTilePlacement(
                                 OpenFieldRuleTileLayer.Obstacle,
-                                exposedFront ? OpenFieldRuleTileRole.ObstacleWall : OpenFieldRuleTileRole.ObstacleTop,
                                 exposedFront ? visual.ObstacleVisual.WallRuleTile : visual.ObstacleVisual.TopRuleTile,
-                                cell,
-                                height));
-                            if (hasFrontCell && frontTerrain == OpenFieldTerrainCell.Ground)
+                                topCell));
+                            if (exposedFront)
                             {
-                                placements.Add(new OpenFieldRuleTilePlacement(
-                                    OpenFieldRuleTileLayer.Obstacle,
-                                    OpenFieldRuleTileRole.ObstacleTransition,
-                                    visual.ObstacleVisual.TransitionRuleTile,
-                                    frontCell,
-                                    0));
+                                for (int step = 0; step < height; step++)
+                                {
+                                    placements.Add(new OpenFieldRuleTilePlacement(
+                                        OpenFieldRuleTileLayer.Obstacle,
+                                        visual.ObstacleVisual.TransitionRuleTile,
+                                        cell + Vector2Int.up * step));
+                                }
                             }
 
                             break;
@@ -568,7 +538,38 @@ namespace CrystalMagic.Game.OpenField
                 }
             }
 
+            AddBoundaryPlacements(layout, visual.BoundaryRuleTile, placements);
             return placements;
+        }
+
+        private static void AddBoundaryPlacements(
+            OpenFieldDungeonLayout layout,
+            OpenFieldRuleTileReferenceData boundaryRuleTile,
+            List<OpenFieldRuleTilePlacement> placements)
+        {
+            for (int x = -1; x <= layout.Width; x++)
+            {
+                placements.Add(new OpenFieldRuleTilePlacement(
+                    OpenFieldRuleTileLayer.Boundary,
+                    boundaryRuleTile,
+                    new Vector2Int(x, -1)));
+                placements.Add(new OpenFieldRuleTilePlacement(
+                    OpenFieldRuleTileLayer.Boundary,
+                    boundaryRuleTile,
+                    new Vector2Int(x, layout.Height)));
+            }
+
+            for (int y = 0; y < layout.Height; y++)
+            {
+                placements.Add(new OpenFieldRuleTilePlacement(
+                    OpenFieldRuleTileLayer.Boundary,
+                    boundaryRuleTile,
+                    new Vector2Int(-1, y)));
+                placements.Add(new OpenFieldRuleTilePlacement(
+                    OpenFieldRuleTileLayer.Boundary,
+                    boundaryRuleTile,
+                    new Vector2Int(layout.Width, y)));
+            }
         }
 
         private static void AddDecorationPlacements(
@@ -616,12 +617,8 @@ namespace CrystalMagic.Game.OpenField
                             reservedCells.Add(cell);
                             placements.Add(new OpenFieldRuleTilePlacement(
                                 OpenFieldRuleTileLayer.Decoration,
-                                OpenFieldRuleTileRole.Decoration,
                                 decoration.RuleTile,
-                                cell,
-                                0,
-                                styleIndex,
-                                decorationIndex));
+                                cell));
                         }
                     }
                 }

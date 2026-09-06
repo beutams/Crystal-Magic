@@ -24,7 +24,8 @@
             "groupName": "Bottom",
             "order": 80,
             "uiNames": [
-                "UnitHealthBarUI"
+                "UnitHealthBarUI",
+                "MinimapUI"
             ]
         },
         {

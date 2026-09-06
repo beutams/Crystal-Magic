@@ -69,6 +69,5 @@ partial class UnitMoveSystem : SystemBase
         physicsVelocity.Linear = new float3(planarVelocity.x, planarVelocity.y, 0f);
         physicsVelocity.Angular = float3.zero;
         transform.Position.z = 0f;
-        transform.Rotation = quaternion.identity;
     }
 }

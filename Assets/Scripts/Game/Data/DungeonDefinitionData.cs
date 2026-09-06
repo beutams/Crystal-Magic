@@ -64,6 +64,7 @@ namespace CrystalMagic.Game.Data
     {
         public OpenFieldVoidVisualData VoidVisual = new();
         public OpenFieldObstacleVisualData ObstacleVisual = new();
+        public OpenFieldRuleTileReferenceData BoundaryRuleTile = new();
         public int GroundCellsPerStyleSeed = 480;
         public List<OpenFieldGroundStyleData> GroundStyles = new();
 
@@ -73,6 +74,8 @@ namespace CrystalMagic.Game.Data
             VoidVisual.EnsureValid();
             ObstacleVisual ??= new OpenFieldObstacleVisualData();
             ObstacleVisual.EnsureValid();
+            BoundaryRuleTile ??= new OpenFieldRuleTileReferenceData();
+            BoundaryRuleTile.EnsureValid();
             GroundCellsPerStyleSeed = Mathf.Max(1, GroundCellsPerStyleSeed);
             GroundStyles ??= new List<OpenFieldGroundStyleData>();
             for (int i = 0; i < GroundStyles.Count; i++)

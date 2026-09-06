@@ -55,11 +55,16 @@ public class TransitionUI : UIBase<TransitionUIData>, ITransitionUI
 
     public IEnumerator Hide()
     {
-        float elapsed = 0f;
-        while (elapsed < _fadeDuration)
+        // FadeOutStarted synchronously enters the target state.  That state's first
+        // frame can build the map and UI, so discard it instead of treating its long
+        // unscaled delta time as an entire fade animation.
+        _canvasGroup.alpha = 1f;
+        yield return null;
+
+        float fadeStartTime = Time.unscaledTime;
+        while (Time.unscaledTime - fadeStartTime < _fadeDuration)
         {
-            elapsed += Time.unscaledDeltaTime;
-            float t = Mathf.Clamp01(elapsed / _fadeDuration);
+            float t = Mathf.Clamp01((Time.unscaledTime - fadeStartTime) / _fadeDuration);
             _canvasGroup.alpha = 1f - Mathf.Pow(t, 3f);
             yield return null;
         }

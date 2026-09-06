@@ -286,19 +286,32 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _mapWidth: 200
   _mapHeight: 200
-  _terrainGenerationMethod: 0
+  _terrainGenerationMethod: 2
   _fbmPerlinTerrain:
-    LowToMiddleHeight: 0.42
-    MiddleToHighHeight: 0.58
+    LowToMiddleHeight: 0.4
+    MiddleToHighHeight: 0.6
     HighFrequencyMultiplier: 8
     HighFrequencyAmplitude: 0.65
   _voronoiTerrain:
     RegionCount: 1000
     EdgeJitter: 0.12
+  _terracedRegionTerrain:
+    LandformFrequency: 0.028
+    WarpStrength: 14
+    WarpFrequency: 0.025
+    FineDetailWeight: 0.18
+    FineDetailFrequencyMultiplier: 3.5
+    GroundRegionChance: 0.55
+    VoidRegionChance: 0.2
+    MinimumObstacleHeight: 1
+    MaximumObstacleHeight: 4
+    MinimumVoidDepth: 1
+    MaximumVoidDepth: 3
   _gameplayContent:
     ChestCounts: {x: 1, y: 1, z: 2}
-    NormalMonsterCounts: {x: 2, y: 4, z: 4}
-    EliteMonsterCounts: {x: 0, y: 0, z: 1}
+    MonsterLevel1Counts: {x: 2, y: 4, z: 4}
+    MonsterLevel2Counts: {x: 0, y: 0, z: 1}
+    MonsterLevel3Counts: {x: 0, y: 0, z: 1}
     WildMonsterCount: 40
 --- !u!1 &2090020409
 GameObject:

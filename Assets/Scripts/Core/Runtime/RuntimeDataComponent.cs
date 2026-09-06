@@ -206,13 +206,9 @@ namespace CrystalMagic.Core
 
     public sealed class RuntimeDungeonSceneData
     {
-        public int ThemeId;
-        public string ThemeKey;
-        public bool IsBossFloor;
         public float CellWorldSize;
-        public int DisplayWidth;
-        public int DisplayHeight;
         public Vector3 PlayerSpawnWorldPosition;
+        public Rect CameraWorldBounds;
         public RuntimeDungeonTerrainVisualData TerrainVisual = new();
         public List<RuntimeDungeonObstacleSpawnData> ObstacleSpawns = new();
 
@@ -227,18 +223,7 @@ namespace CrystalMagic.Core
         Ground,
         Decoration,
         Obstacle,
-    }
-
-    public enum RuntimeDungeonTilemapRole
-    {
-        Abyss,
-        VoidWall,
-        VoidTransition,
-        GroundBase,
-        Decoration,
-        ObstacleTop,
-        ObstacleWall,
-        ObstacleTransition,
+        Boundary,
     }
 
     public sealed class RuntimeDungeonTerrainVisualData
@@ -251,10 +236,8 @@ namespace CrystalMagic.Core
     public sealed class RuntimeDungeonRuleTilePlacement
     {
         public RuntimeDungeonTilemapLayer Layer;
-        public RuntimeDungeonTilemapRole Role;
         public string RuleTilePath;
         public Vector2Int Cell;
-        public int HeightSteps;
     }
 
     public sealed class RuntimeDungeonObstacleVisualSpawnData

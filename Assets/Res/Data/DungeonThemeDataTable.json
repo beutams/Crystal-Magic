@@ -1,3 +1,1014 @@
 ﻿{
-  "Rows": []
+  "Rows": [
+    {
+      "Name": "Prairie",
+      "ThemeKey": "Prairie",
+      "FloorStart": 1,
+      "FloorEnd": 10,
+      "OpenField": {
+        "Terrain": {
+          "Width": 200,
+          "Height": 200,
+          "LowToGroundThreshold": 0.42,
+          "GroundToObstacleThreshold": 0.58,
+          "BaseScaleMultiplier": 0.65,
+          "MinimumBaseScale": 30.0,
+          "MaximumBaseScale": 64.0,
+          "MediumFrequencyMultiplier": 2.0,
+          "MediumAmplitude": 0.5,
+          "DetailFrequencyMultiplier": 8.0,
+          "DetailAmplitude": 0.65,
+          "MinimumObstacleHeight": 1,
+          "MaximumObstacleHeight": 4
+        },
+        "Anchors": {
+          "EntranceRadius": 4,
+          "SmallRadius": 3,
+          "MediumRadius": 5,
+          "LargeRadius": 7,
+          "BorderPadding": 7,
+          "PointGap": 4,
+          "PlacementAttempts": 512
+        },
+        "Content": {
+          "ChestCounts": {
+            "x": 1,
+            "y": 2,
+            "z": 3,
+            "magnitude": 3.7416575,
+            "sqrMagnitude": 14
+          },
+          "WildSquadCount": 22,
+          "PlacementAttempts": 512
+        },
+        "Visual": {
+          "VoidVisual": {
+            "AbyssRuleTile": {
+              "AssetPath": "Assets/Res/Tile/Black.asset"
+            },
+            "WallRuleTile": {
+              "AssetPath": "Assets/Res/Tile/Black.asset"
+            },
+            "TransitionRuleTile": {
+              "AssetPath": "Assets/Res/Tile/Black.asset"
+            }
+          },
+          "ObstacleVisual": {
+            "TopRuleTile": {
+              "AssetPath": "Assets/Res/Tile/Obstacle.asset"
+            },
+            "WallRuleTile": {
+              "AssetPath": "Assets/Res/Tile/Obstacle.asset"
+            },
+            "TransitionRuleTile": {
+              "AssetPath": "Assets/Res/Tile/Obstacle.asset"
+            }
+          },
+          "BoundaryRuleTile": {
+            "AssetPath": "Assets/Res/Tile/Black.asset"
+          },
+          "GroundCellsPerStyleSeed": 480,
+          "GroundStyles": [
+            {
+              "Name": "Grass1",
+              "BaseRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Grass1.asset"
+              },
+              "Decorations": [
+                {
+                  "Name": "DG",
+                  "RuleTile": {
+                    "AssetPath": "Assets/Res/Tile/DecorateGrass.asset"
+                  },
+                  "Radius": 8.0,
+                  "MaximumSpread": 16
+                }
+              ],
+              "Obstacles": [
+                {
+                  "Name": "Tree",
+                  "Sprite": {
+                    "AssetPath": "",
+                    "SpriteName": "",
+                    "SpriteUv": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0,
+                      "w": 0.0
+                    },
+                    "HasSpriteUv": false
+                  },
+                  "SpriteLayers": [
+                    {
+                      "Name": "Layer 1",
+                      "Cells": [
+                        {
+                          "X": 1,
+                          "Y": 0,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_12",
+                            "SpriteUv": {
+                              "x": 0.03125,
+                              "y": 0.53125,
+                              "z": 0.03125,
+                              "w": 0.03125
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 1,
+                          "Y": 1,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_10",
+                            "SpriteUv": {
+                              "x": 0.0342168547,
+                              "y": 0.5625,
+                              "z": 0.0253162868,
+                              "w": 0.008751894
+                            },
+                            "HasSpriteUv": true
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "Name": "Layer 2",
+                      "Cells": [
+                        {
+                          "X": 0,
+                          "Y": 3,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_1",
+                            "SpriteUv": {
+                              "x": 0.0224981066,
+                              "y": 0.40625,
+                              "z": 0.008751893,
+                              "w": 0.0126581443
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 1,
+                          "Y": 3,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_2",
+                            "SpriteUv": {
+                              "x": 0.03125,
+                              "y": 0.40625,
+                              "z": 0.03125,
+                              "w": 0.0224237684
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 2,
+                          "Y": 3,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_3",
+                            "SpriteUv": {
+                              "x": 0.0625,
+                              "y": 0.40625,
+                              "z": 0.0107050193,
+                              "w": 0.0146112693
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 0,
+                          "Y": 2,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_1",
+                            "SpriteUv": {
+                              "x": 0.0224981066,
+                              "y": 0.40625,
+                              "z": 0.008751893,
+                              "w": 0.0126581443
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 1,
+                          "Y": 2,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_2",
+                            "SpriteUv": {
+                              "x": 0.03125,
+                              "y": 0.40625,
+                              "z": 0.03125,
+                              "w": 0.0224237684
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 2,
+                          "Y": 2,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_3",
+                            "SpriteUv": {
+                              "x": 0.0625,
+                              "y": 0.40625,
+                              "z": 0.0107050193,
+                              "w": 0.0146112693
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 0,
+                          "Y": 1,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_4",
+                            "SpriteUv": {
+                              "x": 0.0127324807,
+                              "y": 0.375,
+                              "z": 0.01851752,
+                              "w": 0.03125
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 1,
+                          "Y": 1,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_5",
+                            "SpriteUv": {
+                              "x": 0.03125,
+                              "y": 0.375,
+                              "z": 0.03125,
+                              "w": 0.03125
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 2,
+                          "Y": 1,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_6",
+                            "SpriteUv": {
+                              "x": 0.0625,
+                              "y": 0.375,
+                              "z": 0.0185175184,
+                              "w": 0.03125
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 0,
+                          "Y": 0,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_7",
+                            "SpriteUv": {
+                              "x": 0.0127324807,
+                              "y": 0.356482476,
+                              "z": 0.01851752,
+                              "w": 0.01851752
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 1,
+                          "Y": 0,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_8",
+                            "SpriteUv": {
+                              "x": 0.03125,
+                              "y": 0.354529351,
+                              "z": 0.03125,
+                              "w": 0.0204706453
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 2,
+                          "Y": 0,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_9",
+                            "SpriteUv": {
+                              "x": 0.0625,
+                              "y": 0.3584356,
+                              "z": 0.0185175184,
+                              "w": 0.0165643953
+                            },
+                            "HasSpriteUv": true
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "FootprintWidth": 3,
+                  "FootprintHeight": 3,
+                  "CollisionMask": [
+                    false,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false
+                  ],
+                  "Weight": 1,
+                  "MinimumSpacing": 1.0,
+                  "MaximumCount": 1,
+                  "AllowRotation": false,
+                  "AllowFlipX": false,
+                  "VisualSortAnchor": {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                }
+              ]
+            },
+            {
+              "Name": "Grass2",
+              "BaseRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Grass2.asset"
+              },
+              "Decorations": [
+                {
+                  "Name": "DG",
+                  "RuleTile": {
+                    "AssetPath": "Assets/Res/Tile/DecorateGrass.asset"
+                  },
+                  "Radius": 8.0,
+                  "MaximumSpread": 16
+                }
+              ],
+              "Obstacles": [
+                {
+                  "Name": "Tree",
+                  "Sprite": {
+                    "AssetPath": "",
+                    "SpriteName": "",
+                    "SpriteUv": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0,
+                      "w": 0.0
+                    },
+                    "HasSpriteUv": false
+                  },
+                  "SpriteLayers": [
+                    {
+                      "Name": "Layer 1",
+                      "Cells": [
+                        {
+                          "X": 1,
+                          "Y": 0,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_12",
+                            "SpriteUv": {
+                              "x": 0.03125,
+                              "y": 0.53125,
+                              "z": 0.03125,
+                              "w": 0.03125
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 1,
+                          "Y": 1,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_10",
+                            "SpriteUv": {
+                              "x": 0.0342168547,
+                              "y": 0.5625,
+                              "z": 0.0253162868,
+                              "w": 0.008751894
+                            },
+                            "HasSpriteUv": true
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "Name": "Layer 2",
+                      "Cells": [
+                        {
+                          "X": 0,
+                          "Y": 3,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_1",
+                            "SpriteUv": {
+                              "x": 0.0224981066,
+                              "y": 0.40625,
+                              "z": 0.008751893,
+                              "w": 0.0126581443
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 1,
+                          "Y": 3,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_2",
+                            "SpriteUv": {
+                              "x": 0.03125,
+                              "y": 0.40625,
+                              "z": 0.03125,
+                              "w": 0.0224237684
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 2,
+                          "Y": 3,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_3",
+                            "SpriteUv": {
+                              "x": 0.0625,
+                              "y": 0.40625,
+                              "z": 0.0107050193,
+                              "w": 0.0146112693
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 0,
+                          "Y": 2,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_1",
+                            "SpriteUv": {
+                              "x": 0.0224981066,
+                              "y": 0.40625,
+                              "z": 0.008751893,
+                              "w": 0.0126581443
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 1,
+                          "Y": 2,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_2",
+                            "SpriteUv": {
+                              "x": 0.03125,
+                              "y": 0.40625,
+                              "z": 0.03125,
+                              "w": 0.0224237684
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 2,
+                          "Y": 2,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_3",
+                            "SpriteUv": {
+                              "x": 0.0625,
+                              "y": 0.40625,
+                              "z": 0.0107050193,
+                              "w": 0.0146112693
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 0,
+                          "Y": 1,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_4",
+                            "SpriteUv": {
+                              "x": 0.0127324807,
+                              "y": 0.375,
+                              "z": 0.01851752,
+                              "w": 0.03125
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 1,
+                          "Y": 1,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_5",
+                            "SpriteUv": {
+                              "x": 0.03125,
+                              "y": 0.375,
+                              "z": 0.03125,
+                              "w": 0.03125
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 2,
+                          "Y": 1,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_6",
+                            "SpriteUv": {
+                              "x": 0.0625,
+                              "y": 0.375,
+                              "z": 0.0185175184,
+                              "w": 0.03125
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 0,
+                          "Y": 0,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_7",
+                            "SpriteUv": {
+                              "x": 0.0127324807,
+                              "y": 0.356482476,
+                              "z": 0.01851752,
+                              "w": 0.01851752
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 1,
+                          "Y": 0,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_8",
+                            "SpriteUv": {
+                              "x": 0.03125,
+                              "y": 0.354529351,
+                              "z": 0.03125,
+                              "w": 0.0204706453
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 2,
+                          "Y": 0,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_9",
+                            "SpriteUv": {
+                              "x": 0.0625,
+                              "y": 0.3584356,
+                              "z": 0.0185175184,
+                              "w": 0.0165643953
+                            },
+                            "HasSpriteUv": true
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "FootprintWidth": 3,
+                  "FootprintHeight": 3,
+                  "CollisionMask": [
+                    false,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false
+                  ],
+                  "Weight": 1,
+                  "MinimumSpacing": 1.0,
+                  "MaximumCount": 1,
+                  "AllowRotation": false,
+                  "AllowFlipX": false,
+                  "VisualSortAnchor": {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                }
+              ]
+            },
+            {
+              "Name": "Grass3",
+              "BaseRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Grass3.asset"
+              },
+              "Decorations": [
+                {
+                  "Name": "DG",
+                  "RuleTile": {
+                    "AssetPath": "Assets/Res/Tile/DecorateGrass.asset"
+                  },
+                  "Radius": 8.0,
+                  "MaximumSpread": 16
+                }
+              ],
+              "Obstacles": [
+                {
+                  "Name": "Tree",
+                  "Sprite": {
+                    "AssetPath": "",
+                    "SpriteName": "",
+                    "SpriteUv": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0,
+                      "w": 0.0
+                    },
+                    "HasSpriteUv": false
+                  },
+                  "SpriteLayers": [
+                    {
+                      "Name": "Layer 1",
+                      "Cells": [
+                        {
+                          "X": 1,
+                          "Y": 0,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_12",
+                            "SpriteUv": {
+                              "x": 0.03125,
+                              "y": 0.53125,
+                              "z": 0.03125,
+                              "w": 0.03125
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 1,
+                          "Y": 1,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_10",
+                            "SpriteUv": {
+                              "x": 0.0342168547,
+                              "y": 0.5625,
+                              "z": 0.0253162868,
+                              "w": 0.008751894
+                            },
+                            "HasSpriteUv": true
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "Name": "Layer 2",
+                      "Cells": [
+                        {
+                          "X": 0,
+                          "Y": 3,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_1",
+                            "SpriteUv": {
+                              "x": 0.0224981066,
+                              "y": 0.40625,
+                              "z": 0.008751893,
+                              "w": 0.0126581443
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 1,
+                          "Y": 3,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_2",
+                            "SpriteUv": {
+                              "x": 0.03125,
+                              "y": 0.40625,
+                              "z": 0.03125,
+                              "w": 0.0224237684
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 2,
+                          "Y": 3,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_3",
+                            "SpriteUv": {
+                              "x": 0.0625,
+                              "y": 0.40625,
+                              "z": 0.0107050193,
+                              "w": 0.0146112693
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 0,
+                          "Y": 2,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_1",
+                            "SpriteUv": {
+                              "x": 0.0224981066,
+                              "y": 0.40625,
+                              "z": 0.008751893,
+                              "w": 0.0126581443
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 1,
+                          "Y": 2,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_2",
+                            "SpriteUv": {
+                              "x": 0.03125,
+                              "y": 0.40625,
+                              "z": 0.03125,
+                              "w": 0.0224237684
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 2,
+                          "Y": 2,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_3",
+                            "SpriteUv": {
+                              "x": 0.0625,
+                              "y": 0.40625,
+                              "z": 0.0107050193,
+                              "w": 0.0146112693
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 0,
+                          "Y": 1,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_4",
+                            "SpriteUv": {
+                              "x": 0.0127324807,
+                              "y": 0.375,
+                              "z": 0.01851752,
+                              "w": 0.03125
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 1,
+                          "Y": 1,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_5",
+                            "SpriteUv": {
+                              "x": 0.03125,
+                              "y": 0.375,
+                              "z": 0.03125,
+                              "w": 0.03125
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 2,
+                          "Y": 1,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_6",
+                            "SpriteUv": {
+                              "x": 0.0625,
+                              "y": 0.375,
+                              "z": 0.0185175184,
+                              "w": 0.03125
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 0,
+                          "Y": 0,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_7",
+                            "SpriteUv": {
+                              "x": 0.0127324807,
+                              "y": 0.356482476,
+                              "z": 0.01851752,
+                              "w": 0.01851752
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 1,
+                          "Y": 0,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_8",
+                            "SpriteUv": {
+                              "x": 0.03125,
+                              "y": 0.354529351,
+                              "z": 0.03125,
+                              "w": 0.0204706453
+                            },
+                            "HasSpriteUv": true
+                          }
+                        },
+                        {
+                          "X": 2,
+                          "Y": 0,
+                          "UseObstacleCenter": false,
+                          "Sprite": {
+                            "AssetPath": "Assets/Res/Sprites/Village/Village_Tileset.png",
+                            "SpriteName": "tree1_9",
+                            "SpriteUv": {
+                              "x": 0.0625,
+                              "y": 0.3584356,
+                              "z": 0.0185175184,
+                              "w": 0.0165643953
+                            },
+                            "HasSpriteUv": true
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "FootprintWidth": 3,
+                  "FootprintHeight": 3,
+                  "CollisionMask": [
+                    false,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false
+                  ],
+                  "Weight": 1,
+                  "MinimumSpacing": 1.0,
+                  "MaximumCount": 1,
+                  "AllowRotation": false,
+                  "AllowFlipX": false,
+                  "VisualSortAnchor": {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "Landmarks": [],
+        "EncounterPools": [
+          {
+            "Name": "Small",
+            "InterestSize": 0,
+            "Squads": [
+              {
+                "Name": "Small Squad",
+                "Weight": 1,
+                "MonsterLevel": 1,
+                "IsBossSquad": false,
+                "Width": 3,
+                "Height": 3,
+                "Members": [
+                  {
+                    "UnitName": "MonsterStraw",
+                    "Count": 1
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "Name": "Medium",
+            "InterestSize": 1,
+            "Squads": [
+              {
+                "Name": "Medium Squad",
+                "Weight": 1,
+                "MonsterLevel": 1,
+                "IsBossSquad": false,
+                "Width": 3,
+                "Height": 3,
+                "Members": [
+                  {
+                    "UnitName": "MonsterStraw",
+                    "Count": 1
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "Name": "Large",
+            "InterestSize": 2,
+            "Squads": [
+              {
+                "Name": "Large Squad",
+                "Weight": 1,
+                "MonsterLevel": 1,
+                "IsBossSquad": false,
+                "Width": 3,
+                "Height": 3,
+                "Members": [
+                  {
+                    "UnitName": "MonsterStraw",
+                    "Count": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "TreasureItemIds": [
+          3
+        ]
+      },
+      "Id": 0
+    }
+  ]
 }

@@ -342,11 +342,13 @@ namespace CrystalMagic.Tests.Editor
             }
 
             List<OpenFieldRuleTilePlacement> decorations = result.RuleTilePlacements
-                .Where(placement => placement.Role == OpenFieldRuleTileRole.Decoration)
+                .Where(placement => placement.Layer == OpenFieldRuleTileLayer.Decoration)
                 .ToList();
             Assert.That(decorations, Is.Not.Empty);
             foreach (OpenFieldRuleTilePlacement placement in decorations)
-                Assert.That(result.IsStyleInterior(placement.Cell, placement.GroundStyleIndex), Is.True);
+                Assert.That(result.IsStyleInterior(
+                    placement.Cell,
+                    result.GetGroundStyleIndex(placement.Cell.x, placement.Cell.y)), Is.True);
 
             Assert.That(result.Obstacles, Is.Not.Empty);
             Assert.That(result.Obstacles, Has.Count.GreaterThanOrEqualTo(2));
@@ -559,13 +561,13 @@ namespace CrystalMagic.Tests.Editor
                 new HashSet<Vector2Int>());
 
             Assert.That(result.RuleTilePlacements.Any(placement =>
-                placement.Role == OpenFieldRuleTileRole.VoidWall && placement.Cell == new Vector2Int(0, 0)), Is.True);
+                placement.Layer == OpenFieldRuleTileLayer.Void && placement.Cell == new Vector2Int(0, 0)), Is.True);
             Assert.That(result.RuleTilePlacements.Any(placement =>
-                placement.Role == OpenFieldRuleTileRole.VoidTransition && placement.Cell == new Vector2Int(1, 0)), Is.True);
+                placement.Layer == OpenFieldRuleTileLayer.Void && placement.Cell == new Vector2Int(1, 0)), Is.True);
             Assert.That(result.RuleTilePlacements.Any(placement =>
-                placement.Role == OpenFieldRuleTileRole.VoidTransition && placement.Cell == new Vector2Int(2, 0)), Is.False);
+                placement.Layer == OpenFieldRuleTileLayer.Void && placement.Cell == new Vector2Int(2, 0)), Is.False);
             Assert.That(result.RuleTilePlacements.Any(placement =>
-                placement.Role == OpenFieldRuleTileRole.ObstacleTransition && placement.Cell == new Vector2Int(3, 0)), Is.True);
+                placement.Layer == OpenFieldRuleTileLayer.Obstacle && placement.Cell == new Vector2Int(3, 0)), Is.True);
         }
 
         [Test]
@@ -654,12 +656,10 @@ namespace CrystalMagic.Tests.Editor
             Assert.That(scene.TerrainVisual.Placements.Count, Is.GreaterThan(0));
             Assert.That(scene.TerrainVisual.Placements.Any(placement =>
                 placement.Layer == RuntimeDungeonTilemapLayer.Void &&
-                placement.RuleTilePath == "Assets/Res/Tile/TestVoidWall.asset" &&
-                placement.HeightSteps == -1), Is.True);
+                placement.RuleTilePath == "Assets/Res/Tile/TestVoidWall.asset"), Is.True);
             Assert.That(scene.TerrainVisual.Placements.Any(placement =>
                 placement.Layer == RuntimeDungeonTilemapLayer.Obstacle &&
-                placement.RuleTilePath == "Assets/Res/Tile/TestObstacleWall.asset" &&
-                placement.HeightSteps == 2), Is.True);
+                placement.RuleTilePath == "Assets/Res/Tile/TestObstacleWall.asset"), Is.True);
             Assert.That(scene.TerrainVisual.Placements, Has.Count.EqualTo(sourceVisual.RuleTilePlacements.Count));
             for (int index = 0; index < sourceVisual.RuleTilePlacements.Count; index++)
             {
@@ -668,7 +668,6 @@ namespace CrystalMagic.Tests.Editor
                 Assert.That(output.Layer, Is.EqualTo((RuntimeDungeonTilemapLayer)source.Layer));
                 Assert.That(output.RuleTilePath, Is.EqualTo(source.RuleTile.AssetPath));
                 Assert.That(output.Cell, Is.EqualTo(source.Cell));
-                Assert.That(output.HeightSteps, Is.EqualTo(source.HeightSteps));
             }
 
             Assert.That(scene.ObstacleSpawns, Is.Not.Empty);
@@ -806,12 +805,9 @@ namespace CrystalMagic.Tests.Editor
             {
                 OpenFieldRuleTilePlacement expectedPlacement = expected.RuleTilePlacements[index];
                 OpenFieldRuleTilePlacement actualPlacement = actual.RuleTilePlacements[index];
-                Assert.That(actualPlacement.Role, Is.EqualTo(expectedPlacement.Role), $"Rule tile role differed at index {index}.");
                 Assert.That(actualPlacement.Layer, Is.EqualTo(expectedPlacement.Layer), $"Rule tile layer differed at index {index}.");
+                Assert.That(actualPlacement.RuleTile.AssetPath, Is.EqualTo(expectedPlacement.RuleTile.AssetPath), $"Rule tile asset differed at index {index}.");
                 Assert.That(actualPlacement.Cell, Is.EqualTo(expectedPlacement.Cell), $"Rule tile cell differed at index {index}.");
-                Assert.That(actualPlacement.HeightSteps, Is.EqualTo(expectedPlacement.HeightSteps), $"Rule tile height differed at index {index}.");
-                Assert.That(actualPlacement.GroundStyleIndex, Is.EqualTo(expectedPlacement.GroundStyleIndex), $"Rule tile style differed at index {index}.");
-                Assert.That(actualPlacement.DecorationIndex, Is.EqualTo(expectedPlacement.DecorationIndex), $"Rule tile decoration differed at index {index}.");
             }
 
             Assert.That(actual.Obstacles, Has.Count.EqualTo(expected.Obstacles.Count));

@@ -53,6 +53,10 @@ namespace CrystalMagic.Editor.Data
             visual.ObstacleVisual.WallRuleTile.AssetPath = DrawRuleTilePath("Wall", visual.ObstacleVisual.WallRuleTile.AssetPath);
             visual.ObstacleVisual.TransitionRuleTile.AssetPath = DrawRuleTilePath("Transition", visual.ObstacleVisual.TransitionRuleTile.AssetPath);
 
+            GUILayout.Space(3f);
+            visual.BoundaryRuleTile.AssetPath = DrawRuleTilePath("Boundary", visual.BoundaryRuleTile.AssetPath);
+            EditorGUILayout.LabelField("A one-cell outer ring. It is rendered separately and blocks players with DOTS physics.", EditorStyles.wordWrappedMiniLabel);
+
             GUILayout.Space(4f);
             visual.GroundCellsPerStyleSeed = Mathf.Max(1, EditorGUILayout.IntField("Ground Cells Per Style Seed", visual.GroundCellsPerStyleSeed));
             DrawGroundStyles(visual, theme);
