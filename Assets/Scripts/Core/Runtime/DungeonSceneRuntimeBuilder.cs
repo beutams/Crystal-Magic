@@ -106,30 +106,10 @@ namespace CrystalMagic.Core
                     for (int visualIndex = 0; visualIndex < obstacle.Visuals.Count; visualIndex++)
                     {
                         RuntimeDungeonObstacleVisualSpawnData visual = obstacle.Visuals[visualIndex];
-                        if (visual == null || !EntitySpawnRegistryUtility.TryInstantiateEnvironment(
-                                entityManager,
-                                new FixedString128Bytes("Environment"),
-                                out Entity visualEntity))
-                        {
+                        if (visual == null)
                             continue;
-                        }
 
-                        Vector3 visualPosition = visual.WorldPosition;
-                        visualPosition.z = -visual.SortAnchorWorldY / 100f - visual.LayerIndex * 0.0001f;
-                        SetOrAddLocalTransform(
-                            entityManager,
-                            visualEntity,
-                            visualPosition,
-                            visual.RotationQuarterTurns * 90f);
-                        DungeonSceneVisualUtility.ApplySpriteVisual(
-                            entityManager,
-                            visualEntity,
-                            visual.SpritePath,
-                            visual.SpriteName,
-                            visual.FlippedX,
-                            resourceOwnerKey,
-                            runtimeRoot);
-                        spawnedEntities.Add(visualEntity);
+                        SpawnObstacleSpriteRenderer(runtimeRoot, visual, resourceOwnerKey, obstacleIndex, visualIndex);
                     }
                 }
 
@@ -153,6 +133,33 @@ namespace CrystalMagic.Core
                     spawnedEntities.Add(colliderEntity);
                 }
             }
+        }
+
+        private static void SpawnObstacleSpriteRenderer(
+            DungeonSceneRuntimeRoot runtimeRoot,
+            RuntimeDungeonObstacleVisualSpawnData visual,
+            string resourceOwnerKey,
+            int obstacleIndex,
+            int visualIndex)
+        {
+            if (runtimeRoot == null || string.IsNullOrWhiteSpace(visual.SpritePath))
+                return;
+
+            string spriteReference = string.IsNullOrWhiteSpace(visual.SpriteName)
+                ? visual.SpritePath
+                : $"{visual.SpritePath}|{visual.SpriteName}";
+            Sprite sprite = ResourceComponent.Instance?.LoadSprite(spriteReference, resourceOwnerKey);
+            if (sprite == null)
+                return;
+
+            GameObject visualObject = new($"ObstacleSprite_{obstacleIndex}_{visualIndex}");
+            visualObject.transform.SetParent(runtimeRoot.transform, false);
+            visualObject.transform.localPosition = visual.WorldPosition;
+            visualObject.transform.localRotation = Quaternion.Euler(0f, 0f, visual.RotationQuarterTurns * 90f);
+            SpriteRenderer renderer = visualObject.AddComponent<SpriteRenderer>();
+            renderer.sprite = sprite;
+            renderer.flipX = visual.FlippedX;
+            renderer.sortingOrder = Mathf.RoundToInt(-visual.SortAnchorWorldY * 100f) + visual.LayerIndex;
         }
 
         private static void SpawnEnvironment(
