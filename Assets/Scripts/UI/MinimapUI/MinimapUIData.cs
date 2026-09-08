@@ -5,6 +5,7 @@ public sealed class MinimapUIData : UIData
 {
     public UINode Panel;
     public UINode Terrain;
+    public UINode Fog;
     public UINode InterestPointRoot;
     public MinimapInterestPointView InterestPointTemplate;
     public UINode Exit;
@@ -14,6 +15,7 @@ public sealed class MinimapUIData : UIData
     {
         Panel = UINode.From(Find(root, "Panel"));
         Terrain = UINode.From(Find(root, "Panel/Terrain"));
+        Fog = UINode.From(Find(root, "Panel/Terrain/Fog"));
         InterestPointRoot = UINode.From(Find(root, "Panel/Terrain/InterestPointRoot"));
         InterestPointTemplate = Find(root, "Panel/Terrain/InterestPointRoot/InterestPointTemplate").GetComponent<MinimapInterestPointView>();
         Exit = UINode.From(Find(root, "Panel/Terrain/Exit"));

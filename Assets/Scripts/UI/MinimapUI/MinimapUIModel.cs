@@ -17,6 +17,7 @@ namespace CrystalMagic.UI
         private static readonly Color32 VoidColor = new(24, 20, 30, 255);
         private static readonly Color32 ObstacleColor = new(126, 105, 80, 255);
         private OpenFieldDungeonLayout _layout;
+        private RuntimeDungeonFogData _fogData;
         private Texture2D _terrainTexture;
         private Sprite _terrainSprite;
         private Entity _cachedPlayerEntity = Entity.Null;
@@ -29,20 +30,26 @@ namespace CrystalMagic.UI
         private bool _hasPlayer;
         private Vector2 _playerPosition;
         private float _playerRotationDegrees;
+        private int _fogVersion = -1;
 
         public override string ChangedEventName => DataChangedEventName;
         public bool HasMap => _terrainSprite != null;
         public Sprite TerrainSprite => _terrainSprite;
         public OpenFieldDungeonLayout Layout => _layout;
+        public bool HasFog => _fogData?.MinimapSprite != null;
+        public Sprite FogSprite => _fogData?.MinimapSprite;
         public bool HasExit => _hasExit;
         public Vector2 ExitPosition => _exitPosition;
         public bool HasPlayer => _hasPlayer;
         public Vector2 PlayerPosition => _playerPosition;
         public float PlayerRotationDegrees => _playerRotationDegrees;
+        public bool IsExitExplored => _hasExit && _layout?.ExitInterestPoint != null &&
+                                      IsCellExplored(_layout.ExitInterestPoint.Center.X, _layout.ExitInterestPoint.Center.Y);
 
         public void Refresh()
         {
             bool changed = EnsureMap();
+            changed |= RefreshFogVisual();
             changed |= RefreshPlayerMarker();
             if (changed)
                 PublishChanged();
@@ -57,6 +64,8 @@ namespace CrystalMagic.UI
         {
             ReleaseMapVisual();
             _layout = null;
+            _fogData = null;
+            _fogVersion = -1;
             _cachedPlayerEntity = Entity.Null;
             base.Dispose();
         }
@@ -72,6 +81,8 @@ namespace CrystalMagic.UI
 
                 ReleaseMapVisual();
                 _layout = null;
+                _fogData = null;
+                _fogVersion = -1;
                 _hasExit = false;
                 _hasPlayer = false;
                 _cachedPlayerEntity = Entity.Null;
@@ -83,11 +94,30 @@ namespace CrystalMagic.UI
 
             ReleaseMapVisual();
             _layout = layout;
+            _fogData = mapData.FogData;
+            _fogVersion = -1;
             _cachedPlayerEntity = Entity.Null;
             ConfigureWorldSpace(mapData.SceneData, layout);
             BuildTerrainSprite(layout);
             ConfigureExitMarker(layout);
             _hasPlayer = false;
+            return true;
+        }
+
+        public bool IsCellExplored(int x, int y)
+        {
+            return _fogData != null && _fogData.IsExplored(x, y);
+        }
+
+        private bool RefreshFogVisual()
+        {
+            RuntimeDungeonFogData fogData = RuntimeDataComponent.Instance.GetDungeonMapData().FogData;
+            int version = fogData?.Version ?? -1;
+            if (ReferenceEquals(_fogData, fogData) && _fogVersion == version)
+                return false;
+
+            _fogData = fogData;
+            _fogVersion = version;
             return true;
         }
 

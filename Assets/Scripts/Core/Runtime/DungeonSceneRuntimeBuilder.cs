@@ -63,6 +63,7 @@ namespace CrystalMagic.Core
 
             reportProgress?.Invoke(0.993f, "Building dungeon scene", "Building tile visuals");
             DungeonRuleTileVisualBuilder.Build(runtimeRoot, sceneData.TerrainVisual, resourceOwnerKey);
+            DungeonFogOfWarVisualBuilder.Build(runtimeRoot, mapData.FogData);
             runtimeRoot.SetCameraWorldBounds(sceneData.CameraWorldBounds);
             yield return null;
 

@@ -13,6 +13,7 @@ public sealed class MinimapUI : UIBase<MinimapUIData, MinimapUIModel>
     {
         ClearInterestPointViews();
         UI.Terrain.Image.sprite = null;
+        UI.Fog.Image.sprite = null;
         base.OnClose();
     }
 
@@ -22,36 +23,50 @@ public sealed class MinimapUI : UIBase<MinimapUIData, MinimapUIModel>
         UI.Panel.GameObject.SetActive(hasMap);
         if (!hasMap)
         {
+            UI.Terrain.Image.enabled = false;
+            UI.Fog.GameObject.SetActive(false);
             ClearInterestPointViews();
             return;
         }
 
+        UI.Terrain.Image.enabled = true;
         UI.Terrain.Image.sprite = Model.TerrainSprite;
+        UI.Fog.GameObject.SetActive(Model.HasFog);
+        UI.Fog.Image.sprite = Model.FogSprite;
         RenderInterestPoints();
-        RenderMarker(UI.Exit, Model.HasExit, Model.ExitPosition, 0f);
+        RenderMarker(UI.Exit, Model.HasExit && Model.IsExitExplored, Model.ExitPosition, 0f);
         RenderMarker(UI.Player, Model.HasPlayer, Model.PlayerPosition, Model.PlayerRotationDegrees);
     }
 
     private void RenderInterestPoints()
     {
         OpenFieldDungeonLayout layout = Model.Layout;
-        if (ReferenceEquals(_renderedInterestPointLayout, layout))
-            return;
-
-        ClearInterestPointViews();
-        _renderedInterestPointLayout = layout;
-        if (layout == null || layout.InterestPoints.Count == 0)
-            return;
-
-        UISubViewBase.EnsurePoolCapacity(UI.InterestPointTemplate, layout.InterestPoints.Count);
-        for (int index = 0; index < layout.InterestPoints.Count; index++)
+        if (!ReferenceEquals(_renderedInterestPointLayout, layout))
         {
-            MinimapInterestPointView view = UISubViewBase.AcquireFromPool(
-                UI.InterestPointTemplate,
-                UI.InterestPointRoot.RectTransform);
-            Model.GetInterestPointAnchorRange(layout.InterestPoints[index], out Vector2 anchorMin, out Vector2 anchorMax);
-            view.Render(anchorMin, anchorMax);
-            _interestPointViews.Add(view);
+            ClearInterestPointViews();
+            _renderedInterestPointLayout = layout;
+            if (layout != null && layout.InterestPoints.Count > 0)
+            {
+                UISubViewBase.EnsurePoolCapacity(UI.InterestPointTemplate, layout.InterestPoints.Count);
+                for (int index = 0; index < layout.InterestPoints.Count; index++)
+                {
+                    MinimapInterestPointView view = UISubViewBase.AcquireFromPool(
+                        UI.InterestPointTemplate,
+                        UI.InterestPointRoot.RectTransform);
+                    Model.GetInterestPointAnchorRange(layout.InterestPoints[index], out Vector2 anchorMin, out Vector2 anchorMax);
+                    view.Render(anchorMin, anchorMax);
+                    _interestPointViews.Add(view);
+                }
+            }
+        }
+
+        if (layout == null)
+            return;
+
+        for (int index = 0; index < _interestPointViews.Count; index++)
+        {
+            OpenFieldInterestPoint point = layout.InterestPoints[index];
+            _interestPointViews[index].gameObject.SetActive(Model.IsCellExplored(point.Center.X, point.Center.Y));
         }
     }
 

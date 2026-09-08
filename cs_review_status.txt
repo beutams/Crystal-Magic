@@ -91,11 +91,14 @@ Core\
     ResourceComponent.cs FALSE
     ResourceLoadMode.cs FALSE
   Runtime\
+    DungeonFogOfWarSystem.cs TRUE DIRTY
+    DungeonFogOfWarVisualBuilder.cs TRUE
     DungeonSceneRuntimeBuilder.cs TRUE DIRTY
     OpenFieldDungeonSceneDataBuilder.cs TRUE DIRTY
     DungeonSceneRuntimeRoot.cs TRUE DIRTY
     DungeonSceneVisualUtility.cs WAIT
     RuntimeDataComponent.cs TRUE DIRTY
+    RuntimeDungeonFogData.cs TRUE DIRTY
   SaveData\
     CurrencyUtility.cs WAIT
     InventoryUtility.cs WAIT

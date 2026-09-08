@@ -16,12 +16,12 @@ MonoBehaviour:
   - ClipPath: Assets/Res/Animation/Player/IdleLeft.anim
     SourceClip: {fileID: 7400000, guid: 5185da8580874c34ea7143ff0458e74d, type: 2}
     Sprites:
-    - {fileID: 1959632017, guid: 28564dbd180382841bedccb883833dbb, type: 3}
-    - {fileID: -1585509690, guid: 28564dbd180382841bedccb883833dbb, type: 3}
-    - {fileID: 1627160456, guid: 28564dbd180382841bedccb883833dbb, type: 3}
-    - {fileID: -1266185242, guid: 28564dbd180382841bedccb883833dbb, type: 3}
-    - {fileID: -1683984207, guid: 28564dbd180382841bedccb883833dbb, type: 3}
-    - {fileID: -1496459408, guid: 28564dbd180382841bedccb883833dbb, type: 3}
+    - {fileID: 1959632017, guid: dfc41eddec6b97f45a708059ec35e784, type: 3}
+    - {fileID: -1585509690, guid: dfc41eddec6b97f45a708059ec35e784, type: 3}
+    - {fileID: 1627160456, guid: dfc41eddec6b97f45a708059ec35e784, type: 3}
+    - {fileID: -1266185242, guid: dfc41eddec6b97f45a708059ec35e784, type: 3}
+    - {fileID: -1683984207, guid: dfc41eddec6b97f45a708059ec35e784, type: 3}
+    - {fileID: -1496459408, guid: dfc41eddec6b97f45a708059ec35e784, type: 3}
     SpriteTimes:
     - 0
     - 0.083333336
@@ -40,12 +40,12 @@ MonoBehaviour:
   - ClipPath: Assets/Res/Animation/Player/IdleRight.anim
     SourceClip: {fileID: 7400000, guid: 645c1283b2a65de46b4b02a3fd98cdd9, type: 2}
     Sprites:
-    - {fileID: 1959632017, guid: 28564dbd180382841bedccb883833dbb, type: 3}
-    - {fileID: -1585509690, guid: 28564dbd180382841bedccb883833dbb, type: 3}
-    - {fileID: 1627160456, guid: 28564dbd180382841bedccb883833dbb, type: 3}
-    - {fileID: -1266185242, guid: 28564dbd180382841bedccb883833dbb, type: 3}
-    - {fileID: -1683984207, guid: 28564dbd180382841bedccb883833dbb, type: 3}
-    - {fileID: -1496459408, guid: 28564dbd180382841bedccb883833dbb, type: 3}
+    - {fileID: 1959632017, guid: dfc41eddec6b97f45a708059ec35e784, type: 3}
+    - {fileID: -1585509690, guid: dfc41eddec6b97f45a708059ec35e784, type: 3}
+    - {fileID: 1627160456, guid: dfc41eddec6b97f45a708059ec35e784, type: 3}
+    - {fileID: -1266185242, guid: dfc41eddec6b97f45a708059ec35e784, type: 3}
+    - {fileID: -1683984207, guid: dfc41eddec6b97f45a708059ec35e784, type: 3}
+    - {fileID: -1496459408, guid: dfc41eddec6b97f45a708059ec35e784, type: 3}
     SpriteTimes:
     - 0
     - 0.083333336
@@ -62,14 +62,14 @@ MonoBehaviour:
   - ClipPath: Assets/Res/Animation/Player/WalkLeft.anim
     SourceClip: {fileID: 7400000, guid: 339830f365845384a91a39e0ff5cd57a, type: 2}
     Sprites:
-    - {fileID: 772865672, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
-    - {fileID: 1573279784, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
-    - {fileID: -2099104035, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
-    - {fileID: -1262641449, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
-    - {fileID: 765145937, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
-    - {fileID: 7406337, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
-    - {fileID: 290908963, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
-    - {fileID: -1741107085, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
+    - {fileID: 772865672, guid: 342da9d6e45b6aa4785d7af65657df13, type: 3}
+    - {fileID: 1573279784, guid: 342da9d6e45b6aa4785d7af65657df13, type: 3}
+    - {fileID: -2099104035, guid: 342da9d6e45b6aa4785d7af65657df13, type: 3}
+    - {fileID: -1262641449, guid: 342da9d6e45b6aa4785d7af65657df13, type: 3}
+    - {fileID: 765145937, guid: 342da9d6e45b6aa4785d7af65657df13, type: 3}
+    - {fileID: 7406337, guid: 342da9d6e45b6aa4785d7af65657df13, type: 3}
+    - {fileID: 290908963, guid: 342da9d6e45b6aa4785d7af65657df13, type: 3}
+    - {fileID: -1741107085, guid: 342da9d6e45b6aa4785d7af65657df13, type: 3}
     SpriteTimes:
     - 0
     - 0.083333336
@@ -90,14 +90,14 @@ MonoBehaviour:
   - ClipPath: Assets/Res/Animation/Player/WalkRight.anim
     SourceClip: {fileID: 7400000, guid: 747d3a456da4e0e44acaff26ef423fd8, type: 2}
     Sprites:
-    - {fileID: 772865672, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
-    - {fileID: 1573279784, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
-    - {fileID: -2099104035, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
-    - {fileID: -1262641449, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
-    - {fileID: 765145937, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
-    - {fileID: 7406337, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
-    - {fileID: 290908963, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
-    - {fileID: -1741107085, guid: e06d07cbebf2688438ddc9b0501f8104, type: 3}
+    - {fileID: 772865672, guid: 342da9d6e45b6aa4785d7af65657df13, type: 3}
+    - {fileID: 1573279784, guid: 342da9d6e45b6aa4785d7af65657df13, type: 3}
+    - {fileID: -2099104035, guid: 342da9d6e45b6aa4785d7af65657df13, type: 3}
+    - {fileID: -1262641449, guid: 342da9d6e45b6aa4785d7af65657df13, type: 3}
+    - {fileID: 765145937, guid: 342da9d6e45b6aa4785d7af65657df13, type: 3}
+    - {fileID: 7406337, guid: 342da9d6e45b6aa4785d7af65657df13, type: 3}
+    - {fileID: 290908963, guid: 342da9d6e45b6aa4785d7af65657df13, type: 3}
+    - {fileID: -1741107085, guid: 342da9d6e45b6aa4785d7af65657df13, type: 3}
     SpriteTimes:
     - 0
     - 0.083333336
@@ -116,12 +116,12 @@ MonoBehaviour:
   - ClipPath: Assets/Res/Animation/Player/AttackLeft.anim
     SourceClip: {fileID: 7400000, guid: a41bc0000586bf442b597d587d937872, type: 2}
     Sprites:
-    - {fileID: -763418500, guid: 0d17ebb49d245754d951c8e5279d38da, type: 3}
-    - {fileID: -1662100627, guid: 0d17ebb49d245754d951c8e5279d38da, type: 3}
-    - {fileID: 749353688, guid: 0d17ebb49d245754d951c8e5279d38da, type: 3}
-    - {fileID: -1565354148, guid: 0d17ebb49d245754d951c8e5279d38da, type: 3}
-    - {fileID: -1052590148, guid: 0d17ebb49d245754d951c8e5279d38da, type: 3}
-    - {fileID: 2027819521, guid: 0d17ebb49d245754d951c8e5279d38da, type: 3}
+    - {fileID: -763418500, guid: 171ff1865c55b9049bb56ac4107c0809, type: 3}
+    - {fileID: -1662100627, guid: 171ff1865c55b9049bb56ac4107c0809, type: 3}
+    - {fileID: 749353688, guid: 171ff1865c55b9049bb56ac4107c0809, type: 3}
+    - {fileID: -1565354148, guid: 171ff1865c55b9049bb56ac4107c0809, type: 3}
+    - {fileID: -1052590148, guid: 171ff1865c55b9049bb56ac4107c0809, type: 3}
+    - {fileID: 2027819521, guid: 171ff1865c55b9049bb56ac4107c0809, type: 3}
     SpriteTimes:
     - 0
     - 0.083333336
@@ -140,12 +140,12 @@ MonoBehaviour:
   - ClipPath: Assets/Res/Animation/Player/AttackRight.anim
     SourceClip: {fileID: 7400000, guid: 16b0261a315dfe443910637b0f1639d7, type: 2}
     Sprites:
-    - {fileID: -763418500, guid: 0d17ebb49d245754d951c8e5279d38da, type: 3}
-    - {fileID: -1662100627, guid: 0d17ebb49d245754d951c8e5279d38da, type: 3}
-    - {fileID: 749353688, guid: 0d17ebb49d245754d951c8e5279d38da, type: 3}
-    - {fileID: -1565354148, guid: 0d17ebb49d245754d951c8e5279d38da, type: 3}
-    - {fileID: -1052590148, guid: 0d17ebb49d245754d951c8e5279d38da, type: 3}
-    - {fileID: 2027819521, guid: 0d17ebb49d245754d951c8e5279d38da, type: 3}
+    - {fileID: -763418500, guid: 171ff1865c55b9049bb56ac4107c0809, type: 3}
+    - {fileID: -1662100627, guid: 171ff1865c55b9049bb56ac4107c0809, type: 3}
+    - {fileID: 749353688, guid: 171ff1865c55b9049bb56ac4107c0809, type: 3}
+    - {fileID: -1565354148, guid: 171ff1865c55b9049bb56ac4107c0809, type: 3}
+    - {fileID: -1052590148, guid: 171ff1865c55b9049bb56ac4107c0809, type: 3}
+    - {fileID: 2027819521, guid: 171ff1865c55b9049bb56ac4107c0809, type: 3}
     SpriteTimes:
     - 0
     - 0.083333336
@@ -164,10 +164,10 @@ MonoBehaviour:
   - ClipPath: Assets/Res/Animation/Player/HurtLeft.anim
     SourceClip: {fileID: 7400000, guid: 9cea85dbfb4c9cb4f9646f5d5bef1f2d, type: 2}
     Sprites:
-    - {fileID: 987186672, guid: 93c9bb78ea2631747833794ccc12341c, type: 3}
-    - {fileID: -1546455065, guid: 93c9bb78ea2631747833794ccc12341c, type: 3}
-    - {fileID: 1293379946, guid: 93c9bb78ea2631747833794ccc12341c, type: 3}
-    - {fileID: 1253992308, guid: 93c9bb78ea2631747833794ccc12341c, type: 3}
+    - {fileID: 987186672, guid: 896eed155946504429927a6452b1b0f5, type: 3}
+    - {fileID: -1546455065, guid: 896eed155946504429927a6452b1b0f5, type: 3}
+    - {fileID: 1293379946, guid: 896eed155946504429927a6452b1b0f5, type: 3}
+    - {fileID: 1253992308, guid: 896eed155946504429927a6452b1b0f5, type: 3}
     SpriteTimes:
     - 0
     - 0.083333336
@@ -184,10 +184,10 @@ MonoBehaviour:
   - ClipPath: Assets/Res/Animation/Player/HurtRight.anim
     SourceClip: {fileID: 7400000, guid: c869aaba605744b4c9e9922ecf39a39a, type: 2}
     Sprites:
-    - {fileID: 987186672, guid: 93c9bb78ea2631747833794ccc12341c, type: 3}
-    - {fileID: -1546455065, guid: 93c9bb78ea2631747833794ccc12341c, type: 3}
-    - {fileID: 1293379946, guid: 93c9bb78ea2631747833794ccc12341c, type: 3}
-    - {fileID: 1253992308, guid: 93c9bb78ea2631747833794ccc12341c, type: 3}
+    - {fileID: 987186672, guid: 896eed155946504429927a6452b1b0f5, type: 3}
+    - {fileID: -1546455065, guid: 896eed155946504429927a6452b1b0f5, type: 3}
+    - {fileID: 1293379946, guid: 896eed155946504429927a6452b1b0f5, type: 3}
+    - {fileID: 1253992308, guid: 896eed155946504429927a6452b1b0f5, type: 3}
     SpriteTimes:
     - 0
     - 0.083333336
@@ -204,10 +204,10 @@ MonoBehaviour:
   - ClipPath: Assets/Res/Animation/Player/DeathLeft.anim
     SourceClip: {fileID: 7400000, guid: 29b46d97af1353d4fb27b2bd5b6efbf9, type: 2}
     Sprites:
-    - {fileID: -1749866757, guid: 861d358f2d7b5974c8bb22f68483c0a3, type: 3}
-    - {fileID: -1549211982, guid: 861d358f2d7b5974c8bb22f68483c0a3, type: 3}
-    - {fileID: -440415288, guid: 861d358f2d7b5974c8bb22f68483c0a3, type: 3}
-    - {fileID: -1156948260, guid: 861d358f2d7b5974c8bb22f68483c0a3, type: 3}
+    - {fileID: -1749866757, guid: d56f5600a4e721a41a49078f2e822642, type: 3}
+    - {fileID: -1549211982, guid: d56f5600a4e721a41a49078f2e822642, type: 3}
+    - {fileID: -440415288, guid: d56f5600a4e721a41a49078f2e822642, type: 3}
+    - {fileID: -1156948260, guid: d56f5600a4e721a41a49078f2e822642, type: 3}
     SpriteTimes:
     - 0
     - 0.125
@@ -224,10 +224,10 @@ MonoBehaviour:
   - ClipPath: Assets/Res/Animation/Player/DeathRight.anim
     SourceClip: {fileID: 7400000, guid: 7c27cdd6a0f667e4a9f5f5cfc19b79f8, type: 2}
     Sprites:
-    - {fileID: -1749866757, guid: 861d358f2d7b5974c8bb22f68483c0a3, type: 3}
-    - {fileID: -1549211982, guid: 861d358f2d7b5974c8bb22f68483c0a3, type: 3}
-    - {fileID: -440415288, guid: 861d358f2d7b5974c8bb22f68483c0a3, type: 3}
-    - {fileID: -1156948260, guid: 861d358f2d7b5974c8bb22f68483c0a3, type: 3}
+    - {fileID: -1749866757, guid: d56f5600a4e721a41a49078f2e822642, type: 3}
+    - {fileID: -1549211982, guid: d56f5600a4e721a41a49078f2e822642, type: 3}
+    - {fileID: -440415288, guid: d56f5600a4e721a41a49078f2e822642, type: 3}
+    - {fileID: -1156948260, guid: d56f5600a4e721a41a49078f2e822642, type: 3}
     SpriteTimes:
     - 0
     - 0.125

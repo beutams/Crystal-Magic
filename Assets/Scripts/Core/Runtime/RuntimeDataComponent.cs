@@ -141,6 +141,7 @@ namespace CrystalMagic.Core
         {
             _dungeonMapData.OpenFieldLayout = layout;
             _dungeonMapData.SceneData = sceneData;
+            _dungeonMapData.FogData = layout != null ? new RuntimeDungeonFogData(layout, sceneData) : null;
             _dungeonMapData.Floor = Mathf.Max(1, floor);
             _dungeonMapData.Seed = seed;
             _dungeonMapData.AttemptCount = Mathf.Max(1, attemptCount);
@@ -188,6 +189,7 @@ namespace CrystalMagic.Core
     {
         public OpenFieldDungeonLayout OpenFieldLayout;
         public RuntimeDungeonSceneData SceneData;
+        public RuntimeDungeonFogData FogData;
         public int Floor;
         public int Seed;
         public int AttemptCount;
@@ -198,6 +200,7 @@ namespace CrystalMagic.Core
         {
             OpenFieldLayout = null;
             SceneData = null;
+            FogData = null;
             Floor = 0;
             Seed = 0;
             AttemptCount = 0;
