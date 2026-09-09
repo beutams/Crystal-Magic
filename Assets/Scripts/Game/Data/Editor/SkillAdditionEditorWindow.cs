@@ -230,24 +230,27 @@ namespace CrystalMagic.Editor.Data
 
             int selectedIndex = setters.FindIndex(setter =>
                 string.Equals(setter.Key, setValue.SetterKey, StringComparison.Ordinal));
-            if (selectedIndex < 0)
-            {
-                EditorGUILayout.HelpBox(
-                    $"Setter '{setValue.SetterKey}' is not available in the current source schema.",
-                    MessageType.Warning);
-                return;
-            }
+            bool usedFallbackSetter = selectedIndex < 0;
+            if (usedFallbackSetter)
+                selectedIndex = 0;
 
             string[] options = setters.ConvertAll(setter => setter.Key).ToArray();
             EditorGUI.BeginChangeCheck();
             selectedIndex = EditorGUILayout.Popup("Setter", selectedIndex, options);
             UnitSourceSetSchemaEntry setter = setters[selectedIndex];
+            bool changed = !string.Equals(setValue.SetterKey, setter.Key, StringComparison.Ordinal);
             setValue.SetterKey = setter.Key;
             if (setter.RequiresKey)
+            {
                 setValue.Key = EditorGUILayout.TextField("Key", setValue.Key ?? string.Empty);
+            }
             else
+            {
+                changed |= !string.IsNullOrEmpty(setValue.Key);
                 setValue.Key = string.Empty;
+            }
 
+            changed |= setValue.Values == null;
             setValue.Values ??= new List<ValueExpression>();
             while (setValue.Values.Count < setter.Parameters.Count)
             {
@@ -256,10 +259,14 @@ namespace CrystalMagic.Editor.Data
                     Literal = StateScriptValueExpressionDrawer.CreateDefaultLiteral(
                         setter.Parameters[setValue.Values.Count].Category),
                 });
+                changed = true;
             }
 
             if (setValue.Values.Count > setter.Parameters.Count)
+            {
                 setValue.Values.RemoveRange(setter.Parameters.Count, setValue.Values.Count - setter.Parameters.Count);
+                changed = true;
+            }
 
             for (int index = 0; index < setter.Parameters.Count; index++)
             {
@@ -276,12 +283,13 @@ namespace CrystalMagic.Editor.Data
                     MarkDirty);
             }
 
-            if (EditorGUI.EndChangeCheck())
+            if (usedFallbackSetter || changed || EditorGUI.EndChangeCheck())
                 MarkDirty();
         }
 
         private void DrawModifiers(List<SkillAdditionModifierExpressionData> modifiers)
         {
+            _sourceSchema ??= UnitSourceSchemaFactory.CreateForAllSources();
             modifiers ??= new List<SkillAdditionModifierExpressionData>();
             if (GUILayout.Button("Add Modifier", GUILayout.Width(100f)))
             {
@@ -292,21 +300,24 @@ namespace CrystalMagic.Editor.Data
             int removeAt = -1;
             for (int index = 0; index < modifiers.Count; index++)
             {
-                SkillAdditionModifierExpressionData modifier = modifiers[index];
+                SkillAdditionModifierExpressionData modifier = modifiers[index] ?? new SkillAdditionModifierExpressionData();
+                modifiers[index] = modifier;
                 modifier.Factor ??= new ValueExpression { Literal = UnitValue.FromFloat(0f) };
                 modifier.Bonus ??= new ValueExpression { Literal = UnitValue.FromFloat(0f) };
                 EditorGUI.BeginChangeCheck();
+                EditorGUILayout.BeginVertical("box");
                 EditorGUILayout.BeginHorizontal();
                 modifier.Channel = (SkillModifierChannel)EditorGUILayout.EnumPopup(modifier.Channel);
-                float factor = EditorGUILayout.FloatField("Factor", GetLiteralNumber(modifier.Factor), GUILayout.MinWidth(120f));
-                float bonus = EditorGUILayout.FloatField("Bonus", GetLiteralNumber(modifier.Bonus), GUILayout.MinWidth(120f));
                 if (GUILayout.Button("Delete", GUILayout.Width(60f)))
                     removeAt = index;
                 EditorGUILayout.EndHorizontal();
+                EditorGUILayout.LabelField("Factor (Number)", EditorStyles.miniBoldLabel);
+                StateScriptValueExpressionDrawer.Draw(modifier.Factor, UnitValueCategory.Number, _sourceSchema, MarkDirty);
+                EditorGUILayout.LabelField("Bonus (Number)", EditorStyles.miniBoldLabel);
+                StateScriptValueExpressionDrawer.Draw(modifier.Bonus, UnitValueCategory.Number, _sourceSchema, MarkDirty);
+                EditorGUILayout.EndVertical();
                 if (EditorGUI.EndChangeCheck())
                 {
-                    modifier.Factor = CreateLiteralNumberExpression(factor);
-                    modifier.Bonus = CreateLiteralNumberExpression(bonus);
                     modifiers[index] = modifier;
                     MarkDirty();
                 }
@@ -317,22 +328,6 @@ namespace CrystalMagic.Editor.Data
                 modifiers.RemoveAt(removeAt);
                 MarkDirty();
             }
-        }
-
-        private static float GetLiteralNumber(ValueExpression expression)
-        {
-            return expression?.Kind == ValueExpressionKind.Literal && expression.Literal.TryGetNumber(out float value)
-                ? value
-                : 0f;
-        }
-
-        private static ValueExpression CreateLiteralNumberExpression(float value)
-        {
-            return new ValueExpression
-            {
-                Kind = ValueExpressionKind.Literal,
-                Literal = UnitValue.FromFloat(value),
-            };
         }
 
         internal static EffectGraphBinding CreateEffectBinding(

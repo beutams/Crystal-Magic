@@ -423,7 +423,44 @@
     },
     {
       "NameKey": "格挡",
-      "Callbacks": [],
+      "Callbacks": [
+        {
+          "EventName": "",
+          "Conditions": [],
+          "Actions": [
+            {
+              "$type": "CrystalMagic.Game.Data.ExecuteEffectsSkillAdditionActionData, Assembly-CSharp",
+              "Effects": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+                  "BuffId": -1,
+                  "DurationSeconds": 1.0,
+                  "StackCount": 1,
+                  "Conditions": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "EventName": "",
+          "Conditions": [],
+          "Actions": [
+            {
+              "$type": "CrystalMagic.Game.Data.ExecuteEffectsSkillAdditionActionData, Assembly-CSharp",
+              "Effects": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+                  "BuffId": -1,
+                  "DurationSeconds": 1.0,
+                  "StackCount": 1,
+                  "Conditions": []
+                }
+              ]
+            }
+          ]
+        }
+      ],
       "Id": 4
     }
   ]

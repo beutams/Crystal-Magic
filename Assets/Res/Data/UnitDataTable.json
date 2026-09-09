@@ -106,59 +106,9 @@
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
           "DropDataId": -1
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitBuffModuleData, Assembly-CSharp",
-          "Buffs": []
         }
       ],
       "Id": 3
-    },
-    {
-      "Name": "Werewolf",
-      "Description": "Werewolf",
-      "PrefabPath": "Assets/Res/Prefab/Unit/Werewolf.prefab",
-      "Modules": [
-        {
-          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 6.0,
-          "BaseMaxAcceleration": 10000.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 120000.0,
-          "BaseHealthRegenPerSecond": 50.0,
-          "BaseDefense": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-          "BaseAttackPower": 10.0,
-          "BaseSkillRange": 0.0,
-          "BaseChantSpeedBonus": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
-          "BaseMaxMp": 0.0,
-          "BaseMpRegenPerSecond": 0.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
-          "Faction": 2
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 16.0
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": -1
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitBuffModuleData, Assembly-CSharp",
-          "Buffs": []
-        }
-      ],
-      "Id": 9
     },
     {
       "Name": "NPCEquipShop",
@@ -246,6 +196,48 @@
       "Id": 8
     },
     {
+      "Name": "Werewolf",
+      "Description": "Werewolf",
+      "PrefabPath": "Assets/Res/Prefab/Unit/Werewolf.prefab",
+      "Modules": [
+        {
+          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
+          "BaseMoveSpeed": 6.0,
+          "BaseMaxAcceleration": 10000.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
+          "BaseMaxHealth": 120000.0,
+          "BaseHealthRegenPerSecond": 50.0,
+          "BaseDefense": 0.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
+          "BaseAttackPower": 10.0,
+          "BaseSkillRange": 0.0,
+          "BaseChantSpeedBonus": 0.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
+          "BaseMaxMp": 0.0,
+          "BaseMpRegenPerSecond": 0.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+          "Faction": 2
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
+          "SearchRadius": 16.0
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
+          "DropDataId": 0
+        }
+      ],
+      "Id": 9
+    },
+    {
       "Name": "Werebear",
       "Description": "Werebear",
       "PrefabPath": "Assets/Res/Prefab/Unit/Werebear.prefab",
@@ -283,10 +275,6 @@
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
           "DropDataId": -1
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitBuffModuleData, Assembly-CSharp",
-          "Buffs": []
         }
       ],
       "Id": 10
@@ -329,10 +317,6 @@
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
           "DropDataId": -1
-        },
-        {
-          "$type": "CrystalMagic.Game.Data.UnitBuffModuleData, Assembly-CSharp",
-          "Buffs": []
         }
       ],
       "Id": 11

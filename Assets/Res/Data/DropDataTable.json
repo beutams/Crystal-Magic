@@ -1,3 +1,18 @@
 ﻿{
-  "Rows": []
+  "Rows": [
+    {
+      "Name": "Werewolf Drop",
+      "Description": "",
+      "Entries": [
+        {
+          "DropType": 1,
+          "ItemId": -1,
+          "Chance": 1.0,
+          "MinQuantity": 5,
+          "MaxQuantity": 10
+        }
+      ],
+      "Id": 0
+    }
+  ]
 }

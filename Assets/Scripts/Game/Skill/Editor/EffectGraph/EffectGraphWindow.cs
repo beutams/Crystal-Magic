@@ -1,6 +1,9 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using CrystalMagic.Game.Data.Effects;
 using UnityEditor;
 using UnityEngine;
@@ -11,8 +14,13 @@ namespace CrystalMagic.Editor.EffectGraph
     public sealed class EffectGraphWindow : EditorWindow
     {
         private const float InspectorWidth = 330f;
+        private static readonly MethodInfo MemberwiseCloneMethod = typeof(object).GetMethod(
+            "MemberwiseClone",
+            BindingFlags.Instance | BindingFlags.NonPublic);
 
         private EffectGraphBinding _binding;
+        private EffectGraphBinding _workingBinding;
+        private EffectData[] _workingRootEffects = Array.Empty<EffectData>();
         private EffectGraphModel _model;
         private EffectGraphLayoutStore _layoutStore;
         private EffectGraphLayoutData _layout;
@@ -20,6 +28,7 @@ namespace CrystalMagic.Editor.EffectGraph
         private IMGUIContainer _inspector;
         private EffectData _selectedEffect;
         private bool _rebuildScheduled;
+        private bool _hasUnsavedChanges;
 
         public static void Open(EffectGraphBinding binding)
         {
@@ -36,8 +45,15 @@ namespace CrystalMagic.Editor.EffectGraph
         private void Initialize(EffectGraphBinding binding)
         {
             _binding = binding;
+            _workingRootEffects = CloneEffects(binding.GetRootEffects());
+            _workingBinding = new EffectGraphBinding(
+                binding.OwnerKey,
+                binding.DisplayName,
+                () => _workingRootEffects,
+                effects => _workingRootEffects = effects ?? Array.Empty<EffectData>(),
+                MarkDirty);
             _layoutStore = new EffectGraphLayoutStore();
-            _model = new EffectGraphModel(binding);
+            _model = new EffectGraphModel(_workingBinding);
             _layout = _layoutStore.Load(binding.OwnerKey);
             BuildRoot();
         }
@@ -46,11 +62,6 @@ namespace CrystalMagic.Editor.EffectGraph
         {
             if (_binding != null && _graphView == null)
                 BuildRoot();
-        }
-
-        private void OnDisable()
-        {
-            _graphView?.SaveLayout();
         }
 
         internal void RebuildGraph()
@@ -84,14 +95,35 @@ namespace CrystalMagic.Editor.EffectGraph
             _inspector?.MarkDirtyRepaint();
         }
 
-        internal void SaveLayout(EffectGraphLayoutData layout, IEnumerable<string> validPaths)
+        internal void CaptureLayout(EffectGraphLayoutData layout)
         {
-            if (_binding == null || _layoutStore == null || layout == null)
+            if (layout == null)
                 return;
 
             _layout = layout;
-            _layoutStore.Save(_binding.OwnerKey, layout);
-            _layoutStore.Prune(_binding.OwnerKey, new HashSet<string>(validPaths ?? Enumerable.Empty<string>(), StringComparer.Ordinal));
+        }
+
+        internal void MarkDirty()
+        {
+            _hasUnsavedChanges = true;
+            titleContent.text = "Effect Graph *";
+        }
+
+        private void SaveGraph()
+        {
+            if (_binding == null || _layoutStore == null)
+                return;
+
+            _graphView?.CaptureLayout();
+            if (_hasUnsavedChanges)
+            {
+                _binding.SetRootEffects(CloneEffects(_workingRootEffects));
+                _binding.NotifyChanged();
+            }
+
+            _layoutStore.Save(_binding.OwnerKey, _layout ?? new EffectGraphLayoutData());
+            _hasUnsavedChanges = false;
+            titleContent.text = "Effect Graph";
         }
 
         private void BuildRoot()
@@ -102,8 +134,8 @@ namespace CrystalMagic.Editor.EffectGraph
 
             VisualElement toolbar = new() { style = { flexDirection = FlexDirection.Row, height = 24f, paddingLeft = 6f } };
             toolbar.Add(new Label(_binding.DisplayName) { style = { flexGrow = 1f } });
-            Button saveLayout = new(() => _graphView?.SaveLayout()) { text = "Save Layout" };
-            toolbar.Add(saveLayout);
+            Button save = new(SaveGraph) { text = "Save" };
+            toolbar.Add(save);
             rootVisualElement.Add(toolbar);
 
             VisualElement content = new() { style = { flexGrow = 1f, flexDirection = FlexDirection.Row } };
@@ -140,9 +172,81 @@ namespace CrystalMagic.Editor.EffectGraph
             bool changed = EffectGraphInspector.DrawEffect(_model, _selectedEffect);
             if (EditorGUI.EndChangeCheck() || changed)
             {
-                _binding.NotifyChanged();
-                _graphView?.SaveLayout();
+                _workingBinding.NotifyChanged();
                 Repaint();
+            }
+        }
+
+        private static EffectData[] CloneEffects(EffectData[] effects)
+        {
+            if (effects == null || effects.Length == 0)
+                return Array.Empty<EffectData>();
+
+            Dictionary<object, object> copies = new(ReferenceComparer.Instance);
+            EffectData[] clone = new EffectData[effects.Length];
+            for (int index = 0; index < effects.Length; index++)
+                clone[index] = CloneValue(effects[index], copies) as EffectData;
+
+            return clone;
+        }
+
+        private static object CloneValue(object value, Dictionary<object, object> copies)
+        {
+            if (value == null)
+                return null;
+
+            Type type = value.GetType();
+            if (type.IsValueType || value is string || value is UnityEngine.Object || value is Type || value is Delegate)
+                return value;
+
+            if (copies.TryGetValue(value, out object existing))
+                return existing;
+
+            if (value is Array sourceArray)
+            {
+                Array cloneArray = Array.CreateInstance(type.GetElementType(), sourceArray.Length);
+                copies.Add(value, cloneArray);
+                for (int index = 0; index < sourceArray.Length; index++)
+                    cloneArray.SetValue(CloneValue(sourceArray.GetValue(index), copies), index);
+                return cloneArray;
+            }
+
+            if (value is IList sourceList && Activator.CreateInstance(type) is IList cloneList)
+            {
+                copies.Add(value, cloneList);
+                foreach (object item in sourceList)
+                    cloneList.Add(CloneValue(item, copies));
+                return cloneList;
+            }
+
+            object clone = MemberwiseCloneMethod.Invoke(value, null);
+            copies.Add(value, clone);
+            for (Type current = type; current != null; current = current.BaseType)
+            {
+                foreach (FieldInfo field in current.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
+                {
+                    if (field.IsInitOnly)
+                        continue;
+
+                    field.SetValue(clone, CloneValue(field.GetValue(value), copies));
+                }
+            }
+
+            return clone;
+        }
+
+        private sealed class ReferenceComparer : IEqualityComparer<object>
+        {
+            public static readonly ReferenceComparer Instance = new();
+
+            public new bool Equals(object left, object right)
+            {
+                return ReferenceEquals(left, right);
+            }
+
+            public int GetHashCode(object value)
+            {
+                return RuntimeHelpers.GetHashCode(value);
             }
         }
     }

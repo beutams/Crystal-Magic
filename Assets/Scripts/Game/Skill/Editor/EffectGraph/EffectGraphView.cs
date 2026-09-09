@@ -110,7 +110,7 @@ namespace CrystalMagic.Editor.EffectGraph
             _window.SetSelection(effect);
         }
 
-        public void SaveLayout()
+        public void CaptureLayout()
         {
             if (_model == null || _layout == null)
                 return;
@@ -128,7 +128,7 @@ namespace CrystalMagic.Editor.EffectGraph
                 });
             }
 
-            _window.SaveLayout(_layout, _containerViews.Keys.Select(container => container.Path));
+            _window.CaptureLayout(_layout);
         }
 
         public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter adapter)
@@ -222,7 +222,8 @@ namespace CrystalMagic.Editor.EffectGraph
 
                 if (movedStacks.Count > 0)
                 {
-                    SaveLayout();
+                    CaptureLayout();
+                    _window.MarkDirty();
                     _window.ScheduleGraphRebuild();
                 }
             }
@@ -269,7 +270,8 @@ namespace CrystalMagic.Editor.EffectGraph
                 Position = stack.GetPosition().position,
                 Expanded = stack.expanded,
             });
-            _window.SaveLayout(_layout, _layout.Containers.Select(item => item.Path));
+            _window.CaptureLayout(_layout);
+            _window.MarkDirty();
             _window.ScheduleGraphRebuild();
             return true;
         }

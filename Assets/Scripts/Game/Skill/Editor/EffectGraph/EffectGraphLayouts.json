@@ -140,6 +140,82 @@
                     }
                 ]
             }
+        },
+        {
+            "OwnerKey": "SkillAddition:4:Callbacks[0].Actions[0].Effects",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 0.0,
+                    "y": 13.0
+                },
+                "ViewScale": 1.0,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 59.0,
+                            "y": 191.0
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "SkillAddition:4:Callbacks[1].Actions[0].Effects",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 0.0,
+                    "y": 2.0
+                },
+                "ViewScale": 1.0,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 72.0,
+                            "y": 254.0
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "Skill:2:EffectChain",
+            "Layout": {
+                "ViewPosition": {
+                    "x": -52.0,
+                    "y": -390.0
+                },
+                "ViewScale": 0.8695651888847351,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 57.0,
+                            "y": 184.0
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/1/OnEndEffects",
+                        "Position": {
+                            "x": 286.0,
+                            "y": 456.0
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/1/OnEndEffects/1/OnAfterSearch",
+                        "Position": {
+                            "x": 334.0,
+                            "y": 740.0
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
         }
     ]
 }
