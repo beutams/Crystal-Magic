@@ -417,6 +417,302 @@ MonoBehaviour:
     - 0
     Length: 0.5
     IsLooping: 0
+  - ClipPath: Assets/Res/Animation/Werewolf/IdleLeft.anim
+    SourceClip: {fileID: 7400000, guid: f7d20d3b33a84e2792a3b8ed56782176, type: 2}
+    Sprites:
+    - {fileID: 1959632017, guid: 776a7239f6b162c4182c09a8c5c7988a, type: 3}
+    - {fileID: -1585509690, guid: 776a7239f6b162c4182c09a8c5c7988a, type: 3}
+    - {fileID: 1627160456, guid: 776a7239f6b162c4182c09a8c5c7988a, type: 3}
+    - {fileID: -1266185242, guid: 776a7239f6b162c4182c09a8c5c7988a, type: 3}
+    - {fileID: -1683984207, guid: 776a7239f6b162c4182c09a8c5c7988a, type: 3}
+    - {fileID: -1496459408, guid: 776a7239f6b162c4182c09a8c5c7988a, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 1
+    Length: 0.5
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Werewolf/IdleRight.anim
+    SourceClip: {fileID: 7400000, guid: 0a40ae35297f46a7bd6260e59c505344, type: 2}
+    Sprites:
+    - {fileID: 1959632017, guid: 776a7239f6b162c4182c09a8c5c7988a, type: 3}
+    - {fileID: -1585509690, guid: 776a7239f6b162c4182c09a8c5c7988a, type: 3}
+    - {fileID: 1627160456, guid: 776a7239f6b162c4182c09a8c5c7988a, type: 3}
+    - {fileID: -1266185242, guid: 776a7239f6b162c4182c09a8c5c7988a, type: 3}
+    - {fileID: -1683984207, guid: 776a7239f6b162c4182c09a8c5c7988a, type: 3}
+    - {fileID: -1496459408, guid: 776a7239f6b162c4182c09a8c5c7988a, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 0
+    Length: 0.5
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Werewolf/WalkLeft.anim
+    SourceClip: {fileID: 7400000, guid: 56e0d3fcffb94d73b9f1680afcb2a24f, type: 2}
+    Sprites:
+    - {fileID: 772865672, guid: 5fd0087daa208d6468e0352e7ea1d988, type: 3}
+    - {fileID: 1573279784, guid: 5fd0087daa208d6468e0352e7ea1d988, type: 3}
+    - {fileID: -2099104035, guid: 5fd0087daa208d6468e0352e7ea1d988, type: 3}
+    - {fileID: -1262641449, guid: 5fd0087daa208d6468e0352e7ea1d988, type: 3}
+    - {fileID: 765145937, guid: 5fd0087daa208d6468e0352e7ea1d988, type: 3}
+    - {fileID: 7406337, guid: 5fd0087daa208d6468e0352e7ea1d988, type: 3}
+    - {fileID: 290908963, guid: 5fd0087daa208d6468e0352e7ea1d988, type: 3}
+    - {fileID: -1741107085, guid: 5fd0087daa208d6468e0352e7ea1d988, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    - 0.5
+    - 0.5833333
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 1
+    Length: 0.6666667
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Werewolf/WalkRight.anim
+    SourceClip: {fileID: 7400000, guid: be91d29e650342b3952718b8781db279, type: 2}
+    Sprites:
+    - {fileID: 772865672, guid: 5fd0087daa208d6468e0352e7ea1d988, type: 3}
+    - {fileID: 1573279784, guid: 5fd0087daa208d6468e0352e7ea1d988, type: 3}
+    - {fileID: -2099104035, guid: 5fd0087daa208d6468e0352e7ea1d988, type: 3}
+    - {fileID: -1262641449, guid: 5fd0087daa208d6468e0352e7ea1d988, type: 3}
+    - {fileID: 765145937, guid: 5fd0087daa208d6468e0352e7ea1d988, type: 3}
+    - {fileID: 7406337, guid: 5fd0087daa208d6468e0352e7ea1d988, type: 3}
+    - {fileID: 290908963, guid: 5fd0087daa208d6468e0352e7ea1d988, type: 3}
+    - {fileID: -1741107085, guid: 5fd0087daa208d6468e0352e7ea1d988, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    - 0.5
+    - 0.5833333
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 0
+    Length: 0.6666667
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Werewolf/Attack01Left.anim
+    SourceClip: {fileID: 7400000, guid: de99fca8571445ab9f5f8de2c2f75bd1, type: 2}
+    Sprites:
+    - {fileID: -1998636234, guid: 80ad2241836ea26448d80786fc79fcd4, type: 3}
+    - {fileID: 884115556, guid: 80ad2241836ea26448d80786fc79fcd4, type: 3}
+    - {fileID: -1352542545, guid: 80ad2241836ea26448d80786fc79fcd4, type: 3}
+    - {fileID: 2123558022, guid: 80ad2241836ea26448d80786fc79fcd4, type: 3}
+    - {fileID: -541553442, guid: 80ad2241836ea26448d80786fc79fcd4, type: 3}
+    - {fileID: 1526714918, guid: 80ad2241836ea26448d80786fc79fcd4, type: 3}
+    - {fileID: 819254551, guid: 80ad2241836ea26448d80786fc79fcd4, type: 3}
+    - {fileID: 120941967, guid: 80ad2241836ea26448d80786fc79fcd4, type: 3}
+    - {fileID: 1326099669, guid: 80ad2241836ea26448d80786fc79fcd4, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 1
+    Length: 0.75
+    IsLooping: 0
+  - ClipPath: Assets/Res/Animation/Werewolf/Attack01Right.anim
+    SourceClip: {fileID: 7400000, guid: 66be51ab8aee4d45ae955797046a46a6, type: 2}
+    Sprites:
+    - {fileID: -1998636234, guid: 80ad2241836ea26448d80786fc79fcd4, type: 3}
+    - {fileID: 884115556, guid: 80ad2241836ea26448d80786fc79fcd4, type: 3}
+    - {fileID: -1352542545, guid: 80ad2241836ea26448d80786fc79fcd4, type: 3}
+    - {fileID: 2123558022, guid: 80ad2241836ea26448d80786fc79fcd4, type: 3}
+    - {fileID: -541553442, guid: 80ad2241836ea26448d80786fc79fcd4, type: 3}
+    - {fileID: 1526714918, guid: 80ad2241836ea26448d80786fc79fcd4, type: 3}
+    - {fileID: 819254551, guid: 80ad2241836ea26448d80786fc79fcd4, type: 3}
+    - {fileID: 120941967, guid: 80ad2241836ea26448d80786fc79fcd4, type: 3}
+    - {fileID: 1326099669, guid: 80ad2241836ea26448d80786fc79fcd4, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 0
+    Length: 0.75
+    IsLooping: 0
+  - ClipPath: Assets/Res/Animation/Werewolf/Attack02Left.anim
+    SourceClip: {fileID: 7400000, guid: 598034b1882f4809bf355863535d5cbf, type: 2}
+    Sprites:
+    - {fileID: -1998636234, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    - {fileID: 884115556, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    - {fileID: -1352542545, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    - {fileID: 2123558022, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    - {fileID: -541553442, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    - {fileID: 1526714918, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    - {fileID: 819254551, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    - {fileID: 120941967, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    - {fileID: 1326099669, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    - {fileID: -768794996, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    - {fileID: 873244623, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    - {fileID: 777808135, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    - {fileID: 29512787, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    - 0.75
+    - 0.8333333
+    - 0.9166667
+    - 1
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 1
+    Length: 1.0833334
+    IsLooping: 0
+  - ClipPath: Assets/Res/Animation/Werewolf/Attack02Right.anim
+    SourceClip: {fileID: 7400000, guid: 4b7bc71eeeca4d039c223ef532c0c1ee, type: 2}
+    Sprites:
+    - {fileID: -1998636234, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    - {fileID: 884115556, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    - {fileID: -1352542545, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    - {fileID: 2123558022, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    - {fileID: -541553442, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    - {fileID: 1526714918, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    - {fileID: 819254551, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    - {fileID: 120941967, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    - {fileID: 1326099669, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    - {fileID: -768794996, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    - {fileID: 873244623, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    - {fileID: 777808135, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    - {fileID: 29512787, guid: e7e59583b36c6144dace90468be41212, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    - 0.75
+    - 0.8333333
+    - 0.9166667
+    - 1
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 0
+    Length: 1.0833334
+    IsLooping: 0
+  - ClipPath: Assets/Res/Animation/Werewolf/HurtLeft.anim
+    SourceClip: {fileID: 7400000, guid: d6c15d6f893b45d8a92128f58cacb775, type: 2}
+    Sprites:
+    - {fileID: 987186672, guid: 210b6ed9132b72d4d8e358243ab24108, type: 3}
+    - {fileID: -1546455065, guid: 210b6ed9132b72d4d8e358243ab24108, type: 3}
+    - {fileID: 1293379946, guid: 210b6ed9132b72d4d8e358243ab24108, type: 3}
+    - {fileID: 1253992308, guid: 210b6ed9132b72d4d8e358243ab24108, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 1
+    Length: 0.33333334
+    IsLooping: 0
+  - ClipPath: Assets/Res/Animation/Werewolf/HurtRight.anim
+    SourceClip: {fileID: 7400000, guid: d28bf8bbe62949959b4541f5581d635f, type: 2}
+    Sprites:
+    - {fileID: 987186672, guid: 210b6ed9132b72d4d8e358243ab24108, type: 3}
+    - {fileID: -1546455065, guid: 210b6ed9132b72d4d8e358243ab24108, type: 3}
+    - {fileID: 1293379946, guid: 210b6ed9132b72d4d8e358243ab24108, type: 3}
+    - {fileID: 1253992308, guid: 210b6ed9132b72d4d8e358243ab24108, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 0
+    Length: 0.33333334
+    IsLooping: 0
+  - ClipPath: Assets/Res/Animation/Werewolf/DeathLeft.anim
+    SourceClip: {fileID: 7400000, guid: 4509c105b90148509680c90e9cd3ac2a, type: 2}
+    Sprites:
+    - {fileID: -1749866757, guid: 9fc25e8f7b8e6994fa5e735b3b787fef, type: 3}
+    - {fileID: -1549211982, guid: 9fc25e8f7b8e6994fa5e735b3b787fef, type: 3}
+    - {fileID: -440415288, guid: 9fc25e8f7b8e6994fa5e735b3b787fef, type: 3}
+    - {fileID: -1156948260, guid: 9fc25e8f7b8e6994fa5e735b3b787fef, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 1
+    Length: 0.33333334
+    IsLooping: 0
+  - ClipPath: Assets/Res/Animation/Werewolf/DeathRight.anim
+    SourceClip: {fileID: 7400000, guid: 6c1e970b43474d94b10fb3797c4eee21, type: 2}
+    Sprites:
+    - {fileID: -1749866757, guid: 9fc25e8f7b8e6994fa5e735b3b787fef, type: 3}
+    - {fileID: -1549211982, guid: 9fc25e8f7b8e6994fa5e735b3b787fef, type: 3}
+    - {fileID: -440415288, guid: 9fc25e8f7b8e6994fa5e735b3b787fef, type: 3}
+    - {fileID: -1156948260, guid: 9fc25e8f7b8e6994fa5e735b3b787fef, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 0
+    Length: 0.33333334
+    IsLooping: 0
   - ClipPath: Assets/Res/Animation/Effects/FireballProjectileLoop.anim
     SourceClip: {fileID: 7400000, guid: 2cf85dd8ceda4314a72abe5b8cd251cd, type: 2}
     Sprites:
@@ -458,4 +754,356 @@ MonoBehaviour:
     FlipXTimes: []
     FlipXValues: []
     Length: 0.4375
+    IsLooping: 0
+  - ClipPath: Assets/Res/Animation/Werebear/IdleLeft.anim
+    SourceClip: {fileID: 7400000, guid: 4681153e325848fe9a54f873c4faff21, type: 2}
+    Sprites:
+    - {fileID: 1959632017, guid: a9e883e2bda1e0945b8c41c054bc92d3, type: 3}
+    - {fileID: -1585509690, guid: a9e883e2bda1e0945b8c41c054bc92d3, type: 3}
+    - {fileID: 1627160456, guid: a9e883e2bda1e0945b8c41c054bc92d3, type: 3}
+    - {fileID: -1266185242, guid: a9e883e2bda1e0945b8c41c054bc92d3, type: 3}
+    - {fileID: -1683984207, guid: a9e883e2bda1e0945b8c41c054bc92d3, type: 3}
+    - {fileID: -1496459408, guid: a9e883e2bda1e0945b8c41c054bc92d3, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 1
+    Length: 0.5
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Werebear/IdleRight.anim
+    SourceClip: {fileID: 7400000, guid: 3e544421ed2a49ed92402cceacc006e6, type: 2}
+    Sprites:
+    - {fileID: 1959632017, guid: a9e883e2bda1e0945b8c41c054bc92d3, type: 3}
+    - {fileID: -1585509690, guid: a9e883e2bda1e0945b8c41c054bc92d3, type: 3}
+    - {fileID: 1627160456, guid: a9e883e2bda1e0945b8c41c054bc92d3, type: 3}
+    - {fileID: -1266185242, guid: a9e883e2bda1e0945b8c41c054bc92d3, type: 3}
+    - {fileID: -1683984207, guid: a9e883e2bda1e0945b8c41c054bc92d3, type: 3}
+    - {fileID: -1496459408, guid: a9e883e2bda1e0945b8c41c054bc92d3, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 0
+    Length: 0.5
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Werebear/WalkLeft.anim
+    SourceClip: {fileID: 7400000, guid: 7075b646c91d4d65b67b04b3377cb345, type: 2}
+    Sprites:
+    - {fileID: 772865672, guid: b6779574a9bbff4489457c7ab5bdefb1, type: 3}
+    - {fileID: 1573279784, guid: b6779574a9bbff4489457c7ab5bdefb1, type: 3}
+    - {fileID: -2099104035, guid: b6779574a9bbff4489457c7ab5bdefb1, type: 3}
+    - {fileID: -1262641449, guid: b6779574a9bbff4489457c7ab5bdefb1, type: 3}
+    - {fileID: 765145937, guid: b6779574a9bbff4489457c7ab5bdefb1, type: 3}
+    - {fileID: 7406337, guid: b6779574a9bbff4489457c7ab5bdefb1, type: 3}
+    - {fileID: 290908963, guid: b6779574a9bbff4489457c7ab5bdefb1, type: 3}
+    - {fileID: -1741107085, guid: b6779574a9bbff4489457c7ab5bdefb1, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    - 0.5
+    - 0.5833333
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 1
+    Length: 0.6666667
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Werebear/WalkRight.anim
+    SourceClip: {fileID: 7400000, guid: 82c7d071e2614c3b8d799fa32b7730e3, type: 2}
+    Sprites:
+    - {fileID: 772865672, guid: b6779574a9bbff4489457c7ab5bdefb1, type: 3}
+    - {fileID: 1573279784, guid: b6779574a9bbff4489457c7ab5bdefb1, type: 3}
+    - {fileID: -2099104035, guid: b6779574a9bbff4489457c7ab5bdefb1, type: 3}
+    - {fileID: -1262641449, guid: b6779574a9bbff4489457c7ab5bdefb1, type: 3}
+    - {fileID: 765145937, guid: b6779574a9bbff4489457c7ab5bdefb1, type: 3}
+    - {fileID: 7406337, guid: b6779574a9bbff4489457c7ab5bdefb1, type: 3}
+    - {fileID: 290908963, guid: b6779574a9bbff4489457c7ab5bdefb1, type: 3}
+    - {fileID: -1741107085, guid: b6779574a9bbff4489457c7ab5bdefb1, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    - 0.5
+    - 0.5833333
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 0
+    Length: 0.6666667
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Werebear/Attack01Left.anim
+    SourceClip: {fileID: 7400000, guid: 5daab2b22d5c4f5c8e572d08b48ea0b3, type: 2}
+    Sprites:
+    - {fileID: -1998636234, guid: 06b3066ee51acff4ca58e387c1b3a267, type: 3}
+    - {fileID: 884115556, guid: 06b3066ee51acff4ca58e387c1b3a267, type: 3}
+    - {fileID: -1352542545, guid: 06b3066ee51acff4ca58e387c1b3a267, type: 3}
+    - {fileID: 2123558022, guid: 06b3066ee51acff4ca58e387c1b3a267, type: 3}
+    - {fileID: -541553442, guid: 06b3066ee51acff4ca58e387c1b3a267, type: 3}
+    - {fileID: 1526714918, guid: 06b3066ee51acff4ca58e387c1b3a267, type: 3}
+    - {fileID: 819254551, guid: 06b3066ee51acff4ca58e387c1b3a267, type: 3}
+    - {fileID: 120941967, guid: 06b3066ee51acff4ca58e387c1b3a267, type: 3}
+    - {fileID: 1326099669, guid: 06b3066ee51acff4ca58e387c1b3a267, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 1
+    Length: 0.75
+    IsLooping: 0
+  - ClipPath: Assets/Res/Animation/Werebear/Attack01Right.anim
+    SourceClip: {fileID: 7400000, guid: c903e76e50ae4acc8a17540564624edb, type: 2}
+    Sprites:
+    - {fileID: -1998636234, guid: 06b3066ee51acff4ca58e387c1b3a267, type: 3}
+    - {fileID: 884115556, guid: 06b3066ee51acff4ca58e387c1b3a267, type: 3}
+    - {fileID: -1352542545, guid: 06b3066ee51acff4ca58e387c1b3a267, type: 3}
+    - {fileID: 2123558022, guid: 06b3066ee51acff4ca58e387c1b3a267, type: 3}
+    - {fileID: -541553442, guid: 06b3066ee51acff4ca58e387c1b3a267, type: 3}
+    - {fileID: 1526714918, guid: 06b3066ee51acff4ca58e387c1b3a267, type: 3}
+    - {fileID: 819254551, guid: 06b3066ee51acff4ca58e387c1b3a267, type: 3}
+    - {fileID: 120941967, guid: 06b3066ee51acff4ca58e387c1b3a267, type: 3}
+    - {fileID: 1326099669, guid: 06b3066ee51acff4ca58e387c1b3a267, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 0
+    Length: 0.75
+    IsLooping: 0
+  - ClipPath: Assets/Res/Animation/Werebear/Attack02Left.anim
+    SourceClip: {fileID: 7400000, guid: d9e31afa04e44bee82f41af959da8419, type: 2}
+    Sprites:
+    - {fileID: -1998636234, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    - {fileID: 884115556, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    - {fileID: -1352542545, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    - {fileID: 2123558022, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    - {fileID: -541553442, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    - {fileID: 1526714918, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    - {fileID: 819254551, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    - {fileID: 120941967, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    - {fileID: 1326099669, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    - {fileID: -768794996, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    - {fileID: 873244623, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    - {fileID: 777808135, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    - {fileID: 29512787, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    - 0.75
+    - 0.8333333
+    - 0.9166667
+    - 1
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 1
+    Length: 1.0833334
+    IsLooping: 0
+  - ClipPath: Assets/Res/Animation/Werebear/Attack02Right.anim
+    SourceClip: {fileID: 7400000, guid: 8f15ff5282284968b98ae96b3cf91868, type: 2}
+    Sprites:
+    - {fileID: -1998636234, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    - {fileID: 884115556, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    - {fileID: -1352542545, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    - {fileID: 2123558022, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    - {fileID: -541553442, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    - {fileID: 1526714918, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    - {fileID: 819254551, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    - {fileID: 120941967, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    - {fileID: 1326099669, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    - {fileID: -768794996, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    - {fileID: 873244623, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    - {fileID: 777808135, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    - {fileID: 29512787, guid: dab8edf75a3014d4e8b7fc1df63375a7, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    - 0.75
+    - 0.8333333
+    - 0.9166667
+    - 1
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 0
+    Length: 1.0833334
+    IsLooping: 0
+  - ClipPath: Assets/Res/Animation/Werebear/Attack03Left.anim
+    SourceClip: {fileID: 7400000, guid: e8b769a1e6554ec6985f71a8a11a885b, type: 2}
+    Sprites:
+    - {fileID: -1998636234, guid: 685f5f987697fd246bb31c38bde1c4e4, type: 3}
+    - {fileID: 884115556, guid: 685f5f987697fd246bb31c38bde1c4e4, type: 3}
+    - {fileID: -1352542545, guid: 685f5f987697fd246bb31c38bde1c4e4, type: 3}
+    - {fileID: 2123558022, guid: 685f5f987697fd246bb31c38bde1c4e4, type: 3}
+    - {fileID: -541553442, guid: 685f5f987697fd246bb31c38bde1c4e4, type: 3}
+    - {fileID: 1526714918, guid: 685f5f987697fd246bb31c38bde1c4e4, type: 3}
+    - {fileID: 819254551, guid: 685f5f987697fd246bb31c38bde1c4e4, type: 3}
+    - {fileID: 120941967, guid: 685f5f987697fd246bb31c38bde1c4e4, type: 3}
+    - {fileID: 1326099669, guid: 685f5f987697fd246bb31c38bde1c4e4, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 1
+    Length: 0.75
+    IsLooping: 0
+  - ClipPath: Assets/Res/Animation/Werebear/Attack03Right.anim
+    SourceClip: {fileID: 7400000, guid: 4729b34696894cdfb31ef3cabef276ef, type: 2}
+    Sprites:
+    - {fileID: -1998636234, guid: 685f5f987697fd246bb31c38bde1c4e4, type: 3}
+    - {fileID: 884115556, guid: 685f5f987697fd246bb31c38bde1c4e4, type: 3}
+    - {fileID: -1352542545, guid: 685f5f987697fd246bb31c38bde1c4e4, type: 3}
+    - {fileID: 2123558022, guid: 685f5f987697fd246bb31c38bde1c4e4, type: 3}
+    - {fileID: -541553442, guid: 685f5f987697fd246bb31c38bde1c4e4, type: 3}
+    - {fileID: 1526714918, guid: 685f5f987697fd246bb31c38bde1c4e4, type: 3}
+    - {fileID: 819254551, guid: 685f5f987697fd246bb31c38bde1c4e4, type: 3}
+    - {fileID: 120941967, guid: 685f5f987697fd246bb31c38bde1c4e4, type: 3}
+    - {fileID: 1326099669, guid: 685f5f987697fd246bb31c38bde1c4e4, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 0
+    Length: 0.75
+    IsLooping: 0
+  - ClipPath: Assets/Res/Animation/Werebear/HurtLeft.anim
+    SourceClip: {fileID: 7400000, guid: bd8ecb0b79d74e83a803566174ea90db, type: 2}
+    Sprites:
+    - {fileID: 987186672, guid: f6a7b950d3d1af040a379c9ccd4a35c5, type: 3}
+    - {fileID: -1546455065, guid: f6a7b950d3d1af040a379c9ccd4a35c5, type: 3}
+    - {fileID: 1293379946, guid: f6a7b950d3d1af040a379c9ccd4a35c5, type: 3}
+    - {fileID: 1253992308, guid: f6a7b950d3d1af040a379c9ccd4a35c5, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 1
+    Length: 0.33333334
+    IsLooping: 0
+  - ClipPath: Assets/Res/Animation/Werebear/HurtRight.anim
+    SourceClip: {fileID: 7400000, guid: bee508923f384f84b9e8f35298844787, type: 2}
+    Sprites:
+    - {fileID: 987186672, guid: f6a7b950d3d1af040a379c9ccd4a35c5, type: 3}
+    - {fileID: -1546455065, guid: f6a7b950d3d1af040a379c9ccd4a35c5, type: 3}
+    - {fileID: 1293379946, guid: f6a7b950d3d1af040a379c9ccd4a35c5, type: 3}
+    - {fileID: 1253992308, guid: f6a7b950d3d1af040a379c9ccd4a35c5, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 0
+    Length: 0.33333334
+    IsLooping: 0
+  - ClipPath: Assets/Res/Animation/Werebear/DeathLeft.anim
+    SourceClip: {fileID: 7400000, guid: a43e31e5e68142a4a4da5c996750ddd8, type: 2}
+    Sprites:
+    - {fileID: -1749866757, guid: 5754fc2b4b607164e84dbe22bbd5fa29, type: 3}
+    - {fileID: -1549211982, guid: 5754fc2b4b607164e84dbe22bbd5fa29, type: 3}
+    - {fileID: -440415288, guid: 5754fc2b4b607164e84dbe22bbd5fa29, type: 3}
+    - {fileID: -1156948260, guid: 5754fc2b4b607164e84dbe22bbd5fa29, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 1
+    Length: 0.33333334
+    IsLooping: 0
+  - ClipPath: Assets/Res/Animation/Werebear/DeathRight.anim
+    SourceClip: {fileID: 7400000, guid: 83c5a487b9da4ceeb78d1bf8e5b1ee22, type: 2}
+    Sprites:
+    - {fileID: -1749866757, guid: 5754fc2b4b607164e84dbe22bbd5fa29, type: 3}
+    - {fileID: -1549211982, guid: 5754fc2b4b607164e84dbe22bbd5fa29, type: 3}
+    - {fileID: -440415288, guid: 5754fc2b4b607164e84dbe22bbd5fa29, type: 3}
+    - {fileID: -1156948260, guid: 5754fc2b4b607164e84dbe22bbd5fa29, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 0
+    Length: 0.33333334
     IsLooping: 0
