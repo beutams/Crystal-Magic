@@ -146,8 +146,8 @@ Core\
   GameComponent.cs TRUE
   GameEntry.cs TRUE DIRTY
   IGameComponent.cs TRUE
-  PersistentEventSystem.cs TRUE
-  Singleton.cs TRUE
+  PersistentEventSystem.cs TRUE DIRTY
+  Singleton.cs TRUE DIRTY
 Editor\
   PlayFromStartScene.cs FALSE
   UIConfigWindow.cs FALSE
@@ -711,3 +711,40 @@ UI\
     ButtonPlus.cs FALSE
     UISelectableListGroup.cs FALSE
     UISelectableListItem.cs FALSE
+Web\
+  Battle\
+    ClientBattleManager.cs TRUE DIRTY
+  Core\
+    ClientNetworkManager.cs TRUE DIRTY
+    NetworkTimer.cs TRUE DIRTY
+    ServerUtility.cs TRUE
+    Protocol\
+      TCPPacketCode.cs TRUE DIRTY
+    Service\
+      ClientService.cs TRUE DIRTY
+      ServerService.cs TRUE DIRTY
+    Service.cs TRUE DIRTY
+  Lobby\
+    ClientLobbyManager.cs TRUE DIRTY
+    Room.cs TRUE
+    RoomData.cs TRUE
+    ServerLobbyManager.cs TRUE
+    Protocol\
+      C2L_SetDungeonFloor.cs TRUE
+      L2B_StartRoom.cs TRUE
+  Battle\
+    BattleEnterData.cs TRUE
+    BattlePlayer.cs TRUE DIRTY
+    BattleRoom.cs TRUE DIRTY
+    BattleUnitData.cs TRUE
+    ServerBattleManager.cs TRUE DIRTY
+    ECS\
+      NetworkIdentityAuthoring.cs TRUE DIRTY
+      NetworkPlayerAuthoring.cs TRUE DIRTY
+    Protocol\
+      B2C_CreateBattleUnit.cs TRUE
+      B2C_EnterBattleResult.cs TRUE
+      C2B_SendUserData.cs TRUE
+Core\
+  Flow\
+    OnlineBattlePreparationState.cs TRUE DIRTY
