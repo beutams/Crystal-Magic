@@ -72,19 +72,16 @@ namespace CrystalMagic.Editor.Data
         private void DrawToolbar()
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            if (GUILayout.Button("Load", EditorStyles.toolbarButton, GUILayout.Width(44f)))
-                LoadThemes();
-
             GUI.enabled = _isDirty;
             if (GUILayout.Button(_isDirty ? "Save *" : "Save", EditorStyles.toolbarButton, GUILayout.Width(60f)))
                 SaveThemes();
             GUI.enabled = true;
 
-            if (GUILayout.Button("Add Theme", EditorStyles.toolbarButton, GUILayout.Width(76f)))
+            if (GUILayout.Button("Add", EditorStyles.toolbarButton, GUILayout.Width(52f)))
                 AddTheme();
 
             GUI.enabled = GetSelectedTheme() != null;
-            if (GUILayout.Button("Duplicate", EditorStyles.toolbarButton, GUILayout.Width(72f)))
+            if (GUILayout.Button("Copy", EditorStyles.toolbarButton, GUILayout.Width(56f)))
                 DuplicateTheme();
             if (GUILayout.Button("Delete", EditorStyles.toolbarButton, GUILayout.Width(56f)))
                 DeleteTheme();

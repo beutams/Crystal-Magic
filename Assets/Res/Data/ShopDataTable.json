@@ -1,193 +1,32 @@
 ﻿{
-    "Rows": [
-        {
-            "Id": 0,
-            "itemDataId": 0,
-            "Price": 25,
-            "Grade": 1,
-            "NPC": "SkillShop"
-        },
-        {
-            "Id": 1,
-            "itemDataId": 1,
-            "Price": 25,
-            "Grade": 1,
-            "NPC": "SkillShop"
-        },
-        {
-            "Id": 2,
-            "itemDataId": 2,
-            "Price": 25,
-            "Grade": 1,
-            "NPC": "SkillShop"
-        },
-        {
-            "Id": 3,
-            "itemDataId": 3,
-            "Price": 25,
-            "Grade": 1,
-            "NPC": "SkillShop"
-        },
-        {
-            "Id": 4,
-            "itemDataId": 4,
-            "Price": 25,
-            "Grade": 1,
-            "NPC": "SkillShop"
-        },
-        {
-            "Id": 5,
-            "itemDataId": 5,
-            "Price": 25,
-            "Grade": 1,
-            "NPC": "SkillShop"
-        },
-        {
-            "Id": 6,
-            "itemDataId": 6,
-            "Price": 25,
-            "Grade": 1,
-            "NPC": "SkillShop"
-        },
-        {
-            "Id": 7,
-            "itemDataId": 7,
-            "Price": 25,
-            "Grade": 1,
-            "NPC": "SkillShop"
-        },
-        {
-            "Id": 8,
-            "itemDataId": 8,
-            "Price": 25,
-            "Grade": 1,
-            "NPC": "SkillShop"
-        },
-        {
-            "Id": 9,
-            "itemDataId": 9,
-            "Price": 25,
-            "Grade": 1,
-            "NPC": "SkillShop"
-        },
-        {
-            "Id": 10,
-            "itemDataId": 10,
-            "Price": 25,
-            "Grade": 1,
-            "NPC": "SkillShop"
-        },
-        {
-            "Id": 11,
-            "itemDataId": 11,
-            "Price": 25,
-            "Grade": 1,
-            "NPC": "SkillShop"
-        },
-        {
-            "Id": 12,
-            "itemDataId": 12,
-            "Price": 25,
-            "Grade": 1,
-            "NPC": "SkillShop"
-        },
-        {
-            "Id": 13,
-            "itemDataId": 13,
-            "Price": 100,
-            "Grade": 1,
-            "NPC": "EquipShop"
-        },
-        {
-            "Id": 14,
-            "itemDataId": 14,
-            "Price": 100,
-            "Grade": 1,
-            "NPC": "EquipShop"
-        },
-        {
-            "Id": 15,
-            "itemDataId": 15,
-            "Price": 100,
-            "Grade": 1,
-            "NPC": "EquipShop"
-        },
-        {
-            "Id": 16,
-            "itemDataId": 16,
-            "Price": 100,
-            "Grade": 1,
-            "NPC": "EquipShop"
-        },
-        {
-            "Id": 17,
-            "itemDataId": 17,
-            "Price": 100,
-            "Grade": 1,
-            "NPC": "EquipShop"
-        },
-        {
-            "Id": 18,
-            "itemDataId": 18,
-            "Price": 100,
-            "Grade": 1,
-            "NPC": "EquipShop"
-        },
-        {
-            "Id": 19,
-            "itemDataId": 19,
-            "Price": 100,
-            "Grade": 1,
-            "NPC": "EquipShop"
-        },
-        {
-            "Id": 20,
-            "itemDataId": 20,
-            "Price": 100,
-            "Grade": 1,
-            "NPC": "EquipShop"
-        },
-        {
-            "Id": 21,
-            "itemDataId": 21,
-            "Price": 100,
-            "Grade": 1,
-            "NPC": "EquipShop"
-        },
-        {
-            "Id": 22,
-            "itemDataId": 22,
-            "Price": 100,
-            "Grade": 1,
-            "NPC": "EquipShop"
-        },
-        {
-            "Id": 23,
-            "itemDataId": 23,
-            "Price": 100,
-            "Grade": 1,
-            "NPC": "EquipShop"
-        },
-        {
-            "Id": 24,
-            "itemDataId": 24,
-            "Price": 10,
-            "Grade": 1,
-            "NPC": "PropShop"
-        },
-        {
-            "Id": 25,
-            "itemDataId": 25,
-            "Price": 10,
-            "Grade": 1,
-            "NPC": "PropShop"
-        },
-        {
-            "Id": 26,
-            "itemDataId": 30,
-            "Price": 0,
-            "Grade": 1,
-            "NPC": "EquipShop"
-        }
-    ]
+  "Rows": [
+    {
+      "Id": 0,
+      "itemDataId": 0,
+      "Price": 30,
+      "Grade": 1,
+      "NPC": "EquipShop"
+    },
+    {
+      "Id": 1,
+      "itemDataId": 1,
+      "Price": 0,
+      "Grade": 1,
+      "NPC": "EquipShop"
+    },
+    {
+      "Id": 2,
+      "itemDataId": 2,
+      "Price": 30,
+      "Grade": 1,
+      "NPC": "PropShop"
+    },
+    {
+      "Id": 3,
+      "itemDataId": 3,
+      "Price": 30,
+      "Grade": 1,
+      "NPC": "SkillShop"
+    }
+  ]
 }

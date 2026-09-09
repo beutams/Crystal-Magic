@@ -25,7 +25,8 @@ namespace CrystalMagic.Game.OpenField
                 for (int x = 0; x < layout.Width; x++)
                 {
                     float value = SampleFbmPerlin(x, y, offsetX, offsetY, baseScale, validatedConfig);
-                    layout.SetTerrain(x, y, value, Classify(value, validatedConfig));
+                    OpenFieldTerrainCell terrainCell = Classify(value, validatedConfig);
+                    layout.SetTerrain(x, y, value, terrainCell, GetHeightSteps(value, terrainCell, validatedConfig));
                 }
             }
 
@@ -59,6 +60,26 @@ namespace CrystalMagic.Game.OpenField
                 return OpenFieldTerrainCell.Ground;
 
             return OpenFieldTerrainCell.Obstacle;
+        }
+
+        private static int GetHeightSteps(float value, OpenFieldTerrainCell terrainCell, OpenFieldDungeonTerrainConfig config)
+        {
+            return terrainCell switch
+            {
+                OpenFieldTerrainCell.Void => -1,
+                OpenFieldTerrainCell.Ground => 0,
+                OpenFieldTerrainCell.Obstacle => InterpolateObstacleHeight(value, config),
+                _ => throw new ArgumentOutOfRangeException(nameof(terrainCell), terrainCell, null),
+            };
+        }
+
+        private static int InterpolateObstacleHeight(float value, OpenFieldDungeonTerrainConfig config)
+        {
+            double normalizedHeight = Mathf.InverseLerp(config.GroundToObstacleThreshold, 1f, value);
+            long heightRange = (long)config.MaximumObstacleHeight - config.MinimumObstacleHeight;
+            long offset = (long)Math.Floor(heightRange * normalizedHeight + 0.5d);
+            long height = (long)config.MinimumObstacleHeight + offset;
+            return (int)Math.Max(config.MinimumObstacleHeight, Math.Min(config.MaximumObstacleHeight, height));
         }
     }
 }

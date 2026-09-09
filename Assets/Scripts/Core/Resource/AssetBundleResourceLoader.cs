@@ -85,6 +85,67 @@ namespace CrystalMagic.Core
             return asset;
         }
 
+        public Sprite LoadSprite(string path, string spriteName)
+        {
+            string normalizedPath = AssetBundlePlatformUtility.NormalizeAssetPath(path);
+            string cacheKey = $"{normalizedPath}|{spriteName}";
+            if (string.IsNullOrWhiteSpace(normalizedPath) || string.IsNullOrWhiteSpace(spriteName) || !EnsureCatalogLoaded())
+                return null;
+
+            if (_loadedAssets.TryGetValue(cacheKey, out Object cachedAsset))
+            {
+                if (cachedAsset is not Sprite cachedSprite)
+                {
+                    Debug.LogError($"[AssetBundleResourceLoader] Cached asset type mismatch for '{cacheKey}'. Requested 'Sprite', cached '{cachedAsset.GetType().Name}'.");
+                    return null;
+                }
+
+                _assetRefCounts[cacheKey] = _assetRefCounts.TryGetValue(cacheKey, out int cachedCount)
+                    ? cachedCount + 1
+                    : 1;
+                return cachedSprite;
+            }
+
+            if (!_catalog.TryGetAsset(normalizedPath, out BundleRuntimeAssetEntry assetEntry))
+            {
+                Debug.LogError($"[AssetBundleResourceLoader] Catalog entry not found for '{normalizedPath}'.");
+                return null;
+            }
+
+            AcquireBundlesForAsset(assetEntry);
+            if (!_loadedBundles.TryGetValue(assetEntry.BundleName, out AssetBundle bundle) || bundle == null)
+            {
+                Debug.LogError($"[AssetBundleResourceLoader] Bundle '{assetEntry.BundleName}' is not loaded for asset '{normalizedPath}'.");
+                ReleaseBundlesForAsset(assetEntry);
+                return null;
+            }
+
+            Sprite[] sprites = bundle.LoadAssetWithSubAssets<Sprite>(normalizedPath);
+            if (sprites == null || sprites.Length == 0)
+                sprites = bundle.LoadAssetWithSubAssets<Sprite>(Path.GetFileNameWithoutExtension(normalizedPath));
+
+            Sprite sprite = null;
+            for (int i = 0; sprites != null && i < sprites.Length; i++)
+            {
+                if (sprites[i] != null && sprites[i].name == spriteName)
+                {
+                    sprite = sprites[i];
+                    break;
+                }
+            }
+
+            if (sprite == null)
+            {
+                Debug.LogError($"[AssetBundleResourceLoader] Sprite '{spriteName}' not found in '{normalizedPath}'.");
+                ReleaseBundlesForAsset(assetEntry);
+                return null;
+            }
+
+            _loadedAssets[cacheKey] = sprite;
+            _assetRefCounts[cacheKey] = 1;
+            return sprite;
+        }
+
         public IEnumerator LoadAsync<T>(string path, System.Action<T> onComplete) where T : Object
         {
             T asset = Load<T>(path);
@@ -108,7 +169,10 @@ namespace CrystalMagic.Core
             _assetRefCounts.Remove(normalizedPath);
             _loadedAssets.Remove(normalizedPath);
 
-            if (_catalog != null && _catalog.TryGetAsset(normalizedPath, out BundleRuntimeAssetEntry assetEntry))
+            string assetPath = AssetBundlePlatformUtility.TrySplitSubAssetPath(normalizedPath, out string splitAssetPath, out _)
+                ? splitAssetPath
+                : normalizedPath;
+            if (_catalog != null && _catalog.TryGetAsset(assetPath, out BundleRuntimeAssetEntry assetEntry))
             {
                 ReleaseBundlesForAsset(assetEntry);
             }

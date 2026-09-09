@@ -1,6 +1,16 @@
 ﻿namespace CrystalMagic.UI
 {
-    public sealed class LoadUIModel : UIModelBase
+    public readonly struct LoadUIOpenData
+    {
+        public LoadUIOpenData(System.Action<int> loadConfirmed)
+        {
+            LoadConfirmed = loadConfirmed ?? throw new System.ArgumentNullException(nameof(loadConfirmed));
+        }
+
+        public System.Action<int> LoadConfirmed { get; }
+    }
+
+    public sealed class LoadUIModel : UIModelBase, IUIOpenDataReceiver<LoadUIOpenData>
     {
         public const string SaveRecordsChangedEventName = "LoadUIModel.SaveRecordsChanged";
         public override string ChangedEventName => SaveRecordsChangedEventName;
@@ -10,6 +20,18 @@
 
         public int SlotCountValue => SlotCount;
         public CrystalMagic.Core.SaveRecord[] SaveRecords => _saveRecords;
+
+        private System.Action<int> LoadConfirmed { get; set; }
+
+        public void SetOpenData(LoadUIOpenData data)
+        {
+            LoadConfirmed = data.LoadConfirmed;
+        }
+
+        public void ConfirmLoad(int slotIndex)
+        {
+            LoadConfirmed(slotIndex);
+        }
 
         public void SetSaveRecords(System.Collections.Generic.IEnumerable<CrystalMagic.Core.SaveRecord> records)
         {

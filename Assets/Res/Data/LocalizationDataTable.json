@@ -92,9 +92,9 @@
         },
         {
             "Id": 15,
-            "Key": "ui.training.stats.health",
-            "ChineseSimplified": "生命: {0} / {1}",
-            "English": "Health: {0} / {1}"
+            "Key": "ui.training.stats.max_health",
+            "ChineseSimplified": "总生命值: {0}",
+            "English": "Max Health: {0}"
         },
         {
             "Id": 16,
@@ -170,9 +170,9 @@
         },
         {
             "Id": 28,
-            "Key": "ui.training.stats.total_damage",
-            "ChineseSimplified": "累计伤害: {0}",
-            "English": "Total Damage: {0}"
+            "Key": "ui.training.stats.last_damage",
+            "ChineseSimplified": "最后一次伤害: {0}",
+            "English": "Last Damage: {0}"
         },
         {
             "Id": 29,
@@ -183,8 +183,8 @@
         {
             "Id": 30,
             "Key": "ui.training.stats.average_dps",
-            "ChineseSimplified": "平均 DPS: {0}",
-            "English": "Average DPS: {0}"
+            "ChineseSimplified": "平均每秒伤害: {0}",
+            "English": "Average Damage Per Second: {0}"
         },
         {
             "Id": 31,
@@ -887,6 +887,24 @@
             "Key": "loadui.empty",
             "ChineseSimplified": "无存档",
             "English": "Empty"
+        },
+        {
+            "Id": 148,
+            "Key": "ui.game_menu.continue",
+            "ChineseSimplified": "继续",
+            "English": "Continue"
+        },
+        {
+            "Id": 149,
+            "Key": "ui.game_menu.return_main_menu",
+            "ChineseSimplified": "返回主菜单",
+            "English": "Return to Main Menu"
+        },
+        {
+            "Id": 150,
+            "Key": "ui.confirm.save_success.content",
+            "ChineseSimplified": "存档保存成功。",
+            "English": "Game saved successfully."
         }
     ]
 }

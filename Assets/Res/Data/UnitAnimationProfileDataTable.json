@@ -1,5 +1,231 @@
 ﻿{
-    "Rows":  [
-
-             ]
+  "Rows": [
+    {
+      "UnitDataId": 1,
+      "UnitName": "PlayerTown",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Player/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Player/IdleRight.anim"
+        },
+        {
+          "Name": "Move",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Player/WalkLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Player/WalkRight.anim"
+        }
+      ],
+      "Id": 0
+    },
+    {
+      "UnitDataId": 2,
+      "UnitName": "PlayerDungeon",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Player/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Player/IdleRight.anim"
+        },
+        {
+          "Name": "Move",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Player/WalkLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Player/WalkRight.anim"
+        },
+        {
+          "Name": "Attack",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Player/AttackLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Player/AttackRight.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Player/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Player/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Player/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Player/DeathRight.anim"
+        }
+      ],
+      "Id": 1
+    },
+    {
+      "UnitDataId": 3,
+      "UnitName": "MonsterStraw",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/MonsterStraw/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/MonsterStraw/IdleRight.anim"
+        },
+        {
+          "Name": "Move",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/MonsterStraw/WalkLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/MonsterStraw/WalkRight.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/MonsterStraw/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/MonsterStraw/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/MonsterStraw/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/MonsterStraw/DeathRight.anim"
+        }
+      ],
+      "Id": 2
+    },
+    {
+      "UnitDataId": 9,
+      "UnitName": "Werewolf",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Werewolf/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Werewolf/IdleRight.anim"
+        },
+        {
+          "Name": "Move",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Werewolf/WalkLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Werewolf/WalkRight.anim"
+        },
+        {
+          "Name": "Attack01",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Werewolf/Attack01Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Werewolf/Attack01Right.anim"
+        },
+        {
+          "Name": "Attack02",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Werewolf/Attack02Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Werewolf/Attack02Right.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Werewolf/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Werewolf/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Werewolf/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Werewolf/DeathRight.anim"
+        }
+      ],
+      "Id": 3
+    },
+    {
+      "UnitDataId": 10,
+      "UnitName": "Werebear",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Werebear/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Werebear/IdleRight.anim"
+        },
+        {
+          "Name": "Move",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Werebear/WalkLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Werebear/WalkRight.anim"
+        },
+        {
+          "Name": "Attack01",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Werebear/Attack01Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Werebear/Attack01Right.anim"
+        },
+        {
+          "Name": "Attack02",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Werebear/Attack02Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Werebear/Attack02Right.anim"
+        },
+        {
+          "Name": "Attack03",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Werebear/Attack03Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Werebear/Attack03Right.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Werebear/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Werebear/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Werebear/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Werebear/DeathRight.anim"
+        }
+      ],
+      "Id": 4
+    }
+  ]
 }

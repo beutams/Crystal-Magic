@@ -10,7 +10,6 @@ namespace CrystalMagic.Core
         private const string UIPlayerInputLockReason = "BattleStateBase.UIOpen";
         private UIBase _battleUI;
         private CharacterUI _characterUI;
-        private PropertyUI _propertyUI;
         private GameMenuUI _gameMenuUI;
         private UnitHealthBarManager _unitHealthBarManager;
         private InteractionPromptManager _interactionPromptManager;
@@ -51,7 +50,6 @@ namespace CrystalMagic.Core
             UnbindInput();
             OnExitBattle();
             _characterUI = null;
-            _propertyUI = null;
             _battleUI = null;
         }
 
@@ -83,7 +81,6 @@ namespace CrystalMagic.Core
                 return;
 
             InputComponent.Instance.OnInventory += HandleInventory;
-            InputComponent.Instance.OnProperty += HandleProperty;
             if (UIComponent.Instance != null)
                 UIComponent.Instance.EscapeUnhandled += HandleUnhandledEscape;
             _inputBound = true;
@@ -97,7 +94,6 @@ namespace CrystalMagic.Core
             if (InputComponent.Instance != null)
             {
                 InputComponent.Instance.OnInventory -= HandleInventory;
-                InputComponent.Instance.OnProperty -= HandleProperty;
             }
             if (UIComponent.Instance != null)
                 UIComponent.Instance.EscapeUnhandled -= HandleUnhandledEscape;
@@ -121,23 +117,6 @@ namespace CrystalMagic.Core
             UIComponent.Instance.ShowUI(_characterUI);
         }
 
-        private void HandleProperty()
-        {
-            if (_propertyUI == null || !UIComponent.Instance.IsManaged(_propertyUI))
-            {
-                _propertyUI = UIComponent.Instance.Open<PropertyUI>();
-                return;
-            }
-
-            if (_propertyUI.gameObject.activeSelf)
-            {
-                _propertyUI.Close();
-                return;
-            }
-
-            UIComponent.Instance.ShowUI(_propertyUI);
-        }
-
         private void HandleUnhandledEscape()
         {
             if (_gameMenuUI == null || !UIComponent.Instance.IsManaged(_gameMenuUI))
@@ -155,7 +134,7 @@ namespace CrystalMagic.Core
         private void RefreshUIInputLock()
         {
             bool shouldLock = UIComponent.Instance != null
-                && UIComponent.Instance.HasActiveSceneScopedPanel(BattleSceneName, BattleUIName);
+                && UIComponent.Instance.HasActiveSceneScopedPanel(BattleSceneName, BattleUIName, "MinimapUI");
             if (shouldLock == _playerInputLockedByUI)
                 return;
 
@@ -184,6 +163,7 @@ namespace CrystalMagic.Core
         public const string SceneName = "DungeonScene";
         protected override string BattleSceneName => SceneName;
         private bool _isProcessingDefeat;
+        private MinimapUI _minimapUI;
 
         public static TransitionData CreateEnterTransitionData(LoadGameContext context)
         {
@@ -226,6 +206,8 @@ namespace CrystalMagic.Core
             LoadGameContext context = StateData as LoadGameContext;
             int dungeonFloor = PrepareDungeonRun(context);
             Debug.Log($"[DungeonState] Resuming dungeon at floor: {dungeonFloor}");
+            _minimapUI = UIComponent.Instance.Open<MinimapUI>();
+            UIComponent.Instance.SetLifetime(_minimapUI, UILifetime.SceneScoped);
         }
 
         private void HandleUnitDied(UnitDiedEvent gameEvent)
@@ -255,6 +237,9 @@ namespace CrystalMagic.Core
 
         protected override void OnExitBattle()
         {
+            if (_minimapUI != null && UIComponent.Instance.IsManaged(_minimapUI))
+                UIComponent.Instance.CloseUI(_minimapUI);
+            _minimapUI = null;
             EventComponent.Instance?.Unsubscribe<UnitDiedEvent>(HandleUnitDied);
             Debug.Log("[DungeonState] Exited Dungeon");
         }

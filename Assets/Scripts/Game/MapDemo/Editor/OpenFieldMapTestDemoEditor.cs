@@ -14,6 +14,7 @@ namespace CrystalMagic.Game.MapDemo.Editor
         private SerializedProperty _terrainGenerationMethod;
         private SerializedProperty _fbmPerlinTerrain;
         private SerializedProperty _voronoiTerrain;
+        private SerializedProperty _terracedRegionTerrain;
         private SerializedProperty _gameplayContent;
 
         private void OnEnable()
@@ -23,6 +24,7 @@ namespace CrystalMagic.Game.MapDemo.Editor
             _terrainGenerationMethod = serializedObject.FindProperty("_terrainGenerationMethod");
             _fbmPerlinTerrain = serializedObject.FindProperty("_fbmPerlinTerrain");
             _voronoiTerrain = serializedObject.FindProperty("_voronoiTerrain");
+            _terracedRegionTerrain = serializedObject.FindProperty("_terracedRegionTerrain");
             _gameplayContent = serializedObject.FindProperty("_gameplayContent");
         }
 
@@ -37,18 +39,27 @@ namespace CrystalMagic.Game.MapDemo.Editor
             EditorGUILayout.LabelField("Terrain Generation", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(_terrainGenerationMethod);
 
-            bool usesFbmPerlin = _terrainGenerationMethod.enumValueIndex == 0;
+            int terrainMethod = _terrainGenerationMethod.enumValueIndex;
+            SerializedProperty terrainSettings = terrainMethod switch
+            {
+                0 => _fbmPerlinTerrain,
+                1 => _voronoiTerrain,
+                _ => _terracedRegionTerrain,
+            };
             EditorGUILayout.Space();
-            EditorGUILayout.PropertyField(usesFbmPerlin ? _fbmPerlinTerrain : _voronoiTerrain, true);
+            EditorGUILayout.PropertyField(terrainSettings, true);
             DrawGameplayContentSettings(_gameplayContent);
             serializedObject.ApplyModifiedProperties();
 
             OpenFieldMapTestDemo demo = (OpenFieldMapTestDemo)target;
             EditorGUILayout.Space();
             EditorGUILayout.HelpBox(
-                usesFbmPerlin
-                    ? "fBm Perlin creates low void, middle walkable ground, and high cliffs that block line of sight."
-                    : "Voronoi keeps low and middle regions walkable, while high regions become cliffs that block line of sight. Edge Jitter bends otherwise straight region borders.",
+                terrainMethod switch
+                {
+                    0 => "fBm Perlin creates low void, middle walkable ground, and high cliffs that block line of sight.",
+                    1 => "Voronoi keeps low and middle regions walkable, while high regions become cliffs that block line of sight. Edge Jitter bends otherwise straight region borders.",
+                    _ => "Organic Terraces builds one continuous, domain-warped relief field before quantizing it into void, ground, and cliff steps. Coverage controls keep the map from becoming one enormous empty plateau.",
+                },
                 MessageType.Info);
             EditorGUILayout.HelpBox("Terrain is generated before anchors. Points may occupy any walkable area, then a path search from spawn must reach the exit and every interest point; unsuitable seeds are skipped automatically.", MessageType.None);
             EditorGUILayout.HelpBox("Interest points contain chests and Monster Level 1/2/3. Wild monsters are always Level 1 and are placed only on walkable cells reachable from spawn and outside every anchor area.", MessageType.None);
@@ -92,7 +103,7 @@ namespace CrystalMagic.Game.MapDemo.Editor
             float aspect = texture.width / (float)Mathf.Max(1, texture.height);
             Rect previewRect = GUILayoutUtility.GetAspectRect(aspect, GUILayout.MaxHeight(InspectorPreviewMaxHeight));
             EditorGUI.DrawPreviewTexture(previewRect, texture, null, ScaleMode.StretchToFill);
-            EditorGUILayout.LabelField($"Step: {demo.TerrainGenerationName}    Seed: {demo.PreviewSeed}    Size: {demo.PreviewWidth} x {demo.PreviewHeight}    Reachability: Valid");
+            EditorGUILayout.LabelField($"Terrain: {demo.PreviewStageName}    Seed: {demo.PreviewSeed}    Size: {demo.PreviewWidth} x {demo.PreviewHeight}    Reachability: Valid");
             EditorGUILayout.LabelField(demo.PreviewContentSummary);
         }
     }

@@ -10,12 +10,12 @@ using UnityEngine.Tilemaps;
 namespace CrystalMagic.Editor.Map
 {
     /// <summary>
-    /// Bakes authoring Tilemaps into the two static town render layers used at runtime.
+    /// Bakes every Tile set below the active scene's List root into static Back and Top render layers.
     /// </summary>
     internal static class TownTilemapBakeUtility
     {
-        private const string OutputFolder = "Assets/Res/Map/Town/Generated";
-        private const string PrefabPath = OutputFolder + "/TownMap_Baked.prefab";
+        private const string OutputRootFolder = "Assets/Res/Tile/Out";
+        private const string TileSetListName = "List";
         private const float BackDepth = 0.1f;
         private const float TopDepth = -0.1f;
         private const int BackSortingOrder = -100;
@@ -28,58 +28,88 @@ namespace CrystalMagic.Editor.Map
             Top,
         }
 
-        [MenuItem("Tools/Map/Bake Town Tilemaps")]
-        private static void BakeActiveScene()
+        [MenuItem("Tools/Map/Bake All Tiles")]
+        private static void BakeAllTiles()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode)
             {
-                EditorUtility.DisplayDialog("Bake Town Tilemaps", "Exit Play Mode before baking the town Tilemaps.", "OK");
+                EditorUtility.DisplayDialog("Bake All Tiles", "Exit Play Mode before baking Tilemaps.", "OK");
                 return;
             }
 
             Scene activeScene = SceneManager.GetActiveScene();
-            List<TilemapRenderer> backRenderers = FindRenderers(activeScene, BakeLayer.Back);
-            List<TilemapRenderer> topRenderers = FindRenderers(activeScene, BakeLayer.Top);
-            if (backRenderers.Count == 0 && topRenderers.Count == 0)
+            Transform tileSetList = FindTileSetList(activeScene);
+            if (tileSetList == null)
             {
                 EditorUtility.DisplayDialog(
-                    "Bake Town Tilemaps",
-                    "No Tilemaps were found under a root GameObject whose name starts with Back or Top.",
+                    "Bake All Tiles",
+                    $"No root GameObject named {TileSetListName} was found in the active scene.",
                     "OK");
                 return;
             }
 
-            EnsureOutputFolder();
+            if (tileSetList.childCount == 0)
+            {
+                EditorUtility.DisplayDialog("Bake All Tiles", $"{TileSetListName} does not contain any Tile sets.", "OK");
+                return;
+            }
+
             try
             {
-                BakedLayer backLayer = BakeLayerTexture(BakeLayer.Back, backRenderers);
-                BakedLayer topLayer = BakeLayerTexture(BakeLayer.Top, topRenderers);
-                CreateOrUpdatePrefab(backLayer, topLayer);
+                for (int childIndex = 0; childIndex < tileSetList.childCount; childIndex++)
+                    BakeTileSet(tileSetList.GetChild(childIndex));
+
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
 
-                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
-                Selection.activeObject = prefab;
-                EditorGUIUtility.PingObject(prefab);
-                Debug.Log($"[TownTilemapBakeUtility] Baked town map to {OutputFolder}.");
+                Selection.activeObject = AssetDatabase.LoadAssetAtPath<DefaultAsset>(OutputRootFolder);
+                EditorGUIUtility.PingObject(Selection.activeObject);
+                Debug.Log($"[TownTilemapBakeUtility] Baked {tileSetList.childCount} Tile sets to {OutputRootFolder}.");
             }
             catch (Exception exception)
             {
                 Debug.LogException(exception);
-                EditorUtility.DisplayDialog("Bake Town Tilemaps", exception.Message, "OK");
+                EditorUtility.DisplayDialog("Bake All Tiles", exception.Message, "OK");
             }
         }
 
-        private static List<TilemapRenderer> FindRenderers(Scene scene, BakeLayer bakeLayer)
+        private static Transform FindTileSetList(Scene scene)
         {
-            TilemapRenderer[] allRenderers = UnityEngine.Object.FindObjectsByType<TilemapRenderer>(
-                FindObjectsInactive.Exclude,
-                FindObjectsSortMode.None);
+            GameObject[] rootObjects = scene.GetRootGameObjects();
+            for (int i = 0; i < rootObjects.Length; i++)
+            {
+                if (rootObjects[i].name.Equals(TileSetListName, StringComparison.OrdinalIgnoreCase))
+                    return rootObjects[i].transform;
+            }
+
+            return null;
+        }
+
+        private static void BakeTileSet(Transform tileSet)
+        {
+            List<TilemapRenderer> backRenderers = FindRenderers(tileSet, BakeLayer.Back);
+            List<TilemapRenderer> topRenderers = FindRenderers(tileSet, BakeLayer.Top);
+            if (backRenderers.Count == 0 && topRenderers.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    $"Tile set {tileSet.name} does not contain Tilemaps below a GameObject whose name starts with Back or Top.");
+            }
+
+            string outputFolder = $"{OutputRootFolder}/{tileSet.name}";
+            EnsureOutputFolder(outputFolder);
+            BakedLayer backLayer = BakeLayerTexture(outputFolder, tileSet.name, BakeLayer.Back, backRenderers);
+            BakedLayer topLayer = BakeLayerTexture(outputFolder, tileSet.name, BakeLayer.Top, topRenderers);
+            CreateOrUpdatePrefab(outputFolder, tileSet.name, backLayer, topLayer);
+        }
+
+        private static List<TilemapRenderer> FindRenderers(Transform tileSet, BakeLayer bakeLayer)
+        {
+            TilemapRenderer[] allRenderers = tileSet.GetComponentsInChildren<TilemapRenderer>();
             List<TilemapRenderer> result = new();
             for (int i = 0; i < allRenderers.Length; i++)
             {
                 TilemapRenderer renderer = allRenderers[i];
-                if (renderer == null || renderer.gameObject.scene != scene || !MatchesLayer(renderer.transform, bakeLayer))
+                if (renderer == null || !MatchesLayer(renderer.transform, tileSet, bakeLayer))
                     continue;
 
                 Tilemap tilemap = renderer.GetComponent<Tilemap>();
@@ -91,14 +121,17 @@ namespace CrystalMagic.Editor.Map
             return result;
         }
 
-        private static bool MatchesLayer(Transform transform, BakeLayer bakeLayer)
+        private static bool MatchesLayer(Transform transform, Transform tileSet, BakeLayer bakeLayer)
         {
-            Transform root = transform;
-            while (root.parent != null)
-                root = root.parent;
+            for (Transform current = transform; current != null && current != tileSet; current = current.parent)
+            {
+                if (current.name.StartsWith("Back", StringComparison.OrdinalIgnoreCase))
+                    return bakeLayer == BakeLayer.Back;
+                if (current.name.StartsWith("Top", StringComparison.OrdinalIgnoreCase))
+                    return bakeLayer == BakeLayer.Top;
+            }
 
-            string prefix = bakeLayer == BakeLayer.Back ? "Back" : "Top";
-            return root.name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
+            return false;
         }
 
         private static int CompareRenderers(TilemapRenderer left, TilemapRenderer right)
@@ -109,14 +142,18 @@ namespace CrystalMagic.Editor.Map
             return layerComparison != 0 ? layerComparison : left.sortingOrder.CompareTo(right.sortingOrder);
         }
 
-        private static BakedLayer BakeLayerTexture(BakeLayer bakeLayer, List<TilemapRenderer> renderers)
+        private static BakedLayer BakeLayerTexture(
+            string outputFolder,
+            string tileSetName,
+            BakeLayer bakeLayer,
+            List<TilemapRenderer> renderers)
         {
             if (renderers.Count == 0)
                 return null;
 
-            float pixelsPerUnit = GetPixelsPerUnit(renderers);
+            float pixelsPerUnit = GetHighestPixelsPerUnit(renderers);
             float bakePixelsPerUnit = pixelsPerUnit * PixelBakeScale;
-            List<TilePixel> tiles = CollectTiles(renderers, pixelsPerUnit, out Bounds bounds);
+            List<TilePixel> tiles = CollectTiles(renderers, out Bounds bounds);
             if (tiles.Count == 0)
                 return null;
 
@@ -126,7 +163,7 @@ namespace CrystalMagic.Editor.Map
                 throw new InvalidOperationException("The selected Tilemaps have no renderable bounds.");
 
             string layerName = bakeLayer.ToString();
-            string texturePath = $"{OutputFolder}/Town_{layerName}.png";
+            string texturePath = $"{outputFolder}/{tileSetName}_{layerName}.png";
 
             Texture2D texture = ComposeLayer(tiles, bounds.min, width, height, bakePixelsPerUnit);
             try
@@ -147,10 +184,7 @@ namespace CrystalMagic.Editor.Map
             return new BakedLayer(layerName, bounds, importedTexture);
         }
 
-        private static List<TilePixel> CollectTiles(
-            List<TilemapRenderer> renderers,
-            float pixelsPerUnit,
-            out Bounds bounds)
+        private static List<TilePixel> CollectTiles(List<TilemapRenderer> renderers, out Bounds bounds)
         {
             List<TilePixel> result = new();
             bool hasBounds = false;
@@ -166,7 +200,7 @@ namespace CrystalMagic.Editor.Map
                     if (sprite == null)
                         continue;
 
-                    ValidateTile(tilemap, position, sprite, pixelsPerUnit);
+                    ValidateTile(tilemap, position, sprite);
                     Vector3 cellMin = tilemap.CellToWorld(position);
                     Vector3 cellMax = tilemap.CellToWorld(position + new Vector3Int(1, 1, 0));
                     Vector2 cellWorldMin = new(Mathf.Min(cellMin.x, cellMax.x), Mathf.Min(cellMin.y, cellMax.y));
@@ -202,8 +236,9 @@ namespace CrystalMagic.Editor.Map
             return result;
         }
 
-        private static float GetPixelsPerUnit(List<TilemapRenderer> renderers)
+        private static float GetHighestPixelsPerUnit(List<TilemapRenderer> renderers)
         {
+            float highestPixelsPerUnit = 0f;
             for (int i = 0; i < renderers.Count; i++)
             {
                 Tilemap tilemap = renderers[i].GetComponent<Tilemap>();
@@ -211,21 +246,21 @@ namespace CrystalMagic.Editor.Map
                 foreach (Vector3Int position in cellBounds.allPositionsWithin)
                 {
                     Sprite sprite = tilemap.GetSprite(position);
-                    if (sprite != null && sprite.pixelsPerUnit > 0f)
-                        return sprite.pixelsPerUnit;
+                    if (sprite != null && sprite.pixelsPerUnit > highestPixelsPerUnit)
+                        highestPixelsPerUnit = sprite.pixelsPerUnit;
                 }
             }
+
+            if (highestPixelsPerUnit > 0f)
+                return highestPixelsPerUnit;
 
             throw new InvalidOperationException("The selected Tilemaps do not contain a Sprite Tile that can define the output pixel scale.");
         }
 
-        private static void ValidateTile(Tilemap tilemap, Vector3Int position, Sprite sprite, float pixelsPerUnit)
+        private static void ValidateTile(Tilemap tilemap, Vector3Int position, Sprite sprite)
         {
-            if (!Mathf.Approximately(sprite.pixelsPerUnit, pixelsPerUnit))
-            {
-                throw new InvalidOperationException(
-                    $"Tile {position} on {tilemap.name} uses a different Pixels Per Unit value. All town tiles must use {pixelsPerUnit}.");
-            }
+            if (sprite.pixelsPerUnit <= 0f)
+                throw new InvalidOperationException($"Tile {position} on {tilemap.name} does not have a valid Pixels Per Unit value.");
 
             Vector3 cellOrigin = tilemap.CellToWorld(position);
             Vector3 cellX = tilemap.CellToWorld(position + Vector3Int.right) - cellOrigin;
@@ -274,26 +309,28 @@ namespace CrystalMagic.Editor.Map
                 int sourceY = Mathf.RoundToInt(sourceRect.y);
                 int tileWidth = Mathf.RoundToInt(sourceRect.width);
                 int tileHeight = Mathf.RoundToInt(sourceRect.height);
-                int pixelScale = Mathf.RoundToInt(pixelsPerUnit / tile.Sprite.pixelsPerUnit);
-                if (pixelScale <= 0 || !Mathf.Approximately(pixelScale * tile.Sprite.pixelsPerUnit, pixelsPerUnit))
-                    throw new InvalidOperationException($"Tile {tile.Sprite.name} cannot be represented without pixel interpolation.");
-
                 int destinationX = Mathf.RoundToInt((tile.WorldMin.x - worldMin.x) * pixelsPerUnit);
                 int destinationY = Mathf.RoundToInt((tile.WorldMin.y - worldMin.y) * pixelsPerUnit);
-                for (int y = 0; y < tileHeight * pixelScale; y++)
+                int destinationWidth = Mathf.RoundToInt(tileWidth * pixelsPerUnit / tile.Sprite.pixelsPerUnit);
+                int destinationHeight = Mathf.RoundToInt(tileHeight * pixelsPerUnit / tile.Sprite.pixelsPerUnit);
+                for (int y = 0; y < destinationHeight; y++)
                 {
                     int targetY = destinationY + y;
                     if (targetY < 0 || targetY >= height)
                         continue;
 
-                    int sourcePixelY = sourceY + y / pixelScale;
-                    for (int x = 0; x < tileWidth * pixelScale; x++)
+                    int sourcePixelY = sourceY + Mathf.Min(
+                        tileHeight - 1,
+                        Mathf.FloorToInt(y * tile.Sprite.pixelsPerUnit / pixelsPerUnit));
+                    for (int x = 0; x < destinationWidth; x++)
                     {
                         int targetX = destinationX + x;
                         if (targetX < 0 || targetX >= width)
                             continue;
 
-                        int sourcePixelX = sourceX + x / pixelScale;
+                        int sourcePixelX = sourceX + Mathf.Min(
+                            tileWidth - 1,
+                            Mathf.FloorToInt(x * tile.Sprite.pixelsPerUnit / pixelsPerUnit));
                         Color32 sourceColor = pixels[sourcePixelY * source.width + sourcePixelX];
                         int outputIndex = targetY * width + targetX;
                         output[outputIndex] = AlphaBlend(output[outputIndex], sourceColor, tile.Color);
@@ -369,17 +406,35 @@ namespace CrystalMagic.Editor.Map
             importer.SaveAndReimport();
         }
 
-        private static void CreateOrUpdatePrefab(BakedLayer backLayer, BakedLayer topLayer)
+        private static void CreateOrUpdatePrefab(
+            string outputFolder,
+            string tileSetName,
+            BakedLayer backLayer,
+            BakedLayer topLayer)
         {
-            GameObject root = new("TownMap_Baked");
+            GameObject root = new($"{tileSetName}_Baked");
             try
             {
                 if (backLayer != null)
-                    CreateLayerObject(root.transform, backLayer, BakeLayer.Back, BackDepth, BackSortingOrder);
+                    CreateLayerObject(
+                        root.transform,
+                        outputFolder,
+                        tileSetName,
+                        backLayer,
+                        BakeLayer.Back,
+                        BackDepth,
+                        BackSortingOrder);
                 if (topLayer != null)
-                    CreateLayerObject(root.transform, topLayer, BakeLayer.Top, TopDepth, TopSortingOrder);
+                    CreateLayerObject(
+                        root.transform,
+                        outputFolder,
+                        tileSetName,
+                        topLayer,
+                        BakeLayer.Top,
+                        TopDepth,
+                        TopSortingOrder);
 
-                PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
+                PrefabUtility.SaveAsPrefabAsset(root, $"{outputFolder}/{tileSetName}_Baked.prefab");
             }
             finally
             {
@@ -389,17 +444,19 @@ namespace CrystalMagic.Editor.Map
 
         private static void CreateLayerObject(
             Transform parent,
+            string outputFolder,
+            string tileSetName,
             BakedLayer bakedLayer,
             BakeLayer bakeLayer,
             float depth,
             int sortingOrder)
         {
-            string meshPath = $"{OutputFolder}/Town_{bakedLayer.Name}.asset";
-            string materialPath = $"{OutputFolder}/Town_{bakedLayer.Name}.mat";
+            string meshPath = $"{outputFolder}/{tileSetName}_{bakedLayer.Name}.asset";
+            string materialPath = $"{outputFolder}/{tileSetName}_{bakedLayer.Name}.mat";
             Mesh mesh = CreateOrUpdateMesh(meshPath, bakedLayer.Bounds.size);
             Material material = CreateOrUpdateMaterial(materialPath, bakedLayer.Texture, bakeLayer);
 
-            GameObject layerObject = new($"Town_{bakedLayer.Name}");
+            GameObject layerObject = new($"{tileSetName}_{bakedLayer.Name}");
             layerObject.transform.SetParent(parent, false);
             layerObject.transform.position = new Vector3(bakedLayer.Bounds.center.x, bakedLayer.Bounds.center.y, depth);
             MeshFilter meshFilter = layerObject.AddComponent<MeshFilter>();
@@ -485,14 +542,14 @@ namespace CrystalMagic.Editor.Map
             return material;
         }
 
-        private static void EnsureOutputFolder()
+        private static void EnsureOutputFolder(string outputFolder)
         {
-            if (AssetDatabase.IsValidFolder(OutputFolder))
+            if (AssetDatabase.IsValidFolder(outputFolder))
                 return;
 
-            string current = "Assets";
-            string[] folders = { "Res", "Map", "Town", "Generated" };
-            for (int i = 0; i < folders.Length; i++)
+            string[] folders = outputFolder.Split('/');
+            string current = folders[0];
+            for (int i = 1; i < folders.Length; i++)
             {
                 string next = $"{current}/{folders[i]}";
                 if (!AssetDatabase.IsValidFolder(next))

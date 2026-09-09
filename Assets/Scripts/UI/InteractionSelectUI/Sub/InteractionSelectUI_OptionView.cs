@@ -1,22 +1,34 @@
 using System;
 using CrystalMagic.Core;
 using CrystalMagic.UI;
-using UnityEngine.EventSystems;
 
-public class InteractionSelectUI_OptionView : UISubView<InteractionSelectUI_OptionData>, IPointerClickHandler
+public class InteractionSelectUI_OptionView : UISubView<InteractionSelectUI_OptionData>
 {
     private InteractionSelectOptionDisplayData _data;
+    private bool _buttonEventBound;
 
     public event Action<InteractionSelectOptionDisplayData> Clicked;
 
     public void Render(InteractionSelectOptionDisplayData data)
     {
         Rebind();
+        EnsureButtonEventBound();
         _data = data;
-        UI.TextTMP.TextMeshProUGUI.text = data?.DisplayName ?? string.Empty;
+        string displayName = data?.DisplayName ?? string.Empty;
+        UI.Default_TextTMP.TextMeshProUGUI.text = displayName;
+        UI.Click_TextTMP.TextMeshProUGUI.text = displayName;
     }
 
-    public void OnPointerClick(PointerEventData eventData)
+    private void EnsureButtonEventBound()
+    {
+        if (_buttonEventBound)
+            return;
+
+        GetComponent<ButtonPlus>().onClick.AddListener(OnClicked);
+        _buttonEventBound = true;
+    }
+
+    private void OnClicked()
     {
         if (_data == null)
             return;

@@ -20,6 +20,18 @@ namespace CrystalMagic.Editor.Unit
             EditorGUILayout.LabelField("Type", StateScriptNodeDataRegistry.GetDisplayName(node.Type));
             EditorGUILayout.SelectableLabel(node.Guid ?? string.Empty, EditorStyles.textField, GUILayout.Height(EditorGUIUtility.singleLineHeight));
             EditorGUILayout.Space(6f);
+            if (node is StateStateScriptNodeData stateNode)
+            {
+                EditorGUI.BeginChangeCheck();
+                stateNode.TickOrder = EditorGUILayout.IntField(
+                    new GUIContent("Tick Order", "Lower values update before higher values each frame."),
+                    stateNode.TickOrder);
+                if (EditorGUI.EndChangeCheck())
+                    onChanged?.Invoke();
+
+                EditorGUILayout.Space(6f);
+            }
+
             if (node is SetValueStateScriptNodeData setValue)
             {
                 EditorGUI.BeginChangeCheck();
@@ -33,6 +45,15 @@ namespace CrystalMagic.Editor.Unit
             {
                 EditorGUI.BeginChangeCheck();
                 DrawRequestSkill(requestSkill, sourceSchema, onChanged);
+                if (EditorGUI.EndChangeCheck())
+                    onChanged?.Invoke();
+                return;
+            }
+
+            if (node is RequestSkillWithAdditionActionNodeData requestSkillWithAddition)
+            {
+                EditorGUI.BeginChangeCheck();
+                DrawRequestSkillWithAddition(requestSkillWithAddition, sourceSchema, onChanged);
                 if (EditorGUI.EndChangeCheck())
                     onChanged?.Invoke();
                 return;
@@ -182,8 +203,35 @@ namespace CrystalMagic.Editor.Unit
             Action onChanged)
         {
             requestSkill.SkillId ??= RequestSkillActionNodeData.CreateDefaultSkillIdExpression();
+            requestSkill.Input ??= SkillRequestInputData.CreateDefault();
+            requestSkill.Input.EnsureValid();
             EditorGUILayout.LabelField("Skill ID (Number)", EditorStyles.miniBoldLabel);
             StateScriptValueExpressionDrawer.Draw(requestSkill.SkillId, UnitValueCategory.Number, sourceSchema, onChanged);
+            DrawSkillRequestInput(requestSkill.Input, sourceSchema, onChanged);
+        }
+
+        private static void DrawRequestSkillWithAddition(
+            RequestSkillWithAdditionActionNodeData requestSkill,
+            UnitSourceSchema sourceSchema,
+            Action onChanged)
+        {
+            requestSkill.SkillId ??= RequestSkillWithAdditionActionNodeData.CreateDefaultSkillIdExpression();
+            requestSkill.Input ??= SkillRequestInputData.CreateDefault();
+            requestSkill.Input.EnsureValid();
+            EditorGUILayout.LabelField("Skill ID (Number)", EditorStyles.miniBoldLabel);
+            StateScriptValueExpressionDrawer.Draw(requestSkill.SkillId, UnitValueCategory.Number, sourceSchema, onChanged);
+            DrawSkillRequestInput(requestSkill.Input, sourceSchema, onChanged);
+        }
+
+        private static void DrawSkillRequestInput(
+            SkillRequestInputData input,
+            UnitSourceSchema sourceSchema,
+            Action onChanged)
+        {
+            EditorGUILayout.LabelField("Position (Float3)", EditorStyles.miniBoldLabel);
+            StateScriptValueExpressionDrawer.Draw(input.Position, UnitValueCategory.Float3, sourceSchema, onChanged);
+            EditorGUILayout.LabelField("Target Entity (Entity)", EditorStyles.miniBoldLabel);
+            StateScriptValueExpressionDrawer.Draw(input.TargetEntity, UnitValueCategory.Entity, sourceSchema, onChanged);
         }
 
         private static void DrawRequestInteraction(

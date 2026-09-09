@@ -10,27 +10,34 @@ public sealed class UnitAnimationAuthoring : MonoBehaviour
         public override void Bake(UnitAnimationAuthoring authoring)
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
-            SpriteRenderer spriteRenderer = authoring.GetComponent<SpriteRenderer>();
-            AddComponentObject(entity, UnitAnimationComponent.CreateDefault(spriteRenderer));
+            AddComponentObject(entity, UnitAnimationComponent.CreateDefault());
         }
     }
 }
 
 public sealed class UnitAnimationComponent : IComponentData
 {
-    internal SpriteRenderer Renderer;
-    internal FixedString64Bytes Name;
-    internal FixedString64Bytes PlayingName;
-    internal float ElapsedSeconds;
+    public SpriteRenderer Renderer;
+    public FixedString64Bytes CurrentAnimationName;
+    public FixedString64Bytes PlayingAnimationName;
+    public UnitAnimationDirection LastTwoDirectionFacing;
+    public float ElapsedSeconds;
+    public AnimationClip CurrentAnimationClip;
+    public float CurrentSampleTime;
+    public Sprite CurrentSprite;
 
-    internal static UnitAnimationComponent CreateDefault(SpriteRenderer renderer)
+    internal static UnitAnimationComponent CreateDefault()
     {
         return new UnitAnimationComponent
         {
-            Renderer = renderer,
-            Name = default,
-            PlayingName = default,
+            Renderer = null,
+            CurrentAnimationName = default,
+            PlayingAnimationName = default,
+            LastTwoDirectionFacing = UnitAnimationDirection.Right,
             ElapsedSeconds = 0f,
+            CurrentAnimationClip = null,
+            CurrentSampleTime = 0f,
+            CurrentSprite = null,
         };
     }
 }
@@ -41,14 +48,14 @@ public sealed class UnitAnimationSource : UnitManagedComponentSource<UnitAnimati
     protected override void Define(UnitSourceDefinitionBuilder<UnitAnimationComponent> builder)
     {
         builder.AddGet("unit.animation.name", UnitValueCategory.String,
-            (in UnitAnimationComponent value) => UnitValue.FromString(value?.Name.ToString() ?? string.Empty));
+            (in UnitAnimationComponent value) => UnitValue.FromString(value?.CurrentAnimationName.ToString() ?? string.Empty));
         builder.AddSet("unit.animation.setName", UnitValueCategory.String,
             (ref UnitAnimationComponent value, UnitValue input) =>
             {
                 if (value == null || !input.TryGetString(out string name))
                     return false;
 
-                value.Name = new FixedString64Bytes(name.Trim());
+                value.CurrentAnimationName = new FixedString64Bytes(name.Trim());
                 return true;
             });
     }

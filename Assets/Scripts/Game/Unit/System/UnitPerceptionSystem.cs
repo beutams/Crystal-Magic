@@ -12,7 +12,8 @@ partial class UnitPerceptionSystem : SystemBase
 
     protected override void OnUpdate()
     {
-        if (GameGateComponent.Instance.IsSimulationLocked ||
+        GameGateComponent gameGate = GameGateComponent.Instance;
+        if ((gameGate != null && gameGate.IsSimulationLocked) ||
             !UnitQueryUtility.TryGetTree(EntityManager, UnitQueryTreeKind.Unit, out UnitQueryTree unitTree))
         {
             return;

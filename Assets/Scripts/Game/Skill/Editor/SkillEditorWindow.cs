@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using CrystalMagic.Core;
+using CrystalMagic.Editor.EffectGraph;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Data.Effects;
 using CrystalMagic.Game.Skill;
@@ -331,19 +332,16 @@ namespace CrystalMagic.Editor.Skill
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            if (GUILayout.Button("Load", EditorStyles.toolbarButton, GUILayout.Width(44f)))
-                LoadData();
-
             GUI.enabled = _isDirty;
             if (GUILayout.Button(_isDirty ? "Save *" : "Save", EditorStyles.toolbarButton, GUILayout.Width(52f)))
                 SaveData();
             GUI.enabled = true;
 
-            if (GUILayout.Button("+ Add", EditorStyles.toolbarButton, GUILayout.Width(52f)))
+            if (GUILayout.Button("Add", EditorStyles.toolbarButton, GUILayout.Width(52f)))
                 AddSkill();
 
             GUI.enabled = _selectedIndex >= 0;
-            if (GUILayout.Button("Duplicate", EditorStyles.toolbarButton, GUILayout.Width(64f)))
+            if (GUILayout.Button("Copy", EditorStyles.toolbarButton, GUILayout.Width(64f)))
                 DuplicateSelected();
 
             GUI.color = _selectedIndex >= 0 ? new Color(1f, 0.55f, 0.55f) : Color.white;
@@ -597,11 +595,13 @@ namespace CrystalMagic.Editor.Skill
             EditorGUILayout.LabelField("Description Key");
             skill.DescriptionKey = EditorGUILayout.TextArea(skill.DescriptionKey ?? string.Empty, GUILayout.MinHeight(48f), GUILayout.MaxHeight(80f));
             DrawRuntimeTypeField(skill);
+            skill.InputType = (SkillInputType)EditorGUILayout.EnumPopup("Input Type", skill.InputType);
             skill.IconPath = EditorGUILayout.TextField("Icon Path", skill.IconPath ?? string.Empty);
 
             DrawSectionHeader("Cast");
             skill.MpCost = EditorGUILayout.IntField("MP Cost", skill.MpCost);
             skill.ChantDuration = EditorGUILayout.FloatField("Chant (s)", skill.ChantDuration);
+            skill.CastingMoveMultiplier = Mathf.Max(0f, EditorGUILayout.FloatField("Cast Move Multiplier", skill.CastingMoveMultiplier));
 
             if (EditorGUI.EndChangeCheck())
                 _isDirty = true;
@@ -621,7 +621,21 @@ namespace CrystalMagic.Editor.Skill
         private void DrawEffectChain(SkillData skill)
         {
             skill.EffectChain ??= Array.Empty<EffectData>();
-            skill.EffectChain = DrawEffectChainInline("__root__", skill.EffectChain, ref _addEffectTypeIndex);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField($"{skill.EffectChain.Length} effect(s)");
+            if (GUILayout.Button("Edit Effect Graph", GUILayout.Width(150f)))
+                EffectGraphWindow.Open(CreateEffectBinding(skill, () => { _isDirty = true; Repaint(); }));
+            EditorGUILayout.EndHorizontal();
+        }
+
+        internal static EffectGraphBinding CreateEffectBinding(SkillData skill, Action markDirty)
+        {
+            return new EffectGraphBinding(
+                $"Skill:{skill?.Id ?? -1}:EffectChain",
+                $"Skill [{skill?.Id ?? -1}] {skill?.NameKey}",
+                () => skill?.EffectChain ?? Array.Empty<EffectData>(),
+                effects => { if (skill != null) skill.EffectChain = effects; },
+                markDirty ?? (() => { }));
         }
 
         private EffectData[] DrawEffectChainInline(string stateKey, EffectData[] chain, ref int typeIndex)
@@ -733,18 +747,10 @@ namespace CrystalMagic.Editor.Skill
 
                 foreach (FieldInfo field in effectType.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
                 {
-                    bool disableField =
-                        effect is SpawnVfxEffectData spawnVfxEffect &&
-                        field.Name == nameof(SpawnVfxEffectData.Duration) &&
-                        !spawnVfxEffect.Loop;
-
                     EditorGUI.BeginChangeCheck();
                     object oldValue = field.GetValue(effect);
                     object newValue;
-                    using (new EditorGUI.DisabledScope(disableField))
-                    {
-                        newValue = DrawEffectField(field.FieldType, EditorLabelUtility.GetLabel(field), oldValue, entryKey);
-                    }
+                    newValue = DrawEffectField(field.FieldType, EditorLabelUtility.GetLabel(field), oldValue, entryKey);
 
                     if (EditorGUI.EndChangeCheck())
                     {

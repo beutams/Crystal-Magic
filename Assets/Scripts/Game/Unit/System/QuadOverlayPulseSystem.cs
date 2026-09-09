@@ -1,7 +1,6 @@
 using Unity.Entities;
 
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
-[UpdateAfter(typeof(QuadAnimationSystem))]
 [UpdateBefore(typeof(DestroyEntitySystem))]
 public partial class QuadOverlayPulseSystem : SystemBase
 {

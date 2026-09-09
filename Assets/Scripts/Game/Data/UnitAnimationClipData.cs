@@ -11,10 +11,17 @@ namespace CrystalMagic.Game.Data
         Right = 3,
     }
 
+    public enum UnitAnimationDirectionMode
+    {
+        FourDirections = 0,
+        TwoDirections = 1,
+    }
+
     [System.Serializable]
     public sealed class UnitAnimationEntryData
     {
         public string Name;
+        public UnitAnimationDirectionMode DirectionMode;
         public string FrontClipPath;
         public string BackClipPath;
         public string LeftClipPath;
@@ -22,6 +29,12 @@ namespace CrystalMagic.Game.Data
 
         public void Normalize()
         {
+            if (DirectionMode != UnitAnimationDirectionMode.FourDirections &&
+                DirectionMode != UnitAnimationDirectionMode.TwoDirections)
+            {
+                DirectionMode = UnitAnimationDirectionMode.FourDirections;
+            }
+
             Name ??= string.Empty;
             FrontClipPath ??= string.Empty;
             BackClipPath ??= string.Empty;

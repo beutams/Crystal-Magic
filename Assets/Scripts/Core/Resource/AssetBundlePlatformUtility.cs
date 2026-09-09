@@ -82,6 +82,22 @@ namespace CrystalMagic.Core
                 : path.Replace("\\", "/").Trim();
         }
 
+        public static bool TrySplitSubAssetPath(string path, out string assetPath, out string subAssetName)
+        {
+            string normalizedPath = NormalizeAssetPath(path);
+            int separatorIndex = normalizedPath.LastIndexOf('|');
+            if (separatorIndex <= 0 || separatorIndex >= normalizedPath.Length - 1)
+            {
+                assetPath = normalizedPath;
+                subAssetName = string.Empty;
+                return false;
+            }
+
+            assetPath = normalizedPath[..separatorIndex].Trim();
+            subAssetName = normalizedPath[(separatorIndex + 1)..].Trim();
+            return !string.IsNullOrWhiteSpace(assetPath) && !string.IsNullOrWhiteSpace(subAssetName);
+        }
+
         public static string GetBundleRootPath(string rootFolderName)
         {
             string folderName = string.IsNullOrWhiteSpace(rootFolderName) ? "AssetBundles" : rootFolderName.Trim().Trim('/', '\\');

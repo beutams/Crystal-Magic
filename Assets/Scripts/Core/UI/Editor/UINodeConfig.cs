@@ -24,6 +24,8 @@ namespace CrystalMagic.Editor.UI
             new UINodeComponentEntry { TypeName = "InputField",       Namespace = "UnityEngine.UI" },
             new UINodeComponentEntry { TypeName = "TMP_InputField",   Namespace = "TMPro" },
             new UINodeComponentEntry { TypeName = "TextMeshProUGUI",  Namespace = "TMPro" },
+            new UINodeComponentEntry { TypeName = "CanvasGroup",      Namespace = "UnityEngine" },
+            new UINodeComponentEntry { TypeName = "ButtonPlus",       Namespace = "" },
         };
 
         // ─── 文件路径 ─────────────────────────────

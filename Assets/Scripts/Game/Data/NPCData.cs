@@ -184,6 +184,8 @@ namespace CrystalMagic.Game.Data
     [FactoryKey("Select", 1, "Select")]
     public sealed class NPCSelectInteractionNodeData : NPCInteractionNodeData
     {
+        public string Dialog;
+
         public List<NPCSelectOptionData> Options = new();
     }
 

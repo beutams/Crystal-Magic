@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CrystalMagic.Core;
 using Newtonsoft.Json;
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace CrystalMagic.Game.Data
@@ -55,6 +56,13 @@ namespace CrystalMagic.Game.Data
                         break;
                     case RequestSkillActionNodeData requestSkill:
                         requestSkill.SkillId ??= RequestSkillActionNodeData.CreateDefaultSkillIdExpression();
+                        requestSkill.Input ??= SkillRequestInputData.CreateDefault();
+                        requestSkill.Input.EnsureValid();
+                        break;
+                    case RequestSkillWithAdditionActionNodeData requestSkillWithAddition:
+                        requestSkillWithAddition.SkillId ??= RequestSkillWithAdditionActionNodeData.CreateDefaultSkillIdExpression();
+                        requestSkillWithAddition.Input ??= SkillRequestInputData.CreateDefault();
+                        requestSkillWithAddition.Input.EnsureValid();
                         break;
                     case RequestInteractionActionNodeData requestInteraction:
                         requestInteraction.Interaction ??= RequestInteractionActionNodeData.CreateDefaultInteraction();
@@ -107,6 +115,7 @@ namespace CrystalMagic.Game.Data
     [Serializable]
     public abstract class StateStateScriptNodeData : StateScriptNodeData
     {
+        public int TickOrder;
     }
 
     [Serializable]
@@ -160,10 +169,45 @@ namespace CrystalMagic.Game.Data
     }
 
     [Serializable]
+    public sealed class SkillRequestInputData
+    {
+        public ValueExpression Position = CreateDefaultPositionExpression();
+        public ValueExpression TargetEntity = CreateDefaultTargetEntityExpression();
+
+        public void EnsureValid()
+        {
+            Position ??= CreateDefaultPositionExpression();
+            TargetEntity ??= CreateDefaultTargetEntityExpression();
+        }
+
+        public static SkillRequestInputData CreateDefault()
+        {
+            return new SkillRequestInputData();
+        }
+
+        private static ValueExpression CreateDefaultPositionExpression()
+        {
+            return new ValueExpression
+            {
+                Literal = UnitValue.FromFloat3(float3.zero),
+            };
+        }
+
+        private static ValueExpression CreateDefaultTargetEntityExpression()
+        {
+            return new ValueExpression
+            {
+                Literal = UnitValue.FromEntity(Entity.Null),
+            };
+        }
+    }
+
+    [Serializable]
     [FactoryKey("RequestSkill", 11, "Request Skill")]
     public sealed class RequestSkillActionNodeData : ActionStateScriptNodeData
     {
         public ValueExpression SkillId = CreateDefaultSkillIdExpression();
+        public SkillRequestInputData Input = SkillRequestInputData.CreateDefault();
 
         public RequestSkillActionNodeData()
         {
@@ -183,9 +227,21 @@ namespace CrystalMagic.Game.Data
     [FactoryKey("RequestSkillWithAddition", 13, "Request Skill With Addition")]
     public sealed class RequestSkillWithAdditionActionNodeData : ActionStateScriptNodeData
     {
+        public ValueExpression SkillId = CreateDefaultSkillIdExpression();
+        public SkillRequestInputData Input = SkillRequestInputData.CreateDefault();
+
         public RequestSkillWithAdditionActionNodeData()
         {
             Type = "RequestSkillWithAddition";
+        }
+
+        public static ValueExpression CreateDefaultSkillIdExpression()
+        {
+            return new ValueExpression
+            {
+                Kind = ValueExpressionKind.Getter,
+                GetterKey = "player.skill.currentSkillId",
+            };
         }
     }
 

@@ -82,16 +82,6 @@ namespace CrystalMagic.Editor.Data
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            if (GUILayout.Button("Load", EditorStyles.toolbarButton, GUILayout.Width(44f)))
-            {
-                LoadData();
-            }
-
-            if (GUILayout.Button("Refresh Prefabs", EditorStyles.toolbarButton, GUILayout.Width(96f)))
-            {
-                RefreshRowsFromPrefabs(markDirtyWhenChanged: true);
-            }
-
             GUI.enabled = _isDirty;
             if (GUILayout.Button(_isDirty ? "Save *" : "Save", EditorStyles.toolbarButton, GUILayout.Width(52f)))
             {
@@ -736,6 +726,8 @@ namespace CrystalMagic.Editor.Data
 
         private void DrawSelectNode(NPCInteractionData interaction, NPCInteractionNodeData parentNode, NPCSelectInteractionNodeData select)
         {
+            select.Dialog = EditorGUILayout.TextField("Dialog", select.Dialog ?? string.Empty);
+
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Options", EditorStyles.boldLabel);
             if (GUILayout.Button("Add Option", GUILayout.Width(92f)))

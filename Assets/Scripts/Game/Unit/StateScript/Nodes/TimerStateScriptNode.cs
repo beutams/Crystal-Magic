@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CrystalMagic.Game.Data;
 using UnityEngine;
 
@@ -53,6 +54,18 @@ public sealed class TimerStateScriptNode : StateScriptStateNode
         _elapsedSeconds += Runtime.DeltaTime;
         if (_elapsedSeconds >= _durationSeconds)
             Complete();
+    }
+
+    public override void CollectRuntimeDebugData(List<StateScriptRuntimeDebugValue> values)
+    {
+        base.CollectRuntimeDebugData(values);
+
+        float remainingSeconds = Mathf.Max(0f, _durationSeconds - _elapsedSeconds);
+        float progress = _durationSeconds > 0f ? Mathf.Clamp01(_elapsedSeconds / _durationSeconds) : 0f;
+        values.Add(new StateScriptRuntimeDebugValue("Elapsed", $"{_elapsedSeconds:0.###} s"));
+        values.Add(new StateScriptRuntimeDebugValue("Duration", $"{_durationSeconds:0.###} s"));
+        values.Add(new StateScriptRuntimeDebugValue("Remaining", $"{remainingSeconds:0.###} s"));
+        values.Add(new StateScriptRuntimeDebugValue("Progress", $"{progress:P1}"));
     }
 
     private float ResolveDurationSeconds()

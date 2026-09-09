@@ -9,6 +9,7 @@ namespace CrystalMagic.Core
         private readonly List<Entity> _spawnedEntities = new();
         private readonly List<Object> _runtimeAssets = new();
         private string _resourceOwnerKey;
+        private bool _hasCameraWorldBounds;
 
         public void Initialize(string resourceOwnerKey, IReadOnlyList<Entity> spawnedEntities)
         {
@@ -28,8 +29,29 @@ namespace CrystalMagic.Core
                 _runtimeAssets.Add(runtimeAsset);
         }
 
+        public void TrackRuntimeAssets(params Object[] runtimeAssets)
+        {
+            if (runtimeAssets == null)
+                return;
+
+            for (int i = 0; i < runtimeAssets.Length; i++)
+                TrackRuntimeAsset(runtimeAssets[i]);
+        }
+
+        public void SetCameraWorldBounds(Rect worldBounds)
+        {
+            _hasCameraWorldBounds = worldBounds.width > 0f && worldBounds.height > 0f;
+            if (_hasCameraWorldBounds)
+                CameraComponent.Instance?.SetWorldBounds(GetInstanceID(), worldBounds);
+            else
+                CameraComponent.Instance?.ClearWorldBounds(GetInstanceID());
+        }
+
         private void OnDestroy()
         {
+            if (_hasCameraWorldBounds)
+                CameraComponent.Instance?.ClearWorldBounds(GetInstanceID());
+
             DestroyTrackedEntities();
             DestroyRuntimeAssets();
             ResourceComponent.Instance?.ReleaseOwner(_resourceOwnerKey);

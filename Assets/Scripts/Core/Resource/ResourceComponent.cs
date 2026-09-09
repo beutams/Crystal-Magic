@@ -66,11 +66,35 @@ namespace CrystalMagic.Core
             return resource;
         }
 
+        public Sprite LoadSprite(string path)
+        {
+            if (_loader == null || string.IsNullOrWhiteSpace(path))
+                return null;
+
+            if (!AssetBundlePlatformUtility.TrySplitSubAssetPath(path, out string assetPath, out string spriteName))
+                return Load<Sprite>(path);
+
+            Sprite sprite = _loader.LoadSprite(assetPath, spriteName);
+            if (sprite == null)
+                return null;
+
+            TrackLoadedResource(path, sprite);
+            AddPathReference(path);
+            return sprite;
+        }
+
         public T Load<T>(string path, string ownerKey) where T : Object
         {
             T resource = Load<T>(path);
             TrackOwnerReference(ownerKey, path);
             return resource;
+        }
+
+        public Sprite LoadSprite(string path, string ownerKey)
+        {
+            Sprite sprite = LoadSprite(path);
+            TrackOwnerReference(ownerKey, path);
+            return sprite;
         }
 
         public void LoadAsync<T>(string path, System.Action<T> onComplete) where T : Object

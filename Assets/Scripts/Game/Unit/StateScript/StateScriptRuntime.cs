@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CrystalMagic.Game.Data;
 using Unity.Entities;
 
@@ -115,10 +116,11 @@ public sealed class StateScriptRuntime
             return;
         }
 
-        for (int i = 0; i < _nodesInTraversalOrder.Count; i++)
+        foreach (StateScriptStateNode state in _nodesInTraversalOrder
+                     .OfType<StateScriptStateNode>()
+                     .OrderBy(state => ((StateStateScriptNodeData)state.Data).TickOrder))
         {
-            if (_nodesInTraversalOrder[i] is StateScriptStateNode state)
-                _statesInTickOrder.Add(state);
+            _statesInTickOrder.Add(state);
         }
 
         IsBound = true;

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CrystalMagic.Game.Data;
 using UnityEngine;
 
@@ -72,6 +73,15 @@ public sealed class NumberMonitorStateScriptNode : StateScriptStateNode
             return false;
 
         return !float.IsNaN(value) && !float.IsInfinity(value);
+    }
+
+    public override void CollectRuntimeDebugData(List<StateScriptRuntimeDebugValue> values)
+    {
+        base.CollectRuntimeDebugData(values);
+        values.Add(new StateScriptRuntimeDebugValue("Has Last Value", _hasLastValue.ToString()));
+        values.Add(new StateScriptRuntimeDebugValue(
+            "Last Value",
+            _hasLastValue ? _lastValue.ToString("0.###") : "(none)"));
     }
 
     private static ComparatorFactory CreateExpressionFactory()

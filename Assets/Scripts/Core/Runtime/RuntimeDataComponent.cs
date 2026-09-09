@@ -141,6 +141,7 @@ namespace CrystalMagic.Core
         {
             _dungeonMapData.OpenFieldLayout = layout;
             _dungeonMapData.SceneData = sceneData;
+            _dungeonMapData.FogData = layout != null ? new RuntimeDungeonFogData(layout, sceneData) : null;
             _dungeonMapData.Floor = Mathf.Max(1, floor);
             _dungeonMapData.Seed = seed;
             _dungeonMapData.AttemptCount = Mathf.Max(1, attemptCount);
@@ -188,6 +189,7 @@ namespace CrystalMagic.Core
     {
         public OpenFieldDungeonLayout OpenFieldLayout;
         public RuntimeDungeonSceneData SceneData;
+        public RuntimeDungeonFogData FogData;
         public int Floor;
         public int Seed;
         public int AttemptCount;
@@ -198,6 +200,7 @@ namespace CrystalMagic.Core
         {
             OpenFieldLayout = null;
             SceneData = null;
+            FogData = null;
             Floor = 0;
             Seed = 0;
             AttemptCount = 0;
@@ -206,26 +209,55 @@ namespace CrystalMagic.Core
 
     public sealed class RuntimeDungeonSceneData
     {
-        public int ThemeId;
-        public string ThemeKey;
-        public bool IsBossFloor;
         public float CellWorldSize;
-        public int DisplayWidth;
-        public int DisplayHeight;
         public Vector3 PlayerSpawnWorldPosition;
-        public List<RuntimeDungeonTileSpawnData> TileSpawns = new();
+        public Rect CameraWorldBounds;
+        public RuntimeDungeonTerrainVisualData TerrainVisual = new();
+        public List<RuntimeDungeonObstacleSpawnData> ObstacleSpawns = new();
+
         public List<RuntimeDungeonEnvironmentSpawnData> EnvironmentSpawns = new();
         public List<RuntimeDungeonSceneObjectSpawnData> SceneObjects = new();
         public List<RuntimeDungeonMonsterSpawnData> MonsterSpawns = new();
     }
 
-    public sealed class RuntimeDungeonTileSpawnData
+    public enum RuntimeDungeonTilemapLayer
+    {
+        Void,
+        Ground,
+        Decoration,
+        Obstacle,
+        Boundary,
+    }
+
+    public sealed class RuntimeDungeonTerrainVisualData
+    {
+        public float CellWorldSize = 1f;
+        public Vector2 WorldOrigin;
+        public List<RuntimeDungeonRuleTilePlacement> Placements = new();
+    }
+
+    public sealed class RuntimeDungeonRuleTilePlacement
+    {
+        public RuntimeDungeonTilemapLayer Layer;
+        public string RuleTilePath;
+        public Vector2Int Cell;
+    }
+
+    public sealed class RuntimeDungeonObstacleVisualSpawnData
     {
         public string SpritePath;
         public string SpriteName;
-        public Vector4 UvRect;
         public Vector3 WorldPosition;
-        public float CellWorldSize;
+        public float SortAnchorWorldY;
+        public int RotationQuarterTurns;
+        public bool FlippedX;
+        public int LayerIndex;
+    }
+
+    public sealed class RuntimeDungeonObstacleSpawnData
+    {
+        public List<RuntimeDungeonObstacleVisualSpawnData> Visuals = new();
+        public List<Vector2Int> CollisionCells = new();
     }
 
     public sealed class RuntimeDungeonEnvironmentSpawnData

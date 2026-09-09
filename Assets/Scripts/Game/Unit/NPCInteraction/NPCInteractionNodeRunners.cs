@@ -102,7 +102,10 @@ public sealed class NPCOpenUIInteractionNodeRunner : NPCInteractionNodeRunner
         if (_openedPanel == null || UIComponent.Instance == null)
             return;
 
-        UIComponent.Instance.ReleaseUI(_openedPanel);
+        // UIBase.Close 已经会归还对象池；只有仍由 UIComponent 管理时才补做释放。
+        if (UIComponent.Instance.IsManaged(_openedPanel))
+            UIComponent.Instance.ReleaseUI(_openedPanel);
+
         _openedPanel = null;
     }
 }
@@ -284,6 +287,7 @@ public sealed class NPCSelectInteractionNodeRunner : NPCInteractionNodeRunner
         }
 
         _openedPanel = UIComponent.Instance.Open<InteractionSelectUI>(new InteractionSelectUIOpenData(
+            _node.Dialog,
             enabledOptions,
             option => HandleOptionSelected(session, option)));
 

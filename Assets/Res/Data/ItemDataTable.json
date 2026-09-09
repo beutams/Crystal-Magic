@@ -1,301 +1,52 @@
 ﻿{
-    "Rows":  [
-                 {
-                     "Id":  0,
-                     "ItemType":  1,
-                     "ExtraId":  0,
-                     "Rarity":  1,
-                     "MaxStack":  99,
-                     "SellPrice":  50,
-                     "IconPath":  "Assets/Res/Sprites/Item/Charging.png",
-                     "NameKey":  "skill.charge.name",
-                     "DescriptionKey":  ""
-                 },
-                 {
-                     "Id":  1,
-                     "ItemType":  1,
-                     "ExtraId":  1,
-                     "Rarity":  1,
-                     "MaxStack":  99,
-                     "SellPrice":  50,
-                     "IconPath":  "Assets/Res/Sprites/Item/FireBall.png",
-                     "NameKey":  "skill.fireball.name",
-                     "DescriptionKey":  ""
-                 },
-                 {
-                     "Id":  2,
-                     "ItemType":  1,
-                     "ExtraId":  2,
-                     "Rarity":  1,
-                     "MaxStack":  99,
-                     "SellPrice":  50,
-                     "IconPath":  "Assets/Res/Sprites/Item/FlameStream.png",
-                     "NameKey":  "skill.flame_impact.name",
-                     "DescriptionKey":  ""
-                 },
-                 {
-                     "Id":  3,
-                     "ItemType":  1,
-                     "ExtraId":  3,
-                     "Rarity":  1,
-                     "MaxStack":  99,
-                     "SellPrice":  50,
-                     "IconPath":  "Assets/Res/Sprites/Item/Detonate.png",
-                     "NameKey":  "skill.detonate.name",
-                     "DescriptionKey":  ""
-                 },
-                 {
-                     "Id":  4,
-                     "ItemType":  1,
-                     "ExtraId":  4,
-                     "Rarity":  1,
-                     "MaxStack":  99,
-                     "SellPrice":  50,
-                     "IconPath":  "Assets/Res/Sprites/Item/Eddies.png",
-                     "NameKey":  "skill.water_vortex.name",
-                     "DescriptionKey":  ""
-                 },
-                 {
-                     "Id":  5,
-                     "ItemType":  1,
-                     "ExtraId":  5,
-                     "Rarity":  1,
-                     "MaxStack":  99,
-                     "SellPrice":  50,
-                     "IconPath":  "Assets/Res/Sprites/Item/IceGland.png",
-                     "NameKey":  "skill.ice_spike.name",
-                     "DescriptionKey":  ""
-                 },
-                 {
-                     "Id":  6,
-                     "ItemType":  1,
-                     "ExtraId":  6,
-                     "Rarity":  1,
-                     "MaxStack":  99,
-                     "SellPrice":  50,
-                     "IconPath":  "Assets/Res/Sprites/Item/Freeze.png",
-                     "NameKey":  "skill.freeze.name",
-                     "DescriptionKey":  ""
-                 },
-                 {
-                     "Id":  7,
-                     "ItemType":  1,
-                     "ExtraId":  7,
-                     "Rarity":  1,
-                     "MaxStack":  99,
-                     "SellPrice":  50,
-                     "IconPath":  "Assets/Res/Sprites/Item/Lightning.png",
-                     "NameKey":  "skill.lightning_strike.name",
-                     "DescriptionKey":  ""
-                 },
-                 {
-                     "Id":  8,
-                     "ItemType":  1,
-                     "ExtraId":  8,
-                     "Rarity":  1,
-                     "MaxStack":  99,
-                     "SellPrice":  50,
-                     "IconPath":  "Assets/Res/Sprites/Item/Thunder Field.png",
-                     "NameKey":  "skill.thunder_field.name",
-                     "DescriptionKey":  ""
-                 },
-                 {
-                     "Id":  9,
-                     "ItemType":  1,
-                     "ExtraId":  9,
-                     "Rarity":  1,
-                     "MaxStack":  99,
-                     "SellPrice":  50,
-                     "IconPath":  "Assets/Res/Sprites/Item/Thunderstorm.png",
-                     "NameKey":  "skill.thunder_burst.name",
-                     "DescriptionKey":  ""
-                 },
-                 {
-                     "Id":  10,
-                     "ItemType":  1,
-                     "ExtraId":  10,
-                     "Rarity":  1,
-                     "MaxStack":  99,
-                     "SellPrice":  50,
-                     "IconPath":  "Assets/Res/Sprites/Item/SpeedUp.png",
-                     "NameKey":  "skill.haste.name",
-                     "DescriptionKey":  ""
-                 },
-                 {
-                     "Id":  11,
-                     "ItemType":  1,
-                     "ExtraId":  11,
-                     "Rarity":  1,
-                     "MaxStack":  99,
-                     "SellPrice":  50,
-                     "IconPath":  "Assets/Res/Sprites/Item/Heal.png",
-                     "NameKey":  "skill.restore.name",
-                     "DescriptionKey":  ""
-                 },
-                 {
-                     "Id":  12,
-                     "ItemType":  1,
-                     "ExtraId":  12,
-                     "Rarity":  1,
-                     "MaxStack":  99,
-                     "SellPrice":  50,
-                     "IconPath":  "Assets/Res/Sprites/Item/Shield.png",
-                     "NameKey":  "skill.barrier.name",
-                     "DescriptionKey":  ""
-                 },
-                 {
-                     "Id":  13,
-                     "ItemType":  3,
-                     "ExtraId":  0,
-                     "Rarity":  1,
-                     "MaxStack":  1,
-                     "SellPrice":  100,
-                     "IconPath":  "Assets/Res/Sprites/Item/ModifierAmplify.png",
-                     "NameKey":  "item.addition.amplify.name",
-                     "DescriptionKey":  "skill_addition.amplify.description"
-                 },
-                 {
-                     "Id":  14,
-                     "ItemType":  3,
-                     "ExtraId":  1,
-                     "Rarity":  1,
-                     "MaxStack":  1,
-                     "SellPrice":  100,
-                     "IconPath":  "Assets/Res/Sprites/Item/ModifierWideArea.png",
-                     "NameKey":  "item.addition.area.name",
-                     "DescriptionKey":  "skill_addition.area.description"
-                 },
-                 {
-                     "Id":  15,
-                     "ItemType":  3,
-                     "ExtraId":  2,
-                     "Rarity":  1,
-                     "MaxStack":  1,
-                     "SellPrice":  100,
-                     "IconPath":  "Assets/Res/Sprites/Item/ModifierHaste.png",
-                     "NameKey":  "item.addition.haste.name",
-                     "DescriptionKey":  "skill_addition.haste.description"
-                 },
-                 {
-                     "Id":  16,
-                     "ItemType":  3,
-                     "ExtraId":  3,
-                     "Rarity":  1,
-                     "MaxStack":  1,
-                     "SellPrice":  100,
-                     "IconPath":  "Assets/Res/Sprites/Item/ModifierGuard.png",
-                     "NameKey":  "item.addition.guard.name",
-                     "DescriptionKey":  "skill_addition.guard.description"
-                 },
-                 {
-                     "Id":  17,
-                     "ItemType":  4,
-                     "ExtraId":  101,
-                     "Rarity":  1,
-                     "MaxStack":  1,
-                     "SellPrice":  100,
-                     "IconPath":  "Assets/Res/Sprites/Item/MagicBoost.png",
-                     "NameKey":  "item.magic_boost.name",
-                     "DescriptionKey":  "item.magic_boost.description"
-                 },
-                 {
-                     "Id":  18,
-                     "ItemType":  4,
-                     "ExtraId":  102,
-                     "Rarity":  1,
-                     "MaxStack":  1,
-                     "SellPrice":  100,
-                     "IconPath":  "Assets/Res/Sprites/Item/LifeBoost.png",
-                     "NameKey":  "item.vitality_boost.name",
-                     "DescriptionKey":  "item.vitality_boost.description"
-                 },
-                 {
-                     "Id":  19,
-                     "ItemType":  4,
-                     "ExtraId":  103,
-                     "Rarity":  1,
-                     "MaxStack":  1,
-                     "SellPrice":  100,
-                     "IconPath":  "Assets/Res/Sprites/Item/Regeneration.png",
-                     "NameKey":  "item.sustained_recovery.name",
-                     "DescriptionKey":  "item.sustained_recovery.description"
-                 },
-                 {
-                     "Id":  20,
-                     "ItemType":  4,
-                     "ExtraId":  104,
-                     "Rarity":  1,
-                     "MaxStack":  1,
-                     "SellPrice":  100,
-                     "IconPath":  "Assets/Res/Sprites/Item/FireSpirit.png",
-                     "NameKey":  "item.fire_spirit.name",
-                     "DescriptionKey":  "item.fire_spirit.description"
-                 },
-                 {
-                     "Id":  21,
-                     "ItemType":  4,
-                     "ExtraId":  105,
-                     "Rarity":  1,
-                     "MaxStack":  1,
-                     "SellPrice":  100,
-                     "IconPath":  "Assets/Res/Sprites/Item/WaterSpirit.png",
-                     "NameKey":  "item.water_spirit.name",
-                     "DescriptionKey":  "item.water_spirit.description"
-                 },
-                 {
-                     "Id":  25,
-                     "ItemType":  2,
-                     "ExtraId":  2,
-                     "Rarity":  1,
-                     "MaxStack":  10,
-                     "SellPrice":  10,
-                     "IconPath":  "Assets/Res/Sprites/Item/SmallMpPotion.png",
-                     "NameKey":  "prop.small_mana.name",
-                     "DescriptionKey":  "prop.small_mana.description"
-                 },
-                 {
-                     "Id":  27,
-                     "ItemType":  3,
-                     "ExtraId":  5,
-                     "Rarity":  1,
-                     "MaxStack":  1,
-                     "SellPrice":  100,
-                     "IconPath":  "Assets/Res/Sprites/Item/ModifierBurst.png",
-                     "NameKey":  "item.addition.burst.name",
-                     "DescriptionKey":  "skill_addition.burst.description"
-                 },
-                 {
-                     "Id":  28,
-                     "ItemType":  3,
-                     "ExtraId":  6,
-                     "Rarity":  1,
-                     "MaxStack":  1,
-                     "SellPrice":  100,
-                     "IconPath":  "Assets/Res/Sprites/Item/ModifierMulticast.png",
-                     "NameKey":  "item.addition.repeat.name",
-                     "DescriptionKey":  "skill_addition.repeat.description"
-                 },
-                 {
-                     "Id":  29,
-                     "ItemType":  3,
-                     "ExtraId":  7,
-                     "Rarity":  1,
-                     "MaxStack":  1,
-                     "SellPrice":  100,
-                     "IconPath":  "Assets/Res/Sprites/Item/ModifierAntiMagic.png",
-                     "NameKey":  "item.addition.anti_magic.name",
-                     "DescriptionKey":  "skill_addition.anti_magic.description"
-                 },
-                 {
-                     "Id":  30,
-                     "ItemType":  4,
-                     "ExtraId":  108,
-                     "Rarity":  1,
-                     "MaxStack":  1,
-                     "SellPrice":  0,
-                     "IconPath":  "Assets/Res/Sprites/Item/MagicBoost.png",
-                     "NameKey":  "item.overpowered_staff.name",
-                     "DescriptionKey":  "item.overpowered_staff.description"
-                 }
-             ]
+    "Rows": [
+        {
+            "Id": 0,
+            "NameKey": "火焰戒指",
+            "DescriptionKey": "火焰",
+            "ItemType": 4,
+            "ExtraId": 1,
+            "Rarity": 1,
+            "MaxStack": 1,
+            "SellPrice": 30,
+            "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|fire",
+            "IsNonTransferable": false
+        },
+        {
+            "Id": 1,
+            "NameKey": "OP法杖",
+            "DescriptionKey": "OP",
+            "ItemType": 3,
+            "ExtraId": 2,
+            "Rarity": 1,
+            "MaxStack": 1,
+            "SellPrice": 0,
+            "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|op",
+            "IsNonTransferable": false
+        },
+        {
+            "Id": 2,
+            "NameKey": "小型魔力药剂",
+            "DescriptionKey": "魔力",
+            "ItemType": 2,
+            "ExtraId": 1,
+            "Rarity": 1,
+            "MaxStack": 1,
+            "SellPrice": 30,
+            "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|ys",
+            "IsNonTransferable": false
+        },
+        {
+            "Id": 3,
+            "NameKey": "法术火球术",
+            "DescriptionKey": "法术",
+            "ItemType": 1,
+            "ExtraId": 0,
+            "Rarity": 1,
+            "MaxStack": 1,
+            "SellPrice": 30,
+            "IconPath": "Assets/Res/Sprites/UISprites/240 Pixel Art Spell & Skill Icons - Dani Melich/Fire/64x64 PNGs/fire_skill_01.png",
+            "IsNonTransferable": false
+        }
+    ]
 }

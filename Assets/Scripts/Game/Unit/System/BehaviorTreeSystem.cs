@@ -7,7 +7,8 @@ partial class BehaviorTreeSystem : SystemBase
 {
     protected override void OnUpdate()
     {
-        if (GameGateComponent.Instance.IsSimulationLocked)
+        GameGateComponent gameGate = GameGateComponent.Instance;
+        if (gameGate != null && gameGate.IsSimulationLocked)
             return;
         float deltaTime = SystemAPI.Time.DeltaTime;
         EntityManager entityManager = EntityManager;

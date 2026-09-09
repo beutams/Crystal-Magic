@@ -109,6 +109,17 @@ namespace CrystalMagic.Core {
                 ? ResourceComponent.Instance.Load<TResource>(path)
                 : ResourceComponent.Instance.Load<TResource>(path, ownerKey);
         }
+
+        protected Sprite LoadManagedSprite(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return null;
+
+            string ownerKey = UIComponent.Instance.GetResourceOwnerKey(this);
+            return string.IsNullOrWhiteSpace(ownerKey)
+                ? ResourceComponent.Instance.LoadSprite(path)
+                : ResourceComponent.Instance.LoadSprite(path, ownerKey);
+        }
     }
 
     /// <summary>

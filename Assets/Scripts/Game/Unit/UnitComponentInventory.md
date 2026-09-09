@@ -278,10 +278,10 @@ interaction systems.
 
 | Component | Current role | Decision |
 | --- | --- | --- |
-| `SkillProjectileComponent` + `SkillProjectileHitEntityElement` + `SkillProjectilePayloadComponent` | Projectile motion, hit history, and managed effect payload. It has no animation state. | Keep. Flight and impact visuals belong to the projectile prefab and SpawnVfx effects, not skill data. |
-| `QuadAnimationComponent` + `QuadAnimationVisualComponent` | Generic frame-animation runtime and managed visual resource for VFX quads. | Keep. Projectiles no longer use this path. |
-| `FollowEntityComponent` | Makes an effect quad follow an entity, with offset and optional rotation alignment. | Keep unchanged. |
-| `QuadOverlayPulseComponent` | Timed material overlay pulse on a quad. | Keep unchanged. |
+| `SkillProjectileComponent` + `SkillProjectileHitEntityElement` + `SkillProjectilePayloadComponent` + `SkillProjectileVisualLinkComponent` | Projectile motion, hit history, managed effect payload, and the link to its independent visual entity. | Keep. Gameplay collision and destruction remain independent from visual playback. |
+| `SpriteEffectAnimationComponent` | Managed Enter/Loop/Exit clip playback state sampled into a SpriteRenderer companion. | Keep. Clips are frame sources only; no Animator is used at runtime. |
+| `EffectVisualFollowComponent` | Makes a sprite effect follow an entity, preserving its last transform and then ending when the target disappears. | Keep. Used by follow effects and projectile visuals. |
+| `QuadOverlayPulseComponent` | Timed sprite color overlay pulse for hit feedback. | Keep unchanged. |
 | `UnitInteractableComponent` | Generic kind, ID, amount, variant, range, and availability for spawned drops and other targets. | Keep. |
 | `DungeonMonsterSpawnComponent` | Dungeon region, squad, and boss identity for a spawned monster. | Keep unchanged. |
 | `TreasureComponent` + `DungeonTreasureCandidateItemElement` | Chest state and its generated candidate rewards. | Keep. |

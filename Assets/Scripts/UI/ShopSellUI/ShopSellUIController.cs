@@ -66,7 +66,7 @@ namespace CrystalMagic.UI
             if (inventoryItem == null || inventoryItem.ItemId != Model.ItemId || inventoryItem.Quantity < quantity)
                 return;
 
-            long totalSellPrice = (long)Model.Price * quantity;
+            long totalSellPrice = Model.TotalSellPrice;
             if (totalSellPrice > 0)
                 townData.StashMoney += totalSellPrice;
 

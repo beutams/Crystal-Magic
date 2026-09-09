@@ -19,6 +19,8 @@ namespace CrystalMagic.Game.OpenField
         public float MediumAmplitude = 0.5f;
         public float DetailFrequencyMultiplier = 8f;
         public float DetailAmplitude = 0.65f;
+        public int MinimumObstacleHeight = 1;
+        public int MaximumObstacleHeight = 4;
 
         public OpenFieldDungeonTerrainConfig CloneValidated()
         {
@@ -35,6 +37,8 @@ namespace CrystalMagic.Game.OpenField
                 MediumAmplitude = MediumAmplitude,
                 DetailFrequencyMultiplier = DetailFrequencyMultiplier,
                 DetailAmplitude = DetailAmplitude,
+                MinimumObstacleHeight = MinimumObstacleHeight,
+                MaximumObstacleHeight = MaximumObstacleHeight,
             };
             copy.EnsureValid();
             return copy;
@@ -53,6 +57,8 @@ namespace CrystalMagic.Game.OpenField
             MediumAmplitude = Mathf.Max(0f, MediumAmplitude);
             DetailFrequencyMultiplier = Mathf.Max(0.01f, DetailFrequencyMultiplier);
             DetailAmplitude = Mathf.Max(0f, DetailAmplitude);
+            MinimumObstacleHeight = Mathf.Max(1, MinimumObstacleHeight);
+            MaximumObstacleHeight = Mathf.Max(MinimumObstacleHeight, MaximumObstacleHeight);
         }
     }
 }

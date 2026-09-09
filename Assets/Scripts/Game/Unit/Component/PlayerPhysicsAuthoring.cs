@@ -11,7 +11,7 @@ public sealed class PlayerPhysicsAuthoring : MonoBehaviour
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             AddComponent(entity, new PhysicsMassOverride
             {
-                IsKinematic = 1,
+                IsKinematic = 0,
                 SetVelocityToZero = 0,
             });
         }

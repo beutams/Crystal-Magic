@@ -19,20 +19,26 @@ public class CharacterUI_SkillItemView : UISubView<CharacterUI_SkillItemData>, I
 
         if (data == null)
         {
-            UI.Skill.Image.sprite = null;
+            UI.SkillMask_Skill.Image.sprite = null;
             UI.Effect_EffectIcon.Image.sprite = null;
-            UI.Index_IndexNum.TextMeshProUGUI.text = string.Empty;
+            UI.Effect.GameObject.SetActive(false);
+            UI.Effect_EffectIcon.GameObject.SetActive(false);
+            UI.IndexNum.TextMeshProUGUI.text = string.Empty;
             return;
         }
 
-        UI.Index_IndexNum.TextMeshProUGUI.text = data.DisplayIndex.ToString();
-        UI.Skill.Image.sprite = LoadIcon(data.SkillIconPath);
-            UI.Effect_EffectIcon.Image.sprite = LoadIcon(data.AdditionIconPath);
+        UI.IndexNum.TextMeshProUGUI.text = data.DisplayIndex.ToString();
+        UI.SkillMask_Skill.Image.sprite = LoadIcon(data.SkillIconPath);
+        UI.Effect.GameObject.SetActive(data.CanSelectAddition);
+
+        Sprite additionIcon = LoadIcon(data.AdditionIconPath);
+        UI.Effect_EffectIcon.Image.sprite = additionIcon;
+        UI.Effect_EffectIcon.GameObject.SetActive(data.CanSelectAddition && additionIcon != null);
     }
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (_data == null || eventData == null)
+        if (_data == null || !_data.CanSelectAddition || eventData == null)
             return;
 
         DragStarted?.Invoke(_data, eventData);
@@ -56,7 +62,7 @@ public class CharacterUI_SkillItemView : UISubView<CharacterUI_SkillItemData>, I
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (_data == null || eventData == null || UI.Effect.RectTransform == null)
+        if (_data == null || eventData == null)
             return;
 
         Camera eventCamera = eventData.pressEventCamera != null ? eventData.pressEventCamera : eventData.enterEventCamera;
@@ -71,6 +77,6 @@ public class CharacterUI_SkillItemView : UISubView<CharacterUI_SkillItemData>, I
         if (string.IsNullOrEmpty(iconPath))
             return null;
 
-        return LoadManagedResource<Sprite>(iconPath);
+        return LoadManagedSprite(iconPath);
     }
 }

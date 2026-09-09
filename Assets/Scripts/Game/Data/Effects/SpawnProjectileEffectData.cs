@@ -8,6 +8,18 @@ namespace CrystalMagic.Game.Data.Effects
     [System.Serializable]
     public sealed class SpawnProjectileEffectData : EffectData
     {
+        [EditorLabel("逻辑投射物预制体名称")]
+        public string ProjectilePrefabName = "Projectile";
+
+        [EditorLabel("投射物视觉预制体名称")]
+        public string VisualPrefabName;
+
+        [EditorLabel("投射物视觉缩放")]
+        public float VisualScale = 1f;
+
+        [EditorLabel("投射物视觉偏移")]
+        public Vector3 VisualOffset;
+
         [EditorLabel("飞行速度")]
         public float Speed;
 
@@ -43,6 +55,7 @@ namespace CrystalMagic.Game.Data.Effects
             copy.Speed = ApplyModifierNonNegative(modifiers, SkillModifierChannel.ProjectileSpeed, Speed);
             copy.MaxRange = ApplyModifierNonNegative(modifiers, SkillModifierChannel.ProjectileRange, MaxRange);
             copy.HitRadius = ApplyModifierNonNegative(modifiers, SkillModifierChannel.ProjectileScale, math.max(0.01f, HitRadius));
+            copy.VisualScale = ApplyModifierNonNegative(modifiers, SkillModifierChannel.VfxScale, VisualScale);
             copy.OnCollisionEffects = CreateRuntimeCopies(OnCollisionEffects, modifiers, elementComponent);
             copy.OnDestroyEffects = CreateRuntimeCopies(OnDestroyEffects, modifiers, elementComponent);
             return copy;

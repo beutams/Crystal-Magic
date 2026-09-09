@@ -29,7 +29,10 @@ partial class UnitMoveSystem : SystemBase
             float maxSpeed = math.abs(targetSpeed);
             float maxAcceleration = math.max(0f, UnitModifierResolver.GetMaxAcceleration(EntityManager, entity));
             float2 targetVelocity = targetDirection * targetSpeed;
-            UpdateMoveVelocity(ref move, targetVelocity, maxAcceleration, maxSpeed, deltaTime);
+            if (move.StateMoveMultiplier <= 0f)
+                move.Velocity = float2.zero;
+            else
+                UpdateMoveVelocity(ref move, targetVelocity, maxAcceleration, maxSpeed, deltaTime);
 
             PhysicsVelocity physicsVelocity = physicsVelocityRef.ValueRO;
             LocalTransform transform = transformRef.ValueRO;
@@ -66,6 +69,5 @@ partial class UnitMoveSystem : SystemBase
         physicsVelocity.Linear = new float3(planarVelocity.x, planarVelocity.y, 0f);
         physicsVelocity.Angular = float3.zero;
         transform.Position.z = 0f;
-        transform.Rotation = quaternion.identity;
     }
 }

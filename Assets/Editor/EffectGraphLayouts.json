@@ -1,0 +1,45 @@
+{
+    "Version": 1,
+    "Entries": [
+        {
+            "OwnerKey": "Skill:0:EffectChain",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 0.0,
+                    "y": 66.0
+                },
+                "ViewScale": 1.0,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 202.0,
+                            "y": 64.0
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "SkillAddition:0:Callbacks[0].Actions[0].Effects",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 0.0,
+                    "y": 49.33333206176758
+                },
+                "ViewScale": 1.0,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 196.6666717529297,
+                            "y": 25.333335876464845
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        }
+    ]
+}

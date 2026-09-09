@@ -2,6 +2,18 @@ using System;
 using System.Collections.Generic;
 using CrystalMagic.Game.Data;
 
+public readonly struct StateScriptRuntimeDebugValue
+{
+    public StateScriptRuntimeDebugValue(string name, string value)
+    {
+        Name = name ?? string.Empty;
+        Value = value ?? string.Empty;
+    }
+
+    public string Name { get; }
+    public string Value { get; }
+}
+
 public abstract class StateScriptNode
 {
     private readonly List<StateScriptInputPort> _inputs = new();
@@ -18,6 +30,12 @@ public abstract class StateScriptNode
     public IReadOnlyList<StateScriptInputPort> Inputs => _inputs;
     public IReadOnlyList<StateScriptOutputPort> Outputs => _outputs;
     public long LastPulseTick { get; private set; } = -1;
+
+    // Editor-only consumers pull this snapshot; it never participates in StateScript execution.
+    public virtual void CollectRuntimeDebugData(List<StateScriptRuntimeDebugValue> values)
+    {
+        values.Add(new StateScriptRuntimeDebugValue("Last Pulse Tick", LastPulseTick.ToString()));
+    }
 
     public bool TryGetInput(string name, out StateScriptInputPort port)
     {

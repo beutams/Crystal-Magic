@@ -9,7 +9,6 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
 {
     private readonly List<CharacterUI_SkillItemView> _skillItemViews = new();
     private readonly List<CharacterUI_InventoryItemView> _inventoryItemViews = new();
-    private readonly CharacterUI_EquipSlotDragHandler[] _equipSlotHandlers = new CharacterUI_EquipSlotDragHandler[5];
     private readonly List<CrystalMagic.UI.CharacterSkillDisplayData> _currentSkillItems = new();
     private readonly CrystalMagic.UI.CharacterInventoryDisplayData[] _currentInventoryItems = new CrystalMagic.UI.CharacterInventoryDisplayData[32];
     private readonly CrystalMagic.UI.CharacterEquipDisplayData[] _currentEquipItems = new CrystalMagic.UI.CharacterEquipDisplayData[5];
@@ -20,7 +19,6 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
     private CrystalMagic.UI.CharacterEquipDisplayData _draggedEquipItem;
     private CrystalMagic.UI.CharacterSkillDisplayData _draggedSkillItem;
 
-    public event Action ChangeSkillRequested;
     public event Action<CrystalMagic.UI.CharacterInventoryDisplayData, int> InventorySkillStoneDropped;
     public event Action<CrystalMagic.UI.CharacterInventoryDisplayData, int> InventoryEquipDropped;
     public event Action<int> EquipReturnedToInventory;
@@ -28,11 +26,9 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
     public event Action<CrystalMagic.UI.CharacterSkillDisplayData> SkillAdditionRequested;
     public event Action<CrystalMagic.UI.CharacterSkillDisplayData, int> SkillReordered;
     public event Action<CrystalMagic.UI.CharacterSkillDisplayData> SkillReturnedToInventory;
-    public event Action<int, int> PropShortcutBindRequested;
 
     public override void OnOpen()
     {
-        UI.Skill_ChangeSkillBtn.ButtonPlus.onClick.AddListener(OnChangeSkillButton);
         EnsureEquipSlotHandlers();
         EnsureItemDragInitialized();
         EnsureSkillDragInitialized();
@@ -43,7 +39,6 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
 
     public override void OnClose()
     {
-        UI.Skill_ChangeSkillBtn.ButtonPlus.onClick.RemoveListener(OnChangeSkillButton);
         _draggedInventoryItem = null;
         _draggedEquipItem = null;
         _draggedSkillItem = null;
@@ -222,7 +217,6 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         handler.DragStarted += HandleEquipDragStarted;
         handler.Dragging += HandleEquipDragging;
         handler.DragEnded += HandleEquipDragEnded;
-        _equipSlotHandlers[slotIndex] = handler;
     }
 
     private void HandleInventoryDragStarted(CrystalMagic.UI.CharacterInventoryDisplayData data, PointerEventData eventData)
@@ -233,7 +227,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         _draggedEquipItem = null;
         _draggedSkillItem = null;
         _draggedInventoryItem = data;
-        UI.ItemDrag_Icon.Image.sprite = LoadIcon(data.IconPath);
+        UI.ItemDrag_Mask_Icon.Image.sprite = LoadIcon(data.IconPath);
         SetItemDragVisible(true);
         UpdateItemDragPosition(eventData);
     }
@@ -281,7 +275,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         _draggedInventoryItem = null;
         _draggedSkillItem = null;
         _draggedEquipItem = data;
-        UI.ItemDrag_Icon.Image.sprite = LoadIcon(data.IconPath);
+        UI.ItemDrag_Mask_Icon.Image.sprite = LoadIcon(data.IconPath);
         SetItemDragVisible(true);
         UpdateItemDragPosition(eventData);
     }
@@ -328,9 +322,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         _draggedInventoryItem = null;
         _draggedEquipItem = null;
         _draggedSkillItem = data;
-        UI.SkillDrag_Skill.Image.sprite = LoadIcon(data.SkillIconPath);
-        UI.SkillDrag_Effect_EffectIcon.Image.sprite = LoadIcon(data.AdditionIconPath);
-        UI.SkillDrag_Index_IndexNum.TextMeshProUGUI.text = data.DisplayIndex.ToString();
+        UI.SkillDrag_Mask_Icon.Image.sprite = LoadIcon(data.SkillIconPath);
         SetSkillDragVisible(true);
         UpdateSkillDragPosition(eventData);
     }
@@ -376,83 +368,72 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
 
     private void EnsureItemDragInitialized()
     {
-        if (_itemDragRaycastDisabled || UI.ItemDrag.GameObject == null)
-            return;
-
-        Graphic[] graphics = UI.ItemDrag.GameObject.GetComponentsInChildren<Graphic>(true);
-        for (int i = 0; i < graphics.Length; i++)
-            graphics[i].raycastTarget = false;
-
-        _itemDragRaycastDisabled = true;
+        DisableDragRaycasts(UI.ItemDrag.GameObject, ref _itemDragRaycastDisabled);
     }
 
     private void EnsureSkillDragInitialized()
     {
-        if (_skillDragRaycastDisabled || UI.SkillDrag.GameObject == null)
+        DisableDragRaycasts(UI.SkillDrag.GameObject, ref _skillDragRaycastDisabled);
+    }
+
+    private static void DisableDragRaycasts(GameObject dragObject, ref bool raycastsDisabled)
+    {
+        if (raycastsDisabled)
             return;
 
-        Graphic[] graphics = UI.SkillDrag.GameObject.GetComponentsInChildren<Graphic>(true);
+        Graphic[] graphics = dragObject.GetComponentsInChildren<Graphic>(true);
         for (int i = 0; i < graphics.Length; i++)
             graphics[i].raycastTarget = false;
 
-        _skillDragRaycastDisabled = true;
+        raycastsDisabled = true;
     }
 
     private void SetItemDragVisible(bool visible)
     {
-        if (UI.ItemDrag.GameObject == null)
-            return;
-
-        if (UI.ItemDrag.GameObject.activeSelf != visible)
-            UI.ItemDrag.GameObject.SetActive(visible);
+        SetDragVisible(UI.ItemDrag.GameObject, visible);
     }
 
     private void SetSkillDragVisible(bool visible)
     {
-        if (UI.SkillDrag.GameObject == null)
-            return;
+        SetDragVisible(UI.SkillDrag.GameObject, visible);
+    }
 
-        if (UI.SkillDrag.GameObject.activeSelf != visible)
-            UI.SkillDrag.GameObject.SetActive(visible);
+    private static void SetDragVisible(GameObject dragObject, bool visible)
+    {
+        if (dragObject.activeSelf != visible)
+            dragObject.SetActive(visible);
     }
 
     private void UpdateItemDragPosition(PointerEventData eventData)
     {
-        if (eventData == null || UI.ItemDrag.RectTransform == null)
-            return;
-
-        RectTransform parentRect = UI.ItemDrag.RectTransform.parent as RectTransform;
-        if (parentRect == null)
-        {
-            UI.ItemDrag.RectTransform.position = eventData.position;
-            return;
-        }
-
-        Camera eventCamera = eventData.pressEventCamera != null ? eventData.pressEventCamera : eventData.enterEventCamera;
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(parentRect, eventData.position, eventCamera, out Vector2 localPoint))
-            UI.ItemDrag.RectTransform.anchoredPosition = localPoint;
+        UpdateDragPosition(UI.ItemDrag.RectTransform, eventData);
     }
 
     private void UpdateSkillDragPosition(PointerEventData eventData)
     {
-        if (eventData == null || UI.SkillDrag.RectTransform == null)
+        UpdateDragPosition(UI.SkillDrag.RectTransform, eventData);
+    }
+
+    private static void UpdateDragPosition(RectTransform dragRect, PointerEventData eventData)
+    {
+        if (eventData == null)
             return;
 
-        RectTransform parentRect = UI.SkillDrag.RectTransform.parent as RectTransform;
+        RectTransform parentRect = dragRect.parent as RectTransform;
         if (parentRect == null)
         {
-            UI.SkillDrag.RectTransform.position = eventData.position;
+            dragRect.position = eventData.position;
             return;
         }
 
         Camera eventCamera = eventData.pressEventCamera != null ? eventData.pressEventCamera : eventData.enterEventCamera;
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(parentRect, eventData.position, eventCamera, out Vector2 localPoint))
-            UI.SkillDrag.RectTransform.anchoredPosition = localPoint;
+            dragRect.anchoredPosition = localPoint;
     }
 
     private bool IsPointerOverSkillChain(PointerEventData eventData)
     {
-        if (eventData == null || UI.Skill_SkillChain.RectTransform == null)
+        if (eventData == null)
             return false;
 
         Camera eventCamera = eventData.pressEventCamera != null ? eventData.pressEventCamera : eventData.enterEventCamera;
@@ -491,7 +472,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
 
     private bool IsPointerOverInventory(PointerEventData eventData)
     {
-        if (eventData == null || UI.InventoryView.RectTransform == null)
+        if (eventData == null)
             return false;
 
         Camera eventCamera = eventData.pressEventCamera != null ? eventData.pressEventCamera : eventData.enterEventCamera;
@@ -540,17 +521,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
 
     private bool Contains(RectTransform rectTransform, Vector2 screenPosition, Camera eventCamera)
     {
-        return rectTransform != null && RectTransformUtility.RectangleContainsScreenPoint(rectTransform, screenPosition, eventCamera);
-    }
-
-    private void OnChangeSkillButton()
-    {
-        ChangeSkillRequested?.Invoke();
-    }
-
-    public void RequestPropShortcutBind(int propSlotIndex, int shortcutIndex)
-    {
-        PropShortcutBindRequested?.Invoke(propSlotIndex, shortcutIndex);
+        return RectTransformUtility.RectangleContainsScreenPoint(rectTransform, screenPosition, eventCamera);
     }
 
     private Sprite LoadIcon(string iconPath)
@@ -558,7 +529,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         if (string.IsNullOrEmpty(iconPath))
             return null;
 
-        return LoadManagedResource<Sprite>(iconPath);
+        return LoadManagedSprite(iconPath);
     }
 }
 

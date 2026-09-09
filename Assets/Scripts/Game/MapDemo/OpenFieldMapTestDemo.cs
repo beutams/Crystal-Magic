@@ -11,11 +11,13 @@ namespace CrystalMagic.Game.MapDemo
     {
         private const int MinimumMapSide = 48;
         private const int AnchorPlacementAttempts = 512;
-
+        private const float BaseGroundHeight = 0.5f;
+        private const float HeightStepInterval = 0.1f;
         private enum TerrainGenerationMethod
         {
             FbmPerlin = 0,
             Voronoi = 1,
+            OrganicTerraces = 2,
         }
 
         private enum MapAnchorType
@@ -83,6 +85,7 @@ namespace CrystalMagic.Game.MapDemo
             public readonly int Height;
             public readonly float[] GroundY;
             public readonly ElevationBand[] ElevationBands;
+            public readonly int[] HeightSteps;
             public readonly bool[] WalkableMask;
             public readonly bool[] LineOfSightBlockerMask;
             public readonly bool[] ReachableFromSpawnMask;
@@ -100,6 +103,7 @@ namespace CrystalMagic.Game.MapDemo
                 Height = height;
                 GroundY = new float[width * height];
                 ElevationBands = new ElevationBand[width * height];
+                HeightSteps = new int[width * height];
                 WalkableMask = new bool[width * height];
                 LineOfSightBlockerMask = new bool[width * height];
                 ReachableFromSpawnMask = new bool[width * height];
@@ -129,8 +133,8 @@ namespace CrystalMagic.Game.MapDemo
         [Serializable]
         private sealed class FbmPerlinTerrainSettings
         {
-            [Range(0.01f, 0.99f)] public float LowToMiddleHeight = 0.42f;
-            [Range(0.01f, 0.99f)] public float MiddleToHighHeight = 0.58f;
+            [Range(0.01f, 0.99f)] public float LowToMiddleHeight = 0.4f;
+            [Range(0.01f, 0.99f)] public float MiddleToHighHeight = 0.6f;
             [Min(2f)] public float HighFrequencyMultiplier = 6f;
             [Range(0f, 1.5f)] public float HighFrequencyAmplitude = 0.65f;
 
@@ -153,6 +157,38 @@ namespace CrystalMagic.Game.MapDemo
             {
                 RegionCount = Mathf.Max(3, RegionCount);
                 EdgeJitter = Mathf.Clamp(EdgeJitter, 0f, 12f);
+            }
+        }
+
+        [Serializable]
+        private sealed class TerracedRegionTerrainSettings
+        {
+            [Tooltip("Controls the size of the primary mountains and basins. Lower values make larger landforms.")]
+            [Range(0.005f, 0.08f)] public float LandformFrequency = 0.028f;
+            [Tooltip("Offsets the continuous terrain field before it is terraced, bending contour lines into natural curves.")]
+            [Range(0f, 30f)] public float WarpStrength = 14f;
+            [Range(0.001f, 0.2f)] public float WarpFrequency = 0.025f;
+            [Tooltip("Adds smaller bends and secondary landforms without changing the large-scale silhouette.")]
+            [Range(0f, 0.5f)] public float FineDetailWeight = 0.18f;
+            [Range(1.5f, 8f)] public float FineDetailFrequencyMultiplier = 3.5f;
+            [Tooltip("Approximate fraction of the map kept at elevation zero. It remains the only walkable terrain.")]
+            [Range(0.3f, 0.85f)] public float GroundRegionChance = 0.55f;
+            [Tooltip("Approximate fraction of the map assigned to void; the remaining non-ground terrain becomes obstacle.")]
+            [Range(0.05f, 0.5f)] public float VoidRegionChance = 0.2f;
+            [Min(1)] public int MinimumObstacleHeight = 1;
+            [Min(1)] public int MaximumObstacleHeight = 4;
+
+            public void Validate()
+            {
+                LandformFrequency = Mathf.Clamp(LandformFrequency, 0.005f, 0.08f);
+                WarpStrength = Mathf.Clamp(WarpStrength, 0f, 30f);
+                WarpFrequency = Mathf.Clamp(WarpFrequency, 0.001f, 0.2f);
+                FineDetailWeight = Mathf.Clamp(FineDetailWeight, 0f, 0.5f);
+                FineDetailFrequencyMultiplier = Mathf.Clamp(FineDetailFrequencyMultiplier, 1.5f, 8f);
+                GroundRegionChance = Mathf.Clamp(GroundRegionChance, 0.3f, 0.85f);
+                VoidRegionChance = Mathf.Clamp(VoidRegionChance, 0.05f, 0.95f - GroundRegionChance);
+                MinimumObstacleHeight = Mathf.Max(1, MinimumObstacleHeight);
+                MaximumObstacleHeight = Mathf.Max(MinimumObstacleHeight, MaximumObstacleHeight);
             }
         }
 
@@ -298,6 +334,187 @@ namespace CrystalMagic.Game.MapDemo
             }
         }
 
+        /// <summary>
+        /// Builds an organic, continuous relief field before turning it into discrete
+        /// heights. Domain warping changes only the contour shape; the final values are
+        /// still whole steps, so the runtime keeps its hard cliffs and simple collision.
+        /// </summary>
+        private sealed class TerracedRegionTerrainStep : ITerrainGenerationStep
+        {
+            private readonly TerracedRegionTerrainSettings _settings;
+
+            private readonly struct NoiseOffsets
+            {
+                public readonly float WarpX;
+                public readonly float WarpY;
+                public readonly float MacroX;
+                public readonly float MacroY;
+                public readonly float RidgeX;
+                public readonly float RidgeY;
+                public readonly float DetailX;
+                public readonly float DetailY;
+
+                public NoiseOffsets(System.Random random)
+                {
+                    WarpX = random.Next(-10000, 10001);
+                    WarpY = random.Next(-10000, 10001);
+                    MacroX = random.Next(-10000, 10001);
+                    MacroY = random.Next(-10000, 10001);
+                    RidgeX = random.Next(-10000, 10001);
+                    RidgeY = random.Next(-10000, 10001);
+                    DetailX = random.Next(-10000, 10001);
+                    DetailY = random.Next(-10000, 10001);
+                }
+            }
+
+            public TerracedRegionTerrainStep(TerracedRegionTerrainSettings settings)
+            {
+                _settings = settings;
+            }
+
+            public bool IsWalkable(ElevationBand band)
+            {
+                return band == ElevationBand.Middle;
+            }
+
+            public void Generate(OpenFieldMapData mapData, int seed)
+            {
+                System.Random random = new(seed);
+                NoiseOffsets offsets = new(random);
+                float[] terrainField = new float[mapData.Width * mapData.Height];
+
+                for (int y = 0; y < mapData.Height; y++)
+                {
+                    for (int x = 0; x < mapData.Width; x++)
+                    {
+                        Vector2 samplePosition = GetWarpedSamplePosition(x, y, offsets.WarpX, offsets.WarpY);
+                        terrainField[mapData.GetIndex(x, y)] = SampleTerrainField(samplePosition, offsets);
+                    }
+                }
+
+                AssignTerracedHeights(mapData, terrainField);
+            }
+
+            private float SampleTerrainField(Vector2 samplePosition, NoiseOffsets offsets)
+            {
+                float terrainHeight = SampleFbm(samplePosition, offsets.MacroX, offsets.MacroY, _settings.LandformFrequency, 4) * 0.78f;
+                float ridges = SampleRidgedFbm(samplePosition, offsets.RidgeX, offsets.RidgeY, _settings.LandformFrequency * 0.62f, 3) - 0.5f;
+                terrainHeight += ridges * 0.34f;
+                float detail = SampleFbm(
+                    samplePosition,
+                    offsets.DetailX,
+                    offsets.DetailY,
+                    _settings.LandformFrequency * _settings.FineDetailFrequencyMultiplier,
+                    2);
+                terrainHeight += detail * _settings.FineDetailWeight;
+
+                return terrainHeight;
+            }
+
+            private void AssignTerracedHeights(OpenFieldMapData mapData, float[] terrainField)
+            {
+                float[] sortedField = (float[])terrainField.Clone();
+                Array.Sort(sortedField);
+                float voidThreshold = GetQuantile(sortedField, _settings.VoidRegionChance);
+                float obstacleThreshold = GetQuantile(sortedField, 1f - GetObstacleCoverage());
+                float maximum = sortedField[^1];
+
+                for (int index = 0; index < terrainField.Length; index++)
+                {
+                    int heightSteps = terrainField[index] switch
+                    {
+                        var value when value <= voidThreshold => -1,
+                        var value when value >= obstacleThreshold => GetStepMagnitude(
+                            value,
+                            obstacleThreshold,
+                            maximum,
+                            _settings.MinimumObstacleHeight,
+                            _settings.MaximumObstacleHeight),
+                        _ => 0,
+                    };
+                    mapData.HeightSteps[index] = heightSteps;
+                    mapData.GroundY[index] = BaseGroundHeight + heightSteps * HeightStepInterval;
+                    mapData.ElevationBands[index] = heightSteps switch
+                    {
+                        < 0 => ElevationBand.Low,
+                        > 0 => ElevationBand.High,
+                        _ => ElevationBand.Middle,
+                    };
+                }
+            }
+
+            private float GetObstacleCoverage()
+            {
+                return Mathf.Max(0.01f, 1f - _settings.GroundRegionChance - _settings.VoidRegionChance);
+            }
+
+            private Vector2 GetWarpedSamplePosition(float x, float y, float offsetX, float offsetY)
+            {
+                if (_settings.WarpStrength <= 0f)
+                    return new Vector2(x, y);
+
+                float frequency = _settings.WarpFrequency;
+                float warpX = SampleFbm(new Vector2(x, y), offsetX, offsetY, frequency, 3) * _settings.WarpStrength;
+                float warpY = SampleFbm(new Vector2(x, y), offsetX + 251f, offsetY - 137f, frequency, 3) * _settings.WarpStrength;
+                return new Vector2(x + warpX, y + warpY);
+            }
+
+            private static float SampleFbm(Vector2 position, float offsetX, float offsetY, float frequency, int octaves)
+            {
+                float value = 0f;
+                float amplitude = 1f;
+                float amplitudeSum = 0f;
+                for (int octave = 0; octave < octaves; octave++)
+                {
+                    value += (Mathf.PerlinNoise(
+                        (position.x + offsetX) * frequency,
+                        (position.y + offsetY) * frequency) * 2f - 1f) * amplitude;
+                    amplitudeSum += amplitude;
+                    frequency *= 2f;
+                    amplitude *= 0.5f;
+                }
+
+                return value / amplitudeSum;
+            }
+
+            private static float SampleRidgedFbm(Vector2 position, float offsetX, float offsetY, float frequency, int octaves)
+            {
+                float value = 0f;
+                float amplitude = 1f;
+                float amplitudeSum = 0f;
+                for (int octave = 0; octave < octaves; octave++)
+                {
+                    float sample = Mathf.PerlinNoise(
+                        (position.x + offsetX) * frequency,
+                        (position.y + offsetY) * frequency) * 2f - 1f;
+                    value += (1f - Mathf.Abs(sample)) * amplitude;
+                    amplitudeSum += amplitude;
+                    frequency *= 2f;
+                    amplitude *= 0.5f;
+                }
+
+                return value / amplitudeSum;
+            }
+
+            private static float GetQuantile(float[] sortedValues, float fraction)
+            {
+                int index = Mathf.Clamp(Mathf.FloorToInt((sortedValues.Length - 1) * fraction), 0, sortedValues.Length - 1);
+                return sortedValues[index];
+            }
+
+            private static int GetStepMagnitude(float value, float threshold, float extreme, int minimumSteps, int maximumSteps)
+            {
+                if (Mathf.Approximately(threshold, extreme))
+                    return minimumSteps;
+
+                float normalizedDistance = Mathf.InverseLerp(threshold, extreme, value);
+                return Mathf.Clamp(
+                    Mathf.RoundToInt(Mathf.Lerp(minimumSteps, maximumSteps, normalizedDistance)),
+                    minimumSteps,
+                    maximumSteps);
+            }
+        }
+
         [Header("Map Size")]
         [SerializeField, Min(MinimumMapSide)] private int _mapWidth = 80;
         [SerializeField, Min(MinimumMapSide)] private int _mapHeight = 200;
@@ -305,6 +522,7 @@ namespace CrystalMagic.Game.MapDemo
         [SerializeField] private TerrainGenerationMethod _terrainGenerationMethod = TerrainGenerationMethod.FbmPerlin;
         [SerializeField] private FbmPerlinTerrainSettings _fbmPerlinTerrain = new();
         [SerializeField] private VoronoiTerrainSettings _voronoiTerrain = new();
+        [SerializeField] private TerracedRegionTerrainSettings _terracedRegionTerrain = new();
         [Header("Gameplay Content")]
         [SerializeField] private GameplayContentSettings _gameplayContent = new();
 
@@ -333,6 +551,9 @@ namespace CrystalMagic.Game.MapDemo
         public int PreviewWidth => _lastMapData?.Width ?? 0;
         public int PreviewHeight => _lastMapData?.Height ?? 0;
         public int PreviewSeed => _previewSeed;
+        public bool HasPlayableMap => _lastMapData != null;
+        public string PreviewStageName => TerrainGenerationName;
+        public event Action MapGenerated;
         public string PreviewContentSummary => _lastMapData == null
             ? "Content: none"
             : $"Chests: {_lastMapData.ChestCount}  Interest: L1 {_lastMapData.InterestMonsterLevel1Count} / L2 {_lastMapData.InterestMonsterLevel2Count} / L3 {_lastMapData.InterestMonsterLevel3Count}  Wild: {_lastMapData.WildMonsterCount}";
@@ -340,7 +561,8 @@ namespace CrystalMagic.Game.MapDemo
         {
             TerrainGenerationMethod.FbmPerlin => "fBm Perlin",
             TerrainGenerationMethod.Voronoi => "Voronoi",
-            _ => "Voronoi",
+            TerrainGenerationMethod.OrganicTerraces => "Organic Terraces",
+            _ => "Organic Terraces",
         };
 
         private void Start()
@@ -359,9 +581,11 @@ namespace CrystalMagic.Game.MapDemo
             _mapHeight = Mathf.Max(MinimumMapSide, _mapHeight);
             _fbmPerlinTerrain ??= new FbmPerlinTerrainSettings();
             _voronoiTerrain ??= new VoronoiTerrainSettings();
+            _terracedRegionTerrain ??= new TerracedRegionTerrainSettings();
             _gameplayContent ??= new GameplayContentSettings();
             _fbmPerlinTerrain.Validate();
             _voronoiTerrain.Validate();
+            _terracedRegionTerrain.Validate();
             _gameplayContent.Validate();
         }
 
@@ -425,10 +649,64 @@ namespace CrystalMagic.Game.MapDemo
 
         private void ApplyGeneratedPreview(OpenFieldMapData mapData, int seed)
         {
+            BuildHeightSteps(mapData);
             _lastMapData = mapData;
             _previewSeed = seed;
             BuildTexture(mapData);
             RequestPreviewRepaint();
+            MapGenerated?.Invoke();
+        }
+
+        public bool IsWalkableCell(int x, int y)
+        {
+            return _lastMapData != null && _lastMapData.IsWalkableCell(x, y);
+        }
+
+        /// <summary>
+        /// Gets the visual elevation of a cell in whole grid steps.
+        /// Ground is always zero; only Void and Obstacle cells have a negative or positive elevation.
+        /// </summary>
+        public int GetHeightSteps(int x, int y)
+        {
+            if (_lastMapData == null || x < 0 || x >= _lastMapData.Width || y < 0 || y >= _lastMapData.Height)
+                return 0;
+
+            return _lastMapData.HeightSteps[_lastMapData.GetIndex(x, y)];
+        }
+
+        public Vector2Int GetSpawnCell()
+        {
+            if (_lastMapData != null)
+            {
+                for (int i = 0; i < _lastMapData.Anchors.Count; i++)
+                {
+                    MapAnchor anchor = _lastMapData.Anchors[i];
+                    if (anchor.Type == MapAnchorType.Spawn)
+                        return anchor.Cell;
+                }
+            }
+
+            return Vector2Int.zero;
+        }
+
+        /// <summary>
+        /// Gets every non-spawn anchor restored from the latest generated map.
+        /// The play demo uses these cells as connectivity targets for blocking decorations.
+        /// </summary>
+        public IReadOnlyList<Vector2Int> GetInterestCells()
+        {
+            List<Vector2Int> cells = new();
+            if (_lastMapData == null)
+                return cells;
+
+            for (int i = 0; i < _lastMapData.Anchors.Count; i++)
+            {
+                MapAnchor anchor = _lastMapData.Anchors[i];
+                if (anchor.Type != MapAnchorType.Spawn)
+                    cells.Add(anchor.Cell);
+            }
+
+            return cells;
         }
 
         private static OpenFieldMapData ConvertCoreLayoutToPreview(OpenFieldDungeonLayout layout)
@@ -518,7 +796,12 @@ namespace CrystalMagic.Game.MapDemo
 
         private ITerrainGenerationStep GetTerrainGenerationStep()
         {
-            return new VoronoiTerrainStep(_voronoiTerrain);
+            return _terrainGenerationMethod switch
+            {
+                TerrainGenerationMethod.Voronoi => new VoronoiTerrainStep(_voronoiTerrain),
+                TerrainGenerationMethod.OrganicTerraces => new TerracedRegionTerrainStep(_terracedRegionTerrain),
+                _ => new VoronoiTerrainStep(_voronoiTerrain),
+            };
         }
 
         private int NextSeed()
@@ -567,6 +850,23 @@ namespace CrystalMagic.Game.MapDemo
                 ElevationBand band = mapData.ElevationBands[index];
                 mapData.WalkableMask[index] = terrainStep.IsWalkable(band);
                 mapData.LineOfSightBlockerMask[index] = band == ElevationBand.High;
+            }
+        }
+
+        private static void BuildHeightSteps(OpenFieldMapData mapData)
+        {
+            for (int index = 0; index < mapData.HeightSteps.Length; index++)
+            {
+                mapData.HeightSteps[index] = mapData.ElevationBands[index] switch
+                {
+                    ElevationBand.High => Mathf.Max(
+                        1,
+                        Mathf.FloorToInt((mapData.GroundY[index] - BaseGroundHeight + 0.0001f) / HeightStepInterval)),
+                    ElevationBand.Low => -Mathf.Max(
+                        1,
+                        Mathf.FloorToInt((BaseGroundHeight - mapData.GroundY[index] + 0.0001f) / HeightStepInterval)),
+                    _ => 0,
+                };
             }
         }
 
@@ -892,7 +1192,7 @@ namespace CrystalMagic.Game.MapDemo
                 for (int x = 0; x < mapData.Width; x++)
                 {
                     int index = mapData.GetIndex(x, y);
-                    pixels[index] = GetElevationBandColor(mapData.ElevationBands[index]);
+                    pixels[index] = GetElevationBandColor(mapData.ElevationBands[index], mapData.HeightSteps[index]);
                 }
             }
 
@@ -971,16 +1271,13 @@ namespace CrystalMagic.Game.MapDemo
             };
         }
 
-        private Color GetElevationBandColor(ElevationBand band)
+        private static Color GetElevationBandColor(ElevationBand band, int heightSteps)
         {
-            if (_terrainGenerationMethod == TerrainGenerationMethod.Voronoi && band != ElevationBand.High)
-                return MidHeightColor;
-
             return band switch
             {
-                ElevationBand.Low => LowHeightColor,
+                ElevationBand.Low => Color.Lerp(LowHeightColor, Color.black, Mathf.Clamp01((-heightSteps - 1) * 0.18f)),
                 ElevationBand.Middle => MidHeightColor,
-                ElevationBand.High => HighHeightColor,
+                ElevationBand.High => Color.Lerp(HighHeightColor, new Color(0.78f, 0.55f, 0.34f, 1f), Mathf.Clamp01((heightSteps - 1) * 0.18f)),
                 _ => MidHeightColor,
             };
         }
@@ -1000,7 +1297,7 @@ namespace CrystalMagic.Game.MapDemo
 
         private void OnGUI()
         {
-            if (_mapTexture == null)
+            if (Application.isPlaying || _mapTexture == null)
                 return;
 
             float padding = 20f;
@@ -1057,7 +1354,8 @@ namespace CrystalMagic.Game.MapDemo
             {
                 TerrainGenerationMethod.FbmPerlin => $"Detail: {_fbmPerlinTerrain.HighFrequencyMultiplier:0.0}x  Amplitude: {_fbmPerlinTerrain.HighFrequencyAmplitude:0.00}",
                 TerrainGenerationMethod.Voronoi => $"Regions: {_voronoiTerrain.RegionCount}  Edge Jitter: {_voronoiTerrain.EdgeJitter:0.0}",
-                _ => string.Empty,
+                TerrainGenerationMethod.OrganicTerraces => $"Landform Scale: {_terracedRegionTerrain.LandformFrequency:0.000}  Boundary Warp: {_terracedRegionTerrain.WarpStrength:0.0}",
+                _ => "Organic Terraces",
             };
         }
 
@@ -1067,7 +1365,8 @@ namespace CrystalMagic.Game.MapDemo
             {
                 TerrainGenerationMethod.FbmPerlin => "Walkable: Middle only; Low Void; High Cliff",
                 TerrainGenerationMethod.Voronoi => "Walkable: Low + Middle; High Cliff",
-                _ => string.Empty,
+                TerrainGenerationMethod.OrganicTerraces => "Walkable: Ground only; Low Void; High Cliff",
+                _ => "Walkable: Ground only",
             };
         }
 
@@ -1078,9 +1377,11 @@ namespace CrystalMagic.Game.MapDemo
 
         private string GetLowElevationLabel()
         {
-            return _terrainGenerationMethod == TerrainGenerationMethod.FbmPerlin
-                ? "Low / Void"
-                : "Low / Walkable";
+            return _terrainGenerationMethod switch
+            {
+                TerrainGenerationMethod.Voronoi => "Low / Walkable",
+                _ => "Low / Void",
+            };
         }
 
         private void DrawLegendEntry(float x, float y, Color color, string label)
