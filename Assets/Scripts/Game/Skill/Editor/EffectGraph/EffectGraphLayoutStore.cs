@@ -38,7 +38,7 @@ namespace CrystalMagic.Editor.EffectGraph
 
     public sealed class EffectGraphLayoutStore
     {
-        public const string DefaultPath = "Assets/Editor/EffectGraphLayouts.json";
+        public const string DefaultPath = "Assets/Scripts/Game/Skill/Editor/EffectGraph/EffectGraphLayouts.json";
 
         private readonly string _path;
 

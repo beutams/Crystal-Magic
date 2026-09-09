@@ -1,3 +1,44 @@
 ﻿{
-  "Rows": []
+  "Rows": [
+    {
+      "NameKey": "燃烧",
+      "CanStack": true,
+      "MaxStacks": 5,
+      "PropertyModifiers": [],
+      "SkillModifiers": [],
+      "TriggerEntries": [
+        {
+          "TriggerType": 0,
+          "TickIntervalSeconds": 0.5,
+          "HookType": 0,
+          "ConsumeStackOnTrigger": false,
+          "Effects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "DamageCoefficient": 0.0,
+              "FlatDamageBonus": 5.0,
+              "Element": 2,
+              "Conditions": []
+            }
+          ]
+        }
+      ],
+      "Id": 0
+    },
+    {
+      "NameKey": "爆炎",
+      "CanStack": true,
+      "MaxStacks": 5,
+      "PropertyModifiers": [
+        {
+          "Channel": 2,
+          "Factor": 0.0,
+          "Bonus": -1.0
+        }
+      ],
+      "SkillModifiers": [],
+      "TriggerEntries": [],
+      "Id": 1
+    }
+  ]
 }

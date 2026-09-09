@@ -2,6 +2,7 @@
   "Rows": [
     {
       "NameKey": "增幅",
+      "DescriptionKey": "技能的伤害提升",
       "IconPath": "Assets/Res/Sprites/UISprites/240 Pixel Art Spell & Skill Icons - Dani Melich/Arcane/64x64 PNGs/arcane_skill_20.png",
       "Callbacks": [
         {
@@ -75,6 +76,7 @@
     },
     {
       "NameKey": "双发",
+      "DescriptionKey": "连续释放两次，但是第二次只会造成少量伤害",
       "IconPath": "Assets/Res/Sprites/UISprites/240 Pixel Art Spell & Skill Icons - Dani Melich/Arcane/64x64 PNGs/arcane_skill_20.png",
       "Callbacks": [
         {
@@ -88,7 +90,28 @@
               "Values": [
                 {
                   "Kind": 1,
+                  "Literal": {
+                    "Type": 3,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
                   "GetterKey": "player.skill.currentSkillId",
+                  "OperationType": "",
                   "Inputs": []
                 }
               ]
@@ -102,8 +125,26 @@
                   "Kind": 0,
                   "Literal": {
                     "Type": 1,
-                    "Bool": true
+                    "Bool": true,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
                   },
+                  "GetterKey": "",
+                  "OperationType": "",
                   "Inputs": []
                 }
               ]
@@ -123,16 +164,52 @@
                     "Kind": 0,
                     "Literal": {
                       "Type": 3,
-                      "Float": -0.9
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": -0.9,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
                     },
+                    "GetterKey": "",
+                    "OperationType": "",
                     "Inputs": []
                   },
                   "Bonus": {
                     "Kind": 0,
                     "Literal": {
                       "Type": 3,
-                      "Float": 0.0
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
                     },
+                    "GetterKey": "",
+                    "OperationType": "",
                     "Inputs": []
                   }
                 }
@@ -142,6 +219,212 @@
         }
       ],
       "Id": 1
+    },
+    {
+      "NameKey": "节省",
+      "DescriptionKey": "技能MP消耗降低减半，但伤害也会同时降低",
+      "Callbacks": [
+        {
+          "EventName": "",
+          "Conditions": [],
+          "Actions": [
+            {
+              "$type": "CrystalMagic.Game.Data.ModifyCurrentSkillAdditionActionData, Assembly-CSharp",
+              "Modifiers": [
+                {
+                  "Channel": 100,
+                  "Factor": {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": -0.9,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  },
+                  "Bonus": {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                },
+                {
+                  "Channel": 0,
+                  "Factor": {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.5,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  },
+                  "Bonus": {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "Id": 2
+    },
+    {
+      "NameKey": "扩散",
+      "DescriptionKey": "技能范围扩大一半",
+      "Callbacks": [
+        {
+          "EventName": "",
+          "Conditions": [],
+          "Actions": [
+            {
+              "$type": "CrystalMagic.Game.Data.ModifyCurrentSkillAdditionActionData, Assembly-CSharp",
+              "Modifiers": [
+                {
+                  "Channel": 200,
+                  "Factor": {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.5,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  },
+                  "Bonus": {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "Id": 3
+    },
+    {
+      "NameKey": "格挡",
+      "Callbacks": [],
+      "Id": 4
     }
   ]
 }

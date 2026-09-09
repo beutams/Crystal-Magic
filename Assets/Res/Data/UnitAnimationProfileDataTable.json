@@ -226,6 +226,69 @@
         }
       ],
       "Id": 4
+    },
+    {
+      "UnitDataId": 11,
+      "UnitName": "Swordsman",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Swordsman/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Swordsman/IdleRight.anim"
+        },
+        {
+          "Name": "Move",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Swordsman/WalkLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Swordsman/WalkRight.anim"
+        },
+        {
+          "Name": "Attack01",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Swordsman/Attack01Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Swordsman/Attack01Right.anim"
+        },
+        {
+          "Name": "Attack02",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Swordsman/Attack02Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Swordsman/Attack02Right.anim"
+        },
+        {
+          "Name": "Attack03",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Swordsman/Attack03Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Swordsman/Attack03Right.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Swordsman/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Swordsman/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Swordsman/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Swordsman/DeathRight.anim"
+        }
+      ],
+      "Id": 5
     }
   ]
 }

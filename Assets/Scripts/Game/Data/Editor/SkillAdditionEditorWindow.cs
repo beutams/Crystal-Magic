@@ -176,11 +176,6 @@ namespace CrystalMagic.Editor.Data
                 callback.Actions.Add(new ExecuteEffectsSkillAdditionActionData());
                 MarkDirty();
             }
-            if (GUILayout.Button("+ Replay", GUILayout.Width(80f)))
-            {
-                callback.Actions.Add(new ReplayCurrentSkillAdditionActionData());
-                MarkDirty();
-            }
             EditorGUILayout.EndHorizontal();
 
             int removeAction = -1;

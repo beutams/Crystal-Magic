@@ -1,8 +1,7 @@
 ﻿{
   "Rows": [
     {
-      "NameKey": "火球术",
-      "AnimationName": "",
+      "NameKey": "火球",
       "IsMonsterSkill": false,
       "DescriptionKey": "",
       "RuntimeType": "CommonSkill",
@@ -64,6 +63,13 @@
               ],
               "OnAfterSearch": [
                 {
+                  "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+                  "BuffId": -1,
+                  "DurationSeconds": 1.0,
+                  "StackCount": 1,
+                  "Conditions": []
+                },
+                {
                   "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
                   "DamageCoefficient": 2.0,
                   "FlatDamageBonus": 0.0,
@@ -87,6 +93,173 @@
         }
       ],
       "Id": 0,
+      "EffectiveRuntimeType": "CommonSkill"
+    },
+    {
+      "NameKey": "爆炎弹",
+      "IsMonsterSkill": false,
+      "DescriptionKey": "",
+      "RuntimeType": "CommonSkill",
+      "InputType": 0,
+      "MpCost": 0,
+      "ChantDuration": 0.0,
+      "CastingMoveMultiplier": 1.0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnProjectileEffectData, Assembly-CSharp",
+          "ProjectilePrefabName": "Projectile",
+          "VisualPrefabName": "",
+          "VisualScale": 1.0,
+          "VisualOffset": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "Speed": 0.0,
+          "MaxRange": 0.0,
+          "SpawnOffsetDistance": 0.0,
+          "HitRadius": 0.75,
+          "CanPierce": false,
+          "TriggerDestroyEffectsOnMaxRange": false,
+          "OnCollisionEffects": null,
+          "OnDestoryEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
+              "VfxPrefabName": "",
+              "Duration": 0.0,
+              "Scale": 1.0,
+              "SpawnOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "AlignToCasterForward": false,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+              "Radius": 0.0,
+              "CenterOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "TargetConditions": [],
+              "OnAfterSearch": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+                  "BuffId": -1,
+                  "DurationSeconds": 1.0,
+                  "StackCount": 1,
+                  "Conditions": []
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+                  "DamageCoefficient": 0.0,
+                  "FlatDamageBonus": 0.0,
+                  "Element": 0,
+                  "Conditions": []
+                }
+              ],
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "Id": 1,
+      "EffectiveRuntimeType": "CommonSkill"
+    },
+    {
+      "NameKey": "坠炎",
+      "IsMonsterSkill": false,
+      "DescriptionKey": "",
+      "RuntimeType": "CommonSkill",
+      "InputType": 0,
+      "MpCost": 0,
+      "ChantDuration": 0.0,
+      "CastingMoveMultiplier": 1.0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [],
+      "Id": 2,
+      "EffectiveRuntimeType": "CommonSkill"
+    },
+    {
+      "NameKey": "点燃",
+      "IsMonsterSkill": false,
+      "DescriptionKey": "",
+      "RuntimeType": "CommonSkill",
+      "InputType": 0,
+      "MpCost": 0,
+      "ChantDuration": 0.0,
+      "CastingMoveMultiplier": 1.0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [],
+      "Id": 3,
+      "EffectiveRuntimeType": "CommonSkill"
+    },
+    {
+      "NameKey": "焦土",
+      "IsMonsterSkill": false,
+      "DescriptionKey": "",
+      "RuntimeType": "CommonSkill",
+      "InputType": 0,
+      "MpCost": 0,
+      "ChantDuration": 0.0,
+      "CastingMoveMultiplier": 1.0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [],
+      "Id": 4,
+      "EffectiveRuntimeType": "CommonSkill"
+    },
+    {
+      "NameKey": "引爆",
+      "IsMonsterSkill": false,
+      "DescriptionKey": "",
+      "RuntimeType": "CommonSkill",
+      "InputType": 0,
+      "MpCost": 0,
+      "ChantDuration": 0.0,
+      "CastingMoveMultiplier": 1.0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [],
+      "Id": 5,
+      "EffectiveRuntimeType": "CommonSkill"
+    },
+    {
+      "NameKey": "火径",
+      "IsMonsterSkill": false,
+      "DescriptionKey": "",
+      "RuntimeType": "CommonSkill",
+      "InputType": 0,
+      "MpCost": 0,
+      "ChantDuration": 0.0,
+      "CastingMoveMultiplier": 1.0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [],
+      "Id": 6,
+      "EffectiveRuntimeType": "CommonSkill"
+    },
+    {
+      "NameKey": "火盾",
+      "IsMonsterSkill": false,
+      "DescriptionKey": "",
+      "RuntimeType": "CommonSkill",
+      "InputType": 0,
+      "MpCost": 0,
+      "ChantDuration": 0.0,
+      "CastingMoveMultiplier": 1.0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [],
+      "Id": 7,
       "EffectiveRuntimeType": "CommonSkill"
     }
   ]

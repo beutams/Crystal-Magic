@@ -1,0 +1,145 @@
+{
+    "Version": 1,
+    "Entries": [
+        {
+            "OwnerKey": "Skill:0:EffectChain",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 144.0,
+                    "y": -136.0
+                },
+                "ViewScale": 0.6575162410736084,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 68.0,
+                            "y": 209.0
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/0/OnCollisionEffects",
+                        "Position": {
+                            "x": 35.0,
+                            "y": 392.0
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/0/OnDestroyEffects",
+                        "Position": {
+                            "x": 239.0,
+                            "y": 394.0
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/0/OnDestroyEffects/1/OnAfterSearch",
+                        "Position": {
+                            "x": 289.0,
+                            "y": 655.0
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "SkillAddition:0:Callbacks[0].Actions[0].Effects",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 0.0,
+                    "y": 49.33333206176758
+                },
+                "ViewScale": 1.0,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 196.6666717529297,
+                            "y": 25.333335876464845
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "Skill:1:EffectChain",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 198.0,
+                    "y": -44.0
+                },
+                "ViewScale": 0.6575162410736084,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 54.0,
+                            "y": 198.0
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/0/OnDestroyEffects",
+                        "Position": {
+                            "x": 155.0,
+                            "y": 374.0
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/0/OnDestroyEffects/1/OnAfterSearch",
+                        "Position": {
+                            "x": 203.0,
+                            "y": 660.0
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "Buff:0:TriggerEntries[0].Effects",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 0.0,
+                    "y": 15.0
+                },
+                "ViewScale": 1.0,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 84.0,
+                            "y": 201.0
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "SkillAddition:4:Callbacks[0].Actions[1].Effects",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "ViewScale": 1.0,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 280.0,
+                            "y": 60.0
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        }
+    ]
+}

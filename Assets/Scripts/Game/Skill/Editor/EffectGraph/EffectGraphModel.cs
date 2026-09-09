@@ -135,11 +135,19 @@ namespace CrystalMagic.Editor.EffectGraph
             if (target == null || !EffectGraphTypeRegistry.TryCreate(effectType, out EffectData effect))
                 return null;
 
+            return InsertEffect(target, effect, insertIndex) ? effect : null;
+        }
+
+        public bool InsertEffect(EffectGraphContainerModel target, EffectData effect, int insertIndex)
+        {
+            if (target == null || effect == null || _ownerContainers.ContainsKey(effect))
+                return false;
+
             List<EffectData> effects = new(target.Effects);
             effects.Insert(Math.Clamp(insertIndex, 0, effects.Count), effect);
             target.SetEffects(effects.ToArray());
             NotifyAndRebuild();
-            return effect;
+            return true;
         }
 
         public bool RemoveEffect(EffectGraphContainerModel source, int sourceIndex)

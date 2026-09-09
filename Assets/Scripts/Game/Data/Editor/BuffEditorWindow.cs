@@ -17,7 +17,7 @@ namespace CrystalMagic.Editor.Data
 {
     /// <summary>
     /// Buff 编辑器
-    /// 左侧：Buff 列表；右侧：选中 Buff 的完整配置（支持多态子类）
+    /// 左侧：Buff 列表；右侧：选中 Buff 的完整配置
     /// 菜单路径：Tools/Data/Buff Editor
     /// </summary>
     public class BuffEditorWindow : EditorWindow
@@ -34,46 +34,6 @@ namespace CrystalMagic.Editor.Data
         private static readonly string[] BuffTriggerTypeDisplayNames = EditorLabelUtility.GetEnumDisplayNames<BuffTriggerType>();
         private static readonly SkillHookType[] BuffHookTypes = (SkillHookType[])Enum.GetValues(typeof(SkillHookType));
         private static readonly string[] BuffHookTypeDisplayNames = EditorLabelUtility.GetEnumDisplayNames<SkillHookType>();
-
-        // ===== Buff 瀛愮被娉ㄥ唽 =====
-        private static readonly Type[]   KnownBuffTypes =
-        {
-            typeof(PropertyBuffData),
-            typeof(EffectBuffData),
-            typeof(SkillModifierBuffData),
-            typeof(SkillAdditionGrantBuffData),
-        };
-        private static readonly string[] KnownBuffNames =
-        {
-            "属性修饰 (PropertyBuff)",
-            "特效 (EffectBuff)",
-            "技能修正 (SkillModifierBuff)",
-            "技能附加授予 (SkillAdditionGrantBuff)",
-        };
-        private static readonly Color[] BuffColors =
-        {
-            new(0.14f, 0.50f, 0.24f),  // PropertyBuff - 绿
-            new(0.60f, 0.18f, 0.14f),  // EffectBuff - 红
-            new(0.30f, 0.26f, 0.62f),  // SkillModifierBuff - 紫
-            new(0.52f, 0.36f, 0.08f),  // SkillAdditionGrantBuff - 金
-        };
-
-        // ===== Effect 子类注册（用于 Buff 触发条目）=====
-        private static string[] GetBuffTypeDisplayNames()
-        {
-            string[] displayNames = new string[KnownBuffTypes.Length];
-            for (int i = 0; i < displayNames.Length; i++)
-                displayNames[i] = i < KnownBuffNames.Length ? KnownBuffNames[i] : KnownBuffTypes[i].Name;
-
-            return displayNames;
-        }
-
-        private static Color GetBuffTypeColor(int typeIndex)
-        {
-            return typeIndex >= 0 && typeIndex < BuffColors.Length
-                ? BuffColors[typeIndex]
-                : Color.gray;
-        }
 
         private static readonly Type[] KnownEffectTypes =
         {
@@ -146,7 +106,6 @@ namespace CrystalMagic.Editor.Data
 
         // ===== UI 鐘舵€?=====
         private int     _selectedIndex     = -1;
-        private int     _addBuffTypeIndex;
         private int     _addEffectTypeIndex;
         private Vector2 _listScrollPos;
         private Vector2 _detailScrollPos;
@@ -267,13 +226,10 @@ namespace CrystalMagic.Editor.Data
         // --------------------
         private void AddBuff()
         {
-            BuffData newBuff = (BuffData)Activator.CreateInstance(KnownBuffTypes[_addBuffTypeIndex]);
+            BuffData newBuff = new();
             newBuff.Id       = _rows.Count;
             newBuff.NameKey  = $"buff.new_{_rows.Count}.name";
             newBuff.MaxStacks = 1;
-
-            if (newBuff is EffectBuffData te)
-                te.TriggerEntries = new List<BuffTriggerEntry>();
 
             _rows.Add(newBuff);
             NormalizeRowIds();
@@ -363,9 +319,6 @@ namespace CrystalMagic.Editor.Data
                 SaveData();
             GUI.enabled = true;
 
-            // 先选择 Buff 子类，再执行新增
-            _addBuffTypeIndex = EditorGUILayout.Popup(_addBuffTypeIndex, GetBuffTypeDisplayNames(),
-                EditorStyles.toolbarPopup, GUILayout.Width(180));
             if (GUILayout.Button("Add", EditorStyles.toolbarButton, GUILayout.Width(52)))
                 AddBuff();
 
@@ -446,14 +399,9 @@ namespace CrystalMagic.Editor.Data
                     }
                 }
 
-                // 左侧小色块用于标记 Buff 子类
-                int    typeIdx  = Array.IndexOf(KnownBuffTypes, buff.GetType());
-                Color  typeColor = GetBuffTypeColor(typeIdx);
-                EditorGUI.DrawRect(new Rect(insertRect.xMax + 4f, itemRect.y, 4f, itemRect.height), typeColor);
-
                 string label = $"[{buff.Id}]  {(string.IsNullOrEmpty(buff.Name) ? "（未命名）" : buff.Name)}";
                 GUI.Label(
-                    new Rect(insertRect.xMax + 14f, itemRect.y + 4, itemRect.width - insertRect.width - 14f, itemRect.height - 4),
+                    new Rect(insertRect.xMax + 8f, itemRect.y + 4, itemRect.width - insertRect.width - 8f, itemRect.height - 4),
                     label,
                     isSelected ? EditorStyles.whiteLabel : EditorStyles.label);
 
@@ -497,19 +445,10 @@ namespace CrystalMagic.Editor.Data
                 return;
             }
 
-            BuffData buff    = _rows[_selectedIndex];
-            int      typeIdx = Array.IndexOf(KnownBuffTypes, buff.GetType());
-            string   typeName = typeIdx >= 0 ? GetBuffTypeDisplayNames()[typeIdx] : buff.GetType().Name;
+            BuffData buff = _rows[_selectedIndex];
 
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            if (typeIdx >= 0)
-            {
-                Color prev = GUI.color;
-                GUI.color = GetBuffTypeColor(typeIdx);
-                GUILayout.Label("●", GUILayout.Width(14));
-                GUI.color = prev;
-            }
-            GUILayout.Label($"[{buff.Id}]  {buff.Name}  ·  {typeName}", EditorStyles.boldLabel);
+            GUILayout.Label($"[{buff.Id}]  {buff.Name}", EditorStyles.boldLabel);
             EditorGUILayout.EndHorizontal();
 
             _detailScrollPos = EditorGUILayout.BeginScrollView(_detailScrollPos);
@@ -534,7 +473,6 @@ namespace CrystalMagic.Editor.Data
             DrawPropertyBuffFields(buff);
             DrawSkillModifierFields(buff);
             DrawEffectBuffFields(buff);
-            DrawSkillAdditionGrantFields(buff);
 
             EditorGUIUtility.labelWidth = prevLabelWidth;
             EditorGUILayout.EndScrollView();
@@ -542,7 +480,7 @@ namespace CrystalMagic.Editor.Data
         }
 
         // --------------------
-        // PropertyBuffData 字段
+        // 属性修饰字段
         // --------------------
         private void DrawPropertyBuffFields(BuffData buff)
         {
@@ -625,7 +563,7 @@ namespace CrystalMagic.Editor.Data
         }
 
         // --------------------
-        // SkillModifierBuffData 字段
+        // 技能修正字段
         // --------------------
         private void DrawSkillModifierFields(BuffData buff)
         {
@@ -670,37 +608,6 @@ namespace CrystalMagic.Editor.Data
             if (removeAt >= 0)
             {
                 buff.SkillModifiers.RemoveAt(removeAt);
-                _isDirty = true;
-            }
-        }
-
-        private void DrawSkillAdditionGrantFields(BuffData buff)
-        {
-            if (buff is not SkillAdditionGrantBuffData additionGrant)
-                return;
-
-            DrawSectionHeader("技能附加授予");
-            additionGrant.SkillAdditionIds ??= new List<int>();
-
-            int removeAt = -1;
-            for (int i = 0; i < additionGrant.SkillAdditionIds.Count; i++)
-            {
-                EditorGUILayout.BeginHorizontal();
-                additionGrant.SkillAdditionIds[i] = EditorGUILayout.IntField("Addition Id", additionGrant.SkillAdditionIds[i]);
-                if (GUILayout.Button("删除", GUILayout.Width(44)))
-                    removeAt = i;
-                EditorGUILayout.EndHorizontal();
-            }
-
-            if (GUILayout.Button("+ 添加 Addition", GUILayout.Width(120)))
-            {
-                additionGrant.SkillAdditionIds.Add(-1);
-                _isDirty = true;
-            }
-
-            if (removeAt >= 0)
-            {
-                additionGrant.SkillAdditionIds.RemoveAt(removeAt);
                 _isDirty = true;
             }
         }

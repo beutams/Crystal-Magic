@@ -243,67 +243,14 @@ namespace CrystalMagic.Editor.Data
                 _isDirty = true;
             }
 
-            EditorGUILayout.Space(6f);
-            DrawInteractionGraph(interaction);
+            EditorGUILayout.Space(4f);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField($"{interaction.Nodes?.Count ?? 0} node(s)", EditorStyles.miniLabel);
+            if (GUILayout.Button("Open Graph", GUILayout.Width(100f)))
+                NPCInteractionGraphWindow.Open(this, row, interaction);
+            EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.EndVertical();
-        }
-
-        private void DrawInteractionGraph(NPCInteractionData interaction)
-        {
-            EditorGUILayout.Space(4f);
-            EditorGUI.BeginChangeCheck();
-            interaction.EntryNodeGuid = DrawNodeGuidPopup("Entry Node", interaction, interaction.EntryNodeGuid, null);
-            if (EditorGUI.EndChangeCheck())
-            {
-                _isDirty = true;
-            }
-
-            EditorGUILayout.Space(4f);
-            DrawGraphTerminal("Start", new Color(0.23f, 0.49f, 0.76f));
-            Rect startRect = GUILayoutUtility.GetLastRect();
-
-            if (interaction.Nodes.Count == 0)
-            {
-                if (GUILayout.Button("Add Entry Node", GUILayout.Width(120f)))
-                {
-                    ShowAddEntryNodeMenu(interaction);
-                }
-                EditorGUILayout.HelpBox("No node configured.", MessageType.None);
-                return;
-            }
-
-            List<List<NPCInteractionNodeData>> levels = BuildNodeLevels(interaction);
-            List<GraphEdge> edges = CollectGraphEdges(interaction);
-            Dictionary<string, Rect> nodeRects = new Dictionary<string, Rect>(StringComparer.Ordinal);
-            for (int levelIndex = 0; levelIndex < levels.Count; levelIndex++)
-            {
-                EditorGUILayout.BeginHorizontal();
-                GUILayout.FlexibleSpace();
-
-                List<NPCInteractionNodeData> levelNodes = levels[levelIndex];
-                for (int i = 0; i < levelNodes.Count; i++)
-                {
-                    Rect nodeRect = DrawGraphNode(interaction, levelNodes[i]);
-                    nodeRects[levelNodes[i].Guid] = nodeRect;
-                    if (i < levelNodes.Count - 1)
-                    {
-                        GUILayout.Space(GraphNodeGap);
-                    }
-                }
-
-                GUILayout.FlexibleSpace();
-                EditorGUILayout.EndHorizontal();
-
-                if (levelIndex < levels.Count - 1)
-                {
-                    GUILayout.Space(GraphLevelGap);
-                }
-            }
-
-            DrawGraphTerminal("End", new Color(0.27f, 0.63f, 0.36f));
-            Rect endRect = GUILayoutUtility.GetLastRect();
-            DrawGraphLines(interaction, nodeRects, edges, startRect, endRect);
         }
 
         private void LoadData()
@@ -371,6 +318,17 @@ namespace CrystalMagic.Editor.Data
                 _statusText = $"Save failed: {ex.Message}";
                 Debug.LogError($"[NPCEditor] Save error:\n{ex}");
             }
+        }
+
+        internal void MarkDirtyFromGraph()
+        {
+            _isDirty = true;
+            Repaint();
+        }
+
+        internal void SaveDataFromGraph()
+        {
+            SaveData();
         }
 
         private void NormalizeRowIds()

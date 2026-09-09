@@ -1,0 +1,99 @@
+{
+    "Version": 1,
+    "Entries": [
+        {
+            "OwnerKey": "NPC:Assets/Res/Prefab/Unit/NPCTraining.prefab:Interaction:0:Training",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 200.0,
+                    "y": 28.0
+                },
+                "ViewScale": 0.6575162410736084,
+                "Nodes": [
+                    {
+                        "Guid": "9fa755485fd94a18b7e4b386a3b5307a",
+                        "Position": {
+                            "x": 300.0,
+                            "y": 110.0
+                        }
+                    },
+                    {
+                        "Guid": "6d0a28f1c4c14e89a514e6de07be4b91",
+                        "Position": {
+                            "x": 600.0,
+                            "y": 110.0
+                        }
+                    },
+                    {
+                        "Guid": "c1a95e3707ff40248bb5153c55295ff8",
+                        "Position": {
+                            "x": 900.0,
+                            "y": 110.0
+                        }
+                    },
+                    {
+                        "Guid": "dungeon_floor_21",
+                        "Position": {
+                            "x": 300.0,
+                            "y": 330.0
+                        }
+                    },
+                    {
+                        "Guid": "dungeon_floor_41",
+                        "Position": {
+                            "x": 600.0,
+                            "y": 330.0
+                        }
+                    },
+                    {
+                        "Guid": "dungeon_floor_61",
+                        "Position": {
+                            "x": 900.0,
+                            "y": 330.0
+                        }
+                    },
+                    {
+                        "Guid": "dungeon_floor_81",
+                        "Position": {
+                            "x": 300.0,
+                            "y": 550.0
+                        }
+                    },
+                    {
+                        "Guid": "dungeon_floor_101",
+                        "Position": {
+                            "x": 600.0,
+                            "y": 550.0
+                        }
+                    },
+                    {
+                        "Guid": "3d003138da8c4619980f4cf904066d0d",
+                        "Position": {
+                            "x": 900.0,
+                            "y": 550.0
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "NPC:Assets/Res/Prefab/Unit/NPCPropShop.prefab:Interaction:0:OpenPropShop",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 73.0,
+                    "y": 13.0
+                },
+                "ViewScale": 0.8695651888847351,
+                "Nodes": [
+                    {
+                        "Guid": "14dfb732e88441b099f7fe7cb07fe71f",
+                        "Position": {
+                            "x": 300.0,
+                            "y": 110.0
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}

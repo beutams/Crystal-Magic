@@ -3,20 +3,7 @@
     {
       "Properties": [
         {
-          "Channel": 11,
-          "BaseBonus": 0.3
-        }
-      ],
-      "Id": 1
-    },
-    {
-      "Properties": [
-        {
           "Channel": 1,
-          "BaseBonus": 1000.0
-        },
-        {
-          "Channel": 6,
           "BaseBonus": 1000.0
         },
         {
@@ -24,8 +11,21 @@
           "BaseBonus": 1000.0
         },
         {
+          "Channel": 6,
+          "BaseBonus": 1000.0
+        },
+        {
           "Channel": 7,
           "BaseBonus": 1000.0
+        }
+      ],
+      "Id": 1
+    },
+    {
+      "Properties": [
+        {
+          "Channel": 11,
+          "BaseBonus": 0.3
         }
       ],
       "Id": 2

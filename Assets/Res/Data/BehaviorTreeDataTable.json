@@ -1,24 +1,76 @@
 ﻿{
-    "Rows":  [
-                 {
-                     "UnitDataId":  3,
-                     "Name":  "MonsterStraw",
-                     "Description":  "Test strawman empty behavior tree",
-                     "RootNodeGuid":  "monster_straw_root",
-                     "Nodes":  [
-                                   {
-                                       "Type":  "Root",
-                                       "Guid":  "monster_straw_root",
-                                       "EditorPosition":  {
-                                                              "x":  80,
-                                                              "y":  120
-                                                          },
-                                       "ChildGuids":  [
-
-                                                      ]
-                                   }
-                               ],
-                     "Id":  1
-                 }
-             ]
+  "Rows": [
+    {
+      "UnitDataId": 3,
+      "Name": "MonsterStraw",
+      "Description": "Test strawman empty behavior tree",
+      "RootNodeGuid": "monster_straw_root",
+      "Nodes": [
+        {
+          "Type": "Root",
+          "Guid": "monster_straw_root",
+          "EditorPosition": {
+            "x": 116.0,
+            "y": 85.0
+          },
+          "ChildGuids": []
+        }
+      ],
+      "Id": 1
+    },
+    {
+      "UnitDataId": 9,
+      "Name": "Werewolf",
+      "Description": "",
+      "RootNodeGuid": "c15c480cf53d4eee9a1b29462c1683b1",
+      "Nodes": [
+        {
+          "Type": "Root",
+          "Guid": "c15c480cf53d4eee9a1b29462c1683b1",
+          "EditorPosition": {
+            "x": 80.0,
+            "y": 120.0
+          },
+          "ChildGuids": []
+        }
+      ],
+      "Id": 2
+    },
+    {
+      "UnitDataId": 10,
+      "Name": "Werebear",
+      "Description": "",
+      "RootNodeGuid": "e68ee1f5ce13426b906bce0226088ad2",
+      "Nodes": [
+        {
+          "Type": "Root",
+          "Guid": "e68ee1f5ce13426b906bce0226088ad2",
+          "EditorPosition": {
+            "x": 80.0,
+            "y": 120.0
+          },
+          "ChildGuids": []
+        }
+      ],
+      "Id": 3
+    },
+    {
+      "UnitDataId": 11,
+      "Name": "Swordsman",
+      "Description": "",
+      "RootNodeGuid": "93dde939e8644a6abef4eb0aa8a8e77e",
+      "Nodes": [
+        {
+          "Type": "Root",
+          "Guid": "93dde939e8644a6abef4eb0aa8a8e77e",
+          "EditorPosition": {
+            "x": 80.0,
+            "y": 120.0
+          },
+          "ChildGuids": []
+        }
+      ],
+      "Id": 4
+    }
+  ]
 }

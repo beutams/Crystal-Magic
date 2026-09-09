@@ -2,26 +2,26 @@
     "Rows": [
         {
             "Id": 0,
-            "NameKey": "火焰戒指",
-            "DescriptionKey": "火焰",
+            "NameKey": "OP法杖",
+            "DescriptionKey": "OP法杖",
             "ItemType": 4,
             "ExtraId": 1,
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 30,
-            "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|fire",
+            "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|op",
             "IsNonTransferable": false
         },
         {
             "Id": 1,
-            "NameKey": "OP法杖",
-            "DescriptionKey": "OP",
+            "NameKey": "火焰戒指",
+            "DescriptionKey": "火焰戒指",
             "ItemType": 3,
             "ExtraId": 2,
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 0,
-            "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|op",
+            "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|fire",
             "IsNonTransferable": false
         },
         {

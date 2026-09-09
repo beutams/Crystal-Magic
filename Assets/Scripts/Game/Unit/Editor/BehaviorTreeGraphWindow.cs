@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Core;
+using CrystalMagic.Editor;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
@@ -749,7 +750,33 @@ namespace CrystalMagic.Editor.Unit
             SyncNodePositionsFromGraph();
             _selectedPrefabPath = entry?.AssetPath;
             _selectedSourceSchema = UnitSourceSchemaFactory.CreateForPrefab(entry?.Prefab);
+
+            if (CreateEmptyTreeIfMissing(entry))
+            {
+                MarkDirty();
+                UpdateStatus($"Created an empty behavior tree for {entry.DisplayName}. Save to persist it.");
+            }
+
             RebuildGraph();
+        }
+
+        private bool CreateEmptyTreeIfMissing(UnitPrefabEntry entry)
+        {
+            if (entry?.UnitData == null || GetTreeForUnit(entry.UnitData.Id) != null)
+                return false;
+
+            RootBehaviorNodeData root = (RootBehaviorNodeData)BehaviorNodeDataRegistry.Create(BehaviorNodeTypes.Root);
+            root.EditorPosition = new Vector2(80f, 120f);
+            _rows.Add(new BehaviorTreeData
+            {
+                Id = GetNextTreeId(),
+                UnitDataId = entry.UnitData.Id,
+                Name = entry.DisplayName,
+                Description = string.Empty,
+                RootNodeGuid = root.Guid,
+                Nodes = new List<BehaviorNodeData> { root },
+            });
+            return true;
         }
 
         private void BeginTreeDrag(UnitPrefabEntry entry, Rect entryRect)
@@ -888,6 +915,13 @@ namespace CrystalMagic.Editor.Unit
                 {
                     _statusText = $"Loaded empty behavior tree data | {DataPath}";
                 }
+
+                if (CreateEmptyTreeIfMissing(SelectedUnitEntry))
+                {
+                    _isDirty = true;
+                    _statusText = $"Created an empty behavior tree for {SelectedUnitEntry.DisplayName}. Save to persist it.";
+                }
+
                 UpdateStatus(_statusText);
                 RebuildGraph();
             }
@@ -1059,7 +1093,7 @@ namespace CrystalMagic.Editor.Unit
             {
                 string path = AssetDatabase.GUIDToAssetPath(prefabGuids[i]);
                 GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-                if (prefab == null)
+                if (prefab == null || prefab.GetComponent<UnitBehaviorTreeAuthoring>() == null)
                     continue;
 
                 UnitData unitData = EditorComponents.Data.Find<UnitData>(row =>
@@ -1431,7 +1465,7 @@ namespace CrystalMagic.Editor.Unit
         }
     }
 
-    public sealed class BehaviorTreeNodeView : Node
+    public sealed class BehaviorTreeNodeView : TopBottomPortNode
     {
         public BehaviorTreeNodeView(BehaviorNodeData nodeData)
         {
@@ -1441,9 +1475,7 @@ namespace CrystalMagic.Editor.Unit
 
             if (SupportsInput(nodeData))
             {
-                InputPort = Port.Create<Edge>(Orientation.Horizontal, Direction.Input, Port.Capacity.Single, typeof(bool));
-                InputPort.portName = "Input";
-                inputContainer.Add(InputPort);
+                InputPort = CreateTopInput("Input", Port.Capacity.Single, typeof(bool));
             }
 
             if (BehaviorTreeGraphView.SupportsChildren(nodeData))
@@ -1451,9 +1483,7 @@ namespace CrystalMagic.Editor.Unit
                 Port.Capacity capacity = BehaviorTreeGraphView.GetMaxChildCount(nodeData) == 1
                     ? Port.Capacity.Single
                     : Port.Capacity.Multi;
-                OutputPort = Port.Create<Edge>(Orientation.Horizontal, Direction.Output, capacity, typeof(bool));
-                OutputPort.portName = "Output";
-                outputContainer.Add(OutputPort);
+                OutputPort = CreateBottomOutput("Output", capacity, typeof(bool));
             }
 
             RefreshDisplay();

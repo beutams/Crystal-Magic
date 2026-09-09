@@ -582,16 +582,7 @@ namespace CrystalMagic.Editor.Skill
             using (new EditorGUI.DisabledScope(true))
                 EditorGUILayout.IntField("Id", skill.Id);
 
-            bool isMonsterSkill = EditorGUILayout.Toggle("Monster Skill", skill.IsMonsterSkill);
-            if (isMonsterSkill != skill.IsMonsterSkill)
-            {
-                skill.IsMonsterSkill = isMonsterSkill;
-                _showMonsterSkills = isMonsterSkill;
-                EnsureSelectedSkillVisible();
-            }
-
             skill.NameKey = EditorGUILayout.TextField("Name Key", skill.NameKey ?? string.Empty);
-            skill.AnimationName = EditorGUILayout.TextField("Animation Name", skill.AnimationName ?? string.Empty);
             EditorGUILayout.LabelField("Description Key");
             skill.DescriptionKey = EditorGUILayout.TextArea(skill.DescriptionKey ?? string.Empty, GUILayout.MinHeight(48f), GUILayout.MaxHeight(80f));
             DrawRuntimeTypeField(skill);
