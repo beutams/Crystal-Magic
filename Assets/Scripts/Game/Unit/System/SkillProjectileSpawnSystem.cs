@@ -1,10 +1,13 @@
+using System.Collections.Generic;
 using CrystalMagic.Game.Unit;
+using CrystalMagic.Game.Skill;
 using CrystalMagic.Game.Skill.Effects;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
+[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(SkillReleaseSystem))]
 [UpdateBefore(typeof(SkillProjectileSystem))]
@@ -102,7 +105,8 @@ public partial class SkillProjectileSpawnSystem : SystemBase
         if (EntityManager.HasComponent<SkillProjectilePayloadComponent>(entity))
         {
             SkillProjectilePayloadComponent existing = EntityManager.GetComponentObject<SkillProjectilePayloadComponent>(entity);
-            existing.Context = payload.Context.Clone();
+            existing.Context = CloneContext(payload.Context);
+            existing.CollisionTargetConditions = CloneCollisionTargetConditions(payload.CollisionTargetConditions);
             existing.OnCollisionEffects = payload.OnCollisionEffects;
             existing.OnDestroyEffects = payload.OnDestroyEffects;
             return;
@@ -112,9 +116,22 @@ public partial class SkillProjectileSpawnSystem : SystemBase
             entity,
             new SkillProjectilePayloadComponent
             {
-                Context = payload.Context.Clone(),
+                Context = CloneContext(payload.Context),
+                CollisionTargetConditions = CloneCollisionTargetConditions(payload.CollisionTargetConditions),
                 OnCollisionEffects = payload.OnCollisionEffects,
                 OnDestroyEffects = payload.OnDestroyEffects,
             });
+        }
+
+    private SkillContent CloneContext(SkillContent context)
+    {
+        SkillContent copy = context?.Clone() ?? new SkillContent();
+        copy.EntityManager = EntityManager;
+        return copy;
+    }
+
+    private static List<ConditionConfig> CloneCollisionTargetConditions(List<ConditionConfig> conditions)
+    {
+        return conditions == null ? new List<ConditionConfig>() : new List<ConditionConfig>(conditions);
     }
 }

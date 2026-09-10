@@ -189,7 +189,7 @@ namespace CrystalMagic.Editor.Data
                     break;
 
                 case NPCEnterDungeonInteractionNodeData enterDungeon:
-                    enterDungeon.DungeonFloor = Mathf.Max(1, EditorGUILayout.IntField("Dungeon Floor", enterDungeon.DungeonFloor));
+                    enterDungeon.DungeonThemeId = Mathf.Max(0, EditorGUILayout.IntField("Dungeon Theme Id", enterDungeon.DungeonThemeId));
                     EditorGUILayout.HelpBox("This node ends the interaction and enters the dungeon flow.", MessageType.None);
                     break;
 

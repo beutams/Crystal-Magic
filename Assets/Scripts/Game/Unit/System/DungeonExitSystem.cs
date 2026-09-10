@@ -2,6 +2,7 @@ using CrystalMagic.Core;
 using Unity.Collections;
 using Unity.Entities;
 
+[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 partial struct DungeonExitSystem : ISystem
 {
@@ -44,8 +45,9 @@ partial struct DungeonExitSystem : ISystem
 
             if (!wasOpen && shouldOpen)
             {
-                int currentFloor = SaveDataComponent.Instance?.GetLocationData()?.DungeonFloor ?? 1;
-                SaveDataComponent.Instance?.UnlockDungeonStartFloorAfterBossClear(currentFloor);
+                SaveLocationData location = SaveDataComponent.Instance?.GetLocationData();
+                if (exit.TargetThemeId >= 0 && exit.TargetThemeId != location?.DungeonThemeId)
+                    SaveDataComponent.Instance?.UnlockDungeonTheme(exit.TargetThemeId);
             }
         }
     }

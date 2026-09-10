@@ -290,6 +290,7 @@ namespace CrystalMagic.Core
         public Vector3 Size = Vector3.one;
         public bool RequiresRoomClear;
         public bool ApplyCollider = true;
+        public int TargetThemeId = -1;
         public int TargetFloor;
         public byte InterestSize;
         public uint RandomSeed;

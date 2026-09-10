@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CrystalMagic.Game.Data.Effects;
 using CrystalMagic.Game.Skill;
 using Unity.Collections;
@@ -19,6 +20,7 @@ public sealed class SkillProjectileSpawnRequest
     public byte CanPierce;
     public byte TriggerDestroyEffectsOnMaxRange;
     public SkillContent Context;
+    public List<ConditionConfig> CollisionTargetConditions;
     public EffectData[] OnCollisionEffects;
     public EffectData[] OnDestroyEffects;
 }
@@ -56,6 +58,7 @@ public struct SkillProjectileHitEntityElement : IBufferElementData
 public sealed class SkillProjectilePayloadComponent : IComponentData
 {
     public SkillContent Context;
+    public List<ConditionConfig> CollisionTargetConditions;
     public EffectData[] OnCollisionEffects;
     public EffectData[] OnDestroyEffects;
 }

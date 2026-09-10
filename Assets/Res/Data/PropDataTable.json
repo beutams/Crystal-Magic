@@ -1,3 +1,12 @@
 ﻿{
-  "Rows": []
+  "Rows": [
+    {
+      "NameKey": "小型魔力药剂",
+      "DescriptionKey": "魔力",
+      "TargetType": 0,
+      "CarryLimit": 10,
+      "EffectChain": [],
+      "Id": 1
+    }
+  ]
 }

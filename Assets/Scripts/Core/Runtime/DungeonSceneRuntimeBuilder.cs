@@ -254,6 +254,7 @@ namespace CrystalMagic.Core
                     {
                         DungeonExitComponent exit = entityManager.GetComponentData<DungeonExitComponent>(entity);
                         exit.RegionId = sceneObject.RegionId;
+                        exit.TargetThemeId = sceneObject.TargetThemeId;
                         exit.TargetFloor = Mathf.Max(1, sceneObject.TargetFloor);
                         exit.RequiresRoomClear = sceneObject.RequiresRoomClear ? (byte)1 : (byte)0;
                         exit.IsOpen = 0;

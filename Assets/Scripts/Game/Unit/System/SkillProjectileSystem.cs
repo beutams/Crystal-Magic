@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using CrystalMagic.Game.Skill;
+using CrystalMagic.Game.Skill.Effects;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
+[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(SkillProjectileSpawnSystem))]
 public partial class SkillProjectileSystem : SystemBase
@@ -108,6 +110,9 @@ public partial class SkillProjectileSystem : SystemBase
                 continue;
 
             if (HasHitEntity(hitEntities, hit.Entity))
+                continue;
+
+            if (!EffectConditionUtility.Pass(payload.CollisionTargetConditions, payload.Context, hit.Entity))
                 continue;
 
             float distanceSq = math.lengthsq(hit.Position.xy - projectilePosition.xy);

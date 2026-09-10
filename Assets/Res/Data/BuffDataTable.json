@@ -26,7 +26,7 @@
       "Id": 0
     },
     {
-      "NameKey": "爆炎",
+      "NameKey": "爆燃",
       "CanStack": true,
       "MaxStacks": 5,
       "PropertyModifiers": [
@@ -39,6 +39,159 @@
       "SkillModifiers": [],
       "TriggerEntries": [],
       "Id": 1
+    },
+    {
+      "NameKey": "潮湿",
+      "CanStack": false,
+      "MaxStacks": 1,
+      "PropertyModifiers": [],
+      "SkillModifiers": [],
+      "TriggerEntries": [],
+      "Id": 2
+    },
+    {
+      "NameKey": "冻结",
+      "CanStack": false,
+      "MaxStacks": 1,
+      "PropertyModifiers": [],
+      "SkillModifiers": [],
+      "TriggerEntries": [],
+      "Id": 3
+    },
+    {
+      "NameKey": "麻痹",
+      "CanStack": false,
+      "MaxStacks": 1,
+      "PropertyModifiers": [],
+      "SkillModifiers": [],
+      "TriggerEntries": [],
+      "Id": 4
+    },
+    {
+      "NameKey": "格挡Addition",
+      "CanStack": false,
+      "MaxStacks": 1,
+      "PropertyModifiers": [
+        {
+          "Channel": 14,
+          "Factor": -1.0,
+          "Bonus": 0.0
+        }
+      ],
+      "SkillModifiers": [],
+      "TriggerEntries": [
+        {
+          "TriggerType": 1,
+          "TickIntervalSeconds": 0.0,
+          "HookType": 5,
+          "ConsumeStackOnTrigger": true,
+          "Effects": []
+        },
+        {
+          "TriggerType": 1,
+          "TickIntervalSeconds": 0.0,
+          "HookType": 8,
+          "ConsumeStackOnTrigger": true,
+          "Effects": []
+        }
+      ],
+      "Id": 5
+    },
+    {
+      "NameKey": "灵巧Addition",
+      "CanStack": false,
+      "MaxStacks": 1,
+      "PropertyModifiers": [
+        {
+          "Channel": 0,
+          "Factor": 0.3,
+          "Bonus": 0.0
+        }
+      ],
+      "SkillModifiers": [],
+      "TriggerEntries": [
+        {
+          "TriggerType": 1,
+          "TickIntervalSeconds": 0.0,
+          "HookType": 8,
+          "ConsumeStackOnTrigger": true,
+          "Effects": []
+        }
+      ],
+      "Id": 6
+    },
+    {
+      "NameKey": "缩时咏唱Addition",
+      "CanStack": false,
+      "MaxStacks": 1,
+      "PropertyModifiers": [
+        {
+          "Channel": 9,
+          "Factor": 0.0,
+          "Bonus": 100.0
+        }
+      ],
+      "SkillModifiers": [],
+      "TriggerEntries": [
+        {
+          "TriggerType": 1,
+          "TickIntervalSeconds": 0.0,
+          "HookType": 8,
+          "ConsumeStackOnTrigger": true,
+          "Effects": []
+        }
+      ],
+      "Id": 7
+    },
+    {
+      "NameKey": "反射Addition",
+      "CanStack": false,
+      "MaxStacks": 1,
+      "PropertyModifiers": [],
+      "SkillModifiers": [],
+      "TriggerEntries": [
+        {
+          "TriggerType": 1,
+          "TickIntervalSeconds": 0.0,
+          "HookType": 5,
+          "ConsumeStackOnTrigger": true,
+          "Effects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 1,
+              "ValueSource": 1,
+              "DamageCoefficient": 0.5,
+              "FlatDamageBonus": 0.0,
+              "Element": 0,
+              "Conditions": []
+            }
+          ]
+        }
+      ],
+      "Id": 8
+    },
+    {
+      "NameKey": "反转Addition",
+      "CanStack": true,
+      "MaxStacks": 2,
+      "PropertyModifiers": [],
+      "SkillModifiers": [
+        {
+          "Channel": 100,
+          "Factor": -0.9,
+          "Bonus": 0.0
+        }
+      ],
+      "TriggerEntries": [
+        {
+          "TriggerType": 1,
+          "TickIntervalSeconds": 0.0,
+          "HookType": 8,
+          "ConsumeStackOnTrigger": true,
+          "Effects": []
+        }
+      ],
+      "Id": 9
     }
   ]
 }

@@ -28,6 +28,7 @@ namespace CrystalMagic.Editor.Data
 
         private readonly List<SkillAdditionData> _rows = new();
         private Vector2 _rowScrollPosition;
+        private Vector2 _detailScrollPosition;
         private int _selectedIndex = -1;
         private string _status = string.Empty;
         private bool _isDirty;
@@ -99,13 +100,18 @@ namespace CrystalMagic.Editor.Data
 
         private void DrawDetail()
         {
-            EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(true));
+            EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
             if (_selectedIndex < 0 || _selectedIndex >= _rows.Count)
             {
                 EditorGUILayout.HelpBox("Select or add an Addition. The old Followup/CastTask model is not supported.", MessageType.Info);
                 EditorGUILayout.EndVertical();
                 return;
             }
+
+            _detailScrollPosition = EditorGUILayout.BeginScrollView(
+                _detailScrollPosition,
+                GUILayout.ExpandWidth(true),
+                GUILayout.ExpandHeight(true));
 
             SkillAdditionData row = _rows[_selectedIndex];
             EditorGUI.BeginChangeCheck();
@@ -118,6 +124,7 @@ namespace CrystalMagic.Editor.Data
             }
 
             DrawCallbacks(row);
+            EditorGUILayout.EndScrollView();
             EditorGUILayout.EndVertical();
         }
 

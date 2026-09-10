@@ -3,8 +3,7 @@
     {
       "Name": "Prairie",
       "ThemeKey": "Prairie",
-      "FloorStart": 1,
-      "FloorEnd": 10,
+      "NextThemeId": -1,
       "OpenField": {
         "Terrain": {
           "Width": 200,

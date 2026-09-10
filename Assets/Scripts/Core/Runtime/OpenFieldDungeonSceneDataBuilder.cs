@@ -60,7 +60,8 @@ namespace CrystalMagic.Core
                     WorldPosition = ToWorld(layout, exitPoint.Center),
                     RequiresRoomClear = true,
                     ApplyCollider = false,
-                    TargetFloor = floor + 1,
+                    TargetThemeId = isBossFloor ? theme.NextThemeId : theme.Id,
+                    TargetFloor = isBossFloor ? 1 : floor + 1,
                 });
             }
 

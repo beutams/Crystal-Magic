@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using CrystalMagic.Core;
 using CrystalMagic.Editor.EffectGraph;
+using CrystalMagic.Editor.Skill;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
@@ -115,13 +116,6 @@ namespace CrystalMagic.Editor.Data
         private readonly Dictionary<string, int>  _nestedTypeIndices = new();
         // 每个效果条目的折叠状态，key = 条目路径，true = 展开
         private readonly Dictionary<string, bool> _effectFoldStates  = new();
-        private readonly Dictionary<string, bool> _condFoldStates = new();
-        private readonly Dictionary<string, int> _condAddSrcIdx = new();
-        private readonly Dictionary<string, int> _condAddCmpIdx = new();
-        private string[] _sourceTypeNames = Array.Empty<string>();
-        private string[] _sourceTypeDisplayNames = Array.Empty<string>();
-        private string[] _compareTypeNames = Array.Empty<string>();
-        private string[] _compareTypeDisplayNames = Array.Empty<string>();
 
         // ===== 棰滆壊 =====
         private static readonly Color SelectedColor = new(0.27f, 0.52f, 0.85f, 0.85f);
@@ -137,7 +131,7 @@ namespace CrystalMagic.Editor.Data
             TypeNameHandling    = TypeNameHandling.Auto,
             Formatting          = Formatting.Indented,
             FloatFormatHandling = FloatFormatHandling.String,
-            Converters          = { new UnityObjectConverter() },
+            Converters          = { new StateScriptUnitValueConverter(), new UnityObjectConverter() },
         };
 
         private class TableWrapper { public List<BuffData> Rows = new(); }
@@ -154,18 +148,6 @@ namespace CrystalMagic.Editor.Data
         private void OnEnable()
         {
             LoadData();
-            RefreshTypeArrays();
-        }
-
-        private void RefreshTypeArrays()
-        {
-            EditorTypeDisplayEntry[] sourceEntries = EditorLabelUtility.CollectTypeEntries(typeof(ISource));
-            _sourceTypeNames = sourceEntries.Select(entry => entry.Key).ToArray();
-            _sourceTypeDisplayNames = sourceEntries.Select(entry => entry.DisplayName).ToArray();
-
-            EditorTypeDisplayEntry[] compareEntries = EditorLabelUtility.CollectTypeEntries(typeof(ICompareType));
-            _compareTypeNames = compareEntries.Select(entry => entry.Key).ToArray();
-            _compareTypeDisplayNames = compareEntries.Select(entry => entry.DisplayName).ToArray();
         }
 
         // --------------------
@@ -937,120 +919,16 @@ namespace CrystalMagic.Editor.Data
             EditorGUI.indentLevel--;
         }
 
-        // --------------------
-        // 条件列表
-        // --------------------
         private void DrawConditionList(List<ConditionConfig> conditions, string keyPrefix)
         {
-            string foldKey = keyPrefix + "_fold";
-            if (!_condFoldStates.TryGetValue(foldKey, out bool foldOpen))
-                foldOpen = true;
-
-            foldOpen = EditorGUILayout.Foldout(foldOpen, $"条件 ({conditions.Count})", true);
-            _condFoldStates[foldKey] = foldOpen;
-            if (!foldOpen)
-                return;
-
-            EditorGUI.indentLevel++;
-            DrawAddConditionRow(conditions, keyPrefix);
-
-            int removeAt = -1;
-            for (int i = 0; i < conditions.Count; i++)
+            if (ConditionListEditor.Draw(
+                    conditions,
+                    $"BuffConditions.{keyPrefix}",
+                    EffectConditionSourceSchema.Get(),
+                    () => _isDirty = true))
             {
-                if (!DrawConditionRow(conditions[i]))
-                    removeAt = i;
-            }
-
-            if (removeAt >= 0)
-            {
-                conditions.RemoveAt(removeAt);
                 _isDirty = true;
             }
-
-            EditorGUI.indentLevel--;
-        }
-
-        private void DrawAddConditionRow(List<ConditionConfig> conditions, string keyPrefix)
-        {
-            string srcKey = keyPrefix + "src";
-            string cmpKey = keyPrefix + "cmp";
-            if (!_condAddSrcIdx.ContainsKey(srcKey)) _condAddSrcIdx[srcKey] = 0;
-            if (!_condAddCmpIdx.ContainsKey(cmpKey)) _condAddCmpIdx[cmpKey] = 0;
-
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.Space(16);
-
-            if (_sourceTypeNames.Length > 0)
-                _condAddSrcIdx[srcKey] = EditorGUILayout.Popup(_condAddSrcIdx[srcKey], _sourceTypeDisplayNames, GUILayout.Width(130));
-            else
-                GUILayout.Label("无 ISource", EditorStyles.miniLabel, GUILayout.Width(80));
-
-            if (_compareTypeNames.Length > 0)
-                _condAddCmpIdx[cmpKey] = EditorGUILayout.Popup(_condAddCmpIdx[cmpKey], _compareTypeDisplayNames, GUILayout.Width(100));
-
-            if (GUILayout.Button("+ 条件", GUILayout.Width(60)))
-            {
-                conditions.Add(new ConditionConfig
-                {
-                    SourceType = _sourceTypeNames.Length > 0 ? _sourceTypeNames[_condAddSrcIdx[srcKey]] : "",
-                    CompareType = _compareTypeNames.Length > 0 ? _compareTypeNames[_condAddCmpIdx[cmpKey]] : "",
-                    SourceParam = -1,
-                    ConditionType = ConditionType.Necessary,
-                });
-                _isDirty = true;
-            }
-
-            EditorGUILayout.EndHorizontal();
-        }
-
-        private bool DrawConditionRow(ConditionConfig condition)
-        {
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.Space(16);
-
-            EditorGUI.BeginChangeCheck();
-            condition.ConditionType = (ConditionType)EditorGUILayout.EnumPopup(condition.ConditionType, GUILayout.Width(88));
-
-            if (_sourceTypeNames.Length > 0)
-            {
-                int index = Mathf.Max(0, Array.IndexOf(_sourceTypeNames, condition.SourceType));
-                index = EditorGUILayout.Popup(index, _sourceTypeDisplayNames, GUILayout.Width(130));
-                condition.SourceType = _sourceTypeNames[index];
-            }
-            else
-            {
-                condition.SourceType = EditorGUILayout.TextField(condition.SourceType, GUILayout.Width(130));
-            }
-
-            if (_compareTypeNames.Length > 0)
-            {
-                int index = Mathf.Max(0, Array.IndexOf(_compareTypeNames, condition.CompareType));
-                index = EditorGUILayout.Popup(index, _compareTypeDisplayNames, GUILayout.Width(100));
-                condition.CompareType = _compareTypeNames[index];
-            }
-            else
-            {
-                condition.CompareType = EditorGUILayout.TextField(condition.CompareType, GUILayout.Width(100));
-            }
-
-            condition.SourceParam = EditorGUILayout.IntField(condition.SourceParam, GUILayout.Width(60));
-
-            bool needsValue = condition.CompareType is "GreaterThan" or "LessThan" or "Equal";
-            if (needsValue)
-                condition.CompareValue = EditorGUILayout.FloatField(condition.CompareValue, GUILayout.Width(60));
-            else
-                GUILayout.Space(64);
-
-            if (EditorGUI.EndChangeCheck())
-                _isDirty = true;
-
-            GUILayout.FlexibleSpace();
-            GUI.color = new Color(1f, 0.5f, 0.5f);
-            bool keep = !GUILayout.Button("×", GUILayout.Width(24));
-            GUI.color = Color.white;
-            EditorGUILayout.EndHorizontal();
-
-            return keep;
         }
 
         private static void DrawSectionHeader(string title)

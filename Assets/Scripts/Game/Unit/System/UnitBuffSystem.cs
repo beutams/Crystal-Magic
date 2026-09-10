@@ -4,6 +4,7 @@ using CrystalMagic.Game.Data;
 using Unity.Collections;
 using Unity.Entities;
 
+[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitInitializationSystemGroup))]
 [UpdateBefore(typeof(UnitRecoverySystem))]
 partial class UnitBuffSystem : SystemBase

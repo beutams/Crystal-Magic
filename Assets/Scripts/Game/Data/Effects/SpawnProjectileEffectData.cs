@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CrystalMagic.Game.Data;
 using Newtonsoft.Json;
 using Unity.Mathematics;
@@ -35,6 +36,9 @@ namespace CrystalMagic.Game.Data.Effects
         [EditorLabel("可穿透")]
         public bool CanPierce;
 
+        [EditorLabel("碰撞目标条件")]
+        public List<ConditionConfig> CollisionTargetConditions = new();
+
         [EditorLabel("到最远距离触发销毁效果")]
         public bool TriggerDestroyEffectsOnMaxRange;
 
@@ -56,6 +60,9 @@ namespace CrystalMagic.Game.Data.Effects
             copy.MaxRange = ApplyModifierNonNegative(modifiers, SkillModifierChannel.ProjectileRange, MaxRange);
             copy.HitRadius = ApplyModifierNonNegative(modifiers, SkillModifierChannel.ProjectileScale, math.max(0.01f, HitRadius));
             copy.VisualScale = ApplyModifierNonNegative(modifiers, SkillModifierChannel.VfxScale, VisualScale);
+            copy.CollisionTargetConditions = CollisionTargetConditions == null
+                ? new List<ConditionConfig>()
+                : new List<ConditionConfig>(CollisionTargetConditions);
             copy.OnCollisionEffects = CreateRuntimeCopies(OnCollisionEffects, modifiers, elementComponent);
             copy.OnDestroyEffects = CreateRuntimeCopies(OnDestroyEffects, modifiers, elementComponent);
             return copy;

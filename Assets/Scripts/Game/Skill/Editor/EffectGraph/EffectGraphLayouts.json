@@ -5,10 +5,10 @@
             "OwnerKey": "Skill:0:EffectChain",
             "Layout": {
                 "ViewPosition": {
-                    "x": 144.0,
-                    "y": -136.0
+                    "x": -62.0,
+                    "y": -301.0
                 },
-                "ViewScale": 0.6575162410736084,
+                "ViewScale": 1.0,
                 "Containers": [
                     {
                         "Path": "root",
@@ -211,6 +211,66 @@
                         "Position": {
                             "x": 334.0,
                             "y": 740.0
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "SkillAddition:5:Callbacks[0].Actions[0].Effects",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 0.0,
+                    "y": 16.0
+                },
+                "ViewScale": 1.0,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 57.0,
+                            "y": 201.0
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "SkillAddition:6:Callbacks[0].Actions[0].Effects",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 0.0,
+                    "y": 12.0
+                },
+                "ViewScale": 1.0,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 58.0,
+                            "y": 214.0
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "Buff:8:TriggerEntries[0].Effects",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 0.0,
+                    "y": 23.0
+                },
+                "ViewScale": 1.0,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 58.0,
+                            "y": 206.0
                         },
                         "Expanded": true
                     }

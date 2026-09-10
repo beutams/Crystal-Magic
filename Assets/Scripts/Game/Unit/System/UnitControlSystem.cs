@@ -1,5 +1,6 @@
 using Unity.Entities;
 
+[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateBefore(typeof(SkillReleaseSystem))]
 partial struct UnitControlSystem : ISystem

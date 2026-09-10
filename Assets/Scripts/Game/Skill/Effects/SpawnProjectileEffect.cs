@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CrystalMagic.Game.Data.Effects;
 using Unity.Collections;
 using Unity.Entities;
@@ -87,6 +88,9 @@ namespace CrystalMagic.Game.Skill.Effects
                     CanPierce = Data.CanPierce ? (byte)1 : (byte)0,
                     TriggerDestroyEffectsOnMaxRange = Data.TriggerDestroyEffectsOnMaxRange ? (byte)1 : (byte)0,
                     Context = context.Clone(),
+                    CollisionTargetConditions = Data.CollisionTargetConditions == null
+                        ? new List<ConditionConfig>()
+                        : new List<ConditionConfig>(Data.CollisionTargetConditions),
                     OnCollisionEffects = Data.OnCollisionEffects,
                     OnDestroyEffects = Data.OnDestroyEffects,
                 });

@@ -10,7 +10,6 @@ namespace CrystalMagic.Game.Skill.Effects
 {
     public sealed class ForwardRectSearchEffect : Effect
     {
-        private static ComparatorFactory _comparatorFactory;
         private readonly List<UnitQueryHit> _hits = new();
 
         public new ForwardRectSearchEffectData Data { get; }
@@ -50,12 +49,7 @@ namespace CrystalMagic.Game.Skill.Effects
             for (int i = 0; i < _hits.Count; i++)
             {
                 UnitQueryHit hit = _hits[i];
-                if (!PassTargetConditions(
-                        Data.TargetConditions,
-                        hit.Entity,
-                        entityManager,
-                        context.OriginEntity,
-                        context.HasOriginEntity))
+                if (!EffectConditionUtility.Pass(Data.TargetConditions, context, hit.Entity))
                 {
                     continue;
                 }
@@ -67,33 +61,5 @@ namespace CrystalMagic.Game.Skill.Effects
             }
         }
 
-        private static bool PassTargetConditions(
-            List<ConditionConfig> conditions,
-            Entity target,
-            EntityManager entityManager,
-            Entity originEntity,
-            bool hasOriginEntity)
-        {
-            if (conditions == null || conditions.Count == 0)
-                return true;
-
-            Comparator comparator = GetComparatorFactory().BuildComparator(
-                conditions,
-                target,
-                entityManager,
-                originEntity,
-                hasOriginEntity);
-            return comparator.GetResult();
-        }
-
-        private static ComparatorFactory GetComparatorFactory()
-        {
-            if (_comparatorFactory != null)
-                return _comparatorFactory;
-
-            _comparatorFactory = new ComparatorFactory();
-            ComparatorRegistry.RegisterAll(_comparatorFactory);
-            return _comparatorFactory;
-        }
     }
 }

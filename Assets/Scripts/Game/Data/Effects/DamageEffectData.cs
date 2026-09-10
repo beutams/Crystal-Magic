@@ -3,9 +3,31 @@ using Unity.Mathematics;
 
 namespace CrystalMagic.Game.Data.Effects
 {
+    public enum DamageTargetSource
+    {
+        [EditorLabel("当前目标")]
+        CurrentTarget = 0,
+        [EditorLabel("事件另一方")]
+        OtherEntity = 1,
+    }
+
+    public enum DamageValueSource
+    {
+        [EditorLabel("施法者攻击力")]
+        AttackPower = 0,
+        [EditorLabel("事件数值")]
+        TriggerValue = 1,
+    }
+
     [System.Serializable]
     public sealed class DamageEffectData : EffectData
     {
+        [EditorLabel("伤害目标")]
+        public DamageTargetSource TargetSource = DamageTargetSource.CurrentTarget;
+
+        [EditorLabel("伤害基数")]
+        public DamageValueSource ValueSource = DamageValueSource.AttackPower;
+
         [EditorLabel("伤害倍率")]
         public float DamageCoefficient;
 

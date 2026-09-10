@@ -1,4 +1,4 @@
-﻿{
+{
   "Rows": [
     {
       "Graphs": [
@@ -99,10 +99,7 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "TickOrder": 0,
               "Type": "Monitor",
@@ -233,10 +230,7 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "Type": "Compare",
               "Guid": "f7562bbbf3794e788336651440cb788c",
@@ -366,10 +360,7 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "Type": "Compare",
               "Guid": "9c0d17627ad34f87aea11931b23a4b04",
@@ -536,10 +527,7 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "TickOrder": 0,
               "Type": "Monitor",
@@ -693,10 +681,7 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "TickOrder": 0,
               "Type": "Monitor",
@@ -737,10 +722,7 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "Type": "Compare",
               "Guid": "5ce0fe3e1c8f4e11af7a97ce07944979",
@@ -825,10 +807,7 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "Type": "Compare",
               "Guid": "c89876cda97e470b8ce46cae628db140",
@@ -972,10 +951,7 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "TickOrder": 0,
               "Type": "Monitor",
@@ -1106,10 +1082,7 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "Type": "Compare",
               "Guid": "f21d6e3440144c2b894276e8da98de31",
@@ -1239,10 +1212,7 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "Type": "Compare",
               "Guid": "35af0e1dafaa4a0b8f1345df15968b0a",
@@ -1409,10 +1379,7 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "TickOrder": 0,
               "Type": "Monitor",
@@ -1490,10 +1457,7 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "TickOrder": 0,
               "Type": "Monitor",
@@ -1534,10 +1498,7 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "Type": "Compare",
               "Guid": "afc587aab4e04322a5d42945a6e0c4f0",
@@ -1770,6 +1731,88 @@
               }
             },
             {
+              "SetterKey": "unit.buffs.remove",
+              "Key": "",
+              "Values": [
+                {
+                  "Kind": 0,
+                  "Literal": { "Type": 3, "Float": 8.0 },
+                  "GetterKey": "",
+                  "OperationType": "",
+                  "Inputs": []
+                }
+              ],
+              "Type": "SetValue",
+              "Guid": "6b0aaf74e96e4b6498e965b2eb80f998",
+              "EditorPosition": {
+                "x": 2050.0,
+                "y": 1010.0
+              }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "addition.shortChant.count",
+              "Values": [
+                {
+                  "Kind": 0,
+                  "Literal": {
+                    "Type": 3,
+                    "Float": 0.0
+                  },
+                  "GetterKey": "",
+                  "OperationType": "",
+                  "Inputs": []
+                }
+              ],
+              "Type": "SetValue",
+              "Guid": "d54ce0ba9b0a43bdb49f68fe25dadc97",
+              "EditorPosition": {
+                "x": -48.0,
+                "y": 224.0
+              }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "addition.shortChant.durationMultiplier",
+              "Values": [
+                {
+                  "Kind": 0,
+                  "Literal": {
+                    "Type": 3,
+                    "Float": 1.0
+                  },
+                  "GetterKey": "",
+                  "OperationType": "",
+                  "Inputs": []
+                }
+              ],
+              "Type": "SetValue",
+              "Guid": "a439c8ad09ea4c23a7d29a278a2f51d8",
+              "EditorPosition": {
+                "x": -12.0,
+                "y": 224.0
+              }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "addition.combo.count",
+              "Values": [
+                {
+                  "Kind": 0,
+                  "Literal": { "Type": 3, "Float": 0.0 },
+                  "GetterKey": "",
+                  "OperationType": "",
+                  "Inputs": []
+                }
+              ],
+              "Type": "SetValue",
+              "Guid": "d208e12d2cca4b899124d5dfe1a3a909",
+              "EditorPosition": {
+                "x": 24.0,
+                "y": 224.0
+              }
+            },
+            {
               "Condition": {
                 "ConditionType": 0,
                 "CompareType": "IsTrue",
@@ -1800,10 +1843,7 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "TickOrder": 0,
               "Type": "Monitor",
@@ -1871,10 +1911,7 @@
                       }
                     ]
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "Type": "Compare",
               "Guid": "59b2058254c84bd99e3ecdff8f84421d",
@@ -2005,10 +2042,7 @@
                       }
                     ]
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "TickOrder": -10,
               "Type": "Monitor",
@@ -2049,10 +2083,7 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "Type": "Compare",
               "Guid": "7aa301ef3adc4b34b8fbe56f4a210ca1",
@@ -2141,30 +2172,31 @@
                     ]
                   },
                   {
-                    "Kind": 1,
-                    "Literal": {
-                      "Type": 3,
-                      "Bool": false,
-                      "Int": 0,
-                      "Float": 0.0,
-                      "Float2": {
-                        "x": 0.0,
-                        "y": 0.0
+                    "Kind": 2,
+                    "GetterKey": "",
+                    "OperationType": "Multiply",
+                    "Inputs": [
+                      {
+                        "Kind": 1,
+                        "GetterKey": "unit.attack.chantDurationMultiplier",
+                        "OperationType": "",
+                        "Inputs": []
                       },
-                      "Float3": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                      },
-                      "Entity": {
-                        "Index": 0,
-                        "Version": 0
-                      },
-                      "String": ""
-                    },
-                    "GetterKey": "unit.attack.chantDurationMultiplier",
-                    "OperationType": "",
-                    "Inputs": []
+                      {
+                        "Kind": 1,
+                        "GetterKey": "unit.variables.getNumber",
+                        "OperationType": "",
+                        "Inputs": [
+                          {
+                            "Kind": 0,
+                            "Literal": { "Type": 7, "String": "addition.shortChant.durationMultiplier" },
+                            "GetterKey": "",
+                            "OperationType": "",
+                            "Inputs": []
+                          }
+                        ]
+                      }
+                    ]
                   }
                 ]
               },
@@ -2534,10 +2566,7 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "Type": "Compare",
               "Guid": "a3f17db81df644b7a3a8a7aaf2e43210",
@@ -2603,10 +2632,7 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "Type": "Compare",
               "Guid": "d7ae4f9f0dc144b4b7bcbe9b9af779c2",
@@ -2895,10 +2921,7 @@
                       }
                     ]
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "Type": "Compare",
               "Guid": "a75bb15a3efd47a1afd0717cf8092c92",
@@ -2938,10 +2961,7 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "Type": "Compare",
               "Guid": "4421b6b78d1345148ae0c6bdd0090dd0",
@@ -3290,10 +3310,7 @@
                       }
                     ]
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "Type": "Compare",
               "Guid": "6242611392b04e54bdc35a28ad8f5c92",
@@ -3451,10 +3468,7 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "TickOrder": 0,
               "Type": "Monitor",
@@ -3522,10 +3536,7 @@
                       }
                     ]
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "Type": "Compare",
               "Guid": "05b666a487b8448db838a84b6d9a2ea2",
@@ -3565,10 +3576,7 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "Type": "Compare",
               "Guid": "0798beea61a3475f9910dc61b8bb543d",
@@ -3763,10 +3771,7 @@
                       }
                     ]
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "Type": "Compare",
               "Guid": "ae7dfd1376dc459f867fab373373c18d",
@@ -3833,10 +3838,7 @@
                       }
                     ]
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "TickOrder": 0,
               "Type": "Monitor",
@@ -4020,10 +4022,7 @@
                       }
                     ]
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "Type": "Compare",
               "Guid": "c0c01666d8d54e11a3e5b28b10b49e76",
@@ -4040,6 +4039,73 @@
               "EditorPosition": {
                 "x": 930.0,
                 "y": 347.0
+              }
+            },
+            {
+              "EventName": "skill.afterChain",
+              "TickOrder": 0,
+              "Type": "Addition",
+              "Guid": "f8417cc3a0e8467ea5c6a0ff3cc1c280",
+              "EditorPosition": {
+                "x": 1930.0,
+                "y": 936.0
+              }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "addition.shortChant.count",
+              "Values": [
+                {
+                  "Kind": 0,
+                  "Literal": { "Type": 3, "Float": 0.0 },
+                  "GetterKey": "",
+                  "OperationType": "",
+                  "Inputs": []
+                }
+              ],
+              "Type": "SetValue",
+              "Guid": "8a09e4d9a3bc4012a16f66d194efbd81",
+              "EditorPosition": {
+                "x": 2050.0,
+                "y": 936.0
+              }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "addition.shortChant.durationMultiplier",
+              "Values": [
+                {
+                  "Kind": 0,
+                  "Literal": { "Type": 3, "Float": 1.0 },
+                  "GetterKey": "",
+                  "OperationType": "",
+                  "Inputs": []
+                }
+              ],
+              "Type": "SetValue",
+              "Guid": "a1def9e98b934bb2b1cd7b6d3d9f749a",
+              "EditorPosition": {
+                "x": 2170.0,
+                "y": 936.0
+              }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "addition.combo.count",
+              "Values": [
+                {
+                  "Kind": 0,
+                  "Literal": { "Type": 3, "Float": 0.0 },
+                  "GetterKey": "",
+                  "OperationType": "",
+                  "Inputs": []
+                }
+              ],
+              "Type": "SetValue",
+              "Guid": "54cc70616d37420e88e5f03d116bcbd7",
+              "EditorPosition": {
+                "x": 2290.0,
+                "y": 936.0
               }
             },
             {
@@ -4067,11 +4133,29 @@
             {
               "OutputNodeGuid": "98cce61a1a104d39b6e60a85066754aa",
               "OutputPortName": "Out",
+              "InputNodeGuid": "d54ce0ba9b0a43bdb49f68fe25dadc97",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "d54ce0ba9b0a43bdb49f68fe25dadc97",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "a439c8ad09ea4c23a7d29a278a2f51d8",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "a439c8ad09ea4c23a7d29a278a2f51d8",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "d208e12d2cca4b899124d5dfe1a3a909",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "d208e12d2cca4b899124d5dfe1a3a909",
+              "OutputPortName": "Out",
               "InputNodeGuid": "79e975ab68c34db195c675eab876aef6",
               "InputPortName": "Start"
             },
             {
-              "OutputNodeGuid": "98cce61a1a104d39b6e60a85066754aa",
+              "OutputNodeGuid": "d208e12d2cca4b899124d5dfe1a3a909",
               "OutputPortName": "Out",
               "InputNodeGuid": "013437695ee946a780043d9e2af0e68f",
               "InputPortName": "Start"
@@ -4199,8 +4283,8 @@
             {
               "OutputNodeGuid": "d9c5135bd2b146cebf91b34859c80164",
               "OutputPortName": "Out",
-              "InputNodeGuid": "70ec76c749d84d3fb0e21f7454c798f7",
-              "InputPortName": "In"
+              "InputNodeGuid": "f8417cc3a0e8467ea5c6a0ff3cc1c280",
+              "InputPortName": "Start"
             },
             {
               "OutputNodeGuid": "a75bb15a3efd47a1afd0717cf8092c92",
@@ -4239,7 +4323,7 @@
               "InputPortName": "In"
             },
             {
-              "OutputNodeGuid": "98cce61a1a104d39b6e60a85066754aa",
+              "OutputNodeGuid": "d208e12d2cca4b899124d5dfe1a3a909",
               "OutputPortName": "Out",
               "InputNodeGuid": "339387cbfc64496c8820fb1e214a9158",
               "InputPortName": "Start"
@@ -4307,6 +4391,36 @@
             {
               "OutputNodeGuid": "c0c01666d8d54e11a3e5b28b10b49e76",
               "OutputPortName": "False",
+              "InputNodeGuid": "f8417cc3a0e8467ea5c6a0ff3cc1c280",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "f8417cc3a0e8467ea5c6a0ff3cc1c280",
+              "OutputPortName": "OnStart",
+              "InputNodeGuid": "6b0aaf74e96e4b6498e965b2eb80f998",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "6b0aaf74e96e4b6498e965b2eb80f998",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "8a09e4d9a3bc4012a16f66d194efbd81",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "8a09e4d9a3bc4012a16f66d194efbd81",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "a1def9e98b934bb2b1cd7b6d3d9f749a",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "a1def9e98b934bb2b1cd7b6d3d9f749a",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "54cc70616d37420e88e5f03d116bcbd7",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "54cc70616d37420e88e5f03d116bcbd7",
+              "OutputPortName": "Out",
               "InputNodeGuid": "70ec76c749d84d3fb0e21f7454c798f7",
               "InputPortName": "In"
             },
@@ -4317,7 +4431,7 @@
               "InputPortName": "In"
             },
             {
-              "OutputNodeGuid": "98cce61a1a104d39b6e60a85066754aa",
+              "OutputNodeGuid": "d208e12d2cca4b899124d5dfe1a3a909",
               "OutputPortName": "Out",
               "InputNodeGuid": "28bae935fbf449adb454b96ff890adc6",
               "InputPortName": "In"
@@ -4549,10 +4663,7 @@
                       }
                     ]
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "TickOrder": 0,
               "Type": "Monitor",
@@ -4718,10 +4829,7 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "Type": "Compare",
               "Guid": "855a0eaf62f948f7b93c067ccfaa2f31",
@@ -4841,10 +4949,7 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "Type": "Compare",
               "Guid": "bf72912e855f41caa2782448f5a4ca6c",
@@ -5342,10 +5447,7 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "TickOrder": 0,
               "Type": "Monitor",
@@ -5386,10 +5488,7 @@
                     "OperationType": "",
                     "Inputs": []
                   }
-                ],
-                "SourceType": "",
-                "SourceParam": -1,
-                "CompareValue": 0.0
+                ]
               },
               "Type": "Compare",
               "Guid": "8887ea79cf8f4f45943ba1ab192192a1",

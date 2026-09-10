@@ -26,8 +26,4 @@ public class ConditionConfig
     public string CompareType = string.Empty;
     public List<ValueExpression> Inputs = new();
 
-    // Temporary serialized fields for callers that have not migrated to Inputs yet.
-    public string SourceType = string.Empty;
-    public int SourceParam = -1;
-    public float CompareValue;
 }

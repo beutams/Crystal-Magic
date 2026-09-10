@@ -3,13 +3,13 @@
     {
       "NameKey": "火球",
       "IsMonsterSkill": false,
-      "DescriptionKey": "",
+      "DescriptionKey": "释放火球，命中时会造成一次爆炸并施加点燃效果",
       "RuntimeType": "CommonSkill",
       "InputType": 2,
       "MpCost": 100,
       "ChantDuration": 1.0,
       "CastingMoveMultiplier": 0.5,
-      "IconPath": "Assets/Res/Sprites/UISprites/240 Pixel Art Spell & Skill Icons - Dani Melich/Fire/64x64 PNGs/fire_skill_01.png",
+      "IconPath": "Assets/Res/Sprites/Skill/fire_skill_01.png",
       "Conditions": [],
       "EffectChain": [
         {
@@ -27,6 +27,67 @@
           "SpawnOffsetDistance": 1.0,
           "HitRadius": 0.75,
           "CanPierce": false,
+          "CollisionTargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "Literal": {
+                    "Type": 3,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "OperationType": "",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "Literal": {
+                        "Type": 3,
+                        "Bool": false,
+                        "Int": 0,
+                        "Float": 0.0,
+                        "Float2": {
+                          "x": 0.0,
+                          "y": 0.0
+                        },
+                        "Float3": {
+                          "x": 0.0,
+                          "y": 0.0,
+                          "z": 0.0
+                        },
+                        "Entity": {
+                          "Index": 0,
+                          "Version": 0
+                        },
+                        "String": ""
+                      },
+                      "GetterKey": "effect.context.originEntity",
+                      "OperationType": "",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
           "TriggerDestroyEffectsOnMaxRange": false,
           "OnCollisionEffects": [],
           "OnDestoryEffects": [
@@ -55,33 +116,135 @@
                 {
                   "ConditionType": 0,
                   "CompareType": "IsTrue",
-                  "Inputs": [],
-                  "SourceType": "UnitIsEnemySource",
-                  "SourceParam": -1,
-                  "CompareValue": 0.0
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "Literal": {
+                        "Type": 3,
+                        "Bool": false,
+                        "Int": 0,
+                        "Float": 0.0,
+                        "Float2": {
+                          "x": 0.0,
+                          "y": 0.0
+                        },
+                        "Float3": {
+                          "x": 0.0,
+                          "y": 0.0,
+                          "z": 0.0
+                        },
+                        "Entity": {
+                          "Index": 0,
+                          "Version": 0
+                        },
+                        "String": ""
+                      },
+                      "GetterKey": "unit.faction.isEnemyTo",
+                      "OperationType": "",
+                      "Inputs": [
+                        {
+                          "Kind": 1,
+                          "Literal": {
+                            "Type": 3,
+                            "Bool": false,
+                            "Int": 0,
+                            "Float": 0.0,
+                            "Float2": {
+                              "x": 0.0,
+                              "y": 0.0
+                            },
+                            "Float3": {
+                              "x": 0.0,
+                              "y": 0.0,
+                              "z": 0.0
+                            },
+                            "Entity": {
+                              "Index": 0,
+                              "Version": 0
+                            },
+                            "String": ""
+                          },
+                          "GetterKey": "effect.context.originEntity",
+                          "OperationType": "",
+                          "Inputs": []
+                        }
+                      ]
+                    }
+                  ]
                 }
               ],
               "OnAfterSearch": [
                 {
                   "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
-                  "BuffId": -1,
-                  "DurationSeconds": 1.0,
+                  "BuffId": 0,
+                  "DurationSeconds": 10.0,
                   "StackCount": 1,
                   "Conditions": []
                 },
                 {
                   "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
-                  "DamageCoefficient": 2.0,
+                  "DamageCoefficient": 1.0,
                   "FlatDamageBonus": 0.0,
                   "Element": 2,
                   "Conditions": [
                     {
                       "ConditionType": 0,
                       "CompareType": "IsTrue",
-                      "Inputs": [],
-                      "SourceType": "UnitIsEnemySource",
-                      "SourceParam": -1,
-                      "CompareValue": 0.0
+                      "Inputs": [
+                        {
+                          "Kind": 1,
+                          "Literal": {
+                            "Type": 3,
+                            "Bool": false,
+                            "Int": 0,
+                            "Float": 0.0,
+                            "Float2": {
+                              "x": 0.0,
+                              "y": 0.0
+                            },
+                            "Float3": {
+                              "x": 0.0,
+                              "y": 0.0,
+                              "z": 0.0
+                            },
+                            "Entity": {
+                              "Index": 0,
+                              "Version": 0
+                            },
+                            "String": ""
+                          },
+                          "GetterKey": "unit.faction.isEnemyTo",
+                          "OperationType": "",
+                          "Inputs": [
+                            {
+                              "Kind": 1,
+                              "Literal": {
+                                "Type": 3,
+                                "Bool": false,
+                                "Int": 0,
+                                "Float": 0.0,
+                                "Float2": {
+                                  "x": 0.0,
+                                  "y": 0.0
+                                },
+                                "Float3": {
+                                  "x": 0.0,
+                                  "y": 0.0,
+                                  "z": 0.0
+                                },
+                                "Entity": {
+                                  "Index": 0,
+                                  "Version": 0
+                                },
+                                "String": ""
+                              },
+                              "GetterKey": "effect.context.originEntity",
+                              "OperationType": "",
+                              "Inputs": []
+                            }
+                          ]
+                        }
+                      ]
                     }
                   ]
                 }
@@ -98,12 +261,12 @@
     {
       "NameKey": "爆炎弹",
       "IsMonsterSkill": false,
-      "DescriptionKey": "",
+      "DescriptionKey": "释放火球，命中时造成爆炸并将目标的点燃效果转变成爆燃效果",
       "RuntimeType": "CommonSkill",
-      "InputType": 0,
-      "MpCost": 0,
-      "ChantDuration": 0.0,
-      "CastingMoveMultiplier": 1.0,
+      "InputType": 2,
+      "MpCost": 200,
+      "ChantDuration": 1.0,
+      "CastingMoveMultiplier": 0.5,
       "IconPath": "",
       "Conditions": [],
       "EffectChain": [
@@ -122,6 +285,7 @@
           "SpawnOffsetDistance": 0.0,
           "HitRadius": 0.75,
           "CanPierce": false,
+          "CollisionTargetConditions": [],
           "TriggerDestroyEffectsOnMaxRange": false,
           "OnCollisionEffects": null,
           "OnDestoryEffects": [
@@ -173,14 +337,14 @@
       "EffectiveRuntimeType": "CommonSkill"
     },
     {
-      "NameKey": "坠炎",
+      "NameKey": "流星",
       "IsMonsterSkill": false,
-      "DescriptionKey": "",
+      "DescriptionKey": "召唤一颗流星撞击地面，造成爆炸并将目标的点燃效果转变成爆燃效果",
       "RuntimeType": "CommonSkill",
-      "InputType": 0,
-      "MpCost": 0,
-      "ChantDuration": 0.0,
-      "CastingMoveMultiplier": 1.0,
+      "InputType": 2,
+      "MpCost": 300,
+      "ChantDuration": 1.5,
+      "CastingMoveMultiplier": 0.5,
       "IconPath": "",
       "Conditions": [],
       "EffectChain": [],
@@ -190,11 +354,11 @@
     {
       "NameKey": "点燃",
       "IsMonsterSkill": false,
-      "DescriptionKey": "",
+      "DescriptionKey": "对选中的目标施加2次点燃效果",
       "RuntimeType": "CommonSkill",
-      "InputType": 0,
-      "MpCost": 0,
-      "ChantDuration": 0.0,
+      "InputType": 2,
+      "MpCost": 100,
+      "ChantDuration": 0.3,
       "CastingMoveMultiplier": 1.0,
       "IconPath": "",
       "Conditions": [],
@@ -205,12 +369,12 @@
     {
       "NameKey": "焦土",
       "IsMonsterSkill": false,
-      "DescriptionKey": "",
+      "DescriptionKey": "对范围内的敌人造成持续伤害，并施加一次点燃效果",
       "RuntimeType": "CommonSkill",
-      "InputType": 0,
-      "MpCost": 0,
-      "ChantDuration": 0.0,
-      "CastingMoveMultiplier": 1.0,
+      "InputType": 2,
+      "MpCost": 200,
+      "ChantDuration": 1.0,
+      "CastingMoveMultiplier": 0.5,
       "IconPath": "",
       "Conditions": [],
       "EffectChain": [],
@@ -220,11 +384,11 @@
     {
       "NameKey": "引爆",
       "IsMonsterSkill": false,
-      "DescriptionKey": "",
+      "DescriptionKey": "引爆目标的点燃效果和爆燃效果",
       "RuntimeType": "CommonSkill",
-      "InputType": 0,
-      "MpCost": 0,
-      "ChantDuration": 0.0,
+      "InputType": 2,
+      "MpCost": 200,
+      "ChantDuration": 0.3,
       "CastingMoveMultiplier": 1.0,
       "IconPath": "",
       "Conditions": [],
@@ -235,12 +399,12 @@
     {
       "NameKey": "火径",
       "IsMonsterSkill": false,
-      "DescriptionKey": "",
+      "DescriptionKey": "对直线上的敌人造成伤害，并施加一层点燃效果",
       "RuntimeType": "CommonSkill",
-      "InputType": 0,
-      "MpCost": 0,
-      "ChantDuration": 0.0,
-      "CastingMoveMultiplier": 1.0,
+      "InputType": 2,
+      "MpCost": 200,
+      "ChantDuration": 1.0,
+      "CastingMoveMultiplier": 0.5,
       "IconPath": "",
       "Conditions": [],
       "EffectChain": [],
@@ -250,16 +414,181 @@
     {
       "NameKey": "火盾",
       "IsMonsterSkill": false,
-      "DescriptionKey": "",
+      "DescriptionKey": "形成火盾，提供减伤并且对伤害自己的目标造成点燃效果",
       "RuntimeType": "CommonSkill",
-      "InputType": 0,
-      "MpCost": 0,
-      "ChantDuration": 0.0,
-      "CastingMoveMultiplier": 1.0,
+      "InputType": 1,
+      "MpCost": 100,
+      "ChantDuration": 0.5,
+      "CastingMoveMultiplier": 0.5,
       "IconPath": "",
       "Conditions": [],
       "EffectChain": [],
       "Id": 7,
+      "EffectiveRuntimeType": "CommonSkill"
+    },
+    {
+      "NameKey": "水弹",
+      "IsMonsterSkill": false,
+      "DescriptionKey": "释放水球，命中时会造成一次爆炸并施加潮湿效果",
+      "RuntimeType": "CommonSkill",
+      "InputType": 2,
+      "MpCost": 100,
+      "ChantDuration": 0.5,
+      "CastingMoveMultiplier": 0.5,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [],
+      "Id": 8,
+      "EffectiveRuntimeType": "CommonSkill"
+    },
+    {
+      "NameKey": "水潭",
+      "IsMonsterSkill": false,
+      "DescriptionKey": "在目标地点生成水潭，减速范围内的敌人并造成潮湿效果",
+      "RuntimeType": "CommonSkill",
+      "InputType": 2,
+      "MpCost": 200,
+      "ChantDuration": 2.0,
+      "CastingMoveMultiplier": 0.5,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [],
+      "Id": 9,
+      "EffectiveRuntimeType": "CommonSkill"
+    },
+    {
+      "NameKey": "泡沫",
+      "IsMonsterSkill": false,
+      "DescriptionKey": "召唤一个缓慢飞行的泡沫，对碰到的敌人造成伤害并施加击退和潮湿效果",
+      "RuntimeType": "CommonSkill",
+      "InputType": 2,
+      "MpCost": 100,
+      "ChantDuration": 0.5,
+      "CastingMoveMultiplier": 0.5,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [],
+      "Id": 10,
+      "EffectiveRuntimeType": "CommonSkill"
+    },
+    {
+      "NameKey": "魔力恢复",
+      "IsMonsterSkill": false,
+      "DescriptionKey": "少量恢复自己的魔法值",
+      "RuntimeType": "CommonSkill",
+      "InputType": 1,
+      "MpCost": 100,
+      "ChantDuration": 1.0,
+      "CastingMoveMultiplier": 1.0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [],
+      "Id": 11,
+      "EffectiveRuntimeType": "CommonSkill"
+    },
+    {
+      "NameKey": "水流喷射",
+      "IsMonsterSkill": false,
+      "DescriptionKey": "直线方向释放水流，对敌人造成伤害，潮湿，击退效果",
+      "RuntimeType": "CommonSkill",
+      "InputType": 2,
+      "MpCost": 100,
+      "ChantDuration": 0.3,
+      "CastingMoveMultiplier": 1.0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [],
+      "Id": 12,
+      "EffectiveRuntimeType": "CommonSkill"
+    },
+    {
+      "NameKey": "降雨",
+      "IsMonsterSkill": false,
+      "DescriptionKey": "生成持续性的雨，每隔一段时间就对范围内的单位施加一次潮湿效果",
+      "RuntimeType": "CommonSkill",
+      "InputType": 2,
+      "MpCost": 300,
+      "ChantDuration": 1.5,
+      "CastingMoveMultiplier": 0.5,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [],
+      "Id": 13,
+      "EffectiveRuntimeType": "CommonSkill"
+    },
+    {
+      "NameKey": "冻结",
+      "IsMonsterSkill": false,
+      "DescriptionKey": "对附近的所有单位释放，根据其潮湿效果的层数，造成伤害并转换成冻结效果",
+      "RuntimeType": "CommonSkill",
+      "InputType": 1,
+      "MpCost": 200,
+      "ChantDuration": 0.3,
+      "CastingMoveMultiplier": 0.5,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [],
+      "Id": 14,
+      "EffectiveRuntimeType": "CommonSkill"
+    },
+    {
+      "NameKey": "闪电",
+      "IsMonsterSkill": false,
+      "DescriptionKey": "发射一道闪电，对命中的目标造成伤害，如果附近有携带潮湿效果的目标则会蔓延，消耗其潮湿效果并且造成更高伤害。",
+      "RuntimeType": "CommonSkill",
+      "InputType": 2,
+      "MpCost": 100,
+      "ChantDuration": 0.1,
+      "CastingMoveMultiplier": 1.0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [],
+      "Id": 15,
+      "EffectiveRuntimeType": "CommonSkill"
+    },
+    {
+      "NameKey": "雷场",
+      "IsMonsterSkill": false,
+      "DescriptionKey": "生成一片持续闪电的区域，对其中的单位造成持续伤害，并对携带潮湿效果的单位，消耗潮湿效果进行击晕",
+      "RuntimeType": "CommonSkill",
+      "InputType": 2,
+      "MpCost": 300,
+      "ChantDuration": 1.0,
+      "CastingMoveMultiplier": 0.5,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [],
+      "Id": 16,
+      "EffectiveRuntimeType": "CommonSkill"
+    },
+    {
+      "NameKey": "闪电球",
+      "IsMonsterSkill": false,
+      "DescriptionKey": "生成一个缓慢飞行的闪电球，对碰撞的单位持续造成伤害，如果有潮湿效果则消耗潮湿造成更高伤害",
+      "RuntimeType": "CommonSkill",
+      "InputType": 2,
+      "MpCost": 200,
+      "ChantDuration": 0.3,
+      "CastingMoveMultiplier": 1.0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [],
+      "Id": 17,
+      "EffectiveRuntimeType": "CommonSkill"
+    },
+    {
+      "NameKey": "打雷",
+      "IsMonsterSkill": false,
+      "DescriptionKey": "召唤一道强力雷击轰击目标区域，造成伤害并对其中的单位施加麻痹效果",
+      "RuntimeType": "CommonSkill",
+      "InputType": 2,
+      "MpCost": 200,
+      "ChantDuration": 1.0,
+      "CastingMoveMultiplier": 0.5,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [],
+      "Id": 18,
       "EffectiveRuntimeType": "CommonSkill"
     }
   ]

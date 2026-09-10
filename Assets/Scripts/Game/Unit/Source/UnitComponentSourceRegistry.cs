@@ -16,7 +16,6 @@ public static class UnitComponentSourceRegistry
         new UnitAnimationSource(),
         new UnitFacingSource(),
         new GameInteractionSource(),
-        new UnitJumpArcSource(),
         new UnitFactionSource(),
         new UnitManaSource(),
         new PlayerCurrentSkillSource(),
