@@ -3,6 +3,7 @@ using CrystalMagic.Game.Data;
 using Unity.Entities;
 using Unity.Mathematics;
 
+[RunInGameWorld(GameWorldKind.Town | GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitInitializationSystemGroup))]
 [UpdateBefore(typeof(UnitSourceInitializationSystem))]
 public partial class WorldStateSystem : SystemBase

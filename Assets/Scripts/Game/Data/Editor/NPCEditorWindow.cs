@@ -508,7 +508,7 @@ namespace CrystalMagic.Editor.Data
                     DrawBranchList(interaction, node);
                     break;
                 case NPCEnterDungeonInteractionNodeData enterDungeon:
-                    enterDungeon.DungeonFloor = Mathf.Max(1, EditorGUILayout.IntField("Dungeon Floor", enterDungeon.DungeonFloor));
+                    enterDungeon.DungeonThemeId = Mathf.Max(0, EditorGUILayout.IntField("Dungeon Theme Id", enterDungeon.DungeonThemeId));
                     EditorGUILayout.HelpBox("This node immediately ends the current interaction and enters the dungeon flow.", MessageType.None);
                     break;
                 case NPCEnterTrainingGroundInteractionNodeData:
@@ -1146,9 +1146,9 @@ namespace CrystalMagic.Editor.Data
                 changed = true;
             }
 
-            if (node is NPCEnterDungeonInteractionNodeData enterDungeon && enterDungeon.DungeonFloor < 1)
+            if (node is NPCEnterDungeonInteractionNodeData enterDungeon && enterDungeon.DungeonThemeId < 0)
             {
-                enterDungeon.DungeonFloor = 1;
+                enterDungeon.DungeonThemeId = 0;
                 changed = true;
             }
 

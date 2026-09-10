@@ -3,6 +3,7 @@ using CrystalMagic.Game.Skill;
 using Unity.Entities;
 using UnityEngine;
 
+[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(PersistentEffectSystem))]
 partial class EffectExecutionSystem : SystemBase

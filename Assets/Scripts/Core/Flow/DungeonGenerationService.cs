@@ -19,10 +19,10 @@ namespace CrystalMagic.Core
             if (runData == null)
                 yield break;
 
-            DungeonThemeData theme = ResolveThemeData(dungeonFloor);
+            DungeonThemeData theme = ResolveThemeData(runData.ThemeId);
             if (theme == null)
             {
-                string error = $"No open-field dungeon theme is configured for floor {dungeonFloor}.";
+                string error = $"No open-field dungeon theme is configured for theme id {runData.ThemeId}.";
                 PublishProgress(targetSceneName, 0.35f, "Open field configuration invalid", error);
                 throw new InvalidOperationException(error);
             }
@@ -43,7 +43,7 @@ namespace CrystalMagic.Core
             string targetSceneName)
         {
             theme.EnsureValid();
-            bool isBossFloor = IsBossFloor(dungeonFloor, dungeonConfig);
+            bool isBossFloor = IsBossFloor(dungeonFloor);
             if (!HasConfiguredExitSquad(theme.OpenField, isBossFloor))
             {
                 string error = $"Open field theme '{theme.Name}' has no valid {(isBossFloor ? "boss" : "normal")} large squad for the exit interest point.";
@@ -52,7 +52,7 @@ namespace CrystalMagic.Core
             }
 
             bool rebuildSavedLayout = runData.CurrentFloor == dungeonFloor && runData.Seed != 0;
-            int masterSeed = rebuildSavedLayout ? runData.Seed : DeriveMasterSeed(runData, dungeonFloor);
+            int masterSeed = rebuildSavedLayout ? runData.Seed : DeriveMasterSeed(runData, theme.Id, dungeonFloor);
             OpenFieldDungeonTerrainConfig terrainConfig = theme.OpenField.Terrain.CloneValidated();
             terrainConfig.Width = Mathf.Max(8, dungeonConfig?.MapWidth ?? terrainConfig.Width);
             terrainConfig.Height = Mathf.Max(8, dungeonConfig?.MapHeight ?? terrainConfig.Height);
@@ -67,7 +67,7 @@ namespace CrystalMagic.Core
                     targetSceneName,
                     0.35f,
                     "Generating open field terrain",
-                    $"Floor {dungeonFloor} Attempt {attemptIndex + 1} Seed {candidateSeed}");
+                    $"{theme.Name} Level {dungeonFloor} Attempt {attemptIndex + 1} Seed {candidateSeed}");
 
                 OpenFieldDungeonLayout layout = OpenFieldDungeonTerrainGenerator.Generate(candidateSeed, terrainConfig);
                 yield return null;
@@ -115,7 +115,7 @@ namespace CrystalMagic.Core
                 yield return DungeonSceneRuntimeBuilder.BuildCurrentDungeonSceneCoroutine(
                     targetSceneName,
                     (progress, title, detail) => PublishProgress(targetSceneName, progress, title, detail));
-                PublishProgress(targetSceneName, 0.999f, "Open field ready", $"Floor {dungeonFloor} Seed {candidateSeed}");
+                PublishProgress(targetSceneName, 0.999f, "Open field ready", $"{theme.Name} Level {dungeonFloor} Seed {candidateSeed}");
                 yield break;
             }
         }
@@ -160,46 +160,20 @@ namespace CrystalMagic.Core
             return false;
         }
 
-        private static DungeonThemeData ResolveThemeData(int dungeonFloor)
+        private static DungeonThemeData ResolveThemeData(int dungeonThemeId)
         {
-            IEnumerable<DungeonThemeData> themes = DataComponent.Instance?.FindAll<DungeonThemeData>(static _ => true);
-            DungeonThemeData nearestTheme = null;
-            int nearestDistance = int.MaxValue;
-            if (themes != null)
-            {
-                foreach (DungeonThemeData theme in themes)
-                {
-                    if (theme == null)
-                        continue;
-
-                    theme.EnsureValid();
-                    if (dungeonFloor >= theme.FloorStart && dungeonFloor <= theme.FloorEnd)
-                        return theme;
-
-                    int distance = dungeonFloor < theme.FloorStart
-                        ? theme.FloorStart - dungeonFloor
-                        : dungeonFloor - theme.FloorEnd;
-                    if (distance < nearestDistance)
-                    {
-                        nearestDistance = distance;
-                        nearestTheme = theme;
-                    }
-                }
-            }
-
-            return nearestTheme;
+            DungeonThemeData theme = DataComponent.Instance?.Get<DungeonThemeData>(dungeonThemeId);
+            theme?.EnsureValid();
+            return theme;
         }
 
         private static DungeonConfig GetDungeonConfig()
         {
             return ConfigComponent.Instance.Get<DungeonConfig>();
         }
-
-
-        private static bool IsBossFloor(int dungeonFloor, DungeonConfig config)
+        private static bool IsBossFloor(int dungeonFloor)
         {
-            int bossFloorInterval = Mathf.Max(1, config?.BossFloorInterval ?? 10);
-            return Mathf.Max(1, dungeonFloor) % bossFloorInterval == 0;
+            return Mathf.Clamp(dungeonFloor, 1, DungeonConfig.LevelsPerTheme) == DungeonConfig.LevelsPerTheme;
         }
 
         private static void PublishProgress(string targetSceneName, float progress, string title, string detail)
@@ -211,13 +185,14 @@ namespace CrystalMagic.Core
                 detail ?? string.Empty));
         }
 
-        private static int DeriveMasterSeed(DungeonRunData runData, int dungeonFloor)
+        private static int DeriveMasterSeed(DungeonRunData runData, int dungeonThemeId, int dungeonFloor)
         {
             unchecked
             {
                 uint baseSeed = (uint)(runData?.BaseSeed == 0 ? DefaultSeed : runData.BaseSeed);
+                uint theme = (uint)Mathf.Max(0, dungeonThemeId);
                 uint floor = (uint)Mathf.Max(1, dungeonFloor);
-                uint mixed = baseSeed ^ (floor * 3266489917u) ^ 2246822519u;
+                uint mixed = baseSeed ^ (theme * 2246822519u) ^ (floor * 3266489917u) ^ 2246822519u;
                 mixed ^= mixed >> 16;
                 mixed *= 2246822519u;
                 mixed ^= mixed >> 13;

@@ -7,8 +7,6 @@ namespace CrystalMagic.Game.Skill
 {
     public static class SkillExecutor
     {
-        private static ComparatorFactory s_comparatorFactory;
-
         public static void ExecuteSkill(SkillData skillData, SkillContent context)
         {
             if (skillData == null || skillData.EffectChain == null)
@@ -67,13 +65,8 @@ namespace CrystalMagic.Game.Skill
             if (!TryGetConditionEntity(context, entityManager, out Entity conditionEntity))
                 return false;
 
-            Comparator comparator = GetComparatorFactory().BuildComparator(
-                effectData.Conditions,
-                conditionEntity,
-                entityManager,
-                context != null ? context.OriginEntity : Entity.Null,
-                context != null && context.HasOriginEntity);
-            return comparator.GetResult();
+            context.EntityManager = entityManager;
+            return EffectConditionUtility.Pass(effectData.Conditions, context, conditionEntity);
         }
 
         private static bool TryGetConditionEntity(SkillContent context, EntityManager entityManager, out Entity conditionEntity)
@@ -98,16 +91,6 @@ namespace CrystalMagic.Game.Skill
 
             conditionEntity = Entity.Null;
             return false;
-        }
-
-        private static ComparatorFactory GetComparatorFactory()
-        {
-            if (s_comparatorFactory != null)
-                return s_comparatorFactory;
-
-            s_comparatorFactory = new ComparatorFactory();
-            ComparatorRegistry.RegisterAll(s_comparatorFactory);
-            return s_comparatorFactory;
         }
 
         private static EntityManager GetEntityManager(SkillContent context)

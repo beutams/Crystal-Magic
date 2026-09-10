@@ -18,11 +18,10 @@ namespace CrystalMagic.Game.Skill.Effects
 
         public override void Execute(SkillContent context)
         {
-            if (Data == null || context == null || !context.HasTargetEntity)
+            if (Data == null || context == null || !TryResolveTarget(context, out Entity target))
                 return;
 
             EntityManager entityManager = context.EntityManager;
-            Entity target = context.TargetEntity;
             if (target == Entity.Null ||
                 !entityManager.Exists(target) ||
                 !entityManager.HasComponent<UnitVitalityComponent>(target) ||
@@ -45,7 +44,6 @@ namespace CrystalMagic.Game.Skill.Effects
 
             if (!died)
             {
-                QuadOverlayPulseUtility.PlayHit(entityManager, target);
                 UnitBuffHookUtility.Dispatch(
                     entityManager,
                     target,
@@ -58,8 +56,8 @@ namespace CrystalMagic.Game.Skill.Effects
             }
 
             Debug.Log(
-                $"[DamageEffect] Damage={damage:0.##} | Formula=max(0, AttackPower*Coeff+Flat-Defense) | " +
-                $"AttackPower={breakdown.AttackPower:0.##} Coeff={Data.DamageCoefficient:0.##} Flat={Data.FlatDamageBonus:0.##} " +
+                $"[DamageEffect] Damage={damage:0.##} | Formula=max(0, BaseValue*Coeff+Flat-Defense) | " +
+                $"BaseValue={breakdown.BaseValue:0.##} Coeff={Data.DamageCoefficient:0.##} Flat={Data.FlatDamageBonus:0.##} " +
                 $"Raw={breakdown.RawDamage:0.##} Defense={breakdown.Defense:0.##} Final={breakdown.FinalDamage:0.##} " +
                 $"Target={target.Index}:{target.Version} HP={previousHealth:0.##}->{vitality.CurrentHealth:0.##}");
 
@@ -68,29 +66,52 @@ namespace CrystalMagic.Game.Skill.Effects
 
         private DamageBreakdown CalculateDamage(SkillContent context, EntityManager entityManager, Entity target)
         {
-            float attackPower = 0f;
-            if (context.HasOriginEntity &&
-                context.OriginEntity != Entity.Null &&
-                entityManager.Exists(context.OriginEntity) &&
-                entityManager.HasComponent<UnitAttackComponent>(context.OriginEntity))
-            {
-                attackPower = UnitModifierResolver.GetAttackPower(entityManager, context.OriginEntity);
-            }
-
-            float rawDamage = attackPower * Data.DamageCoefficient + Data.FlatDamageBonus;
-            float defense = UnitModifierResolver.GetDefense(entityManager, target);
+            float baseValue = ResolveBaseValue(context, entityManager);
+            float rawDamage = baseValue * Data.DamageCoefficient + Data.FlatDamageBonus;
+            float defense = Data.ValueSource == DamageValueSource.TriggerValue
+                ? 0f
+                : UnitModifierResolver.GetDefense(entityManager, target);
             return new DamageBreakdown
             {
-                AttackPower = attackPower,
+                BaseValue = baseValue,
                 RawDamage = rawDamage,
                 Defense = defense,
                 FinalDamage = math.max(0f, rawDamage - defense),
             };
         }
 
+        private bool TryResolveTarget(SkillContent context, out Entity target)
+        {
+            switch (Data.TargetSource)
+            {
+                case DamageTargetSource.OtherEntity:
+                    target = context.HasOtherEntity ? context.OtherEntity : Entity.Null;
+                    return target != Entity.Null;
+                default:
+                    target = context.HasTargetEntity ? context.TargetEntity : Entity.Null;
+                    return target != Entity.Null;
+            }
+        }
+
+        private float ResolveBaseValue(SkillContent context, EntityManager entityManager)
+        {
+            if (Data.ValueSource == DamageValueSource.TriggerValue)
+                return math.max(0f, context.TriggerValue);
+
+            if (context.HasOriginEntity &&
+                context.OriginEntity != Entity.Null &&
+                entityManager.Exists(context.OriginEntity) &&
+                entityManager.HasComponent<UnitAttackComponent>(context.OriginEntity))
+            {
+                return UnitModifierResolver.GetAttackPower(entityManager, context.OriginEntity);
+            }
+
+            return 0f;
+        }
+
         private struct DamageBreakdown
         {
-            public float AttackPower;
+            public float BaseValue;
             public float RawDamage;
             public float Defense;
             public float FinalDamage;

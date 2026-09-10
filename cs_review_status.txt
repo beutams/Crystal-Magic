@@ -16,13 +16,12 @@ Core\
     Editor\
       DataFileEncodingValidator.cs FALSE
       DataTableRegistryGenerator.cs FALSE
-      DataTableViewerWindow.cs TRUE DIRTY
     DataComponent.cs TRUE
     DataFileUtility.cs TRUE
     DataRow.cs TRUE
     DataTable.cs TRUE
     DataTableRegistry.cs TRUE DIRTY
-    ReadOnlyDataAttribute.cs TRUE
+    ReadOnlyDataAttribute.cs TRUE DIRTY
     UnityObjectPathJsonConverter.cs TRUE
   Editor\
     EditorFocusUtility.cs FALSE
@@ -48,12 +47,12 @@ Core\
     GeneratedFactory.cs TRUE DIRTY
   Flow\
     DungeonGenerationService.cs TRUE DIRTY
+    DungeonSettlementState.cs TRUE DIRTY
     DungeonState.cs TRUE DIRTY
     GameFlowComponent.cs FALSE
     GameState.cs FALSE
-    LoadGameState.cs FALSE
+    LoadGameState.cs TRUE DIRTY
     MainMenuState.cs FALSE
-    ResultState.cs FALSE
     TownState.cs TRUE DIRTY
     TrainingState.cs TRUE DIRTY
     TransitionState.cs FALSE
@@ -101,16 +100,19 @@ Core\
     RuntimeDungeonFogData.cs TRUE DIRTY
   SaveData\
     CurrencyUtility.cs WAIT
+    DungeonSettlementResult.cs TRUE
     InventoryUtility.cs WAIT
     PropInventoryUtility.cs WAIT
-    SaveData.cs TRUE
-    SaveDataComponent.cs WAIT
+    SaveData.cs TRUE DIRTY
+    SaveDataComponent.cs TRUE DIRTY
     SaveVariableData.cs TRUE
   Scene\
     Editor\
       SubSceneAutoOpenOnPlay.cs FALSE
     AutoOpen.cs FALSE
-    SceneComponent.cs WAIT
+    SceneComponent.cs TRUE DIRTY
+  World\
+    GameWorldBootstrap.cs TRUE DIRTY
   Settings\
     GameSettingsComponent.cs TRUE DIRTY
     GameSettingsData.cs TRUE DIRTY
@@ -164,7 +166,7 @@ Game\
     Condition.cs TRUE DIRTY
     ConditionConfig.cs TRUE DIRTY
     ICompareType.cs TRUE DIRTY
-    ISource.cs TRUE DIRTY
+    UnitValue.cs FALSE
   Config\
   Data\
     Editor\
@@ -172,8 +174,11 @@ Game\
       DungeonEditorWindow.cs TRUE DIRTY
       DungeonEditorWindow.OpenField.cs TRUE DIRTY
       EquipEditorWindow.cs TRUE DIRTY
-      NPCEditorWindow.cs TRUE
+      ItemDataEditorWindow.cs TRUE
+      LocalizationEditorWindow.cs TRUE
+    NPCEditorWindow.cs TRUE DIRTY
       PropEditorWindow.cs TRUE DIRTY
+      ShopDataEditorWindow.cs TRUE DIRTY
       SkillAdditionEditorWindow.cs TRUE DIRTY
       SpriteEffectAnimationAssetGenerator.cs TRUE
       UnitAnimationFrameLibraryBuilder.cs TRUE
@@ -196,7 +201,7 @@ Game\
       PersistentEffectData.cs FALSE
       RandomAreaPointEffectData.cs FALSE
       RecoverEffectData.cs FALSE
-      SpawnProjectileEffectData.cs TRUE
+      SpawnProjectileEffectData.cs TRUE DIRTY
       SpawnFollowVfxEffectData.cs TRUE
       SpawnSoundEffectData.cs FALSE
       SpawnUnitEffectData.cs TRUE
@@ -242,7 +247,7 @@ Game\
     Editor\
       EffectGraph\
         EffectGraphBinding.cs TRUE
-        EffectGraphInspector.cs TRUE
+        EffectGraphInspector.cs TRUE DIRTY
         EffectGraphLayoutStore.cs TRUE
         EffectGraphModel.cs TRUE
         EffectGraphTypeRegistry.cs TRUE DIRTY
@@ -255,14 +260,15 @@ Game\
       SkillRegistryGenerator.cs FALSE
     Effects\
       ApplyBuffEffect.cs FALSE
-      AreaSearchEffect.cs FALSE
+      AreaSearchEffect.cs TRUE
       BuffStackEffect.cs FALSE
       CameraShakeEffect.cs FALSE
-      ChainSearchEffect.cs FALSE
-      ConeSearchEffect.cs FALSE
-      DamageEffect.cs TRUE
+      ChainSearchEffect.cs TRUE
+      ConeSearchEffect.cs TRUE
+      DamageEffect.cs TRUE DIRTY
       Effect.cs FALSE
-      ForwardRectSearchEffect.cs FALSE
+      EffectConditionUtility.cs FALSE
+      ForwardRectSearchEffect.cs TRUE
       PersistentEffect.cs TRUE
         闁归晲鑳堕悽濠氬箑瑜庨弲銉╁几濠婃劗绀夋繛锝堫嚙婵偞绋夐埀顒佺▔椤忓懎鐦紓渚囧幒閹广垽宕濋垾鍐茬厒缂侇垵宕电划?
       RandomAreaPointEffect.cs FALSE
@@ -369,7 +375,7 @@ Game\
       DestroyEntityFlagAuthoring.cs TRUE
         婵繆顔婃鎼佸冀閸ヮ亶鍞?
       DropEntityPrefabRegistryEntry.cs FALSE
-      DungeonExitAuthoring.cs TRUE
+      DungeonExitAuthoring.cs TRUE DIRTY
         闁革附澹嗘晶鐑藉礄閸濆嫬缍撶紓浣稿濞?
       DungeonMonsterSpawnComponent.cs TRUE DIRTY
       DungeonTreasureAuthoring.cs TRUE DIRTY
@@ -387,7 +393,6 @@ Game\
       PlayerSkillAuthoring.cs TRUE DIRTY
         闁哄倽濮ょ涵鍓佹嫚闁垮婀寸紓浣稿濞嗐垽鏁嶇仦鐣屾憼闁衡偓閹呯闂佹彃锕ラ弬渚€骞庨埀顒勬嚄娴犲鎳犻柛妯煎枎椤劙寮悧鍫濈ウ
       ProjectileEntityPrefabRegistryEntry.cs FALSE
-      QuadAnimationComponent.cs TRUE DIRTY
       SkillProjectileAuthoring.cs TRUE DIRTY
       SkillProjectileRuntime.cs TRUE DIRTY
       SpriteEffectAnimationAuthoring.cs TRUE
@@ -417,7 +422,6 @@ Game\
         闂傚啩绲婚幆鈧柡浣哄瀹?
         ==婵炲备鍓濆﹢浣瑰緞濮橆厸鍋?
         闁告娲戠紞鍛村箛韫囨挻绂堥梻鍡楁閹?
-      UnitJumpArcAuthoring.cs TRUE DIRTY
       UnitManaAuthoring.cs TRUE DIRTY
         濮掑嫭姊圭涵鍫曞极閻楀牆绁?
       UnitMoveAuthoring.cs TRUE DIRTY
@@ -487,17 +491,17 @@ Game\
         闁活潿鍔嶉弳鐔煎箲椤旂晫鈧垰顕欓崫鍕瘔閻炴稑濂旂拹鐔煎冀閹达絽螡闁绘劗鎳撻顔炬寬?
       BehaviorTreeSystem.cs TRUE DIRTY
         闁告瑥鍊归弳鐔煎礃濞嗗繐寮冲娑欏灦濠㈡﹢鏁嶇仦鎯р挃閻炴稑鐭侀、鎴炵▔閻戞鍩?
-      DestroyEntitySystem.cs TRUE
+      DestroyEntitySystem.cs TRUE DIRTY
         闁告帞濞€濞呭海鏁敂绛嬪姤濞存壕鍓濋悥锝囨媼閹殿喗鐣遍悗鍦仒缂?
-      DungeonExitSystem.cs TRUE
+      DungeonExitSystem.cs TRUE DIRTY
         闁告帡鏀遍弻濠囧礄閸濆嫬缍撻悷娆欑秮閺€锝夋偐閼哥鍋?
         闁瑰灚鎸哥槐鎴犫偓瑙勭箘椤斿牓鎮介悢绋跨亣闁瑰搫顦抽幆銈夋偋?
-      EffectExecutionSystem.cs TRUE
+      EffectExecutionSystem.cs TRUE DIRTY
         濞戞挸锕ら惇鐧皍ff濞戞柨顑囩悮顐︽儍閸曨垰娅為柡鈧欢鈧琭fect闁挎稑鐭傞埀顒佷亢缁诲啰鎷犻柨瀣勾闁规亽鍔忕换婊堝礆閻楀牆鈷旈悶娑樿嫰閻即鏌屾繝鍐╂澒
         闁活亞鍠庨悿鍕閵堝嫮闉嶇紒顖濆吹缁椽鏁嶇仦鎯р挃閻炴稑濂斿锔界閹烘洖螡闁绘劕缍婇幗濂稿礆閹殿喚娉㈤柡澶屽枂閳?
       NPCInteractPromptSystem.cs TRUE DIRTY
         缂備胶鍠曢鎼佸箥閳ь剟寮垫径濠傝濞存嚎鍊撶花鎵矓瀹ュ洩顫﹂柨娑樼焸閳ь剙顦崵顓㈠嫉閳ь剚娼婚幋鐘崇暠
-      PersistentEffectSystem.cs TRUE
+      PersistentEffectSystem.cs TRUE DIRTY
         闁告梻濮撮崣鍡涘箰娴ｈ櫣鏁鹃柡浣哥墛閻忓鎷犻柨瀣勾闁挎稑鐬奸崝褔宕ユ惔銈庡悁闁哄啫鐖奸崳鎾绩閻愵剙鐦紓渚囧幗閳ь儸鍕珡闁?
       PlayerEquipmentPropertySystem.cs TRUE DIRTY
         缂備胶鍠曢鍝ユ啑閸涱収妲甸悘鐐靛仦閳ь儸鍐ㄦ櫢闁稿繈鍎遍惈姗€骞€瑜忕划宥嗙閺堜絻鍘?
@@ -506,20 +510,19 @@ Game\
       PlayerPhysicsRotationLockSystem.cs FALSE
       PlayerSkillAnalysisSystem.cs TRUE DIRTY
         闁汇垻鍠愰崹姘跺礂閾氬倻绉奸柟鍨涘亾闁煎啿鈧噥鍤炴慨?
-      SkillReleaseSystem.cs TRUE
+      SkillReleaseSystem.cs TRUE DIRTY
       SkillProjectileSpawnSystem.cs TRUE DIRTY
       SkillProjectileSystem.cs TRUE DIRTY
-      SpriteEffectAnimationSystem.cs TRUE
-      UnitBuffSystem.cs TRUE
+      SpriteEffectAnimationSystem.cs TRUE DIRTY
+      UnitBuffSystem.cs TRUE DIRTY
         缂備胶鍠曢绐ff闁告劖鐟ラ崣鍡欎沪閻愮补鍋撹閹蜂即骞庨埀顒勬嚄閹存帗鍙忔慨婵撶秶缁辨繃娼娆惧殑闁瑰灈鍋撻柤瀹犲Г濡炲倿姊?
       UnitAnimationSystem.cs TRUE DIRTY
-      UnitSpriteRendererSortingSystem.cs TRUE
+      UnitSpriteRendererSortingSystem.cs TRUE DIRTY
       UnitControlSystem.cs TRUE DIRTY
         闁告帡鏀遍弻濠囧矗濡や礁浠橀柡浣哄瀹?
-      UnitDeathFinalizeSystem.cs TRUE
-      UnitDropOnDestroySystem.cs TRUE
+      UnitDeathFinalizeSystem.cs TRUE DIRTY
+      UnitDropOnDestroySystem.cs TRUE DIRTY
         闁诡剦浜炴晶鍨潰鐠佹娊顎楅柟鍝勵槼閹倝鎮?
-      UnitJumpArcSystem.cs FALSE
       UnitMoveSystem.cs TRUE DIRTY
         閹煎瓨姊婚弫銈囩矓鐠囨彃袟
       UnitResetSystem.cs TRUE DIRTY
@@ -528,13 +531,13 @@ Game\
         闁哄被鍎撮妤呭嫉閳ь剚娼婚幋鐘崇暠闁轰礁濂斿Ч澶愬礃濞嗗繐寮崇紒渚垮灪閺咁偆绱掗崟顏咁偨
       UnitQuerySystem.cs TRUE DIRTY
         闁轰胶澧楀畵渚€宕犻弽褍绀嬪ù锝呯С缂嶅懐绱旈鍡欑闁圭粯鍔掔欢浣冪疀椤愶腹鍋撻悢鍝ュ弨閻犲洢鍨虹敮鎾矗?
-      UnitRecoverySystem.cs TRUE
+      UnitRecoverySystem.cs TRUE DIRTY
         閹煎瓨姊婚弫銈夋偨閻旈攱鍤掗柟顓滃灩椤?
       UnitSkillAnalysisSystem.cs TRUE DIRTY
         闂佹彃绉堕悿鍝爇illModifier
       UnitSkillExecuteSystem.cs TRUE DIRTY
         闁告瑯浜濆Σ鍝ユ媼閿涘嫮鏆柛鎰槻瀹?
-      UnitSystemGroups.cs TRUE
+      UnitSystemGroups.cs TRUE DIRTY
         闁告帒妫涚悮?
         闁归攱鍎宠ぐ鍥箳婢跺孩鍎伴柣?
     Utility\
@@ -542,7 +545,6 @@ Game\
       NPCAuthoringUtility.cs FALSE
       PendingEffectExecutionQueueUtility.cs FALSE
       PropUseUtility.cs TRUE DIRTY
-      QuadOverlayPulseUtility.cs TRUE
       SkillExecutionUtility.cs TRUE DIRTY
       SkillReleaseUtility.cs FALSE
       UnitAnimationVisualUtility.cs FALSE
@@ -559,10 +561,6 @@ Game\
       UnitSkillModifierUtility.cs FALSE
     Unit\
       CompareSource\
-        UnitBuffStackSource.cs TRUE
-        UnitHealthRatioSource.cs TRUE
-        UnitIsCastingSource.cs TRUE DIRTY
-        UnitIsControlledSource.cs TRUE
       State\
   World\
     WorldInputComponent.cs TRUE
@@ -588,11 +586,16 @@ UI\
     CharacterUIData.cs TRUE
     CharacterUIModel.cs TRUE DIRTY
   ConfirmUI\
-    ConfirmUI.cs FALSE
-    ConfirmUIController.cs FALSE
+    ConfirmUI.cs TRUE
+    ConfirmUIController.cs TRUE
     ConfirmUIData.cs FALSE
-    ConfirmUIModel.cs FALSE
+    ConfirmUIModel.cs TRUE
     ConfirmUIOpenData.cs FALSE
+  DungeonSettlementUI\
+    DungeonSettlementUI.cs TRUE
+    DungeonSettlementUIController.cs TRUE
+    DungeonSettlementUIData.cs TRUE
+    DungeonSettlementUIModel.cs TRUE
   EffectItemInfoUI\
     EffectItemInfoUI.cs FALSE
     EffectItemInfoUIController.cs FALSE
@@ -771,3 +774,7 @@ Web\
 Core\
   Flow\
     OnlineBattlePreparationState.cs TRUE DIRTY
+Tests\
+  Editor\
+    Comparator\
+      ConditionExpressionMigrationTests.cs FALSE

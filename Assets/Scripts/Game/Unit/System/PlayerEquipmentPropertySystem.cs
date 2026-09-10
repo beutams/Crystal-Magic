@@ -2,6 +2,7 @@ using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using Unity.Entities;
 
+[RunInGameWorld(GameWorldKind.Town | GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitInitializationSystemGroup))]
 [UpdateBefore(typeof(UnitBuffSystem))]
 partial class PlayerEquipmentPropertySystem : SystemBase

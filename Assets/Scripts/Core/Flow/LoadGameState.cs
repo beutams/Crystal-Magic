@@ -32,7 +32,7 @@ namespace CrystalMagic.Core {
 
             if (context.ShouldEnterDungeon())
             {
-                Debug.Log($"[LoadGameState] 进入 Dungeon，楼层 {context.DungeonFloor}");
+                Debug.Log($"[LoadGameState] 进入 Dungeon，主题 {context.DungeonThemeId}，关卡 {context.DungeonFloor}");
                 targetSceneName = DungeonState.SceneName;
                 targetStateType = typeof(DungeonState);
             }

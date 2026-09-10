@@ -49,6 +49,10 @@ namespace CrystalMagic.Core
             ReleaseUIInputLock();
             UnbindInput();
             OnExitBattle();
+            ReleaseManagedUI(_gameMenuUI);
+            ReleaseManagedUI(_characterUI);
+            ReleaseManagedUI(_battleUI);
+            _gameMenuUI = null;
             _characterUI = null;
             _battleUI = null;
         }
@@ -156,6 +160,12 @@ namespace CrystalMagic.Core
             GameGateComponent.Instance.Unlock(GameGateType.PlayerInput, UIPlayerInputLockReason);
             _playerInputLockedByUI = false;
         }
+
+        private static void ReleaseManagedUI(UIBase panel)
+        {
+            if (panel != null && UIComponent.Instance.IsManaged(panel))
+                UIComponent.Instance.CloseUI(panel);
+        }
     }
 
     public class DungeonState : BattleStateBase
@@ -182,19 +192,19 @@ namespace CrystalMagic.Core
         public static int PrepareDungeonRun(LoadGameContext context)
         {
             int dungeonFloor = context?.DungeonFloor ?? 1;
+            int dungeonThemeId = context?.DungeonThemeId ?? SaveDataComponent.Instance.GetInitialDungeonThemeId();
             SaveAreaType previousAreaType = SaveDataComponent.Instance.GetLocationData()?.AreaType ?? SaveAreaType.Town;
 
             if (previousAreaType == SaveAreaType.Dungeon)
             {
-                SaveDataComponent.Instance.EnsureDungeonRunExists(dungeonFloor);
+                SaveDataComponent.Instance.EnsureDungeonRunExists(dungeonThemeId, dungeonFloor);
             }
             else
             {
-                SaveDataComponent.Instance.BeginDungeonRunFromPersistent(dungeonFloor);
+                SaveDataComponent.Instance.BeginDungeonRunFromPersistent(dungeonThemeId, dungeonFloor);
             }
 
-            SaveDataComponent.Instance?.SetCurrentLocation(SaveAreaType.Dungeon, dungeonFloor);
-            SaveDataComponent.Instance?.UpdateDungeonReachedFloorProgress(dungeonFloor);
+            SaveDataComponent.Instance.SetCurrentLocation(SaveAreaType.Dungeon, dungeonFloor, dungeonThemeId);
             return dungeonFloor;
         }
 
@@ -205,7 +215,7 @@ namespace CrystalMagic.Core
             Debug.Log("[DungeonState] Entered Dungeon");
             LoadGameContext context = StateData as LoadGameContext;
             int dungeonFloor = PrepareDungeonRun(context);
-            Debug.Log($"[DungeonState] Resuming dungeon at floor: {dungeonFloor}");
+            Debug.Log($"[DungeonState] Resuming dungeon theme {SaveDataComponent.Instance.GetDungeonRunData()?.ThemeId} at level {dungeonFloor}");
             _minimapUI = UIComponent.Instance.Open<MinimapUI>();
             UIComponent.Instance.SetLifetime(_minimapUI, UILifetime.SceneScoped);
         }
@@ -230,9 +240,8 @@ namespace CrystalMagic.Core
             }
 
             _isProcessingDefeat = true;
-            SaveDataComponent.Instance.ApplyDungeonDeathAndCommit();
-            LoadGameContext context = SaveDataComponent.Instance.CreateLoadGameContext(SaveAreaType.Town);
-            GameFlowComponent.Instance.SetState<ResultState>(ResultStateData.Create(ResultOutcome.Failure, context));
+            GameFlowComponent.Instance.SetState<DungeonSettlementState>(
+                DungeonSettlementStateData.Create(DungeonSettlementOutcome.Defeated));
         }
 
         protected override void OnExitBattle()

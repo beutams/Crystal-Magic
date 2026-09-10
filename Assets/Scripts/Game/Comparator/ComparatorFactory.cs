@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -244,14 +243,8 @@ public sealed class DotOperation : IValueOperation
 
 public class ComparatorFactory
 {
-    private readonly GeneratedFactory<string, ISource> _sourceFactories = new(StringComparer.Ordinal);
     private readonly GeneratedFactory<string, ICompareType> _compareFactories = new(StringComparer.Ordinal);
     private readonly GeneratedFactory<string, IValueOperation> _operationFactories = new(StringComparer.Ordinal);
-
-    public void RegisterSource(string key, Func<ISource> factory)
-    {
-        _sourceFactories.Register(key, factory);
-    }
 
     public void RegisterCompareType(string key, Func<ICompareType> factory)
     {
@@ -261,15 +254,6 @@ public class ComparatorFactory
     public void RegisterValueOperation(string key, Func<IValueOperation> factory)
     {
         _operationFactories.Register(key, factory);
-    }
-
-    public ISource CreateSource(string typeName)
-    {
-        if (_sourceFactories.TryCreate(typeName, out ISource source))
-            return source;
-
-        Debug.LogError($"[ComparatorFactory] Unregistered legacy source: {typeName}");
-        return null;
     }
 
     public ICompareType CreateCompareType(string typeName)
@@ -349,46 +333,6 @@ public class ComparatorFactory
         return new Comparator(conditions);
     }
 
-    // Temporary overload for current modules. It converts their old source/value fields into typed inputs.
-    public Comparator BuildComparator(
-        List<ConditionConfig> configs,
-        Entity entity,
-        EntityManager entityManager,
-        Entity originEntity = default,
-        bool hasOriginEntity = false)
-    {
-        if (configs == null || configs.Count == 0)
-            return new Comparator(Array.Empty<Condition>());
-
-        SourceContext context = new(entity, entityManager, originEntity, hasOriginEntity);
-        Condition[] conditions = new Condition[configs.Count];
-        for (int i = 0; i < configs.Count; i++)
-        {
-            ConditionConfig config = configs[i];
-            bool hasExpressions = config?.Inputs != null && config.Inputs.Count > 0;
-            bool built;
-            string error;
-            if (hasExpressions)
-            {
-                built = false;
-                error = "Expression conditions require IComparatorValueResolver.";
-            }
-            else
-            {
-                built = TryBuildLegacyCondition(config, context, out conditions[i], out error);
-            }
-
-            if (!built)
-            {
-                Debug.LogError($"[ComparatorFactory] Failed to build legacy condition {i}: {error}");
-                return new Comparator(Array.Empty<Condition>(), false);
-            }
-        }
-
-        return new Comparator(conditions);
-    }
-
-    public int SourceCount => _sourceFactories.Count;
     public int CompareCount => _compareFactories.Count;
     public int OperationCount => _operationFactories.Count;
 
@@ -416,75 +360,6 @@ public class ComparatorFactory
             return false;
 
         condition = new Condition(config.ConditionType, compareType, getters);
-        return true;
-    }
-
-    private bool TryBuildLegacyCondition(
-        ConditionConfig config,
-        in SourceContext context,
-        out Condition condition,
-        out string error)
-    {
-        condition = null;
-        if (config == null)
-        {
-            error = "Configuration is null.";
-            return false;
-        }
-
-        ISource source = CreateSource(config.SourceType);
-        ICompareType compareType = CreateCompareType(config.CompareType);
-        if (source == null || compareType == null)
-        {
-            error = "Legacy source or compare type is unavailable.";
-            return false;
-        }
-
-        SourceContext sourceContext = new(
-            context.Entity,
-            context.EntityManager,
-            context.OriginEntity,
-            context.HasOriginEntity,
-            config.SourceParam,
-            context.UnitPrefab,
-            context.UnitData,
-            context.HasRuntimeEntity);
-        source.Init(sourceContext);
-
-        IReadOnlyList<ComparatorParameterDefinition> parameters = compareType.Parameters;
-        if (parameters.Count != 1 && parameters.Count != 2)
-        {
-            error = $"Compare type '{config.CompareType}' cannot be represented by the legacy configuration.";
-            return false;
-        }
-
-        if (!parameters[0].Accepts(UnitValueCategory.Number))
-        {
-            error = $"Compare type '{config.CompareType}' does not accept the legacy numeric source.";
-            return false;
-        }
-
-        Func<UnitValue> sourceGetter = () => UnitValue.FromFloat(source.GetValue());
-        if (parameters.Count == 1)
-        {
-            condition = new Condition(config.ConditionType, compareType, new[] { sourceGetter });
-            error = string.Empty;
-            return true;
-        }
-
-        if (!parameters[1].Accepts(UnitValueCategory.Number))
-        {
-            error = $"Compare type '{config.CompareType}' does not accept the legacy numeric threshold.";
-            return false;
-        }
-
-        UnitValue threshold = UnitValue.FromFloat(config.CompareValue);
-        condition = new Condition(config.ConditionType, compareType, new Func<UnitValue>[]
-        {
-            sourceGetter,
-            () => threshold,
-        });
-        error = string.Empty;
         return true;
     }
 

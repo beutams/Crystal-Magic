@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using CrystalMagic.Editor;
+using CrystalMagic.Editor.Skill;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Data.Effects;
 using UnityEditor;
@@ -19,7 +21,10 @@ namespace CrystalMagic.Editor.EffectGraph
             EditorGUILayout.LabelField(EffectGraphTypeRegistry.GetDisplayName(effect), EditorStyles.boldLabel);
             EditorGUILayout.Space(4f);
             effect.Conditions ??= new List<ConditionConfig>();
-            changed |= DrawConditions(effect.Conditions);
+            changed |= ConditionListEditor.Draw(
+                effect.Conditions,
+                $"EffectGraph.{effect.GetType().FullName}.Conditions",
+                EffectConditionSourceSchema.Get());
 
             FieldInfo[] fields = effect.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
             for (int index = 0; index < fields.Length; index++)
@@ -31,6 +36,23 @@ namespace CrystalMagic.Editor.EffectGraph
                 if (model.IsNestedEffectArrayField(field))
                 {
                     EditorGUILayout.LabelField(EditorLabelUtility.GetLabel(field), "Edited by its connected container", EditorStyles.miniLabel);
+                    continue;
+                }
+
+                if (field.FieldType == typeof(List<ConditionConfig>))
+                {
+                    List<ConditionConfig> conditions = field.GetValue(effect) as List<ConditionConfig> ?? new List<ConditionConfig>();
+                    if (field.GetValue(effect) == null)
+                    {
+                        field.SetValue(effect, conditions);
+                        changed = true;
+                    }
+
+                    EditorGUILayout.LabelField(EditorLabelUtility.GetLabel(field), EditorStyles.boldLabel);
+                    changed |= ConditionListEditor.Draw(
+                        conditions,
+                        $"EffectGraph.{effect.GetType().FullName}.{field.Name}",
+                        EffectConditionSourceSchema.Get());
                     continue;
                 }
 
@@ -72,48 +94,6 @@ namespace CrystalMagic.Editor.EffectGraph
 
             EditorGUILayout.LabelField(label, value?.ToString() ?? "(None)");
             return value;
-        }
-
-        private static bool DrawConditions(List<ConditionConfig> conditions)
-        {
-            conditions ??= new List<ConditionConfig>();
-            bool changed = false;
-            EditorGUILayout.LabelField($"Conditions ({conditions.Count})", EditorStyles.boldLabel);
-
-            int removeAt = -1;
-            for (int index = 0; index < conditions.Count; index++)
-            {
-                ConditionConfig condition = conditions[index] ?? new ConditionConfig();
-                EditorGUI.BeginChangeCheck();
-                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-                condition.ConditionType = (ConditionType)EditorGUILayout.EnumPopup("Type", condition.ConditionType);
-                condition.SourceType = EditorGUILayout.TextField("Source", condition.SourceType);
-                condition.CompareType = EditorGUILayout.TextField("Compare", condition.CompareType);
-                condition.SourceParam = EditorGUILayout.IntField("Source Param", condition.SourceParam);
-                condition.CompareValue = EditorGUILayout.FloatField("Value", condition.CompareValue);
-                if (GUILayout.Button("Remove", GUILayout.Width(70f)))
-                    removeAt = index;
-                EditorGUILayout.EndVertical();
-                if (EditorGUI.EndChangeCheck())
-                {
-                    conditions[index] = condition;
-                    changed = true;
-                }
-            }
-
-            if (removeAt >= 0)
-            {
-                conditions.RemoveAt(removeAt);
-                changed = true;
-            }
-
-            if (GUILayout.Button("Add Condition", GUILayout.Width(100f)))
-            {
-                conditions.Add(new ConditionConfig { SourceParam = -1, ConditionType = ConditionType.Necessary });
-                changed = true;
-            }
-
-            return changed;
         }
 
         private static List<SkillModifierEntry> DrawModifiers(string label, List<SkillModifierEntry> modifiers)

@@ -152,21 +152,36 @@ public sealed class NPCEnterDungeonInteractionNodeRunner : NPCInteractionNodeRun
             return;
         }
 
-        int dungeonFloor = ResolveDungeonFloor(session);
+        ResolveDungeonDestination(session, out int dungeonThemeId, out int dungeonFloor);
+        if (dungeonThemeId < 0)
+        {
+            Debug.LogWarning("[NPCInteraction] The dungeon exit has no next theme configured.");
+            return;
+        }
+
         SaveDataComponent saveDataComponent = SaveDataComponent.Instance;
         SaveAreaType currentAreaType = saveDataComponent?.GetLocationData()?.AreaType ?? SaveAreaType.Town;
+        if (!saveDataComponent.IsDungeonThemeUnlocked(dungeonThemeId))
+        {
+            Debug.LogWarning($"[NPCInteraction] Dungeon theme {dungeonThemeId} is locked.");
+            return;
+        }
+
         if (currentAreaType != SaveAreaType.Dungeon)
             saveDataComponent?.ClearDungeonRun();
 
         LoadGameContext context = saveDataComponent?.CreateLoadGameContext(
             SaveAreaType.Dungeon,
-            dungeonFloor);
+            dungeonFloor,
+            dungeonThemeId);
 
         GameFlowComponent.Instance.BeginTransition(DungeonState.CreateEnterTransitionData(context));
     }
 
-    private int ResolveDungeonFloor(NPCInteractionSession session)
+    private void ResolveDungeonDestination(NPCInteractionSession session, out int dungeonThemeId, out int dungeonFloor)
     {
+        dungeonThemeId = _node.DungeonThemeId;
+        dungeonFloor = 1;
         if (session != null && session.Target != Entity.Null)
         {
             World world = World.DefaultGameObjectInjectionWorld;
@@ -174,11 +189,13 @@ public sealed class NPCEnterDungeonInteractionNodeRunner : NPCInteractionNodeRun
             {
                 EntityManager entityManager = world.EntityManager;
                 if (entityManager.Exists(session.Target) && entityManager.HasComponent<DungeonExitComponent>(session.Target))
-                    return Math.Max(1, entityManager.GetComponentData<DungeonExitComponent>(session.Target).TargetFloor);
+                {
+                    DungeonExitComponent exit = entityManager.GetComponentData<DungeonExitComponent>(session.Target);
+                    dungeonThemeId = exit.TargetThemeId;
+                    dungeonFloor = Math.Max(1, exit.TargetFloor);
+                }
             }
         }
-
-        return Math.Max(1, _node.DungeonFloor);
     }
 
     public override bool IsCompleted(NPCInteractionSession session)
@@ -234,9 +251,8 @@ public sealed class NPCEnterTownInteractionNodeRunner : NPCInteractionNodeRunner
             return;
         }
 
-        SaveDataComponent.Instance.CommitDungeonRunToPersistent();
-        LoadGameContext context = SaveDataComponent.Instance.CreateLoadGameContext(SaveAreaType.Town);
-        GameFlowComponent.Instance.SetState<ResultState>(ResultStateData.Create(ResultOutcome.Success, context));
+        GameFlowComponent.Instance.SetState<DungeonSettlementState>(
+            DungeonSettlementStateData.Create(DungeonSettlementOutcome.Escaped));
     }
 
     public override bool IsCompleted(NPCInteractionSession session)

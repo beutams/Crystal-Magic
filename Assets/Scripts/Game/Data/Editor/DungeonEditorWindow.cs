@@ -98,7 +98,7 @@ namespace CrystalMagic.Editor.Data
         {
             EditorGUILayout.BeginVertical(GUILayout.Width(ListPanelWidth), GUILayout.ExpandHeight(true));
             EditorGUILayout.LabelField($"Themes ({_themes.Count})", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("Select a 1-10 floor theme to edit its open-field settings.", EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("Every theme contains 10 levels. Configure its next theme here.", EditorStyles.wordWrappedMiniLabel);
             _listScrollPosition = EditorGUILayout.BeginScrollView(_listScrollPosition);
             for (int i = 0; i < _themes.Count; i++)
             {
@@ -106,7 +106,7 @@ namespace CrystalMagic.Editor.Data
                 if (theme == null)
                     continue;
 
-                string label = $"[{theme.Id}] {theme.Name} ({theme.FloorStart}-{theme.FloorEnd})";
+                string label = $"[{theme.Id}] {theme.Name} (10 levels)";
                 if (GUILayout.Toggle(i == _selectedThemeIndex, label, "Button") && _selectedThemeIndex != i)
                 {
                     EditorFocusUtility.ClearTextFocus();
@@ -143,10 +143,7 @@ namespace CrystalMagic.Editor.Data
             EditorGUILayout.LabelField("Theme", EditorStyles.boldLabel);
             theme.Name = EditorGUILayout.TextField("Name", theme.Name ?? string.Empty);
             theme.ThemeKey = EditorGUILayout.TextField("Theme Key", theme.ThemeKey ?? string.Empty);
-            EditorGUILayout.BeginHorizontal();
-            theme.FloorStart = Mathf.Max(1, EditorGUILayout.IntField("Floor Start", theme.FloorStart));
-            theme.FloorEnd = Mathf.Max(theme.FloorStart, EditorGUILayout.IntField("Floor End", theme.FloorEnd));
-            EditorGUILayout.EndHorizontal();
+            theme.NextThemeId = DrawIntPopup("Next Theme", theme.NextThemeId, BuildThemeOptions());
             EditorGUILayout.EndVertical();
             if (EditorGUI.EndChangeCheck())
             {
@@ -163,8 +160,7 @@ namespace CrystalMagic.Editor.Data
                 Id = id,
                 Name = $"Theme {id}",
                 ThemeKey = $"theme_{id:D2}",
-                FloorStart = id * 10 + 1,
-                FloorEnd = id * 10 + 10,
+                NextThemeId = -1,
             };
             theme.EnsureValid();
             _themes.Add(theme);
@@ -273,6 +269,25 @@ namespace CrystalMagic.Editor.Data
                 {
                     Id = row.Id,
                     Label = $"[{row.Id}] {row.Name}",
+                });
+            }
+
+            return options;
+        }
+
+        private List<IntOption> BuildThemeOptions()
+        {
+            List<IntOption> options = new()
+            {
+                new IntOption { Id = -1, Label = "None" },
+            };
+
+            foreach (DungeonThemeData theme in _themes.OrderBy(static theme => theme.Id))
+            {
+                options.Add(new IntOption
+                {
+                    Id = theme.Id,
+                    Label = $"[{theme.Id}] {theme.Name}",
                 });
             }
 

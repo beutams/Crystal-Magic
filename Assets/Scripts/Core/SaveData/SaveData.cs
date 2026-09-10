@@ -225,6 +225,7 @@ namespace CrystalMagic.Core {
         public string RunId;
         public long RunTimestamp;
         public int BaseSeed;
+        public int ThemeId = -1;
         public int CurrentFloor;
         public int Seed;
         /// <summary>
@@ -404,6 +405,7 @@ namespace CrystalMagic.Core {
     public class SaveLocationData
     {
         public SaveAreaType AreaType = SaveAreaType.Town;
+        public int DungeonThemeId = -1;
         public int DungeonFloor = 1;
     }
 }

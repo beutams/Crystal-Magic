@@ -13,16 +13,14 @@ namespace CrystalMagic.Game.Data
     {
         public string Name;
         public string ThemeKey;
-        public int FloorStart = 1;
-        public int FloorEnd = 10;
+        public int NextThemeId = -1;
         public OpenFieldDungeonThemeData OpenField = new();
 
         public void EnsureValid()
         {
             Name ??= string.Empty;
             ThemeKey ??= string.Empty;
-            FloorStart = Mathf.Max(1, FloorStart);
-            FloorEnd = Mathf.Max(FloorStart, FloorEnd);
+            NextThemeId = Mathf.Max(-1, NextThemeId);
             OpenField ??= new OpenFieldDungeonThemeData();
             OpenField.EnsureValid();
         }

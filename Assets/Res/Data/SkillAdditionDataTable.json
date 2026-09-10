@@ -1,9 +1,9 @@
 ﻿{
   "Rows": [
     {
-      "NameKey": "增幅",
+      "NameKey": "伤害增幅",
       "DescriptionKey": "技能的伤害提升",
-      "IconPath": "Assets/Res/Sprites/UISprites/240 Pixel Art Spell & Skill Icons - Dani Melich/Arcane/64x64 PNGs/arcane_skill_20.png",
+      "IconPath": "Assets/Res/Sprites/Skill/arcane_skill_20.png",
       "Callbacks": [
         {
           "EventName": "skill.beforeRequest",
@@ -70,14 +70,32 @@
               ]
             }
           ]
+        },
+        {
+          "EventName": "skill.afterChain",
+          "Conditions": [],
+          "Actions": [
+            {
+              "$type": "CrystalMagic.Game.Data.ExecuteEffectsSkillAdditionActionData, Assembly-CSharp",
+              "Effects": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.RemoveBuffEffectData, Assembly-CSharp",
+                  "BuffId": 9,
+                  "RemoveAllStacks": true,
+                  "RemoveStackCount": 1,
+                  "Conditions": []
+                }
+              ]
+            }
+          ]
         }
       ],
       "Id": 0
     },
     {
       "NameKey": "双发",
-      "DescriptionKey": "连续释放两次，但是第二次只会造成少量伤害",
-      "IconPath": "Assets/Res/Sprites/UISprites/240 Pixel Art Spell & Skill Icons - Dani Melich/Arcane/64x64 PNGs/arcane_skill_20.png",
+      "DescriptionKey": "连续释放两次技能，但是第二次只会造成少量伤害",
+      "IconPath": "Assets/Res/Sprites/Skill/arcane_skill_20.png",
       "Callbacks": [
         {
           "EventName": "skill.afterRequest",
@@ -216,76 +234,39 @@
               ]
             }
           ]
+        },
+        {
+          "EventName": "skill.afterChain",
+          "Conditions": [],
+          "Actions": [
+            {
+              "$type": "CrystalMagic.Game.Data.ExecuteEffectsSkillAdditionActionData, Assembly-CSharp",
+              "Effects": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.RemoveBuffEffectData, Assembly-CSharp",
+                  "BuffId": 9,
+                  "RemoveAllStacks": true,
+                  "RemoveStackCount": 1,
+                  "Conditions": []
+                }
+              ]
+            }
+          ]
         }
       ],
       "Id": 1
     },
     {
       "NameKey": "节省",
-      "DescriptionKey": "技能MP消耗降低减半，但伤害也会同时降低",
+      "DescriptionKey": "技能MP消耗降低减半",
       "Callbacks": [
         {
-          "EventName": "",
+          "EventName": "skill.beforeRequest",
           "Conditions": [],
           "Actions": [
             {
               "$type": "CrystalMagic.Game.Data.ModifyCurrentSkillAdditionActionData, Assembly-CSharp",
               "Modifiers": [
-                {
-                  "Channel": 100,
-                  "Factor": {
-                    "Kind": 0,
-                    "Literal": {
-                      "Type": 3,
-                      "Bool": false,
-                      "Int": 0,
-                      "Float": -0.9,
-                      "Float2": {
-                        "x": 0.0,
-                        "y": 0.0
-                      },
-                      "Float3": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                      },
-                      "Entity": {
-                        "Index": 0,
-                        "Version": 0
-                      },
-                      "String": ""
-                    },
-                    "GetterKey": "",
-                    "OperationType": "",
-                    "Inputs": []
-                  },
-                  "Bonus": {
-                    "Kind": 0,
-                    "Literal": {
-                      "Type": 3,
-                      "Bool": false,
-                      "Int": 0,
-                      "Float": 0.0,
-                      "Float2": {
-                        "x": 0.0,
-                        "y": 0.0
-                      },
-                      "Float3": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                      },
-                      "Entity": {
-                        "Index": 0,
-                        "Version": 0
-                      },
-                      "String": ""
-                    },
-                    "GetterKey": "",
-                    "OperationType": "",
-                    "Inputs": []
-                  }
-                },
                 {
                   "Channel": 0,
                   "Factor": {
@@ -344,6 +325,24 @@
               ]
             }
           ]
+        },
+        {
+          "EventName": "skill.afterChain",
+          "Conditions": [],
+          "Actions": [
+            {
+              "$type": "CrystalMagic.Game.Data.ExecuteEffectsSkillAdditionActionData, Assembly-CSharp",
+              "Effects": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.RemoveBuffEffectData, Assembly-CSharp",
+                  "BuffId": 9,
+                  "RemoveAllStacks": true,
+                  "RemoveStackCount": 1,
+                  "Conditions": []
+                }
+              ]
+            }
+          ]
         }
       ],
       "Id": 2
@@ -353,7 +352,7 @@
       "DescriptionKey": "技能范围扩大一半",
       "Callbacks": [
         {
-          "EventName": "",
+          "EventName": "skill.beforeRequest",
           "Conditions": [],
           "Actions": [
             {
@@ -417,15 +416,34 @@
               ]
             }
           ]
+        },
+        {
+          "EventName": "skill.afterChain",
+          "Conditions": [],
+          "Actions": [
+            {
+              "$type": "CrystalMagic.Game.Data.ExecuteEffectsSkillAdditionActionData, Assembly-CSharp",
+              "Effects": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.RemoveBuffEffectData, Assembly-CSharp",
+                  "BuffId": 9,
+                  "RemoveAllStacks": true,
+                  "RemoveStackCount": 1,
+                  "Conditions": []
+                }
+              ]
+            }
+          ]
         }
       ],
       "Id": 3
     },
     {
       "NameKey": "格挡",
+      "DescriptionKey": "抵挡施法过程中第一次受到的伤害",
       "Callbacks": [
         {
-          "EventName": "",
+          "EventName": "skill.beforeRequest",
           "Conditions": [],
           "Actions": [
             {
@@ -433,8 +451,8 @@
               "Effects": [
                 {
                   "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
-                  "BuffId": -1,
-                  "DurationSeconds": 1.0,
+                  "BuffId": 5,
+                  "DurationSeconds": -1.0,
                   "StackCount": 1,
                   "Conditions": []
                 }
@@ -443,17 +461,17 @@
           ]
         },
         {
-          "EventName": "",
+          "EventName": "skill.afterChain",
           "Conditions": [],
           "Actions": [
             {
               "$type": "CrystalMagic.Game.Data.ExecuteEffectsSkillAdditionActionData, Assembly-CSharp",
               "Effects": [
                 {
-                  "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
-                  "BuffId": -1,
-                  "DurationSeconds": 1.0,
-                  "StackCount": 1,
+                  "$type": "CrystalMagic.Game.Data.Effects.RemoveBuffEffectData, Assembly-CSharp",
+                  "BuffId": 9,
+                  "RemoveAllStacks": true,
+                  "RemoveStackCount": 1,
                   "Conditions": []
                 }
               ]
@@ -462,6 +480,543 @@
         }
       ],
       "Id": 4
+    },
+    {
+      "NameKey": "灵巧",
+      "DescriptionKey": "加快施法过程中的移动速度",
+      "Callbacks": [
+        {
+          "EventName": "skill.beforeRequest",
+          "Conditions": [],
+          "Actions": [
+            {
+              "$type": "CrystalMagic.Game.Data.ExecuteEffectsSkillAdditionActionData, Assembly-CSharp",
+              "Effects": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+                  "BuffId": 6,
+                  "DurationSeconds": -1.0,
+                  "StackCount": 1,
+                  "Conditions": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "EventName": "skill.afterChain",
+          "Conditions": [],
+          "Actions": [
+            {
+              "$type": "CrystalMagic.Game.Data.ExecuteEffectsSkillAdditionActionData, Assembly-CSharp",
+              "Effects": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.RemoveBuffEffectData, Assembly-CSharp",
+                  "BuffId": 9,
+                  "RemoveAllStacks": true,
+                  "RemoveStackCount": 1,
+                  "Conditions": []
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "Id": 5
+    },
+    {
+      "NameKey": "缩时咏唱",
+      "DescriptionKey": "减少法术的咏唱时间，每使用一次效果就更弱",
+      "Callbacks": [
+        {
+          "EventName": "skill.beforeCast",
+          "Conditions": [],
+          "Actions": [
+            {
+              "$type": "CrystalMagic.Game.Data.SetSourceValueSkillAdditionActionData, Assembly-CSharp",
+              "SetterKey": "unit.variables.set",
+              "Key": "addition.shortChant.count",
+              "Values": [
+                {
+                  "Kind": 2,
+                  "Literal": {
+                    "Type": 3,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "",
+                  "OperationType": "Add",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "Literal": {
+                        "Type": 3,
+                        "Bool": false,
+                        "Int": 0,
+                        "Float": 0.0,
+                        "Float2": {
+                          "x": 0.0,
+                          "y": 0.0
+                        },
+                        "Float3": {
+                          "x": 0.0,
+                          "y": 0.0,
+                          "z": 0.0
+                        },
+                        "Entity": {
+                          "Index": 0,
+                          "Version": 0
+                        },
+                        "String": ""
+                      },
+                      "GetterKey": "unit.variables.getNumber",
+                      "OperationType": "",
+                      "Inputs": [
+                        {
+                          "Kind": 0,
+                          "Literal": {
+                            "Type": 7,
+                            "Bool": false,
+                            "Int": 0,
+                            "Float": 0.0,
+                            "Float2": {
+                              "x": 0.0,
+                              "y": 0.0
+                            },
+                            "Float3": {
+                              "x": 0.0,
+                              "y": 0.0,
+                              "z": 0.0
+                            },
+                            "Entity": {
+                              "Index": 0,
+                              "Version": 0
+                            },
+                            "String": "addition.shortChant.count"
+                          },
+                          "GetterKey": "",
+                          "OperationType": "",
+                          "Inputs": []
+                        }
+                      ]
+                    },
+                    {
+                      "Kind": 0,
+                      "Literal": {
+                        "Type": 3,
+                        "Bool": false,
+                        "Int": 0,
+                        "Float": 1.0,
+                        "Float2": {
+                          "x": 0.0,
+                          "y": 0.0
+                        },
+                        "Float3": {
+                          "x": 0.0,
+                          "y": 0.0,
+                          "z": 0.0
+                        },
+                        "Entity": {
+                          "Index": 0,
+                          "Version": 0
+                        },
+                        "String": ""
+                      },
+                      "GetterKey": "",
+                      "OperationType": "",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.SetSourceValueSkillAdditionActionData, Assembly-CSharp",
+              "SetterKey": "unit.variables.set",
+              "Key": "addition.shortChant.durationMultiplier",
+              "Values": [
+                {
+                  "Kind": 2,
+                  "GetterKey": "",
+                  "OperationType": "Clamp",
+                  "Inputs": [
+                    {
+                      "Kind": 2,
+                      "GetterKey": "",
+                      "OperationType": "Max",
+                      "Inputs": [
+                        {
+                          "Kind": 2,
+                          "GetterKey": "",
+                          "OperationType": "Add",
+                          "Inputs": [
+                            {
+                              "Kind": 0,
+                              "Literal": { "Type": 3, "Float": 0.4 },
+                              "GetterKey": "",
+                              "OperationType": "",
+                              "Inputs": []
+                            },
+                            {
+                              "Kind": 2,
+                              "GetterKey": "",
+                              "OperationType": "Multiply",
+                              "Inputs": [
+                                {
+                                  "Kind": 0,
+                                  "Literal": { "Type": 3, "Float": 0.1 },
+                                  "GetterKey": "",
+                                  "OperationType": "",
+                                  "Inputs": []
+                                },
+                                {
+                                  "Kind": 1,
+                                  "GetterKey": "unit.variables.getNumber",
+                                  "OperationType": "",
+                                  "Inputs": [
+                                    {
+                                      "Kind": 0,
+                                      "Literal": { "Type": 7, "String": "addition.shortChant.count" },
+                                      "GetterKey": "",
+                                      "OperationType": "",
+                                      "Inputs": []
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "Kind": 2,
+                          "GetterKey": "",
+                          "OperationType": "Subtract",
+                          "Inputs": [
+                            {
+                              "Kind": 0,
+                              "Literal": { "Type": 3, "Float": 1.0 },
+                              "GetterKey": "",
+                              "OperationType": "",
+                              "Inputs": []
+                            },
+                            {
+                              "Kind": 2,
+                              "GetterKey": "",
+                              "OperationType": "Multiply",
+                              "Inputs": [
+                                {
+                                  "Kind": 0,
+                                  "Literal": { "Type": 3, "Float": 0.5 },
+                                  "GetterKey": "",
+                                  "OperationType": "",
+                                  "Inputs": []
+                                },
+                                {
+                                  "Kind": 1,
+                                  "GetterKey": "unit.variables.getNumber",
+                                  "OperationType": "",
+                                  "Inputs": [
+                                    {
+                                      "Kind": 0,
+                                      "Literal": { "Type": 7, "String": "addition.shortChant.count" },
+                                      "GetterKey": "",
+                                      "OperationType": "",
+                                      "Inputs": []
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "Kind": 0,
+                      "Literal": { "Type": 3, "Float": 0.5 },
+                      "GetterKey": "",
+                      "OperationType": "",
+                      "Inputs": []
+                    },
+                    {
+                      "Kind": 0,
+                      "Literal": { "Type": 3, "Float": 1.0 },
+                      "GetterKey": "",
+                      "OperationType": "",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "EventName": "skill.afterChain",
+          "Conditions": [],
+          "Actions": [
+            {
+              "$type": "CrystalMagic.Game.Data.ExecuteEffectsSkillAdditionActionData, Assembly-CSharp",
+              "Effects": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.RemoveBuffEffectData, Assembly-CSharp",
+                  "BuffId": 9,
+                  "RemoveAllStacks": true,
+                  "RemoveStackCount": 1,
+                  "Conditions": []
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "Id": 6
+    },
+    {
+      "NameKey": "反射",
+      "DescriptionKey": "技能期间若受到伤害，则对目标造成一次伤害",
+      "Callbacks": [
+        {
+          "EventName": "skill.beforeRequest",
+          "Conditions": [],
+          "Actions": [
+            {
+              "$type": "CrystalMagic.Game.Data.ExecuteEffectsSkillAdditionActionData, Assembly-CSharp",
+              "Effects": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+                  "BuffId": 8,
+                  "DurationSeconds": -1.0,
+                  "StackCount": 1,
+                  "Conditions": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "EventName": "skill.afterChain",
+          "Conditions": [],
+          "Actions": [
+            {
+              "$type": "CrystalMagic.Game.Data.ExecuteEffectsSkillAdditionActionData, Assembly-CSharp",
+              "Effects": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.RemoveBuffEffectData, Assembly-CSharp",
+                  "BuffId": 9,
+                  "RemoveAllStacks": true,
+                  "RemoveStackCount": 1,
+                  "Conditions": []
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "Id": 7
+    },
+    {
+      "NameKey": "连击",
+      "DescriptionKey": "连续使用则每次伤害都会变高",
+      "Callbacks": [
+        {
+          "EventName": "skill.beforeRequest",
+          "Conditions": [],
+          "Actions": [
+            {
+              "$type": "CrystalMagic.Game.Data.SetSourceValueSkillAdditionActionData, Assembly-CSharp",
+              "SetterKey": "unit.variables.set",
+              "Key": "addition.combo.count",
+              "Values": [
+                {
+                  "Kind": 2,
+                  "GetterKey": "",
+                  "OperationType": "Add",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "GetterKey": "unit.variables.getNumber",
+                      "OperationType": "",
+                      "Inputs": [
+                        {
+                          "Kind": 0,
+                          "Literal": { "Type": 7, "String": "addition.combo.count" },
+                          "GetterKey": "",
+                          "OperationType": "",
+                          "Inputs": []
+                        }
+                      ]
+                    },
+                    {
+                      "Kind": 0,
+                      "Literal": { "Type": 3, "Float": 1.0 },
+                      "GetterKey": "",
+                      "OperationType": "",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.ModifyCurrentSkillAdditionActionData, Assembly-CSharp",
+              "Modifiers": [
+                {
+                  "Channel": 100,
+                  "Factor": {
+                    "Kind": 2,
+                    "GetterKey": "",
+                    "OperationType": "Multiply",
+                    "Inputs": [
+                      {
+                        "Kind": 2,
+                        "GetterKey": "",
+                        "OperationType": "Subtract",
+                        "Inputs": [
+                          {
+                            "Kind": 1,
+                            "GetterKey": "unit.variables.getNumber",
+                            "OperationType": "",
+                            "Inputs": [
+                              {
+                                "Kind": 0,
+                                "Literal": { "Type": 7, "String": "addition.combo.count" },
+                                "GetterKey": "",
+                                "OperationType": "",
+                                "Inputs": []
+                              }
+                            ]
+                          },
+                          {
+                            "Kind": 0,
+                            "Literal": { "Type": 3, "Float": 1.0 },
+                            "GetterKey": "",
+                            "OperationType": "",
+                            "Inputs": []
+                          }
+                        ]
+                      },
+                      {
+                        "Kind": 0,
+                        "Literal": { "Type": 3, "Float": 0.2 },
+                        "GetterKey": "",
+                        "OperationType": "",
+                        "Inputs": []
+                      }
+                    ]
+                  },
+                  "Bonus": {
+                    "Kind": 0,
+                    "Literal": { "Type": 3, "Float": 0.0 },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "EventName": "skill.afterChain",
+          "Conditions": [],
+          "Actions": [
+            {
+              "$type": "CrystalMagic.Game.Data.ExecuteEffectsSkillAdditionActionData, Assembly-CSharp",
+              "Effects": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.RemoveBuffEffectData, Assembly-CSharp",
+                  "BuffId": 9,
+                  "RemoveAllStacks": true,
+                  "RemoveStackCount": 1,
+                  "Conditions": []
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "Id": 8
+    },
+    {
+      "NameKey": "反转",
+      "DescriptionKey": "不消耗蓝量，但是本次以及下个技能造成的伤害极低。",
+      "Callbacks": [
+        {
+          "EventName": "skill.beforeRequest",
+          "Conditions": [],
+          "Actions": [
+            {
+              "$type": "CrystalMagic.Game.Data.ExecuteEffectsSkillAdditionActionData, Assembly-CSharp",
+              "Effects": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+                  "BuffId": 9,
+                  "DurationSeconds": -1.0,
+                  "StackCount": 2,
+                  "Conditions": []
+                }
+              ]
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.ModifyCurrentSkillAdditionActionData, Assembly-CSharp",
+              "Modifiers": [
+                {
+                  "Channel": 0,
+                  "Factor": {
+                    "Kind": 0,
+                    "Literal": { "Type": 3, "Float": -1.0 },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  },
+                  "Bonus": {
+                    "Kind": 0,
+                    "Literal": { "Type": 3, "Float": 0.0 },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "EventName": "skill.afterChain",
+          "Conditions": [],
+          "Actions": [
+            {
+              "$type": "CrystalMagic.Game.Data.ExecuteEffectsSkillAdditionActionData, Assembly-CSharp",
+              "Effects": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.RemoveBuffEffectData, Assembly-CSharp",
+                  "BuffId": 9,
+                  "RemoveAllStacks": true,
+                  "RemoveStackCount": 1,
+                  "Conditions": []
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "Id": 9
     }
   ]
 }

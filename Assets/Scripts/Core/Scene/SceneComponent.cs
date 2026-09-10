@@ -20,6 +20,7 @@ namespace CrystalMagic.Core {
             }
 
             Debug.Log($"[SceneComponent] Loading scene: {sceneName}");
+            GameWorldManager.PrepareForSceneLoad(sceneName);
             SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
             _currentSceneName = sceneName;
         }
@@ -39,6 +40,7 @@ namespace CrystalMagic.Core {
             }
 
             Debug.Log($"[SceneComponent] Loading scene async: {sceneName}");
+            GameWorldManager.PrepareForSceneLoad(sceneName);
 
             AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
 
@@ -158,6 +160,7 @@ namespace CrystalMagic.Core {
         public override void Cleanup()
         {
             _currentSceneName = null;
+            GameWorldManager.Shutdown();
             base.Cleanup();
         }
 

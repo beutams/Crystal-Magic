@@ -19,6 +19,7 @@ public sealed class UnitQueryRuntimeComponent : IComponentData
     public UnitQueryTree InteractableTree = new();
 }
 
+[RunInGameWorld(GameWorldKind.Town | GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitInitializationSystemGroup), OrderFirst = true)]
 [UpdateBefore(typeof(UnitPerceptionSystem))]
 [UpdateBefore(typeof(SkillProjectileSystem))]

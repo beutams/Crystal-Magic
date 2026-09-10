@@ -17,6 +17,18 @@ public class ConfirmUI : UIBase<ConfirmUIData>
         UI.Content.TextMeshProUGUI.text = content ?? string.Empty;
     }
 
+    public void SetConfirmLabel(string label)
+    {
+        string value = label ?? string.Empty;
+        UI.Confirm_Default_Text.TextMeshProUGUI.text = value;
+        UI.Confirm_Click_Text.TextMeshProUGUI.text = value;
+    }
+
+    public void SetCancelVisible(bool isVisible)
+    {
+        UI.Cancel.GameObject.SetActive(isVisible);
+    }
+
     public override void OnOpen()
     {
         UI.Confirm.ButtonPlus.onClick.AddListener(OnConfirmButtonClicked);

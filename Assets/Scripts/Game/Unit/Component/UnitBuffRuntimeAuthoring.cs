@@ -69,8 +69,13 @@ public sealed class UnitBuffSource : UnitManagedComponentSource<UnitBuffRuntimeC
 
         builder.AddContextSet("unit.buffs.remove", s_buffIdParameter,
             (in UnitSourceBindingContext context, ref UnitBuffRuntimeComponent component, UnitValue[] input) =>
-                TryGetInt(input, 0, out int buffId) &&
-                UnitBuffUtility.RemoveAll(context.EntityManager, context.Entity, buffId));
+            {
+                if (!TryGetInt(input, 0, out int buffId))
+                    return false;
+
+                UnitBuffUtility.RemoveAll(context.EntityManager, context.Entity, buffId);
+                return true;
+            });
         builder.AddContextSet("unit.buffs.removeStacks", s_removeStacksParameters,
             (in UnitSourceBindingContext context, ref UnitBuffRuntimeComponent component, UnitValue[] input) =>
                 TryGetInt(input, 0, out int buffId) &&
@@ -229,14 +234,18 @@ public sealed class UnitBuffRuntimeEntry
             if (trigger.TriggerType != BuffTriggerType.Hook || trigger.HookType != context.HookType)
                 continue;
 
+            bool hasOtherEntity = context.HasOriginEntity || context.HasOtherEntity;
+            Entity otherEntity = context.HasOriginEntity
+                ? context.OriginEntity
+                : context.HasOtherEntity ? context.OtherEntity : Entity.Null;
             EnqueueEffects(
                 context?.EffectExecutionQueue,
                 trigger.RuntimeEffects,
                 context?.HookType ?? SkillHookType.None,
                 context?.TargetEntity ?? Entity.Null,
                 context?.TriggerValue ?? 0f,
-                context?.HasOtherEntity ?? false,
-                context?.OtherEntity ?? Entity.Null,
+                hasOtherEntity,
+                otherEntity,
                 context?.HasPosition ?? false,
                 context?.Position ?? Vector3.zero);
             if (trigger.ConsumeStackOnTrigger && ConsumeOneStack())

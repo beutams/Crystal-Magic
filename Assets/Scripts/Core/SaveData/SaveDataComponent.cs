@@ -30,9 +30,7 @@ namespace CrystalMagic.Core {
 
         #region Constants
         private const string SAVE_FOLDER = "SaveData";
-        public const string DungeonUnlockedStartFloorVariablePrefix = "DungeonUnlockedStartFloor_";
-        public const string DungeonHighestReachedFloorVariableKey = "DungeonHighestReachedFloor";
-        public const int DungeonStartFloorUnlockInterval = 20;
+        public const string DungeonThemeUnlockedVariablePrefix = "DungeonThemeUnlocked_";
         #endregion
 
         #region Fields
@@ -370,57 +368,82 @@ namespace CrystalMagic.Core {
         #endregion
 
         #region Dungeon Run
-        public void EnsureDungeonRunExists(int dungeonFloor = 1)
+        public void EnsureDungeonRunExists(int dungeonThemeId = -1, int dungeonFloor = 1)
         {
             EnsureCurrentSaveDataValid();
             if (_currentSaveData.DungeonRun?.Character != null)
             {
-                int normalizedFloor = Mathf.Max(1, dungeonFloor);
-                if (_currentSaveData.DungeonRun.CurrentFloor != normalizedFloor)
+                int normalizedThemeId = NormalizeDungeonThemeId(dungeonThemeId);
+                int normalizedFloor = NormalizeDungeonFloor(dungeonFloor);
+                if (_currentSaveData.DungeonRun.ThemeId != normalizedThemeId ||
+                    _currentSaveData.DungeonRun.CurrentFloor != normalizedFloor)
                     _currentSaveData.DungeonRun.Seed = 0;
 
+                _currentSaveData.DungeonRun.ThemeId = normalizedThemeId;
                 _currentSaveData.DungeonRun.CurrentFloor = normalizedFloor;
                 return;
             }
 
-            _currentSaveData.DungeonRun = CreateDungeonRunFromPersistent(dungeonFloor);
+            _currentSaveData.DungeonRun = CreateDungeonRunFromPersistent(dungeonThemeId, dungeonFloor);
         }
 
-        public void BeginDungeonRunFromPersistent(int dungeonFloor = 1)
+        public void BeginDungeonRunFromPersistent(int dungeonThemeId = -1, int dungeonFloor = 1)
         {
             EnsureCurrentSaveDataValid();
-            _currentSaveData.DungeonRun = CreateDungeonRunFromPersistent(dungeonFloor);
+            _currentSaveData.DungeonRun = CreateDungeonRunFromPersistent(dungeonThemeId, dungeonFloor);
             PublishAllDataChangedEvents();
         }
 
-        public void CommitDungeonRunToPersistent(bool clearRun = true, bool includeRunMoney = true, bool removeNonTransferableItems = true)
+        public DungeonSettlementResult SettleDungeonRun(DungeonSettlementOutcome outcome)
         {
             EnsureCurrentSaveDataValid();
-            if (_currentSaveData.DungeonRun?.Character == null)
-                return;
+            EnsureDungeonRunExists(
+                _currentSaveData.Location?.DungeonThemeId ?? -1,
+                _currentSaveData.Location?.DungeonFloor ?? 1);
 
-            if (removeNonTransferableItems)
-                RemoveNonTransferableItems(_currentSaveData.DungeonRun.Character);
+            DungeonRunData dungeonRun = _currentSaveData.DungeonRun;
+            CharacterData settledCharacter = CloneCharacterData(dungeonRun.Character);
+            int reachedFloor = Mathf.Max(1, dungeonRun.CurrentFloor);
+            DungeonSettlementResult result;
 
-            if (includeRunMoney && _currentSaveData.DungeonRun.RunMoney > 0)
-                _currentSaveData.Town.StashMoney += _currentSaveData.DungeonRun.RunMoney;
+            if (outcome == DungeonSettlementOutcome.Escaped)
+            {
+                int beforeTransferItemQuantity = CountTrackedItems(settledCharacter);
+                RemoveNonTransferableItems(settledCharacter);
+                int afterTransferItemQuantity = CountTrackedItems(settledCharacter);
+                GetItemDelta(_currentSaveData.Town.Character, settledCharacter, out int gainedItemQuantity, out int lostItemQuantity);
+                long returnedMoney = Math.Max(0L, dungeonRun.RunMoney);
 
-            _currentSaveData.Town.Character = CloneCharacterData(_currentSaveData.DungeonRun.Character);
+                _currentSaveData.Town.StashMoney += returnedMoney;
+                result = new DungeonSettlementResult
+                {
+                    Outcome = outcome,
+                    ReachedFloor = reachedFloor,
+                    ReturnedMoney = returnedMoney,
+                    GainedItemQuantity = gainedItemQuantity,
+                    LostItemQuantity = lostItemQuantity,
+                    NonTransferableItemQuantity = Mathf.Max(0, beforeTransferItemQuantity - afterTransferItemQuantity),
+                };
+            }
+            else
+            {
+                result = new DungeonSettlementResult
+                {
+                    Outcome = outcome,
+                    ReachedFloor = reachedFloor,
+                    LostItemQuantity = CountTrackedItems(settledCharacter),
+                };
+                ClearBackpackAndEquipment(settledCharacter);
+            }
+
+            _currentSaveData.Town.Character = settledCharacter;
             EnsureCharacterDataValid(_currentSaveData.Town.Character);
-
-            if (clearRun)
-                _currentSaveData.DungeonRun = null;
-
+            _currentSaveData.DungeonRun = null;
+            _currentSaveData.Location.AreaType = SaveAreaType.Town;
+            _currentSaveData.Location.DungeonThemeId = GetInitialDungeonThemeId();
+            _currentSaveData.Location.DungeonFloor = 1;
             PublishAllDataChangedEvents();
-        }
-
-        public void ApplyDungeonDeathAndCommit()
-        {
-            EnsureCurrentSaveDataValid();
-            EnsureDungeonRunExists(_currentSaveData.Location?.DungeonFloor ?? 1);
-
-            ClearBackpackAndEquipment(_currentSaveData.DungeonRun.Character);
-            CommitDungeonRunToPersistent(includeRunMoney: false, removeNonTransferableItems: false);
+            return result;
         }
 
         public void ClearDungeonRun()
@@ -462,77 +485,53 @@ namespace CrystalMagic.Core {
 
         #endregion
 
-        #region Dungeon Progress
-        public void EnsureDungeonStartFloorUnlocksInitialized()
+        #region Dungeon Theme Progress
+        public int GetInitialDungeonThemeId()
         {
-            EnsureCurrentSaveDataValid();
-            EnsureDungeonStartFloorUnlocksInitialized(_currentSaveData);
+            return Mathf.Max(0, GetDungeonConfig()?.InitialThemeId ?? 0);
         }
 
-        public void UpdateDungeonReachedFloorProgress(int dungeonFloor)
+        public bool IsDungeonThemeUnlocked(int dungeonThemeId)
         {
             EnsureCurrentSaveDataValid();
-
-            int normalizedFloor = Mathf.Max(1, dungeonFloor);
-            double highestReached = GetVariable(DungeonHighestReachedFloorVariableKey, 1d);
-            if (normalizedFloor > highestReached)
-                SetVariable(DungeonHighestReachedFloorVariableKey, normalizedFloor);
-
-            UnlockDungeonStartFloorInternal(1);
+            int normalizedThemeId = NormalizeDungeonThemeId(dungeonThemeId);
+            return GetVariable(GetDungeonThemeUnlockVariableKey(normalizedThemeId), 0d) > 0.5d;
         }
 
-        public void UnlockDungeonStartFloorAfterBossClear(int clearedFloor)
+        public void UnlockDungeonTheme(int dungeonThemeId)
         {
-            EnsureCurrentSaveDataValid();
-
-            int normalizedFloor = Mathf.Max(1, clearedFloor);
-            if (normalizedFloor % DungeonStartFloorUnlockInterval != 0)
+            if (dungeonThemeId < 0)
                 return;
 
-            UnlockDungeonStartFloorInternal(normalizedFloor + 1);
+            EnsureCurrentSaveDataValid();
+            SetVariable(GetDungeonThemeUnlockVariableKey(dungeonThemeId), 1d);
         }
 
-        public bool IsDungeonStartFloorUnlocked(int startFloor)
+        public List<int> GetUnlockedDungeonThemeIds()
         {
             EnsureCurrentSaveDataValid();
-
-            int normalizedFloor = NormalizeDungeonStartFloor(startFloor);
-            if (normalizedFloor == 1)
-                return true;
-
-            return GetVariable(GetDungeonStartFloorUnlockVariableKey(normalizedFloor), 0d) > 0.5d;
-        }
-
-        public List<int> GetUnlockedDungeonStartFloors()
-        {
-            EnsureCurrentSaveDataValid();
-            EnsureDungeonStartFloorUnlocksInitialized();
-
-            List<int> floors = new() { 1 };
-            int highestReachedFloor = Mathf.Max(1, (int)Math.Round(GetVariable(DungeonHighestReachedFloorVariableKey, 1d)));
-            int maxCandidateFloor = Mathf.Max(1, ((highestReachedFloor / DungeonStartFloorUnlockInterval) + 1) * DungeonStartFloorUnlockInterval + 1);
-            for (int startFloor = DungeonStartFloorUnlockInterval + 1; startFloor <= maxCandidateFloor; startFloor += DungeonStartFloorUnlockInterval)
+            List<int> themeIds = new();
+            foreach (DungeonThemeData theme in DataComponent.Instance.FindAll<DungeonThemeData>(static theme => theme != null))
             {
-                if (!IsDungeonStartFloorUnlocked(startFloor))
-                    continue;
-
-                floors.Add(startFloor);
+                if (IsDungeonThemeUnlocked(theme.Id))
+                    themeIds.Add(theme.Id);
             }
 
-            return floors;
+            return themeIds;
         }
 
         #endregion
 
         #region Location
-        public void SetCurrentLocation(SaveAreaType areaType, int dungeonFloor = 1)
+        public void SetCurrentLocation(SaveAreaType areaType, int dungeonFloor = 1, int dungeonThemeId = -1)
         {
             EnsureCurrentSaveDataValid();
             _currentSaveData.Location.AreaType = areaType;
-            _currentSaveData.Location.DungeonFloor = Mathf.Max(1, dungeonFloor);
+            _currentSaveData.Location.DungeonThemeId = NormalizeDungeonThemeId(dungeonThemeId);
+            _currentSaveData.Location.DungeonFloor = NormalizeDungeonFloor(dungeonFloor);
         }
 
-        public LoadGameContext CreateLoadGameContext(SaveAreaType areaType, int dungeonFloor = 1)
+        public LoadGameContext CreateLoadGameContext(SaveAreaType areaType, int dungeonFloor = 1, int dungeonThemeId = -1)
         {
             EnsureCurrentSaveDataValid();
 
@@ -543,7 +542,8 @@ namespace CrystalMagic.Core {
                 Location = new SaveLocationData
                 {
                     AreaType = areaType,
-                    DungeonFloor = Mathf.Max(1, dungeonFloor),
+                    DungeonThemeId = NormalizeDungeonThemeId(dungeonThemeId),
+                    DungeonFloor = NormalizeDungeonFloor(dungeonFloor),
                 },
             };
         }
@@ -684,7 +684,11 @@ namespace CrystalMagic.Core {
                 repairedPaths?.Add("Location");
             }
 
-            data.Location.DungeonFloor = Mathf.Max(1, data.Location.DungeonFloor);
+            bool isLegacyDungeonLocation = data.Location.DungeonThemeId < 0;
+            data.Location.DungeonThemeId = NormalizeDungeonThemeId(data.Location.DungeonThemeId);
+            data.Location.DungeonFloor = isLegacyDungeonLocation
+                ? 1
+                : NormalizeDungeonFloor(data.Location.DungeonFloor);
 
             if (data.Town == null)
             {
@@ -696,15 +700,18 @@ namespace CrystalMagic.Core {
 
             if (data.DungeonRun != null)
             {
-                EnsureDungeonRunDataValid(data.DungeonRun, data.Town.Character, repairedPaths);
+                EnsureDungeonRunDataValid(data.DungeonRun, data.Town.Character, data.Location.DungeonThemeId, repairedPaths);
             }
             else if (data.Location.AreaType == SaveAreaType.Dungeon)
             {
-                data.DungeonRun = CreateDungeonRunFromPersistent(data.Town.Character, data.Location.DungeonFloor);
+                data.DungeonRun = CreateDungeonRunFromPersistent(
+                    data.Town.Character,
+                    data.Location.DungeonThemeId,
+                    data.Location.DungeonFloor);
                 repairedPaths?.Add("DungeonRun");
             }
 
-            EnsureDungeonStartFloorUnlocksInitialized(data);
+            EnsureDungeonThemeUnlocksInitialized(data);
             LogValidationRepairsIfNeeded(data, repairedPaths, logRepairs);
         }
 
@@ -787,7 +794,11 @@ namespace CrystalMagic.Core {
             data.Props.EnsureValid(GetPropSlotCount(), GetPropShortcutSlotCount(), repairedPaths, $"{basePath}.Props");
         }
 
-        private void EnsureDungeonRunDataValid(DungeonRunData data, CharacterData fallbackCharacter = null, List<string> repairedPaths = null)
+        private void EnsureDungeonRunDataValid(
+            DungeonRunData data,
+            CharacterData fallbackCharacter = null,
+            int fallbackThemeId = -1,
+            List<string> repairedPaths = null)
         {
             if (data == null)
                 return;
@@ -801,7 +812,11 @@ namespace CrystalMagic.Core {
             if (data.BaseSeed == 0)
                 data.BaseSeed = DeriveDungeonRunBaseSeed(data);
 
-            data.CurrentFloor = Mathf.Max(1, data.CurrentFloor);
+            bool isLegacyDungeonRun = data.ThemeId < 0;
+            data.ThemeId = NormalizeDungeonThemeId(data.ThemeId < 0 ? fallbackThemeId : data.ThemeId);
+            data.CurrentFloor = isLegacyDungeonRun
+                ? 1
+                : NormalizeDungeonFloor(data.CurrentFloor);
             if (data.Character == null)
             {
                 data.Character = CloneCharacterData(fallbackCharacter);
@@ -841,24 +856,25 @@ namespace CrystalMagic.Core {
             return data.Town?.StashMoney ?? 0;
         }
 
-        private DungeonRunData CreateDungeonRunFromPersistent(int dungeonFloor)
+        private DungeonRunData CreateDungeonRunFromPersistent(int dungeonThemeId, int dungeonFloor)
         {
-            return CreateDungeonRunFromPersistent(GetPersistentTownData()?.Character, dungeonFloor);
+            return CreateDungeonRunFromPersistent(GetPersistentTownData()?.Character, dungeonThemeId, dungeonFloor);
         }
 
-        private DungeonRunData CreateDungeonRunFromPersistent(CharacterData sourceCharacter, int dungeonFloor)
+        private DungeonRunData CreateDungeonRunFromPersistent(CharacterData sourceCharacter, int dungeonThemeId, int dungeonFloor)
         {
             DungeonRunData data = new DungeonRunData
             {
                 RunId = Guid.NewGuid().ToString("N"),
                 RunTimestamp = DateTime.Now.Ticks,
-                CurrentFloor = Mathf.Max(1, dungeonFloor),
+                ThemeId = NormalizeDungeonThemeId(dungeonThemeId),
+                CurrentFloor = NormalizeDungeonFloor(dungeonFloor),
                 Character = CloneCharacterData(sourceCharacter),
                 Monsters = new List<MonsterStateData>(),
                 ItemDrops = new List<ItemDropData>(),
             };
             data.BaseSeed = DeriveDungeonRunBaseSeed(data);
-            EnsureDungeonRunDataValid(data, sourceCharacter);
+            EnsureDungeonRunDataValid(data, sourceCharacter, dungeonThemeId);
             return data;
         }
 
@@ -970,6 +986,96 @@ namespace CrystalMagic.Core {
             return itemData != null && itemData.IsNonTransferable;
         }
 
+        private static int CountTrackedItems(CharacterData data)
+        {
+            Dictionary<int, int> itemCounts = GetTrackedItemCounts(data);
+            int total = 0;
+            foreach (int quantity in itemCounts.Values)
+                total += quantity;
+
+            return total;
+        }
+
+        private static void GetItemDelta(CharacterData baseline, CharacterData result, out int gained, out int lost)
+        {
+            Dictionary<int, int> baselineCounts = GetTrackedItemCounts(baseline);
+            Dictionary<int, int> resultCounts = GetTrackedItemCounts(result);
+            HashSet<int> itemIds = new(baselineCounts.Keys);
+            itemIds.UnionWith(resultCounts.Keys);
+
+            gained = 0;
+            lost = 0;
+            foreach (int itemId in itemIds)
+            {
+                baselineCounts.TryGetValue(itemId, out int baselineQuantity);
+                resultCounts.TryGetValue(itemId, out int resultQuantity);
+                int delta = resultQuantity - baselineQuantity;
+                if (delta > 0)
+                    gained += delta;
+                else
+                    lost -= delta;
+            }
+        }
+
+        private static Dictionary<int, int> GetTrackedItemCounts(CharacterData data)
+        {
+            Dictionary<int, int> counts = new();
+            if (data == null)
+                return counts;
+
+            if (data.Backpack?.Items != null)
+            {
+                for (int i = 0; i < data.Backpack.Items.Count; i++)
+                {
+                    InventoryItemData item = data.Backpack.Items[i];
+                    AddTrackedItemCount(counts, item?.ItemId ?? -1, item?.Quantity ?? 0);
+                }
+            }
+
+            if (data.Props?.Slots != null)
+            {
+                for (int i = 0; i < data.Props.Slots.Count; i++)
+                {
+                    CharacterPropSlotData slot = data.Props.Slots[i];
+                    AddTrackedItemCount(counts, slot?.ItemId ?? -1, slot?.Quantity ?? 0);
+                }
+            }
+
+            if (data.Equipment != null)
+            {
+                AddTrackedItemCount(counts, data.Equipment.MagicStoneId, 1);
+                if (data.Equipment.SpiritSlots != null)
+                {
+                    for (int i = 0; i < data.Equipment.SpiritSlots.Length; i++)
+                        AddTrackedItemCount(counts, data.Equipment.SpiritSlots[i], 1);
+                }
+            }
+
+            if (data.Skills?.Chains != null)
+            {
+                for (int chainIndex = 0; chainIndex < data.Skills.Chains.Length; chainIndex++)
+                {
+                    SkillChainData chain = data.Skills.Chains[chainIndex];
+                    if (chain?.Slots == null)
+                        continue;
+
+                    for (int slotIndex = 0; slotIndex < chain.Slots.Count; slotIndex++)
+                        AddTrackedItemCount(counts, chain.Slots[slotIndex]?.SkillStoneItemId ?? -1, 1);
+                }
+            }
+
+            return counts;
+        }
+
+        private static void AddTrackedItemCount(Dictionary<int, int> counts, int itemId, int quantity)
+        {
+            if (itemId < 0 || quantity <= 0)
+                return;
+
+            counts.TryGetValue(itemId, out int currentQuantity);
+            counts[itemId] = currentQuantity + quantity;
+        }
+
         private static void ClearSkillChains(CharacterData data)
         {
             if (data?.Skills?.Chains == null)
@@ -995,39 +1101,30 @@ namespace CrystalMagic.Core {
 
         #endregion
 
-        #region Dungeon Unlock Helpers
-        private void UnlockDungeonStartFloorInternal(int startFloor)
-        {
-            int normalizedFloor = NormalizeDungeonStartFloor(startFloor);
-            SetVariable(GetDungeonStartFloorUnlockVariableKey(normalizedFloor), 1d);
-        }
-
-        private static void EnsureDungeonStartFloorUnlocksInitialized(SaveData data)
+        #region Dungeon Theme Helpers
+        private void EnsureDungeonThemeUnlocksInitialized(SaveData data)
         {
             if (data?.Variables == null)
                 return;
 
-            string unlockKey = GetDungeonStartFloorUnlockVariableKey(1);
+            string unlockKey = GetDungeonThemeUnlockVariableKey(GetInitialDungeonThemeId());
             if (!data.Variables.Contains(unlockKey))
                 data.Variables.Set(unlockKey, 1d);
-
-            if (!data.Variables.Contains(DungeonHighestReachedFloorVariableKey))
-                data.Variables.Set(DungeonHighestReachedFloorVariableKey, 1d);
         }
 
-        private static int NormalizeDungeonStartFloor(int startFloor)
+        private int NormalizeDungeonThemeId(int dungeonThemeId)
         {
-            int normalizedFloor = Mathf.Max(1, startFloor);
-            if (normalizedFloor == 1)
-                return 1;
-
-            int remainder = (normalizedFloor - 1) % DungeonStartFloorUnlockInterval;
-            return remainder == 0 ? normalizedFloor : normalizedFloor - remainder + DungeonStartFloorUnlockInterval;
+            return dungeonThemeId < 0 ? GetInitialDungeonThemeId() : dungeonThemeId;
         }
 
-        public static string GetDungeonStartFloorUnlockVariableKey(int startFloor)
+        private static int NormalizeDungeonFloor(int dungeonFloor)
         {
-            return $"{DungeonUnlockedStartFloorVariablePrefix}{NormalizeDungeonStartFloor(startFloor)}";
+            return Mathf.Clamp(dungeonFloor, 1, DungeonConfig.LevelsPerTheme);
+        }
+
+        public static string GetDungeonThemeUnlockVariableKey(int dungeonThemeId)
+        {
+            return $"{DungeonThemeUnlockedVariablePrefix}{Mathf.Max(0, dungeonThemeId)}";
         }
 
         #endregion
@@ -1122,6 +1219,11 @@ namespace CrystalMagic.Core {
             return ConfigComponent.Instance.Get<GameConfig>();
         }
 
+        private DungeonConfig GetDungeonConfig()
+        {
+            return ConfigComponent.Instance.Get<DungeonConfig>();
+        }
+
         private int GetMaxSaveSlots()
         {
             return Mathf.Max(1, GetGameConfig().MaxSaveSlots);
@@ -1173,6 +1275,7 @@ namespace CrystalMagic.Core {
         public SaveLocationData Location;
 
         public SaveAreaType AreaType => Location?.AreaType ?? SaveAreaType.Town;
+        public int DungeonThemeId => Location?.DungeonThemeId ?? -1;
         public int DungeonFloor => Mathf.Max(1, Location?.DungeonFloor ?? 1);
 
         public bool ShouldEnterDungeon()

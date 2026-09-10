@@ -15,8 +15,10 @@ namespace CrystalMagic.Game.Config
         [EditorLabel("Map Height")]
         public int MapHeight = 200;
 
-        [EditorLabel("Boss Floor Interval")]
-        public int BossFloorInterval = 10;
+        [EditorLabel("Initial Theme Id")]
+        public int InitialThemeId;
+
+        public const int LevelsPerTheme = 10;
 
         [EditorLabel("Chest Reward Count Range (Min / Max)")]
         public Vector2Int ChestRewardCountRange = new(3, 4);
@@ -52,7 +54,7 @@ namespace CrystalMagic.Game.Config
         {
             MapWidth = Mathf.Max(8, MapWidth);
             MapHeight = Mathf.Max(8, MapHeight);
-            BossFloorInterval = Mathf.Max(1, BossFloorInterval);
+            InitialThemeId = Mathf.Max(0, InitialThemeId);
             ChestRewardCountRange.x = Mathf.Max(1, ChestRewardCountRange.x);
             ChestRewardCountRange.y = Mathf.Max(ChestRewardCountRange.x, ChestRewardCountRange.y);
             SmallChestLuckRange = ClampLuckRange(SmallChestLuckRange);

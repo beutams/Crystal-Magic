@@ -5,6 +5,7 @@ using Unity.Physics;
 using Unity.Physics.Systems;
 
 [BurstCompile]
+[RunInGameWorld(GameWorldKind.Town | GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(BeforePhysicsSystemGroup))]
 partial struct PlayerPhysicsRotationLockSystem : ISystem
 {

@@ -3,6 +3,7 @@ using CrystalMagic.Game.Data;
 using Unity.Entities;
 using UnityEngine;
 
+[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitInitializationSystemGroup))]
 partial class BehaviorTreeInitSystem : SystemBase
 {

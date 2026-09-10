@@ -1,6 +1,7 @@
 using CrystalMagic.Core;
 using Unity.Entities;
 
+[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitPostProcessSystemGroup))]
 [UpdateBefore(typeof(UnitDropOnDestroySystem))]
 [UpdateBefore(typeof(DestroyEntitySystem))]

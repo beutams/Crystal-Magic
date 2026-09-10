@@ -3,6 +3,7 @@ using CrystalMagic.Game.Skill;
 using Unity.Entities;
 using UnityEngine;
 
+[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateBefore(typeof(SkillProjectileSpawnSystem))]
 [UpdateBefore(typeof(PersistentEffectSystem))]
@@ -29,7 +30,26 @@ public partial class SkillReleaseSystem : SystemBase
                 }
 
                 if (!SkillReleaseUtility.TryExecute(EntityManager, request, resolvedSkill, _context))
+                {
                     Debug.LogError($"[SkillReleaseSystem] Failed to execute SkillId={request.SkillId}.");
+                    continue;
+                }
+
+                UnitBuffHookUtility.Dispatch(
+                    EntityManager,
+                    request.OriginEntity,
+                    SkillHookType.OnCastComplete,
+                    SkillTriggerSource.ActiveCast,
+                    hasOriginEntity: true,
+                    originEntity: request.OriginEntity,
+                    sourceSkillId: request.SkillId,
+                    hasOtherEntity: request.HasTargetEntity,
+                    otherEntity: request.TargetEntity,
+                    hasPosition: request.HasTargetPosition,
+                    position: new Vector3(
+                        request.TargetPosition.x,
+                        request.TargetPosition.y,
+                        request.TargetPosition.z));
             }
         }
     }

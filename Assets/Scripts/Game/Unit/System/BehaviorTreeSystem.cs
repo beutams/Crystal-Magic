@@ -1,6 +1,7 @@
 using CrystalMagic.Core;
 using Unity.Entities;
 
+[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateAfter(typeof(UnitPerceptionSystem))]
 partial class BehaviorTreeSystem : SystemBase
