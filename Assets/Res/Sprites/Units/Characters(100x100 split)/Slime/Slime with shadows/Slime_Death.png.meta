@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: d90f651e650364b41a2f5a876e6cfce7
+guid: dab8edf75a3014d4e8b7fc1df63375a7
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -107,15 +107,15 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
+      customData:
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 2aeedac7891779945815cd5f8cc03b59
-      internalID: -1749866757
+      spriteID: c254fd205ebbc114ebcf3362946a8ed0
+      internalID: -1998636234
       vertices: []
-      indices: 
+      indices:
       edges: []
       weights: []
     - serializedVersion: 2
@@ -129,15 +129,15 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
+      customData:
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 6ac9a196f44b3c447a4aecc80b42905e
-      internalID: -1549211982
+      spriteID: 230efd2a8e804da438a392111cd947a4
+      internalID: 884115556
       vertices: []
-      indices: 
+      indices:
       edges: []
       weights: []
     - serializedVersion: 2
@@ -151,15 +151,15 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
+      customData:
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 5dcf662ed18a3be49a3f3d3b9b6b8597
-      internalID: -440415288
+      spriteID: e71122a74c1b8d941bff364e0248370a
+      internalID: -1352542545
       vertices: []
-      indices: 
+      indices:
       edges: []
       weights: []
     - serializedVersion: 2
@@ -173,25 +173,25 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
+      customData:
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 9e63d28d660302d41b1696492be3b92c
-      internalID: -1156948260
+      spriteID: c38978523de9fb4419494396cde56a57
+      internalID: 2123558022
       vertices: []
-      indices: 
+      indices:
       edges: []
       weights: []
     outline: []
-    customData: 
+    customData:
     physicsShape: []
     bones: []
-    spriteID: e9a9c411d5fc5c94a8fdb13ffdbfe215
+    spriteID: 64b5b01323e001a4983a0d015614f2f2
     internalID: 0
     vertices: []
-    indices: 
+    indices:
     edges: []
     weights: []
     secondaryTextures: []
@@ -200,12 +200,12 @@ TextureImporter:
       - key: SpriteEditor.SliceSettings
         value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":100.0,"y":100.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      Slime_Death_0: -1749866757
-      Slime_Death_1: -1549211982
-      Slime_Death_2: -440415288
-      Slime_Death_3: -1156948260
-  mipmapLimitGroupName: 
+      Slime_Death_0: -1998636234
+      Slime_Death_1: 884115556
+      Slime_Death_2: -1352542545
+      Slime_Death_3: 2123558022
+  mipmapLimitGroupName:
   pSDRemoveMatte: 0
-  userData: 
-  assetBundleName: 
-  assetBundleVariant: 
+  userData:
+  assetBundleName:
+  assetBundleVariant:

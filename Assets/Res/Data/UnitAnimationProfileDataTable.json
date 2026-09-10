@@ -289,6 +289,1148 @@
         }
       ],
       "Id": 5
+    },
+    {
+      "UnitDataId": 12,
+      "UnitName": "Archer",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Archer/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Archer/IdleRight.anim"
+        },
+        {
+          "Name": "Walk",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Archer/WalkLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Archer/WalkRight.anim"
+        },
+        {
+          "Name": "Attack01",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Archer/Attack01Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Archer/Attack01Right.anim"
+        },
+        {
+          "Name": "Attack02",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Archer/Attack02Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Archer/Attack02Right.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Archer/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Archer/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Archer/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Archer/DeathRight.anim"
+        }
+      ],
+      "Id": 6
+    },
+    {
+      "UnitDataId": 13,
+      "UnitName": "Armored Axeman",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Armored Axeman/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Armored Axeman/IdleRight.anim"
+        },
+        {
+          "Name": "Walk",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Armored Axeman/WalkLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Armored Axeman/WalkRight.anim"
+        },
+        {
+          "Name": "Attack01",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Armored Axeman/Attack01Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Armored Axeman/Attack01Right.anim"
+        },
+        {
+          "Name": "Attack02",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Armored Axeman/Attack02Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Armored Axeman/Attack02Right.anim"
+        },
+        {
+          "Name": "Attack03",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Armored Axeman/Attack03Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Armored Axeman/Attack03Right.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Armored Axeman/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Armored Axeman/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Armored Axeman/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Armored Axeman/DeathRight.anim"
+        }
+      ],
+      "Id": 7
+    },
+    {
+      "UnitDataId": 14,
+      "UnitName": "Armored Orc",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Armored Orc/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Armored Orc/IdleRight.anim"
+        },
+        {
+          "Name": "Walk",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Armored Orc/WalkLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Armored Orc/WalkRight.anim"
+        },
+        {
+          "Name": "Attack01",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Armored Orc/Attack01Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Armored Orc/Attack01Right.anim"
+        },
+        {
+          "Name": "Attack02",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Armored Orc/Attack02Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Armored Orc/Attack02Right.anim"
+        },
+        {
+          "Name": "Attack03",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Armored Orc/Attack03Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Armored Orc/Attack03Right.anim"
+        },
+        {
+          "Name": "Block",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Armored Orc/BlockLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Armored Orc/BlockRight.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Armored Orc/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Armored Orc/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Armored Orc/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Armored Orc/DeathRight.anim"
+        }
+      ],
+      "Id": 8
+    },
+    {
+      "UnitDataId": 15,
+      "UnitName": "Armored Skeleton",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Armored Skeleton/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Armored Skeleton/IdleRight.anim"
+        },
+        {
+          "Name": "Walk",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Armored Skeleton/WalkLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Armored Skeleton/WalkRight.anim"
+        },
+        {
+          "Name": "Attack01",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Armored Skeleton/Attack01Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Armored Skeleton/Attack01Right.anim"
+        },
+        {
+          "Name": "Attack02",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Armored Skeleton/Attack02Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Armored Skeleton/Attack02Right.anim"
+        },
+        {
+          "Name": "Summon",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Armored Skeleton/SummonLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Armored Skeleton/SummonRight.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Armored Skeleton/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Armored Skeleton/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Armored Skeleton/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Armored Skeleton/DeathRight.anim"
+        }
+      ],
+      "Id": 9
+    },
+    {
+      "UnitDataId": 16,
+      "UnitName": "Bat",
+      "Animations": [
+        {
+          "Name": "Flying",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Bat/FlyingLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Bat/FlyingRight.anim"
+        },
+        {
+          "Name": "Attack01",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Bat/Attack01Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Bat/Attack01Right.anim"
+        },
+        {
+          "Name": "Attack02",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Bat/Attack02Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Bat/Attack02Right.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Bat/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Bat/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Bat/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Bat/DeathRight.anim"
+        }
+      ],
+      "Id": 10
+    },
+    {
+      "UnitDataId": 17,
+      "UnitName": "Elite Orc",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Elite Orc/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Elite Orc/IdleRight.anim"
+        },
+        {
+          "Name": "Walk",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Elite Orc/WalkLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Elite Orc/WalkRight.anim"
+        },
+        {
+          "Name": "Attack01",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Elite Orc/Attack01Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Elite Orc/Attack01Right.anim"
+        },
+        {
+          "Name": "Attack02",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Elite Orc/Attack02Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Elite Orc/Attack02Right.anim"
+        },
+        {
+          "Name": "Attack03",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Elite Orc/Attack03Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Elite Orc/Attack03Right.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Elite Orc/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Elite Orc/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Elite Orc/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Elite Orc/DeathRight.anim"
+        }
+      ],
+      "Id": 11
+    },
+    {
+      "UnitDataId": 18,
+      "UnitName": "Greatsword Skeleton",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Greatsword Skeleton/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Greatsword Skeleton/IdleRight.anim"
+        },
+        {
+          "Name": "Walk",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Greatsword Skeleton/WalkLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Greatsword Skeleton/WalkRight.anim"
+        },
+        {
+          "Name": "Attack01",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Greatsword Skeleton/Attack01Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Greatsword Skeleton/Attack01Right.anim"
+        },
+        {
+          "Name": "Attack02",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Greatsword Skeleton/Attack02Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Greatsword Skeleton/Attack02Right.anim"
+        },
+        {
+          "Name": "Attack03",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Greatsword Skeleton/Attack03Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Greatsword Skeleton/Attack03Right.anim"
+        },
+        {
+          "Name": "Summon",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Greatsword Skeleton/SummonLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Greatsword Skeleton/SummonRight.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Greatsword Skeleton/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Greatsword Skeleton/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Greatsword Skeleton/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Greatsword Skeleton/DeathRight.anim"
+        }
+      ],
+      "Id": 12
+    },
+    {
+      "UnitDataId": 19,
+      "UnitName": "Knight",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Knight/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Knight/IdleRight.anim"
+        },
+        {
+          "Name": "Walk",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Knight/WalkLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Knight/WalkRight.anim"
+        },
+        {
+          "Name": "Attack01",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Knight/Attack01Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Knight/Attack01Right.anim"
+        },
+        {
+          "Name": "Attack02",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Knight/Attack02Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Knight/Attack02Right.anim"
+        },
+        {
+          "Name": "Attack03",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Knight/Attack03Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Knight/Attack03Right.anim"
+        },
+        {
+          "Name": "Block",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Knight/BlockLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Knight/BlockRight.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Knight/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Knight/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Knight/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Knight/DeathRight.anim"
+        }
+      ],
+      "Id": 13
+    },
+    {
+      "UnitDataId": 20,
+      "UnitName": "Knight Templar",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Knight Templar/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Knight Templar/IdleRight.anim"
+        },
+        {
+          "Name": "Walk01",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Knight Templar/Walk01Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Knight Templar/Walk01Right.anim"
+        },
+        {
+          "Name": "Walk02",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Knight Templar/Walk02Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Knight Templar/Walk02Right.anim"
+        },
+        {
+          "Name": "Attack01",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Knight Templar/Attack01Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Knight Templar/Attack01Right.anim"
+        },
+        {
+          "Name": "Attack02",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Knight Templar/Attack02Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Knight Templar/Attack02Right.anim"
+        },
+        {
+          "Name": "Attack03",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Knight Templar/Attack03Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Knight Templar/Attack03Right.anim"
+        },
+        {
+          "Name": "Block",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Knight Templar/BlockLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Knight Templar/BlockRight.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Knight Templar/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Knight Templar/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Knight Templar/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Knight Templar/DeathRight.anim"
+        }
+      ],
+      "Id": 14
+    },
+    {
+      "UnitDataId": 21,
+      "UnitName": "Lancer",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Lancer/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Lancer/IdleRight.anim"
+        },
+        {
+          "Name": "Walk01",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Lancer/Walk01Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Lancer/Walk01Right.anim"
+        },
+        {
+          "Name": "Walk02",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Lancer/Walk02Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Lancer/Walk02Right.anim"
+        },
+        {
+          "Name": "Attack01",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Lancer/Attack01Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Lancer/Attack01Right.anim"
+        },
+        {
+          "Name": "Attack02",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Lancer/Attack02Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Lancer/Attack02Right.anim"
+        },
+        {
+          "Name": "Attack03",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Lancer/Attack03Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Lancer/Attack03Right.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Lancer/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Lancer/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Lancer/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Lancer/DeathRight.anim"
+        }
+      ],
+      "Id": 15
+    },
+    {
+      "UnitDataId": 22,
+      "UnitName": "Necromancer",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Necromancer/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Necromancer/IdleRight.anim"
+        },
+        {
+          "Name": "Walk",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Necromancer/WalkLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Necromancer/WalkRight.anim"
+        },
+        {
+          "Name": "Attack01",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Necromancer/Attack01Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Necromancer/Attack01Right.anim"
+        },
+        {
+          "Name": "Attack02",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Necromancer/Attack02Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Necromancer/Attack02Right.anim"
+        },
+        {
+          "Name": "Summon",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Necromancer/SummonLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Necromancer/SummonRight.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Necromancer/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Necromancer/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Necromancer/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Necromancer/DeathRight.anim"
+        }
+      ],
+      "Id": 16
+    },
+    {
+      "UnitDataId": 23,
+      "UnitName": "Orc",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Orc/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Orc/IdleRight.anim"
+        },
+        {
+          "Name": "Walk",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Orc/WalkLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Orc/WalkRight.anim"
+        },
+        {
+          "Name": "Attack01",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Orc/Attack01Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Orc/Attack01Right.anim"
+        },
+        {
+          "Name": "Attack02",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Orc/Attack02Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Orc/Attack02Right.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Orc/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Orc/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Orc/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Orc/DeathRight.anim"
+        }
+      ],
+      "Id": 17
+    },
+    {
+      "UnitDataId": 24,
+      "UnitName": "Orc rider",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Orc rider/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Orc rider/IdleRight.anim"
+        },
+        {
+          "Name": "Walk",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Orc rider/WalkLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Orc rider/WalkRight.anim"
+        },
+        {
+          "Name": "Attack01",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Orc rider/Attack01Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Orc rider/Attack01Right.anim"
+        },
+        {
+          "Name": "Attack02",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Orc rider/Attack02Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Orc rider/Attack02Right.anim"
+        },
+        {
+          "Name": "Attack03",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Orc rider/Attack03Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Orc rider/Attack03Right.anim"
+        },
+        {
+          "Name": "Block",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Orc rider/BlockLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Orc rider/BlockRight.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Orc rider/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Orc rider/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Orc rider/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Orc rider/DeathRight.anim"
+        }
+      ],
+      "Id": 18
+    },
+    {
+      "UnitDataId": 25,
+      "UnitName": "Priest",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Priest/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Priest/IdleRight.anim"
+        },
+        {
+          "Name": "Walk",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Priest/WalkLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Priest/WalkRight.anim"
+        },
+        {
+          "Name": "Attack",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Priest/AttackLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Priest/AttackRight.anim"
+        },
+        {
+          "Name": "Heal",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Priest/HealLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Priest/HealRight.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Priest/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Priest/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Priest/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Priest/DeathRight.anim"
+        }
+      ],
+      "Id": 19
+    },
+    {
+      "UnitDataId": 26,
+      "UnitName": "Skeleton",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Skeleton/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Skeleton/IdleRight.anim"
+        },
+        {
+          "Name": "Walk",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Skeleton/WalkLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Skeleton/WalkRight.anim"
+        },
+        {
+          "Name": "Attack01",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Skeleton/Attack01Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Skeleton/Attack01Right.anim"
+        },
+        {
+          "Name": "Attack02",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Skeleton/Attack02Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Skeleton/Attack02Right.anim"
+        },
+        {
+          "Name": "Block",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Skeleton/BlockLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Skeleton/BlockRight.anim"
+        },
+        {
+          "Name": "Summon",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Skeleton/SummonLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Skeleton/SummonRight.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Skeleton/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Skeleton/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Skeleton/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Skeleton/DeathRight.anim"
+        }
+      ],
+      "Id": 20
+    },
+    {
+      "UnitDataId": 27,
+      "UnitName": "Skeleton Archer",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Skeleton Archer/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Skeleton Archer/IdleRight.anim"
+        },
+        {
+          "Name": "Walk",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Skeleton Archer/WalkLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Skeleton Archer/WalkRight.anim"
+        },
+        {
+          "Name": "Attack",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Skeleton Archer/AttackLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Skeleton Archer/AttackRight.anim"
+        },
+        {
+          "Name": "Summon",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Skeleton Archer/SummonLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Skeleton Archer/SummonRight.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Skeleton Archer/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Skeleton Archer/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Skeleton Archer/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Skeleton Archer/DeathRight.anim"
+        }
+      ],
+      "Id": 21
+    },
+    {
+      "UnitDataId": 28,
+      "UnitName": "Slime",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Slime/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Slime/IdleRight.anim"
+        },
+        {
+          "Name": "Walk",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Slime/WalkLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Slime/WalkRight.anim"
+        },
+        {
+          "Name": "Attack01",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Slime/Attack01Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Slime/Attack01Right.anim"
+        },
+        {
+          "Name": "Attack02",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Slime/Attack02Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Slime/Attack02Right.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Slime/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Slime/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Slime/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Slime/DeathRight.anim"
+        }
+      ],
+      "Id": 22
+    },
+    {
+      "UnitDataId": 29,
+      "UnitName": "Soldier",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Soldier/IdleLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Soldier/IdleRight.anim"
+        },
+        {
+          "Name": "Walk",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Soldier/WalkLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Soldier/WalkRight.anim"
+        },
+        {
+          "Name": "Attack01",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Soldier/Attack01Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Soldier/Attack01Right.anim"
+        },
+        {
+          "Name": "Attack02",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Soldier/Attack02Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Soldier/Attack02Right.anim"
+        },
+        {
+          "Name": "Attack03",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Soldier/Attack03Left.anim",
+          "RightClipPath": "Assets/Res/Animation/Soldier/Attack03Right.anim"
+        },
+        {
+          "Name": "Hurt",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Soldier/HurtLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Soldier/HurtRight.anim"
+        },
+        {
+          "Name": "Death",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Soldier/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Soldier/DeathRight.anim"
+        }
+      ],
+      "Id": 23
     }
   ]
 }

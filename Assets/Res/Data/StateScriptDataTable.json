@@ -455,7 +455,7 @@
             {
               "Condition": {
                 "ConditionType": 0,
-        "CompareType": "GreaterThan",
+                "CompareType": "GreaterThan",
                 "Inputs": [
                   {
                     "Kind": 2,
@@ -543,7 +543,7 @@
               },
               "TickOrder": 0,
               "Type": "Monitor",
-      "Guid": "717b9e3603714bff8e2777022fed1608",
+              "Guid": "717b9e3603714bff8e2777022fed1608",
               "EditorPosition": {
                 "x": 263.333344,
                 "y": 479.333344
@@ -5682,6 +5682,1266 @@
         }
       ],
       "Id": 10
+    },
+    {
+      "Graphs": [
+        {
+          "Guid": "a018651f28f74c538f5d3ee47ed633ed",
+          "Name": "Idle",
+          "EntryNodeGuid": "08fb2728790d46cdbc6c33e9170ccce3",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "08fb2728790d46cdbc6c33e9170ccce3",
+              "EditorPosition": {
+                "x": 120.0,
+                "y": 180.0
+              }
+            },
+            {
+              "SetterKey": "unit.animation.setName",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Idle"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "78b51b60f149442d98805dd9e16ff542",
+              "EditorPosition": {
+                "x": 400.0,
+                "y": 180.0
+              }
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "08fb2728790d46cdbc6c33e9170ccce3",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "78b51b60f149442d98805dd9e16ff542",
+              "InputPortName": "In"
+            }
+          ],
+          "ViewPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "ViewScale": 1.0
+        }
+      ],
+      "Id": 11
+    },
+    {
+      "Graphs": [
+        {
+          "Guid": "b7394542e41a4ceaac8889ddf49b394d",
+          "Name": "Idle",
+          "EntryNodeGuid": "24c8188df111413daccfedabc27f3f8f",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "24c8188df111413daccfedabc27f3f8f",
+              "EditorPosition": {
+                "x": 120.0,
+                "y": 180.0
+              }
+            },
+            {
+              "SetterKey": "unit.animation.setName",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Idle"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "305681b85e874bbfb9168264a53e2484",
+              "EditorPosition": {
+                "x": 400.0,
+                "y": 180.0
+              }
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "24c8188df111413daccfedabc27f3f8f",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "305681b85e874bbfb9168264a53e2484",
+              "InputPortName": "In"
+            }
+          ],
+          "ViewPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "ViewScale": 1.0
+        }
+      ],
+      "Id": 12
+    },
+    {
+      "Graphs": [
+        {
+          "Guid": "29fd86ca7bcd4309813b13b8c150645a",
+          "Name": "Idle",
+          "EntryNodeGuid": "a2869df3f0234803808db02d999faf48",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "a2869df3f0234803808db02d999faf48",
+              "EditorPosition": {
+                "x": 120.0,
+                "y": 180.0
+              }
+            },
+            {
+              "SetterKey": "unit.animation.setName",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Idle"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "121ba4e00806427bb2f49f422a96a8f8",
+              "EditorPosition": {
+                "x": 400.0,
+                "y": 180.0
+              }
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "a2869df3f0234803808db02d999faf48",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "121ba4e00806427bb2f49f422a96a8f8",
+              "InputPortName": "In"
+            }
+          ],
+          "ViewPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "ViewScale": 1.0
+        }
+      ],
+      "Id": 13
+    },
+    {
+      "Graphs": [
+        {
+          "Guid": "f547cd7c15784181a33e1a1f5f2b65a7",
+          "Name": "Idle",
+          "EntryNodeGuid": "357ce14e870a4c54bc5d2a4e9691353a",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "357ce14e870a4c54bc5d2a4e9691353a",
+              "EditorPosition": {
+                "x": 120.0,
+                "y": 180.0
+              }
+            },
+            {
+              "SetterKey": "unit.animation.setName",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Idle"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "6243019ec726423d9f6c15c52c9fdcf1",
+              "EditorPosition": {
+                "x": 400.0,
+                "y": 180.0
+              }
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "357ce14e870a4c54bc5d2a4e9691353a",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "6243019ec726423d9f6c15c52c9fdcf1",
+              "InputPortName": "In"
+            }
+          ],
+          "ViewPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "ViewScale": 1.0
+        }
+      ],
+      "Id": 14
+    },
+    {
+      "Graphs": [
+        {
+          "Guid": "9a3eb10221694150aef5675deeb4659f",
+          "Name": "Flying",
+          "EntryNodeGuid": "159af1e5cce542299d2906bb7e6be3d1",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "159af1e5cce542299d2906bb7e6be3d1",
+              "EditorPosition": {
+                "x": 120.0,
+                "y": 180.0
+              }
+            },
+            {
+              "SetterKey": "unit.animation.setName",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Flying"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "54f0e8aa96774a369171f07f25f17ccf",
+              "EditorPosition": {
+                "x": 400.0,
+                "y": 180.0
+              }
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "159af1e5cce542299d2906bb7e6be3d1",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "54f0e8aa96774a369171f07f25f17ccf",
+              "InputPortName": "In"
+            }
+          ],
+          "ViewPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "ViewScale": 1.0
+        }
+      ],
+      "Id": 15
+    },
+    {
+      "Graphs": [
+        {
+          "Guid": "2c07d34ed4934becbb0d72882615cd72",
+          "Name": "Idle",
+          "EntryNodeGuid": "af78178f22444c748b835093d20a9c70",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "af78178f22444c748b835093d20a9c70",
+              "EditorPosition": {
+                "x": 120.0,
+                "y": 180.0
+              }
+            },
+            {
+              "SetterKey": "unit.animation.setName",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Idle"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "ccccdd0956004417b223ca216aa30a04",
+              "EditorPosition": {
+                "x": 400.0,
+                "y": 180.0
+              }
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "af78178f22444c748b835093d20a9c70",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "ccccdd0956004417b223ca216aa30a04",
+              "InputPortName": "In"
+            }
+          ],
+          "ViewPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "ViewScale": 1.0
+        }
+      ],
+      "Id": 16
+    },
+    {
+      "Graphs": [
+        {
+          "Guid": "7c8651213db04334ab358941e6cde589",
+          "Name": "Idle",
+          "EntryNodeGuid": "e6cf96214f6c4962ab371f31c79d005f",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "e6cf96214f6c4962ab371f31c79d005f",
+              "EditorPosition": {
+                "x": 120.0,
+                "y": 180.0
+              }
+            },
+            {
+              "SetterKey": "unit.animation.setName",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Idle"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "0d637f27110c48c69db71e67e49a20a7",
+              "EditorPosition": {
+                "x": 400.0,
+                "y": 180.0
+              }
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "e6cf96214f6c4962ab371f31c79d005f",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "0d637f27110c48c69db71e67e49a20a7",
+              "InputPortName": "In"
+            }
+          ],
+          "ViewPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "ViewScale": 1.0
+        }
+      ],
+      "Id": 17
+    },
+    {
+      "Graphs": [
+        {
+          "Guid": "346f054807bb400482be41e9d75594fe",
+          "Name": "Idle",
+          "EntryNodeGuid": "aec2eb8e007240c8aa1b86574f5afbfe",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "aec2eb8e007240c8aa1b86574f5afbfe",
+              "EditorPosition": {
+                "x": 120.0,
+                "y": 180.0
+              }
+            },
+            {
+              "SetterKey": "unit.animation.setName",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Idle"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "bdd348c48205468a819cfc5c944904c9",
+              "EditorPosition": {
+                "x": 400.0,
+                "y": 180.0
+              }
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "aec2eb8e007240c8aa1b86574f5afbfe",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "bdd348c48205468a819cfc5c944904c9",
+              "InputPortName": "In"
+            }
+          ],
+          "ViewPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "ViewScale": 1.0
+        }
+      ],
+      "Id": 18
+    },
+    {
+      "Graphs": [
+        {
+          "Guid": "dbe43f7745b74b8d8a11da3fd725e851",
+          "Name": "Idle",
+          "EntryNodeGuid": "3bc5334d758a4944925103eba8110b23",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "3bc5334d758a4944925103eba8110b23",
+              "EditorPosition": {
+                "x": 120.0,
+                "y": 180.0
+              }
+            },
+            {
+              "SetterKey": "unit.animation.setName",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Idle"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "59eb5a2c5b634f668c2600f6566a052e",
+              "EditorPosition": {
+                "x": 400.0,
+                "y": 180.0
+              }
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "3bc5334d758a4944925103eba8110b23",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "59eb5a2c5b634f668c2600f6566a052e",
+              "InputPortName": "In"
+            }
+          ],
+          "ViewPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "ViewScale": 1.0
+        }
+      ],
+      "Id": 19
+    },
+    {
+      "Graphs": [
+        {
+          "Guid": "82c511f405e2451e9dbd874d209a1974",
+          "Name": "Idle",
+          "EntryNodeGuid": "d91f786e3d11485089076eb78c924f90",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "d91f786e3d11485089076eb78c924f90",
+              "EditorPosition": {
+                "x": 120.0,
+                "y": 180.0
+              }
+            },
+            {
+              "SetterKey": "unit.animation.setName",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Idle"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "7d125cec07e94daaab244c9dbd9e2311",
+              "EditorPosition": {
+                "x": 400.0,
+                "y": 180.0
+              }
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "d91f786e3d11485089076eb78c924f90",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "7d125cec07e94daaab244c9dbd9e2311",
+              "InputPortName": "In"
+            }
+          ],
+          "ViewPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "ViewScale": 1.0
+        }
+      ],
+      "Id": 20
+    },
+    {
+      "Graphs": [
+        {
+          "Guid": "e2f886eccb1e459c9aaff95637c7f462",
+          "Name": "Idle",
+          "EntryNodeGuid": "d19e97ca90f8451b962c85b25f22bb1b",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "d19e97ca90f8451b962c85b25f22bb1b",
+              "EditorPosition": {
+                "x": 120.0,
+                "y": 180.0
+              }
+            },
+            {
+              "SetterKey": "unit.animation.setName",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Idle"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "dd184b2e2f574c18a7ec05cef815f27b",
+              "EditorPosition": {
+                "x": 400.0,
+                "y": 180.0
+              }
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "d19e97ca90f8451b962c85b25f22bb1b",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "dd184b2e2f574c18a7ec05cef815f27b",
+              "InputPortName": "In"
+            }
+          ],
+          "ViewPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "ViewScale": 1.0
+        }
+      ],
+      "Id": 21
+    },
+    {
+      "Graphs": [
+        {
+          "Guid": "8341ffb7f1884aa8a52dc5de6ebb21b8",
+          "Name": "Idle",
+          "EntryNodeGuid": "afbf4ae61fe44614b1bb72d8c6212fb5",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "afbf4ae61fe44614b1bb72d8c6212fb5",
+              "EditorPosition": {
+                "x": 120.0,
+                "y": 180.0
+              }
+            },
+            {
+              "SetterKey": "unit.animation.setName",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Idle"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "2ce50945799141d28c51ca98722e6caa",
+              "EditorPosition": {
+                "x": 400.0,
+                "y": 180.0
+              }
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "afbf4ae61fe44614b1bb72d8c6212fb5",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "2ce50945799141d28c51ca98722e6caa",
+              "InputPortName": "In"
+            }
+          ],
+          "ViewPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "ViewScale": 1.0
+        }
+      ],
+      "Id": 22
+    },
+    {
+      "Graphs": [
+        {
+          "Guid": "5ea33137c17f445e95dfccc0a0432bb8",
+          "Name": "Idle",
+          "EntryNodeGuid": "54b20197b77e46d28426d028ecc91df8",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "54b20197b77e46d28426d028ecc91df8",
+              "EditorPosition": {
+                "x": 120.0,
+                "y": 180.0
+              }
+            },
+            {
+              "SetterKey": "unit.animation.setName",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Idle"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "c1a2699978a54b13bb97c4d016561f84",
+              "EditorPosition": {
+                "x": 400.0,
+                "y": 180.0
+              }
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "54b20197b77e46d28426d028ecc91df8",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "c1a2699978a54b13bb97c4d016561f84",
+              "InputPortName": "In"
+            }
+          ],
+          "ViewPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "ViewScale": 1.0
+        }
+      ],
+      "Id": 23
+    },
+    {
+      "Graphs": [
+        {
+          "Guid": "5af9e292d8ca455b907e797786f3c9c5",
+          "Name": "Idle",
+          "EntryNodeGuid": "d0d9b0d65ad14be5ad18fee72de85cdd",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "d0d9b0d65ad14be5ad18fee72de85cdd",
+              "EditorPosition": {
+                "x": 120.0,
+                "y": 180.0
+              }
+            },
+            {
+              "SetterKey": "unit.animation.setName",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Idle"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "c44dbc3c9d9b47539911ea371d43f96d",
+              "EditorPosition": {
+                "x": 400.0,
+                "y": 180.0
+              }
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "d0d9b0d65ad14be5ad18fee72de85cdd",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "c44dbc3c9d9b47539911ea371d43f96d",
+              "InputPortName": "In"
+            }
+          ],
+          "ViewPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "ViewScale": 1.0
+        }
+      ],
+      "Id": 24
+    },
+    {
+      "Graphs": [
+        {
+          "Guid": "e9efae8de1124584865255794ea3602c",
+          "Name": "Idle",
+          "EntryNodeGuid": "0c208c0cc56e458294e5a21c185d2475",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "0c208c0cc56e458294e5a21c185d2475",
+              "EditorPosition": {
+                "x": 120.0,
+                "y": 180.0
+              }
+            },
+            {
+              "SetterKey": "unit.animation.setName",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Idle"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "863bd4bd8a634c4593d49edd6425f3c6",
+              "EditorPosition": {
+                "x": 400.0,
+                "y": 180.0
+              }
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "0c208c0cc56e458294e5a21c185d2475",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "863bd4bd8a634c4593d49edd6425f3c6",
+              "InputPortName": "In"
+            }
+          ],
+          "ViewPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "ViewScale": 1.0
+        }
+      ],
+      "Id": 25
+    },
+    {
+      "Graphs": [
+        {
+          "Guid": "35b5551714bf4e3ebeceba838842de42",
+          "Name": "Idle",
+          "EntryNodeGuid": "d67e60574a6a43cc8732f11bfdefc1f5",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "d67e60574a6a43cc8732f11bfdefc1f5",
+              "EditorPosition": {
+                "x": 120.0,
+                "y": 180.0
+              }
+            },
+            {
+              "SetterKey": "unit.animation.setName",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Idle"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "9e67911b9f0f4ccdb2a368e5e6a92c70",
+              "EditorPosition": {
+                "x": 400.0,
+                "y": 180.0
+              }
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "d67e60574a6a43cc8732f11bfdefc1f5",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "9e67911b9f0f4ccdb2a368e5e6a92c70",
+              "InputPortName": "In"
+            }
+          ],
+          "ViewPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "ViewScale": 1.0
+        }
+      ],
+      "Id": 26
+    },
+    {
+      "Graphs": [
+        {
+          "Guid": "890ce1fb0f3c47759b1e93281f4759cc",
+          "Name": "Idle",
+          "EntryNodeGuid": "014c21c7adcc4192b5cb8a5e825b19d3",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "014c21c7adcc4192b5cb8a5e825b19d3",
+              "EditorPosition": {
+                "x": 120.0,
+                "y": 180.0
+              }
+            },
+            {
+              "SetterKey": "unit.animation.setName",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Idle"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "c90cb9949f4a40388260ad014a858782",
+              "EditorPosition": {
+                "x": 400.0,
+                "y": 180.0
+              }
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "014c21c7adcc4192b5cb8a5e825b19d3",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "c90cb9949f4a40388260ad014a858782",
+              "InputPortName": "In"
+            }
+          ],
+          "ViewPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "ViewScale": 1.0
+        }
+      ],
+      "Id": 27
+    },
+    {
+      "Graphs": [
+        {
+          "Guid": "adfd9e9d60df4869bcf660d72e5553e8",
+          "Name": "Idle",
+          "EntryNodeGuid": "82ebe072836b4d10aacd129074ca6b13",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "82ebe072836b4d10aacd129074ca6b13",
+              "EditorPosition": {
+                "x": 120.0,
+                "y": 180.0
+              }
+            },
+            {
+              "SetterKey": "unit.animation.setName",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Idle"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "9b373fe2dd384be590e9025acfc2d2ca",
+              "EditorPosition": {
+                "x": 400.0,
+                "y": 180.0
+              }
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "82ebe072836b4d10aacd129074ca6b13",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "9b373fe2dd384be590e9025acfc2d2ca",
+              "InputPortName": "In"
+            }
+          ],
+          "ViewPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "ViewScale": 1.0
+        }
+      ],
+      "Id": 28
     }
   ]
 }

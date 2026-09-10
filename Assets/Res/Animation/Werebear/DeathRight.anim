@@ -16,14 +16,7 @@ AnimationClip:
   m_EulerCurves: []
   m_PositionCurves: []
   m_ScaleCurves: []
-  m_FloatCurves:
-  - serializedVersion: 2
-    curve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 0
+$10
         inSlope: Infinity
         outSlope: Infinity
         tangentMode: 103
@@ -44,11 +37,11 @@ AnimationClip:
     - time: 0
       value: {fileID: -1749866757, guid: 5754fc2b4b607164e84dbe22bbd5fa29, type: 3}
     - time: 0.0833333
-      value: {fileID: -1749866757, guid: 5754fc2b4b607164e84dbe22bbd5fa29, type: 3}
+      value: {fileID: -1549211982, guid: 5754fc2b4b607164e84dbe22bbd5fa29, type: 3}
     - time: 0.1666667
-      value: {fileID: -1549211982, guid: 5754fc2b4b607164e84dbe22bbd5fa29, type: 3}
+      value: {fileID: -440415288, guid: 5754fc2b4b607164e84dbe22bbd5fa29, type: 3}
     - time: 0.25
-      value: {fileID: -1549211982, guid: 5754fc2b4b607164e84dbe22bbd5fa29, type: 3}
+      value: {fileID: -1156948260, guid: 5754fc2b4b607164e84dbe22bbd5fa29, type: 3}
     attribute: m_Sprite
     path: 
     classID: 212
@@ -80,9 +73,9 @@ AnimationClip:
       isIntCurve: 0
       isSerializeReferenceCurve: 0
     pptrCurveMapping:
+    - {fileID: -1749866757, guid: 5754fc2b4b607164e84dbe22bbd5fa29, type: 3}
+    - {fileID: -1549211982, guid: 5754fc2b4b607164e84dbe22bbd5fa29, type: 3}
     - {fileID: -440415288, guid: 5754fc2b4b607164e84dbe22bbd5fa29, type: 3}
-    - {fileID: -440415288, guid: 5754fc2b4b607164e84dbe22bbd5fa29, type: 3}
-    - {fileID: -1156948260, guid: 5754fc2b4b607164e84dbe22bbd5fa29, type: 3}
     - {fileID: -1156948260, guid: 5754fc2b4b607164e84dbe22bbd5fa29, type: 3}
   m_AnimationClipSettings:
     serializedVersion: 2

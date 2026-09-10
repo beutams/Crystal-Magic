@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 993419817db609142b076aee6c3e6810
+guid: dab8edf75a3014d4e8b7fc1df63375a7
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -107,15 +107,15 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
+      customData:
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 65f219df81da46747af10a794051bebd
-      internalID: 1959632017
+      spriteID: c254fd205ebbc114ebcf3362946a8ed0
+      internalID: -1998636234
       vertices: []
-      indices: 
+      indices:
       edges: []
       weights: []
     - serializedVersion: 2
@@ -129,15 +129,15 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
+      customData:
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 5f143e9e2b6af97449c0dd1b195e2a45
-      internalID: -1585509690
+      spriteID: 230efd2a8e804da438a392111cd947a4
+      internalID: 884115556
       vertices: []
-      indices: 
+      indices:
       edges: []
       weights: []
     - serializedVersion: 2
@@ -151,15 +151,15 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
+      customData:
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c059f33ea342e11458506a017ee8aec7
-      internalID: 1627160456
+      spriteID: e71122a74c1b8d941bff364e0248370a
+      internalID: -1352542545
       vertices: []
-      indices: 
+      indices:
       edges: []
       weights: []
     - serializedVersion: 2
@@ -173,15 +173,15 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
+      customData:
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 52ac86fe93e5a06499e31e63b0c446c5
-      internalID: -1266185242
+      spriteID: c38978523de9fb4419494396cde56a57
+      internalID: 2123558022
       vertices: []
-      indices: 
+      indices:
       edges: []
       weights: []
     - serializedVersion: 2
@@ -195,15 +195,15 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
+      customData:
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 07d54f4e64d0be547b799b9140684850
-      internalID: -1683984207
+      spriteID: eb248327b1f7d5f40a040b3eb3a96be6
+      internalID: -541553442
       vertices: []
-      indices: 
+      indices:
       edges: []
       weights: []
     - serializedVersion: 2
@@ -217,25 +217,25 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
+      customData:
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 336d54b2930cbf04db4c648ff17a240e
-      internalID: -1496459408
+      spriteID: 16d4e8075d061b64292951414612cc3b
+      internalID: 1526714918
       vertices: []
-      indices: 
+      indices:
       edges: []
       weights: []
     outline: []
-    customData: 
+    customData:
     physicsShape: []
     bones: []
-    spriteID: 0db98c5ddb877aa4eaa0074c74709fac
+    spriteID: 64b5b01323e001a4983a0d015614f2f2
     internalID: 0
     vertices: []
-    indices: 
+    indices:
     edges: []
     weights: []
     secondaryTextures: []
@@ -244,14 +244,14 @@ TextureImporter:
       - key: SpriteEditor.SliceSettings
         value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":100.0,"y":100.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      Slime_Idle_0: 1959632017
-      Slime_Idle_1: -1585509690
-      Slime_Idle_2: 1627160456
-      Slime_Idle_3: -1266185242
-      Slime_Idle_4: -1683984207
-      Slime_Idle_5: -1496459408
-  mipmapLimitGroupName: 
+      Slime_Idle_0: -1998636234
+      Slime_Idle_1: 884115556
+      Slime_Idle_2: -1352542545
+      Slime_Idle_3: 2123558022
+      Slime_Idle_4: -541553442
+      Slime_Idle_5: 1526714918
+  mipmapLimitGroupName:
   pSDRemoveMatte: 0
-  userData: 
-  assetBundleName: 
-  assetBundleVariant: 
+  userData:
+  assetBundleName:
+  assetBundleVariant:
