@@ -3,7 +3,6 @@ using Unity.Entities;
 
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateAfter(typeof(BehaviorTreeSystem))]
-[UpdateAfter(typeof(UnitControlSystem))]
 public partial class StateScriptSystem : SystemBase
 {
     protected override void OnUpdate()
