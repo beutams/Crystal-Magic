@@ -543,8 +543,10 @@ Game\
       UnitSystemGroups.cs TRUE DIRTY
         闁告帒妫涚悮?
         闁归攱鍎宠ぐ鍥箳婢跺孩鍎伴柣?
+    Debug\
+      UnitDebugInspectorUtility.cs TRUE DIRTY
     Utility\
-      EntitySpawnRegistryUtility.cs TRUE
+      EntitySpawnRegistryUtility.cs TRUE DIRTY
       NPCAuthoringUtility.cs FALSE
       PendingEffectExecutionQueueUtility.cs FALSE
       PropUseUtility.cs TRUE DIRTY
@@ -666,10 +668,10 @@ UI\
     Sub\
       DebugUI_NavigationItemData.cs FALSE
       DebugUI_NavigationItemView.cs FALSE
-    DebugUI.cs TRUE
-    DebugUIController.cs TRUE
-    DebugUIData.cs FALSE
-    DebugUIModel.cs TRUE
+    DebugUI.cs TRUE DIRTY
+    DebugUIController.cs TRUE DIRTY
+    DebugUIData.cs TRUE DIRTY
+    DebugUIModel.cs TRUE DIRTY
     DebugUI_LauncherDrag.cs FALSE
   SaveUI\
     Sub\

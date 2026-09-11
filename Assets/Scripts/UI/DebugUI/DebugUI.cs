@@ -13,10 +13,26 @@ public sealed class DebugUI : UIBase<DebugUIData, DebugUIModel>
 
     private readonly List<DebugUI_NavigationItemView> _pageItemViews = new();
     private Vector2 _launcherPointerOffset;
+    private int _lastUnitInspectorEditorRevision = -1;
 
     public event Action ContentToggleRequested;
     public event Action ContentHideRequested;
     public event Action<DebugPage> PageRequested;
+    public event Action PreviousSpawnUnitRequested;
+    public event Action NextSpawnUnitRequested;
+    public event Action SpawnUnitRequested;
+    public event Action UnitInspectorRefreshRequested;
+    public event Action PreviousInspectorUnitRequested;
+    public event Action NextInspectorUnitRequested;
+    public event Action PreviousInspectorComponentRequested;
+    public event Action NextInspectorComponentRequested;
+    public event Action PreviousInspectorBuffRequested;
+    public event Action NextInspectorBuffRequested;
+    public event Action<string> UnitInspectorApplyRequested;
+    public event Action<string> UnitInspectorAddBuffRequested;
+    public event Action UnitInspectorRemoveBuffRequested;
+    public event Action UnitInspectorClearBehaviorRequested;
+    public event Action UnitInspectorClearStateScriptRequested;
 
     protected override void OnInit()
     {
@@ -29,6 +45,21 @@ public sealed class DebugUI : UIBase<DebugUIData, DebugUIModel>
     {
         UI.Launcher.ButtonPlus.onClick.AddListener(HandleLauncherClicked);
         UI.Content_Close.ButtonPlus.onClick.AddListener(HandleContentHideClicked);
+        UI.Content_UnitSpawner_Previous.ButtonPlus.onClick.AddListener(HandlePreviousSpawnUnitClicked);
+        UI.Content_UnitSpawner_Next.ButtonPlus.onClick.AddListener(HandleNextSpawnUnitClicked);
+        UI.Content_UnitSpawner_Spawn.ButtonPlus.onClick.AddListener(HandleSpawnUnitClicked);
+        UI.Content_UnitInspector_Refresh.ButtonPlus.onClick.AddListener(HandleUnitInspectorRefreshClicked);
+        UI.Content_UnitInspector_UnitPrevious.ButtonPlus.onClick.AddListener(HandlePreviousInspectorUnitClicked);
+        UI.Content_UnitInspector_UnitNext.ButtonPlus.onClick.AddListener(HandleNextInspectorUnitClicked);
+        UI.Content_UnitInspector_ComponentPrevious.ButtonPlus.onClick.AddListener(HandlePreviousInspectorComponentClicked);
+        UI.Content_UnitInspector_ComponentNext.ButtonPlus.onClick.AddListener(HandleNextInspectorComponentClicked);
+        UI.Content_UnitInspector_BuffPrevious.ButtonPlus.onClick.AddListener(HandlePreviousInspectorBuffClicked);
+        UI.Content_UnitInspector_BuffNext.ButtonPlus.onClick.AddListener(HandleNextInspectorBuffClicked);
+        UI.Content_UnitInspector_Apply.ButtonPlus.onClick.AddListener(HandleUnitInspectorApplyClicked);
+        UI.Content_UnitInspector_AddBuff.ButtonPlus.onClick.AddListener(HandleUnitInspectorAddBuffClicked);
+        UI.Content_UnitInspector_RemoveBuff.ButtonPlus.onClick.AddListener(HandleUnitInspectorRemoveBuffClicked);
+        UI.Content_UnitInspector_ClearBehavior.ButtonPlus.onClick.AddListener(HandleUnitInspectorClearBehaviorClicked);
+        UI.Content_UnitInspector_ClearStateScript.ButtonPlus.onClick.AddListener(HandleUnitInspectorClearStateScriptClicked);
 
         DebugUI_LauncherDrag launcherDrag = UI.Launcher.GameObject.GetComponent<DebugUI_LauncherDrag>();
         launcherDrag.DragStarted += HandleLauncherDragStarted;
@@ -43,6 +74,21 @@ public sealed class DebugUI : UIBase<DebugUIData, DebugUIModel>
     {
         UI.Launcher.ButtonPlus.onClick.RemoveListener(HandleLauncherClicked);
         UI.Content_Close.ButtonPlus.onClick.RemoveListener(HandleContentHideClicked);
+        UI.Content_UnitSpawner_Previous.ButtonPlus.onClick.RemoveListener(HandlePreviousSpawnUnitClicked);
+        UI.Content_UnitSpawner_Next.ButtonPlus.onClick.RemoveListener(HandleNextSpawnUnitClicked);
+        UI.Content_UnitSpawner_Spawn.ButtonPlus.onClick.RemoveListener(HandleSpawnUnitClicked);
+        UI.Content_UnitInspector_Refresh.ButtonPlus.onClick.RemoveListener(HandleUnitInspectorRefreshClicked);
+        UI.Content_UnitInspector_UnitPrevious.ButtonPlus.onClick.RemoveListener(HandlePreviousInspectorUnitClicked);
+        UI.Content_UnitInspector_UnitNext.ButtonPlus.onClick.RemoveListener(HandleNextInspectorUnitClicked);
+        UI.Content_UnitInspector_ComponentPrevious.ButtonPlus.onClick.RemoveListener(HandlePreviousInspectorComponentClicked);
+        UI.Content_UnitInspector_ComponentNext.ButtonPlus.onClick.RemoveListener(HandleNextInspectorComponentClicked);
+        UI.Content_UnitInspector_BuffPrevious.ButtonPlus.onClick.RemoveListener(HandlePreviousInspectorBuffClicked);
+        UI.Content_UnitInspector_BuffNext.ButtonPlus.onClick.RemoveListener(HandleNextInspectorBuffClicked);
+        UI.Content_UnitInspector_Apply.ButtonPlus.onClick.RemoveListener(HandleUnitInspectorApplyClicked);
+        UI.Content_UnitInspector_AddBuff.ButtonPlus.onClick.RemoveListener(HandleUnitInspectorAddBuffClicked);
+        UI.Content_UnitInspector_RemoveBuff.ButtonPlus.onClick.RemoveListener(HandleUnitInspectorRemoveBuffClicked);
+        UI.Content_UnitInspector_ClearBehavior.ButtonPlus.onClick.RemoveListener(HandleUnitInspectorClearBehaviorClicked);
+        UI.Content_UnitInspector_ClearStateScript.ButtonPlus.onClick.RemoveListener(HandleUnitInspectorClearStateScriptClicked);
 
         DebugUI_LauncherDrag launcherDrag = UI.Launcher.GameObject.GetComponent<DebugUI_LauncherDrag>();
         launcherDrag.DragStarted -= HandleLauncherDragStarted;
@@ -60,8 +106,20 @@ public sealed class DebugUI : UIBase<DebugUIData, DebugUIModel>
 
         UI.Content_PlayerAttributes.GameObject.SetActive(Model.SelectedPage == DebugPage.PlayerAttributes);
         UI.Content_TrainingGround.GameObject.SetActive(Model.SelectedPage == DebugPage.TrainingGround);
+        UI.Content_UnitSpawner.GameObject.SetActive(Model.SelectedPage == DebugPage.UnitSpawner);
+        UI.Content_UnitInspector.GameObject.SetActive(Model.SelectedPage == DebugPage.UnitInspector);
         UI.Content_PlayerAttributes_Value.TextMeshProUGUI.text = Model.PlayerAttributesText;
         UI.Content_TrainingGround_Value.TextMeshProUGUI.text = Model.TrainingGroundText;
+        UI.Content_UnitSpawner_SelectedUnit.TextMeshProUGUI.text = Model.UnitSpawnerText;
+        UI.Content_UnitInspector_Unit.TextMeshProUGUI.text = Model.UnitInspectorUnitText;
+        UI.Content_UnitInspector_Component.TextMeshProUGUI.text = Model.UnitInspectorComponentText;
+        UI.Content_UnitInspector_Buff.TextMeshProUGUI.text = Model.UnitInspectorBuffText;
+        UI.Content_UnitInspector_Status.TextMeshProUGUI.text = Model.UnitInspectorStatusText;
+        if (_lastUnitInspectorEditorRevision != Model.UnitInspectorEditorRevision)
+        {
+            _lastUnitInspectorEditorRevision = Model.UnitInspectorEditorRevision;
+            UI.Content_UnitInspector_Editor.TMP_InputField.SetTextWithoutNotify(Model.UnitInspectorDetailText);
+        }
     }
 
     private void SetContentVisible(bool visible)
@@ -138,6 +196,22 @@ public sealed class DebugUI : UIBase<DebugUIData, DebugUIModel>
     {
         PageRequested?.Invoke(page);
     }
+
+    private void HandlePreviousSpawnUnitClicked() => PreviousSpawnUnitRequested?.Invoke();
+    private void HandleNextSpawnUnitClicked() => NextSpawnUnitRequested?.Invoke();
+    private void HandleSpawnUnitClicked() => SpawnUnitRequested?.Invoke();
+    private void HandleUnitInspectorRefreshClicked() => UnitInspectorRefreshRequested?.Invoke();
+    private void HandlePreviousInspectorUnitClicked() => PreviousInspectorUnitRequested?.Invoke();
+    private void HandleNextInspectorUnitClicked() => NextInspectorUnitRequested?.Invoke();
+    private void HandlePreviousInspectorComponentClicked() => PreviousInspectorComponentRequested?.Invoke();
+    private void HandleNextInspectorComponentClicked() => NextInspectorComponentRequested?.Invoke();
+    private void HandlePreviousInspectorBuffClicked() => PreviousInspectorBuffRequested?.Invoke();
+    private void HandleNextInspectorBuffClicked() => NextInspectorBuffRequested?.Invoke();
+    private void HandleUnitInspectorApplyClicked() => UnitInspectorApplyRequested?.Invoke(UI.Content_UnitInspector_Editor.TMP_InputField.text);
+    private void HandleUnitInspectorAddBuffClicked() => UnitInspectorAddBuffRequested?.Invoke(UI.Content_UnitInspector_Editor.TMP_InputField.text);
+    private void HandleUnitInspectorRemoveBuffClicked() => UnitInspectorRemoveBuffRequested?.Invoke();
+    private void HandleUnitInspectorClearBehaviorClicked() => UnitInspectorClearBehaviorRequested?.Invoke();
+    private void HandleUnitInspectorClearStateScriptClicked() => UnitInspectorClearStateScriptRequested?.Invoke();
 
     private void HandleLauncherDragStarted(PointerEventData eventData)
     {

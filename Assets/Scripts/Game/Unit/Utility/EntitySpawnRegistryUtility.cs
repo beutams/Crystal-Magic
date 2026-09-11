@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
 
@@ -5,6 +6,27 @@ namespace CrystalMagic.Game.Unit
 {
     public static class EntitySpawnRegistryUtility
     {
+        public static void GetRegisteredUnitNames(EntityManager entityManager, List<string> destination)
+        {
+            destination.Clear();
+
+            if (!TryGetRegistryEntity(entityManager, out Entity registryEntity) ||
+                !entityManager.HasBuffer<UnitEntityPrefabRegistryEntry>(registryEntity))
+            {
+                return;
+            }
+
+            DynamicBuffer<UnitEntityPrefabRegistryEntry> buffer = entityManager.GetBuffer<UnitEntityPrefabRegistryEntry>(registryEntity);
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                UnitEntityPrefabRegistryEntry entry = buffer[i];
+                if (entry.Prefab != Entity.Null)
+                    destination.Add(entry.Name.ToString());
+            }
+
+            destination.Sort(System.StringComparer.Ordinal);
+        }
+
         public static bool TryGetUnitPrefab(EntityManager entityManager, in FixedString128Bytes unitName, out Entity prefab)
         {
             if (!TryGetRegistryEntity(entityManager, out Entity registryEntity) ||

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using CrystalMagic.Core;
+using CrystalMagic.Game.Unit;
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
@@ -13,6 +14,8 @@ namespace CrystalMagic.UI
     {
         PlayerAttributes,
         TrainingGround,
+        UnitSpawner,
+        UnitInspector,
     }
 
     public readonly struct DebugPageDefinition
@@ -33,12 +36,16 @@ namespace CrystalMagic.UI
 
         private const float DamageResetDelaySeconds = 10f;
 
-        private static readonly DebugPageDefinition[] PageDefinitions =
-        {
-            new(DebugPage.PlayerAttributes, "Player Attributes"),
-            new(DebugPage.TrainingGround, "Training Ground"),
-        };
+        private static readonly DebugPageDefinition PlayerAttributesPage = new(DebugPage.PlayerAttributes, "Player Attributes");
+        private static readonly DebugPageDefinition TrainingGroundPage = new(DebugPage.TrainingGround, "Training Ground");
+        private static readonly DebugPageDefinition UnitSpawnerPage = new(DebugPage.UnitSpawner, "Unit Spawner");
+        private static readonly DebugPageDefinition UnitInspectorPage = new(DebugPage.UnitInspector, "Unit Inspector");
 
+        private readonly List<DebugPageDefinition> _pages = new() { PlayerAttributesPage };
+        private readonly List<string> _spawnableUnitNames = new();
+        private readonly List<UnitDebugUnitEntry> _inspectorUnits = new();
+        private readonly List<UnitDebugComponentEntry> _inspectorComponents = new();
+        private readonly List<UnitDebugBuffEntry> _inspectorBuffs = new();
         private Entity _cachedPlayerEntity = Entity.Null;
         private Entity _cachedDummyEntity = Entity.Null;
         private World _cachedDummyQueryWorld;
@@ -49,13 +56,38 @@ namespace CrystalMagic.UI
         private float _damageSessionStartTime = -1f;
         private float _lastDamageTime = -1f;
         private bool _hasDummyHealthSnapshot;
+        private bool _isTrainingGroundActive;
+        private int _selectedSpawnUnitIndex = -1;
+        private int _selectedInspectorUnitIndex = -1;
+        private int _selectedInspectorComponentIndex = -1;
+        private int _selectedInspectorBuffIndex = -1;
 
         public override string ChangedEventName => DataChangedEventName;
-        public IReadOnlyList<DebugPageDefinition> Pages => PageDefinitions;
+        public IReadOnlyList<DebugPageDefinition> Pages => _pages;
         public bool IsContentVisible { get; private set; }
+        public bool IsTrainingGroundActive => _isTrainingGroundActive;
         public DebugPage? SelectedPage { get; private set; }
         public string PlayerAttributesText { get; private set; } = string.Empty;
         public string TrainingGroundText { get; private set; } = string.Empty;
+        public string SelectedSpawnUnitName => _selectedSpawnUnitIndex >= 0 && _selectedSpawnUnitIndex < _spawnableUnitNames.Count
+            ? _spawnableUnitNames[_selectedSpawnUnitIndex]
+            : string.Empty;
+        public string UnitSpawnerText => string.IsNullOrEmpty(SelectedSpawnUnitName)
+            ? "No registered unit is available."
+            : $"Unit: {SelectedSpawnUnitName}\n{_selectedSpawnUnitIndex + 1}/{_spawnableUnitNames.Count}";
+        public string UnitInspectorUnitText => TryGetSelectedInspectorUnit(out UnitDebugUnitEntry unit)
+            ? $"Unit {_selectedInspectorUnitIndex + 1}/{_inspectorUnits.Count}: {unit.Label}"
+            : "No live unit is available.";
+        public string UnitInspectorComponentText => TryGetSelectedInspectorComponent(out UnitDebugComponentEntry component)
+            ? $"Component {_selectedInspectorComponentIndex + 1}/{_inspectorComponents.Count}: {component.Label}"
+            : "No editable Component is available.";
+        public string UnitInspectorBuffText => TryGetSelectedInspectorBuff(out UnitDebugBuffEntry buff)
+            ? $"Buff {_selectedInspectorBuffIndex + 1}/{_inspectorBuffs.Count}: {buff.Label}"
+            : "No Buff selected.";
+        public string UnitInspectorDetailText { get; private set; } = string.Empty;
+        public string UnitInspectorStatusText { get; private set; } = string.Empty;
+        public int UnitInspectorEditorRevision { get; private set; }
+        public int SelectedInspectorBuffIndex => _selectedInspectorBuffIndex;
 
         public void SetContentVisible(bool visible)
         {
@@ -63,6 +95,7 @@ namespace CrystalMagic.UI
                 return;
 
             IsContentVisible = visible;
+            RefreshPageDefinitions();
             if (visible)
                 RebuildDisplayText();
 
@@ -71,6 +104,9 @@ namespace CrystalMagic.UI
 
         public void SelectPage(DebugPage page)
         {
+            if (!ContainsPage(page))
+                return;
+
             if (SelectedPage == page)
                 return;
 
@@ -83,15 +119,183 @@ namespace CrystalMagic.UI
 
         public void RefreshRuntime()
         {
-            if (!IsContentVisible || !RebuildDisplayText())
+            bool pageDefinitionsChanged = RefreshPageDefinitions();
+            if (!IsContentVisible)
+            {
+                if (pageDefinitionsChanged)
+                    PublishChanged();
+                return;
+            }
+
+            if (!pageDefinitionsChanged && !RebuildDisplayText())
                 return;
 
             PublishChanged();
         }
 
+        public void SetSpawnableUnitNames(IReadOnlyList<string> unitNames)
+        {
+            string selectedUnitName = SelectedSpawnUnitName;
+            bool changed = _spawnableUnitNames.Count != unitNames.Count;
+            if (!changed)
+            {
+                for (int i = 0; i < unitNames.Count; i++)
+                {
+                    if (string.Equals(_spawnableUnitNames[i], unitNames[i], StringComparison.Ordinal))
+                        continue;
+
+                    changed = true;
+                    break;
+                }
+            }
+
+            if (!changed)
+                return;
+
+            _spawnableUnitNames.Clear();
+            for (int i = 0; i < unitNames.Count; i++)
+                _spawnableUnitNames.Add(unitNames[i]);
+
+            _selectedSpawnUnitIndex = _spawnableUnitNames.IndexOf(selectedUnitName);
+            if (_selectedSpawnUnitIndex < 0 && _spawnableUnitNames.Count > 0)
+                _selectedSpawnUnitIndex = 0;
+
+            PublishChanged();
+        }
+
+        public void SelectPreviousSpawnUnit()
+        {
+            if (_spawnableUnitNames.Count <= 1)
+                return;
+
+            _selectedSpawnUnitIndex = (_selectedSpawnUnitIndex - 1 + _spawnableUnitNames.Count) % _spawnableUnitNames.Count;
+            PublishChanged();
+        }
+
+        public void SelectNextSpawnUnit()
+        {
+            if (_spawnableUnitNames.Count <= 1)
+                return;
+
+            _selectedSpawnUnitIndex = (_selectedSpawnUnitIndex + 1) % _spawnableUnitNames.Count;
+            PublishChanged();
+        }
+
+        public void SetInspectorUnits(IReadOnlyList<UnitDebugUnitEntry> units)
+        {
+            Entity selectedEntity = TryGetSelectedInspectorUnit(out UnitDebugUnitEntry selected) ? selected.Entity : Entity.Null;
+            _inspectorUnits.Clear();
+            for (int i = 0; i < units.Count; i++)
+                _inspectorUnits.Add(units[i]);
+
+            _selectedInspectorUnitIndex = _inspectorUnits.FindIndex(entry => entry.Entity == selectedEntity);
+            if (_selectedInspectorUnitIndex < 0 && _inspectorUnits.Count > 0)
+                _selectedInspectorUnitIndex = 0;
+            _selectedInspectorComponentIndex = -1;
+            _selectedInspectorBuffIndex = -1;
+            PublishChanged();
+        }
+
+        public void SetInspectorComponents(IReadOnlyList<UnitDebugComponentEntry> components)
+        {
+            UnitDebugComponentKind? selectedKind = TryGetSelectedInspectorComponent(out UnitDebugComponentEntry selected)
+                ? selected.Kind
+                : null;
+            _inspectorComponents.Clear();
+            for (int i = 0; i < components.Count; i++)
+                _inspectorComponents.Add(components[i]);
+
+            _selectedInspectorComponentIndex = selectedKind.HasValue
+                ? _inspectorComponents.FindIndex(entry => entry.Kind == selectedKind.Value)
+                : -1;
+            if (_selectedInspectorComponentIndex < 0 && _inspectorComponents.Count > 0)
+                _selectedInspectorComponentIndex = 0;
+            _selectedInspectorBuffIndex = -1;
+            PublishChanged();
+        }
+
+        public void SetInspectorBuffs(IReadOnlyList<UnitDebugBuffEntry> buffs)
+        {
+            int selectedBuffId = TryGetSelectedInspectorBuff(out UnitDebugBuffEntry selected) ? selected.BuffId : -1;
+            _inspectorBuffs.Clear();
+            for (int i = 0; i < buffs.Count; i++)
+                _inspectorBuffs.Add(buffs[i]);
+
+            _selectedInspectorBuffIndex = _inspectorBuffs.FindIndex(entry => entry.BuffId == selectedBuffId);
+            if (_selectedInspectorBuffIndex < 0 && _inspectorBuffs.Count > 0)
+                _selectedInspectorBuffIndex = 0;
+            PublishChanged();
+        }
+
+        public void SetUnitInspectorDetail(string detail, string status = "")
+        {
+            bool detailChanged = !string.Equals(UnitInspectorDetailText, detail, StringComparison.Ordinal);
+            bool statusChanged = !string.Equals(UnitInspectorStatusText, status, StringComparison.Ordinal);
+            if (!detailChanged && !statusChanged)
+                return;
+
+            UnitInspectorDetailText = detail ?? string.Empty;
+            UnitInspectorStatusText = status ?? string.Empty;
+            if (detailChanged)
+                UnitInspectorEditorRevision++;
+            PublishChanged();
+        }
+
+        public void SetUnitInspectorStatus(string status)
+        {
+            if (string.Equals(UnitInspectorStatusText, status, StringComparison.Ordinal))
+                return;
+
+            UnitInspectorStatusText = status ?? string.Empty;
+            PublishChanged();
+        }
+
+        public bool SelectPreviousInspectorUnit() => SelectInspectorItem(_inspectorUnits.Count, ref _selectedInspectorUnitIndex, -1);
+        public bool SelectNextInspectorUnit() => SelectInspectorItem(_inspectorUnits.Count, ref _selectedInspectorUnitIndex, 1);
+        public bool SelectPreviousInspectorComponent() => SelectInspectorItem(_inspectorComponents.Count, ref _selectedInspectorComponentIndex, -1);
+        public bool SelectNextInspectorComponent() => SelectInspectorItem(_inspectorComponents.Count, ref _selectedInspectorComponentIndex, 1);
+        public bool SelectPreviousInspectorBuff() => SelectInspectorItem(_inspectorBuffs.Count, ref _selectedInspectorBuffIndex, -1);
+        public bool SelectNextInspectorBuff() => SelectInspectorItem(_inspectorBuffs.Count, ref _selectedInspectorBuffIndex, 1);
+
+        public bool TryGetSelectedInspectorUnit(out UnitDebugUnitEntry entry)
+        {
+            if (_selectedInspectorUnitIndex >= 0 && _selectedInspectorUnitIndex < _inspectorUnits.Count)
+            {
+                entry = _inspectorUnits[_selectedInspectorUnitIndex];
+                return true;
+            }
+
+            entry = default;
+            return false;
+        }
+
+        public bool TryGetSelectedInspectorComponent(out UnitDebugComponentEntry entry)
+        {
+            if (_selectedInspectorComponentIndex >= 0 && _selectedInspectorComponentIndex < _inspectorComponents.Count)
+            {
+                entry = _inspectorComponents[_selectedInspectorComponentIndex];
+                return true;
+            }
+
+            entry = default;
+            return false;
+        }
+
+        public bool TryGetSelectedInspectorBuff(out UnitDebugBuffEntry entry)
+        {
+            if (_selectedInspectorBuffIndex >= 0 && _selectedInspectorBuffIndex < _inspectorBuffs.Count)
+            {
+                entry = _inspectorBuffs[_selectedInspectorBuffIndex];
+                return true;
+            }
+
+            entry = default;
+            return false;
+        }
+
         public void HandleUnitDamaged(UnitDamagedEvent gameEvent)
         {
-            if (!IsTrainingGroundActive() ||
+            if (!IsTrainingGroundSceneActive() ||
                 !TryGetDummyEntity(out EntityManager entityManager, out Entity dummyEntity) ||
                 gameEvent.TargetEntity != dummyEntity)
                 return;
@@ -193,7 +397,7 @@ namespace CrystalMagic.UI
 
         private TrainingDummySnapshot ReadTrainingDummy()
         {
-            if (!IsTrainingGroundActive())
+            if (!IsTrainingGroundSceneActive())
             {
                 ResetTrainingSession();
                 return default;
@@ -224,9 +428,52 @@ namespace CrystalMagic.UI
             return snapshot;
         }
 
-        private bool IsTrainingGroundActive()
+        private bool IsTrainingGroundSceneActive()
         {
             return SceneManager.GetActiveScene().name == TrainingState.SceneName;
+        }
+
+        private bool RefreshPageDefinitions()
+        {
+            bool isTrainingGroundActive = IsTrainingGroundSceneActive();
+            if (_isTrainingGroundActive == isTrainingGroundActive)
+                return false;
+
+            _isTrainingGroundActive = isTrainingGroundActive;
+            _pages.Clear();
+            _pages.Add(PlayerAttributesPage);
+            if (_isTrainingGroundActive)
+            {
+                _pages.Add(TrainingGroundPage);
+                _pages.Add(UnitSpawnerPage);
+                _pages.Add(UnitInspectorPage);
+            }
+
+            if (SelectedPage.HasValue && !ContainsPage(SelectedPage.Value))
+                SelectedPage = null;
+
+            return true;
+        }
+
+        private bool ContainsPage(DebugPage page)
+        {
+            for (int i = 0; i < _pages.Count; i++)
+            {
+                if (_pages[i].Page == page)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private bool SelectInspectorItem(int count, ref int selectedIndex, int direction)
+        {
+            if (count <= 1)
+                return false;
+
+            selectedIndex = (selectedIndex + direction + count) % count;
+            PublishChanged();
+            return true;
         }
 
         private void ResetTrainingSession()
