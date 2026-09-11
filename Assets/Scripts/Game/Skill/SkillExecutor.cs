@@ -119,6 +119,7 @@ namespace CrystalMagic.Game.Skill
                 HealEffectData data => new HealEffect(data),
                 HealthCostEffectData data => new HealthCostEffect(data),
                 KnockbackEffectData data => new KnockbackEffect(data),
+                MoveVfxEffectData data => new MoveVfxEffect(data),
                 PersistentEffectData data => new PersistentEffect(data),
                 RestoreManaEffectData data => new RestoreManaEffect(data),
                 SpawnProjectileEffectData data => new SpawnProjectileEffect(data),

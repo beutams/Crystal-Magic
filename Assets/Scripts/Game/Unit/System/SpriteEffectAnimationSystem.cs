@@ -30,7 +30,6 @@ public partial class SpriteEffectAnimationSystem : SystemBase
         foreach ((SpriteEffectAnimationComponent animation, Entity entity) in
                  SystemAPI.Query<SpriteEffectAnimationComponent>().WithEntityAccess())
         {
-            UpdateFollow(entity, animation);
             UpdateAnimation(entity, animation, deltaTime, ref pendingDestroy);
         }
 
@@ -56,32 +55,6 @@ public partial class SpriteEffectAnimationSystem : SystemBase
 
         SpriteEffectAnimationComponent animation = entityManager.GetComponentObject<SpriteEffectAnimationComponent>(entity);
         animation.EndRequested = 1;
-    }
-
-    private void UpdateFollow(Entity entity, SpriteEffectAnimationComponent animation)
-    {
-        if (!EntityManager.HasComponent<EffectVisualFollowComponent>(entity) ||
-            !EntityManager.HasComponent<LocalTransform>(entity))
-        {
-            return;
-        }
-
-        EffectVisualFollowComponent follow = EntityManager.GetComponentData<EffectVisualFollowComponent>(entity);
-        if (follow.Target == Entity.Null || !EntityManager.Exists(follow.Target) ||
-            !EntityManager.HasComponent<LocalTransform>(follow.Target))
-        {
-            if (follow.EndWhenTargetMissing != 0)
-                animation.EndRequested = 1;
-            return;
-        }
-
-        LocalTransform targetTransform = EntityManager.GetComponentData<LocalTransform>(follow.Target);
-        LocalTransform visualTransform = EntityManager.GetComponentData<LocalTransform>(entity);
-        quaternion rotation = follow.AlignRotation != 0 ? targetTransform.Rotation : visualTransform.Rotation;
-        visualTransform.Position = targetTransform.Position + math.rotate(rotation, follow.Offset);
-        if (follow.AlignRotation != 0)
-            visualTransform.Rotation = rotation;
-        EntityManager.SetComponentData(entity, visualTransform);
     }
 
     private void UpdateAnimation(

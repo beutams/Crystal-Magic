@@ -15,7 +15,7 @@
         {
           "$type": "CrystalMagic.Game.Data.Effects.SpawnProjectileEffectData, Assembly-CSharp",
           "ProjectilePrefabName": "Projectile",
-          "VisualPrefabName": "FireballProjectileVisual",
+          "VisualPrefabName": "Fireball",
           "VisualScale": 1.0,
           "VisualOffset": {
             "x": 0.0,
@@ -93,8 +93,8 @@
           "OnDestoryEffects": [
             {
               "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
-              "VfxPrefabName": "FireballSolarFlash",
-              "Duration": 0.0,
+              "VfxPrefabName": "Solarflare",
+              "Duration": 0.5833333,
               "Scale": 1.25,
               "SpawnOffset": {
                 "x": 0.0,
@@ -173,16 +173,20 @@
                   ]
                 }
               ],
+              "OnlyNearestTarget": false,
               "OnAfterSearch": [
                 {
                   "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
                   "BuffId": 0,
                   "DurationSeconds": 10.0,
                   "StackCount": 1,
+                  "OnlyOncePerPersistentEffect": false,
                   "Conditions": []
                 },
                 {
                   "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+                  "TargetSource": 0,
+                  "ValueSource": 0,
                   "DamageCoefficient": 1.0,
                   "FlatDamageBonus": 0.0,
                   "Element": 2,
@@ -267,33 +271,93 @@
       "MpCost": 200,
       "ChantDuration": 1.0,
       "CastingMoveMultiplier": 0.5,
-      "IconPath": "",
+      "IconPath": "Assets/Res/Sprites/Skill/fire_skill_04.png",
       "Conditions": [],
       "EffectChain": [
         {
           "$type": "CrystalMagic.Game.Data.Effects.SpawnProjectileEffectData, Assembly-CSharp",
           "ProjectilePrefabName": "Projectile",
-          "VisualPrefabName": "",
+          "VisualPrefabName": "Meteor",
           "VisualScale": 1.0,
           "VisualOffset": {
             "x": 0.0,
             "y": 0.0,
             "z": 0.0
           },
-          "Speed": 0.0,
-          "MaxRange": 0.0,
-          "SpawnOffsetDistance": 0.0,
+          "Speed": 10.0,
+          "MaxRange": 40.0,
+          "SpawnOffsetDistance": 1.0,
           "HitRadius": 0.75,
           "CanPierce": false,
-          "CollisionTargetConditions": [],
+          "CollisionTargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "Literal": {
+                    "Type": 3,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "OperationType": "",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "Literal": {
+                        "Type": 3,
+                        "Bool": false,
+                        "Int": 0,
+                        "Float": 0.0,
+                        "Float2": {
+                          "x": 0.0,
+                          "y": 0.0
+                        },
+                        "Float3": {
+                          "x": 0.0,
+                          "y": 0.0,
+                          "z": 0.0
+                        },
+                        "Entity": {
+                          "Index": 0,
+                          "Version": 0
+                        },
+                        "String": ""
+                      },
+                      "GetterKey": "effect.context.originEntity",
+                      "OperationType": "",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
           "TriggerDestroyEffectsOnMaxRange": false,
-          "OnCollisionEffects": null,
+          "OnCollisionEffects": [],
           "OnDestoryEffects": [
             {
               "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
-              "VfxPrefabName": "",
-              "Duration": 0.0,
-              "Scale": 1.0,
+              "VfxPrefabName": "Solarflare",
+              "Duration": 0.5833333,
+              "Scale": 1.25,
               "SpawnOffset": {
                 "x": 0.0,
                 "y": 0.0,
@@ -304,27 +368,151 @@
             },
             {
               "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
-              "Radius": 0.0,
+              "Radius": 5.0,
               "CenterOffset": {
                 "x": 0.0,
                 "y": 0.0,
                 "z": 0.0
               },
-              "TargetConditions": [],
+              "TargetConditions": [
+                {
+                  "ConditionType": 0,
+                  "CompareType": "IsTrue",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "Literal": {
+                        "Type": 3,
+                        "Bool": false,
+                        "Int": 0,
+                        "Float": 0.0,
+                        "Float2": {
+                          "x": 0.0,
+                          "y": 0.0
+                        },
+                        "Float3": {
+                          "x": 0.0,
+                          "y": 0.0,
+                          "z": 0.0
+                        },
+                        "Entity": {
+                          "Index": 0,
+                          "Version": 0
+                        },
+                        "String": ""
+                      },
+                      "GetterKey": "unit.faction.isEnemyTo",
+                      "OperationType": "",
+                      "Inputs": [
+                        {
+                          "Kind": 1,
+                          "Literal": {
+                            "Type": 3,
+                            "Bool": false,
+                            "Int": 0,
+                            "Float": 0.0,
+                            "Float2": {
+                              "x": 0.0,
+                              "y": 0.0
+                            },
+                            "Float3": {
+                              "x": 0.0,
+                              "y": 0.0,
+                              "z": 0.0
+                            },
+                            "Entity": {
+                              "Index": 0,
+                              "Version": 0
+                            },
+                            "String": ""
+                          },
+                          "GetterKey": "effect.context.originEntity",
+                          "OperationType": "",
+                          "Inputs": []
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "OnlyNearestTarget": false,
               "OnAfterSearch": [
                 {
                   "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
-                  "BuffId": -1,
-                  "DurationSeconds": 1.0,
+                  "BuffId": 0,
+                  "DurationSeconds": 10.0,
                   "StackCount": 1,
+                  "OnlyOncePerPersistentEffect": false,
                   "Conditions": []
                 },
                 {
                   "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
-                  "DamageCoefficient": 0.0,
+                  "TargetSource": 0,
+                  "ValueSource": 0,
+                  "DamageCoefficient": 2.0,
                   "FlatDamageBonus": 0.0,
-                  "Element": 0,
-                  "Conditions": []
+                  "Element": 2,
+                  "Conditions": [
+                    {
+                      "ConditionType": 0,
+                      "CompareType": "IsTrue",
+                      "Inputs": [
+                        {
+                          "Kind": 1,
+                          "Literal": {
+                            "Type": 3,
+                            "Bool": false,
+                            "Int": 0,
+                            "Float": 0.0,
+                            "Float2": {
+                              "x": 0.0,
+                              "y": 0.0
+                            },
+                            "Float3": {
+                              "x": 0.0,
+                              "y": 0.0,
+                              "z": 0.0
+                            },
+                            "Entity": {
+                              "Index": 0,
+                              "Version": 0
+                            },
+                            "String": ""
+                          },
+                          "GetterKey": "unit.faction.isEnemyTo",
+                          "OperationType": "",
+                          "Inputs": [
+                            {
+                              "Kind": 1,
+                              "Literal": {
+                                "Type": 3,
+                                "Bool": false,
+                                "Int": 0,
+                                "Float": 0.0,
+                                "Float2": {
+                                  "x": 0.0,
+                                  "y": 0.0
+                                },
+                                "Float3": {
+                                  "x": 0.0,
+                                  "y": 0.0,
+                                  "z": 0.0
+                                },
+                                "Entity": {
+                                  "Index": 0,
+                                  "Version": 0
+                                },
+                                "String": ""
+                              },
+                              "GetterKey": "effect.context.originEntity",
+                              "OperationType": "",
+                              "Inputs": []
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
                 }
               ],
               "Conditions": []
@@ -345,39 +533,406 @@
       "MpCost": 300,
       "ChantDuration": 1.5,
       "CastingMoveMultiplier": 0.5,
-      "IconPath": "",
+      "IconPath": "Assets/Res/Sprites/Skill/fire_skill_08.png",
       "Conditions": [],
-      "EffectChain": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.MoveVfxEffectData, Assembly-CSharp",
+          "VfxPrefabName": "MeteorDown",
+          "Duration": 0.5,
+          "Scale": 1.25,
+          "StartOffset": {
+            "x": 0.0,
+            "y": 6.0,
+            "z": 0.0
+          },
+          "MoveOffset": {
+            "x": 0.0,
+            "y": -6.0,
+            "z": 0.0
+          },
+          "PreservePrefabRotation": true,
+          "OnArrivalEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
+              "VfxPrefabName": "Impact_FireClouds_Large",
+              "Duration": 0.8333333,
+              "Scale": 1.5,
+              "SpawnOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "AlignToCasterForward": false,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+              "Radius": 6.0,
+              "CenterOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "TargetConditions": [
+                {
+                  "ConditionType": 0,
+                  "CompareType": "IsTrue",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "Literal": {
+                        "Type": 3,
+                        "Bool": false,
+                        "Int": 0,
+                        "Float": 0.0,
+                        "Float2": {
+                          "x": 0.0,
+                          "y": 0.0
+                        },
+                        "Float3": {
+                          "x": 0.0,
+                          "y": 0.0,
+                          "z": 0.0
+                        },
+                        "Entity": {
+                          "Index": 0,
+                          "Version": 0
+                        },
+                        "String": ""
+                      },
+                      "GetterKey": "unit.faction.isEnemyTo",
+                      "OperationType": "",
+                      "Inputs": [
+                        {
+                          "Kind": 1,
+                          "Literal": {
+                            "Type": 3,
+                            "Bool": false,
+                            "Int": 0,
+                            "Float": 0.0,
+                            "Float2": {
+                              "x": 0.0,
+                              "y": 0.0
+                            },
+                            "Float3": {
+                              "x": 0.0,
+                              "y": 0.0,
+                              "z": 0.0
+                            },
+                            "Entity": {
+                              "Index": 0,
+                              "Version": 0
+                            },
+                            "String": ""
+                          },
+                          "GetterKey": "effect.context.originEntity",
+                          "OperationType": "",
+                          "Inputs": []
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "OnlyNearestTarget": false,
+              "OnAfterSearch": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+                  "TargetSource": 0,
+                  "ValueSource": 0,
+                  "DamageCoefficient": 3.0,
+                  "FlatDamageBonus": 0.0,
+                  "Element": 2,
+                  "Conditions": []
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.ReadBuffStackEffectData, Assembly-CSharp",
+                  "BuffId": 0,
+                  "PerStackModifiers": [],
+                  "OnAfterRead": [
+                    {
+                      "$type": "CrystalMagic.Game.Data.Effects.RemoveBuffEffectData, Assembly-CSharp",
+                      "BuffId": 0,
+                      "RemoveAllStacks": true,
+                      "RemoveStackCount": 1,
+                      "Conditions": []
+                    },
+                    {
+                      "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+                      "BuffId": 1,
+                      "DurationSeconds": 5.0,
+                      "StackCount": 1,
+                      "OnlyOncePerPersistentEffect": false,
+                      "Conditions": []
+                    }
+                  ],
+                  "Conditions": []
+                }
+              ],
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
       "Id": 2,
       "EffectiveRuntimeType": "CommonSkill"
     },
     {
       "NameKey": "点燃",
       "IsMonsterSkill": false,
-      "DescriptionKey": "对选中的目标施加2次点燃效果",
+      "DescriptionKey": "对指定位置最近的敌人施加2层点燃效果",
       "RuntimeType": "CommonSkill",
       "InputType": 2,
       "MpCost": 100,
       "ChantDuration": 0.3,
       "CastingMoveMultiplier": 1.0,
-      "IconPath": "",
+      "IconPath": "Assets/Res/Sprites/Skill/fire_skill_13.png",
       "Conditions": [],
-      "EffectChain": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+          "Radius": 5.0,
+          "CenterOffset": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "Literal": {
+                    "Type": 3,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "OperationType": "",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "Literal": {
+                        "Type": 3,
+                        "Bool": false,
+                        "Int": 0,
+                        "Float": 0.0,
+                        "Float2": {
+                          "x": 0.0,
+                          "y": 0.0
+                        },
+                        "Float3": {
+                          "x": 0.0,
+                          "y": 0.0,
+                          "z": 0.0
+                        },
+                        "Entity": {
+                          "Index": 0,
+                          "Version": 0
+                        },
+                        "String": ""
+                      },
+                      "GetterKey": "effect.context.originEntity",
+                      "OperationType": "",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "OnlyNearestTarget": true,
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+              "BuffId": 0,
+              "DurationSeconds": 10.0,
+              "StackCount": 2,
+              "OnlyOncePerPersistentEffect": false,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnFollowVfxEffectData, Assembly-CSharp",
+              "VfxPrefabName": "Status_Burn",
+              "FollowTarget": 1,
+              "Duration": 10.0,
+              "Scale": 1.0,
+              "SpawnOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "AlignToTargetForward": false,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
       "Id": 3,
       "EffectiveRuntimeType": "CommonSkill"
     },
     {
       "NameKey": "焦土",
       "IsMonsterSkill": false,
-      "DescriptionKey": "对范围内的敌人造成持续伤害，并施加一次点燃效果",
+      "DescriptionKey": "持续召唤火焰攻击范围内敌人，每个敌人仅会被点燃一次",
       "RuntimeType": "CommonSkill",
       "InputType": 2,
       "MpCost": 200,
       "ChantDuration": 1.0,
       "CastingMoveMultiplier": 0.5,
-      "IconPath": "",
+      "IconPath": "Assets/Res/Sprites/Skill/fire_skill_05.png",
       "Conditions": [],
-      "EffectChain": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.PersistentEffectData, Assembly-CSharp",
+          "Element": 2,
+          "TotalDuration": 3.0,
+          "TickIntervalSeconds": 0.5,
+          "OnStartEffects": [],
+          "OnTickEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.RandomAreaPointEffectData, Assembly-CSharp",
+              "Radius": 5.0,
+              "MinRadius": 0.0,
+              "PointCount": 1,
+              "CenterOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "OnEachPointEffects": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
+                  "VfxPrefabName": "Flamethrower",
+                  "Duration": 0.6666666,
+                  "Scale": 1.0,
+                  "SpawnOffset": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "AlignToCasterForward": false,
+                  "Conditions": []
+                }
+              ],
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+              "Radius": 5.0,
+              "CenterOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "TargetConditions": [
+                {
+                  "ConditionType": 0,
+                  "CompareType": "IsTrue",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "Literal": {
+                        "Type": 3,
+                        "Bool": false,
+                        "Int": 0,
+                        "Float": 0.0,
+                        "Float2": {
+                          "x": 0.0,
+                          "y": 0.0
+                        },
+                        "Float3": {
+                          "x": 0.0,
+                          "y": 0.0,
+                          "z": 0.0
+                        },
+                        "Entity": {
+                          "Index": 0,
+                          "Version": 0
+                        },
+                        "String": ""
+                      },
+                      "GetterKey": "unit.faction.isEnemyTo",
+                      "OperationType": "",
+                      "Inputs": [
+                        {
+                          "Kind": 1,
+                          "Literal": {
+                            "Type": 3,
+                            "Bool": false,
+                            "Int": 0,
+                            "Float": 0.0,
+                            "Float2": {
+                              "x": 0.0,
+                              "y": 0.0
+                            },
+                            "Float3": {
+                              "x": 0.0,
+                              "y": 0.0,
+                              "z": 0.0
+                            },
+                            "Entity": {
+                              "Index": 0,
+                              "Version": 0
+                            },
+                            "String": ""
+                          },
+                          "GetterKey": "effect.context.originEntity",
+                          "OperationType": "",
+                          "Inputs": []
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "OnlyNearestTarget": false,
+              "OnAfterSearch": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+                  "TargetSource": 0,
+                  "ValueSource": 0,
+                  "DamageCoefficient": 1.0,
+                  "FlatDamageBonus": 0.0,
+                  "Element": 2,
+                  "Conditions": []
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+                  "BuffId": 0,
+                  "DurationSeconds": 10.0,
+                  "StackCount": 1,
+                  "OnlyOncePerPersistentEffect": true,
+                  "Conditions": []
+                }
+              ],
+              "Conditions": []
+            }
+          ],
+          "OnEndEffects": [],
+          "Conditions": []
+        }
+      ],
       "Id": 4,
       "EffectiveRuntimeType": "CommonSkill"
     },
@@ -390,7 +945,7 @@
       "MpCost": 200,
       "ChantDuration": 0.3,
       "CastingMoveMultiplier": 1.0,
-      "IconPath": "",
+      "IconPath": "Assets/Res/Sprites/Skill/fire_skill_11.png",
       "Conditions": [],
       "EffectChain": [],
       "Id": 5,

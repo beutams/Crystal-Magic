@@ -36,6 +36,7 @@ partial class PersistentEffectSystem : SystemBase
             {
                 SkillContent tickContext = instance.Context.Clone();
                 tickContext.EntityManager = EntityManager;
+                tickContext.PersistentEffectAppliedBuffTargets = instance.AppliedBuffTargets;
                 ExecuteEffects(instance.OnTickEffects, tickContext);
                 instance.NextTickTime += instance.TickIntervalSeconds;
             }
@@ -130,5 +131,6 @@ partial class PersistentEffectSystem : SystemBase
         public SkillContent Context;
         public EffectData[] OnTickEffects;
         public EffectData[] OnEndEffects;
+        public Dictionary<int, HashSet<Entity>> AppliedBuffTargets = new();
     }
 }

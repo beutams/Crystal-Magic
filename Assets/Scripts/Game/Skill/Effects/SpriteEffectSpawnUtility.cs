@@ -17,12 +17,47 @@ namespace CrystalMagic.Game.Skill.Effects
             float loopDuration,
             out Entity entity)
         {
+            return TrySpawn(
+                entityManager,
+                prefabName,
+                position,
+                rotation,
+                scale,
+                loopDuration,
+                false,
+                out entity);
+        }
+
+        public static bool TrySpawn(
+            EntityManager entityManager,
+            string prefabName,
+            float3 position,
+            quaternion rotation,
+            float scale,
+            float loopDuration,
+            bool preservePrefabRotation,
+            out Entity entity)
+        {
             if (!EntitySpawnRegistryUtility.TryInstantiateVfx(entityManager, new FixedString128Bytes(prefabName), out entity))
                 return false;
 
-            SetOrAddComponentData(entityManager, entity, LocalTransform.FromPositionRotationScale(position, rotation, math.max(0.01f, scale)));
-            SpriteEffectAnimationComponent animation = entityManager.GetComponentObject<SpriteEffectAnimationComponent>(entity);
-            animation.RemainingLoopSeconds = loopDuration > 0f ? loopDuration : -1f;
+            LocalTransform transform = preservePrefabRotation && entityManager.HasComponent<LocalTransform>(entity)
+                ? entityManager.GetComponentData<LocalTransform>(entity)
+                : LocalTransform.FromPositionRotationScale(position, rotation, math.max(0.01f, scale));
+            transform.Position = position;
+            transform.Scale = math.max(0.01f, scale);
+            SetOrAddComponentData(entityManager, entity, transform);
+
+            if (entityManager.HasComponent<SpriteEffectAnimationComponent>(entity))
+            {
+                SpriteEffectAnimationComponent animation = entityManager.GetComponentObject<SpriteEffectAnimationComponent>(entity);
+                animation.RemainingLoopSeconds = loopDuration > 0f ? loopDuration : -1f;
+            }
+            else if (loopDuration > 0f)
+            {
+                SetOrAddComponentData(entityManager, entity, new VfxLifetimeComponent { RemainingSeconds = loopDuration });
+            }
+
             return true;
         }
 

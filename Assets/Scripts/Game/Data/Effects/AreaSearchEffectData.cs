@@ -22,6 +22,10 @@ namespace CrystalMagic.Game.Data.Effects
         [EditorLabel("目标条件")]
         public List<ConditionConfig> TargetConditions = new();
 
+        /// <summary>仅对范围内距离搜索中心最近的目标执行后续效果</summary>
+        [EditorLabel("仅最近目标")]
+        public bool OnlyNearestTarget;
+
         [EditorLabel("搜索后效果")]
         public EffectData[] OnAfterSearch;
 

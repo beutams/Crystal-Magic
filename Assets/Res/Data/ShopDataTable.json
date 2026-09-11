@@ -26,6 +26,97 @@
       "itemDataId": 3,
       "Price": 30,
       "Grade": 1,
+      "NPC": "PropShop"
+    },
+    {
+      "Id": 4,
+      "itemDataId": 5,
+      "Price": 30,
+      "Grade": 1,
+      "NPC": "EquipShop"
+    },
+    {
+      "Id": 5,
+      "itemDataId": 6,
+      "Price": 30,
+      "Grade": 1,
+      "NPC": "EquipShop"
+    },
+    {
+      "Id": 6,
+      "itemDataId": 7,
+      "Price": 30,
+      "Grade": 1,
+      "NPC": "EquipShop"
+    },
+    {
+      "Id": 7,
+      "itemDataId": 8,
+      "Price": 30,
+      "Grade": 1,
+      "NPC": "EquipShop"
+    },
+    {
+      "Id": 8,
+      "itemDataId": 9,
+      "Price": 30,
+      "Grade": 1,
+      "NPC": "EquipShop"
+    },
+    {
+      "Id": 9,
+      "itemDataId": 10,
+      "Price": 30,
+      "Grade": 1,
+      "NPC": "EquipShop"
+    },
+    {
+      "Id": 10,
+      "itemDataId": 11,
+      "Price": 30,
+      "Grade": 1,
+      "NPC": "EquipShop"
+    },
+    {
+      "Id": 11,
+      "itemDataId": 12,
+      "Price": 30,
+      "Grade": 1,
+      "NPC": "EquipShop"
+    },
+    {
+      "Id": 12,
+      "itemDataId": 4,
+      "Price": 30,
+      "Grade": 1,
+      "NPC": "SkillShop"
+    },
+    {
+      "Id": 13,
+      "itemDataId": 13,
+      "Price": 30,
+      "Grade": 1,
+      "NPC": "SkillShop"
+    },
+    {
+      "Id": 14,
+      "itemDataId": 14,
+      "Price": 30,
+      "Grade": 1,
+      "NPC": "SkillShop"
+    },
+    {
+      "Id": 15,
+      "itemDataId": 15,
+      "Price": 30,
+      "Grade": 1,
+      "NPC": "SkillShop"
+    },
+    {
+      "Id": 16,
+      "itemDataId": 16,
+      "Price": 30,
+      "Grade": 1,
       "NPC": "SkillShop"
     }
   ]

@@ -36,17 +36,38 @@ namespace CrystalMagic.Game.Skill.Effects
                 return;
             unitTree.QueryCircle(center, Data.Radius, _hits);
 
+            int nearestHitIndex = -1;
+            float nearestDistanceSq = float.MaxValue;
             for (int i = 0; i < _hits.Count; i++)
             {
                 UnitQueryHit hit = _hits[i];
                 if (!EffectConditionUtility.Pass(Data.TargetConditions, context, hit.Entity))
                     continue;
 
-                Vector3 targetPosition = new(hit.Position.x, hit.Position.y, hit.Position.z);
-                SkillContent targetContext = context.CloneForTarget(hit.Entity, targetPosition);
-                targetContext.EntityManager = entityManager;
-                SkillExecutor.ExecuteEffects(Data.OnAfterSearch, targetContext);
+                if (!Data.OnlyNearestTarget)
+                {
+                    ExecuteTargetEffects(entityManager, context, hit);
+                    continue;
+                }
+
+                float distanceSq = math.lengthsq(hit.Position.xy - center.xy);
+                if (distanceSq >= nearestDistanceSq)
+                    continue;
+
+                nearestDistanceSq = distanceSq;
+                nearestHitIndex = i;
             }
+
+            if (nearestHitIndex >= 0)
+                ExecuteTargetEffects(entityManager, context, _hits[nearestHitIndex]);
+        }
+
+        private void ExecuteTargetEffects(EntityManager entityManager, SkillContent context, UnitQueryHit hit)
+        {
+            Vector3 targetPosition = new(hit.Position.x, hit.Position.y, hit.Position.z);
+            SkillContent targetContext = context.CloneForTarget(hit.Entity, targetPosition);
+            targetContext.EntityManager = entityManager;
+            SkillExecutor.ExecuteEffects(Data.OnAfterSearch, targetContext);
         }
 
         private static bool TryGetSearchCenter(SkillContent context, EntityManager entityManager, out float3 center)

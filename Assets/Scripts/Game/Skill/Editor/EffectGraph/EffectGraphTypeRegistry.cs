@@ -35,6 +35,7 @@ namespace CrystalMagic.Editor.EffectGraph
             new(typeof(HealthCostEffectData), "Health Cost", new Color(0.42f, 0.16f, 0.16f)),
             new(typeof(FearEffectData), "Fear", new Color(0.42f, 0.24f, 0.12f)),
             new(typeof(KnockbackEffectData), "Knockback", new Color(0.68f, 0.26f, 0.12f)),
+            new(typeof(MoveVfxEffectData), "Move VFX", new Color(0.16f, 0.58f, 0.50f)),
             new(typeof(PersistentEffectData), "Persistent", new Color(0.14f, 0.50f, 0.24f)),
             new(typeof(RandomAreaPointEffectData), "Random Area Points", new Color(0.26f, 0.50f, 0.24f)),
             new(typeof(ReadBuffStackEffectData), "Read Buff Stack", new Color(0.22f, 0.42f, 0.64f)),

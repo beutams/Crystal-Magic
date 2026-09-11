@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CrystalMagic.Game.Data;
 using Unity.Entities;
 using UnityEngine;
@@ -65,6 +66,9 @@ namespace CrystalMagic.Game.Skill
         public GameObject Origin { get; set; }
 
         public SkillModifierSet RuntimeModifiers { get; set; }
+
+        /// <summary>由持续效果实例共享，用于记录已施加过的 Buff 目标。</summary>
+        public Dictionary<int, HashSet<Entity>> PersistentEffectAppliedBuffTargets { get; set; }
 
         public SkillContent Clone()
         {

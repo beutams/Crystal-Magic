@@ -12,6 +12,9 @@ namespace CrystalMagic.Game.Data.Effects
         [EditorLabel("施加层数")]
         public int StackCount = 1;
 
+        [EditorLabel("每个持续效果仅一次")]
+        public bool OnlyOncePerPersistentEffect;
+
         public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, UnitElementComponent? elementComponent = null)
         {
             ApplyBuffEffectData copy = (ApplyBuffEffectData)base.CreateRuntimeCopy(modifiers, elementComponent);
