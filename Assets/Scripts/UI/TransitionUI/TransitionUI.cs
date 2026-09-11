@@ -1,6 +1,5 @@
 using System.Collections;
 using CrystalMagic.Core;
-using CrystalMagic.Game.Config;
 using UnityEngine;
 
 public class TransitionUI : UIBase<TransitionUIData>, ITransitionUI
@@ -19,13 +18,20 @@ public class TransitionUI : UIBase<TransitionUIData>, ITransitionUI
 
     public override void OnOpen()
     {
-        _debugEnabled = ConfigComponent.Instance.Get<GameConfig>().EnableDebug;
-        UI.Debug.GameObject.SetActive(_debugEnabled);
+        DebugComponent.Instance.EnabledChanged += HandleDebugEnabledChanged;
+        HandleDebugEnabledChanged(DebugComponent.Instance.IsEnabled);
         SetStatus("Loading", string.Empty, 0f);
     }
 
     public override void OnClose()
     {
+        DebugComponent.Instance.EnabledChanged -= HandleDebugEnabledChanged;
+    }
+
+    private void HandleDebugEnabledChanged(bool isEnabled)
+    {
+        _debugEnabled = isEnabled;
+        UI.Debug.GameObject.SetActive(_debugEnabled);
     }
 
     public void SetStatus(string title, string detail, float progress)

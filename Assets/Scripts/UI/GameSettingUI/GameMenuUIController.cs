@@ -14,6 +14,7 @@ namespace CrystalMagic.UI
             View.BindModel(Model);
             Bindings.Bind(() => View.ContinueRequested += OnContinueRequested, () => View.ContinueRequested -= OnContinueRequested);
             Bindings.Bind(() => View.SaveRequested += OnSaveRequested, () => View.SaveRequested -= OnSaveRequested);
+            Bindings.Bind(() => View.SettingsRequested += OnSettingsRequested, () => View.SettingsRequested -= OnSettingsRequested);
             Bindings.Bind(() => View.ReturnMainMenuRequested += OnReturnMainMenuRequested, () => View.ReturnMainMenuRequested -= OnReturnMainMenuRequested);
             Model.ReloadFromSettings();
         }
@@ -32,6 +33,11 @@ namespace CrystalMagic.UI
                 LocalizationComponent.Instance.Get("ui.confirm.save"),
                 LocalizationComponent.Instance.Get("ui.confirm.save_success.content"));
             UIComponent.Instance.OpenChild<ConfirmUI>(View, openData);
+        }
+
+        private void OnSettingsRequested()
+        {
+            UIComponent.Instance.OpenChild<SettingUI>(View);
         }
 
         private void OnReturnMainMenuRequested()

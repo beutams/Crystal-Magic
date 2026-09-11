@@ -1,6 +1,9 @@
 Core\
   Audio\
     AudioComponent.cs TRUE
+  Debug\
+    DebugComponent.cs TRUE DIRTY
+    DebugQueryShapeReporter.cs TRUE
   Camera\
     CameraComponent.cs TRUE DIRTY
     SceneCamera.cs WAIT
@@ -210,7 +213,7 @@ Game\
     StateScript\
       StateScriptData.cs TRUE DIRTY
       StateScriptNodeDataConverter.cs TRUE DIRTY
-    BuffData.cs TRUE
+    BuffData.cs TRUE DIRTY
     DropData.cs FALSE
     DungeonDefinitionData.cs TRUE DIRTY
     DungeonTileGridData.cs TRUE
@@ -432,7 +435,7 @@ Game\
       UnitSkillReleaseAuthoring.cs TRUE DIRTY
       UnitSkillModifierRuntimeAuthoring.cs TRUE DIRTY
       ========濠㈤浜滈ˇ璺ㄧ磼閸曨亝顐介柛锔哄姀缁绘牠鏌岀仦鎯ф綉闁?
-      UnitEntityPrefabRegistryEntry.cs FALSE
+      UnitEntityPrefabRegistryEntry.cs TRUE
       UnitVitalityAuthoring.cs TRUE DIRTY
       UnitVariableAuthoring.cs TRUE DIRTY
         闁汇垻鍠庨幊锟犲极閻楀牆绁?
@@ -463,7 +466,7 @@ Game\
       NPCInteractionNodeRegistryGenerator.cs FALSE
       UnitRuntimeAttributeDrawerFactory.cs FALSE
       UnitRuntimeAttributeDrawers.cs TRUE DIRTY
-      UnitRuntimeDebugWindow.cs TRUE
+      UnitRuntimeDebugWindow.cs TRUE DIRTY
       UnitRuntimeDrawerContext.cs FALSE
     Event\
       NPCInteractionFinishedEvent.cs FALSE
@@ -541,7 +544,7 @@ Game\
         闁告帒妫涚悮?
         闁归攱鍎宠ぐ鍥箳婢跺孩鍎伴柣?
     Utility\
-      EntitySpawnRegistryUtility.cs FALSE
+      EntitySpawnRegistryUtility.cs TRUE
       NPCAuthoringUtility.cs FALSE
       PendingEffectExecutionQueueUtility.cs FALSE
       PropUseUtility.cs TRUE DIRTY
@@ -557,7 +560,7 @@ Game\
       UnitFactionUtility.cs TRUE
       UnitFeatureBakeUtility.cs TRUE
       UnitModifierUtility.cs TRUE
-      UnitQueryUtility.cs FALSE
+      UnitQueryUtility.cs TRUE DIRTY
       UnitSkillModifierUtility.cs FALSE
     Unit\
       CompareSource\
@@ -591,6 +594,9 @@ UI\
     ConfirmUIData.cs FALSE
     ConfirmUIModel.cs TRUE
     ConfirmUIOpenData.cs FALSE
+  DamageNumberUI\
+    DamageNumberItem.cs TRUE
+    DamageNumberManager.cs TRUE
   DungeonSettlementUI\
     DungeonSettlementUI.cs TRUE
     DungeonSettlementUIController.cs TRUE
@@ -622,7 +628,12 @@ UI\
     GameMenuUI.cs TRUE DIRTY
     GameMenuUIController.cs TRUE DIRTY
     GameMenuUIData.cs TRUE
-    GameMenuUIModel.cs FALSE
+    GameMenuUIModel.cs TRUE
+  SettingUI\
+    SettingUI.cs TRUE
+    SettingUIController.cs TRUE
+    SettingUIData.cs TRUE
+    SettingUIModel.cs TRUE
   InteractionSelectUI\
     Sub\
       InteractionSelectUI_OptionData.cs FALSE
@@ -648,15 +659,15 @@ UI\
     MinimapInterestPointView.cs TRUE
   MainMenuUI\
     MainMenuUI.cs FALSE
-    MainMenuUIController.cs TRUE
+    MainMenuUIController.cs TRUE DIRTY
     MainMenuUIData.cs FALSE
     MainMenuUIModel.cs FALSE
   DebugUI\
     Sub\
       DebugUI_NavigationItemData.cs FALSE
       DebugUI_NavigationItemView.cs FALSE
-    DebugUI.cs FALSE
-    DebugUIController.cs FALSE
+    DebugUI.cs TRUE
+    DebugUIController.cs TRUE
     DebugUIData.cs FALSE
     DebugUIModel.cs TRUE
     DebugUI_LauncherDrag.cs FALSE
@@ -721,13 +732,13 @@ UI\
     TransitionMaskUIData.cs FALSE
     TransitionMaskUIModel.cs FALSE
   TransitionUI\
-    TransitionUI.cs TRUE
+    TransitionUI.cs TRUE DIRTY
     TransitionUIController.cs FALSE
     TransitionUIData.cs FALSE
     TransitionUIModel.cs FALSE
   UnitHealthBarUI\
     UnitHealthBarManager.cs TRUE DIRTY
-    UnitHealthBarUI.cs FALSE
+    UnitHealthBarUI.cs TRUE
     UnitHealthBarUIController.cs FALSE
     UnitHealthBarUIData.cs FALSE
     UnitHealthBarUIModel.cs FALSE

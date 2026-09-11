@@ -19,6 +19,7 @@ namespace CrystalMagic.Core
         public UIComponent UIComponent { get; private set; }
         public DataComponent DataComponent { get; private set; }
         public ConfigComponent ConfigComponent { get; private set; }
+        public DebugComponent DebugComponent { get; private set; }
         public CameraComponent CameraComponent { get; private set; }
         public SaveDataComponent SaveDataComponent { get; private set; }
         public GameSettingsComponent GameSettingsComponent { get; private set; }
@@ -89,6 +90,9 @@ namespace CrystalMagic.Core
 
             ConfigComponent = ConfigComponent.Instance;
             _components.Add(ConfigComponent);
+
+            DebugComponent = DebugComponent.Instance;
+            _components.Add(DebugComponent);
 
             CameraComponent = CameraComponent.Instance;
             _components.Add(CameraComponent);

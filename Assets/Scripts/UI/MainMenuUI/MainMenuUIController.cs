@@ -40,7 +40,7 @@ namespace CrystalMagic.UI
 
         private void OnConfigRequested()
         {
-            
+            UIComponent.Instance.OpenChild<SettingUI>(View);
         }
 
         private void OnExitRequested()

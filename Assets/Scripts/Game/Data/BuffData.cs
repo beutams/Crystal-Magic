@@ -14,6 +14,7 @@ namespace CrystalMagic.Game.Data
     public class BuffData : DataRow
     {
         public string NameKey;
+        public string IconPath;
         public bool CanStack;
         public int MaxStacks = 1;
         public List<PropertyModifierEntry> PropertyModifiers = new();

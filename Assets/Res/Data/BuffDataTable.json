@@ -2,6 +2,7 @@
   "Rows": [
     {
       "NameKey": "燃烧",
+      "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|fire",
       "CanStack": true,
       "MaxStacks": 5,
       "PropertyModifiers": [],
@@ -27,6 +28,7 @@
     },
     {
       "NameKey": "爆燃",
+      "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|fire",
       "CanStack": true,
       "MaxStacks": 5,
       "PropertyModifiers": [
@@ -42,6 +44,7 @@
     },
     {
       "NameKey": "潮湿",
+      "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|ys",
       "CanStack": false,
       "MaxStacks": 1,
       "PropertyModifiers": [],
@@ -51,6 +54,7 @@
     },
     {
       "NameKey": "冻结",
+      "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|fz",
       "CanStack": false,
       "MaxStacks": 1,
       "PropertyModifiers": [],
@@ -60,6 +64,7 @@
     },
     {
       "NameKey": "麻痹",
+      "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|sj",
       "CanStack": false,
       "MaxStacks": 1,
       "PropertyModifiers": [],
@@ -69,6 +74,7 @@
     },
     {
       "NameKey": "格挡Addition",
+      "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|op",
       "CanStack": false,
       "MaxStacks": 1,
       "PropertyModifiers": [
@@ -99,6 +105,7 @@
     },
     {
       "NameKey": "灵巧Addition",
+      "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|op",
       "CanStack": false,
       "MaxStacks": 1,
       "PropertyModifiers": [
@@ -122,6 +129,7 @@
     },
     {
       "NameKey": "缩时咏唱Addition",
+      "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|sj",
       "CanStack": false,
       "MaxStacks": 1,
       "PropertyModifiers": [
@@ -145,6 +153,7 @@
     },
     {
       "NameKey": "反射Addition",
+      "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|op",
       "CanStack": false,
       "MaxStacks": 1,
       "PropertyModifiers": [],
@@ -172,6 +181,7 @@
     },
     {
       "NameKey": "反转Addition",
+      "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|ys",
       "CanStack": true,
       "MaxStacks": 2,
       "PropertyModifiers": [],

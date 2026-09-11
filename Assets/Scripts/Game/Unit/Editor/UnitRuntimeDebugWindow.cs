@@ -26,6 +26,8 @@ namespace CrystalMagic.Editor.Unit
         private string _statusText = "Enter Play Mode to inspect runtime units.";
         private double _nextRuntimeRefreshTime;
 
+        private static bool IsRuntimeDebugEnabled => Application.isPlaying && DebugComponent.Instance.IsEnabled;
+
         private sealed class UnitRuntimeEntry
         {
             public Entity Entity;
@@ -56,7 +58,8 @@ namespace CrystalMagic.Editor.Unit
 
         private void OnInspectorUpdate()
         {
-            if (Application.isPlaying && EditorApplication.timeSinceStartup >= _nextRuntimeRefreshTime)
+            if (Application.isPlaying &&
+                (!IsRuntimeDebugEnabled || EditorApplication.timeSinceStartup >= _nextRuntimeRefreshTime))
             {
                 RefreshUnits();
                 _nextRuntimeRefreshTime = EditorApplication.timeSinceStartup + RuntimeRefreshIntervalSeconds;
@@ -75,6 +78,12 @@ namespace CrystalMagic.Editor.Unit
         private void OnGUI()
         {
             DrawToolbar();
+
+            if (Application.isPlaying && !IsRuntimeDebugEnabled)
+            {
+                EditorGUILayout.HelpBox("DebugComponent is disabled.", MessageType.Info);
+                return;
+            }
 
             EditorGUILayout.BeginHorizontal();
             DrawUnitListPanel();
@@ -199,6 +208,12 @@ namespace CrystalMagic.Editor.Unit
                 return;
             }
 
+            if (!IsRuntimeDebugEnabled)
+            {
+                _statusText = "DebugComponent is disabled.";
+                return;
+            }
+
             World world = World.DefaultGameObjectInjectionWorld;
             if (world == null || !world.IsCreated)
             {
@@ -272,6 +287,9 @@ namespace CrystalMagic.Editor.Unit
         {
             entityManager = default;
             entity = Entity.Null;
+
+            if (!IsRuntimeDebugEnabled)
+                return false;
 
             if (_selectedIndex < 0 || _selectedIndex >= _unitEntries.Count)
                 return false;

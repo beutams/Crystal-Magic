@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CrystalMagic.Core;
 using Unity.Entities;
 using Unity.Mathematics;
 
@@ -79,16 +80,20 @@ public sealed class UnitQueryTree
     public void QueryCircle(float3 center, float radius, List<UnitQueryHit> results)
     {
         results.Clear();
-        if (_rootIndex < 0 || radius <= 0f)
+        if (radius <= 0f)
             return;
 
-        QueryCircle(_rootIndex, center.xy, radius * radius, results);
+        if (_rootIndex >= 0)
+            QueryCircle(_rootIndex, center.xy, radius * radius, results);
+
+        DebugQueryShapeReporter.ReportCircle(center, radius);
+        ReportHits(center, results);
     }
 
     public void QueryForwardRect(float3 origin, float2 forward, float length, float width, List<UnitQueryHit> results)
     {
         results.Clear();
-        if (_rootIndex < 0 || length <= 0f || width <= 0f || math.lengthsq(forward) <= 0.0001f)
+        if (length <= 0f || width <= 0f || math.lengthsq(forward) <= 0.0001f)
             return;
 
         float2 normalizedForward = math.normalize(forward);
@@ -104,19 +109,33 @@ public sealed class UnitQueryTree
         float2 rectMin = math.min(math.min(corner0, corner1), math.min(corner2, corner3));
         float2 rectMax = math.max(math.max(corner0, corner1), math.max(corner2, corner3));
 
-        QueryForwardRect(_rootIndex, origin.xy, normalizedForward, right, length, halfWidth, rectMin, rectMax, results);
+        if (_rootIndex >= 0)
+            QueryForwardRect(_rootIndex, origin.xy, normalizedForward, right, length, halfWidth, rectMin, rectMax, results);
+
+        DebugQueryShapeReporter.ReportForwardRect(origin, normalizedForward, length, width);
+        ReportHits(origin, results);
     }
 
     public void QueryCone(float3 origin, float2 forward, float radius, float angleDegrees, List<UnitQueryHit> results)
     {
         results.Clear();
-        if (_rootIndex < 0 || radius <= 0f || angleDegrees <= 0f || math.lengthsq(forward) <= 0.0001f)
+        if (radius <= 0f || angleDegrees <= 0f || math.lengthsq(forward) <= 0.0001f)
             return;
 
         float2 normalizedForward = math.normalize(forward);
         float radiusSq = radius * radius;
         float minDot = math.cos(math.radians(math.clamp(angleDegrees, 0f, 360f) * 0.5f));
-        QueryCone(_rootIndex, origin.xy, normalizedForward, radiusSq, minDot, results);
+        if (_rootIndex >= 0)
+            QueryCone(_rootIndex, origin.xy, normalizedForward, radiusSq, minDot, results);
+
+        DebugQueryShapeReporter.ReportCone(origin, normalizedForward, radius, angleDegrees);
+        ReportHits(origin, results);
+    }
+
+    private static void ReportHits(float3 origin, List<UnitQueryHit> results)
+    {
+        for (int i = 0; i < results.Count; i++)
+            DebugQueryShapeReporter.ReportHit(origin, results[i].Position);
     }
 
     private void Reset()

@@ -306,11 +306,8 @@ namespace CrystalMagic.UI
                     continue;
                 }
 
-                if (entry.SourceSkillId < 0)
-                    continue;
-
-                SkillData sourceSkill = DataComponent.Instance?.Get<SkillData>(entry.SourceSkillId);
-                string iconPath = sourceSkill?.IconPath;
+                BuffData buffData = DataComponent.Instance?.Get<BuffData>(entry.BuffId);
+                string iconPath = buffData?.IconPath;
                 if (string.IsNullOrWhiteSpace(iconPath))
                     continue;
 
@@ -318,13 +315,12 @@ namespace CrystalMagic.UI
                 {
                     BuffId = entry.BuffId,
                     StackCount = entry.StackCount,
-                    SourceSkillId = entry.SourceSkillId,
                     IconPath = iconPath,
                 });
 
                 signature = (signature * 31) + entry.BuffId;
                 signature = (signature * 31) + entry.StackCount;
-                signature = (signature * 31) + entry.SourceSkillId;
+                signature = (signature * 31) + iconPath.GetHashCode();
             }
         }
 

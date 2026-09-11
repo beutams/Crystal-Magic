@@ -61,13 +61,35 @@ namespace CrystalMagic.Core {
 
             _uiInputLocked = GameGateComponent.Instance.IsUIInputLocked;
             ApplyUIInputState();
-            OpenPersistentDebugUI();
+            DebugComponent.Instance.EnabledChanged += HandleDebugEnabledChanged;
+            if (DebugComponent.Instance.IsEnabled)
+                OpenPersistentDebugUI();
         }
 
         private void OpenPersistentDebugUI()
         {
+            if (_debugUI != null)
+                return;
+
             _debugUI = Open<DebugUI>();
             SetLifetime(_debugUI, UILifetime.Persistent);
+        }
+
+        private void ClosePersistentDebugUI()
+        {
+            if (_debugUI == null)
+                return;
+
+            ReleaseUI(_debugUI);
+            _debugUI = null;
+        }
+
+        private void HandleDebugEnabledChanged(bool isEnabled)
+        {
+            if (isEnabled)
+                OpenPersistentDebugUI();
+            else
+                ClosePersistentDebugUI();
         }
 
         private void LoadConfigFromPath()
@@ -918,6 +940,8 @@ namespace CrystalMagic.Core {
 
         public override void Cleanup()
         {
+            DebugComponent.Instance.EnabledChanged -= HandleDebugEnabledChanged;
+
             if (EventComponent.Instance != null)
             {
                 EventComponent.Instance.Unsubscribe<UISceneScopeChangedEvent>(HandleSceneScopeChanged);

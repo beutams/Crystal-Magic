@@ -35,8 +35,11 @@ partial class BehaviorTreeSystem : SystemBase
             if (behaviorTree.IsInitialized && behaviorTree.Runtime != null)
                 behaviorTree.Runtime.Tick(behaviorTree.Context);
 
-            behaviorTree.CurrentNodeName = behaviorTree.Context.Debug.CurrentNodeName ?? "None";
-            behaviorTree.LastStatus = behaviorTree.Context.Debug.LastStatus ?? "None";
+            if (DebugComponent.Instance.IsEnabled)
+            {
+                behaviorTree.CurrentNodeName = behaviorTree.Context.Debug.CurrentNodeName ?? "None";
+                behaviorTree.LastStatus = behaviorTree.Context.Debug.LastStatus ?? "None";
+            }
         }
     }
 }

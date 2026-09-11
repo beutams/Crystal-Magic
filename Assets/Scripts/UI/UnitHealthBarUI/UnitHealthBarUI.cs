@@ -1,5 +1,6 @@
 using CrystalMagic.Core;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -96,6 +97,11 @@ namespace CrystalMagic.UI
 
                 UnitHealthBarBuffDisplayData buff = buffs[i];
                 iconHandle.Icon.sprite = LoadIcon(buff.IconPath);
+                bool showStackCount = buff.StackCount > 1;
+                iconHandle.StackCount.gameObject.SetActive(showStackCount);
+                if (showStackCount)
+                    iconHandle.StackCount.text = buff.StackCount.ToString();
+
                 if (!iconHandle.Root.gameObject.activeSelf)
                     iconHandle.Root.gameObject.SetActive(true);
             }
@@ -209,14 +215,16 @@ namespace CrystalMagic.UI
             clone.name = handle.BuffIconTemplate.gameObject.name;
             RectTransform root = clone.transform as RectTransform;
             Image image = clone.GetComponent<Image>();
-            if (root == null || image == null)
+            TextMeshProUGUI stackCount = clone.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (root == null || image == null || stackCount == null)
             {
+                Debug.LogError("[UnitHealthBarUI] BuffIcon template must contain an Image and a TextMeshProUGUI stack counter.");
                 Destroy(clone);
                 return null;
             }
 
             root.gameObject.SetActive(false);
-            return new BuffIconHandle(root, image);
+            return new BuffIconHandle(root, image, stackCount);
         }
 
         private Sprite LoadIcon(string iconPath)
@@ -256,11 +264,13 @@ namespace CrystalMagic.UI
         {
             public RectTransform Root { get; }
             public Image Icon { get; }
+            public TextMeshProUGUI StackCount { get; }
 
-            public BuffIconHandle(RectTransform root, Image icon)
+            public BuffIconHandle(RectTransform root, Image icon, TextMeshProUGUI stackCount)
             {
                 Root = root;
                 Icon = icon;
+                StackCount = stackCount;
             }
         }
     }
@@ -269,7 +279,6 @@ namespace CrystalMagic.UI
     {
         public int BuffId;
         public int StackCount;
-        public int SourceSkillId;
         public string IconPath;
     }
 }

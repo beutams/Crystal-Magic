@@ -43,6 +43,7 @@ namespace CrystalMagic.Editor.Unit
         private Label _statusLabel;
 
         private static readonly UnitSourceSchema s_emptySourceSchema = new UnitSourceSchemaBuilder().Build();
+        private static bool IsRuntimeDebugEnabled => Application.isPlaying && DebugComponent.Instance.IsEnabled;
 
         private sealed class TableWrapper
         {
@@ -114,6 +115,16 @@ namespace CrystalMagic.Editor.Unit
         {
             if (!Application.isPlaying)
                 return;
+
+            if (!IsRuntimeDebugEnabled)
+            {
+                _runtimeUnitEntries.Clear();
+                _selectedRuntimeEntity = Entity.Null;
+                _runtimeDataInspector.Refresh(null);
+                _graphView?.RefreshRuntimeDebug(null);
+                Repaint();
+                return;
+            }
 
             if (EditorApplication.timeSinceStartup >= _nextRuntimeUnitRefreshTime)
                 RefreshRuntimeUnitEntries();
@@ -244,12 +255,13 @@ namespace CrystalMagic.Editor.Unit
         {
             _listScroll = EditorGUILayout.BeginScrollView(_listScroll);
             EditorGUILayout.Space(6f);
-            if (Application.isPlaying)
+            bool showRuntimeDebug = IsRuntimeDebugEnabled;
+            if (showRuntimeDebug)
                 DrawRuntimeUnitList();
             else
                 DrawPrefabUnitList();
 
-            if (Application.isPlaying && _selectedRuntimeEntity == Entity.Null)
+            if (showRuntimeDebug && _selectedRuntimeEntity == Entity.Null)
             {
                 EditorGUILayout.HelpBox("Select a live unit with a StateScript component to inspect its graphs.", MessageType.Info);
                 EditorGUILayout.EndScrollView();
@@ -260,7 +272,7 @@ namespace CrystalMagic.Editor.Unit
             UnitPrefabEntry selectedEntry = GetSelectedUnitEntry();
             if (selectedEntry == null)
             {
-                string message = Application.isPlaying
+                string message = showRuntimeDebug
                     ? "The selected runtime unit does not resolve to a UnitData prefab."
                     : "Select a unit prefab.";
                 EditorGUILayout.HelpBox(message, MessageType.Info);
@@ -303,7 +315,7 @@ namespace CrystalMagic.Editor.Unit
                 }
             }
 
-            if (Application.isPlaying)
+            if (showRuntimeDebug)
                 _runtimeDataInspector.Draw(FindDebugRuntime(), SelectRuntimeDebugNode);
 
             EditorGUILayout.Space(8f);
@@ -786,7 +798,7 @@ namespace CrystalMagic.Editor.Unit
         {
             _nextRuntimeUnitRefreshTime = EditorApplication.timeSinceStartup + RuntimeUnitRefreshIntervalSeconds;
             _runtimeUnitEntries.Clear();
-            if (!Application.isPlaying)
+            if (!IsRuntimeDebugEnabled)
             {
                 _selectedRuntimeEntity = Entity.Null;
                 return;
@@ -859,7 +871,7 @@ namespace CrystalMagic.Editor.Unit
 
         private StateScriptRuntime FindDebugRuntime()
         {
-            if (!Application.isPlaying || _selectedRuntimeEntity == Entity.Null)
+            if (!IsRuntimeDebugEnabled || _selectedRuntimeEntity == Entity.Null)
                 return null;
 
             World world = World.DefaultGameObjectInjectionWorld;
