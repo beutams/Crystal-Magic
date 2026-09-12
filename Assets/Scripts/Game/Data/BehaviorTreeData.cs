@@ -79,6 +79,7 @@ namespace CrystalMagic.Game.Data
         public const string Cooldown = "Cooldown";
         public const string Timeout = "Timeout";
         public const string Check = "Check";
+        public const string HitCheck = "HitCheck";
         public const string Set = "Set";
         public const string Wait = "Wait";
     }
@@ -244,6 +245,29 @@ namespace CrystalMagic.Game.Data
     }
 
     [Serializable]
+    [FactoryKey(BehaviorNodeTypes.HitCheck, 13, "Hit Check")]
+    public sealed class HitCheckBehaviorNodeData : BehaviorNodeData
+    {
+        public ValueExpression Target = CreateDefaultTargetExpression();
+        public Vector2 Center;
+        public Vector2 Size = Vector2.one;
+        public float TargetPadding;
+
+        public HitCheckBehaviorNodeData()
+        {
+            Type = BehaviorNodeTypes.HitCheck;
+        }
+
+        private static ValueExpression CreateDefaultTargetExpression()
+        {
+            return new ValueExpression
+            {
+                Literal = UnitValue.FromEntity(Unity.Entities.Entity.Null),
+            };
+        }
+    }
+
+    [Serializable]
     [FactoryKey(BehaviorNodeTypes.Set, 11, "Set")]
     public sealed class SetBehaviorNodeData : BehaviorNodeData
     {
@@ -321,6 +345,7 @@ namespace CrystalMagic.Game.Data
                 CooldownBehaviorNodeData cooldown => $"{GetDisplayName(cooldown.Type)} | {cooldown.CooldownSeconds:0.##}s",
                 TimeoutBehaviorNodeData timeout => $"{GetDisplayName(timeout.Type)} | {timeout.TimeoutSeconds:0.##}s",
                 CheckBehaviorNodeData condition => $"{GetDisplayName(condition.Type)} | Conditions {condition.Conditions?.Count ?? 0}",
+                HitCheckBehaviorNodeData hitCheck => $"{GetDisplayName(hitCheck.Type)} | {hitCheck.Size.x:0.##} x {hitCheck.Size.y:0.##}",
                 SetBehaviorNodeData set => $"{GetDisplayName(set.Type)} | {set.SetKey}",
                 WaitBehaviorNodeData wait => $"{GetDisplayName(wait.Type)} | {wait.DurationSeconds:0.##}s",
                 _ => GetDisplayName(ResolveTypeName(node)),

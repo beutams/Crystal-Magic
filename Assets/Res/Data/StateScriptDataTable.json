@@ -1,4 +1,4 @@
-{
+﻿{
   "Rows": [
     {
       "Graphs": [
@@ -632,8 +632,8 @@
             }
           ],
           "ViewPosition": {
-            "x": -178.0,
-            "y": -25.333334
+            "x": -178.4,
+            "y": -25.6
           },
           "ViewScale": 0.8695652
         },
@@ -1733,10 +1733,55 @@
             {
               "SetterKey": "unit.buffs.remove",
               "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
               "Values": [
                 {
                   "Kind": 0,
-                  "Literal": { "Type": 3, "Float": 8.0 },
+                  "Literal": {
+                    "Type": 3,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 8.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
                   "GetterKey": "",
                   "OperationType": "",
                   "Inputs": []
@@ -1752,12 +1797,54 @@
             {
               "SetterKey": "unit.variables.set",
               "Key": "addition.shortChant.count",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
               "Values": [
                 {
                   "Kind": 0,
                   "Literal": {
                     "Type": 3,
-                    "Float": 0.0
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
                   },
                   "GetterKey": "",
                   "OperationType": "",
@@ -1774,12 +1861,54 @@
             {
               "SetterKey": "unit.variables.set",
               "Key": "addition.shortChant.durationMultiplier",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
               "Values": [
                 {
                   "Kind": 0,
                   "Literal": {
                     "Type": 3,
-                    "Float": 1.0
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 1.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
                   },
                   "GetterKey": "",
                   "OperationType": "",
@@ -1796,10 +1925,55 @@
             {
               "SetterKey": "unit.variables.set",
               "Key": "addition.combo.count",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
               "Values": [
                 {
                   "Kind": 0,
-                  "Literal": { "Type": 3, "Float": 0.0 },
+                  "Literal": {
+                    "Type": 3,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
                   "GetterKey": "",
                   "OperationType": "",
                   "Inputs": []
@@ -2173,23 +2347,102 @@
                   },
                   {
                     "Kind": 2,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
                     "GetterKey": "",
                     "OperationType": "Multiply",
                     "Inputs": [
                       {
                         "Kind": 1,
+                        "Literal": {
+                          "Type": 3,
+                          "Bool": false,
+                          "Int": 0,
+                          "Float": 0.0,
+                          "Float2": {
+                            "x": 0.0,
+                            "y": 0.0
+                          },
+                          "Float3": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "Entity": {
+                            "Index": 0,
+                            "Version": 0
+                          },
+                          "String": ""
+                        },
                         "GetterKey": "unit.attack.chantDurationMultiplier",
                         "OperationType": "",
                         "Inputs": []
                       },
                       {
                         "Kind": 1,
+                        "Literal": {
+                          "Type": 3,
+                          "Bool": false,
+                          "Int": 0,
+                          "Float": 0.0,
+                          "Float2": {
+                            "x": 0.0,
+                            "y": 0.0
+                          },
+                          "Float3": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "Entity": {
+                            "Index": 0,
+                            "Version": 0
+                          },
+                          "String": ""
+                        },
                         "GetterKey": "unit.variables.getNumber",
                         "OperationType": "",
                         "Inputs": [
                           {
                             "Kind": 0,
-                            "Literal": { "Type": 7, "String": "addition.shortChant.durationMultiplier" },
+                            "Literal": {
+                              "Type": 7,
+                              "Bool": false,
+                              "Int": 0,
+                              "Float": 0.0,
+                              "Float2": {
+                                "x": 0.0,
+                                "y": 0.0
+                              },
+                              "Float3": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 0.0
+                              },
+                              "Entity": {
+                                "Index": 0,
+                                "Version": 0
+                              },
+                              "String": "addition.shortChant.durationMultiplier"
+                            },
                             "GetterKey": "",
                             "OperationType": "",
                             "Inputs": []
@@ -4054,10 +4307,55 @@
             {
               "SetterKey": "unit.variables.set",
               "Key": "addition.shortChant.count",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
               "Values": [
                 {
                   "Kind": 0,
-                  "Literal": { "Type": 3, "Float": 0.0 },
+                  "Literal": {
+                    "Type": 3,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
                   "GetterKey": "",
                   "OperationType": "",
                   "Inputs": []
@@ -4073,10 +4371,55 @@
             {
               "SetterKey": "unit.variables.set",
               "Key": "addition.shortChant.durationMultiplier",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
               "Values": [
                 {
                   "Kind": 0,
-                  "Literal": { "Type": 3, "Float": 1.0 },
+                  "Literal": {
+                    "Type": 3,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 1.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
                   "GetterKey": "",
                   "OperationType": "",
                   "Inputs": []
@@ -4092,10 +4435,55 @@
             {
               "SetterKey": "unit.variables.set",
               "Key": "addition.combo.count",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
               "Values": [
                 {
                   "Kind": 0,
-                  "Literal": { "Type": 3, "Float": 0.0 },
+                  "Literal": {
+                    "Type": 3,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
                   "GetterKey": "",
                   "OperationType": "",
                   "Inputs": []
@@ -6975,16 +7363,240 @@
     {
       "Graphs": [
         {
-          "Guid": "adfd9e9d60df4869bcf660d72e5553e8",
-          "Name": "Idle",
-          "EntryNodeGuid": "82ebe072836b4d10aacd129074ca6b13",
+          "Guid": "slime_locomotion",
+          "Name": "Locomotion",
+          "EntryNodeGuid": "slime_locomotion_entry",
           "Nodes": [
             {
               "Type": "Entry",
-              "Guid": "82ebe072836b4d10aacd129074ca6b13",
+              "Guid": "slime_locomotion_entry",
               "EditorPosition": {
-                "x": 120.0,
+                "x": 80.0,
                 "y": 180.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "Equal",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "unit.variables.getString",
+                    "OperationType": "",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 7,
+                          "Bool": false,
+                          "Int": 0,
+                          "Float": 0.0,
+                          "Float2": {
+                            "x": 0.0,
+                            "y": 0.0
+                          },
+                          "Float3": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "Entity": {
+                            "Index": 0,
+                            "Version": 0
+                          },
+                          "String": "ai.intent"
+                        },
+                        "GetterKey": "",
+                        "OperationType": "",
+                        "Inputs": []
+                      }
+                    ]
+                  },
+                  {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 7,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": "Idle"
+                    },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ]
+              },
+              "TickOrder": 0,
+              "Type": "Monitor",
+              "Guid": "slime_idle_monitor",
+              "EditorPosition": {
+                "x": 280.0,
+                "y": 100.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "Equal",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "unit.variables.getBool",
+                    "OperationType": "",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 7,
+                          "Bool": false,
+                          "Int": 0,
+                          "Float": 0.0,
+                          "Float2": {
+                            "x": 0.0,
+                            "y": 0.0
+                          },
+                          "Float3": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "Entity": {
+                            "Index": 0,
+                            "Version": 0
+                          },
+                          "String": "ai.attack.locked"
+                        },
+                        "GetterKey": "",
+                        "OperationType": "",
+                        "Inputs": []
+                      }
+                    ]
+                  },
+                  {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 1,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ]
+              },
+              "Type": "Compare",
+              "Guid": "slime_idle_unlocked",
+              "EditorPosition": {
+                "x": 520.0,
+                "y": 100.0
+              }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.state",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Idle"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_idle_state",
+              "EditorPosition": {
+                "x": 760.0,
+                "y": 100.0
               }
             },
             {
@@ -7018,24 +7630,2209 @@
               },
               "Values": [],
               "Type": "SetValue",
-              "Guid": "9b373fe2dd384be590e9025acfc2d2ca",
+              "Guid": "slime_idle_animation",
               "EditorPosition": {
-                "x": 400.0,
-                "y": 180.0
+                "x": 1000.0,
+                "y": 100.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "Equal",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "unit.variables.getString",
+                    "OperationType": "",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 7,
+                          "Bool": false,
+                          "Int": 0,
+                          "Float": 0.0,
+                          "Float2": {
+                            "x": 0.0,
+                            "y": 0.0
+                          },
+                          "Float3": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "Entity": {
+                            "Index": 0,
+                            "Version": 0
+                          },
+                          "String": "ai.intent"
+                        },
+                        "GetterKey": "",
+                        "OperationType": "",
+                        "Inputs": []
+                      }
+                    ]
+                  },
+                  {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 7,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": "Chase"
+                    },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ]
+              },
+              "TickOrder": 0,
+              "Type": "Monitor",
+              "Guid": "slime_chase_monitor",
+              "EditorPosition": {
+                "x": 280.0,
+                "y": 300.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "Equal",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "unit.variables.getBool",
+                    "OperationType": "",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 7,
+                          "Bool": false,
+                          "Int": 0,
+                          "Float": 0.0,
+                          "Float2": {
+                            "x": 0.0,
+                            "y": 0.0
+                          },
+                          "Float3": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "Entity": {
+                            "Index": 0,
+                            "Version": 0
+                          },
+                          "String": "ai.attack.locked"
+                        },
+                        "GetterKey": "",
+                        "OperationType": "",
+                        "Inputs": []
+                      }
+                    ]
+                  },
+                  {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 1,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ]
+              },
+              "Type": "Compare",
+              "Guid": "slime_chase_unlocked",
+              "EditorPosition": {
+                "x": 520.0,
+                "y": 300.0
+              }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.state",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Chase"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_chase_state",
+              "EditorPosition": {
+                "x": 760.0,
+                "y": 300.0
+              }
+            },
+            {
+              "SetterKey": "unit.animation.setName",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Walk"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_walk_animation",
+              "EditorPosition": {
+                "x": 1000.0,
+                "y": 300.0
+              }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.state",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Idle"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_init_skill_ready",
+              "EditorPosition": {
+                "x": 280.0,
+                "y": 480.0
+              }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.skill.cooldownTrigger",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_init_cooldown_trigger",
+              "EditorPosition": {
+                "x": 520.0,
+                "y": 480.0
+              }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.skill.coolingDown",
+              "Value": { "Kind": 0, "Literal": { "Type": 1, "Bool": false } },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_init_cooling_down",
+              "EditorPosition": { "x": 700.0, "y": 480.0 }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.attack.locked",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_init_attack_active",
+              "EditorPosition": {
+                "x": 760.0,
+                "y": 480.0
               }
             }
           ],
           "Edges": [
             {
-              "OutputNodeGuid": "82ebe072836b4d10aacd129074ca6b13",
+              "OutputNodeGuid": "slime_locomotion_entry",
               "OutputPortName": "Out",
-              "InputNodeGuid": "9b373fe2dd384be590e9025acfc2d2ca",
+              "InputNodeGuid": "slime_init_skill_ready",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_init_skill_ready",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_init_cooldown_trigger",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_init_cooldown_trigger",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_init_cooling_down",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_init_cooling_down",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_init_attack_active",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_init_attack_active",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_idle_monitor",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "slime_init_attack_active",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_chase_monitor",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "slime_idle_monitor",
+              "OutputPortName": "True",
+              "InputNodeGuid": "slime_idle_unlocked",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "slime_idle_unlocked",
+              "OutputPortName": "True",
+              "InputNodeGuid": "slime_idle_state",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_idle_state",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_idle_animation",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_chase_monitor",
+              "OutputPortName": "True",
+              "InputNodeGuid": "slime_chase_unlocked",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "slime_chase_unlocked",
+              "OutputPortName": "True",
+              "InputNodeGuid": "slime_chase_state",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_chase_state",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_walk_animation",
               "InputPortName": "In"
             }
           ],
           "ViewPosition": {
             "x": 0.0,
             "y": 0.0
+          },
+          "ViewScale": 1.0
+        },
+        {
+          "Guid": "slime_attack01_graph",
+          "Name": "Attack 01",
+          "EntryNodeGuid": "slime_attack01_entry",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "slime_attack01_entry",
+              "EditorPosition": {
+                "x": 80.0,
+                "y": 180.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "Equal",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "unit.variables.getString",
+                    "OperationType": "",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 7,
+                          "Bool": false,
+                          "Int": 0,
+                          "Float": 0.0,
+                          "Float2": {
+                            "x": 0.0,
+                            "y": 0.0
+                          },
+                          "Float3": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "Entity": {
+                            "Index": 0,
+                            "Version": 0
+                          },
+                          "String": "ai.intent"
+                        },
+                        "GetterKey": "",
+                        "OperationType": "",
+                        "Inputs": []
+                      }
+                    ]
+                  },
+                  {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 7,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": "Attack01"
+                    },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ]
+              },
+              "TickOrder": 0,
+              "Type": "Monitor",
+              "Guid": "slime_attack01_monitor",
+              "EditorPosition": {
+                "x": 280.0,
+                "y": 180.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "Equal",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "unit.variables.getBool",
+                    "OperationType": "",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 7,
+                          "Bool": false,
+                          "Int": 0,
+                          "Float": 0.0,
+                          "Float2": {
+                            "x": 0.0,
+                            "y": 0.0
+                          },
+                          "Float3": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "Entity": {
+                            "Index": 0,
+                            "Version": 0
+                          },
+                          "String": "ai.attack.locked"
+                        },
+                        "GetterKey": "",
+                        "OperationType": "",
+                        "Inputs": []
+                      }
+                    ]
+                  },
+                  {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 1,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ]
+              },
+              "Type": "Compare",
+              "Guid": "slime_attack01_unlocked",
+              "EditorPosition": {
+                "x": 520.0,
+                "y": 100.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "Equal",
+                "Inputs": [
+                  { "Kind": 1, "GetterKey": "unit.variables.getBool", "Inputs": [ { "Kind": 0, "Literal": { "Type": 7, "String": "ai.skill.coolingDown" } } ] },
+                  { "Kind": 0, "Literal": { "Type": 1, "Bool": false } }
+                ]
+              },
+              "Type": "Compare",
+              "Guid": "slime_attack01_cooldown_ready",
+              "EditorPosition": { "x": 700.0, "y": 100.0 }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.attack.locked",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": true,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_attack01_active_true",
+              "EditorPosition": {
+                "x": 760.0,
+                "y": 100.0
+              }
+            },
+            {
+              "SetterKey": "unit.move.setStateMoveMultiplier",
+              "Key": "",
+              "Value": { "Kind": 0, "Literal": { "Type": 3, "Float": 0.0 } },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_attack01_lock_motion",
+              "EditorPosition": { "x": 920.0, "y": 100.0 }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.state",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Attack01"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_attack01_state",
+              "EditorPosition": {
+                "x": 1000.0,
+                "y": 100.0
+              }
+            },
+            {
+              "SetterKey": "unit.animation.play",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Attack01"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_attack01_animation",
+              "EditorPosition": {
+                "x": 1240.0,
+                "y": 100.0
+              }
+            },
+            {
+              "Duration": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.25,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "TickOrder": 1,
+              "Type": "Timer",
+              "Guid": "slime_attack01_windup",
+              "EditorPosition": {
+                "x": 1480.0,
+                "y": 100.0
+              }
+            },
+            {
+              "SkillId": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 2,
+                  "Bool": false,
+                  "Int": 19,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Input": {
+                "Position": {
+                  "Kind": 1,
+                  "Literal": {
+                    "Type": 5,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "unit.transform.positionOf",
+                  "OperationType": "",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "Literal": {
+                        "Type": 3,
+                        "Bool": false,
+                        "Int": 0,
+                        "Float": 0.0,
+                        "Float2": {
+                          "x": 0.0,
+                          "y": 0.0
+                        },
+                        "Float3": {
+                          "x": 0.0,
+                          "y": 0.0,
+                          "z": 0.0
+                        },
+                        "Entity": {
+                          "Index": 0,
+                          "Version": 0
+                        },
+                        "String": ""
+                      },
+                      "GetterKey": "unit.perception.nearestUnitByFaction",
+                      "OperationType": "",
+                      "Inputs": [
+                        {
+                          "Kind": 0,
+                          "Literal": {
+                            "Type": 2,
+                            "Bool": false,
+                            "Int": 0,
+                            "Float": 0.0,
+                            "Float2": {
+                              "x": 0.0,
+                              "y": 0.0
+                            },
+                            "Float3": {
+                              "x": 0.0,
+                              "y": 0.0,
+                              "z": 0.0
+                            },
+                            "Entity": {
+                              "Index": 0,
+                              "Version": 0
+                            },
+                            "String": ""
+                          },
+                          "GetterKey": "",
+                          "OperationType": "",
+                          "Inputs": []
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "TargetEntity": {
+                  "Kind": 1,
+                  "Literal": {
+                    "Type": 6,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "unit.perception.nearestUnitByFaction",
+                  "OperationType": "",
+                  "Inputs": [
+                    {
+                      "Kind": 0,
+                      "Literal": {
+                        "Type": 2,
+                        "Bool": false,
+                        "Int": 0,
+                        "Float": 0.0,
+                        "Float2": {
+                          "x": 0.0,
+                          "y": 0.0
+                        },
+                        "Float3": {
+                          "x": 0.0,
+                          "y": 0.0,
+                          "z": 0.0
+                        },
+                        "Entity": {
+                          "Index": 0,
+                          "Version": 0
+                        },
+                        "String": ""
+                      },
+                      "GetterKey": "",
+                      "OperationType": "",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              },
+              "Type": "RequestSkill",
+              "Guid": "slime_attack01_skill",
+              "EditorPosition": {
+                "x": 1720.0,
+                "y": 100.0
+              }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.skill.cooldownTrigger",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": true,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_attack01_trigger_cooldown",
+              "EditorPosition": {
+                "x": 1960.0,
+                "y": 100.0
+              }
+            },
+            {
+              "Duration": { "Kind": 0, "Literal": { "Type": 3, "Float": 0.25 } },
+              "TickOrder": 1,
+              "Type": "Timer",
+              "Guid": "slime_attack01_recovery",
+              "EditorPosition": { "x": 2200.0, "y": 100.0 }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.skill.coolingDown",
+              "Value": { "Kind": 0, "Literal": { "Type": 1, "Bool": true } },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_attack01_begin_cooldown",
+              "EditorPosition": { "x": 2440.0, "y": 100.0 }
+            },
+            {
+              "SetterKey": "unit.move.setStateMoveMultiplier",
+              "Key": "",
+              "Value": { "Kind": 0, "Literal": { "Type": 3, "Float": 1.0 } },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_attack01_unlock_motion",
+              "EditorPosition": { "x": 2680.0, "y": 100.0 }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.attack.locked",
+              "Value": { "Kind": 0, "Literal": { "Type": 1, "Bool": false } },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_attack01_active_false",
+              "EditorPosition": { "x": 2920.0, "y": 100.0 }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.state",
+              "Value": { "Kind": 0, "Literal": { "Type": 7, "String": "Idle" } },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_attack01_idle_state",
+              "EditorPosition": { "x": 3160.0, "y": 100.0 }
+            },
+            {
+              "SetterKey": "unit.animation.setName",
+              "Key": "",
+              "Value": { "Kind": 0, "Literal": { "Type": 7, "String": "Idle" } },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_attack01_idle_animation",
+              "EditorPosition": { "x": 3400.0, "y": 100.0 }
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "slime_attack01_entry",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_attack01_monitor",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "slime_attack01_monitor",
+              "OutputPortName": "True",
+              "InputNodeGuid": "slime_attack01_unlocked",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "slime_attack01_unlocked",
+              "OutputPortName": "True",
+              "InputNodeGuid": "slime_attack01_cooldown_ready",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "slime_attack01_cooldown_ready",
+              "OutputPortName": "True",
+              "InputNodeGuid": "slime_attack01_active_true",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_attack01_active_true",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_attack01_lock_motion",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_attack01_lock_motion",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_attack01_state",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_attack01_state",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_attack01_animation",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_attack01_animation",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_attack01_windup",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "slime_attack01_windup",
+              "OutputPortName": "OnComplete",
+              "InputNodeGuid": "slime_attack01_skill",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_attack01_skill",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_attack01_recovery",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "slime_attack01_recovery",
+              "OutputPortName": "OnComplete",
+              "InputNodeGuid": "slime_attack01_begin_cooldown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_attack01_begin_cooldown",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_attack01_trigger_cooldown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_attack01_trigger_cooldown",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_attack01_unlock_motion",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_attack01_unlock_motion",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_attack01_active_false",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_attack01_active_false",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_attack01_idle_state",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_attack01_idle_state",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_attack01_idle_animation",
+              "InputPortName": "In"
+            }
+          ],
+          "ViewPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "ViewScale": 1.0
+        },
+        {
+          "Guid": "slime_attack02_graph",
+          "Name": "Attack 02",
+          "EntryNodeGuid": "slime_attack02_entry",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "slime_attack02_entry",
+              "EditorPosition": {
+                "x": 80.0,
+                "y": 180.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "Equal",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "unit.variables.getString",
+                    "OperationType": "",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 7,
+                          "Bool": false,
+                          "Int": 0,
+                          "Float": 0.0,
+                          "Float2": {
+                            "x": 0.0,
+                            "y": 0.0
+                          },
+                          "Float3": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "Entity": {
+                            "Index": 0,
+                            "Version": 0
+                          },
+                          "String": "ai.intent"
+                        },
+                        "GetterKey": "",
+                        "OperationType": "",
+                        "Inputs": []
+                      }
+                    ]
+                  },
+                  {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 7,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": "Attack02"
+                    },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ]
+              },
+              "TickOrder": 0,
+              "Type": "Monitor",
+              "Guid": "slime_attack02_monitor",
+              "EditorPosition": {
+                "x": 280.0,
+                "y": 180.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "Equal",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "unit.variables.getBool",
+                    "OperationType": "",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 7,
+                          "Bool": false,
+                          "Int": 0,
+                          "Float": 0.0,
+                          "Float2": {
+                            "x": 0.0,
+                            "y": 0.0
+                          },
+                          "Float3": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "Entity": {
+                            "Index": 0,
+                            "Version": 0
+                          },
+                          "String": "ai.attack.locked"
+                        },
+                        "GetterKey": "",
+                        "OperationType": "",
+                        "Inputs": []
+                      }
+                    ]
+                  },
+                  {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 1,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ]
+              },
+              "Type": "Compare",
+              "Guid": "slime_attack02_unlocked",
+              "EditorPosition": {
+                "x": 520.0,
+                "y": 100.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "Equal",
+                "Inputs": [
+                  { "Kind": 1, "GetterKey": "unit.variables.getBool", "Inputs": [ { "Kind": 0, "Literal": { "Type": 7, "String": "ai.skill.coolingDown" } } ] },
+                  { "Kind": 0, "Literal": { "Type": 1, "Bool": false } }
+                ]
+              },
+              "Type": "Compare",
+              "Guid": "slime_attack02_cooldown_ready",
+              "EditorPosition": { "x": 700.0, "y": 100.0 }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.attack.locked",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": true,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_attack02_active_true",
+              "EditorPosition": {
+                "x": 760.0,
+                "y": 100.0
+              }
+            },
+            {
+              "SetterKey": "unit.move.setStateMoveMultiplier",
+              "Key": "",
+              "Value": { "Kind": 0, "Literal": { "Type": 3, "Float": 0.0 } },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_attack02_lock_motion",
+              "EditorPosition": { "x": 920.0, "y": 100.0 }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.state",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Attack02"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_attack02_state",
+              "EditorPosition": {
+                "x": 1000.0,
+                "y": 100.0
+              }
+            },
+            {
+              "SetterKey": "unit.animation.play",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 7,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": "Attack02"
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_attack02_animation",
+              "EditorPosition": {
+                "x": 1240.0,
+                "y": 100.0
+              }
+            },
+            {
+              "Duration": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.6666667,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "TickOrder": 1,
+              "Type": "Timer",
+              "Guid": "slime_attack02_windup",
+              "EditorPosition": {
+                "x": 1480.0,
+                "y": 100.0
+              }
+            },
+            {
+              "SkillId": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 2,
+                  "Bool": false,
+                  "Int": 20,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Input": {
+                "Position": {
+                  "Kind": 1,
+                  "Literal": {
+                    "Type": 5,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "unit.transform.positionOf",
+                  "OperationType": "",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "Literal": {
+                        "Type": 3,
+                        "Bool": false,
+                        "Int": 0,
+                        "Float": 0.0,
+                        "Float2": {
+                          "x": 0.0,
+                          "y": 0.0
+                        },
+                        "Float3": {
+                          "x": 0.0,
+                          "y": 0.0,
+                          "z": 0.0
+                        },
+                        "Entity": {
+                          "Index": 0,
+                          "Version": 0
+                        },
+                        "String": ""
+                      },
+                      "GetterKey": "unit.perception.nearestUnitByFaction",
+                      "OperationType": "",
+                      "Inputs": [
+                        {
+                          "Kind": 0,
+                          "Literal": {
+                            "Type": 2,
+                            "Bool": false,
+                            "Int": 0,
+                            "Float": 0.0,
+                            "Float2": {
+                              "x": 0.0,
+                              "y": 0.0
+                            },
+                            "Float3": {
+                              "x": 0.0,
+                              "y": 0.0,
+                              "z": 0.0
+                            },
+                            "Entity": {
+                              "Index": 0,
+                              "Version": 0
+                            },
+                            "String": ""
+                          },
+                          "GetterKey": "",
+                          "OperationType": "",
+                          "Inputs": []
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "TargetEntity": {
+                  "Kind": 1,
+                  "Literal": {
+                    "Type": 6,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "unit.perception.nearestUnitByFaction",
+                  "OperationType": "",
+                  "Inputs": [
+                    {
+                      "Kind": 0,
+                      "Literal": {
+                        "Type": 2,
+                        "Bool": false,
+                        "Int": 0,
+                        "Float": 0.0,
+                        "Float2": {
+                          "x": 0.0,
+                          "y": 0.0
+                        },
+                        "Float3": {
+                          "x": 0.0,
+                          "y": 0.0,
+                          "z": 0.0
+                        },
+                        "Entity": {
+                          "Index": 0,
+                          "Version": 0
+                        },
+                        "String": ""
+                      },
+                      "GetterKey": "",
+                      "OperationType": "",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              },
+              "Type": "RequestSkill",
+              "Guid": "slime_attack02_skill",
+              "EditorPosition": {
+                "x": 1720.0,
+                "y": 100.0
+              }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.skill.cooldownTrigger",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": true,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_attack02_trigger_cooldown",
+              "EditorPosition": {
+                "x": 1960.0,
+                "y": 100.0
+              }
+            },
+            {
+              "Duration": { "Kind": 0, "Literal": { "Type": 3, "Float": 0.3333333 } },
+              "TickOrder": 1,
+              "Type": "Timer",
+              "Guid": "slime_attack02_recovery",
+              "EditorPosition": { "x": 2200.0, "y": 100.0 }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.skill.coolingDown",
+              "Value": { "Kind": 0, "Literal": { "Type": 1, "Bool": true } },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_attack02_begin_cooldown",
+              "EditorPosition": { "x": 2440.0, "y": 100.0 }
+            },
+            {
+              "SetterKey": "unit.move.setStateMoveMultiplier",
+              "Key": "",
+              "Value": { "Kind": 0, "Literal": { "Type": 3, "Float": 1.0 } },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_attack02_unlock_motion",
+              "EditorPosition": { "x": 2680.0, "y": 100.0 }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.attack.locked",
+              "Value": { "Kind": 0, "Literal": { "Type": 1, "Bool": false } },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_attack02_active_false",
+              "EditorPosition": { "x": 2920.0, "y": 100.0 }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.state",
+              "Value": { "Kind": 0, "Literal": { "Type": 7, "String": "Idle" } },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_attack02_idle_state",
+              "EditorPosition": { "x": 3160.0, "y": 100.0 }
+            },
+            {
+              "SetterKey": "unit.animation.setName",
+              "Key": "",
+              "Value": { "Kind": 0, "Literal": { "Type": 7, "String": "Idle" } },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_attack02_idle_animation",
+              "EditorPosition": { "x": 3400.0, "y": 100.0 }
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "slime_attack02_entry",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_attack02_monitor",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "slime_attack02_monitor",
+              "OutputPortName": "True",
+              "InputNodeGuid": "slime_attack02_unlocked",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "slime_attack02_unlocked",
+              "OutputPortName": "True",
+              "InputNodeGuid": "slime_attack02_cooldown_ready",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "slime_attack02_cooldown_ready",
+              "OutputPortName": "True",
+              "InputNodeGuid": "slime_attack02_active_true",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_attack02_active_true",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_attack02_lock_motion",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_attack02_lock_motion",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_attack02_state",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_attack02_state",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_attack02_animation",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_attack02_animation",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_attack02_windup",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "slime_attack02_windup",
+              "OutputPortName": "OnComplete",
+              "InputNodeGuid": "slime_attack02_skill",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_attack02_skill",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_attack02_recovery",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "slime_attack02_recovery",
+              "OutputPortName": "OnComplete",
+              "InputNodeGuid": "slime_attack02_begin_cooldown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_attack02_begin_cooldown",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_attack02_trigger_cooldown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_attack02_trigger_cooldown",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_attack02_unlock_motion",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_attack02_unlock_motion",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_attack02_active_false",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_attack02_active_false",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_attack02_idle_state",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_attack02_idle_state",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_attack02_idle_animation",
+              "InputPortName": "In"
+            }
+          ],
+          "ViewPosition": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "ViewScale": 1.0
+        },
+        {
+          "Guid": "slime_shared_skill_cooldown_graph",
+          "Name": "Shared Skill Cooldown",
+          "EntryNodeGuid": "slime_shared_skill_cooldown_entry",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "slime_shared_skill_cooldown_entry",
+              "EditorPosition": {
+                "x": 80.0,
+                "y": 180.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "Equal",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": {
+                      "Type": 3,
+                      "Bool": false,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "unit.variables.getBool",
+                    "OperationType": "",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 7,
+                          "Bool": false,
+                          "Int": 0,
+                          "Float": 0.0,
+                          "Float2": {
+                            "x": 0.0,
+                            "y": 0.0
+                          },
+                          "Float3": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "Entity": {
+                            "Index": 0,
+                            "Version": 0
+                          },
+                          "String": "ai.skill.cooldownTrigger"
+                        },
+                        "GetterKey": "",
+                        "OperationType": "",
+                        "Inputs": []
+                      }
+                    ]
+                  },
+                  {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 1,
+                      "Bool": true,
+                      "Int": 0,
+                      "Float": 0.0,
+                      "Float2": {
+                        "x": 0.0,
+                        "y": 0.0
+                      },
+                      "Float3": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "Entity": {
+                        "Index": 0,
+                        "Version": 0
+                      },
+                      "String": ""
+                    },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ]
+              },
+              "TickOrder": 0,
+              "Type": "Monitor",
+              "Guid": "slime_shared_skill_cooldown_monitor",
+              "EditorPosition": {
+                "x": 280.0,
+                "y": 180.0
+              }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.skill.cooldownTrigger",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [
+                {
+                  "Kind": 0,
+                  "Literal": {
+                    "Type": 1,
+                    "Bool": false,
+                    "Int": 0,
+                    "Float": 0.0,
+                    "Float2": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "Float3": {
+                      "x": 0.0,
+                      "y": 0.0,
+                      "z": 0.0
+                    },
+                    "Entity": {
+                      "Index": 0,
+                      "Version": 0
+                    },
+                    "String": ""
+                  },
+                  "GetterKey": "",
+                  "OperationType": "",
+                  "Inputs": []
+                }
+              ],
+              "Type": "SetValue",
+              "Guid": "slime_shared_skill_clear_trigger",
+              "EditorPosition": {
+                "x": 520.0,
+                "y": 180.0
+              }
+            },
+            {
+              "Duration": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 3,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 1.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "TickOrder": 1,
+              "Type": "Timer",
+              "Guid": "slime_shared_skill_cooldown_timer",
+              "EditorPosition": {
+                "x": 760.0,
+                "y": 180.0
+              }
+            },
+            {
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.skill.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false,
+                  "Int": 0,
+                  "Float": 0.0,
+                  "Float2": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "Float3": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "Entity": {
+                    "Index": 0,
+                    "Version": 0
+                  },
+                  "String": ""
+                },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "slime_shared_skill_ready",
+              "EditorPosition": {
+                "x": 1000.0,
+                "y": 180.0
+              }
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "slime_shared_skill_cooldown_entry",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_shared_skill_cooldown_monitor",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "slime_shared_skill_cooldown_monitor",
+              "OutputPortName": "OnChangeTrue",
+              "InputNodeGuid": "slime_shared_skill_clear_trigger",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_shared_skill_clear_trigger",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_shared_skill_cooldown_timer",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "slime_shared_skill_cooldown_timer",
+              "OutputPortName": "OnComplete",
+              "InputNodeGuid": "slime_shared_skill_ready",
+              "InputPortName": "In"
+            }
+          ],
+          "ViewPosition": {
+            "x": -285.6,
+            "y": 100.8
           },
           "ViewScale": 1.0
         }

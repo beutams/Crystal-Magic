@@ -10,16 +10,20 @@ public sealed class BehaviorContext
     public EntityManager EntityManager { get; private set; }
     public float DeltaTime { get; private set; }
     public UnitSourceAccessTable Sources { get; private set; }
-    public BehaviorDebugState Debug;
+    public BehaviorDebugState Debug { get; } = new();
 
-    public void BeginFrame(Entity entity, EntityManager entityManager, float deltaTime, UnitSourceAccessTable sources)
+    public void BeginFrame(
+        Entity entity,
+        EntityManager entityManager,
+        float deltaTime,
+        UnitSourceAccessTable sources,
+        bool captureDebug)
     {
         Entity = entity;
         EntityManager = entityManager;
         DeltaTime = deltaTime;
         Sources = sources;
-        Debug.CurrentNodeName = "None";
-        Debug.LastStatus = "None";
+        Debug.BeginFrame(captureDebug);
     }
 
     public void SetCurrentNode(ABehaviorNode node)
@@ -27,17 +31,46 @@ public sealed class BehaviorContext
         if (node != null)
             Debug.CurrentNodeName = node.DisplayName;
     }
+
+    public void SetNodeStatus(string nodeGuid, BehaviorNodeStatus status)
+    {
+        Debug.SetNodeStatus(nodeGuid, status);
+    }
 }
 
-public struct BehaviorDebugState
+public sealed class BehaviorDebugState
 {
+    private readonly Dictionary<string, BehaviorNodeStatus> _nodeStatuses = new(StringComparer.Ordinal);
+    private bool _isEnabled;
+
     public string CurrentNodeName;
     public string LastStatus;
+
+    public void BeginFrame(bool isEnabled)
+    {
+        _isEnabled = isEnabled;
+        CurrentNodeName = "None";
+        LastStatus = "None";
+        _nodeStatuses.Clear();
+    }
+
+    public void SetNodeStatus(string nodeGuid, BehaviorNodeStatus status)
+    {
+        if (_isEnabled && !string.IsNullOrWhiteSpace(nodeGuid))
+            _nodeStatuses[nodeGuid] = status;
+    }
+
+    public bool TryGetNodeStatus(string nodeGuid, out BehaviorNodeStatus status)
+    {
+        status = default;
+        return !string.IsNullOrWhiteSpace(nodeGuid) && _nodeStatuses.TryGetValue(nodeGuid, out status);
+    }
 }
 
 public sealed class BehaviorTreeRuntime
 {
     private readonly ABehaviorNode _root;
+    private BehaviorContext _lastContext;
 
     public BehaviorTreeRuntime(ABehaviorNode root)
     {
@@ -65,12 +98,19 @@ public sealed class BehaviorTreeRuntime
 
     public BehaviorNodeStatus Tick(BehaviorContext context)
     {
+        _lastContext = context;
         if (_root == null || !IsBound || context?.Sources == null)
             return BehaviorNodeStatus.Failure;
 
         BehaviorNodeStatus status = _root.Tick(context);
         context.Debug.LastStatus = status.ToString();
         return status;
+    }
+
+    public bool TryGetDebugNodeStatus(string nodeGuid, out BehaviorNodeStatus status)
+    {
+        status = default;
+        return _lastContext != null && _lastContext.Debug.TryGetNodeStatus(nodeGuid, out status);
     }
 
     public void Reset()

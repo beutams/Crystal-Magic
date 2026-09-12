@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 1749207573584865081}
   - component: {fileID: 6980236891455900452}
   - component: {fileID: 6979236984405017346}
+  - component: {fileID: 7640362010762780979}
   m_Layer: 0
   m_Name: MeteorDown
   m_TagString: Untagged
@@ -103,3 +104,25 @@ MonoBehaviour:
   EnterClip: {fileID: 0}
   LoopClip: {fileID: 7400000, guid: 3e6a432dbeee1454385b8d8c6d15a8c2, type: 2}
   ExitClip: {fileID: 0}
+--- !u!95 &7640362010762780979
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4484575494646836339}
+  m_Enabled: 0
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 96bbd0dcac36455488d742baa5ba5a32, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage:
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0

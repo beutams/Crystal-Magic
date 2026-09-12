@@ -16,7 +16,14 @@ AnimationClip:
   m_EulerCurves: []
   m_PositionCurves: []
   m_ScaleCurves: []
-$10
+  m_FloatCurves:
+  - serializedVersion: 2
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
         inSlope: Infinity
         outSlope: Infinity
         tangentMode: 103
@@ -35,13 +42,13 @@ $10
   - serializedVersion: 2
     curve:
     - time: 0
-      value: {fileID: -1998636234, guid: 83ef698e22e1c2046840ebb31e59e6a2, type: 3}
+      value: {fileID: -1998636234, guid: f6f5f95961708964680e4a68f51cfbaf, type: 3}
     - time: 0.0833333
-      value: {fileID: 884115556, guid: 83ef698e22e1c2046840ebb31e59e6a2, type: 3}
+      value: {fileID: 884115556, guid: f6f5f95961708964680e4a68f51cfbaf, type: 3}
     - time: 0.1666667
-      value: {fileID: -1352542545, guid: 83ef698e22e1c2046840ebb31e59e6a2, type: 3}
+      value: {fileID: -1352542545, guid: f6f5f95961708964680e4a68f51cfbaf, type: 3}
     - time: 0.25
-      value: {fileID: 2123558022, guid: 83ef698e22e1c2046840ebb31e59e6a2, type: 3}
+      value: {fileID: 2123558022, guid: f6f5f95961708964680e4a68f51cfbaf, type: 3}
     attribute: m_Sprite
     path: 
     classID: 212
@@ -73,10 +80,10 @@ $10
       isIntCurve: 0
       isSerializeReferenceCurve: 0
     pptrCurveMapping:
-    - {fileID: -1998636234, guid: 83ef698e22e1c2046840ebb31e59e6a2, type: 3}
-    - {fileID: 884115556, guid: 83ef698e22e1c2046840ebb31e59e6a2, type: 3}
-    - {fileID: -1352542545, guid: 83ef698e22e1c2046840ebb31e59e6a2, type: 3}
-    - {fileID: 2123558022, guid: 83ef698e22e1c2046840ebb31e59e6a2, type: 3}
+    - {fileID: -1998636234, guid: f6f5f95961708964680e4a68f51cfbaf, type: 3}
+    - {fileID: 884115556, guid: f6f5f95961708964680e4a68f51cfbaf, type: 3}
+    - {fileID: -1352542545, guid: f6f5f95961708964680e4a68f51cfbaf, type: 3}
+    - {fileID: 2123558022, guid: f6f5f95961708964680e4a68f51cfbaf, type: 3}
   m_AnimationClipSettings:
     serializedVersion: 2
     m_AdditiveReferencePoseClip: {fileID: 0}

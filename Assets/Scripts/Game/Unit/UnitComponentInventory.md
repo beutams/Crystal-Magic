@@ -16,9 +16,11 @@ The proposed direction is valid:
   movement, skills, animation, and other gameplay components.
 
 The important boundary is that `UnitVariableComponent` is a shared blackboard,
-not a replacement for all ECS components. Health, movement, control, buff
-lists, rendering data, and other high-frequency or strongly structured data
-must remain in their dedicated components.
+not a replacement for all ECS components. Its `Owner` is `Entity.Null` when
+the unit owns its dictionary; otherwise the unit proxies all variable access to
+one designated owner. Health, movement, control, buff lists, rendering data,
+and other high-frequency or strongly structured data must remain in their
+dedicated components.
 
 ## Source Contract
 
@@ -28,7 +30,7 @@ becoming a second copy of every unit component.
 | Scope | Owner | Read/write policy | Examples |
 | --- | --- | --- | --- |
 | `unit.*` | Existing ECS component | The component Source explicitly declares each read/write permission | `unit.vitality.currentHealthPercentage`, `unit.perception.targetDistance`, `unit.move.setDirection(...)` |
-| `var.*` | `UnitVariableComponent` | Shared read/write state for BT, StateScript, and gameplay systems | `var.input.castHeld`, `var.cooldown.shieldSlam`, `var.animation.clip` |
+| `var.*` | `UnitVariableComponent` owner | Shared read/write state for BT, StateScript, and gameplay systems; consumers proxy to their configured owner | `var.input.castHeld`, `var.cooldown.shieldSlam`, `var.animation.clip` |
 | `script.*` | One running StateScript graph | Local graph state; never used as cross-graph communication | local timer, local branch flag, temporary loop counter |
 
 Conditions use typed `UnitSource` value expressions. They support booleans,

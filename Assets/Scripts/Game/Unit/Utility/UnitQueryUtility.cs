@@ -116,6 +116,26 @@ public sealed class UnitQueryTree
         ReportHits(origin, results);
     }
 
+    public void QueryAxisAlignedRect(float3 center, float2 size, List<UnitQueryHit> results)
+    {
+        results.Clear();
+        if (math.any(size <= 0f))
+            return;
+
+        float2 halfSize = size * 0.5f;
+        float2 rectMin = center.xy - halfSize;
+        float2 rectMax = center.xy + halfSize;
+        if (_rootIndex >= 0)
+            QueryAxisAlignedRect(_rootIndex, rectMin, rectMax, results);
+
+        DebugQueryShapeReporter.ReportForwardRect(
+            new float3(rectMin.x, center.y, center.z),
+            new float2(1f, 0f),
+            size.x,
+            size.y);
+        ReportHits(center, results);
+    }
+
     public void QueryCone(float3 origin, float2 forward, float radius, float angleDegrees, List<UnitQueryHit> results)
     {
         results.Clear();
@@ -290,6 +310,31 @@ public sealed class UnitQueryTree
         QueryForwardRect(node.Child1, origin, normalizedForward, right, length, halfWidth, rectMin, rectMax, results);
         QueryForwardRect(node.Child2, origin, normalizedForward, right, length, halfWidth, rectMin, rectMax, results);
         QueryForwardRect(node.Child3, origin, normalizedForward, right, length, halfWidth, rectMin, rectMax, results);
+    }
+
+    private void QueryAxisAlignedRect(int nodeIndex, float2 rectMin, float2 rectMax, List<UnitQueryHit> results)
+    {
+        Node node = _nodes[nodeIndex];
+        if (!OverlapsAabb(node.Min, node.Max, rectMin, rectMax))
+            return;
+
+        for (int i = 0; i < node.EntryIndices.Count; i++)
+        {
+            UnitQueryHit entry = _entries[node.EntryIndices[i]];
+            float2 position = entry.Position.xy;
+            if (math.any(position < rectMin) || math.any(position > rectMax))
+                continue;
+
+            results.Add(entry);
+        }
+
+        if (!node.HasChildren)
+            return;
+
+        QueryAxisAlignedRect(node.Child0, rectMin, rectMax, results);
+        QueryAxisAlignedRect(node.Child1, rectMin, rectMax, results);
+        QueryAxisAlignedRect(node.Child2, rectMin, rectMax, results);
+        QueryAxisAlignedRect(node.Child3, rectMin, rectMax, results);
     }
 
     private void QueryCone(

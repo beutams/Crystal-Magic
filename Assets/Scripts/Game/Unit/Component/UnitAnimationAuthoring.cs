@@ -58,5 +58,16 @@ public sealed class UnitAnimationSource : UnitManagedComponentSource<UnitAnimati
                 value.CurrentAnimationName = new FixedString64Bytes(name.Trim());
                 return true;
             });
+        builder.AddSet("unit.animation.play", UnitValueCategory.String,
+            (ref UnitAnimationComponent value, UnitValue input) =>
+            {
+                if (value == null || !input.TryGetString(out string name))
+                    return false;
+
+                value.CurrentAnimationName = new FixedString64Bytes(name.Trim());
+                value.PlayingAnimationName = default;
+                value.ElapsedSeconds = 0f;
+                return true;
+            });
     }
 }

@@ -7,6 +7,7 @@ using CrystalMagic.Game.Data;
 using CrystalMagic.Core;
 using CrystalMagic.Editor;
 using Newtonsoft.Json;
+using Unity.Collections;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
@@ -26,19 +27,28 @@ namespace CrystalMagic.Editor.Unit
 
         private readonly List<BehaviorTreeData> _rows = new();
         private readonly List<UnitPrefabEntry> _unitEntries = new();
+        private readonly List<RuntimeUnitEntry> _runtimeUnitEntries = new();
+        private readonly Dictionary<int, string> _runtimePrefabNames = new();
+        private readonly BehaviorTreeRuntimeDataInspector _runtimeDataInspector = new();
         private string _selectedPrefabPath;
+        private int _selectedUnitDataId = -1;
+        private Entity _selectedRuntimeEntity = Entity.Null;
         private BehaviorTreeDragData _pendingTreeDrag;
         private UnitSourceSchema _selectedSourceSchema;
         private bool _isDirty;
         private string _statusText = string.Empty;
         private Vector2 _listScrollPos;
+        private double _nextRuntimeUnitRefreshTime;
 
         private BehaviorTreeGraphView _graphView;
+        private IMGUIContainer _listContainer;
         private IMGUIContainer _detailContainer;
         private Label _statusLabel;
 
         private static readonly ComparatorFactory s_expressionFactory = CreateExpressionFactory();
         private static readonly UnitSourceSchema s_emptySourceSchema = new UnitSourceSchemaBuilder().Build();
+        private const double RuntimeUnitRefreshIntervalSeconds = 0.5d;
+        private static bool IsRuntimeDebugEnabled => Application.isPlaying && DebugComponent.Instance.IsEnabled;
 
         private static JsonSerializerSettings JsonSettings => new()
         {
@@ -62,6 +72,15 @@ namespace CrystalMagic.Editor.Unit
                 : Path.GetFileNameWithoutExtension(AssetPath);
         }
 
+        private sealed class RuntimeUnitEntry
+        {
+            public Entity Entity;
+            public int UnitDataId;
+            public string PrefabName;
+
+            public string DisplayName => $"{PrefabName} ({Entity})";
+        }
+
         private sealed class BehaviorTreeDragData
         {
             public BehaviorTreeDragData(int sourceUnitDataId)
@@ -80,6 +99,17 @@ namespace CrystalMagic.Editor.Unit
             window.Show();
         }
 
+        private void OnEnable()
+        {
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+            _nextRuntimeUnitRefreshTime = 0d;
+        }
+
+        private void OnDisable()
+        {
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+        }
+
         private void CreateGUI()
         {
             LoadData();
@@ -90,8 +120,62 @@ namespace CrystalMagic.Editor.Unit
             BuildToolbar(root);
             BuildBody(root);
 
-            if (SelectedUnitEntry != null)
+            if (SelectedTree != null)
                 RebuildGraph();
+        }
+
+        private void OnInspectorUpdate()
+        {
+            if (!Application.isPlaying)
+                return;
+
+            if (!IsRuntimeDebugEnabled)
+            {
+                _runtimeUnitEntries.Clear();
+                ClearRuntimeSelection();
+                _runtimeDataInspector.Invalidate();
+                _graphView?.RefreshRuntimeDebug(null);
+                _listContainer?.MarkDirtyRepaint();
+                Repaint();
+                return;
+            }
+
+            if (EditorApplication.timeSinceStartup >= _nextRuntimeUnitRefreshTime)
+                RefreshRuntimeUnitEntries();
+
+            BehaviorTreeRuntime runtime = FindDebugRuntime();
+            _runtimeDataInspector.Refresh(runtime, SelectedTree);
+            _graphView?.RefreshRuntimeDebug(runtime);
+            _listContainer?.MarkDirtyRepaint();
+            _detailContainer?.MarkDirtyRepaint();
+            Repaint();
+        }
+
+        private void OnPlayModeStateChanged(PlayModeStateChange change)
+        {
+            if (change == PlayModeStateChange.EnteredPlayMode)
+            {
+                ClearRuntimeSelection();
+                _runtimeUnitEntries.Clear();
+                _nextRuntimeUnitRefreshTime = 0d;
+                RefreshRuntimeUnitEntries();
+                RebuildGraph();
+                Repaint();
+                return;
+            }
+
+            if (change != PlayModeStateChange.ExitingPlayMode)
+                return;
+
+            _runtimeUnitEntries.Clear();
+            ClearRuntimeSelection();
+            _nextRuntimeUnitRefreshTime = 0d;
+            if (SelectedUnitEntry == null)
+                _selectedPrefabPath = _unitEntries.FirstOrDefault()?.AssetPath;
+            _selectedUnitDataId = SelectedUnitEntry?.UnitData?.Id ?? -1;
+            _selectedSourceSchema = UnitSourceSchemaFactory.CreateForPrefab(SelectedUnitEntry?.Prefab);
+            RebuildGraph();
+            Repaint();
         }
 
         private void BuildToolbar(VisualElement root)
@@ -123,7 +207,7 @@ namespace CrystalMagic.Editor.Unit
                 }
             };
 
-            var listPanel = new IMGUIContainer(DrawListPanel)
+            _listContainer = new IMGUIContainer(DrawListPanel)
             {
                 style =
                 {
@@ -131,15 +215,15 @@ namespace CrystalMagic.Editor.Unit
                     minWidth = ListPanelWidth,
                 }
             };
-            body.Add(listPanel);
+            body.Add(_listContainer);
             body.Add(CreateDivider());
 
             _graphView = new BehaviorTreeGraphView(this)
             {
                 style = { flexGrow = 1f }
             };
-            _graphView.RegisterCallback<MouseUpEvent>(_ => _detailContainer?.MarkDirtyRepaint());
-            _graphView.RegisterCallback<KeyUpEvent>(_ => _detailContainer?.MarkDirtyRepaint());
+            _graphView.RegisterCallback<MouseUpEvent>(_ => NotifyGraphNodeSelected(_graphView.GetSelectedNodeGuid()));
+            _graphView.RegisterCallback<KeyUpEvent>(_ => NotifyGraphNodeSelected(_graphView.GetSelectedNodeGuid()));
             body.Add(_graphView);
             body.Add(CreateDivider());
 
@@ -195,52 +279,97 @@ namespace CrystalMagic.Editor.Unit
         {
             EditorGUILayout.BeginVertical();
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            GUILayout.Label($"Units ({_unitEntries.Count})", EditorStyles.boldLabel);
+            bool showRuntimeDebug = IsRuntimeDebugEnabled;
+            int unitCount = showRuntimeDebug ? _runtimeUnitEntries.Count : _unitEntries.Count;
+            GUILayout.Label(showRuntimeDebug ? $"Runtime Units ({unitCount})" : $"Units ({unitCount})", EditorStyles.boldLabel);
             EditorGUILayout.EndHorizontal();
 
             _listScrollPos = EditorGUILayout.BeginScrollView(_listScrollPos);
-            for (int i = 0; i < _unitEntries.Count; i++)
+            if (showRuntimeDebug)
             {
-                UnitPrefabEntry entry = _unitEntries[i];
-                bool isSelected = string.Equals(entry.AssetPath, _selectedPrefabPath, StringComparison.Ordinal);
-                string label = entry.UnitData == null
-                    ? $"[No UnitData] {entry.DisplayName}"
-                    : $"[{entry.UnitData.Id}] {entry.DisplayName}";
-                GUIStyle style = isSelected ? EditorStyles.toolbarButton : EditorStyles.miniButton;
-                Rect entryRect = GUILayoutUtility.GetRect(new GUIContent(label), style, GUILayout.ExpandWidth(true));
-                HandleTreeDrop(entry, entryRect);
-                BeginTreeDrag(entry, entryRect);
-                if (GUI.Button(entryRect, label, style))
+                DrawRuntimeUnitList();
+            }
+            else
+            {
+                for (int i = 0; i < _unitEntries.Count; i++)
                 {
-                    if (!isSelected)
+                    UnitPrefabEntry entry = _unitEntries[i];
+                    bool isSelected = string.Equals(entry.AssetPath, _selectedPrefabPath, StringComparison.Ordinal);
+                    string label = entry.UnitData == null
+                        ? $"[No UnitData] {entry.DisplayName}"
+                        : $"[{entry.UnitData.Id}] {entry.DisplayName}";
+                    GUIStyle style = isSelected ? EditorStyles.toolbarButton : EditorStyles.miniButton;
+                    Rect entryRect = GUILayoutUtility.GetRect(new GUIContent(label), style, GUILayout.ExpandWidth(true));
+                    HandleTreeDrop(entry, entryRect);
+                    BeginTreeDrag(entry, entryRect);
+                    if (GUI.Button(entryRect, label, style) && !isSelected)
                         SelectUnit(entry);
                 }
             }
 
-            EditorGUILayout.EndScrollView();
-
-            UnitPrefabEntry selected = SelectedUnitEntry;
-            if (selected != null)
+            if (showRuntimeDebug && _selectedRuntimeEntity == Entity.Null)
             {
                 EditorGUILayout.Space(6f);
-                EditorGUILayout.LabelField(selected.DisplayName, EditorStyles.boldLabel);
-                if (selected.UnitData == null)
-                {
-                    EditorGUILayout.HelpBox("This Prefab has no UnitData binding.", MessageType.Warning);
-                }
-                else if (SelectedTree == null)
-                {
-                    EditorGUILayout.HelpBox("No behavior tree data is assigned to this unit.", MessageType.Info);
-                }
-                else
-                {
-                    EditorGUILayout.LabelField($"Tree: [{SelectedTree.Id}] {GetTreeName(SelectedTree)}", EditorStyles.miniLabel);
-                }
+                EditorGUILayout.HelpBox("Select a live unit with a behavior tree to inspect its runtime data.", MessageType.Info);
+                EditorGUILayout.EndScrollView();
+                EditorGUILayout.EndVertical();
+                return;
+            }
 
+            UnitPrefabEntry selected = GetSelectedUnitEntry();
+            if (selected == null && !showRuntimeDebug)
+            {
+                EditorGUILayout.HelpBox("Select a unit prefab.", MessageType.Info);
+                EditorGUILayout.EndScrollView();
+                EditorGUILayout.EndVertical();
+                return;
+            }
+
+            EditorGUILayout.Space(6f);
+            if (selected != null)
+                EditorGUILayout.LabelField(selected.DisplayName, EditorStyles.boldLabel);
+            else
+                EditorGUILayout.LabelField($"Unit Data [{SelectedUnitDataId}]", EditorStyles.boldLabel);
+
+            if (SelectedTree == null)
+                EditorGUILayout.HelpBox("No behavior tree data is assigned to this unit.", MessageType.Info);
+            else
+                EditorGUILayout.LabelField($"Tree: [{SelectedTree.Id}] {GetTreeName(SelectedTree)}", EditorStyles.miniLabel);
+
+            if (showRuntimeDebug)
+            {
+                _runtimeDataInspector.Draw(FindDebugRuntime(), FindDebugDrawerContext(), SelectedTree);
+            }
+            else if (selected?.UnitData == null)
+            {
+                EditorGUILayout.HelpBox("This Prefab has no UnitData binding.", MessageType.Warning);
+            }
+            else
+            {
                 EditorGUILayout.HelpBox("Drag a unit with behavior tree data onto another unit to copy it.", MessageType.None);
             }
 
+            EditorGUILayout.EndScrollView();
             EditorGUILayout.EndVertical();
+        }
+
+        private void DrawRuntimeUnitList()
+        {
+            if (_runtimeUnitEntries.Count == 0)
+            {
+                EditorGUILayout.HelpBox("No live unit with UnitBehaviorTreeComponent was found.", MessageType.Info);
+                return;
+            }
+
+            for (int i = 0; i < _runtimeUnitEntries.Count; i++)
+            {
+                RuntimeUnitEntry entry = _runtimeUnitEntries[i];
+                GUIStyle style = entry.Entity == _selectedRuntimeEntity
+                    ? EditorStyles.toolbarButton
+                    : EditorStyles.miniButton;
+                if (GUILayout.Button(entry.DisplayName, style, GUILayout.ExpandWidth(true)))
+                    SelectRuntimeUnit(entry);
+            }
         }
 
         private void DrawDetailPanel()
@@ -299,6 +428,10 @@ namespace CrystalMagic.Editor.Unit
 
                 case CheckBehaviorNodeData condition:
                     DrawConditionList(condition.Conditions);
+                    break;
+
+                case HitCheckBehaviorNodeData hitCheck:
+                    DrawHitCheckNode(hitCheck);
                     break;
 
                 case SetBehaviorNodeData set:
@@ -483,6 +616,16 @@ namespace CrystalMagic.Editor.Unit
             EnsureExpressionCount(ref node.Inputs, selectedEntry.Parameters);
             for (int i = 0; i < selectedEntry.Parameters.Count; i++)
                 DrawValueExpression(node.Inputs[i], selectedEntry.Parameters[i], 0);
+        }
+
+        private void DrawHitCheckNode(HitCheckBehaviorNodeData node)
+        {
+            node.Target ??= new ValueExpression { Literal = UnitValue.FromEntity(Entity.Null) };
+            DrawValueExpression(node.Target, new ComparatorParameterDefinition("Target", UnitValueCategory.Entity), 0);
+            node.Center = EditorGUILayout.Vector2Field("Local Center", node.Center);
+            node.Size = Vector2.Max(Vector2.zero, EditorGUILayout.Vector2Field("Size", node.Size));
+            node.TargetPadding = Mathf.Max(0f, EditorGUILayout.FloatField("Target Padding", node.TargetPadding));
+            EditorGUILayout.HelpBox("Local X and Y use world axes. Hit Check never rotates, but mirrors its X offset for left/right facing.", MessageType.None);
         }
 
         private void DrawValueExpression(
@@ -700,9 +843,19 @@ namespace CrystalMagic.Editor.Unit
         private UnitPrefabEntry SelectedUnitEntry => _unitEntries.FirstOrDefault(entry =>
             string.Equals(entry.AssetPath, _selectedPrefabPath, StringComparison.Ordinal));
 
-        internal BehaviorTreeData SelectedTree => SelectedUnitEntry?.UnitData == null
-            ? null
-            : GetTreeForUnit(SelectedUnitEntry.UnitData.Id);
+        private UnitPrefabEntry GetSelectedUnitEntry()
+        {
+            int unitDataId = SelectedUnitDataId;
+            return unitDataId < 0
+                ? null
+                : _unitEntries.FirstOrDefault(entry => entry.UnitData != null && entry.UnitData.Id == unitDataId);
+        }
+
+        private int SelectedUnitDataId => _selectedRuntimeEntity != Entity.Null
+            ? _selectedUnitDataId
+            : SelectedUnitEntry?.UnitData?.Id ?? -1;
+
+        internal BehaviorTreeData SelectedTree => GetTreeForUnit(SelectedUnitDataId);
 
         private UnitSourceSchema SelectedSourceSchema => _selectedSourceSchema ?? s_emptySourceSchema;
 
@@ -713,8 +866,10 @@ namespace CrystalMagic.Editor.Unit
 
         internal void RebuildGraph()
         {
+            _runtimeDataInspector.Invalidate();
             _graphView?.BuildFromData(SelectedTree);
             _detailContainer?.MarkDirtyRepaint();
+            _listContainer?.MarkDirtyRepaint();
         }
 
         internal void MarkDirty()
@@ -728,6 +883,13 @@ namespace CrystalMagic.Editor.Unit
         {
             SyncNodePositionsFromGraph();
             MarkDirty();
+        }
+
+        internal void NotifyGraphNodeSelected(string nodeGuid)
+        {
+            _runtimeDataInspector.SetSelectedNode(nodeGuid);
+            _detailContainer?.MarkDirtyRepaint();
+            _listContainer?.MarkDirtyRepaint();
         }
 
         internal void SyncNodePositionsFromGraph()
@@ -748,7 +910,9 @@ namespace CrystalMagic.Editor.Unit
         private void SelectUnit(UnitPrefabEntry entry)
         {
             SyncNodePositionsFromGraph();
+            ClearRuntimeSelection();
             _selectedPrefabPath = entry?.AssetPath;
+            _selectedUnitDataId = entry?.UnitData?.Id ?? -1;
             _selectedSourceSchema = UnitSourceSchemaFactory.CreateForPrefab(entry?.Prefab);
 
             if (CreateEmptyTreeIfMissing(entry))
@@ -860,7 +1024,9 @@ namespace CrystalMagic.Editor.Unit
             else
                 _rows[_rows.IndexOf(targetTree)] = copiedTree;
 
+            ClearRuntimeSelection();
             _selectedPrefabPath = targetEntry.AssetPath;
+            _selectedUnitDataId = targetEntry.UnitData.Id;
             _selectedSourceSchema = UnitSourceSchemaFactory.CreateForPrefab(targetEntry.Prefab);
             MarkDirty();
             RebuildGraph();
@@ -900,6 +1066,7 @@ namespace CrystalMagic.Editor.Unit
                 bool migrated = MigrateLegacyTreeBindings();
                 if (!_unitEntries.Any(entry => string.Equals(entry.AssetPath, _selectedPrefabPath, StringComparison.Ordinal)))
                     _selectedPrefabPath = _unitEntries.FirstOrDefault()?.AssetPath;
+                _selectedUnitDataId = SelectedUnitEntry?.UnitData?.Id ?? -1;
                 _selectedSourceSchema = UnitSourceSchemaFactory.CreateForPrefab(SelectedUnitEntry?.Prefab);
 
                 if (migrated)
@@ -1085,6 +1252,7 @@ namespace CrystalMagic.Editor.Unit
         private void RefreshUnitEntries()
         {
             _unitEntries.Clear();
+            _runtimePrefabNames.Clear();
             if (!AssetDatabase.IsValidFolder(UnitPrefabDirectory))
                 return;
 
@@ -1104,6 +1272,9 @@ namespace CrystalMagic.Editor.Unit
                     Prefab = prefab,
                     UnitData = unitData,
                 });
+
+                if (unitData != null)
+                    _runtimePrefabNames[unitData.Id] = prefab.name;
             }
 
             _unitEntries.Sort((left, right) =>
@@ -1115,6 +1286,134 @@ namespace CrystalMagic.Editor.Unit
                     ? idComparison
                     : string.Compare(left.DisplayName, right.DisplayName, StringComparison.Ordinal);
             });
+        }
+
+        private void RefreshRuntimeUnitEntries()
+        {
+            _nextRuntimeUnitRefreshTime = EditorApplication.timeSinceStartup + RuntimeUnitRefreshIntervalSeconds;
+            _runtimeUnitEntries.Clear();
+            if (!IsRuntimeDebugEnabled)
+            {
+                ClearRuntimeSelection();
+                return;
+            }
+
+            World world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated)
+                return;
+
+            EntityManager entityManager = world.EntityManager;
+            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<UnitBehaviorTreeComponent>());
+            using NativeArray<Entity> entities = query.ToEntityArray(Allocator.Temp);
+            bool selectedEntityFound = _selectedRuntimeEntity == Entity.Null;
+            for (int i = 0; i < entities.Length; i++)
+            {
+                Entity entity = entities[i];
+                UnitBehaviorTreeComponent component = entityManager.GetComponentObject<UnitBehaviorTreeComponent>(entity);
+                if (component == null)
+                    continue;
+
+                _runtimeUnitEntries.Add(new RuntimeUnitEntry
+                {
+                    Entity = entity,
+                    UnitDataId = component.UnitDataId,
+                    PrefabName = ResolveRuntimePrefabName(component.UnitDataId),
+                });
+                selectedEntityFound |= entity == _selectedRuntimeEntity;
+            }
+
+            _runtimeUnitEntries.Sort((left, right) =>
+            {
+                int nameComparison = string.Compare(left.PrefabName, right.PrefabName, StringComparison.Ordinal);
+                return nameComparison != 0 ? nameComparison : left.Entity.Index.CompareTo(right.Entity.Index);
+            });
+
+            if (!selectedEntityFound)
+            {
+                ClearRuntimeSelection();
+                RebuildGraph();
+                UpdateStatus("Selected runtime unit no longer exists.");
+            }
+        }
+
+        private string ResolveRuntimePrefabName(int unitDataId)
+        {
+            if (_runtimePrefabNames.TryGetValue(unitDataId, out string prefabName))
+                return prefabName;
+
+            UnitData unitData = EditorComponents.Data.Find<UnitData>(row => row.Id == unitDataId);
+            string prefabPath = unitData?.PrefabPath;
+            GameObject prefab = string.IsNullOrWhiteSpace(prefabPath)
+                ? null
+                : AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            prefabName = prefab != null
+                ? prefab.name
+                : string.IsNullOrWhiteSpace(prefabPath)
+                    ? "[Missing Prefab]"
+                    : Path.GetFileNameWithoutExtension(prefabPath);
+            _runtimePrefabNames[unitDataId] = prefabName;
+            return prefabName;
+        }
+
+        private void SelectRuntimeUnit(RuntimeUnitEntry entry)
+        {
+            if (entry == null)
+                return;
+
+            SyncNodePositionsFromGraph();
+            _selectedRuntimeEntity = entry.Entity;
+            _selectedUnitDataId = entry.UnitDataId;
+            UnitPrefabEntry prefabEntry = GetSelectedUnitEntry();
+            _selectedPrefabPath = prefabEntry?.AssetPath;
+            _selectedSourceSchema = UnitSourceSchemaFactory.CreateForPrefab(prefabEntry?.Prefab);
+            RebuildGraph();
+            UpdateStatus($"Debugging {entry.DisplayName}.");
+        }
+
+        private void ClearRuntimeSelection()
+        {
+            _selectedRuntimeEntity = Entity.Null;
+            _selectedUnitDataId = -1;
+        }
+
+        private BehaviorTreeRuntime FindDebugRuntime()
+        {
+            if (!IsRuntimeDebugEnabled || _selectedRuntimeEntity == Entity.Null)
+                return null;
+
+            World world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated)
+                return null;
+
+            EntityManager entityManager = world.EntityManager;
+            if (!entityManager.Exists(_selectedRuntimeEntity) ||
+                !entityManager.HasComponent<UnitBehaviorTreeComponent>(_selectedRuntimeEntity))
+            {
+                return null;
+            }
+
+            return entityManager.GetComponentObject<UnitBehaviorTreeComponent>(_selectedRuntimeEntity)?.Runtime;
+        }
+
+        private UnitRuntimeDrawerContext FindDebugDrawerContext()
+        {
+            if (!IsRuntimeDebugEnabled || _selectedRuntimeEntity == Entity.Null)
+                return null;
+
+            World world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated)
+                return null;
+
+            EntityManager entityManager = world.EntityManager;
+            if (!entityManager.Exists(_selectedRuntimeEntity))
+                return null;
+
+            UnitData unitData = EditorComponents.Data.Find<UnitData>(row => row.Id == SelectedUnitDataId);
+            return new UnitRuntimeDrawerContext(
+                entityManager,
+                _selectedRuntimeEntity,
+                ResolveRuntimePrefabName(SelectedUnitDataId),
+                unitData);
         }
 
         private bool MigrateLegacyTreeBindings()
@@ -1246,6 +1545,21 @@ namespace CrystalMagic.Editor.Unit
             nodeView?.RefreshDisplay();
         }
 
+        public void RefreshRuntimeDebug(BehaviorTreeRuntime runtime)
+        {
+            foreach (BehaviorTreeNodeView view in _nodeViews.Values)
+            {
+                BehaviorNodeStatus status = default;
+                bool hasStatus = runtime != null && runtime.TryGetDebugNodeStatus(view.NodeData.Guid, out status);
+                view.RefreshRuntimeDebug(hasStatus, status);
+            }
+        }
+
+        public string GetSelectedNodeGuid()
+        {
+            return selection?.OfType<BehaviorTreeNodeView>().FirstOrDefault()?.NodeData?.Guid;
+        }
+
         public static bool SupportsChildren(BehaviorNodeData node)
         {
             return node is RootBehaviorNodeData or SelectorBehaviorNodeData or SequenceBehaviorNodeData or ParallelBehaviorNodeData
@@ -1285,7 +1599,7 @@ namespace CrystalMagic.Editor.Unit
                 BehaviorNodeTypes.Cooldown or
                 BehaviorNodeTypes.Timeout => "Decorator",
 
-                BehaviorNodeTypes.Check => "Condition",
+                BehaviorNodeTypes.Check or BehaviorNodeTypes.HitCheck => "Condition",
                 _ => "Action",
             };
         }
@@ -1467,6 +1781,10 @@ namespace CrystalMagic.Editor.Unit
 
     public sealed class BehaviorTreeNodeView : TopBottomPortNode
     {
+        private static readonly Color s_runningColor = new(0.20f, 0.55f, 1f, 0.95f);
+        private static readonly Color s_successColor = new(0.20f, 0.72f, 0.34f, 0.95f);
+        private static readonly Color s_failureColor = new(0.88f, 0.25f, 0.25f, 0.95f);
+
         public BehaviorTreeNodeView(BehaviorNodeData nodeData)
         {
             NodeData = nodeData;
@@ -1500,10 +1818,204 @@ namespace CrystalMagic.Editor.Unit
             title = BehaviorNodeDataRegistry.GetDisplayName(NodeData.Type);
         }
 
+        public void RefreshRuntimeDebug(bool hasStatus, BehaviorNodeStatus status)
+        {
+            if (!hasStatus)
+            {
+                titleContainer.style.backgroundColor = new StyleColor(StyleKeyword.Null);
+                return;
+            }
+
+            StyleColor color = status switch
+            {
+                BehaviorNodeStatus.Running => new StyleColor(s_runningColor),
+                BehaviorNodeStatus.Success => new StyleColor(s_successColor),
+                BehaviorNodeStatus.Failure => new StyleColor(s_failureColor),
+                _ => new StyleColor(StyleKeyword.Null),
+            };
+            titleContainer.style.backgroundColor = color;
+        }
+
         private static bool SupportsInput(BehaviorNodeData nodeData)
         {
             return nodeData is not RootBehaviorNodeData;
         }
 
+    }
+
+    internal sealed class BehaviorTreeRuntimeDataInspector
+    {
+        private const int MaxExpressionDepth = 16;
+
+        private static readonly UnitSourceSchema s_sourceSchema = UnitSourceSchemaFactory.CreateForAllSources();
+
+        private readonly Dictionary<string, HashSet<Type>> _nodeComponentTypes = new(StringComparer.Ordinal);
+        private BehaviorTreeRuntime _runtime;
+        private BehaviorTreeData _tree;
+        private string _selectedNodeGuid;
+
+        public void Refresh(BehaviorTreeRuntime runtime, BehaviorTreeData tree)
+        {
+            if (ReferenceEquals(_runtime, runtime) && ReferenceEquals(_tree, tree))
+                return;
+
+            _runtime = runtime;
+            _tree = tree;
+            _nodeComponentTypes.Clear();
+            if (tree?.Nodes == null)
+                return;
+
+            for (int i = 0; i < tree.Nodes.Count; i++)
+                CollectNodeComponents(tree.Nodes[i]);
+        }
+
+        public void Invalidate()
+        {
+            _runtime = null;
+            _tree = null;
+            _nodeComponentTypes.Clear();
+            _selectedNodeGuid = null;
+        }
+
+        public void SetSelectedNode(string nodeGuid)
+        {
+            _selectedNodeGuid = nodeGuid;
+        }
+
+        public void Draw(BehaviorTreeRuntime runtime, UnitRuntimeDrawerContext context, BehaviorTreeData tree)
+        {
+            Refresh(runtime, tree);
+            EditorGUILayout.Space(10f);
+            EditorGUILayout.LabelField("Component Data", EditorStyles.boldLabel);
+            if (context == null)
+            {
+                EditorGUILayout.HelpBox("Select a live unit to inspect runtime data.", MessageType.Info);
+                return;
+            }
+
+            IReadOnlyList<IUnitRuntimeAttributeDrawer> drawers = UnitRuntimeAttributeDrawerFactory.GetDrawers();
+            bool hasComponent = false;
+            for (int i = 0; i < drawers.Count; i++)
+            {
+                IUnitRuntimeAttributeDrawer drawer = drawers[i];
+                if (!drawer.CanDraw(context))
+                    continue;
+
+                hasComponent = true;
+                bool isSelectedNodeComponent = drawer is IUnitRuntimeComponentDrawer componentDrawer &&
+                                               IsSelectedNodeComponent(componentDrawer.ComponentType);
+                DrawComponentDrawer(drawer, context, isSelectedNodeComponent);
+            }
+
+            if (!hasComponent)
+                EditorGUILayout.HelpBox("This unit does not expose any registered component data.", MessageType.Info);
+        }
+
+        private void DrawComponentDrawer(
+            IUnitRuntimeAttributeDrawer drawer,
+            UnitRuntimeDrawerContext context,
+            bool isSelectedNodeComponent)
+        {
+            Color originalColor = GUI.backgroundColor;
+            if (isSelectedNodeComponent)
+                GUI.backgroundColor = new Color(0.38f, 0.70f, 1f, 1f);
+
+            EditorGUILayout.BeginVertical("box");
+            using (new EditorGUI.DisabledScope(true))
+                drawer.Draw(context);
+            EditorGUILayout.EndVertical();
+            GUI.backgroundColor = originalColor;
+        }
+
+        private bool IsSelectedNodeComponent(Type componentType)
+        {
+            return componentType != null &&
+                   !string.IsNullOrWhiteSpace(_selectedNodeGuid) &&
+                   _nodeComponentTypes.TryGetValue(_selectedNodeGuid, out HashSet<Type> componentTypes) &&
+                   componentTypes.Contains(componentType);
+        }
+
+        private void CollectNodeComponents(BehaviorNodeData node)
+        {
+            switch (node)
+            {
+                case CheckBehaviorNodeData check:
+                    CollectConditions(node.Guid, check.Conditions);
+                    break;
+
+                case HitCheckBehaviorNodeData hitCheck:
+                    CollectExpression(node.Guid, hitCheck.Target, 0);
+                    break;
+
+                case SetBehaviorNodeData set:
+                    TrackSource(node.Guid, set.SetKey);
+                    if (set.Inputs == null)
+                        return;
+
+                    for (int i = 0; i < set.Inputs.Count; i++)
+                        CollectExpression(node.Guid, set.Inputs[i], 0);
+                    break;
+            }
+        }
+
+        private void CollectConditions(string nodeGuid, List<ConditionConfig> conditions)
+        {
+            if (conditions == null)
+                return;
+
+            for (int conditionIndex = 0; conditionIndex < conditions.Count; conditionIndex++)
+            {
+                ConditionConfig condition = conditions[conditionIndex];
+                if (condition?.Inputs == null)
+                    continue;
+
+                for (int inputIndex = 0; inputIndex < condition.Inputs.Count; inputIndex++)
+                    CollectExpression(nodeGuid, condition.Inputs[inputIndex], 0);
+            }
+        }
+
+        private void CollectExpression(string nodeGuid, ValueExpression expression, int depth)
+        {
+            if (expression == null || depth >= MaxExpressionDepth)
+                return;
+
+            if (expression.Kind == ValueExpressionKind.Getter)
+                TrackSource(nodeGuid, expression.GetterKey);
+
+            if (expression.Inputs == null)
+                return;
+
+            for (int i = 0; i < expression.Inputs.Count; i++)
+                CollectExpression(nodeGuid, expression.Inputs[i], depth + 1);
+        }
+
+        private void TrackSource(string nodeGuid, string sourceKey)
+        {
+            if (string.IsNullOrWhiteSpace(nodeGuid) || string.IsNullOrWhiteSpace(sourceKey))
+                return;
+
+            if (s_sourceSchema.TryGet(sourceKey, out UnitSourceGetSchemaEntry getEntry))
+            {
+                TrackComponent(nodeGuid, getEntry.ComponentType);
+                return;
+            }
+
+            if (s_sourceSchema.TryGet(sourceKey, out UnitSourceSetSchemaEntry setEntry))
+                TrackComponent(nodeGuid, setEntry.ComponentType);
+        }
+
+        private void TrackComponent(string nodeGuid, Type componentType)
+        {
+            if (string.IsNullOrWhiteSpace(nodeGuid) || componentType == null)
+                return;
+
+            if (!_nodeComponentTypes.TryGetValue(nodeGuid, out HashSet<Type> componentTypes))
+            {
+                componentTypes = new HashSet<Type>();
+                _nodeComponentTypes.Add(nodeGuid, componentTypes);
+            }
+
+            componentTypes.Add(componentType);
+        }
     }
 }

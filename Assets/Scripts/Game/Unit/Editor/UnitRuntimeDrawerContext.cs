@@ -1,3 +1,4 @@
+using System;
 using CrystalMagic.Game.Data;
 using Unity.Entities;
 
@@ -35,5 +36,10 @@ namespace CrystalMagic.Editor.Unit
     {
         bool CanDraw(UnitRuntimeDrawerContext context);
         void Draw(UnitRuntimeDrawerContext context);
+    }
+
+    public interface IUnitRuntimeComponentDrawer : IUnitRuntimeAttributeDrawer
+    {
+        Type ComponentType { get; }
     }
 }

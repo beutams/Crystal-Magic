@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 4276484546079677518}
   - component: {fileID: 7206818015236691583}
   - component: {fileID: 6717860997846557113}
+  - component: {fileID: 1640255539093547268}
   m_Layer: 0
   m_Name: Ground_Fire_Start
   m_TagString: Untagged
@@ -103,3 +104,25 @@ MonoBehaviour:
   EnterClip: {fileID: 0}
   LoopClip: {fileID: 7400000, guid: 310ad10bb4f01084483225242d4aa511, type: 2}
   ExitClip: {fileID: 0}
+--- !u!95 &1640255539093547268
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6636354298396580147}
+  m_Enabled: 0
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 45b2600b29cd64640a02cca03b972202, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage:
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0

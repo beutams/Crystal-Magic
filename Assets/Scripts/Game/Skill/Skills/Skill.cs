@@ -66,6 +66,8 @@ namespace CrystalMagic.Game.Skill
             context.EntityManager = entityManager;
             context.HasOriginEntity = true;
             context.OriginEntity = request.OriginEntity;
+            context.HasOriginPositionSnapshot = false;
+            context.OriginPositionSnapshot = Vector3.zero;
             context.HasTargetEntity = false;
             context.TargetEntity = Entity.Null;
             context.HasTarget = false;

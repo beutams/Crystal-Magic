@@ -236,10 +236,10 @@ namespace CrystalMagic.Game.Unit
                     if (entityManager.HasComponent<UnitPerceptionComponent>(entity))
                     {
                         Append(builder, "SearchRadius", entityManager.GetComponentData<UnitPerceptionComponent>(entity).SearchRadius);
-                        if (entityManager.HasBuffer<UnitPerceptionEntityElement>(entity))
+                        if (entityManager.HasBuffer<UnitPerceptionUnitElement>(entity))
                         {
-                            DynamicBuffer<UnitPerceptionEntityElement> entries = entityManager.GetBuffer<UnitPerceptionEntityElement>(entity);
-                            builder.Append("Entities=");
+                            DynamicBuffer<UnitPerceptionUnitElement> entries = entityManager.GetBuffer<UnitPerceptionUnitElement>(entity);
+                            builder.Append("Units=");
                             for (int i = 0; i < entries.Length; i++)
                             {
                                 if (i > 0)
@@ -372,7 +372,15 @@ namespace CrystalMagic.Game.Unit
                 case UnitDebugComponentKind.Variables:
                     if (entityManager.HasComponent<UnitVariableComponent>(entity))
                     {
-                        UnitVariableComponent value = entityManager.GetComponentObject<UnitVariableComponent>(entity);
+                        UnitVariableComponent localValue = entityManager.GetComponentObject<UnitVariableComponent>(entity);
+                        builder.Append("Owner=").Append(localValue?.Owner ?? Entity.Null).AppendLine();
+                        if (!UnitVariableSource.TryResolveOwner(entityManager, entity, out Entity ownerEntity, out UnitVariableComponent value))
+                        {
+                            builder.AppendLine("Variables could not resolve their owner.");
+                            break;
+                        }
+
+                        builder.Append("ValueOwner=").Append(ownerEntity).AppendLine();
                         builder.AppendLine("Variables are a typed runtime dictionary and are displayed read-only.");
                         if (value.Values != null)
                         {
@@ -678,16 +686,16 @@ namespace CrystalMagic.Game.Unit
             if (changed)
                 manager.SetComponentData(entity, value);
 
-            if (!values.TryGetValue("Entities", out string serializedEntries) || !manager.HasBuffer<UnitPerceptionEntityElement>(entity))
+            if (!values.TryGetValue("Units", out string serializedEntries) || !manager.HasBuffer<UnitPerceptionUnitElement>(entity))
                 return changed;
 
             if (!TryParseEntityList(serializedEntries, out List<Entity> entries))
                 return changed;
 
-            DynamicBuffer<UnitPerceptionEntityElement> buffer = manager.GetBuffer<UnitPerceptionEntityElement>(entity);
+            DynamicBuffer<UnitPerceptionUnitElement> buffer = manager.GetBuffer<UnitPerceptionUnitElement>(entity);
             buffer.Clear();
             for (int i = 0; i < entries.Count; i++)
-                buffer.Add(new UnitPerceptionEntityElement { Value = entries[i] });
+                buffer.Add(new UnitPerceptionUnitElement { Value = entries[i] });
             return true;
         }
 

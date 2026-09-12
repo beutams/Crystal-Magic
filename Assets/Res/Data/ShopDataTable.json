@@ -118,6 +118,27 @@
       "Price": 30,
       "Grade": 1,
       "NPC": "SkillShop"
+    },
+    {
+      "Id": 17,
+      "itemDataId": 17,
+      "Price": 30,
+      "Grade": 1,
+      "NPC": "SkillShop"
+    },
+    {
+      "Id": 18,
+      "itemDataId": 18,
+      "Price": 30,
+      "Grade": 1,
+      "NPC": "SkillShop"
+    },
+    {
+      "Id": 19,
+      "itemDataId": 19,
+      "Price": 30,
+      "Grade": 1,
+      "NPC": "SkillShop"
     }
   ]
 }

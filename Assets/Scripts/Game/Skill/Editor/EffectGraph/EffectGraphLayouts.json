@@ -276,6 +276,138 @@
                     }
                 ]
             }
+        },
+        {
+            "OwnerKey": "Skill:5:EffectChain",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 65.33333587646485,
+                    "y": -235.3333282470703
+                },
+                "ViewScale": 0.7561436891555786,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 84.0,
+                            "y": 180.6666717529297
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/0/OnAfterSearch",
+                        "Position": {
+                            "x": 129.3333282470703,
+                            "y": 334.0
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/0/OnAfterSearch/1/OnAfterRead",
+                        "Position": {
+                            "x": 349.3333435058594,
+                            "y": 686.0
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/0/OnAfterSearch/2/OnAfterRead",
+                        "Position": {
+                            "x": 191.3333282470703,
+                            "y": 694.0
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "Skill:6:EffectChain",
+            "Layout": {
+                "ViewPosition": {
+                    "x": -14.0,
+                    "y": 11.333333015441895
+                },
+                "ViewScale": 0.6575162410736084,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": -4.0,
+                            "y": 194.0
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/0/OnStartEffects",
+                        "Position": {
+                            "x": 37.33333206176758,
+                            "y": 523.3333129882813
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/0/OnStartEffects/1/OnAfterSearch",
+                        "Position": {
+                            "x": 60.0,
+                            "y": 784.6666870117188
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/0/OnEndEffects",
+                        "Position": {
+                            "x": 272.6666564941406,
+                            "y": 411.3333435058594
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/1/OnEndEffects",
+                        "Position": {
+                            "x": 516.6666870117188,
+                            "y": 552.6666870117188
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/2/OnEndEffects",
+                        "Position": {
+                            "x": 294.0,
+                            "y": 562.6666870117188
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "Skill:19:EffectChain",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 0.0,
+                    "y": 4.0
+                },
+                "ViewScale": 1.0,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 64.80000305175781,
+                            "y": 179.20001220703126
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/0/OnAfterSearch",
+                        "Position": {
+                            "x": 146.39999389648438,
+                            "y": 367.20001220703127
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
         }
     ]
 }

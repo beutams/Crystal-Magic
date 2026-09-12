@@ -21,7 +21,7 @@ partial class UnitPerceptionSystem : SystemBase
         }
 
         foreach (var (perception, transform, nearbyEntities, entity) in
-                 SystemAPI.Query<RefRO<UnitPerceptionComponent>, RefRO<LocalTransform>, DynamicBuffer<UnitPerceptionEntityElement>>()
+                 SystemAPI.Query<RefRO<UnitPerceptionComponent>, RefRO<LocalTransform>, DynamicBuffer<UnitPerceptionUnitElement>>()
                      .WithNone<UnitDeathComponent>()
                      .WithEntityAccess())
         {
@@ -45,7 +45,7 @@ partial class UnitPerceptionSystem : SystemBase
                     continue;
                 if (EntityManager.HasComponent<UnitDeathComponent>(hit.Entity) && EntityManager.IsComponentEnabled<UnitDeathComponent>(hit.Entity))
                     continue;
-                nearbyEntities.Add(new UnitPerceptionEntityElement { Value = hit.Entity });
+                nearbyEntities.Add(new UnitPerceptionUnitElement { Value = hit.Entity });
             }
         }
     }

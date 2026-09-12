@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 1871670343255774264}
   - component: {fileID: 7830108890206548598}
   - component: {fileID: 2080050093071011901}
+  - component: {fileID: 7873168348418264449}
   m_Layer: 0
   m_Name: Incinerate
   m_TagString: Untagged
@@ -103,3 +104,25 @@ MonoBehaviour:
   EnterClip: {fileID: 0}
   LoopClip: {fileID: 7400000, guid: d65eccb90f8a5bd42b2e80b44937a0c6, type: 2}
   ExitClip: {fileID: 0}
+--- !u!95 &7873168348418264449
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8436492800926945550}
+  m_Enabled: 0
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 929e1fa30cee8f34481e23270897bfa1, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage:
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0

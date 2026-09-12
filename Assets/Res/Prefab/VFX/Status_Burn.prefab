@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 1622765943144954867}
   - component: {fileID: 9057657855091575578}
   - component: {fileID: 6534946966121086242}
+  - component: {fileID: 1630213416141636696}
   m_Layer: 0
   m_Name: Status_Burn
   m_TagString: Untagged
@@ -103,3 +104,25 @@ MonoBehaviour:
   EnterClip: {fileID: 0}
   LoopClip: {fileID: 7400000, guid: a60ca05f40d11034eabd8928a280edf7, type: 2}
   ExitClip: {fileID: 0}
+--- !u!95 &1630213416141636696
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6675851987778211398}
+  m_Enabled: 0
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 5d5b774625e349b4787e26f7495888c9, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage:
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0

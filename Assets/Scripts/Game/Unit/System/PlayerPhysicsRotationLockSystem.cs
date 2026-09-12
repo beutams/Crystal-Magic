@@ -18,14 +18,24 @@ partial struct PlayerPhysicsRotationLockSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        foreach ((RefRO<UnitFactionComponent> factionRef, RefRW<PhysicsMass> massRef, RefRW<PhysicsVelocity> velocityRef) in
-            SystemAPI.Query<RefRO<UnitFactionComponent>, RefRW<PhysicsMass>, RefRW<PhysicsVelocity>>()
+        foreach (RefRW<PhysicsMassOverride> overrideRef in
+            SystemAPI.Query<RefRW<PhysicsMassOverride>>()
+                .WithAll<UnitFactionComponent>()
                 .WithNone<UnitDeathComponent>())
         {
-            if (!UnitFactionUtility.IsPlayer(factionRef.ValueRO.Value))
-                continue;
+            PhysicsMassOverride massOverride = overrideRef.ValueRO;
+            massOverride.IsKinematic = 1;
+            massOverride.SetVelocityToZero = 0;
+            overrideRef.ValueRW = massOverride;
+        }
 
+        foreach ((RefRW<PhysicsMass> massRef, RefRW<PhysicsVelocity> velocityRef) in
+            SystemAPI.Query<RefRW<PhysicsMass>, RefRW<PhysicsVelocity>>()
+                .WithAll<UnitFactionComponent>()
+                .WithNone<UnitDeathComponent>())
+        {
             PhysicsMass mass = massRef.ValueRO;
+            mass.InverseMass = 0f;
             mass.InverseInertia = float3.zero;
             massRef.ValueRW = mass;
 

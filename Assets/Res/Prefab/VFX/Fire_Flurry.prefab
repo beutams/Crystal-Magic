@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 993867071262874422}
   - component: {fileID: 563650142396343866}
   - component: {fileID: 3014879366348022696}
+  - component: {fileID: 2170496748150550492}
   m_Layer: 0
   m_Name: Fire_Flurry
   m_TagString: Untagged
@@ -103,3 +104,25 @@ MonoBehaviour:
   EnterClip: {fileID: 0}
   LoopClip: {fileID: 7400000, guid: 63189906f0b9c9a42a25c5fd5e35fe7d, type: 2}
   ExitClip: {fileID: 0}
+--- !u!95 &2170496748150550492
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6824681756334980364}
+  m_Enabled: 0
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 6698c1cacd2fba3499b3c9b448113085, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage:
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0

@@ -31,7 +31,9 @@ public abstract class ABehaviorNode
     public BehaviorNodeStatus Tick(BehaviorContext context)
     {
         context?.SetCurrentNode(this);
-        return OnTick(context);
+        BehaviorNodeStatus status = OnTick(context);
+        context?.SetNodeStatus(Guid, status);
+        return status;
     }
 
     public bool TryBind(UnitSourceAccessTable sources, out string error)

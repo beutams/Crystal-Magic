@@ -47,12 +47,39 @@ namespace CrystalMagic.Core
         private bool _drawCurrentQueryHits;
         private int _shapeDrawFrame = -1;
         private int _shapeCountThisFrame;
+        private const float QueryShapeLifetimeSeconds = 1f;
+        private readonly System.Collections.Generic.List<ActiveQueryShape> _activeShapes = new();
+        private readonly System.Collections.Generic.List<ActiveDebugLine> _activeLines = new();
+
+        private struct ActiveQueryShape
+        {
+            public DebugQueryShapeRequest Request;
+            public float ExpiresAt;
+        }
+
+        private struct ActiveDebugLine
+        {
+            public Vector3 Start;
+            public Vector3 End;
+            public Color Color;
+            public float ExpiresAt;
+        }
 
         public override int Priority => 3;
 
         public bool IsEnabled => _isEnabled;
 
         public event Action<bool> EnabledChanged;
+
+        // Allow gameplay scenes such as TrainingScene to be played directly in the
+        // editor without relying on Start.unity's persistent GameEntry hierarchy.
+        protected override void Awake()
+        {
+            if (!InitializeSingletonInstance(this))
+                return;
+
+            UpdateQueryVisualizationSubscription();
+        }
 
         public override void Initialize()
         {
@@ -73,8 +100,64 @@ namespace CrystalMagic.Core
         public override void Cleanup()
         {
             UnsubscribeQueryVisualization();
+            _activeShapes.Clear();
+            _activeLines.Clear();
             EnabledChanged = null;
             base.Cleanup();
+        }
+
+        private void LateUpdate()
+        {
+            if (!_isEnabled)
+            {
+                _activeShapes.Clear();
+                _activeLines.Clear();
+                return;
+            }
+
+            float now = Time.unscaledTime;
+            for (int i = _activeShapes.Count - 1; i >= 0; i--)
+            {
+                ActiveQueryShape shape = _activeShapes[i];
+                float remaining = shape.ExpiresAt - now;
+                if (remaining <= 0f)
+                {
+                    _activeShapes.RemoveAt(i);
+                    continue;
+                }
+
+                Color color = GetFadedColor(shape.Request.ShapeType switch
+                {
+                    DebugQueryShapeType.Circle => _circleColor,
+                    DebugQueryShapeType.ForwardRect => _forwardRectColor,
+                    _ => _coneColor,
+                }, remaining);
+                switch (shape.Request.ShapeType)
+                {
+                    case DebugQueryShapeType.Circle:
+                        DrawCircle(shape.Request.Origin, shape.Request.Radius, color);
+                        break;
+                    case DebugQueryShapeType.ForwardRect:
+                        DrawForwardRect(shape.Request.Origin, shape.Request.Forward, shape.Request.Length, shape.Request.Width, color);
+                        break;
+                    case DebugQueryShapeType.Cone:
+                        DrawCone(shape.Request.Origin, shape.Request.Forward, shape.Request.Radius, shape.Request.AngleDegrees, color);
+                        break;
+                }
+            }
+
+            for (int i = _activeLines.Count - 1; i >= 0; i--)
+            {
+                ActiveDebugLine line = _activeLines[i];
+                float remaining = line.ExpiresAt - now;
+                if (remaining <= 0f)
+                {
+                    _activeLines.RemoveAt(i);
+                    continue;
+                }
+
+                Debug.DrawLine(line.Start, line.End, GetFadedColor(line.Color, remaining), 0f, false);
+            }
         }
 
         private void UpdateQueryVisualizationSubscription()
@@ -110,18 +193,11 @@ namespace CrystalMagic.Core
             if (!_drawCurrentQueryHits)
                 return;
 
-            switch (request.ShapeType)
+            _activeShapes.Add(new ActiveQueryShape
             {
-                case DebugQueryShapeType.Circle:
-                    DrawCircle(request.Origin, request.Radius, _circleColor);
-                    break;
-                case DebugQueryShapeType.ForwardRect:
-                    DrawForwardRect(request.Origin, request.Forward, request.Length, request.Width);
-                    break;
-                case DebugQueryShapeType.Cone:
-                    DrawCone(request.Origin, request.Forward, request.Radius, request.AngleDegrees);
-                    break;
-            }
+                Request = request,
+                ExpiresAt = Time.unscaledTime + QueryShapeLifetimeSeconds,
+            });
         }
 
         private void HandleQueryHitReported(float3 origin, float3 position)
@@ -131,11 +207,29 @@ namespace CrystalMagic.Core
 
             Vector3 start = ToDebugPosition(origin);
             Vector3 markerCenter = ToDebugPosition(position);
-            Debug.DrawLine(start, markerCenter, _hitColor, 0f, false);
-
             float halfSize = _hitMarkerSize * 0.5f;
-            Debug.DrawLine(markerCenter + Vector3.left * halfSize, markerCenter + Vector3.right * halfSize, _hitColor, 0f, false);
-            Debug.DrawLine(markerCenter + Vector3.down * halfSize, markerCenter + Vector3.up * halfSize, _hitColor, 0f, false);
+            float expiresAt = Time.unscaledTime + QueryShapeLifetimeSeconds;
+            _activeLines.Add(new ActiveDebugLine
+            {
+                Start = start,
+                End = markerCenter,
+                Color = _hitColor,
+                ExpiresAt = expiresAt,
+            });
+            _activeLines.Add(new ActiveDebugLine
+            {
+                Start = markerCenter + Vector3.left * halfSize,
+                End = markerCenter + Vector3.right * halfSize,
+                Color = _hitColor,
+                ExpiresAt = expiresAt,
+            });
+            _activeLines.Add(new ActiveDebugLine
+            {
+                Start = markerCenter + Vector3.down * halfSize,
+                End = markerCenter + Vector3.up * halfSize,
+                Color = _hitColor,
+                ExpiresAt = expiresAt,
+            });
         }
 
         private bool TryBeginShapeDraw()
@@ -170,7 +264,7 @@ namespace CrystalMagic.Core
             }
         }
 
-        private void DrawForwardRect(float3 origin, float2 forward, float length, float width)
+        private void DrawForwardRect(float3 origin, float2 forward, float length, float width, Color color)
         {
             float2 right = new(-forward.y, forward.x);
             float halfWidth = width * 0.5f;
@@ -182,18 +276,18 @@ namespace CrystalMagic.Core
             Vector3 corner2 = ToDebugPosition(new float3(end + right * halfWidth, origin.z));
             Vector3 corner3 = ToDebugPosition(new float3(end - right * halfWidth, origin.z));
 
-            Debug.DrawLine(corner0, corner1, _forwardRectColor, 0f, false);
-            Debug.DrawLine(corner1, corner2, _forwardRectColor, 0f, false);
-            Debug.DrawLine(corner2, corner3, _forwardRectColor, 0f, false);
-            Debug.DrawLine(corner3, corner0, _forwardRectColor, 0f, false);
+            Debug.DrawLine(corner0, corner1, color, 0f, false);
+            Debug.DrawLine(corner1, corner2, color, 0f, false);
+            Debug.DrawLine(corner2, corner3, color, 0f, false);
+            Debug.DrawLine(corner3, corner0, color, 0f, false);
         }
 
-        private void DrawCone(float3 origin, float2 forward, float radius, float angleDegrees)
+        private void DrawCone(float3 origin, float2 forward, float radius, float angleDegrees, Color color)
         {
             float clampedAngle = Mathf.Clamp(angleDegrees, 0f, 360f);
             if (clampedAngle >= 359.99f)
             {
-                DrawCircle(origin, radius, _coneColor);
+                DrawCircle(origin, radius, color);
                 return;
             }
 
@@ -208,11 +302,17 @@ namespace CrystalMagic.Core
                 float progress = i / (float)segments;
                 float angle = forwardAngle - halfAngleRadians + clampedAngle * Mathf.Deg2Rad * progress;
                 Vector3 current = ToDebugPosition(origin + new float3(Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius, 0f));
-                Debug.DrawLine(previous, current, _coneColor, 0f, false);
+                Debug.DrawLine(previous, current, color, 0f, false);
                 previous = current;
             }
 
-            Debug.DrawLine(previous, originPosition, _coneColor, 0f, false);
+            Debug.DrawLine(previous, originPosition, color, 0f, false);
+        }
+
+        private static Color GetFadedColor(Color color, float remaining)
+        {
+            color.a *= Mathf.Clamp01(remaining / QueryShapeLifetimeSeconds);
+            return color;
         }
 
         private Vector3 ToDebugPosition(float3 position)

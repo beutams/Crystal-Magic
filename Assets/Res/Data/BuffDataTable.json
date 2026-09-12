@@ -202,6 +202,40 @@
         }
       ],
       "Id": 9
+    },
+    {
+      "NameKey": "火盾",
+      "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|fire",
+      "CanStack": false,
+      "MaxStacks": 1,
+      "PropertyModifiers": [
+        {
+          "Channel": 14,
+          "Factor": -0.3,
+          "Bonus": 0.0
+        }
+      ],
+      "SkillModifiers": [],
+      "TriggerEntries": [
+        {
+          "TriggerType": 1,
+          "TickIntervalSeconds": 0.0,
+          "HookType": 5,
+          "ConsumeStackOnTrigger": false,
+          "Effects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+              "BuffId": 0,
+              "TargetSource": 1,
+              "DurationSeconds": 5.0,
+              "StackCount": 1,
+              "OnlyOncePerPersistentEffect": false,
+              "Conditions": []
+            }
+          ]
+        }
+      ],
+      "Id": 10
     }
   ]
 }

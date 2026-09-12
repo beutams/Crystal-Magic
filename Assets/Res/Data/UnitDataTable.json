@@ -1005,13 +1005,13 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 120000.0,
-          "BaseHealthRegenPerSecond": 50.0,
+          "BaseMaxHealth": 100.0,
+          "BaseHealthRegenPerSecond": 0.0,
           "BaseDefense": 0.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-          "BaseAttackPower": 10.0,
+          "BaseAttackPower": 20.0,
           "BaseSkillRange": 0.0,
           "BaseChantSpeedBonus": 0.0
         },
@@ -1026,7 +1026,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 16.0
+          "SearchRadius": 10.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",

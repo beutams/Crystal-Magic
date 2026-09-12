@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 9135975634684979000}
   - component: {fileID: 5707974576151666703}
   - component: {fileID: 3786132379890108056}
+  - component: {fileID: 8220566446720013698}
   m_Layer: 0
   m_Name: Flame_Furnace
   m_TagString: Untagged
@@ -103,3 +104,25 @@ MonoBehaviour:
   EnterClip: {fileID: 0}
   LoopClip: {fileID: 7400000, guid: f658d36996f96ed4f9b08b907a53e9ea, type: 2}
   ExitClip: {fileID: 0}
+--- !u!95 &8220566446720013698
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4121642682274361642}
+  m_Enabled: 0
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 3b9fa7ac13646ff458457065a2af727b, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage:
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0

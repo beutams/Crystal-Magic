@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 8392386969719006906}
   - component: {fileID: 1104916142418159307}
   - component: {fileID: 6208245321238487155}
+  - component: {fileID: 9014219759086675452}
   m_Layer: 0
   m_Name: Fireball
   m_TagString: Untagged
@@ -103,3 +104,25 @@ MonoBehaviour:
   EnterClip: {fileID: 0}
   LoopClip: {fileID: 7400000, guid: bdafbbeee38cf1944a71add217bab422, type: 2}
   ExitClip: {fileID: 0}
+--- !u!95 &9014219759086675452
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5113658404753888381}
+  m_Enabled: 0
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: c3392479b55d04b4a87e3f8bbe6999ab, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage:
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0

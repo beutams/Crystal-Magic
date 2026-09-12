@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 2556263041901922254}
   - component: {fileID: 2451258638012108347}
   - component: {fileID: 2097489693019376601}
+  - component: {fileID: 1212736031464491968}
   m_Layer: 0
   m_Name: Impact_Firecloud_Small
   m_TagString: Untagged
@@ -103,3 +104,25 @@ MonoBehaviour:
   EnterClip: {fileID: 0}
   LoopClip: {fileID: 7400000, guid: 785481486be7037479f5512f5580e66e, type: 2}
   ExitClip: {fileID: 0}
+--- !u!95 &1212736031464491968
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7621726644268497045}
+  m_Enabled: 0
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: b3069b79fb30ba14492a81c2015e4ff1, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage:
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0

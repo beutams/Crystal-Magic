@@ -134,7 +134,7 @@ namespace CrystalMagic.UI
 
             LocalTransform transform = entityManager.GetComponentData<LocalTransform>(unitEntity);
             transform.Position = spawnPosition;
-            transform.Rotation = UnitFacingUtility.CreateRotation(-spawnFacing);
+            transform.Rotation = quaternion.identity;
             entityManager.SetComponentData(unitEntity, transform);
             UnitFacingUtility.SetFacing(entityManager, unitEntity, -spawnFacing);
         }

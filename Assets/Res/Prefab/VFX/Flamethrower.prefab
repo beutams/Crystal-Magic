@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 1210387366395259309}
   - component: {fileID: 1725005777199677655}
   - component: {fileID: 1765769621138822625}
+  - component: {fileID: 2744431116204996753}
   m_Layer: 0
   m_Name: Flamethrower
   m_TagString: Untagged
@@ -103,3 +104,25 @@ MonoBehaviour:
   EnterClip: {fileID: 0}
   LoopClip: {fileID: 7400000, guid: ee73f0483894f9e41a4464fbb1cc2cbd, type: 2}
   ExitClip: {fileID: 0}
+--- !u!95 &2744431116204996753
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4415662091446437104}
+  m_Enabled: 0
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 277948c62d4668d4d9a26e5dbb95128d, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage:
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0

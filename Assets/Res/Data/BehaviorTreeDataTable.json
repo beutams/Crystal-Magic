@@ -71,6 +71,183 @@
         }
       ],
       "Id": 4
+    },
+    {
+      "UnitDataId": 28,
+      "Name": "Slime",
+      "Description": "Selects only the current intent: idle, chase, or one attack. StateScript owns action execution and cooldown.",
+      "RootNodeGuid": "slime_root",
+      "Nodes": [
+        {
+          "Type": "Root",
+          "Guid": "slime_root",
+          "EditorPosition": { "x": 80.0, "y": 120.0 },
+          "ChildGuids": [ "slime_selector" ]
+        },
+        {
+          "Type": "Selector",
+          "Guid": "slime_selector",
+          "EditorPosition": { "x": 280.0, "y": 120.0 },
+          "ChildGuids": [ "slime_attack01", "slime_attack02", "slime_chase", "slime_idle" ]
+        },
+        {
+          "Type": "Sequence",
+          "Guid": "slime_attack01",
+          "EditorPosition": { "x": 500.0, "y": -80.0 },
+          "ChildGuids": [ "slime_hit01", "slime_stop01", "slime_state_attack01" ]
+        },
+        {
+          "Type": "HitCheck",
+          "Guid": "slime_hit01",
+          "EditorPosition": { "x": 730.0, "y": -140.0 },
+          "ChildGuids": [],
+          "Target": {
+            "Kind": 1,
+            "GetterKey": "unit.perception.nearestUnitByFaction",
+            "Inputs": [ { "Kind": 0, "Literal": { "Type": 2, "Int": 0 } } ]
+          },
+          "Center": { "x": 0.18334088, "y": -0.022417814 },
+          "Size": { "x": 0.32010794, "y": 0.12543157 },
+          "TargetPadding": 0.0
+        },
+        {
+          "Type": "Set",
+          "Guid": "slime_stop01",
+          "EditorPosition": { "x": 730.0, "y": -60.0 },
+          "ChildGuids": [],
+          "SetKey": "unit.move.setDirection",
+          "Key": "",
+          "Inputs": [ { "Kind": 0, "Literal": { "Type": 4, "Float2": { "x": 0.0, "y": 0.0 } } } ]
+        },
+        {
+          "Type": "Set",
+          "Guid": "slime_state_attack01",
+          "EditorPosition": { "x": 730.0, "y": 20.0 },
+          "ChildGuids": [],
+          "SetKey": "unit.variables.set",
+          "Key": "ai.intent",
+          "Inputs": [ { "Kind": 0, "Literal": { "Type": 7, "String": "Attack01" } } ]
+        },
+        {
+          "Type": "Sequence",
+          "Guid": "slime_attack02",
+          "EditorPosition": { "x": 500.0, "y": 140.0 },
+          "ChildGuids": [ "slime_hit02", "slime_stop02", "slime_state_attack02" ]
+        },
+        {
+          "Type": "HitCheck",
+          "Guid": "slime_hit02",
+          "EditorPosition": { "x": 730.0, "y": 100.0 },
+          "ChildGuids": [],
+          "Target": {
+            "Kind": 1,
+            "GetterKey": "unit.perception.nearestUnitByFaction",
+            "Inputs": [ { "Kind": 0, "Literal": { "Type": 2, "Int": 0 } } ]
+          },
+          "Center": { "x": 0.24250792, "y": -0.037201166 },
+          "Size": { "x": 0.50868106, "y": 0.40447682 },
+          "TargetPadding": 0.0
+        },
+        {
+          "Type": "Set",
+          "Guid": "slime_stop02",
+          "EditorPosition": { "x": 730.0, "y": 180.0 },
+          "ChildGuids": [],
+          "SetKey": "unit.move.setDirection",
+          "Key": "",
+          "Inputs": [ { "Kind": 0, "Literal": { "Type": 4, "Float2": { "x": 0.0, "y": 0.0 } } } ]
+        },
+        {
+          "Type": "Set",
+          "Guid": "slime_state_attack02",
+          "EditorPosition": { "x": 730.0, "y": 260.0 },
+          "ChildGuids": [],
+          "SetKey": "unit.variables.set",
+          "Key": "ai.intent",
+          "Inputs": [ { "Kind": 0, "Literal": { "Type": 7, "String": "Attack02" } } ]
+        },
+        {
+          "Type": "Sequence",
+          "Guid": "slime_chase",
+          "EditorPosition": { "x": 500.0, "y": 360.0 },
+          "ChildGuids": [ "slime_has_player", "slime_move_to_player", "slime_state_chase" ]
+        },
+        {
+          "Type": "Check",
+          "Guid": "slime_has_player",
+          "EditorPosition": { "x": 730.0, "y": 340.0 },
+          "ChildGuids": [],
+          "Conditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "GreaterThan",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "GetterKey": "unit.perception.unitsByFactionCount",
+                  "Inputs": [ { "Kind": 0, "Literal": { "Type": 2, "Int": 0 } } ]
+                },
+                { "Kind": 0, "Literal": { "Type": 2, "Int": 0 } }
+              ]
+            }
+          ]
+        },
+        {
+          "Type": "Set",
+          "Guid": "slime_move_to_player",
+          "EditorPosition": { "x": 730.0, "y": 420.0 },
+          "ChildGuids": [],
+          "SetKey": "unit.move.setDirection",
+          "Key": "",
+          "Inputs": [
+            {
+              "Kind": 1,
+              "GetterKey": "unit.transform.directionTo",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "GetterKey": "unit.perception.nearestUnitByFaction",
+                  "Inputs": [ { "Kind": 0, "Literal": { "Type": 2, "Int": 0 } } ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Type": "Set",
+          "Guid": "slime_state_chase",
+          "EditorPosition": { "x": 730.0, "y": 500.0 },
+          "ChildGuids": [],
+          "SetKey": "unit.variables.set",
+          "Key": "ai.intent",
+          "Inputs": [ { "Kind": 0, "Literal": { "Type": 7, "String": "Chase" } } ]
+        },
+        {
+          "Type": "Sequence",
+          "Guid": "slime_idle",
+          "EditorPosition": { "x": 500.0, "y": 600.0 },
+          "ChildGuids": [ "slime_stop_idle", "slime_state_idle" ]
+        },
+        {
+          "Type": "Set",
+          "Guid": "slime_stop_idle",
+          "EditorPosition": { "x": 730.0, "y": 580.0 },
+          "ChildGuids": [],
+          "SetKey": "unit.move.setDirection",
+          "Key": "",
+          "Inputs": [ { "Kind": 0, "Literal": { "Type": 4, "Float2": { "x": 0.0, "y": 0.0 } } } ]
+        },
+        {
+          "Type": "Set",
+          "Guid": "slime_state_idle",
+          "EditorPosition": { "x": 730.0, "y": 660.0 },
+          "ChildGuids": [],
+          "SetKey": "unit.variables.set",
+          "Key": "ai.intent",
+          "Inputs": [ { "Kind": 0, "Literal": { "Type": 7, "String": "Idle" } } ]
+        }
+      ],
+      "Id": 5
     }
   ]
 }

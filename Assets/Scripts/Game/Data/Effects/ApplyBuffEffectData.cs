@@ -1,10 +1,21 @@
 namespace CrystalMagic.Game.Data.Effects
 {
+    public enum BuffTargetSource
+    {
+        [EditorLabel("当前目标")]
+        CurrentTarget = 0,
+        [EditorLabel("事件另一方")]
+        OtherEntity = 1,
+    }
+
     [System.Serializable]
     public sealed class ApplyBuffEffectData : EffectData
     {
         [EditorLabel("BuffId")]
         public int BuffId = -1;
+
+        [EditorLabel("施加目标")]
+        public BuffTargetSource TargetSource = BuffTargetSource.CurrentTarget;
 
         [EditorLabel("持续时间")]
         public float DurationSeconds = 1f;

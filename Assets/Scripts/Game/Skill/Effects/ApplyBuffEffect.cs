@@ -18,7 +18,9 @@ namespace CrystalMagic.Game.Skill.Effects
                 return;
 
             EntityManager entityManager = context.EntityManager;
-            Entity target = context.TargetEntity;
+            Entity target = Data.TargetSource == BuffTargetSource.OtherEntity && context.HasOtherEntity
+                ? context.OtherEntity
+                : context.TargetEntity;
             if (target == Entity.Null || !entityManager.Exists(target))
                 return;
 

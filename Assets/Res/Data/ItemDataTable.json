@@ -213,7 +213,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 30,
-            "IconPath": "",
+            "IconPath": "Assets/Res/Sprites/Skill/fire_skill_11.png",
             "IsNonTransferable": false
         },
         {
@@ -237,7 +237,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 30,
-            "IconPath": "",
+            "IconPath": "Assets/Res/Sprites/Skill/fire_skill_17.png",
             "IsNonTransferable": false
         },
         {

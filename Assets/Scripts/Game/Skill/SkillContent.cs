@@ -53,6 +53,11 @@ namespace CrystalMagic.Game.Skill
 
         public Entity OriginEntity { get; set; }
 
+        /// <summary>施放时记录的施法者坐标，供延迟效果脱离施法者后复用。</summary>
+        public bool HasOriginPositionSnapshot { get; set; }
+
+        public Vector3 OriginPositionSnapshot { get; set; }
+
         public int SourceSkillId { get; set; } = -1;
 
         public bool HasTargetEntity { get; set; }

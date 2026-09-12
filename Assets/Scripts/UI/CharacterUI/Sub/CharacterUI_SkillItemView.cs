@@ -38,7 +38,7 @@ public class CharacterUI_SkillItemView : UISubView<CharacterUI_SkillItemData>, I
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (_data == null || !_data.CanSelectAddition || eventData == null)
+        if (_data == null || eventData == null)
             return;
 
         DragStarted?.Invoke(_data, eventData);

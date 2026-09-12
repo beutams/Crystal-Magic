@@ -316,7 +316,7 @@ namespace CrystalMagic.Editor.Unit
             }
 
             if (showRuntimeDebug)
-                _runtimeDataInspector.Draw(FindDebugRuntime(), SelectRuntimeDebugNode);
+                _runtimeDataInspector.Draw(FindDebugRuntime());
 
             EditorGUILayout.Space(8f);
             if (selectedEntry.Prefab.GetComponent<UnitStateScriptAuthoring>() == null)
@@ -376,16 +376,6 @@ namespace CrystalMagic.Editor.Unit
 
         internal void NotifyGraphNodeSelected(string nodeGuid)
         {
-            _runtimeDataInspector.SetSelectedNode(nodeGuid);
-            _inspectorContainer?.MarkDirtyRepaint();
-            Repaint();
-        }
-
-        private void SelectRuntimeDebugNode(string nodeGuid)
-        {
-            if (_graphView == null || !_graphView.SelectNode(nodeGuid))
-                return;
-
             _runtimeDataInspector.SetSelectedNode(nodeGuid);
             _inspectorContainer?.MarkDirtyRepaint();
             Repaint();
@@ -1211,10 +1201,9 @@ namespace CrystalMagic.Editor.Unit
     {
         private const int MaxExpressionDepth = 16;
 
-        private static readonly ComparatorFactory s_expressionFactory = CreateExpressionFactory();
+        private static readonly UnitSourceSchema s_sourceSchema = UnitSourceSchemaFactory.CreateForAllSources();
 
-        private readonly List<RuntimeInputBinding> _inputBindings = new();
-        private readonly List<StateScriptRuntimeDebugValue> _nodeDebugValues = new();
+        private readonly Dictionary<string, HashSet<Type>> _nodeComponentTypes = new(StringComparer.Ordinal);
         private StateScriptRuntime _runtime;
         private string _selectedNodeGuid;
 
@@ -1224,18 +1213,18 @@ namespace CrystalMagic.Editor.Unit
                 return;
 
             _runtime = runtime;
-            _inputBindings.Clear();
+            _nodeComponentTypes.Clear();
             if (runtime == null)
                 return;
 
             for (int i = 0; i < runtime.NodesInTraversalOrder.Count; i++)
-                CollectNodeInputs(runtime, runtime.NodesInTraversalOrder[i].Data);
+                CollectNodeComponents(runtime.NodesInTraversalOrder[i].Data);
         }
 
         public void Invalidate()
         {
             _runtime = null;
-            _inputBindings.Clear();
+            _nodeComponentTypes.Clear();
             _selectedNodeGuid = null;
         }
 
@@ -1244,375 +1233,205 @@ namespace CrystalMagic.Editor.Unit
             _selectedNodeGuid = nodeGuid;
         }
 
-        public void Draw(StateScriptRuntime runtime, Action<string> onNodeSelected)
+        public void Draw(StateScriptRuntime runtime)
         {
             Refresh(runtime);
             EditorGUILayout.Space(10f);
-            EditorGUILayout.LabelField("Runtime Data", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Component Data", EditorStyles.boldLabel);
             if (runtime == null)
             {
                 EditorGUILayout.HelpBox("Select a live unit and graph to inspect runtime data.", MessageType.Info);
                 return;
             }
 
-            DrawInputSection(onNodeSelected);
-            DrawNodeStateSection(runtime, onNodeSelected);
+            DrawComponentData(runtime);
         }
 
-        private void DrawInputSection(Action<string> onNodeSelected)
+        private void DrawComponentData(StateScriptRuntime runtime)
         {
-            EditorGUILayout.LabelField("Inputs", EditorStyles.miniBoldLabel);
-            if (_inputBindings.Count == 0)
+            UnitRuntimeDrawerContext context = new(runtime.EntityManager, runtime.Entity, string.Empty, null);
+            IReadOnlyList<IUnitRuntimeAttributeDrawer> drawers = UnitRuntimeAttributeDrawerFactory.GetDrawers();
+            bool hasComponent = false;
+            for (int i = 0; i < drawers.Count; i++)
             {
-                EditorGUILayout.HelpBox("This graph does not read any runtime input values.", MessageType.None);
-                return;
+                IUnitRuntimeAttributeDrawer drawer = drawers[i];
+                if (!drawer.CanDraw(context))
+                    continue;
+
+                hasComponent = true;
+                bool isSelectedNodeComponent = drawer is IUnitRuntimeComponentDrawer componentDrawer &&
+                                               IsSelectedNodeComponent(componentDrawer.ComponentType);
+                DrawComponentDrawer(drawer, context, isSelectedNodeComponent);
             }
 
-            for (int i = 0; i < _inputBindings.Count; i++)
-            {
-                RuntimeInputBinding binding = _inputBindings[i];
-                EditorGUILayout.BeginVertical("box");
-                DrawNodeHeader(binding.NodeGuid, binding.NodeLabel, onNodeSelected);
-                EditorGUILayout.LabelField(binding.Path, EditorStyles.miniLabel);
-                EditorGUILayout.LabelField(binding.Key, EditorStyles.miniLabel);
-
-                if (binding.TryRead(out UnitValue value, out string parameters, out string error))
-                {
-                    if (!string.IsNullOrEmpty(parameters))
-                        EditorGUILayout.LabelField("Parameters", parameters, EditorStyles.miniLabel);
-                    EditorGUILayout.LabelField("Value", FormatUnitValue(value), EditorStyles.miniLabel);
-                }
-                else
-                {
-                    EditorGUILayout.HelpBox(error, MessageType.Warning);
-                }
-
-                EditorGUILayout.EndVertical();
-            }
+            if (!hasComponent)
+                EditorGUILayout.HelpBox("This unit does not expose any registered component data.", MessageType.Info);
         }
 
-        private void DrawNodeStateSection(StateScriptRuntime runtime, Action<string> onNodeSelected)
-        {
-            EditorGUILayout.Space(6f);
-            EditorGUILayout.LabelField("Node State", EditorStyles.miniBoldLabel);
-            for (int i = 0; i < runtime.NodesInTraversalOrder.Count; i++)
-            {
-                StateScriptNode node = runtime.NodesInTraversalOrder[i];
-                _nodeDebugValues.Clear();
-                node.CollectRuntimeDebugData(_nodeDebugValues);
-
-                EditorGUILayout.BeginVertical("box");
-                DrawNodeHeader(node.Data.Guid, GetNodeLabel(node.Data), onNodeSelected);
-                for (int valueIndex = 0; valueIndex < _nodeDebugValues.Count; valueIndex++)
-                {
-                    StateScriptRuntimeDebugValue value = _nodeDebugValues[valueIndex];
-                    EditorGUILayout.LabelField(value.Name, value.Value, EditorStyles.miniLabel);
-                }
-                EditorGUILayout.EndVertical();
-            }
-        }
-
-        private void DrawNodeHeader(string nodeGuid, string nodeLabel, Action<string> onNodeSelected)
+        private void DrawComponentDrawer(
+            IUnitRuntimeAttributeDrawer drawer,
+            UnitRuntimeDrawerContext context,
+            bool isSelectedNodeComponent)
         {
             Color originalColor = GUI.backgroundColor;
-            if (string.Equals(nodeGuid, _selectedNodeGuid, StringComparison.Ordinal))
+            if (isSelectedNodeComponent)
                 GUI.backgroundColor = new Color(0.38f, 0.70f, 1f, 1f);
 
-            if (GUILayout.Button(nodeLabel, EditorStyles.miniButton))
-                onNodeSelected?.Invoke(nodeGuid);
-
+            EditorGUILayout.BeginVertical("box");
+            using (new EditorGUI.DisabledScope(true))
+                drawer.Draw(context);
+            EditorGUILayout.EndVertical();
             GUI.backgroundColor = originalColor;
         }
 
-        private void CollectNodeInputs(StateScriptRuntime runtime, StateScriptNodeData node)
+        private bool IsSelectedNodeComponent(Type componentType)
+        {
+            return componentType != null &&
+                   !string.IsNullOrWhiteSpace(_selectedNodeGuid) &&
+                   _nodeComponentTypes.TryGetValue(_selectedNodeGuid, out HashSet<Type> componentTypes) &&
+                   componentTypes.Contains(componentType);
+        }
+
+        private void CollectNodeComponents(StateScriptNodeData node)
         {
             if (node == null)
                 return;
 
-            DebugNodeReference nodeReference = new(node.Guid, GetNodeLabel(node));
             switch (node)
             {
                 case CompareStateScriptNodeData compare:
-                    CollectCondition(runtime, nodeReference, "Condition", compare.Condition);
+                    CollectCondition(node.Guid, compare.Condition);
                     break;
 
                 case MonitorStateScriptNodeData monitor:
-                    CollectCondition(runtime, nodeReference, "Condition", monitor.Condition);
+                    CollectCondition(node.Guid, monitor.Condition);
                     break;
 
                 case SetValueStateScriptNodeData setValue:
-                    CollectSetValueInputs(runtime, nodeReference, setValue);
+                    TrackSource(node.Guid, setValue.SetterKey);
+                    CollectSetValueInputs(node.Guid, setValue);
                     break;
 
                 case RequestSkillActionNodeData requestSkill:
-                    CollectExpression(runtime, nodeReference, "Skill ID", requestSkill.SkillId, 0);
+                    TrackComponent(node.Guid, typeof(UnitSkillReleaseComponent));
+                    CollectSkillRequestInputs(node.Guid, requestSkill.SkillId, requestSkill.Input);
+                    break;
+
+                case RequestSkillWithAdditionActionNodeData requestSkillWithAddition:
+                    TrackComponent(node.Guid, typeof(UnitSkillReleaseComponent));
+                    CollectSkillRequestInputs(node.Guid, requestSkillWithAddition.SkillId, requestSkillWithAddition.Input);
                     break;
 
                 case RequestInteractionActionNodeData requestInteraction:
-                    CollectInteractionInput(runtime, nodeReference, requestInteraction.Interaction);
+                    CollectInteractionInput(node.Guid, requestInteraction.Interaction);
                     break;
 
                 case PublishGameEventStateScriptNodeData publishGameEvent:
-                    CollectExpression(runtime, nodeReference, "Reference", publishGameEvent.Reference, 0);
+                    CollectExpression(node.Guid, publishGameEvent.Reference, 0);
                     break;
 
                 case TimerStateScriptNodeData timer:
-                    CollectExpression(runtime, nodeReference, "Duration", timer.Duration, 0);
+                    CollectExpression(node.Guid, timer.Duration, 0);
                     break;
 
                 case NumberMonitorStateScriptNodeData numberMonitor:
-                    CollectExpression(runtime, nodeReference, "Observed Value", numberMonitor.Value, 0);
+                    CollectExpression(node.Guid, numberMonitor.Value, 0);
                     break;
             }
         }
 
-        private void CollectCondition(
-            StateScriptRuntime runtime,
-            DebugNodeReference node,
-            string path,
-            ConditionConfig condition)
+        private void CollectCondition(string nodeGuid, ConditionConfig condition)
         {
             if (condition?.Inputs == null)
                 return;
 
             for (int i = 0; i < condition.Inputs.Count; i++)
-                CollectExpression(runtime, node, $"{path}[{i}]", condition.Inputs[i], 0);
+                CollectExpression(nodeGuid, condition.Inputs[i], 0);
         }
 
-        private void CollectSetValueInputs(
-            StateScriptRuntime runtime,
-            DebugNodeReference node,
-            SetValueStateScriptNodeData setValue)
+        private void CollectSetValueInputs(string nodeGuid, SetValueStateScriptNodeData setValue)
         {
             IReadOnlyList<ValueExpression> values = setValue.Values != null && setValue.Values.Count > 0
                 ? setValue.Values
                 : new[] { setValue.Value };
             for (int i = 0; i < values.Count; i++)
-                CollectExpression(runtime, node, $"Value[{i}]", values[i], 0);
+                CollectExpression(nodeGuid, values[i], 0);
         }
 
-        private void CollectInteractionInput(
-            StateScriptRuntime runtime,
-            DebugNodeReference node,
-            InteractionRequestInput interaction)
+        private void CollectSkillRequestInputs(string nodeGuid, ValueExpression skillId, SkillRequestInputData input)
+        {
+            CollectExpression(nodeGuid, skillId, 0);
+            if (input == null)
+                return;
+
+            CollectExpression(nodeGuid, input.Position, 0);
+            CollectExpression(nodeGuid, input.TargetEntity, 0);
+        }
+
+        private void CollectInteractionInput(string nodeGuid, InteractionRequestInput interaction)
         {
             if (interaction == null)
                 return;
 
             if (interaction.Source == InteractionRequestSource.Getter)
             {
-                _inputBindings.Add(RuntimeInputBinding.CreateInteraction(
-                    node,
-                    "Interaction",
-                    interaction.GetterKey,
-                    runtime.Sources));
+                TrackSource(nodeGuid, interaction.GetterKey);
                 return;
             }
 
-            CollectExpression(runtime, node, "Interaction Target", interaction.Target, 0);
+            CollectExpression(nodeGuid, interaction.Target, 0);
         }
 
-        private void CollectExpression(
-            StateScriptRuntime runtime,
-            DebugNodeReference node,
-            string path,
-            ValueExpression expression,
-            int depth)
+        private void CollectExpression(string nodeGuid, ValueExpression expression, int depth)
         {
             if (expression == null || depth >= MaxExpressionDepth)
                 return;
 
             if (expression.Kind == ValueExpressionKind.Getter)
-            {
-                _inputBindings.Add(RuntimeInputBinding.CreateValue(
-                    node,
-                    path,
-                    expression,
-                    runtime.Sources));
-            }
+                TrackSource(nodeGuid, expression.GetterKey);
 
             if (expression.Inputs == null)
                 return;
 
             for (int i = 0; i < expression.Inputs.Count; i++)
-                CollectExpression(runtime, node, $"{path}.Input[{i}]", expression.Inputs[i], depth + 1);
+                CollectExpression(nodeGuid, expression.Inputs[i], depth + 1);
         }
 
-        private static string GetNodeLabel(StateScriptNodeData node)
+        private void TrackSource(string nodeGuid, string sourceKey)
         {
-            string displayName = StateScriptNodeDataRegistry.GetDisplayName(node.Type);
-            return string.IsNullOrWhiteSpace(node.Guid)
-                ? displayName
-                : $"{displayName} ({node.Guid})";
+            if (string.IsNullOrWhiteSpace(sourceKey))
+                return;
+
+            if (s_sourceSchema.TryGet(sourceKey, out UnitSourceGetSchemaEntry getEntry))
+            {
+                TrackComponent(nodeGuid, getEntry.ComponentType);
+                return;
+            }
+
+            if (s_sourceSchema.TryGet(sourceKey, out UnitSourceSetSchemaEntry setEntry))
+            {
+                TrackComponent(nodeGuid, setEntry.ComponentType);
+                return;
+            }
+
+            if (s_sourceSchema.TryGetInteraction(sourceKey, out InteractionRequestGetSchemaEntry interactionEntry))
+                TrackComponent(nodeGuid, interactionEntry.ComponentType);
         }
 
-        private static string FormatUnitValue(UnitValue value)
+        private void TrackComponent(string nodeGuid, Type componentType)
         {
-            return value.Type switch
+            if (string.IsNullOrWhiteSpace(nodeGuid) || componentType == null)
+                return;
+
+            if (!_nodeComponentTypes.TryGetValue(nodeGuid, out HashSet<Type> componentTypes))
             {
-                UnitValueType.Bool => value.Bool.ToString(),
-                UnitValueType.Int => value.Int.ToString(),
-                UnitValueType.Float => value.Float.ToString("0.###"),
-                UnitValueType.Float2 => $"({value.Float2.x:0.###}, {value.Float2.y:0.###})",
-                UnitValueType.Float3 => $"({value.Float3.x:0.###}, {value.Float3.y:0.###}, {value.Float3.z:0.###})",
-                UnitValueType.Entity => value.Entity.ToString(),
-                UnitValueType.String => value.String ?? string.Empty,
-                _ => "(none)",
-            };
+                componentTypes = new HashSet<Type>();
+                _nodeComponentTypes.Add(nodeGuid, componentTypes);
+            }
+
+            componentTypes.Add(componentType);
         }
 
-        private static ComparatorFactory CreateExpressionFactory()
-        {
-            ComparatorFactory factory = new();
-            ComparatorRegistry.RegisterAll(factory);
-            return factory;
-        }
-
-        private readonly struct DebugNodeReference
-        {
-            public DebugNodeReference(string guid, string label)
-            {
-                Guid = guid ?? string.Empty;
-                Label = label ?? string.Empty;
-            }
-
-            public string Guid { get; }
-            public string Label { get; }
-        }
-
-        private sealed class RuntimeInputBinding
-        {
-            private readonly Func<UnitValue> _valueReader;
-            private readonly Func<UnitValue>[] _parameterReaders;
-            private readonly UnitSourceAccessTable _sources;
-            private readonly bool _isInteraction;
-            private readonly string _buildError;
-
-            private RuntimeInputBinding(
-                DebugNodeReference node,
-                string path,
-                string key,
-                Func<UnitValue> valueReader,
-                Func<UnitValue>[] parameterReaders,
-                UnitSourceAccessTable sources,
-                bool isInteraction,
-                string buildError)
-            {
-                NodeGuid = node.Guid;
-                NodeLabel = node.Label;
-                Path = path;
-                Key = key;
-                _valueReader = valueReader;
-                _parameterReaders = parameterReaders;
-                _sources = sources;
-                _isInteraction = isInteraction;
-                _buildError = buildError;
-            }
-
-            public string NodeGuid { get; }
-            public string NodeLabel { get; }
-            public string Path { get; }
-            public string Key { get; }
-
-            public static RuntimeInputBinding CreateValue(
-                DebugNodeReference node,
-                string path,
-                ValueExpression expression,
-                UnitSourceAccessTable sources)
-            {
-                if (!s_expressionFactory.TryBuildValueExpression(
-                        expression,
-                        sources,
-                        out _,
-                        out Func<UnitValue> valueReader,
-                        out string error))
-                {
-                    return new RuntimeInputBinding(node, path, expression.GetterKey, null, null, sources, false, error);
-                }
-
-                Func<UnitValue>[] parameterReaders = new Func<UnitValue>[expression.Inputs?.Count ?? 0];
-                for (int i = 0; i < parameterReaders.Length; i++)
-                {
-                    if (!s_expressionFactory.TryBuildValueExpression(
-                            expression.Inputs[i],
-                            sources,
-                            out _,
-                            out Func<UnitValue> parameterReader,
-                            out error))
-                    {
-                        return new RuntimeInputBinding(node, path, expression.GetterKey, null, null, sources, false, error);
-                    }
-
-                    parameterReaders[i] = parameterReader;
-                }
-
-                return new RuntimeInputBinding(node, path, expression.GetterKey, valueReader, parameterReaders, sources, false, string.Empty);
-            }
-
-            public static RuntimeInputBinding CreateInteraction(
-                DebugNodeReference node,
-                string path,
-                string key,
-                UnitSourceAccessTable sources)
-            {
-                string error = sources.TryGetInteractionDefinition(key, out _)
-                    ? string.Empty
-                    : $"Interaction getter '{key}' is unavailable.";
-                return new RuntimeInputBinding(node, path, key, null, null, sources, true, error);
-            }
-
-            public bool TryRead(out UnitValue value, out string parameters, out string error)
-            {
-                value = UnitValue.None;
-                parameters = string.Empty;
-                error = _buildError;
-                if (!string.IsNullOrEmpty(error))
-                    return false;
-
-                try
-                {
-                    if (_isInteraction)
-                    {
-                        if (!_sources.TryGetInteraction(Key, out InteractionRequestSnapshot request))
-                        {
-                            value = UnitValue.FromString("(no active interaction request)");
-                            return true;
-                        }
-
-                        value = UnitValue.FromString(FormatInteractionRequest(request));
-                        return true;
-                    }
-
-                    if (_parameterReaders.Length > 0)
-                    {
-                        string[] formattedParameters = new string[_parameterReaders.Length];
-                        for (int i = 0; i < _parameterReaders.Length; i++)
-                            formattedParameters[i] = FormatUnitValue(_parameterReaders[i]());
-                        parameters = string.Join(", ", formattedParameters);
-                    }
-
-                    value = _valueReader();
-                    if (value.Category == UnitValueCategory.None)
-                    {
-                        error = "Getter returned no value.";
-                        return false;
-                    }
-
-                    return true;
-                }
-                catch (Exception exception)
-                {
-                    error = exception.Message;
-                    return false;
-                }
-            }
-
-            private static string FormatInteractionRequest(InteractionRequestSnapshot request)
-            {
-                return $"Target={request.Target}; Kind={request.Data.Kind}; DataId={request.Data.DataId}; " +
-                       $"Amount={request.Data.Amount}; Variant={request.Data.Variant}";
-            }
-        }
     }
 
     internal static class StateScriptGraphValidator

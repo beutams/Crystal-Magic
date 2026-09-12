@@ -1,13 +1,19 @@
+using System;
+using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Editor.Data;
+using Unity.Entities;
 using UnityEditor;
+using UnityEngine;
 using Unity.Transforms;
 
 namespace CrystalMagic.Editor.Unit
 {
     [FactoryKey("Transform", 0)]
-    public sealed class UnitTransformRuntimeDrawer : IUnitRuntimeAttributeDrawer
+    public sealed class UnitTransformRuntimeDrawer : IUnitRuntimeComponentDrawer
     {
+        public Type ComponentType => typeof(LocalTransform);
+
         public bool CanDraw(UnitRuntimeDrawerContext context) => context.HasComponent<LocalTransform>();
 
         public void Draw(UnitRuntimeDrawerContext context)
@@ -21,8 +27,10 @@ namespace CrystalMagic.Editor.Unit
     }
 
     [FactoryKey("Faction", 10)]
-    public sealed class UnitFactionRuntimeDrawer : IUnitRuntimeAttributeDrawer
+    public sealed class UnitFactionRuntimeDrawer : IUnitRuntimeComponentDrawer
     {
+        public Type ComponentType => typeof(UnitFactionComponent);
+
         public bool CanDraw(UnitRuntimeDrawerContext context) => context.HasComponent<UnitFactionComponent>();
 
         public void Draw(UnitRuntimeDrawerContext context)
@@ -34,8 +42,10 @@ namespace CrystalMagic.Editor.Unit
     }
 
     [FactoryKey("Move", 20)]
-    public sealed class UnitMoveRuntimeDrawer : IUnitRuntimeAttributeDrawer
+    public sealed class UnitMoveRuntimeDrawer : IUnitRuntimeComponentDrawer
     {
+        public Type ComponentType => typeof(UnitMoveComponent);
+
         public bool CanDraw(UnitRuntimeDrawerContext context) => context.HasComponent<UnitMoveComponent>();
 
         public void Draw(UnitRuntimeDrawerContext context)
@@ -51,8 +61,10 @@ namespace CrystalMagic.Editor.Unit
     }
 
     [FactoryKey("Vitality", 30)]
-    public sealed class UnitVitalityRuntimeDrawer : IUnitRuntimeAttributeDrawer
+    public sealed class UnitVitalityRuntimeDrawer : IUnitRuntimeComponentDrawer
     {
+        public Type ComponentType => typeof(UnitVitalityComponent);
+
         public bool CanDraw(UnitRuntimeDrawerContext context) => context.HasComponent<UnitVitalityComponent>();
 
         public void Draw(UnitRuntimeDrawerContext context)
@@ -67,8 +79,10 @@ namespace CrystalMagic.Editor.Unit
     }
 
     [FactoryKey("Attack", 40)]
-    public sealed class UnitAttackRuntimeDrawer : IUnitRuntimeAttributeDrawer
+    public sealed class UnitAttackRuntimeDrawer : IUnitRuntimeComponentDrawer
     {
+        public Type ComponentType => typeof(UnitAttackComponent);
+
         public bool CanDraw(UnitRuntimeDrawerContext context) => context.HasComponent<UnitAttackComponent>();
 
         public void Draw(UnitRuntimeDrawerContext context)
@@ -81,8 +95,10 @@ namespace CrystalMagic.Editor.Unit
     }
 
     [FactoryKey("Element", 50)]
-    public sealed class UnitElementRuntimeDrawer : IUnitRuntimeAttributeDrawer
+    public sealed class UnitElementRuntimeDrawer : IUnitRuntimeComponentDrawer
     {
+        public Type ComponentType => typeof(UnitElementComponent);
+
         public bool CanDraw(UnitRuntimeDrawerContext context) => context.HasComponent<UnitElementComponent>();
 
         public void Draw(UnitRuntimeDrawerContext context)
@@ -96,8 +112,10 @@ namespace CrystalMagic.Editor.Unit
     }
 
     [FactoryKey("Mana", 60)]
-    public sealed class UnitManaRuntimeDrawer : IUnitRuntimeAttributeDrawer
+    public sealed class UnitManaRuntimeDrawer : IUnitRuntimeComponentDrawer
     {
+        public Type ComponentType => typeof(UnitManaComponent);
+
         public bool CanDraw(UnitRuntimeDrawerContext context) => context.HasComponent<UnitManaComponent>();
 
         public void Draw(UnitRuntimeDrawerContext context)
@@ -111,8 +129,10 @@ namespace CrystalMagic.Editor.Unit
     }
 
     [FactoryKey("Perception", 70)]
-    public sealed class UnitPerceptionRuntimeDrawer : IUnitRuntimeAttributeDrawer
+    public sealed class UnitPerceptionRuntimeDrawer : IUnitRuntimeComponentDrawer
     {
+        public Type ComponentType => typeof(UnitPerceptionComponent);
+
         public bool CanDraw(UnitRuntimeDrawerContext context) => context.HasComponent<UnitPerceptionComponent>();
 
         public void Draw(UnitRuntimeDrawerContext context)
@@ -120,8 +140,123 @@ namespace CrystalMagic.Editor.Unit
             UnitEditorWindow.DrawSectionHeader("Perception");
             UnitPerceptionComponent perception = context.GetComponent<UnitPerceptionComponent>();
             EditorGUILayout.FloatField("Search Radius", perception.SearchRadius);
-            if (context.EntityManager.HasBuffer<UnitPerceptionEntityElement>(context.Entity))
-                EditorGUILayout.IntField("Nearby Unit Count", context.EntityManager.GetBuffer<UnitPerceptionEntityElement>(context.Entity).Length);
+            if (context.EntityManager.HasBuffer<UnitPerceptionUnitElement>(context.Entity))
+                EditorGUILayout.IntField("Nearby Unit Count", context.EntityManager.GetBuffer<UnitPerceptionUnitElement>(context.Entity).Length);
+        }
+    }
+
+    [FactoryKey("Variables", 80)]
+    public sealed class UnitVariableRuntimeDrawer : IUnitRuntimeComponentDrawer
+    {
+        public Type ComponentType => typeof(UnitVariableComponent);
+
+        public bool CanDraw(UnitRuntimeDrawerContext context) => context.HasComponent<UnitVariableComponent>();
+
+        public void Draw(UnitRuntimeDrawerContext context)
+        {
+            UnitEditorWindow.DrawSectionHeader("Variables");
+            UnitVariableComponent localVariables = context.EntityManager.GetComponentObject<UnitVariableComponent>(context.Entity);
+            Entity configuredOwner = localVariables?.Owner ?? Entity.Null;
+            bool resolved = UnitVariableSource.TryResolveOwner(
+                context.EntityManager,
+                context.Entity,
+                out Entity valueOwner,
+                out UnitVariableComponent variables);
+            int count = resolved ? variables.Values?.Count ?? 0 : 0;
+
+            using (new EditorGUI.DisabledScope(true))
+            {
+                EditorGUILayout.TextField("Owner", configuredOwner == Entity.Null ? "(self)" : configuredOwner.ToString());
+                EditorGUILayout.TextField("Value Owner", resolved ? valueOwner.ToString() : "(invalid)");
+                EditorGUILayout.IntField("Count", count);
+                if (!resolved)
+                {
+                    EditorGUILayout.TextField("Values", "(owner is missing or is another consumer)");
+                    return;
+                }
+
+                if (count == 0)
+                {
+                    EditorGUILayout.TextField("Values", "(none)");
+                    return;
+                }
+
+                List<KeyValuePair<string, UnitValue>> entries = new(variables.Values);
+                entries.Sort((left, right) => string.Compare(left.Key, right.Key, StringComparison.Ordinal));
+                for (int i = 0; i < entries.Count; i++)
+                {
+                    KeyValuePair<string, UnitValue> entry = entries[i];
+                    DrawValue(entry.Key, entry.Value);
+                }
+            }
+        }
+
+        private static void DrawValue(string key, UnitValue value)
+        {
+            string label = $"{key} ({value.Type})";
+            switch (value.Type)
+            {
+                case UnitValueType.Bool:
+                    EditorGUILayout.Toggle(label, value.Bool);
+                    break;
+                case UnitValueType.Int:
+                    EditorGUILayout.IntField(label, value.Int);
+                    break;
+                case UnitValueType.Float:
+                    EditorGUILayout.FloatField(label, value.Float);
+                    break;
+                case UnitValueType.Float2:
+                    EditorGUILayout.Vector2Field(label, new Vector2(value.Float2.x, value.Float2.y));
+                    break;
+                case UnitValueType.Float3:
+                    EditorGUILayout.Vector3Field(label, new Vector3(value.Float3.x, value.Float3.y, value.Float3.z));
+                    break;
+                case UnitValueType.Entity:
+                    EditorGUILayout.TextField(label, value.Entity.ToString());
+                    break;
+                case UnitValueType.String:
+                    EditorGUILayout.TextField(label, value.String ?? string.Empty);
+                    break;
+                default:
+                    EditorGUILayout.TextField(label, "(none)");
+                    break;
+            }
+        }
+    }
+
+    [FactoryKey("Animation", 75)]
+    public sealed class UnitAnimationRuntimeDrawer : IUnitRuntimeComponentDrawer
+    {
+        public Type ComponentType => typeof(UnitAnimationComponent);
+
+        public bool CanDraw(UnitRuntimeDrawerContext context) => context.HasComponent<UnitAnimationComponent>();
+
+        public void Draw(UnitRuntimeDrawerContext context)
+        {
+            UnitAnimationComponent animation = context.EntityManager.GetComponentObject<UnitAnimationComponent>(context.Entity);
+            UnitEditorWindow.DrawSectionHeader("Animation");
+            EditorGUILayout.TextField("Requested", animation?.CurrentAnimationName.ToString() ?? string.Empty);
+            EditorGUILayout.TextField("Playing", animation?.PlayingAnimationName.ToString() ?? string.Empty);
+            EditorGUILayout.TextField("Facing", animation?.LastTwoDirectionFacing.ToString() ?? string.Empty);
+            EditorGUILayout.FloatField("Elapsed", animation?.ElapsedSeconds ?? 0f);
+            EditorGUILayout.FloatField("Sample Time", animation?.CurrentSampleTime ?? 0f);
+            EditorGUILayout.ObjectField("Clip", animation?.CurrentAnimationClip, typeof(AnimationClip), false);
+            EditorGUILayout.ObjectField("Sprite", animation?.CurrentSprite, typeof(Sprite), false);
+        }
+    }
+
+    [FactoryKey("SkillRelease", 90)]
+    public sealed class UnitSkillReleaseRuntimeDrawer : IUnitRuntimeComponentDrawer
+    {
+        public Type ComponentType => typeof(UnitSkillReleaseComponent);
+
+        public bool CanDraw(UnitRuntimeDrawerContext context) => context.HasComponent<UnitSkillReleaseComponent>();
+
+        public void Draw(UnitRuntimeDrawerContext context)
+        {
+            UnitSkillReleaseComponent release = context.EntityManager.GetComponentObject<UnitSkillReleaseComponent>(context.Entity);
+            UnitEditorWindow.DrawSectionHeader("Skill Release");
+            EditorGUILayout.IntField("Pending Requests", release?.PendingRequests?.Count ?? 0);
         }
     }
 
