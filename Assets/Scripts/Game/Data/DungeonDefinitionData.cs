@@ -392,6 +392,7 @@ namespace CrystalMagic.Game.Data
         public bool IsBossSquad;
         public int Width = 3;
         public int Height = 3;
+        public int CostLimit = 1;
         public List<OpenFieldDungeonSquadMemberData> Members = new();
 
         public void EnsureValid()
@@ -401,6 +402,7 @@ namespace CrystalMagic.Game.Data
             MonsterLevel = Mathf.Clamp(MonsterLevel, 1, 3);
             Width = Mathf.Max(1, Width);
             Height = Mathf.Max(1, Height);
+            CostLimit = Mathf.Max(1, CostLimit);
             Members ??= new List<OpenFieldDungeonSquadMemberData>();
             foreach (OpenFieldDungeonSquadMemberData member in Members)
                 member?.EnsureValid();
@@ -411,12 +413,16 @@ namespace CrystalMagic.Game.Data
     public sealed class OpenFieldDungeonSquadMemberData
     {
         public string UnitName;
-        public int Count = 1;
+        public int MinCount = 1;
+        public int Cost = 1;
+        public int Weight = 1;
 
         public void EnsureValid()
         {
             UnitName ??= string.Empty;
-            Count = Mathf.Max(1, Count);
+            MinCount = Mathf.Max(0, MinCount);
+            Cost = Mathf.Max(1, Cost);
+            Weight = Mathf.Max(1, Weight);
         }
     }
 }

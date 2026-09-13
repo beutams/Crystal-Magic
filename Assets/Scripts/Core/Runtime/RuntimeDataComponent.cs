@@ -217,6 +217,7 @@ namespace CrystalMagic.Core
 
         public List<RuntimeDungeonEnvironmentSpawnData> EnvironmentSpawns = new();
         public List<RuntimeDungeonSceneObjectSpawnData> SceneObjects = new();
+        public List<RuntimeDungeonInterestPointSpawnData> InterestPointSpawns = new();
         public List<RuntimeDungeonMonsterSpawnData> MonsterSpawns = new();
     }
 
@@ -307,6 +308,17 @@ namespace CrystalMagic.Core
         public Vector2Int SourceCoordinate;
         public Vector2Int DisplayCoordinate;
         public Vector3 WorldPosition;
+    }
+
+    public sealed class RuntimeDungeonInterestPointSpawnData
+    {
+        public int EncounterId;
+        public int SquadId;
+        public Vector3 WorldPosition;
+        public float SpawnDistance = 18f;
+        public float PatrolSpeed = 3f;
+        public float ArrivalDistance = 0.75f;
+        public List<RuntimeDungeonMonsterSpawnData> MemberSpawns = new();
     }
 
 

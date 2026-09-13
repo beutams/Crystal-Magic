@@ -947,17 +947,26 @@
             "InterestSize": 0,
             "Squads": [
               {
-                "Name": "Small Squad",
+               "Name": "Small Squad",
                 "Weight": 1,
                 "MonsterLevel": 1,
                 "IsBossSquad": false,
                 "Width": 3,
                 "Height": 3,
+                "CostLimit": 1,
                 "Members": [
+                 {
+                   "UnitName": "MonsterStraw",
+                   "MinCount": 1,
+                   "Cost": 1,
+                   "Weight": 1
+                  },
                   {
-                    "UnitName": "MonsterStraw",
-                    "Count": 1
-                  }
+                    "UnitName": "Orc",
+                    "MinCount": 0,
+                    "Cost": 1,
+                    "Weight": 1
+                 }
                 ]
               }
             ]
@@ -967,17 +976,26 @@
             "InterestSize": 1,
             "Squads": [
               {
-                "Name": "Medium Squad",
+               "Name": "Medium Squad",
                 "Weight": 1,
                 "MonsterLevel": 1,
                 "IsBossSquad": false,
                 "Width": 3,
                 "Height": 3,
+                "CostLimit": 1,
                 "Members": [
+                 {
+                   "UnitName": "MonsterStraw",
+                   "MinCount": 1,
+                   "Cost": 1,
+                   "Weight": 1
+                  },
                   {
-                    "UnitName": "MonsterStraw",
-                    "Count": 1
-                  }
+                    "UnitName": "Orc",
+                    "MinCount": 0,
+                    "Cost": 1,
+                    "Weight": 1
+                 }
                 ]
               }
             ]
@@ -987,17 +1005,26 @@
             "InterestSize": 2,
             "Squads": [
               {
-                "Name": "Large Squad",
+               "Name": "Large Squad",
                 "Weight": 1,
                 "MonsterLevel": 1,
                 "IsBossSquad": false,
                 "Width": 3,
                 "Height": 3,
+                "CostLimit": 1,
                 "Members": [
+                 {
+                   "UnitName": "MonsterStraw",
+                   "MinCount": 1,
+                   "Cost": 1,
+                   "Weight": 1
+                  },
                   {
-                    "UnitName": "MonsterStraw",
-                    "Count": 1
-                  }
+                    "UnitName": "Orc",
+                    "MinCount": 0,
+                    "Cost": 1,
+                    "Weight": 1
+                 }
                 ]
               }
             ]

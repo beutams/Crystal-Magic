@@ -10,9 +10,11 @@ namespace CrystalMagic.Game.Skill.Effects
     /// <summary>
     /// 伤害效果，逻辑由战斗结算系统接入
     /// </summary>
-    public sealed class DamageEffect : Effect
+    public class DamageEffect : Effect
     {
         public new DamageEffectData Data { get; }
+
+        protected virtual bool SendsOnDamagedHook => true;
 
         public DamageEffect(DamageEffectData data) : base(data) => Data = data;
 
@@ -42,7 +44,7 @@ namespace CrystalMagic.Game.Skill.Effects
             if (died && entityManager.HasComponent<UnitDeathComponent>(target))
                 entityManager.SetComponentEnabled<UnitDeathComponent>(target, true);
 
-            if (!died)
+            if (!died && SendsOnDamagedHook)
             {
                 UnitBuffHookUtility.Dispatch(
                     entityManager,

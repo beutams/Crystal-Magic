@@ -183,7 +183,9 @@ namespace CrystalMagic.Core
 
         public static TransitionData CreateEnterTransitionData(LoadGameContext context)
         {
-            return new TransitionData
+            DungeonFlowTiming.EnsureStarted(context);
+            DungeonFlowTiming.BeginStage(1, "创建地牢转场数据");
+            TransitionData transitionData = new TransitionData
             {
                 TargetSceneName = SceneName,
                 TargetStateType = typeof(DungeonState),
@@ -193,6 +195,8 @@ namespace CrystalMagic.Core
                 ForceReloadTargetScene = true,
                 PostLoadCoroutineFactory = () => DungeonGenerationService.GenerateForTransition(context, SceneName),
             };
+            DungeonFlowTiming.EndStage(1, "TransitionData 已创建");
+            return transitionData;
         }
 
         public static int PrepareDungeonRun(LoadGameContext context)

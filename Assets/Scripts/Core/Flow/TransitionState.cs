@@ -15,6 +15,7 @@ namespace CrystalMagic.Core {
                 return;
             }
 
+            DungeonFlowTiming.EndStage(4, "TransitionState 已进入");
             if (!TransitionComponent.Instance.BeginLoadAndFadeOut(_transitionData))
             {
                 Debug.LogError("[TransitionState] Failed to start transition load sequence.");

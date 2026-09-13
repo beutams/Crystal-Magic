@@ -4,7 +4,9 @@ using UnityEngine;
 
 public class TransitionUI : UIBase<TransitionUIData>, ITransitionUI
 {
-    [SerializeField] private float _fadeDuration = 0.5f;
+    private const float MaximumFadeFrameDeltaSeconds = 1f / 30f;
+
+    [SerializeField] private float _fadeDuration = 1f;
 
     private CanvasGroup _canvasGroup;
     private bool _debugEnabled;
@@ -61,17 +63,18 @@ public class TransitionUI : UIBase<TransitionUIData>, ITransitionUI
 
     public IEnumerator Hide()
     {
-        // FadeOutStarted synchronously enters the target state.  That state's first
-        // frame can build the map and UI, so discard it instead of treating its long
-        // unscaled delta time as an entire fade animation.
+        // FadeOutStarted synchronously enters the target state. Keep its first frame
+        // opaque, then cap each accumulated frame delta so scene setup hitches cannot
+        // consume the entire fade before the next rendered frame.
         _canvasGroup.alpha = 1f;
         yield return null;
 
-        float fadeStartTime = Time.unscaledTime;
-        while (Time.unscaledTime - fadeStartTime < _fadeDuration)
+        float elapsed = 0f;
+        while (elapsed < _fadeDuration)
         {
-            float t = Mathf.Clamp01((Time.unscaledTime - fadeStartTime) / _fadeDuration);
-            _canvasGroup.alpha = 1f - Mathf.Pow(t, 3f);
+            elapsed += Mathf.Min(Time.unscaledDeltaTime, MaximumFadeFrameDeltaSeconds);
+            float t = Mathf.Clamp01(elapsed / _fadeDuration);
+            _canvasGroup.alpha = 1f - t;
             yield return null;
         }
 

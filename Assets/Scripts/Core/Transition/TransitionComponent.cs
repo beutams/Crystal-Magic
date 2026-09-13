@@ -69,12 +69,14 @@ namespace CrystalMagic.Core {
 
         private IEnumerator FadeInAsync(ITransitionUI transitionUI, string targetSceneName)
         {
+            DungeonFlowTiming.BeginStage(3, "Transition UI 淡入", targetSceneName);
             EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.FadeInStarted, targetSceneName));
             if (transitionUI != null)
             {
                 yield return StartCoroutine(transitionUI.Show());
             }
 
+            DungeonFlowTiming.EndStage(3, "FadeIn 已完成");
             EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.FadeInCompleted, targetSceneName));
         }
 
@@ -92,6 +94,7 @@ namespace CrystalMagic.Core {
                     yield return StartCoroutine(postLoadCoroutine);
             }
 
+            DungeonFlowTiming.BeginStage(17, "淡出转场、进入 DungeonState 并解锁输入");
             EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.LoadCompleted, transitionData.TargetSceneName, 1f));
             PublishLoadProgress(transitionData.TargetSceneName, 1f, "Load complete", transitionData.TargetSceneName);
             yield return StartCoroutine(FadeOutAsync(transitionUI, transitionData.TargetSceneName));
@@ -105,11 +108,14 @@ namespace CrystalMagic.Core {
             _activeTransitionUI = null;
             _loadSequenceStarted = false;
             _isTransitioning = false;
+            DungeonFlowTiming.EndStage(17, "DungeonState 已进入，输入与模拟已解锁");
+            DungeonFlowTiming.Complete("角色现在可以接收移动输入");
         }
 
         private IEnumerator LoadSceneAsync(TransitionData transitionData)
         {
             bool forceReloadTargetScene = transitionData.ForceReloadTargetScene;
+            DungeonFlowTiming.BeginStage(5, "加载 DungeonScene", transitionData.TargetSceneName);
             yield return StartCoroutine(
                 SceneComponent.Instance.LoadSceneAsyncCoroutine(
                     transitionData.TargetSceneName,
@@ -120,9 +126,14 @@ namespace CrystalMagic.Core {
                         "Loading scene",
                         transitionData.TargetSceneName))
             );
+            DungeonFlowTiming.EndStage(5, "DungeonScene 已加载");
 
+            DungeonFlowTiming.BeginStage(6, "激活并等待 Required SubScene");
             if (transitionData.RequiredSubSceneNames == null)
+            {
+                DungeonFlowTiming.EndStage(6, "没有 Required SubScene");
                 yield break;
+            }
 
             SceneComponent.Instance.SetSubScenesActive(transitionData.RequiredSubSceneNames);
             foreach (string subSceneName in transitionData.RequiredSubSceneNames)
@@ -130,6 +141,7 @@ namespace CrystalMagic.Core {
                 PublishLoadProgress(transitionData.TargetSceneName, 0.27f, "Loading sub-scene", subSceneName);
                 yield return StartCoroutine(SceneComponent.Instance.WaitForSubSceneLoadedCoroutine(subSceneName));
             }
+            DungeonFlowTiming.EndStage(6, "Required SubScene 已完成");
         }
 
         private IEnumerator FadeOutAsync(ITransitionUI transitionUI, string targetSceneName)

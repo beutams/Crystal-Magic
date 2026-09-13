@@ -30,6 +30,7 @@ namespace CrystalMagic.Editor.EffectGraph
             new(typeof(ChainSearchEffectData), "Chain Search", new Color(0.18f, 0.42f, 0.74f)),
             new(typeof(ConeSearchEffectData), "Cone Search", new Color(0.20f, 0.50f, 0.70f)),
             new(typeof(DamageEffectData), "Damage", new Color(0.60f, 0.18f, 0.14f)),
+            new(typeof(BuffDamageEffectData), "Buff Damage", new Color(0.60f, 0.18f, 0.14f)),
             new(typeof(ForwardRectSearchEffectData), "Forward Rect Search", new Color(0.60f, 0.30f, 0.12f)),
             new(typeof(RectSearchEffectData), "Rect Search", new Color(0.60f, 0.36f, 0.12f)),
             new(typeof(HealEffectData), "Heal", new Color(0.16f, 0.52f, 0.22f)),

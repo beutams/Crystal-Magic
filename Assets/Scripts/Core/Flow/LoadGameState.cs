@@ -32,6 +32,7 @@ namespace CrystalMagic.Core {
 
             if (context.ShouldEnterDungeon())
             {
+                DungeonFlowTiming.Begin(context);
                 Debug.Log($"[LoadGameState] 进入 Dungeon，主题 {context.DungeonThemeId}，关卡 {context.DungeonFloor}");
                 targetSceneName = DungeonState.SceneName;
                 targetStateType = typeof(DungeonState);

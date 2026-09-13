@@ -32,6 +32,9 @@ public class UnitMoveAuthoring : MonoBehaviour
                 Direction = float2.zero,
                 StateMoveMultiplier = 1f,
                 Velocity = float2.zero,
+                FrameVelocity = float2.zero,
+                HasFrameVelocity = 0,
+                CommandMoveSpeed = -1f,
             });
         }
     }
@@ -45,6 +48,11 @@ public struct UnitMoveComponent : IComponentData
     public float2 Direction;
     public float StateMoveMultiplier;
     public float2 Velocity;
+    public float2 FrameVelocity;
+    public byte HasFrameVelocity;
+    // A non-negative value is an externally commanded speed. -1 means use
+    // the normal modifier-resolved unit speed.
+    public float CommandMoveSpeed;
 
     public float BaseMoveSpeedValue => BaseMoveSpeed + BaseMoveSpeedOffset;
 }
@@ -64,6 +72,7 @@ public sealed class UnitMoveSource : UnitComponentSource<UnitMoveComponent>
             (in UnitSourceBindingContext context, in UnitMoveComponent _, UnitValue[] _) => UnitValue.FromFloat(UnitModifierResolver.GetMaxAcceleration(context.EntityManager, context.Entity)));
         builder.AddGet("unit.move.direction", UnitValueCategory.Float2, (in UnitMoveComponent value) => UnitValue.FromFloat2(value.Direction));
         builder.AddGet("unit.move.stateMoveMultiplier", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.StateMoveMultiplier));
+        builder.AddGet("unit.move.commandSpeed", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.CommandMoveSpeed));
 
         builder.AddSet("unit.move.setDirection", UnitValueCategory.Float2,
             (ref UnitMoveComponent value, UnitValue input) =>
@@ -77,6 +86,13 @@ public sealed class UnitMoveSource : UnitComponentSource<UnitMoveComponent>
                 value.Velocity = input.Float2;
                 return true;
             });
+        builder.AddSet("unit.move.setFrameVelocity", UnitValueCategory.Float2,
+            (ref UnitMoveComponent value, UnitValue input) =>
+            {
+                value.FrameVelocity = input.Float2;
+                value.HasFrameVelocity = 1;
+                return true;
+            });
         builder.AddSet("unit.move.setStateMoveMultiplier", UnitValueCategory.Number,
             (ref UnitMoveComponent value, UnitValue input) =>
             {
@@ -84,6 +100,15 @@ public sealed class UnitMoveSource : UnitComponentSource<UnitMoveComponent>
                     return false;
 
                 value.StateMoveMultiplier = math.max(0f, multiplier);
+                return true;
+            });
+        builder.AddSet("unit.move.setCommandSpeed", UnitValueCategory.Number,
+            (ref UnitMoveComponent value, UnitValue input) =>
+            {
+                if (!input.TryGetNumber(out float speed))
+                    return false;
+
+                value.CommandMoveSpeed = speed < 0f ? -1f : math.max(0f, speed);
                 return true;
             });
     }

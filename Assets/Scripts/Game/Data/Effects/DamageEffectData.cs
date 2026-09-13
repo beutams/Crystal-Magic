@@ -20,7 +20,7 @@ namespace CrystalMagic.Game.Data.Effects
     }
 
     [System.Serializable]
-    public sealed class DamageEffectData : EffectData
+    public class DamageEffectData : EffectData
     {
         [EditorLabel("伤害目标")]
         public DamageTargetSource TargetSource = DamageTargetSource.CurrentTarget;
@@ -56,6 +56,15 @@ namespace CrystalMagic.Game.Data.Effects
             copy.FlatDamageBonus = ApplyModifier(runtimeModifiers, SkillModifierChannel.FlatDamage, FlatDamageBonus);
             return copy;
         }
+    }
+
+    /// <summary>
+    /// Damage emitted from a Buff trigger. It uses the standard damage formula,
+    /// but deliberately does not dispatch the OnDamaged hook.
+    /// </summary>
+    [System.Serializable]
+    public sealed class BuffDamageEffectData : DamageEffectData
+    {
     }
 
     [System.Serializable]

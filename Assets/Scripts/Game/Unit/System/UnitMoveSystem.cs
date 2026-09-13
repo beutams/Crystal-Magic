@@ -58,18 +58,34 @@ partial class UnitMoveSystem : SystemBase
 
             UnitMoveComponent move = moveRef.ValueRO;
             UnitFacingComponent facing = facingRef.ValueRO;
-            float2 targetDirection = math.normalizesafe(move.Direction, float2.zero);
-            if (math.lengthsq(targetDirection) > 0.0001f)
-                facing.Direction = targetDirection;
+            bool hasFrameVelocity = move.HasFrameVelocity != 0;
+            float2 frameVelocity = move.FrameVelocity;
+            move.HasFrameVelocity = 0;
 
-            float targetSpeed = UnitModifierResolver.GetMoveSpeed(EntityManager, entity) * move.StateMoveMultiplier;
-            float maxSpeed = math.abs(targetSpeed);
-            float maxAcceleration = math.max(0f, UnitModifierResolver.GetMaxAcceleration(EntityManager, entity));
-            float2 targetVelocity = targetDirection * targetSpeed;
-            if (move.StateMoveMultiplier <= 0f)
-                move.Velocity = float2.zero;
+            if (hasFrameVelocity)
+            {
+                // StateScript can supply an explicit velocity for this frame, such as knockback.
+                // It is consumed immediately, so ordinary movement resumes if no graph writes it next frame.
+                move.Velocity = frameVelocity;
+            }
             else
-                UpdateMoveVelocity(ref move, targetVelocity, maxAcceleration, maxSpeed, deltaTime);
+            {
+                float2 targetDirection = math.normalizesafe(move.Direction, float2.zero);
+                if (math.lengthsq(targetDirection) > 0.0001f)
+                    facing.Direction = targetDirection;
+
+                float resolvedSpeed = move.CommandMoveSpeed >= 0f
+                    ? move.CommandMoveSpeed
+                    : UnitModifierResolver.GetMoveSpeed(EntityManager, entity);
+                float targetSpeed = resolvedSpeed * move.StateMoveMultiplier;
+                float maxSpeed = math.abs(targetSpeed);
+                float maxAcceleration = math.max(0f, UnitModifierResolver.GetMaxAcceleration(EntityManager, entity));
+                float2 targetVelocity = targetDirection * targetSpeed;
+                if (move.StateMoveMultiplier <= 0f)
+                    move.Velocity = float2.zero;
+                else
+                    UpdateMoveVelocity(ref move, targetVelocity, maxAcceleration, maxSpeed, deltaTime);
+            }
 
             if (hasPhysicsWorld && EntityManager.HasComponent<PhysicsCollider>(entity))
             {

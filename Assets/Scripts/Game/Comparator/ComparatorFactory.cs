@@ -241,6 +241,34 @@ public sealed class DotOperation : IValueOperation
     public bool TryEvaluate(UnitValue[] values, out UnitValue result) => ComparatorFactory.TryApplyFloat3Pair(values, math.dot, out result);
 }
 
+[FactoryKey("ScaleFloat2")]
+[EditorLabel("Scale Float2")]
+public sealed class ScaleFloat2Operation : IValueOperation
+{
+    private static readonly ComparatorParameterDefinition[] s_parameters =
+    {
+        new("Vector", UnitValueCategory.Float2),
+        new("Scale", UnitValueCategory.Number),
+    };
+
+    public IReadOnlyList<ComparatorParameterDefinition> Parameters => s_parameters;
+    public UnitValueCategory ResultCategory => UnitValueCategory.Float2;
+
+    public bool TryEvaluate(UnitValue[] values, out UnitValue result)
+    {
+        if (values == null || values.Length != 2 ||
+            !values[0].TryGetFloat2(out float2 vector) ||
+            !values[1].TryGetNumber(out float scale))
+        {
+            result = UnitValue.None;
+            return false;
+        }
+
+        result = UnitValue.FromFloat2(vector * scale);
+        return true;
+    }
+}
+
 public class ComparatorFactory
 {
     private readonly GeneratedFactory<string, ICompareType> _compareFactories = new(StringComparer.Ordinal);

@@ -113,6 +113,7 @@ namespace CrystalMagic.Game.Skill
                 ReadBuffStackEffectData data => new ReadBuffStackEffect(data),
                 RemoveBuffEffectData data => new RemoveBuffEffect(data),
                 CameraShakeEffectData data => new CameraShakeEffect(data),
+                BuffDamageEffectData data => new BuffDamageEffect(data),
                 DamageEffectData data => new DamageEffect(data),
                 FearEffectData data => new FearEffect(data),
                 ForwardRectSearchEffectData data => new ForwardRectSearchEffect(data),

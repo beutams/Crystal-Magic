@@ -1,4 +1,4 @@
-/*#if UNITY_EDITOR
+#if UNITY_EDITOR
 using UnityEditor;
 using Unity.Scenes;
 using Unity.Scenes.Editor;
@@ -47,7 +47,7 @@ namespace CrystalMagic.Editor
 
         private static void OpenAllClosedAutoLoadSubScenesInLoadedScenes()
         {
-            foreach (var sub in Object.FindObjectsOfType<SubScene>(true))
+            foreach (var sub in Object.FindObjectsByType<SubScene>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 TryOpen(sub);
         }
 
@@ -60,9 +60,9 @@ namespace CrystalMagic.Editor
             if (sub.IsLoaded)
                 return;
 
+            Debug.Log($"[SubSceneAutoOpenOnPlay] Opening SubScene in Play Mode: {sub.name}");
             SubSceneUtility.EditScene(sub);
         }
     }
 }
 #endif
-*/

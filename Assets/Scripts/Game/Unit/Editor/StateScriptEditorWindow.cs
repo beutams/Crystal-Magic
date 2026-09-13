@@ -312,6 +312,17 @@ namespace CrystalMagic.Editor.Unit
                     selectedGraph.Name = EditorGUILayout.TextField("Graph Name", selectedGraph.Name ?? string.Empty);
                     if (EditorGUI.EndChangeCheck())
                         MarkDirty();
+
+                    selectedGraph.ExecutionConditions ??= new List<ConditionConfig>();
+                    EditorGUILayout.LabelField("Run Conditions", EditorStyles.boldLabel);
+                    if (ConditionListEditor.Draw(
+                            selectedGraph.ExecutionConditions,
+                            $"StateScript.GraphRun.{_selectedUnitDataId}.{selectedGraph.Guid}",
+                            _selectedSourceSchema ?? s_emptySourceSchema,
+                            MarkDirty))
+                    {
+                        MarkDirty();
+                    }
                 }
             }
 

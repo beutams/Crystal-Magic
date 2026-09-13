@@ -24,8 +24,12 @@ namespace CrystalMagic.Core
         {
             RuntimeDungeonMapData mapData = RuntimeDataComponent.Instance.GetDungeonMapData();
             if (!mapData.HasLayout || mapData.SceneData == null)
+            {
+                DungeonFlowTiming.Fail("Runtime dungeon map data is unavailable");
                 yield break;
+            }
 
+            DungeonFlowTiming.BeginStage(14, "准备运行时根节点并等待 ECS Spawn Registry");
             DestroyExistingRoot();
 
             reportProgress?.Invoke(0.985f, "Building dungeon scene", "Creating runtime scene root");
@@ -56,11 +60,15 @@ namespace CrystalMagic.Core
 
             if (!hasSpawnRegistry)
             {
+                DungeonFlowTiming.EndStage(14, "ECS Spawn Registry 不可用");
+                DungeonFlowTiming.Fail("Entity spawn registry is unavailable in DungeonScene");
                 Debug.LogError("[DungeonSceneRuntimeBuilder] Entity spawn registry is unavailable in DungeonScene.");
                 runtimeRoot.Initialize(resourceOwnerKey, spawnedEntities);
                 yield break;
             }
+            DungeonFlowTiming.EndStage(14, "ECS Spawn Registry 已就绪");
 
+            DungeonFlowTiming.BeginStage(15, "构建地牢视觉、碰撞与场景对象");
             reportProgress?.Invoke(0.993f, "Building dungeon scene", "Building tile visuals");
             DungeonRuleTileVisualBuilder.Build(runtimeRoot, sceneData.TerrainVisual, resourceOwnerKey);
             DungeonFogOfWarVisualBuilder.Build(runtimeRoot, mapData.FogData);
@@ -78,15 +86,22 @@ namespace CrystalMagic.Core
             reportProgress?.Invoke(0.996f, "Building dungeon scene", "Spawning scene objects");
             SpawnSceneObjects(entityManager, sceneData, resourceOwnerKey, spawnedEntities);
             yield return null;
+            DungeonFlowTiming.EndStage(15, "视觉、碰撞和场景对象已完成");
 
+            DungeonFlowTiming.BeginStage(16, "生成玩家、兴趣点与怪物");
             reportProgress?.Invoke(0.997f, "Building dungeon scene", "Spawning player");
             SpawnPlayer(entityManager, sceneData, spawnedEntities);
+            yield return null;
+
+            reportProgress?.Invoke(0.9975f, "Building dungeon scene", "Spawning interest point units");
+            SpawnInterestPoints(entityManager, sceneData, spawnedEntities);
             yield return null;
 
             reportProgress?.Invoke(0.998f, "Building dungeon scene", "Spawning monsters");
             SpawnMonsters(entityManager, sceneData, spawnedEntities);
 
             runtimeRoot.Initialize(resourceOwnerKey, spawnedEntities);
+            DungeonFlowTiming.EndStage(16, $"SpawnedEntities={spawnedEntities.Count}");
         }
 
         private static void SpawnObstacles(
@@ -334,6 +349,68 @@ namespace CrystalMagic.Core
                     entityManager.AddComponentData(monster, new DungeonMonsterSpawnComponent { RegionId = spawn.RegionId, SquadId = spawn.SquadId, IsBoss = spawn.IsBoss ? (byte)1 : (byte)0 });
 
                 spawnedEntities.Add(monster);
+            }
+        }
+
+        private static void SpawnInterestPoints(
+            EntityManager entityManager,
+            RuntimeDungeonSceneData sceneData,
+            List<Entity> spawnedEntities)
+        {
+            if (sceneData.InterestPointSpawns == null || sceneData.InterestPointSpawns.Count == 0)
+                return;
+
+            List<Entity> pointEntities = new(sceneData.InterestPointSpawns.Count);
+            for (int index = 0; index < sceneData.InterestPointSpawns.Count; index++)
+            {
+                RuntimeDungeonInterestPointSpawnData spawn = sceneData.InterestPointSpawns[index];
+                if (spawn == null)
+                    continue;
+
+                Entity pointEntity = entityManager.CreateEntity();
+                entityManager.AddComponentData(pointEntity, LocalTransform.FromPositionRotationScale(
+                    new float3(spawn.WorldPosition.x, spawn.WorldPosition.y, spawn.WorldPosition.z),
+                    quaternion.identity,
+                    1f));
+                entityManager.AddComponentData(pointEntity, new UnitFactionComponent
+                {
+                    Value = UnitFactionType.Npc,
+                });
+                entityManager.AddComponentObject(pointEntity, new UnitVariableComponent());
+                entityManager.AddComponentObject(pointEntity, new UnitBehaviorTreeComponent
+                {
+                    UnitDataId = DungeonPatrolRuntimeUtility.InterestPointUnitDataId,
+                });
+                entityManager.AddComponentObject(pointEntity, new UnitStateScriptComponent
+                {
+                    UnitDataId = DungeonPatrolRuntimeUtility.InterestPointUnitDataId,
+                });
+                entityManager.AddComponentObject(pointEntity, new DungeonInterestPointComponent
+                {
+                    EncounterId = spawn.EncounterId,
+                    SquadId = spawn.SquadId,
+                    SpawnDistance = Mathf.Max(0f, spawn.SpawnDistance),
+                    PatrolSpeed = Mathf.Max(0f, spawn.PatrolSpeed),
+                    ArrivalDistance = Mathf.Max(0.05f, spawn.ArrivalDistance),
+                    MemberSpawns = spawn.MemberSpawns == null
+                        ? new List<RuntimeDungeonMonsterSpawnData>()
+                        : new List<RuntimeDungeonMonsterSpawnData>(spawn.MemberSpawns),
+                });
+                entityManager.AddComponent<DungeonRuntimeOwnedEntity>(pointEntity);
+
+                pointEntities.Add(pointEntity);
+                spawnedEntities.Add(pointEntity);
+            }
+
+            for (int pointIndex = 0; pointIndex < pointEntities.Count; pointIndex++)
+            {
+                Entity pointEntity = pointEntities[pointIndex];
+                DungeonInterestPointComponent point = entityManager.GetComponentObject<DungeonInterestPointComponent>(pointEntity);
+                for (int targetIndex = 0; targetIndex < pointEntities.Count; targetIndex++)
+                {
+                    if (targetIndex != pointIndex)
+                        point.CandidateTargets.Add(pointEntities[targetIndex]);
+                }
             }
         }
 

@@ -583,11 +583,12 @@ namespace CrystalMagic.Editor.Data
             squad.Width = Mathf.Max(1, EditorGUILayout.IntField("Deployment Width", squad.Width));
             squad.Height = Mathf.Max(1, EditorGUILayout.IntField("Deployment Height", squad.Height));
             EditorGUILayout.EndHorizontal();
+            squad.CostLimit = Mathf.Max(1, EditorGUILayout.IntField("Cost Limit", squad.CostLimit));
             squad.IsBossSquad = canBeBoss && EditorGUILayout.Toggle("Boss Squad", squad.IsBossSquad);
 
             squad.Members ??= new List<OpenFieldDungeonSquadMemberData>();
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Members", EditorStyles.miniBoldLabel);
+            EditorGUILayout.LabelField("Members (minimum / cost / random weight)", EditorStyles.miniBoldLabel);
             if (GUILayout.Button("Add Member", GUILayout.Width(92f)))
                 squad.Members.Add(new OpenFieldDungeonSquadMemberData());
             EditorGUILayout.EndHorizontal();
@@ -598,7 +599,12 @@ namespace CrystalMagic.Editor.Data
                 OpenFieldDungeonSquadMemberData member = squad.Members[i] ??= new OpenFieldDungeonSquadMemberData();
                 EditorGUILayout.BeginHorizontal();
                 member.UnitName = DrawStringPopup("", member.UnitName, options);
-                member.Count = Mathf.Max(1, EditorGUILayout.IntField(member.Count, GUILayout.Width(52f)));
+                GUILayout.Label("Min", GUILayout.Width(26f));
+                member.MinCount = Mathf.Max(0, EditorGUILayout.IntField(member.MinCount, GUILayout.Width(38f)));
+                GUILayout.Label("Cost", GUILayout.Width(30f));
+                member.Cost = Mathf.Max(1, EditorGUILayout.IntField(member.Cost, GUILayout.Width(38f)));
+                GUILayout.Label("Weight", GUILayout.Width(42f));
+                member.Weight = Mathf.Max(1, EditorGUILayout.IntField(member.Weight, GUILayout.Width(38f)));
                 if (GUILayout.Button("-", GUILayout.Width(24f)))
                 {
                     squad.Members.RemoveAt(i);

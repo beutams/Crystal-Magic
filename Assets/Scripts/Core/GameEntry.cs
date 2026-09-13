@@ -12,6 +12,7 @@ namespace CrystalMagic.Core
         private bool _isInitialized = false;
 
         public EventComponent EventComponent { get; private set; }
+        public LocalLogComponent LocalLogComponent { get; private set; }
         public ResourceComponent ResourceComponent { get; private set; }
         public PoolComponent PoolComponent { get; private set; }
         public SceneComponent SceneComponent { get; private set; }
@@ -63,6 +64,9 @@ namespace CrystalMagic.Core
             }
 
             Debug.Log("[GameEntry] Initializing game components...");
+
+            LocalLogComponent = LocalLogComponent.Instance;
+            _components.Add(LocalLogComponent);
 
             EventComponent = EventComponent.Instance;
             _components.Add(EventComponent);

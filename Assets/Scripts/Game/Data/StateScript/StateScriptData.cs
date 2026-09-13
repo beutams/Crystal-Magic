@@ -27,6 +27,8 @@ namespace CrystalMagic.Game.Data
     {
         public string Guid;
         public string Name;
+        // All conditions must pass for this graph to tick. An empty list keeps it active.
+        public List<ConditionConfig> ExecutionConditions = new();
         public string EntryNodeGuid;
         public List<StateScriptNodeData> Nodes = new();
         public List<StateScriptEdgeData> Edges = new();
@@ -37,6 +39,12 @@ namespace CrystalMagic.Game.Data
         {
             Guid ??= System.Guid.NewGuid().ToString("N");
             Name ??= string.Empty;
+            ExecutionConditions ??= new List<ConditionConfig>();
+            for (int i = 0; i < ExecutionConditions.Count; i++)
+            {
+                if (ExecutionConditions[i] != null)
+                    ExecutionConditions[i].ConditionType = ConditionType.Necessary;
+            }
             Nodes ??= new List<StateScriptNodeData>();
             Edges ??= new List<StateScriptEdgeData>();
             ViewScale = Mathf.Max(0.1f, ViewScale);

@@ -83,6 +83,11 @@ namespace CrystalMagic.Core
             }
 
             _spawnedEntities.Clear();
+
+            EntityQuery runtimeOwnedQuery = entityManager.CreateEntityQuery(
+                ComponentType.ReadOnly<DungeonRuntimeOwnedEntity>());
+            if (!runtimeOwnedQuery.IsEmptyIgnoreFilter)
+                entityManager.DestroyEntity(runtimeOwnedQuery);
         }
     }
 }

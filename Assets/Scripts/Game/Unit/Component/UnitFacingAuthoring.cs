@@ -29,5 +29,14 @@ public sealed class UnitFacingSource : UnitComponentSource<UnitFacingComponent>
     {
         builder.AddGet("unit.facing.direction", UnitValueCategory.Float2,
             (in UnitFacingComponent value) => UnitValue.FromFloat2(value.Direction));
+        builder.AddSet("unit.facing.setDirection", UnitValueCategory.Float2,
+            (ref UnitFacingComponent value, UnitValue input) =>
+            {
+                if (!input.TryGetFloat2(out float2 direction))
+                    return false;
+
+                value.Direction = math.normalizesafe(direction, value.Direction);
+                return true;
+            });
     }
 }

@@ -24,6 +24,7 @@ namespace CrystalMagic.Editor.Unit
         private const string UnitPrefabDirectory = "Assets/Res/Prefab/Unit";
         private const string TreeDragDataKey = "CrystalMagic.BehaviorTree";
         private const float ListPanelWidth = 240f;
+        private const float InspectorPanelMinWidth = 300f;
 
         private readonly List<BehaviorTreeData> _rows = new();
         private readonly List<UnitPrefabEntry> _unitEntries = new();
@@ -38,6 +39,7 @@ namespace CrystalMagic.Editor.Unit
         private bool _isDirty;
         private string _statusText = string.Empty;
         private Vector2 _listScrollPos;
+        private Vector2 _detailScrollPos;
         private double _nextRuntimeUnitRefreshTime;
 
         private BehaviorTreeGraphView _graphView;
@@ -54,6 +56,11 @@ namespace CrystalMagic.Editor.Unit
         {
             Formatting = Formatting.Indented,
             NullValueHandling = NullValueHandling.Ignore,
+            Converters = new List<JsonConverter>
+            {
+                new StateScriptVector2Converter(),
+                new StateScriptUnitValueConverter(),
+            },
         };
 
         private sealed class TableWrapper
@@ -218,21 +225,27 @@ namespace CrystalMagic.Editor.Unit
             body.Add(_listContainer);
             body.Add(CreateDivider());
 
+            TwoPaneSplitView graphAndInspectorSplit = new(
+                1,
+                InspectorPanelMinWidth,
+                TwoPaneSplitViewOrientation.Horizontal)
+            {
+                style = { flexGrow = 1f },
+            };
+
             _graphView = new BehaviorTreeGraphView(this)
             {
-                style = { flexGrow = 1f }
+                style = { flexGrow = 1f },
             };
             _graphView.RegisterCallback<MouseUpEvent>(_ => NotifyGraphNodeSelected(_graphView.GetSelectedNodeGuid()));
             _graphView.RegisterCallback<KeyUpEvent>(_ => NotifyGraphNodeSelected(_graphView.GetSelectedNodeGuid()));
-            body.Add(_graphView);
-            body.Add(CreateDivider());
+            graphAndInspectorSplit.Add(_graphView);
 
             var detailPanel = new VisualElement
             {
                 style =
                 {
-                    width = 320f,
-                    minWidth = 280f,
+                    minWidth = InspectorPanelMinWidth,
                     backgroundColor = new Color(0.17f, 0.17f, 0.17f, 1f),
                 }
             };
@@ -254,7 +267,8 @@ namespace CrystalMagic.Editor.Unit
             };
             detailPanel.Add(_detailContainer);
 
-            body.Add(detailPanel);
+            graphAndInspectorSplit.Add(detailPanel);
+            body.Add(graphAndInspectorSplit);
             root.Add(body);
         }
 
@@ -374,81 +388,89 @@ namespace CrystalMagic.Editor.Unit
 
         private void DrawDetailPanel()
         {
-            if (_graphView == null)
-                return;
-
-            BehaviorTreeData tree = SelectedTree;
-            if (tree == null)
+            _detailScrollPos = EditorGUILayout.BeginScrollView(_detailScrollPos);
+            try
             {
-                EditorGUILayout.HelpBox("Select a unit with behavior tree data.", MessageType.Info);
-                return;
+                if (_graphView == null)
+                    return;
+
+                BehaviorTreeData tree = SelectedTree;
+                if (tree == null)
+                {
+                    EditorGUILayout.HelpBox("Select a unit with behavior tree data.", MessageType.Info);
+                    return;
+                }
+
+                DrawTreeSettings(tree);
+                EditorGUILayout.Space(8f);
+
+                BehaviorTreeNodeView selectedNode = _graphView.selection?.OfType<BehaviorTreeNodeView>().FirstOrDefault();
+                if (selectedNode == null)
+                {
+                    EditorGUILayout.HelpBox("Select a node to edit its fields.", MessageType.Info);
+                    return;
+                }
+
+                BehaviorNodeData node = selectedNode.NodeData;
+                if (node == null)
+                    return;
+
+                EditorGUILayout.LabelField(BehaviorNodeDataRegistry.GetDisplayName(node.Type), EditorStyles.boldLabel);
+                using (new EditorGUI.DisabledScope(true))
+                {
+                    EditorGUILayout.TextField("Guid", node.Guid ?? string.Empty);
+                    EditorGUILayout.TextField("Type", node.Type ?? string.Empty);
+                }
+
+                EditorGUI.BeginChangeCheck();
+                switch (node)
+                {
+                    case ParallelBehaviorNodeData parallel:
+                        parallel.SuccessPolicy = (ParallelSuccessPolicy)EditorGUILayout.EnumPopup("Success Policy", parallel.SuccessPolicy);
+                        parallel.FailurePolicy = (ParallelFailurePolicy)EditorGUILayout.EnumPopup("Failure Policy", parallel.FailurePolicy);
+                        break;
+
+                    case RepeaterBehaviorNodeData repeater:
+                        repeater.ExecutionMode = (RepeaterExecutionMode)EditorGUILayout.EnumPopup("Execution Mode", repeater.ExecutionMode);
+                        repeater.RepeatCount = EditorGUILayout.IntField("Repeat Count", repeater.RepeatCount);
+                        break;
+
+                    case CooldownBehaviorNodeData cooldown:
+                        cooldown.CooldownSeconds = EditorGUILayout.FloatField("Cooldown Seconds", cooldown.CooldownSeconds);
+                        break;
+
+                    case TimeoutBehaviorNodeData timeout:
+                        timeout.TimeoutSeconds = EditorGUILayout.FloatField("Timeout Seconds", timeout.TimeoutSeconds);
+                        break;
+
+                    case CheckBehaviorNodeData condition:
+                        DrawConditionList(condition.Conditions);
+                        break;
+
+                    case HitCheckBehaviorNodeData hitCheck:
+                        DrawHitCheckNode(hitCheck);
+                        break;
+
+                    case SetBehaviorNodeData set:
+                        DrawSetNode(set);
+                        break;
+
+                    case WaitBehaviorNodeData wait:
+                        wait.DurationSeconds = Mathf.Max(0f, EditorGUILayout.FloatField("Duration Seconds", wait.DurationSeconds));
+                        break;
+                }
+                if (EditorGUI.EndChangeCheck())
+                {
+                    MarkDirty();
+                    _graphView.RefreshNode(selectedNode);
+                }
+
+                DrawChildOrderEditor(tree, node);
             }
-
-            DrawTreeSettings(tree);
-            EditorGUILayout.Space(8f);
-
-            BehaviorTreeNodeView selectedNode = _graphView.selection?.OfType<BehaviorTreeNodeView>().FirstOrDefault();
-            if (selectedNode == null)
+            finally
             {
-                EditorGUILayout.HelpBox("Select a node to edit its fields.", MessageType.Info);
-                return;
+                EditorGUILayout.EndScrollView();
             }
-
-            BehaviorNodeData node = selectedNode.NodeData;
-            if (node == null)
-                return;
-
-            EditorGUILayout.LabelField(BehaviorNodeDataRegistry.GetDisplayName(node.Type), EditorStyles.boldLabel);
-            using (new EditorGUI.DisabledScope(true))
-            {
-                EditorGUILayout.TextField("Guid", node.Guid ?? string.Empty);
-                EditorGUILayout.TextField("Type", node.Type ?? string.Empty);
-            }
-
-            EditorGUI.BeginChangeCheck();
-            switch (node)
-            {
-                case ParallelBehaviorNodeData parallel:
-                    parallel.SuccessPolicy = (ParallelSuccessPolicy)EditorGUILayout.EnumPopup("Success Policy", parallel.SuccessPolicy);
-                    parallel.FailurePolicy = (ParallelFailurePolicy)EditorGUILayout.EnumPopup("Failure Policy", parallel.FailurePolicy);
-                    break;
-
-                case RepeaterBehaviorNodeData repeater:
-                    repeater.ExecutionMode = (RepeaterExecutionMode)EditorGUILayout.EnumPopup("Execution Mode", repeater.ExecutionMode);
-                    repeater.RepeatCount = EditorGUILayout.IntField("Repeat Count", repeater.RepeatCount);
-                    break;
-
-                case CooldownBehaviorNodeData cooldown:
-                    cooldown.CooldownSeconds = EditorGUILayout.FloatField("Cooldown Seconds", cooldown.CooldownSeconds);
-                    break;
-
-                case TimeoutBehaviorNodeData timeout:
-                    timeout.TimeoutSeconds = EditorGUILayout.FloatField("Timeout Seconds", timeout.TimeoutSeconds);
-                    break;
-
-                case CheckBehaviorNodeData condition:
-                    DrawConditionList(condition.Conditions);
-                    break;
-
-                case HitCheckBehaviorNodeData hitCheck:
-                    DrawHitCheckNode(hitCheck);
-                    break;
-
-                case SetBehaviorNodeData set:
-                    DrawSetNode(set);
-                    break;
-
-                case WaitBehaviorNodeData wait:
-                    wait.DurationSeconds = Mathf.Max(0f, EditorGUILayout.FloatField("Duration Seconds", wait.DurationSeconds));
-                    break;
-            }
-            if (EditorGUI.EndChangeCheck())
-            {
-                MarkDirty();
-                _graphView.RefreshNode(selectedNode);
-            }
-
-            DrawChildOrderEditor(tree, node);
         }
 
         private void DrawTreeSettings(BehaviorTreeData tree)

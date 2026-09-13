@@ -67,7 +67,9 @@ namespace CrystalMagic.Core
 
             _activeTransitionData = transitionData;
             _isTransitioning = true;
+            DungeonFlowTiming.BeginStage(2, "打开转场 UI 并接受转场请求", transitionData.TargetSceneName);
             OpenTransitionUI(transitionData);
+            DungeonFlowTiming.EndStage(2, "转场 UI 已打开");
 
             if (!TransitionComponent.Instance.BeginFadeIn(transitionData, _activeTransitionUI))
             {
@@ -196,6 +198,8 @@ namespace CrystalMagic.Core
         {
             if (_currentState is TransitionState)
                 return;
+
+            DungeonFlowTiming.BeginStage(4, "进入 TransitionState 并启动加载");
 
             GameState transitionState = GetOrCreateState(typeof(TransitionState));
             if (transitionState == null)

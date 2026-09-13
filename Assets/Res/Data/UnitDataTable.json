@@ -7,7 +7,7 @@
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 10.0,
+          "BaseMoveSpeed": 6.0,
           "BaseMaxAcceleration": 10000.0
         },
         {
@@ -41,13 +41,13 @@
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 10.0,
+          "BaseMoveSpeed": 6.0,
           "BaseMaxAcceleration": 10000.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
           "BaseMaxHealth": 100.0,
-          "BaseHealthRegenPerSecond": 10.0,
+          "BaseHealthRegenPerSecond": 5.0,
           "BaseDefense": 0.0
         },
         {
@@ -412,14 +412,14 @@
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 6.0,
+          "BaseMoveSpeed": 4.5,
           "BaseMaxAcceleration": 10000.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 120000.0,
-          "BaseHealthRegenPerSecond": 50.0,
-          "BaseDefense": 0.0
+          "BaseMaxHealth": 200.0,
+          "BaseHealthRegenPerSecond": 3.0,
+          "BaseDefense": 5.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
@@ -438,11 +438,11 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 16.0
+          "SearchRadius": 6.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 0
+          "DropDataId": 9
         }
       ],
       "Id": 14
@@ -454,14 +454,14 @@
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 6.0,
+          "BaseMoveSpeed": 4.5,
           "BaseMaxAcceleration": 10000.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 120000.0,
-          "BaseHealthRegenPerSecond": 50.0,
-          "BaseDefense": 0.0
+          "BaseMaxHealth": 150.0,
+          "BaseHealthRegenPerSecond": 0.0,
+          "BaseDefense": 3.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
@@ -480,11 +480,11 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 16.0
+          "SearchRadius": 6.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 0
+          "DropDataId": 8
         }
       ],
       "Id": 15
@@ -538,14 +538,14 @@
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 6.0,
+          "BaseMoveSpeed": 5.0,
           "BaseMaxAcceleration": 10000.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 120000.0,
-          "BaseHealthRegenPerSecond": 50.0,
-          "BaseDefense": 0.0
+          "BaseMaxHealth": 250.0,
+          "BaseHealthRegenPerSecond": 5.0,
+          "BaseDefense": 5.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
@@ -564,11 +564,11 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 16.0
+          "SearchRadius": 8.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 0
+          "DropDataId": 11
         }
       ],
       "Id": 17
@@ -580,14 +580,14 @@
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 6.0,
+          "BaseMoveSpeed": 4.5,
           "BaseMaxAcceleration": 10000.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 120000.0,
-          "BaseHealthRegenPerSecond": 50.0,
-          "BaseDefense": 0.0
+          "BaseMaxHealth": 150.0,
+          "BaseHealthRegenPerSecond": 0.0,
+          "BaseDefense": 1.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
@@ -606,11 +606,11 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 16.0
+          "SearchRadius": 6.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 0
+          "DropDataId": 8
         }
       ],
       "Id": 18
@@ -790,14 +790,14 @@
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 6.0,
+          "BaseMoveSpeed": 5.0,
           "BaseMaxAcceleration": 10000.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 120000.0,
-          "BaseHealthRegenPerSecond": 50.0,
-          "BaseDefense": 0.0
+          "BaseMaxHealth": 150.0,
+          "BaseHealthRegenPerSecond": 1.0,
+          "BaseDefense": 1.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
@@ -816,11 +816,11 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 16.0
+          "SearchRadius": 6.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 0
+          "DropDataId": 7
         }
       ],
       "Id": 23
@@ -832,14 +832,14 @@
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 6.0,
+          "BaseMoveSpeed": 7.0,
           "BaseMaxAcceleration": 10000.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 120000.0,
-          "BaseHealthRegenPerSecond": 50.0,
-          "BaseDefense": 0.0
+          "BaseMaxHealth": 400.0,
+          "BaseHealthRegenPerSecond": 3.0,
+          "BaseDefense": 4.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
@@ -858,11 +858,11 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 16.0
+          "SearchRadius": 6.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 0
+          "DropDataId": 11
         }
       ],
       "Id": 24
@@ -916,13 +916,13 @@
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 6.0,
+          "BaseMoveSpeed": 4.5,
           "BaseMaxAcceleration": 10000.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 120000.0,
-          "BaseHealthRegenPerSecond": 50.0,
+          "BaseMaxHealth": 80.0,
+          "BaseHealthRegenPerSecond": 0.0,
           "BaseDefense": 0.0
         },
         {
@@ -942,11 +942,11 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 16.0
+          "SearchRadius": 6.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 0
+          "DropDataId": 7
         }
       ],
       "Id": 26
@@ -958,14 +958,14 @@
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 6.0,
+          "BaseMoveSpeed": 4.5,
           "BaseMaxAcceleration": 10000.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 120000.0,
-          "BaseHealthRegenPerSecond": 50.0,
-          "BaseDefense": 0.0
+          "BaseMaxHealth": 100.0,
+          "BaseHealthRegenPerSecond": 0.0,
+          "BaseDefense": 1.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
@@ -984,11 +984,11 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 16.0
+          "SearchRadius": 10.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 0
+          "DropDataId": 8
         }
       ],
       "Id": 27
@@ -1076,6 +1076,13 @@
         }
       ],
       "Id": 29
+    },
+    {
+      "Name": "DungeonInterestPoint",
+      "Description": "开放场景兴趣点控制单位（运行时创建，无渲染实体）",
+      "PrefabPath": "Assets/Res/Prefab/Unit/DungeonInterestPoint.prefab",
+      "Modules": [],
+      "Id": 30
     }
   ]
 }

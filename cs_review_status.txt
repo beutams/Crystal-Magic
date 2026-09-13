@@ -49,20 +49,23 @@ Core\
     FactoryKeyAttribute.cs TRUE
     GeneratedFactory.cs TRUE DIRTY
   Flow\
+    DungeonFlowTiming.cs TRUE
     DungeonGenerationService.cs TRUE DIRTY
     DungeonSettlementState.cs TRUE DIRTY
     DungeonState.cs TRUE DIRTY
-    GameFlowComponent.cs FALSE
-    GameState.cs FALSE
+    GameFlowComponent.cs TRUE
+    GameState.cs TRUE
     LoadGameState.cs TRUE DIRTY
-    MainMenuState.cs FALSE
+    MainMenuState.cs TRUE
     TownState.cs TRUE DIRTY
     TrainingState.cs TRUE DIRTY
-    TransitionState.cs FALSE
+    TransitionState.cs TRUE
   GameGate\
-    GameGateComponent.cs FALSE
+    GameGateComponent.cs TRUE
   Input\
     InputComponent.cs TRUE DIRTY
+  Logging\
+    LocalLogComponent.cs TRUE
   Localization\
     Editor\
       LocalizedTextMeshProUGUIEditor.cs FALSE
@@ -111,7 +114,7 @@ Core\
     SaveVariableData.cs TRUE
   Scene\
     Editor\
-      SubSceneAutoOpenOnPlay.cs FALSE
+      SubSceneAutoOpenOnPlay.cs TRUE
     AutoOpen.cs FALSE
     SceneComponent.cs TRUE DIRTY
   World\
@@ -660,7 +663,7 @@ UI\
     MinimapInterestPointData.cs TRUE
     MinimapInterestPointView.cs TRUE
   MainMenuUI\
-    MainMenuUI.cs FALSE
+    MainMenuUI.cs TRUE
     MainMenuUIController.cs TRUE DIRTY
     MainMenuUIData.cs FALSE
     MainMenuUIModel.cs FALSE
@@ -679,8 +682,8 @@ UI\
       SaveUI_OpenView.cs FALSE
       SaveUI_SaveItemData.cs FALSE
       SaveUI_SaveItemView.cs FALSE
-    SaveUI.cs FALSE
-    SaveUIController.cs FALSE
+    SaveUI.cs TRUE
+    SaveUIController.cs TRUE
     SaveUIData.cs FALSE
     SaveUIModel.cs FALSE
   ShopBuyUI\

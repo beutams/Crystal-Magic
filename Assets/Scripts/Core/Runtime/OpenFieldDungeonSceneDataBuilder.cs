@@ -91,6 +91,7 @@ namespace CrystalMagic.Core
             }
 
             AddLandmarks(scene, layout, theme.OpenField, occupiedCells);
+            AddInterestPointSpawns(scene, layout);
             AddSquads(scene, layout, theme, isBossFloor, occupiedCells);
             ConfigureChestCandidates(scene, theme.OpenField.TreasureItemIds);
             return scene;
@@ -288,6 +289,18 @@ namespace CrystalMagic.Core
                 HideVisual = true,
             });
         }
+        private static void AddInterestPointSpawns(RuntimeDungeonSceneData scene, OpenFieldDungeonLayout layout)
+        {
+            foreach (OpenFieldInterestPoint point in layout.InterestPoints)
+            {
+                scene.InterestPointSpawns.Add(new RuntimeDungeonInterestPointSpawnData
+                {
+                    EncounterId = point.EncounterId,
+                    WorldPosition = ToWorld(layout, point.Center),
+                });
+            }
+        }
+
         private static void AddSquads(RuntimeDungeonSceneData scene, OpenFieldDungeonLayout layout, DungeonThemeData theme, bool isBossFloor, HashSet<Vector2Int> occupiedCells)
         {
             foreach (OpenFieldContentPlacement placement in layout.ContentPlacements)
@@ -304,53 +317,124 @@ namespace CrystalMagic.Core
                 if (squad == null)
                     continue;
 
+                RuntimeDungeonInterestPointSpawnData interestPointSpawn = placement.Type == OpenFieldContentType.InterestSquad
+                    ? FindInterestPointSpawn(scene, placement.EncounterId)
+                    : null;
+                if (placement.Type == OpenFieldContentType.InterestSquad && interestPointSpawn == null)
+                    continue;
+
+                if (interestPointSpawn != null)
+                    interestPointSpawn.SquadId = placement.SquadId;
+
                 System.Random random = new(layout.Seed ^ (placement.SquadId * 486187739));
                 int localIndex = 0;
-                foreach (OpenFieldDungeonSquadMemberData member in squad.Members)
+                foreach (UnitData unit in BuildSquadRoster(squad, random))
                 {
-                    UnitData unit = DataComponent.Instance?.Find<UnitData>(row => row.Name == member.UnitName);
-                    if (unit == null || string.IsNullOrWhiteSpace(unit.PrefabPath))
-                        continue;
-
                     UnitDungeonFootprintModuleData footprint = unit.GetModule<UnitDungeonFootprintModuleData>();
                     int footprintWidth = Mathf.Max(1, footprint?.Width ?? 1);
                     int footprintHeight = Mathf.Max(1, footprint?.Height ?? 1);
-                    int count = Mathf.Max(1, member.Count);
-                    for (int i = 0; i < count; i++)
+                    if (!TryReserveMemberPosition(
+                            layout,
+                            placement.Cell,
+                            squad,
+                            footprintWidth,
+                            footprintHeight,
+                            occupiedCells,
+                            random,
+                            out OpenFieldGridPosition cell))
                     {
-                        if (!TryReserveMemberPosition(
-                                layout,
-                                placement.Cell,
-                                squad,
-                                footprintWidth,
-                                footprintHeight,
-                                occupiedCells,
-                                random,
-                                out OpenFieldGridPosition cell))
-                        {
-                            Debug.LogWarning($"[OpenFieldDungeonSceneDataBuilder] Squad '{squad.Name}' cannot fit all configured members in its {squad.Width}x{squad.Height} deployment area.");
-                            continue;
-                        }
-
-                        Vector3 worldPosition = ToWorld(layout, cell) + new Vector3(
-                            (footprintWidth - 1) * CellWorldSize * 0.5f,
-                            (footprintHeight - 1) * CellWorldSize * 0.5f,
-                            0f);
-                        scene.MonsterSpawns.Add(new RuntimeDungeonMonsterSpawnData
-                        {
-                            RegionId = placement.EncounterId,
-                            SquadId = placement.SquadId,
-                            TileIndex = localIndex++,
-                            Level = squad.MonsterLevel,
-                            IsBoss = squad.IsBossSquad,
-                            PrefabName = Path.GetFileNameWithoutExtension(unit.PrefabPath),
-                            SourceCoordinate = ToVector2Int(cell),
-                            DisplayCoordinate = ToVector2Int(cell),
-                            WorldPosition = worldPosition,
-                        });
+                        Debug.LogWarning($"[OpenFieldDungeonSceneDataBuilder] Squad '{squad.Name}' cannot fit all generated members in its {squad.Width}x{squad.Height} deployment area.");
+                        continue;
                     }
+
+                    Vector3 worldPosition = ToWorld(layout, cell) + new Vector3(
+                        (footprintWidth - 1) * CellWorldSize * 0.5f,
+                        (footprintHeight - 1) * CellWorldSize * 0.5f,
+                        0f);
+                    RuntimeDungeonMonsterSpawnData memberSpawn = new()
+                    {
+                        RegionId = placement.EncounterId,
+                        SquadId = placement.SquadId,
+                        TileIndex = localIndex++,
+                        Level = squad.MonsterLevel,
+                        IsBoss = squad.IsBossSquad,
+                        PrefabName = Path.GetFileNameWithoutExtension(unit.PrefabPath),
+                        SourceCoordinate = ToVector2Int(cell),
+                        DisplayCoordinate = ToVector2Int(cell),
+                        WorldPosition = worldPosition,
+                    };
+                    if (interestPointSpawn != null)
+                        interestPointSpawn.MemberSpawns.Add(memberSpawn);
+                    else
+                        scene.MonsterSpawns.Add(memberSpawn);
                 }
             }
+        }
+
+        private static List<UnitData> BuildSquadRoster(OpenFieldDungeonSquadData squad, System.Random random)
+        {
+            List<ResolvedSquadMember> choices = new();
+            List<UnitData> roster = new();
+            int totalCost = 0;
+            foreach (OpenFieldDungeonSquadMemberData member in squad.Members)
+            {
+                if (member == null || string.IsNullOrWhiteSpace(member.UnitName))
+                    continue;
+
+                UnitData unit = DataComponent.Instance?.Find<UnitData>(row => row.Name == member.UnitName);
+                if (unit == null || string.IsNullOrWhiteSpace(unit.PrefabPath))
+                    continue;
+
+                ResolvedSquadMember choice = new(unit, Mathf.Max(1, member.Cost), Mathf.Max(1, member.Weight));
+                choices.Add(choice);
+                int minimum = Mathf.Max(0, member.MinCount);
+                for (int index = 0; index < minimum; index++)
+                {
+                    roster.Add(unit);
+                    totalCost += choice.Cost;
+                }
+            }
+
+            int costLimit = Mathf.Max(1, squad.CostLimit);
+            while (totalCost < costLimit && choices.Count > 0)
+            {
+                ResolvedSquadMember choice = SelectWeightedMember(choices, random);
+                roster.Add(choice.Unit);
+                totalCost += choice.Cost;
+            }
+
+            return roster;
+        }
+
+        private static ResolvedSquadMember SelectWeightedMember(List<ResolvedSquadMember> choices, System.Random random)
+        {
+            int totalWeight = 0;
+            foreach (ResolvedSquadMember choice in choices)
+                totalWeight += choice.Weight;
+
+            int roll = random.Next(totalWeight);
+            foreach (ResolvedSquadMember choice in choices)
+            {
+                roll -= choice.Weight;
+                if (roll < 0)
+                    return choice;
+            }
+
+            return choices[0];
+        }
+
+        private readonly struct ResolvedSquadMember
+        {
+            public ResolvedSquadMember(UnitData unit, int cost, int weight)
+            {
+                Unit = unit;
+                Cost = cost;
+                Weight = weight;
+            }
+
+            public UnitData Unit { get; }
+            public int Cost { get; }
+            public int Weight { get; }
         }
 
         private static void AddLandmarks(
@@ -462,6 +546,19 @@ namespace CrystalMagic.Core
             foreach (OpenFieldInterestPoint point in layout.InterestPoints)
                 if (point.EncounterId == encounterId)
                     return point;
+            return null;
+        }
+
+        private static RuntimeDungeonInterestPointSpawnData FindInterestPointSpawn(
+            RuntimeDungeonSceneData scene,
+            int encounterId)
+        {
+            foreach (RuntimeDungeonInterestPointSpawnData spawn in scene.InterestPointSpawns)
+            {
+                if (spawn.EncounterId == encounterId)
+                    return spawn;
+            }
+
             return null;
         }
 

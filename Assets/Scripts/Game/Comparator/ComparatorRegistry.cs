@@ -30,6 +30,7 @@ public static class ComparatorRegistry
         factory.RegisterValueOperation("Max", static () => new MaxOperation());
         factory.RegisterValueOperation("Min", static () => new MinOperation());
         factory.RegisterValueOperation("Multiply", static () => new MultiplyOperation());
+        factory.RegisterValueOperation("ScaleFloat2", static () => new ScaleFloat2Operation());
         factory.RegisterValueOperation("Subtract", static () => new SubtractOperation());
     }
 }
