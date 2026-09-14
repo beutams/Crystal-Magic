@@ -1,6 +1,7 @@
 using CrystalMagic.Core;
 using System;
 using System.Collections.Generic;
+using Unity.Entities;
 
 namespace Server
 {
@@ -9,11 +10,14 @@ namespace Server
         public ServerService battleService;
         public ServerService lobbyService;
         public Dictionary<ulong, BattleRoom> battleRooms = new Dictionary<ulong, BattleRoom>();
+        public Dictionary<Connect, BattlePlayer> connectDic = new Dictionary<Connect, BattlePlayer>();
+
 
         public Connect lobbyConnect;
         protected override void Awake()
         {
             base.Awake();
+            TCPPacketCode.Init();
             battleService = new ServerService(ServerUtility.GetBattleIPEndPoint());
             battleService.OnAccept += OnAccept;
             battleService.OnDisconnected += OnDisconnected;
@@ -27,16 +31,11 @@ namespace Server
 
         private void OnDisconnected(Connect connect)
         {
-            foreach (BattleRoom room in battleRooms.Values)
+            if (connectDic.TryGetValue(connect, out BattlePlayer player))
             {
-                foreach (BattlePlayer player in room.players.Values)
-                {
-                    if (player.connect == connect)
-                    {
-                        player.connect = null;
-                        return;
-                    }
-                }
+                connectDic.Remove(connect);
+                player.connect = null;
+                connect.UnRegisterCallback(TCPPacketCode.GetOpcode<C2B_SendUserData>(), OnGetUserData);
             }
         }
 
@@ -65,8 +64,8 @@ namespace Server
                 return;
             }
 
-            BattleRoom room = BattleRoom.CreateRoom(realMessage.ownerAccountId,realMessage.players);
-            battleRooms.Add(room.roomId, room);
+            BattleRoom room = BattleRoom.CreateRoom(realMessage.roomId, realMessage.ownerAccountId, realMessage.dungeonFloor, realMessage.players);
+            battleRooms.Add(room.battleId, room);
 
             Dictionary<ulong, string> keys = new Dictionary<ulong, string>();
             foreach(var player in room.players.Keys)
@@ -89,8 +88,19 @@ namespace Server
                     {
                         room.secretKeys.Remove(realMessage.ticket);
                         player.connect = connect;
+                        connectDic[connect] = player;
                         connect.UnRegisterCallback(TCPPacketCode.GetOpcode<C2B_EnterBattle>(), OnEnterBattle);
-                        connect.Send(new B2C_EnterBattleResult() { type = BattleRequestType.EnterBattleSuccess });
+                        connect.RegisterCallback(TCPPacketCode.GetOpcode<C2B_SendUserData>(), OnGetUserData);
+                        connect.Send(new B2C_EnterBattleResult()
+                        {
+                            type = BattleRequestType.EnterBattleSuccess,
+                            battleData = new BattleEnterData()
+                            {
+                                battleId = room.battleId,
+                                dungeonFloor = room.dungeonFloor,
+                                seed = room.seed,
+                            }
+                        });
                         return;
                     }
                 }
@@ -98,6 +108,69 @@ namespace Server
 
             connect.Send(new B2C_EnterBattleResult() { type = BattleRequestType.EnterBattleFail });
             battleService.DisconnectAfterSend(connect);
+        }
+        private void OnGetUserData(IMessage message, Connect connect)
+        {
+            C2B_SendUserData realMessage = message as C2B_SendUserData;
+            if (realMessage == null || realMessage.data == null
+                || !connectDic.TryGetValue(connect, out BattlePlayer player)
+                || player == null || player.init || player.room.started)
+            {
+                return;
+            }
+
+            player.characterData = realMessage.data;
+            player.unitId = Guid.NewGuid();
+            EntityManager entityManager = player.room.world.EntityManager;
+            player.entity = entityManager.CreateEntity();
+            entityManager.AddComponentData(player.entity, new NetworkIdentityComponent() { id = player.unitId });
+            player.init = true;
+
+            foreach (BattlePlayer battlePlayer in player.room.players.Values)
+            {
+                if (!battlePlayer.init)
+                {
+                    continue;
+                }
+
+                player.connect.Send(new B2C_CreateBattleUnit()
+                {
+                    unitData = new BattleUnitData()
+                    {
+                        unitId = battlePlayer.unitId,
+                        accountId = battlePlayer.accountId,
+                        characterData = battlePlayer.characterData,
+                    }
+                });
+            }
+
+            foreach (BattlePlayer battlePlayer in player.room.players.Values)
+            {
+                if (!battlePlayer.init || battlePlayer == player || battlePlayer.connect == null)
+                {
+                    continue;
+                }
+
+                battlePlayer.connect.Send(new B2C_CreateBattleUnit()
+                {
+                    unitData = new BattleUnitData()
+                    {
+                        unitId = player.unitId,
+                        accountId = player.accountId,
+                        characterData = player.characterData,
+                    }
+                });
+            }
+
+            foreach (BattlePlayer battlePlayer in player.room.players.Values)
+            {
+                if (!battlePlayer.init)
+                {
+                    return;
+                }
+            }
+
+            player.room.started = true;
         }
         private void LateUpdate()
         {

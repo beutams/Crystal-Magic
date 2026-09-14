@@ -1,4 +1,4 @@
-﻿%YAML 1.1
+%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!1 &144640258752659519
 GameObject:
@@ -65,8 +65,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "攻击力"
-  _localizationKey: ui.property.attack_power
+  m_text: "\u653B\u51FB\u529B"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d13458b720792d84abbeda6935d095ee, type: 2}
   m_sharedMaterial: {fileID: -7278382337010117695, guid: d13458b720792d84abbeda6935d095ee, type: 2}
@@ -137,6 +136,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: ui.property.attack_power
 --- !u!1 &262212215417242369
 GameObject:
   m_ObjectHideFlags: 0
@@ -273,6 +273,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: 
 --- !u!1 &549243115295296143
 GameObject:
   m_ObjectHideFlags: 0
@@ -338,8 +339,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "生命"
-  _localizationKey: ui.property.health
+  m_text: "\u751F\u547D"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d13458b720792d84abbeda6935d095ee, type: 2}
   m_sharedMaterial: {fileID: -7278382337010117695, guid: d13458b720792d84abbeda6935d095ee, type: 2}
@@ -410,6 +410,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: ui.property.health
 --- !u!1 &702484155928758300
 GameObject:
   m_ObjectHideFlags: 0
@@ -475,8 +476,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "风属性加成"
-  _localizationKey: ui.property.wind_power
+  m_text: "\u98CE\u5C5E\u6027\u52A0\u6210"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d13458b720792d84abbeda6935d095ee, type: 2}
   m_sharedMaterial: {fileID: -7278382337010117695, guid: d13458b720792d84abbeda6935d095ee, type: 2}
@@ -547,6 +547,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: ui.property.wind_power
 --- !u!1 &742411509896296551
 GameObject:
   m_ObjectHideFlags: 0
@@ -683,6 +684,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: 
 --- !u!1 &814698598640118429
 GameObject:
   m_ObjectHideFlags: 0
@@ -893,6 +895,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: 
 --- !u!1 &2078544684167433361
 GameObject:
   m_ObjectHideFlags: 0
@@ -995,8 +998,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "咏唱速度"
-  _localizationKey: ui.property.chant_speed
+  m_text: "\u548F\u5531\u901F\u5EA6"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d13458b720792d84abbeda6935d095ee, type: 2}
   m_sharedMaterial: {fileID: -7278382337010117695, guid: d13458b720792d84abbeda6935d095ee, type: 2}
@@ -1067,6 +1069,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: ui.property.chant_speed
 --- !u!1 &2156787074646099067
 GameObject:
   m_ObjectHideFlags: 0
@@ -1169,8 +1172,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "火属性加成"
-  _localizationKey: ui.property.fire_power
+  m_text: "\u706B\u5C5E\u6027\u52A0\u6210"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d13458b720792d84abbeda6935d095ee, type: 2}
   m_sharedMaterial: {fileID: -7278382337010117695, guid: d13458b720792d84abbeda6935d095ee, type: 2}
@@ -1241,6 +1243,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: ui.property.fire_power
 --- !u!1 &2464706758099194151
 GameObject:
   m_ObjectHideFlags: 0
@@ -1377,6 +1380,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: 
 --- !u!1 &2515237617347222577
 GameObject:
   m_ObjectHideFlags: 0
@@ -1442,8 +1446,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "电属性加成"
-  _localizationKey: ui.property.lightning_power
+  m_text: "\u7535\u5C5E\u6027\u52A0\u6210"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d13458b720792d84abbeda6935d095ee, type: 2}
   m_sharedMaterial: {fileID: -7278382337010117695, guid: d13458b720792d84abbeda6935d095ee, type: 2}
@@ -1514,6 +1517,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: ui.property.lightning_power
 --- !u!1 &2777050930257983664
 GameObject:
   m_ObjectHideFlags: 0
@@ -1687,6 +1691,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: 
 --- !u!1 &3438781031821508079
 GameObject:
   m_ObjectHideFlags: 0
@@ -1789,8 +1794,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "行动速度"
-  _localizationKey: ui.property.action_speed
+  m_text: "\u884C\u52A8\u901F\u5EA6"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d13458b720792d84abbeda6935d095ee, type: 2}
   m_sharedMaterial: {fileID: -7278382337010117695, guid: d13458b720792d84abbeda6935d095ee, type: 2}
@@ -1861,6 +1865,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: ui.property.action_speed
 --- !u!1 &3819062403824595106
 GameObject:
   m_ObjectHideFlags: 0
@@ -1997,6 +2002,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: 
 --- !u!1 &4181657623835252371
 GameObject:
   m_ObjectHideFlags: 0
@@ -2133,6 +2139,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: 
 --- !u!1 &4689682894167631562
 GameObject:
   m_ObjectHideFlags: 0
@@ -2198,8 +2205,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "魔力"
-  _localizationKey: ui.property.mana
+  m_text: "\u9B54\u529B"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d13458b720792d84abbeda6935d095ee, type: 2}
   m_sharedMaterial: {fileID: -7278382337010117695, guid: d13458b720792d84abbeda6935d095ee, type: 2}
@@ -2270,6 +2276,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: ui.property.mana
 --- !u!1 &5045896363232490207
 GameObject:
   m_ObjectHideFlags: 0
@@ -2406,6 +2413,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: 
 --- !u!1 &5059114849674658344
 GameObject:
   m_ObjectHideFlags: 0
@@ -2471,8 +2479,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "魔力恢复"
-  _localizationKey: ui.property.mana_regen
+  m_text: "\u9B54\u529B\u6062\u590D"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d13458b720792d84abbeda6935d095ee, type: 2}
   m_sharedMaterial: {fileID: -7278382337010117695, guid: d13458b720792d84abbeda6935d095ee, type: 2}
@@ -2543,6 +2550,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: ui.property.mana_regen
 --- !u!1 &5137426116843058905
 GameObject:
   m_ObjectHideFlags: 0
@@ -2648,6 +2656,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _canCloseByEscape: 1
+--- !u!114 &639147834832431355
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5137426116843058905}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7158f745a79344da8b819f7efbe30340, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Tier: 0
 --- !u!1 &5371101510009071019
 GameObject:
   m_ObjectHideFlags: 0
@@ -2787,8 +2808,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "水属性加成"
-  _localizationKey: ui.property.water_power
+  m_text: "\u6C34\u5C5E\u6027\u52A0\u6210"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d13458b720792d84abbeda6935d095ee, type: 2}
   m_sharedMaterial: {fileID: -7278382337010117695, guid: d13458b720792d84abbeda6935d095ee, type: 2}
@@ -2859,6 +2879,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: ui.property.water_power
 --- !u!1 &6586074115411584008
 GameObject:
   m_ObjectHideFlags: 0
@@ -2924,8 +2945,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "生命恢复"
-  _localizationKey: ui.property.health_regen
+  m_text: "\u751F\u547D\u6062\u590D"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d13458b720792d84abbeda6935d095ee, type: 2}
   m_sharedMaterial: {fileID: -7278382337010117695, guid: d13458b720792d84abbeda6935d095ee, type: 2}
@@ -2996,6 +3016,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: ui.property.health_regen
 --- !u!1 &6755024495952653198
 GameObject:
   m_ObjectHideFlags: 0
@@ -3132,6 +3153,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: 
 --- !u!1 &6859659074710634541
 GameObject:
   m_ObjectHideFlags: 0
@@ -3268,6 +3290,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: 
 --- !u!1 &7156745163557985872
 GameObject:
   m_ObjectHideFlags: 0
@@ -3404,6 +3427,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: 
 --- !u!1 &7448556838003163022
 GameObject:
   m_ObjectHideFlags: 0
@@ -3469,8 +3493,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "技能范围"
-  _localizationKey: ui.property.skill_range
+  m_text: "\u6280\u80FD\u8303\u56F4"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d13458b720792d84abbeda6935d095ee, type: 2}
   m_sharedMaterial: {fileID: -7278382337010117695, guid: d13458b720792d84abbeda6935d095ee, type: 2}
@@ -3541,6 +3564,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: ui.property.skill_range
 --- !u!1 &7820216044045806573
 GameObject:
   m_ObjectHideFlags: 0
@@ -3643,8 +3667,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "移动速度"
-  _localizationKey: ui.property.move_speed
+  m_text: "\u79FB\u52A8\u901F\u5EA6"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d13458b720792d84abbeda6935d095ee, type: 2}
   m_sharedMaterial: {fileID: -7278382337010117695, guid: d13458b720792d84abbeda6935d095ee, type: 2}
@@ -3715,6 +3738,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: ui.property.move_speed
 --- !u!1 &8779821068435181784
 GameObject:
   m_ObjectHideFlags: 0
@@ -3925,6 +3949,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: 
 --- !u!1 &9081655153736827807
 GameObject:
   m_ObjectHideFlags: 0
@@ -4098,6 +4123,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+  _localizationKey: 
 --- !u!1 &9169057886786976090
 GameObject:
   m_ObjectHideFlags: 0
@@ -4135,16 +4161,3 @@ RectTransform:
   m_AnchoredPosition: {x: -900, y: 300}
   m_SizeDelta: {x: 500, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &639147834832431355
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5137426116843058905}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7158f745a79344da8b819f7efbe30340, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Tier: 0

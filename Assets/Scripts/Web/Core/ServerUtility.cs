@@ -60,6 +60,19 @@ namespace Server
                 .TrimEnd('=');
         }
 
+        public static int CreateBattleSeed()
+        {
+            byte[] bytes = new byte[4];
+
+            using (RandomNumberGenerator random = RandomNumberGenerator.Create())
+            {
+                random.GetBytes(bytes);
+            }
+
+            int seed = BitConverter.ToInt32(bytes, 0) & int.MaxValue;
+            return seed == 0 ? 1 : seed;
+        }
+
 
         public const long PingInterval = 3_000;
         public const long Timeout = 10_000;

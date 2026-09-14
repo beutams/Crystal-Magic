@@ -1,25 +1,42 @@
+using System;
 using System.Collections.Generic;
+using Unity.Entities;
 
 namespace Server
 {
     public class BattleRoom
     {
-        public ulong roomId;
+        public ulong battleId;
+        public ulong lobbyRoomId;
         public ulong ownerAccountId;
+        public int dungeonFloor;
+        public int seed;
+        public bool started;
+
+        public World world;
         public Dictionary<ulong, BattlePlayer> players;
         public Dictionary<string, BattlePlayer> secretKeys;
-
-        public static BattleRoom CreateRoom(ulong ownerAccountId,ulong[] playerlist)
+        public static BattleRoom CreateRoom(ulong lobbyRoomId, ulong ownerAccountId, int dungeonFloor, ulong[] playerlist)
         {
             BattleRoom room = new BattleRoom();
-            room.roomId = ServerUtility.CreateBattleRoomId();
+            room.battleId = ServerUtility.CreateBattleRoomId();
+            room.lobbyRoomId = lobbyRoomId;
             room.ownerAccountId = ownerAccountId;
+            room.dungeonFloor = Math.Max(1, dungeonFloor);
+            room.seed = ServerUtility.CreateBattleSeed();
             room.players = new Dictionary<ulong, BattlePlayer>();
             room.secretKeys = new Dictionary<string, BattlePlayer>();
-            foreach(var player in playerlist)
+            foreach(var accountId in playerlist)
             {
-                room.players.Add(player, new BattlePlayer() { accountId = player });
+                room.players.Add(accountId, new BattlePlayer()
+                {
+                    accountId = accountId,
+                    room = room,
+                });
             }
+
+            room.world = new World(lobbyRoomId.ToString(), WorldFlags.Game);
+            ScriptBehaviourUpdateOrder.AppendWorldToCurrentPlayerLoop(room.world);
             return room;
         }
     }

@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using UnityEditor.MemoryProfiler;
 
 namespace Server
 {
@@ -16,8 +15,17 @@ namespace Server
 
         public static Dictionary<Type, ushort> messages = new Dictionary<Type, ushort>();
         public static Dictionary<ushort, Type> opcodes = new Dictionary<ushort, Type>();
+        private static bool initialized;
+
         public static void Init()
         {
+            if (initialized)
+            {
+                return;
+            }
+
+            messages.Clear();
+            opcodes.Clear();
             Assembly assembly = Assembly.GetExecutingAssembly();
             foreach (Type type in assembly.GetTypes())
             {
@@ -33,6 +41,8 @@ namespace Server
                     }
                 }
             }
+
+            initialized = true;
         }
         public static ushort GetOpcode<T>(T message) where T : IMessage
         {

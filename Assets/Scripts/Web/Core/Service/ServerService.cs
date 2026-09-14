@@ -26,7 +26,7 @@ namespace Server
         {
             try
             {
-                startTime = TimerManager.Instance.TimeNow;
+                startTime = NetworkTimer.Instance.TimeNow;
 
                 state = ServerState.CLOSED;
                 socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -58,7 +58,7 @@ namespace Server
         }
         private void OnClientConnect(IMessage message, Connect connect)
         {
-            connect.Send(new S2C_Pong() { Time = TimerManager.Instance.TimeNow });
+            connect.Send(new S2C_Pong() { Time = NetworkTimer.Instance.TimeNow });
         }
         public override void Update()
         {
@@ -90,8 +90,8 @@ namespace Server
 
                 Connect connect = pair.connect;
                 connect.State = ConnectState.Connected;
-                connect.startTime = TimerManager.Instance.TimeNow;
-                connect.LastReceiveTime = TimerManager.Instance.TimeNow;
+                connect.startTime = NetworkTimer.Instance.TimeNow;
+                connect.LastReceiveTime = NetworkTimer.Instance.TimeNow;
                 Debug.Log($"[TCP][Server] Accepted {clientSocket.RemoteEndPoint}, Connect={id}");
                 OnAccept?.Invoke(connect);
             }

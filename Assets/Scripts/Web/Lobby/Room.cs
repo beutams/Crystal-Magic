@@ -8,6 +8,7 @@ public class Room
     public string roomName;
     public int enterNum;
     public int maxNum;
+    public int dungeonFloor = 1;
     public Dictionary<ulong, Player> players = new Dictionary<ulong, Player>();
 
     public bool start;

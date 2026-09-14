@@ -32,13 +32,13 @@ namespace Server
         {
             connectingTask = new Dictionary<Guid, Task>();
             timerIds = new Dictionary<Connect, long>();
-            startTime = TimerManager.Instance.TimeNow;
+            startTime = NetworkTimer.Instance.TimeNow;
             OnConnectedSuccess += (connect) =>
             {
-                long timerid = TimerManager.Instance.AddRepeated(ServerUtility.PingInterval, () =>
+                long timerid = NetworkTimer.Instance.AddRepeated(ServerUtility.PingInterval, () =>
                 {
                     Debug.Log($"[TCP][Client] Heartbeat triggered, Connect={connect.IPEndPoint}");
-                    connect.Send(new C2S_Ping() { Time = TimerManager.Instance.TimeNow });
+                    connect.Send(new C2S_Ping() { Time = NetworkTimer.Instance.TimeNow });
                 });
                 //connect.RegisterCallback(TCPPacketCode.GetOpcode<S2C_Pong>(null), OnPong);
                 timerIds.Add(connect, timerid);
@@ -48,7 +48,7 @@ namespace Server
             {
                 if (timerIds.TryGetValue(connect, out long timerId))
                 {
-                    TimerManager.Instance.Remove(timerId);
+                    NetworkTimer.Instance.Remove(timerId);
                     timerIds.Remove(connect);
                 }
             };
@@ -61,6 +61,30 @@ namespace Server
             HandleSend();
             HandleTimeout();
             HandleDisconnect();
+        }
+        public void Shutdown()
+        {
+            if (timerIds != null)
+            {
+                foreach (long timerId in timerIds.Values)
+                {
+                    NetworkTimer.Instance.Remove(timerId);
+                }
+
+                timerIds.Clear();
+            }
+
+            ClosePairs(connects);
+            ClosePairs(pendingConnects);
+            connectingTask?.Clear();
+            disconnectList.Clear();
+            closeAfterSendList.Clear();
+            OnConnecting = null;
+            OnConnectedSuccess = null;
+            OnConnectedFail = null;
+            OnSend = null;
+            OnRecv = null;
+            OnDisconnected = null;
         }
         private void HandleConnect()
         {
@@ -110,8 +134,8 @@ namespace Server
                     //成功连接
                     task.GetAwaiter().GetResult();
                     connect.State = ConnectState.Connected;
-                    connect.startTime = TimerManager.Instance.TimeNow;
-                    connect.LastReceiveTime = TimerManager.Instance.TimeNow;
+                    connect.startTime = NetworkTimer.Instance.TimeNow;
+                    connect.LastReceiveTime = NetworkTimer.Instance.TimeNow;
 
                     Debug.Log($"[TCP][Client] Connect succeeded: {connect.IPEndPoint}, Connect={id}");
                     OnConnectedSuccess.Invoke(connect);
@@ -132,6 +156,29 @@ namespace Server
             {
                 connectingTask.Remove(complete);
             }
+        }
+        private void ClosePairs(Dictionary<Guid, TCPPair> pairs)
+        {
+            foreach (TCPPair pair in pairs.Values)
+            {
+                try
+                {
+                    pair.socket.Shutdown(SocketShutdown.Both);
+                }
+                catch (SocketException)
+                {
+                }
+                finally
+                {
+                    pair.socket.Close();
+                    pair.socket.Dispose();
+                    pair.connect.readSteam.Dispose();
+                    pair.connect.sendSteam.Dispose();
+                    pair.connect.Dispose();
+                }
+            }
+
+            pairs.Clear();
         }
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Server;
 using UnityEngine;
 
 namespace CrystalMagic.Core
@@ -28,10 +29,14 @@ namespace CrystalMagic.Core
         public GameGateComponent GameGateComponent { get; private set; }
         public GameFlowComponent GameFlowComponent { get; private set; }
         public TimerComponent TimerComponent { get; private set; }
+        public ClientNetworkManager ClientNetworkManager { get; private set; }
 
         protected override void Awake()
         {
-            InitializeSingletonInstance(this);
+            if (InitializeSingletonInstance(this))
+            {
+                DontDestroyOnLoad(gameObject);
+            }
         }
 
         private void Start()
@@ -113,6 +118,9 @@ namespace CrystalMagic.Core
 
             TimerComponent = TimerComponent.Instance;
             _components.Add(TimerComponent);
+
+            ClientNetworkManager = ClientNetworkManager.Instance;
+            _components.Add(ClientNetworkManager);
 
             // 按优先级排序后依次初始化。
             _components.Sort((a, b) => a.Priority.CompareTo(b.Priority));

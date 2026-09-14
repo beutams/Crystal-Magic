@@ -7,5 +7,6 @@ namespace Server
     public class B2C_EnterBattleResult : IMessage
     {
         public BattleRequestType type;
+        public BattleEnterData battleData;
     }
 }

@@ -14,19 +14,7 @@ namespace Server
 
         public override void OnInspectorGUI()
         {
-            StartMono startMono = (StartMono)target;
-
-            EditorGUI.BeginChangeCheck();
-            bool isServer = EditorGUILayout.Toggle("Server", startMono.server);
-            if (EditorGUI.EndChangeCheck())
-            {
-                Undo.RecordObject(startMono, "Change Server Mode");
-                startMono.server = isServer;
-                EditorUtility.SetDirty(startMono);
-            }
-
-            EditorGUILayout.Space();
-            DrawRuntimeStatus(startMono);
+            DrawRuntimeStatus((StartMono)target);
         }
 
         public override bool RequiresConstantRepaint()
@@ -176,7 +164,7 @@ namespace Server
                 return "No message received";
             }
 
-            long elapsed = TimerManager.Instance.TimeNow - lastReceiveTime;
+            long elapsed = NetworkTimer.Instance.TimeNow - lastReceiveTime;
             return elapsed < 1000 ? elapsed + " ms ago" : (elapsed / 1000f).ToString("F1") + " s ago";
         }
 

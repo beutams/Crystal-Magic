@@ -17,6 +17,7 @@ namespace Server
         protected override void Awake()
         {
             base.Awake();
+            TCPPacketCode.Init();
             lobbyService = new ServerService(ServerUtility.GetLobbyIPEndPoint());
             lobbyService.OnAccept += OnAccept;
             lobbyService.OnDisconnected += OnDisconnected;
@@ -73,6 +74,7 @@ namespace Server
             connect.UnRegisterCallback(TCPPacketCode.GetOpcode<C2L_JoinRoom>(), OnClientJoinRoom);
             connect.UnRegisterCallback(TCPPacketCode.GetOpcode<C2L_LeaveRoom>(), OnClientLeaveRoom);
             connect.UnRegisterCallback(TCPPacketCode.GetOpcode<C2L_Ready>(), OnClientReady);
+            connect.UnRegisterCallback(TCPPacketCode.GetOpcode<C2L_SetDungeonFloor>(), OnClientSetDungeonFloor);
             connect.UnRegisterCallback(TCPPacketCode.GetOpcode<C2L_Start>(), OnClientStart);
         }
         private void OnAccept(Connect connect)
@@ -111,6 +113,7 @@ namespace Server
             connect.RegisterCallback(TCPPacketCode.GetOpcode<C2L_JoinRoom>(), OnClientJoinRoom);
             connect.RegisterCallback(TCPPacketCode.GetOpcode<C2L_LeaveRoom>(), OnClientLeaveRoom);
             connect.RegisterCallback(TCPPacketCode.GetOpcode<C2L_Ready>(), OnClientReady);
+            connect.RegisterCallback(TCPPacketCode.GetOpcode<C2L_SetDungeonFloor>(), OnClientSetDungeonFloor);
             connect.RegisterCallback(TCPPacketCode.GetOpcode<C2L_Start>(), OnClientStart);
 
             connect.Send(new L2C_RefreshRoomList
@@ -141,6 +144,7 @@ namespace Server
                 {
                     roomId = room.roomId,
                     ownerAccountId = room.ownerAccountId,
+                    dungeonFloor = room.dungeonFloor,
                     players = room.players.Keys.ToArray()
                 });
             }
@@ -159,6 +163,24 @@ namespace Server
                 }
             }
         }
+        private void OnClientSetDungeonFloor(IMessage message, Connect connect)
+        {
+            C2L_SetDungeonFloor realMessage = message as C2L_SetDungeonFloor;
+            if (realMessage != null
+                && connectAccountDic.TryGetValue(connect, out ulong accountId)
+                && playerList.TryGetValue(accountId, out Player player)
+                && roomList.TryGetValue(player.roomId, out Room room)
+                && room.ownerAccountId == accountId)
+            {
+                room.dungeonFloor = Math.Max(1, realMessage.dungeonFloor);
+
+                RoomData roomData = RoomData.CreateRoomData(room);
+                foreach (Player member in room.players.Values)
+                {
+                    member.connect.Send(new L2C_RefreshRoomInfo() { roomData = roomData });
+                }
+            }
+        }
         private void OnClientCreateRoom(IMessage message, Connect connect)
         {
             C2L_CreateRoom realMessage = message as C2L_CreateRoom;
@@ -170,6 +192,7 @@ namespace Server
                 room.roomName = realMessage.roomName;
                 room.enterNum = 1;
                 room.maxNum = 4;
+                room.dungeonFloor = 1;
                 room.start = false;
                 room.players.Add(player.accountId, player);
 

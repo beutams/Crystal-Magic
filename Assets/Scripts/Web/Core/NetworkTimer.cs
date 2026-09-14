@@ -8,7 +8,7 @@ namespace Server
     /// <summary>
     /// 由主循环调用 Update 驱动的单线程定时器。
     /// </summary>
-    public sealed class TimerManager
+    public sealed class NetworkTimer
     {
         private sealed class Timer
         {
@@ -19,7 +19,7 @@ namespace Server
             public Action Callback;
         }
 
-        private static readonly TimerManager instance = new TimerManager();
+        private static readonly NetworkTimer instance = new NetworkTimer();
 
         private readonly Stopwatch clock = Stopwatch.StartNew();
         private readonly Dictionary<long, Timer> timers = new Dictionary<long, Timer>();
@@ -27,12 +27,12 @@ namespace Server
 
         private long idGenerator;
 
-        public static TimerManager Instance => instance;
+        public static NetworkTimer Instance => instance;
 
-        /// <summary>从 TimerManager 创建起累计的单调毫秒时间。</summary>
+        /// <summary>从 NetworkTimer 创建起累计的单调毫秒时间。</summary>
         public long TimeNow => this.clock.ElapsedMilliseconds;
 
-        private TimerManager()
+        private NetworkTimer()
         {
         }
 
@@ -61,6 +61,11 @@ namespace Server
         public bool Remove(long timerId)
         {
             return this.timers.Remove(timerId);
+        }
+
+        public void Clear()
+        {
+            this.timers.Clear();
         }
 
         /// <summary>

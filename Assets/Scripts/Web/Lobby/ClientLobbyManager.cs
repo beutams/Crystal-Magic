@@ -5,9 +5,9 @@ using UnityEngine;
 
 namespace Server
 {
-    public class ClientLobbyManager : Singleton<ClientLobbyManager>
+    public class ClientLobbyManager
     {
-        public ClientService clientServic;
+        public ClientService clientServic => ClientNetworkManager.Instance.clientServic;
         public ulong accountId;
         public RoomListData roomList;
         public RoomData room;
@@ -23,10 +23,8 @@ namespace Server
         public Action<LobbyRequestType> onRequestWaiting;
         public Action onRequestFinished;
         public Action<LobbyRequestType> onRequestFail;
-        protected override void Awake()
+        public void Initialize()
         {
-            base.Awake();
-            clientServic = ClientNetworkManager.Instance.clientServic;
             clientServic.Connect(ServerUtility.GetLobbyIPEndPoint(), out lobbyConnect);
 
             lobbyConnect.OnConnected += OnLobbyConnected;
@@ -38,6 +36,35 @@ namespace Server
             lobbyConnect.RegisterCallback(TCPPacketCode.GetOpcode<L2C_CreateReturn>(), OnCreateRoom);
             lobbyConnect.RegisterCallback(TCPPacketCode.GetOpcode<L2C_LeaveReturn>(), OnLeaveRoom);
             lobbyConnect.RegisterCallback(TCPPacketCode.GetOpcode<L2C_StartTicket>(), OnStartTicket);
+        }
+        public void Cleanup()
+        {
+            if (request != null)
+            {
+                NetworkTimer.Instance.Remove(request.waitTimerId);
+                NetworkTimer.Instance.Remove(request.timeoutTimerId);
+                request = null;
+            }
+
+            if (lobbyConnect != null)
+            {
+                lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_RefreshRoomList>(), OnRefreshRoomList);
+                lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_RefreshRoomInfo>(), OnRefreshRoomInfo);
+                lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_JoinReturn>(), OnJoinRoom);
+                lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_CreateReturn>(), OnCreateRoom);
+                lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_LeaveReturn>(), OnLeaveRoom);
+                lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_StartTicket>(), OnStartTicket);
+                lobbyConnect.OnConnected -= OnLobbyConnected;
+                lobbyConnect.OnDisconnected -= OnDisconnected;
+                clientServic.Disconnect(lobbyConnect);
+                lobbyConnect = null;
+            }
+
+            loggedIn = false;
+            disconnecting = false;
+            accountId = 0UL;
+            room = null;
+            roomList = null;
         }
         private void OnLobbyConnected(Connect connect)
         {
@@ -82,8 +109,8 @@ namespace Server
 
             if (request != null)
             {
-                TimerManager.Instance.Remove(request.waitTimerId);
-                TimerManager.Instance.Remove(request.timeoutTimerId);
+                NetworkTimer.Instance.Remove(request.waitTimerId);
+                NetworkTimer.Instance.Remove(request.timeoutTimerId);
                 request = null;
                 onRequestFinished?.Invoke();
             }
@@ -105,9 +132,10 @@ namespace Server
         private void OnStartTicket(IMessage message, Connect connect)
         {
             L2C_StartTicket startTicket = message as L2C_StartTicket;
-            if (startTicket != null)
+            if (connect == lobbyConnect && startTicket != null)
             {
-                ClientBattleManager.Instance.ConnectWithTicket(startTicket.ticket);
+                FinishRequest(LobbyRequestType.StartRequest);
+                ClientNetworkManager.Instance.clientBattleManager.ConnectWithTicket(startTicket.ticket);
             }
         }
         public void OnRefreshRoomList(IMessage message,Connect connect)
@@ -224,6 +252,14 @@ namespace Server
             }
             lobbyConnect.Send(new C2L_Ready() { ready = ready});
         }
+        public void SetDungeonFloor(int dungeonFloor)
+        {
+            if (!loggedIn || disconnecting || request != null || room == null || room.ownerAccountId != accountId)
+            {
+                return;
+            }
+            lobbyConnect.Send(new C2L_SetDungeonFloor() { dungeonFloor = Math.Max(1, dungeonFloor) });
+        }
         public void StartRoom()
         {
             if (!BeginRequest(LobbyRequestType.StartRequest))
@@ -247,14 +283,14 @@ namespace Server
             request.type = type;
 
             LobbyRequest currentRequest = request;
-            request.waitTimerId = TimerManager.Instance.AddOnce(500, () =>
+            request.waitTimerId = NetworkTimer.Instance.AddOnce(500, () =>
             {
                 if (request == currentRequest)
                 {
                     onRequestWaiting?.Invoke(request.type);
                 }
             });
-            request.timeoutTimerId = TimerManager.Instance.AddOnce(5000, () =>
+            request.timeoutTimerId = NetworkTimer.Instance.AddOnce(5000, () =>
             {
                 OnRequestTimeout(currentRequest);
             });
@@ -268,8 +304,8 @@ namespace Server
                 return false;
             }
 
-            TimerManager.Instance.Remove(request.waitTimerId);
-            TimerManager.Instance.Remove(request.timeoutTimerId);
+            NetworkTimer.Instance.Remove(request.waitTimerId);
+            NetworkTimer.Instance.Remove(request.timeoutTimerId);
             request = null;
             onRequestFinished?.Invoke();
             return true;
@@ -295,6 +331,9 @@ namespace Server
                     break;
                 case LobbyRequestType.LeaveRequest:
                     onRequestFail?.Invoke(LobbyRequestType.LeaveTimeout);
+                    break;
+                case LobbyRequestType.StartRequest:
+                    onRequestFail?.Invoke(LobbyRequestType.StartTimeout);
                     break;
             }
 

@@ -3,7 +3,8 @@ using UnityEngine;
 namespace CrystalMagic.Core
 {
     /// <summary>
-    /// 泛型单例基类（MonoBehaviour 版本）
+    /// 泛型单例基类（MonoBehaviour 版本）。
+    /// 只负责实例唯一性，跨场景存活由 GameEntry 或 PersistentSingleton 显式负责。
     /// </summary>
     public abstract class Singleton<T> : MonoBehaviour where T : Singleton<T>
     {
@@ -15,7 +16,6 @@ namespace CrystalMagic.Core
             if (_instance == null)
             {
                 _instance = instance;
-                DontDestroyOnLoad(gameObject);
                 return true;
             }
 
@@ -119,6 +119,21 @@ namespace CrystalMagic.Core
             if (_instance != null)
             {
                 Destroy(_instance.gameObject);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 用于不隶属于 GameEntry 的独立持久化 Mono 单例。
+    /// 挂载对象必须是场景根节点。
+    /// </summary>
+    public abstract class PersistentSingleton<T> : Singleton<T> where T : PersistentSingleton<T>
+    {
+        protected override void Awake()
+        {
+            if (InitializeSingletonInstance(this as T))
+            {
+                DontDestroyOnLoad(gameObject);
             }
         }
     }

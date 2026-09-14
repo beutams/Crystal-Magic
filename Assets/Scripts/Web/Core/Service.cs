@@ -154,7 +154,7 @@ namespace Server
                 readStream.Write(cache, 0, count);
                 while (TCPPacketCode.TryUnPack(readStream, out byte[] body, out ushort opcode))
                 {
-                    connect.LastReceiveTime = TimerManager.Instance.TimeNow;
+                    connect.LastReceiveTime = NetworkTimer.Instance.TimeNow;
                     Debug.Log($"[TCP][Recv] Packet opcode={opcode}, body={body.Length} bytes, Connect={id}");
                     connect.OnRead(opcode, body, connect);
                     OnRecv?.Invoke(connect);
@@ -199,7 +199,7 @@ namespace Server
                     continue;
                 }
 
-                if(TimerManager.Instance.TimeNow - connect.LastReceiveTime > ServerUtility.Timeout)
+                if(NetworkTimer.Instance.TimeNow - connect.LastReceiveTime > ServerUtility.Timeout)
                 {
                     Debug.LogWarning($"[TCP][Timeout] Connect={guid}, Remote={pair.Value.IPEndPoint}, LastReceive={connect.LastReceiveTime}ms");
                     connect.State = ConnectState.Close;

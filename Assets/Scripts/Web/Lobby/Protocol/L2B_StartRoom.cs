@@ -8,6 +8,7 @@ namespace Server
     {
         public ulong roomId;
         public ulong ownerAccountId;
+        public int dungeonFloor;
         public ulong[] players;
     }
 }
