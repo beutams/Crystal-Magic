@@ -1,5 +1,172 @@
 ﻿{
-    "Rows":  [
-
-             ]
+  "Rows": [
+    {
+      "Name": "Werewolf Drop",
+      "Description": "Level 3",
+      "Entries": [
+        {
+          "DropType": 1,
+          "ItemId": -1,
+          "Chance": 1.0,
+          "MinQuantity": 20,
+          "MaxQuantity": 20
+        }
+      ],
+      "Id": 0
+    },
+    {
+      "Name": "Armored Orc Drop",
+      "Description": "Level 3",
+      "Entries": [
+        {
+          "DropType": 1,
+          "ItemId": -1,
+          "Chance": 1.0,
+          "MinQuantity": 3,
+          "MaxQuantity": 5
+        }
+      ],
+      "Id": 1
+    },
+    {
+      "Name": "Armored Skeleton Drop",
+      "Description": "Level 2",
+      "Entries": [
+        {
+          "DropType": 1,
+          "ItemId": -1,
+          "Chance": 1.0,
+          "MinQuantity": 2,
+          "MaxQuantity": 4
+        }
+      ],
+      "Id": 2
+    },
+    {
+      "Name": "Elite Orc Drop",
+      "Description": "Level 5",
+      "Entries": [
+        {
+          "DropType": 1,
+          "ItemId": -1,
+          "Chance": 1.0,
+          "MinQuantity": 5,
+          "MaxQuantity": 8
+        }
+      ],
+      "Id": 3
+    },
+    {
+      "Name": "Greatsword Skeleton Drop",
+      "Description": "Level 2",
+      "Entries": [
+        {
+          "DropType": 1,
+          "ItemId": -1,
+          "Chance": 1.0,
+          "MinQuantity": 2,
+          "MaxQuantity": 4
+        }
+      ],
+      "Id": 4
+    },
+    {
+      "Name": "Orc Drop",
+      "Description": "Level 1",
+      "Entries": [
+        {
+          "DropType": 1,
+          "ItemId": -1,
+          "Chance": 1.0,
+          "MinQuantity": 1,
+          "MaxQuantity": 3
+        }
+      ],
+      "Id": 5
+    },
+    {
+      "Name": "Orc rider Drop",
+      "Description": "Level 5",
+      "Entries": [
+        {
+          "DropType": 1,
+          "ItemId": -1,
+          "Chance": 1.0,
+          "MinQuantity": 5,
+          "MaxQuantity": 8
+        }
+      ],
+      "Id": 6
+    },
+    {
+      "Name": "Level 1 Default",
+      "Description": "Level 1",
+      "Entries": [
+        {
+          "DropType": 1,
+          "ItemId": -1,
+          "Chance": 1.0,
+          "MinQuantity": 1,
+          "MaxQuantity": 3
+        }
+      ],
+      "Id": 7
+    },
+    {
+      "Name": "Level 2 Default",
+      "Description": "Level 2",
+      "Entries": [
+        {
+          "DropType": 1,
+          "ItemId": -1,
+          "Chance": 1.0,
+          "MinQuantity": 2,
+          "MaxQuantity": 4
+        }
+      ],
+      "Id": 8
+    },
+    {
+      "Name": "Level 3 Default",
+      "Description": "Level 3",
+      "Entries": [
+        {
+          "DropType": 1,
+          "ItemId": -1,
+          "Chance": 1.0,
+          "MinQuantity": 3,
+          "MaxQuantity": 5
+        }
+      ],
+      "Id": 9
+    },
+    {
+      "Name": "Level 4 Defailt",
+      "Description": "Level 4",
+      "Entries": [
+        {
+          "DropType": 1,
+          "ItemId": -1,
+          "Chance": 1.0,
+          "MinQuantity": 4,
+          "MaxQuantity": 8
+        }
+      ],
+      "Id": 10
+    },
+    {
+      "Name": "Level 5 Default",
+      "Description": "Level 5",
+      "Entries": [
+        {
+          "DropType": 1,
+          "ItemId": -1,
+          "Chance": 1.0,
+          "MinQuantity": 5,
+          "MaxQuantity": 15
+        }
+      ],
+      "Id": 11
+    }
+  ]
 }

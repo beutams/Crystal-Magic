@@ -133,31 +133,6 @@
                                                                                     "EnableExpression":  "",
                                                                                     "NextNodeGuid":  "c1a95e3707ff40248bb5153c55295ff8",
                                                                                     "DisplayNameKey":  "npc.option.floor_1"
-                                                                                },
-                                                                                {
-                                                                                    "EnableExpression":  "DungeonUnlockedStartFloor_21 \u003e 0",
-                                                                                    "NextNodeGuid":  "dungeon_floor_21",
-                                                                                    "DisplayNameKey":  "npc.option.floor_21"
-                                                                                },
-                                                                                {
-                                                                                    "EnableExpression":  "DungeonUnlockedStartFloor_41 \u003e 0",
-                                                                                    "NextNodeGuid":  "dungeon_floor_41",
-                                                                                    "DisplayNameKey":  "npc.option.floor_41"
-                                                                                },
-                                                                                {
-                                                                                    "EnableExpression":  "DungeonUnlockedStartFloor_61 \u003e 0",
-                                                                                    "NextNodeGuid":  "dungeon_floor_61",
-                                                                                    "DisplayNameKey":  "npc.option.floor_61"
-                                                                                },
-                                                                                {
-                                                                                    "EnableExpression":  "DungeonUnlockedStartFloor_81 \u003e 0",
-                                                                                    "NextNodeGuid":  "dungeon_floor_81",
-                                                                                    "DisplayNameKey":  "npc.option.floor_81"
-                                                                                },
-                                                                                {
-                                                                                    "EnableExpression":  "DungeonUnlockedStartFloor_101 \u003e 0",
-                                                                                    "NextNodeGuid":  "dungeon_floor_101",
-                                                                                    "DisplayNameKey":  "npc.option.floor_101"
                                                                                 }
                                                                             ],
                                                                 "Guid":  "6d0a28f1c4c14e89a514e6de07be4b91",
@@ -167,48 +142,8 @@
                                                                 "Type":  "Select"
                                                             },
                                                             {
-                                                                "DungeonFloor":  1,
+                                                                "DungeonThemeId":  0,
                                                                 "Guid":  "c1a95e3707ff40248bb5153c55295ff8",
-                                                                "Branches":  [
-
-                                                                             ],
-                                                                "Type":  "EnterDungeon"
-                                                            },
-                                                            {
-                                                                "DungeonFloor":  21,
-                                                                "Guid":  "dungeon_floor_21",
-                                                                "Branches":  [
-
-                                                                             ],
-                                                                "Type":  "EnterDungeon"
-                                                            },
-                                                            {
-                                                                "DungeonFloor":  41,
-                                                                "Guid":  "dungeon_floor_41",
-                                                                "Branches":  [
-
-                                                                             ],
-                                                                "Type":  "EnterDungeon"
-                                                            },
-                                                            {
-                                                                "DungeonFloor":  61,
-                                                                "Guid":  "dungeon_floor_61",
-                                                                "Branches":  [
-
-                                                                             ],
-                                                                "Type":  "EnterDungeon"
-                                                            },
-                                                            {
-                                                                "DungeonFloor":  81,
-                                                                "Guid":  "dungeon_floor_81",
-                                                                "Branches":  [
-
-                                                                             ],
-                                                                "Type":  "EnterDungeon"
-                                                            },
-                                                            {
-                                                                "DungeonFloor":  101,
-                                                                "Guid":  "dungeon_floor_101",
                                                                 "Branches":  [
 
                                                                              ],
@@ -257,7 +192,7 @@
                                                                 "Type":  "Select"
                                                             },
                                                             {
-                                                                "DungeonFloor":  1,
+                                                                "DungeonThemeId":  0,
                                                                 "Guid":  "exit_next_floor",
                                                                 "Branches":  [
 

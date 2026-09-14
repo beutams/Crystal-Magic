@@ -9,24 +9,17 @@ using UnityEngine;
 
 namespace CrystalMagic.Game.Data
 {
-    public enum BuffCategory
-    {
-        PropertyModifier = 0,
-        Effect = 1,
-        SkillModifier = 2,
-        SkillAdditionGrant = 3,
-    }
-
+    [ReadOnlyData]
     [System.Serializable]
-    public abstract class BuffData : DataRow
+    public class BuffData : DataRow
     {
         public string NameKey;
+        public string IconPath;
         public bool CanStack;
         public int MaxStacks = 1;
         public List<PropertyModifierEntry> PropertyModifiers = new();
         public List<SkillModifierEntry> SkillModifiers = new();
         public List<BuffTriggerEntry> TriggerEntries = new();
-        public abstract BuffCategory Category { get; }
 
         [JsonIgnore]
         public string Name => LocalizationComponent.Resolve(NameKey);
@@ -151,33 +144,23 @@ namespace CrystalMagic.Game.Data
         }
     }
 
+    // Legacy serialized subtype aliases. New buff rows use BuffData directly.
     [ReadOnlyData]
     [System.Serializable]
     public class PropertyBuffData : BuffData
     {
-        public override BuffCategory Category => BuffCategory.PropertyModifier;
     }
 
     [ReadOnlyData]
     [System.Serializable]
     public class EffectBuffData : BuffData
     {
-        public override BuffCategory Category => BuffCategory.Effect;
     }
 
     [ReadOnlyData]
     [System.Serializable]
     public class SkillModifierBuffData : BuffData
     {
-        public override BuffCategory Category => BuffCategory.SkillModifier;
     }
 
-    [ReadOnlyData]
-    [System.Serializable]
-    public sealed class SkillAdditionGrantBuffData : BuffData
-    {
-        public List<int> SkillAdditionIds = new();
-
-        public override BuffCategory Category => BuffCategory.SkillAdditionGrant;
-    }
 }

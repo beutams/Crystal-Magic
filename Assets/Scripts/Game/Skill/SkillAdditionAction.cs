@@ -252,32 +252,4 @@ namespace CrystalMagic.Game.Skill
         }
     }
 
-    [FactoryKey("ReplayCurrentSkill", 30, "Replay Current Skill")]
-    public sealed class ReplayCurrentSkillAdditionAction : SkillAdditionAction
-    {
-        public ReplayCurrentSkillAdditionAction(ReplayCurrentSkillAdditionActionData data, SkillAdditionActionContext context)
-            : base(data, context)
-        {
-        }
-
-        protected override SkillAdditionActionStatus OnStart()
-        {
-            if (!PlayerCurrentSkillUtility.TryGetCurrentSkillId(Context.EntityManager, Context.Entity, out int skillId) ||
-                !Context.EntityManager.HasComponent<UnitSkillReleaseComponent>(Context.Entity))
-            {
-                return SkillAdditionActionStatus.Failed;
-            }
-
-            UnitSkillReleaseComponent releaseComponent = Context.EntityManager.GetComponentObject<UnitSkillReleaseComponent>(Context.Entity);
-            if (releaseComponent == null)
-                return SkillAdditionActionStatus.Failed;
-
-            releaseComponent.PendingRequests.Add(SkillReleaseRequestUtility.Create(
-                Context.EntityManager,
-                Context.Entity,
-                skillId,
-                new SkillModifierSet()));
-            return SkillAdditionActionStatus.Completed;
-        }
-    }
 }

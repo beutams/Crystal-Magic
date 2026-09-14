@@ -19,7 +19,25 @@ namespace CrystalMagic.Game.Skill.Effects
             if (!TryGetReleasePosition(context, context.EntityManager, out Vector3 position))
                 return;
 
-            PersistentEffectUtility.AddEffect(Data, context, position);
+            SkillContent persistentContext = context.Clone();
+            CaptureOriginPositionSnapshot(persistentContext, context.EntityManager);
+            PersistentEffectUtility.AddEffect(Data, persistentContext, position);
+        }
+
+        private static void CaptureOriginPositionSnapshot(SkillContent context, EntityManager entityManager)
+        {
+            if (context.HasOriginPositionSnapshot ||
+                !context.HasOriginEntity ||
+                context.OriginEntity == Entity.Null ||
+                !entityManager.Exists(context.OriginEntity) ||
+                !entityManager.HasComponent<LocalTransform>(context.OriginEntity))
+            {
+                return;
+            }
+
+            Unity.Mathematics.float3 position = entityManager.GetComponentData<LocalTransform>(context.OriginEntity).Position;
+            context.HasOriginPositionSnapshot = true;
+            context.OriginPositionSnapshot = new Vector3(position.x, position.y, position.z);
         }
 
         private static bool TryGetReleasePosition(SkillContent context, EntityManager entityManager, out Vector3 position)

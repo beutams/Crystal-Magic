@@ -7,8 +7,6 @@ namespace CrystalMagic.Game.Skill
 {
     public static class SkillExecutor
     {
-        private static ComparatorFactory s_comparatorFactory;
-
         public static void ExecuteSkill(SkillData skillData, SkillContent context)
         {
             if (skillData == null || skillData.EffectChain == null)
@@ -67,13 +65,8 @@ namespace CrystalMagic.Game.Skill
             if (!TryGetConditionEntity(context, entityManager, out Entity conditionEntity))
                 return false;
 
-            Comparator comparator = GetComparatorFactory().BuildComparator(
-                effectData.Conditions,
-                conditionEntity,
-                entityManager,
-                context != null ? context.OriginEntity : Entity.Null,
-                context != null && context.HasOriginEntity);
-            return comparator.GetResult();
+            context.EntityManager = entityManager;
+            return EffectConditionUtility.Pass(effectData.Conditions, context, conditionEntity);
         }
 
         private static bool TryGetConditionEntity(SkillContent context, EntityManager entityManager, out Entity conditionEntity)
@@ -100,16 +93,6 @@ namespace CrystalMagic.Game.Skill
             return false;
         }
 
-        private static ComparatorFactory GetComparatorFactory()
-        {
-            if (s_comparatorFactory != null)
-                return s_comparatorFactory;
-
-            s_comparatorFactory = new ComparatorFactory();
-            ComparatorRegistry.RegisterAll(s_comparatorFactory);
-            return s_comparatorFactory;
-        }
-
         private static EntityManager GetEntityManager(SkillContent context)
         {
             if (context != null)
@@ -130,17 +113,22 @@ namespace CrystalMagic.Game.Skill
                 ReadBuffStackEffectData data => new ReadBuffStackEffect(data),
                 RemoveBuffEffectData data => new RemoveBuffEffect(data),
                 CameraShakeEffectData data => new CameraShakeEffect(data),
+                BuffDamageEffectData data => new BuffDamageEffect(data),
                 DamageEffectData data => new DamageEffect(data),
                 FearEffectData data => new FearEffect(data),
                 ForwardRectSearchEffectData data => new ForwardRectSearchEffect(data),
+                RectSearchEffectData data => new RectSearchEffect(data),
                 HealEffectData data => new HealEffect(data),
                 HealthCostEffectData data => new HealthCostEffect(data),
                 KnockbackEffectData data => new KnockbackEffect(data),
+                MoveVfxEffectData data => new MoveVfxEffect(data),
                 PersistentEffectData data => new PersistentEffect(data),
                 RestoreManaEffectData data => new RestoreManaEffect(data),
                 SpawnProjectileEffectData data => new SpawnProjectileEffect(data),
                 SpawnSoundEffectData data => new SpawnSoundEffect(data),
                 SpawnUnitEffectData data => new SpawnUnitEffect(data),
+                SpawnFollowVfxEffectData data => new SpawnFollowVfxEffect(data),
+                SpawnLineVfxEffectData data => new SpawnLineVfxEffect(data),
                 SpawnVfxEffectData data => new SpawnVfxEffect(data),
                 StunEffectData data => new StunEffect(data),
                 _ => null,

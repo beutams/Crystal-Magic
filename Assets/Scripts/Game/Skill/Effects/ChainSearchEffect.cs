@@ -10,7 +10,6 @@ namespace CrystalMagic.Game.Skill.Effects
 {
     public sealed class ChainSearchEffect : Effect
     {
-        private static ComparatorFactory _comparatorFactory;
         private readonly List<UnitQueryHit> _hits = new();
         private readonly HashSet<Entity> _visitedEntities = new();
 
@@ -69,12 +68,7 @@ namespace CrystalMagic.Game.Skill.Effects
                 if (_visitedEntities.Contains(hit.Entity))
                     continue;
 
-                if (!PassTargetConditions(
-                        Data.TargetConditions,
-                        hit.Entity,
-                        entityManager,
-                        context.OriginEntity,
-                        context.HasOriginEntity))
+                if (!EffectConditionUtility.Pass(Data.TargetConditions, context, hit.Entity))
                 {
                     continue;
                 }
@@ -120,33 +114,5 @@ namespace CrystalMagic.Game.Skill.Effects
             return false;
         }
 
-        private static bool PassTargetConditions(
-            List<ConditionConfig> conditions,
-            Entity target,
-            EntityManager entityManager,
-            Entity originEntity,
-            bool hasOriginEntity)
-        {
-            if (conditions == null || conditions.Count == 0)
-                return true;
-
-            Comparator comparator = GetComparatorFactory().BuildComparator(
-                conditions,
-                target,
-                entityManager,
-                originEntity,
-                hasOriginEntity);
-            return comparator.GetResult();
-        }
-
-        private static ComparatorFactory GetComparatorFactory()
-        {
-            if (_comparatorFactory != null)
-                return _comparatorFactory;
-
-            _comparatorFactory = new ComparatorFactory();
-            ComparatorRegistry.RegisterAll(_comparatorFactory);
-            return _comparatorFactory;
-        }
     }
 }

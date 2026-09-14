@@ -165,7 +165,7 @@ namespace CrystalMagic.Game.Data
     [FactoryKey("EnterDungeon", 4, "Enter Dungeon")]
     public sealed class NPCEnterDungeonInteractionNodeData : NPCInteractionNodeData
     {
-        public int DungeonFloor = 1;
+        public int DungeonThemeId;
     }
 
     [Serializable]
@@ -184,6 +184,8 @@ namespace CrystalMagic.Game.Data
     [FactoryKey("Select", 1, "Select")]
     public sealed class NPCSelectInteractionNodeData : NPCInteractionNodeData
     {
+        public string Dialog;
+
         public List<NPCSelectOptionData> Options = new();
     }
 

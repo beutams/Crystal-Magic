@@ -1,5 +1,6 @@
 using CrystalMagic.Core;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,8 +8,6 @@ namespace CrystalMagic.UI
 {
     public class UnitHealthBarUI : UIBase<UnitHealthBarUIData, UnitHealthBarUIModel>
     {
-        private const float BuffIconSpacing = 2f;
-
         private RectTransform _rectTransform;
         private RectTransform _templateRectTransform;
         private RectTransform _templateMaskRectTransform;
@@ -97,8 +96,12 @@ namespace CrystalMagic.UI
                 }
 
                 UnitHealthBarBuffDisplayData buff = buffs[i];
-                iconHandle.Root.anchoredPosition = new Vector2(i * (iconHandle.Size + BuffIconSpacing), 0f);
                 iconHandle.Icon.sprite = LoadIcon(buff.IconPath);
+                bool showStackCount = buff.StackCount > 1;
+                iconHandle.StackCount.gameObject.SetActive(showStackCount);
+                if (showStackCount)
+                    iconHandle.StackCount.text = buff.StackCount.ToString();
+
                 if (!iconHandle.Root.gameObject.activeSelf)
                     iconHandle.Root.gameObject.SetActive(true);
             }
@@ -212,18 +215,16 @@ namespace CrystalMagic.UI
             clone.name = handle.BuffIconTemplate.gameObject.name;
             RectTransform root = clone.transform as RectTransform;
             Image image = clone.GetComponent<Image>();
-            if (root == null || image == null)
+            TextMeshProUGUI stackCount = clone.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (root == null || image == null || stackCount == null)
             {
+                Debug.LogError("[UnitHealthBarUI] BuffIcon template must contain an Image and a TextMeshProUGUI stack counter.");
                 Destroy(clone);
                 return null;
             }
 
-            float size = root.rect.width;
-            if (size <= 0f)
-                size = root.sizeDelta.x;
-
             root.gameObject.SetActive(false);
-            return new BuffIconHandle(root, image, size > 0f ? size : 10f);
+            return new BuffIconHandle(root, image, stackCount);
         }
 
         private Sprite LoadIcon(string iconPath)
@@ -234,7 +235,7 @@ namespace CrystalMagic.UI
             if (_iconCache.TryGetValue(iconPath, out Sprite cachedSprite))
                 return cachedSprite;
 
-            Sprite sprite = LoadManagedResource<Sprite>(iconPath);
+            Sprite sprite = LoadManagedSprite(iconPath);
             _iconCache[iconPath] = sprite;
             return sprite;
         }
@@ -263,13 +264,13 @@ namespace CrystalMagic.UI
         {
             public RectTransform Root { get; }
             public Image Icon { get; }
-            public float Size { get; }
+            public TextMeshProUGUI StackCount { get; }
 
-            public BuffIconHandle(RectTransform root, Image icon, float size)
+            public BuffIconHandle(RectTransform root, Image icon, TextMeshProUGUI stackCount)
             {
                 Root = root;
                 Icon = icon;
-                Size = size;
+                StackCount = stackCount;
             }
         }
     }
@@ -278,7 +279,6 @@ namespace CrystalMagic.UI
     {
         public int BuffId;
         public int StackCount;
-        public int SourceSkillId;
         public string IconPath;
     }
 }

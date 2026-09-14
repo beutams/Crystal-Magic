@@ -10,9 +10,9 @@ namespace CrystalMagic.Core
         private const string UIPlayerInputLockReason = "BattleStateBase.UIOpen";
         private UIBase _battleUI;
         private CharacterUI _characterUI;
-        private PropertyUI _propertyUI;
         private GameMenuUI _gameMenuUI;
         private UnitHealthBarManager _unitHealthBarManager;
+        private DamageNumberManager _damageNumberManager;
         private InteractionPromptManager _interactionPromptManager;
         private bool _inputBound;
         private bool _playerInputLockedByUI;
@@ -26,6 +26,8 @@ namespace CrystalMagic.Core
             InputComponent.Instance?.SetBattleInputEnabled(true);
             _unitHealthBarManager ??= new UnitHealthBarManager();
             _unitHealthBarManager.Initialize();
+            _damageNumberManager ??= new DamageNumberManager();
+            _damageNumberManager.Initialize();
             _interactionPromptManager ??= new InteractionPromptManager();
             _interactionPromptManager.Initialize();
             OpenBattleUI();
@@ -36,6 +38,7 @@ namespace CrystalMagic.Core
         {
             OnUpdateBattle();
             _unitHealthBarManager?.Tick();
+            _damageNumberManager?.Tick();
             _interactionPromptManager?.Tick();
             RefreshUIInputLock();
         }
@@ -44,14 +47,19 @@ namespace CrystalMagic.Core
         {
             _unitHealthBarManager?.Dispose();
             _unitHealthBarManager = null;
+            _damageNumberManager?.Dispose();
+            _damageNumberManager = null;
             _interactionPromptManager?.Dispose();
             _interactionPromptManager = null;
             InputComponent.Instance?.SetBattleInputEnabled(false);
             ReleaseUIInputLock();
             UnbindInput();
             OnExitBattle();
+            ReleaseManagedUI(_gameMenuUI);
+            ReleaseManagedUI(_characterUI);
+            ReleaseManagedUI(_battleUI);
+            _gameMenuUI = null;
             _characterUI = null;
-            _propertyUI = null;
             _battleUI = null;
         }
 
@@ -83,7 +91,6 @@ namespace CrystalMagic.Core
                 return;
 
             InputComponent.Instance.OnInventory += HandleInventory;
-            InputComponent.Instance.OnProperty += HandleProperty;
             if (UIComponent.Instance != null)
                 UIComponent.Instance.EscapeUnhandled += HandleUnhandledEscape;
             _inputBound = true;
@@ -97,7 +104,6 @@ namespace CrystalMagic.Core
             if (InputComponent.Instance != null)
             {
                 InputComponent.Instance.OnInventory -= HandleInventory;
-                InputComponent.Instance.OnProperty -= HandleProperty;
             }
             if (UIComponent.Instance != null)
                 UIComponent.Instance.EscapeUnhandled -= HandleUnhandledEscape;
@@ -121,23 +127,6 @@ namespace CrystalMagic.Core
             UIComponent.Instance.ShowUI(_characterUI);
         }
 
-        private void HandleProperty()
-        {
-            if (_propertyUI == null || !UIComponent.Instance.IsManaged(_propertyUI))
-            {
-                _propertyUI = UIComponent.Instance.Open<PropertyUI>();
-                return;
-            }
-
-            if (_propertyUI.gameObject.activeSelf)
-            {
-                _propertyUI.Close();
-                return;
-            }
-
-            UIComponent.Instance.ShowUI(_propertyUI);
-        }
-
         private void HandleUnhandledEscape()
         {
             if (_gameMenuUI == null || !UIComponent.Instance.IsManaged(_gameMenuUI))
@@ -155,7 +144,7 @@ namespace CrystalMagic.Core
         private void RefreshUIInputLock()
         {
             bool shouldLock = UIComponent.Instance != null
-                && UIComponent.Instance.HasActiveSceneScopedPanel(BattleSceneName, BattleUIName);
+                && UIComponent.Instance.HasActiveSceneScopedPanel(BattleSceneName, BattleUIName, "MinimapUI");
             if (shouldLock == _playerInputLockedByUI)
                 return;
 
@@ -177,6 +166,12 @@ namespace CrystalMagic.Core
             GameGateComponent.Instance.Unlock(GameGateType.PlayerInput, UIPlayerInputLockReason);
             _playerInputLockedByUI = false;
         }
+
+        private static void ReleaseManagedUI(UIBase panel)
+        {
+            if (panel != null && UIComponent.Instance.IsManaged(panel))
+                UIComponent.Instance.CloseUI(panel);
+        }
     }
 
     public class DungeonState : BattleStateBase
@@ -184,10 +179,13 @@ namespace CrystalMagic.Core
         public const string SceneName = "DungeonScene";
         protected override string BattleSceneName => SceneName;
         private bool _isProcessingDefeat;
+        private MinimapUI _minimapUI;
 
         public static TransitionData CreateEnterTransitionData(LoadGameContext context)
         {
-            return new TransitionData
+            DungeonFlowTiming.EnsureStarted(context);
+            DungeonFlowTiming.BeginStage(1, "创建地牢转场数据");
+            TransitionData transitionData = new TransitionData
             {
                 TargetSceneName = SceneName,
                 TargetStateType = typeof(DungeonState),
@@ -197,24 +195,26 @@ namespace CrystalMagic.Core
                 ForceReloadTargetScene = true,
                 PostLoadCoroutineFactory = () => DungeonGenerationService.GenerateForTransition(context, SceneName),
             };
+            DungeonFlowTiming.EndStage(1, "TransitionData 已创建");
+            return transitionData;
         }
 
         public static int PrepareDungeonRun(LoadGameContext context)
         {
             int dungeonFloor = context?.DungeonFloor ?? 1;
+            int dungeonThemeId = context?.DungeonThemeId ?? SaveDataComponent.Instance.GetInitialDungeonThemeId();
             SaveAreaType previousAreaType = SaveDataComponent.Instance.GetLocationData()?.AreaType ?? SaveAreaType.Town;
 
             if (previousAreaType == SaveAreaType.Dungeon)
             {
-                SaveDataComponent.Instance.EnsureDungeonRunExists(dungeonFloor);
+                SaveDataComponent.Instance.EnsureDungeonRunExists(dungeonThemeId, dungeonFloor);
             }
             else
             {
-                SaveDataComponent.Instance.BeginDungeonRunFromPersistent(dungeonFloor);
+                SaveDataComponent.Instance.BeginDungeonRunFromPersistent(dungeonThemeId, dungeonFloor);
             }
 
-            SaveDataComponent.Instance?.SetCurrentLocation(SaveAreaType.Dungeon, dungeonFloor);
-            SaveDataComponent.Instance?.UpdateDungeonReachedFloorProgress(dungeonFloor);
+            SaveDataComponent.Instance.SetCurrentLocation(SaveAreaType.Dungeon, dungeonFloor, dungeonThemeId);
             return dungeonFloor;
         }
 
@@ -225,7 +225,9 @@ namespace CrystalMagic.Core
             Debug.Log("[DungeonState] Entered Dungeon");
             LoadGameContext context = StateData as LoadGameContext;
             int dungeonFloor = PrepareDungeonRun(context);
-            Debug.Log($"[DungeonState] Resuming dungeon at floor: {dungeonFloor}");
+            Debug.Log($"[DungeonState] Resuming dungeon theme {SaveDataComponent.Instance.GetDungeonRunData()?.ThemeId} at level {dungeonFloor}");
+            _minimapUI = UIComponent.Instance.Open<MinimapUI>();
+            UIComponent.Instance.SetLifetime(_minimapUI, UILifetime.SceneScoped);
         }
 
         private void HandleUnitDied(UnitDiedEvent gameEvent)
@@ -248,13 +250,15 @@ namespace CrystalMagic.Core
             }
 
             _isProcessingDefeat = true;
-            SaveDataComponent.Instance.ApplyDungeonDeathAndCommit();
-            LoadGameContext context = SaveDataComponent.Instance.CreateLoadGameContext(SaveAreaType.Town);
-            GameFlowComponent.Instance.SetState<ResultState>(ResultStateData.Create(ResultOutcome.Failure, context));
+            GameFlowComponent.Instance.SetState<DungeonSettlementState>(
+                DungeonSettlementStateData.Create(DungeonSettlementOutcome.Defeated));
         }
 
         protected override void OnExitBattle()
         {
+            if (_minimapUI != null && UIComponent.Instance.IsManaged(_minimapUI))
+                UIComponent.Instance.CloseUI(_minimapUI);
+            _minimapUI = null;
             EventComponent.Instance?.Unsubscribe<UnitDiedEvent>(HandleUnitDied);
             Debug.Log("[DungeonState] Exited Dungeon");
         }

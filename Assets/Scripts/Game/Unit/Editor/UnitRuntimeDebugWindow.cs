@@ -16,17 +16,22 @@ namespace CrystalMagic.Editor.Unit
     {
         private const float UnitListWidth = 220f;
         private const float BehaviorPanelWidth = 360f;
+        private const double RuntimeRefreshIntervalSeconds = 0.5d;
 
         private readonly List<UnitRuntimeEntry> _unitEntries = new();
         private Vector2 _unitListScrollPos;
         private Vector2 _valueScrollPos;
         private Vector2 _behaviorScrollPos;
         private int _selectedIndex = -1;
-        private string _statusText = "Enter Play Mode and refresh to inspect runtime units.";
+        private string _statusText = "Enter Play Mode to inspect runtime units.";
+        private double _nextRuntimeRefreshTime;
+
+        private static bool IsRuntimeDebugEnabled => Application.isPlaying && DebugComponent.Instance.IsEnabled;
 
         private sealed class UnitRuntimeEntry
         {
             public Entity Entity;
+            public int UnitDataId;
             public string DisplayName;
             public string UnitName;
         }
@@ -42,6 +47,7 @@ namespace CrystalMagic.Editor.Unit
         private void OnEnable()
         {
             RefreshUnits();
+            _nextRuntimeRefreshTime = EditorApplication.timeSinceStartup + RuntimeRefreshIntervalSeconds;
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
         }
 
@@ -52,19 +58,32 @@ namespace CrystalMagic.Editor.Unit
 
         private void OnInspectorUpdate()
         {
-            if (Application.isPlaying)
-                Repaint();
+            if (Application.isPlaying &&
+                (!IsRuntimeDebugEnabled || EditorApplication.timeSinceStartup >= _nextRuntimeRefreshTime))
+            {
+                RefreshUnits();
+                _nextRuntimeRefreshTime = EditorApplication.timeSinceStartup + RuntimeRefreshIntervalSeconds;
+            }
+
+            Repaint();
         }
 
         private void OnPlayModeStateChanged(PlayModeStateChange change)
         {
             RefreshUnits();
+            _nextRuntimeRefreshTime = EditorApplication.timeSinceStartup + RuntimeRefreshIntervalSeconds;
             Repaint();
         }
 
         private void OnGUI()
         {
             DrawToolbar();
+
+            if (Application.isPlaying && !IsRuntimeDebugEnabled)
+            {
+                EditorGUILayout.HelpBox("DebugComponent is disabled.", MessageType.Info);
+                return;
+            }
 
             EditorGUILayout.BeginHorizontal();
             DrawUnitListPanel();
@@ -77,10 +96,6 @@ namespace CrystalMagic.Editor.Unit
         private void DrawToolbar()
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            if (GUILayout.Button("Refresh", EditorStyles.toolbarButton, GUILayout.Width(60f)))
-                RefreshUnits();
-
-            GUILayout.Space(8f);
             EditorGUILayout.LabelField(_statusText, EditorStyles.miniLabel);
             EditorGUILayout.EndHorizontal();
         }
@@ -181,12 +196,21 @@ namespace CrystalMagic.Editor.Unit
 
         private void RefreshUnits()
         {
+            Entity selectedEntity = _selectedIndex >= 0 && _selectedIndex < _unitEntries.Count
+                ? _unitEntries[_selectedIndex].Entity
+                : Entity.Null;
             _unitEntries.Clear();
             _selectedIndex = -1;
 
             if (!Application.isPlaying)
             {
                 _statusText = "Enter Play Mode to inspect runtime units.";
+                return;
+            }
+
+            if (!IsRuntimeDebugEnabled)
+            {
+                _statusText = "DebugComponent is disabled.";
                 return;
             }
 
@@ -210,13 +234,26 @@ namespace CrystalMagic.Editor.Unit
                 _unitEntries.Add(new UnitRuntimeEntry
                 {
                     Entity = entity,
+                    UnitDataId = GetUnitDataId(entityManager, entity),
                     UnitName = unitName,
                     DisplayName = string.IsNullOrWhiteSpace(unitName) ? entity.ToString() : $"{unitName} ({entity})",
                 });
             }
 
-            _unitEntries.Sort((left, right) => string.Compare(left.DisplayName, right.DisplayName, StringComparison.Ordinal));
-            _selectedIndex = _unitEntries.Count > 0 ? 0 : -1;
+            _unitEntries.Sort((left, right) =>
+            {
+                int leftId = left.UnitDataId >= 0 ? left.UnitDataId : int.MaxValue;
+                int rightId = right.UnitDataId >= 0 ? right.UnitDataId : int.MaxValue;
+                int idComparison = leftId.CompareTo(rightId);
+                return idComparison != 0
+                    ? idComparison
+                    : string.Compare(left.DisplayName, right.DisplayName, StringComparison.Ordinal);
+            });
+            _selectedIndex = selectedEntity != Entity.Null
+                ? _unitEntries.FindIndex(entry => entry.Entity == selectedEntity)
+                : -1;
+            if (_selectedIndex < 0 && _unitEntries.Count > 0)
+                _selectedIndex = 0;
             _statusText = $"Loaded {_unitEntries.Count} live unit(s).";
         }
 
@@ -250,6 +287,9 @@ namespace CrystalMagic.Editor.Unit
         {
             entityManager = default;
             entity = Entity.Null;
+
+            if (!IsRuntimeDebugEnabled)
+                return false;
 
             if (_selectedIndex < 0 || _selectedIndex >= _unitEntries.Count)
                 return false;

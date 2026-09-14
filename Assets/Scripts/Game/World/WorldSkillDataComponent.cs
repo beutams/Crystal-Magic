@@ -160,15 +160,17 @@ public sealed class WorldSkillInfo
         Id = data.Id;
         MpCost = data.MpCost;
         ChantDuration = data.ChantDuration;
-        AnimationName = data.AnimationName ?? string.Empty;
+        CastingMoveMultiplier = Mathf.Max(0f, data.CastingMoveMultiplier);
         RuntimeType = data.EffectiveRuntimeType;
+        InputType = data.InputType;
     }
 
     public int Id;
     public int MpCost;
     public float ChantDuration;
-    public string AnimationName;
+    public float CastingMoveMultiplier;
     public string RuntimeType;
+    public SkillInputType InputType;
 }
 
 public sealed class WorldSkillSource : UnitComponentSource
@@ -205,7 +207,6 @@ public sealed class WorldSkillSource : UnitComponentSource
         schema.AddGet("world.skill.hasCurrentSkill", ComponentType, UnitValueCategory.Bool, s_currentSkillSlotParameter);
         schema.AddGet("world.skill.getCurrentSkillMpCost", ComponentType, UnitValueCategory.Number, s_currentSkillSlotParameter);
         schema.AddGet("world.skill.getCurrentSkillChantDuration", ComponentType, UnitValueCategory.Number, s_currentSkillSlotParameter);
-        schema.AddGet("world.skill.getCurrentSkillAnimationName", ComponentType, UnitValueCategory.String, s_currentSkillSlotParameter);
         schema.AddGet("world.skill.getCurrentSkillRuntimeType", ComponentType, UnitValueCategory.String, s_currentSkillSlotParameter);
         schema.AddGet("world.skill.isChainEmpty", ComponentType, UnitValueCategory.Bool, s_chainIdParameter);
         schema.AddGet("world.skill.getChainLength", ComponentType, UnitValueCategory.Number, s_chainIdParameter);
@@ -214,8 +215,9 @@ public sealed class WorldSkillSource : UnitComponentSource
         schema.AddGet("world.skill.hasSkill", ComponentType, UnitValueCategory.Bool, s_skillIdParameter);
         schema.AddGet("world.skill.getSkillMpCost", ComponentType, UnitValueCategory.Number, s_skillIdParameter);
         schema.AddGet("world.skill.getSkillChantDuration", ComponentType, UnitValueCategory.Number, s_skillIdParameter);
-        schema.AddGet("world.skill.getSkillAnimationName", ComponentType, UnitValueCategory.String, s_skillIdParameter);
+        schema.AddGet("world.skill.getSkillCastingMoveMultiplier", ComponentType, UnitValueCategory.Number, s_skillIdParameter);
         schema.AddGet("world.skill.getSkillRuntimeType", ComponentType, UnitValueCategory.String, s_skillIdParameter);
+        schema.AddGet("world.skill.getInputType", ComponentType, UnitValueCategory.Number, s_skillIdParameter);
     }
 
     public override void Bind(in UnitSourceBindingContext context, UnitSourceAccessTable table)
@@ -261,8 +263,6 @@ public sealed class WorldSkillSource : UnitComponentSource
             skill => UnitValue.FromInt(skill.MpCost));
         AddCurrentSkillGet(table, entityManager, worldEntity, "world.skill.getCurrentSkillChantDuration", UnitValueCategory.Number,
             skill => UnitValue.FromFloat(skill.ChantDuration));
-        AddCurrentSkillGet(table, entityManager, worldEntity, "world.skill.getCurrentSkillAnimationName", UnitValueCategory.String,
-            skill => UnitValue.FromString(skill.AnimationName));
         AddCurrentSkillGet(table, entityManager, worldEntity, "world.skill.getCurrentSkillRuntimeType", UnitValueCategory.String,
             skill => UnitValue.FromString(skill.RuntimeType));
         table.AddGet(new UnitSourceGet(
@@ -307,13 +307,8 @@ public sealed class WorldSkillSource : UnitComponentSource
             skill => UnitValue.FromInt(skill.MpCost));
         AddSkillNumberGet(table, entityManager, worldEntity, "world.skill.getSkillChantDuration", s_skillIdParameter,
             skill => UnitValue.FromFloat(skill.ChantDuration));
-        table.AddGet(new UnitSourceGet(
-            "world.skill.getSkillAnimationName",
-            UnitValueCategory.String,
-            s_skillIdParameter,
-            input => TryGetSkill(entityManager, worldEntity, input[0], out WorldSkillInfo skill)
-                ? UnitValue.FromString(skill.AnimationName)
-                : UnitValue.None));
+        AddSkillNumberGet(table, entityManager, worldEntity, "world.skill.getSkillCastingMoveMultiplier", s_skillIdParameter,
+            skill => UnitValue.FromFloat(skill.CastingMoveMultiplier));
         table.AddGet(new UnitSourceGet(
             "world.skill.getSkillRuntimeType",
             UnitValueCategory.String,
@@ -321,6 +316,8 @@ public sealed class WorldSkillSource : UnitComponentSource
             input => TryGetSkill(entityManager, worldEntity, input[0], out WorldSkillInfo skill)
                 ? UnitValue.FromString(skill.RuntimeType)
                 : UnitValue.None));
+        AddSkillNumberGet(table, entityManager, worldEntity, "world.skill.getInputType", s_skillIdParameter,
+            skill => UnitValue.FromInt((int)skill.InputType));
     }
 
     private static void AddSkillNumberGet(

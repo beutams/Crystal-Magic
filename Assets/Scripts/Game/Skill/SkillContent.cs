@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CrystalMagic.Game.Data;
 using Unity.Entities;
 using UnityEngine;
@@ -52,6 +53,11 @@ namespace CrystalMagic.Game.Skill
 
         public Entity OriginEntity { get; set; }
 
+        /// <summary>施放时记录的施法者坐标，供延迟效果脱离施法者后复用。</summary>
+        public bool HasOriginPositionSnapshot { get; set; }
+
+        public Vector3 OriginPositionSnapshot { get; set; }
+
         public int SourceSkillId { get; set; } = -1;
 
         public bool HasTargetEntity { get; set; }
@@ -65,6 +71,9 @@ namespace CrystalMagic.Game.Skill
         public GameObject Origin { get; set; }
 
         public SkillModifierSet RuntimeModifiers { get; set; }
+
+        /// <summary>由持续效果实例共享，用于记录已施加过的 Buff 目标。</summary>
+        public Dictionary<int, HashSet<Entity>> PersistentEffectAppliedBuffTargets { get; set; }
 
         public SkillContent Clone()
         {

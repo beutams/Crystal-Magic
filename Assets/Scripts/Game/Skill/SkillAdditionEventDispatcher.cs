@@ -20,26 +20,6 @@ namespace CrystalMagic.Game.Skill
             if (PlayerCurrentSkillUtility.TryGetCurrentAdditionId(entityManager, entity, out int selectedAdditionId))
                 AppendActions(actions, runtime, eventName, selectedAdditionId);
 
-            if (!UnitBuffUtility.TryGetRuntimeComponent(entityManager, entity, out UnitBuffRuntimeComponent buffComponent) ||
-                buffComponent.Buffs == null)
-            {
-                return actions;
-            }
-
-            for (int entryIndex = 0; entryIndex < buffComponent.Buffs.Count; entryIndex++)
-            {
-                UnitBuffRuntimeEntry entry = buffComponent.Buffs[entryIndex];
-                if (entry == null || entry.StackCount <= 0)
-                    continue;
-
-                SkillAdditionGrantBuffData grantData = DataComponent.Instance?.Get<BuffData>(entry.BuffId) as SkillAdditionGrantBuffData;
-                if (grantData?.SkillAdditionIds == null)
-                    continue;
-
-                for (int additionIndex = 0; additionIndex < grantData.SkillAdditionIds.Count; additionIndex++)
-                    AppendActions(actions, runtime, eventName, grantData.SkillAdditionIds[additionIndex]);
-            }
-
             return actions;
         }
 

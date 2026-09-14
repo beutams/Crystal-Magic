@@ -19,9 +19,9 @@ namespace CrystalMagic.UI
         private float _hpRatio = 1f;
         private float _mpRatio = 1f;
         private float _currentHp;
-        private float _maxHp;
         private float _currentMp;
-        private float _maxMp;
+        private bool _isChanting;
+        private float _chantProgress;
 
         public override string ChangedEventName => DataChangedEventName;
         public IReadOnlyList<BattleSkillDisplayData> SkillItems => _skillItems;
@@ -29,9 +29,9 @@ namespace CrystalMagic.UI
         public float HpRatio => _hpRatio;
         public float MpRatio => _mpRatio;
         public float CurrentHp => _currentHp;
-        public float MaxHp => _maxHp;
         public float CurrentMp => _currentMp;
-        public float MaxMp => _maxMp;
+        public bool IsChanting => _isChanting;
+        public float ChantProgress => _chantProgress;
 
         public void Refresh()
         {
@@ -44,32 +44,43 @@ namespace CrystalMagic.UI
             RebuildState(publishIfChanged: true);
         }
 
+        // Skill-cast code can use this until the real chant state is connected to the BattleUI controller.
+        public void SetChantProgress(bool isChanting, float progress)
+        {
+            float nextProgress = isChanting ? Mathf.Clamp01(progress) : 0f;
+            if (_isChanting == isChanting && Mathf.Approximately(_chantProgress, nextProgress))
+                return;
+
+            _isChanting = isChanting;
+            _chantProgress = nextProgress;
+            PublishChanged();
+        }
+
         private void RebuildState(bool publishIfChanged)
         {
             SkillCData skillConfig = SaveDataComponent.Instance.GetSkillData();
             CharacterPropData propConfig = SaveDataComponent.Instance.GetCharacterPropData();
             RuntimeSkillData runtimeSkillData = RuntimeDataComponent.Instance.GetSkillData();
             RuntimePropData runtimePropData = RuntimeDataComponent.Instance.GetPropData();
-            List<BattleSkillDisplayData> nextItems = BuildSkillItems(skillConfig, runtimeSkillData);
-            List<BattlePropShortcutDisplayData> nextPropItems = BuildPropShortcutItems(propConfig, runtimePropData);
-
             PlayerCombatSnapshot snapshot = ReadPlayerSnapshot();
+            List<BattleSkillDisplayData> nextItems = BuildSkillItems(
+                skillConfig,
+                runtimeSkillData,
+                snapshot.CurrentSkillChainIndex,
+                snapshot.CurrentSkillSlotIndex);
+            List<BattlePropShortcutDisplayData> nextPropItems = BuildPropShortcutItems(propConfig, runtimePropData);
 
             float nextHpRatio = snapshot.HasHealth ? snapshot.HpRatio : 1f;
             float nextMpRatio = snapshot.HasMana ? snapshot.MpRatio : 1f;
             float nextCurrentHp = snapshot.HasHealth ? snapshot.CurrentHealth : 0f;
-            float nextMaxHp = snapshot.HasHealth ? snapshot.MaxHealth : 0f;
             float nextCurrentMp = snapshot.HasMana ? snapshot.CurrentMana : 0f;
-            float nextMaxMp = snapshot.HasMana ? snapshot.MaxMana : 0f;
 
             bool changed = !AreSkillItemsEqual(_skillItems, nextItems)
                 || !ArePropShortcutItemsEqual(_propShortcutItems, nextPropItems)
                 || !Mathf.Approximately(_hpRatio, nextHpRatio)
                 || !Mathf.Approximately(_mpRatio, nextMpRatio)
                 || !Mathf.Approximately(_currentHp, nextCurrentHp)
-                || !Mathf.Approximately(_maxHp, nextMaxHp)
-                || !Mathf.Approximately(_currentMp, nextCurrentMp)
-                || !Mathf.Approximately(_maxMp, nextMaxMp);
+                || !Mathf.Approximately(_currentMp, nextCurrentMp);
 
             if (!changed)
                 return;
@@ -81,15 +92,17 @@ namespace CrystalMagic.UI
             _hpRatio = nextHpRatio;
             _mpRatio = nextMpRatio;
             _currentHp = nextCurrentHp;
-            _maxHp = nextMaxHp;
             _currentMp = nextCurrentMp;
-            _maxMp = nextMaxMp;
 
             if (publishIfChanged)
                 PublishChanged();
         }
 
-        private static List<BattleSkillDisplayData> BuildSkillItems(SkillCData skillConfig, RuntimeSkillData runtimeSkillData)
+        private static List<BattleSkillDisplayData> BuildSkillItems(
+            SkillCData skillConfig,
+            RuntimeSkillData runtimeSkillData,
+            int currentSkillChainIndex,
+            int currentSkillSlotIndex)
         {
             List<BattleSkillDisplayData> items = new();
 
@@ -118,6 +131,9 @@ namespace CrystalMagic.UI
                     SkillId = skillData != null ? skillData.Id : -1,
                     SkillIconPath = skillData != null ? skillData.IconPath : string.Empty,
                     AdditionIconPath = skillAdditionData != null ? skillAdditionData.IconPath : string.Empty,
+                    CanShowAddition = i > 0,
+                    IsSelected = selectedChainIndex == currentSkillChainIndex &&
+                                 i == currentSkillSlotIndex,
                 });
             }
 
@@ -168,7 +184,11 @@ namespace CrystalMagic.UI
 
         private PlayerCombatSnapshot ReadPlayerSnapshot()
         {
-            PlayerCombatSnapshot snapshot = new();
+            PlayerCombatSnapshot snapshot = new()
+            {
+                CurrentSkillChainIndex = -1,
+                CurrentSkillSlotIndex = -1,
+            };
 
             if (!TryGetPlayerEntity(out EntityManager entityManager, out Entity player))
                 return snapshot;
@@ -193,6 +213,13 @@ namespace CrystalMagic.UI
                 snapshot.CurrentMana = mana.CurrentMana;
                 snapshot.MaxMana = resolvedMaxMana;
                 snapshot.MpRatio = Mathf.Clamp01(mana.CurrentMana / maxMana);
+            }
+
+            if (PlayerCurrentSkillUtility.TryGetCurrentSlot(entityManager, player, out _))
+            {
+                PlayerCurrentSkillComponent currentSkill = entityManager.GetComponentObject<PlayerCurrentSkillComponent>(player);
+                snapshot.CurrentSkillChainIndex = currentSkill.CurrentChainId;
+                snapshot.CurrentSkillSlotIndex = currentSkill.CurrentSlotIndex;
             }
 
             return snapshot;
@@ -262,9 +289,8 @@ namespace CrystalMagic.UI
                 if (a.DisplayIndex != b.DisplayIndex ||
                     a.SkillIndex != b.SkillIndex ||
                     a.SkillId != b.SkillId ||
+                    a.CanShowAddition != b.CanShowAddition ||
                     a.IsSelected != b.IsSelected ||
-                    a.ShowChantProgress != b.ShowChantProgress ||
-                    !Mathf.Approximately(a.ChantProgress, b.ChantProgress) ||
                     !string.Equals(a.SkillIconPath, b.SkillIconPath, System.StringComparison.Ordinal) ||
                     !string.Equals(a.AdditionIconPath, b.AdditionIconPath, System.StringComparison.Ordinal))
                 {
@@ -320,9 +346,8 @@ namespace CrystalMagic.UI
         public int SkillId;
         public string SkillIconPath;
         public string AdditionIconPath;
+        public bool CanShowAddition;
         public bool IsSelected;
-        public bool ShowChantProgress;
-        public float ChantProgress;
     }
 
     public sealed class BattlePropShortcutDisplayData
@@ -349,5 +374,7 @@ namespace CrystalMagic.UI
         public float CurrentMana;
         public float MaxMana;
         public float MpRatio;
+        public int CurrentSkillChainIndex;
+        public int CurrentSkillSlotIndex;
     }
 }

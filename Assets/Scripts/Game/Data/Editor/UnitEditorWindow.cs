@@ -155,7 +155,15 @@ namespace CrystalMagic.Editor.Data
                 });
             }
 
-            _prefabEntries.Sort((left, right) => string.Compare(left.DisplayName, right.DisplayName, StringComparison.Ordinal));
+            _prefabEntries.Sort((left, right) =>
+            {
+                int leftId = ResolveUnitData(left)?.Id ?? int.MaxValue;
+                int rightId = ResolveUnitData(right)?.Id ?? int.MaxValue;
+                int idComparison = leftId.CompareTo(rightId);
+                return idComparison != 0
+                    ? idComparison
+                    : string.Compare(left.DisplayName, right.DisplayName, StringComparison.Ordinal);
+            });
             _selectedIndex = _prefabEntries.Count == 0 ? -1 : Mathf.Clamp(_selectedIndex, 0, _prefabEntries.Count - 1);
         }
 
@@ -191,13 +199,13 @@ namespace CrystalMagic.Editor.Data
         {
             UnitData row = new UnitData
             {
+                Id = GetNextStableUnitDataId(),
                 Name = entry.DisplayName,
                 Description = string.Empty,
                 PrefabPath = entry.AssetPath,
             };
             row.NormalizeModules();
             _rows.Add(row);
-            NormalizeRowIds();
             _isDirty = true;
             return row;
         }
@@ -218,9 +226,9 @@ namespace CrystalMagic.Editor.Data
 
             row.Name = entry.DisplayName;
             row.PrefabPath = entry.AssetPath;
+            row.Id = GetNextStableUnitDataId();
             row.NormalizeModules();
             _rows.Add(row);
-            NormalizeRowIds();
             _isDirty = true;
             return row;
         }
@@ -256,7 +264,6 @@ namespace CrystalMagic.Editor.Data
                     row?.NormalizeModules();
                 }
 
-                NormalizeRowIds();
                 _statusText = $"Loaded {_rows.Count} rows - {DataPath}";
             }
             catch (Exception ex)
@@ -281,7 +288,6 @@ namespace CrystalMagic.Editor.Data
                 int removedCount = Mathf.Max(0, _rows.Count - saveRows.Count);
                 _rows = saveRows;
 
-                NormalizeRowIds();
                 foreach (UnitData row in _rows)
                 {
                     row?.NormalizeModules();
@@ -374,6 +380,7 @@ namespace CrystalMagic.Editor.Data
                 new AnimationProfileTableWrapper { Rows = _animationProfiles },
                 JsonSettings);
             DataFileUtility.WriteJsonText(AnimationProfileDataPath, json);
+            UnitAnimationFrameLibraryBuilder.Rebuild(_animationProfiles);
         }
 
         private void SynchronizeAnimationProfiles()
@@ -436,15 +443,12 @@ namespace CrystalMagic.Editor.Data
                 rows.Add(row);
             }
 
-            return rows;
+            return rows.OrderBy(static row => row.Id).ToList();
         }
 
-        private void NormalizeRowIds()
+        private int GetNextStableUnitDataId()
         {
-            for (int i = 0; i < _rows.Count; i++)
-            {
-                _rows[i].Id = i;
-            }
+            return _rows.Count == 0 ? 1 : _rows.Max(static row => row.Id) + 1;
         }
 
         private void NormalizeDropRowIds()
@@ -457,25 +461,12 @@ namespace CrystalMagic.Editor.Data
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            if (GUILayout.Button("加载", EditorStyles.toolbarButton, GUILayout.Width(44f)))
-            {
-                LoadData();
-                LoadDropData();
-                LoadAnimationProfiles();
-                RefreshPrefabEntries();
-            }
-
             GUI.enabled = _isDirty;
             if (GUILayout.Button(_isDirty ? "保存 *" : "保存", EditorStyles.toolbarButton, GUILayout.Width(56f)))
             {
                 SaveData();
             }
             GUI.enabled = true;
-
-            if (GUILayout.Button("刷新 Prefab", EditorStyles.toolbarButton, GUILayout.Width(78f)))
-            {
-                RefreshPrefabEntries();
-            }
 
             GUILayout.FlexibleSpace();
             if (!string.IsNullOrEmpty(_statusText))
@@ -578,7 +569,7 @@ namespace CrystalMagic.Editor.Data
             GUILayout.Space(4f);
             EditorGUILayout.BeginHorizontal();
             GUILayout.Space(8f);
-            string[] tabs = { "属性", "行为", "动画" };
+            string[] tabs = { "属性", "动画" };
             _selectedTab = Mathf.Clamp(_selectedTab, 0, tabs.Length - 1);
             int newTab = GUILayout.Toolbar(_selectedTab, tabs, GUILayout.Width(260f), GUILayout.Height(24f));
             if (newTab != _selectedTab)
@@ -603,9 +594,6 @@ namespace CrystalMagic.Editor.Data
                     DrawAttributePanel(entry, unit);
                     break;
                 case 1:
-                    DrawBehaviorPreviewPanel(entry, unit);
-                    break;
-                case 2:
                     DrawAnimationPanel(entry, unit);
                     break;
             }
@@ -695,78 +683,6 @@ namespace CrystalMagic.Editor.Data
             }
         }
 
-        private void DrawBehaviorPreviewPanel(UnitPrefabEntry entry, UnitData unit)
-        {
-            DrawSectionHeader("Behavior");
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.Label("Behavior Tree", EditorStyles.boldLabel);
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Open Behavior Editor", GUILayout.Width(150f)))
-            {
-                BehaviorTreeGraphWindow.Open();
-            }
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.HelpBox("这里只预览行为树数据，修改请到 Behavior Tree 编辑器。", MessageType.Info);
-
-            UnitBehaviorTreeAuthoring authoring = entry.Prefab.GetComponent<UnitBehaviorTreeAuthoring>();
-            if (authoring == null)
-            {
-                EditorGUILayout.HelpBox("当前 Prefab 没有挂 UnitBehaviorTreeAuthoring。", MessageType.Warning);
-                return;
-            }
-
-            if (unit == null)
-            {
-                EditorGUILayout.HelpBox("当前 Prefab 没有对应的 UnitData，无法关联行为树。", MessageType.Warning);
-                return;
-            }
-
-            using (new EditorGUI.DisabledScope(true))
-                EditorGUILayout.IntField("Unit Data Id", unit.Id);
-
-            BehaviorTreeData tree = EditorComponents.Data.Find<BehaviorTreeData>(
-                row => row.UnitDataId == unit.Id);
-            if (tree == null)
-            {
-                EditorGUILayout.HelpBox("没有找到对应的 BehaviorTreeData。", MessageType.Warning);
-                return;
-            }
-
-            EditorGUILayout.LabelField("Tree", $"[{tree.Id}] {GetBehaviorTreePreviewName(tree)}");
-            if (!string.IsNullOrWhiteSpace(tree.Description))
-            {
-                EditorGUILayout.LabelField("Description", tree.Description, EditorStyles.wordWrappedLabel);
-            }
-
-            EditorGUILayout.LabelField("Node Count", tree.Nodes?.Count.ToString() ?? "0");
-
-            BehaviorNodeData rootNode = tree.GetRootNode();
-            EditorGUILayout.LabelField("Root", rootNode != null ? BehaviorNodeDataRegistry.GetDisplayName(rootNode.Type) : "None");
-
-            if (tree.Nodes == null || tree.Nodes.Count == 0)
-            {
-                EditorGUILayout.HelpBox("这棵行为树还没有节点。", MessageType.Info);
-                return;
-            }
-
-            GUILayout.Space(6f);
-            for (int i = 0; i < tree.Nodes.Count; i++)
-            {
-                BehaviorNodeData node = tree.Nodes[i];
-                if (node == null)
-                {
-                    continue;
-                }
-
-                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-                EditorGUILayout.LabelField($"[{i + 1}] {BehaviorNodeDataRegistry.GetDisplayName(node.Type)}", EditorStyles.boldLabel);
-                EditorGUILayout.LabelField(BehaviorNodeDataRegistry.GetSummary(node), EditorStyles.wordWrappedMiniLabel);
-                EditorGUILayout.EndVertical();
-                GUILayout.Space(4f);
-            }
-        }
-
         private void DrawAnimationPanel(UnitPrefabEntry entry, UnitData unit)
         {
             DrawSectionHeader("Animation");
@@ -776,12 +692,9 @@ namespace CrystalMagic.Editor.Data
                 return;
             }
 
-            if (entry.Prefab.GetComponent<SpriteRenderer>() == null)
-            {
-                EditorGUILayout.HelpBox(
-                    "AnimationClip 直接驱动同一 GameObject 上的 SpriteRenderer.sprite。请先将该单位的视觉组件改为 SpriteRenderer。",
-                    MessageType.Warning);
-            }
+            EditorGUILayout.HelpBox(
+                "Prefab 必须手动挂载 SpriteRenderer；运行时动画直接从 Entity 获取该组件。",
+                MessageType.None);
 
             UnitAnimationProfileData profile = GetAnimationProfile(unit);
             if (profile == null)
@@ -816,7 +729,7 @@ namespace CrystalMagic.Editor.Data
 
             EditorGUILayout.LabelField("Unit Data", $"[{unit.Id}] {unit.Name}");
             EditorGUILayout.HelpBox(
-                "StateScript writes unit.animation.setName. Each name requires four explicit AnimationClips; the clips may animate SpriteRenderer.flipX themselves.",
+                "StateScript writes unit.animation.setName. 每组动画可选 2 方向或 4 方向；2 方向只使用左右 Clip，上下移动会保持最近一次的左右朝向。",
                 MessageType.None);
 
             EditorGUI.BeginChangeCheck();
@@ -871,10 +784,19 @@ namespace CrystalMagic.Editor.Data
             EditorGUILayout.EndHorizontal();
 
             animation.Name = EditorGUILayout.TextField("Animation Name", animation.Name ?? string.Empty);
-            DrawAnimationClipField(entry, animation.Name, "Down / Front", "Front", ref animation.FrontClipPath);
-            DrawAnimationClipField(entry, animation.Name, "Up / Back", "Back", ref animation.BackClipPath);
+            int directionModeIndex = animation.DirectionMode == UnitAnimationDirectionMode.TwoDirections ? 0 : 1;
+            directionModeIndex = EditorGUILayout.Popup("方向", directionModeIndex, new[] { "2 方向（左右）", "4 方向（上下左右）" });
+            animation.DirectionMode = directionModeIndex == 0
+                ? UnitAnimationDirectionMode.TwoDirections
+                : UnitAnimationDirectionMode.FourDirections;
+
             DrawAnimationClipField(entry, animation.Name, "Left", "Left", ref animation.LeftClipPath);
             DrawAnimationClipField(entry, animation.Name, "Right", "Right", ref animation.RightClipPath);
+            if (animation.DirectionMode == UnitAnimationDirectionMode.FourDirections)
+            {
+                DrawAnimationClipField(entry, animation.Name, "Down / Front", "Front", ref animation.FrontClipPath);
+                DrawAnimationClipField(entry, animation.Name, "Up / Back", "Back", ref animation.BackClipPath);
+            }
             EditorGUILayout.EndVertical();
             GUILayout.Space(4f);
         }

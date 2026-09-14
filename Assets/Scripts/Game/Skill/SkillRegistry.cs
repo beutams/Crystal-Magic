@@ -10,35 +10,30 @@ namespace CrystalMagic.Game.Skill
     {
         private static readonly string[] s_skillRuntimeTypeOrder =
         {
-            "PositionSkill",
-            "SelfSkill",
+            "CommonSkill",
         };
 
         private static readonly Dictionary<string, Type> s_skillRuntimeTypes = new(StringComparer.Ordinal)
         {
-            { "PositionSkill", typeof(PositionSkill) },
-            { "SelfSkill", typeof(SelfSkill) },
+            { "CommonSkill", typeof(CommonSkill) },
         };
 
         private static readonly Dictionary<Type, string> s_skillRuntimeKeys = new()
         {
-            { typeof(PositionSkill), "PositionSkill" },
-            { typeof(SelfSkill), "SelfSkill" },
+            { typeof(CommonSkill), "CommonSkill" },
         };
 
         private static readonly Dictionary<string, string> s_skillRuntimeDisplayNames = new(StringComparer.Ordinal)
         {
-            { "PositionSkill", "Position Skill" },
-            { "SelfSkill", "Self Skill" },
+            { "CommonSkill", "Common Skill" },
         };
 
         private static readonly FactoryTypeInfo[] s_skillRuntimeTypeInfos =
         {
-            new("PositionSkill", "Position Skill", typeof(PositionSkill), 0),
-            new("SelfSkill", "Self Skill", typeof(SelfSkill), 10),
+            new("CommonSkill", "Common Skill", typeof(CommonSkill), 0),
         };
 
-        public static string DefaultSkillRuntimeTypeKey => "PositionSkill";
+        public static string DefaultSkillRuntimeTypeKey => "CommonSkill";
 
         public static IReadOnlyList<string> SkillRuntimeTypeOrder => s_skillRuntimeTypeOrder;
 
@@ -71,8 +66,7 @@ namespace CrystalMagic.Game.Skill
             if (factory == null)
                 return;
 
-            factory.Register("PositionSkill", static data => new PositionSkill(data));
-            factory.Register("SelfSkill", static data => new SelfSkill(data));
+            factory.Register("CommonSkill", static data => new CommonSkill(data));
         }
     }
 }

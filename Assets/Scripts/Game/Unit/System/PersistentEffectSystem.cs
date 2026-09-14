@@ -4,6 +4,7 @@ using CrystalMagic.Game.Skill;
 using Unity.Entities;
 using UnityEngine;
 
+[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(SkillProjectileSystem))]
 partial class PersistentEffectSystem : SystemBase
@@ -35,6 +36,7 @@ partial class PersistentEffectSystem : SystemBase
             {
                 SkillContent tickContext = instance.Context.Clone();
                 tickContext.EntityManager = EntityManager;
+                tickContext.PersistentEffectAppliedBuffTargets = instance.AppliedBuffTargets;
                 ExecuteEffects(instance.OnTickEffects, tickContext);
                 instance.NextTickTime += instance.TickIntervalSeconds;
             }
@@ -129,5 +131,6 @@ partial class PersistentEffectSystem : SystemBase
         public SkillContent Context;
         public EffectData[] OnTickEffects;
         public EffectData[] OnEndEffects;
+        public Dictionary<int, HashSet<Entity>> AppliedBuffTargets = new();
     }
 }

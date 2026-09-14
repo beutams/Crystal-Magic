@@ -140,6 +140,11 @@ if (_subscribed && InputComponent.Instance != null)
 
 All UI panels must follow the existing MVC framework:
 
+## Confirmation Visibility
+
+- When requesting approval for a proposed change, put the complete proposal in the same user-visible final message: what will change, the affected files or systems, and the expected result. Do not place the proposal only in commentary or ask for confirmation without showing the plan.
+- After the user explicitly approves that proposal or says an equivalent such as "确认" or "改", implement it without asking for the same confirmation again unless the scope materially changes.
+
 - View classes derive from `UIBase` or `UIBase<TData>`.
 - Model classes derive from `UIModelBase`.
 - Controller classes derive from `UIControllerBase<TView, TModel>`.

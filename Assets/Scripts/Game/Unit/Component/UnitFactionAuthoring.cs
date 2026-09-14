@@ -43,9 +43,36 @@ public struct UnitFactionComponent : IComponentData
 [UnitSourceAuthoring(typeof(UnitFactionAuthoring))]
 public sealed class UnitFactionSource : UnitComponentSource<UnitFactionComponent>
 {
+    private static readonly ComparatorParameterDefinition[] s_otherEntityParameters =
+    {
+        new("Other Entity", UnitValueCategory.Entity),
+    };
+
     protected override void Define(UnitSourceDefinitionBuilder<UnitFactionComponent> builder)
     {
         builder.AddGet("unit.faction.value", UnitValueCategory.Number,
             (in UnitFactionComponent value) => UnitValue.FromInt((int)value.Value));
+
+        builder.AddContextGet("unit.faction.isEnemyTo", UnitValueCategory.Bool, s_otherEntityParameters,
+            static (in UnitSourceBindingContext context, in UnitFactionComponent faction, UnitValue[] parameters) =>
+            {
+                if (parameters == null || parameters.Length != 1 ||
+                    parameters[0].Type != UnitValueType.Entity)
+                {
+                    return UnitValue.FromBool(false);
+                }
+
+                Entity otherEntity = parameters[0].Entity;
+                EntityManager entityManager = context.EntityManager;
+                if (otherEntity == Entity.Null ||
+                    !entityManager.Exists(otherEntity) ||
+                    !entityManager.HasComponent<UnitFactionComponent>(otherEntity))
+                {
+                    return UnitValue.FromBool(false);
+                }
+
+                UnitFactionComponent otherFaction = entityManager.GetComponentData<UnitFactionComponent>(otherEntity);
+                return UnitValue.FromBool(UnitFactionUtility.IsEnemy(faction.Value, otherFaction.Value));
+            });
     }
 }

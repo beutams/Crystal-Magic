@@ -7,6 +7,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
+[RunInGameWorld(GameWorldKind.Town | GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(InteractionCandidateSystem))]
 public partial class GameInteractionSystem : SystemBase

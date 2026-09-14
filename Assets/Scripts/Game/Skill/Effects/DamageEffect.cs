@@ -10,19 +10,20 @@ namespace CrystalMagic.Game.Skill.Effects
     /// <summary>
     /// 伤害效果，逻辑由战斗结算系统接入
     /// </summary>
-    public sealed class DamageEffect : Effect
+    public class DamageEffect : Effect
     {
         public new DamageEffectData Data { get; }
+
+        protected virtual bool SendsOnDamagedHook => true;
 
         public DamageEffect(DamageEffectData data) : base(data) => Data = data;
 
         public override void Execute(SkillContent context)
         {
-            if (Data == null || context == null || !context.HasTargetEntity)
+            if (Data == null || context == null || !TryResolveTarget(context, out Entity target))
                 return;
 
             EntityManager entityManager = context.EntityManager;
-            Entity target = context.TargetEntity;
             if (target == Entity.Null ||
                 !entityManager.Exists(target) ||
                 !entityManager.HasComponent<UnitVitalityComponent>(target) ||
@@ -43,9 +44,8 @@ namespace CrystalMagic.Game.Skill.Effects
             if (died && entityManager.HasComponent<UnitDeathComponent>(target))
                 entityManager.SetComponentEnabled<UnitDeathComponent>(target, true);
 
-            if (!died)
+            if (!died && SendsOnDamagedHook)
             {
-                QuadOverlayPulseUtility.PlayHit(entityManager, target);
                 UnitBuffHookUtility.Dispatch(
                     entityManager,
                     target,
@@ -58,39 +58,68 @@ namespace CrystalMagic.Game.Skill.Effects
             }
 
             Debug.Log(
-                $"[DamageEffect] Damage={damage:0.##} | Formula=max(0, AttackPower*Coeff+Flat-Defense) | " +
-                $"AttackPower={breakdown.AttackPower:0.##} Coeff={Data.DamageCoefficient:0.##} Flat={Data.FlatDamageBonus:0.##} " +
+                $"[DamageEffect] Damage={damage:0.##} | Formula=max(0, BaseValue*Coeff+Flat-Defense) | " +
+                $"BaseValue={breakdown.BaseValue:0.##} Coeff={Data.DamageCoefficient:0.##} Flat={Data.FlatDamageBonus:0.##} " +
                 $"Raw={breakdown.RawDamage:0.##} Defense={breakdown.Defense:0.##} Final={breakdown.FinalDamage:0.##} " +
                 $"Target={target.Index}:{target.Version} HP={previousHealth:0.##}->{vitality.CurrentHealth:0.##}");
+
+            if (entityManager.HasComponent<LocalTransform>(target))
+            {
+                float3 targetPosition = entityManager.GetComponentData<LocalTransform>(target).Position;
+                EventComponent.Instance.Publish(new DamageAppliedEvent(target, targetPosition, damage, died));
+            }
 
             EventComponent.Instance.Publish(new UnitDamagedEvent(target, vitality.CurrentHealth, UnitModifierResolver.GetMaxHealth(entityManager, target)));
         }
 
         private DamageBreakdown CalculateDamage(SkillContent context, EntityManager entityManager, Entity target)
         {
-            float attackPower = 0f;
-            if (context.HasOriginEntity &&
-                context.OriginEntity != Entity.Null &&
-                entityManager.Exists(context.OriginEntity) &&
-                entityManager.HasComponent<UnitAttackComponent>(context.OriginEntity))
-            {
-                attackPower = UnitModifierResolver.GetAttackPower(entityManager, context.OriginEntity);
-            }
-
-            float rawDamage = attackPower * Data.DamageCoefficient + Data.FlatDamageBonus;
-            float defense = UnitModifierResolver.GetDefense(entityManager, target);
+            float baseValue = ResolveBaseValue(context, entityManager);
+            float rawDamage = baseValue * Data.DamageCoefficient + Data.FlatDamageBonus;
+            float defense = Data.ValueSource == DamageValueSource.TriggerValue
+                ? 0f
+                : UnitModifierResolver.GetDefense(entityManager, target);
             return new DamageBreakdown
             {
-                AttackPower = attackPower,
+                BaseValue = baseValue,
                 RawDamage = rawDamage,
                 Defense = defense,
                 FinalDamage = math.max(0f, rawDamage - defense),
             };
         }
 
+        private bool TryResolveTarget(SkillContent context, out Entity target)
+        {
+            switch (Data.TargetSource)
+            {
+                case DamageTargetSource.OtherEntity:
+                    target = context.HasOtherEntity ? context.OtherEntity : Entity.Null;
+                    return target != Entity.Null;
+                default:
+                    target = context.HasTargetEntity ? context.TargetEntity : Entity.Null;
+                    return target != Entity.Null;
+            }
+        }
+
+        private float ResolveBaseValue(SkillContent context, EntityManager entityManager)
+        {
+            if (Data.ValueSource == DamageValueSource.TriggerValue)
+                return math.max(0f, context.TriggerValue);
+
+            if (context.HasOriginEntity &&
+                context.OriginEntity != Entity.Null &&
+                entityManager.Exists(context.OriginEntity) &&
+                entityManager.HasComponent<UnitAttackComponent>(context.OriginEntity))
+            {
+                return UnitModifierResolver.GetAttackPower(entityManager, context.OriginEntity);
+            }
+
+            return 0f;
+        }
+
         private struct DamageBreakdown
         {
-            public float AttackPower;
+            public float BaseValue;
             public float RawDamage;
             public float Defense;
             public float FinalDamage;

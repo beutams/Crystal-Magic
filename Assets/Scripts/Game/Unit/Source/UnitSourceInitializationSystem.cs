@@ -1,6 +1,7 @@
 using Unity.Collections;
 using Unity.Entities;
 
+[RunInGameWorld(GameWorldKind.Town | GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitInitializationSystemGroup))]
 [UpdateBefore(typeof(BehaviorTreeInitSystem))]
 public partial class UnitSourceInitializationSystem : SystemBase

@@ -1,10 +1,33 @@
 using CrystalMagic.Game.Data;
+using Unity.Mathematics;
 
 namespace CrystalMagic.Game.Data.Effects
 {
-    [System.Serializable]
-    public sealed class DamageEffectData : EffectData
+    public enum DamageTargetSource
     {
+        [EditorLabel("当前目标")]
+        CurrentTarget = 0,
+        [EditorLabel("事件另一方")]
+        OtherEntity = 1,
+    }
+
+    public enum DamageValueSource
+    {
+        [EditorLabel("施法者攻击力")]
+        AttackPower = 0,
+        [EditorLabel("事件数值")]
+        TriggerValue = 1,
+    }
+
+    [System.Serializable]
+    public class DamageEffectData : EffectData
+    {
+        [EditorLabel("伤害目标")]
+        public DamageTargetSource TargetSource = DamageTargetSource.CurrentTarget;
+
+        [EditorLabel("伤害基数")]
+        public DamageValueSource ValueSource = DamageValueSource.AttackPower;
+
         [EditorLabel("伤害倍率")]
         public float DamageCoefficient;
 
@@ -23,29 +46,25 @@ namespace CrystalMagic.Game.Data.Effects
         {
             float attributePower = ResolveAttributePower(elementComponent);
             SkillModifierSet runtimeModifiers = CreateModifiersWithAttributePower(modifiers, attributePower);
-            AppendElementModifiers(GetAttributePowerValue(runtimeModifiers), runtimeModifiers);
             DamageEffectData copy = (DamageEffectData)base.CreateRuntimeCopy(runtimeModifiers, elementComponent);
-            copy.DamageCoefficient = ApplyModifier(runtimeModifiers, SkillModifierChannel.Damage, DamageCoefficient);
+            float skillDamageFactor = runtimeModifiers?.GetFactor(SkillModifierChannel.Damage) ?? 1f;
+            float skillDamageBonus = runtimeModifiers?.GetBonus(SkillModifierChannel.Damage) ?? 0f;
+            float elementMultiplier = Element == ElementType.None
+                ? 1f
+                : math.max(0f, 1f + GetAttributePowerValue(runtimeModifiers));
+            copy.DamageCoefficient = DamageCoefficient * skillDamageFactor * elementMultiplier + skillDamageBonus;
             copy.FlatDamageBonus = ApplyModifier(runtimeModifiers, SkillModifierChannel.FlatDamage, FlatDamageBonus);
             return copy;
         }
+    }
 
-        private void AppendElementModifiers(float elementBonus, SkillModifierSet modifiers)
-        {
-            if (Element == ElementType.None)
-                return;
-
-            modifiers.Add(new SkillModifierEntry
-            {
-                Channel = SkillModifierChannel.Damage,
-                Factor = elementBonus,
-            });
-            modifiers.Add(new SkillModifierEntry
-            {
-                Channel = SkillModifierChannel.FlatDamage,
-                Factor = elementBonus,
-            });
-        }
+    /// <summary>
+    /// Damage emitted from a Buff trigger. It uses the standard damage formula,
+    /// but deliberately does not dispatch the OnDamaged hook.
+    /// </summary>
+    [System.Serializable]
+    public sealed class BuffDamageEffectData : DamageEffectData
+    {
     }
 
     [System.Serializable]

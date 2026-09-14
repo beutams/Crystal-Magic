@@ -21,22 +21,29 @@ namespace CrystalMagic.Editor.Unit
         private const string GraphDragDataKey = "CrystalMagic.StateScriptGraph";
         private const float ListPanelWidth = 270f;
         private const float InspectorPanelMinWidth = 300f;
+        private const double RuntimeUnitRefreshIntervalSeconds = 0.5d;
 
         private readonly List<StateScriptData> _rows = new();
         private readonly List<UnitPrefabEntry> _unitEntries = new();
+        private readonly List<RuntimeUnitEntry> _runtimeUnitEntries = new();
+        private readonly Dictionary<int, string> _runtimePrefabNames = new();
+        private readonly StateScriptRuntimeDataInspector _runtimeDataInspector = new();
         private int _selectedUnitDataId = -1;
+        private Entity _selectedRuntimeEntity = Entity.Null;
         private string _selectedGraphGuid;
         private StateScriptGraphDragData _pendingGraphDrag;
         private UnitSourceSchema _selectedSourceSchema;
         private bool _isDirty;
         private string _statusText = string.Empty;
         private Vector2 _listScroll;
+        private double _nextRuntimeUnitRefreshTime;
 
         private StateScriptGraphView _graphView;
         private IMGUIContainer _inspectorContainer;
         private Label _statusLabel;
 
         private static readonly UnitSourceSchema s_emptySourceSchema = new UnitSourceSchemaBuilder().Build();
+        private static bool IsRuntimeDebugEnabled => Application.isPlaying && DebugComponent.Instance.IsEnabled;
 
         private sealed class TableWrapper
         {
@@ -50,6 +57,15 @@ namespace CrystalMagic.Editor.Unit
             public UnitData UnitData;
 
             public string DisplayName => UnitData?.Name ?? Prefab?.name ?? Path.GetFileNameWithoutExtension(AssetPath);
+        }
+
+        private sealed class RuntimeUnitEntry
+        {
+            public Entity Entity;
+            public int UnitDataId;
+            public string PrefabName;
+
+            public string DisplayName => $"{PrefabName} ({Entity})";
         }
 
         private static JsonSerializerSettings JsonSettings => new()
@@ -71,6 +87,17 @@ namespace CrystalMagic.Editor.Unit
             window.Show();
         }
 
+        private void OnEnable()
+        {
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+            _nextRuntimeUnitRefreshTime = 0d;
+        }
+
+        private void OnDisable()
+        {
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+        }
+
         private void CreateGUI()
         {
             LoadData();
@@ -86,23 +113,68 @@ namespace CrystalMagic.Editor.Unit
 
         private void OnInspectorUpdate()
         {
-            if (!Application.isPlaying || _graphView == null || SelectedGraph == null)
+            if (!Application.isPlaying)
                 return;
 
+            if (!IsRuntimeDebugEnabled)
+            {
+                _runtimeUnitEntries.Clear();
+                _selectedRuntimeEntity = Entity.Null;
+                _runtimeDataInspector.Refresh(null);
+                _graphView?.RefreshRuntimeDebug(null);
+                Repaint();
+                return;
+            }
+
+            if (EditorApplication.timeSinceStartup >= _nextRuntimeUnitRefreshTime)
+                RefreshRuntimeUnitEntries();
+
+            if (_graphView == null || SelectedGraph == null)
+            {
+                Repaint();
+                return;
+            }
+
             StateScriptRuntime runtime = FindDebugRuntime();
+            _runtimeDataInspector.Refresh(runtime);
             _graphView.RefreshRuntimeDebug(runtime);
+            Repaint();
+        }
+
+        private void OnPlayModeStateChanged(PlayModeStateChange change)
+        {
+            if (change == PlayModeStateChange.EnteredPlayMode)
+            {
+                ClearRuntimeSelection();
+                _runtimeUnitEntries.Clear();
+                _nextRuntimeUnitRefreshTime = 0d;
+                RefreshRuntimeUnitEntries();
+                RebuildGraph();
+                Repaint();
+                return;
+            }
+
+            if (change != PlayModeStateChange.ExitingPlayMode)
+                return;
+
+            _runtimeUnitEntries.Clear();
+            _selectedRuntimeEntity = Entity.Null;
+            _nextRuntimeUnitRefreshTime = 0d;
+            if (GetSelectedUnitEntry() == null)
+            {
+                _selectedUnitDataId = _unitEntries.FirstOrDefault(entry => entry.UnitData != null)?.UnitData.Id ?? -1;
+                _selectedGraphGuid = GetSelectedData()?.Graphs.FirstOrDefault(graph => graph != null)?.Guid;
+            }
+
+            _selectedSourceSchema = UnitSourceSchemaFactory.CreateForPrefab(GetSelectedUnitEntry()?.Prefab);
+            RebuildGraph();
             Repaint();
         }
 
         private void BuildToolbar(VisualElement root)
         {
             Toolbar toolbar = new();
-            toolbar.Add(CreateToolbarButton("Load", 48f, LoadData));
             toolbar.Add(CreateToolbarButton(_isDirty ? "Save *" : "Save", 58f, SaveData));
-            toolbar.Add(CreateToolbarButton("Add Graph", 76f, AddGraph));
-            toolbar.Add(CreateToolbarButton("Delete Graph", 92f, DeleteSelectedGraph));
-            toolbar.Add(CreateToolbarButton("Validate", 64f, ValidateSelectedGraph));
-            toolbar.Add(CreateToolbarButton("Generate Registry", 110f, StateScriptRegistryGenerator.Generate));
             toolbar.Add(new VisualElement { style = { flexGrow = 1f } });
 
             _statusLabel = new Label(_statusText)
@@ -183,33 +255,27 @@ namespace CrystalMagic.Editor.Unit
         {
             _listScroll = EditorGUILayout.BeginScrollView(_listScroll);
             EditorGUILayout.Space(6f);
-            EditorGUILayout.LabelField("Units", EditorStyles.boldLabel);
+            bool showRuntimeDebug = IsRuntimeDebugEnabled;
+            if (showRuntimeDebug)
+                DrawRuntimeUnitList();
+            else
+                DrawPrefabUnitList();
 
-            for (int i = 0; i < _unitEntries.Count; i++)
+            if (showRuntimeDebug && _selectedRuntimeEntity == Entity.Null)
             {
-                UnitPrefabEntry entry = _unitEntries[i];
-                bool selected = entry.UnitData != null && entry.UnitData.Id == _selectedUnitDataId;
-                GUIStyle style = selected ? EditorStyles.toolbarButton : EditorStyles.miniButton;
-                Rect unitRect = GUILayoutUtility.GetRect(new GUIContent(entry.DisplayName), style, GUILayout.ExpandWidth(true));
-                HandleGraphDrop(entry, unitRect);
-                bool clicked = GUI.Button(unitRect, entry.DisplayName, style);
-                if (!clicked)
-                    continue;
-
-                if (entry.UnitData == null)
-                {
-                    SetStatus($"UnitData is missing for prefab: {entry.DisplayName}");
-                    continue;
-                }
-
-                SelectUnit(entry.UnitData.Id);
+                EditorGUILayout.HelpBox("Select a live unit with a StateScript component to inspect its graphs.", MessageType.Info);
+                EditorGUILayout.EndScrollView();
+                return;
             }
 
             EditorGUILayout.Space(10f);
             UnitPrefabEntry selectedEntry = GetSelectedUnitEntry();
             if (selectedEntry == null)
             {
-                EditorGUILayout.HelpBox("Select a unit prefab.", MessageType.Info);
+                string message = showRuntimeDebug
+                    ? "The selected runtime unit does not resolve to a UnitData prefab."
+                    : "Select a unit prefab.";
+                EditorGUILayout.HelpBox(message, MessageType.Info);
                 EditorGUILayout.EndScrollView();
                 return;
             }
@@ -246,8 +312,22 @@ namespace CrystalMagic.Editor.Unit
                     selectedGraph.Name = EditorGUILayout.TextField("Graph Name", selectedGraph.Name ?? string.Empty);
                     if (EditorGUI.EndChangeCheck())
                         MarkDirty();
+
+                    selectedGraph.ExecutionConditions ??= new List<ConditionConfig>();
+                    EditorGUILayout.LabelField("Run Conditions", EditorStyles.boldLabel);
+                    if (ConditionListEditor.Draw(
+                            selectedGraph.ExecutionConditions,
+                            $"StateScript.GraphRun.{_selectedUnitDataId}.{selectedGraph.Guid}",
+                            _selectedSourceSchema ?? s_emptySourceSchema,
+                            MarkDirty))
+                    {
+                        MarkDirty();
+                    }
                 }
             }
+
+            if (showRuntimeDebug)
+                _runtimeDataInspector.Draw(FindDebugRuntime());
 
             EditorGUILayout.Space(8f);
             if (selectedEntry.Prefab.GetComponent<UnitStateScriptAuthoring>() == null)
@@ -256,9 +336,60 @@ namespace CrystalMagic.Editor.Unit
             EditorGUILayout.EndScrollView();
         }
 
+        private void DrawRuntimeUnitList()
+        {
+            EditorGUILayout.LabelField($"Runtime Units ({_runtimeUnitEntries.Count})", EditorStyles.boldLabel);
+            if (_runtimeUnitEntries.Count == 0)
+            {
+                EditorGUILayout.HelpBox("No live unit with UnitStateScriptComponent was found.", MessageType.Info);
+                return;
+            }
+
+            for (int i = 0; i < _runtimeUnitEntries.Count; i++)
+            {
+                RuntimeUnitEntry entry = _runtimeUnitEntries[i];
+                bool selected = entry.Entity == _selectedRuntimeEntity;
+                GUIStyle style = selected ? EditorStyles.toolbarButton : EditorStyles.miniButton;
+                if (GUILayout.Button(entry.DisplayName, style, GUILayout.ExpandWidth(true)))
+                    SelectRuntimeUnit(entry);
+            }
+        }
+
+        private void DrawPrefabUnitList()
+        {
+            EditorGUILayout.LabelField("Units", EditorStyles.boldLabel);
+
+            for (int i = 0; i < _unitEntries.Count; i++)
+            {
+                UnitPrefabEntry entry = _unitEntries[i];
+                bool selected = entry.UnitData != null && entry.UnitData.Id == _selectedUnitDataId;
+                GUIStyle style = selected ? EditorStyles.toolbarButton : EditorStyles.miniButton;
+                Rect unitRect = GUILayoutUtility.GetRect(new GUIContent(entry.DisplayName), style, GUILayout.ExpandWidth(true));
+                HandleGraphDrop(entry, unitRect);
+                bool clicked = GUI.Button(unitRect, entry.DisplayName, style);
+                if (!clicked)
+                    continue;
+
+                if (entry.UnitData == null)
+                {
+                    SetStatus($"UnitData is missing for prefab: {entry.DisplayName}");
+                    continue;
+                }
+
+                SelectUnit(entry.UnitData.Id);
+            }
+        }
+
         private void DrawInspectorPanel()
         {
             StateScriptNodeInspector.Draw(_graphView?.GetSelectedNodeData(), SelectedSourceSchema, MarkDirty);
+        }
+
+        internal void NotifyGraphNodeSelected(string nodeGuid)
+        {
+            _runtimeDataInspector.SetSelectedNode(nodeGuid);
+            _inspectorContainer?.MarkDirtyRepaint();
+            Repaint();
         }
 
         private void LoadData()
@@ -284,7 +415,12 @@ namespace CrystalMagic.Editor.Unit
                 _rows[i].EnsureValid();
 
             RefreshUnitEntries();
-            if (GetSelectedUnitEntry() == null)
+            if (Application.isPlaying)
+            {
+                ClearRuntimeSelection();
+                RefreshRuntimeUnitEntries();
+            }
+            else if (GetSelectedUnitEntry() == null)
             {
                 _selectedUnitDataId = _unitEntries.FirstOrDefault(entry => entry.UnitData != null)?.UnitData.Id ?? -1;
                 StateScriptData selectedData = GetSelectedData();
@@ -544,12 +680,14 @@ namespace CrystalMagic.Editor.Unit
         internal void MarkDirty()
         {
             _isDirty = true;
+            _runtimeDataInspector.Invalidate();
             SetStatus("Modified.");
             _inspectorContainer?.MarkDirtyRepaint();
         }
 
         internal void RebuildGraph()
         {
+            _runtimeDataInspector.Invalidate();
             if (_graphView == null)
                 return;
 
@@ -579,11 +717,31 @@ namespace CrystalMagic.Editor.Unit
         private void SelectUnit(int unitDataId)
         {
             SaveGraphViewTransform();
+            _selectedRuntimeEntity = Entity.Null;
             _selectedUnitDataId = unitDataId;
             _selectedSourceSchema = UnitSourceSchemaFactory.CreateForPrefab(GetSelectedUnitEntry()?.Prefab);
             StateScriptData data = GetSelectedData();
             _selectedGraphGuid = data?.Graphs.FirstOrDefault(graph => graph != null)?.Guid;
             RebuildGraph();
+        }
+
+        private void SelectRuntimeUnit(RuntimeUnitEntry entry)
+        {
+            if (entry == null)
+                return;
+
+            SaveGraphViewTransform();
+            _selectedRuntimeEntity = entry.Entity;
+            _selectedUnitDataId = entry.UnitDataId;
+            _selectedSourceSchema = UnitSourceSchemaFactory.CreateForPrefab(GetSelectedUnitEntry()?.Prefab);
+
+            StateScriptData data = GetSelectedData();
+            bool hasSelectedGraph = data?.Graphs.Any(graph => graph != null && string.Equals(graph.Guid, _selectedGraphGuid, StringComparison.Ordinal)) == true;
+            if (!hasSelectedGraph)
+                _selectedGraphGuid = data?.Graphs.FirstOrDefault(graph => graph != null)?.Guid;
+
+            RebuildGraph();
+            SetStatus($"Debugging {entry.DisplayName}.");
         }
 
         private StateScriptData GetSelectedData()
@@ -601,6 +759,7 @@ namespace CrystalMagic.Editor.Unit
         private void RefreshUnitEntries()
         {
             _unitEntries.Clear();
+            _runtimePrefabNames.Clear();
             if (!AssetDatabase.IsValidFolder(UnitPrefabDirectory))
                 return;
 
@@ -620,32 +779,122 @@ namespace CrystalMagic.Editor.Unit
                     Prefab = prefab,
                     UnitData = unitData,
                 });
+
+                if (unitData != null)
+                    _runtimePrefabNames[unitData.Id] = prefab.name;
             }
 
-            _unitEntries.Sort((left, right) => string.Compare(left.DisplayName, right.DisplayName, StringComparison.Ordinal));
+            _unitEntries.Sort((left, right) =>
+            {
+                int leftId = left.UnitData?.Id ?? int.MaxValue;
+                int rightId = right.UnitData?.Id ?? int.MaxValue;
+                int idComparison = leftId.CompareTo(rightId);
+                return idComparison != 0
+                    ? idComparison
+                    : string.Compare(left.DisplayName, right.DisplayName, StringComparison.Ordinal);
+            });
+        }
+
+        private void RefreshRuntimeUnitEntries()
+        {
+            _nextRuntimeUnitRefreshTime = EditorApplication.timeSinceStartup + RuntimeUnitRefreshIntervalSeconds;
+            _runtimeUnitEntries.Clear();
+            if (!IsRuntimeDebugEnabled)
+            {
+                _selectedRuntimeEntity = Entity.Null;
+                return;
+            }
+
+            World world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated)
+                return;
+
+            EntityManager entityManager = world.EntityManager;
+            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<UnitStateScriptComponent>());
+            using NativeArray<Entity> entities = query.ToEntityArray(Allocator.Temp);
+            bool selectedEntityFound = _selectedRuntimeEntity == Entity.Null;
+            for (int i = 0; i < entities.Length; i++)
+            {
+                Entity entity = entities[i];
+                UnitStateScriptComponent component = entityManager.GetComponentObject<UnitStateScriptComponent>(entity);
+                if (component == null)
+                    continue;
+
+                _runtimeUnitEntries.Add(new RuntimeUnitEntry
+                {
+                    Entity = entity,
+                    UnitDataId = component.UnitDataId,
+                    PrefabName = ResolveRuntimePrefabName(component.UnitDataId),
+                });
+                selectedEntityFound |= entity == _selectedRuntimeEntity;
+            }
+
+            _runtimeUnitEntries.Sort((left, right) =>
+            {
+                int nameComparison = string.Compare(left.PrefabName, right.PrefabName, StringComparison.Ordinal);
+                return nameComparison != 0 ? nameComparison : left.Entity.Index.CompareTo(right.Entity.Index);
+            });
+
+            if (!selectedEntityFound)
+            {
+                ClearRuntimeSelection();
+                RebuildGraph();
+                SetStatus("Selected runtime unit no longer exists.");
+            }
+        }
+
+        private string ResolveRuntimePrefabName(int unitDataId)
+        {
+            if (_runtimePrefabNames.TryGetValue(unitDataId, out string prefabName))
+                return prefabName;
+
+            UnitData unitData = EditorComponents.Data.Find<UnitData>(row => row.Id == unitDataId);
+            string prefabPath = unitData?.PrefabPath;
+            GameObject prefab = string.IsNullOrWhiteSpace(prefabPath)
+                ? null
+                : AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            prefabName = prefab != null
+                ? prefab.name
+                : string.IsNullOrWhiteSpace(prefabPath)
+                    ? "[Missing Prefab]"
+                    : Path.GetFileNameWithoutExtension(prefabPath);
+            _runtimePrefabNames[unitDataId] = prefabName;
+            return prefabName;
+        }
+
+        private void ClearRuntimeSelection()
+        {
+            _selectedRuntimeEntity = Entity.Null;
+            _selectedUnitDataId = -1;
+            _selectedGraphGuid = null;
+            _selectedSourceSchema = s_emptySourceSchema;
         }
 
         private StateScriptRuntime FindDebugRuntime()
         {
+            if (!IsRuntimeDebugEnabled || _selectedRuntimeEntity == Entity.Null)
+                return null;
+
             World world = World.DefaultGameObjectInjectionWorld;
             if (world == null || !world.IsCreated)
                 return null;
 
             EntityManager entityManager = world.EntityManager;
-            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<UnitStateScriptComponent>());
-            using NativeArray<Entity> entities = query.ToEntityArray(Allocator.Temp);
-            for (int i = 0; i < entities.Length; i++)
+            if (!entityManager.Exists(_selectedRuntimeEntity) ||
+                !entityManager.HasComponent<UnitStateScriptComponent>(_selectedRuntimeEntity))
             {
-                UnitStateScriptComponent component = entityManager.GetComponentObject<UnitStateScriptComponent>(entities[i]);
-                if (component == null || component.UnitDataId != _selectedUnitDataId)
-                    continue;
+                return null;
+            }
 
-                for (int runtimeIndex = 0; runtimeIndex < component.Runtimes.Count; runtimeIndex++)
-                {
-                    StateScriptRuntime runtime = component.Runtimes[runtimeIndex];
-                    if (string.Equals(runtime.Data.Guid, _selectedGraphGuid, StringComparison.Ordinal))
-                        return runtime;
-                }
+            UnitStateScriptComponent component = entityManager.GetComponentObject<UnitStateScriptComponent>(_selectedRuntimeEntity);
+            if (component == null)
+                return null;
+
+            for (int runtimeIndex = 0; runtimeIndex < component.Runtimes.Count; runtimeIndex++)
+            {
+                StateScriptRuntime runtime = component.Runtimes[runtimeIndex];
+                if (runtime != null && string.Equals(runtime.Data?.Guid, _selectedGraphGuid, StringComparison.Ordinal))
+                    return runtime;
             }
 
             return null;
@@ -957,6 +1206,243 @@ namespace CrystalMagic.Editor.Unit
             ComparatorRegistry.RegisterAll(factory);
             return factory;
         }
+    }
+
+    internal sealed class StateScriptRuntimeDataInspector
+    {
+        private const int MaxExpressionDepth = 16;
+
+        private static readonly UnitSourceSchema s_sourceSchema = UnitSourceSchemaFactory.CreateForAllSources();
+
+        private readonly Dictionary<string, HashSet<Type>> _nodeComponentTypes = new(StringComparer.Ordinal);
+        private StateScriptRuntime _runtime;
+        private string _selectedNodeGuid;
+
+        public void Refresh(StateScriptRuntime runtime)
+        {
+            if (ReferenceEquals(_runtime, runtime))
+                return;
+
+            _runtime = runtime;
+            _nodeComponentTypes.Clear();
+            if (runtime == null)
+                return;
+
+            for (int i = 0; i < runtime.NodesInTraversalOrder.Count; i++)
+                CollectNodeComponents(runtime.NodesInTraversalOrder[i].Data);
+        }
+
+        public void Invalidate()
+        {
+            _runtime = null;
+            _nodeComponentTypes.Clear();
+            _selectedNodeGuid = null;
+        }
+
+        public void SetSelectedNode(string nodeGuid)
+        {
+            _selectedNodeGuid = nodeGuid;
+        }
+
+        public void Draw(StateScriptRuntime runtime)
+        {
+            Refresh(runtime);
+            EditorGUILayout.Space(10f);
+            EditorGUILayout.LabelField("Component Data", EditorStyles.boldLabel);
+            if (runtime == null)
+            {
+                EditorGUILayout.HelpBox("Select a live unit and graph to inspect runtime data.", MessageType.Info);
+                return;
+            }
+
+            DrawComponentData(runtime);
+        }
+
+        private void DrawComponentData(StateScriptRuntime runtime)
+        {
+            UnitRuntimeDrawerContext context = new(runtime.EntityManager, runtime.Entity, string.Empty, null);
+            IReadOnlyList<IUnitRuntimeAttributeDrawer> drawers = UnitRuntimeAttributeDrawerFactory.GetDrawers();
+            bool hasComponent = false;
+            for (int i = 0; i < drawers.Count; i++)
+            {
+                IUnitRuntimeAttributeDrawer drawer = drawers[i];
+                if (!drawer.CanDraw(context))
+                    continue;
+
+                hasComponent = true;
+                bool isSelectedNodeComponent = drawer is IUnitRuntimeComponentDrawer componentDrawer &&
+                                               IsSelectedNodeComponent(componentDrawer.ComponentType);
+                DrawComponentDrawer(drawer, context, isSelectedNodeComponent);
+            }
+
+            if (!hasComponent)
+                EditorGUILayout.HelpBox("This unit does not expose any registered component data.", MessageType.Info);
+        }
+
+        private void DrawComponentDrawer(
+            IUnitRuntimeAttributeDrawer drawer,
+            UnitRuntimeDrawerContext context,
+            bool isSelectedNodeComponent)
+        {
+            Color originalColor = GUI.backgroundColor;
+            if (isSelectedNodeComponent)
+                GUI.backgroundColor = new Color(0.38f, 0.70f, 1f, 1f);
+
+            EditorGUILayout.BeginVertical("box");
+            using (new EditorGUI.DisabledScope(true))
+                drawer.Draw(context);
+            EditorGUILayout.EndVertical();
+            GUI.backgroundColor = originalColor;
+        }
+
+        private bool IsSelectedNodeComponent(Type componentType)
+        {
+            return componentType != null &&
+                   !string.IsNullOrWhiteSpace(_selectedNodeGuid) &&
+                   _nodeComponentTypes.TryGetValue(_selectedNodeGuid, out HashSet<Type> componentTypes) &&
+                   componentTypes.Contains(componentType);
+        }
+
+        private void CollectNodeComponents(StateScriptNodeData node)
+        {
+            if (node == null)
+                return;
+
+            switch (node)
+            {
+                case CompareStateScriptNodeData compare:
+                    CollectCondition(node.Guid, compare.Condition);
+                    break;
+
+                case MonitorStateScriptNodeData monitor:
+                    CollectCondition(node.Guid, monitor.Condition);
+                    break;
+
+                case SetValueStateScriptNodeData setValue:
+                    TrackSource(node.Guid, setValue.SetterKey);
+                    CollectSetValueInputs(node.Guid, setValue);
+                    break;
+
+                case RequestSkillActionNodeData requestSkill:
+                    TrackComponent(node.Guid, typeof(UnitSkillReleaseComponent));
+                    CollectSkillRequestInputs(node.Guid, requestSkill.SkillId, requestSkill.Input);
+                    break;
+
+                case RequestSkillWithAdditionActionNodeData requestSkillWithAddition:
+                    TrackComponent(node.Guid, typeof(UnitSkillReleaseComponent));
+                    CollectSkillRequestInputs(node.Guid, requestSkillWithAddition.SkillId, requestSkillWithAddition.Input);
+                    break;
+
+                case RequestInteractionActionNodeData requestInteraction:
+                    CollectInteractionInput(node.Guid, requestInteraction.Interaction);
+                    break;
+
+                case PublishGameEventStateScriptNodeData publishGameEvent:
+                    CollectExpression(node.Guid, publishGameEvent.Reference, 0);
+                    break;
+
+                case TimerStateScriptNodeData timer:
+                    CollectExpression(node.Guid, timer.Duration, 0);
+                    break;
+
+                case NumberMonitorStateScriptNodeData numberMonitor:
+                    CollectExpression(node.Guid, numberMonitor.Value, 0);
+                    break;
+            }
+        }
+
+        private void CollectCondition(string nodeGuid, ConditionConfig condition)
+        {
+            if (condition?.Inputs == null)
+                return;
+
+            for (int i = 0; i < condition.Inputs.Count; i++)
+                CollectExpression(nodeGuid, condition.Inputs[i], 0);
+        }
+
+        private void CollectSetValueInputs(string nodeGuid, SetValueStateScriptNodeData setValue)
+        {
+            IReadOnlyList<ValueExpression> values = setValue.Values != null && setValue.Values.Count > 0
+                ? setValue.Values
+                : new[] { setValue.Value };
+            for (int i = 0; i < values.Count; i++)
+                CollectExpression(nodeGuid, values[i], 0);
+        }
+
+        private void CollectSkillRequestInputs(string nodeGuid, ValueExpression skillId, SkillRequestInputData input)
+        {
+            CollectExpression(nodeGuid, skillId, 0);
+            if (input == null)
+                return;
+
+            CollectExpression(nodeGuid, input.Position, 0);
+            CollectExpression(nodeGuid, input.TargetEntity, 0);
+        }
+
+        private void CollectInteractionInput(string nodeGuid, InteractionRequestInput interaction)
+        {
+            if (interaction == null)
+                return;
+
+            if (interaction.Source == InteractionRequestSource.Getter)
+            {
+                TrackSource(nodeGuid, interaction.GetterKey);
+                return;
+            }
+
+            CollectExpression(nodeGuid, interaction.Target, 0);
+        }
+
+        private void CollectExpression(string nodeGuid, ValueExpression expression, int depth)
+        {
+            if (expression == null || depth >= MaxExpressionDepth)
+                return;
+
+            if (expression.Kind == ValueExpressionKind.Getter)
+                TrackSource(nodeGuid, expression.GetterKey);
+
+            if (expression.Inputs == null)
+                return;
+
+            for (int i = 0; i < expression.Inputs.Count; i++)
+                CollectExpression(nodeGuid, expression.Inputs[i], depth + 1);
+        }
+
+        private void TrackSource(string nodeGuid, string sourceKey)
+        {
+            if (string.IsNullOrWhiteSpace(sourceKey))
+                return;
+
+            if (s_sourceSchema.TryGet(sourceKey, out UnitSourceGetSchemaEntry getEntry))
+            {
+                TrackComponent(nodeGuid, getEntry.ComponentType);
+                return;
+            }
+
+            if (s_sourceSchema.TryGet(sourceKey, out UnitSourceSetSchemaEntry setEntry))
+            {
+                TrackComponent(nodeGuid, setEntry.ComponentType);
+                return;
+            }
+
+            if (s_sourceSchema.TryGetInteraction(sourceKey, out InteractionRequestGetSchemaEntry interactionEntry))
+                TrackComponent(nodeGuid, interactionEntry.ComponentType);
+        }
+
+        private void TrackComponent(string nodeGuid, Type componentType)
+        {
+            if (string.IsNullOrWhiteSpace(nodeGuid) || componentType == null)
+                return;
+
+            if (!_nodeComponentTypes.TryGetValue(nodeGuid, out HashSet<Type> componentTypes))
+            {
+                componentTypes = new HashSet<Type>();
+                _nodeComponentTypes.Add(nodeGuid, componentTypes);
+            }
+
+            componentTypes.Add(componentType);
+        }
+
     }
 
     internal static class StateScriptGraphValidator

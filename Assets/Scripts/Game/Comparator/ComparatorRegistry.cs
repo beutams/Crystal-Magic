@@ -8,10 +8,6 @@ public static class ComparatorRegistry
         if (factory == null)
             return;
 
-        factory.RegisterSource("UnitBuffStackSource", static () => new UnitBuffStackSource());
-        factory.RegisterSource("UnitHealthRatioSource", static () => new UnitHealthRatioSource());
-        factory.RegisterSource("UnitIsCastingSource", static () => new UnitIsCastingSource());
-        factory.RegisterSource("UnitIsControlledSource", static () => new UnitIsControlledSource());
         factory.RegisterCompareType("Equal", static () => new Equal());
         factory.RegisterCompareType("GreaterOrEqual", static () => new GreaterOrEqual());
         factory.RegisterCompareType("GreaterThan", static () => new GreaterThan());
@@ -34,6 +30,7 @@ public static class ComparatorRegistry
         factory.RegisterValueOperation("Max", static () => new MaxOperation());
         factory.RegisterValueOperation("Min", static () => new MinOperation());
         factory.RegisterValueOperation("Multiply", static () => new MultiplyOperation());
+        factory.RegisterValueOperation("ScaleFloat2", static () => new ScaleFloat2Operation());
         factory.RegisterValueOperation("Subtract", static () => new SubtractOperation());
     }
 }

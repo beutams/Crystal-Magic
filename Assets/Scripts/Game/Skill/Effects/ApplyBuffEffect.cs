@@ -18,13 +18,22 @@ namespace CrystalMagic.Game.Skill.Effects
                 return;
 
             EntityManager entityManager = context.EntityManager;
-            Entity target = context.TargetEntity;
+            Entity target = Data.TargetSource == BuffTargetSource.OtherEntity && context.HasOtherEntity
+                ? context.OtherEntity
+                : context.TargetEntity;
             if (target == Entity.Null || !entityManager.Exists(target))
                 return;
 
             BuffData buffData = DataComponent.Instance?.Get<BuffData>(Data.BuffId);
             if (buffData == null)
                 return;
+
+            if (Data.OnlyOncePerPersistentEffect &&
+                context.PersistentEffectAppliedBuffTargets != null &&
+                !TryRegisterPersistentBuffTarget(context.PersistentEffectAppliedBuffTargets, Data.BuffId, target))
+            {
+                return;
+            }
 
             int stackToApply = math.max(1, Data.StackCount);
             float duration = Data.DurationSeconds < 0f ? -1f : math.max(0f, Data.DurationSeconds);
@@ -41,6 +50,20 @@ namespace CrystalMagic.Game.Skill.Effects
                 originEntity,
                 sourceSkillId,
                 runtimeTriggerEntries);
+        }
+
+        private static bool TryRegisterPersistentBuffTarget(
+            System.Collections.Generic.Dictionary<int, System.Collections.Generic.HashSet<Entity>> targetsByBuff,
+            int buffId,
+            Entity target)
+        {
+            if (!targetsByBuff.TryGetValue(buffId, out System.Collections.Generic.HashSet<Entity> targets))
+            {
+                targets = new System.Collections.Generic.HashSet<Entity>();
+                targetsByBuff.Add(buffId, targets);
+            }
+
+            return targets.Add(target);
         }
 
         private static System.Collections.Generic.List<BuffTriggerRuntimeEntry> CreateRuntimeTriggerEntries(SkillContent context, BuffData buffData)

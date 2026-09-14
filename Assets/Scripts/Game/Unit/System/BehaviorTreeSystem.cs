@@ -1,14 +1,18 @@
 using CrystalMagic.Core;
 using Unity.Entities;
 
+[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateAfter(typeof(UnitPerceptionSystem))]
 partial class BehaviorTreeSystem : SystemBase
 {
     protected override void OnUpdate()
     {
-        if (GameGateComponent.Instance.IsSimulationLocked)
+        GameGateComponent gameGate = GameGateComponent.Instance;
+        if (gameGate != null && gameGate.IsSimulationLocked)
             return;
+
+        bool isDebugEnabled = DebugComponent.Instance.IsEnabled;
         float deltaTime = SystemAPI.Time.DeltaTime;
         EntityManager entityManager = EntityManager;
 
@@ -28,13 +32,16 @@ partial class BehaviorTreeSystem : SystemBase
                 continue;
 
             behaviorTree.Context ??= new BehaviorContext();
-            behaviorTree.Context.BeginFrame(entity, entityManager, deltaTime, sourceRuntime.Table);
+            behaviorTree.Context.BeginFrame(entity, entityManager, deltaTime, sourceRuntime.Table, isDebugEnabled);
 
             if (behaviorTree.IsInitialized && behaviorTree.Runtime != null)
                 behaviorTree.Runtime.Tick(behaviorTree.Context);
 
-            behaviorTree.CurrentNodeName = behaviorTree.Context.Debug.CurrentNodeName ?? "None";
-            behaviorTree.LastStatus = behaviorTree.Context.Debug.LastStatus ?? "None";
+            if (isDebugEnabled)
+            {
+                behaviorTree.CurrentNodeName = behaviorTree.Context.Debug.CurrentNodeName ?? "None";
+                behaviorTree.LastStatus = behaviorTree.Context.Debug.LastStatus ?? "None";
+            }
         }
     }
 }

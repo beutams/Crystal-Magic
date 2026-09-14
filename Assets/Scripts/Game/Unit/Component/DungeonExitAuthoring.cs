@@ -11,6 +11,7 @@ public sealed class DungeonExitAuthoring : MonoBehaviour
             AddComponent(entity, new DungeonExitComponent
             {
                 RegionId = -1,
+                TargetThemeId = -1,
                 TargetFloor = 1,
                 RequiresRoomClear = 1,
                 IsOpen = 0,
@@ -22,6 +23,7 @@ public sealed class DungeonExitAuthoring : MonoBehaviour
 public struct DungeonExitComponent : IComponentData
 {
     public int RegionId;
+    public int TargetThemeId;
     public int TargetFloor;
     public byte RequiresRoomClear;
     public byte IsOpen;

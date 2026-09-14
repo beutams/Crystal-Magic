@@ -8,13 +8,16 @@ namespace CrystalMagic.UI
     public readonly struct InteractionSelectUIOpenData
     {
         public InteractionSelectUIOpenData(
+            string dialog,
             IReadOnlyList<NPCSelectOptionData> options,
             Action<NPCSelectOptionData> selectAction)
         {
+            Dialog = dialog;
             Options = options;
             SelectAction = selectAction;
         }
 
+        public string Dialog { get; }
         public IReadOnlyList<NPCSelectOptionData> Options { get; }
         public Action<NPCSelectOptionData> SelectAction { get; }
     }
@@ -32,11 +35,13 @@ namespace CrystalMagic.UI
 
         private readonly List<InteractionSelectOptionDisplayData> _options = new();
 
+        public string Dialog { get; private set; } = string.Empty;
         public IReadOnlyList<InteractionSelectOptionDisplayData> Options => _options;
         public Action<NPCSelectOptionData> SelectAction { get; private set; }
 
         public void SetOpenData(InteractionSelectUIOpenData data)
         {
+            Dialog = data.Dialog ?? string.Empty;
             SelectAction = data.SelectAction;
             RebuildOptions(data.Options);
         }
@@ -51,6 +56,7 @@ namespace CrystalMagic.UI
 
         public override void Dispose()
         {
+            Dialog = string.Empty;
             SelectAction = null;
             _options.Clear();
         }

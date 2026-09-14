@@ -82,16 +82,6 @@ namespace CrystalMagic.Editor.Data
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            if (GUILayout.Button("Load", EditorStyles.toolbarButton, GUILayout.Width(44f)))
-            {
-                LoadData();
-            }
-
-            if (GUILayout.Button("Refresh Prefabs", EditorStyles.toolbarButton, GUILayout.Width(96f)))
-            {
-                RefreshRowsFromPrefabs(markDirtyWhenChanged: true);
-            }
-
             GUI.enabled = _isDirty;
             if (GUILayout.Button(_isDirty ? "Save *" : "Save", EditorStyles.toolbarButton, GUILayout.Width(52f)))
             {
@@ -253,67 +243,14 @@ namespace CrystalMagic.Editor.Data
                 _isDirty = true;
             }
 
-            EditorGUILayout.Space(6f);
-            DrawInteractionGraph(interaction);
+            EditorGUILayout.Space(4f);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField($"{interaction.Nodes?.Count ?? 0} node(s)", EditorStyles.miniLabel);
+            if (GUILayout.Button("Open Graph", GUILayout.Width(100f)))
+                NPCInteractionGraphWindow.Open(this, row, interaction);
+            EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.EndVertical();
-        }
-
-        private void DrawInteractionGraph(NPCInteractionData interaction)
-        {
-            EditorGUILayout.Space(4f);
-            EditorGUI.BeginChangeCheck();
-            interaction.EntryNodeGuid = DrawNodeGuidPopup("Entry Node", interaction, interaction.EntryNodeGuid, null);
-            if (EditorGUI.EndChangeCheck())
-            {
-                _isDirty = true;
-            }
-
-            EditorGUILayout.Space(4f);
-            DrawGraphTerminal("Start", new Color(0.23f, 0.49f, 0.76f));
-            Rect startRect = GUILayoutUtility.GetLastRect();
-
-            if (interaction.Nodes.Count == 0)
-            {
-                if (GUILayout.Button("Add Entry Node", GUILayout.Width(120f)))
-                {
-                    ShowAddEntryNodeMenu(interaction);
-                }
-                EditorGUILayout.HelpBox("No node configured.", MessageType.None);
-                return;
-            }
-
-            List<List<NPCInteractionNodeData>> levels = BuildNodeLevels(interaction);
-            List<GraphEdge> edges = CollectGraphEdges(interaction);
-            Dictionary<string, Rect> nodeRects = new Dictionary<string, Rect>(StringComparer.Ordinal);
-            for (int levelIndex = 0; levelIndex < levels.Count; levelIndex++)
-            {
-                EditorGUILayout.BeginHorizontal();
-                GUILayout.FlexibleSpace();
-
-                List<NPCInteractionNodeData> levelNodes = levels[levelIndex];
-                for (int i = 0; i < levelNodes.Count; i++)
-                {
-                    Rect nodeRect = DrawGraphNode(interaction, levelNodes[i]);
-                    nodeRects[levelNodes[i].Guid] = nodeRect;
-                    if (i < levelNodes.Count - 1)
-                    {
-                        GUILayout.Space(GraphNodeGap);
-                    }
-                }
-
-                GUILayout.FlexibleSpace();
-                EditorGUILayout.EndHorizontal();
-
-                if (levelIndex < levels.Count - 1)
-                {
-                    GUILayout.Space(GraphLevelGap);
-                }
-            }
-
-            DrawGraphTerminal("End", new Color(0.27f, 0.63f, 0.36f));
-            Rect endRect = GUILayoutUtility.GetLastRect();
-            DrawGraphLines(interaction, nodeRects, edges, startRect, endRect);
         }
 
         private void LoadData()
@@ -381,6 +318,17 @@ namespace CrystalMagic.Editor.Data
                 _statusText = $"Save failed: {ex.Message}";
                 Debug.LogError($"[NPCEditor] Save error:\n{ex}");
             }
+        }
+
+        internal void MarkDirtyFromGraph()
+        {
+            _isDirty = true;
+            Repaint();
+        }
+
+        internal void SaveDataFromGraph()
+        {
+            SaveData();
         }
 
         private void NormalizeRowIds()
@@ -560,7 +508,7 @@ namespace CrystalMagic.Editor.Data
                     DrawBranchList(interaction, node);
                     break;
                 case NPCEnterDungeonInteractionNodeData enterDungeon:
-                    enterDungeon.DungeonFloor = Mathf.Max(1, EditorGUILayout.IntField("Dungeon Floor", enterDungeon.DungeonFloor));
+                    enterDungeon.DungeonThemeId = Mathf.Max(0, EditorGUILayout.IntField("Dungeon Theme Id", enterDungeon.DungeonThemeId));
                     EditorGUILayout.HelpBox("This node immediately ends the current interaction and enters the dungeon flow.", MessageType.None);
                     break;
                 case NPCEnterTrainingGroundInteractionNodeData:
@@ -736,6 +684,8 @@ namespace CrystalMagic.Editor.Data
 
         private void DrawSelectNode(NPCInteractionData interaction, NPCInteractionNodeData parentNode, NPCSelectInteractionNodeData select)
         {
+            select.Dialog = EditorGUILayout.TextField("Dialog", select.Dialog ?? string.Empty);
+
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Options", EditorStyles.boldLabel);
             if (GUILayout.Button("Add Option", GUILayout.Width(92f)))
@@ -1196,9 +1146,9 @@ namespace CrystalMagic.Editor.Data
                 changed = true;
             }
 
-            if (node is NPCEnterDungeonInteractionNodeData enterDungeon && enterDungeon.DungeonFloor < 1)
+            if (node is NPCEnterDungeonInteractionNodeData enterDungeon && enterDungeon.DungeonThemeId < 0)
             {
-                enterDungeon.DungeonFloor = 1;
+                enterDungeon.DungeonThemeId = 0;
                 changed = true;
             }
 

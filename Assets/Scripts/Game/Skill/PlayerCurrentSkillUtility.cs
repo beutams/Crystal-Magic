@@ -60,6 +60,23 @@ public static class PlayerCurrentSkillUtility
         return true;
     }
 
+    public static bool TryGetCurrentInputType(
+        EntityManager entityManager,
+        Entity entity,
+        out SkillInputType inputType)
+    {
+        inputType = SkillInputType.None;
+        if (!TryGetCurrentSkillId(entityManager, entity, out int skillId) ||
+            !TryGetWorldSkillData(entityManager, out WorldSkillDataComponent worldSkillData) ||
+            !worldSkillData.TryGetSkill(skillId, out WorldSkillInfo skill))
+        {
+            return false;
+        }
+
+        inputType = skill.InputType;
+        return true;
+    }
+
     public static bool AddPendingExtraModifier(EntityManager entityManager, Entity entity, SkillModifierEntry entry)
     {
         if (!TryGetComponent(entityManager, entity, out PlayerCurrentSkillComponent component) ||

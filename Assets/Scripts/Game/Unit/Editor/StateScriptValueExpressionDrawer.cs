@@ -51,7 +51,6 @@ namespace CrystalMagic.Editor.Unit
             if (condition == null)
                 return;
 
-            condition.ConditionType = ConditionType.Necessary;
             EditorGUILayout.LabelField("Condition", EditorStyles.boldLabel);
             EditorGUILayout.BeginVertical("box");
             DrawCompareInputs(condition, sourceSchema, onChanged);

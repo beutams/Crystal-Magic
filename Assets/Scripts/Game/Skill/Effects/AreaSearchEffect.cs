@@ -13,7 +13,6 @@ namespace CrystalMagic.Game.Skill.Effects
     /// </summary>
     public sealed class AreaSearchEffect : Effect
     {
-        private static ComparatorFactory _comparatorFactory;
         private readonly List<UnitQueryHit> _hits = new();
 
         public new AreaSearchEffectData Data { get; }
@@ -26,6 +25,7 @@ namespace CrystalMagic.Game.Skill.Effects
                 return;
 
             EntityManager entityManager = GetEntityManager();
+            context.EntityManager = entityManager;
             if (!TryGetSearchCenter(context, entityManager, out float3 center))
                 return;
 
@@ -36,22 +36,38 @@ namespace CrystalMagic.Game.Skill.Effects
                 return;
             unitTree.QueryCircle(center, Data.Radius, _hits);
 
+            int nearestHitIndex = -1;
+            float nearestDistanceSq = float.MaxValue;
             for (int i = 0; i < _hits.Count; i++)
             {
                 UnitQueryHit hit = _hits[i];
-                if (!PassTargetConditions(
-                        Data.TargetConditions,
-                        hit.Entity,
-                        entityManager,
-                        context.OriginEntity,
-                        context.HasOriginEntity))
+                if (!EffectConditionUtility.Pass(Data.TargetConditions, context, hit.Entity))
                     continue;
 
-                Vector3 targetPosition = new(hit.Position.x, hit.Position.y, hit.Position.z);
-                SkillContent targetContext = context.CloneForTarget(hit.Entity, targetPosition);
-                targetContext.EntityManager = entityManager;
-                SkillExecutor.ExecuteEffects(Data.OnAfterSearch, targetContext);
+                if (!Data.OnlyNearestTarget)
+                {
+                    ExecuteTargetEffects(entityManager, context, hit);
+                    continue;
+                }
+
+                float distanceSq = math.lengthsq(hit.Position.xy - center.xy);
+                if (distanceSq >= nearestDistanceSq)
+                    continue;
+
+                nearestDistanceSq = distanceSq;
+                nearestHitIndex = i;
             }
+
+            if (nearestHitIndex >= 0)
+                ExecuteTargetEffects(entityManager, context, _hits[nearestHitIndex]);
+        }
+
+        private void ExecuteTargetEffects(EntityManager entityManager, SkillContent context, UnitQueryHit hit)
+        {
+            Vector3 targetPosition = new(hit.Position.x, hit.Position.y, hit.Position.z);
+            SkillContent targetContext = context.CloneForTarget(hit.Entity, targetPosition);
+            targetContext.EntityManager = entityManager;
+            SkillExecutor.ExecuteEffects(Data.OnAfterSearch, targetContext);
         }
 
         private static bool TryGetSearchCenter(SkillContent context, EntityManager entityManager, out float3 center)
@@ -73,35 +89,6 @@ namespace CrystalMagic.Game.Skill.Effects
 
             center = float3.zero;
             return false;
-        }
-
-        private static bool PassTargetConditions(
-            List<ConditionConfig> conditions,
-            Entity target,
-            EntityManager entityManager,
-            Entity originEntity,
-            bool hasOriginEntity)
-        {
-            if (conditions == null || conditions.Count == 0)
-                return true;
-
-            Comparator comparator = GetComparatorFactory().BuildComparator(
-                conditions,
-                target,
-                entityManager,
-                originEntity,
-                hasOriginEntity);
-            return comparator.GetResult();
-        }
-
-        private static ComparatorFactory GetComparatorFactory()
-        {
-            if (_comparatorFactory != null)
-                return _comparatorFactory;
-
-            _comparatorFactory = new ComparatorFactory();
-            ComparatorRegistry.RegisterAll(_comparatorFactory);
-            return _comparatorFactory;
         }
 
         private static EntityManager GetEntityManager()

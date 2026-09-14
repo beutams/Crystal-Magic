@@ -4,6 +4,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
+[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateBefore(typeof(BehaviorTreeSystem))]
 partial class UnitPerceptionSystem : SystemBase
@@ -12,14 +13,15 @@ partial class UnitPerceptionSystem : SystemBase
 
     protected override void OnUpdate()
     {
-        if (GameGateComponent.Instance.IsSimulationLocked ||
+        GameGateComponent gameGate = GameGateComponent.Instance;
+        if ((gameGate != null && gameGate.IsSimulationLocked) ||
             !UnitQueryUtility.TryGetTree(EntityManager, UnitQueryTreeKind.Unit, out UnitQueryTree unitTree))
         {
             return;
         }
 
         foreach (var (perception, transform, nearbyEntities, entity) in
-                 SystemAPI.Query<RefRO<UnitPerceptionComponent>, RefRO<LocalTransform>, DynamicBuffer<UnitPerceptionEntityElement>>()
+                 SystemAPI.Query<RefRO<UnitPerceptionComponent>, RefRO<LocalTransform>, DynamicBuffer<UnitPerceptionUnitElement>>()
                      .WithNone<UnitDeathComponent>()
                      .WithEntityAccess())
         {
@@ -43,7 +45,7 @@ partial class UnitPerceptionSystem : SystemBase
                     continue;
                 if (EntityManager.HasComponent<UnitDeathComponent>(hit.Entity) && EntityManager.IsComponentEnabled<UnitDeathComponent>(hit.Entity))
                     continue;
-                nearbyEntities.Add(new UnitPerceptionEntityElement { Value = hit.Entity });
+                nearbyEntities.Add(new UnitPerceptionUnitElement { Value = hit.Entity });
             }
         }
     }

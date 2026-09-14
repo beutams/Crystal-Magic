@@ -1,8 +1,8 @@
 using Unity.Entities;
 
-[UpdateInGroup(typeof(UnitDecisionSystemGroup))]
-[UpdateAfter(typeof(BehaviorTreeSystem))]
-[UpdateBefore(typeof(StateScriptSystem))]
+[RunInGameWorld(GameWorldKind.Dungeon)]
+[UpdateInGroup(typeof(UnitExecutionSystemGroup))]
+[UpdateBefore(typeof(SkillReleaseSystem))]
 partial struct UnitControlSystem : ISystem
 {
     public void OnUpdate(ref SystemState state)

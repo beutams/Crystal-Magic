@@ -66,6 +66,8 @@ namespace CrystalMagic.Game.Skill
             context.EntityManager = entityManager;
             context.HasOriginEntity = true;
             context.OriginEntity = request.OriginEntity;
+            context.HasOriginPositionSnapshot = false;
+            context.OriginPositionSnapshot = Vector3.zero;
             context.HasTargetEntity = false;
             context.TargetEntity = Entity.Null;
             context.HasTarget = false;
@@ -79,6 +81,27 @@ namespace CrystalMagic.Game.Skill
             context.HasOtherEntity = false;
             context.OtherEntity = Entity.Null;
             context.TriggerValue = 0f;
+        }
+    }
+
+    [FactoryKey(nameof(CommonSkill), 0, "Common Skill")]
+    public sealed class CommonSkill : Skill
+    {
+        public CommonSkill(ResolvedSkillData data) : base(data)
+        {
+        }
+
+        protected override bool BuildContext(in SkillReleaseRequest request, SkillContent context)
+        {
+            if (!request.HasTargetPosition)
+                return false;
+
+            SetPosition(
+                context,
+                true,
+                new Vector3(request.TargetPosition.x, request.TargetPosition.y, request.TargetPosition.z));
+            SetTargetEntity(context, request.HasTargetEntity, request.TargetEntity);
+            return true;
         }
     }
 }

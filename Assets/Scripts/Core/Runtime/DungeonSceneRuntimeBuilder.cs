@@ -24,8 +24,12 @@ namespace CrystalMagic.Core
         {
             RuntimeDungeonMapData mapData = RuntimeDataComponent.Instance.GetDungeonMapData();
             if (!mapData.HasLayout || mapData.SceneData == null)
+            {
+                DungeonFlowTiming.Fail("Runtime dungeon map data is unavailable");
                 yield break;
+            }
 
+            DungeonFlowTiming.BeginStage(14, "准备运行时根节点并等待 ECS Spawn Registry");
             DestroyExistingRoot();
 
             reportProgress?.Invoke(0.985f, "Building dungeon scene", "Creating runtime scene root");
@@ -56,31 +60,123 @@ namespace CrystalMagic.Core
 
             if (!hasSpawnRegistry)
             {
+                DungeonFlowTiming.EndStage(14, "ECS Spawn Registry 不可用");
+                DungeonFlowTiming.Fail("Entity spawn registry is unavailable in DungeonScene");
                 Debug.LogError("[DungeonSceneRuntimeBuilder] Entity spawn registry is unavailable in DungeonScene.");
                 runtimeRoot.Initialize(resourceOwnerKey, spawnedEntities);
                 yield break;
             }
+            DungeonFlowTiming.EndStage(14, "ECS Spawn Registry 已就绪");
 
+            DungeonFlowTiming.BeginStage(15, "构建地牢视觉、碰撞与场景对象");
             reportProgress?.Invoke(0.993f, "Building dungeon scene", "Building tile visuals");
-            DungeonTileVisualBuilder.Build(runtimeRoot, sceneData, resourceOwnerKey);
+            DungeonRuleTileVisualBuilder.Build(runtimeRoot, sceneData.TerrainVisual, resourceOwnerKey);
+            DungeonFogOfWarVisualBuilder.Build(runtimeRoot, mapData.FogData);
+            runtimeRoot.SetCameraWorldBounds(sceneData.CameraWorldBounds);
             yield return null;
 
-            reportProgress?.Invoke(0.994f, "Building dungeon scene", "Spawning environment");
+            reportProgress?.Invoke(0.994f, "Building dungeon scene", "Spawning obstacles");
+            SpawnObstacles(entityManager, runtimeRoot, sceneData, resourceOwnerKey, spawnedEntities);
+            yield return null;
+
+            reportProgress?.Invoke(0.995f, "Building dungeon scene", "Spawning environment");
             SpawnEnvironment(entityManager, sceneData, resourceOwnerKey, spawnedEntities);
             yield return null;
 
             reportProgress?.Invoke(0.996f, "Building dungeon scene", "Spawning scene objects");
             SpawnSceneObjects(entityManager, sceneData, resourceOwnerKey, spawnedEntities);
             yield return null;
+            DungeonFlowTiming.EndStage(15, "视觉、碰撞和场景对象已完成");
 
+            DungeonFlowTiming.BeginStage(16, "生成玩家、兴趣点与怪物");
             reportProgress?.Invoke(0.997f, "Building dungeon scene", "Spawning player");
             SpawnPlayer(entityManager, sceneData, spawnedEntities);
+            yield return null;
+
+            reportProgress?.Invoke(0.9975f, "Building dungeon scene", "Spawning interest point units");
+            SpawnInterestPoints(entityManager, sceneData, spawnedEntities);
             yield return null;
 
             reportProgress?.Invoke(0.998f, "Building dungeon scene", "Spawning monsters");
             SpawnMonsters(entityManager, sceneData, spawnedEntities);
 
             runtimeRoot.Initialize(resourceOwnerKey, spawnedEntities);
+            DungeonFlowTiming.EndStage(16, $"SpawnedEntities={spawnedEntities.Count}");
+        }
+
+        private static void SpawnObstacles(
+            EntityManager entityManager,
+            DungeonSceneRuntimeRoot runtimeRoot,
+            RuntimeDungeonSceneData sceneData,
+            string resourceOwnerKey,
+            List<Entity> spawnedEntities)
+        {
+            List<RuntimeDungeonObstacleSpawnData> obstacleSpawns = sceneData.ObstacleSpawns;
+            for (int obstacleIndex = 0; obstacleIndex < obstacleSpawns.Count; obstacleIndex++)
+            {
+                RuntimeDungeonObstacleSpawnData obstacle = obstacleSpawns[obstacleIndex];
+                if (obstacle == null)
+                    continue;
+
+                if (obstacle.Visuals != null)
+                {
+                    for (int visualIndex = 0; visualIndex < obstacle.Visuals.Count; visualIndex++)
+                    {
+                        RuntimeDungeonObstacleVisualSpawnData visual = obstacle.Visuals[visualIndex];
+                        if (visual == null)
+                            continue;
+
+                        SpawnObstacleSpriteRenderer(runtimeRoot, visual, resourceOwnerKey, obstacleIndex, visualIndex);
+                    }
+                }
+
+                if (obstacle.CollisionCells == null)
+                    continue;
+
+                for (int cellIndex = 0; cellIndex < obstacle.CollisionCells.Count; cellIndex++)
+                {
+                    if (!EntitySpawnRegistryUtility.TryInstantiateEnvironment(
+                            entityManager,
+                            new FixedString128Bytes("Collider"),
+                            out Entity colliderEntity))
+                    {
+                        continue;
+                    }
+
+                    Vector3 colliderPosition = ToWorldCell(sceneData, obstacle.CollisionCells[cellIndex]);
+                    SetOrAddLocalTransform(entityManager, colliderEntity, colliderPosition);
+                    DungeonSceneVisualUtility.HideVisual(entityManager, colliderEntity);
+                    ApplyBoxColliderSize(entityManager, colliderEntity, new Vector3(1f, 1f, 1.6f));
+                    spawnedEntities.Add(colliderEntity);
+                }
+            }
+        }
+
+        private static void SpawnObstacleSpriteRenderer(
+            DungeonSceneRuntimeRoot runtimeRoot,
+            RuntimeDungeonObstacleVisualSpawnData visual,
+            string resourceOwnerKey,
+            int obstacleIndex,
+            int visualIndex)
+        {
+            if (runtimeRoot == null || string.IsNullOrWhiteSpace(visual.SpritePath))
+                return;
+
+            string spriteReference = string.IsNullOrWhiteSpace(visual.SpriteName)
+                ? visual.SpritePath
+                : $"{visual.SpritePath}|{visual.SpriteName}";
+            Sprite sprite = ResourceComponent.Instance?.LoadSprite(spriteReference, resourceOwnerKey);
+            if (sprite == null)
+                return;
+
+            GameObject visualObject = new($"ObstacleSprite_{obstacleIndex}_{visualIndex}");
+            visualObject.transform.SetParent(runtimeRoot.transform, false);
+            visualObject.transform.localPosition = visual.WorldPosition;
+            visualObject.transform.localRotation = Quaternion.Euler(0f, 0f, visual.RotationQuarterTurns * 90f);
+            SpriteRenderer renderer = visualObject.AddComponent<SpriteRenderer>();
+            renderer.sprite = sprite;
+            renderer.flipX = visual.FlippedX;
+            renderer.sortingOrder = Mathf.RoundToInt(-visual.SortAnchorWorldY * 100f) + visual.LayerIndex;
         }
 
         private static void SpawnEnvironment(
@@ -173,6 +269,7 @@ namespace CrystalMagic.Core
                     {
                         DungeonExitComponent exit = entityManager.GetComponentData<DungeonExitComponent>(entity);
                         exit.RegionId = sceneObject.RegionId;
+                        exit.TargetThemeId = sceneObject.TargetThemeId;
                         exit.TargetFloor = Mathf.Max(1, sceneObject.TargetFloor);
                         exit.RequiresRoomClear = sceneObject.RequiresRoomClear ? (byte)1 : (byte)0;
                         exit.IsOpen = 0;
@@ -255,6 +352,68 @@ namespace CrystalMagic.Core
             }
         }
 
+        private static void SpawnInterestPoints(
+            EntityManager entityManager,
+            RuntimeDungeonSceneData sceneData,
+            List<Entity> spawnedEntities)
+        {
+            if (sceneData.InterestPointSpawns == null || sceneData.InterestPointSpawns.Count == 0)
+                return;
+
+            List<Entity> pointEntities = new(sceneData.InterestPointSpawns.Count);
+            for (int index = 0; index < sceneData.InterestPointSpawns.Count; index++)
+            {
+                RuntimeDungeonInterestPointSpawnData spawn = sceneData.InterestPointSpawns[index];
+                if (spawn == null)
+                    continue;
+
+                Entity pointEntity = entityManager.CreateEntity();
+                entityManager.AddComponentData(pointEntity, LocalTransform.FromPositionRotationScale(
+                    new float3(spawn.WorldPosition.x, spawn.WorldPosition.y, spawn.WorldPosition.z),
+                    quaternion.identity,
+                    1f));
+                entityManager.AddComponentData(pointEntity, new UnitFactionComponent
+                {
+                    Value = UnitFactionType.Npc,
+                });
+                entityManager.AddComponentObject(pointEntity, new UnitVariableComponent());
+                entityManager.AddComponentObject(pointEntity, new UnitBehaviorTreeComponent
+                {
+                    UnitDataId = DungeonPatrolRuntimeUtility.InterestPointUnitDataId,
+                });
+                entityManager.AddComponentObject(pointEntity, new UnitStateScriptComponent
+                {
+                    UnitDataId = DungeonPatrolRuntimeUtility.InterestPointUnitDataId,
+                });
+                entityManager.AddComponentObject(pointEntity, new DungeonInterestPointComponent
+                {
+                    EncounterId = spawn.EncounterId,
+                    SquadId = spawn.SquadId,
+                    SpawnDistance = Mathf.Max(0f, spawn.SpawnDistance),
+                    PatrolSpeed = Mathf.Max(0f, spawn.PatrolSpeed),
+                    ArrivalDistance = Mathf.Max(0.05f, spawn.ArrivalDistance),
+                    MemberSpawns = spawn.MemberSpawns == null
+                        ? new List<RuntimeDungeonMonsterSpawnData>()
+                        : new List<RuntimeDungeonMonsterSpawnData>(spawn.MemberSpawns),
+                });
+                entityManager.AddComponent<DungeonRuntimeOwnedEntity>(pointEntity);
+
+                pointEntities.Add(pointEntity);
+                spawnedEntities.Add(pointEntity);
+            }
+
+            for (int pointIndex = 0; pointIndex < pointEntities.Count; pointIndex++)
+            {
+                Entity pointEntity = pointEntities[pointIndex];
+                DungeonInterestPointComponent point = entityManager.GetComponentObject<DungeonInterestPointComponent>(pointEntity);
+                for (int targetIndex = 0; targetIndex < pointEntities.Count; targetIndex++)
+                {
+                    if (targetIndex != pointIndex)
+                        point.CandidateTargets.Add(pointEntities[targetIndex]);
+                }
+            }
+        }
+
         private static bool TryInstantiateUnit(EntityManager entityManager, string prefabName, Vector3 worldPosition, out Entity entity)
         {
             if (!EntitySpawnRegistryUtility.TryInstantiateUnit(entityManager, new FixedString128Bytes(prefabName), out entity))
@@ -286,6 +445,18 @@ namespace CrystalMagic.Core
                     rotation,
                     1f));
             }
+        }
+
+        private static Vector3 ToWorldCell(RuntimeDungeonSceneData sceneData, Vector2Int cell)
+        {
+            float cellSize = sceneData.CellWorldSize > 0f
+                ? sceneData.CellWorldSize
+                : 1f;
+            Vector2 worldOrigin = sceneData.TerrainVisual?.WorldOrigin ?? Vector2.zero;
+            return new Vector3(
+                worldOrigin.x + (cell.x + 0.5f) * cellSize,
+                worldOrigin.y + (cell.y + 0.5f) * cellSize,
+                0f);
         }
 
         private static void ApplyBoxColliderSize(EntityManager entityManager, Entity entity, Vector3 size)

@@ -26,6 +26,7 @@ namespace CrystalMagic.Core {
         private Dictionary<UIBase, UIMvcContext> _mvcContexts = new();
         private Dictionary<string, Type> _typeCache = new();
         private UIGroupConfig _config;
+        private UIBase _debugUI;
         private bool _uiInputLocked;
         private int _currentSceneScopeId;
         private string _currentSceneName = string.Empty;
@@ -60,6 +61,35 @@ namespace CrystalMagic.Core {
 
             _uiInputLocked = GameGateComponent.Instance.IsUIInputLocked;
             ApplyUIInputState();
+            DebugComponent.Instance.EnabledChanged += HandleDebugEnabledChanged;
+            if (DebugComponent.Instance.IsEnabled)
+                OpenPersistentDebugUI();
+        }
+
+        private void OpenPersistentDebugUI()
+        {
+            if (_debugUI != null)
+                return;
+
+            _debugUI = Open<DebugUI>();
+            SetLifetime(_debugUI, UILifetime.Persistent);
+        }
+
+        private void ClosePersistentDebugUI()
+        {
+            if (_debugUI == null)
+                return;
+
+            ReleaseUI(_debugUI);
+            _debugUI = null;
+        }
+
+        private void HandleDebugEnabledChanged(bool isEnabled)
+        {
+            if (isEnabled)
+                OpenPersistentDebugUI();
+            else
+                ClosePersistentDebugUI();
         }
 
         private void LoadConfigFromPath()
@@ -398,48 +428,19 @@ namespace CrystalMagic.Core {
         }
 
         /// <summary>
-        /// 关闭 UI
+        /// 关闭 UI 并归还对象池。
         /// </summary>
         public void CloseUI(UIBase panel)
         {
-            if (panel == null)
-                return;
-
-            if (_mvcContexts.TryGetValue(panel, out UIMvcContext context) && context.Parent != null)
-            {
-                string childGroupName = string.IsNullOrEmpty(context.GroupName) ? DefaultGroupName : context.GroupName;
-                ReleaseContextTree(context);
-                RefreshGroupSortingOrders(childGroupName);
-                return;
-            }
-
-            string groupName = GetGroupNameByUIName(panel.GetType().Name);
-            if (string.IsNullOrEmpty(groupName))
-                groupName = DefaultGroupName;
-
-            CloseUI(groupName, panel);
+            ReleaseUI(panel);
         }
 
         /// <summary>
-        /// 关闭 UI（按组名）
+        /// 关闭 UI 并归还对象池。分组由面板当前上下文决定。
         /// </summary>
         public void CloseUI(string groupName, UIBase panel)
         {
-            if (panel == null)
-                return;
-
-            if (_mvcContexts.TryGetValue(panel, out UIMvcContext context) && context.Parent != null)
-            {
-                string childGroupName = string.IsNullOrEmpty(context.GroupName) ? DefaultGroupName : context.GroupName;
-                ReleaseContextTree(context);
-                RefreshGroupSortingOrders(childGroupName);
-                return;
-            }
-
-            if (_groups.TryGetValue(groupName, out UIGroup group))
-            {
-                group.CloseUI(panel);
-            }
+            ReleaseUI(panel);
         }
 
         public void ReleaseUI(UIBase panel)
@@ -447,7 +448,10 @@ namespace CrystalMagic.Core {
             if (panel == null)
                 return;
 
-            if (_mvcContexts.TryGetValue(panel, out UIMvcContext context) && context.Parent != null)
+            if (!_mvcContexts.TryGetValue(panel, out UIMvcContext context))
+                return;
+
+            if (context.Parent != null)
             {
                 string childGroupName = string.IsNullOrEmpty(context.GroupName) ? DefaultGroupName : context.GroupName;
                 ReleaseContextTree(context);
@@ -455,9 +459,25 @@ namespace CrystalMagic.Core {
                 return;
             }
 
-            CloseUI(panel);
+            CloseRootPanelForRelease(panel);
             DisconnectMvc(panel);
             PoolComponent.Instance.Release(panel.gameObject);
+        }
+
+        private void CloseRootPanelForRelease(UIBase panel)
+        {
+            if (panel == null)
+                return;
+
+            string groupName = GetGroupNameByUIName(panel.GetType().Name);
+            if (string.IsNullOrEmpty(groupName))
+                groupName = DefaultGroupName;
+
+            if (_groups.TryGetValue(groupName, out UIGroup group))
+                group.CloseUI(panel);
+
+            // 分组中已找不到面板时，仍须完成关闭回调与子面板清理。
+            CloseRootPanel(panel);
         }
 
         /// <summary>
@@ -920,6 +940,8 @@ namespace CrystalMagic.Core {
 
         public override void Cleanup()
         {
+            DebugComponent.Instance.EnabledChanged -= HandleDebugEnabledChanged;
+
             if (EventComponent.Instance != null)
             {
                 EventComponent.Instance.Unsubscribe<UISceneScopeChangedEvent>(HandleSceneScopeChanged);

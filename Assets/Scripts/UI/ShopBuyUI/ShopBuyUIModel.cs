@@ -25,6 +25,7 @@ namespace CrystalMagic.UI
         public string IconPath { get; private set; }
         public int Quantity { get; private set; }
         public int MaxBuyCount { get; private set; }
+        public long TotalCost => (long)Price * Quantity;
 
         public void SetOpenData(ShopBuyUIOpenData data)
         {

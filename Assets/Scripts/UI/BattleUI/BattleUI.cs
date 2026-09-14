@@ -9,6 +9,7 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
     private readonly List<BattleUI_SkillItemView> _skillItemViews = new();
     private float _hpMaskBaseWidth = -1f;
     private float _mpMaskBaseWidth = -1f;
+    private float _chantMaskBaseWidth = -1f;
 
     public event Action<int> PropShortcutUseRequested;
     public event Action<int, int> PropShortcutBindRequested;
@@ -17,6 +18,7 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
     {
         EnsureSkillItemTemplateView();
         CacheBarWidths();
+        UI.Bar.GameObject.SetActive(false);
         base.OnOpen();
     }
 
@@ -38,7 +40,8 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
             return;
 
         RenderSkillChain(Model.SkillItems);
-        RenderVitalityAndMana(Model.HpRatio, Model.MpRatio, Model.CurrentHp, Model.MaxHp, Model.CurrentMp, Model.MaxMp);
+        RenderChantProgress(Model.IsChanting, Model.ChantProgress);
+        RenderVitalityAndMana(Model.HpRatio, Model.MpRatio, Model.CurrentHp, Model.CurrentMp);
     }
 
     private void RenderSkillChain(IReadOnlyList<BattleSkillDisplayData> skillItems)
@@ -66,70 +69,71 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
         }
 
         BattleUI_SkillItemView templateView = UI.SkillChain_Viewport_Content_SkillItem.GameObject.GetComponent<BattleUI_SkillItemView>();
-        if (templateView == null)
-            return;
-
         UISubViewBase.EnsurePoolCapacity(templateView, itemCount, itemCount);
 
         while (_skillItemViews.Count < itemCount)
         {
             BattleUI_SkillItemView itemView = UISubViewBase.AcquireFromPool(templateView, UI.SkillChain_Viewport_Content.GameObject.transform);
-            if (itemView == null)
-                break;
-
             _skillItemViews.Add(itemView);
         }
     }
 
     private void EnsureSkillItemTemplateView()
     {
-        if (UI.SkillChain_Viewport_Content_SkillItem.GameObject == null)
-            return;
-
         if (UI.SkillChain_Viewport_Content_SkillItem.GameObject.GetComponent<BattleUI_SkillItemView>() == null)
             UI.SkillChain_Viewport_Content_SkillItem.GameObject.AddComponent<BattleUI_SkillItemView>();
     }
 
-    private void RenderVitalityAndMana(float hpRatio, float mpRatio, float currentHp, float maxHp, float currentMp, float maxMp)
+    private void RenderChantProgress(bool isChanting, float progress)
+    {
+        UI.Bar.GameObject.SetActive(isChanting);
+        SetMaskWidth(UI.Bar_BarMask.RectTransform, progress, _chantMaskBaseWidth);
+    }
+
+    private void RenderVitalityAndMana(float hpRatio, float mpRatio, float currentHp, float currentMp)
     {
         CacheBarWidths();
         SetMaskWidth(UI.HP_BarMask.RectTransform, hpRatio, _hpMaskBaseWidth);
         SetMaskWidth(UI.MP_BarMask.RectTransform, mpRatio, _mpMaskBaseWidth);
-        SetValueText(UI.HP_Value.TextMeshProUGUI, currentHp, maxHp);
-        SetValueText(UI.MP_Value.TextMeshProUGUI, currentMp, maxMp);
+        SetValueText(UI.HP_Value.TextMeshProUGUI, currentHp);
+        SetValueText(UI.MP_Value.TextMeshProUGUI, currentMp);
     }
 
     private void CacheBarWidths()
     {
-        if (_hpMaskBaseWidth <= 0f && UI.HP_BarMask.RectTransform != null)
+        if (_hpMaskBaseWidth <= 0f)
         {
             _hpMaskBaseWidth = UI.HP_BarMask.RectTransform.rect.width;
             if (_hpMaskBaseWidth <= 0f)
                 _hpMaskBaseWidth = UI.HP_BarMask.RectTransform.sizeDelta.x;
         }
 
-        if (_mpMaskBaseWidth <= 0f && UI.MP_BarMask.RectTransform != null)
+        if (_mpMaskBaseWidth <= 0f)
         {
             _mpMaskBaseWidth = UI.MP_BarMask.RectTransform.rect.width;
             if (_mpMaskBaseWidth <= 0f)
                 _mpMaskBaseWidth = UI.MP_BarMask.RectTransform.sizeDelta.x;
         }
+
+        if (_chantMaskBaseWidth <= 0f)
+        {
+            _chantMaskBaseWidth = UI.Bar_BarMask.RectTransform.rect.width;
+            if (_chantMaskBaseWidth <= 0f)
+                _chantMaskBaseWidth = UI.Bar_BarMask.RectTransform.sizeDelta.x;
+        }
     }
 
     private static void SetMaskWidth(RectTransform rectTransform, float ratio, float baseWidth)
     {
-        if (rectTransform == null || baseWidth <= 0f)
+        if (baseWidth <= 0f)
             return;
 
         rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, baseWidth * Mathf.Clamp01(ratio));
     }
 
-    private static void SetValueText(TMPro.TextMeshProUGUI text, float current, float max)
+    private static void SetValueText(TMPro.TextMeshProUGUI text, float current)
     {
-        if (text == null)
-            return;
-
-        text.text = $"{FormatValue(current)}/{FormatValue(max)}";
+        text.text = FormatValue(current);
     }
 
     private static string FormatValue(float value)
@@ -152,58 +156,29 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
 
 public class BattleUI_SkillItemView : UISubView<BattleUI_SkillItemData>
 {
-    private float _baseBarMaskWidth = -1f;
-
     public void Render(BattleSkillDisplayData data)
     {
         Rebind();
-        EnsureBarWidthCached();
 
         if (data == null)
         {
-            UI.Skill.Image.sprite = null;
+            UI.SkillMask_Skill.Image.sprite = null;
             UI.Effect_EffectIcon.Image.sprite = null;
-            UI.Index_IndexNum.TextMeshProUGUI.text = string.Empty;
-            SetSelected(false, false, 0f);
+            UI.Effect.GameObject.SetActive(false);
+            UI.Effect_EffectIcon.GameObject.SetActive(false);
+            UI.IndexNum.TextMeshProUGUI.text = string.Empty;
+            UI.Select.GameObject.SetActive(false);
             return;
         }
 
-        UI.Skill.Image.sprite = LoadIcon(data.SkillIconPath);
-        UI.Effect_EffectIcon.Image.sprite = LoadIcon(data.AdditionIconPath);
-        UI.Index_IndexNum.TextMeshProUGUI.text = data.DisplayIndex.ToString();
-        SetSelected(data.IsSelected, data.ShowChantProgress, data.ChantProgress);
-    }
+        UI.SkillMask_Skill.Image.sprite = LoadIcon(data.SkillIconPath);
+        UI.Effect.GameObject.SetActive(data.CanShowAddition);
 
-    private void SetSelected(bool selected, bool showChantProgress, float chantProgress)
-    {
-        if (UI.Select.GameObject != null)
-            UI.Select.GameObject.SetActive(selected);
-
-        if (UI.Select_BarBackground.GameObject != null)
-            UI.Select_BarBackground.GameObject.SetActive(selected && showChantProgress);
-
-        if (UI.Select_BarMask.GameObject != null)
-            UI.Select_BarMask.GameObject.SetActive(selected && showChantProgress);
-
-        SetMaskWidth(UI.Select_BarMask.RectTransform, showChantProgress ? chantProgress : 0f, _baseBarMaskWidth);
-    }
-
-    private void EnsureBarWidthCached()
-    {
-        if (_baseBarMaskWidth > 0f || UI.Select_BarMask.RectTransform == null)
-            return;
-
-        _baseBarMaskWidth = UI.Select_BarMask.RectTransform.rect.width;
-        if (_baseBarMaskWidth <= 0f)
-            _baseBarMaskWidth = UI.Select_BarMask.RectTransform.sizeDelta.x;
-    }
-
-    private static void SetMaskWidth(RectTransform rectTransform, float ratio, float baseWidth)
-    {
-        if (rectTransform == null || baseWidth <= 0f)
-            return;
-
-        rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, baseWidth * Mathf.Clamp01(ratio));
+        Sprite additionIcon = LoadIcon(data.AdditionIconPath);
+        UI.Effect_EffectIcon.Image.sprite = additionIcon;
+        UI.Effect_EffectIcon.GameObject.SetActive(data.CanShowAddition && additionIcon != null);
+        UI.IndexNum.TextMeshProUGUI.text = data.DisplayIndex.ToString();
+        UI.Select.GameObject.SetActive(data.IsSelected);
     }
 
     private Sprite LoadIcon(string iconPath)
@@ -211,36 +186,28 @@ public class BattleUI_SkillItemView : UISubView<BattleUI_SkillItemData>
         if (string.IsNullOrEmpty(iconPath))
             return null;
 
-        return LoadManagedResource<Sprite>(iconPath);
+        return LoadManagedSprite(iconPath);
     }
 }
 
 public class BattleUI_SkillItemData : UIData
 {
     public UINode Background;
-    public UINode Select;
-    public UINode Select_Border;
-    public UINode Select_BarBackground;
-    public UINode Select_BarMask;
-    public UINode Select_BarMask_Bar;
-    public UINode Skill;
+    public UINode SkillMask;
+    public UINode SkillMask_Skill;
     public UINode Effect;
     public UINode Effect_EffectIcon;
-    public UINode Index;
-    public UINode Index_IndexNum;
+    public UINode IndexNum;
+    public UINode Select;
 
     public override void Bind(Transform root)
     {
         Background = UINode.From(Find(root, "Background"));
-        Select = UINode.From(Find(root, "Select"));
-        Select_Border = UINode.From(Find(root, "Select/Border"));
-        Select_BarBackground = UINode.From(Find(root, "Select/BarBackground"));
-        Select_BarMask = UINode.From(Find(root, "Select/BarMask"));
-        Select_BarMask_Bar = UINode.From(Find(root, "Select/BarMask/Bar"));
-        Skill = UINode.From(Find(root, "Skill"));
+        SkillMask = UINode.From(Find(root, "SkillMask"));
+        SkillMask_Skill = UINode.From(Find(root, "SkillMask/Skill"));
         Effect = UINode.From(Find(root, "Effect"));
         Effect_EffectIcon = UINode.From(Find(root, "Effect/EffectIcon"));
-        Index = UINode.From(Find(root, "Index"));
-        Index_IndexNum = UINode.From(Find(root, "Index/IndexNum"));
+        IndexNum = UINode.From(Find(root, "IndexNum"));
+        Select = UINode.From(Find(root, "Select"));
     }
 }

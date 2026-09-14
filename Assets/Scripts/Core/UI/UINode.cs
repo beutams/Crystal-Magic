@@ -23,6 +23,7 @@ namespace CrystalMagic.Core {
         public InputField InputField;
         public TMP_InputField TMP_InputField;
         public TextMeshProUGUI TextMeshProUGUI;
+        public CanvasGroup CanvasGroup;
 
         public ButtonPlus ButtonPlus;
 
@@ -40,6 +41,7 @@ namespace CrystalMagic.Core {
             node.InputField = go.GetComponent<InputField>();
             node.TMP_InputField = go.GetComponent<TMP_InputField>();
             node.TextMeshProUGUI = go.GetComponent<TextMeshProUGUI>();
+            node.CanvasGroup = go.GetComponent<CanvasGroup>();
             node.ButtonPlus = go.GetComponent<ButtonPlus>();
             return node;
         }

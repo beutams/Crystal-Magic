@@ -9,7 +9,7 @@ public static class BehaviorTreeRegistry
 {
     private static readonly string[] s_behaviorNodeDataTypeOrder =
     {
-        "Root", "Selector", "Sequence", "Parallel", "Check", "Set", "Wait",
+        "Root", "Selector", "Sequence", "Parallel", "Check", "HitCheck", "Set", "Wait",
         "Inverter", "Succeeder", "Failer", "Repeater", "UntilSuccess", "UntilFailure", "Cooldown", "Timeout",
     };
 
@@ -20,6 +20,7 @@ public static class BehaviorTreeRegistry
         { "Sequence", typeof(SequenceBehaviorNodeData) },
         { "Parallel", typeof(ParallelBehaviorNodeData) },
         { "Check", typeof(CheckBehaviorNodeData) },
+        { "HitCheck", typeof(HitCheckBehaviorNodeData) },
         { "Set", typeof(SetBehaviorNodeData) },
         { "Wait", typeof(WaitBehaviorNodeData) },
         { "Inverter", typeof(InverterBehaviorNodeData) },
@@ -39,6 +40,7 @@ public static class BehaviorTreeRegistry
         { typeof(SequenceBehaviorNodeData), "Sequence" },
         { typeof(ParallelBehaviorNodeData), "Parallel" },
         { typeof(CheckBehaviorNodeData), "Check" },
+        { typeof(HitCheckBehaviorNodeData), "HitCheck" },
         { typeof(SetBehaviorNodeData), "Set" },
         { typeof(WaitBehaviorNodeData), "Wait" },
         { typeof(InverterBehaviorNodeData), "Inverter" },
@@ -54,7 +56,7 @@ public static class BehaviorTreeRegistry
     private static readonly Dictionary<string, string> s_behaviorNodeDataDisplayNames = new(StringComparer.Ordinal)
     {
         { "Root", "Root" }, { "Selector", "Selector" }, { "Sequence", "Sequence" }, { "Parallel", "Parallel" },
-        { "Check", "Check" }, { "Set", "Set" }, { "Wait", "Wait" },
+        { "Check", "Check" }, { "HitCheck", "Hit Check" }, { "Set", "Set" }, { "Wait", "Wait" },
         { "Inverter", "Inverter" }, { "Succeeder", "Succeeder" }, { "Failer", "Failer" },
         { "Repeater", "Repeater" }, { "UntilSuccess", "Until Success" }, { "UntilFailure", "Until Failure" },
         { "Cooldown", "Cooldown" }, { "Timeout", "Timeout" },
@@ -67,6 +69,7 @@ public static class BehaviorTreeRegistry
         new("Sequence", "Sequence", typeof(SequenceBehaviorNodeData), 1),
         new("Parallel", "Parallel", typeof(ParallelBehaviorNodeData), 2),
         new("Check", "Check", typeof(CheckBehaviorNodeData), 10),
+        new("HitCheck", "Hit Check", typeof(HitCheckBehaviorNodeData), 13),
         new("Set", "Set", typeof(SetBehaviorNodeData), 11),
         new("Wait", "Wait", typeof(WaitBehaviorNodeData), 12),
         new("Inverter", "Inverter", typeof(InverterBehaviorNodeData), 20),
@@ -98,6 +101,7 @@ public static class BehaviorTreeRegistry
         factory.Register("Sequence", static () => new SequenceBehaviorNodeData());
         factory.Register("Parallel", static () => new ParallelBehaviorNodeData());
         factory.Register("Check", static () => new CheckBehaviorNodeData());
+        factory.Register("HitCheck", static () => new HitCheckBehaviorNodeData());
         factory.Register("Set", static () => new SetBehaviorNodeData());
         factory.Register("Wait", static () => new WaitBehaviorNodeData());
         factory.Register("Inverter", static () => new InverterBehaviorNodeData());
@@ -120,6 +124,7 @@ public static class BehaviorTreeRegistry
         factory.Register(typeof(SequenceBehaviorNodeData), static data => new SequenceBehaviorNode((SequenceBehaviorNodeData)data));
         factory.Register(typeof(ParallelBehaviorNodeData), static data => new ParallelBehaviorNode((ParallelBehaviorNodeData)data));
         factory.Register(typeof(CheckBehaviorNodeData), static data => new CheckBehaviorNode((CheckBehaviorNodeData)data));
+        factory.Register(typeof(HitCheckBehaviorNodeData), static data => new HitCheckBehaviorNode((HitCheckBehaviorNodeData)data));
         factory.Register(typeof(SetBehaviorNodeData), static data => new SetBehaviorNode((SetBehaviorNodeData)data));
         factory.Register(typeof(WaitBehaviorNodeData), static data => new WaitBehaviorNode((WaitBehaviorNodeData)data));
         factory.Register(typeof(InverterBehaviorNodeData), static data => new InverterBehaviorNode((InverterBehaviorNodeData)data));

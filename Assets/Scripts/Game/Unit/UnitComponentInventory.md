@@ -16,9 +16,11 @@ The proposed direction is valid:
   movement, skills, animation, and other gameplay components.
 
 The important boundary is that `UnitVariableComponent` is a shared blackboard,
-not a replacement for all ECS components. Health, movement, control, buff
-lists, rendering data, and other high-frequency or strongly structured data
-must remain in their dedicated components.
+not a replacement for all ECS components. Its `Owner` is `Entity.Null` when
+the unit owns its dictionary; otherwise the unit proxies all variable access to
+one designated owner. Health, movement, control, buff lists, rendering data,
+and other high-frequency or strongly structured data must remain in their
+dedicated components.
 
 ## Source Contract
 
@@ -28,13 +30,12 @@ becoming a second copy of every unit component.
 | Scope | Owner | Read/write policy | Examples |
 | --- | --- | --- | --- |
 | `unit.*` | Existing ECS component | The component Source explicitly declares each read/write permission | `unit.vitality.currentHealthPercentage`, `unit.perception.targetDistance`, `unit.move.setDirection(...)` |
-| `var.*` | `UnitVariableComponent` | Shared read/write state for BT, StateScript, and gameplay systems | `var.input.castHeld`, `var.cooldown.shieldSlam`, `var.animation.clip` |
+| `var.*` | `UnitVariableComponent` owner | Shared read/write state for BT, StateScript, and gameplay systems; consumers proxy to their configured owner | `var.input.castHeld`, `var.cooldown.shieldSlam`, `var.animation.clip` |
 | `script.*` | One running StateScript graph | Local graph state; never used as cross-graph communication | local timer, local branch flag, temporary loop counter |
 
-The existing `ISource.GetValue()` returns only `float`. It is appropriate for
-CheckData expressions: booleans use `0/1`, and vectors expose scalar fields
-such as `.x`, `.y`, and `.length`. It is not sufficient for target entities,
-`float2`, skill snapshots, or buff lists. StateScript action nodes therefore
+Conditions use typed `UnitSource` value expressions. They support booleans,
+numbers, entities, `float2`, `float3`, strings, and nested operations rather
+than flattening values to a scalar. StateScript action nodes therefore
 also need typed component Sources, for example `UnitPerceptionSource` can give
 the target entity and target position directly. Do not force all data through
 a float expression API.
@@ -129,9 +130,9 @@ Each condition compiles its configured getter/literal/operation inputs into
 delegates during tree initialization. The behavior-tree tick then calls the
 compiled Comparator without creating Sources, Comparators, or reflection data.
 
-The old scalar `ISource`/`ComparatorFactory.RegisterSource` path must not be
-used by new behavior-tree conditions. It may remain temporarily for unrelated
-legacy users until the Comparator migration is complete.
+The old scalar `ISource`/`ComparatorFactory.RegisterSource` path has been
+removed. Behavior-tree, StateScript, and effect conditions all compile typed
+UnitSource expressions through `ComparatorFactory`.
 
 ### Editor Changes
 
@@ -169,14 +170,14 @@ This is the logical order derived from the current system groups and explicit
 `UpdateBefore` / `UpdateAfter` attributes. Systems without an explicit relation
 inside the same group must not depend on their incidental order.
 
-1. **Initialization**: query registration, stat recovery, buff initialization,
+1. **Initialization**: query registration and buff initialization,
    behavior-tree construction, and the old state-machine construction.
 2. **Decision**: death is evaluated first; perception refreshes target data;
    Behavior Tree and player input produce commands; control refreshes locks;
    skill cooldown and availability refresh; the old state transition and state
    machine run last.
-3. **Execution**: old skill analysis and cast execution, effects/projectiles,
-   movement, jump arc, animation, then death-finalization.
+3. **Execution**: stat recovery, old skill analysis and cast execution,
+   effects/projectiles, movement, animation, then death-finalization.
 4. **Post process**: drops and entity destruction.
 
 Target order after migration:
@@ -218,7 +219,6 @@ runtime that will take over its former producer responsibilities.
 | `UnitControlRuntimeComponent` | Active stun, knockback, fear, movement/cast locks, and interruption data. | `UnitControlSource`: exposes every entry field and every resolved active-control field. | Keep. Its application can stop a StateScript graph through a dedicated interrupt action. |
 | `UnitMoveComponent` | Direction command, StateScript movement multiplier, velocity, speed, and acceleration. | `UnitMoveSource`: exposes every stored field and every calculated movement value. | Keep. StateScript writes direction and multiplier independently; `UnitMoveSystem` remains the only integrator. |
 | `UnitFacingComponent` | The current facing direction. | `UnitFacingSource`: exposes the complete direction value and scalar projections/angle. | Keep. Graph actions set facing explicitly when a skill needs it. |
-| `UnitJumpArcComponent` | Runtime jump trajectory. | `UnitJumpArcSource`: exposes every stored field and calculated progress. | Keep as an optional ability component. A jump action owns its lifecycle. |
 
 ### Decisions And Skill Metadata
 
@@ -278,10 +278,9 @@ interaction systems.
 
 | Component | Current role | Decision |
 | --- | --- | --- |
-| `SkillProjectileComponent` + `SkillProjectileHitEntityElement` + `SkillProjectilePayloadComponent` | Projectile motion, hit history, and managed effect payload. It has no animation state. | Keep. Flight and impact visuals belong to the projectile prefab and SpawnVfx effects, not skill data. |
-| `QuadAnimationComponent` + `QuadAnimationVisualComponent` | Generic frame-animation runtime and managed visual resource for VFX quads. | Keep. Projectiles no longer use this path. |
-| `FollowEntityComponent` | Makes an effect quad follow an entity, with offset and optional rotation alignment. | Keep unchanged. |
-| `QuadOverlayPulseComponent` | Timed material overlay pulse on a quad. | Keep unchanged. |
+| `SkillProjectileComponent` + `SkillProjectileHitEntityElement` + `SkillProjectilePayloadComponent` + `SkillProjectileVisualLinkComponent` | Projectile motion, hit history, managed effect payload, and the link to its independent visual entity. | Keep. Gameplay collision and destruction remain independent from visual playback. |
+| `SpriteEffectAnimationComponent` | Managed Enter/Loop/Exit clip playback state sampled into a SpriteRenderer companion. | Keep. Clips are frame sources only; no Animator is used at runtime. |
+| `EffectVisualFollowComponent` | Makes a sprite effect follow an entity, preserving its last transform and then ending when the target disappears. | Keep. Used by follow effects and projectile visuals. |
 | `UnitInteractableComponent` | Generic kind, ID, amount, variant, range, and availability for spawned drops and other targets. | Keep. |
 | `DungeonMonsterSpawnComponent` | Dungeon region, squad, and boss identity for a spawned monster. | Keep unchanged. |
 | `TreasureComponent` + `DungeonTreasureCandidateItemElement` | Chest state and its generated candidate rewards. | Keep. |

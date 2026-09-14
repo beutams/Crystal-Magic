@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CrystalMagic.Core;
 using Unity.Entities;
 using Unity.Mathematics;
 
@@ -79,16 +80,20 @@ public sealed class UnitQueryTree
     public void QueryCircle(float3 center, float radius, List<UnitQueryHit> results)
     {
         results.Clear();
-        if (_rootIndex < 0 || radius <= 0f)
+        if (radius <= 0f)
             return;
 
-        QueryCircle(_rootIndex, center.xy, radius * radius, results);
+        if (_rootIndex >= 0)
+            QueryCircle(_rootIndex, center.xy, radius * radius, results);
+
+        DebugQueryShapeReporter.ReportCircle(center, radius);
+        ReportHits(center, results);
     }
 
     public void QueryForwardRect(float3 origin, float2 forward, float length, float width, List<UnitQueryHit> results)
     {
         results.Clear();
-        if (_rootIndex < 0 || length <= 0f || width <= 0f || math.lengthsq(forward) <= 0.0001f)
+        if (length <= 0f || width <= 0f || math.lengthsq(forward) <= 0.0001f)
             return;
 
         float2 normalizedForward = math.normalize(forward);
@@ -104,19 +109,53 @@ public sealed class UnitQueryTree
         float2 rectMin = math.min(math.min(corner0, corner1), math.min(corner2, corner3));
         float2 rectMax = math.max(math.max(corner0, corner1), math.max(corner2, corner3));
 
-        QueryForwardRect(_rootIndex, origin.xy, normalizedForward, right, length, halfWidth, rectMin, rectMax, results);
+        if (_rootIndex >= 0)
+            QueryForwardRect(_rootIndex, origin.xy, normalizedForward, right, length, halfWidth, rectMin, rectMax, results);
+
+        DebugQueryShapeReporter.ReportForwardRect(origin, normalizedForward, length, width);
+        ReportHits(origin, results);
+    }
+
+    public void QueryAxisAlignedRect(float3 center, float2 size, List<UnitQueryHit> results)
+    {
+        results.Clear();
+        if (math.any(size <= 0f))
+            return;
+
+        float2 halfSize = size * 0.5f;
+        float2 rectMin = center.xy - halfSize;
+        float2 rectMax = center.xy + halfSize;
+        if (_rootIndex >= 0)
+            QueryAxisAlignedRect(_rootIndex, rectMin, rectMax, results);
+
+        DebugQueryShapeReporter.ReportForwardRect(
+            new float3(rectMin.x, center.y, center.z),
+            new float2(1f, 0f),
+            size.x,
+            size.y);
+        ReportHits(center, results);
     }
 
     public void QueryCone(float3 origin, float2 forward, float radius, float angleDegrees, List<UnitQueryHit> results)
     {
         results.Clear();
-        if (_rootIndex < 0 || radius <= 0f || angleDegrees <= 0f || math.lengthsq(forward) <= 0.0001f)
+        if (radius <= 0f || angleDegrees <= 0f || math.lengthsq(forward) <= 0.0001f)
             return;
 
         float2 normalizedForward = math.normalize(forward);
         float radiusSq = radius * radius;
         float minDot = math.cos(math.radians(math.clamp(angleDegrees, 0f, 360f) * 0.5f));
-        QueryCone(_rootIndex, origin.xy, normalizedForward, radiusSq, minDot, results);
+        if (_rootIndex >= 0)
+            QueryCone(_rootIndex, origin.xy, normalizedForward, radiusSq, minDot, results);
+
+        DebugQueryShapeReporter.ReportCone(origin, normalizedForward, radius, angleDegrees);
+        ReportHits(origin, results);
+    }
+
+    private static void ReportHits(float3 origin, List<UnitQueryHit> results)
+    {
+        for (int i = 0; i < results.Count; i++)
+            DebugQueryShapeReporter.ReportHit(origin, results[i].Position);
     }
 
     private void Reset()
@@ -271,6 +310,31 @@ public sealed class UnitQueryTree
         QueryForwardRect(node.Child1, origin, normalizedForward, right, length, halfWidth, rectMin, rectMax, results);
         QueryForwardRect(node.Child2, origin, normalizedForward, right, length, halfWidth, rectMin, rectMax, results);
         QueryForwardRect(node.Child3, origin, normalizedForward, right, length, halfWidth, rectMin, rectMax, results);
+    }
+
+    private void QueryAxisAlignedRect(int nodeIndex, float2 rectMin, float2 rectMax, List<UnitQueryHit> results)
+    {
+        Node node = _nodes[nodeIndex];
+        if (!OverlapsAabb(node.Min, node.Max, rectMin, rectMax))
+            return;
+
+        for (int i = 0; i < node.EntryIndices.Count; i++)
+        {
+            UnitQueryHit entry = _entries[node.EntryIndices[i]];
+            float2 position = entry.Position.xy;
+            if (math.any(position < rectMin) || math.any(position > rectMax))
+                continue;
+
+            results.Add(entry);
+        }
+
+        if (!node.HasChildren)
+            return;
+
+        QueryAxisAlignedRect(node.Child0, rectMin, rectMax, results);
+        QueryAxisAlignedRect(node.Child1, rectMin, rectMax, results);
+        QueryAxisAlignedRect(node.Child2, rectMin, rectMax, results);
+        QueryAxisAlignedRect(node.Child3, rectMin, rectMax, results);
     }
 
     private void QueryCone(

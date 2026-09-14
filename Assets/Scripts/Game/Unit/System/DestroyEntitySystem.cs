@@ -2,6 +2,7 @@ using Unity.Burst;
 using Unity.Entities;
 
 [BurstCompile]
+[RunInGameWorld(GameWorldKind.Town | GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitPostProcessSystemGroup), OrderLast = true)]
 [UpdateBefore(typeof(EndSimulationEntityCommandBufferSystem))]
 partial struct DestroyEntitySystem : ISystem

@@ -85,7 +85,7 @@ namespace CrystalMagic.Game.Config
             {
                 new() { Channel = SkillModifierChannel.MpCost, MinimumFactor = 0f },
                 new() { Channel = SkillModifierChannel.Reserved, MinimumFactor = 0f },
-                new() { Channel = SkillModifierChannel.Damage, MinimumFactor = 0.2f },
+                new() { Channel = SkillModifierChannel.Damage, MinimumFactor = 0.1f },
                 new() { Channel = SkillModifierChannel.FlatDamage, MinimumFactor = 0f },
                 new() { Channel = SkillModifierChannel.KnockbackForce, MinimumFactor = 0f },
                 new() { Channel = SkillModifierChannel.HitStunSeconds, MinimumFactor = 0f },

@@ -13,7 +13,6 @@ namespace CrystalMagic.Editor
     public class UIConfigWindow : EditorWindow
     {
         private const string ConfigPath = "Assets/Res/Config/ui_config.json";
-        private const string DefaultConfigName = "ui_config.json";
 
         private UIGroupConfig _config;
         private Vector2 _scrollPosition;
@@ -37,19 +36,11 @@ namespace CrystalMagic.Editor
 
             EditorGUILayout.Space();
 
-            // 文件操作按钮
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("新建配置", GUILayout.Width(100)))
+            using (new EditorGUI.DisabledScope(!_isDirty))
             {
-                CreateNewConfig();
-            }
-            if (GUILayout.Button("加载配置", GUILayout.Width(100)))
-            {
-                LoadConfig();
-            }
-            if (GUILayout.Button("保存配置", GUILayout.Width(100)))
-            {
-                SaveConfig();
+                if (GUILayout.Button(_isDirty ? "Save *" : "Save", GUILayout.Width(100)))
+                    SaveConfig();
             }
             EditorGUILayout.EndHorizontal();
 
@@ -57,7 +48,7 @@ namespace CrystalMagic.Editor
 
             if (_config == null)
             {
-                EditorGUILayout.HelpBox("未加载配置，请点击【加载配置】或【新建配置】", MessageType.Info);
+                EditorGUILayout.HelpBox("配置会在打开窗口时自动读取。", MessageType.Info);
                 return;
             }
 
@@ -250,7 +241,7 @@ namespace CrystalMagic.Editor
             EditorGUILayout.EndVertical();
         }
 
-        private void CreateNewConfig()
+        private void CreateDefaultConfig()
         {
             _config = new UIGroupConfig();
             _config.referenceResolutionWidth = 2560;
@@ -272,7 +263,6 @@ namespace CrystalMagic.Editor
                     "ConfirmUI",
                     "GameMenuUI",
                     "GameSaveUI",
-                    "PropertyUI",
                 }
             });
             _config.groups.Add(new UIGroupEntry
@@ -283,6 +273,16 @@ namespace CrystalMagic.Editor
                 uiNames = new List<string>
                 {
                     "UnitHealthBarUI",
+                }
+            });
+            _config.groups.Add(new UIGroupEntry
+            {
+                groupName = "Debug",
+                groupType = UIGroupType.List,
+                order = 20000,
+                uiNames = new List<string>
+                {
+                    "DebugUI",
                 }
             });
             _isDirty = true;
@@ -299,7 +299,8 @@ namespace CrystalMagic.Editor
             }
             else
             {
-                Debug.LogWarning($"[UIConfig] File not found: {ConfigPath}");
+                CreateDefaultConfig();
+                Debug.LogWarning($"[UIConfig] File not found: {ConfigPath}. Created default configuration in memory.");
             }
         }
 

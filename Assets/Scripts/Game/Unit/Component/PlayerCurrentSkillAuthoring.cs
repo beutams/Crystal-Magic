@@ -31,6 +31,10 @@ public sealed class PlayerCurrentSkillSource : UnitManagedComponentSource<Player
         new ComparatorParameterDefinition("ChainId", UnitValueCategory.Number),
         new ComparatorParameterDefinition("SlotIndex", UnitValueCategory.Number),
     };
+    private static readonly ComparatorParameterDefinition[] s_clearParameters =
+    {
+        new ComparatorParameterDefinition("Clear", UnitValueCategory.Bool),
+    };
     private static readonly ComparatorParameterDefinition[] s_extraModifierParameters =
     {
         new ComparatorParameterDefinition("Channel", UnitValueCategory.Number),
@@ -49,6 +53,11 @@ public sealed class PlayerCurrentSkillSource : UnitManagedComponentSource<Player
                 PlayerCurrentSkillUtility.TryGetCurrentSkillId(context.EntityManager, context.Entity, out int skillId)
                     ? UnitValue.FromInt(skillId)
                     : UnitValue.None);
+        builder.AddContextGet("player.skill.currentInputType", UnitValueCategory.Number, s_noParameters,
+            (in UnitSourceBindingContext context, in PlayerCurrentSkillComponent _, UnitValue[] _) =>
+                PlayerCurrentSkillUtility.TryGetCurrentInputType(context.EntityManager, context.Entity, out SkillInputType inputType)
+                    ? UnitValue.FromInt((int)inputType)
+                    : UnitValue.None);
         builder.AddContextGet("player.skill.currentAdditionId", UnitValueCategory.Number, s_noParameters,
             (in UnitSourceBindingContext context, in PlayerCurrentSkillComponent _, UnitValue[] _) =>
                 PlayerCurrentSkillUtility.TryGetCurrentAdditionId(context.EntityManager, context.Entity, out int additionId)
@@ -63,6 +72,15 @@ public sealed class PlayerCurrentSkillSource : UnitManagedComponentSource<Player
                 TryGetInt(values, 0, out int chainId) &&
                 TryGetInt(values, 1, out int slotIndex) &&
                 PlayerCurrentSkillUtility.TrySetCurrentChainSlot(context.EntityManager, context.Entity, chainId, slotIndex));
+        builder.AddContextSet("player.skill.currentChainSlot.clear", s_clearParameters,
+            (in UnitSourceBindingContext context, ref PlayerCurrentSkillComponent _, UnitValue[] values) =>
+            {
+                if (values.Length != 1 || values[0].Type != UnitValueType.Bool || !values[0].Bool)
+                    return false;
+
+                PlayerCurrentSkillUtility.ClearCurrentChainSlot(context.EntityManager, context.Entity);
+                return true;
+            });
         builder.AddContextSet("player.skill.pendingExtraModifiers.add", s_extraModifierParameters,
             (in UnitSourceBindingContext context, ref PlayerCurrentSkillComponent _, UnitValue[] values) =>
                 TryGetInt(values, 0, out int rawChannel) &&

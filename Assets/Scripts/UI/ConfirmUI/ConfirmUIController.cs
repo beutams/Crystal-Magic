@@ -11,6 +11,8 @@
         {
             View.SetTitle(Model.Title);
             View.SetContent(Model.Content);
+            View.SetConfirmLabel(Model.ConfirmLabel);
+            View.SetCancelVisible(Model.ShowCancelButton);
             Bindings.Bind(() => View.ConfirmClicked += OnConfirmClicked, () => View.ConfirmClicked -= OnConfirmClicked);
             Bindings.Bind(() => View.CancelClicked += OnCancelClicked, () => View.CancelClicked -= OnCancelClicked);
         }

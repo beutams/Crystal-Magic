@@ -8,12 +8,10 @@ namespace CrystalMagic.UI
         public override string ChangedEventName => DataChangedEventName;
 
         private readonly System.Collections.Generic.List<CharacterSkillDisplayData> _skillItems = new();
-        private readonly System.Collections.Generic.List<CharacterPropSlotDisplayData> _propItems = new();
         private readonly CharacterInventoryDisplayData[] _inventoryItems = new CharacterInventoryDisplayData[32];
         private readonly CharacterEquipDisplayData[] _equipItems = new CharacterEquipDisplayData[5];
 
         public System.Collections.Generic.IReadOnlyList<CharacterSkillDisplayData> SkillItems => _skillItems;
-        public System.Collections.Generic.IReadOnlyList<CharacterPropSlotDisplayData> PropItems => _propItems;
         public CharacterInventoryDisplayData[] InventoryItems => _inventoryItems;
         public CharacterEquipDisplayData[] EquipItems => _equipItems;
         public int InventorySlotCount => 32;
@@ -21,7 +19,6 @@ namespace CrystalMagic.UI
         public void Refresh()
         {
             RefreshSkill();
-            RefreshProp();
             RefreshInventory();
             RefreshEquip();
             CrystalMagic.Core.EventComponent.Instance.Publish(new CrystalMagic.Core.CommonGameEvent(DataChangedEventName, this));
@@ -60,6 +57,7 @@ namespace CrystalMagic.UI
                     SkillId = skillData != null ? skillData.Id : -1,
                     SkillIconPath = skillIconPath,
                     AdditionIconPath = additionIconPath,
+                    CanSelectAddition = i > 0,
                 });
             }
         }
@@ -89,35 +87,6 @@ namespace CrystalMagic.UI
                     Name = itemData != null ? itemData.Name : string.Empty,
                     IconPath = itemData != null ? itemData.IconPath : string.Empty,
                 };
-            }
-        }
-
-        private void RefreshProp()
-        {
-            _propItems.Clear();
-
-            CrystalMagic.Core.CharacterPropData propData = CrystalMagic.Core.SaveDataComponent.Instance.GetCharacterPropData();
-            if (propData?.Slots == null)
-                return;
-
-            for (int i = 0; i < propData.Slots.Count; i++)
-            {
-                CrystalMagic.Core.CharacterPropSlotData slot = propData.Slots[i];
-                int itemId = slot != null && !slot.IsEmpty ? slot.ItemId : -1;
-                CrystalMagic.Game.Data.ItemData itemData = itemId >= 0
-                    ? CrystalMagic.Core.DataComponent.Instance.Get<CrystalMagic.Game.Data.ItemData>(itemId)
-                    : null;
-
-                _propItems.Add(new CharacterPropSlotDisplayData
-                {
-                    SlotIndex = i,
-                    BoundShortcutIndex = FindBoundShortcutIndex(propData, i),
-                    ItemId = itemId,
-                    Count = slot != null && !slot.IsEmpty ? slot.Quantity : 0,
-                    CarryLimit = itemId >= 0 ? CrystalMagic.Core.PropInventoryUtility.GetCarryLimit(itemId) : 0,
-                    Name = itemData != null ? itemData.Name : string.Empty,
-                    IconPath = itemData != null ? itemData.IconPath : string.Empty,
-                });
             }
         }
 
@@ -173,19 +142,6 @@ namespace CrystalMagic.UI
             }
         }
 
-        private static int FindBoundShortcutIndex(CrystalMagic.Core.CharacterPropData propData, int propSlotIndex)
-        {
-            if (propData?.ShortcutSlotIndexes == null)
-                return -1;
-
-            for (int i = 0; i < propData.ShortcutSlotIndexes.Length; i++)
-            {
-                if (propData.ShortcutSlotIndexes[i] == propSlotIndex)
-                    return i;
-            }
-
-            return -1;
-        }
     }
 
     public sealed class CharacterSkillDisplayData
@@ -195,6 +151,7 @@ namespace CrystalMagic.UI
         public int SkillId;
         public string SkillIconPath;
         public string AdditionIconPath;
+        public bool CanSelectAddition;
     }
 
     public sealed class CharacterInventoryDisplayData
@@ -203,17 +160,6 @@ namespace CrystalMagic.UI
         public int ItemId;
         public int Count;
         public CrystalMagic.Game.Data.ItemType ItemType;
-        public string Name;
-        public string IconPath;
-    }
-
-    public sealed class CharacterPropSlotDisplayData
-    {
-        public int SlotIndex;
-        public int BoundShortcutIndex;
-        public int ItemId;
-        public int Count;
-        public int CarryLimit;
         public string Name;
         public string IconPath;
     }

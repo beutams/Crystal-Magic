@@ -8,6 +8,9 @@ namespace CrystalMagic.Core {
     /// </summary>
     public abstract class UIGroup : MonoBehaviour
     {
+        // Screen-space panels must render after gameplay SpriteRenderers.
+        private const string UISortingLayerName = "UI";
+
         protected LinkedList<UIBase> _panels = new LinkedList<UIBase>();
 
         [SerializeField] protected string _groupName;
@@ -31,6 +34,7 @@ namespace CrystalMagic.Core {
 
             if (_canvas != null)
             {
+                _canvas.sortingLayerName = UISortingLayerName;
                 _canvas.sortingOrder = _baseSortingOrder;
             }
         }
@@ -114,6 +118,7 @@ namespace CrystalMagic.Core {
             panelCanvas.overrideSorting = true;
             panelCanvas.worldCamera = CameraComponent.Instance.Current;
             panelCanvas.planeDistance = _planeDistance;
+            panelCanvas.sortingLayerName = UISortingLayerName;
 
             // 添加 CanvasScaler
             CanvasScaler scaler = panel.GetComponent<CanvasScaler>();
@@ -204,6 +209,7 @@ namespace CrystalMagic.Core {
 
             _canvas.renderMode = RenderMode.ScreenSpaceCamera;
             _canvas.worldCamera = CameraComponent.Instance != null ? CameraComponent.Instance.Current : null;
+            _canvas.sortingLayerName = UISortingLayerName;
             _canvas.sortingOrder = _baseSortingOrder;
             _canvas.planeDistance = _planeDistance;
 

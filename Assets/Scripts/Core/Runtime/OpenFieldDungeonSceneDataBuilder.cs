@@ -23,20 +23,29 @@ namespace CrystalMagic.Core
             theme.EnsureValid();
             RuntimeDungeonSceneData scene = new()
             {
-                ThemeId = theme.Id,
-                ThemeKey = theme.ThemeKey,
-                IsBossFloor = isBossFloor,
                 CellWorldSize = CellWorldSize,
-                DisplayWidth = layout.Width,
-                DisplayHeight = layout.Height,
                 PlayerSpawnWorldPosition = ToWorld(layout, layout.Entrance),
             };
+            scene.TerrainVisual.CellWorldSize = CellWorldSize;
+            scene.TerrainVisual.WorldOrigin = new Vector2(
+                -layout.Width * CellWorldSize * 0.5f,
+                -layout.Height * CellWorldSize * 0.5f);
+
+            HashSet<Vector2Int> protectedCells = BuildProtectedCells(layout);
+            OpenFieldDungeonVisualLayout visualLayout = OpenFieldDungeonVisualLayoutBuilder.Build(
+                layout,
+                theme.OpenField.Visual,
+                protectedCells);
+            AddTerrainVisual(scene, visualLayout);
+            scene.CameraWorldBounds = CalculateCameraWorldBounds(scene.TerrainVisual);
+            AddObstacleSpawns(scene, layout, visualLayout);
 
             bool[,] collisionMask = new bool[layout.Width, layout.Height];
             for (int y = 0; y < layout.Height; y++)
             for (int x = 0; x < layout.Width; x++)
-                AddTerrain(scene, layout, theme.OpenField.Visual, x, y, collisionMask);
+                AddTerrain(layout, x, y, collisionMask);
             AddMergedTerrainColliders(scene, layout, collisionMask);
+            AddMapBoundaryColliders(scene, layout);
 
             if (layout.ExitInterestPoint != null)
             {
@@ -51,7 +60,8 @@ namespace CrystalMagic.Core
                     WorldPosition = ToWorld(layout, exitPoint.Center),
                     RequiresRoomClear = true,
                     ApplyCollider = false,
-                    TargetFloor = floor + 1,
+                    TargetThemeId = isBossFloor ? theme.NextThemeId : theme.Id,
+                    TargetFloor = isBossFloor ? 1 : floor + 1,
                 });
             }
 
@@ -73,38 +83,135 @@ namespace CrystalMagic.Core
                 });
             }
 
-            HashSet<Vector2Int> occupiedCells = BuildReservedCells(layout);
+            HashSet<Vector2Int> occupiedCells = new(protectedCells);
+            foreach (RuntimeDungeonObstacleSpawnData obstacle in scene.ObstacleSpawns)
+            {
+                foreach (Vector2Int collisionCell in obstacle.CollisionCells)
+                    occupiedCells.Add(collisionCell);
+            }
+
             AddLandmarks(scene, layout, theme.OpenField, occupiedCells);
+            AddInterestPointSpawns(scene, layout);
             AddSquads(scene, layout, theme, isBossFloor, occupiedCells);
             ConfigureChestCandidates(scene, theme.OpenField.TreasureItemIds);
             return scene;
         }
 
-        private static void AddTerrain(RuntimeDungeonSceneData scene, OpenFieldDungeonLayout layout, OpenFieldDungeonVisualData visual, int x, int y, bool[,] collisionMask)
+        private static void AddTerrainVisual(
+            RuntimeDungeonSceneData scene,
+            OpenFieldDungeonVisualLayout visualLayout)
         {
-            OpenFieldTerrainCell cell = layout.GetTerrainCell(x, y);
-            DungeonTileGridData grid = cell switch
+            foreach (OpenFieldRuleTilePlacement placement in visualLayout.RuleTilePlacements)
             {
-                OpenFieldTerrainCell.Void => visual.VoidTileGrid,
-                OpenFieldTerrainCell.Ground => visual.GroundTileGrid,
-                _ => visual.ObstacleTileGrid,
-            };
-            DungeonTileGridCellData tile = ResolveTerrainTile(layout, grid, cell, x, y);
-            OpenFieldGridPosition position = new(x, y);
-            if (tile != null && !string.IsNullOrWhiteSpace(tile.SpritePath) && !string.IsNullOrWhiteSpace(tile.SpriteName))
-            {
-                scene.TileSpawns.Add(new RuntimeDungeonTileSpawnData
+                scene.TerrainVisual.Placements.Add(new RuntimeDungeonRuleTilePlacement
                 {
-                    SpritePath = tile.SpritePath,
-                    SpriteName = tile.SpriteName,
-                    UvRect = new Vector4(tile.SpriteUvX, tile.SpriteUvY, tile.SpriteUvWidth, tile.SpriteUvHeight),
-                    WorldPosition = ToWorld(layout, position),
-                    CellWorldSize = CellWorldSize,
+                    Layer = ToRuntimeTilemapLayer(placement.Layer),
+                    RuleTilePath = placement.RuleTile?.AssetPath ?? string.Empty,
+                    Cell = placement.Cell,
                 });
             }
+        }
 
-            collisionMask[x, y] = cell != OpenFieldTerrainCell.Ground;
+        private static void AddObstacleSpawns(
+            RuntimeDungeonSceneData scene,
+            OpenFieldDungeonLayout layout,
+            OpenFieldDungeonVisualLayout visualLayout)
+        {
+            foreach (OpenFieldObstaclePlacement placement in visualLayout.Obstacles)
+            {
+                RuntimeDungeonObstacleSpawnData obstacleSpawn = new()
+                {
+                    CollisionCells = new List<Vector2Int>(placement.CollisionCells),
+                };
+                float obstacleSortAnchorWorldY = GetObstacleSortAnchorWorldY(layout, placement);
+                foreach (OpenFieldObstacleVisualSpritePlacement visual in placement.VisualSprites)
+                {
+                    OpenFieldSpriteReferenceData sprite = visual.Sprite;
+                    Vector3 worldPosition = visual.UseObstacleCenter
+                        ? ToWorldRectangle(layout, placement.OccupiedCells)
+                        : ToWorld(layout, placement.Origin + visual.LocalCell);
+                    obstacleSpawn.Visuals.Add(new RuntimeDungeonObstacleVisualSpawnData
+                    {
+                        SpritePath = sprite?.AssetPath ?? string.Empty,
+                        SpriteName = sprite?.SpriteName ?? string.Empty,
+                        WorldPosition = worldPosition,
+                        SortAnchorWorldY = obstacleSortAnchorWorldY,
+                        RotationQuarterTurns = placement.RotationQuarterTurns,
+                        FlippedX = placement.FlippedX,
+                        LayerIndex = visual.LayerIndex,
+                    });
+                }
 
+                scene.ObstacleSpawns.Add(obstacleSpawn);
+            }
+        }
+
+        private static float GetObstacleSortAnchorWorldY(
+            OpenFieldDungeonLayout layout,
+            OpenFieldObstaclePlacement placement)
+        {
+            int minimumY = int.MaxValue;
+            foreach (Vector2Int cell in placement.OccupiedCells)
+                minimumY = Mathf.Min(minimumY, cell.y);
+
+            if (minimumY == int.MaxValue)
+                return placement.VisualSortAnchor.y;
+
+            return ToWorld(layout, new Vector2Int(0, minimumY)).y + placement.VisualSortAnchor.y;
+        }
+
+        private static RuntimeDungeonTilemapLayer ToRuntimeTilemapLayer(OpenFieldRuleTileLayer layer)
+        {
+            return layer switch
+            {
+                OpenFieldRuleTileLayer.Void => RuntimeDungeonTilemapLayer.Void,
+                OpenFieldRuleTileLayer.Ground => RuntimeDungeonTilemapLayer.Ground,
+                OpenFieldRuleTileLayer.Decoration => RuntimeDungeonTilemapLayer.Decoration,
+                OpenFieldRuleTileLayer.Obstacle => RuntimeDungeonTilemapLayer.Obstacle,
+                OpenFieldRuleTileLayer.Boundary => RuntimeDungeonTilemapLayer.Boundary,
+                _ => throw new ArgumentOutOfRangeException(nameof(layer), layer, null),
+            };
+        }
+
+        private static Rect CalculateCameraWorldBounds(RuntimeDungeonTerrainVisualData terrainVisual)
+        {
+            float cellWorldSize = terrainVisual?.CellWorldSize > 0f
+                ? terrainVisual.CellWorldSize
+                : CellWorldSize;
+            Vector2 worldOrigin = terrainVisual?.WorldOrigin ?? Vector2.zero;
+            List<RuntimeDungeonRuleTilePlacement> placements = terrainVisual?.Placements;
+            if (placements == null || placements.Count == 0)
+                return new Rect(worldOrigin, Vector2.one * cellWorldSize);
+
+            int minimumX = int.MaxValue;
+            int minimumY = int.MaxValue;
+            int maximumX = int.MinValue;
+            int maximumY = int.MinValue;
+            for (int index = 0; index < placements.Count; index++)
+            {
+                RuntimeDungeonRuleTilePlacement placement = placements[index];
+                if (placement == null)
+                    continue;
+
+                minimumX = Mathf.Min(minimumX, placement.Cell.x);
+                minimumY = Mathf.Min(minimumY, placement.Cell.y);
+                maximumX = Mathf.Max(maximumX, placement.Cell.x);
+                maximumY = Mathf.Max(maximumY, placement.Cell.y);
+            }
+
+            if (minimumX == int.MaxValue)
+                return new Rect(worldOrigin, Vector2.one * cellWorldSize);
+
+            return Rect.MinMaxRect(
+                worldOrigin.x + minimumX * cellWorldSize,
+                worldOrigin.y + minimumY * cellWorldSize,
+                worldOrigin.x + (maximumX + 1) * cellWorldSize,
+                worldOrigin.y + (maximumY + 1) * cellWorldSize);
+        }
+
+        private static void AddTerrain(OpenFieldDungeonLayout layout, int x, int y, bool[,] collisionMask)
+        {
+            collisionMask[x, y] = layout.GetTerrainCell(x, y) != OpenFieldTerrainCell.Ground;
         }
 
         private static void AddMergedTerrainColliders(
@@ -156,6 +263,44 @@ namespace CrystalMagic.Core
                 }
             }
         }
+
+        private static void AddMapBoundaryColliders(RuntimeDungeonSceneData scene, OpenFieldDungeonLayout layout)
+        {
+            AddHiddenCollider(scene, layout, -1, -1, layout.Width + 2, 1);
+            AddHiddenCollider(scene, layout, -1, layout.Height, layout.Width + 2, 1);
+            AddHiddenCollider(scene, layout, -1, 0, 1, layout.Height);
+            AddHiddenCollider(scene, layout, layout.Width, 0, 1, layout.Height);
+        }
+
+        private static void AddHiddenCollider(
+            RuntimeDungeonSceneData scene,
+            OpenFieldDungeonLayout layout,
+            int x,
+            int y,
+            int width,
+            int height)
+        {
+            scene.EnvironmentSpawns.Add(new RuntimeDungeonEnvironmentSpawnData
+            {
+                PrefabName = "Collider",
+                WorldPosition = ToWorldRectangle(layout, x, y, width, height),
+                Size = new Vector3(width * CellWorldSize, height * CellWorldSize, 1.6f),
+                ApplyCollider = true,
+                HideVisual = true,
+            });
+        }
+        private static void AddInterestPointSpawns(RuntimeDungeonSceneData scene, OpenFieldDungeonLayout layout)
+        {
+            foreach (OpenFieldInterestPoint point in layout.InterestPoints)
+            {
+                scene.InterestPointSpawns.Add(new RuntimeDungeonInterestPointSpawnData
+                {
+                    EncounterId = point.EncounterId,
+                    WorldPosition = ToWorld(layout, point.Center),
+                });
+            }
+        }
+
         private static void AddSquads(RuntimeDungeonSceneData scene, OpenFieldDungeonLayout layout, DungeonThemeData theme, bool isBossFloor, HashSet<Vector2Int> occupiedCells)
         {
             foreach (OpenFieldContentPlacement placement in layout.ContentPlacements)
@@ -172,53 +317,124 @@ namespace CrystalMagic.Core
                 if (squad == null)
                     continue;
 
+                RuntimeDungeonInterestPointSpawnData interestPointSpawn = placement.Type == OpenFieldContentType.InterestSquad
+                    ? FindInterestPointSpawn(scene, placement.EncounterId)
+                    : null;
+                if (placement.Type == OpenFieldContentType.InterestSquad && interestPointSpawn == null)
+                    continue;
+
+                if (interestPointSpawn != null)
+                    interestPointSpawn.SquadId = placement.SquadId;
+
                 System.Random random = new(layout.Seed ^ (placement.SquadId * 486187739));
                 int localIndex = 0;
-                foreach (OpenFieldDungeonSquadMemberData member in squad.Members)
+                foreach (UnitData unit in BuildSquadRoster(squad, random))
                 {
-                    UnitData unit = DataComponent.Instance?.Find<UnitData>(row => row.Name == member.UnitName);
-                    if (unit == null || string.IsNullOrWhiteSpace(unit.PrefabPath))
-                        continue;
-
                     UnitDungeonFootprintModuleData footprint = unit.GetModule<UnitDungeonFootprintModuleData>();
                     int footprintWidth = Mathf.Max(1, footprint?.Width ?? 1);
                     int footprintHeight = Mathf.Max(1, footprint?.Height ?? 1);
-                    int count = Mathf.Max(1, member.Count);
-                    for (int i = 0; i < count; i++)
+                    if (!TryReserveMemberPosition(
+                            layout,
+                            placement.Cell,
+                            squad,
+                            footprintWidth,
+                            footprintHeight,
+                            occupiedCells,
+                            random,
+                            out OpenFieldGridPosition cell))
                     {
-                        if (!TryReserveMemberPosition(
-                                layout,
-                                placement.Cell,
-                                squad,
-                                footprintWidth,
-                                footprintHeight,
-                                occupiedCells,
-                                random,
-                                out OpenFieldGridPosition cell))
-                        {
-                            Debug.LogWarning($"[OpenFieldDungeonSceneDataBuilder] Squad '{squad.Name}' cannot fit all configured members in its {squad.Width}x{squad.Height} deployment area.");
-                            continue;
-                        }
-
-                        Vector3 worldPosition = ToWorld(layout, cell) + new Vector3(
-                            (footprintWidth - 1) * CellWorldSize * 0.5f,
-                            (footprintHeight - 1) * CellWorldSize * 0.5f,
-                            0f);
-                        scene.MonsterSpawns.Add(new RuntimeDungeonMonsterSpawnData
-                        {
-                            RegionId = placement.EncounterId,
-                            SquadId = placement.SquadId,
-                            TileIndex = localIndex++,
-                            Level = squad.MonsterLevel,
-                            IsBoss = squad.IsBossSquad,
-                            PrefabName = Path.GetFileNameWithoutExtension(unit.PrefabPath),
-                            SourceCoordinate = ToVector2Int(cell),
-                            DisplayCoordinate = ToVector2Int(cell),
-                            WorldPosition = worldPosition,
-                        });
+                        Debug.LogWarning($"[OpenFieldDungeonSceneDataBuilder] Squad '{squad.Name}' cannot fit all generated members in its {squad.Width}x{squad.Height} deployment area.");
+                        continue;
                     }
+
+                    Vector3 worldPosition = ToWorld(layout, cell) + new Vector3(
+                        (footprintWidth - 1) * CellWorldSize * 0.5f,
+                        (footprintHeight - 1) * CellWorldSize * 0.5f,
+                        0f);
+                    RuntimeDungeonMonsterSpawnData memberSpawn = new()
+                    {
+                        RegionId = placement.EncounterId,
+                        SquadId = placement.SquadId,
+                        TileIndex = localIndex++,
+                        Level = squad.MonsterLevel,
+                        IsBoss = squad.IsBossSquad,
+                        PrefabName = Path.GetFileNameWithoutExtension(unit.PrefabPath),
+                        SourceCoordinate = ToVector2Int(cell),
+                        DisplayCoordinate = ToVector2Int(cell),
+                        WorldPosition = worldPosition,
+                    };
+                    if (interestPointSpawn != null)
+                        interestPointSpawn.MemberSpawns.Add(memberSpawn);
+                    else
+                        scene.MonsterSpawns.Add(memberSpawn);
                 }
             }
+        }
+
+        private static List<UnitData> BuildSquadRoster(OpenFieldDungeonSquadData squad, System.Random random)
+        {
+            List<ResolvedSquadMember> choices = new();
+            List<UnitData> roster = new();
+            int totalCost = 0;
+            foreach (OpenFieldDungeonSquadMemberData member in squad.Members)
+            {
+                if (member == null || string.IsNullOrWhiteSpace(member.UnitName))
+                    continue;
+
+                UnitData unit = DataComponent.Instance?.Find<UnitData>(row => row.Name == member.UnitName);
+                if (unit == null || string.IsNullOrWhiteSpace(unit.PrefabPath))
+                    continue;
+
+                ResolvedSquadMember choice = new(unit, Mathf.Max(1, member.Cost), Mathf.Max(1, member.Weight));
+                choices.Add(choice);
+                int minimum = Mathf.Max(0, member.MinCount);
+                for (int index = 0; index < minimum; index++)
+                {
+                    roster.Add(unit);
+                    totalCost += choice.Cost;
+                }
+            }
+
+            int costLimit = Mathf.Max(1, squad.CostLimit);
+            while (totalCost < costLimit && choices.Count > 0)
+            {
+                ResolvedSquadMember choice = SelectWeightedMember(choices, random);
+                roster.Add(choice.Unit);
+                totalCost += choice.Cost;
+            }
+
+            return roster;
+        }
+
+        private static ResolvedSquadMember SelectWeightedMember(List<ResolvedSquadMember> choices, System.Random random)
+        {
+            int totalWeight = 0;
+            foreach (ResolvedSquadMember choice in choices)
+                totalWeight += choice.Weight;
+
+            int roll = random.Next(totalWeight);
+            foreach (ResolvedSquadMember choice in choices)
+            {
+                roll -= choice.Weight;
+                if (roll < 0)
+                    return choice;
+            }
+
+            return choices[0];
+        }
+
+        private readonly struct ResolvedSquadMember
+        {
+            public ResolvedSquadMember(UnitData unit, int cost, int weight)
+            {
+                Unit = unit;
+                Cost = cost;
+                Weight = weight;
+            }
+
+            public UnitData Unit { get; }
+            public int Cost { get; }
+            public int Weight { get; }
         }
 
         private static void AddLandmarks(
@@ -325,47 +541,6 @@ namespace CrystalMagic.Core
             return false;
         }
 
-        private static DungeonTileGridCellData ResolveTerrainTile(
-            OpenFieldDungeonLayout layout,
-            DungeonTileGridData grid,
-            OpenFieldTerrainCell terrain,
-            int x,
-            int y)
-        {
-            if (grid == null)
-                return null;
-
-            bool hasLeft = IsSameTerrain(layout, terrain, x - 1, y);
-            bool hasRight = IsSameTerrain(layout, terrain, x + 1, y);
-            bool hasTop = IsSameTerrain(layout, terrain, x, y + 1);
-            bool hasBottom = IsSameTerrain(layout, terrain, x, y - 1);
-            int connectionCount = (hasLeft ? 1 : 0) + (hasRight ? 1 : 0) + (hasTop ? 1 : 0) + (hasBottom ? 1 : 0);
-            if (connectionCount == 4) return grid.GetCell(1, 1);
-            if (connectionCount == 3)
-            {
-                if (!hasTop) return grid.GetCell(1, 0);
-                if (!hasBottom) return grid.GetCell(1, 2);
-                if (!hasLeft) return grid.GetCell(0, 1);
-                return grid.GetCell(2, 1);
-            }
-            if (hasRight && hasBottom) return grid.GetCell(0, 0);
-            if (hasLeft && hasBottom) return grid.GetCell(2, 0);
-            if (hasRight && hasTop) return grid.GetCell(0, 2);
-            if (hasLeft && hasTop) return grid.GetCell(2, 2);
-            if (hasLeft && hasRight) return grid.GetCell(1, 0);
-            if (hasTop && hasBottom) return grid.GetCell(0, 1);
-            if (hasRight) return grid.GetCell(0, 1);
-            if (hasLeft) return grid.GetCell(2, 1);
-            if (hasBottom) return grid.GetCell(1, 0);
-            if (hasTop) return grid.GetCell(1, 2);
-            return grid.GetCell(1, 0);
-        }
-
-        private static bool IsSameTerrain(OpenFieldDungeonLayout layout, OpenFieldTerrainCell terrain, int x, int y)
-        {
-            return x >= 0 && x < layout.Width && y >= 0 && y < layout.Height
-                && layout.GetTerrainCell(x, y) == terrain;
-        }
         private static OpenFieldInterestPoint FindInterestPoint(OpenFieldDungeonLayout layout, int encounterId)
         {
             foreach (OpenFieldInterestPoint point in layout.InterestPoints)
@@ -374,7 +549,20 @@ namespace CrystalMagic.Core
             return null;
         }
 
-        private static HashSet<Vector2Int> BuildReservedCells(OpenFieldDungeonLayout layout)
+        private static RuntimeDungeonInterestPointSpawnData FindInterestPointSpawn(
+            RuntimeDungeonSceneData scene,
+            int encounterId)
+        {
+            foreach (RuntimeDungeonInterestPointSpawnData spawn in scene.InterestPointSpawns)
+            {
+                if (spawn.EncounterId == encounterId)
+                    return spawn;
+            }
+
+            return null;
+        }
+
+        private static HashSet<Vector2Int> BuildProtectedCells(OpenFieldDungeonLayout layout)
         {
             HashSet<Vector2Int> occupied = new();
             if (layout.HasEntrance)
@@ -544,11 +732,48 @@ namespace CrystalMagic.Core
                 (y + height * 0.5f - layout.Height * 0.5f) * CellWorldSize,
                 0f);
         }
+
+        private static Vector3 ToWorldRectangle(
+            OpenFieldDungeonLayout layout,
+            IReadOnlyList<Vector2Int> occupiedCells)
+        {
+            if (occupiedCells == null || occupiedCells.Count == 0)
+                return Vector3.zero;
+
+            int minimumX = occupiedCells[0].x;
+            int maximumX = occupiedCells[0].x;
+            int minimumY = occupiedCells[0].y;
+            int maximumY = occupiedCells[0].y;
+            for (int index = 1; index < occupiedCells.Count; index++)
+            {
+                Vector2Int cell = occupiedCells[index];
+                minimumX = Mathf.Min(minimumX, cell.x);
+                maximumX = Mathf.Max(maximumX, cell.x);
+                minimumY = Mathf.Min(minimumY, cell.y);
+                maximumY = Mathf.Max(maximumY, cell.y);
+            }
+
+            return ToWorldRectangle(
+                layout,
+                minimumX,
+                minimumY,
+                maximumX - minimumX + 1,
+                maximumY - minimumY + 1);
+        }
+
         private static Vector3 ToWorld(OpenFieldDungeonLayout layout, OpenFieldGridPosition position)
         {
             return new Vector3(
                 (position.X + 0.5f - layout.Width * 0.5f) * CellWorldSize,
                 (position.Y + 0.5f - layout.Height * 0.5f) * CellWorldSize,
+                0f);
+        }
+
+        private static Vector3 ToWorld(OpenFieldDungeonLayout layout, Vector2Int cell)
+        {
+            return new Vector3(
+                (cell.x + 0.5f - layout.Width * 0.5f) * CellWorldSize,
+                (cell.y + 0.5f - layout.Height * 0.5f) * CellWorldSize,
                 0f);
         }
         private static Vector2Int ToVector2Int(OpenFieldGridPosition position) => new(position.X, position.Y);

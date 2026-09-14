@@ -43,7 +43,15 @@ namespace CrystalMagic.Editor.Config
             w.Show();
         }
 
-        private void OnEnable() => ScanConfigTypes();
+        private void OnEnable()
+        {
+            ScanConfigTypes();
+            if (_configTypes.Count == 0)
+                return;
+
+            _selectedIndex = Mathf.Clamp(_selectedIndex, 0, _configTypes.Count - 1);
+            LoadConfig(_configTypes[_selectedIndex]);
+        }
 
         // ─────────────────────────────────────────
         //  Scan types marked with [GameConfig]
@@ -129,23 +137,14 @@ namespace CrystalMagic.Editor.Config
             if (newIdx != _selectedIndex)
             {
                 _selectedIndex = newIdx;
-                _configObj = null;
-                _loadedType = null;
-                _isDirty = false;
-            }
-
-            if (GUILayout.Button("Load", EditorStyles.toolbarButton, GUILayout.Width(44))
-                && _configTypes.Count > 0)
                 LoadConfig(_configTypes[_selectedIndex]);
+            }
 
             GUI.enabled = _isDirty;
             if (GUILayout.Button(_isDirty ? "Save *" : "Save",
                 EditorStyles.toolbarButton, GUILayout.Width(52)))
                 SaveConfig();
             GUI.enabled = true;
-
-            if (GUILayout.Button("Refresh Types", EditorStyles.toolbarButton, GUILayout.Width(60)))
-                ScanConfigTypes();
 
             GUILayout.FlexibleSpace();
 

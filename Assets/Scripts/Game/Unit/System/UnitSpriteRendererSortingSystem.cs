@@ -2,6 +2,7 @@ using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
 
+[RunInGameWorld(GameWorldKind.Town | GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(UnitAnimationSystem))]
 public partial class UnitSpriteRendererSortingSystem : SystemBase

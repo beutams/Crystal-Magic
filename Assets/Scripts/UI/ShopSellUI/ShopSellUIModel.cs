@@ -27,6 +27,7 @@ namespace CrystalMagic.UI
         public string IconPath { get; private set; }
         public int Quantity { get; private set; }
         public int MaxSellCount { get; private set; }
+        public long TotalSellPrice => Price > 0 ? (long)Price * Quantity : 0;
 
         public void SetOpenData(ShopSellUIOpenData data)
         {

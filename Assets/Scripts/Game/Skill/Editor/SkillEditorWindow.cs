@@ -5,9 +5,11 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using CrystalMagic.Core;
+using CrystalMagic.Editor.EffectGraph;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Data.Effects;
 using CrystalMagic.Game.Skill;
+using CrystalMagic.Game.Skill.Effects;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
@@ -37,11 +39,15 @@ namespace CrystalMagic.Editor.Skill
             typeof(ChainSearchEffectData),
             typeof(ConeSearchEffectData),
             typeof(DamageEffectData),
+            typeof(BuffDamageEffectData),
             typeof(ForwardRectSearchEffectData),
+            typeof(RectSearchEffectData),
             typeof(HealEffectData),
             typeof(HealthCostEffectData),
             typeof(FearEffectData),
             typeof(KnockbackEffectData),
+            typeof(MoveVfxEffectData),
+            typeof(SpawnLineVfxEffectData),
             typeof(PersistentEffectData),
             typeof(RandomAreaPointEffectData),
             typeof(ReadBuffStackEffectData),
@@ -62,11 +68,15 @@ namespace CrystalMagic.Editor.Skill
             "Chain Search",
             "Cone Search",
             "Damage",
+            "Buff Damage",
             "Forward Rect Search",
+            "Rect Search",
             "Heal",
             "Health Cost",
             "Fear",
             "Knockback",
+            "Move VFX",
+            "Spawn Line VFX",
             "Persistent",
             "Random Area Points",
             "Read Buff Stack",
@@ -87,11 +97,15 @@ namespace CrystalMagic.Editor.Skill
             new(0.18f, 0.42f, 0.74f),
             new(0.20f, 0.50f, 0.70f),
             new(0.60f, 0.18f, 0.14f),
+            new(0.60f, 0.18f, 0.14f),
             new(0.60f, 0.30f, 0.12f),
+            new(0.60f, 0.36f, 0.12f),
             new(0.16f, 0.52f, 0.22f),
             new(0.42f, 0.16f, 0.16f),
             new(0.42f, 0.24f, 0.12f),
             new(0.68f, 0.26f, 0.12f),
+            new(0.16f, 0.58f, 0.50f),
+            new(0.16f, 0.52f, 0.42f),
             new(0.14f, 0.50f, 0.24f),
             new(0.26f, 0.50f, 0.24f),
             new(0.22f, 0.42f, 0.64f),
@@ -105,6 +119,9 @@ namespace CrystalMagic.Editor.Skill
             new(0.58f, 0.42f, 0.12f),
         };
 
+        // This is editor-window cache, not Unity asset data. Keeping it out of domain-reload
+        // serialization avoids recursively serializing ValueExpression.Inputs.
+        [System.NonSerialized]
         private List<SkillData> _rows = new();
         private bool _isDirty;
         private string _statusText = string.Empty;
@@ -118,15 +135,6 @@ namespace CrystalMagic.Editor.Skill
 
         private readonly Dictionary<string, int> _nestedTypeIndices = new();
         private readonly Dictionary<string, bool> _effectFoldStates = new();
-        private readonly Dictionary<string, bool> _conditionFoldStates = new();
-        private readonly Dictionary<string, bool> _conditionAddSectionStates = new();
-        private readonly Dictionary<string, int> _conditionAddSourceIndices = new();
-        private readonly Dictionary<string, int> _conditionAddCompareIndices = new();
-
-        private string[] _sourceTypeNames = Array.Empty<string>();
-        private string[] _sourceTypeDisplayNames = Array.Empty<string>();
-        private string[] _compareTypeNames = Array.Empty<string>();
-        private string[] _compareTypeDisplayNames = Array.Empty<string>();
 
         private static readonly Color SelectedColor = new(0.27f, 0.52f, 0.85f, 0.85f);
         private static readonly Color EvenRowColor = new(0.22f, 0.22f, 0.22f, 1f);
@@ -134,14 +142,18 @@ namespace CrystalMagic.Editor.Skill
         private static readonly Color HoverColor = new(0.32f, 0.32f, 0.32f, 1f);
         private static readonly Color SectionLine = new(0.45f, 0.45f, 0.45f, 1f);
         private static readonly Color DividerColor = new(0.15f, 0.15f, 0.15f, 1f);
-        private static readonly Color ConditionAddHeaderColor = new(0.15f, 0.15f, 0.15f, 1f);
-        private static readonly Color ConditionAddBodyColor = new(0.18f, 0.18f, 0.18f, 1f);
         private static JsonSerializerSettings JsonSettings => new()
         {
             TypeNameHandling = TypeNameHandling.Auto,
             Formatting = Formatting.Indented,
             FloatFormatHandling = FloatFormatHandling.String,
-            Converters = { new LayerMaskConverter(), new Vector3Converter(), new UnityObjectConverter() },
+            Converters =
+            {
+                new StateScriptUnitValueConverter(),
+                new LayerMaskConverter(),
+                new Vector3Converter(),
+                new UnityObjectConverter(),
+            },
         };
 
         private class TableWrapper
@@ -160,22 +172,11 @@ namespace CrystalMagic.Editor.Skill
         private void OnEnable()
         {
             LoadData();
-            RefreshTypeArrays();
-        }
-
-        private void RefreshTypeArrays()
-        {
-            EditorTypeDisplayEntry[] sourceEntries = EditorLabelUtility.CollectTypeEntries(typeof(ISource));
-            _sourceTypeNames = sourceEntries.Select(entry => entry.Key).ToArray();
-            _sourceTypeDisplayNames = sourceEntries.Select(entry => entry.DisplayName).ToArray();
-
-            EditorTypeDisplayEntry[] compareEntries = EditorLabelUtility.CollectTypeEntries(typeof(ICompareType));
-            _compareTypeNames = compareEntries.Select(entry => entry.Key).ToArray();
-            _compareTypeDisplayNames = compareEntries.Select(entry => entry.DisplayName).ToArray();
         }
 
         private void LoadData()
         {
+            _rows ??= new List<SkillData>();
             _rows.Clear();
             _selectedIndex = -1;
             _isDirty = false;
@@ -331,19 +332,16 @@ namespace CrystalMagic.Editor.Skill
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            if (GUILayout.Button("Load", EditorStyles.toolbarButton, GUILayout.Width(44f)))
-                LoadData();
-
             GUI.enabled = _isDirty;
             if (GUILayout.Button(_isDirty ? "Save *" : "Save", EditorStyles.toolbarButton, GUILayout.Width(52f)))
                 SaveData();
             GUI.enabled = true;
 
-            if (GUILayout.Button("+ Add", EditorStyles.toolbarButton, GUILayout.Width(52f)))
+            if (GUILayout.Button("Add", EditorStyles.toolbarButton, GUILayout.Width(52f)))
                 AddSkill();
 
             GUI.enabled = _selectedIndex >= 0;
-            if (GUILayout.Button("Duplicate", EditorStyles.toolbarButton, GUILayout.Width(64f)))
+            if (GUILayout.Button("Copy", EditorStyles.toolbarButton, GUILayout.Width(64f)))
                 DuplicateSelected();
 
             GUI.color = _selectedIndex >= 0 ? new Color(1f, 0.55f, 0.55f) : Color.white;
@@ -584,24 +582,17 @@ namespace CrystalMagic.Editor.Skill
             using (new EditorGUI.DisabledScope(true))
                 EditorGUILayout.IntField("Id", skill.Id);
 
-            bool isMonsterSkill = EditorGUILayout.Toggle("Monster Skill", skill.IsMonsterSkill);
-            if (isMonsterSkill != skill.IsMonsterSkill)
-            {
-                skill.IsMonsterSkill = isMonsterSkill;
-                _showMonsterSkills = isMonsterSkill;
-                EnsureSelectedSkillVisible();
-            }
-
             skill.NameKey = EditorGUILayout.TextField("Name Key", skill.NameKey ?? string.Empty);
-            skill.AnimationName = EditorGUILayout.TextField("Animation Name", skill.AnimationName ?? string.Empty);
             EditorGUILayout.LabelField("Description Key");
             skill.DescriptionKey = EditorGUILayout.TextArea(skill.DescriptionKey ?? string.Empty, GUILayout.MinHeight(48f), GUILayout.MaxHeight(80f));
             DrawRuntimeTypeField(skill);
+            skill.InputType = (SkillInputType)EditorGUILayout.EnumPopup("Input Type", skill.InputType);
             skill.IconPath = EditorGUILayout.TextField("Icon Path", skill.IconPath ?? string.Empty);
 
             DrawSectionHeader("Cast");
             skill.MpCost = EditorGUILayout.IntField("MP Cost", skill.MpCost);
             skill.ChantDuration = EditorGUILayout.FloatField("Chant (s)", skill.ChantDuration);
+            skill.CastingMoveMultiplier = Mathf.Max(0f, EditorGUILayout.FloatField("Cast Move Multiplier", skill.CastingMoveMultiplier));
 
             if (EditorGUI.EndChangeCheck())
                 _isDirty = true;
@@ -621,7 +612,21 @@ namespace CrystalMagic.Editor.Skill
         private void DrawEffectChain(SkillData skill)
         {
             skill.EffectChain ??= Array.Empty<EffectData>();
-            skill.EffectChain = DrawEffectChainInline("__root__", skill.EffectChain, ref _addEffectTypeIndex);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField($"{skill.EffectChain.Length} effect(s)");
+            if (GUILayout.Button("Edit Effect Graph", GUILayout.Width(150f)))
+                EffectGraphWindow.Open(CreateEffectBinding(skill, () => { _isDirty = true; Repaint(); }));
+            EditorGUILayout.EndHorizontal();
+        }
+
+        internal static EffectGraphBinding CreateEffectBinding(SkillData skill, Action markDirty)
+        {
+            return new EffectGraphBinding(
+                $"Skill:{skill?.Id ?? -1}:EffectChain",
+                $"Skill [{skill?.Id ?? -1}] {skill?.NameKey}",
+                () => skill?.EffectChain ?? Array.Empty<EffectData>(),
+                effects => { if (skill != null) skill.EffectChain = effects; },
+                markDirty ?? (() => { }));
         }
 
         private EffectData[] DrawEffectChainInline(string stateKey, EffectData[] chain, ref int typeIndex)
@@ -733,18 +738,10 @@ namespace CrystalMagic.Editor.Skill
 
                 foreach (FieldInfo field in effectType.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
                 {
-                    bool disableField =
-                        effect is SpawnVfxEffectData spawnVfxEffect &&
-                        field.Name == nameof(SpawnVfxEffectData.Duration) &&
-                        !spawnVfxEffect.Loop;
-
                     EditorGUI.BeginChangeCheck();
                     object oldValue = field.GetValue(effect);
                     object newValue;
-                    using (new EditorGUI.DisabledScope(disableField))
-                    {
-                        newValue = DrawEffectField(field.FieldType, EditorLabelUtility.GetLabel(field), oldValue, entryKey);
-                    }
+                    newValue = DrawEffectField(field.FieldType, EditorLabelUtility.GetLabel(field), oldValue, entryKey);
 
                     if (EditorGUI.EndChangeCheck())
                     {
@@ -895,205 +892,13 @@ namespace CrystalMagic.Editor.Skill
 
         private void DrawConditionList(List<ConditionConfig> conditions, string keyPrefix)
         {
-            string foldKey = keyPrefix + "_fold";
-            if (!_conditionFoldStates.TryGetValue(foldKey, out bool isOpen))
-                isOpen = true;
-
-            isOpen = EditorGUILayout.Foldout(isOpen, $"Conditions ({conditions.Count})", true);
-            _conditionFoldStates[foldKey] = isOpen;
-            if (!isOpen)
-                return;
-
-            EditorGUI.indentLevel++;
-            DrawAddConditionRow(conditions, keyPrefix);
-
-            int removeAt = -1;
-            for (int i = 0; i < conditions.Count; i++)
+            if (ConditionListEditor.Draw(
+                    conditions,
+                    $"SkillConditions.{keyPrefix}",
+                    EffectConditionSourceSchema.Get(),
+                    () => _isDirty = true))
             {
-                if (!DrawConditionRow(conditions[i]))
-                    removeAt = i;
-            }
-
-            if (removeAt >= 0)
-            {
-                conditions.RemoveAt(removeAt);
                 _isDirty = true;
-            }
-
-            EditorGUI.indentLevel--;
-        }
-
-        private void DrawAddConditionRow(List<ConditionConfig> conditions, string keyPrefix)
-        {
-            string sectionKey = keyPrefix + "_add_section";
-            string sourceKey = keyPrefix + "_src";
-            string compareKey = keyPrefix + "_cmp";
-            if (!_conditionAddSectionStates.ContainsKey(sectionKey))
-                _conditionAddSectionStates[sectionKey] = false;
-            if (!_conditionAddSourceIndices.ContainsKey(sourceKey))
-                _conditionAddSourceIndices[sourceKey] = 0;
-            if (!_conditionAddCompareIndices.ContainsKey(compareKey))
-                _conditionAddCompareIndices[compareKey] = 0;
-
-            Rect headerRect = GetConditionContentRect();
-            EditorGUI.DrawRect(headerRect, ConditionAddHeaderColor);
-            Rect foldoutRect = new(headerRect.x + 6f, headerRect.y, headerRect.width - 12f, headerRect.height);
-            bool isOpen = EditorGUI.Foldout(foldoutRect, _conditionAddSectionStates[sectionKey], "Add Condition", true);
-            _conditionAddSectionStates[sectionKey] = isOpen;
-            if (!isOpen)
-            {
-                GUILayout.Space(2f);
-                return;
-            }
-
-            Rect rowRect = GetConditionContentRect();
-            const float spacing = 4f;
-            const float buttonWidth = 92f;
-            Rect backgroundRect = new(rowRect.x, rowRect.y - 1f, rowRect.width, rowRect.height + 2f);
-            EditorGUI.DrawRect(backgroundRect, ConditionAddBodyColor);
-            rowRect.x += 6f;
-            rowRect.width = Mathf.Max(0f, rowRect.width - 12f);
-
-            Rect buttonRect = new(rowRect.xMax - buttonWidth, rowRect.y, buttonWidth, rowRect.height);
-            float fieldsWidth = Mathf.Max(0f, buttonRect.x - rowRect.x - spacing);
-            float sourceWidth = fieldsWidth;
-            float compareWidth = 0f;
-
-            if (_compareTypeNames.Length > 0)
-                SplitConditionFieldWidths(fieldsWidth, 0.58f, 72f, 72f, out sourceWidth, out compareWidth);
-
-            Rect sourceRect = new(rowRect.x, rowRect.y, sourceWidth, rowRect.height);
-            Rect compareRect = new(sourceRect.xMax + spacing, rowRect.y, compareWidth, rowRect.height);
-
-            if (_sourceTypeNames.Length > 0)
-            {
-                _conditionAddSourceIndices[sourceKey] = EditorGUI.Popup(
-                    sourceRect,
-                    _conditionAddSourceIndices[sourceKey],
-                    _sourceTypeDisplayNames);
-            }
-            else
-            {
-                EditorGUI.LabelField(sourceRect, "No ISource", EditorStyles.miniLabel);
-            }
-
-            if (_compareTypeNames.Length > 0)
-            {
-                _conditionAddCompareIndices[compareKey] = EditorGUI.Popup(
-                    compareRect,
-                    _conditionAddCompareIndices[compareKey],
-                    _compareTypeDisplayNames);
-            }
-
-            if (GUI.Button(buttonRect, "+ Condition"))
-            {
-                conditions.Add(new ConditionConfig
-                {
-                    SourceType = _sourceTypeNames.Length > 0 ? _sourceTypeNames[_conditionAddSourceIndices[sourceKey]] : string.Empty,
-                    CompareType = _compareTypeNames.Length > 0 ? _compareTypeNames[_conditionAddCompareIndices[compareKey]] : string.Empty,
-                    SourceParam = -1,
-                    ConditionType = ConditionType.Necessary,
-                });
-                _isDirty = true;
-            }
-
-            GUILayout.Space(2f);
-        }
-
-        private bool DrawConditionRow(ConditionConfig condition)
-        {
-            EditorGUI.BeginChangeCheck();
-
-            bool expectsValueWidth = condition.CompareType is "GreaterThan" or "LessThan" or "Equal";
-            Rect rowRect = GetConditionContentRect();
-            const float spacing = 4f;
-            const float conditionTypeWidth = 118f;
-            const float sourceParamWidth = 64f;
-            const float valueWidth = 64f;
-            const float deleteWidth = 24f;
-
-            float trailingWidth = deleteWidth + sourceParamWidth + spacing + (expectsValueWidth ? valueWidth + spacing : 0f);
-            float fieldsWidth = Mathf.Max(0f, rowRect.width - conditionTypeWidth - trailingWidth - spacing * 2f);
-            SplitConditionFieldWidths(fieldsWidth, 0.58f, 72f, 72f, out float sourceWidth, out float compareWidth);
-
-            Rect typeRect = new(rowRect.x, rowRect.y, conditionTypeWidth, rowRect.height);
-            Rect sourceRect = new(typeRect.xMax + spacing, rowRect.y, sourceWidth, rowRect.height);
-            Rect compareRect = new(sourceRect.xMax + spacing, rowRect.y, compareWidth, rowRect.height);
-            Rect sourceParamRect = new(compareRect.xMax + spacing, rowRect.y, sourceParamWidth, rowRect.height);
-            Rect valueRect = new(sourceParamRect.xMax + spacing, rowRect.y, valueWidth, rowRect.height);
-            Rect deleteRect = new(rowRect.xMax - deleteWidth, rowRect.y, deleteWidth, rowRect.height);
-
-            condition.ConditionType = (ConditionType)EditorGUI.EnumPopup(typeRect, condition.ConditionType);
-
-            if (_sourceTypeNames.Length > 0)
-            {
-                int sourceIndex = Mathf.Max(0, Array.IndexOf(_sourceTypeNames, condition.SourceType));
-                sourceIndex = EditorGUI.Popup(sourceRect, sourceIndex, _sourceTypeDisplayNames);
-                condition.SourceType = _sourceTypeNames[sourceIndex];
-            }
-            else
-            {
-                condition.SourceType = EditorGUI.TextField(sourceRect, condition.SourceType);
-            }
-
-            if (_compareTypeNames.Length > 0)
-            {
-                int compareIndex = Mathf.Max(0, Array.IndexOf(_compareTypeNames, condition.CompareType));
-                compareIndex = EditorGUI.Popup(compareRect, compareIndex, _compareTypeDisplayNames);
-                condition.CompareType = _compareTypeNames[compareIndex];
-            }
-            else
-            {
-                condition.CompareType = EditorGUI.TextField(compareRect, condition.CompareType);
-            }
-
-            condition.SourceParam = EditorGUI.IntField(sourceParamRect, condition.SourceParam);
-
-            bool needsValue = condition.CompareType is "GreaterThan" or "LessThan" or "Equal";
-            if (needsValue)
-                condition.CompareValue = EditorGUI.FloatField(valueRect, condition.CompareValue);
-
-            if (EditorGUI.EndChangeCheck())
-                _isDirty = true;
-
-            GUI.color = new Color(1f, 0.5f, 0.5f);
-            bool keep = !GUI.Button(deleteRect, "×");
-            GUI.color = Color.white;
-
-            return keep;
-        }
-
-        private static Rect GetConditionContentRect()
-        {
-            Rect rowRect = EditorGUI.IndentedRect(EditorGUILayout.GetControlRect(false, EditorGUIUtility.singleLineHeight));
-            rowRect.x += 16f;
-            rowRect.width = Mathf.Max(0f, rowRect.width - 16f);
-            return rowRect;
-        }
-
-        private static void SplitConditionFieldWidths(
-            float totalWidth,
-            float leftRatio,
-            float minLeftWidth,
-            float minRightWidth,
-            out float leftWidth,
-            out float rightWidth)
-        {
-            if (totalWidth <= 0f)
-            {
-                leftWidth = 0f;
-                rightWidth = 0f;
-                return;
-            }
-
-            float desiredLeftWidth = totalWidth * leftRatio;
-            leftWidth = Mathf.Clamp(desiredLeftWidth, minLeftWidth, Mathf.Max(minLeftWidth, totalWidth - minRightWidth));
-            rightWidth = Mathf.Max(0f, totalWidth - leftWidth);
-
-            if (rightWidth < minRightWidth)
-            {
-                rightWidth = Mathf.Min(minRightWidth, totalWidth);
-                leftWidth = Mathf.Max(0f, totalWidth - rightWidth);
             }
         }
 
@@ -1170,6 +975,31 @@ namespace CrystalMagic.Editor.Skill
                 writer.WriteValue(value.z);
                 writer.WriteEndObject();
             }
+        }
+    }
+
+    public static class EffectConditionSourceSchema
+    {
+        private static readonly ComparatorParameterDefinition[] s_noParameters = Array.Empty<ComparatorParameterDefinition>();
+        private static UnitSourceSchema s_schema;
+
+        public static UnitSourceSchema Get()
+        {
+            if (s_schema != null)
+                return s_schema;
+
+            UnitSourceSchemaBuilder builder = new();
+            IReadOnlyList<UnitComponentSource> sources = UnitComponentSourceRegistry.Sources;
+            for (int i = 0; i < sources.Count; i++)
+                sources[i]?.Describe(builder);
+
+            builder.AddGet(EffectConditionUtility.OriginEntityKey, typeof(SkillContent), UnitValueCategory.Entity, s_noParameters);
+            builder.AddGet(EffectConditionUtility.TargetEntityKey, typeof(SkillContent), UnitValueCategory.Entity, s_noParameters);
+            builder.AddGet(EffectConditionUtility.OtherEntityKey, typeof(SkillContent), UnitValueCategory.Entity, s_noParameters);
+            builder.AddGet(EffectConditionUtility.PositionKey, typeof(SkillContent), UnitValueCategory.Float3, s_noParameters);
+            builder.AddGet(EffectConditionUtility.TriggerValueKey, typeof(SkillContent), UnitValueCategory.Number, s_noParameters);
+            s_schema = builder.Build();
+            return s_schema;
         }
     }
 }

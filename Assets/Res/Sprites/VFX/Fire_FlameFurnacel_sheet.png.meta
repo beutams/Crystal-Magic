@@ -1,0 +1,626 @@
+fileFormatVersion: 2
+guid: 061c716f18773414aa493c5608fd302a
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -3607074879700163938
+    second: Fire_FlameFurnacel_sheet_0
+  - first:
+      213: 130067698777535980
+    second: Fire_FlameFurnacel_sheet_1
+  - first:
+      213: 6247242178361178291
+    second: Fire_FlameFurnacel_sheet_2
+  - first:
+      213: 4920735651252849753
+    second: Fire_FlameFurnacel_sheet_3
+  - first:
+      213: -5088210789016189607
+    second: Fire_FlameFurnacel_sheet_4
+  - first:
+      213: 6860798756419810932
+    second: Fire_FlameFurnacel_sheet_5
+  - first:
+      213: 5856464982393257740
+    second: Fire_FlameFurnacel_sheet_6
+  - first:
+      213: 8324892384624995126
+    second: Fire_FlameFurnacel_sheet_7
+  - first:
+      213: -7555349636521704601
+    second: Fire_FlameFurnacel_sheet_8
+  - first:
+      213: -6458054742769766650
+    second: Fire_FlameFurnacel_sheet_9
+  - first:
+      213: -6337425185425408700
+    second: Fire_FlameFurnacel_sheet_10
+  - first:
+      213: -7005471580029552795
+    second: Fire_FlameFurnacel_sheet_11
+  - first:
+      213: -4494798104886593541
+    second: Fire_FlameFurnacel_sheet_12
+  - first:
+      213: -4269516124613326985
+    second: Fire_FlameFurnacel_sheet_13
+  - first:
+      213: 4011008136947716278
+    second: Fire_FlameFurnacel_sheet_14
+  - first:
+      213: 1683622533766731852
+    second: Fire_FlameFurnacel_sheet_15
+  - first:
+      213: -5695574151268978697
+    second: Fire_FlameFurnacel_sheet_16
+  - first:
+      213: -4932700942245325794
+    second: Fire_FlameFurnacel_sheet_17
+  - first:
+      213: -2929437054115810824
+    second: Fire_FlameFurnacel_sheet_18
+  - first:
+      213: 1384780941326295125
+    second: Fire_FlameFurnacel_sheet_19
+  - first:
+      213: 2771252180238723598
+    second: Fire_FlameFurnacel_sheet_20
+  - first:
+      213: 1875296553465765053
+    second: Fire_FlameFurnacel_sheet_21
+  - first:
+      213: -3997941640339465825
+    second: Fire_FlameFurnacel_sheet_22
+  - first:
+      213: -2512016008961892877
+    second: Fire_FlameFurnacel_sheet_23
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 16
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Fire_FlameFurnacel_sheet_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e92ac3d028811fdc0800000000000000
+      internalID: -3607074879700163938
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire_FlameFurnacel_sheet_1
+      rect:
+        serializedVersion: 2
+        x: 100
+        y: 0
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ce5336602e71ec100800000000000000
+      internalID: 130067698777535980
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire_FlameFurnacel_sheet_2
+      rect:
+        serializedVersion: 2
+        x: 200
+        y: 0
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3b83e0379a9a2b650800000000000000
+      internalID: 6247242178361178291
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire_FlameFurnacel_sheet_3
+      rect:
+        serializedVersion: 2
+        x: 300
+        y: 0
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 95cc68ee007f94440800000000000000
+      internalID: 4920735651252849753
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire_FlameFurnacel_sheet_4
+      rect:
+        serializedVersion: 2
+        x: 400
+        y: 0
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9554162fe3b0369b0800000000000000
+      internalID: -5088210789016189607
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire_FlameFurnacel_sheet_5
+      rect:
+        serializedVersion: 2
+        x: 500
+        y: 0
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 47638df6e14763f50800000000000000
+      internalID: 6860798756419810932
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire_FlameFurnacel_sheet_6
+      rect:
+        serializedVersion: 2
+        x: 600
+        y: 0
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c0f70136fd7564150800000000000000
+      internalID: 5856464982393257740
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire_FlameFurnacel_sheet_7
+      rect:
+        serializedVersion: 2
+        x: 700
+        y: 0
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 63b6de24485f78370800000000000000
+      internalID: 8324892384624995126
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire_FlameFurnacel_sheet_8
+      rect:
+        serializedVersion: 2
+        x: 800
+        y: 0
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7634f391981062790800000000000000
+      internalID: -7555349636521704601
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire_FlameFurnacel_sheet_9
+      rect:
+        serializedVersion: 2
+        x: 900
+        y: 0
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 60f6e2d7d616066a0800000000000000
+      internalID: -6458054742769766650
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire_FlameFurnacel_sheet_10
+      rect:
+        serializedVersion: 2
+        x: 1000
+        y: 0
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 44dba18fe51fc08a0800000000000000
+      internalID: -6337425185425408700
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire_FlameFurnacel_sheet_11
+      rect:
+        serializedVersion: 2
+        x: 1100
+        y: 0
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5677e3ce6b097ce90800000000000000
+      internalID: -7005471580029552795
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire_FlameFurnacel_sheet_12
+      rect:
+        serializedVersion: 2
+        x: 1200
+        y: 0
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf7b22520f44f91c0800000000000000
+      internalID: -4494798104886593541
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire_FlameFurnacel_sheet_13
+      rect:
+        serializedVersion: 2
+        x: 1300
+        y: 0
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 777ce9d94b1afb4c0800000000000000
+      internalID: -4269516124613326985
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire_FlameFurnacel_sheet_14
+      rect:
+        serializedVersion: 2
+        x: 1400
+        y: 0
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6b058f936a6f9a730800000000000000
+      internalID: 4011008136947716278
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire_FlameFurnacel_sheet_15
+      rect:
+        serializedVersion: 2
+        x: 1500
+        y: 0
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c48520536cd6d5710800000000000000
+      internalID: 1683622533766731852
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire_FlameFurnacel_sheet_16
+      rect:
+        serializedVersion: 2
+        x: 1600
+        y: 0
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7ff27b16c7145f0b0800000000000000
+      internalID: -5695574151268978697
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire_FlameFurnacel_sheet_17
+      rect:
+        serializedVersion: 2
+        x: 1700
+        y: 0
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e149b3aa0a68b8bb0800000000000000
+      internalID: -4932700942245325794
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire_FlameFurnacel_sheet_18
+      rect:
+        serializedVersion: 2
+        x: 1800
+        y: 0
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8f17f85258c8857d0800000000000000
+      internalID: -2929437054115810824
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: ec6e4c8d2241b7549839fc7b1ed7d5ef
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Fire_FlameFurnacel_sheet_0: -3607074879700163938
+      Fire_FlameFurnacel_sheet_1: 130067698777535980
+      Fire_FlameFurnacel_sheet_10: -6337425185425408700
+      Fire_FlameFurnacel_sheet_11: -7005471580029552795
+      Fire_FlameFurnacel_sheet_12: -4494798104886593541
+      Fire_FlameFurnacel_sheet_13: -4269516124613326985
+      Fire_FlameFurnacel_sheet_14: 4011008136947716278
+      Fire_FlameFurnacel_sheet_15: 1683622533766731852
+      Fire_FlameFurnacel_sheet_16: -5695574151268978697
+      Fire_FlameFurnacel_sheet_17: -4932700942245325794
+      Fire_FlameFurnacel_sheet_18: -2929437054115810824
+      Fire_FlameFurnacel_sheet_2: 6247242178361178291
+      Fire_FlameFurnacel_sheet_3: 4920735651252849753
+      Fire_FlameFurnacel_sheet_4: -5088210789016189607
+      Fire_FlameFurnacel_sheet_5: 6860798756419810932
+      Fire_FlameFurnacel_sheet_6: 5856464982393257740
+      Fire_FlameFurnacel_sheet_7: 8324892384624995126
+      Fire_FlameFurnacel_sheet_8: -7555349636521704601
+      Fire_FlameFurnacel_sheet_9: -6458054742769766650
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

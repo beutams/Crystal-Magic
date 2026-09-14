@@ -1,17 +1,21 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CrystalMagic.Game.Data;
 using Unity.Entities;
 
 public sealed class StateScriptRuntime
 {
     private const int MaxPulseDepth = 128;
+    private static readonly ComparatorFactory s_comparatorFactory = CreateComparatorFactory();
 
     private readonly Dictionary<string, StateScriptNode> _nodes = new(StringComparer.Ordinal);
     private readonly List<StateScriptNode> _nodesInTraversalOrder = new();
     private readonly List<StateScriptStateNode> _statesInTickOrder = new();
+    private Comparator _executionCondition;
     private StateScriptEntryNode _entry;
     private int _pulseDepth;
+    private bool _isExecutionActive;
 
     internal StateScriptRuntime(
         StateScriptInstanceData data,
@@ -48,13 +52,26 @@ public sealed class StateScriptRuntime
             return;
 
         IsStarted = true;
-        _entry.Start();
+        BeginExecutionIfNeeded();
     }
 
     public void Tick(float deltaTime)
     {
         if (!IsBound)
             return;
+
+        if (!IsExecutionEnabled())
+        {
+            if (_isExecutionActive)
+            {
+                StopAllWithoutOutput();
+                _isExecutionActive = false;
+            }
+
+            return;
+        }
+
+        BeginExecutionIfNeeded();
 
         DeltaTime = deltaTime;
         TickVersion++;
@@ -115,20 +132,69 @@ public sealed class StateScriptRuntime
             return;
         }
 
-        for (int i = 0; i < _nodesInTraversalOrder.Count; i++)
+        foreach (StateScriptStateNode state in _nodesInTraversalOrder
+                     .OfType<StateScriptStateNode>()
+                     .OrderBy(state => ((StateStateScriptNodeData)state.Data).TickOrder))
         {
-            if (_nodesInTraversalOrder[i] is StateScriptStateNode state)
-                _statesInTickOrder.Add(state);
+            _statesInTickOrder.Add(state);
         }
 
         IsBound = true;
         BindingError = string.Empty;
     }
 
+    internal bool TryBindExecutionConditions(out string error)
+    {
+        Data.ExecutionConditions ??= new List<ConditionConfig>();
+        if (Data.ExecutionConditions.Count == 0)
+        {
+            _executionCondition = null;
+            error = string.Empty;
+            return true;
+        }
+
+        for (int i = 0; i < Data.ExecutionConditions.Count; i++)
+        {
+            if (Data.ExecutionConditions[i] != null)
+                Data.ExecutionConditions[i].ConditionType = ConditionType.Necessary;
+        }
+
+        _executionCondition = s_comparatorFactory.BuildComparator(Data.ExecutionConditions, Sources);
+        if (_executionCondition == null || !_executionCondition.IsValid)
+        {
+            error = "StateScript graph execution condition is invalid.";
+            return false;
+        }
+
+        error = string.Empty;
+        return true;
+    }
+
     internal void FailBuild(string error)
     {
         IsBound = false;
         BindingError = error ?? string.Empty;
+    }
+
+    private bool IsExecutionEnabled()
+    {
+        return _executionCondition == null || _executionCondition.GetResult();
+    }
+
+    private void BeginExecutionIfNeeded()
+    {
+        if (_isExecutionActive || _entry == null || !IsExecutionEnabled())
+            return;
+
+        _isExecutionActive = true;
+        _entry.Start();
+    }
+
+    private static ComparatorFactory CreateComparatorFactory()
+    {
+        ComparatorFactory factory = new();
+        ComparatorRegistry.RegisterAll(factory);
+        return factory;
     }
 
     private void BuildTraversalOrder()
@@ -183,6 +249,9 @@ public static class StateScriptRuntimeBuilder
         }
 
         StateScriptRuntime runtime = new(data, entity, entityManager, sources);
+        if (!runtime.TryBindExecutionConditions(out error))
+            return null;
+
         for (int i = 0; i < data.Nodes.Count; i++)
         {
             StateScriptNodeData nodeData = data.Nodes[i];

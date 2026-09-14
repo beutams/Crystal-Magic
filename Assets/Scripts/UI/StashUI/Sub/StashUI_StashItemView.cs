@@ -69,6 +69,6 @@ public class StashUI_StashItemView : UISubView<StashUI_StashItemData>, IBeginDra
         if (string.IsNullOrEmpty(iconPath))
             return null;
 
-        return LoadManagedResource<Sprite>(iconPath);
+        return LoadManagedSprite(iconPath);
     }
 }

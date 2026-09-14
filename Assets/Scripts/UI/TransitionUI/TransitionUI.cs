@@ -1,128 +1,83 @@
+using System.Collections;
 using CrystalMagic.Core;
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
-public class TransitionUI : UIBase<TransitionUIData>
+public class TransitionUI : UIBase<TransitionUIData>, ITransitionUI
 {
-    private const string TitleNodeName = "LoadingTitle";
-    private const string DetailNodeName = "LoadingDetail";
-    private const string ProgressBackgroundNodeName = "LoadingProgressBackground";
-    private const string ProgressFillNodeName = "LoadingProgressFill";
+    private const float MaximumFadeFrameDeltaSeconds = 1f / 30f;
 
-    private TextMeshProUGUI _titleText;
-    private TextMeshProUGUI _detailText;
-    private Image _progressFillImage;
+    [SerializeField] private float _fadeDuration = 1f;
+
+    private CanvasGroup _canvasGroup;
+    private bool _debugEnabled;
 
     protected override void OnInit()
     {
         base.OnInit();
-        EnsureRuntimeWidgets();
+        _canvasGroup = GetComponent<CanvasGroup>();
+        _canvasGroup.alpha = 0f;
     }
 
     public override void OnOpen()
     {
+        DebugComponent.Instance.EnabledChanged += HandleDebugEnabledChanged;
+        HandleDebugEnabledChanged(DebugComponent.Instance.IsEnabled);
         SetStatus("Loading", string.Empty, 0f);
     }
 
     public override void OnClose()
     {
+        DebugComponent.Instance.EnabledChanged -= HandleDebugEnabledChanged;
+    }
+
+    private void HandleDebugEnabledChanged(bool isEnabled)
+    {
+        _debugEnabled = isEnabled;
+        UI.Debug.GameObject.SetActive(_debugEnabled);
     }
 
     public void SetStatus(string title, string detail, float progress)
     {
-        if (_titleText != null)
-            _titleText.text = string.IsNullOrWhiteSpace(title) ? "Loading" : title;
-        if (_detailText != null)
-            _detailText.text = detail ?? string.Empty;
-        if (_progressFillImage != null)
-            _progressFillImage.fillAmount = Mathf.Clamp01(progress);
-    }
+        UI.BarMask_Bar.Image.fillAmount = Mathf.Clamp01(progress);
 
-    private void EnsureRuntimeWidgets()
-    {
-        RectTransform container = UI?.Image?.RectTransform ?? transform as RectTransform;
-        if (container == null)
+        if (!_debugEnabled)
             return;
 
-        TMP_FontAsset fontAsset = TMP_Settings.defaultFontAsset;
-        if (fontAsset == null)
-            fontAsset = Resources.Load<TMP_FontAsset>("Fonts & Materials/LiberationSans SDF");
-        _titleText = GetOrCreateText(container, TitleNodeName, fontAsset, 34f, FontStyles.Bold, new Vector2(0.5f, 0.62f), new Vector2(0.5f, 0.62f), Vector2.zero, new Vector2(760f, 60f));
-        _detailText = GetOrCreateText(container, DetailNodeName, fontAsset, 24f, FontStyles.Normal, new Vector2(0.5f, 0.54f), new Vector2(0.5f, 0.54f), Vector2.zero, new Vector2(900f, 120f));
-
-        RectTransform progressBackground = GetOrCreateRect(container, ProgressBackgroundNodeName, new Vector2(0.5f, 0.43f), new Vector2(0.5f, 0.43f), Vector2.zero, new Vector2(720f, 24f));
-        Image backgroundImage = progressBackground.GetComponent<Image>();
-        if (backgroundImage == null)
-            backgroundImage = progressBackground.gameObject.AddComponent<Image>();
-        backgroundImage.color = new Color(1f, 1f, 1f, 0.16f);
-        backgroundImage.raycastTarget = false;
-
-        RectTransform progressFill = GetOrCreateRect(progressBackground, ProgressFillNodeName, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-        _progressFillImage = progressFill.GetComponent<Image>();
-        if (_progressFillImage == null)
-            _progressFillImage = progressFill.gameObject.AddComponent<Image>();
-        _progressFillImage.color = new Color(0.34f, 0.76f, 1f, 0.96f);
-        _progressFillImage.type = Image.Type.Filled;
-        _progressFillImage.fillMethod = Image.FillMethod.Horizontal;
-        _progressFillImage.fillOrigin = 0;
-        _progressFillImage.fillAmount = 0f;
-        _progressFillImage.raycastTarget = false;
+        UI.Debug_LoadingTitle.TextMeshProUGUI.text = string.IsNullOrWhiteSpace(title) ? "Loading" : title;
+        UI.Debug_LoadingDetail.TextMeshProUGUI.text = detail ?? string.Empty;
     }
 
-    private static TextMeshProUGUI GetOrCreateText(
-        RectTransform parent,
-        string nodeName,
-        TMP_FontAsset fontAsset,
-        float fontSize,
-        FontStyles fontStyle,
-        Vector2 anchorMin,
-        Vector2 anchorMax,
-        Vector2 anchoredPosition,
-        Vector2 sizeDelta)
+    public IEnumerator Show()
     {
-        RectTransform rectTransform = GetOrCreateRect(parent, nodeName, anchorMin, anchorMax, anchoredPosition, sizeDelta);
-        TextMeshProUGUI text = rectTransform.GetComponent<TextMeshProUGUI>();
-        if (text == null)
-            text = rectTransform.gameObject.AddComponent<LocalizedTextMeshProUGUI>();
+        float elapsed = 0f;
+        while (elapsed < _fadeDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / _fadeDuration);
+            _canvasGroup.alpha = 1f - Mathf.Pow(1f - t, 3f);
+            yield return null;
+        }
 
-        if (fontAsset != null)
-            text.font = fontAsset;
-        text.fontSize = fontSize;
-        text.fontStyle = fontStyle;
-        text.alignment = TextAlignmentOptions.Center;
-        text.color = Color.white;
-        text.textWrappingMode = TextWrappingModes.Normal;
-        text.raycastTarget = false;
-        return text;
+        _canvasGroup.alpha = 1f;
     }
 
-    private static RectTransform GetOrCreateRect(
-        RectTransform parent,
-        string nodeName,
-        Vector2 anchorMin,
-        Vector2 anchorMax,
-        Vector2 anchoredPosition,
-        Vector2 sizeDelta)
+    public IEnumerator Hide()
     {
-        Transform existing = parent.Find(nodeName);
-        RectTransform rectTransform;
-        if (existing == null)
+        // FadeOutStarted synchronously enters the target state. Keep its first frame
+        // opaque, then cap each accumulated frame delta so scene setup hitches cannot
+        // consume the entire fade before the next rendered frame.
+        _canvasGroup.alpha = 1f;
+        yield return null;
+
+        float elapsed = 0f;
+        while (elapsed < _fadeDuration)
         {
-            GameObject node = new GameObject(nodeName, typeof(RectTransform));
-            rectTransform = node.GetComponent<RectTransform>();
-            rectTransform.SetParent(parent, false);
-        }
-        else
-        {
-            rectTransform = existing as RectTransform;
+            elapsed += Mathf.Min(Time.unscaledDeltaTime, MaximumFadeFrameDeltaSeconds);
+            float t = Mathf.Clamp01(elapsed / _fadeDuration);
+            _canvasGroup.alpha = 1f - t;
+            yield return null;
         }
 
-        rectTransform.anchorMin = anchorMin;
-        rectTransform.anchorMax = anchorMax;
-        rectTransform.anchoredPosition = anchoredPosition;
-        rectTransform.sizeDelta = sizeDelta;
-        rectTransform.pivot = new Vector2(0.5f, 0.5f);
-        return rectTransform;
+        _canvasGroup.alpha = 0f;
     }
 }

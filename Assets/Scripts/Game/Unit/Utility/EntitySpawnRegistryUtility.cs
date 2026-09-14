@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
 
@@ -5,6 +6,27 @@ namespace CrystalMagic.Game.Unit
 {
     public static class EntitySpawnRegistryUtility
     {
+        public static void GetRegisteredUnitNames(EntityManager entityManager, List<string> destination)
+        {
+            destination.Clear();
+
+            if (!TryGetRegistryEntity(entityManager, out Entity registryEntity) ||
+                !entityManager.HasBuffer<UnitEntityPrefabRegistryEntry>(registryEntity))
+            {
+                return;
+            }
+
+            DynamicBuffer<UnitEntityPrefabRegistryEntry> buffer = entityManager.GetBuffer<UnitEntityPrefabRegistryEntry>(registryEntity);
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                UnitEntityPrefabRegistryEntry entry = buffer[i];
+                if (entry.Prefab != Entity.Null)
+                    destination.Add(entry.Name.ToString());
+            }
+
+            destination.Sort(System.StringComparer.Ordinal);
+        }
+
         public static bool TryGetUnitPrefab(EntityManager entityManager, in FixedString128Bytes unitName, out Entity prefab)
         {
             if (!TryGetRegistryEntity(entityManager, out Entity registryEntity) ||
@@ -60,7 +82,7 @@ namespace CrystalMagic.Game.Unit
             }
 
             instance = entityManager.Instantiate(prefab);
-            InitializeDestroyFlag(entityManager, instance);
+            InitializeInstantiatedEntity(entityManager, instance, unitName);
             return instance != Entity.Null;
         }
 
@@ -73,7 +95,7 @@ namespace CrystalMagic.Game.Unit
             }
 
             instance = entityManager.Instantiate(prefab);
-            InitializeDestroyFlag(entityManager, instance);
+            InitializeInstantiatedEntity(entityManager, instance, projectileName);
             return instance != Entity.Null;
         }
 
@@ -109,7 +131,7 @@ namespace CrystalMagic.Game.Unit
             }
 
             instance = entityManager.Instantiate(prefab);
-            InitializeDestroyFlag(entityManager, instance);
+            InitializeInstantiatedEntity(entityManager, instance, dropName);
             return instance != Entity.Null;
         }
 
@@ -145,7 +167,7 @@ namespace CrystalMagic.Game.Unit
             }
 
             instance = entityManager.Instantiate(prefab);
-            InitializeDestroyFlag(entityManager, instance);
+            InitializeInstantiatedEntity(entityManager, instance, prefabName);
             return instance != Entity.Null;
         }
 
@@ -181,8 +203,20 @@ namespace CrystalMagic.Game.Unit
             }
 
             instance = entityManager.Instantiate(prefab);
-            InitializeDestroyFlag(entityManager, instance);
+            InitializeInstantiatedEntity(entityManager, instance, prefabName);
             return instance != Entity.Null;
+        }
+
+        private static void InitializeInstantiatedEntity(
+            EntityManager entityManager,
+            Entity entity,
+            in FixedString128Bytes prefabName)
+        {
+            InitializeDestroyFlag(entityManager, entity);
+#if UNITY_EDITOR
+            if (entity != Entity.Null && entityManager.Exists(entity))
+                entityManager.SetName(entity, new FixedString64Bytes(prefabName.ToString()));
+#endif
         }
 
         public static void InitializeDestroyFlag(EntityManager entityManager, Entity entity)

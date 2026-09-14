@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using CrystalMagic.Game.Skill;
+using CrystalMagic.Game.Skill.Effects;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
+[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(SkillProjectileSpawnSystem))]
 public partial class SkillProjectileSystem : SystemBase
@@ -110,6 +112,9 @@ public partial class SkillProjectileSystem : SystemBase
             if (HasHitEntity(hitEntities, hit.Entity))
                 continue;
 
+            if (!EffectConditionUtility.Pass(payload.CollisionTargetConditions, payload.Context, hit.Entity))
+                continue;
+
             float distanceSq = math.lengthsq(hit.Position.xy - projectilePosition.xy);
             if (distanceSq >= bestDistanceSq)
                 continue;
@@ -151,6 +156,12 @@ public partial class SkillProjectileSystem : SystemBase
 
         if (!EntityManager.Exists(entity))
             return;
+
+        if (EntityManager.HasComponent<SkillProjectileVisualLinkComponent>(entity))
+        {
+            Entity visualEntity = EntityManager.GetComponentData<SkillProjectileVisualLinkComponent>(entity).VisualEntity;
+            SpriteEffectAnimationSystem.RequestEnd(EntityManager, visualEntity);
+        }
 
         if (!EntityManager.HasComponent<DestroyEntityFlag>(entity))
             EntityManager.AddComponent<DestroyEntityFlag>(entity);

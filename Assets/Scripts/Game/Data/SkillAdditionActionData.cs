@@ -47,9 +47,4 @@ namespace CrystalMagic.Game.Data
         public EffectData[] Effects = Array.Empty<EffectData>();
     }
 
-    [Serializable]
-    [FactoryKey("ReplayCurrentSkill", 30, "Replay Current Skill")]
-    public sealed class ReplayCurrentSkillAdditionActionData : SkillAdditionActionData
-    {
-    }
 }

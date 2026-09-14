@@ -1,8 +1,9 @@
 using Unity.Entities;
 using Unity.Mathematics;
 
-[UpdateInGroup(typeof(UnitInitializationSystemGroup))]
-[UpdateAfter(typeof(UnitBuffSystem))]
+[RunInGameWorld(GameWorldKind.Dungeon)]
+[UpdateInGroup(typeof(UnitExecutionSystemGroup))]
+[UpdateBefore(typeof(UnitControlSystem))]
 partial class UnitRecoverySystem : SystemBase
 {
     protected override void OnUpdate()

@@ -20,6 +20,9 @@ namespace CrystalMagic.Core {
         private World _followQueryWorld;
         private EntityQuery _playerFollowQuery;
         private float _screenShakeScale = 1f;
+        private Rect _worldBounds;
+        private int _worldBoundsOwnerId;
+        private bool _hasWorldBounds;
 
         /// <summary>当前活跃的场景相机</summary>
         public Camera Current => _current != null ? _current.Camera : Camera.main;
@@ -41,6 +44,31 @@ namespace CrystalMagic.Core {
             }
         }
 
+        public void SetWorldBounds(int ownerId, Rect worldBounds)
+        {
+            if (ownerId == 0 || worldBounds.width <= 0f || worldBounds.height <= 0f)
+                return;
+
+            _worldBounds = Rect.MinMaxRect(
+                Mathf.Min(worldBounds.xMin, worldBounds.xMax),
+                Mathf.Min(worldBounds.yMin, worldBounds.yMax),
+                Mathf.Max(worldBounds.xMin, worldBounds.xMax),
+                Mathf.Max(worldBounds.yMin, worldBounds.yMax));
+            _worldBoundsOwnerId = ownerId;
+            _hasWorldBounds = true;
+            ClampCameraToWorldBounds(Current);
+        }
+
+        public void ClearWorldBounds(int ownerId)
+        {
+            if (!_hasWorldBounds || ownerId == 0 || _worldBoundsOwnerId != ownerId)
+                return;
+
+            _worldBounds = default;
+            _worldBoundsOwnerId = 0;
+            _hasWorldBounds = false;
+        }
+
         private void LateUpdate()
         {
             RestoreShakeOffset();
@@ -50,6 +78,7 @@ namespace CrystalMagic.Core {
                 return;
 
             ApplyFollow(camera, Time.deltaTime);
+            ClampCameraToWorldBounds(camera);
 
             if (_shakes.Count == 0)
                 return;
@@ -59,9 +88,13 @@ namespace CrystalMagic.Core {
             if (offset == Vector3.zero)
                 return;
 
-            _lastShakeOffset = offset;
+            Vector3 constrainedPosition = ClampCameraPosition(camera, basePosition + offset);
+            _lastShakeOffset = constrainedPosition - basePosition;
+            if (_lastShakeOffset == Vector3.zero)
+                return;
+
             _shakeAppliedCamera = camera;
-            camera.transform.position = basePosition + offset;
+            camera.transform.position = constrainedPosition;
         }
         #region Shake
         public void SetScreenShakeScale(float scale)
@@ -165,6 +198,55 @@ namespace CrystalMagic.Core {
             camera.transform.position = Vector3.Lerp(currentPosition, desiredPosition, t);
         }
 
+        private void ClampCameraToWorldBounds(Camera camera)
+        {
+            if (camera != null)
+                camera.transform.position = ClampCameraPosition(camera, camera.transform.position);
+        }
+
+        private Vector3 ClampCameraPosition(Camera camera, Vector3 position)
+        {
+            if (!_hasWorldBounds || camera == null || !TryGetCameraHalfViewSize(camera, position, out Vector2 halfViewSize))
+                return position;
+
+            position.x = ClampAxisToBounds(position.x, _worldBounds.xMin, _worldBounds.xMax, halfViewSize.x);
+            position.y = ClampAxisToBounds(position.y, _worldBounds.yMin, _worldBounds.yMax, halfViewSize.y);
+            return position;
+        }
+
+        private static bool TryGetCameraHalfViewSize(Camera camera, Vector3 position, out Vector2 halfViewSize)
+        {
+            float aspect = Mathf.Max(0.0001f, camera.aspect);
+            if (camera.orthographic)
+            {
+                float halfHeight = Mathf.Max(0f, camera.orthographicSize);
+                halfViewSize = new Vector2(halfHeight * aspect, halfHeight);
+                return true;
+            }
+
+            float distanceToMapPlane = Mathf.Abs(position.z);
+            if (distanceToMapPlane <= 0.0001f)
+            {
+                halfViewSize = default;
+                return false;
+            }
+
+            float halfVerticalFovRadians = camera.fieldOfView * Mathf.Deg2Rad * 0.5f;
+            float perspectiveHalfHeight = Mathf.Tan(halfVerticalFovRadians) * distanceToMapPlane;
+            halfViewSize = new Vector2(perspectiveHalfHeight * aspect, perspectiveHalfHeight);
+            return true;
+        }
+
+        private static float ClampAxisToBounds(float value, float minimum, float maximum, float halfViewSize)
+        {
+            float minimumCenter = minimum + halfViewSize;
+            float maximumCenter = maximum - halfViewSize;
+            if (minimumCenter > maximumCenter)
+                return (minimum + maximum) * 0.5f;
+
+            return Mathf.Clamp(value, minimumCenter, maximumCenter);
+        }
+
         private bool TryGetPlayerTargetPosition(out Vector3 targetPosition)
         {
             targetPosition = Vector3.zero;
@@ -211,6 +293,9 @@ namespace CrystalMagic.Core {
             _shakes.Clear();
             _current = null;
             _followQueryWorld = null;
+            _worldBounds = default;
+            _worldBoundsOwnerId = 0;
+            _hasWorldBounds = false;
             base.Cleanup();
         }
 

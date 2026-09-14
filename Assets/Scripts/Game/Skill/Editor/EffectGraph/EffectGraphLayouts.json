@@ -1,0 +1,413 @@
+{
+    "Version": 1,
+    "Entries": [
+        {
+            "OwnerKey": "Skill:0:EffectChain",
+            "Layout": {
+                "ViewPosition": {
+                    "x": -62.0,
+                    "y": -301.0
+                },
+                "ViewScale": 1.0,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 68.0,
+                            "y": 209.0
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/0/OnCollisionEffects",
+                        "Position": {
+                            "x": 35.0,
+                            "y": 392.0
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/0/OnDestroyEffects",
+                        "Position": {
+                            "x": 239.0,
+                            "y": 394.0
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/0/OnDestroyEffects/1/OnAfterSearch",
+                        "Position": {
+                            "x": 289.0,
+                            "y": 655.0
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "SkillAddition:0:Callbacks[0].Actions[0].Effects",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 0.0,
+                    "y": 49.33333206176758
+                },
+                "ViewScale": 1.0,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 196.6666717529297,
+                            "y": 25.333335876464845
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "Skill:1:EffectChain",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 198.0,
+                    "y": -44.0
+                },
+                "ViewScale": 0.6575162410736084,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 54.0,
+                            "y": 198.0
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/0/OnDestroyEffects",
+                        "Position": {
+                            "x": 155.0,
+                            "y": 374.0
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/0/OnDestroyEffects/1/OnAfterSearch",
+                        "Position": {
+                            "x": 203.0,
+                            "y": 660.0
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "Buff:0:TriggerEntries[0].Effects",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 0.0,
+                    "y": 15.0
+                },
+                "ViewScale": 1.0,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 84.0,
+                            "y": 201.0
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "SkillAddition:4:Callbacks[0].Actions[1].Effects",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "ViewScale": 1.0,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 280.0,
+                            "y": 60.0
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "SkillAddition:4:Callbacks[0].Actions[0].Effects",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 0.0,
+                    "y": 13.0
+                },
+                "ViewScale": 1.0,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 59.0,
+                            "y": 191.0
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "SkillAddition:4:Callbacks[1].Actions[0].Effects",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 0.0,
+                    "y": 2.0
+                },
+                "ViewScale": 1.0,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 72.0,
+                            "y": 254.0
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "Skill:2:EffectChain",
+            "Layout": {
+                "ViewPosition": {
+                    "x": -52.0,
+                    "y": -390.0
+                },
+                "ViewScale": 0.8695651888847351,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 57.0,
+                            "y": 184.0
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/1/OnEndEffects",
+                        "Position": {
+                            "x": 286.0,
+                            "y": 456.0
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/1/OnEndEffects/1/OnAfterSearch",
+                        "Position": {
+                            "x": 334.0,
+                            "y": 740.0
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "SkillAddition:5:Callbacks[0].Actions[0].Effects",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 0.0,
+                    "y": 16.0
+                },
+                "ViewScale": 1.0,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 57.0,
+                            "y": 201.0
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "SkillAddition:6:Callbacks[0].Actions[0].Effects",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 0.0,
+                    "y": 12.0
+                },
+                "ViewScale": 1.0,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 58.0,
+                            "y": 214.0
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "Buff:8:TriggerEntries[0].Effects",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 0.0,
+                    "y": 23.0
+                },
+                "ViewScale": 1.0,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 58.0,
+                            "y": 206.0
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "Skill:5:EffectChain",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 65.33333587646485,
+                    "y": -235.3333282470703
+                },
+                "ViewScale": 0.7561436891555786,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 84.0,
+                            "y": 180.6666717529297
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/0/OnAfterSearch",
+                        "Position": {
+                            "x": 129.3333282470703,
+                            "y": 334.0
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/0/OnAfterSearch/1/OnAfterRead",
+                        "Position": {
+                            "x": 349.3333435058594,
+                            "y": 686.0
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/0/OnAfterSearch/2/OnAfterRead",
+                        "Position": {
+                            "x": 191.3333282470703,
+                            "y": 694.0
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "Skill:6:EffectChain",
+            "Layout": {
+                "ViewPosition": {
+                    "x": -14.0,
+                    "y": 11.333333015441895
+                },
+                "ViewScale": 0.6575162410736084,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": -4.0,
+                            "y": 194.0
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/0/OnStartEffects",
+                        "Position": {
+                            "x": 37.33333206176758,
+                            "y": 523.3333129882813
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/0/OnStartEffects/1/OnAfterSearch",
+                        "Position": {
+                            "x": 60.0,
+                            "y": 784.6666870117188
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/0/OnEndEffects",
+                        "Position": {
+                            "x": 272.6666564941406,
+                            "y": 411.3333435058594
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/1/OnEndEffects",
+                        "Position": {
+                            "x": 516.6666870117188,
+                            "y": 552.6666870117188
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/2/OnEndEffects",
+                        "Position": {
+                            "x": 294.0,
+                            "y": 562.6666870117188
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        },
+        {
+            "OwnerKey": "Skill:19:EffectChain",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 0.0,
+                    "y": 4.0
+                },
+                "ViewScale": 1.0,
+                "Containers": [
+                    {
+                        "Path": "root",
+                        "Position": {
+                            "x": 64.80000305175781,
+                            "y": 179.20001220703126
+                        },
+                        "Expanded": true
+                    },
+                    {
+                        "Path": "root/0/OnAfterSearch",
+                        "Position": {
+                            "x": 146.39999389648438,
+                            "y": 367.20001220703127
+                        },
+                        "Expanded": true
+                    }
+                ]
+            }
+        }
+    ]
+}

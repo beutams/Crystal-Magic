@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using CrystalMagic.Game.Data;
+using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -27,6 +28,8 @@ namespace CrystalMagic.Editor.Unit
             grid.StretchToParentSize();
 
             graphViewChanged = OnGraphViewChanged;
+            RegisterCallback<MouseUpEvent>(_ => _window.NotifyGraphNodeSelected(GetSelectedNodeData()?.Guid));
+            RegisterCallback<KeyUpEvent>(_ => _window.NotifyGraphNodeSelected(GetSelectedNodeData()?.Guid));
         }
 
         public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter adapter)
@@ -87,6 +90,16 @@ namespace CrystalMagic.Editor.Unit
         public StateScriptNodeData GetSelectedNodeData()
         {
             return selection?.OfType<StateScriptNodeView>().FirstOrDefault()?.NodeData;
+        }
+
+        public bool SelectNode(string nodeGuid)
+        {
+            if (string.IsNullOrWhiteSpace(nodeGuid) || !_nodeViews.TryGetValue(nodeGuid, out StateScriptNodeView view))
+                return false;
+
+            ClearSelection();
+            AddToSelection(view);
+            return true;
         }
 
         private bool AddNode(StateScriptNodeData nodeData)
@@ -344,9 +357,13 @@ namespace CrystalMagic.Editor.Unit
         private static readonly Color s_pulseColor = new(0.72f, 0.56f, 0.18f, 1f);
         private static readonly Color s_pendingColor = new(0.70f, 0.40f, 0.12f, 1f);
         private static readonly Color s_runningColor = new(0.22f, 0.58f, 0.30f, 1f);
+        private const double PulseFadeDurationSeconds = 0.5d;
 
         private readonly Dictionary<string, Port> _inputs = new(StringComparer.Ordinal);
         private readonly Dictionary<string, Port> _outputs = new(StringComparer.Ordinal);
+        private bool _hasObservedPulse;
+        private long _lastObservedPulseTick;
+        private double _pulseStartedAt;
 
         public StateScriptNodeView(StateScriptNodeData nodeData, StateScriptNode prototype)
         {
@@ -377,6 +394,7 @@ namespace CrystalMagic.Editor.Unit
 
         public void RefreshRuntimeDebug(StateScriptNode node, StateScriptRuntime runtime)
         {
+            ObservePulse(node);
             if (node is StateScriptStateNode state)
             {
                 if (state.Status == StateScriptStateStatus.Running)
@@ -390,13 +408,53 @@ namespace CrystalMagic.Editor.Unit
                     return;
                 }
             }
-            else if (node != null && runtime != null && node.LastPulseTick == runtime.TickVersion)
+            else if (TryGetPulseColor(out Color pulseColor))
             {
-                titleContainer.style.backgroundColor = s_pulseColor;
+                titleContainer.style.backgroundColor = pulseColor;
                 return;
             }
 
             titleContainer.style.backgroundColor = new StyleColor(StyleKeyword.Null);
+        }
+
+        private void ObservePulse(StateScriptNode node)
+        {
+            if (node == null)
+            {
+                _hasObservedPulse = false;
+                _lastObservedPulseTick = -1;
+                _pulseStartedAt = 0d;
+                return;
+            }
+
+            if (!_hasObservedPulse)
+            {
+                _hasObservedPulse = true;
+                _lastObservedPulseTick = node.LastPulseTick;
+                return;
+            }
+
+            if (node.LastPulseTick == _lastObservedPulseTick)
+                return;
+
+            _lastObservedPulseTick = node.LastPulseTick;
+            if (node.LastPulseTick >= 0)
+                _pulseStartedAt = EditorApplication.timeSinceStartup;
+        }
+
+        private bool TryGetPulseColor(out Color color)
+        {
+            double elapsed = EditorApplication.timeSinceStartup - _pulseStartedAt;
+            if (_pulseStartedAt <= 0d || elapsed < 0d || elapsed >= PulseFadeDurationSeconds)
+            {
+                color = default;
+                return false;
+            }
+
+            float fade = Mathf.SmoothStep(1f, 0f, (float)(elapsed / PulseFadeDurationSeconds));
+            color = s_pulseColor;
+            color.a = fade;
+            return true;
         }
 
         private void AddInputPort(string name)
