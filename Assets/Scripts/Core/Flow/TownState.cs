@@ -19,13 +19,15 @@ namespace CrystalMagic.Core {
         {
             Debug.Log("[TownState] Entered Town");
             InputComponent.Instance?.SetBattleInputEnabled(false);
-            SaveDataComponent.Instance?.SetCurrentLocation(SaveAreaType.Town);
+            LoadGameContext context = StateData as LoadGameContext;
+            GameRuntimeStateUtility.BindPlayerCharacterData(context?.Character ?? new CharacterData());
+            GameRuntimeStateUtility.ApplyPlayerRuntimeState(context?.Player);
             _interactionPromptManager ??= new InteractionPromptManager();
             _interactionPromptManager.Initialize();
             BindInput();
             
             // 可以在这里访问 StateData（如果是从读档进入）
-            if (StateData is LoadGameContext context)
+            if (context != null)
             {
                 Debug.Log($"[TownState] Loaded from slot index: {context.SaveIndex}");
             }

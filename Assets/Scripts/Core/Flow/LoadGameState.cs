@@ -9,23 +9,16 @@ namespace CrystalMagic.Core {
             int saveIndex = StateData is int index ? index : 0;
             Debug.Log($"[LoadGameState] Loading slot index: {saveIndex}");
 
-            bool success = SaveDataComponent.Instance.LoadFromSlot(saveIndex);
-            SaveData saveData = SaveDataComponent.Instance.GetCurrentSaveData();
+            GameWorldManager.ShutdownGameWorld();
+            GameWorldManager.CreateGameWorld();
+            bool success = SaveDataComponent.Instance.LoadFromSlot(saveIndex, out LoadGameContext context);
 
-            if (!success || saveData == null)
+            if (!success)
             {
                 Debug.LogError("[LoadGameState] Failed to load game!");
+                GameWorldManager.ShutdownGameWorld();
                 return;
             }
-
-            RuntimeDataComponent.Instance.InitializeForGameRun();
-
-            LoadGameContext context = new LoadGameContext
-            {
-                SaveData = saveData,
-                SaveIndex = saveIndex,
-                Location = saveData.Location,
-            };
 
             string targetSceneName;
             System.Type targetStateType;

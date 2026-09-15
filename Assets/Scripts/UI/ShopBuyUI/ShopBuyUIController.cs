@@ -54,14 +54,13 @@ namespace CrystalMagic.UI
             if (quantity <= 0)
                 return;
 
-            TownData townData = SaveDataComponent.Instance.GetTownData();
             BackpackData backpackData = SaveDataComponent.Instance.GetBackpackData();
             CharacterPropData propData = SaveDataComponent.Instance.GetCharacterPropData();
-            if (townData == null || backpackData == null)
+            if (backpackData == null)
                 return;
 
             long totalCost = (long)Model.Price * quantity;
-            if (totalCost < 0 || townData.StashMoney < totalCost)
+            if (totalCost < 0 || SaveDataComponent.Instance.GetStashMoney() < totalCost)
                 return;
 
             if (!InventoryUtility.CanAddItemToCharacterInventory(backpackData, propData, Model.ItemId, quantity))
@@ -71,7 +70,7 @@ namespace CrystalMagic.UI
             if (addedCount != quantity)
                 return;
 
-            townData.StashMoney -= totalCost;
+            SaveDataComponent.Instance.AddStashMoney(-totalCost);
             SaveDataComponent.Instance.NotifyBackpackDataChanged();
             View.Close();
         }

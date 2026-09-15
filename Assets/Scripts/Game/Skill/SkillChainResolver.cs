@@ -1,10 +1,7 @@
-using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Data.Effects;
-using Unity.Entities;
 using Unity.Mathematics;
-using UnityEngine;
 
 namespace CrystalMagic.Game.Skill
 {
@@ -26,27 +23,6 @@ namespace CrystalMagic.Game.Skill
         public static SkillData GetSkillData(SkillChainSlotData slotData)
         {
             return slotData == null ? null : GetSkillDataBySkillStoneItemId(slotData.SkillStoneItemId);
-        }
-
-        public static SkillChainSlotData GetFirstSlot(SkillCData skillConfig, RuntimeSkillData runtimeSkillData)
-        {
-            if (skillConfig?.Chains == null || skillConfig.Chains.Length == 0)
-                return null;
-
-            int selectedIndex = Mathf.Clamp(runtimeSkillData?.CurrentSkillChainIndex ?? 0, 0, skillConfig.Chains.Length - 1);
-            SkillChainData chain = skillConfig.Chains[selectedIndex];
-            chain?.EnsureSlots();
-            if (chain?.Slots == null || chain.Slots.Count == 0)
-                return null;
-
-            foreach (SkillChainSlotData slotData in chain.Slots)
-            {
-                SkillData skillData = GetSkillData(slotData);
-                if (skillData != null)
-                    return slotData;
-            }
-
-            return null;
         }
 
     }

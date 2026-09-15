@@ -4,7 +4,6 @@ using System.Linq;
 using UnityEngine;
 using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data;
-using CrystalMagic.Game.MapDemo;
 
 namespace CrystalMagic.Core {
     /// <summary>
@@ -34,8 +33,9 @@ namespace CrystalMagic.Core {
         #endregion
 
         #region Fields
-        private SaveData _currentSaveData;
         private int _currentSaveIndex;
+        private GlobalData _globalData;
+        private SaveVariableData _variables;
         #endregion
 
         #region Events
@@ -51,7 +51,8 @@ namespace CrystalMagic.Core {
             base.Initialize();
             EnsureSaveFolderExists();
             _currentSaveIndex = -1;
-            RuntimeDataComponent.Instance.Reset();
+            _globalData = new GlobalData();
+            _variables = new SaveVariableData();
             Debug.Log("[SaveDataComponent] Initialized");
         }
 
@@ -90,22 +91,20 @@ namespace CrystalMagic.Core {
                 return false;
             }
 
-            if (_currentSaveData == null)
+            SaveData data = GameRuntimeStateUtility.Export(index, _globalData, _variables);
+            if (data == null)
             {
-                OnSaveFailed?.Invoke("Save failed: current save data is null.");
-                Debug.LogError("[SaveDataComponent] Save failed: current save data is null.");
+                OnSaveFailed?.Invoke("Save failed: GameWorld runtime state is unavailable.");
+                Debug.LogError("[SaveDataComponent] Save failed: GameWorld runtime state is unavailable.");
                 return false;
             }
 
             try
             {
-                EnsureSaveDataValid(_currentSaveData);
+                data.SaveIndex = index;
+                EnsureSaveDataValid(data);
 
-                _currentSaveData.SaveIndex = index;
-                _currentSaveData.SaveTimestamp = DateTime.Now.Ticks;
-                _currentSaveData.GameVersion = Application.version;
-
-                string json = JsonUtility.ToJson(_currentSaveData, true);
+                string json = JsonUtility.ToJson(data, true);
                 string filePath = GetSavePath(index);
 
                 EnsureSaveFolderExists();
@@ -114,7 +113,7 @@ namespace CrystalMagic.Core {
 
                 _currentSaveIndex = index;
 
-                OnSaveSuccess?.Invoke(_currentSaveData);
+                OnSaveSuccess?.Invoke(data);
                 Debug.Log($"[SaveDataComponent] Game saved to slot index: {index}");
                 return true;
             }
@@ -147,6 +146,12 @@ namespace CrystalMagic.Core {
         /// </summary>
         public bool LoadFromSlot(int index)
         {
+            return LoadFromSlot(index, out _);
+        }
+
+        public bool LoadFromSlot(int index, out LoadGameContext context)
+        {
+            context = null;
             if (index < 0)
             {
                 OnLoadFailed?.Invoke($"Load failed: invalid slot index {index}.");
@@ -175,8 +180,18 @@ namespace CrystalMagic.Core {
 
                 EnsureSaveDataValid(data);
 
-                _currentSaveData = data;
                 _currentSaveIndex = data.SaveIndex;
+                _globalData = data.Global;
+                _variables = data.Variables;
+                GameRuntimeStateUtility.ImportPersistentData(data);
+                context = new LoadGameContext
+                {
+                    SaveIndex = _currentSaveIndex,
+                    Location = data.Location,
+                    Character = data.Character,
+                    Player = data.Player,
+                    DungeonRun = data.DungeonRun,
+                };
 
                 OnLoadSuccess?.Invoke(data);
                 PublishAllDataChangedEvents();
@@ -233,8 +248,6 @@ namespace CrystalMagic.Core {
                         records.Add(new SaveRecord
                         {
                             SaveIndex = slotIndex,
-                            Timestamp = data.SaveTimestamp,
-                            GameVersion = data.GameVersion,
                             StashMoney = GetPreviewStashMoney(data),
                         });
                         count++;
@@ -295,74 +308,87 @@ namespace CrystalMagic.Core {
         #region Data Access
         public SaveData GetCurrentSaveData()
         {
-            EnsureCurrentSaveDataValid();
-            return _currentSaveData;
+            return GameRuntimeStateUtility.Export(_currentSaveIndex, _globalData, _variables);
         }
 
         public GlobalData GetGlobalData()
         {
-            EnsureCurrentSaveDataValid();
-            return _currentSaveData.Global;
-        }
-
-        public TownData GetTownData()
-        {
-            EnsureCurrentSaveDataValid();
-            return _currentSaveData.Town;
+            return _globalData;
         }
 
         public StashData GetStashData()
         {
-            EnsureCurrentSaveDataValid();
-            return _currentSaveData.Town?.Stash;
+            return GameRuntimeStateUtility.GetStashData();
+        }
+
+        public long GetStashMoney()
+        {
+            return GetStashData()?.Money ?? 0;
+        }
+
+        public void AddStashMoney(long amount)
+        {
+            StashData stash = GetStashData();
+            if (amount == 0 || stash == null)
+                return;
+
+            stash.Money = Math.Max(0L, stash.Money + amount);
+            NotifyStashDataChanged();
+        }
+
+        public void AddCharacterMoney(long amount)
+        {
+            CharacterData character = GetCharacterData();
+            if (amount == 0 || character == null)
+                return;
+
+            character.Money = Math.Max(0L, character.Money + amount);
+            NotifyCharacterDataChanged();
         }
 
         public CharacterData GetCharacterData()
         {
-            EnsureCurrentSaveDataValid();
             return GetActiveCharacterDataInternal();
         }
 
         public SaveLocationData GetLocationData()
         {
-            EnsureCurrentSaveDataValid();
-            return _currentSaveData.Location;
+            DungeonRunData run = GetDungeonRunData();
+            return new SaveLocationData
+            {
+                AreaType = GameWorldManager.SceneMode == GameSceneMode.Dungeon
+                    ? SaveAreaType.Dungeon
+                    : GameWorldManager.SceneMode == GameSceneMode.Training
+                        ? SaveAreaType.Training
+                        : SaveAreaType.Town,
+                DungeonThemeId = run?.ThemeId ?? GetInitialDungeonThemeId(),
+                DungeonFloor = run?.CurrentFloor ?? 1,
+            };
         }
 
         public EquipmentData GetEquipmentData()
         {
-            EnsureCurrentSaveDataValid();
             return GetActiveCharacterDataInternal()?.Equipment;
         }
 
         public SkillCData GetSkillData()
         {
-            EnsureCurrentSaveDataValid();
             return GetActiveCharacterDataInternal()?.Skills;
         }
 
         public BackpackData GetBackpackData()
         {
-            EnsureCurrentSaveDataValid();
             return GetActiveCharacterDataInternal()?.Backpack;
         }
 
         public CharacterPropData GetCharacterPropData()
         {
-            EnsureCurrentSaveDataValid();
             return GetActiveCharacterDataInternal()?.Props;
-        }
-
-        public TownData GetPersistentTownData()
-        {
-            EnsureCurrentSaveDataValid();
-            return _currentSaveData.Town;
         }
 
         public DungeonRunData GetDungeonRunData()
         {
-            EnsureCurrentSaveDataValid();
-            return _currentSaveData.DungeonRun;
+            return GameRuntimeStateUtility.GetDungeonRunData();
         }
 
         #endregion
@@ -370,89 +396,53 @@ namespace CrystalMagic.Core {
         #region Dungeon Run
         public void EnsureDungeonRunExists(int dungeonThemeId = -1, int dungeonFloor = 1)
         {
-            EnsureCurrentSaveDataValid();
-            if (_currentSaveData.DungeonRun?.Character != null)
+            if (!GameWorldManager.TryGetEntityManager(out Unity.Entities.EntityManager entityManager))
+                return;
+
+            if (GameRuntimeStateUtility.TryGetComponentObject(entityManager, out DungeonRunComponent dungeonRun))
             {
                 int normalizedThemeId = NormalizeDungeonThemeId(dungeonThemeId);
                 int normalizedFloor = NormalizeDungeonFloor(dungeonFloor);
-                if (_currentSaveData.DungeonRun.ThemeId != normalizedThemeId ||
-                    _currentSaveData.DungeonRun.CurrentFloor != normalizedFloor)
-                    _currentSaveData.DungeonRun.Seed = 0;
+                if (dungeonRun.ThemeId != normalizedThemeId || dungeonRun.CurrentFloor != normalizedFloor)
+                    dungeonRun.Seed = 0;
 
-                _currentSaveData.DungeonRun.ThemeId = normalizedThemeId;
-                _currentSaveData.DungeonRun.CurrentFloor = normalizedFloor;
+                dungeonRun.ThemeId = normalizedThemeId;
+                dungeonRun.CurrentFloor = normalizedFloor;
                 return;
             }
 
-            _currentSaveData.DungeonRun = CreateDungeonRunFromPersistent(dungeonThemeId, dungeonFloor);
+            BeginDungeonRunFromPersistent(dungeonThemeId, dungeonFloor);
         }
 
         public void BeginDungeonRunFromPersistent(int dungeonThemeId = -1, int dungeonFloor = 1)
         {
-            EnsureCurrentSaveDataValid();
-            _currentSaveData.DungeonRun = CreateDungeonRunFromPersistent(dungeonThemeId, dungeonFloor);
+            if (!GameWorldManager.TryGetEntityManager(out Unity.Entities.EntityManager entityManager))
+                return;
+
+            DungeonRunData data = CreateDungeonRunFromPersistent(dungeonThemeId, dungeonFloor);
+            GameRuntimeStateUtility.CreateDungeonRun(data);
             PublishAllDataChangedEvents();
         }
 
         public DungeonSettlementResult SettleDungeonRun(DungeonSettlementOutcome outcome)
         {
-            EnsureCurrentSaveDataValid();
-            EnsureDungeonRunExists(
-                _currentSaveData.Location?.DungeonThemeId ?? -1,
-                _currentSaveData.Location?.DungeonFloor ?? 1);
+            DungeonRunData dungeonRun = GetDungeonRunData();
+            int reachedFloor = Mathf.Max(1, dungeonRun?.CurrentFloor ?? 1);
+            if (outcome == DungeonSettlementOutcome.Defeated)
+                GameRuntimeStateUtility.ClearPlayerCharacterData();
 
-            DungeonRunData dungeonRun = _currentSaveData.DungeonRun;
-            CharacterData settledCharacter = CloneCharacterData(dungeonRun.Character);
-            int reachedFloor = Mathf.Max(1, dungeonRun.CurrentFloor);
-            DungeonSettlementResult result;
-
-            if (outcome == DungeonSettlementOutcome.Escaped)
-            {
-                int beforeTransferItemQuantity = CountTrackedItems(settledCharacter);
-                RemoveNonTransferableItems(settledCharacter);
-                int afterTransferItemQuantity = CountTrackedItems(settledCharacter);
-                GetItemDelta(_currentSaveData.Town.Character, settledCharacter, out int gainedItemQuantity, out int lostItemQuantity);
-                long returnedMoney = Math.Max(0L, dungeonRun.RunMoney);
-
-                _currentSaveData.Town.StashMoney += returnedMoney;
-                result = new DungeonSettlementResult
-                {
-                    Outcome = outcome,
-                    ReachedFloor = reachedFloor,
-                    ReturnedMoney = returnedMoney,
-                    GainedItemQuantity = gainedItemQuantity,
-                    LostItemQuantity = lostItemQuantity,
-                    NonTransferableItemQuantity = Mathf.Max(0, beforeTransferItemQuantity - afterTransferItemQuantity),
-                };
-            }
-            else
-            {
-                result = new DungeonSettlementResult
-                {
-                    Outcome = outcome,
-                    ReachedFloor = reachedFloor,
-                    LostItemQuantity = CountTrackedItems(settledCharacter),
-                };
-                ClearBackpackAndEquipment(settledCharacter);
-            }
-
-            _currentSaveData.Town.Character = settledCharacter;
-            EnsureCharacterDataValid(_currentSaveData.Town.Character);
-            _currentSaveData.DungeonRun = null;
-            _currentSaveData.Location.AreaType = SaveAreaType.Town;
-            _currentSaveData.Location.DungeonThemeId = GetInitialDungeonThemeId();
-            _currentSaveData.Location.DungeonFloor = 1;
+            GameRuntimeStateUtility.ClearDungeonRun();
             PublishAllDataChangedEvents();
-            return result;
+            return new DungeonSettlementResult
+            {
+                Outcome = outcome,
+                ReachedFloor = reachedFloor,
+            };
         }
 
         public void ClearDungeonRun()
         {
-            EnsureCurrentSaveDataValid();
-            if (_currentSaveData.DungeonRun == null)
-                return;
-
-            _currentSaveData.DungeonRun = null;
+            GameRuntimeStateUtility.ClearDungeonRun();
             PublishAllDataChangedEvents();
         }
 
@@ -461,26 +451,22 @@ namespace CrystalMagic.Core {
         #region Variables
         public void SetVariable(string key, double value)
         {
-            EnsureCurrentSaveDataValid();
-            _currentSaveData.Variables.Set(key, value);
+            _variables?.Set(key, value);
         }
 
         public double GetVariable(string key, double defaultValue = 0d)
         {
-            EnsureCurrentSaveDataValid();
-            return _currentSaveData.Variables.Get(key, defaultValue);
+            return _variables?.Get(key, defaultValue) ?? defaultValue;
         }
 
         public bool ContainsVariable(string key)
         {
-            EnsureCurrentSaveDataValid();
-            return _currentSaveData.Variables.Contains(key);
+            return _variables != null && _variables.Contains(key);
         }
 
         public bool Check(string expression)
         {
-            EnsureCurrentSaveDataValid();
-            return _currentSaveData.Variables.Check(expression);
+            return _variables != null && _variables.Check(expression);
         }
 
         #endregion
@@ -493,7 +479,6 @@ namespace CrystalMagic.Core {
 
         public bool IsDungeonThemeUnlocked(int dungeonThemeId)
         {
-            EnsureCurrentSaveDataValid();
             int normalizedThemeId = NormalizeDungeonThemeId(dungeonThemeId);
             return GetVariable(GetDungeonThemeUnlockVariableKey(normalizedThemeId), 0d) > 0.5d;
         }
@@ -503,13 +488,11 @@ namespace CrystalMagic.Core {
             if (dungeonThemeId < 0)
                 return;
 
-            EnsureCurrentSaveDataValid();
             SetVariable(GetDungeonThemeUnlockVariableKey(dungeonThemeId), 1d);
         }
 
         public List<int> GetUnlockedDungeonThemeIds()
         {
-            EnsureCurrentSaveDataValid();
             List<int> themeIds = new();
             foreach (DungeonThemeData theme in DataComponent.Instance.FindAll<DungeonThemeData>(static theme => theme != null))
             {
@@ -522,23 +505,14 @@ namespace CrystalMagic.Core {
 
         #endregion
 
-        #region Location
-        public void SetCurrentLocation(SaveAreaType areaType, int dungeonFloor = 1, int dungeonThemeId = -1)
-        {
-            EnsureCurrentSaveDataValid();
-            _currentSaveData.Location.AreaType = areaType;
-            _currentSaveData.Location.DungeonThemeId = NormalizeDungeonThemeId(dungeonThemeId);
-            _currentSaveData.Location.DungeonFloor = NormalizeDungeonFloor(dungeonFloor);
-        }
-
+        #region Load Context
         public LoadGameContext CreateLoadGameContext(SaveAreaType areaType, int dungeonFloor = 1, int dungeonThemeId = -1)
         {
-            EnsureCurrentSaveDataValid();
-
             return new LoadGameContext
             {
-                SaveData = _currentSaveData,
                 SaveIndex = GetCurrentSaveIndex(),
+                Character = GetCharacterData(),
+                DungeonRun = areaType == SaveAreaType.Dungeon ? GetDungeonRunData() : null,
                 Location = new SaveLocationData
                 {
                     AreaType = areaType,
@@ -553,62 +527,53 @@ namespace CrystalMagic.Core {
         #region Change Notifications
         public void NotifySaveDataChanged()
         {
-            EnsureCurrentSaveDataValid();
-            EventComponent.Instance.Publish(new CommonGameEvent(SaveDataChangedEventName, _currentSaveData));
+            EventComponent.Instance.Publish(new CommonGameEvent(SaveDataChangedEventName, GetCurrentSaveData()));
         }
 
         public void NotifyGlobalDataChanged()
         {
-            EnsureCurrentSaveDataValid();
-            EventComponent.Instance.Publish(new CommonGameEvent(GlobalDataChangedEventName, _currentSaveData.Global));
+            EventComponent.Instance.Publish(new CommonGameEvent(GlobalDataChangedEventName, GetGlobalData()));
             NotifySaveDataChanged();
         }
 
         public void NotifyTownDataChanged()
         {
-            EnsureCurrentSaveDataValid();
-            EventComponent.Instance.Publish(new CommonGameEvent(TownDataChangedEventName, GetTownData()));
+            EventComponent.Instance.Publish(new CommonGameEvent(TownDataChangedEventName, GetCurrentSaveData()));
             NotifySaveDataChanged();
         }
 
         public void NotifyStashDataChanged()
         {
-            EnsureCurrentSaveDataValid();
             EventComponent.Instance.Publish(new CommonGameEvent(StashDataChangedEventName, GetStashData()));
             NotifyTownDataChanged();
         }
 
         public void NotifyCharacterDataChanged()
         {
-            EnsureCurrentSaveDataValid();
             EventComponent.Instance.Publish(new CommonGameEvent(CharacterDataChangedEventName, GetCharacterData()));
             NotifyTownDataChanged();
         }
 
         public void NotifyBackpackDataChanged()
         {
-            EnsureCurrentSaveDataValid();
             EventComponent.Instance.Publish(new CommonGameEvent(BackpackDataChangedEventName, GetBackpackData()));
             NotifyCharacterDataChanged();
         }
 
         public void NotifyCharacterPropDataChanged()
         {
-            EnsureCurrentSaveDataValid();
             EventComponent.Instance.Publish(new CommonGameEvent(CharacterPropDataChangedEventName, GetCharacterPropData()));
             NotifyCharacterDataChanged();
         }
 
         public void NotifyEquipmentDataChanged()
         {
-            EnsureCurrentSaveDataValid();
             EventComponent.Instance.Publish(new CommonGameEvent(EquipmentDataChangedEventName, GetEquipmentData()));
             NotifyCharacterDataChanged();
         }
 
         public void NotifySkillDataChanged()
         {
-            EnsureCurrentSaveDataValid();
             EventComponent.Instance.Publish(new CommonGameEvent(SkillDataChangedEventName, GetSkillData()));
             NotifyCharacterDataChanged();
         }
@@ -625,13 +590,30 @@ namespace CrystalMagic.Core {
 
         public bool CreateNewGameToSlot(int index)
         {
+            if (index < 0)
+                return false;
+
             SaveData data = CreateNewSaveData();
             GameConfig gameConfig = GetGameConfig();
-            data.Town.StashMoney = gameConfig.StartingGold;
+            data.Stash.Money = gameConfig.StartingGold;
+            data.SaveIndex = index;
 
-            _currentSaveData = data;
-            _currentSaveIndex = index;
-            return SaveToSlot(index);
+            try
+            {
+                EnsureSaveFolderExists();
+                string filePath = GetSavePath(index);
+                System.IO.File.WriteAllText(filePath, JsonUtility.ToJson(data, true));
+                CreateBackup(filePath);
+                _currentSaveIndex = index;
+                OnSaveSuccess?.Invoke(data);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                OnSaveFailed?.Invoke($"Save failed: {ex.Message}");
+                Debug.LogError($"[SaveDataComponent] Error creating new game: {ex.Message}");
+                return false;
+            }
         }
 
         #endregion
@@ -690,50 +672,33 @@ namespace CrystalMagic.Core {
                 ? 1
                 : NormalizeDungeonFloor(data.Location.DungeonFloor);
 
-            if (data.Town == null)
-            {
-                data.Town = new TownData();
-                repairedPaths?.Add("Town");
-            }
-
-            EnsureTownDataValid(data.Town, repairedPaths);
-
-            if (data.DungeonRun != null)
-            {
-                EnsureDungeonRunDataValid(data.DungeonRun, data.Town.Character, data.Location.DungeonThemeId, repairedPaths);
-            }
-            else if (data.Location.AreaType == SaveAreaType.Dungeon)
-            {
-                data.DungeonRun = CreateDungeonRunFromPersistent(
-                    data.Town.Character,
-                    data.Location.DungeonThemeId,
-                    data.Location.DungeonFloor);
-                repairedPaths?.Add("DungeonRun");
-            }
-
-            EnsureDungeonThemeUnlocksInitialized(data);
-            LogValidationRepairsIfNeeded(data, repairedPaths, logRepairs);
-        }
-
-        private void EnsureTownDataValid(TownData data, List<string> repairedPaths = null)
-        {
-            if (data == null)
-                return;
-
             if (data.Stash == null)
             {
                 data.Stash = new StashData();
-                repairedPaths?.Add("Town.Stash");
+                repairedPaths?.Add("Stash");
             }
 
             if (data.Character == null)
             {
                 data.Character = new CharacterData();
-                repairedPaths?.Add("Town.Character");
+                repairedPaths?.Add("Character");
             }
 
             EnsureStashDataValid(data.Stash, repairedPaths);
-            EnsureCharacterDataValid(data.Character, repairedPaths, "Town.Character");
+            EnsureCharacterDataValid(data.Character, repairedPaths, "Character");
+
+            if (data.DungeonRun != null)
+            {
+                EnsureDungeonRunDataValid(data.DungeonRun, data.Location.DungeonThemeId, repairedPaths);
+            }
+            else if (data.Location.AreaType == SaveAreaType.Dungeon)
+            {
+                data.DungeonRun = CreateDungeonRunFromPersistent(data.Location.DungeonThemeId, data.Location.DungeonFloor);
+                repairedPaths?.Add("DungeonRun");
+            }
+
+            EnsureDungeonThemeUnlocksInitialized(data);
+            LogValidationRepairsIfNeeded(data, repairedPaths, logRepairs);
         }
 
         private void EnsureStashDataValid(StashData data, List<string> repairedPaths = null)
@@ -744,7 +709,7 @@ namespace CrystalMagic.Core {
             if (data.Items == null)
             {
                 data.Items = new List<InventoryItemData>();
-                repairedPaths?.Add("Town.Stash.Items");
+                repairedPaths?.Add("Stash.Items");
             }
 
             if (data.Capacity <= 0)
@@ -796,7 +761,6 @@ namespace CrystalMagic.Core {
 
         private void EnsureDungeonRunDataValid(
             DungeonRunData data,
-            CharacterData fallbackCharacter = null,
             int fallbackThemeId = -1,
             List<string> repairedPaths = null)
         {
@@ -817,18 +781,10 @@ namespace CrystalMagic.Core {
             data.CurrentFloor = isLegacyDungeonRun
                 ? 1
                 : NormalizeDungeonFloor(data.CurrentFloor);
-            if (data.Character == null)
+            if (data.Units == null)
             {
-                data.Character = CloneCharacterData(fallbackCharacter);
-                repairedPaths?.Add("DungeonRun.Character");
-            }
-
-            EnsureCharacterDataValid(data.Character, repairedPaths, "DungeonRun.Character");
-
-            if (data.Monsters == null)
-            {
-                data.Monsters = new List<MonsterStateData>();
-                repairedPaths?.Add("DungeonRun.Monsters");
+                data.Units = new List<UnitRuntimeData>();
+                repairedPaths?.Add("DungeonRun.Units");
             }
 
             if (data.ItemDrops == null)
@@ -840,12 +796,7 @@ namespace CrystalMagic.Core {
 
         private CharacterData GetActiveCharacterDataInternal()
         {
-            if (_currentSaveData == null)
-                return null;
-
-            return _currentSaveData.Location?.AreaType == SaveAreaType.Dungeon && _currentSaveData.DungeonRun?.Character != null
-                ? _currentSaveData.DungeonRun.Character
-                : _currentSaveData.Town?.Character;
+            return GameRuntimeStateUtility.GetPlayerCharacterData();
         }
 
         private long GetPreviewStashMoney(SaveData data)
@@ -853,15 +804,10 @@ namespace CrystalMagic.Core {
             if (data == null)
                 return 0;
 
-            return data.Town?.StashMoney ?? 0;
+            return data.Stash?.Money ?? 0;
         }
 
         private DungeonRunData CreateDungeonRunFromPersistent(int dungeonThemeId, int dungeonFloor)
-        {
-            return CreateDungeonRunFromPersistent(GetPersistentTownData()?.Character, dungeonThemeId, dungeonFloor);
-        }
-
-        private DungeonRunData CreateDungeonRunFromPersistent(CharacterData sourceCharacter, int dungeonThemeId, int dungeonFloor)
         {
             DungeonRunData data = new DungeonRunData
             {
@@ -869,12 +815,11 @@ namespace CrystalMagic.Core {
                 RunTimestamp = DateTime.Now.Ticks,
                 ThemeId = NormalizeDungeonThemeId(dungeonThemeId),
                 CurrentFloor = NormalizeDungeonFloor(dungeonFloor),
-                Character = CloneCharacterData(sourceCharacter),
-                Monsters = new List<MonsterStateData>(),
+                Units = new List<UnitRuntimeData>(),
                 ItemDrops = new List<ItemDropData>(),
             };
             data.BaseSeed = DeriveDungeonRunBaseSeed(data);
-            EnsureDungeonRunDataValid(data, sourceCharacter, dungeonThemeId);
+            EnsureDungeonRunDataValid(data, dungeonThemeId);
             return data;
         }
 
@@ -898,204 +843,6 @@ namespace CrystalMagic.Core {
 
                 int result = (int)(hash == 0 ? 19088743u : hash);
                 return result == 0 ? 1 : result;
-            }
-        }
-
-        private void ClearBackpackAndEquipment(CharacterData data)
-        {
-            if (data == null)
-                return;
-
-            EnsureCharacterDataValid(data);
-            data.Backpack.Items.Clear();
-            data.Props.ClearSlots();
-            data.Equipment = new EquipmentData();
-            ClearSkillChains(data);
-        }
-
-        private void RemoveNonTransferableItems(CharacterData data)
-        {
-            if (data == null)
-                return;
-
-            EnsureCharacterDataValid(data);
-
-            if (data.Backpack?.Items != null)
-            {
-                data.Backpack.Items.RemoveAll(item => item != null && IsItemNonTransferable(item.ItemId));
-            }
-
-            if (data.Props?.Slots != null)
-            {
-                for (int i = 0; i < data.Props.Slots.Count; i++)
-                {
-                    CharacterPropSlotData slot = data.Props.Slots[i];
-                    if (slot == null || slot.ItemId < 0)
-                        continue;
-
-                    if (IsItemNonTransferable(slot.ItemId))
-                        slot.Clear();
-                }
-            }
-
-            if (data.Equipment != null)
-            {
-                if (IsItemNonTransferable(data.Equipment.MagicStoneId))
-                    data.Equipment.MagicStoneId = -1;
-
-                if (data.Equipment.SpiritSlots != null)
-                {
-                    for (int i = 0; i < data.Equipment.SpiritSlots.Length; i++)
-                    {
-                        if (IsItemNonTransferable(data.Equipment.SpiritSlots[i]))
-                            data.Equipment.SpiritSlots[i] = -1;
-                    }
-                }
-            }
-
-            if (data.Skills?.Chains != null)
-            {
-                for (int i = 0; i < data.Skills.Chains.Length; i++)
-                {
-                    SkillChainData chain = data.Skills.Chains[i];
-                    if (chain?.Slots == null)
-                        continue;
-
-                    for (int slotIndex = 0; slotIndex < chain.Slots.Count; slotIndex++)
-                    {
-                        SkillChainSlotData slot = chain.Slots[slotIndex];
-                        if (slot == null)
-                            continue;
-
-                        if (IsItemNonTransferable(slot.SkillStoneItemId))
-                        {
-                            slot.SkillStoneItemId = -1;
-                            slot.SkillAdditionId = -1;
-                        }
-                    }
-                }
-            }
-        }
-
-        private bool IsItemNonTransferable(int itemId)
-        {
-            if (itemId < 0 || DataComponent.Instance == null)
-                return false;
-
-            ItemData itemData = DataComponent.Instance.Get<ItemData>(itemId);
-            return itemData != null && itemData.IsNonTransferable;
-        }
-
-        private static int CountTrackedItems(CharacterData data)
-        {
-            Dictionary<int, int> itemCounts = GetTrackedItemCounts(data);
-            int total = 0;
-            foreach (int quantity in itemCounts.Values)
-                total += quantity;
-
-            return total;
-        }
-
-        private static void GetItemDelta(CharacterData baseline, CharacterData result, out int gained, out int lost)
-        {
-            Dictionary<int, int> baselineCounts = GetTrackedItemCounts(baseline);
-            Dictionary<int, int> resultCounts = GetTrackedItemCounts(result);
-            HashSet<int> itemIds = new(baselineCounts.Keys);
-            itemIds.UnionWith(resultCounts.Keys);
-
-            gained = 0;
-            lost = 0;
-            foreach (int itemId in itemIds)
-            {
-                baselineCounts.TryGetValue(itemId, out int baselineQuantity);
-                resultCounts.TryGetValue(itemId, out int resultQuantity);
-                int delta = resultQuantity - baselineQuantity;
-                if (delta > 0)
-                    gained += delta;
-                else
-                    lost -= delta;
-            }
-        }
-
-        private static Dictionary<int, int> GetTrackedItemCounts(CharacterData data)
-        {
-            Dictionary<int, int> counts = new();
-            if (data == null)
-                return counts;
-
-            if (data.Backpack?.Items != null)
-            {
-                for (int i = 0; i < data.Backpack.Items.Count; i++)
-                {
-                    InventoryItemData item = data.Backpack.Items[i];
-                    AddTrackedItemCount(counts, item?.ItemId ?? -1, item?.Quantity ?? 0);
-                }
-            }
-
-            if (data.Props?.Slots != null)
-            {
-                for (int i = 0; i < data.Props.Slots.Count; i++)
-                {
-                    CharacterPropSlotData slot = data.Props.Slots[i];
-                    AddTrackedItemCount(counts, slot?.ItemId ?? -1, slot?.Quantity ?? 0);
-                }
-            }
-
-            if (data.Equipment != null)
-            {
-                AddTrackedItemCount(counts, data.Equipment.MagicStoneId, 1);
-                if (data.Equipment.SpiritSlots != null)
-                {
-                    for (int i = 0; i < data.Equipment.SpiritSlots.Length; i++)
-                        AddTrackedItemCount(counts, data.Equipment.SpiritSlots[i], 1);
-                }
-            }
-
-            if (data.Skills?.Chains != null)
-            {
-                for (int chainIndex = 0; chainIndex < data.Skills.Chains.Length; chainIndex++)
-                {
-                    SkillChainData chain = data.Skills.Chains[chainIndex];
-                    if (chain?.Slots == null)
-                        continue;
-
-                    for (int slotIndex = 0; slotIndex < chain.Slots.Count; slotIndex++)
-                        AddTrackedItemCount(counts, chain.Slots[slotIndex]?.SkillStoneItemId ?? -1, 1);
-                }
-            }
-
-            return counts;
-        }
-
-        private static void AddTrackedItemCount(Dictionary<int, int> counts, int itemId, int quantity)
-        {
-            if (itemId < 0 || quantity <= 0)
-                return;
-
-            counts.TryGetValue(itemId, out int currentQuantity);
-            counts[itemId] = currentQuantity + quantity;
-        }
-
-        private static void ClearSkillChains(CharacterData data)
-        {
-            if (data?.Skills?.Chains == null)
-                return;
-
-            for (int chainIndex = 0; chainIndex < data.Skills.Chains.Length; chainIndex++)
-            {
-                SkillChainData chain = data.Skills.Chains[chainIndex];
-                if (chain?.Slots == null)
-                    continue;
-
-                for (int slotIndex = 0; slotIndex < chain.Slots.Count; slotIndex++)
-                {
-                    SkillChainSlotData slot = chain.Slots[slotIndex];
-                    if (slot == null)
-                        continue;
-
-                    slot.SkillStoneItemId = -1;
-                    slot.SkillAdditionId = -1;
-                }
             }
         }
 
@@ -1129,35 +876,7 @@ namespace CrystalMagic.Core {
 
         #endregion
 
-        #region Clone And Repair Helpers
-        private CharacterData CloneCharacterData(CharacterData source)
-        {
-            CharacterData clone = DeepClone(source);
-            clone ??= new CharacterData();
-            EnsureCharacterDataValid(clone);
-            return clone;
-        }
-
-        private T DeepClone<T>(T source) where T : class
-        {
-            if (source == null)
-                return null;
-
-            string json = JsonUtility.ToJson(source);
-            return JsonUtility.FromJson<T>(json);
-        }
-
-        private void EnsureCurrentSaveDataValid()
-        {
-            if (_currentSaveData == null)
-            {
-                _currentSaveData = new SaveData();
-                Debug.LogWarning("[SaveDataComponent] Current save data was null. A new SaveData instance was created during validation.");
-            }
-
-            EnsureSaveDataValid(_currentSaveData);
-        }
-
+        #region Repair Helpers
         private static void LogValidationRepairsIfNeeded(SaveData data, List<string> repairedPaths, bool logRepairs)
         {
             if (!logRepairs || repairedPaths == null || repairedPaths.Count == 0)
@@ -1172,16 +891,15 @@ namespace CrystalMagic.Core {
         #region Publish Helpers
         private void PublishAllDataChangedEvents()
         {
-            EnsureCurrentSaveDataValid();
-            EventComponent.Instance.Publish(new CommonGameEvent(GlobalDataChangedEventName, _currentSaveData.Global));
-            EventComponent.Instance.Publish(new CommonGameEvent(TownDataChangedEventName, GetTownData()));
+            EventComponent.Instance.Publish(new CommonGameEvent(GlobalDataChangedEventName, GetGlobalData()));
+            EventComponent.Instance.Publish(new CommonGameEvent(TownDataChangedEventName, GetCurrentSaveData()));
             EventComponent.Instance.Publish(new CommonGameEvent(StashDataChangedEventName, GetStashData()));
             EventComponent.Instance.Publish(new CommonGameEvent(CharacterDataChangedEventName, GetCharacterData()));
             EventComponent.Instance.Publish(new CommonGameEvent(BackpackDataChangedEventName, GetBackpackData()));
             EventComponent.Instance.Publish(new CommonGameEvent(CharacterPropDataChangedEventName, GetCharacterPropData()));
             EventComponent.Instance.Publish(new CommonGameEvent(EquipmentDataChangedEventName, GetEquipmentData()));
             EventComponent.Instance.Publish(new CommonGameEvent(SkillDataChangedEventName, GetSkillData()));
-            EventComponent.Instance.Publish(new CommonGameEvent(SaveDataChangedEventName, _currentSaveData));
+            EventComponent.Instance.Publish(new CommonGameEvent(SaveDataChangedEventName, GetCurrentSaveData()));
         }
 
         #endregion
@@ -1208,9 +926,6 @@ namespace CrystalMagic.Core {
         #region Config Helpers
         private int GetCurrentSaveIndex()
         {
-            if (_currentSaveData != null)
-                return _currentSaveData.SaveIndex;
-
             return _currentSaveIndex;
         }
 
@@ -1248,21 +963,9 @@ namespace CrystalMagic.Core {
     public class SaveRecord
     {
         public int SaveIndex;
-        public long Timestamp;
-        public string GameVersion;
         public long StashMoney;
         public int MaxFloor;
         public int TotalRuns;
-
-        public DateTime GetDateTime()
-        {
-            return new DateTime(Timestamp);
-        }
-
-        public string GetFormattedTime()
-        {
-            return GetDateTime().ToString("yyyy-MM-dd HH:mm:ss");
-        }
     }
 
     /// <summary>
@@ -1270,9 +973,11 @@ namespace CrystalMagic.Core {
     /// </summary>
     public class LoadGameContext
     {
-        public SaveData SaveData;
         public int SaveIndex;
         public SaveLocationData Location;
+        public CharacterData Character;
+        public UnitRuntimeData Player;
+        public DungeonRunData DungeonRun;
 
         public SaveAreaType AreaType => Location?.AreaType ?? SaveAreaType.Town;
         public int DungeonThemeId => Location?.DungeonThemeId ?? -1;

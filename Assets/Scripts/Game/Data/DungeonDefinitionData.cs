@@ -7,7 +7,6 @@ using UnityEngine;
 
 namespace CrystalMagic.Game.Data
 {
-    [ReadOnlyData]
     [Serializable]
     public sealed class DungeonThemeData : DataRow
     {

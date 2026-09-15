@@ -72,7 +72,9 @@ namespace CrystalMagic.UI
 
         private bool EnsureMap()
         {
-            RuntimeDungeonMapData mapData = RuntimeDataComponent.Instance.GetDungeonMapData();
+            DungeonRuntimeMapComponent mapData = GameRuntimeStateUtility.GetDungeonRuntimeMap();
+            if (mapData == null)
+                return false;
             OpenFieldDungeonLayout layout = mapData.OpenFieldLayout;
             if (layout == null || layout.Width <= 0 || layout.Height <= 0)
             {
@@ -111,7 +113,7 @@ namespace CrystalMagic.UI
 
         private bool RefreshFogVisual()
         {
-            RuntimeDungeonFogData fogData = RuntimeDataComponent.Instance.GetDungeonMapData().FogData;
+            RuntimeDungeonFogData fogData = GameRuntimeStateUtility.GetDungeonRuntimeMap()?.FogData;
             int version = fogData?.Version ?? -1;
             if (ReferenceEquals(_fogData, fogData) && _fogVersion == version)
                 return false;

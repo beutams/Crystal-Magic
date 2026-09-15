@@ -9,7 +9,6 @@ namespace CrystalMagic.Game.Data
         Money = 1,
     }
 
-    [ReadOnlyData]
     [System.Serializable]
     public sealed class DropData : DataRow
     {

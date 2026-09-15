@@ -9,7 +9,6 @@ using UnityEngine;
 namespace CrystalMagic.Game.Data
 {
     [Serializable]
-    [ReadOnlyData]
     public sealed class StateScriptData : DataRow
     {
         public List<StateScriptInstanceData> Graphs = new();

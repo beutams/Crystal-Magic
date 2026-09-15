@@ -7,7 +7,6 @@ using UnityEngine;
 namespace CrystalMagic.Game.Data
 {
     [System.Serializable]
-    [ReadOnlyData]
     public class SkillAdditionData : DataRow
     {
         public string NameKey;

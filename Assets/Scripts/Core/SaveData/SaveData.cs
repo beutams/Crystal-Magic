@@ -12,8 +12,6 @@ namespace CrystalMagic.Core {
     {
         // ========== 元数据 ==========
         public int SaveIndex;                    // 存档名称
-        public long SaveTimestamp;                 // 存档时间戳
-        public string GameVersion;                 // 游戏版本号
 
         // ========== 全局数据 ==========
         /// <summary>
@@ -23,11 +21,10 @@ namespace CrystalMagic.Core {
         public SaveVariableData Variables = new();
         public SaveLocationData Location = new();
 
-        // ========== 城镇数据 ==========
-        /// <summary>
-        /// 城镇状态数据
-        /// </summary>
-        public TownData Town;
+        // ========== GameWorld 投影 ==========
+        public StashData Stash;
+        public CharacterData Character;
+        public UnitRuntimeData Player;
         public DungeonRunData DungeonRun;
     }
     /// <summary>
@@ -39,39 +36,14 @@ namespace CrystalMagic.Core {
         public long TotalPlayTimeSeconds;      // 总游玩时间（秒）
     }
 
-    #region 城镇数据
-    /// <summary>
-    /// 城镇数据
-    /// </summary>
-    [System.Serializable]
-    public class TownData
-    {
-        /// <summary>
-        /// 仓库数据
-        /// </summary>
-        public StashData Stash;
-        /// <summary>
-        /// 仓库货币
-        /// </summary>
-        public long StashMoney;
-        /// <summary>
-        /// 角色数据
-        /// </summary>
-        public CharacterData Character;
-        public TownData()
-        {
-            Stash = new StashData();
-            Character = new CharacterData();
-            StashMoney = 0;
-        }
-    }
-
+    #region 角色与仓库数据
     /// <summary>
     /// 角色数据
     /// </summary>
     [System.Serializable]
     public class CharacterData
     {
+        public long Money;
         [SerializeField]
         /// <summary>
         /// 角色装备系统
@@ -102,6 +74,7 @@ namespace CrystalMagic.Core {
     [System.Serializable]
     public class StashData
     {
+        public long Money;
         public int Capacity = -1;
         /// <summary>
         /// 物品列表
@@ -228,18 +201,7 @@ namespace CrystalMagic.Core {
         public int ThemeId = -1;
         public int CurrentFloor;
         public int Seed;
-        /// <summary>
-        /// 玩家在地牢中的角色状态
-        /// </summary>
-        public CharacterData Character;
-        /// <summary>
-        /// 当局货币
-        /// </summary>
-        public long RunMoney;
-        /// <summary>
-        /// 怪物位置和状态列表
-        /// </summary>
-        public List<MonsterStateData> Monsters = new();
+        public List<UnitRuntimeData> Units = new();
         /// <summary>
         /// 物品掉落位置
         /// </summary>
@@ -247,17 +209,19 @@ namespace CrystalMagic.Core {
     }
 
     /// <summary>
-    /// 怪物状态数据
+    /// 场景单位在保存瞬间的运行状态。
     /// </summary>
     [System.Serializable]
-    public class MonsterStateData
+    public class UnitRuntimeData
     {
-        public int MonsterId;                  // 怪物唯一 Id（当局）
-        public int MonsterDefId;               // 怪物配置 Id
-        public float X;                        // X 坐标
-        public float Y;                        // Y 坐标
-        public float HP;                       // 当前 HP
-        public float MaxHP;                    // 最大 HP
+        public int SaveId = -1;
+        public int UnitDataId = -1;
+        public UnitFactionType Faction;
+        public float X;
+        public float Y;
+        public float Z;
+        public float Health;
+        public float Mana;
     }
 
     /// <summary>
@@ -266,6 +230,7 @@ namespace CrystalMagic.Core {
     [System.Serializable]
     public class ItemDropData
     {
+        public DropRewardType DropType;
         public int ItemId;                     // 物品 Id
         public int Quantity;                   // 数量
         public float X;                        // X 坐标

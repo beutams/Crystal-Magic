@@ -3,7 +3,6 @@ using CrystalMagic.Core;
 
 namespace CrystalMagic.Game.Data
 {
-    [ReadOnlyData]
     [System.Serializable]
     public class UnitData : DataRow
     {

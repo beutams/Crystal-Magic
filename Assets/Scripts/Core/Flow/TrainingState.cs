@@ -10,7 +10,6 @@ namespace CrystalMagic.Core
         protected override void OnEnterBattle()
         {
             Debug.Log("[TrainingState] Entered Training Ground");
-            SaveDataComponent.Instance?.SetCurrentLocation(SaveAreaType.Training);
 
             if (StateData is LoadGameContext context)
             {

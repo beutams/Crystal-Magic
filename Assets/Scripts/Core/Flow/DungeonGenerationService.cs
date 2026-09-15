@@ -128,7 +128,8 @@ namespace CrystalMagic.Core
                 DungeonFlowTiming.BeginStage(13, "保存当前运行时地牢数据");
                 runData.Seed = candidateSeed;
                 runData.CurrentFloor = dungeonFloor;
-                RuntimeDataComponent.Instance.SetCurrentOpenFieldDungeonLayout(
+                GameRuntimeStateUtility.UpdateDungeonRun(runData);
+                GameRuntimeStateUtility.SetDungeonRuntimeMap(
                     layout,
                     sceneData,
                     dungeonFloor,

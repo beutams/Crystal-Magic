@@ -29,11 +29,10 @@ namespace CrystalMagic.UI
             _skillItems.Clear();
 
             CrystalMagic.Core.SkillCData skillConfig = CrystalMagic.Core.SaveDataComponent.Instance.GetSkillData();
-            CrystalMagic.Core.RuntimeSkillData runtimeSkillData = CrystalMagic.Core.RuntimeDataComponent.Instance.GetSkillData();
             if (skillConfig?.Chains == null || skillConfig.Chains.Length == 0)
                 return;
 
-            int selectedIndex = UnityEngine.Mathf.Clamp(runtimeSkillData.CurrentSkillChainIndex, 0, skillConfig.Chains.Length - 1);
+            int selectedIndex = UnityEngine.Mathf.Clamp(PlayerSkillSelectionUtility.GetCurrentChainIndex(), 0, skillConfig.Chains.Length - 1);
             CrystalMagic.Core.SkillChainData chain = skillConfig.Chains[selectedIndex];
             chain?.EnsureSlots();
             if (chain?.Slots == null)

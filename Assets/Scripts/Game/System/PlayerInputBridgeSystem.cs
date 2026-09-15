@@ -1,0 +1,103 @@
+using CrystalMagic.Core;
+using Unity.Entities;
+using Unity.Mathematics;
+using UnityEngine;
+
+[RunInGameWorld(GameWorldKind.Town | GameWorldKind.Dungeon)]
+[UpdateInGroup(typeof(UnitInitializationSystemGroup))]
+[UpdateBefore(typeof(UnitSourceInitializationSystem))]
+public partial class PlayerInputBridgeSystem : SystemBase
+{
+    private InputComponent _inputComponent;
+    private InputState _inputState;
+    private bool _wasSkillHeld;
+    private bool _wasNextSkillChainHeld;
+
+    protected override void OnUpdate()
+    {
+        TryBindInputComponent();
+        if (_inputComponent == null)
+            return;
+
+        bool isSkillPressed = _inputState.IsSkillHeld && !_wasSkillHeld;
+        bool isNextSkillChainPressed = _inputState.IsNextSkillChainHeld && !_wasNextSkillChainHeld;
+        bool hasPlayer = false;
+        foreach ((RefRO<UnitFactionComponent> factionRef, Entity entity) in
+                 SystemAPI.Query<RefRO<UnitFactionComponent>>().WithEntityAccess())
+        {
+            if (!UnitFactionUtility.IsPlayer(factionRef.ValueRO.Value))
+                continue;
+
+            hasPlayer = true;
+            PlayerInputComponent input = new()
+            {
+                Move = new float2(_inputState.Move.x, _inputState.Move.y),
+                PointerWorldPosition = new float3(
+                    _inputState.PointerWorldPosition.x,
+                    _inputState.PointerWorldPosition.y,
+                    _inputState.PointerWorldPosition.z),
+                IsPrimaryHeld = _inputState.IsPrimaryHeld ? (byte)1 : (byte)0,
+                IsInteractHeld = _inputState.IsInteractHeld ? (byte)1 : (byte)0,
+                IsInventoryHeld = _inputState.IsInventoryHeld ? (byte)1 : (byte)0,
+                IsPropertyHeld = _inputState.IsPropertyHeld ? (byte)1 : (byte)0,
+                IsEscapeHeld = _inputState.IsEscapeHeld ? (byte)1 : (byte)0,
+                IsSkillHeld = _inputState.IsSkillHeld ? (byte)1 : (byte)0,
+                SkillChainIndex = _inputState.SkillChainIndex,
+                IsNextSkillChainHeld = _inputState.IsNextSkillChainHeld ? (byte)1 : (byte)0,
+                IsUsePropHeld = _inputState.IsUsePropHeld ? (byte)1 : (byte)0,
+                PropIndex = _inputState.PropIndex,
+            };
+            if (EntityManager.HasComponent<PlayerInputComponent>(entity))
+                EntityManager.SetComponentData(entity, input);
+            else
+                EntityManager.AddComponentData(entity, input);
+
+            PlayerSkillSelectionComponent selection = EntityManager.HasComponent<PlayerSkillSelectionComponent>(entity)
+                ? EntityManager.GetComponentData<PlayerSkillSelectionComponent>(entity)
+                : default;
+            int chainCount = GameRuntimeStateUtility.TryGetPlayerCharacterData(EntityManager, entity, out CharacterData characterData)
+                ? characterData.Skills?.Chains?.Length ?? 0
+                : 0;
+            if (isSkillPressed && input.SkillChainIndex >= 0)
+                selection.CurrentChainIndex = Mathf.Clamp(input.SkillChainIndex, 0, chainCount > 0 ? chainCount - 1 : 0);
+            if (isNextSkillChainPressed && chainCount > 0)
+                selection.CurrentChainIndex = (selection.CurrentChainIndex + 1) % chainCount;
+
+            if (EntityManager.HasComponent<PlayerSkillSelectionComponent>(entity))
+                EntityManager.SetComponentData(entity, selection);
+            else
+                EntityManager.AddComponentData(entity, selection);
+
+            if (isSkillPressed || isNextSkillChainPressed)
+                EventComponent.Instance.Publish(new CommonGameEvent(PlayerSkillSelectionComponent.ChangedEventName));
+            break;
+        }
+
+        if (hasPlayer)
+        {
+            _wasSkillHeld = _inputState.IsSkillHeld;
+            _wasNextSkillChainHeld = _inputState.IsNextSkillChainHeld;
+        }
+    }
+
+    protected override void OnDestroy()
+    {
+        if (_inputComponent != null)
+            _inputComponent.OnInputStateChanged -= HandleInputStateChanged;
+    }
+
+    private void TryBindInputComponent()
+    {
+        if (_inputComponent != null || !InputComponent.TryGetInstance(out InputComponent inputComponent))
+            return;
+
+        _inputComponent = inputComponent;
+        _inputState = _inputComponent.CurrentState;
+        _inputComponent.OnInputStateChanged += HandleInputStateChanged;
+    }
+
+    private void HandleInputStateChanged(InputState inputState)
+    {
+        _inputState = inputState;
+    }
+}

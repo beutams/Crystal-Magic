@@ -11,8 +11,8 @@ public static class PlayerCurrentSkillUtility
         int slotIndex)
     {
         if (!TryGetComponent(entityManager, entity, out PlayerCurrentSkillComponent component) ||
-            !TryGetWorldSkillData(entityManager, out WorldSkillDataComponent worldSkillData) ||
-            !worldSkillData.TryGetChainSlot(chainId, slotIndex, out _))
+            !TryGetPlayerSkillRuntimeData(entityManager, entity, out PlayerSkillRuntimeDataComponent playerSkillData) ||
+            !playerSkillData.TryGetChainSlot(chainId, slotIndex, out _))
         {
             return false;
         }
@@ -30,20 +30,20 @@ public static class PlayerCurrentSkillUtility
     public static bool TryGetCurrentSlot(
         EntityManager entityManager,
         Entity entity,
-        out WorldSkillChainSlotData slot)
+        out PlayerSkillChainSlotData slot)
     {
         slot = default;
         return TryGetComponent(entityManager, entity, out PlayerCurrentSkillComponent component) &&
                component.CurrentChainId >= 0 &&
                component.CurrentSlotIndex >= 0 &&
-               TryGetWorldSkillData(entityManager, out WorldSkillDataComponent worldSkillData) &&
-               worldSkillData.TryGetChainSlot(component.CurrentChainId, component.CurrentSlotIndex, out slot);
+               TryGetPlayerSkillRuntimeData(entityManager, entity, out PlayerSkillRuntimeDataComponent playerSkillData) &&
+               playerSkillData.TryGetChainSlot(component.CurrentChainId, component.CurrentSlotIndex, out slot);
     }
 
     public static bool TryGetCurrentSkillId(EntityManager entityManager, Entity entity, out int skillId)
     {
         skillId = -1;
-        if (!TryGetCurrentSlot(entityManager, entity, out WorldSkillChainSlotData slot) || slot.SkillId < 0)
+        if (!TryGetCurrentSlot(entityManager, entity, out PlayerSkillChainSlotData slot) || slot.SkillId < 0)
             return false;
 
         skillId = slot.SkillId;
@@ -53,7 +53,7 @@ public static class PlayerCurrentSkillUtility
     public static bool TryGetCurrentAdditionId(EntityManager entityManager, Entity entity, out int additionId)
     {
         additionId = -1;
-        if (!TryGetCurrentSlot(entityManager, entity, out WorldSkillChainSlotData slot) || slot.SkillAdditionId < 0)
+        if (!TryGetCurrentSlot(entityManager, entity, out PlayerSkillChainSlotData slot) || slot.SkillAdditionId < 0)
             return false;
 
         additionId = slot.SkillAdditionId;
@@ -67,8 +67,8 @@ public static class PlayerCurrentSkillUtility
     {
         inputType = SkillInputType.None;
         if (!TryGetCurrentSkillId(entityManager, entity, out int skillId) ||
-            !TryGetWorldSkillData(entityManager, out WorldSkillDataComponent worldSkillData) ||
-            !worldSkillData.TryGetSkill(skillId, out WorldSkillInfo skill))
+            !TryGetPlayerSkillRuntimeData(entityManager, entity, out PlayerSkillRuntimeDataComponent playerSkillData) ||
+            !playerSkillData.TryGetSkill(skillId, out PlayerSkillInfo skill))
         {
             return false;
         }
@@ -122,11 +122,12 @@ public static class PlayerCurrentSkillUtility
         return component != null;
     }
 
-    private static bool TryGetWorldSkillData(EntityManager entityManager, out WorldSkillDataComponent data)
+    private static bool TryGetPlayerSkillRuntimeData(EntityManager entityManager, Entity entity, out PlayerSkillRuntimeDataComponent data)
     {
         data = null;
-        return WorldStateUtility.TryGetEntity(entityManager, out Entity worldEntity) &&
-               entityManager.HasComponent<WorldSkillDataComponent>(worldEntity) &&
-               (data = entityManager.GetComponentObject<WorldSkillDataComponent>(worldEntity)) != null;
+        return entity != Entity.Null &&
+               entityManager.Exists(entity) &&
+               entityManager.HasComponent<PlayerSkillRuntimeDataComponent>(entity) &&
+               (data = entityManager.GetComponentObject<PlayerSkillRuntimeDataComponent>(entity)) != null;
     }
 }

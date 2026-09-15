@@ -1,4 +1,4 @@
-﻿{
+{
     "Rows": [
         {
             "Id": 0,
@@ -9,8 +9,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 30,
-            "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|op",
-            "IsNonTransferable": false
+            "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|op"
         },
         {
             "Id": 1,
@@ -21,8 +20,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 0,
-            "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|fire",
-            "IsNonTransferable": false
+            "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|fire"
         },
         {
             "Id": 2,
@@ -33,8 +31,7 @@
             "Rarity": 0,
             "MaxStack": 0,
             "SellPrice": 0,
-            "IconPath": "",
-            "IsNonTransferable": false
+            "IconPath": ""
         },
         {
             "Id": 3,
@@ -45,8 +42,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 30,
-            "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|ys",
-            "IsNonTransferable": false
+            "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|ys"
         },
         {
             "Id": 4,
@@ -57,8 +53,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 30,
-            "IconPath": "Assets/Res/Sprites/Skill/fire_skill_01.png",
-            "IsNonTransferable": false
+            "IconPath": "Assets/Res/Sprites/Skill/fire_skill_01.png"
         },
         {
             "Id": 5,
@@ -69,8 +64,7 @@
             "Rarity": 0,
             "MaxStack": 0,
             "SellPrice": 0,
-            "IconPath": "",
-            "IsNonTransferable": false
+            "IconPath": ""
         },
         {
             "Id": 6,
@@ -81,8 +75,7 @@
             "Rarity": 0,
             "MaxStack": 0,
             "SellPrice": 0,
-            "IconPath": "",
-            "IsNonTransferable": false
+            "IconPath": ""
         },
         {
             "Id": 7,
@@ -93,8 +86,7 @@
             "Rarity": 0,
             "MaxStack": 0,
             "SellPrice": 0,
-            "IconPath": "",
-            "IsNonTransferable": false
+            "IconPath": ""
         },
         {
             "Id": 8,
@@ -105,8 +97,7 @@
             "Rarity": 0,
             "MaxStack": 0,
             "SellPrice": 0,
-            "IconPath": "",
-            "IsNonTransferable": false
+            "IconPath": ""
         },
         {
             "Id": 9,
@@ -117,8 +108,7 @@
             "Rarity": 0,
             "MaxStack": 0,
             "SellPrice": 0,
-            "IconPath": "",
-            "IsNonTransferable": false
+            "IconPath": ""
         },
         {
             "Id": 10,
@@ -129,8 +119,7 @@
             "Rarity": 0,
             "MaxStack": 0,
             "SellPrice": 0,
-            "IconPath": "",
-            "IsNonTransferable": false
+            "IconPath": ""
         },
         {
             "Id": 11,
@@ -141,8 +130,7 @@
             "Rarity": 0,
             "MaxStack": 0,
             "SellPrice": 0,
-            "IconPath": "",
-            "IsNonTransferable": false
+            "IconPath": ""
         },
         {
             "Id": 12,
@@ -153,8 +141,7 @@
             "Rarity": 0,
             "MaxStack": 0,
             "SellPrice": 0,
-            "IconPath": "",
-            "IsNonTransferable": false
+            "IconPath": ""
         },
         {
             "Id": 13,
@@ -165,8 +152,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 30,
-            "IconPath": "Assets/Res/Sprites/Skill/fire_skill_04.png",
-            "IsNonTransferable": false
+            "IconPath": "Assets/Res/Sprites/Skill/fire_skill_04.png"
         },
         {
             "Id": 14,
@@ -177,8 +163,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 30,
-            "IconPath": "Assets/Res/Sprites/Skill/fire_skill_08.png",
-            "IsNonTransferable": false
+            "IconPath": "Assets/Res/Sprites/Skill/fire_skill_08.png"
         },
         {
             "Id": 15,
@@ -189,8 +174,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 30,
-            "IconPath": "Assets/Res/Sprites/Skill/fire_skill_13.png",
-            "IsNonTransferable": false
+            "IconPath": "Assets/Res/Sprites/Skill/fire_skill_13.png"
         },
         {
             "Id": 16,
@@ -201,8 +185,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 30,
-            "IconPath": "Assets/Res/Sprites/Skill/fire_skill_05.png",
-            "IsNonTransferable": false
+            "IconPath": "Assets/Res/Sprites/Skill/fire_skill_05.png"
         },
         {
             "Id": 17,
@@ -213,8 +196,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 30,
-            "IconPath": "Assets/Res/Sprites/Skill/fire_skill_11.png",
-            "IsNonTransferable": false
+            "IconPath": "Assets/Res/Sprites/Skill/fire_skill_11.png"
         },
         {
             "Id": 18,
@@ -225,8 +207,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 30,
-            "IconPath": "",
-            "IsNonTransferable": false
+            "IconPath": ""
         },
         {
             "Id": 19,
@@ -237,8 +218,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 30,
-            "IconPath": "Assets/Res/Sprites/Skill/fire_skill_17.png",
-            "IsNonTransferable": false
+            "IconPath": "Assets/Res/Sprites/Skill/fire_skill_17.png"
         },
         {
             "Id": 20,
@@ -249,8 +229,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 30,
-            "IconPath": "",
-            "IsNonTransferable": false
+            "IconPath": ""
         },
         {
             "Id": 21,
@@ -261,8 +240,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 30,
-            "IconPath": "",
-            "IsNonTransferable": false
+            "IconPath": ""
         },
         {
             "Id": 22,
@@ -273,8 +251,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 30,
-            "IconPath": "",
-            "IsNonTransferable": false
+            "IconPath": ""
         },
         {
             "Id": 23,
@@ -285,8 +262,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 30,
-            "IconPath": "",
-            "IsNonTransferable": false
+            "IconPath": ""
         },
         {
             "Id": 24,
@@ -297,8 +273,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 30,
-            "IconPath": "",
-            "IsNonTransferable": false
+            "IconPath": ""
         },
         {
             "Id": 25,
@@ -309,8 +284,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 30,
-            "IconPath": "",
-            "IsNonTransferable": false
+            "IconPath": ""
         },
         {
             "Id": 26,
@@ -321,8 +295,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 30,
-            "IconPath": "",
-            "IsNonTransferable": false
+            "IconPath": ""
         },
         {
             "Id": 27,
@@ -333,8 +306,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 30,
-            "IconPath": "",
-            "IsNonTransferable": false
+            "IconPath": ""
         },
         {
             "Id": 28,
@@ -345,8 +317,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 30,
-            "IconPath": "",
-            "IsNonTransferable": false
+            "IconPath": ""
         },
         {
             "Id": 29,
@@ -357,8 +328,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 30,
-            "IconPath": "",
-            "IsNonTransferable": false
+            "IconPath": ""
         },
         {
             "Id": 30,
@@ -369,8 +339,7 @@
             "Rarity": 1,
             "MaxStack": 1,
             "SellPrice": 30,
-            "IconPath": "",
-            "IsNonTransferable": false
+            "IconPath": ""
         }
     ]
 }

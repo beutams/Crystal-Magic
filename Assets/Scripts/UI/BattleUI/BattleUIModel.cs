@@ -60,15 +60,13 @@ namespace CrystalMagic.UI
         {
             SkillCData skillConfig = SaveDataComponent.Instance.GetSkillData();
             CharacterPropData propConfig = SaveDataComponent.Instance.GetCharacterPropData();
-            RuntimeSkillData runtimeSkillData = RuntimeDataComponent.Instance.GetSkillData();
-            RuntimePropData runtimePropData = RuntimeDataComponent.Instance.GetPropData();
             PlayerCombatSnapshot snapshot = ReadPlayerSnapshot();
             List<BattleSkillDisplayData> nextItems = BuildSkillItems(
                 skillConfig,
-                runtimeSkillData,
+                snapshot.SelectedSkillChainIndex,
                 snapshot.CurrentSkillChainIndex,
                 snapshot.CurrentSkillSlotIndex);
-            List<BattlePropShortcutDisplayData> nextPropItems = BuildPropShortcutItems(propConfig, runtimePropData);
+            List<BattlePropShortcutDisplayData> nextPropItems = BuildPropShortcutItems(propConfig, snapshot.PropCooldownRemaining);
 
             float nextHpRatio = snapshot.HasHealth ? snapshot.HpRatio : 1f;
             float nextMpRatio = snapshot.HasMana ? snapshot.MpRatio : 1f;
@@ -100,7 +98,7 @@ namespace CrystalMagic.UI
 
         private static List<BattleSkillDisplayData> BuildSkillItems(
             SkillCData skillConfig,
-            RuntimeSkillData runtimeSkillData,
+            int selectedSkillChainIndex,
             int currentSkillChainIndex,
             int currentSkillSlotIndex)
         {
@@ -109,7 +107,7 @@ namespace CrystalMagic.UI
             if (skillConfig?.Chains == null || skillConfig.Chains.Length == 0)
                 return items;
 
-            int selectedChainIndex = Mathf.Clamp(runtimeSkillData?.CurrentSkillChainIndex ?? 0, 0, skillConfig.Chains.Length - 1);
+            int selectedChainIndex = Mathf.Clamp(selectedSkillChainIndex, 0, skillConfig.Chains.Length - 1);
             SkillChainData chain = skillConfig.Chains[selectedChainIndex];
             chain?.EnsureSlots();
             if (chain?.Slots == null)
@@ -140,13 +138,13 @@ namespace CrystalMagic.UI
             return items;
         }
 
-        private static List<BattlePropShortcutDisplayData> BuildPropShortcutItems(CharacterPropData propConfig, RuntimePropData runtimePropData)
+        private static List<BattlePropShortcutDisplayData> BuildPropShortcutItems(CharacterPropData propConfig, float cooldownRemaining)
         {
             List<BattlePropShortcutDisplayData> items = new();
             if (propConfig?.ShortcutSlotIndexes == null)
                 return items;
 
-            float cooldownRemaining = Mathf.Max(0f, runtimePropData?.SharedCooldownRemaining ?? 0f);
+            cooldownRemaining = Mathf.Max(0f, cooldownRemaining);
             GameConfig config = ConfigComponent.Instance.Get<GameConfig>();
             float cooldownDuration = Mathf.Max(0f, config.BattlePropSharedCooldownSeconds);
             float cooldownRatio = cooldownDuration > 0f
@@ -221,6 +219,12 @@ namespace CrystalMagic.UI
                 snapshot.CurrentSkillChainIndex = currentSkill.CurrentChainId;
                 snapshot.CurrentSkillSlotIndex = currentSkill.CurrentSlotIndex;
             }
+
+            if (entityManager.HasComponent<PlayerSkillSelectionComponent>(player))
+                snapshot.SelectedSkillChainIndex = entityManager.GetComponentData<PlayerSkillSelectionComponent>(player).CurrentChainIndex;
+
+            if (entityManager.HasComponent<PlayerPropCooldownComponent>(player))
+                snapshot.PropCooldownRemaining = entityManager.GetComponentData<PlayerPropCooldownComponent>(player).SharedCooldownRemaining;
 
             return snapshot;
         }
@@ -376,5 +380,7 @@ namespace CrystalMagic.UI
         public float MpRatio;
         public int CurrentSkillChainIndex;
         public int CurrentSkillSlotIndex;
+        public int SelectedSkillChainIndex;
+        public float PropCooldownRemaining;
     }
 }

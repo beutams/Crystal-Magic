@@ -25,7 +25,7 @@ public class GameSaveUI_SaveItemView : UISubView<GameSaveUI_SaveItemData>
             return;
 
         UI.Open_Index.TextMeshProUGUI.text = (record.SaveIndex + 1).ToString("00");
-        UI.Open_CreateTime.TextMeshProUGUI.text = record.GetFormattedTime();
+        UI.Open_CreateTime.TextMeshProUGUI.text = string.Empty;
         UI.Open_Money.TextMeshProUGUI.text = record.StashMoney.ToString();
     }
 
