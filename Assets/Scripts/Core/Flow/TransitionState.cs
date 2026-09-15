@@ -35,6 +35,8 @@ namespace CrystalMagic.Core {
         public string TransitionUIName { get; set; }
         public IReadOnlyList<string> RequiredSceneNames { get; set; }
         public IReadOnlyList<string> RequiredSubSceneNames { get; set; }
+        public IReadOnlyList<string> ActiveSubSceneNames { get; set; }
+        public bool KeepCurrentMainScene { get; set; }
         public bool ForceReloadTargetScene { get; set; }
         public System.Func<System.Collections.IEnumerator> PostLoadCoroutineFactory { get; set; }
         public System.Action OnComplete { get; set; }

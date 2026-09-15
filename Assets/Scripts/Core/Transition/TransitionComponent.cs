@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace CrystalMagic.Core {
@@ -114,34 +115,42 @@ namespace CrystalMagic.Core {
 
         private IEnumerator LoadSceneAsync(TransitionData transitionData)
         {
-            bool forceReloadTargetScene = transitionData.ForceReloadTargetScene;
-            DungeonFlowTiming.BeginStage(5, "加载 DungeonScene", transitionData.TargetSceneName);
-            yield return StartCoroutine(
-                SceneComponent.Instance.LoadSceneAsyncCoroutine(
-                    transitionData.TargetSceneName,
-                    forceReload: forceReloadTargetScene,
-                    onProgress: progress => PublishLoadProgress(
-                        transitionData.TargetSceneName,
-                        Mathf.Lerp(0.05f, 0.25f, progress),
-                        "Loading scene",
-                        transitionData.TargetSceneName))
-            );
-            DungeonFlowTiming.EndStage(5, "DungeonScene 已加载");
-
-            DungeonFlowTiming.BeginStage(6, "激活并等待 Required SubScene");
-            if (transitionData.RequiredSubSceneNames == null)
+            DungeonFlowTiming.BeginStage(5, "加载目标场景", transitionData.TargetSceneName);
+            if (transitionData.KeepCurrentMainScene)
             {
-                DungeonFlowTiming.EndStage(6, "没有 Required SubScene");
+                GameWorldManager.PrepareForSceneLoad(transitionData.TargetSceneName);
+                PublishLoadProgress(transitionData.TargetSceneName, 0.25f, "Keeping main scene", transitionData.TargetSceneName);
+            }
+            else
+            {
+                yield return StartCoroutine(
+                    SceneComponent.Instance.LoadSceneAsyncCoroutine(
+                        transitionData.TargetSceneName,
+                        forceReload: transitionData.ForceReloadTargetScene,
+                        onProgress: progress => PublishLoadProgress(
+                            transitionData.TargetSceneName,
+                            Mathf.Lerp(0.05f, 0.25f, progress),
+                            "Loading scene",
+                            transitionData.TargetSceneName))
+                );
+            }
+            DungeonFlowTiming.EndStage(5, "目标场景已就绪");
+
+            IReadOnlyList<string> activeSubSceneNames = transitionData.ActiveSubSceneNames ?? transitionData.RequiredSubSceneNames;
+            DungeonFlowTiming.BeginStage(6, "激活并等待目标 SubScene");
+            if (activeSubSceneNames == null)
+            {
+                DungeonFlowTiming.EndStage(6, "没有 SubScene 变更");
                 yield break;
             }
 
-            SceneComponent.Instance.SetSubScenesActive(transitionData.RequiredSubSceneNames);
-            foreach (string subSceneName in transitionData.RequiredSubSceneNames)
+            SceneComponent.Instance.SetSubScenesActive(activeSubSceneNames);
+            foreach (string subSceneName in activeSubSceneNames)
             {
                 PublishLoadProgress(transitionData.TargetSceneName, 0.27f, "Loading sub-scene", subSceneName);
                 yield return StartCoroutine(SceneComponent.Instance.WaitForSubSceneLoadedCoroutine(subSceneName));
             }
-            DungeonFlowTiming.EndStage(6, "Required SubScene 已完成");
+            DungeonFlowTiming.EndStage(6, "目标 SubScene 已完成");
         }
 
         private IEnumerator FadeOutAsync(ITransitionUI transitionUI, string targetSceneName)

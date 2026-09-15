@@ -8,6 +8,7 @@ namespace CrystalMagic.Core {
     public class TownState : GameState
     {
         public const string SceneName = "TownScene";
+        public const string SubSceneName = "TownSubScene";
         private const string UIPlayerInputLockReason = "TownState.UIOpen";
         private CharacterUI _characterUI;
         private InteractionPromptManager _interactionPromptManager;
@@ -56,7 +57,8 @@ namespace CrystalMagic.Core {
                 TargetStateType = typeof(TownState),
                 TargetStateData = data,
                 TransitionUIName = "TransitionUI",
-                ForceReloadTargetScene = true,
+                KeepCurrentMainScene = true,
+                ActiveSubSceneNames = new[] { SubSceneName },
             };
         }
 
