@@ -177,6 +177,7 @@ namespace CrystalMagic.Core
     public class DungeonState : BattleStateBase
     {
         public const string SceneName = "DungeonScene";
+        public const string RegistrySubSceneName = "DungeonRegistrySubScene";
         protected override string BattleSceneName => SceneName;
         private bool _isProcessingDefeat;
         private MinimapUI _minimapUI;
@@ -191,8 +192,8 @@ namespace CrystalMagic.Core
                 TargetStateType = typeof(DungeonState),
                 TargetStateData = context,
                 TransitionUIName = "TransitionUI",
-                RequiredSubSceneNames = new[] { "DungeonRegistrySubScene" },
-                ForceReloadTargetScene = true,
+                KeepCurrentMainScene = true,
+                ActiveSubSceneNames = new[] { RegistrySubSceneName },
                 PostLoadCoroutineFactory = () => DungeonGenerationService.GenerateForTransition(context, SceneName),
             };
             DungeonFlowTiming.EndStage(1, "TransitionData 已创建");

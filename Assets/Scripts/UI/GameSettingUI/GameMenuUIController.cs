@@ -47,7 +47,8 @@ namespace CrystalMagic.UI
                 TargetSceneName = "MainMenu",
                 TargetStateType = typeof(MainMenuState),
                 TransitionUIName = "TransitionUI",
-                ForceReloadTargetScene = true,
+                KeepCurrentMainScene = true,
+                ActiveSubSceneNames = System.Array.Empty<string>(),
             });
         }
     }

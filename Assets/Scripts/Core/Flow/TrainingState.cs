@@ -5,6 +5,7 @@ namespace CrystalMagic.Core
     public sealed class TrainingState : BattleStateBase
     {
         public const string SceneName = "TrainingScene";
+        public const string SubSceneName = "TrainingSubScene";
         protected override string BattleSceneName => SceneName;
 
         protected override void OnEnterBattle()
@@ -30,7 +31,8 @@ namespace CrystalMagic.Core
                 TargetStateType = typeof(TrainingState),
                 TargetStateData = data,
                 TransitionUIName = "TransitionUI",
-                ForceReloadTargetScene = true,
+                KeepCurrentMainScene = true,
+                ActiveSubSceneNames = new[] { SubSceneName },
             };
         }
     }

@@ -20,39 +20,25 @@ namespace CrystalMagic.Core {
                 return;
             }
 
-            string targetSceneName;
-            System.Type targetStateType;
-
             if (context.ShouldEnterDungeon())
             {
                 DungeonFlowTiming.Begin(context);
                 Debug.Log($"[LoadGameState] 进入 Dungeon，主题 {context.DungeonThemeId}，关卡 {context.DungeonFloor}");
-                targetSceneName = DungeonState.SceneName;
-                targetStateType = typeof(DungeonState);
             }
             else if (context.ShouldEnterTraining())
             {
                 Debug.Log("[LoadGameState] Enter Training");
-                targetSceneName = TrainingState.SceneName;
-                targetStateType = typeof(TrainingState);
             }
             else
             {
                 Debug.Log("[LoadGameState] 进入 Town");
-                targetSceneName = TownState.SceneName;
-                targetStateType = typeof(TownState);
             }
 
             TransitionData transitionData = context.ShouldEnterDungeon()
                 ? DungeonState.CreateEnterTransitionData(context)
-                : new TransitionData
-                {
-                    TargetSceneName = targetSceneName,
-                    TargetStateType = targetStateType,
-                    TargetStateData = context,
-                    TransitionUIName = "TransitionUI",
-                    ForceReloadTargetScene = true,
-                };
+                : context.ShouldEnterTraining()
+                    ? TrainingState.CreateEnterTransitionData(context)
+                    : TownState.CreateEnterTransitionData(context);
 
             GameFlowComponent.Instance.BeginTransition(transitionData);
         }
