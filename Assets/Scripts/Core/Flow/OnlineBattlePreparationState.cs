@@ -36,7 +36,6 @@ namespace CrystalMagic.Core
                     EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<EntitySpawnRegistrySingleton>());
                     if (!query.IsEmptyIgnoreFilter)
                     {
-                        ClientNetworkManager.Instance.clientBattleManager.OnBattleSceneLoaded();
                         yield break;
                     }
                 }

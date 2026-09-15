@@ -14,7 +14,6 @@ namespace Server
         public ClientService battleServic => ClientNetworkManager.Instance.clientServic;
         public Connect battleConnect;
         public string ticket;
-        public BattleEnterData battleData;
         public World battleWorld;
         public Entity localPlayer;
         public Dictionary<Guid, Entity> players = new Dictionary<Guid, Entity>();
@@ -32,7 +31,6 @@ namespace Server
             }
 
             ticket = null;
-            battleData = null;
             localPlayer = Entity.Null;
             players.Clear();
         }
@@ -51,7 +49,19 @@ namespace Server
         }
         private void OnBattleConnected(Connect connect)
         {
-            connect.Send(new C2B_EnterBattle() { ticket = ticket });
+            CharacterData characterData = SaveDataComponent.Instance.GetCharacterData();
+            if (characterData == null)
+            {
+                Debug.LogError("[Battle] Character data is unavailable.");
+                battleServic.Disconnect(connect);
+                return;
+            }
+
+            connect.Send(new C2B_EnterBattle()
+            {
+                ticket = ticket,
+                data = characterData,
+            });
         }
         private void OnEnterBattleResult(IMessage message, Connect connect)
         {
@@ -65,13 +75,6 @@ namespace Server
             {
                 case BattleRequestType.EnterBattleSuccess:
                     ticket = null;
-                    battleData = realMessage.battleData;
-                    if (battleData == null)
-                    {
-                        battleServic.Disconnect(connect);
-                        return;
-                    }
-                    GameFlowComponent.Instance.BeginTransition(OnlineBattlePreparationState.CreateEnterTransitionData(battleData));
                     break;
                 case BattleRequestType.EnterBattleFail:
                     ticket = null;
@@ -87,19 +90,8 @@ namespace Server
             }
             battleConnect = null;
             ticket = null;
-            battleData = null;
             localPlayer = Entity.Null;
             players.Clear();
-        }
-        public void OnBattleSceneLoaded()
-        {
-            if (battleData == null)
-            {
-                return;
-            }
-
-            CharacterData characterData = SaveDataComponent.Instance.GetCharacterData();
-            battleConnect.Send(new C2B_SendUserData() { data = characterData });
         }
         private void OnCreateBattleUnit(IMessage message, Connect connect)
         {

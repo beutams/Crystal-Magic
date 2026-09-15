@@ -1,4 +1,5 @@
 using System;
+using CrystalMagic.Core;
 
 namespace Server
 {
@@ -7,5 +8,6 @@ namespace Server
     public class C2B_EnterBattle : IMessage
     {
         public string ticket;
+        public CharacterData data;
     }
 }

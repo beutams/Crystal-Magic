@@ -11,7 +11,7 @@ namespace Server
 
         public BattleRoom room;
 
-        public bool init;
+        public bool entered;
         public Guid unitId;
         public Entity entity;
         public CharacterData characterData;
