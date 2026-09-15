@@ -9,7 +9,6 @@ using UnityEngine;
 
 namespace CrystalMagic.Game.Data
 {
-    [ReadOnlyData]
     [System.Serializable]
     public class BuffData : DataRow
     {
@@ -145,19 +144,16 @@ namespace CrystalMagic.Game.Data
     }
 
     // Legacy serialized subtype aliases. New buff rows use BuffData directly.
-    [ReadOnlyData]
     [System.Serializable]
     public class PropertyBuffData : BuffData
     {
     }
 
-    [ReadOnlyData]
     [System.Serializable]
     public class EffectBuffData : BuffData
     {
     }
 
-    [ReadOnlyData]
     [System.Serializable]
     public class SkillModifierBuffData : BuffData
     {

@@ -66,7 +66,7 @@ namespace CrystalMagic.Core
 
         private static string GetTitle(DungeonSettlementResult result)
         {
-            return result != null && result.IsSuccess ? "地下城结算" : "地下城结算 - 战败";
+            return result != null && result.IsSuccess ? "成功离开地下城" : "地下城战败";
         }
 
         private static string GetContent(DungeonSettlementResult result)
@@ -74,17 +74,9 @@ namespace CrystalMagic.Core
             if (result == null)
                 return "本次地牢记录已结束。";
 
-            if (!result.IsSuccess)
-            {
-                return $"抵达层数：{result.ReachedFloor}\n" +
-                       $"遗失物品：{result.LostItemQuantity}\n" +
-                       "当局金币未能带回。";
-            }
-
-            return $"抵达层数：{result.ReachedFloor}\n" +
-                   $"带回金币：{result.ReturnedMoney}\n" +
-                   $"物品变化：+{result.GainedItemQuantity} / -{result.LostItemQuantity}\n" +
-                   $"不可带回：{result.NonTransferableItemQuantity}";
+            return result.IsSuccess
+                ? $"抵达层数：{result.ReachedFloor}\n角色当前携带的数据已带回城镇。"
+                : $"抵达层数：{result.ReachedFloor}\n本次地牢角色数据已丢弃。";
         }
 
         private static void LockDungeon()

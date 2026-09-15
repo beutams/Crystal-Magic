@@ -211,7 +211,6 @@ namespace CrystalMagic.Core {
             _currentState.IsSkillHeld = true;
             _currentState.SkillChainIndex = skillChainIndex;
             PublishInputState();
-            RuntimeDataComponent.Instance.SetCurrentSkillChainIndex(skillChainIndex, SaveDataComponent.Instance?.GetSkillData());
         }
 
         private void HandleSkillCanceled(InputAction.CallbackContext ctx)
@@ -225,7 +224,6 @@ namespace CrystalMagic.Core {
         {
             _currentState.IsNextSkillChainHeld = true;
             PublishInputState();
-            RuntimeDataComponent.Instance.SelectNextSkillChain(SaveDataComponent.Instance?.GetSkillData());
         }
 
         private void HandleTabCanceled(InputAction.CallbackContext ctx)

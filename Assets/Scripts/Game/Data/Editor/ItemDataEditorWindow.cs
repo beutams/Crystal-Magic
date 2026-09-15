@@ -150,7 +150,6 @@ namespace CrystalMagic.Editor.Data
             row.MaxStack = EditorGUILayout.IntField("Max Stack", row.MaxStack);
             row.SellPrice = EditorGUILayout.IntField("Sell Price", row.SellPrice);
             row.IconPath = EditorGUILayout.TextField("Icon Path", row.IconPath ?? string.Empty);
-            row.IsNonTransferable = EditorGUILayout.Toggle("Non Transferable", row.IsNonTransferable);
 
             if (EditorGUI.EndChangeCheck())
                 _isDirty = true;

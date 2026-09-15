@@ -16,7 +16,6 @@ namespace CrystalMagic.Game.Data
     }
 
     [System.Serializable]
-    [ReadOnlyData]
     public sealed class PropData : DataRow
     {
         public string NameKey;

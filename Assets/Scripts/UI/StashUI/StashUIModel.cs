@@ -119,7 +119,7 @@
 
         private void RefreshMoney()
         {
-            _stashMoney = CrystalMagic.Core.SaveDataComponent.Instance.GetTownData()?.StashMoney ?? 0;
+            _stashMoney = CrystalMagic.Core.SaveDataComponent.Instance.GetStashMoney();
         }
 
         private bool MatchesCategory(CrystalMagic.Game.Data.ItemType itemType)

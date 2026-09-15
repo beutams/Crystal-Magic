@@ -55,7 +55,6 @@ namespace CrystalMagic.Game.Data
         }
     }
 
-    [ReadOnlyData]
     [System.Serializable]
     public sealed class UnitAnimationProfileData : DataRow
     {

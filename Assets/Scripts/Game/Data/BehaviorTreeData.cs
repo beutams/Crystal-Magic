@@ -9,7 +9,6 @@ using UnityEngine;
 namespace CrystalMagic.Game.Data
 {
     [Serializable]
-    [ReadOnlyData]
     public sealed class BehaviorTreeData : DataRow
     {
         public int UnitDataId = -1;

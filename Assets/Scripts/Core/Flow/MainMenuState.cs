@@ -11,6 +11,7 @@ namespace CrystalMagic.Core {
 
         public override void OnEnter()
         {
+            GameWorldManager.ShutdownGameWorld();
             Debug.Log("[MainMenuState] Entered MainMenu");
             // 从对象池加载并显示 MainMenu UI
             BindEvents();

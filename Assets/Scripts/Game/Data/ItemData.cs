@@ -40,7 +40,6 @@ namespace CrystalMagic.Game.Data
         public int MaxStack;
         public int SellPrice;
         public string IconPath;
-        public bool IsNonTransferable;
     }
 
     [System.Serializable]
@@ -50,7 +49,6 @@ namespace CrystalMagic.Game.Data
         public float BaseBonus;
     }
 
-    [ReadOnlyData]
     [System.Serializable]
     public class EquipData : DataRow
     {

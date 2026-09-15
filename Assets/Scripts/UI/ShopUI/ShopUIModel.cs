@@ -90,8 +90,7 @@ namespace CrystalMagic.UI
 
         private void RefreshMoney()
         {
-            TownData townData = SaveDataComponent.Instance.GetTownData();
-            _money = townData?.StashMoney ?? 0;
+            _money = SaveDataComponent.Instance.GetStashMoney();
         }
     }
 

@@ -6,7 +6,6 @@ using Newtonsoft.Json;
 namespace CrystalMagic.Game.Data
 {
     [Serializable]
-    [ReadOnlyData]
     public class NPCData : DataRow
     {
         public string NPC;

@@ -97,7 +97,7 @@ namespace CrystalMagic.UI
             if (Price < 0)
                 return 0;
 
-            long money = SaveDataComponent.Instance.GetTownData()?.StashMoney ?? 0;
+            long money = SaveDataComponent.Instance.GetStashMoney();
             long maxBuyCount = money / Price;
             if (maxBuyCount <= 0)
                 return 0;

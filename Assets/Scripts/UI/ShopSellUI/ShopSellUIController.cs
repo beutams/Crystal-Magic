@@ -53,9 +53,8 @@ namespace CrystalMagic.UI
             if (quantity <= 0)
                 return;
 
-            TownData townData = SaveDataComponent.Instance.GetTownData();
             BackpackData backpackData = SaveDataComponent.Instance.GetBackpackData();
-            if (townData == null || backpackData?.Items == null)
+            if (backpackData?.Items == null)
                 return;
 
             int slotIndex = Model.SlotIndex;
@@ -68,7 +67,7 @@ namespace CrystalMagic.UI
 
             long totalSellPrice = Model.TotalSellPrice;
             if (totalSellPrice > 0)
-                townData.StashMoney += totalSellPrice;
+                SaveDataComponent.Instance.AddStashMoney(totalSellPrice);
 
             inventoryItem.Quantity -= quantity;
             if (inventoryItem.Quantity <= 0)

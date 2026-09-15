@@ -1,4 +1,4 @@
-﻿{
+{
   "Rows": [
     {
       "Graphs": [
@@ -67,7 +67,7 @@
                           },
                           "String": ""
                         },
-                        "GetterKey": "world.input.move",
+                        "GetterKey": "player.input.move",
                         "OperationType": "",
                         "Inputs": []
                       }
@@ -134,7 +134,7 @@
                   },
                   "String": ""
                 },
-                "GetterKey": "world.input.move",
+                "GetterKey": "player.input.move",
                 "OperationType": "",
                 "Inputs": []
               },
@@ -431,7 +431,7 @@
                   },
                   "String": ""
                 },
-                "GetterKey": "world.input.move",
+                "GetterKey": "player.input.move",
                 "OperationType": "",
                 "Inputs": []
               },
@@ -677,7 +677,7 @@
                       },
                       "String": ""
                     },
-                    "GetterKey": "world.input.interactHeld",
+                    "GetterKey": "player.input.interactHeld",
                     "OperationType": "",
                     "Inputs": []
                   }
@@ -943,7 +943,7 @@
                           },
                           "String": ""
                         },
-                        "GetterKey": "world.input.move",
+                        "GetterKey": "player.input.move",
                         "OperationType": "",
                         "Inputs": []
                       }
@@ -1010,7 +1010,7 @@
                   },
                   "String": ""
                 },
-                "GetterKey": "world.input.move",
+                "GetterKey": "player.input.move",
                 "OperationType": "",
                 "Inputs": []
               },
@@ -1307,7 +1307,7 @@
                   },
                   "String": ""
                 },
-                "GetterKey": "world.input.move",
+                "GetterKey": "player.input.move",
                 "OperationType": "",
                 "Inputs": []
               },
@@ -2037,7 +2037,7 @@
                       },
                       "String": ""
                     },
-                    "GetterKey": "world.input.primaryHeld",
+                    "GetterKey": "player.input.primaryHeld",
                     "OperationType": "",
                     "Inputs": []
                   }
@@ -2277,7 +2277,7 @@
                       },
                       "String": ""
                     },
-                    "GetterKey": "world.skill.isCurrentChainEmpty",
+                    "GetterKey": "player.skill.isCurrentChainEmpty",
                     "OperationType": "",
                     "Inputs": []
                   }
@@ -2338,7 +2338,7 @@
                       },
                       "String": ""
                     },
-                    "GetterKey": "world.skill.getSkillChantDuration",
+                    "GetterKey": "player.skill.getSkillChantDuration",
                     "OperationType": "",
                     "Inputs": [
                       {
@@ -2545,7 +2545,7 @@
                   },
                   "String": ""
                 },
-                "GetterKey": "world.skill.getCurrentChainId",
+                "GetterKey": "player.skill.getCurrentChainId",
                 "OperationType": "",
                 "Inputs": []
               },
@@ -2572,7 +2572,7 @@
                     },
                     "String": ""
                   },
-                  "GetterKey": "world.skill.getCurrentChainId",
+                  "GetterKey": "player.skill.getCurrentChainId",
                   "OperationType": "",
                   "Inputs": []
                 },
@@ -2660,7 +2660,7 @@
                     },
                     "String": ""
                   },
-                  "GetterKey": "world.input.pointerWorldPosition",
+                  "GetterKey": "player.input.pointerWorldPosition",
                   "OperationType": "",
                   "Inputs": []
                 },
@@ -3167,7 +3167,7 @@
                       },
                       "String": ""
                     },
-                    "GetterKey": "world.skill.getChainLength",
+                    "GetterKey": "player.skill.getChainLength",
                     "OperationType": "",
                     "Inputs": [
                       {
@@ -3272,7 +3272,7 @@
                   },
                   "String": ""
                 },
-                "GetterKey": "world.skill.getSkillCastingMoveMultiplier",
+                "GetterKey": "player.skill.getSkillCastingMoveMultiplier",
                 "OperationType": "",
                 "Inputs": [
                   {
@@ -3556,7 +3556,7 @@
                       },
                       "String": ""
                     },
-                    "GetterKey": "world.skill.getSkillMpCost",
+                    "GetterKey": "player.skill.getSkillMpCost",
                     "OperationType": "",
                     "Inputs": [
                       {
@@ -3621,7 +3621,7 @@
                   },
                   "String": ""
                 },
-                "GetterKey": "world.skill.getSkillMpCost",
+                "GetterKey": "player.skill.getSkillMpCost",
                 "OperationType": "",
                 "Inputs": [
                   {
@@ -3675,7 +3675,7 @@
                     },
                     "String": ""
                   },
-                  "GetterKey": "world.skill.getSkillMpCost",
+                  "GetterKey": "player.skill.getSkillMpCost",
                   "OperationType": "",
                   "Inputs": [
                     {
@@ -4150,7 +4150,7 @@
                   },
                   "String": ""
                 },
-                "GetterKey": "world.skill.getCurrentChainId",
+                "GetterKey": "player.skill.getCurrentChainId",
                 "OperationType": "",
                 "Inputs": []
               },
@@ -4177,7 +4177,7 @@
                     },
                     "String": ""
                   },
-                  "GetterKey": "world.skill.getCurrentChainId",
+                  "GetterKey": "player.skill.getCurrentChainId",
                   "OperationType": "",
                   "Inputs": []
                 },
@@ -4268,7 +4268,7 @@
                       },
                       "String": ""
                     },
-                    "GetterKey": "world.skill.getSkillMpCost",
+                    "GetterKey": "player.skill.getSkillMpCost",
                     "OperationType": "",
                     "Inputs": [
                       {
@@ -5157,7 +5157,7 @@
                       },
                       "String": ""
                     },
-                    "GetterKey": "world.skill.getInputType",
+                    "GetterKey": "player.skill.getInputType",
                     "OperationType": "",
                     "Inputs": [
                       {
@@ -5277,7 +5277,7 @@
                       },
                       "String": ""
                     },
-                    "GetterKey": "world.skill.getInputType",
+                    "GetterKey": "player.skill.getInputType",
                     "OperationType": "",
                     "Inputs": [
                       {
@@ -5562,7 +5562,7 @@
                     },
                     "String": ""
                   },
-                  "GetterKey": "world.input.pointerWorldPosition",
+                  "GetterKey": "player.input.pointerWorldPosition",
                   "OperationType": "",
                   "Inputs": []
                 },
@@ -5855,7 +5855,7 @@
                       },
                       "String": ""
                     },
-                    "GetterKey": "world.input.interactHeld",
+                    "GetterKey": "player.input.interactHeld",
                     "OperationType": "",
                     "Inputs": []
                   }

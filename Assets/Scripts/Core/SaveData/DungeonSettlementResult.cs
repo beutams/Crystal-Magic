@@ -10,10 +10,6 @@ namespace CrystalMagic.Core
     {
         public DungeonSettlementOutcome Outcome { get; set; }
         public int ReachedFloor { get; set; }
-        public long ReturnedMoney { get; set; }
-        public int GainedItemQuantity { get; set; }
-        public int LostItemQuantity { get; set; }
-        public int NonTransferableItemQuantity { get; set; }
 
         public bool IsSuccess => Outcome == DungeonSettlementOutcome.Escaped;
     }

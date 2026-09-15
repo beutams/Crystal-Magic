@@ -154,7 +154,7 @@ namespace CrystalMagic.UI
                 return false;
             }
 
-            long money = CrystalMagic.Core.SaveDataComponent.Instance.GetTownData()?.StashMoney ?? 0;
+            long money = CrystalMagic.Core.SaveDataComponent.Instance.GetStashMoney();
             if (money < data.Price)
             {
                 tipMessage = CrystalMagic.Core.LocalizationComponent.Instance.Get("ui.shop.insufficient_money");

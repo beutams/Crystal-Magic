@@ -203,18 +203,13 @@ namespace CrystalMagic.Core
         {
             int dungeonFloor = context?.DungeonFloor ?? 1;
             int dungeonThemeId = context?.DungeonThemeId ?? SaveDataComponent.Instance.GetInitialDungeonThemeId();
-            SaveAreaType previousAreaType = SaveDataComponent.Instance.GetLocationData()?.AreaType ?? SaveAreaType.Town;
 
-            if (previousAreaType == SaveAreaType.Dungeon)
-            {
+            if (SaveDataComponent.Instance.GetDungeonRunData() != null)
                 SaveDataComponent.Instance.EnsureDungeonRunExists(dungeonThemeId, dungeonFloor);
-            }
+            else if (context?.DungeonRun != null)
+                GameRuntimeStateUtility.CreateDungeonRun(context.DungeonRun);
             else
-            {
                 SaveDataComponent.Instance.BeginDungeonRunFromPersistent(dungeonThemeId, dungeonFloor);
-            }
-
-            SaveDataComponent.Instance.SetCurrentLocation(SaveAreaType.Dungeon, dungeonFloor, dungeonThemeId);
             return dungeonFloor;
         }
 
@@ -225,6 +220,8 @@ namespace CrystalMagic.Core
             Debug.Log("[DungeonState] Entered Dungeon");
             LoadGameContext context = StateData as LoadGameContext;
             int dungeonFloor = PrepareDungeonRun(context);
+            GameRuntimeStateUtility.BindPlayerCharacterData(context?.Character ?? new CharacterData());
+            GameRuntimeStateUtility.RestoreDungeonRuntimeState(context?.Player);
             Debug.Log($"[DungeonState] Resuming dungeon theme {SaveDataComponent.Instance.GetDungeonRunData()?.ThemeId} at level {dungeonFloor}");
             _minimapUI = UIComponent.Instance.Open<MinimapUI>();
             UIComponent.Instance.SetLifetime(_minimapUI, UILifetime.SceneScoped);

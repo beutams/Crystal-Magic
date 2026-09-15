@@ -7,9 +7,16 @@ using Unity.Entities;
 public enum GameWorldKind
 {
     None = 0,
-    Default = 1 << 0,
-    Town = 1 << 1,
-    Dungeon = 1 << 2,
+    Town = 1 << 0,
+    Dungeon = 1 << 1,
+}
+
+public enum GameSceneMode
+{
+    None = 0,
+    Town = 1,
+    Dungeon = 2,
+    Training = 3,
 }
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false)]
@@ -26,125 +33,149 @@ public sealed class RunInGameWorldAttribute : Attribute
 namespace CrystalMagic.Core
 {
     /// <summary>
-    /// Prevents gameplay systems from being created in Unity's automatic default world.
+    /// 菜单阶段不创建 ECS World。进入一局游戏后才由 GameWorldManager 显式创建唯一的 GameWorld。
     /// </summary>
     public sealed class GameWorldBootstrap : ICustomBootstrap
     {
         public bool Initialize(string defaultWorldName)
         {
-            GameWorldManager.EnsureDefaultWorld();
             return true;
         }
     }
 
     /// <summary>
-    /// Owns the currently loaded gameplay world and switches it before scene loading begins.
+    /// 管理一次游戏会话唯一的 ECS World。
+    /// Town、Dungeon、Training 只是同一 World 中不同的场景运行模式。
     /// </summary>
     public static class GameWorldManager
     {
-        private const string DefaultWorldName = "DefaultWorld";
-        private const string TownWorldName = "TownWorld";
-        private const string DungeonWorldName = "DungeonWorld";
+        private const string WorldName = "GameWorld";
 
-        private static World _defaultWorld;
-        private static World _activeGameWorld;
+        private static World _gameWorld;
+        private static List<Type> _gameSystemTypes;
 
-        public static GameWorldKind ActiveKind { get; private set; } = GameWorldKind.Default;
+        public static bool HasGameWorld => _gameWorld != null && _gameWorld.IsCreated;
+        public static World GameWorld => HasGameWorld ? _gameWorld : null;
+        public static GameSceneMode SceneMode { get; private set; }
 
-        public static void EnsureDefaultWorld()
+        public static World CreateGameWorld()
         {
-            if (_defaultWorld != null && _defaultWorld.IsCreated)
+            if (HasGameWorld)
+                return _gameWorld;
+
+            _gameWorld = new World(WorldName, WorldFlags.Game);
+            World.DefaultGameObjectInjectionWorld = _gameWorld;
+
+            _gameSystemTypes = DefaultWorldInitialization
+                .GetAllSystems(WorldSystemFilterFlags.Default)
+                .Where(type => type.Assembly != typeof(GameWorldManager).Assembly || HasGameWorldAttribute(type))
+                .ToList();
+            DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(_gameWorld, _gameSystemTypes);
+            ScriptBehaviourUpdateOrder.AppendWorldToCurrentPlayerLoop(_gameWorld);
+            UpdateSystemEnablement();
+            return _gameWorld;
+        }
+
+        public static bool TryGetEntityManager(out EntityManager entityManager)
+        {
+            if (!HasGameWorld)
             {
-                if (World.DefaultGameObjectInjectionWorld == null)
-                    World.DefaultGameObjectInjectionWorld = _defaultWorld;
-                return;
+                entityManager = default;
+                return false;
             }
 
-            _defaultWorld = new World(DefaultWorldName, WorldFlags.Game);
-            World.DefaultGameObjectInjectionWorld = _defaultWorld;
-            ActiveKind = GameWorldKind.Default;
+            entityManager = _gameWorld.EntityManager;
+            return true;
         }
 
         public static void PrepareForSceneLoad(string sceneName)
         {
-            EnsureDefaultWorld();
+            if (!HasGameWorld)
+                return;
 
-            GameWorldKind targetKind = ResolveWorldKind(sceneName);
-            DisposeWorld(ref _activeGameWorld);
-
-            if (targetKind == GameWorldKind.Default)
+            GameSceneMode targetMode = ResolveSceneMode(sceneName);
+            if (targetMode == GameSceneMode.None)
             {
-                World.DefaultGameObjectInjectionWorld = _defaultWorld;
-                ActiveKind = GameWorldKind.Default;
+                ShutdownGameWorld();
                 return;
             }
 
-            _activeGameWorld = CreateGameWorld(targetKind);
-            World.DefaultGameObjectInjectionWorld = _activeGameWorld;
-            ActiveKind = targetKind;
+            SetSceneMode(targetMode);
+        }
+
+        public static void SetSceneMode(GameSceneMode sceneMode)
+        {
+            if (!HasGameWorld)
+                return;
+
+            SceneMode = sceneMode;
+            UpdateSystemEnablement();
+        }
+
+        public static void ShutdownGameWorld()
+        {
+            if (!HasGameWorld)
+            {
+                SceneMode = GameSceneMode.None;
+                return;
+            }
+
+            if (World.DefaultGameObjectInjectionWorld == _gameWorld)
+                World.DefaultGameObjectInjectionWorld = null;
+
+            ScriptBehaviourUpdateOrder.RemoveWorldFromCurrentPlayerLoop(_gameWorld);
+            _gameWorld.Dispose();
+            _gameWorld = null;
+            _gameSystemTypes = null;
+            SceneMode = GameSceneMode.None;
         }
 
         public static void Shutdown()
         {
-            if (World.DefaultGameObjectInjectionWorld == _activeGameWorld)
-                World.DefaultGameObjectInjectionWorld = _defaultWorld;
-
-            DisposeWorld(ref _activeGameWorld);
-
-            if (World.DefaultGameObjectInjectionWorld == _defaultWorld)
-                World.DefaultGameObjectInjectionWorld = null;
-
-            DisposeWorld(ref _defaultWorld);
-            ActiveKind = GameWorldKind.Default;
+            ShutdownGameWorld();
         }
 
-        private static GameWorldKind ResolveWorldKind(string sceneName)
+        private static GameSceneMode ResolveSceneMode(string sceneName)
         {
             if (sceneName == TownState.SceneName)
-                return GameWorldKind.Town;
+                return GameSceneMode.Town;
 
-            // Training shares the combat runtime and therefore reuses DungeonWorld.
-            if (sceneName == DungeonState.SceneName || sceneName == TrainingState.SceneName)
-                return GameWorldKind.Dungeon;
+            if (sceneName == DungeonState.SceneName)
+                return GameSceneMode.Dungeon;
 
-            return GameWorldKind.Default;
+            if (sceneName == TrainingState.SceneName)
+                return GameSceneMode.Training;
+
+            return GameSceneMode.None;
         }
 
-        private static World CreateGameWorld(GameWorldKind worldKind)
+        private static bool HasGameWorldAttribute(Type systemType)
         {
-            string worldName = worldKind == GameWorldKind.Town ? TownWorldName : DungeonWorldName;
-            World world = new(worldName, WorldFlags.Game);
-            World.DefaultGameObjectInjectionWorld = world;
-            List<Type> systemTypes = DefaultWorldInitialization
-                .GetAllSystems(WorldSystemFilterFlags.Default)
-                .Where(type => type.Assembly != typeof(GameWorldManager).Assembly || RunsInWorld(type, worldKind))
-                .ToList();
-
-            DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(world, systemTypes);
-            ScriptBehaviourUpdateOrder.AppendWorldToCurrentPlayerLoop(world);
-            return world;
+            return Attribute.IsDefined(systemType, typeof(RunInGameWorldAttribute));
         }
 
-        private static void DisposeWorld(ref World world)
+        private static void UpdateSystemEnablement()
         {
-            if (world == null)
+            if (!HasGameWorld || _gameSystemTypes == null)
                 return;
 
-            if (world.IsCreated)
+            GameWorldKind activeKind = SceneMode == GameSceneMode.Town
+                ? GameWorldKind.Town
+                : SceneMode == GameSceneMode.Dungeon || SceneMode == GameSceneMode.Training
+                    ? GameWorldKind.Dungeon
+                    : GameWorldKind.None;
+
+            for (int i = 0; i < _gameSystemTypes.Count; i++)
             {
-                ScriptBehaviourUpdateOrder.RemoveWorldFromCurrentPlayerLoop(world);
-                world.Dispose();
+                Type type = _gameSystemTypes[i];
+                RunInGameWorldAttribute attribute = Attribute.GetCustomAttribute(type, typeof(RunInGameWorldAttribute)) as RunInGameWorldAttribute;
+                if (attribute == null)
+                    continue;
+
+                ComponentSystemBase system = _gameWorld.GetExistingSystemManaged(type);
+                if (system != null)
+                    system.Enabled = (attribute.Worlds & activeKind) != 0;
             }
-
-            world = null;
-        }
-
-        private static bool RunsInWorld(Type systemType, GameWorldKind worldKind)
-        {
-            RunInGameWorldAttribute attribute = Attribute.GetCustomAttribute(
-                systemType,
-                typeof(RunInGameWorldAttribute)) as RunInGameWorldAttribute;
-            return attribute != null && (attribute.Worlds & worldKind) != 0;
         }
     }
 }

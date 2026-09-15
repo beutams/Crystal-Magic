@@ -51,11 +51,10 @@ namespace CrystalMagic.UI
                 return;
 
             CrystalMagic.Core.SkillCData skillData = CrystalMagic.Core.SaveDataComponent.Instance.GetSkillData();
-            CrystalMagic.Core.RuntimeSkillData runtimeSkillData = CrystalMagic.Core.RuntimeDataComponent.Instance.GetSkillData();
-            if (skillData?.Chains == null || runtimeSkillData == null)
+            if (skillData?.Chains == null)
                 return;
 
-            int skillChainIndex = UnityEngine.Mathf.Clamp(runtimeSkillData.CurrentSkillChainIndex, 0, skillData.Chains.Length - 1);
+            int skillChainIndex = UnityEngine.Mathf.Clamp(PlayerSkillSelectionUtility.GetCurrentChainIndex(), 0, skillData.Chains.Length - 1);
             CrystalMagic.Core.SkillChainData chain = skillData.Chains[skillChainIndex];
             chain?.EnsureSlots();
             if (chain?.Slots == null || Model.SkillSlotIndex < 0 || Model.SkillSlotIndex >= chain.Slots.Count)
