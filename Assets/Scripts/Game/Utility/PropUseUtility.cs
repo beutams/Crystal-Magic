@@ -254,6 +254,7 @@ namespace CrystalMagic.Game
             PlayerPropCooldownComponent cooldown = new()
             {
                 SharedCooldownRemaining = GetSharedCooldownSeconds(),
+                NetworkDirty = 1,
             };
             if (context.EntityManager.HasComponent<PlayerPropCooldownComponent>(context.UserEntity))
                 context.EntityManager.SetComponentData(context.UserEntity, cooldown);

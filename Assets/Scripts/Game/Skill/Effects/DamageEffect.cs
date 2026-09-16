@@ -39,10 +39,16 @@ namespace CrystalMagic.Game.Skill.Effects
 
             float previousHealth = vitality.CurrentHealth;
             vitality.CurrentHealth = math.max(0f, vitality.CurrentHealth - damage);
+            vitality.NetworkDirty = 1;
             entityManager.SetComponentData(target, vitality);
             bool died = vitality.CurrentHealth <= 0f;
             if (died && entityManager.HasComponent<UnitDeathComponent>(target))
+            {
+                UnitDeathComponent death = entityManager.GetComponentData<UnitDeathComponent>(target);
+                death.NetworkDirty = 1;
+                entityManager.SetComponentData(target, death);
                 entityManager.SetComponentEnabled<UnitDeathComponent>(target, true);
+            }
 
             if (!died && SendsOnDamagedHook)
             {

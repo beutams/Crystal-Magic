@@ -3,9 +3,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 
-[RunInGameWorld(GameWorldKind.Town | GameWorldKind.Dungeon)]
-[UpdateInGroup(typeof(UnitInitializationSystemGroup))]
-[UpdateBefore(typeof(UnitSourceInitializationSystem))]
+[UpdateInGroup(typeof(ClientInputSystemGroup))]
 public partial class PlayerInputBridgeSystem : SystemBase
 {
     private InputComponent _inputComponent;
@@ -28,6 +26,12 @@ public partial class PlayerInputBridgeSystem : SystemBase
             if (!UnitFactionUtility.IsPlayer(factionRef.ValueRO.Value))
                 continue;
 
+            if (GameWorldManager.Role == GameWorldRole.Client &&
+                !EntityManager.HasComponent<NetworkPlayerComponent>(entity))
+            {
+                continue;
+            }
+
             hasPlayer = true;
             PlayerInputComponent input = new()
             {
@@ -47,7 +51,26 @@ public partial class PlayerInputBridgeSystem : SystemBase
                 IsUsePropHeld = _inputState.IsUsePropHeld ? (byte)1 : (byte)0,
                 PropIndex = _inputState.PropIndex,
             };
-            if (EntityManager.HasComponent<PlayerInputComponent>(entity))
+            bool hasInput = EntityManager.HasComponent<PlayerInputComponent>(entity);
+            PlayerInputComponent oldInput = hasInput
+                ? EntityManager.GetComponentData<PlayerInputComponent>(entity)
+                : default;
+            bool inputChanged = !hasInput ||
+                                !oldInput.Move.Equals(input.Move) ||
+                                !oldInput.PointerWorldPosition.Equals(input.PointerWorldPosition) ||
+                                oldInput.IsPrimaryHeld != input.IsPrimaryHeld ||
+                                oldInput.IsInteractHeld != input.IsInteractHeld ||
+                                oldInput.IsInventoryHeld != input.IsInventoryHeld ||
+                                oldInput.IsPropertyHeld != input.IsPropertyHeld ||
+                                oldInput.IsEscapeHeld != input.IsEscapeHeld ||
+                                oldInput.IsSkillHeld != input.IsSkillHeld ||
+                                oldInput.SkillChainIndex != input.SkillChainIndex ||
+                                oldInput.IsNextSkillChainHeld != input.IsNextSkillChainHeld ||
+                                oldInput.IsUsePropHeld != input.IsUsePropHeld ||
+                                oldInput.PropIndex != input.PropIndex;
+            input.NetworkDirty = inputChanged ? (byte)1 : oldInput.NetworkDirty;
+
+            if (hasInput)
                 EntityManager.SetComponentData(entity, input);
             else
                 EntityManager.AddComponentData(entity, input);
@@ -62,6 +85,13 @@ public partial class PlayerInputBridgeSystem : SystemBase
                 selection.CurrentChainIndex = Mathf.Clamp(input.SkillChainIndex, 0, chainCount > 0 ? chainCount - 1 : 0);
             if (isNextSkillChainPressed && chainCount > 0)
                 selection.CurrentChainIndex = (selection.CurrentChainIndex + 1) % chainCount;
+
+            if (selection.CurrentChainIndex != (EntityManager.HasComponent<PlayerSkillSelectionComponent>(entity)
+                    ? EntityManager.GetComponentData<PlayerSkillSelectionComponent>(entity).CurrentChainIndex
+                    : 0))
+            {
+                selection.NetworkDirty = 1;
+            }
 
             if (EntityManager.HasComponent<PlayerSkillSelectionComponent>(entity))
                 EntityManager.SetComponentData(entity, selection);

@@ -4,9 +4,9 @@ using System.Collections.Generic;
 
 public class NetworkEventDictionary : SingletonNonMono<NetworkEventDictionary>
 {
-    public Dictionary<Type, NetworkStateData> events = new Dictionary<Type, NetworkStateData>();
+    public Dictionary<Type, NetworkState> events = new Dictionary<Type, NetworkState>();
 
-    public void Handle(NetworkStateData data)
+    public void Handle(NetworkState data)
     {
 
     }

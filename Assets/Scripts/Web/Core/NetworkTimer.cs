@@ -63,6 +63,23 @@ namespace Server
             return this.timers.Remove(timerId);
         }
 
+        public bool ChangeInterval(long timerId, long intervalMilliseconds)
+        {
+            if (intervalMilliseconds <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(intervalMilliseconds));
+            }
+
+            if (!this.timers.TryGetValue(timerId, out Timer timer))
+            {
+                return false;
+            }
+
+            timer.Interval = intervalMilliseconds;
+            timer.NextTriggerTime = this.TimeNow + timer.Interval;
+            return true;
+        }
+
         public void Clear()
         {
             this.timers.Clear();

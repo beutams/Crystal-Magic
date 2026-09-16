@@ -4,8 +4,7 @@ using UnityEngine;
 
 namespace CrystalMagic.Core
 {
-    [RunInGameWorld(GameWorldKind.Dungeon)]
-    [UpdateInGroup(typeof(UnitPostProcessSystemGroup))]
+    [UpdateInGroup(typeof(ClientPresentationSystemGroup))]
     public partial class DungeonFogOfWarSystem : SystemBase
     {
         protected override void OnUpdate()

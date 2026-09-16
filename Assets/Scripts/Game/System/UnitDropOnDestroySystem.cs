@@ -5,7 +5,6 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
-[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitPostProcessSystemGroup))]
 [UpdateBefore(typeof(DestroyEntitySystem))]
 partial class UnitDropOnDestroySystem : SystemBase

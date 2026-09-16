@@ -46,8 +46,17 @@ public static class UnitBuffHookUtility
         List<UnitBuffRuntimeEntry> buffs = runtimeComponent.Buffs;
         for (int i = buffs.Count - 1; i >= 0; i--)
         {
-            if (!buffs[i].OnHook(context))
+            UnitBuffRuntimeEntry entry = buffs[i];
+            int stackCount = entry.StackCount;
+            if (!entry.OnHook(context))
+            {
                 buffs.RemoveAt(i);
+                runtimeComponent.NetworkDirty = 1;
+            }
+            else if (entry.StackCount != stackCount)
+            {
+                runtimeComponent.NetworkDirty = 1;
+            }
         }
     }
 }

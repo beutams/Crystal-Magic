@@ -4,7 +4,6 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
-[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateBefore(typeof(BehaviorTreeSystem))]
 partial class UnitPerceptionSystem : SystemBase

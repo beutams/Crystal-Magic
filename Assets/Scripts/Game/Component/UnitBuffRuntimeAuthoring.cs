@@ -23,6 +23,7 @@ public class UnitBuffRuntimeAuthoring : MonoBehaviour
 public class UnitBuffRuntimeComponent : IComponentData
 {
     public List<UnitBuffRuntimeEntry> Buffs = new();
+    public byte NetworkDirty;
 }
 
 [UnitSourceAuthoring(typeof(UnitBuffRuntimeAuthoring))]

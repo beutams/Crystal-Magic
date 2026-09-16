@@ -75,6 +75,7 @@ public static class UnitControlUtility
             return;
 
         RefreshResolvedState(ref runtime);
+        runtime.NetworkDirty = 1;
         entityManager.SetComponentData(entity, runtime);
     }
 
@@ -84,6 +85,7 @@ public static class UnitControlUtility
             return;
 
         float safeDeltaTime = math.max(0f, deltaTime);
+        bool removed = false;
         for (int i = runtime.Entries.Length - 1; i >= 0; i--)
         {
             UnitControlRuntimeEntry entry = runtime.Entries[i];
@@ -91,12 +93,17 @@ public static class UnitControlUtility
             entry.MotionVelocity = DampenVelocity(entry.MotionVelocity, entry.MotionDamping, safeDeltaTime);
 
             if (entry.RemainingTime <= 0f)
+            {
                 runtime.Entries.RemoveAt(i);
+                removed = true;
+            }
             else
                 runtime.Entries[i] = entry;
         }
 
         RefreshResolvedState(ref runtime);
+        if (removed)
+            runtime.NetworkDirty = 1;
         entityManager.SetComponentData(entity, runtime);
     }
 
@@ -166,6 +173,7 @@ public static class UnitControlUtility
         }
 
         RefreshResolvedState(ref runtime);
+        runtime.NetworkDirty = 1;
         entityManager.SetComponentData(target, runtime);
     }
 

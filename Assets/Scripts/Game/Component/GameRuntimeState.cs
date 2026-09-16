@@ -420,12 +420,19 @@ namespace CrystalMagic.Core
                 LocalTransform transform = entityManager.GetComponentData<LocalTransform>(entity);
                 transform.Position = new float3(data.X, data.Y, data.Z);
                 entityManager.SetComponentData(entity, transform);
+                if (entityManager.HasComponent<UnitMoveComponent>(entity))
+                {
+                    UnitMoveComponent move = entityManager.GetComponentData<UnitMoveComponent>(entity);
+                    move.NetworkDirty = 1;
+                    entityManager.SetComponentData(entity, move);
+                }
             }
 
             if (entityManager.HasComponent<UnitVitalityComponent>(entity))
             {
                 UnitVitalityComponent vitality = entityManager.GetComponentData<UnitVitalityComponent>(entity);
                 vitality.CurrentHealth = data.Health;
+                vitality.NetworkDirty = 1;
                 entityManager.SetComponentData(entity, vitality);
             }
 
@@ -433,6 +440,7 @@ namespace CrystalMagic.Core
             {
                 UnitManaComponent mana = entityManager.GetComponentData<UnitManaComponent>(entity);
                 mana.CurrentMana = data.Mana;
+                mana.NetworkDirty = 1;
                 entityManager.SetComponentData(entity, mana);
             }
         }

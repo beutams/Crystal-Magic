@@ -1,7 +1,6 @@
 using CrystalMagic.Core;
 using Unity.Entities;
 
-[RunInGameWorld(GameWorldKind.Town | GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitInitializationSystemGroup))]
 [UpdateBefore(typeof(PlayerInputBridgeSystem))]
 public partial class PlayerRuntimeStateSystem : SystemBase
@@ -32,6 +31,7 @@ public partial class PlayerRuntimeStateSystem : SystemBase
             if (selection.CurrentChainIndex < 0 || selection.CurrentChainIndex > maxIndex)
             {
                 selection.CurrentChainIndex = 0;
+                selection.NetworkDirty = 1;
                 EntityManager.SetComponentData(entity, selection);
             }
 

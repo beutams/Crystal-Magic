@@ -6,6 +6,7 @@ namespace Server
     [Serializable]
     public class B2L_ReloadRoomResult : IMessage
     {
-        public RoomData roomData { get; set; }
+        public ulong accountId { get; set; }
+        public string ticket { get; set; }
     }
 }

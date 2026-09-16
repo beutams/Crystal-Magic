@@ -7,7 +7,6 @@ using Unity.Physics;
 using Unity.Transforms;
 using UnityEngine;
 
-[RunInGameWorld(GameWorldKind.Town | GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(SkillReleaseSystem))]
 partial class UnitMoveSystem : SystemBase
@@ -58,6 +57,9 @@ partial class UnitMoveSystem : SystemBase
 
             UnitMoveComponent move = moveRef.ValueRO;
             UnitFacingComponent facing = facingRef.ValueRO;
+            UnitMoveComponent oldMove = move;
+            UnitFacingComponent oldFacing = facing;
+            LocalTransform oldTransform = transformRef.ValueRO;
             bool hasFrameVelocity = move.HasFrameVelocity != 0;
             float2 frameVelocity = move.FrameVelocity;
             move.HasFrameVelocity = 0;
@@ -102,6 +104,19 @@ partial class UnitMoveSystem : SystemBase
             PhysicsVelocity physicsVelocity = physicsVelocityRef.ValueRO;
             LocalTransform transform = transformRef.ValueRO;
             ApplyPlanarTransform(ref physicsVelocity, ref transform, move.Velocity);
+
+            if (!move.Velocity.Equals(oldMove.Velocity) ||
+                !move.Direction.Equals(oldMove.Direction) ||
+                !move.FrameVelocity.Equals(oldMove.FrameVelocity) ||
+                move.HasFrameVelocity != oldMove.HasFrameVelocity ||
+                math.lengthsq(move.Velocity) > 0.0001f ||
+                !math.all(transform.Position == oldTransform.Position))
+            {
+                move.NetworkDirty = 1;
+            }
+
+            if (!facing.Direction.Equals(oldFacing.Direction))
+                facing.NetworkDirty = 1;
 
             moveRef.ValueRW = move;
             facingRef.ValueRW = facing;

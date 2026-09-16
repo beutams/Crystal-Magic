@@ -1,15 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using Unity.Entities;
-
-[Flags]
-public enum GameWorldKind
-{
-    None = 0,
-    Town = 1 << 0,
-    Dungeon = 1 << 1,
-}
 
 public enum GameSceneMode
 {
@@ -19,15 +9,12 @@ public enum GameSceneMode
     Training = 3,
 }
 
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false)]
-public sealed class RunInGameWorldAttribute : Attribute
+public enum GameWorldRole
 {
-    public RunInGameWorldAttribute(GameWorldKind worlds)
-    {
-        Worlds = worlds;
-    }
-
-    public GameWorldKind Worlds { get; }
+    None = 0,
+    Standalone = 1,
+    Server = 2,
+    Client = 3,
 }
 
 namespace CrystalMagic.Core
@@ -52,27 +39,53 @@ namespace CrystalMagic.Core
         private const string WorldName = "GameWorld";
 
         private static World _gameWorld;
-        private static List<Type> _gameSystemTypes;
+        private static bool _appendedToPlayerLoop;
 
         public static bool HasGameWorld => _gameWorld != null && _gameWorld.IsCreated;
         public static World GameWorld => HasGameWorld ? _gameWorld : null;
         public static GameSceneMode SceneMode { get; private set; }
+        public static GameWorldRole Role { get; private set; }
 
         public static World CreateGameWorld()
         {
-            if (HasGameWorld)
-                return _gameWorld;
+            return CreateGameWorld(GameWorldRole.Standalone);
+        }
 
-            _gameWorld = new World(WorldName, WorldFlags.Game);
+        public static World CreateGameWorld(GameWorldRole role)
+        {
+            if (role == GameWorldRole.None)
+                throw new ArgumentOutOfRangeException(nameof(role));
+
+            if (HasGameWorld)
+            {
+                if (Role != role)
+                    throw new InvalidOperationException($"GameWorld is already running as {Role}, cannot change it to {role}.");
+
+                return _gameWorld;
+            }
+
+            WorldFlags worldFlags = role switch
+            {
+                GameWorldRole.Server => WorldFlags.GameServer,
+                GameWorldRole.Client => WorldFlags.GameClient,
+                _ => WorldFlags.Game,
+            };
+            WorldSystemFilterFlags systemFilter = role switch
+            {
+                GameWorldRole.Server => WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation,
+                GameWorldRole.Client => WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.Presentation,
+                _ => WorldSystemFilterFlags.Default | WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.Presentation,
+            };
+
+            _gameWorld = new World(WorldName, worldFlags);
+            Role = role;
             World.DefaultGameObjectInjectionWorld = _gameWorld;
 
-            _gameSystemTypes = DefaultWorldInitialization
-                .GetAllSystems(WorldSystemFilterFlags.Default)
-                .Where(type => type.Assembly != typeof(GameWorldManager).Assembly || HasGameWorldAttribute(type))
-                .ToList();
-            DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(_gameWorld, _gameSystemTypes);
+            DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(
+                _gameWorld,
+                DefaultWorldInitialization.GetAllSystems(systemFilter));
             ScriptBehaviourUpdateOrder.AppendWorldToCurrentPlayerLoop(_gameWorld);
-            UpdateSystemEnablement();
+            _appendedToPlayerLoop = true;
             return _gameWorld;
         }
 
@@ -109,7 +122,6 @@ namespace CrystalMagic.Core
                 return;
 
             SceneMode = sceneMode;
-            UpdateSystemEnablement();
         }
 
         public static void ShutdownGameWorld()
@@ -117,17 +129,21 @@ namespace CrystalMagic.Core
             if (!HasGameWorld)
             {
                 SceneMode = GameSceneMode.None;
+                Role = GameWorldRole.None;
                 return;
             }
 
             if (World.DefaultGameObjectInjectionWorld == _gameWorld)
                 World.DefaultGameObjectInjectionWorld = null;
 
-            ScriptBehaviourUpdateOrder.RemoveWorldFromCurrentPlayerLoop(_gameWorld);
+            if (_appendedToPlayerLoop)
+                ScriptBehaviourUpdateOrder.RemoveWorldFromCurrentPlayerLoop(_gameWorld);
+
             _gameWorld.Dispose();
             _gameWorld = null;
-            _gameSystemTypes = null;
+            _appendedToPlayerLoop = false;
             SceneMode = GameSceneMode.None;
+            Role = GameWorldRole.None;
         }
 
         public static void Shutdown()
@@ -149,33 +165,5 @@ namespace CrystalMagic.Core
             return GameSceneMode.None;
         }
 
-        private static bool HasGameWorldAttribute(Type systemType)
-        {
-            return Attribute.IsDefined(systemType, typeof(RunInGameWorldAttribute));
-        }
-
-        private static void UpdateSystemEnablement()
-        {
-            if (!HasGameWorld || _gameSystemTypes == null)
-                return;
-
-            GameWorldKind activeKind = SceneMode == GameSceneMode.Town
-                ? GameWorldKind.Town
-                : SceneMode == GameSceneMode.Dungeon || SceneMode == GameSceneMode.Training
-                    ? GameWorldKind.Dungeon
-                    : GameWorldKind.None;
-
-            for (int i = 0; i < _gameSystemTypes.Count; i++)
-            {
-                Type type = _gameSystemTypes[i];
-                RunInGameWorldAttribute attribute = Attribute.GetCustomAttribute(type, typeof(RunInGameWorldAttribute)) as RunInGameWorldAttribute;
-                if (attribute == null)
-                    continue;
-
-                ComponentSystemBase system = _gameWorld.GetExistingSystemManaged(type);
-                if (system != null)
-                    system.Enabled = (attribute.Worlds & activeKind) != 0;
-            }
-        }
     }
 }

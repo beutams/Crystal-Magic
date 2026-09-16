@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using CrystalMagic.Core;
 using Unity.Entities;
 
-[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(SpriteEffectAnimationSystem))]
 partial class VfxLifetimeSystem : SystemBase

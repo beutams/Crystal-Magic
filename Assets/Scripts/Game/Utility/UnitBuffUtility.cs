@@ -46,6 +46,7 @@ public static class UnitBuffUtility
             entry.OriginEntity = hasOriginEntity ? originEntity : Entity.Null;
             entry.SourceSkillId = sourceSkillId;
             entry.InitializeFromDefinition(buffData, runtimeTriggerEntries);
+            runtimeComponent.NetworkDirty = 1;
             return true;
         }
 
@@ -62,6 +63,7 @@ public static class UnitBuffUtility
         };
         newEntry.InitializeFromDefinition(buffData, runtimeTriggerEntries);
         buffs.Add(newEntry);
+        runtimeComponent.NetworkDirty = 1;
         return true;
     }
 
@@ -85,6 +87,7 @@ public static class UnitBuffUtility
             if (removeAllStacks)
             {
                 buffs.RemoveAt(i);
+                runtimeComponent.NetworkDirty = 1;
                 return true;
             }
 
@@ -92,6 +95,7 @@ public static class UnitBuffUtility
             if (entry.StackCount <= 0)
                 buffs.RemoveAt(i);
 
+            runtimeComponent.NetworkDirty = 1;
             return true;
         }
 
@@ -118,6 +122,9 @@ public static class UnitBuffUtility
             buffs.RemoveAt(i);
             removed = true;
         }
+
+        if (removed)
+            runtimeComponent.NetworkDirty = 1;
 
         return removed;
     }
@@ -147,6 +154,7 @@ public static class UnitBuffUtility
             if (entry.StackCount == 0)
                 buffs.RemoveAt(i);
 
+            runtimeComponent.NetworkDirty = 1;
             return true;
         }
 

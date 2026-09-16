@@ -9,7 +9,6 @@ public struct UnitQueryHit
     public float3 Position;
 }
 
-[RunInGameWorld(GameWorldKind.Town | GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitInitializationSystemGroup), OrderFirst = true)]
 [UpdateBefore(typeof(UnitPerceptionSystem))]
 [UpdateBefore(typeof(SkillProjectileSystem))]

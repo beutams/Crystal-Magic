@@ -53,6 +53,7 @@ public struct UnitMoveComponent : IComponentData
     // A non-negative value is an externally commanded speed. -1 means use
     // the normal modifier-resolved unit speed.
     public float CommandMoveSpeed;
+    public byte NetworkDirty;
 
     public float BaseMoveSpeedValue => BaseMoveSpeed + BaseMoveSpeedOffset;
 }
@@ -78,12 +79,14 @@ public sealed class UnitMoveSource : UnitComponentSource<UnitMoveComponent>
             (ref UnitMoveComponent value, UnitValue input) =>
             {
                 value.Direction = input.Float2;
+                value.NetworkDirty = 1;
                 return true;
             });
         builder.AddSet("unit.move.setVelocity", UnitValueCategory.Float2,
             (ref UnitMoveComponent value, UnitValue input) =>
             {
                 value.Velocity = input.Float2;
+                value.NetworkDirty = 1;
                 return true;
             });
         builder.AddSet("unit.move.setFrameVelocity", UnitValueCategory.Float2,
@@ -91,6 +94,7 @@ public sealed class UnitMoveSource : UnitComponentSource<UnitMoveComponent>
             {
                 value.FrameVelocity = input.Float2;
                 value.HasFrameVelocity = 1;
+                value.NetworkDirty = 1;
                 return true;
             });
         builder.AddSet("unit.move.setStateMoveMultiplier", UnitValueCategory.Number,
@@ -100,6 +104,7 @@ public sealed class UnitMoveSource : UnitComponentSource<UnitMoveComponent>
                     return false;
 
                 value.StateMoveMultiplier = math.max(0f, multiplier);
+                value.NetworkDirty = 1;
                 return true;
             });
         builder.AddSet("unit.move.setCommandSpeed", UnitValueCategory.Number,
@@ -109,6 +114,7 @@ public sealed class UnitMoveSource : UnitComponentSource<UnitMoveComponent>
                     return false;
 
                 value.CommandMoveSpeed = speed < 0f ? -1f : math.max(0f, speed);
+                value.NetworkDirty = 1;
                 return true;
             });
     }

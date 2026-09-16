@@ -41,6 +41,7 @@ public struct UnitManaComponent : IComponentData
     public float CurrentMana;
     public float BaseMpRegenPerSecond;
     public float BaseMpRegenPerSecondOffset;
+    public byte NetworkDirty;
 }
 
 [UnitSourceAuthoring(typeof(UnitManaAuthoring))]
@@ -75,6 +76,7 @@ public sealed class UnitManaSource : UnitComponentSource<UnitManaComponent>
                 }
 
                 value.CurrentMana -= cost;
+                value.NetworkDirty = 1;
                 return true;
             });
     }

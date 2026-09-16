@@ -4,7 +4,6 @@ using CrystalMagic.Game.Skill;
 using Unity.Entities;
 using UnityEngine;
 
-[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateBefore(typeof(SkillProjectileSpawnSystem))]
 [UpdateBefore(typeof(PersistentEffectSystem))]

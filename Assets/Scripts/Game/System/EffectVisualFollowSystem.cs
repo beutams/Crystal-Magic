@@ -4,8 +4,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
-[RunInGameWorld(GameWorldKind.Dungeon)]
-[UpdateInGroup(typeof(UnitExecutionSystemGroup))]
+[UpdateInGroup(typeof(ClientPresentationSystemGroup))]
 [UpdateAfter(typeof(SkillProjectileSystem))]
 [UpdateBefore(typeof(SpriteEffectAnimationSystem))]
 partial class EffectVisualFollowSystem : SystemBase

@@ -60,6 +60,7 @@ public struct UnitControlRuntimeComponent : IComponentData
     public Entity ActiveSourceEntity;
     public float2 ActiveMotionVelocity;
     public float ActiveMotionDamping;
+    public byte NetworkDirty;
 }
 
 [UnitSourceAuthoring(typeof(UnitControlAuthoring))]

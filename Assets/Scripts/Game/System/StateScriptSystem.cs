@@ -1,7 +1,6 @@
 using CrystalMagic.Core;
 using Unity.Entities;
 
-[RunInGameWorld(GameWorldKind.Town | GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateAfter(typeof(BehaviorTreeSystem))]
 public partial class StateScriptSystem : SystemBase

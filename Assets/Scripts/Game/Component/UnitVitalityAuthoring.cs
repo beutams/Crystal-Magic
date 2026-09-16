@@ -48,6 +48,7 @@ public struct UnitVitalityComponent : IComponentData
     public float BaseHealthRegenOffset;
     public float BaseDefense;
     public float BaseDefenseOffset;
+    public byte NetworkDirty;
 
     public float BaseMaxHealthValue => BaseMaxHealth + BaseMaxHealthOffset;
     public float BaseHealthRegenPerSecondValue => BaseHealthRegenPerSecond + BaseHealthRegenOffset;

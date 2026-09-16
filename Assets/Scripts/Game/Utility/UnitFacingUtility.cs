@@ -33,7 +33,11 @@ public static class UnitFacingUtility
             return;
 
         UnitFacingComponent facing = entityManager.GetComponentData<UnitFacingComponent>(entity);
+        if (math.all(facing.Direction == direction))
+            return;
+
         facing.Direction = direction;
+        facing.NetworkDirty = 1;
         entityManager.SetComponentData(entity, facing);
     }
 

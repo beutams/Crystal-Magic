@@ -120,6 +120,10 @@ namespace Server
             {
                 roomListData = RoomListData.CreateRoomData(roomList)
             });
+            battleConnect.Send(new L2B_TryReloadRoom
+            {
+                accountId = accountId,
+            });
             return true;
         }
         private void OnClientStart(IMessage message, Connect connect)
@@ -320,7 +324,17 @@ namespace Server
         }
         public void OnBattleReload(IMessage message, Connect connect)
         {
+            B2L_ReloadRoomResult realMessage = message as B2L_ReloadRoomResult;
+            if (realMessage == null ||
+                string.IsNullOrEmpty(realMessage.ticket) ||
+                !playerList.TryGetValue(realMessage.accountId, out Player player))
+            {
+                return;
+            }
 
+            player.connect.Send(new L2C_StartTicket { ticket = realMessage.ticket });
+            playerList.Remove(realMessage.accountId);
+            connectAccountDic.Remove(player.connect);
         }
         #endregion
     }

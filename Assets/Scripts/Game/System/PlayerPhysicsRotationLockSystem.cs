@@ -5,7 +5,7 @@ using Unity.Physics;
 using Unity.Physics.Systems;
 
 [BurstCompile]
-[RunInGameWorld(GameWorldKind.Town | GameWorldKind.Dungeon)]
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(BeforePhysicsSystemGroup))]
 partial struct PlayerPhysicsRotationLockSystem : ISystem
 {

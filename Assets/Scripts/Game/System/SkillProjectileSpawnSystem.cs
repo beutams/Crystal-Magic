@@ -7,7 +7,6 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(SkillReleaseSystem))]
 [UpdateBefore(typeof(SkillProjectileSystem))]
@@ -45,6 +44,7 @@ public partial class SkillProjectileSpawnSystem : SystemBase
                 HitRadius = request.HitRadius,
                 CanPierce = request.CanPierce,
                 TriggerDestroyEffectsOnMaxRange = request.TriggerDestroyEffectsOnMaxRange,
+                NetworkDirty = 1,
             });
 
         if (!EntityManager.HasBuffer<SkillProjectileHitEntityElement>(projectileEntity))

@@ -32,6 +32,7 @@ namespace CrystalMagic.Game.Skill.Effects
 
             float maxHealth = UnitModifierResolver.GetMaxHealth(entityManager, target);
             vitality.CurrentHealth = math.min(maxHealth, vitality.CurrentHealth + healAmount);
+            vitality.NetworkDirty = 1;
             entityManager.SetComponentData(target, vitality);
             EventComponent.Instance.Publish(new UnitDamagedEvent(target, vitality.CurrentHealth, maxHealth));
         }
@@ -77,6 +78,7 @@ namespace CrystalMagic.Game.Skill.Effects
                 return;
 
             mana.CurrentMana = math.min(UnitModifierResolver.GetMaxMp(entityManager, target), mana.CurrentMana + manaRestoreAmount);
+            mana.NetworkDirty = 1;
             entityManager.SetComponentData(target, mana);
         }
 
@@ -125,6 +127,7 @@ namespace CrystalMagic.Game.Skill.Effects
                 return;
 
             vitality.CurrentHealth = math.max(1f, vitality.CurrentHealth - healthCost);
+            vitality.NetworkDirty = 1;
             entityManager.SetComponentData(origin, vitality);
             EventComponent.Instance.Publish(new UnitDamagedEvent(origin, vitality.CurrentHealth, maxHealth));
         }

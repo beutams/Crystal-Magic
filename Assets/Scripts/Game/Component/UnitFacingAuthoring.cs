@@ -20,6 +20,7 @@ public sealed class UnitFacingAuthoring : MonoBehaviour
 public struct UnitFacingComponent : IComponentData
 {
     public float2 Direction;
+    public byte NetworkDirty;
 }
 
 [UnitSourceAuthoring(typeof(UnitFacingAuthoring))]
@@ -36,6 +37,7 @@ public sealed class UnitFacingSource : UnitComponentSource<UnitFacingComponent>
                     return false;
 
                 value.Direction = math.normalizesafe(direction, value.Direction);
+                value.NetworkDirty = 1;
                 return true;
             });
     }

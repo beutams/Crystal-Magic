@@ -8,7 +8,7 @@ namespace CrystalMagic.Core
 {
     public class OnlineBattlePreparationState : GameState
     {
-        public const string SceneName = "DungeonScene";
+        public const string SceneName = DungeonState.SceneName;
         private const int SpawnRegistryWaitFrames = 60;
 
         public static TransitionData CreateEnterTransitionData(BattleEnterData battleData)
@@ -19,8 +19,8 @@ namespace CrystalMagic.Core
                 TargetStateType = typeof(OnlineBattlePreparationState),
                 TargetStateData = battleData,
                 TransitionUIName = "TransitionUI",
-                RequiredSubSceneNames = new[] { "DungeonRegistrySubScene" },
-                ForceReloadTargetScene = true,
+                KeepCurrentMainScene = true,
+                ActiveSubSceneNames = new[] { DungeonState.RegistrySubSceneName },
                 PostLoadCoroutineFactory = InitializeBattleScene,
             };
         }
@@ -36,6 +36,7 @@ namespace CrystalMagic.Core
                     EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<EntitySpawnRegistrySingleton>());
                     if (!query.IsEmptyIgnoreFilter)
                     {
+                        ClientNetworkManager.Instance.clientBattleManager.OnBattleSceneInitialized();
                         yield break;
                     }
                 }

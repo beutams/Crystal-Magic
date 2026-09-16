@@ -1,7 +1,6 @@
 using Unity.Entities;
 using Unity.Mathematics;
 
-[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateBefore(typeof(UnitControlSystem))]
 partial class UnitRecoverySystem : SystemBase
@@ -18,14 +17,23 @@ partial class UnitRecoverySystem : SystemBase
             float currentHealth = math.clamp(vitality.CurrentHealth, 0f, maxHealth);
             if (currentHealth <= 0f)
             {
-                vitality.CurrentHealth = 0f;
-                vitalityRef.ValueRW = vitality;
+                if (vitality.CurrentHealth != 0f)
+                {
+                    vitality.CurrentHealth = 0f;
+                    vitality.NetworkDirty = 1;
+                    vitalityRef.ValueRW = vitality;
+                }
                 continue;
             }
 
             float healthDelta = UnitModifierResolver.GetHealthRegen(EntityManager, entity) * deltaTime;
-            vitality.CurrentHealth = math.clamp(currentHealth + healthDelta, 0f, maxHealth);
-            vitalityRef.ValueRW = vitality;
+            float nextHealth = math.clamp(currentHealth + healthDelta, 0f, maxHealth);
+            if (nextHealth != vitality.CurrentHealth)
+            {
+                vitality.CurrentHealth = nextHealth;
+                vitality.NetworkDirty = 1;
+                vitalityRef.ValueRW = vitality;
+            }
         }
 
         foreach ((RefRW<UnitManaComponent> manaRef, Entity entity) in
@@ -35,8 +43,13 @@ partial class UnitRecoverySystem : SystemBase
             float maxMp = math.max(0f, UnitModifierResolver.GetMaxMp(EntityManager, entity));
             float currentMana = math.clamp(mana.CurrentMana, 0f, maxMp);
             float manaDelta = UnitModifierResolver.GetMpRegen(EntityManager, entity) * deltaTime;
-            mana.CurrentMana = math.clamp(currentMana + manaDelta, 0f, maxMp);
-            manaRef.ValueRW = mana;
+            float nextMana = math.clamp(currentMana + manaDelta, 0f, maxMp);
+            if (nextMana != mana.CurrentMana)
+            {
+                mana.CurrentMana = nextMana;
+                mana.NetworkDirty = 1;
+                manaRef.ValueRW = mana;
+            }
         }
     }
 }

@@ -6,8 +6,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 
-[RunInGameWorld(GameWorldKind.Town | GameWorldKind.Dungeon)]
-[UpdateInGroup(typeof(UnitExecutionSystemGroup))]
+[UpdateInGroup(typeof(ClientPresentationSystemGroup))]
 [UpdateAfter(typeof(StateScriptSystem))]
 partial class UnitAnimationSystem : SystemBase
 {

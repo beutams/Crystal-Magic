@@ -36,4 +36,5 @@ public struct TreasureComponent : IComponentData
     public uint RandomSeed;
     public byte InterestSize;
     public byte IsOpened;
+    public byte NetworkDirty;
 }

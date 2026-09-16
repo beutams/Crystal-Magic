@@ -4,7 +4,6 @@ using CrystalMagic.Game.Data;
 using Unity.Collections;
 using Unity.Entities;
 
-[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitInitializationSystemGroup))]
 [UpdateBefore(typeof(UnitRecoverySystem))]
 partial class UnitBuffSystem : SystemBase
@@ -45,8 +44,16 @@ partial class UnitBuffSystem : SystemBase
         for (int i = buffs.Count - 1; i >= 0; i--)
         {
             UnitBuffRuntimeEntry entry = buffs[i];
+            int stackCount = entry.StackCount;
             if (!entry.Update(_updateContext, deltaTime))
+            {
                 buffs.RemoveAt(i);
+                runtimeComponent.NetworkDirty = 1;
+            }
+            else if (entry.StackCount != stackCount)
+            {
+                runtimeComponent.NetworkDirty = 1;
+            }
         }
     }
 }

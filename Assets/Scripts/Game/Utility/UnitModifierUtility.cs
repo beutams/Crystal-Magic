@@ -8,25 +8,45 @@ public static class UnitModifierUtility
         if (entityManager.HasComponent<UnitMoveComponent>(entity))
         {
             UnitMoveComponent move = entityManager.GetComponentData<UnitMoveComponent>(entity);
-            move.BaseMoveSpeedOffset = modifiers.GetBonus(PropertyModifierChannel.MoveSpeed);
-            entityManager.SetComponentData(entity, move);
+            float moveSpeedOffset = modifiers.GetBonus(PropertyModifierChannel.MoveSpeed);
+            if (move.BaseMoveSpeedOffset != moveSpeedOffset)
+            {
+                move.BaseMoveSpeedOffset = moveSpeedOffset;
+                move.NetworkDirty = 1;
+                entityManager.SetComponentData(entity, move);
+            }
         }
 
         if (entityManager.HasComponent<UnitVitalityComponent>(entity))
         {
             UnitVitalityComponent vitality = entityManager.GetComponentData<UnitVitalityComponent>(entity);
-            vitality.BaseMaxHealthOffset = modifiers.GetBonus(PropertyModifierChannel.MaxHealth);
-            vitality.BaseHealthRegenOffset = modifiers.GetBonus(PropertyModifierChannel.HealthRegen);
-            vitality.BaseDefenseOffset = modifiers.GetBonus(PropertyModifierChannel.Defense);
-            entityManager.SetComponentData(entity, vitality);
+            float maxHealthOffset = modifiers.GetBonus(PropertyModifierChannel.MaxHealth);
+            float healthRegenOffset = modifiers.GetBonus(PropertyModifierChannel.HealthRegen);
+            float defenseOffset = modifiers.GetBonus(PropertyModifierChannel.Defense);
+            if (vitality.BaseMaxHealthOffset != maxHealthOffset ||
+                vitality.BaseHealthRegenOffset != healthRegenOffset ||
+                vitality.BaseDefenseOffset != defenseOffset)
+            {
+                vitality.BaseMaxHealthOffset = maxHealthOffset;
+                vitality.BaseHealthRegenOffset = healthRegenOffset;
+                vitality.BaseDefenseOffset = defenseOffset;
+                vitality.NetworkDirty = 1;
+                entityManager.SetComponentData(entity, vitality);
+            }
         }
 
         if (entityManager.HasComponent<UnitManaComponent>(entity))
         {
             UnitManaComponent mana = entityManager.GetComponentData<UnitManaComponent>(entity);
-            mana.BaseMaxMpOffset = modifiers.GetBonus(PropertyModifierChannel.MaxMp);
-            mana.BaseMpRegenPerSecondOffset = modifiers.GetBonus(PropertyModifierChannel.MpRegen);
-            entityManager.SetComponentData(entity, mana);
+            float maxMpOffset = modifiers.GetBonus(PropertyModifierChannel.MaxMp);
+            float mpRegenOffset = modifiers.GetBonus(PropertyModifierChannel.MpRegen);
+            if (mana.BaseMaxMpOffset != maxMpOffset || mana.BaseMpRegenPerSecondOffset != mpRegenOffset)
+            {
+                mana.BaseMaxMpOffset = maxMpOffset;
+                mana.BaseMpRegenPerSecondOffset = mpRegenOffset;
+                mana.NetworkDirty = 1;
+                entityManager.SetComponentData(entity, mana);
+            }
         }
 
         if (entityManager.HasComponent<UnitAttackComponent>(entity))

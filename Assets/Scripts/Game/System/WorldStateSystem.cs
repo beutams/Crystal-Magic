@@ -1,7 +1,6 @@
 using CrystalMagic.Core;
 using Unity.Entities;
 
-[RunInGameWorld(GameWorldKind.Town | GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitInitializationSystemGroup))]
 [UpdateBefore(typeof(UnitSourceInitializationSystem))]
 public partial class WorldStateSystem : SystemBase

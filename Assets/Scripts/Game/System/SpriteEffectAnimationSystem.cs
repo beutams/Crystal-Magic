@@ -6,8 +6,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-[RunInGameWorld(GameWorldKind.Dungeon)]
-[UpdateInGroup(typeof(UnitExecutionSystemGroup))]
+[UpdateInGroup(typeof(ClientPresentationSystemGroup))]
 [UpdateAfter(typeof(SkillProjectileSystem))]
 [UpdateBefore(typeof(DestroyEntitySystem))]
 public partial class SpriteEffectAnimationSystem : SystemBase

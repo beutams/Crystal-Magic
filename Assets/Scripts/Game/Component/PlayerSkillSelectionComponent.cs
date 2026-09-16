@@ -5,6 +5,7 @@ public struct PlayerSkillSelectionComponent : IComponentData
 {
     public const string ChangedEventName = "Player.Skill.Selection.Changed";
     public int CurrentChainIndex;
+    public byte NetworkDirty;
 }
 
 public static class PlayerSkillSelectionUtility

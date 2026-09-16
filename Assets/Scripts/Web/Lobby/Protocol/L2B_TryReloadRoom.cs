@@ -6,6 +6,6 @@ namespace Server
     [Serializable]
     public class L2B_TryReloadRoom : IMessage
     {
-        public RoomData roomData { get; set; }
+        public ulong accountId { get; set; }
     }
 }

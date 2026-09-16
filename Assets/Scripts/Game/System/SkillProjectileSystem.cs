@@ -6,7 +6,6 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
-[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(SkillProjectileSpawnSystem))]
 public partial class SkillProjectileSystem : SystemBase
@@ -51,6 +50,7 @@ public partial class SkillProjectileSystem : SystemBase
                 transform.Position += projectile.Direction * moveDistance;
                 transform.Rotation = CreateRotation(projectile.Direction);
                 projectile.TraveledDistance += math.abs(moveDistance);
+                projectile.NetworkDirty = 1;
 
                 EntityManager.SetComponentData(entity, transform);
                 EntityManager.SetComponentData(entity, projectile);

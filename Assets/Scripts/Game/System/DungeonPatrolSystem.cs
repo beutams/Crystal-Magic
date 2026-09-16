@@ -5,7 +5,6 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
-[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateAfter(typeof(BehaviorTreeSystem))]
 public partial class DungeonInterestPointSpawnSystem : SystemBase
@@ -41,7 +40,6 @@ public partial class DungeonInterestPointSpawnSystem : SystemBase
     }
 }
 
-[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateAfter(typeof(StateScriptSystem))]
 public partial class DungeonPatrolMemberDecisionSystem : SystemBase

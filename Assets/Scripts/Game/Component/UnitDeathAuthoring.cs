@@ -17,6 +17,7 @@ public sealed class UnitDeathAuthoring : MonoBehaviour
 
 public struct UnitDeathComponent : IComponentData, IEnableableComponent
 {
+    public byte NetworkDirty;
 }
 
 [UnitSourceAuthoring(typeof(UnitDeathAuthoring))]

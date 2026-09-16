@@ -16,6 +16,7 @@ public struct PlayerInputComponent : IComponentData
     public byte IsNextSkillChainHeld;
     public byte IsUsePropHeld;
     public int PropIndex;
+    public byte NetworkDirty;
 }
 
 [UnitSourceAuthoring(typeof(PlayerCurrentSkillAuthoring))]

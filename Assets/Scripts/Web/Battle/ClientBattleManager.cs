@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Collections;
+using Unity.Transforms;
 using UnityEngine;
 using System.Linq;
 
@@ -12,18 +13,25 @@ namespace Server
     public class ClientBattleManager
     {
         public ClientService battleServic => ClientNetworkManager.Instance.clientServic;
+        public ClientFrameManager frame;
         public Connect battleConnect;
         public string ticket;
-        public World battleWorld;
-        public Entity localPlayer;
-        public Dictionary<Guid, Entity> players = new Dictionary<Guid, Entity>();
-        private Guid playerIdentity;
+        public Dictionary<Guid, Entity> networkEntities = new Dictionary<Guid, Entity>();
+        private BattleEnterData battleData;
+
+        private NetworkEntitySpawnInfo[] pendingEntityInfos;
+        private bool sceneInitialized;
+        private bool entitiesInitialized;
+
         public void Cleanup()
         {
+            frame?.Stop();
             if (battleConnect != null)
             {
                 battleConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<B2C_EnterBattleResult>(), OnEnterBattleResult);
-                battleConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<B2C_CreateBattleUnit>(), OnCreateBattleUnit);
+                battleConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<B2C_EnterBattleScene>(), OnEnterBattleScene);
+                battleConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<B2C_CreateNetworkEntities>(), OnCreateNetworkEntities);
+                battleConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<B2C_StartFrame>(), OnStartFrame);
                 battleConnect.OnConnected -= OnBattleConnected;
                 battleConnect.OnDisconnected -= OnBattleDisconnected;
                 battleServic.Disconnect(battleConnect);
@@ -31,8 +39,12 @@ namespace Server
             }
 
             ticket = null;
-            localPlayer = Entity.Null;
-            players.Clear();
+            networkEntities.Clear();
+            battleData = null;
+            pendingEntityInfos = null;
+            sceneInitialized = false;
+            entitiesInitialized = false;
+            frame = null;
         }
         public void ConnectWithTicket(string ticket)
         {
@@ -45,7 +57,9 @@ namespace Server
             battleConnect.OnConnected += OnBattleConnected;
             battleConnect.OnDisconnected += OnBattleDisconnected;
             battleConnect.RegisterCallback(TCPPacketCode.GetOpcode<B2C_EnterBattleResult>(), OnEnterBattleResult);
-            battleConnect.RegisterCallback(TCPPacketCode.GetOpcode<B2C_CreateBattleUnit>(), OnCreateBattleUnit);
+            battleConnect.RegisterCallback(TCPPacketCode.GetOpcode<B2C_EnterBattleScene>(), OnEnterBattleScene);
+            battleConnect.RegisterCallback(TCPPacketCode.GetOpcode<B2C_CreateNetworkEntities>(), OnCreateNetworkEntities);
+            battleConnect.RegisterCallback(TCPPacketCode.GetOpcode<B2C_StartFrame>(), OnStartFrame);
         }
         private void OnBattleConnected(Connect connect)
         {
@@ -75,6 +89,8 @@ namespace Server
             {
                 case BattleRequestType.EnterBattleSuccess:
                     ticket = null;
+                    frame = ClientFrameManager.Instance;
+                    frame.AddConnect(connect);
                     break;
                 case BattleRequestType.EnterBattleFail:
                     ticket = null;
@@ -88,90 +104,184 @@ namespace Server
             {
                 return;
             }
+            frame?.Stop();
             battleConnect = null;
             ticket = null;
-            localPlayer = Entity.Null;
-            players.Clear();
-        }
-        private void OnCreateBattleUnit(IMessage message, Connect connect)
-        {
-            B2C_CreateBattleUnit realMessage = message as B2C_CreateBattleUnit;
-            if (realMessage == null || realMessage.unitData == null || realMessage.unitData.unitId == Guid.Empty)
-            {
-                return;
-            }
-
-            BattleUnitData unitData = realMessage.unitData;
-            if (players.ContainsKey(unitData.unitId))
-            {
-                return;
-            }
-
-            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-            if (!EntitySpawnRegistryUtility.TryInstantiateUnit(entityManager, new FixedString128Bytes("PlayerDungeon"), out Entity entity))
-            {
-                Debug.LogError("[Battle] Failed to create PlayerDungeon.");
-                return;
-            }
-
-            entityManager.AddComponentData(entity, new NetworkIdentityComponent() { id = unitData.unitId });
-            if (unitData.accountId == ClientNetworkManager.Instance.clientLobbyManager.accountId)
-            {
-                entityManager.AddComponentData(entity, new NetworkPlayerComponent() { id = unitData.unitId });
-                localPlayer = entity;
-            }
-
-            players.Add(unitData.unitId, entity);
+            networkEntities.Clear();
+            battleData = null;
+            pendingEntityInfos = null;
+            sceneInitialized = false;
+            entitiesInitialized = false;
+            frame = null;
         }
 
-        public SortedDictionary<uint, Queue<NetworkStateData>> allcmds = new SortedDictionary<uint, Queue<NetworkStateData>>();
-        public SortedDictionary<uint, Queue<NetworkStateData>> receivedOrder = new SortedDictionary<uint, Queue<NetworkStateData>>();
-        public SortedDictionary<uint, Queue<NetworkStateData>> sendOrder = new SortedDictionary<uint, Queue<NetworkStateData>>();
-        public SortedDictionary<uint, Queue<NetworkStateData>> inputOrder = new SortedDictionary<uint, Queue<NetworkStateData>>();
-        public uint currentFrame; //当前模拟帧
-        public uint currentArrivedFrame; //当前收到服务器的帧
-        private void OnFixedUpdate()
+        private void OnStartFrame(IMessage message, Connect connect)
         {
-            if(receivedOrder.Count > 0)
+            B2C_StartFrame realMessage = message as B2C_StartFrame;
+            if (realMessage == null ||
+                connect != battleConnect ||
+                battleData == null ||
+                realMessage.battleId != battleData.battleId ||
+                !entitiesInitialized ||
+                frame == null)
             {
-                Queue<NetworkStateData> frame = receivedOrder.First().Value;
-                List<NetworkStateData> needRollback = new List<NetworkStateData>();
-                foreach (var data in frame)
+                return;
+            }
+
+            frame.Start();
+        }
+
+        private void OnEnterBattleScene(IMessage message, Connect connect)
+        {
+            B2C_EnterBattleScene realMessage = message as B2C_EnterBattleScene;
+            if (realMessage == null || realMessage.battleData == null || realMessage.battleData.battleId == 0)
+            {
+                return;
+            }
+
+            if (battleData != null)
+            {
+                if (battleData.battleId != realMessage.battleData.battleId)
+                    Debug.LogError("[Battle] Received a scene message for another battle.");
+
+                return;
+            }
+
+            battleData = realMessage.battleData;
+            sceneInitialized = false;
+            entitiesInitialized = false;
+            GameWorldManager.CreateGameWorld(GameWorldRole.Client);
+            GameFlowComponent.Instance.BeginTransition(OnlineBattlePreparationState.CreateEnterTransitionData(battleData));
+        }
+
+        public void OnBattleSceneInitialized()
+        {
+            if (battleData == null || sceneInitialized)
+                return;
+
+            sceneInitialized = true;
+            TryInitializeNetworkEntities();
+        }
+
+        private void OnCreateNetworkEntities(IMessage message, Connect connect)
+        {
+            B2C_CreateNetworkEntities realMessage = message as B2C_CreateNetworkEntities;
+            if (realMessage == null ||
+                battleData == null ||
+                realMessage.battleId != battleData.battleId ||
+                entitiesInitialized)
+            {
+                return;
+            }
+
+            pendingEntityInfos = realMessage.entityInfos ?? Array.Empty<NetworkEntitySpawnInfo>();
+            TryInitializeNetworkEntities();
+        }
+
+        private void TryInitializeNetworkEntities()
+        {
+            if (!sceneInitialized || pendingEntityInfos == null || entitiesInitialized || !GameWorldManager.TryGetEntityManager(out EntityManager entityManager))
+                return;
+
+            for (int index = 0; index < pendingEntityInfos.Length; index++)
+            {
+                NetworkEntitySpawnInfo entityInfo = pendingEntityInfos[index];
+                if (entityInfo == null ||
+                    entityInfo.unitId == Guid.Empty ||
+                    string.IsNullOrEmpty(entityInfo.prefabName))
                 {
-                    if(data.unitId != playerIdentity)
-                    {
-                        NetworkEventDictionary.Instance.Handle(data);
-                    }
-                    else
-                    {
-                        if(!CheckConsistency(data) || !data.hasChecked)
+                    Debug.LogError("[Battle] Received invalid network entity spawn data.");
+                    return;
+                }
+
+                if (networkEntities.ContainsKey(entityInfo.unitId))
+                    continue;
+
+                Entity entity;
+                FixedString128Bytes prefabName = new FixedString128Bytes(entityInfo.prefabName);
+                switch (entityInfo.prefabType)
+                {
+                    case NetworkEntityPrefabType.Unit:
+                        if (!EntitySpawnRegistryUtility.TryInstantiateUnit(entityManager, prefabName, out entity))
                         {
-                            needRollback.Add(data);
+                            Debug.LogError($"[Battle] Failed to create unit '{entityInfo.prefabName}'.");
+                            return;
                         }
-                    }
+                        break;
+                    case NetworkEntityPrefabType.Environment:
+                        if (!EntitySpawnRegistryUtility.TryInstantiateEnvironment(entityManager, prefabName, out entity))
+                        {
+                            Debug.LogError($"[Battle] Failed to create environment '{entityInfo.prefabName}'.");
+                            return;
+                        }
+                        break;
+                    case NetworkEntityPrefabType.Drop:
+                        if (!EntitySpawnRegistryUtility.TryInstantiateDrop(entityManager, prefabName, out entity))
+                        {
+                            Debug.LogError($"[Battle] Failed to create drop '{entityInfo.prefabName}'.");
+                            return;
+                        }
+                        break;
+                    case NetworkEntityPrefabType.Projectile:
+                        if (!EntitySpawnRegistryUtility.TryInstantiateProjectile(entityManager, prefabName, out entity))
+                        {
+                            Debug.LogError($"[Battle] Failed to create projectile '{entityInfo.prefabName}'.");
+                            return;
+                        }
+                        break;
+                    default:
+                        Debug.LogError($"[Battle] Unsupported network entity type: {entityInfo.prefabType}.");
+                        return;
                 }
-                foreach(var data in needRollback)
+
+                if (entityManager.HasComponent<LocalTransform>(entity))
                 {
-                    RollBack(data);
-                    int count = (int)(currentFrame - data.frame - 1);
-                    while(count >= 0)
-                    {
-                        count--;
-                    }
+                    LocalTransform transform = entityManager.GetComponentData<LocalTransform>(entity);
+                    transform.Position = new Unity.Mathematics.float3(entityInfo.x, entityInfo.y, entityInfo.z);
+                    entityManager.SetComponentData(entity, transform);
                 }
+
+                if (entityManager.HasComponent<NetworkIdentityComponent>(entity))
+                    entityManager.SetComponentData(entity, new NetworkIdentityComponent { id = entityInfo.unitId });
+                else
+                    entityManager.AddComponentData(entity, new NetworkIdentityComponent { id = entityInfo.unitId });
+
+                if (entityInfo.characterData != null)
+                {
+                    if (entityManager.HasComponent<PlayerCharacterComponent>(entity))
+                        entityManager.GetComponentObject<PlayerCharacterComponent>(entity).Data = entityInfo.characterData;
+                    else
+                        entityManager.AddComponentObject(entity, new PlayerCharacterComponent { Data = entityInfo.characterData });
+                }
+
+                if (entityManager.HasComponent<UnitVitalityComponent>(entity))
+                {
+                    UnitVitalityComponent vitality = entityManager.GetComponentData<UnitVitalityComponent>(entity);
+                    vitality.CurrentHealth = entityInfo.health;
+                    entityManager.SetComponentData(entity, vitality);
+                }
+
+                if (entityManager.HasComponent<UnitManaComponent>(entity))
+                {
+                    UnitManaComponent mana = entityManager.GetComponentData<UnitManaComponent>(entity);
+                    mana.CurrentMana = entityInfo.mana;
+                    entityManager.SetComponentData(entity, mana);
+                }
+
+                if (entityInfo.ownerAccountId == ClientNetworkManager.Instance.clientLobbyManager.accountId)
+                {
+                    if (entityManager.HasComponent<NetworkPlayerComponent>(entity))
+                        entityManager.SetComponentData(entity, new NetworkPlayerComponent { id = entityInfo.unitId });
+                    else
+                        entityManager.AddComponentData(entity, new NetworkPlayerComponent { id = entityInfo.unitId });
+                }
+
+                networkEntities.Add(entityInfo.unitId, entity);
             }
-        }
-        private void FixedUpdateManual()
-        {
 
-        }
-        private void RollBack(NetworkStateData data)
-        {
-
-        }
-        private bool CheckConsistency(NetworkStateData data)
-        {
-            throw new NotImplementedException();
+            entitiesInitialized = true;
+            if (battleConnect != null)
+                battleConnect.Send(new C2B_BattleReady { battleId = battleData.battleId });
         }
     }
 }

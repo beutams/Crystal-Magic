@@ -34,4 +34,5 @@ public struct SkillProjectileComponent : IComponentData
     public float HitRadius;
     public byte CanPierce;
     public byte TriggerDestroyEffectsOnMaxRange;
+    public byte NetworkDirty;
 }

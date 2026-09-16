@@ -7,7 +7,6 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-[RunInGameWorld(GameWorldKind.Town | GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(InteractionCandidateSystem))]
 public partial class GameInteractionSystem : SystemBase
@@ -166,8 +165,10 @@ public partial class GameInteractionSystem : SystemBase
             return;
 
         treasure.IsOpened = 1;
+        treasure.NetworkDirty = 1;
         EntityManager.SetComponentData(request.Target, treasure);
         interactable.IsEnabled = 0;
+        interactable.NetworkDirty = 1;
         EntityManager.SetComponentData(request.Target, interactable);
     }
 

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Unity.Entities;
 
 namespace Server
 {
@@ -11,9 +10,7 @@ namespace Server
         public ulong ownerAccountId;
         public int dungeonFloor;
         public int seed;
-        public bool started;
-
-        public World world;
+        public BattlePhase phase;
         public Dictionary<ulong, BattlePlayer> players;
         public Dictionary<string, BattlePlayer> secretKeys;
         public static BattleRoom CreateRoom(ulong lobbyRoomId, ulong ownerAccountId, int dungeonFloor, ulong[] playerlist)
@@ -35,8 +32,7 @@ namespace Server
                 });
             }
 
-            room.world = new World(lobbyRoomId.ToString(), WorldFlags.Game);
-            ScriptBehaviourUpdateOrder.AppendWorldToCurrentPlayerLoop(room.world);
+            room.phase = BattlePhase.WaitingForEnter;
             return room;
         }
     }

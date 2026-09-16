@@ -2,7 +2,6 @@ using CrystalMagic.Core;
 using Unity.Collections;
 using Unity.Entities;
 
-[RunInGameWorld(GameWorldKind.Dungeon)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 partial struct DungeonExitSystem : ISystem
 {
