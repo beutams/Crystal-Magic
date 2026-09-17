@@ -12,12 +12,6 @@ namespace Server
         private static long roomIdCounter;
         private static long battleRoomIdCounter;
 
-        public static string loginIP = "127.0.0.1";
-        public static int loginPort = 10001;
-        public static IPEndPoint GetLoginInIPEndPoint()
-        {
-            return new IPEndPoint(IPAddress.Parse(loginIP), loginPort);
-        }
         public static string lobbyIP = "127.0.0.1";
         public static int lobbyPort = 10002;
         public static IPEndPoint GetLobbyIPEndPoint()
@@ -76,5 +70,9 @@ namespace Server
 
         public const long PingInterval = 3_000;
         public const long Timeout = 10_000;
+        public const long BattleLobbyReconnectInterval = 1_000;
+        public const long BattleEnterTimeout = 10_000;
+        public const long BattleInitializeTimeout = 10_000;
+        public const long BattleReadyTimeout = 10_000;
     }
 }

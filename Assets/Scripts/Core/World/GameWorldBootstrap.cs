@@ -19,6 +19,54 @@ public enum GameWorldRole
 
 namespace CrystalMagic.Core
 {
+    public struct GameWorldContextComponent : IComponentData
+    {
+        public GameWorldRole Role;
+        public GameSceneMode SceneMode;
+    }
+
+    public static class GameWorldContextUtility
+    {
+        public static void Bind(EntityManager entityManager, GameWorldRole role, GameSceneMode sceneMode)
+        {
+            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<GameWorldContextComponent>());
+            GameWorldContextComponent context = new()
+            {
+                Role = role,
+                SceneMode = sceneMode,
+            };
+
+            if (query.IsEmptyIgnoreFilter)
+            {
+                Entity entity = entityManager.CreateEntity();
+                entityManager.AddComponentData(entity, context);
+                return;
+            }
+
+            entityManager.SetComponentData(query.GetSingletonEntity(), context);
+        }
+
+        public static bool TryGet(EntityManager entityManager, out GameWorldContextComponent context)
+        {
+            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<GameWorldContextComponent>());
+            if (query.IsEmptyIgnoreFilter)
+            {
+                context = default;
+                return false;
+            }
+
+            context = entityManager.GetComponentData<GameWorldContextComponent>(query.GetSingletonEntity());
+            return true;
+        }
+
+        public static GameSceneMode GetSceneMode(EntityManager entityManager)
+        {
+            return TryGet(entityManager, out GameWorldContextComponent context)
+                ? context.SceneMode
+                : GameSceneMode.None;
+        }
+    }
+
     /// <summary>
     /// 菜单阶段不创建 ECS World。进入一局游戏后才由 GameWorldManager 显式创建唯一的 GameWorld。
     /// </summary>
@@ -31,8 +79,9 @@ namespace CrystalMagic.Core
     }
 
     /// <summary>
-    /// 管理一次游戏会话唯一的 ECS World。
-    /// Town、Dungeon、Training 只是同一 World 中不同的场景运行模式。
+    /// 管理客户端或单机当前游戏会话唯一的 ECS World。
+    /// 单机 Town、Dungeon、Training 共享同一个 World；进入联机战斗时会销毁 Standalone World 并创建 Client World，
+    /// 返回城镇时再反向重建。Battle Server 的 World 由各自 BattleRoom 独立持有，不经过这里。
     /// </summary>
     public static class GameWorldManager
     {
@@ -51,7 +100,7 @@ namespace CrystalMagic.Core
             return CreateGameWorld(GameWorldRole.Standalone);
         }
 
-        public static World CreateGameWorld(GameWorldRole role)
+        public static World CreateGameWorld(GameWorldRole role, bool appendToPlayerLoop = true)
         {
             if (role == GameWorldRole.None)
                 throw new ArgumentOutOfRangeException(nameof(role));
@@ -60,6 +109,9 @@ namespace CrystalMagic.Core
             {
                 if (Role != role)
                     throw new InvalidOperationException($"GameWorld is already running as {Role}, cannot change it to {role}.");
+
+                if (appendToPlayerLoop)
+                    AppendGameWorldToPlayerLoop();
 
                 return _gameWorld;
             }
@@ -84,9 +136,36 @@ namespace CrystalMagic.Core
             DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(
                 _gameWorld,
                 DefaultWorldInitialization.GetAllSystems(systemFilter));
+            SceneMode = GameSceneMode.None;
+            GameWorldContextUtility.Bind(_gameWorld.EntityManager, role, SceneMode);
+            if (appendToPlayerLoop)
+                AppendGameWorldToPlayerLoop();
+
+            return _gameWorld;
+        }
+
+        /// <summary>
+        /// 用于黑屏转场阶段：World 尚未加入 Unity PlayerLoop 时，手动推进一次初始化和场景导入。
+        /// </summary>
+        public static void UpdateGameWorld()
+        {
+            if (!HasGameWorld || _appendedToPlayerLoop)
+                return;
+
+            _gameWorld.Update();
+        }
+
+        public static bool AppendGameWorldToPlayerLoop()
+        {
+            if (!HasGameWorld)
+                return false;
+
+            if (_appendedToPlayerLoop)
+                return true;
+
             ScriptBehaviourUpdateOrder.AppendWorldToCurrentPlayerLoop(_gameWorld);
             _appendedToPlayerLoop = true;
-            return _gameWorld;
+            return true;
         }
 
         public static bool TryGetEntityManager(out EntityManager entityManager)
@@ -122,6 +201,7 @@ namespace CrystalMagic.Core
                 return;
 
             SceneMode = sceneMode;
+            GameWorldContextUtility.Bind(_gameWorld.EntityManager, Role, SceneMode);
         }
 
         public static void ShutdownGameWorld()

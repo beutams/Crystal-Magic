@@ -41,15 +41,17 @@ public partial class DungeonInterestPointSpawnSystem : SystemBase
 }
 
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
-[UpdateAfter(typeof(StateScriptSystem))]
+[UpdateAfter(typeof(BehaviorTreeSystem))]
+[UpdateBefore(typeof(UnitNavigationSystem))]
 public partial class DungeonPatrolMemberDecisionSystem : SystemBase
 {
     protected override void OnUpdate()
     {
         foreach ((RefRW<UnitMoveComponent> moveRef,
+                  RefRW<UnitNavigationComponent> navigationRef,
                   DungeonPatrolMemberComponent patrolMember,
                   Entity entity) in
-                 SystemAPI.Query<RefRW<UnitMoveComponent>, DungeonPatrolMemberComponent>()
+                 SystemAPI.Query<RefRW<UnitMoveComponent>, RefRW<UnitNavigationComponent>, DungeonPatrolMemberComponent>()
                      .WithNone<UnitDeathComponent>()
                      .WithEntityAccess())
         {
@@ -69,16 +71,13 @@ public partial class DungeonPatrolMemberDecisionSystem : SystemBase
                 !EntityManager.HasComponent<LocalTransform>(target) ||
                 !EntityManager.HasComponent<LocalTransform>(entity))
             {
-                moveRef.ValueRW.Direction = float2.zero;
+                UnitNavigationUtility.Stop(ref navigationRef.ValueRW);
                 moveRef.ValueRW.CommandMoveSpeed = -1f;
                 continue;
             }
 
-            float2 delta = EntityManager.GetComponentData<LocalTransform>(target).Position.xy -
-                           EntityManager.GetComponentData<LocalTransform>(entity).Position.xy;
-            moveRef.ValueRW.Direction = math.lengthsq(delta) <= arrivalDistance * arrivalDistance
-                ? float2.zero
-                : math.normalizesafe(delta, float2.zero);
+            float3 targetPosition = EntityManager.GetComponentData<LocalTransform>(target).Position;
+            UnitNavigationUtility.SetDestination(ref navigationRef.ValueRW, targetPosition, arrivalDistance);
             moveRef.ValueRW.CommandMoveSpeed = speed;
         }
     }

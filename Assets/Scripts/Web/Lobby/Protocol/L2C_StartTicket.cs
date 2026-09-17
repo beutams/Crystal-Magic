@@ -8,5 +8,6 @@ namespace Server
     public class L2C_StartTicket : IMessage
     {
         public string ticket;
+        public bool reload;
     }
 }

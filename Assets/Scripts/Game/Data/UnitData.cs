@@ -63,6 +63,23 @@ namespace CrystalMagic.Game.Data
     }
 
     [System.Serializable]
+    public sealed class UnitNavigationModuleData : UnitModuleData
+    {
+        // A negative value derives the radius from the unit collider during baking.
+        public float ClearanceRadius = -1f;
+        public float WaypointTolerance = 0.12f;
+    }
+
+    [System.Serializable]
+    public sealed class UnitAvoidanceModuleData : UnitModuleData
+    {
+        public float NeighborDistance = 4f;
+        public int MaxNeighbors = 12;
+        public float TimeHorizon = 0.8f;
+        public float RadiusPadding = 0.05f;
+    }
+
+    [System.Serializable]
     public sealed class UnitVitalityModuleData : UnitModuleData
     {
         public float BaseMaxHealth = 100f;

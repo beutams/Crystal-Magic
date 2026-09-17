@@ -87,6 +87,13 @@ namespace CrystalMagic.Core {
             EventComponent.Instance?.Publish(new UISceneScopeChangedEvent(transitionData.TargetSceneName));
             PublishLoadProgress(transitionData.TargetSceneName, 0.05f, "Loading scene", transitionData.TargetSceneName);
 
+            if (transitionData.PreLoadCoroutineFactory != null)
+            {
+                IEnumerator preLoadCoroutine = transitionData.PreLoadCoroutineFactory();
+                if (preLoadCoroutine != null)
+                    yield return StartCoroutine(preLoadCoroutine);
+            }
+
             yield return StartCoroutine(LoadSceneAsync(transitionData));
             if (transitionData.PostLoadCoroutineFactory != null)
             {

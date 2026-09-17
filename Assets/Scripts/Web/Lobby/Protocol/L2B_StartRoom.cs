@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Server
 {
@@ -8,7 +9,8 @@ namespace Server
     {
         public ulong roomId;
         public ulong ownerAccountId;
-        public int dungeonFloor;
+        public int themeKey;
         public ulong[] players;
+        public Dictionary<ulong, string> saveGuids;
     }
 }

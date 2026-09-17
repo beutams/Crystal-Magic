@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using CrystalMagic.Game.Unit;
 using CrystalMagic.Game.Skill;
 using CrystalMagic.Game.Skill.Effects;
+using Server;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -14,12 +15,18 @@ public partial class SkillProjectileSpawnSystem : SystemBase
 {
     protected override void OnUpdate()
     {
-        if (!SkillProjectileSpawnQueue.HasPendingRequests)
+        if (!SkillProjectileSpawnQueueUtility.TryGet(EntityManager, out SkillProjectileSpawnQueueComponent queue) ||
+            queue.Requests.Count == 0)
             return;
 
-        while (SkillProjectileSpawnQueue.TryDequeue(out SkillProjectileSpawnRequest request))
+        while (queue.Requests.Count > 0)
         {
-            if (!EntitySpawnRegistryUtility.TryInstantiateProjectile(EntityManager, request.ProjectileName, out Entity projectileEntity))
+            SkillProjectileSpawnRequest request = queue.Requests.Dequeue();
+            NetworkEntitySpawnInfo entityInfo = NetworkEntitySpawnUtility.CreateInfo(
+                NetworkEntityPrefabType.Projectile,
+                request.ProjectileName.ToString(),
+                new Vector3(request.StartPosition.x, request.StartPosition.y, request.StartPosition.z));
+            if (!NetworkEntitySpawnUtility.TrySpawn(EntityManager, entityInfo, out Entity projectileEntity))
             {
                 Debug.LogError($"[SkillProjectileSpawnSystem] Missing projectile prefab in registry: {request.ProjectileName}");
                 continue;

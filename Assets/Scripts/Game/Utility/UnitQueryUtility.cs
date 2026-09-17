@@ -77,7 +77,7 @@ public sealed class UnitQueryTree
             Insert(_rootIndex, i, 0);
     }
 
-    public void QueryCircle(float3 center, float radius, List<UnitQueryHit> results)
+    public void QueryCircle(float3 center, float radius, List<UnitQueryHit> results, bool reportDebug = true)
     {
         results.Clear();
         if (radius <= 0f)
@@ -86,8 +86,11 @@ public sealed class UnitQueryTree
         if (_rootIndex >= 0)
             QueryCircle(_rootIndex, center.xy, radius * radius, results);
 
-        DebugQueryShapeReporter.ReportCircle(center, radius);
-        ReportHits(center, results);
+        if (reportDebug)
+        {
+            DebugQueryShapeReporter.ReportCircle(center, radius);
+            ReportHits(center, results);
+        }
     }
 
     public void QueryForwardRect(float3 origin, float2 forward, float length, float width, List<UnitQueryHit> results)

@@ -68,6 +68,48 @@ namespace Server
             HandleTimeout();
             HandleDisconnect();
         }
+
+        public void Shutdown()
+        {
+            foreach (TCPPair pair in connects.Values)
+            {
+                try
+                {
+                    pair.socket.Shutdown(SocketShutdown.Both);
+                }
+                catch (SocketException)
+                {
+                }
+                finally
+                {
+                    pair.socket.Close();
+                    pair.socket.Dispose();
+                    pair.connect.readSteam.Dispose();
+                    pair.connect.sendSteam.Dispose();
+                    pair.connect.Dispose();
+                }
+            }
+
+            connects.Clear();
+            disconnectList.Clear();
+            closeAfterSendList.Clear();
+
+            if (socket == null)
+            {
+                return;
+            }
+
+            socket.Close();
+            socket.Dispose();
+            socket = null;
+            OnListening = null;
+            OnListeningFail = null;
+            OnAccept = null;
+            OnSend = null;
+            OnRecv = null;
+            OnDisconnected = null;
+            state = ServerState.CLOSED;
+        }
         protected void HandleAccept()
         {
             if (state != ServerState.LISTENING || socket == null)

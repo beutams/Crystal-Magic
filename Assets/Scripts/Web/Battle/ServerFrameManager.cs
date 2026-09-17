@@ -3,9 +3,10 @@ using System.Linq;
 
 namespace Server
 {
-    public class ServerFrameManager : FrameManager<ServerFrameManager>
+    public class ServerFrameManager : FrameManager
     {
         public List<Connect> connects = new List<Connect>();
+        public List<Connect> syncingConnects = new List<Connect>();
         public SortedDictionary<uint, Queue<NetworkStateData>> allcmds = new SortedDictionary<uint, Queue<NetworkStateData>>();
 
         public override void AddConnect(Connect connect)
@@ -19,14 +20,39 @@ namespace Server
             connect.RegisterCallback(TCPPacketCode.GetOpcode<General_FrameStateData>(), OnReceiveMessage);
         }
 
-        public override void RemoveConnect(Connect connect)
+        public void AddSyncingConnect(Connect connect)
         {
-            if (connect == null || !connects.Remove(connect))
+            if (connect == null || connects.Contains(connect) || syncingConnects.Contains(connect))
             {
                 return;
             }
 
-            connect.UnRegisterCallback(TCPPacketCode.GetOpcode<General_FrameStateData>(), OnReceiveMessage);
+            syncingConnects.Add(connect);
+        }
+
+        public void PromoteSyncingConnect(Connect connect)
+        {
+            if (connect == null)
+            {
+                return;
+            }
+
+            syncingConnects.Remove(connect);
+            AddConnect(connect);
+        }
+
+        public override void RemoveConnect(Connect connect)
+        {
+            if (connect == null)
+            {
+                return;
+            }
+
+            syncingConnects.Remove(connect);
+            if (connects.Remove(connect))
+            {
+                connect.UnRegisterCallback(TCPPacketCode.GetOpcode<General_FrameStateData>(), OnReceiveMessage);
+            }
         }
 
         public override void HandleReceive()
@@ -46,11 +72,31 @@ namespace Server
             onHandleReceive?.Invoke(frame, states);
         }
 
+        public override void OnReceiveMessage(IMessage message, Connect connect)
+        {
+            if (message is General_FrameStateData frameMessage && frameMessage.data != null)
+                connect.RecordBattleFrameReceive(frameMessage.clientFrameSequence);
+
+            base.OnReceiveMessage(message, connect);
+        }
+
         protected override void SendFrame(NetworkFrameData data)
         {
             foreach (Connect connect in connects)
             {
-                connect.Send(new General_FrameStateData { data = data });
+                connect.Send(new General_FrameStateData
+                {
+                    data = data,
+                    acknowledgedClientFrameSequence = connect.LastReceivedBattleFrameSequence,
+                });
+            }
+
+            foreach (Connect connect in syncingConnects)
+            {
+                connect.Send(new General_FrameStateData
+                {
+                    data = data,
+                });
             }
         }
 
@@ -60,6 +106,8 @@ namespace Server
             {
                 RemoveConnect(connects[index]);
             }
+
+            syncingConnects.Clear();
 
             base.Stop();
         }

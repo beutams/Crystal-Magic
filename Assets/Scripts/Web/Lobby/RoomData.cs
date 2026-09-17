@@ -11,7 +11,8 @@ namespace Server
         public string roomName;
         public int enterNum;
         public int maxNum;
-        public int dungeonFloor;
+        public int themeKey;
+        public bool start;
         public Dictionary<ulong, string> players = new Dictionary<ulong, string>();
         public Dictionary<ulong, bool> playerready = new Dictionary<ulong, bool>();
         public static RoomData CreateRoomData(Room room)
@@ -21,7 +22,8 @@ namespace Server
             roomData.roomName = room.roomName;
             roomData.enterNum = room.enterNum;
             roomData.maxNum = room.maxNum;
-            roomData.dungeonFloor = room.dungeonFloor;
+            roomData.themeKey = room.themeKey;
+            roomData.start = room.start;
             roomData.ownerAccountId = room.ownerAccountId;
             foreach (var item in room.players)
             {
@@ -47,7 +49,7 @@ namespace Server
                 data.roomName = room.roomName;
                 data.enterNum = room.enterNum;
                 data.maxNum = room.maxNum;
-                data.dungeonFloor = room.dungeonFloor;
+                data.themeKey = room.themeKey;
                 listData.roomList.Add(data);
             }
             return listData;
@@ -61,6 +63,6 @@ namespace Server
         public string roomName;
         public int enterNum;
         public int maxNum;
-        public int dungeonFloor;
+        public int themeKey;
     }
 }

@@ -13,7 +13,14 @@ namespace Server
     {
         public long startTime {  get; set; }
         public long LastReceiveTime { get; set; }
+        public long RttMs { get; private set; }
+        public uint LastReceivedBattleFrameSequence { get; private set; }
+
         protected Dictionary<int,Action<IMessage,Connect>> callback = new Dictionary<int, Action<IMessage,Connect>>();
+        private readonly Dictionary<uint, long> pendingBattleFrameSendTimes = new Dictionary<uint, long>();
+        private readonly List<uint> acknowledgedBattleFrameSequences = new List<uint>();
+        private uint nextBattleFrameSequence;
+        private uint lastAcknowledgedBattleFrameSequence;
         public ConnectState State;
         public IPEndPoint IPEndPoint;
         public Action<Connect> OnConnected;
@@ -48,6 +55,42 @@ namespace Server
             sendSteam.Position = sendSteam.Length;
             sendSteam.Write(data, 0, data.Length);
             Debug.Log($"[TCP][Queue] opcode={opcode}, {data.Length} bytes queued for {IPEndPoint}");
+        }
+
+        public uint RecordBattleFrameSend(long sendTime)
+        {
+            nextBattleFrameSequence++;
+            if (nextBattleFrameSequence == 0)
+                nextBattleFrameSequence++;
+
+            pendingBattleFrameSendTimes[nextBattleFrameSequence] = sendTime;
+            return nextBattleFrameSequence;
+        }
+
+        public void RecordBattleFrameReceive(uint sequence)
+        {
+            if (sequence > LastReceivedBattleFrameSequence)
+                LastReceivedBattleFrameSequence = sequence;
+        }
+
+        public void AcknowledgeBattleFrame(uint sequence, long receiveTime)
+        {
+            if (sequence == 0 || sequence <= lastAcknowledgedBattleFrameSequence)
+                return;
+
+            lastAcknowledgedBattleFrameSequence = sequence;
+            if (pendingBattleFrameSendTimes.TryGetValue(sequence, out long sendTime))
+                RttMs = Math.Max(0, receiveTime - sendTime);
+
+            acknowledgedBattleFrameSequences.Clear();
+            foreach (KeyValuePair<uint, long> pending in pendingBattleFrameSendTimes)
+            {
+                if (pending.Key <= sequence)
+                    acknowledgedBattleFrameSequences.Add(pending.Key);
+            }
+
+            foreach (uint acknowledgedSequence in acknowledgedBattleFrameSequences)
+                pendingBattleFrameSendTimes.Remove(acknowledgedSequence);
         }
         public void RegisterCallback(int opcode, Action<IMessage,Connect> callback)
         {

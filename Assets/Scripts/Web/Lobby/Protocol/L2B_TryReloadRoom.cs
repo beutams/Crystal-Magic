@@ -7,5 +7,6 @@ namespace Server
     public class L2B_TryReloadRoom : IMessage
     {
         public ulong accountId { get; set; }
+        public string saveGuid { get; set; }
     }
 }

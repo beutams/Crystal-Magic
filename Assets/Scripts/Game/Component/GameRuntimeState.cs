@@ -225,11 +225,32 @@ namespace CrystalMagic.Core
             if (!GameWorldManager.TryGetEntityManager(out EntityManager entityManager))
                 return;
 
-            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<DungeonRunComponent>());
-            if (query.IsEmptyIgnoreFilter)
-                return;
+            SetDungeonRuntimeMap(entityManager, layout, sceneData, floor, seed, attemptCount);
+        }
 
-            Entity dungeonRunEntity = query.GetSingletonEntity();
+        public static void SetDungeonRuntimeMap(
+            EntityManager entityManager,
+            OpenFieldDungeonLayout layout,
+            RuntimeDungeonSceneData sceneData,
+            int floor,
+            int seed,
+            int attemptCount)
+        {
+
+            EntityQuery runQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<DungeonRunComponent>());
+            Entity dungeonRunEntity;
+            if (!runQuery.IsEmptyIgnoreFilter)
+            {
+                dungeonRunEntity = runQuery.GetSingletonEntity();
+            }
+            else
+            {
+                // Battle World 没有可存档的 DungeonRun，但客户端表现和服务器运行仍需要同一份运行时地图。
+                EntityQuery mapQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<DungeonRuntimeMapComponent>());
+                dungeonRunEntity = mapQuery.IsEmptyIgnoreFilter
+                    ? entityManager.CreateEntity()
+                    : mapQuery.GetSingletonEntity();
+            }
             DungeonRuntimeMapComponent map;
             if (entityManager.HasComponent<DungeonRuntimeMapComponent>(dungeonRunEntity))
                 map = entityManager.GetComponentObject<DungeonRuntimeMapComponent>(dungeonRunEntity);
@@ -327,6 +348,24 @@ namespace CrystalMagic.Core
             player = Entity.Null;
             if (!GameWorldManager.TryGetEntityManager(out entityManager))
                 return false;
+
+            return TryGetPlayerEntity(entityManager, out player);
+        }
+
+        public static bool TryGetPlayerEntity(EntityManager entityManager, out Entity player)
+        {
+            player = Entity.Null;
+            EntityQuery localPlayerQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<NetworkPlayerComponent>());
+            if (!localPlayerQuery.IsEmptyIgnoreFilter)
+            {
+                using Unity.Collections.NativeArray<Entity> localPlayers =
+                    localPlayerQuery.ToEntityArray(Unity.Collections.Allocator.Temp);
+                if (localPlayers.Length > 0)
+                {
+                    player = localPlayers[0];
+                    return true;
+                }
+            }
 
             EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<UnitFactionComponent>());
             using Unity.Collections.NativeArray<Entity> entities = query.ToEntityArray(Unity.Collections.Allocator.Temp);

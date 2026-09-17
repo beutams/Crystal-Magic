@@ -135,7 +135,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -298,7 +298,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -650,7 +650,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.setDestination",
           "Key": "",
           "Inputs": [
             {
@@ -675,7 +675,7 @@
                 },
                 "String": ""
               },
-              "GetterKey": "unit.transform.directionTo",
+              "GetterKey": "unit.transform.positionOf",
               "OperationType": "",
               "Inputs": [
                 {
@@ -794,7 +794,7 @@
           ]
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -1354,7 +1354,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -1517,7 +1517,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -1869,7 +1869,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.setDestination",
           "Key": "",
           "Inputs": [
             {
@@ -1894,7 +1894,7 @@
                 },
                 "String": ""
               },
-              "GetterKey": "unit.transform.directionTo",
+              "GetterKey": "unit.transform.positionOf",
               "OperationType": "",
               "Inputs": [
                 {
@@ -2013,7 +2013,7 @@
           ]
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -2176,7 +2176,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -2917,7 +2917,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -3080,7 +3080,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -3432,7 +3432,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.setDestination",
           "Key": "",
           "Inputs": [
             {
@@ -3457,7 +3457,7 @@
                 },
                 "String": ""
               },
-              "GetterKey": "unit.transform.directionTo",
+              "GetterKey": "unit.transform.positionOf",
               "OperationType": "",
               "Inputs": [
                 {
@@ -3576,7 +3576,7 @@
           ]
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -3739,7 +3739,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -4479,7 +4479,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -4642,7 +4642,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -4994,7 +4994,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.setDestination",
           "Key": "",
           "Inputs": [
             {
@@ -5019,7 +5019,7 @@
                 },
                 "String": ""
               },
-              "GetterKey": "unit.transform.directionTo",
+              "GetterKey": "unit.transform.positionOf",
               "OperationType": "",
               "Inputs": [
                 {
@@ -5138,7 +5138,7 @@
           ]
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -5698,7 +5698,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -5861,7 +5861,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -6213,7 +6213,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.setDestination",
           "Key": "",
           "Inputs": [
             {
@@ -6238,7 +6238,7 @@
                 },
                 "String": ""
               },
-              "GetterKey": "unit.transform.directionTo",
+              "GetterKey": "unit.transform.positionOf",
               "OperationType": "",
               "Inputs": [
                 {
@@ -6357,7 +6357,7 @@
           ]
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -6520,7 +6520,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -7261,7 +7261,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -7424,7 +7424,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -7776,7 +7776,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.setDestination",
           "Key": "",
           "Inputs": [
             {
@@ -7801,7 +7801,7 @@
                 },
                 "String": ""
               },
-              "GetterKey": "unit.transform.directionTo",
+              "GetterKey": "unit.transform.positionOf",
               "OperationType": "",
               "Inputs": [
                 {
@@ -7920,7 +7920,7 @@
           ]
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -8083,7 +8083,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -8823,7 +8823,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -8986,7 +8986,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -9338,7 +9338,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.setDestination",
           "Key": "",
           "Inputs": [
             {
@@ -9363,7 +9363,7 @@
                 },
                 "String": ""
               },
-              "GetterKey": "unit.transform.directionTo",
+              "GetterKey": "unit.transform.positionOf",
               "OperationType": "",
               "Inputs": [
                 {
@@ -9482,7 +9482,7 @@
           ]
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -10041,7 +10041,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -10204,7 +10204,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -10556,7 +10556,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.setDestination",
           "Key": "",
           "Inputs": [
             {
@@ -10581,7 +10581,7 @@
                 },
                 "String": ""
               },
-              "GetterKey": "unit.transform.directionTo",
+              "GetterKey": "unit.transform.positionOf",
               "OperationType": "",
               "Inputs": [
                 {
@@ -10700,7 +10700,7 @@
           ]
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -11260,7 +11260,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -11424,7 +11424,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -11776,7 +11776,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.setDestination",
           "Key": "",
           "Inputs": [
             {
@@ -11801,7 +11801,7 @@
                 },
                 "String": ""
               },
-              "GetterKey": "unit.transform.directionTo",
+              "GetterKey": "unit.transform.positionOf",
               "OperationType": "",
               "Inputs": [
                 {
@@ -11920,7 +11920,7 @@
           ]
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -12084,7 +12084,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -12825,7 +12825,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -12988,7 +12988,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -13340,7 +13340,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.setDestination",
           "Key": "",
           "Inputs": [
             {
@@ -13365,7 +13365,7 @@
                 },
                 "String": ""
               },
-              "GetterKey": "unit.transform.directionTo",
+              "GetterKey": "unit.transform.positionOf",
               "OperationType": "",
               "Inputs": [
                 {
@@ -13484,7 +13484,7 @@
           ]
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -13647,7 +13647,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -14388,7 +14388,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -14551,7 +14551,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -14903,7 +14903,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.setDestination",
           "Key": "",
           "Inputs": [
             {
@@ -14928,7 +14928,7 @@
                 },
                 "String": ""
               },
-              "GetterKey": "unit.transform.directionTo",
+              "GetterKey": "unit.transform.positionOf",
               "OperationType": "",
               "Inputs": [
                 {
@@ -15047,7 +15047,7 @@
           ]
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -15210,7 +15210,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -15951,7 +15951,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -16114,7 +16114,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -16466,7 +16466,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.setDestination",
           "Key": "",
           "Inputs": [
             {
@@ -16491,7 +16491,7 @@
                 },
                 "String": ""
               },
-              "GetterKey": "unit.transform.directionTo",
+              "GetterKey": "unit.transform.positionOf",
               "OperationType": "",
               "Inputs": [
                 {
@@ -16610,7 +16610,7 @@
           ]
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -16773,7 +16773,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -17514,7 +17514,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -17677,7 +17677,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -18029,7 +18029,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.setDestination",
           "Key": "",
           "Inputs": [
             {
@@ -18054,7 +18054,7 @@
                 },
                 "String": ""
               },
-              "GetterKey": "unit.transform.directionTo",
+              "GetterKey": "unit.transform.positionOf",
               "OperationType": "",
               "Inputs": [
                 {
@@ -18173,7 +18173,7 @@
           ]
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -18336,7 +18336,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -19076,7 +19076,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -19239,7 +19239,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -19591,7 +19591,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.setDestination",
           "Key": "",
           "Inputs": [
             {
@@ -19616,7 +19616,7 @@
                 },
                 "String": ""
               },
-              "GetterKey": "unit.transform.directionTo",
+              "GetterKey": "unit.transform.positionOf",
               "OperationType": "",
               "Inputs": [
                 {
@@ -19735,7 +19735,7 @@
           ]
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -20294,7 +20294,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -20457,7 +20457,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -20809,7 +20809,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.setDestination",
           "Key": "",
           "Inputs": [
             {
@@ -20834,7 +20834,7 @@
                 },
                 "String": ""
               },
-              "GetterKey": "unit.transform.directionTo",
+              "GetterKey": "unit.transform.positionOf",
               "OperationType": "",
               "Inputs": [
                 {
@@ -20953,7 +20953,7 @@
           ]
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -21395,7 +21395,7 @@
       ],
       "Id": 23
     },
-    {"UnitDataId":24,"Name":"Orc rider","Description":"Copied from Slime baseline.","RootNodeGuid":"orc_rider_root","Nodes":[{"Type":"Root","Guid":"orc_rider_root","EditorPosition":{"x":80.0,"y":120.0},"ChildGuids":["orc_rider_selector"]},{"Type":"Selector","Guid":"orc_rider_selector","EditorPosition":{"x":280.0,"y":120.0},"ChildGuids":["orc_rider_attack01","orc_rider_attack02","orc_rider_attack03","orc_rider_chase","orc_rider_idle"]},{"Type":"Sequence","Guid":"orc_rider_attack01","EditorPosition":{"x":500.0,"y":-80.0},"ChildGuids":["orc_rider_hit01","orc_rider_attack01_behavior_cooldown_ready","orc_rider_stop01","orc_rider_state_attack01"]},{"Target":{"Kind":1,"Literal":{"Type":6,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.perception.nearestUnitByFaction","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},"Center":{"x":0.18730626,"y":0.03498777},"Size":{"x":0.39489254,"y":0.33777222},"TargetPadding":0.0,"Type":"HitCheck","Guid":"orc_rider_hit01","EditorPosition":{"x":730.0,"y":-140.0},"ChildGuids":[]},{"SetKey":"unit.move.setDirection","Key":"","Inputs":[{"Kind":0,"Literal":{"Type":4,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_stop01","EditorPosition":{"x":730.0,"y":-60.0},"ChildGuids":[]},{"SetKey":"unit.variables.set","Key":"ai.intent","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"Attack01"},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_state_attack01","EditorPosition":{"x":730.0,"y":20.0},"ChildGuids":[]},{"Type":"Sequence","Guid":"orc_rider_attack02","EditorPosition":{"x":500.0,"y":140.0},"ChildGuids":["orc_rider_hit02","orc_rider_attack02_behavior_cooldown_ready","orc_rider_stop02","orc_rider_state_attack02"]},{"Target":{"Kind":1,"Literal":{"Type":6,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.perception.nearestUnitByFaction","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},"Center":{"x":0.18509369,"y":0.053218167},"Size":{"x":0.541875,"y":0.5842464},"TargetPadding":0.0,"Type":"HitCheck","Guid":"orc_rider_hit02","EditorPosition":{"x":730.0,"y":100.0},"ChildGuids":[]},{"SetKey":"unit.move.setDirection","Key":"","Inputs":[{"Kind":0,"Literal":{"Type":4,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_stop02","EditorPosition":{"x":730.0,"y":180.0},"ChildGuids":[]},{"SetKey":"unit.variables.set","Key":"ai.intent","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"Attack02"},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_state_attack02","EditorPosition":{"x":730.0,"y":260.0},"ChildGuids":[]},{"Type":"Sequence","Guid":"orc_rider_chase","EditorPosition":{"x":500.0,"y":360.0},"ChildGuids":["orc_rider_has_player","orc_rider_move_to_player","orc_rider_state_chase"]},{"Conditions":[{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":2,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"Distance","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.transform.position","OperationType":"","Inputs":[]},{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.perception.nearestUnitByFaction","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]}]}]},{"Kind":0,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":1.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Type":"Check","Guid":"orc_rider_has_player","EditorPosition":{"x":730.0,"y":340.0},"ChildGuids":[]},{"SetKey":"unit.move.setDirection","Key":"","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.transform.directionTo","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.perception.nearestUnitByFaction","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]}]}],"Type":"Set","Guid":"orc_rider_move_to_player","EditorPosition":{"x":730.0,"y":420.0},"ChildGuids":[]},{"SetKey":"unit.variables.set","Key":"ai.intent","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"Chase"},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_state_chase","EditorPosition":{"x":730.0,"y":500.0},"ChildGuids":[]},{"Type":"Sequence","Guid":"orc_rider_idle","EditorPosition":{"x":500.0,"y":600.0},"ChildGuids":["orc_rider_stop_idle","orc_rider_state_idle"]},{"SetKey":"unit.move.setDirection","Key":"","Inputs":[{"Kind":0,"Literal":{"Type":4,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_stop_idle","EditorPosition":{"x":730.0,"y":580.0},"ChildGuids":[]},{"SetKey":"unit.variables.set","Key":"ai.intent","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"Idle"},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_state_idle","EditorPosition":{"x":730.0,"y":660.0},"ChildGuids":[]},{"Type":"Sequence","Guid":"orc_rider_attack03","EditorPosition":{"x":500.0,"y":140.0},"ChildGuids":["orc_rider_hit03","orc_rider_attack03_behavior_cooldown_ready","orc_rider_stop03","orc_rider_state_attack03"]},{"Target":{"Kind":1,"Literal":{"Type":6,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.perception.nearestUnitByFaction","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},"Center":{"x":0.03494501,"y":0.05869945},"Size":{"x":0.923059,"y":0.5360898},"TargetPadding":0.0,"Type":"HitCheck","Guid":"orc_rider_hit03","EditorPosition":{"x":730.0,"y":100.0},"ChildGuids":[]},{"SetKey":"unit.move.setDirection","Key":"","Inputs":[{"Kind":0,"Literal":{"Type":4,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_stop03","EditorPosition":{"x":730.0,"y":180.0},"ChildGuids":[]},{"SetKey":"unit.variables.set","Key":"ai.intent","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"Attack03"},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_state_attack03","EditorPosition":{"x":730.0,"y":260.0},"ChildGuids":[]},{"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"ai.skill.coolingDown"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"ai.attack01.coolingDown"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Type":"Check","Guid":"orc_rider_attack01_behavior_cooldown_ready","EditorPosition":{"x":730.0,"y":-40.0},"ChildGuids":[]},{"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"ai.skill.coolingDown"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"ai.attack02.coolingDown"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Type":"Check","Guid":"orc_rider_attack02_behavior_cooldown_ready","EditorPosition":{"x":730.0,"y":180.0},"ChildGuids":[]},{"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"ai.skill.coolingDown"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"ai.attack03.coolingDown"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Type":"Check","Guid":"orc_rider_attack03_behavior_cooldown_ready","EditorPosition":{"x":730.0,"y":180.0},"ChildGuids":[]}],"Id":24},
+    {"UnitDataId":24,"Name":"Orc rider","Description":"Copied from Slime baseline.","RootNodeGuid":"orc_rider_root","Nodes":[{"Type":"Root","Guid":"orc_rider_root","EditorPosition":{"x":80.0,"y":120.0},"ChildGuids":["orc_rider_selector"]},{"Type":"Selector","Guid":"orc_rider_selector","EditorPosition":{"x":280.0,"y":120.0},"ChildGuids":["orc_rider_attack01","orc_rider_attack02","orc_rider_attack03","orc_rider_chase","orc_rider_idle"]},{"Type":"Sequence","Guid":"orc_rider_attack01","EditorPosition":{"x":500.0,"y":-80.0},"ChildGuids":["orc_rider_hit01","orc_rider_attack01_behavior_cooldown_ready","orc_rider_stop01","orc_rider_state_attack01"]},{"Target":{"Kind":1,"Literal":{"Type":6,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.perception.nearestUnitByFaction","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},"Center":{"x":0.18730626,"y":0.03498777},"Size":{"x":0.39489254,"y":0.33777222},"TargetPadding":0.0,"Type":"HitCheck","Guid":"orc_rider_hit01","EditorPosition":{"x":730.0,"y":-140.0},"ChildGuids":[]},{"SetKey":"unit.navigation.stop","Key":"","Inputs":[{"Kind":0,"Literal":{"Type":4,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_stop01","EditorPosition":{"x":730.0,"y":-60.0},"ChildGuids":[]},{"SetKey":"unit.variables.set","Key":"ai.intent","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"Attack01"},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_state_attack01","EditorPosition":{"x":730.0,"y":20.0},"ChildGuids":[]},{"Type":"Sequence","Guid":"orc_rider_attack02","EditorPosition":{"x":500.0,"y":140.0},"ChildGuids":["orc_rider_hit02","orc_rider_attack02_behavior_cooldown_ready","orc_rider_stop02","orc_rider_state_attack02"]},{"Target":{"Kind":1,"Literal":{"Type":6,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.perception.nearestUnitByFaction","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},"Center":{"x":0.18509369,"y":0.053218167},"Size":{"x":0.541875,"y":0.5842464},"TargetPadding":0.0,"Type":"HitCheck","Guid":"orc_rider_hit02","EditorPosition":{"x":730.0,"y":100.0},"ChildGuids":[]},{"SetKey":"unit.navigation.stop","Key":"","Inputs":[{"Kind":0,"Literal":{"Type":4,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_stop02","EditorPosition":{"x":730.0,"y":180.0},"ChildGuids":[]},{"SetKey":"unit.variables.set","Key":"ai.intent","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"Attack02"},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_state_attack02","EditorPosition":{"x":730.0,"y":260.0},"ChildGuids":[]},{"Type":"Sequence","Guid":"orc_rider_chase","EditorPosition":{"x":500.0,"y":360.0},"ChildGuids":["orc_rider_has_player","orc_rider_move_to_player","orc_rider_state_chase"]},{"Conditions":[{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":2,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"Distance","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.transform.position","OperationType":"","Inputs":[]},{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.perception.nearestUnitByFaction","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]}]}]},{"Kind":0,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":1.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Type":"Check","Guid":"orc_rider_has_player","EditorPosition":{"x":730.0,"y":340.0},"ChildGuids":[]},{"SetKey":"unit.navigation.setDestination","Key":"","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.perception.nearestUnitByFaction","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]}]}],"Type":"Set","Guid":"orc_rider_move_to_player","EditorPosition":{"x":730.0,"y":420.0},"ChildGuids":[]},{"SetKey":"unit.variables.set","Key":"ai.intent","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"Chase"},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_state_chase","EditorPosition":{"x":730.0,"y":500.0},"ChildGuids":[]},{"Type":"Sequence","Guid":"orc_rider_idle","EditorPosition":{"x":500.0,"y":600.0},"ChildGuids":["orc_rider_stop_idle","orc_rider_state_idle"]},{"SetKey":"unit.navigation.stop","Key":"","Inputs":[{"Kind":0,"Literal":{"Type":4,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_stop_idle","EditorPosition":{"x":730.0,"y":580.0},"ChildGuids":[]},{"SetKey":"unit.variables.set","Key":"ai.intent","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"Idle"},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_state_idle","EditorPosition":{"x":730.0,"y":660.0},"ChildGuids":[]},{"Type":"Sequence","Guid":"orc_rider_attack03","EditorPosition":{"x":500.0,"y":140.0},"ChildGuids":["orc_rider_hit03","orc_rider_attack03_behavior_cooldown_ready","orc_rider_stop03","orc_rider_state_attack03"]},{"Target":{"Kind":1,"Literal":{"Type":6,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.perception.nearestUnitByFaction","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},"Center":{"x":0.03494501,"y":0.05869945},"Size":{"x":0.923059,"y":0.5360898},"TargetPadding":0.0,"Type":"HitCheck","Guid":"orc_rider_hit03","EditorPosition":{"x":730.0,"y":100.0},"ChildGuids":[]},{"SetKey":"unit.navigation.stop","Key":"","Inputs":[{"Kind":0,"Literal":{"Type":4,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_stop03","EditorPosition":{"x":730.0,"y":180.0},"ChildGuids":[]},{"SetKey":"unit.variables.set","Key":"ai.intent","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"Attack03"},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_state_attack03","EditorPosition":{"x":730.0,"y":260.0},"ChildGuids":[]},{"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"ai.skill.coolingDown"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"ai.attack01.coolingDown"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Type":"Check","Guid":"orc_rider_attack01_behavior_cooldown_ready","EditorPosition":{"x":730.0,"y":-40.0},"ChildGuids":[]},{"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"ai.skill.coolingDown"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"ai.attack02.coolingDown"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Type":"Check","Guid":"orc_rider_attack02_behavior_cooldown_ready","EditorPosition":{"x":730.0,"y":180.0},"ChildGuids":[]},{"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"ai.skill.coolingDown"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"ai.attack03.coolingDown"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Type":"Check","Guid":"orc_rider_attack03_behavior_cooldown_ready","EditorPosition":{"x":730.0,"y":180.0},"ChildGuids":[]}],"Id":24},
     {
       "UnitDataId": 25,
       "Name": "Priest",
@@ -21512,7 +21512,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -21864,7 +21864,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.setDestination",
           "Key": "",
           "Inputs": [
             {
@@ -21889,7 +21889,7 @@
                 },
                 "String": ""
               },
-              "GetterKey": "unit.transform.directionTo",
+              "GetterKey": "unit.transform.positionOf",
               "OperationType": "",
               "Inputs": [
                 {
@@ -22008,7 +22008,7 @@
           ]
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -22386,7 +22386,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -22549,7 +22549,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -22901,7 +22901,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.setDestination",
           "Key": "",
           "Inputs": [
             {
@@ -22926,7 +22926,7 @@
                 },
                 "String": ""
               },
-              "GetterKey": "unit.transform.directionTo",
+              "GetterKey": "unit.transform.positionOf",
               "OperationType": "",
               "Inputs": [
                 {
@@ -23045,7 +23045,7 @@
           ]
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -23603,7 +23603,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -23955,7 +23955,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.setDestination",
           "Key": "",
           "Inputs": [
             {
@@ -23980,7 +23980,7 @@
                 },
                 "String": ""
               },
-              "GetterKey": "unit.transform.directionTo",
+              "GetterKey": "unit.transform.positionOf",
               "OperationType": "",
               "Inputs": [
                 {
@@ -24099,7 +24099,7 @@
           ]
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -24477,7 +24477,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -24640,7 +24640,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -24992,7 +24992,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.setDestination",
           "Key": "",
           "Inputs": [
             {
@@ -25017,7 +25017,7 @@
                 },
                 "String": ""
               },
-              "GetterKey": "unit.transform.directionTo",
+              "GetterKey": "unit.transform.positionOf",
               "OperationType": "",
               "Inputs": [
                 {
@@ -25136,7 +25136,7 @@
           ]
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -25696,7 +25696,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -25859,7 +25859,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -26211,7 +26211,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.setDestination",
           "Key": "",
           "Inputs": [
             {
@@ -26236,7 +26236,7 @@
                 },
                 "String": ""
               },
-              "GetterKey": "unit.transform.directionTo",
+              "GetterKey": "unit.transform.positionOf",
               "OperationType": "",
               "Inputs": [
                 {
@@ -26355,7 +26355,7 @@
           ]
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {
@@ -26518,7 +26518,7 @@
           "ChildGuids": []
         },
         {
-          "SetKey": "unit.move.setDirection",
+          "SetKey": "unit.navigation.stop",
           "Key": "",
           "Inputs": [
             {

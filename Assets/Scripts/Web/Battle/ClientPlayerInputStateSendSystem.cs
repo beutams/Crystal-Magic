@@ -7,7 +7,7 @@ public partial class ClientPlayerInputStateSendSystem : SystemBase
 {
     protected override void OnUpdate()
     {
-        if (!ClientFrameManager.Instance.running)
+        if (!FrameManagerUtility.TryGet(EntityManager, out ClientFrameManager frame) || !frame.running)
             return;
 
         foreach ((RefRW<PlayerInputComponent> inputRef,
@@ -19,11 +19,11 @@ public partial class ClientPlayerInputStateSendSystem : SystemBase
             if (input.NetworkDirty == 0 || identityRef.ValueRO.id == System.Guid.Empty)
                 continue;
 
-            uint frame = ClientFrameManager.Instance.currentFrame;
-            if (!ClientFrameManager.Instance.sendOrder.TryGetValue(frame, out System.Collections.Generic.Queue<NetworkStateData> queue))
+            uint currentFrame = frame.currentFrame;
+            if (!frame.sendOrder.TryGetValue(currentFrame, out System.Collections.Generic.Queue<NetworkStateData> queue))
             {
                 queue = new System.Collections.Generic.Queue<NetworkStateData>();
-                ClientFrameManager.Instance.sendOrder.Add(frame, queue);
+                frame.sendOrder.Add(currentFrame, queue);
             }
 
             queue.Enqueue(new NetworkPlayerInputStateData

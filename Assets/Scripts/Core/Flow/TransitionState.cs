@@ -38,6 +38,7 @@ namespace CrystalMagic.Core {
         public IReadOnlyList<string> ActiveSubSceneNames { get; set; }
         public bool KeepCurrentMainScene { get; set; }
         public bool ForceReloadTargetScene { get; set; }
+        public System.Func<System.Collections.IEnumerator> PreLoadCoroutineFactory { get; set; }
         public System.Func<System.Collections.IEnumerator> PostLoadCoroutineFactory { get; set; }
         public System.Action OnComplete { get; set; }
     }

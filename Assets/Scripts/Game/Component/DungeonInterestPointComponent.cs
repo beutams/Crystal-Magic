@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Unit;
+using Server;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -152,17 +153,25 @@ public static class DungeonPatrolRuntimeUtility
             for (int index = 0; index < point.MemberSpawns.Count; index++)
             {
                 RuntimeDungeonMonsterSpawnData spawn = point.MemberSpawns[index];
-                if (spawn == null || string.IsNullOrWhiteSpace(spawn.PrefabName) ||
-                    !EntitySpawnRegistryUtility.TryInstantiateUnit(
-                        entityManager,
-                        new FixedString128Bytes(spawn.PrefabName),
-                        out Entity member))
+                if (spawn == null || string.IsNullOrWhiteSpace(spawn.PrefabName))
                 {
                     continue;
                 }
 
-                SetLocalTransform(entityManager, member, spawn.WorldPosition);
-                SetOrAddMonsterSpawnData(entityManager, member, point, spawn);
+                NetworkEntitySpawnInfo entityInfo = NetworkEntitySpawnUtility.CreateInfo(
+                    NetworkEntityPrefabType.Unit,
+                    spawn.PrefabName,
+                    spawn.WorldPosition);
+                entityInfo.hasMonsterSpawnData = true;
+                entityInfo.monsterSaveId = spawn.SaveId;
+                entityInfo.monsterRegionId = point.EncounterId;
+                entityInfo.monsterSquadId = point.SquadId;
+                entityInfo.monsterIsBoss = spawn.IsBoss;
+                if (!NetworkEntitySpawnUtility.TrySpawn(entityManager, entityInfo, out Entity member))
+                {
+                    continue;
+                }
+
                 GameRuntimeStateUtility.TryRestoreDungeonUnit(entityManager, member);
                 SetOrAddPatrolMember(entityManager, member, pointEntity);
                 SetOrAddVariableOwner(entityManager, member, pointEntity);
@@ -373,25 +382,6 @@ public static class DungeonPatrolRuntimeUtility
             entityManager.AddComponentData(member, component);
     }
 
-    private static void SetOrAddMonsterSpawnData(
-        EntityManager entityManager,
-        Entity member,
-        DungeonInterestPointComponent point,
-        RuntimeDungeonMonsterSpawnData spawn)
-    {
-        DungeonMonsterSpawnComponent component = new()
-        {
-            SaveId = spawn.SaveId,
-            RegionId = point.EncounterId,
-            SquadId = point.SquadId,
-            IsBoss = spawn.IsBoss ? (byte)1 : (byte)0,
-        };
-        if (entityManager.HasComponent<DungeonMonsterSpawnComponent>(member))
-            entityManager.SetComponentData(member, component);
-        else
-            entityManager.AddComponentData(member, component);
-    }
-
     private static void SetOrAddVariableOwner(EntityManager entityManager, Entity member, Entity pointEntity)
     {
         if (!entityManager.HasComponent<UnitVariableComponent>(member))
@@ -408,15 +398,4 @@ public static class DungeonPatrolRuntimeUtility
             entityManager.AddComponent<DungeonRuntimeOwnedEntity>(entity);
     }
 
-    private static void SetLocalTransform(EntityManager entityManager, Entity entity, UnityEngine.Vector3 worldPosition)
-    {
-        LocalTransform transform = LocalTransform.FromPositionRotationScale(
-            new float3(worldPosition.x, worldPosition.y, worldPosition.z),
-            quaternion.identity,
-            1f);
-        if (entityManager.HasComponent<LocalTransform>(entity))
-            entityManager.SetComponentData(entity, transform);
-        else
-            entityManager.AddComponentData(entity, transform);
-    }
 }

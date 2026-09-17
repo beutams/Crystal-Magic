@@ -65,7 +65,11 @@ namespace Server
         {
             string json = Encoding.UTF8.GetString(bytes);
             Type type = opcodes[opcode];
-            return (IMessage)JsonConvert.DeserializeObject(json,type);
+            JsonSerializerSettings settings = new JsonSerializerSettings()
+            {
+                TypeNameHandling = TypeNameHandling.Auto
+            };
+            return (IMessage)JsonConvert.DeserializeObject(json, type, settings);
         }
         public static byte[] Pack(ushort opcode, byte[] message)
         {

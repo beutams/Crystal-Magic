@@ -72,7 +72,7 @@ namespace CrystalMagic.Game.Skill.Effects
         private void CreateProjectileSpawnRequest(SkillContent context, Vector3 startPosition, Vector3 direction)
         {
             FixedString128Bytes projectileName = new(string.IsNullOrWhiteSpace(Data.ProjectilePrefabName) ? "Projectile" : Data.ProjectilePrefabName);
-            SkillProjectileSpawnQueue.Enqueue(
+            SkillProjectileSpawnQueueUtility.GetOrCreate(context.EntityManager).Requests.Enqueue(
                 new SkillProjectileSpawnRequest
                 {
                     ProjectileName = projectileName,

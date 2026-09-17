@@ -435,6 +435,19 @@ namespace CrystalMagic.Core {
             ReleaseUI(panel);
         }
 
+        public void CloseUI<T>() where T : UIBase
+        {
+            List<UIBase> panelsToClose = new();
+            foreach (UIBase panel in _mvcContexts.Keys)
+            {
+                if (panel is T)
+                    panelsToClose.Add(panel);
+            }
+
+            for (int i = 0; i < panelsToClose.Count; i++)
+                ReleaseUI(panelsToClose[i]);
+        }
+
         /// <summary>
         /// 关闭 UI 并归还对象池。分组由面板当前上下文决定。
         /// </summary>

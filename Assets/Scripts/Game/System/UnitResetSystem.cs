@@ -1,4 +1,6 @@
+using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
+using Server;
 using Unity.Entities;
 using Unity.Mathematics;
 
@@ -10,6 +12,9 @@ partial class UnitResetSystem : SystemBase
 {
     protected override void OnUpdate()
     {
+        if (FrameManagerUtility.TryGet(EntityManager, out ClientFrameManager _))
+            return;
+
         foreach (RefRW<UnitMoveComponent> moveRef in SystemAPI.Query<RefRW<UnitMoveComponent>>())
         {
             UnitMoveComponent move = moveRef.ValueRW;

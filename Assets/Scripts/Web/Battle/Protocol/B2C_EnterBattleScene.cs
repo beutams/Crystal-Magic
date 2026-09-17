@@ -7,5 +7,6 @@ namespace Server
     public class B2C_EnterBattleScene : IMessage
     {
         public BattleEnterData battleData;
+        public uint connectVersion;
     }
 }

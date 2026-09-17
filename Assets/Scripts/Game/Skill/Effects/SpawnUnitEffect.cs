@@ -1,6 +1,6 @@
 using CrystalMagic.Game.Data.Effects;
 using CrystalMagic.Game.Unit;
-using Unity.Collections;
+using Server;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -37,31 +37,27 @@ namespace CrystalMagic.Game.Skill.Effects
                 string selectedUnitName = candidates.Length == 1
                     ? candidates[0]
                     : candidates[UnityEngine.Random.Range(0, candidates.Length)];
-                FixedString128Bytes unitName = new(selectedUnitName);
-                if (!EntitySpawnRegistryUtility.TryInstantiateUnit(entityManager, unitName, out Entity instance))
-                    continue;
+                Vector2 direction = UnityEngine.Random.insideUnitCircle;
+                if (direction.sqrMagnitude <= 0.0001f)
+                    direction = Vector2.right;
 
-                if (entityManager.HasComponent<LocalTransform>(instance))
-                {
-                    LocalTransform transform = entityManager.GetComponentData<LocalTransform>(instance);
-                    Vector2 direction = UnityEngine.Random.insideUnitCircle;
-                    if (direction.sqrMagnitude <= 0.0001f)
-                        direction = Vector2.right;
-
-                    float radius = Mathf.Sqrt(UnityEngine.Random.Range(minRadius * minRadius, maxRadius * maxRadius));
-                    transform.Position = new float3(center.x + direction.x * radius, center.y + direction.y * radius, center.z);
-                    transform.Rotation = quaternion.identity;
-                    entityManager.SetComponentData(instance, transform);
-                }
-
+                float radius = Mathf.Sqrt(UnityEngine.Random.Range(minRadius * minRadius, maxRadius * maxRadius));
+                float3 spawnPosition = new(center.x + direction.x * radius, center.y + direction.y * radius, center.z);
+                NetworkEntitySpawnInfo entityInfo = NetworkEntitySpawnUtility.CreateInfo(
+                    NetworkEntityPrefabType.Unit,
+                    selectedUnitName,
+                    new Vector3(spawnPosition.x, spawnPosition.y, spawnPosition.z));
                 if (Data.CopyFactionFromCaster &&
                     context.HasOriginEntity &&
                     entityManager.Exists(context.OriginEntity) &&
-                    entityManager.HasComponent<UnitFactionComponent>(context.OriginEntity) &&
-                    entityManager.HasComponent<UnitFactionComponent>(instance))
+                    entityManager.HasComponent<UnitFactionComponent>(context.OriginEntity))
                 {
-                    entityManager.SetComponentData(instance, entityManager.GetComponentData<UnitFactionComponent>(context.OriginEntity));
+                    entityInfo.hasFaction = true;
+                    entityInfo.faction = entityManager.GetComponentData<UnitFactionComponent>(context.OriginEntity).Value;
                 }
+
+                if (!NetworkEntitySpawnUtility.TrySpawn(entityManager, entityInfo, out _))
+                    continue;
             }
         }
 

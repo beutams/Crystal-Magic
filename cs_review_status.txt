@@ -188,6 +188,7 @@ Game\
       SkillAdditionEditorWindow.cs TRUE DIRTY
       SpriteEffectAnimationAssetGenerator.cs TRUE
       UnitAnimationFrameLibraryBuilder.cs TRUE
+      UnitAvoidanceAttributeDrawer.cs TRUE
       UnitEditorAttributeDrawerFactory.cs FALSE
       UnitEditorAttributeDrawers.cs TRUE DIRTY
       UnitEditorDrawerContext.cs FALSE
@@ -266,7 +267,7 @@ Game\
       SkillRegistryGenerator.cs FALSE
     Effects\
       ApplyBuffEffect.cs FALSE
-      AreaSearchEffect.cs TRUE
+      AreaSearchEffect.cs TRUE DIRTY
       BuffStackEffect.cs FALSE
       CameraShakeEffect.cs FALSE
       ChainSearchEffect.cs TRUE
@@ -430,8 +431,10 @@ Game\
         闁告娲戠紞鍛村箛韫囨挻绂堥梻鍡楁閹?
       UnitManaAuthoring.cs TRUE DIRTY
         濮掑嫭姊圭涵鍫曞极閻楀牆绁?
+      UnitAvoidanceAuthoring.cs TRUE
       UnitMoveAuthoring.cs TRUE DIRTY
         缂佸顕ф慨鈺呭极閻楀牆绁?
+      UnitNavigationAuthoring.cs FALSE
       UnitPerceptionAuthoring.cs TRUE DIRTY
         缂佷究鍨洪弲顐ょ磼閸曨亝顐介柨娑樼焸閳ь剙鍊块崢顦沶it缂傚倹鐗炵欢顐﹀闯?
         闁告娲戠紞鍛村箥閳ь剟寮垫径瀣楅柤瀹犲Г閺嗙喖骞?
@@ -499,6 +502,7 @@ Game\
         闁告瑥鍊归弳鐔煎礃濞嗗繐寮冲娑欏灦濠㈡﹢鏁嶇仦鎯р挃閻炴稑鐭侀、鎴炵▔閻戞鍩?
       DestroyEntitySystem.cs TRUE DIRTY
         闁告帞濞€濞呭海鏁敂绛嬪姤濞存壕鍓濋悥锝囨媼閹殿喗鐣遍悗鍦仒缂?
+      DungeonPatrolSystem.cs FALSE
       DungeonExitSystem.cs TRUE DIRTY
         闁告帡鏀遍弻濠囧礄閸濆嫬缍撻悷娆欑秮閺€锝夋偐閼哥鍋?
         闁瑰灚鎸哥槐鎴犫偓瑙勭箘椤斿牓鎮介悢绋跨亣闁瑰搫顦抽幆銈夋偋?
@@ -513,7 +517,7 @@ Game\
         缂備胶鍠曢鍝ユ啑閸涱収妲甸悘鐐靛仦閳ь儸鍐ㄦ櫢闁稿繈鍎遍惈姗€骞€瑜忕划宥嗙閺堜絻鍘?
         闁活潿鍔嶉崺娑欐綇閹惧啿寮抽悗娑櫭埀?
         濞达綀娉曢弫銈夋焼閹惧啿寰?
-      PlayerPhysicsRotationLockSystem.cs FALSE
+      PlayerPhysicsRotationLockSystem.cs TRUE
       PlayerSkillAnalysisSystem.cs TRUE DIRTY
         闁汇垻鍠愰崹姘跺礂閾氬倻绉奸柟鍨涘亾闁煎啿鈧噥鍤炴慨?
       SkillReleaseSystem.cs TRUE DIRTY
@@ -529,8 +533,10 @@ Game\
       UnitDeathFinalizeSystem.cs TRUE DIRTY
       UnitDropOnDestroySystem.cs TRUE DIRTY
         闁诡剦浜炴晶鍨潰鐠佹娊顎楅柟鍝勵槼閹倝鎮?
+      UnitAvoidanceSystem.cs TRUE
       UnitMoveSystem.cs TRUE DIRTY
         閹煎瓨姊婚弫銈囩矓鐠囨彃袟
+      UnitNavigationSystem.cs FALSE
       UnitResetSystem.cs TRUE DIRTY
         闂佹彃绉堕悿鍡椥掕箛鎾村闁轰胶澧楀畵?
       UnitPerceptionSystem.cs TRUE DIRTY
@@ -755,7 +761,9 @@ UI\
     UISelectableListItem.cs FALSE
 Web\
   Battle\
+    BattleWorldContext.cs TRUE
     ClientBattleManager.cs TRUE DIRTY
+    NetworkEventDictionary.cs TRUE
   Core\
     ClientNetworkManager.cs TRUE DIRTY
     NetworkTimer.cs TRUE DIRTY
@@ -770,10 +778,10 @@ Web\
     ClientLobbyManager.cs TRUE DIRTY
     Room.cs TRUE
     RoomData.cs TRUE
-    ServerLobbyManager.cs TRUE
+    ServerLobbyManager.cs TRUE DIRTY
     Protocol\
       C2L_SetDungeonFloor.cs TRUE
-      L2B_StartRoom.cs TRUE
+      L2B_StartRoom.cs TRUE DIRTY
   Battle\
     BattleEnterData.cs TRUE
     BattlePlayer.cs TRUE DIRTY
@@ -785,7 +793,7 @@ Web\
       NetworkPlayerAuthoring.cs TRUE DIRTY
     Protocol\
       B2C_CreateBattleUnit.cs TRUE
-      B2C_EnterBattleResult.cs TRUE
+      B2C_EnterBattleResult.cs TRUE DIRTY
       C2B_SendUserData.cs TRUE
 Core\
   Flow\
@@ -794,3 +802,6 @@ Tests\
   Editor\
     Comparator\
       ConditionExpressionMigrationTests.cs FALSE
+ThirdParty\
+  RVO2\
+    OrcaAgent.cs TRUE

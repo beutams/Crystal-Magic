@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data;
+using Server;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -31,32 +32,27 @@ namespace CrystalMagic.Game.Unit
             if (amount <= 0)
                 return false;
 
-            if (!EntitySpawnRegistryUtility.TryInstantiateDrop(entityManager, DropPrefabName, out Entity dropEntity))
+            UnitInteractionData interactionData = UnitInteractionData.CreateDrop(dropType, itemId, amount);
+            NetworkEntitySpawnInfo entityInfo = NetworkEntitySpawnUtility.CreateInfo(
+                NetworkEntityPrefabType.Drop,
+                DropPrefabName.ToString(),
+                new Vector3(position.x, position.y, position.z));
+            entityInfo.hasInteractableData = true;
+            entityInfo.interactionKind = interactionData.Kind;
+            entityInfo.interactionDataId = interactionData.DataId;
+            entityInfo.interactionAmount = interactionData.Amount;
+            entityInfo.interactionVariant = interactionData.Variant;
+            float interactionRange = math.max(0f, ConfigComponent.Instance.Get<GameConfig>().InteractionRange);
+            entityInfo.interactionRangeSq = interactionRange * interactionRange;
+            entityInfo.interactionEnabled = true;
+            if (!NetworkEntitySpawnUtility.TrySpawn(entityManager, entityInfo, out Entity dropEntity))
             {
                 LogMissingDropPrefabOnce();
                 return false;
             }
 
-            SetOrAddComponentData(entityManager, dropEntity, LocalTransform.FromPositionRotationScale(position, quaternion.identity, 1f));
-            float interactionRange = math.max(0f, ConfigComponent.Instance.Get<GameConfig>().InteractionRange);
-            SetOrAddComponentData(entityManager, dropEntity, new UnitInteractableComponent
-            {
-                Data = UnitInteractionData.CreateDrop(dropType, itemId, amount),
-                RangeSq = interactionRange * interactionRange,
-                IsEnabled = 1,
-            });
-
             ApplyDropVisual(entityManager, dropEntity, dropType, itemId);
             return true;
-        }
-
-        private static void SetOrAddComponentData<T>(EntityManager entityManager, Entity entity, T value)
-            where T : unmanaged, IComponentData
-        {
-            if (entityManager.HasComponent<T>(entity))
-                entityManager.SetComponentData(entity, value);
-            else
-                entityManager.AddComponentData(entity, value);
         }
 
         private static void ApplyDropVisual(EntityManager entityManager, Entity dropEntity, DropRewardType dropType, int itemId)

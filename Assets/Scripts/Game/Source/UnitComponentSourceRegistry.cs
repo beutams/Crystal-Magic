@@ -22,6 +22,7 @@ public static class UnitComponentSourceRegistry
         new PlayerCurrentSkillSource(),
         new UnitSkillReleaseSource(),
         new UnitMoveSource(),
+        new UnitNavigationSource(),
         new UnitPerceptionSource(),
         new DungeonInterestPointSource(),
         new UnitTransformSource(),

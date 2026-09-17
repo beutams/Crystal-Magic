@@ -28,11 +28,7 @@ public static class PersistentEffectUtility
         if (data == null || sourceContext == null)
             return;
 
-        World world = World.DefaultGameObjectInjectionWorld;
-        if (world == null || !world.IsCreated)
-            return;
-
-        PersistentEffectQueueComponent queue = GetOrCreate(world.EntityManager);
+        PersistentEffectQueueComponent queue = GetOrCreate(sourceContext.EntityManager);
         queue.Enqueue(new PersistentEffectRequest
         {
             Data = data,

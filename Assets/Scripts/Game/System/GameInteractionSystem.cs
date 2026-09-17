@@ -111,7 +111,7 @@ public partial class GameInteractionSystem : SystemBase
 
         if (dropType == DropRewardType.Money)
         {
-            if (GameWorldManager.SceneMode == GameSceneMode.Dungeon &&
+            if (GameWorldContextUtility.GetSceneMode(EntityManager) == GameSceneMode.Dungeon &&
                 GameRuntimeStateUtility.TryGetPlayerCharacterData(EntityManager, request.Actor, out CharacterData characterData))
             {
                 characterData.Money = System.Math.Max(0L, characterData.Money + amount);

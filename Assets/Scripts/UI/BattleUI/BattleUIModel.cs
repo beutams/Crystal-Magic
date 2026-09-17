@@ -3,7 +3,6 @@ using CrystalMagic.Core;
 using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Skill;
-using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 
@@ -243,20 +242,18 @@ namespace CrystalMagic.UI
             if (_cachedPlayerEntity != Entity.Null &&
                 entityManager.Exists(_cachedPlayerEntity) &&
                 entityManager.HasComponent<UnitFactionComponent>(_cachedPlayerEntity) &&
+                (GameWorldManager.Role != GameWorldRole.Client ||
+                 entityManager.HasComponent<NetworkPlayerComponent>(_cachedPlayerEntity)) &&
                 UnitFactionUtility.IsPlayer(entityManager.GetComponentData<UnitFactionComponent>(_cachedPlayerEntity).Value))
             {
                 player = _cachedPlayerEntity;
                 return true;
             }
 
-            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<UnitFactionComponent>());
-            using NativeArray<Entity> entities = query.ToEntityArray(Allocator.Temp);
-            for (int i = 0; i < entities.Length; i++)
+            if (GameRuntimeStateUtility.TryGetPlayerEntity(entityManager, out Entity entity) &&
+                entityManager.HasComponent<UnitFactionComponent>(entity) &&
+                UnitFactionUtility.IsPlayer(entityManager.GetComponentData<UnitFactionComponent>(entity).Value))
             {
-                Entity entity = entities[i];
-                if (!UnitFactionUtility.IsPlayer(entityManager.GetComponentData<UnitFactionComponent>(entity).Value))
-                    continue;
-
                 _cachedPlayerEntity = entity;
                 player = entity;
                 return true;

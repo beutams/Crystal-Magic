@@ -21,7 +21,7 @@ namespace Server
         public Action<Connect> OnDisconnected;
         public abstract void Init();
         public abstract void Update();
-        public void Disconnect(Connect connect)
+        public virtual void Disconnect(Connect connect)
         {
             if (connect == null)
             {
@@ -181,6 +181,7 @@ namespace Server
                         pair.socket.Close();
                         pair.socket.Dispose();
                         pair.connect.readSteam.Dispose();
+                        pair.connect.sendSteam.Dispose();
                         pair.connect.Dispose();
                         closeAfterSendList.Remove(id);
                     }

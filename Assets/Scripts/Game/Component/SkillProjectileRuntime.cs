@@ -25,29 +25,37 @@ public sealed class SkillProjectileSpawnRequest
     public EffectData[] OnDestroyEffects;
 }
 
-public static class SkillProjectileSpawnQueue
+public sealed class SkillProjectileSpawnQueueComponent : IComponentData
 {
-    private static readonly System.Collections.Generic.Queue<SkillProjectileSpawnRequest> s_requests = new();
+    public readonly Queue<SkillProjectileSpawnRequest> Requests = new();
+}
 
-    public static void Enqueue(SkillProjectileSpawnRequest request)
+public static class SkillProjectileSpawnQueueUtility
+{
+    public static SkillProjectileSpawnQueueComponent GetOrCreate(EntityManager entityManager)
     {
-        if (request != null)
-            s_requests.Enqueue(request);
+        EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<SkillProjectileSpawnQueueComponent>());
+        if (!query.IsEmptyIgnoreFilter)
+            return entityManager.GetComponentObject<SkillProjectileSpawnQueueComponent>(query.GetSingletonEntity());
+
+        Entity entity = entityManager.CreateEntity();
+        SkillProjectileSpawnQueueComponent queue = new();
+        entityManager.AddComponentObject(entity, queue);
+        return queue;
     }
 
-    public static bool TryDequeue(out SkillProjectileSpawnRequest request)
+    public static bool TryGet(EntityManager entityManager, out SkillProjectileSpawnQueueComponent queue)
     {
-        if (s_requests.Count > 0)
+        EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<SkillProjectileSpawnQueueComponent>());
+        if (query.IsEmptyIgnoreFilter)
         {
-            request = s_requests.Dequeue();
-            return true;
+            queue = null;
+            return false;
         }
 
-        request = null;
-        return false;
+        queue = entityManager.GetComponentObject<SkillProjectileSpawnQueueComponent>(query.GetSingletonEntity());
+        return queue != null;
     }
-
-    public static bool HasPendingRequests => s_requests.Count > 0;
 }
 
 public struct SkillProjectileHitEntityElement : IBufferElementData

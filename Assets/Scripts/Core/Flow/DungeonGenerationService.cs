@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data;
-using CrystalMagic.Game.OpenField;
 using UnityEngine;
 
 namespace CrystalMagic.Core
@@ -40,7 +39,6 @@ namespace CrystalMagic.Core
                 runData,
                 dungeonFloor,
                 theme,
-                GetDungeonConfig(),
                 targetSceneName);
         }
 
@@ -48,26 +46,13 @@ namespace CrystalMagic.Core
             DungeonRunData runData,
             int dungeonFloor,
             DungeonThemeData theme,
-            DungeonConfig dungeonConfig,
             string targetSceneName)
         {
             theme.EnsureValid();
             bool isBossFloor = IsBossFloor(dungeonFloor);
-            if (!HasConfiguredExitSquad(theme.OpenField, isBossFloor))
-            {
-                string error = $"Open field theme '{theme.Name}' has no valid {(isBossFloor ? "boss" : "normal")} large squad for the exit interest point.";
-                PublishProgress(targetSceneName, 0.35f, "Open field configuration invalid", error);
-                DungeonFlowTiming.Fail(error);
-                throw new InvalidOperationException(error);
-            }
-
             bool rebuildSavedLayout = runData.CurrentFloor == dungeonFloor && runData.Seed != 0;
             int masterSeed = rebuildSavedLayout ? runData.Seed : DeriveMasterSeed(runData, theme.Id, dungeonFloor);
-            OpenFieldDungeonTerrainConfig terrainConfig = theme.OpenField.Terrain.CloneValidated();
-            terrainConfig.Width = Mathf.Max(8, dungeonConfig?.MapWidth ?? terrainConfig.Width);
-            terrainConfig.Height = Mathf.Max(8, dungeonConfig?.MapHeight ?? terrainConfig.Height);
-            terrainConfig.EnsureValid();
-            DungeonFlowTiming.EndStage(8, $"Theme={theme.Name} MasterSeed={masterSeed} Size={terrainConfig.Width}x{terrainConfig.Height}");
+            DungeonFlowTiming.EndStage(8, $"Theme={theme.Name} MasterSeed={masterSeed}");
 
             for (int attemptIndex = 0; attemptIndex < MaxGenerationAttempts; attemptIndex++)
             {
@@ -80,61 +65,37 @@ namespace CrystalMagic.Core
                     "Generating open field terrain",
                     $"{theme.Name} Level {dungeonFloor} Attempt {attemptIndex + 1} Seed {candidateSeed}");
 
-                DungeonFlowTiming.BeginStage(9, "生成地形", $"Attempt={attemptIndex + 1} Seed={candidateSeed}");
-                OpenFieldDungeonLayout layout = OpenFieldDungeonTerrainGenerator.Generate(candidateSeed, terrainConfig);
-                DungeonFlowTiming.EndStage(9, $"Cells={layout.Width}x{layout.Height}");
-                yield return null;
-
-                PublishProgress(targetSceneName, 0.52f, "Placing open field anchors", $"Attempt {attemptIndex + 1}");
-                DungeonFlowTiming.BeginStage(10, "放置地牢锚点", $"Attempt={attemptIndex + 1}");
-                bool anchorsPlaced = OpenFieldDungeonAnchorGenerator.TryPlace(layout, candidateSeed, theme.OpenField.Anchors);
-                DungeonFlowTiming.EndStage(10, anchorsPlaced ? "成功" : "失败，重试下一个 Seed");
-                if (!anchorsPlaced)
+                DungeonFlowTiming.BeginStage(9, "生成并校验共享地图计划", $"Attempt={attemptIndex + 1} Seed={candidateSeed}");
+                if (!DungeonMapPlanBuilder.TryBuild(
+                        theme.Id,
+                        candidateSeed,
+                        dungeonFloor,
+                        isBossFloor,
+                        out DungeonMapPlan plan,
+                        out string error))
                 {
-                    yield return null;
-                    continue;
-                }
-
-                PublishProgress(targetSceneName, 0.68f, "Placing open field content", $"Attempt {attemptIndex + 1}");
-                DungeonFlowTiming.BeginStage(11, "放置地牢内容", $"Attempt={attemptIndex + 1}");
-                bool contentPlaced = OpenFieldDungeonContentGenerator.TryPlace(layout, candidateSeed, theme.OpenField.Content);
-                DungeonFlowTiming.EndStage(11, contentPlaced ? "成功" : "失败，重试下一个 Seed");
-                if (!contentPlaced)
-                {
-                    yield return null;
-                    continue;
-                }
-
-                DungeonFlowTiming.BeginStage(12, "构建并校验运行时场景数据", $"Attempt={attemptIndex + 1}");
-                RuntimeDungeonSceneData sceneData = OpenFieldDungeonSceneDataBuilder.Build(
-                    layout,
-                    theme,
-                    dungeonConfig,
-                    dungeonFloor,
-                    isBossFloor);
-                if (!HasValidExitGuard(sceneData, layout.ExitInterestPoint, isBossFloor))
-                {
-                    DungeonFlowTiming.EndStage(12, "出口守卫无效，重试下一个 Seed");
+                    DungeonFlowTiming.EndStage(9, $"失败：{error}");
                     PublishProgress(
                         targetSceneName,
                         0.76f,
                         "Open field candidate rejected",
-                        $"Attempt {attemptIndex + 1} cannot deploy the exit guard squad; continuing with the next seed.");
+                        $"Attempt {attemptIndex + 1} failed: {error}");
                     yield return null;
                     continue;
                 }
-                DungeonFlowTiming.EndStage(12, "场景数据校验通过");
+                plan.attemptCount = attemptIndex + 1;
+                DungeonFlowTiming.EndStage(9, $"场景数据校验通过 Cells={plan.layout.Width}x{plan.layout.Height}");
 
                 DungeonFlowTiming.BeginStage(13, "保存当前运行时地牢数据");
                 runData.Seed = candidateSeed;
                 runData.CurrentFloor = dungeonFloor;
                 GameRuntimeStateUtility.UpdateDungeonRun(runData);
                 GameRuntimeStateUtility.SetDungeonRuntimeMap(
-                    layout,
-                    sceneData,
+                    plan.layout,
+                    plan.sceneData,
                     dungeonFloor,
                     candidateSeed,
-                    attemptIndex + 1);
+                    plan.attemptCount);
                 DungeonFlowTiming.EndStage(13, $"AcceptedAttempt={attemptIndex + 1} Seed={candidateSeed}");
                 PublishProgress(targetSceneName, 0.84f, "Open field layout ready", $"Accepted Attempt {attemptIndex + 1} Seed {candidateSeed}");
                 yield return DungeonSceneRuntimeBuilder.BuildCurrentDungeonSceneCoroutine(
@@ -151,58 +112,6 @@ namespace CrystalMagic.Core
             throw new InvalidOperationException(generationError);
         }
 
-        private static bool HasConfiguredExitSquad(OpenFieldDungeonThemeData data, bool requiresBoss)
-        {
-            foreach (OpenFieldDungeonEncounterPoolData pool in data.EncounterPools)
-            {
-                if (pool == null || pool.InterestSize != OpenFieldInterestSizeData.Large)
-                    continue;
-
-                foreach (OpenFieldDungeonSquadData squad in pool.Squads)
-                {
-                    if (squad == null || squad.IsBossSquad != requiresBoss || squad.Members == null || squad.Members.Count == 0)
-                        continue;
-
-                    foreach (OpenFieldDungeonSquadMemberData member in squad.Members)
-                    {
-                        if (member != null && !string.IsNullOrWhiteSpace(member.UnitName) && member.Cost > 0 && member.Weight > 0)
-                            return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        private static bool HasValidExitGuard(
-            RuntimeDungeonSceneData sceneData,
-            OpenFieldInterestPoint exitInterestPoint,
-            bool requiresBoss)
-        {
-            if (sceneData == null || exitInterestPoint == null)
-                return false;
-
-            foreach (RuntimeDungeonMonsterSpawnData spawn in sceneData.MonsterSpawns)
-            {
-                if (spawn != null && spawn.RegionId == exitInterestPoint.EncounterId && spawn.IsBoss == requiresBoss)
-                    return true;
-            }
-
-            foreach (RuntimeDungeonInterestPointSpawnData interestPointSpawn in sceneData.InterestPointSpawns)
-            {
-                if (interestPointSpawn == null || interestPointSpawn.EncounterId != exitInterestPoint.EncounterId)
-                    continue;
-
-                foreach (RuntimeDungeonMonsterSpawnData memberSpawn in interestPointSpawn.MemberSpawns)
-                {
-                    if (memberSpawn != null && memberSpawn.RegionId == exitInterestPoint.EncounterId && memberSpawn.IsBoss == requiresBoss)
-                        return true;
-                }
-            }
-
-            return false;
-        }
-
         private static DungeonThemeData ResolveThemeData(int dungeonThemeId)
         {
             DungeonThemeData theme = DataComponent.Instance?.Get<DungeonThemeData>(dungeonThemeId);
@@ -210,10 +119,6 @@ namespace CrystalMagic.Core
             return theme;
         }
 
-        private static DungeonConfig GetDungeonConfig()
-        {
-            return ConfigComponent.Instance.Get<DungeonConfig>();
-        }
         private static bool IsBossFloor(int dungeonFloor)
         {
             return Mathf.Clamp(dungeonFloor, 1, DungeonConfig.LevelsPerTheme) == DungeonConfig.LevelsPerTheme;

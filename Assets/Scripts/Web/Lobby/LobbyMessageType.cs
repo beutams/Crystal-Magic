@@ -23,4 +23,7 @@ public enum LobbyRequestType
     StartSuccess = 16,
     StartFail = 17,
     StartTimeout = 18,
+
+    LoginFail = 19,
+    LoginSaveMismatch = 20,
 }

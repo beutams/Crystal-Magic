@@ -21,10 +21,10 @@ namespace CrystalMagic.Game.Skill.Effects
 
         public override void Execute(SkillContent context)
         {
-            if (Data == null)
+            if (Data == null || context == null)
                 return;
 
-            EntityManager entityManager = GetEntityManager();
+            EntityManager entityManager = context.EntityManager;
             context.EntityManager = entityManager;
             if (!TryGetSearchCenter(context, entityManager, out float3 center))
                 return;
@@ -91,9 +91,5 @@ namespace CrystalMagic.Game.Skill.Effects
             return false;
         }
 
-        private static EntityManager GetEntityManager()
-        {
-            return World.DefaultGameObjectInjectionWorld.EntityManager;
-        }
     }
 }

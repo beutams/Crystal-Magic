@@ -1,6 +1,5 @@
 using CrystalMagic.Core;
 using CrystalMagic.Game.OpenField;
-using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -233,22 +232,19 @@ namespace CrystalMagic.UI
                 entityManager.Exists(_cachedPlayerEntity) &&
                 entityManager.HasComponent<UnitFactionComponent>(_cachedPlayerEntity) &&
                 entityManager.HasComponent<LocalTransform>(_cachedPlayerEntity) &&
+                (GameWorldManager.Role != GameWorldRole.Client ||
+                 entityManager.HasComponent<NetworkPlayerComponent>(_cachedPlayerEntity)) &&
                 UnitFactionUtility.IsPlayer(entityManager.GetComponentData<UnitFactionComponent>(_cachedPlayerEntity).Value))
             {
                 player = _cachedPlayerEntity;
                 return true;
             }
 
-            EntityQuery query = entityManager.CreateEntityQuery(
-                ComponentType.ReadOnly<UnitFactionComponent>(),
-                ComponentType.ReadOnly<LocalTransform>());
-            using NativeArray<Entity> entities = query.ToEntityArray(Allocator.Temp);
-            for (int index = 0; index < entities.Length; index++)
+            if (GameRuntimeStateUtility.TryGetPlayerEntity(entityManager, out Entity entity) &&
+                entityManager.HasComponent<UnitFactionComponent>(entity) &&
+                entityManager.HasComponent<LocalTransform>(entity) &&
+                UnitFactionUtility.IsPlayer(entityManager.GetComponentData<UnitFactionComponent>(entity).Value))
             {
-                Entity entity = entities[index];
-                if (!UnitFactionUtility.IsPlayer(entityManager.GetComponentData<UnitFactionComponent>(entity).Value))
-                    continue;
-
                 _cachedPlayerEntity = entity;
                 player = entity;
                 return true;

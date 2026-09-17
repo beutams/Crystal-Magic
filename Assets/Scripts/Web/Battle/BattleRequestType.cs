@@ -4,4 +4,7 @@ public enum BattleRequestType
 
     EnterBattleSuccess = 1,
     EnterBattleFail = 2,
+
+    ReloadBattleSuccess = 3,
+    ReloadBattleFail = 4,
 }

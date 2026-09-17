@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
+using Server;
 using Unity.Collections;
 using Unity.Entities;
 
@@ -18,6 +19,9 @@ partial class UnitBuffSystem : SystemBase
 
     protected override void OnUpdate()
     {
+        if (FrameManagerUtility.TryGet(EntityManager, out FrameManager frame) && !frame.running)
+            return;
+
         float dt = SystemAPI.Time.DeltaTime;
         PendingEffectExecutionQueueComponent effectExecutionQueue = PendingEffectExecutionQueueUtility.GetOrCreate(EntityManager);
         using NativeArray<Entity> buffEntities = _buffRuntimeQuery.ToEntityArray(Allocator.Temp);

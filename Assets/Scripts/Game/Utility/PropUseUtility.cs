@@ -47,7 +47,7 @@ namespace CrystalMagic.Game
         public static bool TryUsePropSlot(int slotIndex, PropUseRequestContext context, out PropUseFailureReason failureReason)
         {
             failureReason = PropUseFailureReason.None;
-            if (!IsBattleArea())
+            if (!IsBattleArea(context.EntityManager))
             {
                 failureReason = PropUseFailureReason.NotInBattleArea;
                 return false;
@@ -206,7 +206,7 @@ namespace CrystalMagic.Game
         {
             failureReason = PropUseFailureReason.None;
 
-            if (!IsBattleArea())
+            if (!IsBattleArea(context.EntityManager))
             {
                 failureReason = PropUseFailureReason.NotInBattleArea;
                 return false;
@@ -356,10 +356,10 @@ namespace CrystalMagic.Game
             return true;
         }
 
-        private static bool IsBattleArea()
+        private static bool IsBattleArea(EntityManager entityManager)
         {
-            return GameWorldManager.SceneMode == GameSceneMode.Training ||
-                   GameWorldManager.SceneMode == GameSceneMode.Dungeon;
+            GameSceneMode sceneMode = GameWorldContextUtility.GetSceneMode(entityManager);
+            return sceneMode == GameSceneMode.Training || sceneMode == GameSceneMode.Dungeon;
         }
 
         private static float GetSharedCooldownSeconds()

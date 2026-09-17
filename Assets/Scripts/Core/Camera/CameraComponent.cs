@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -18,7 +17,7 @@ namespace CrystalMagic.Core {
         private Camera _shakeAppliedCamera;
         private Vector3 _lastShakeOffset;
         private World _followQueryWorld;
-        private EntityQuery _playerFollowQuery;
+        private Entity _followTargetEntity = Entity.Null;
         private float _screenShakeScale = 1f;
         private Rect _worldBounds;
         private int _worldBoundsOwnerId;
@@ -258,31 +257,28 @@ namespace CrystalMagic.Core {
             if (_followQueryWorld != world)
             {
                 _followQueryWorld = world;
-                _playerFollowQuery = world.EntityManager.CreateEntityQuery(
-                    ComponentType.ReadOnly<UnitFactionComponent>(),
-                    ComponentType.ReadOnly<LocalToWorld>()
-                );
+                _followTargetEntity = Entity.Null;
             }
-
-            if (_playerFollowQuery.IsEmptyIgnoreFilter)
-                return false;
 
             EntityManager entityManager = world.EntityManager;
-            using NativeArray<Entity> entities = _playerFollowQuery.ToEntityArray(Allocator.Temp);
-            for (int i = 0; i < entities.Length; i++)
+            if (_followTargetEntity == Entity.Null ||
+                !entityManager.Exists(_followTargetEntity) ||
+                !entityManager.HasComponent<LocalToWorld>(_followTargetEntity) ||
+                GameWorldManager.Role == GameWorldRole.Client &&
+                !entityManager.HasComponent<NetworkPlayerComponent>(_followTargetEntity))
             {
-                Entity entity = entities[i];
-                UnitFactionType faction = entityManager.GetComponentData<UnitFactionComponent>(entity).Value;
-                if (!UnitFactionUtility.IsPlayer(faction))
-                    continue;
-
-                LocalToWorld localToWorld = entityManager.GetComponentData<LocalToWorld>(entity);
-                float3 position = localToWorld.Position;
-                targetPosition = new Vector3(position.x, position.y, position.z);
-                return true;
+                if (!GameRuntimeStateUtility.TryGetPlayerEntity(entityManager, out _followTargetEntity) ||
+                    !entityManager.HasComponent<LocalToWorld>(_followTargetEntity))
+                {
+                    _followTargetEntity = Entity.Null;
+                    return false;
+                }
             }
 
-            return false;
+            LocalToWorld localToWorld = entityManager.GetComponentData<LocalToWorld>(_followTargetEntity);
+            float3 position = localToWorld.Position;
+            targetPosition = new Vector3(position.x, position.y, position.z);
+            return true;
         }
 
         #endregion
@@ -293,6 +289,7 @@ namespace CrystalMagic.Core {
             _shakes.Clear();
             _current = null;
             _followQueryWorld = null;
+            _followTargetEntity = Entity.Null;
             _worldBounds = default;
             _worldBoundsOwnerId = 0;
             _hasWorldBounds = false;

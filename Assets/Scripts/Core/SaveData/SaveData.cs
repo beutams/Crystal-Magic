@@ -12,6 +12,7 @@ namespace CrystalMagic.Core {
     {
         // ========== 元数据 ==========
         public int SaveIndex;                    // 存档名称
+        public string SaveGuid;                  // 存档唯一身份，不随槽位编号或进程变化
 
         // ========== 全局数据 ==========
         /// <summary>

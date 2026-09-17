@@ -4,8 +4,8 @@ namespace Server
 {
     [Message(Opcode = 16)]
     [Serializable]
-    public class C2L_SetDungeonFloor : IMessage
+    public class C2L_SetDungeonTheme : IMessage
     {
-        public int dungeonFloor;
+        public int themeKey;
     }
 }

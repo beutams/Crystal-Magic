@@ -7,5 +7,6 @@ namespace Server
     public class C2B_BattleReady : IMessage
     {
         public ulong battleId;
+        public uint connectVersion;
     }
 }

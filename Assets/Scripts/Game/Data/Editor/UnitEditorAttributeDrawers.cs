@@ -47,6 +47,28 @@ namespace CrystalMagic.Editor.Data
         }
     }
 
+    [FactoryKey("Navigation", 15)]
+    public sealed class UnitNavigationAttributeDrawer : IUnitEditorAttributeDrawer
+    {
+        public bool CanDraw(UnitEditorDrawerContext context)
+        {
+            return context.HasAuthoring<UnitNavigationAuthoring>();
+        }
+
+        public void Draw(UnitEditorDrawerContext context)
+        {
+            UnitNavigationModuleData module = context.GetOrCreateModule<UnitNavigationModuleData>();
+            if (module == null)
+                return;
+
+            GUILayout.Space(8f);
+            UnitEditorWindow.DrawSectionHeader("Navigation");
+            module.ClearanceRadius = EditorGUILayout.FloatField("Clearance Radius (-1 = Auto)", module.ClearanceRadius);
+            module.ClearanceRadius = module.ClearanceRadius < 0f ? -1f : module.ClearanceRadius;
+            module.WaypointTolerance = Mathf.Max(0.01f, EditorGUILayout.FloatField("Waypoint Tolerance", module.WaypointTolerance));
+        }
+    }
+
     [FactoryKey("Vitality", 20)]
     public sealed class UnitVitalityAttributeDrawer : IUnitEditorAttributeDrawer
     {

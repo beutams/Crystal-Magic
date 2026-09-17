@@ -8,6 +8,7 @@ namespace Server
     public class C2B_EnterBattle : IMessage
     {
         public string ticket;
+        public string saveGuid;
         public CharacterData data;
     }
 }

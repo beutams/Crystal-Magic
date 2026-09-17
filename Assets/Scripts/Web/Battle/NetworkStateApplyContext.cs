@@ -38,6 +38,14 @@ public sealed class NetworkStateApplyContext
         return false;
     }
 
+    public void RegisterEntity(Guid unitId, Entity entity)
+    {
+        if (unitId != Guid.Empty && entity != Entity.Null && EntityManager.Exists(entity))
+        {
+            _entities[unitId] = entity;
+        }
+    }
+
     public void SetOrAdd<T>(Entity entity, T value) where T : unmanaged, IComponentData
     {
         if (EntityManager.HasComponent<T>(entity))

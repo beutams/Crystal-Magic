@@ -1,8 +1,10 @@
+using CrystalMagic.Core;
+using Server;
 using Unity.Entities;
 
 [WorldSystemFilter(
-    WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation,
-    WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
+    WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.ClientSimulation,
+    WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.ClientSimulation)]
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateBefore(typeof(UnitDecisionSystemGroup))]
 public partial class UnitInitializationSystemGroup : ComponentSystemGroup
@@ -17,6 +19,15 @@ public partial class UnitInitializationSystemGroup : ComponentSystemGroup
 [UpdateBefore(typeof(UnitExecutionSystemGroup))]
 public partial class UnitDecisionSystemGroup : ComponentSystemGroup
 {
+    protected override void OnUpdate()
+    {
+        // Battle World 在地图初始化时已经加入 PlayerLoop；这里只阻断开战前的权威战斗逻辑，
+        // 不改变 ECS 正常的逐帧更新频率。
+        if (FrameManagerUtility.TryGet(EntityManager, out FrameManager frame) && !frame.running)
+            return;
+
+        base.OnUpdate();
+    }
 }
 
 [WorldSystemFilter(
@@ -27,6 +38,13 @@ public partial class UnitDecisionSystemGroup : ComponentSystemGroup
 [UpdateBefore(typeof(UnitPostProcessSystemGroup))]
 public partial class UnitExecutionSystemGroup : ComponentSystemGroup
 {
+    protected override void OnUpdate()
+    {
+        if (FrameManagerUtility.TryGet(EntityManager, out FrameManager frame) && !frame.running)
+            return;
+
+        base.OnUpdate();
+    }
 }
 
 [WorldSystemFilter(
@@ -36,6 +54,13 @@ public partial class UnitExecutionSystemGroup : ComponentSystemGroup
 [UpdateAfter(typeof(UnitExecutionSystemGroup))]
 public partial class UnitPostProcessSystemGroup : ComponentSystemGroup
 {
+    protected override void OnUpdate()
+    {
+        if (FrameManagerUtility.TryGet(EntityManager, out FrameManager frame) && !frame.running)
+            return;
+
+        base.OnUpdate();
+    }
 }
 
 [WorldSystemFilter(

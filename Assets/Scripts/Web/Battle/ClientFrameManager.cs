@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Server
 {
-    public class ClientFrameManager : FrameManager<ClientFrameManager>
+    public class ClientFrameManager : FrameManager
     {
         public Connect connect;
 
@@ -52,8 +52,27 @@ namespace Server
         {
             if (connect != null)
             {
-                connect.Send(new General_FrameStateData { data = data });
+                uint clientFrameSequence = connect.RecordBattleFrameSend(NetworkTimer.Instance.TimeNow);
+                connect.Send(new General_FrameStateData
+                {
+                    data = data,
+                    clientFrameSequence = clientFrameSequence,
+                });
             }
+        }
+
+        public override void OnReceiveMessage(IMessage message, Connect receivedConnect)
+        {
+            if (receivedConnect == connect &&
+                message is General_FrameStateData frameMessage &&
+                frameMessage.data != null)
+            {
+                receivedConnect.AcknowledgeBattleFrame(
+                    frameMessage.acknowledgedClientFrameSequence,
+                    NetworkTimer.Instance.TimeNow);
+            }
+
+            base.OnReceiveMessage(message, receivedConnect);
         }
 
         public override void Stop()

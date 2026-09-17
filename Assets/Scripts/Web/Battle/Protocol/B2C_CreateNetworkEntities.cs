@@ -7,6 +7,7 @@ namespace Server
     public class B2C_CreateNetworkEntities : IMessage
     {
         public ulong battleId;
+        public uint connectVersion;
         public NetworkEntitySpawnInfo[] entityInfos;
     }
 }

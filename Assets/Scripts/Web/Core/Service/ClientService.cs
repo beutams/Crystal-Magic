@@ -28,6 +28,50 @@ namespace Server
             pendingConnects.Add(id, pair);
             Debug.Log($"[TCP][Client] Created Connect={id}, Target={iPEndPoint}");
         }
+        public override void Disconnect(Connect connect)
+        {
+            if (connect == null)
+            {
+                return;
+            }
+
+            Guid pendingId = Guid.Empty;
+            foreach (var pair in pendingConnects)
+            {
+                if (pair.Value.connect == connect)
+                {
+                    pendingId = pair.Key;
+                    break;
+                }
+            }
+
+            if (pendingId == Guid.Empty)
+            {
+                base.Disconnect(connect);
+                return;
+            }
+
+            TCPPair pendingPair = pendingConnects[pendingId];
+            pendingConnects.Remove(pendingId);
+            connect.State = ConnectState.Close;
+            try
+            {
+                pendingPair.socket.Shutdown(SocketShutdown.Both);
+            }
+            catch (SocketException)
+            {
+            }
+            finally
+            {
+                OnDisconnected?.Invoke(connect);
+                connect.OnDisconnected?.Invoke(connect);
+                pendingPair.socket.Close();
+                pendingPair.socket.Dispose();
+                connect.readSteam.Dispose();
+                connect.sendSteam.Dispose();
+                connect.Dispose();
+            }
+        }
         public override void Init()
         {
             connectingTask = new Dictionary<Guid, Task>();
@@ -127,6 +171,12 @@ namespace Server
                 Guid id = connecting.Key;
                 Connect connect = connects[id].connect;
                 Task task = connecting.Value;
+                if (connect.State == ConnectState.Close)
+                {
+                    completeList.Add(id);
+                    continue;
+                }
+
                 if (!task.IsCompleted)
                     continue;
                 try
@@ -148,7 +198,7 @@ namespace Server
                     connect.State = ConnectState.Close;
                     disconnectList.Add(id);
                     OnConnectedFail?.Invoke(connect);
-                    connectingTask.Remove(id);
+                    completeList.Add(id);
                 }
             }
 

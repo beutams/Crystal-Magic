@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using CrystalMagic.Game.Skill;
-using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
@@ -8,16 +7,12 @@ using Unity.Transforms;
 using UnityEngine;
 
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
-[UpdateAfter(typeof(SkillReleaseSystem))]
+[UpdateAfter(typeof(UnitAvoidanceSystem))]
 partial class UnitMoveSystem : SystemBase
 {
     protected override void OnUpdate()
     {
         float deltaTime = SystemAPI.Time.DeltaTime;
-        bool hasPhysicsWorld = SystemAPI.HasSingleton<PhysicsWorldSingleton>();
-        PhysicsWorldSingleton physicsWorld = hasPhysicsWorld
-            ? SystemAPI.GetSingleton<PhysicsWorldSingleton>()
-            : default;
         List<VfxArrival> pendingArrivals = null;
         List<Entity> pendingDestroy = null;
         foreach ((RefRW<UnitMoveComponent> moveRef,
@@ -70,6 +65,15 @@ partial class UnitMoveSystem : SystemBase
                 // It is consumed immediately, so ordinary movement resumes if no graph writes it next frame.
                 move.Velocity = frameVelocity;
             }
+            else if (EntityManager.HasComponent<UnitAvoidanceComponent>(entity) &&
+                     EntityManager.GetComponentData<UnitAvoidanceComponent>(entity).HasResolvedVelocity != 0)
+            {
+                UnitAvoidanceComponent avoidance = EntityManager.GetComponentData<UnitAvoidanceComponent>(entity);
+                move.Velocity = avoidance.ResolvedVelocity;
+                float2 resolvedDirection = math.normalizesafe(move.Velocity, float2.zero);
+                if (math.lengthsq(resolvedDirection) > 0.0001f)
+                    facing.Direction = resolvedDirection;
+            }
             else
             {
                 float2 targetDirection = math.normalizesafe(move.Direction, float2.zero);
@@ -87,18 +91,6 @@ partial class UnitMoveSystem : SystemBase
                     move.Velocity = float2.zero;
                 else
                     UpdateMoveVelocity(ref move, targetVelocity, maxAcceleration, maxSpeed, deltaTime);
-            }
-
-            if (hasPhysicsWorld && EntityManager.HasComponent<PhysicsCollider>(entity))
-            {
-                PhysicsCollider collider = EntityManager.GetComponentData<PhysicsCollider>(entity);
-                move.Velocity = ConstrainVelocityByCollision(
-                    physicsWorld,
-                    entity,
-                    transformRef.ValueRO,
-                    collider,
-                    move.Velocity,
-                    deltaTime);
             }
 
             PhysicsVelocity physicsVelocity = physicsVelocityRef.ValueRO;
@@ -189,59 +181,6 @@ partial class UnitMoveSystem : SystemBase
         physicsVelocity.Linear = new float3(planarVelocity.x, planarVelocity.y, 0f);
         physicsVelocity.Angular = float3.zero;
         transform.Position.z = 0f;
-    }
-
-    private static float2 ConstrainVelocityByCollision(
-        PhysicsWorldSingleton physicsWorld,
-        Entity entity,
-        LocalTransform transform,
-        PhysicsCollider collider,
-        float2 velocity,
-        float deltaTime)
-    {
-        float3 displacement = new float3(velocity.x, velocity.y, 0f) * math.max(0f, deltaTime);
-        if (math.lengthsq(displacement) <= 0.000001f || !collider.Value.IsCreated)
-            return velocity;
-
-        ColliderCastInput input = new ColliderCastInput(
-            collider.Value,
-            transform.Position,
-            transform.Position + displacement,
-            transform.Rotation,
-            transform.Scale);
-        NativeList<ColliderCastHit> hits = new NativeList<ColliderCastHit>(Allocator.Temp);
-        bool hasHit = physicsWorld.CastCollider(input, ref hits);
-        if (!hasHit)
-        {
-            hits.Dispose();
-            return velocity;
-        }
-
-        float closestFraction = 1f;
-        float2 closestNormal = float2.zero;
-        for (int index = 0; index < hits.Length; index++)
-        {
-            ColliderCastHit hit = hits[index];
-            if (hit.Entity == entity)
-                continue;
-
-            float2 normal = math.normalizesafe(hit.SurfaceNormal.xy, float2.zero);
-            if (math.lengthsq(normal) <= 0.000001f || math.dot(velocity, normal) >= -0.0001f)
-                continue;
-
-            if (hit.Fraction < closestFraction)
-            {
-                closestFraction = hit.Fraction;
-                closestNormal = normal;
-            }
-        }
-
-        hits.Dispose();
-        if (closestFraction >= 1f)
-            return velocity;
-
-        float2 slideVelocity = velocity - closestNormal * math.min(0f, math.dot(velocity, closestNormal));
-        return slideVelocity * math.max(0f, closestFraction - 0.01f);
     }
 
     private sealed class VfxArrival

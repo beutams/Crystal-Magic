@@ -31,7 +31,7 @@ namespace CrystalMagic.Core
         public GameGateComponent GameGateComponent { get; private set; }
         public GameFlowComponent GameFlowComponent { get; private set; }
         public TimerComponent TimerComponent { get; private set; }
-        public ClientNetworkManager ClientNetworkManager { get; private set; }
+        public NetworkComponent NetworkComponent { get; private set; }
 
         protected override void Awake()
         {
@@ -46,6 +46,11 @@ namespace CrystalMagic.Core
             if (!_isInitialized)
             {
                 InitializeAllComponents();
+
+                if (NetworkComponent.Role != NetworkRole.Client)
+                {
+                    return;
+                }
 
                 // 初始化完成后进入主菜单。
                 GameFlowComponent.Instance.BeginTransition(new TransitionData
@@ -74,6 +79,17 @@ namespace CrystalMagic.Core
 
             LocalLogComponent = LocalLogComponent.Instance;
             _components.Add(LocalLogComponent);
+
+            NetworkComponent = Server.NetworkComponent.Instance;
+            _components.Add(NetworkComponent);
+
+            // Lobby 不会创建游戏世界，只保留网络与日志即可。Battle Server 仍需初始化
+            // Config、Data、Scene 等完整组件，才能和客户端走同一套地图/实体生成流程。
+            if (NetworkComponent.Role == NetworkRole.LobbyServer)
+            {
+                InitializeRegisteredComponents();
+                return;
+            }
 
             EventComponent = EventComponent.Instance;
             _components.Add(EventComponent);
@@ -129,10 +145,11 @@ namespace CrystalMagic.Core
             TimerComponent = TimerComponent.Instance;
             _components.Add(TimerComponent);
 
-            ClientNetworkManager = ClientNetworkManager.Instance;
-            _components.Add(ClientNetworkManager);
+            InitializeRegisteredComponents();
+        }
 
-            // 按优先级排序后依次初始化。
+        private void InitializeRegisteredComponents()
+        {
             _components.Sort((a, b) => a.Priority.CompareTo(b.Priority));
 
             foreach (var component in _components)

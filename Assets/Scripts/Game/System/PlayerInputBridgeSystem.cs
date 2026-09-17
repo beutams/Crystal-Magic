@@ -1,4 +1,5 @@
 using CrystalMagic.Core;
+using Server;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
@@ -17,6 +18,7 @@ public partial class PlayerInputBridgeSystem : SystemBase
         if (_inputComponent == null)
             return;
 
+        bool isNetworkClient = FrameManagerUtility.TryGet(EntityManager, out ClientFrameManager _);
         bool isSkillPressed = _inputState.IsSkillHeld && !_wasSkillHeld;
         bool isNextSkillChainPressed = _inputState.IsNextSkillChainHeld && !_wasNextSkillChainHeld;
         bool hasPlayer = false;
@@ -26,7 +28,7 @@ public partial class PlayerInputBridgeSystem : SystemBase
             if (!UnitFactionUtility.IsPlayer(factionRef.ValueRO.Value))
                 continue;
 
-            if (GameWorldManager.Role == GameWorldRole.Client &&
+            if (isNetworkClient &&
                 !EntityManager.HasComponent<NetworkPlayerComponent>(entity))
             {
                 continue;

@@ -7,5 +7,7 @@ namespace Server
     public class B2C_StartFrame : IMessage
     {
         public ulong battleId;
+        public uint connectVersion;
+        public uint startFrame;
     }
 }

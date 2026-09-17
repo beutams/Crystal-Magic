@@ -119,10 +119,56 @@ namespace CrystalMagic.Core {
             }
         }
 
+        public System.Collections.IEnumerator WaitForSubSceneUnloadedCoroutine(string subSceneName, float timeoutSeconds = 10f)
+        {
+            if (string.IsNullOrEmpty(subSceneName))
+                yield break;
+
+            float startTime = Time.realtimeSinceStartup;
+            bool hasLoggedWaiting = false;
+
+            while (true)
+            {
+                SubScene targetSubScene = FindSubScene(subSceneName);
+                if (targetSubScene == null || !targetSubScene.IsLoaded)
+                {
+                    Debug.Log($"[SceneComponent] SubScene unloaded: {subSceneName}");
+                    yield break;
+                }
+
+                if (!hasLoggedWaiting)
+                {
+                    Debug.Log($"[SceneComponent] Waiting for SubScene unload: {subSceneName}");
+                    hasLoggedWaiting = true;
+                }
+
+                if (timeoutSeconds > 0f && Time.realtimeSinceStartup - startTime >= timeoutSeconds)
+                {
+                    Debug.LogWarning($"[SceneComponent] Wait SubScene unload timeout: {subSceneName}");
+                    yield break;
+                }
+
+                yield return null;
+            }
+        }
+
         public bool IsSubSceneLoaded(string subSceneName)
         {
             SubScene targetSubScene = FindSubScene(subSceneName);
             return targetSubScene != null && targetSubScene.IsLoaded;
+        }
+
+        public bool TryGetSubSceneGuid(string subSceneName, out Unity.Entities.Hash128 sceneGuid)
+        {
+            SubScene targetSubScene = FindSubScene(subSceneName);
+            if (targetSubScene == null || !targetSubScene.SceneGUID.IsValid)
+            {
+                sceneGuid = default;
+                return false;
+            }
+
+            sceneGuid = targetSubScene.SceneGUID;
+            return true;
         }
 
         public void SetSubScenesActive(IReadOnlyList<string> activeSubSceneNames)

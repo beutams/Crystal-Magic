@@ -8,5 +8,6 @@ namespace Server
     {
         public ulong accountId;
         public string username;
+        public string saveGuid;
     }
 }

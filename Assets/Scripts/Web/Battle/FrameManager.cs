@@ -2,10 +2,11 @@ using CrystalMagic.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Entities;
 
 namespace Server
 {
-    public class FrameManager<T> : SingletonNonMono<T> where T : FrameManager<T>, new()
+    public class FrameManager
     {
         public int frameInterval = 33;
         public bool running;
@@ -59,24 +60,83 @@ namespace Server
         protected virtual void SendFrame(NetworkFrameData data){}
         public virtual void AddConnect(Connect connect){}
         public virtual void RemoveConnect(Connect connect){}
+        public virtual void ClearOrders()
+        {
+            receivedOrder.Clear();
+            sendOrder.Clear();
+        }
         public virtual void Start()
+        {
+            Start(0U);
+        }
+        public virtual void Start(uint startFrame)
         {
             if (running)
                 return;
 
-            currentFrame = 0;
+            currentFrame = startFrame;
             timerId = NetworkTimer.Instance.AddRepeated(frameInterval, OnTick);
             running = true;
         }
         public virtual void Stop()
         {
-            if (!running)
-                return;
+            if (running)
+            {
+                NetworkTimer.Instance.Remove(timerId);
+            }
 
-            NetworkTimer.Instance.Remove(timerId);
+            ClearOrders();
             currentFrame = 0;
             running = false;
             timerId = -1;
+        }
+    }
+
+    public sealed class FrameManagerComponent : IComponentData
+    {
+        public FrameManager manager;
+    }
+
+    public static class FrameManagerUtility
+    {
+        public static void Bind(EntityManager entityManager, FrameManager manager)
+        {
+            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<FrameManagerComponent>());
+            if (query.IsEmptyIgnoreFilter)
+            {
+                Entity entity = entityManager.CreateEntity();
+                entityManager.AddComponentObject(entity, new FrameManagerComponent { manager = manager });
+                return;
+            }
+
+            entityManager.GetComponentObject<FrameManagerComponent>(query.GetSingletonEntity()).manager = manager;
+        }
+
+        public static bool TryGet(EntityManager entityManager, out FrameManager manager)
+        {
+            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<FrameManagerComponent>());
+            if (query.IsEmptyIgnoreFilter)
+            {
+                manager = null;
+                return false;
+            }
+
+            manager = entityManager
+                .GetComponentObject<FrameManagerComponent>(query.GetSingletonEntity())
+                ?.manager;
+            return manager != null;
+        }
+
+        public static bool TryGet<T>(EntityManager entityManager, out T manager) where T : FrameManager
+        {
+            if (TryGet(entityManager, out FrameManager frameManager) && frameManager is T typedManager)
+            {
+                manager = typedManager;
+                return true;
+            }
+
+            manager = null;
+            return false;
         }
     }
 }

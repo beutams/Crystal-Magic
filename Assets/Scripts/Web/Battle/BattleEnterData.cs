@@ -6,7 +6,7 @@ namespace Server
     public class BattleEnterData
     {
         public ulong battleId;
-        public int dungeonFloor;
+        public int themeKey;
         public int seed;
     }
 }

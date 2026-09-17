@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using CrystalMagic.Game.Unit;
+using Server;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -12,11 +13,15 @@ using BoxCollider = Unity.Physics.BoxCollider;
 
 namespace CrystalMagic.Core
 {
-    internal static class DungeonSceneRuntimeBuilder
+    public static class DungeonSceneRuntimeBuilder
     {
         private const string RuntimeRootName = "__DungeonRuntime";
         private const int SpawnRegistryWaitFrames = 60;
         private const string PlayerPrefabName = "PlayerDungeon";
+
+        /// <summary>
+        /// 单机入口保留原有完整行为：地图表现、静态碰撞、场景对象、玩家、兴趣点和怪物都会生成。
+        /// </summary>
 
         public static IEnumerator BuildCurrentDungeonSceneCoroutine(
             string targetSceneName,
@@ -30,7 +35,7 @@ namespace CrystalMagic.Core
             }
 
             DungeonFlowTiming.BeginStage(14, "准备运行时根节点并等待 ECS Spawn Registry");
-            DestroyExistingRoot();
+            DestroyCurrentDungeonScene();
 
             reportProgress?.Invoke(0.985f, "Building dungeon scene", "Creating runtime scene root");
             GameObject rootObject = new(RuntimeRootName);
@@ -102,6 +107,104 @@ namespace CrystalMagic.Core
 
             runtimeRoot.Initialize(resourceOwnerKey, spawnedEntities);
             DungeonFlowTiming.EndStage(16, $"SpawnedEntities={spawnedEntities.Count}");
+        }
+
+        /// <summary>
+        /// Battle Server 只生成计算需要的静态碰撞和权威实体；不创建任何表现 GameObject。
+        /// 所有会下发给客户端的实体均由 NetworkEntitySpawnUtility 创建并自动写入生成队列。
+        /// </summary>
+        public static bool TryBuildBattleServer(
+            EntityManager entityManager,
+            DungeonMapPlan mapPlan,
+            IReadOnlyList<NetworkEntitySpawnInfo> playerInfos)
+        {
+            if (mapPlan?.sceneData == null || !HasSpawnRegistry(entityManager))
+            {
+                return false;
+            }
+
+            DestroyRuntimeOwnedEntities(entityManager);
+            NetworkEntitySpawnUtility.EnsureSpawnQueue(entityManager);
+            NetworkEntitySpawnUtility.ClearSpawnQueue(entityManager);
+            List<Entity> spawnedEntities = new();
+            RuntimeDungeonSceneData sceneData = mapPlan.sceneData;
+
+            GameRuntimeStateUtility.SetDungeonRuntimeMap(
+                entityManager,
+                mapPlan.layout,
+                sceneData,
+                mapPlan.dungeonFloor,
+                mapPlan.seed,
+                mapPlan.attemptCount);
+
+            SpawnObstacles(entityManager, null, sceneData, null, spawnedEntities);
+            SpawnEnvironment(entityManager, sceneData, null, spawnedEntities, false);
+            SpawnSceneObjects(entityManager, sceneData, null, spawnedEntities, false);
+
+            if (playerInfos != null)
+            {
+                for (int index = 0; index < playerInfos.Count; index++)
+                {
+                    NetworkEntitySpawnInfo playerInfo = playerInfos[index];
+                    if (!NetworkEntitySpawnUtility.TrySpawn(entityManager, playerInfo, out Entity player))
+                    {
+                        Debug.LogError($"[DungeonSceneRuntimeBuilder] Failed to spawn Battle player '{playerInfo?.prefabName}'.");
+                        DestroyRuntimeOwnedEntities(entityManager);
+                        NetworkEntitySpawnUtility.ClearSpawnQueue(entityManager);
+                        return false;
+                    }
+
+                    spawnedEntities.Add(player);
+                }
+            }
+
+            // 兴趣点是服务器 AI 的控制实体，不向客户端同步；它们后续生成的巡逻单位会走动态 Spawn 包。
+            SpawnInterestPoints(entityManager, sceneData, spawnedEntities);
+            SpawnMonsters(entityManager, sceneData, spawnedEntities);
+
+            for (int index = 0; index < spawnedEntities.Count; index++)
+            {
+                Entity entity = spawnedEntities[index];
+                if (entity != Entity.Null && entityManager.Exists(entity) && !entityManager.HasComponent<DungeonRuntimeOwnedEntity>(entity))
+                {
+                    entityManager.AddComponent<DungeonRuntimeOwnedEntity>(entity);
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Battle Client 只按相同地图计划生成静态表现和碰撞。玩家、怪物、宝箱、出口等动态实体
+        /// 必须等待服务器 B2C_CreateNetworkEntities 下发后统一创建。
+        /// </summary>
+        public static bool TryBuildBattleClient(EntityManager entityManager, DungeonMapPlan mapPlan)
+        {
+            if (mapPlan?.sceneData == null || !HasSpawnRegistry(entityManager))
+            {
+                return false;
+            }
+
+            RuntimeDungeonSceneData sceneData = mapPlan.sceneData;
+            GameRuntimeStateUtility.SetDungeonRuntimeMap(
+                entityManager,
+                mapPlan.layout,
+                sceneData,
+                mapPlan.dungeonFloor,
+                mapPlan.seed,
+                mapPlan.attemptCount);
+            GameObject rootObject = new(RuntimeRootName);
+            DungeonSceneRuntimeRoot runtimeRoot = rootObject.AddComponent<DungeonSceneRuntimeRoot>();
+            List<Entity> spawnedEntities = new();
+            string resourceOwnerKey = $"{RuntimeRootName}_{Guid.NewGuid():N}";
+
+            DungeonRuleTileVisualBuilder.Build(runtimeRoot, sceneData.TerrainVisual, resourceOwnerKey);
+            DungeonFogOfWarVisualBuilder.Build(runtimeRoot, mapPlan.fogData);
+            runtimeRoot.SetCameraWorldBounds(sceneData.CameraWorldBounds);
+            SpawnObstacles(entityManager, runtimeRoot, sceneData, resourceOwnerKey, spawnedEntities);
+            SpawnEnvironment(entityManager, sceneData, resourceOwnerKey, spawnedEntities, true);
+            runtimeRoot.Initialize(resourceOwnerKey, spawnedEntities);
+            return true;
         }
 
         private static void SpawnObstacles(
@@ -183,7 +286,8 @@ namespace CrystalMagic.Core
             EntityManager entityManager,
             RuntimeDungeonSceneData sceneData,
             string resourceOwnerKey,
-            List<Entity> spawnedEntities)
+            List<Entity> spawnedEntities,
+            bool createVisual = true)
         {
             List<RuntimeDungeonEnvironmentSpawnData> environmentSpawns = sceneData.EnvironmentSpawns;
             for (int i = 0; i < environmentSpawns.Count; i++)
@@ -196,7 +300,7 @@ namespace CrystalMagic.Core
                     continue;
 
                 SetOrAddLocalTransform(entityManager, entity, spawn.WorldPosition, spawn.RotationDegrees);
-                if (spawn.HideVisual)
+                if (spawn.HideVisual || !createVisual)
                 {
                     DungeonSceneVisualUtility.ApplyNonUniformScale(
                         entityManager,
@@ -224,7 +328,8 @@ namespace CrystalMagic.Core
             EntityManager entityManager,
             RuntimeDungeonSceneData sceneData,
             string resourceOwnerKey,
-            List<Entity> spawnedEntities)
+            List<Entity> spawnedEntities,
+            bool createVisual = true)
         {
             List<RuntimeDungeonSceneObjectSpawnData> sceneObjects = sceneData.SceneObjects;
             for (int i = 0; i < sceneObjects.Count; i++)
@@ -233,93 +338,69 @@ namespace CrystalMagic.Core
                 if (sceneObject == null || string.IsNullOrWhiteSpace(sceneObject.PrefabName))
                     continue;
 
-                if (!EntitySpawnRegistryUtility.TryInstantiateEnvironment(entityManager, new FixedString128Bytes(sceneObject.PrefabName), out Entity entity))
+                NetworkEntitySpawnInfo entityInfo = NetworkEntitySpawnUtility.CreateInfo(
+                    NetworkEntityPrefabType.Environment,
+                    sceneObject.PrefabName,
+                    sceneObject.WorldPosition);
+                entityInfo.hasScale = true;
+                entityInfo.scaleX = sceneObject.Size.x;
+                entityInfo.scaleY = sceneObject.Size.y;
+                entityInfo.scaleZ = sceneObject.Size.z;
+                entityInfo.hasCollider = true;
+                entityInfo.colliderEnabled = sceneObject.ApplyCollider;
+                entityInfo.colliderSizeX = sceneObject.Size.x;
+                entityInfo.colliderSizeY = sceneObject.Size.y;
+                entityInfo.colliderSizeZ = sceneObject.Size.z;
+                if (sceneObject.ObjectType == RuntimeDungeonSceneObjectType.Exit)
+                {
+                    entityInfo.hasExitData = true;
+                    entityInfo.exitRegionId = sceneObject.RegionId;
+                    entityInfo.exitTargetThemeKey = sceneObject.TargetThemeId;
+                    entityInfo.exitTargetFloor = sceneObject.TargetFloor;
+                    entityInfo.exitRequiresRoomClear = sceneObject.RequiresRoomClear;
+                    entityInfo.exitIsOpen = false;
+                }
+                else if (sceneObject.ObjectType == RuntimeDungeonSceneObjectType.Treasure)
+                {
+                    entityInfo.hasTreasureData = true;
+                    entityInfo.treasureRegionId = sceneObject.RegionId;
+                    entityInfo.treasureRandomSeed = sceneObject.RandomSeed == 0 ? 1u : sceneObject.RandomSeed;
+                    entityInfo.treasureInterestSize = sceneObject.InterestSize;
+                    entityInfo.treasureIsOpened = false;
+                    entityInfo.treasureCandidateItemIds = sceneObject.TreasureCandidateItemIds?.ToArray();
+                }
+                if (!NetworkEntitySpawnUtility.TrySpawn(entityManager, entityInfo, out Entity entity))
                     continue;
 
-                SetOrAddLocalTransform(entityManager, entity, sceneObject.WorldPosition);
-                DungeonSceneVisualUtility.ApplyEnvironmentVisual(
-                    entityManager,
-                    entity,
-                    sceneObject.PrefabName,
-                    string.Empty,
-                    resourceOwnerKey,
-                    new float3(sceneObject.Size.x, sceneObject.Size.y, sceneObject.Size.z));
-                if (sceneObject.ApplyCollider)
+                if (createVisual)
                 {
-                    ApplyBoxColliderSize(entityManager, entity, sceneObject.Size);
+                    DungeonSceneVisualUtility.ApplyEnvironmentVisual(
+                        entityManager,
+                        entity,
+                        sceneObject.PrefabName,
+                        string.Empty,
+                        resourceOwnerKey,
+                        new float3(sceneObject.Size.x, sceneObject.Size.y, sceneObject.Size.z));
                 }
-                else if (entityManager.HasComponent<PhysicsCollider>(entity))
+                else
                 {
-                    entityManager.RemoveComponent<PhysicsCollider>(entity);
+                    DungeonSceneVisualUtility.ApplyNonUniformScale(
+                        entityManager,
+                        entity,
+                        new float3(sceneObject.Size.x, sceneObject.Size.y, sceneObject.Size.z));
+                    DungeonSceneVisualUtility.HideVisual(entityManager, entity);
                 }
-                ApplySceneObjectRuntimeData(entityManager, entity, sceneObject);
                 spawnedEntities.Add(entity);
-            }
-        }
-
-        private static void ApplySceneObjectRuntimeData(
-            EntityManager entityManager,
-            Entity entity,
-            RuntimeDungeonSceneObjectSpawnData sceneObject)
-        {
-            switch (sceneObject.ObjectType)
-            {
-                case RuntimeDungeonSceneObjectType.Exit:
-                    if (entityManager.HasComponent<DungeonExitComponent>(entity))
-                    {
-                        DungeonExitComponent exit = entityManager.GetComponentData<DungeonExitComponent>(entity);
-                        exit.RegionId = sceneObject.RegionId;
-                        exit.TargetThemeId = sceneObject.TargetThemeId;
-                        exit.TargetFloor = Mathf.Max(1, sceneObject.TargetFloor);
-                        exit.RequiresRoomClear = sceneObject.RequiresRoomClear ? (byte)1 : (byte)0;
-                        exit.IsOpen = 0;
-                        entityManager.SetComponentData(entity, exit);
-                    }
-                    break;
-
-                case RuntimeDungeonSceneObjectType.Treasure:
-                    if (entityManager.HasComponent<TreasureComponent>(entity))
-                    {
-                        TreasureComponent treasure = entityManager.GetComponentData<TreasureComponent>(entity);
-                        treasure.RegionId = sceneObject.RegionId;
-                        treasure.RandomSeed = sceneObject.RandomSeed == 0 ? 1u : sceneObject.RandomSeed;
-                        treasure.InterestSize = sceneObject.InterestSize;
-                        treasure.IsOpened = 0;
-                        entityManager.SetComponentData(entity, treasure);
-                    }
-
-                    if (entityManager.HasComponent<UnitInteractableComponent>(entity))
-                    {
-                        UnitInteractableComponent interactable = entityManager.GetComponentData<UnitInteractableComponent>(entity);
-                        interactable.Data = new UnitInteractionData
-                        {
-                            Kind = InteractionKind.Treasure,
-                            DataId = sceneObject.RegionId,
-                        };
-                        interactable.IsEnabled = 1;
-                        entityManager.SetComponentData(entity, interactable);
-                    }
-
-                    if (!entityManager.HasBuffer<DungeonTreasureCandidateItemElement>(entity))
-                        entityManager.AddBuffer<DungeonTreasureCandidateItemElement>(entity);
-
-                    DynamicBuffer<DungeonTreasureCandidateItemElement> candidateBuffer = entityManager.GetBuffer<DungeonTreasureCandidateItemElement>(entity);
-                    candidateBuffer.Clear();
-                    if (sceneObject.TreasureCandidateItemIds != null)
-                    {
-                        foreach (int itemId in sceneObject.TreasureCandidateItemIds)
-                        {
-                            if (itemId >= 0)
-                                candidateBuffer.Add(new DungeonTreasureCandidateItemElement { ItemId = itemId });
-                        }
-                    }
-                    break;
             }
         }
 
         private static void SpawnPlayer(EntityManager entityManager, RuntimeDungeonSceneData sceneData, List<Entity> spawnedEntities)
         {
-            if (!TryInstantiateUnit(entityManager, PlayerPrefabName, sceneData.PlayerSpawnWorldPosition, out Entity player))
+            NetworkEntitySpawnInfo entityInfo = NetworkEntitySpawnUtility.CreateInfo(
+                NetworkEntityPrefabType.Unit,
+                PlayerPrefabName,
+                sceneData.PlayerSpawnWorldPosition);
+            if (!NetworkEntitySpawnUtility.TrySpawn(entityManager, entityInfo, out Entity player))
             {
                 Debug.LogError("[DungeonSceneRuntimeBuilder] Failed to spawn PlayerDungeon.");
                 return;
@@ -340,15 +421,18 @@ namespace CrystalMagic.Core
                 if (spawn == null || string.IsNullOrWhiteSpace(spawn.PrefabName))
                     continue;
 
-                if (!TryInstantiateUnit(entityManager, spawn.PrefabName, spawn.WorldPosition, out Entity monster))
-                    continue;
-
-                if (entityManager.HasComponent<DungeonMonsterSpawnComponent>(monster))
-                    entityManager.SetComponentData(monster, new DungeonMonsterSpawnComponent { SaveId = i + 1, RegionId = spawn.RegionId, SquadId = spawn.SquadId, IsBoss = spawn.IsBoss ? (byte)1 : (byte)0 });
-                else
-                    entityManager.AddComponentData(monster, new DungeonMonsterSpawnComponent { SaveId = i + 1, RegionId = spawn.RegionId, SquadId = spawn.SquadId, IsBoss = spawn.IsBoss ? (byte)1 : (byte)0 });
-
+                NetworkEntitySpawnInfo entityInfo = NetworkEntitySpawnUtility.CreateInfo(
+                    NetworkEntityPrefabType.Unit,
+                    spawn.PrefabName,
+                    spawn.WorldPosition);
                 spawn.SaveId = i + 1;
+                entityInfo.hasMonsterSpawnData = true;
+                entityInfo.monsterSaveId = spawn.SaveId;
+                entityInfo.monsterRegionId = spawn.RegionId;
+                entityInfo.monsterSquadId = spawn.SquadId;
+                entityInfo.monsterIsBoss = spawn.IsBoss;
+                if (!NetworkEntitySpawnUtility.TrySpawn(entityManager, entityInfo, out Entity monster))
+                    continue;
 
                 spawnedEntities.Add(monster);
             }
@@ -425,15 +509,6 @@ namespace CrystalMagic.Core
             }
         }
 
-        private static bool TryInstantiateUnit(EntityManager entityManager, string prefabName, Vector3 worldPosition, out Entity entity)
-        {
-            if (!EntitySpawnRegistryUtility.TryInstantiateUnit(entityManager, new FixedString128Bytes(prefabName), out entity))
-                return false;
-
-            SetOrAddLocalTransform(entityManager, entity, worldPosition);
-            return true;
-        }
-
         private static void SetOrAddLocalTransform(
             EntityManager entityManager,
             Entity entity,
@@ -492,7 +567,16 @@ namespace CrystalMagic.Core
             return !query.IsEmptyIgnoreFilter;
         }
 
-        private static void DestroyExistingRoot()
+        private static void DestroyRuntimeOwnedEntities(EntityManager entityManager)
+        {
+            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<DungeonRuntimeOwnedEntity>());
+            if (!query.IsEmptyIgnoreFilter)
+            {
+                entityManager.DestroyEntity(query);
+            }
+        }
+
+        public static void DestroyCurrentDungeonScene()
         {
             GameObject existing = GameObject.Find(RuntimeRootName);
             if (existing != null)

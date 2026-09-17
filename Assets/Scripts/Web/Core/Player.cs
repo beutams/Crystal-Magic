@@ -4,6 +4,7 @@ namespace Server
     {
         public ulong accountId;
         public string username;
+        public string saveGuid;
 
         public ulong roomId;
         public bool ready;

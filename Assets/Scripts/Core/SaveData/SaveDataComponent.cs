@@ -34,8 +34,12 @@ namespace CrystalMagic.Core {
 
         #region Fields
         private int _currentSaveIndex;
+        private string _currentSaveGuid;
         private GlobalData _globalData;
         private SaveVariableData _variables;
+
+        public int CurrentSaveIndex => _currentSaveIndex;
+        public string CurrentSaveGuid => _currentSaveGuid;
         #endregion
 
         #region Events
@@ -51,6 +55,7 @@ namespace CrystalMagic.Core {
             base.Initialize();
             EnsureSaveFolderExists();
             _currentSaveIndex = -1;
+            _currentSaveGuid = null;
             _globalData = new GlobalData();
             _variables = new SaveVariableData();
             Debug.Log("[SaveDataComponent] Initialized");
@@ -102,6 +107,9 @@ namespace CrystalMagic.Core {
             try
             {
                 data.SaveIndex = index;
+                data.SaveGuid = index == _currentSaveIndex && Guid.TryParse(_currentSaveGuid, out Guid currentSaveGuid)
+                    ? currentSaveGuid.ToString("N")
+                    : Guid.NewGuid().ToString("N");
                 EnsureSaveDataValid(data);
 
                 string json = JsonUtility.ToJson(data, true);
@@ -112,6 +120,7 @@ namespace CrystalMagic.Core {
                 CreateBackup(filePath);
 
                 _currentSaveIndex = index;
+                _currentSaveGuid = data.SaveGuid;
 
                 OnSaveSuccess?.Invoke(data);
                 Debug.Log($"[SaveDataComponent] Game saved to slot index: {index}");
@@ -151,6 +160,11 @@ namespace CrystalMagic.Core {
 
         public bool LoadFromSlot(int index, out LoadGameContext context)
         {
+            return LoadFromSlot(index, null, out context);
+        }
+
+        public bool LoadFromSlot(int index, string expectedSaveGuid, out LoadGameContext context)
+        {
             context = null;
             if (index < 0)
             {
@@ -178,15 +192,32 @@ namespace CrystalMagic.Core {
                     return false;
                 }
 
+                string storedSaveGuid = data.SaveGuid;
                 EnsureSaveDataValid(data);
+                if (!string.Equals(storedSaveGuid, data.SaveGuid, StringComparison.Ordinal))
+                {
+                    System.IO.File.WriteAllText(filePath, JsonUtility.ToJson(data, true));
+                    CreateBackup(filePath);
+                }
+
+                if (!string.IsNullOrWhiteSpace(expectedSaveGuid) &&
+                    (!Guid.TryParse(expectedSaveGuid, out Guid expectedGuid) ||
+                     !string.Equals(data.SaveGuid, expectedGuid.ToString("N"), StringComparison.Ordinal)))
+                {
+                    OnLoadFailed?.Invoke($"Load failed: save identity mismatch for slot {index}.");
+                    Debug.LogError($"[SaveDataComponent] Save identity mismatch for slot index: {index}");
+                    return false;
+                }
 
                 _currentSaveIndex = data.SaveIndex;
+                _currentSaveGuid = data.SaveGuid;
                 _globalData = data.Global;
                 _variables = data.Variables;
                 GameRuntimeStateUtility.ImportPersistentData(data);
                 context = new LoadGameContext
                 {
                     SaveIndex = _currentSaveIndex,
+                    SaveGuid = _currentSaveGuid,
                     Location = data.Location,
                     Character = data.Character,
                     Player = data.Player,
@@ -308,7 +339,10 @@ namespace CrystalMagic.Core {
         #region Data Access
         public SaveData GetCurrentSaveData()
         {
-            return GameRuntimeStateUtility.Export(_currentSaveIndex, _globalData, _variables);
+            SaveData data = GameRuntimeStateUtility.Export(_currentSaveIndex, _globalData, _variables);
+            if (data != null)
+                data.SaveGuid = _currentSaveGuid;
+            return data;
         }
 
         public GlobalData GetGlobalData()
@@ -511,6 +545,7 @@ namespace CrystalMagic.Core {
             return new LoadGameContext
             {
                 SaveIndex = GetCurrentSaveIndex(),
+                SaveGuid = _currentSaveGuid,
                 Character = GetCharacterData(),
                 DungeonRun = areaType == SaveAreaType.Dungeon ? GetDungeonRunData() : null,
                 Location = new SaveLocationData
@@ -605,6 +640,7 @@ namespace CrystalMagic.Core {
                 System.IO.File.WriteAllText(filePath, JsonUtility.ToJson(data, true));
                 CreateBackup(filePath);
                 _currentSaveIndex = index;
+                _currentSaveGuid = data.SaveGuid;
                 OnSaveSuccess?.Invoke(data);
                 return true;
             }
@@ -647,6 +683,21 @@ namespace CrystalMagic.Core {
         private void EnsureSaveDataValid(SaveData data, bool logRepairs = true)
         {
             List<string> repairedPaths = logRepairs ? new List<string>() : null;
+
+            if (!Guid.TryParse(data.SaveGuid, out Guid saveGuid))
+            {
+                data.SaveGuid = Guid.NewGuid().ToString("N");
+                repairedPaths?.Add("SaveGuid");
+            }
+            else
+            {
+                string normalizedSaveGuid = saveGuid.ToString("N");
+                if (!string.Equals(data.SaveGuid, normalizedSaveGuid, StringComparison.Ordinal))
+                {
+                    data.SaveGuid = normalizedSaveGuid;
+                    repairedPaths?.Add("SaveGuid");
+                }
+            }
 
             if (data.Global == null)
             {
@@ -974,6 +1025,7 @@ namespace CrystalMagic.Core {
     public class LoadGameContext
     {
         public int SaveIndex;
+        public string SaveGuid;
         public SaveLocationData Location;
         public CharacterData Character;
         public UnitRuntimeData Player;
