@@ -5,7 +5,7 @@
  *
  * Modified for Crystal Magic: the internal KD-tree, static-obstacle solver,
  * parallel simulation loop, and position integration were removed. Agent
- * neighbors are supplied by the game's UnitQueryTree and ECS remains the
+ * neighbors are supplied by the game's UnitQueryGrid and ECS remains the
  * authoritative owner of positions and velocities.
  */
 

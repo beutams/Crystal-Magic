@@ -29,7 +29,7 @@ namespace CrystalMagic.Game.Skill.Effects
 
             float2 size = math.max(float2.zero, new float2(Data.Size.x, Data.Size.y));
             if (math.any(size <= 0f) ||
-                !UnitQueryUtility.TryGetTree(context.EntityManager, UnitQueryTreeKind.Unit, out UnitQueryTree unitTree))
+                !UnitQueryUtility.TryGetGrid(context.EntityManager, UnitQueryGridKind.Unit, out UnitQueryGrid unitGrid))
             {
                 return;
             }
@@ -42,7 +42,7 @@ namespace CrystalMagic.Game.Skill.Effects
                 Data.CenterOffset.x * horizontalFacingSign,
                 Data.CenterOffset.y,
                 Data.CenterOffset.z);
-            unitTree.QueryAxisAlignedRect(center, size, _hits);
+            unitGrid.QueryAxisAlignedRect(center, size, _hits);
 
             for (int i = 0; i < _hits.Count; i++)
             {
@@ -61,9 +61,8 @@ namespace CrystalMagic.Game.Skill.Effects
         {
             if (entityManager.HasComponent<UnitAnimationComponent>(entity))
             {
-                UnitAnimationComponent animation = entityManager.GetComponentObject<UnitAnimationComponent>(entity);
-                if (animation != null)
-                    return animation.LastTwoDirectionFacing == UnitAnimationDirection.Left ? -1f : 1f;
+                UnitAnimationComponent animation = entityManager.GetComponentData<UnitAnimationComponent>(entity);
+                return animation.LastTwoDirectionFacing == UnitAnimationDirection.Left ? -1f : 1f;
             }
 
             return UnitFacingUtility.TryGetFacing(entityManager, entity, out float2 facing) && facing.x < -0.0001f

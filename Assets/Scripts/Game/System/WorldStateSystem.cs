@@ -2,7 +2,8 @@ using CrystalMagic.Core;
 using Unity.Entities;
 
 [UpdateInGroup(typeof(UnitInitializationSystemGroup))]
-[UpdateBefore(typeof(UnitSourceInitializationSystem))]
+[UpdateBefore(typeof(BehaviorTreeInitSystem))]
+[UpdateBefore(typeof(StateScriptInitSystem))]
 public partial class WorldStateSystem : SystemBase
 {
     private Entity _worldEntity;

@@ -1,70 +1,53 @@
-using System;
 using Unity.Entities;
 
-public sealed class GameInteractionSource : UnitComponentSource
+[UnitSourceProvider(typeof(InteractionCandidateComponent), isGlobal: true)]
+public static class GameInteractionSource
 {
-    private static readonly ComparatorParameterDefinition[] s_noParameters = Array.Empty<ComparatorParameterDefinition>();
-
-    public override Type ComponentType => typeof(InteractionCandidateComponent);
-    public override bool IsGlobal => true;
-
-    public override void Describe(UnitSourceSchemaBuilder schema)
+    [UnitSourceGet(0, "game.interaction.hasCandidate", UnitValueCategory.Bool)]
+    [UnitSourceGet(1, "game.interaction.candidateKind", UnitValueCategory.Number)]
+    [UnitSourceGet(2, "game.interaction.candidateTarget", UnitValueCategory.Entity)]
+    [UnitSourceGet(3, "world.interaction.isInteracting", UnitValueCategory.Bool)]
+    public static bool TryGet(
+        int operation,
+        EntityManager entityManager,
+        Entity entity,
+        in UnitSourceArguments arguments,
+        out UnitSourceValue result)
     {
-        schema.AddGet("game.interaction.hasCandidate", ComponentType, UnitValueCategory.Bool, s_noParameters);
-        schema.AddGet("game.interaction.candidateKind", ComponentType, UnitValueCategory.Number, s_noParameters);
-        schema.AddGet("game.interaction.candidateTarget", ComponentType, UnitValueCategory.Entity, s_noParameters);
-        schema.AddGet("world.interaction.isInteracting", ComponentType, UnitValueCategory.Bool, s_noParameters);
-        schema.AddInteractionGet("game.interaction.candidate", ComponentType);
-    }
-
-    public override void Bind(in UnitSourceBindingContext context, UnitSourceAccessTable table)
-    {
-        EntityManager entityManager = context.EntityManager;
-        EntityQuery query = entityManager.CreateEntityQuery(Unity.Entities.ComponentType.ReadOnly<InteractionCandidateComponent>());
-        table.AddGet(new UnitSourceGet(
-            "game.interaction.hasCandidate",
-            UnitValueCategory.Bool,
-            s_noParameters,
-            _ => UnitValue.FromBool(TryGetCandidate(query, out InteractionCandidateComponent candidate) &&
-                                     candidate.IsInteracting == 0 && candidate.Target != Entity.Null && candidate.Data.IsValid)));
-        table.AddGet(new UnitSourceGet(
-            "game.interaction.candidateKind",
-            UnitValueCategory.Number,
-            s_noParameters,
-            _ => UnitValue.FromInt(TryGetCandidate(query, out InteractionCandidateComponent candidate) && candidate.IsInteracting == 0
+        bool hasCandidate = TryGetCandidate(entityManager, out InteractionCandidateComponent candidate);
+        result = operation switch
+        {
+            0 => UnitSourceValue.FromBool(hasCandidate && candidate.IsInteracting == 0 &&
+                                          candidate.Target != Entity.Null && candidate.Data.IsValid),
+            1 => UnitSourceValue.FromInt(hasCandidate && candidate.IsInteracting == 0
                 ? (int)candidate.Data.Kind
-                : (int)InteractionKind.None)));
-        table.AddGet(new UnitSourceGet(
-            "game.interaction.candidateTarget",
-            UnitValueCategory.Entity,
-            s_noParameters,
-            _ => UnitValue.FromEntity(TryGetCandidate(query, out InteractionCandidateComponent candidate) && candidate.IsInteracting == 0
+                : (int)InteractionKind.None),
+            2 => UnitSourceValue.FromEntity(hasCandidate && candidate.IsInteracting == 0
                 ? candidate.Target
-                : Entity.Null)));
-        table.AddGet(new UnitSourceGet(
-            "world.interaction.isInteracting",
-            UnitValueCategory.Bool,
-            s_noParameters,
-            _ => UnitValue.FromBool(TryGetCandidate(query, out InteractionCandidateComponent candidate) && candidate.IsInteracting != 0)));
-        table.AddInteractionGet(new InteractionRequestSourceGet(
-            "game.interaction.candidate",
-            (out InteractionRequestSnapshot request) =>
-            {
-                request = default;
-                if (!TryGetCandidate(query, out InteractionCandidateComponent candidate) || candidate.IsInteracting != 0)
-                    return false;
-
-                request = new InteractionRequestSnapshot
-                {
-                    Target = candidate.Target,
-                    Data = candidate.Data,
-                };
-                return request.IsValid;
-            }));
+                : Entity.Null),
+            3 => UnitSourceValue.FromBool(hasCandidate && candidate.IsInteracting != 0),
+            _ => UnitSourceValue.None,
+        };
+        return result.Type != UnitValueType.None;
     }
 
-    private static bool TryGetCandidate(EntityQuery query, out InteractionCandidateComponent candidate)
+    public static bool TryGetInteraction(EntityManager entityManager, out InteractionRequestSnapshot request)
     {
+        request = default;
+        if (!TryGetCandidate(entityManager, out InteractionCandidateComponent candidate) || candidate.IsInteracting != 0)
+            return false;
+
+        request = new InteractionRequestSnapshot
+        {
+            Target = candidate.Target,
+            Data = candidate.Data,
+        };
+        return request.IsValid;
+    }
+
+    private static bool TryGetCandidate(EntityManager entityManager, out InteractionCandidateComponent candidate)
+    {
+        EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<InteractionCandidateComponent>());
         if (query.IsEmptyIgnoreFilter)
         {
             candidate = default;

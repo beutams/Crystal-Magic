@@ -8,21 +8,13 @@ using UnityEngine;
 // Mirrors the player skill configuration for State Script value queries.
 public sealed class PlayerSkillRuntimeDataComponent : IComponentData
 {
-    private int _configurationSignature = int.MinValue;
-
     public int CurrentChainId;
     public List<PlayerSkillChainData> Chains = new();
     public Dictionary<int, PlayerSkillInfo> Skills = new();
 
-    public void Synchronize(SkillCData skillConfig, DataComponent dataComponent, int currentChainId)
+    public void Rebuild(SkillCData skillConfig, DataComponent dataComponent, int currentChainId)
     {
         CurrentChainId = currentChainId;
-
-        int signature = CalculateConfigurationSignature(skillConfig);
-        if (signature == _configurationSignature && Skills.Count > 0)
-            return;
-
-        _configurationSignature = signature;
         Chains.Clear();
         Skills.Clear();
 
@@ -92,31 +84,6 @@ public sealed class PlayerSkillRuntimeDataComponent : IComponentData
         return Skills.TryGetValue(skillId, out skill);
     }
 
-    private static int CalculateConfigurationSignature(SkillCData skillConfig)
-    {
-        unchecked
-        {
-            int signature = 17;
-            SkillChainData[] sourceChains = skillConfig?.Chains;
-            int chainCount = sourceChains?.Length ?? 0;
-            signature = signature * 31 + chainCount;
-            for (int chainIndex = 0; chainIndex < chainCount; chainIndex++)
-            {
-                List<SkillChainSlotData> slots = sourceChains[chainIndex]?.Slots;
-                int slotCount = slots?.Count ?? 0;
-                signature = signature * 31 + slotCount;
-                for (int slotIndex = 0; slotIndex < slotCount; slotIndex++)
-                {
-                    SkillChainSlotData slot = slots[slotIndex];
-                    signature = signature * 31 + (slot?.SkillStoneItemId ?? -1);
-                    signature = signature * 31 + (slot?.SkillAdditionId ?? -1);
-                }
-            }
-
-            return signature;
-        }
-    }
-
     private static int ResolveSkillId(DataComponent dataComponent, int skillStoneItemId)
     {
         if (dataComponent == null || skillStoneItemId < 0)
@@ -127,6 +94,85 @@ public sealed class PlayerSkillRuntimeDataComponent : IComponentData
             return -1;
 
         return dataComponent.Get<SkillData>(itemData.ExtraId) != null ? itemData.ExtraId : -1;
+    }
+}
+
+public static class PlayerSkillRuntimeDataUtility
+{
+    public static void Initialize(EntityManager entityManager, Entity player, CharacterData characterData)
+    {
+        if (!entityManager.Exists(player) || characterData == null)
+            return;
+
+        if (!entityManager.HasComponent<PlayerSkillSelectionComponent>(player))
+            entityManager.AddComponentData(player, new PlayerSkillSelectionComponent());
+
+        if (!entityManager.HasComponent<PlayerPropCooldownComponent>(player))
+            entityManager.AddComponentData(player, new PlayerPropCooldownComponent());
+
+        Rebuild(entityManager, player, characterData);
+    }
+
+    public static void Rebuild(EntityManager entityManager, Entity player)
+    {
+        if (!GameRuntimeStateUtility.TryGetPlayerCharacterData(entityManager, player, out CharacterData characterData))
+            return;
+
+        if (!entityManager.HasComponent<PlayerSkillSelectionComponent>(player) ||
+            !entityManager.HasComponent<PlayerPropCooldownComponent>(player))
+        {
+            Initialize(entityManager, player, characterData);
+            return;
+        }
+
+        Rebuild(entityManager, player, characterData);
+    }
+
+    public static void SetCurrentChain(EntityManager entityManager, Entity player, int currentChainId)
+    {
+        if (!entityManager.Exists(player) ||
+            !entityManager.HasComponent<PlayerSkillRuntimeDataComponent>(player))
+        {
+            return;
+        }
+
+        PlayerSkillRuntimeDataComponent runtimeData =
+            entityManager.GetComponentObject<PlayerSkillRuntimeDataComponent>(player);
+        if (runtimeData != null)
+            runtimeData.CurrentChainId = currentChainId;
+    }
+
+    private static void Rebuild(EntityManager entityManager, Entity player, CharacterData characterData)
+    {
+        PlayerSkillSelectionComponent selection =
+            entityManager.GetComponentData<PlayerSkillSelectionComponent>(player);
+        int chainCount = characterData.Skills?.Chains?.Length ?? 0;
+        int maxIndex = chainCount > 0 ? chainCount - 1 : 0;
+        if (selection.CurrentChainIndex < 0 || selection.CurrentChainIndex > maxIndex)
+        {
+            selection.CurrentChainIndex = 0;
+            selection.NetworkDirty = 1;
+            entityManager.SetComponentData(player, selection);
+        }
+
+        PlayerSkillRuntimeDataComponent runtimeData;
+        if (entityManager.HasComponent<PlayerSkillRuntimeDataComponent>(player))
+        {
+            runtimeData = entityManager.GetComponentObject<PlayerSkillRuntimeDataComponent>(player);
+            if (runtimeData == null)
+            {
+                entityManager.RemoveComponent<PlayerSkillRuntimeDataComponent>(player);
+                runtimeData = new PlayerSkillRuntimeDataComponent();
+                entityManager.AddComponentObject(player, runtimeData);
+            }
+        }
+        else
+        {
+            runtimeData = new PlayerSkillRuntimeDataComponent();
+            entityManager.AddComponentObject(player, runtimeData);
+        }
+
+        runtimeData.Rebuild(characterData.Skills, DataComponent.Instance, selection.CurrentChainIndex);
     }
 }
 
@@ -173,269 +219,192 @@ public sealed class PlayerSkillInfo
     public SkillInputType InputType;
 }
 
-public sealed class PlayerSkillRuntimeDataSource : UnitComponentSource
+[UnitSourceProvider(typeof(PlayerSkillRuntimeDataComponent), typeof(PlayerCurrentSkillAuthoring))]
+public static class PlayerSkillRuntimeDataSource
 {
-    private static readonly ComparatorParameterDefinition[] s_noParameters = Array.Empty<ComparatorParameterDefinition>();
-    private static readonly ComparatorParameterDefinition[] s_chainIdParameter =
-    {
-        new ComparatorParameterDefinition("Chain ID", UnitValueCategory.Number),
-    };
-    private static readonly ComparatorParameterDefinition[] s_chainSlotParameters =
-    {
-        new ComparatorParameterDefinition("Chain ID", UnitValueCategory.Number),
-        new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number),
-    };
-    private static readonly ComparatorParameterDefinition[] s_currentSkillSlotParameter =
-    {
-        new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number),
-    };
-    private static readonly ComparatorParameterDefinition[] s_skillIdParameter =
-    {
-        new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number),
-    };
-
-    public override Type ComponentType => typeof(PlayerSkillRuntimeDataComponent);
-    public override bool IsGlobal => false;
-
-    public override void Describe(UnitSourceSchemaBuilder schema)
-    {
-        schema.AddGet("player.skill.getCurrentChainId", ComponentType, UnitValueCategory.Number, s_noParameters);
-        schema.AddGet("player.skill.isCurrentChainEmpty", ComponentType, UnitValueCategory.Bool, s_noParameters);
-        schema.AddGet("player.skill.getCurrentChainLength", ComponentType, UnitValueCategory.Number, s_noParameters);
-        schema.AddGet("player.skill.getCurrentSkillId", ComponentType, UnitValueCategory.Number, s_currentSkillSlotParameter);
-        schema.AddGet("player.skill.getCurrentSkillAdditionId", ComponentType, UnitValueCategory.Number, s_currentSkillSlotParameter);
-        schema.AddGet("player.skill.hasCurrentSkill", ComponentType, UnitValueCategory.Bool, s_currentSkillSlotParameter);
-        schema.AddGet("player.skill.getCurrentSkillMpCost", ComponentType, UnitValueCategory.Number, s_currentSkillSlotParameter);
-        schema.AddGet("player.skill.getCurrentSkillChantDuration", ComponentType, UnitValueCategory.Number, s_currentSkillSlotParameter);
-        schema.AddGet("player.skill.getCurrentSkillRuntimeType", ComponentType, UnitValueCategory.String, s_currentSkillSlotParameter);
-        schema.AddGet("player.skill.isChainEmpty", ComponentType, UnitValueCategory.Bool, s_chainIdParameter);
-        schema.AddGet("player.skill.getChainLength", ComponentType, UnitValueCategory.Number, s_chainIdParameter);
-        schema.AddGet("player.skill.getChainSkillId", ComponentType, UnitValueCategory.Number, s_chainSlotParameters);
-        schema.AddGet("player.skill.getChainSkillAdditionId", ComponentType, UnitValueCategory.Number, s_chainSlotParameters);
-        schema.AddGet("player.skill.hasSkill", ComponentType, UnitValueCategory.Bool, s_skillIdParameter);
-        schema.AddGet("player.skill.getSkillMpCost", ComponentType, UnitValueCategory.Number, s_skillIdParameter);
-        schema.AddGet("player.skill.getSkillChantDuration", ComponentType, UnitValueCategory.Number, s_skillIdParameter);
-        schema.AddGet("player.skill.getSkillCastingMoveMultiplier", ComponentType, UnitValueCategory.Number, s_skillIdParameter);
-        schema.AddGet("player.skill.getSkillRuntimeType", ComponentType, UnitValueCategory.String, s_skillIdParameter);
-        schema.AddGet("player.skill.getInputType", ComponentType, UnitValueCategory.Number, s_skillIdParameter);
-    }
-
-    public override void Bind(in UnitSourceBindingContext context, UnitSourceAccessTable table)
-    {
-        EntityManager entityManager = context.EntityManager;
-        Entity playerEntity = context.Entity;
-        table.AddGet(new UnitSourceGet(
-            "player.skill.getCurrentChainId",
-            UnitValueCategory.Number,
-            s_noParameters,
-            _ => TryGetData(entityManager, playerEntity, out PlayerSkillRuntimeDataComponent data)
-                ? UnitValue.FromInt(data.CurrentChainId)
-                : UnitValue.None));
-        table.AddGet(new UnitSourceGet(
-            "player.skill.isCurrentChainEmpty",
-            UnitValueCategory.Bool,
-            s_noParameters,
-            _ => TryGetData(entityManager, playerEntity, out PlayerSkillRuntimeDataComponent data)
-                ? UnitValue.FromBool(data.IsChainEmpty(data.CurrentChainId))
-                : UnitValue.None));
-        table.AddGet(new UnitSourceGet(
-            "player.skill.getCurrentChainLength",
-            UnitValueCategory.Number,
-            s_noParameters,
-            _ => TryGetData(entityManager, playerEntity, out PlayerSkillRuntimeDataComponent data) &&
-                 data.TryGetChainLength(data.CurrentChainId, out int length)
-                ? UnitValue.FromInt(length)
-                : UnitValue.None));
-        AddCurrentChainSlotGet(table, entityManager, playerEntity, "player.skill.getCurrentSkillId",
-            slot => UnitValue.FromInt(slot.SkillId));
-        AddCurrentChainSlotGet(table, entityManager, playerEntity, "player.skill.getCurrentSkillAdditionId",
-            slot => UnitValue.FromInt(slot.SkillAdditionId));
-        table.AddGet(new UnitSourceGet(
-            "player.skill.hasCurrentSkill",
-            UnitValueCategory.Bool,
-            s_currentSkillSlotParameter,
-            input => TryGetCurrentSkill(entityManager, playerEntity, input, out _)
-                ? UnitValue.FromBool(true)
-                : UnitValue.FromBool(false)));
-        AddCurrentSkillGet(table, entityManager, playerEntity, "player.skill.getCurrentSkillMpCost", UnitValueCategory.Number,
-            skill => UnitValue.FromInt(skill.MpCost));
-        AddCurrentSkillGet(table, entityManager, playerEntity, "player.skill.getCurrentSkillChantDuration", UnitValueCategory.Number,
-            skill => UnitValue.FromFloat(skill.ChantDuration));
-        AddCurrentSkillGet(table, entityManager, playerEntity, "player.skill.getCurrentSkillRuntimeType", UnitValueCategory.String,
-            skill => UnitValue.FromString(skill.RuntimeType));
-        table.AddGet(new UnitSourceGet(
-            "player.skill.isChainEmpty",
-            UnitValueCategory.Bool,
-            s_chainIdParameter,
-            input => TryGetData(entityManager, playerEntity, out PlayerSkillRuntimeDataComponent data) &&
-                     TryGetInt(input[0], out int chainId)
-                ? UnitValue.FromBool(data.IsChainEmpty(chainId))
-                : UnitValue.None));
-        table.AddGet(new UnitSourceGet(
-            "player.skill.getChainLength",
-            UnitValueCategory.Number,
-            s_chainIdParameter,
-            input => TryGetData(entityManager, playerEntity, out PlayerSkillRuntimeDataComponent data) &&
-                     TryGetInt(input[0], out int chainId) &&
-                     data.TryGetChainLength(chainId, out int length)
-                ? UnitValue.FromInt(length)
-                : UnitValue.None));
-        table.AddGet(new UnitSourceGet(
-            "player.skill.getChainSkillId",
-            UnitValueCategory.Number,
-            s_chainSlotParameters,
-            input => TryGetChainSlot(entityManager, playerEntity, input, out PlayerSkillChainSlotData slot)
-                ? UnitValue.FromInt(slot.SkillId)
-                : UnitValue.None));
-        table.AddGet(new UnitSourceGet(
-            "player.skill.getChainSkillAdditionId",
-            UnitValueCategory.Number,
-            s_chainSlotParameters,
-            input => TryGetChainSlot(entityManager, playerEntity, input, out PlayerSkillChainSlotData slot)
-                ? UnitValue.FromInt(slot.SkillAdditionId)
-                : UnitValue.None));
-        table.AddGet(new UnitSourceGet(
-            "player.skill.hasSkill",
-            UnitValueCategory.Bool,
-            s_skillIdParameter,
-            input => TryGetSkill(entityManager, playerEntity, input[0], out _)
-                ? UnitValue.FromBool(true)
-                : UnitValue.FromBool(false)));
-        AddSkillNumberGet(table, entityManager, playerEntity, "player.skill.getSkillMpCost", s_skillIdParameter,
-            skill => UnitValue.FromInt(skill.MpCost));
-        AddSkillNumberGet(table, entityManager, playerEntity, "player.skill.getSkillChantDuration", s_skillIdParameter,
-            skill => UnitValue.FromFloat(skill.ChantDuration));
-        AddSkillNumberGet(table, entityManager, playerEntity, "player.skill.getSkillCastingMoveMultiplier", s_skillIdParameter,
-            skill => UnitValue.FromFloat(skill.CastingMoveMultiplier));
-        table.AddGet(new UnitSourceGet(
-            "player.skill.getSkillRuntimeType",
-            UnitValueCategory.String,
-            s_skillIdParameter,
-            input => TryGetSkill(entityManager, playerEntity, input[0], out PlayerSkillInfo skill)
-                ? UnitValue.FromString(skill.RuntimeType)
-                : UnitValue.None));
-        AddSkillNumberGet(table, entityManager, playerEntity, "player.skill.getInputType", s_skillIdParameter,
-            skill => UnitValue.FromInt((int)skill.InputType));
-    }
-
-    private static void AddSkillNumberGet(
-        UnitSourceAccessTable table,
+    [UnitSourceGet(0, "player.skill.getCurrentChainId", UnitValueCategory.Number)]
+    [UnitSourceGet(1, "player.skill.isCurrentChainEmpty", UnitValueCategory.Bool)]
+    [UnitSourceGet(2, "player.skill.getCurrentChainLength", UnitValueCategory.Number)]
+    [UnitSourceGet(3, "player.skill.getCurrentSkillId", UnitValueCategory.Number, UnitValueCategory.Number, ParameterNames = new[] { "Slot Index" })]
+    [UnitSourceGet(4, "player.skill.getCurrentSkillAdditionId", UnitValueCategory.Number, UnitValueCategory.Number, ParameterNames = new[] { "Slot Index" })]
+    [UnitSourceGet(5, "player.skill.hasCurrentSkillAt", UnitValueCategory.Bool, UnitValueCategory.Number, ParameterNames = new[] { "Slot Index" })]
+    [UnitSourceGet(6, "player.skill.getCurrentSkillMpCost", UnitValueCategory.Number, UnitValueCategory.Number, ParameterNames = new[] { "Slot Index" })]
+    [UnitSourceGet(7, "player.skill.getCurrentSkillChantDuration", UnitValueCategory.Number, UnitValueCategory.Number, ParameterNames = new[] { "Slot Index" })]
+    [UnitSourceGet(8, "player.skill.getCurrentSkillRuntimeType", UnitValueCategory.String, UnitValueCategory.Number, ParameterNames = new[] { "Slot Index" })]
+    [UnitSourceGet(9, "player.skill.isChainEmpty", UnitValueCategory.Bool, UnitValueCategory.Number, ParameterNames = new[] { "Chain ID" })]
+    [UnitSourceGet(10, "player.skill.getChainLength", UnitValueCategory.Number, UnitValueCategory.Number, ParameterNames = new[] { "Chain ID" })]
+    [UnitSourceGet(11, "player.skill.getChainSkillId", UnitValueCategory.Number, UnitValueCategory.Number, UnitValueCategory.Number, ParameterNames = new[] { "Chain ID", "Slot Index" })]
+    [UnitSourceGet(12, "player.skill.getChainSkillAdditionId", UnitValueCategory.Number, UnitValueCategory.Number, UnitValueCategory.Number, ParameterNames = new[] { "Chain ID", "Slot Index" })]
+    [UnitSourceGet(13, "player.skill.hasSkill", UnitValueCategory.Bool, UnitValueCategory.Number, ParameterNames = new[] { "Skill ID" })]
+    [UnitSourceGet(14, "player.skill.getSkillMpCost", UnitValueCategory.Number, UnitValueCategory.Number, ParameterNames = new[] { "Skill ID" })]
+    [UnitSourceGet(15, "player.skill.getSkillChantDuration", UnitValueCategory.Number, UnitValueCategory.Number, ParameterNames = new[] { "Skill ID" })]
+    [UnitSourceGet(16, "player.skill.getSkillCastingMoveMultiplier", UnitValueCategory.Number, UnitValueCategory.Number, ParameterNames = new[] { "Skill ID" })]
+    [UnitSourceGet(17, "player.skill.getSkillRuntimeType", UnitValueCategory.String, UnitValueCategory.Number, ParameterNames = new[] { "Skill ID" })]
+    [UnitSourceGet(18, "player.skill.getInputType", UnitValueCategory.Number, UnitValueCategory.Number, ParameterNames = new[] { "Skill ID" })]
+    public static bool TryGet(
+        int operation,
         EntityManager entityManager,
-        Entity playerEntity,
-        string key,
-        IReadOnlyList<ComparatorParameterDefinition> parameters,
-        Func<PlayerSkillInfo, UnitValue> getter)
+        Entity entity,
+        in UnitSourceArguments arguments,
+        out UnitSourceValue result)
     {
-        table.AddGet(new UnitSourceGet(
-            key,
-            UnitValueCategory.Number,
-            parameters,
-            input => TryGetSkill(entityManager, playerEntity, input[0], out PlayerSkillInfo skill)
-                ? getter(skill)
-                : UnitValue.None));
-    }
-
-    private static void AddCurrentChainSlotGet(
-        UnitSourceAccessTable table,
-        EntityManager entityManager,
-        Entity playerEntity,
-        string key,
-        Func<PlayerSkillChainSlotData, UnitValue> getter)
-    {
-        table.AddGet(new UnitSourceGet(
-            key,
-            UnitValueCategory.Number,
-            s_currentSkillSlotParameter,
-            input => TryGetCurrentChainSlot(entityManager, playerEntity, input, out PlayerSkillChainSlotData slot)
-                ? getter(slot)
-                : UnitValue.None));
-    }
-
-    private static void AddCurrentSkillGet(
-        UnitSourceAccessTable table,
-        EntityManager entityManager,
-        Entity playerEntity,
-        string key,
-        UnitValueCategory category,
-        Func<PlayerSkillInfo, UnitValue> getter)
-    {
-        table.AddGet(new UnitSourceGet(
-            key,
-            category,
-            s_currentSkillSlotParameter,
-            input => TryGetCurrentSkill(entityManager, playerEntity, input, out PlayerSkillInfo skill)
-                ? getter(skill)
-                : UnitValue.None));
-    }
-
-    private static bool TryGetChainSlot(
-        EntityManager entityManager,
-        Entity playerEntity,
-        UnitValue[] input,
-        out PlayerSkillChainSlotData slot)
-    {
-        slot = default;
-        return input.Length == 2 &&
-               TryGetData(entityManager, playerEntity, out PlayerSkillRuntimeDataComponent data) &&
-               TryGetInt(input[0], out int chainId) &&
-               TryGetInt(input[1], out int slotIndex) &&
-               data.TryGetChainSlot(chainId, slotIndex, out slot);
-    }
-
-    private static bool TryGetCurrentChainSlot(
-        EntityManager entityManager,
-        Entity playerEntity,
-        UnitValue[] input,
-        out PlayerSkillChainSlotData slot)
-    {
-        slot = default;
-        return input.Length == 1 &&
-               TryGetData(entityManager, playerEntity, out PlayerSkillRuntimeDataComponent data) &&
-               TryGetInt(input[0], out int slotIndex) &&
-               data.TryGetChainSlot(data.CurrentChainId, slotIndex, out slot);
-    }
-
-    private static bool TryGetSkill(EntityManager entityManager, Entity playerEntity, UnitValue skillIdValue, out PlayerSkillInfo skill)
-    {
-        skill = null;
-        return TryGetData(entityManager, playerEntity, out PlayerSkillRuntimeDataComponent data) &&
-               TryGetInt(skillIdValue, out int skillId) &&
-               data.TryGetSkill(skillId, out skill);
-    }
-
-    private static bool TryGetCurrentSkill(
-        EntityManager entityManager,
-        Entity playerEntity,
-        UnitValue[] input,
-        out PlayerSkillInfo skill)
-    {
-        skill = null;
-        return TryGetCurrentChainSlot(entityManager, playerEntity, input, out PlayerSkillChainSlotData slot) &&
-               TryGetData(entityManager, playerEntity, out PlayerSkillRuntimeDataComponent data) &&
-               data.TryGetSkill(slot.SkillId, out skill);
-    }
-
-    private static bool TryGetData(EntityManager entityManager, Entity playerEntity, out PlayerSkillRuntimeDataComponent data)
-    {
-        data = null;
-        if (!entityManager.Exists(playerEntity) || !entityManager.HasComponent<PlayerSkillRuntimeDataComponent>(playerEntity))
+        result = default;
+        if (!TryGetData(entityManager, entity, out PlayerSkillRuntimeDataComponent data))
             return false;
 
-        data = entityManager.GetComponentObject<PlayerSkillRuntimeDataComponent>(playerEntity);
+        switch (operation)
+        {
+            case 0:
+                result = UnitSourceValue.FromInt(data.CurrentChainId);
+                return true;
+            case 1:
+                result = UnitSourceValue.FromBool(data.IsChainEmpty(data.CurrentChainId));
+                return true;
+            case 2:
+                if (!data.TryGetChainLength(data.CurrentChainId, out int currentLength))
+                    return false;
+                result = UnitSourceValue.FromInt(currentLength);
+                return true;
+            case 3:
+                if (!TryGetCurrentChainSlot(data, in arguments, out PlayerSkillChainSlotData currentIdSlot))
+                    return false;
+                result = UnitSourceValue.FromInt(currentIdSlot.SkillId);
+                return true;
+            case 4:
+                if (!TryGetCurrentChainSlot(data, in arguments, out PlayerSkillChainSlotData currentAdditionSlot))
+                    return false;
+                result = UnitSourceValue.FromInt(currentAdditionSlot.SkillAdditionId);
+                return true;
+            case 5:
+                result = UnitSourceValue.FromBool(
+                    TryGetCurrentChainSlot(data, in arguments, out PlayerSkillChainSlotData currentSlot) &&
+                    data.TryGetSkill(currentSlot.SkillId, out _));
+                return true;
+            case 6:
+                if (!TryGetCurrentSkill(data, in arguments, out PlayerSkillInfo currentMpSkill))
+                    return false;
+                result = UnitSourceValue.FromInt(currentMpSkill.MpCost);
+                return true;
+            case 7:
+                if (!TryGetCurrentSkill(data, in arguments, out PlayerSkillInfo currentChantSkill))
+                    return false;
+                result = UnitSourceValue.FromFloat(currentChantSkill.ChantDuration);
+                return true;
+            case 8:
+                if (!TryGetCurrentSkill(data, in arguments, out PlayerSkillInfo currentRuntimeSkill))
+                    return false;
+                result = UnitSourceValue.FromString(currentRuntimeSkill.RuntimeType);
+                return result.Type != UnitValueType.None;
+            case 9:
+                if (!arguments.TryGetInt(0, out int emptyChainId))
+                    return false;
+                result = UnitSourceValue.FromBool(data.IsChainEmpty(emptyChainId));
+                return true;
+            case 10:
+                if (!arguments.TryGetInt(0, out int lengthChainId) ||
+                    !data.TryGetChainLength(lengthChainId, out int chainLength))
+                    return false;
+                result = UnitSourceValue.FromInt(chainLength);
+                return true;
+            case 11:
+                if (!TryGetChainSlot(data, in arguments, out PlayerSkillChainSlotData skillSlot))
+                    return false;
+                result = UnitSourceValue.FromInt(skillSlot.SkillId);
+                return true;
+            case 12:
+                if (!TryGetChainSlot(data, in arguments, out PlayerSkillChainSlotData additionSlot))
+                    return false;
+                result = UnitSourceValue.FromInt(additionSlot.SkillAdditionId);
+                return true;
+            case 13:
+                if (!arguments.TryGetInt(0, out int hasSkillId))
+                    return false;
+                result = UnitSourceValue.FromBool(data.TryGetSkill(hasSkillId, out _));
+                return true;
+            case 14:
+                if (!TryGetSkill(data, in arguments, out PlayerSkillInfo mpSkill))
+                    return false;
+                result = UnitSourceValue.FromInt(mpSkill.MpCost);
+                return true;
+            case 15:
+                if (!TryGetSkill(data, in arguments, out PlayerSkillInfo chantSkill))
+                    return false;
+                result = UnitSourceValue.FromFloat(chantSkill.ChantDuration);
+                return true;
+            case 16:
+                if (!TryGetSkill(data, in arguments, out PlayerSkillInfo moveSkill))
+                    return false;
+                result = UnitSourceValue.FromFloat(moveSkill.CastingMoveMultiplier);
+                return true;
+            case 17:
+                if (!TryGetSkill(data, in arguments, out PlayerSkillInfo runtimeSkill))
+                    return false;
+                result = UnitSourceValue.FromString(runtimeSkill.RuntimeType);
+                return result.Type != UnitValueType.None;
+            case 18:
+                if (!TryGetSkill(data, in arguments, out PlayerSkillInfo inputSkill))
+                    return false;
+                result = UnitSourceValue.FromInt((int)inputSkill.InputType);
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private static bool TryGetData(
+        EntityManager entityManager,
+        Entity entity,
+        out PlayerSkillRuntimeDataComponent data)
+    {
+        data = null;
+        if (!entityManager.Exists(entity) ||
+            !entityManager.HasComponent<PlayerSkillRuntimeDataComponent>(entity))
+        {
+            return false;
+        }
+
+        data = entityManager.GetComponentObject<PlayerSkillRuntimeDataComponent>(entity);
         return data != null;
     }
 
-    private static bool TryGetInt(UnitValue value, out int result)
+    private static bool TryGetCurrentChainSlot(
+        PlayerSkillRuntimeDataComponent data,
+        in UnitSourceArguments arguments,
+        out PlayerSkillChainSlotData slot)
     {
-        result = -1;
-        if (!value.TryGetNumber(out float rawValue) || float.IsNaN(rawValue) || float.IsInfinity(rawValue))
-            return false;
+        slot = default;
+        return arguments.TryGetInt(0, out int slotIndex) &&
+               data.TryGetChainSlot(data.CurrentChainId, slotIndex, out slot);
+    }
 
-        float roundedValue = Mathf.Round(rawValue);
-        if (roundedValue < int.MinValue || roundedValue > int.MaxValue || !Mathf.Approximately(rawValue, roundedValue))
-            return false;
+    private static bool TryGetCurrentSkill(
+        PlayerSkillRuntimeDataComponent data,
+        in UnitSourceArguments arguments,
+        out PlayerSkillInfo skill)
+    {
+        skill = null;
+        return TryGetCurrentChainSlot(data, in arguments, out PlayerSkillChainSlotData slot) &&
+               data.TryGetSkill(slot.SkillId, out skill);
+    }
 
-        result = (int)roundedValue;
-        return true;
+    private static bool TryGetChainSlot(
+        PlayerSkillRuntimeDataComponent data,
+        in UnitSourceArguments arguments,
+        out PlayerSkillChainSlotData slot)
+    {
+        slot = default;
+        return arguments.TryGetInt(0, out int chainId) &&
+               arguments.TryGetInt(1, out int slotIndex) &&
+               data.TryGetChainSlot(chainId, slotIndex, out slot);
+    }
+
+    private static bool TryGetSkill(
+        PlayerSkillRuntimeDataComponent data,
+        in UnitSourceArguments arguments,
+        out PlayerSkillInfo skill)
+    {
+        skill = null;
+        return arguments.TryGetInt(0, out int skillId) &&
+               data.TryGetSkill(skillId, out skill);
     }
 }

@@ -40,39 +40,38 @@ public struct UnitFactionComponent : IComponentData
     public UnitFactionType Value;
 }
 
-[UnitSourceAuthoring(typeof(UnitFactionAuthoring))]
-public sealed class UnitFactionSource : UnitComponentSource<UnitFactionComponent>
+[UnitSourceProvider(typeof(UnitFactionComponent), typeof(UnitFactionAuthoring))]
+public static class UnitFactionSource
 {
-    private static readonly ComparatorParameterDefinition[] s_otherEntityParameters =
+    [UnitSourceGet(0, "unit.faction.value", UnitValueCategory.Number)]
+    public static bool TryGet(
+        int operation,
+        in UnitFactionComponent value,
+        in UnitSourceArguments arguments,
+        out UnitSourceValue result)
     {
-        new("Other Entity", UnitValueCategory.Entity),
-    };
+        result = operation == 0 ? UnitSourceValue.FromInt((int)value.Value) : UnitSourceValue.None;
+        return result.Type != UnitValueType.None;
+    }
 
-    protected override void Define(UnitSourceDefinitionBuilder<UnitFactionComponent> builder)
+    [UnitSourceGet(1, "unit.faction.isEnemyTo", UnitValueCategory.Bool, UnitValueCategory.Entity,
+        ParameterNames = new[] { "Other Entity" })]
+    public static bool TryGetRelation(
+        int operation,
+        Entity entity,
+        in ComponentLookup<UnitFactionComponent> factions,
+        in UnitSourceArguments arguments,
+        out UnitSourceValue result)
     {
-        builder.AddGet("unit.faction.value", UnitValueCategory.Number,
-            (in UnitFactionComponent value) => UnitValue.FromInt((int)value.Value));
+        result = UnitSourceValue.FromBool(false);
+        if (operation != 1 || !factions.TryGetComponent(entity, out UnitFactionComponent faction))
+            return false;
 
-        builder.AddContextGet("unit.faction.isEnemyTo", UnitValueCategory.Bool, s_otherEntityParameters,
-            static (in UnitSourceBindingContext context, in UnitFactionComponent faction, UnitValue[] parameters) =>
-            {
-                if (parameters == null || parameters.Length != 1 ||
-                    parameters[0].Type != UnitValueType.Entity)
-                {
-                    return UnitValue.FromBool(false);
-                }
+        if (!arguments.TryGetEntity(0, out Entity otherEntity) || otherEntity == Entity.Null ||
+            !factions.TryGetComponent(otherEntity, out UnitFactionComponent otherFaction))
+            return true;
 
-                Entity otherEntity = parameters[0].Entity;
-                EntityManager entityManager = context.EntityManager;
-                if (otherEntity == Entity.Null ||
-                    !entityManager.Exists(otherEntity) ||
-                    !entityManager.HasComponent<UnitFactionComponent>(otherEntity))
-                {
-                    return UnitValue.FromBool(false);
-                }
-
-                UnitFactionComponent otherFaction = entityManager.GetComponentData<UnitFactionComponent>(otherEntity);
-                return UnitValue.FromBool(UnitFactionUtility.IsEnemy(faction.Value, otherFaction.Value));
-            });
+        result = UnitSourceValue.FromBool(UnitFactionUtility.IsEnemy(faction.Value, otherFaction.Value));
+        return true;
     }
 }

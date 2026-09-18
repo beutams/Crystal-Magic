@@ -24,127 +24,99 @@ public sealed class UnitVariableComponent : IComponentData
     public Dictionary<string, UnitValue> Values = new(StringComparer.Ordinal);
 }
 
-[UnitSourceAuthoring(typeof(UnitVariableAuthoring))]
-public sealed class UnitVariableSource : UnitComponentSource
+[UnitSourceProvider(typeof(UnitVariableComponent), typeof(UnitVariableAuthoring))]
+public static class UnitVariableSource
 {
-    private static readonly ComparatorParameterDefinition[] s_keyParameter =
+    [UnitSourceGet(0, "unit.variables.count", UnitValueCategory.Number)]
+    [UnitSourceGet(1, "unit.variables.consumerCount", UnitValueCategory.Number)]
+    [UnitSourceGet(2, "unit.variables.owner", UnitValueCategory.Entity)]
+    [UnitSourceGet(3, "unit.variables.has", UnitValueCategory.Bool, UnitValueCategory.String, ParameterNames = new[] { "Key" })]
+    [UnitSourceGet(4, "unit.variables.get", UnitValueCategory.Any, UnitValueCategory.String, ParameterNames = new[] { "Key" })]
+    [UnitSourceGet(5, "unit.variables.getNumber", UnitValueCategory.Number, UnitValueCategory.String, ParameterNames = new[] { "Key" })]
+    [UnitSourceGet(6, "unit.variables.getBool", UnitValueCategory.Bool, UnitValueCategory.String, ParameterNames = new[] { "Key" })]
+    [UnitSourceGet(7, "unit.variables.getFloat2", UnitValueCategory.Float2, UnitValueCategory.String, ParameterNames = new[] { "Key" })]
+    [UnitSourceGet(8, "unit.variables.getFloat3", UnitValueCategory.Float3, UnitValueCategory.String, ParameterNames = new[] { "Key" })]
+    [UnitSourceGet(9, "unit.variables.getEntity", UnitValueCategory.Entity, UnitValueCategory.String, ParameterNames = new[] { "Key" })]
+    [UnitSourceGet(10, "unit.variables.getString", UnitValueCategory.String, UnitValueCategory.String, ParameterNames = new[] { "Key" })]
+    public static bool TryGet(
+        int operation,
+        EntityManager entityManager,
+        Entity entity,
+        in UnitSourceArguments arguments,
+        out UnitSourceValue result)
     {
-        new ComparatorParameterDefinition("Key", UnitValueCategory.String),
-    };
+        result = default;
+        if (!entityManager.Exists(entity) || !entityManager.HasComponent<UnitVariableComponent>(entity))
+            return false;
 
-    private static readonly ComparatorParameterDefinition[] s_ownerParameter =
-    {
-        new ComparatorParameterDefinition("Owner", UnitValueCategory.Entity),
-    };
+        if (operation == 1)
+        {
+            result = UnitSourceValue.FromInt(CountConsumers(entityManager, entity));
+            return true;
+        }
 
-    public override Type ComponentType => typeof(UnitVariableComponent);
+        if (operation == 2)
+        {
+            result = UnitSourceValue.FromEntity(GetOwner(entityManager, entity));
+            return true;
+        }
 
-    public override void Describe(UnitSourceSchemaBuilder schema)
-    {
-        schema.AddGet("unit.variables.count", ComponentType, UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
-        schema.AddGet("unit.variables.consumerCount", ComponentType, UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
-        schema.AddGet("unit.variables.owner", ComponentType, UnitValueCategory.Entity, Array.Empty<ComparatorParameterDefinition>());
-        schema.AddGet("unit.variables.has", ComponentType, UnitValueCategory.Bool, s_keyParameter);
-        schema.AddGet("unit.variables.get", ComponentType, UnitValueCategory.Any, s_keyParameter);
-        schema.AddGet("unit.variables.getNumber", ComponentType, UnitValueCategory.Number, s_keyParameter);
-        schema.AddGet("unit.variables.getBool", ComponentType, UnitValueCategory.Bool, s_keyParameter);
-        schema.AddGet("unit.variables.getFloat2", ComponentType, UnitValueCategory.Float2, s_keyParameter);
-        schema.AddGet("unit.variables.getFloat3", ComponentType, UnitValueCategory.Float3, s_keyParameter);
-        schema.AddGet("unit.variables.getEntity", ComponentType, UnitValueCategory.Entity, s_keyParameter);
-        schema.AddGet("unit.variables.getString", ComponentType, UnitValueCategory.String, s_keyParameter);
-        schema.AddSet("unit.variables.set", ComponentType, new[] { new ComparatorParameterDefinition("Value", UnitValueCategory.Any) }, requiresKey: true);
-        schema.AddSet("unit.variables.remove", ComponentType, s_keyParameter);
-        schema.AddSet("unit.variables.setOwner", ComponentType, s_ownerParameter);
+        if (!TryResolveOwner(entityManager, entity, out _, out UnitVariableComponent component))
+            return false;
+
+        if (operation == 0)
+        {
+            result = UnitSourceValue.FromInt(component.Values?.Count ?? 0);
+            return true;
+        }
+
+        if (!arguments.TryGet(0, out UnitSourceValue keySource))
+            return false;
+
+        UnitValue key = keySource.ToUnitValue();
+        UnitValue value = operation switch
+        {
+            3 => UnitValue.FromBool(Contains(component, key)),
+            4 => Get(component, key),
+            5 => GetCategory(component, key, UnitValueCategory.Number),
+            6 => GetCategory(component, key, UnitValueCategory.Bool),
+            7 => GetCategory(component, key, UnitValueCategory.Float2),
+            8 => GetCategory(component, key, UnitValueCategory.Float3),
+            9 => GetCategory(component, key, UnitValueCategory.Entity),
+            10 => GetCategory(component, key, UnitValueCategory.String),
+            _ => UnitValue.None,
+        };
+        return UnitSourceValue.TryFromUnitValue(value, out result);
     }
 
-    public override void Bind(in UnitSourceBindingContext context, UnitSourceAccessTable table)
+    [UnitSourceSet(0, "unit.variables.set", UnitValueCategory.Any,
+        ParameterNames = new[] { "Value" }, RequiresKey = true)]
+    [UnitSourceSet(1, "unit.variables.remove", UnitValueCategory.String, ParameterNames = new[] { "Key" })]
+    [UnitSourceSet(2, "unit.variables.setOwner", UnitValueCategory.Entity, ParameterNames = new[] { "Owner" })]
+    public static bool TrySet(
+        int operation,
+        EntityManager entityManager,
+        Entity entity,
+        in UnitSourceArguments arguments)
     {
-        EntityManager entityManager = context.EntityManager;
-        Entity entity = context.Entity;
-        if (!entityManager.Exists(entity) || !entityManager.HasComponent<UnitVariableComponent>(entity))
-            return;
+        if (operation == 2)
+        {
+            return arguments.TryGet(0, out UnitSourceValue owner) &&
+                   SetOwner(entityManager, entity, owner.ToUnitValue());
+        }
 
-        table.AddGet(new UnitSourceGet(
-            "unit.variables.count",
-            UnitValueCategory.Number,
-            Array.Empty<ComparatorParameterDefinition>(),
-            parameters => UnitValue.FromInt(TryResolveOwner(entityManager, entity, out _, out UnitVariableComponent component)
-                ? component.Values?.Count ?? 0
-                : 0)));
-        table.AddGet(new UnitSourceGet(
-            "unit.variables.consumerCount",
-            UnitValueCategory.Number,
-            Array.Empty<ComparatorParameterDefinition>(),
-            _ => UnitValue.FromInt(CountConsumers(entityManager, entity))));
-        table.AddGet(new UnitSourceGet(
-            "unit.variables.owner",
-            UnitValueCategory.Entity,
-            Array.Empty<ComparatorParameterDefinition>(),
-            _ => UnitValue.FromEntity(GetOwner(entityManager, entity))));
-        table.AddGet(new UnitSourceGet(
-            "unit.variables.has",
-            UnitValueCategory.Bool,
-            s_keyParameter,
-            input => UnitValue.FromBool(TryResolveOwner(entityManager, entity, out _, out UnitVariableComponent component) && Contains(component, input[0]))));
-        table.AddGet(new UnitSourceGet(
-            "unit.variables.get",
-            UnitValueCategory.Any,
-            s_keyParameter,
-            input => TryResolveOwner(entityManager, entity, out _, out UnitVariableComponent component) ? Get(component, input[0]) : UnitValue.None));
-        table.AddGet(new UnitSourceGet(
-            "unit.variables.getNumber",
-            UnitValueCategory.Number,
-            s_keyParameter,
-            input => TryResolveOwner(entityManager, entity, out _, out UnitVariableComponent component)
-                ? GetCategory(component, input[0], UnitValueCategory.Number)
-                : UnitValue.None));
-        table.AddGet(new UnitSourceGet(
-            "unit.variables.getBool",
-            UnitValueCategory.Bool,
-            s_keyParameter,
-            input => TryResolveOwner(entityManager, entity, out _, out UnitVariableComponent component)
-                ? GetCategory(component, input[0], UnitValueCategory.Bool)
-                : UnitValue.None));
-        table.AddGet(new UnitSourceGet(
-            "unit.variables.getFloat2",
-            UnitValueCategory.Float2,
-            s_keyParameter,
-            input => TryResolveOwner(entityManager, entity, out _, out UnitVariableComponent component)
-                ? GetCategory(component, input[0], UnitValueCategory.Float2)
-                : UnitValue.None));
-        table.AddGet(new UnitSourceGet(
-            "unit.variables.getFloat3",
-            UnitValueCategory.Float3,
-            s_keyParameter,
-            input => TryResolveOwner(entityManager, entity, out _, out UnitVariableComponent component)
-                ? GetCategory(component, input[0], UnitValueCategory.Float3)
-                : UnitValue.None));
-        table.AddGet(new UnitSourceGet(
-            "unit.variables.getEntity",
-            UnitValueCategory.Entity,
-            s_keyParameter,
-            input => TryResolveOwner(entityManager, entity, out _, out UnitVariableComponent component)
-                ? GetCategory(component, input[0], UnitValueCategory.Entity)
-                : UnitValue.None));
-        table.AddGet(new UnitSourceGet(
-            "unit.variables.getString",
-            UnitValueCategory.String,
-            s_keyParameter,
-            input => TryResolveOwner(entityManager, entity, out _, out UnitVariableComponent component)
-                ? GetCategory(component, input[0], UnitValueCategory.String)
-                : UnitValue.None));
-        table.AddSet(new UnitSourceSet(
-            "unit.variables.set",
-            new[] { new ComparatorParameterDefinition("Value", UnitValueCategory.Any) },
-            (string key, UnitValue value) => TryResolveOwner(entityManager, entity, out _, out UnitVariableComponent component) && Set(component, key, value)));
-        table.AddSet(new UnitSourceSet(
-            "unit.variables.remove",
-            s_keyParameter,
-            input => TryResolveOwner(entityManager, entity, out _, out UnitVariableComponent component) && Remove(component, input[0])));
-        table.AddSet(new UnitSourceSet(
-            "unit.variables.setOwner",
-            s_ownerParameter,
-            input => SetOwner(entityManager, entity, input[0])));
+        if (!TryResolveOwner(entityManager, entity, out _, out UnitVariableComponent component))
+            return false;
+
+        if (operation == 0)
+        {
+            return arguments.HasKey != 0 &&
+                   arguments.TryGet(0, out UnitSourceValue sourceValue) &&
+                   Set(component, arguments.Key.ToString(), sourceValue.ToUnitValue());
+        }
+
+        return operation == 1 && arguments.TryGet(0, out UnitSourceValue key) &&
+               Remove(component, key.ToUnitValue());
     }
 
     public static bool TryResolveOwner(

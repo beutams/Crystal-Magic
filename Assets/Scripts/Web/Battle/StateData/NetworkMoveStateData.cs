@@ -8,15 +8,9 @@ public sealed class NetworkMoveStateData : NetworkStateData
     public float baseMoveSpeed;
     public float baseMoveSpeedOffset;
     public float baseMaxAcceleration;
-    public float directionX;
-    public float directionY;
     public float stateMoveMultiplier;
     public float velocityX;
     public float velocityY;
-    public float frameVelocityX;
-    public float frameVelocityY;
-    public byte hasFrameVelocity;
-    public float commandMoveSpeed;
     public float positionX;
     public float positionY;
     public float positionZ;
@@ -31,12 +25,9 @@ public sealed class NetworkMoveStateData : NetworkStateData
             BaseMoveSpeed = baseMoveSpeed,
             BaseMoveSpeedOffset = baseMoveSpeedOffset,
             BaseMaxAcceleration = baseMaxAcceleration,
-            Direction = new float2(directionX, directionY),
             StateMoveMultiplier = stateMoveMultiplier,
             Velocity = new float2(velocityX, velocityY),
-            FrameVelocity = new float2(frameVelocityX, frameVelocityY),
-            HasFrameVelocity = hasFrameVelocity,
-            CommandMoveSpeed = commandMoveSpeed,
+            CommandMoveSpeed = -1f,
             NetworkDirty = 0,
         });
 

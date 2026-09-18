@@ -7,7 +7,6 @@ public enum BehaviorNodeStatus
     Failure,
     Running,
 }
-
 public abstract class ABehaviorNode
 {
     protected readonly BehaviorNodeData Data;
@@ -36,7 +35,7 @@ public abstract class ABehaviorNode
         return status;
     }
 
-    public bool TryBind(UnitSourceAccessTable sources, out string error)
+    public bool TryBind(UnitSourceResolver sources, out string error)
     {
         if (sources == null)
         {
@@ -70,7 +69,7 @@ public abstract class ABehaviorNode
             Children[i]?.Reset();
     }
 
-    protected virtual bool OnBind(UnitSourceAccessTable sources, out string error)
+    protected virtual bool OnBind(UnitSourceResolver sources, out string error)
     {
         error = string.Empty;
         return true;

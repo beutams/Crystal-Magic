@@ -59,24 +59,54 @@ public struct UnitAttackComponent : IComponentData
     }
 }
 
-[UnitSourceAuthoring(typeof(UnitAttackAuthoring))]
-public sealed class UnitAttackSource : UnitComponentSource<UnitAttackComponent>
+[UnitSourceProvider(typeof(UnitAttackComponent), typeof(UnitAttackAuthoring))]
+public static class UnitAttackSource
 {
-    private static readonly ComparatorParameterDefinition[] s_noParameters = System.Array.Empty<ComparatorParameterDefinition>();
-
-    protected override void Define(UnitSourceDefinitionBuilder<UnitAttackComponent> builder)
+    [UnitSourceGet(0, "unit.attack.baseAttackPower", UnitValueCategory.Number)]
+    [UnitSourceGet(1, "unit.attack.baseSkillRange", UnitValueCategory.Number)]
+    [UnitSourceGet(2, "unit.attack.baseChantSpeedBonus", UnitValueCategory.Number)]
+    public static bool TryGet(
+        int operation,
+        in UnitAttackComponent value,
+        in UnitSourceArguments arguments,
+        out UnitSourceValue result)
     {
-        builder.AddGet("unit.attack.baseAttackPower", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.BaseAttackPowerValue));
-        builder.AddContextGet("unit.attack.realAttackPower", UnitValueCategory.Number, s_noParameters,
-            (in UnitSourceBindingContext context, in UnitAttackComponent _, UnitValue[] _) => UnitValue.FromFloat(UnitModifierResolver.GetAttackPower(context.EntityManager, context.Entity)));
-        builder.AddGet("unit.attack.baseSkillRange", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.BaseSkillRangeValue));
-        builder.AddContextGet("unit.attack.realSkillRange", UnitValueCategory.Number, s_noParameters,
-            (in UnitSourceBindingContext context, in UnitAttackComponent _, UnitValue[] _) => UnitValue.FromFloat(UnitModifierResolver.GetSkillRange(context.EntityManager, context.Entity)));
-        builder.AddGet("unit.attack.baseChantSpeedBonus", UnitValueCategory.Number, (in UnitAttackComponent value) => UnitValue.FromFloat(value.BaseChantSpeedBonusValue));
-        builder.AddContextGet("unit.attack.realChantSpeedBonus", UnitValueCategory.Number, s_noParameters,
-            (in UnitSourceBindingContext context, in UnitAttackComponent _, UnitValue[] _) => UnitValue.FromFloat(UnitModifierResolver.GetChantSpeedBonus(context.EntityManager, context.Entity)));
-        builder.AddContextGet("unit.attack.chantDurationMultiplier", UnitValueCategory.Number, s_noParameters,
-            (in UnitSourceBindingContext context, in UnitAttackComponent _, UnitValue[] _) =>
-                UnitValue.FromFloat(UnitAttackComponent.GetDurationMultiplier(UnitModifierResolver.GetChantSpeedBonus(context.EntityManager, context.Entity))));
+        result = operation switch
+        {
+            0 => UnitSourceValue.FromFloat(value.BaseAttackPowerValue),
+            1 => UnitSourceValue.FromFloat(value.BaseSkillRangeValue),
+            2 => UnitSourceValue.FromFloat(value.BaseChantSpeedBonusValue),
+            _ => UnitSourceValue.None,
+        };
+        return result.Type != UnitValueType.None;
+    }
+
+    [UnitSourceGet(3, "unit.attack.realAttackPower", UnitValueCategory.Number)]
+    [UnitSourceGet(4, "unit.attack.realSkillRange", UnitValueCategory.Number)]
+    [UnitSourceGet(5, "unit.attack.realChantSpeedBonus", UnitValueCategory.Number)]
+    [UnitSourceGet(6, "unit.attack.chantDurationMultiplier", UnitValueCategory.Number)]
+    public static bool TryGetResolved(
+        int operation,
+        EntityManager entityManager,
+        Entity entity,
+        in UnitSourceArguments arguments,
+        out UnitSourceValue result)
+    {
+        if (!entityManager.Exists(entity) || !entityManager.HasComponent<UnitAttackComponent>(entity))
+        {
+            result = default;
+            return false;
+        }
+
+        result = operation switch
+        {
+            3 => UnitSourceValue.FromFloat(UnitModifierResolver.GetAttackPower(entityManager, entity)),
+            4 => UnitSourceValue.FromFloat(UnitModifierResolver.GetSkillRange(entityManager, entity)),
+            5 => UnitSourceValue.FromFloat(UnitModifierResolver.GetChantSpeedBonus(entityManager, entity)),
+            6 => UnitSourceValue.FromFloat(UnitAttackComponent.GetDurationMultiplier(
+                UnitModifierResolver.GetChantSpeedBonus(entityManager, entity))),
+            _ => UnitSourceValue.None,
+        };
+        return result.Type != UnitValueType.None;
     }
 }

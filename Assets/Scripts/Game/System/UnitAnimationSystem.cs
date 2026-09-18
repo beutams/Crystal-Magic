@@ -24,10 +24,12 @@ partial class UnitAnimationSystem : SystemBase
             return;
 
         float deltaTime = SystemAPI.Time.DeltaTime;
-        foreach ((UnitAnimationComponent animation, Entity entity) in
-                 SystemAPI.Query<UnitAnimationComponent>().WithEntityAccess())
+        foreach ((RefRW<UnitAnimationComponent> animationRef, Entity entity) in
+                 SystemAPI.Query<RefRW<UnitAnimationComponent>>().WithEntityAccess())
         {
-            UpdateAnimation(entity, profileTable, deltaTime, animation);
+            UnitAnimationComponent animation = animationRef.ValueRO;
+            UpdateAnimation(entity, profileTable, deltaTime, ref animation);
+            animationRef.ValueRW = animation;
         }
     }
 
@@ -45,16 +47,25 @@ partial class UnitAnimationSystem : SystemBase
         Entity entity,
         DataTable<UnitAnimationProfileData> profileTable,
         float deltaTime,
-        UnitAnimationComponent animation)
+        ref UnitAnimationComponent animation)
     {
-        SpriteRenderer spriteRenderer = EntityManager.GetComponentObject<SpriteRenderer>(entity);
-        animation.Renderer = spriteRenderer;
+        if (!EntityManager.HasComponent<SpriteRenderer>(entity))
+            return;
 
-        string animationName = animation.CurrentAnimationName.ToString();
+        SpriteRenderer spriteRenderer = EntityManager.GetComponentObject<SpriteRenderer>(entity);
+        string animationName = animation.AnimationName.ToString();
         if (string.IsNullOrWhiteSpace(animationName))
         {
-            ResetPlayback(animation);
+            ResetPlayback(ref animation);
             return;
+        }
+
+        bool requestChanged = !animation.PlayingAnimationName.Equals(animation.AnimationName) ||
+                              animation.PlayingSequence != animation.Sequence;
+        if (requestChanged)
+        {
+            animation.CurrentSampleTime = 0f;
+            animation.CurrentClipLength = 0f;
         }
 
         UnitAnimationProfileData profile = FindProfile(profileTable, entity);
@@ -73,7 +84,7 @@ partial class UnitAnimationSystem : SystemBase
             return;
         }
 
-        UnitAnimationDirection direction = ResolveAnimationDirection(entity, EntityManager, entry, animation);
+        UnitAnimationDirection direction = ResolveAnimationDirection(entity, EntityManager, entry, ref animation);
         string clipPath = entry.GetClipPath(direction);
         if (string.IsNullOrWhiteSpace(clipPath))
         {
@@ -87,13 +98,12 @@ partial class UnitAnimationSystem : SystemBase
         if (track == null)
             return;
 
-        animation.CurrentAnimationClip = track.SourceClip;
+        animation.CurrentClipLength = track.Length;
 
-        if (!animation.PlayingAnimationName.Equals(animation.CurrentAnimationName) ||
-            animation.PlayingSequence != animation.RequestedSequence)
+        if (requestChanged)
         {
-            animation.PlayingAnimationName = animation.CurrentAnimationName;
-            animation.PlayingSequence = animation.RequestedSequence;
+            animation.PlayingAnimationName = animation.AnimationName;
+            animation.PlayingSequence = animation.Sequence;
             animation.ElapsedSeconds = math.max(0f, animation.RequestedStartElapsedSeconds);
         }
         else
@@ -106,7 +116,6 @@ partial class UnitAnimationSystem : SystemBase
         spriteRenderer.sprite = track.SampleSprite(sampleTime);
         if (track.TrySampleFlipX(sampleTime, out bool flipX))
             spriteRenderer.flipX = flipX;
-        animation.CurrentSprite = spriteRenderer.sprite;
     }
 
     private UnitAnimationFrameTrack GetFrameTrack(string clipPath)
@@ -177,17 +186,17 @@ partial class UnitAnimationSystem : SystemBase
         Entity entity,
         EntityManager entityManager,
         UnitAnimationEntryData entry,
-        UnitAnimationComponent animation)
+        ref UnitAnimationComponent animation)
     {
         return entry.DirectionMode == UnitAnimationDirectionMode.TwoDirections
-            ? ResolveTwoDirectionAnimationDirection(entity, entityManager, animation)
+            ? ResolveTwoDirectionAnimationDirection(entity, entityManager, ref animation)
             : ResolveFourDirectionAnimationDirection(entity, entityManager);
     }
 
     private static UnitAnimationDirection ResolveTwoDirectionAnimationDirection(
         Entity entity,
         EntityManager entityManager,
-        UnitAnimationComponent animation)
+        ref UnitAnimationComponent animation)
     {
         if (!UnitFacingUtility.TryGetFacing(entityManager, entity, out float2 facingDirection))
             return animation.LastTwoDirectionFacing;
@@ -236,13 +245,12 @@ partial class UnitAnimationSystem : SystemBase
             Debug.LogWarning(message);
     }
 
-    private static void ResetPlayback(UnitAnimationComponent animation)
+    private static void ResetPlayback(ref UnitAnimationComponent animation)
     {
         animation.PlayingAnimationName = default;
         animation.PlayingSequence = 0u;
         animation.ElapsedSeconds = 0f;
-        animation.CurrentAnimationClip = null;
         animation.CurrentSampleTime = 0f;
-        animation.CurrentSprite = null;
+        animation.CurrentClipLength = 0f;
     }
 }

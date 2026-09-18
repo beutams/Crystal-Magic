@@ -48,26 +48,26 @@ nodes; runtime code must not create formatted keys during a per-frame path.
 
 ### Ownership And Placement
 
-Every retained unit component has exactly one `UnitComponentSource`
-implementation. The implementation lives in the same `.cs` file as that
-component's Authoring/Baker class. For example, `UnitMoveAuthoring.cs` contains
-`UnitMoveComponent`, its Baker, and `UnitMoveComponentSource`; no separate
-source-file hierarchy is needed.
+Each exposed unit component has one static Source provider, normally beside
+that component's Authoring/Baker definition. Provider methods are marked with
+`UnitSourceGet` or `UnitSourceSet`; the editor generator discovers those
+attributes and emits the shared `UnitSourceId`, schema registry, and switch
+dispatcher.
 
-Only the shared contracts and runtime tables are common files:
+The shared Source files are:
 
-- `UnitComponentSource`
-- `UnitValue` and its value-type metadata
-- `UnitSourceAccessTable`
-- Source schema/binding builders and the generated source registry
+- Source provider/get/set attributes
+- `UnitValue` for managed graph data and `UnitSourceValue` for unmanaged dispatch
+- `UnitSourceResolver`, the managed adapter used by current graph runtimes
+- the generated Source registry and `UnitSourceDispatcher`
 
 Each component Source has two responsibilities:
 
 1. Describe its parameterized `Get` and `Set` functions for the editor. Every
    function declares a fixed return type (for `Get`) and fixed input count and
    input types.
-2. During unit initialization, register the real per-entity getter, setter,
-   delegates into that unit's access table.
+2. Implement the real static getter or setter against an ECS component,
+   `ComponentLookup`, or an explicitly managed fallback.
 
 Sources decide their own permissions. A field with no registered setter is
 read-only. Structured data is not exposed as a collection type: for example,
@@ -75,21 +75,20 @@ buff queries are `Get` functions such as `unit.buffs.getCount()`, while
 `add(...)`, `remove(...)`, and `clear()` are `Set` functions. Behavior Tree
 and StateScript never access an ECS component directly.
 
-### Per-Unit Runtime Table
+### Generated Runtime Dispatch
 
-Add `UnitSourceRuntimeComponent` as a managed component on every unit. It owns
-one `UnitSourceAccessTable` for that entity. The table contains:
+There is no Source component, dictionary, or binding callback on each unit.
+`UnitSourceDispatcherSystem` owns one dispatcher per World and refreshes its
+`ComponentLookup` values. A call resolves its authored string key to a generated
+`UnitSourceId`, then the generated switch calls the provider with the target
+`Entity` and arguments. Native providers therefore remain usable by Burst/jobs;
+providers that still depend on managed data use an explicit main-thread
+`BurstDiscard` fallback.
 
-| Table | Purpose |
-| --- | --- |
-| `Gets` | `string -> UnitSourceGet`; includes return type, fixed input signature, and `UnitValue[] -> UnitValue` delegate |
-| `Sets` | `string -> UnitSourceSet`; includes fixed input signature and `UnitValue[] -> bool` delegate |
-
-The table is populated once when the unit initializes. Behavior Tree and
-StateScript graph nodes store only string keys in data, but resolve those keys
-to delegate references when their runtime instance is built. Comparators use
-the same `Get` signature to create input ports. There is no reflection or
-source discovery in the per-frame path.
+Behavior Tree and StateScript keep a lightweight `UnitSourceResolver` containing
+their target entity, world access, and the current dispatcher. Comparators use
+the same generated `Get` schema to create input ports. Reflection is restricted
+to editor generation and is absent from the runtime dispatch path.
 
 `UnitVariableComponent` is exposed by `UnitVariableSource` using the same
 table. It provides typed `get*`, `set`, `has`, `remove`, and `clear` functions;
@@ -100,7 +99,7 @@ copied into the unit variable component.
 ### Behavior Tree Runtime Changes
 
 `BehaviorBlackboard` stops owning hard-coded `Sense` and `Intent` structures.
-It keeps only the entity/runtime context, its `UnitSourceAccessTable`, the
+It keeps only the entity/runtime context, its `UnitSourceResolver`, the
 per-tick collected-value snapshot, local behavior-tree state, and debug data.
 
 `BehaviorTreeSystem` changes from:
@@ -111,7 +110,7 @@ per-tick collected-value snapshot, local behavior-tree state, and debug data.
 
 to:
 
-1. Retrieve the unit's already-bound access table.
+1. Refresh the unit resolver with the World's current generated dispatcher.
 2. Run the fixed pre-tree collection phase for the getter keys compiled from
    this tree's conditions/expressions.
 3. Tick the tree; setters and operations update authoritative components or
@@ -293,7 +292,6 @@ interaction systems.
 | Component | Responsibility | Notes |
 | --- | --- | --- |
 | `UnitVariableComponent` | Shared unit blackboard for authored runtime variables. | New. It holds only `var.*`, not component mirrors or graph-local temporaries. |
-| `UnitSourceRuntimeComponent` | Per-unit managed owner of the Source access table and compiled access delegates. | New. It is initialized once and shared by Behavior Tree, StateScript, and Comparator binding. |
 | `UnitStateScriptRuntimeComponent` | Managed graph instances, active graph status, cancellation, and graph-local `script.*` variables. | New. It replaces the old state machine and cast phase runtime. State `OnComplete` connections replace cast hooks. It may hold the current resolved-skill snapshot until an execution graph finishes. |
 
 ## First Variable Keys

@@ -1,4 +1,3 @@
-using System;
 using Unity.Entities;
 using UnityEngine;
 
@@ -20,29 +19,24 @@ public struct UnitDeathComponent : IComponentData, IEnableableComponent
     public byte NetworkDirty;
 }
 
-[UnitSourceAuthoring(typeof(UnitDeathAuthoring))]
-public sealed class UnitDeathSource : UnitComponentSource
+[UnitSourceProvider(typeof(UnitDeathComponent), typeof(UnitDeathAuthoring))]
+public static class UnitDeathSource
 {
-    private static readonly ComparatorParameterDefinition[] s_noParameters = Array.Empty<ComparatorParameterDefinition>();
-
-    public override Type ComponentType => typeof(UnitDeathComponent);
-
-    public override void Describe(UnitSourceSchemaBuilder schema)
+    [UnitSourceGet(0, "unit.death.isActive", UnitValueCategory.Bool)]
+    public static bool TryGet(
+        int operation,
+        Entity entity,
+        in ComponentLookup<UnitDeathComponent> deaths,
+        in UnitSourceArguments arguments,
+        out UnitSourceValue result)
     {
-        schema.AddGet("unit.death.isActive", ComponentType, UnitValueCategory.Bool, s_noParameters);
-    }
+        if (operation != 0 || !deaths.HasComponent(entity))
+        {
+            result = default;
+            return false;
+        }
 
-    public override void Bind(in UnitSourceBindingContext context, UnitSourceAccessTable table)
-    {
-        EntityManager entityManager = context.EntityManager;
-        Entity entity = context.Entity;
-        if (!entityManager.Exists(entity) || !entityManager.HasComponent<UnitDeathComponent>(entity))
-            return;
-
-        table.AddGet(new UnitSourceGet(
-            "unit.death.isActive",
-            UnitValueCategory.Bool,
-            s_noParameters,
-            _ => UnitValue.FromBool(entityManager.Exists(entity) && entityManager.IsComponentEnabled<UnitDeathComponent>(entity))));
+        result = UnitSourceValue.FromBool(deaths.IsComponentEnabled(entity));
+        return true;
     }
 }

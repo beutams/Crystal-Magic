@@ -25,19 +25,17 @@ namespace CrystalMagic.Game.Skill.Effects
                 return false;
 
             EntityManager entityManager = context.EntityManager;
-            if (!entityManager.Exists(evaluatedEntity) ||
-                !entityManager.HasComponent<UnitSourceRuntimeComponent>(evaluatedEntity))
-            {
+            if (!entityManager.Exists(evaluatedEntity))
                 return false;
-            }
 
-            UnitSourceRuntimeComponent runtime = entityManager.GetComponentObject<UnitSourceRuntimeComponent>(evaluatedEntity);
-            if (runtime?.Table == null)
+            if (!UnitSourceDispatcherSystem.TryGet(entityManager, out UnitSourceDispatcher dispatcher))
                 return false;
+            UnitSourceResolver sources = new(evaluatedEntity);
+            sources.Update(evaluatedEntity, entityManager, in dispatcher);
 
             Comparator comparator = GetComparatorFactory().BuildComparator(
                 conditions,
-                new EffectConditionValueResolver(runtime.Table, context));
+                new EffectConditionValueResolver(sources, context));
             return comparator.GetResult();
         }
 
@@ -53,12 +51,12 @@ namespace CrystalMagic.Game.Skill.Effects
 
         private sealed class EffectConditionValueResolver : IComparatorValueResolver
         {
-            private readonly UnitSourceAccessTable _unitSourceTable;
+            private readonly UnitSourceResolver _unitSources;
             private readonly SkillContent _context;
 
-            public EffectConditionValueResolver(UnitSourceAccessTable unitSourceTable, SkillContent context)
+            public EffectConditionValueResolver(UnitSourceResolver unitSources, SkillContent context)
             {
-                _unitSourceTable = unitSourceTable;
+                _unitSources = unitSources;
                 _context = context;
             }
 
@@ -82,7 +80,7 @@ namespace CrystalMagic.Game.Skill.Effects
                         getter = new ContextValueGetter(UnitValueCategory.Number, GetTriggerValue);
                         return true;
                     default:
-                        return ((IComparatorValueResolver)_unitSourceTable).TryGet(key, out getter);
+                        return ((IComparatorValueResolver)_unitSources).TryGet(key, out getter);
                 }
             }
 

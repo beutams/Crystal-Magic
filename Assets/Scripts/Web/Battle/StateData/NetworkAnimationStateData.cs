@@ -15,23 +15,17 @@ public sealed class NetworkAnimationStateData : NetworkStateData
             return;
 
         FixedString64Bytes fixedName = new(animationName ?? string.Empty);
-        context.SetOrAdd(entity, new UnitAnimationStateComponent
-        {
-            AnimationName = fixedName,
-            StartFrame = startFrame,
-            Sequence = sequence,
-            NetworkDirty = 0,
-        });
+        UnitAnimationComponent animation = context.EntityManager.HasComponent<UnitAnimationComponent>(entity)
+            ? context.EntityManager.GetComponentData<UnitAnimationComponent>(entity)
+            : UnitAnimationComponent.CreateDefault();
+        bool requestChanged = !animation.AnimationName.Equals(fixedName) || animation.Sequence != sequence;
+        animation.AnimationName = fixedName;
+        animation.StartFrame = startFrame;
+        animation.Sequence = sequence;
+        animation.NetworkDirty = 0;
+        if (requestChanged)
+            animation.RequestedStartElapsedSeconds = context.GetElapsedSeconds(startFrame);
 
-        if (!context.EntityManager.HasComponent<UnitAnimationComponent>(entity))
-            return;
-
-        UnitAnimationComponent animation = context.EntityManager.GetComponentObject<UnitAnimationComponent>(entity);
-        if (animation == null)
-            return;
-
-        animation.CurrentAnimationName = fixedName;
-        animation.RequestedSequence = sequence;
-        animation.RequestedStartElapsedSeconds = context.GetElapsedSeconds(startFrame);
+        context.SetOrAdd(entity, animation);
     }
 }

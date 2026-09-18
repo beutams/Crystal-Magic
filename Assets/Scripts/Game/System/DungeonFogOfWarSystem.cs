@@ -39,11 +39,18 @@ namespace CrystalMagic.Core
 
         private void UpdateHostileVisuals(RuntimeDungeonFogData fogData)
         {
-            foreach ((UnitAnimationComponent animation, RefRO<UnitFactionComponent> faction, RefRO<LocalTransform> transform) in
-                     SystemAPI.Query<UnitAnimationComponent, RefRO<UnitFactionComponent>, RefRO<LocalTransform>>())
+            foreach ((RefRO<UnitAnimationComponent> _, RefRO<UnitFactionComponent> faction,
+                      RefRO<LocalTransform> transform, Entity entity) in
+                     SystemAPI.Query<RefRO<UnitAnimationComponent>, RefRO<UnitFactionComponent>, RefRO<LocalTransform>>()
+                         .WithEntityAccess())
             {
-                if (!UnitFactionUtility.IsHostile(faction.ValueRO.Value) || animation.Renderer == null)
+                if (!UnitFactionUtility.IsHostile(faction.ValueRO.Value) ||
+                    !EntityManager.HasComponent<SpriteRenderer>(entity))
+                {
                     continue;
+                }
+
+                SpriteRenderer spriteRenderer = EntityManager.GetComponentObject<SpriteRenderer>(entity);
 
                 Vector3 position = new(
                     transform.ValueRO.Position.x,
@@ -51,8 +58,8 @@ namespace CrystalMagic.Core
                     transform.ValueRO.Position.z);
                 bool shouldShow = fogData.TryGetCell(position, out Vector2Int cell) &&
                                   fogData.IsVisible(cell.x, cell.y);
-                if (animation.Renderer.enabled != shouldShow)
-                    animation.Renderer.enabled = shouldShow;
+                if (spriteRenderer.enabled != shouldShow)
+                    spriteRenderer.enabled = shouldShow;
             }
         }
     }

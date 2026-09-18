@@ -1,9 +1,17 @@
+using System;
 using System.Collections.Generic;
 using CrystalMagic.Core;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
-public enum UnitQueryTreeKind
+public struct UnitQueryHit
+{
+    public Entity Entity;
+    public float3 Position;
+}
+
+public enum UnitQueryGridKind
 {
     Unit,
     Interactable,
@@ -11,81 +19,100 @@ public enum UnitQueryTreeKind
 
 public static class UnitQueryUtility
 {
-    public static bool TryGetTree(EntityManager entityManager, UnitQueryTreeKind treeKind, out UnitQueryTree tree)
+    public static bool TryGetGrid(EntityManager entityManager, UnitQueryGridKind gridKind, out UnitQueryGrid grid)
     {
         EntityQuery singletonQuery = entityManager.CreateEntityQuery(
             ComponentType.ReadOnly<UnitQuerySingleton>(),
             ComponentType.ReadOnly<UnitQueryRuntimeComponent>());
-        if (singletonQuery.IsEmptyIgnoreFilter)
-        {
-            tree = null;
-            return false;
-        }
 
-        Entity singletonEntity = singletonQuery.GetSingletonEntity();
-        UnitQueryRuntimeComponent runtime = entityManager.GetComponentObject<UnitQueryRuntimeComponent>(singletonEntity);
-        if (runtime == null)
+        try
         {
-            tree = null;
-            return false;
-        }
+            if (singletonQuery.IsEmptyIgnoreFilter)
+            {
+                grid = null;
+                return false;
+            }
 
-        tree = treeKind == UnitQueryTreeKind.Interactable
-            ? runtime.InteractableTree
-            : runtime.UnitTree;
-        return tree != null;
+            Entity singletonEntity = singletonQuery.GetSingletonEntity();
+            UnitQueryRuntimeComponent runtime = entityManager.GetComponentObject<UnitQueryRuntimeComponent>(singletonEntity);
+            if (runtime == null)
+            {
+                grid = null;
+                return false;
+            }
+
+            grid = gridKind == UnitQueryGridKind.Interactable
+                ? runtime.InteractableGrid
+                : runtime.UnitGrid;
+            return grid != null && grid.IsCreated;
+        }
+        finally
+        {
+            singletonQuery.Dispose();
+        }
     }
 }
 
-public sealed class UnitQueryTree
+public sealed class UnitQueryGrid : IDisposable
 {
-    private const int MaxDepth = 6;
-    private const int LeafCapacity = 8;
-    private const float MinimumRootSize = 1f;
-    private const float SplitEpsilon = 0.01f;
-    private const float RootPadding = 0.25f;
+    public const float DefaultCellSize = 4f;
 
-    private readonly List<UnitQueryHit> _entries = new();
-    private readonly List<Node> _nodes = new();
-    private int _activeNodeCount;
-    private int _rootIndex = -1;
+    private static readonly UnitQueryHitComparer HitComparer = new();
 
-    public void Rebuild(List<UnitQueryHit> sourceEntries)
+    private NativeParallelMultiHashMap<long, UnitQueryHit> _entries;
+    private readonly float _inverseCellSize;
+
+    public bool IsCreated => _entries.IsCreated;
+    public float InverseCellSize => _inverseCellSize;
+
+    public UnitQueryGrid(int initialCapacity = 16, float cellSize = DefaultCellSize)
     {
-        Reset();
-        if (sourceEntries == null || sourceEntries.Count == 0)
+        float resolvedCellSize = math.max(0.01f, cellSize);
+        _inverseCellSize = 1f / resolvedCellSize;
+        _entries = new NativeParallelMultiHashMap<long, UnitQueryHit>(
+            math.max(1, initialCapacity),
+            Allocator.Persistent);
+    }
+
+    public void PrepareForBuild(int entryCount)
+    {
+        if (!_entries.IsCreated)
             return;
 
-        _entries.AddRange(sourceEntries);
+        if (entryCount > _entries.Capacity)
+            _entries.Capacity = math.max(entryCount, _entries.Capacity * 2);
 
-        float2 min = _entries[0].Position.xy;
-        float2 max = _entries[0].Position.xy;
-        for (int i = 1; i < _entries.Count; i++)
-        {
-            float2 position = _entries[i].Position.xy;
-            min = math.min(min, position);
-            max = math.max(max, position);
-        }
+        _entries.Clear();
+    }
 
-        float2 size = max - min;
-        float extent = math.max(MinimumRootSize, math.max(size.x, size.y) + RootPadding * 2f);
-        float2 center = (min + max) * 0.5f;
-        float2 halfExtent = new(extent * 0.5f);
+    public NativeParallelMultiHashMap<long, UnitQueryHit>.ParallelWriter AsParallelWriter()
+    {
+        return _entries.AsParallelWriter();
+    }
 
-        _rootIndex = AllocateNode(center - halfExtent, center + halfExtent);
-        for (int i = 0; i < _entries.Count; i++)
-            Insert(_rootIndex, i, 0);
+    public NativeParallelMultiHashMap<long, UnitQueryHit>.ReadOnly AsReadOnly()
+    {
+        return _entries.AsReadOnly();
     }
 
     public void QueryCircle(float3 center, float radius, List<UnitQueryHit> results, bool reportDebug = true)
     {
         results.Clear();
-        if (radius <= 0f)
+        if (!_entries.IsCreated || radius <= 0f)
             return;
 
-        if (_rootIndex >= 0)
-            QueryCircle(_rootIndex, center.xy, radius * radius, results);
+        float2 queryCenter = center.xy;
+        float radiusSq = radius * radius;
+        int2 minCell = GetCell(queryCenter - radius, _inverseCellSize);
+        int2 maxCell = GetCell(queryCenter + radius, _inverseCellSize);
 
+        for (int y = minCell.y; y <= maxCell.y; y++)
+        {
+            for (int x = minCell.x; x <= maxCell.x; x++)
+                AddCircleHits(GetCellKey(new int2(x, y)), queryCenter, radiusSq, results);
+        }
+
+        SortResults(results);
         if (reportDebug)
         {
             DebugQueryShapeReporter.ReportCircle(center, radius);
@@ -96,7 +123,7 @@ public sealed class UnitQueryTree
     public void QueryForwardRect(float3 origin, float2 forward, float length, float width, List<UnitQueryHit> results)
     {
         results.Clear();
-        if (length <= 0f || width <= 0f || math.lengthsq(forward) <= 0.0001f)
+        if (!_entries.IsCreated || length <= 0f || width <= 0f || math.lengthsq(forward) <= 0.0001f)
             return;
 
         float2 normalizedForward = math.normalize(forward);
@@ -111,10 +138,25 @@ public sealed class UnitQueryTree
         float2 corner3 = end + right * halfWidth;
         float2 rectMin = math.min(math.min(corner0, corner1), math.min(corner2, corner3));
         float2 rectMax = math.max(math.max(corner0, corner1), math.max(corner2, corner3));
+        int2 minCell = GetCell(rectMin, _inverseCellSize);
+        int2 maxCell = GetCell(rectMax, _inverseCellSize);
 
-        if (_rootIndex >= 0)
-            QueryForwardRect(_rootIndex, origin.xy, normalizedForward, right, length, halfWidth, rectMin, rectMax, results);
+        for (int y = minCell.y; y <= maxCell.y; y++)
+        {
+            for (int x = minCell.x; x <= maxCell.x; x++)
+            {
+                AddForwardRectHits(
+                    GetCellKey(new int2(x, y)),
+                    origin.xy,
+                    normalizedForward,
+                    right,
+                    length,
+                    halfWidth,
+                    results);
+            }
+        }
 
+        SortResults(results);
         DebugQueryShapeReporter.ReportForwardRect(origin, normalizedForward, length, width);
         ReportHits(origin, results);
     }
@@ -122,15 +164,22 @@ public sealed class UnitQueryTree
     public void QueryAxisAlignedRect(float3 center, float2 size, List<UnitQueryHit> results)
     {
         results.Clear();
-        if (math.any(size <= 0f))
+        if (!_entries.IsCreated || math.any(size <= 0f))
             return;
 
         float2 halfSize = size * 0.5f;
         float2 rectMin = center.xy - halfSize;
         float2 rectMax = center.xy + halfSize;
-        if (_rootIndex >= 0)
-            QueryAxisAlignedRect(_rootIndex, rectMin, rectMax, results);
+        int2 minCell = GetCell(rectMin, _inverseCellSize);
+        int2 maxCell = GetCell(rectMax, _inverseCellSize);
 
+        for (int y = minCell.y; y <= maxCell.y; y++)
+        {
+            for (int x = minCell.x; x <= maxCell.x; x++)
+                AddAxisAlignedRectHits(GetCellKey(new int2(x, y)), rectMin, rectMax, results);
+        }
+
+        SortResults(results);
         DebugQueryShapeReporter.ReportForwardRect(
             new float3(rectMin.x, center.y, center.z),
             new float2(1f, 0f),
@@ -142,17 +191,130 @@ public sealed class UnitQueryTree
     public void QueryCone(float3 origin, float2 forward, float radius, float angleDegrees, List<UnitQueryHit> results)
     {
         results.Clear();
-        if (radius <= 0f || angleDegrees <= 0f || math.lengthsq(forward) <= 0.0001f)
+        if (!_entries.IsCreated || radius <= 0f || angleDegrees <= 0f || math.lengthsq(forward) <= 0.0001f)
             return;
 
         float2 normalizedForward = math.normalize(forward);
         float radiusSq = radius * radius;
         float minDot = math.cos(math.radians(math.clamp(angleDegrees, 0f, 360f) * 0.5f));
-        if (_rootIndex >= 0)
-            QueryCone(_rootIndex, origin.xy, normalizedForward, radiusSq, minDot, results);
+        int2 minCell = GetCell(origin.xy - radius, _inverseCellSize);
+        int2 maxCell = GetCell(origin.xy + radius, _inverseCellSize);
 
+        for (int y = minCell.y; y <= maxCell.y; y++)
+        {
+            for (int x = minCell.x; x <= maxCell.x; x++)
+            {
+                AddConeHits(
+                    GetCellKey(new int2(x, y)),
+                    origin.xy,
+                    normalizedForward,
+                    radiusSq,
+                    minDot,
+                    results);
+            }
+        }
+
+        SortResults(results);
         DebugQueryShapeReporter.ReportCone(origin, normalizedForward, radius, angleDegrees);
         ReportHits(origin, results);
+    }
+
+    public void Dispose()
+    {
+        if (_entries.IsCreated)
+            _entries.Dispose();
+    }
+
+    public static int2 GetCell(float2 position, float inverseCellSize)
+    {
+        return (int2)math.floor(position * inverseCellSize);
+    }
+
+    public static long GetCellKey(int2 cell)
+    {
+        return ((long)cell.x << 32) | (uint)cell.y;
+    }
+
+    private void AddCircleHits(long cellKey, float2 center, float radiusSq, List<UnitQueryHit> results)
+    {
+        if (!_entries.TryGetFirstValue(cellKey, out UnitQueryHit hit, out NativeParallelMultiHashMapIterator<long> iterator))
+            return;
+
+        do
+        {
+            if (math.lengthsq(hit.Position.xy - center) <= radiusSq)
+                results.Add(hit);
+        } while (_entries.TryGetNextValue(out hit, ref iterator));
+    }
+
+    private void AddForwardRectHits(
+        long cellKey,
+        float2 origin,
+        float2 normalizedForward,
+        float2 right,
+        float length,
+        float halfWidth,
+        List<UnitQueryHit> results)
+    {
+        if (!_entries.TryGetFirstValue(cellKey, out UnitQueryHit hit, out NativeParallelMultiHashMapIterator<long> iterator))
+            return;
+
+        do
+        {
+            float2 difference = hit.Position.xy - origin;
+            float forwardDistance = math.dot(difference, normalizedForward);
+            if (forwardDistance < 0f || forwardDistance > length)
+                continue;
+
+            float lateralDistance = math.abs(math.dot(difference, right));
+            if (lateralDistance <= halfWidth)
+                results.Add(hit);
+        } while (_entries.TryGetNextValue(out hit, ref iterator));
+    }
+
+    private void AddAxisAlignedRectHits(long cellKey, float2 rectMin, float2 rectMax, List<UnitQueryHit> results)
+    {
+        if (!_entries.TryGetFirstValue(cellKey, out UnitQueryHit hit, out NativeParallelMultiHashMapIterator<long> iterator))
+            return;
+
+        do
+        {
+            float2 position = hit.Position.xy;
+            if (!math.any(position < rectMin) && !math.any(position > rectMax))
+                results.Add(hit);
+        } while (_entries.TryGetNextValue(out hit, ref iterator));
+    }
+
+    private void AddConeHits(
+        long cellKey,
+        float2 origin,
+        float2 normalizedForward,
+        float radiusSq,
+        float minDot,
+        List<UnitQueryHit> results)
+    {
+        if (!_entries.TryGetFirstValue(cellKey, out UnitQueryHit hit, out NativeParallelMultiHashMapIterator<long> iterator))
+            return;
+
+        do
+        {
+            float2 difference = hit.Position.xy - origin;
+            float distanceSq = math.lengthsq(difference);
+            if (distanceSq > radiusSq)
+                continue;
+
+            if (distanceSq <= 0.0001f ||
+                math.dot(normalizedForward, difference * math.rsqrt(distanceSq)) >= minDot)
+            {
+                results.Add(hit);
+            }
+        } while (_entries.TryGetNextValue(out hit, ref iterator));
+    }
+
+    private static void SortResults(List<UnitQueryHit> results)
+    {
+        if (results.Count > 1)
+            results.Sort(HitComparer);
     }
 
     private static void ReportHits(float3 origin, List<UnitQueryHit> results)
@@ -161,262 +323,14 @@ public sealed class UnitQueryTree
             DebugQueryShapeReporter.ReportHit(origin, results[i].Position);
     }
 
-    private void Reset()
+    private sealed class UnitQueryHitComparer : IComparer<UnitQueryHit>
     {
-        for (int i = 0; i < _activeNodeCount; i++)
-            _nodes[i].Reset(float2.zero, float2.zero);
-
-        _entries.Clear();
-        _activeNodeCount = 0;
-        _rootIndex = -1;
-    }
-
-    private int AllocateNode(float2 min, float2 max)
-    {
-        Node node;
-        if (_activeNodeCount < _nodes.Count)
+        public int Compare(UnitQueryHit left, UnitQueryHit right)
         {
-            node = _nodes[_activeNodeCount];
-        }
-        else
-        {
-            node = new Node();
-            _nodes.Add(node);
-        }
-
-        node.Reset(min, max);
-        return _activeNodeCount++;
-    }
-
-    private void Insert(int nodeIndex, int entryIndex, int depth)
-    {
-        Node node = _nodes[nodeIndex];
-        if (!node.HasChildren)
-        {
-            if (node.EntryIndices.Count < LeafCapacity || !CanSplit(node, depth))
-            {
-                node.EntryIndices.Add(entryIndex);
-                return;
-            }
-
-            Split(nodeIndex);
-            RedistributeEntries(nodeIndex, depth);
-        }
-
-        int childIndex = GetChildIndex(node, _entries[entryIndex].Position.xy);
-        Insert(childIndex, entryIndex, depth + 1);
-    }
-
-    private bool CanSplit(Node node, int depth)
-    {
-        if (depth >= MaxDepth)
-            return false;
-
-        float2 size = node.Max - node.Min;
-        return size.x > SplitEpsilon && size.y > SplitEpsilon;
-    }
-
-    private void Split(int nodeIndex)
-    {
-        Node node = _nodes[nodeIndex];
-        float2 center = (node.Min + node.Max) * 0.5f;
-
-        node.Child0 = AllocateNode(node.Min, center);
-        node.Child1 = AllocateNode(new float2(center.x, node.Min.y), new float2(node.Max.x, center.y));
-        node.Child2 = AllocateNode(new float2(node.Min.x, center.y), new float2(center.x, node.Max.y));
-        node.Child3 = AllocateNode(center, node.Max);
-    }
-
-    private void RedistributeEntries(int nodeIndex, int depth)
-    {
-        Node node = _nodes[nodeIndex];
-        for (int i = 0; i < node.EntryIndices.Count; i++)
-        {
-            int existingEntryIndex = node.EntryIndices[i];
-            int childIndex = GetChildIndex(node, _entries[existingEntryIndex].Position.xy);
-            Insert(childIndex, existingEntryIndex, depth + 1);
-        }
-
-        node.EntryIndices.Clear();
-    }
-
-    private static int GetChildIndex(Node node, float2 position)
-    {
-        float2 center = (node.Min + node.Max) * 0.5f;
-        bool right = position.x >= center.x;
-        bool top = position.y >= center.y;
-
-        if (top)
-            return right ? node.Child3 : node.Child2;
-
-        return right ? node.Child1 : node.Child0;
-    }
-
-    private void QueryCircle(int nodeIndex, float2 center, float radiusSq, List<UnitQueryHit> results)
-    {
-        Node node = _nodes[nodeIndex];
-        if (!IntersectsCircle(node.Min, node.Max, center, radiusSq))
-            return;
-
-        for (int i = 0; i < node.EntryIndices.Count; i++)
-        {
-            UnitQueryHit entry = _entries[node.EntryIndices[i]];
-            if (math.lengthsq(entry.Position.xy - center) > radiusSq)
-                continue;
-
-            results.Add(entry);
-        }
-
-        if (!node.HasChildren)
-            return;
-
-        QueryCircle(node.Child0, center, radiusSq, results);
-        QueryCircle(node.Child1, center, radiusSq, results);
-        QueryCircle(node.Child2, center, radiusSq, results);
-        QueryCircle(node.Child3, center, radiusSq, results);
-    }
-
-    private void QueryForwardRect(
-        int nodeIndex,
-        float2 origin,
-        float2 normalizedForward,
-        float2 right,
-        float length,
-        float halfWidth,
-        float2 rectMin,
-        float2 rectMax,
-        List<UnitQueryHit> results)
-    {
-        Node node = _nodes[nodeIndex];
-        if (!OverlapsAabb(node.Min, node.Max, rectMin, rectMax))
-            return;
-
-        for (int i = 0; i < node.EntryIndices.Count; i++)
-        {
-            UnitQueryHit entry = _entries[node.EntryIndices[i]];
-            float2 diff = entry.Position.xy - origin;
-            float forwardDistance = math.dot(diff, normalizedForward);
-            if (forwardDistance < 0f || forwardDistance > length)
-                continue;
-
-            float lateralDistance = math.abs(math.dot(diff, right));
-            if (lateralDistance > halfWidth)
-                continue;
-
-            results.Add(entry);
-        }
-
-        if (!node.HasChildren)
-            return;
-
-        QueryForwardRect(node.Child0, origin, normalizedForward, right, length, halfWidth, rectMin, rectMax, results);
-        QueryForwardRect(node.Child1, origin, normalizedForward, right, length, halfWidth, rectMin, rectMax, results);
-        QueryForwardRect(node.Child2, origin, normalizedForward, right, length, halfWidth, rectMin, rectMax, results);
-        QueryForwardRect(node.Child3, origin, normalizedForward, right, length, halfWidth, rectMin, rectMax, results);
-    }
-
-    private void QueryAxisAlignedRect(int nodeIndex, float2 rectMin, float2 rectMax, List<UnitQueryHit> results)
-    {
-        Node node = _nodes[nodeIndex];
-        if (!OverlapsAabb(node.Min, node.Max, rectMin, rectMax))
-            return;
-
-        for (int i = 0; i < node.EntryIndices.Count; i++)
-        {
-            UnitQueryHit entry = _entries[node.EntryIndices[i]];
-            float2 position = entry.Position.xy;
-            if (math.any(position < rectMin) || math.any(position > rectMax))
-                continue;
-
-            results.Add(entry);
-        }
-
-        if (!node.HasChildren)
-            return;
-
-        QueryAxisAlignedRect(node.Child0, rectMin, rectMax, results);
-        QueryAxisAlignedRect(node.Child1, rectMin, rectMax, results);
-        QueryAxisAlignedRect(node.Child2, rectMin, rectMax, results);
-        QueryAxisAlignedRect(node.Child3, rectMin, rectMax, results);
-    }
-
-    private void QueryCone(
-        int nodeIndex,
-        float2 origin,
-        float2 normalizedForward,
-        float radiusSq,
-        float minDot,
-        List<UnitQueryHit> results)
-    {
-        Node node = _nodes[nodeIndex];
-        if (!IntersectsCircle(node.Min, node.Max, origin, radiusSq))
-            return;
-
-        for (int i = 0; i < node.EntryIndices.Count; i++)
-        {
-            UnitQueryHit entry = _entries[node.EntryIndices[i]];
-            float2 diff = entry.Position.xy - origin;
-            float distanceSq = math.lengthsq(diff);
-            if (distanceSq > radiusSq)
-                continue;
-
-            if (distanceSq <= 0.0001f)
-            {
-                results.Add(entry);
-                continue;
-            }
-
-            float2 normalizedDiff = diff * math.rsqrt(distanceSq);
-            if (math.dot(normalizedForward, normalizedDiff) < minDot)
-                continue;
-
-            results.Add(entry);
-        }
-
-        if (!node.HasChildren)
-            return;
-
-        QueryCone(node.Child0, origin, normalizedForward, radiusSq, minDot, results);
-        QueryCone(node.Child1, origin, normalizedForward, radiusSq, minDot, results);
-        QueryCone(node.Child2, origin, normalizedForward, radiusSq, minDot, results);
-        QueryCone(node.Child3, origin, normalizedForward, radiusSq, minDot, results);
-    }
-
-    private static bool IntersectsCircle(float2 min, float2 max, float2 center, float radiusSq)
-    {
-        float2 closest = math.clamp(center, min, max);
-        return math.lengthsq(closest - center) <= radiusSq;
-    }
-
-    private static bool OverlapsAabb(float2 minA, float2 maxA, float2 minB, float2 maxB)
-    {
-        return minA.x <= maxB.x &&
-               maxA.x >= minB.x &&
-               minA.y <= maxB.y &&
-               maxA.y >= minB.y;
-    }
-
-    private sealed class Node
-    {
-        public readonly List<int> EntryIndices = new();
-        public float2 Min;
-        public float2 Max;
-        public int Child0 = -1;
-        public int Child1 = -1;
-        public int Child2 = -1;
-        public int Child3 = -1;
-
-        public bool HasChildren => Child0 >= 0;
-
-        public void Reset(float2 min, float2 max)
-        {
-            Min = min;
-            Max = max;
-            Child0 = -1;
-            Child1 = -1;
-            Child2 = -1;
-            Child3 = -1;
-            EntryIndices.Clear();
+            int indexComparison = left.Entity.Index.CompareTo(right.Entity.Index);
+            return indexComparison != 0
+                ? indexComparison
+                : left.Entity.Version.CompareTo(right.Entity.Version);
         }
     }
 }

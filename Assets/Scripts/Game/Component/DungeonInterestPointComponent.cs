@@ -31,82 +31,83 @@ public struct DungeonRuntimeOwnedEntity : IComponentData
 {
 }
 
-[UnitSourceAuthoring(typeof(DungeonInterestPointAuthoring))]
-public sealed class DungeonInterestPointSource : UnitManagedComponentSource<DungeonInterestPointComponent>
+[UnitSourceProvider(typeof(DungeonInterestPointComponent), typeof(DungeonInterestPointAuthoring))]
+public static class DungeonInterestPointSource
 {
-    private static readonly ComparatorParameterDefinition[] s_noParameters = Array.Empty<ComparatorParameterDefinition>();
-    private static readonly ComparatorParameterDefinition[] s_boolParameter =
+    [UnitSourceGet(0, "unit.interestPoint.encounterId", UnitValueCategory.Number)]
+    [UnitSourceGet(1, "unit.interestPoint.squadId", UnitValueCategory.Number)]
+    [UnitSourceGet(2, "unit.interestPoint.spawnDistance", UnitValueCategory.Number)]
+    [UnitSourceGet(3, "unit.interestPoint.patrolSpeed", UnitValueCategory.Number)]
+    [UnitSourceGet(4, "unit.interestPoint.arrivalDistance", UnitValueCategory.Number)]
+    [UnitSourceGet(5, "unit.interestPoint.hasPatrol", UnitValueCategory.Bool)]
+    [UnitSourceGet(6, "unit.interestPoint.currentTarget", UnitValueCategory.Entity)]
+    [UnitSourceGet(7, "unit.interestPoint.playerDistance", UnitValueCategory.Number)]
+    [UnitSourceGet(8, "unit.interestPoint.shouldSpawnPatrol", UnitValueCategory.Bool)]
+    [UnitSourceGet(9, "unit.interestPoint.targetReached", UnitValueCategory.Bool)]
+    public static bool TryGet(
+        int operation,
+        EntityManager entityManager,
+        Entity entity,
+        in UnitSourceArguments arguments,
+        out UnitSourceValue result)
     {
-        new ComparatorParameterDefinition("Value", UnitValueCategory.Bool),
-    };
-    private static readonly ComparatorParameterDefinition[] s_numberParameter =
+        result = default;
+        if (!entityManager.Exists(entity) || !entityManager.HasComponent<DungeonInterestPointComponent>(entity))
+            return false;
+
+        DungeonInterestPointComponent value = entityManager.GetComponentObject<DungeonInterestPointComponent>(entity);
+        if (value == null)
+            return false;
+
+        result = operation switch
+        {
+            0 => UnitSourceValue.FromInt(value.EncounterId),
+            1 => UnitSourceValue.FromInt(value.SquadId),
+            2 => UnitSourceValue.FromFloat(value.SpawnDistance),
+            3 => UnitSourceValue.FromFloat(value.PatrolSpeed),
+            4 => UnitSourceValue.FromFloat(value.ArrivalDistance),
+            5 => UnitSourceValue.FromBool(UnitVariableSource.CountConsumers(entityManager, entity) > 0),
+            6 => UnitSourceValue.FromEntity(value.CurrentTarget),
+            7 => UnitSourceValue.FromFloat(DungeonPatrolRuntimeUtility.GetNearestPlayerDistance(entityManager, entity)),
+            8 => UnitSourceValue.FromBool(value.PatrolEnabled && UnitVariableSource.CountConsumers(entityManager, entity) < 1 &&
+                                          DungeonPatrolRuntimeUtility.IsFarFromPlayer(entityManager, entity, value.SpawnDistance)),
+            9 => UnitSourceValue.FromBool(DungeonPatrolRuntimeUtility.IsTargetReached(entityManager, entity, value)),
+            _ => UnitSourceValue.None,
+        };
+        return result.Type != UnitValueType.None;
+    }
+
+    [UnitSourceSet(0, "unit.interestPoint.setPatrolActive", UnitValueCategory.Bool, ParameterNames = new[] { "Value" })]
+    [UnitSourceSet(1, "unit.interestPoint.setNextPatrolTarget", UnitValueCategory.Bool, ParameterNames = new[] { "Value" })]
+    [UnitSourceSet(2, "unit.interestPoint.setPatrolSpeed", UnitValueCategory.Number, ParameterNames = new[] { "Value" })]
+    public static bool TrySet(
+        int operation,
+        EntityManager entityManager,
+        Entity entity,
+        in UnitSourceArguments arguments)
     {
-        new ComparatorParameterDefinition("Value", UnitValueCategory.Number),
-    };
+        if (!entityManager.Exists(entity) || !entityManager.HasComponent<DungeonInterestPointComponent>(entity))
+            return false;
 
-    protected override void Define(UnitSourceDefinitionBuilder<DungeonInterestPointComponent> builder)
-    {
-        builder.AddGet("unit.interestPoint.encounterId", UnitValueCategory.Number,
-            (in DungeonInterestPointComponent value) => UnitValue.FromInt(value.EncounterId));
-        builder.AddGet("unit.interestPoint.squadId", UnitValueCategory.Number,
-            (in DungeonInterestPointComponent value) => UnitValue.FromInt(value.SquadId));
-        builder.AddGet("unit.interestPoint.spawnDistance", UnitValueCategory.Number,
-            (in DungeonInterestPointComponent value) => UnitValue.FromFloat(value.SpawnDistance));
-        builder.AddGet("unit.interestPoint.patrolSpeed", UnitValueCategory.Number,
-            (in DungeonInterestPointComponent value) => UnitValue.FromFloat(value.PatrolSpeed));
-        builder.AddGet("unit.interestPoint.arrivalDistance", UnitValueCategory.Number,
-            (in DungeonInterestPointComponent value) => UnitValue.FromFloat(value.ArrivalDistance));
-        builder.AddContextGet("unit.interestPoint.hasPatrol", UnitValueCategory.Bool, s_noParameters,
-            static (in UnitSourceBindingContext context, in DungeonInterestPointComponent _, UnitValue[] _) =>
-                UnitValue.FromBool(UnitVariableSource.CountConsumers(context.EntityManager, context.Entity) > 0));
-        builder.AddGet("unit.interestPoint.currentTarget", UnitValueCategory.Entity,
-            (in DungeonInterestPointComponent value) => UnitValue.FromEntity(value.CurrentTarget));
+        DungeonInterestPointComponent value = entityManager.GetComponentObject<DungeonInterestPointComponent>(entity);
+        if (value == null)
+            return false;
 
-        builder.AddContextGet("unit.interestPoint.playerDistance", UnitValueCategory.Number, s_noParameters,
-            static (in UnitSourceBindingContext context, in DungeonInterestPointComponent _, UnitValue[] _) =>
-                UnitValue.FromFloat(DungeonPatrolRuntimeUtility.GetNearestPlayerDistance(context.EntityManager, context.Entity)));
-        builder.AddContextGet("unit.interestPoint.shouldSpawnPatrol", UnitValueCategory.Bool, s_noParameters,
-            static (in UnitSourceBindingContext context, in DungeonInterestPointComponent value, UnitValue[] _) =>
-                UnitValue.FromBool(value.PatrolEnabled && UnitVariableSource.CountConsumers(context.EntityManager, context.Entity) < 1 &&
-                                   DungeonPatrolRuntimeUtility.IsFarFromPlayer(context.EntityManager, context.Entity, value.SpawnDistance)));
-        builder.AddContextGet("unit.interestPoint.targetReached", UnitValueCategory.Bool, s_noParameters,
-            static (in UnitSourceBindingContext context, in DungeonInterestPointComponent value, UnitValue[] _) =>
-                UnitValue.FromBool(DungeonPatrolRuntimeUtility.IsTargetReached(context.EntityManager, context.Entity, value)));
-
-        builder.AddContextSet("unit.interestPoint.setPatrolActive", s_boolParameter,
-            static (in UnitSourceBindingContext context, ref DungeonInterestPointComponent value, UnitValue[] input) =>
-            {
-                if (input == null || input.Length != 1 || input[0].Type != UnitValueType.Bool)
-                    return false;
-
-                value.PatrolEnabled = input[0].Bool;
-                DungeonPatrolRuntimeUtility.SetSharedPatrolActive(
-                    context.EntityManager,
-                    context.Entity,
-                    value.PatrolEnabled);
+        switch (operation)
+        {
+            case 0 when arguments.TryGetBool(0, out bool active):
+                value.PatrolEnabled = active;
+                DungeonPatrolRuntimeUtility.SetSharedPatrolActive(entityManager, entity, active);
                 return true;
-            });
-        builder.AddContextSet("unit.interestPoint.setNextPatrolTarget", s_boolParameter,
-            static (in UnitSourceBindingContext context, ref DungeonInterestPointComponent value, UnitValue[] input) =>
-            {
-                if (input == null || input.Length != 1 || input[0].Type != UnitValueType.Bool)
-                    return false;
-
-                return !input[0].Bool || DungeonPatrolRuntimeUtility.TrySelectNextTarget(
-                    context.EntityManager,
-                    context.Entity,
-                    value);
-            });
-        builder.AddContextSet("unit.interestPoint.setPatrolSpeed", s_numberParameter,
-            static (in UnitSourceBindingContext context, ref DungeonInterestPointComponent value, UnitValue[] input) =>
-            {
-                if (input == null || input.Length != 1 || !input[0].TryGetNumber(out float speed))
-                    return false;
-
+            case 1 when arguments.TryGetBool(0, out bool advance):
+                return !advance || DungeonPatrolRuntimeUtility.TrySelectNextTarget(entityManager, entity, value);
+            case 2 when arguments.TryGetNumber(0, out float speed):
                 value.PatrolSpeed = math.max(0f, speed);
-                DungeonPatrolRuntimeUtility.SetSharedPatrolValues(context.EntityManager, context.Entity, value);
+                DungeonPatrolRuntimeUtility.SetSharedPatrolValues(entityManager, entity, value);
                 return true;
-            });
+            default:
+                return false;
+        }
     }
 }
 

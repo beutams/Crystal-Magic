@@ -989,9 +989,11 @@ namespace CrystalMagic.Editor.Skill
                 return s_schema;
 
             UnitSourceSchemaBuilder builder = new();
-            IReadOnlyList<UnitComponentSource> sources = UnitComponentSourceRegistry.Sources;
-            for (int i = 0; i < sources.Count; i++)
-                sources[i]?.Describe(builder);
+            UnitSourceSchema unitSchema = UnitComponentSourceRegistry.CreateSchema();
+            foreach (UnitSourceGetSchemaEntry entry in unitSchema.Gets)
+                builder.AddGet(entry.Key, entry.ComponentType, entry.ReturnType, entry.Parameters);
+            foreach (UnitSourceSetSchemaEntry entry in unitSchema.Sets)
+                builder.AddSet(entry.Key, entry.ComponentType, entry.Parameters, entry.RequiresKey);
 
             builder.AddGet(EffectConditionUtility.OriginEntityKey, typeof(SkillContent), UnitValueCategory.Entity, s_noParameters);
             builder.AddGet(EffectConditionUtility.TargetEntityKey, typeof(SkillContent), UnitValueCategory.Entity, s_noParameters);

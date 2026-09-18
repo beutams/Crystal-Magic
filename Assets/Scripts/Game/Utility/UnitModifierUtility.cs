@@ -1,17 +1,19 @@
-using CrystalMagic.Game.Data;
+using CrystalMagic.Core;
 using Unity.Entities;
 
 public static class UnitModifierUtility
 {
-    public static void ApplyEquipmentPropertyModifiers(EntityManager entityManager, Entity entity, PropertyModifierSet modifiers)
+    public static void ApplyEquipmentProperties(
+        EntityManager entityManager,
+        Entity entity,
+        in EquipmentPropertyData properties)
     {
         if (entityManager.HasComponent<UnitMoveComponent>(entity))
         {
             UnitMoveComponent move = entityManager.GetComponentData<UnitMoveComponent>(entity);
-            float moveSpeedOffset = modifiers.GetBonus(PropertyModifierChannel.MoveSpeed);
-            if (move.BaseMoveSpeedOffset != moveSpeedOffset)
+            if (move.BaseMoveSpeedOffset != properties.MoveSpeed)
             {
-                move.BaseMoveSpeedOffset = moveSpeedOffset;
+                move.BaseMoveSpeedOffset = properties.MoveSpeed;
                 move.NetworkDirty = 1;
                 entityManager.SetComponentData(entity, move);
             }
@@ -20,16 +22,13 @@ public static class UnitModifierUtility
         if (entityManager.HasComponent<UnitVitalityComponent>(entity))
         {
             UnitVitalityComponent vitality = entityManager.GetComponentData<UnitVitalityComponent>(entity);
-            float maxHealthOffset = modifiers.GetBonus(PropertyModifierChannel.MaxHealth);
-            float healthRegenOffset = modifiers.GetBonus(PropertyModifierChannel.HealthRegen);
-            float defenseOffset = modifiers.GetBonus(PropertyModifierChannel.Defense);
-            if (vitality.BaseMaxHealthOffset != maxHealthOffset ||
-                vitality.BaseHealthRegenOffset != healthRegenOffset ||
-                vitality.BaseDefenseOffset != defenseOffset)
+            if (vitality.BaseMaxHealthOffset != properties.MaxHealth ||
+                vitality.BaseHealthRegenOffset != properties.HealthRegen ||
+                vitality.BaseDefenseOffset != properties.Defense)
             {
-                vitality.BaseMaxHealthOffset = maxHealthOffset;
-                vitality.BaseHealthRegenOffset = healthRegenOffset;
-                vitality.BaseDefenseOffset = defenseOffset;
+                vitality.BaseMaxHealthOffset = properties.MaxHealth;
+                vitality.BaseHealthRegenOffset = properties.HealthRegen;
+                vitality.BaseDefenseOffset = properties.Defense;
                 vitality.NetworkDirty = 1;
                 entityManager.SetComponentData(entity, vitality);
             }
@@ -38,12 +37,11 @@ public static class UnitModifierUtility
         if (entityManager.HasComponent<UnitManaComponent>(entity))
         {
             UnitManaComponent mana = entityManager.GetComponentData<UnitManaComponent>(entity);
-            float maxMpOffset = modifiers.GetBonus(PropertyModifierChannel.MaxMp);
-            float mpRegenOffset = modifiers.GetBonus(PropertyModifierChannel.MpRegen);
-            if (mana.BaseMaxMpOffset != maxMpOffset || mana.BaseMpRegenPerSecondOffset != mpRegenOffset)
+            if (mana.BaseMaxMpOffset != properties.MaxMp ||
+                mana.BaseMpRegenPerSecondOffset != properties.MpRegen)
             {
-                mana.BaseMaxMpOffset = maxMpOffset;
-                mana.BaseMpRegenPerSecondOffset = mpRegenOffset;
+                mana.BaseMaxMpOffset = properties.MaxMp;
+                mana.BaseMpRegenPerSecondOffset = properties.MpRegen;
                 mana.NetworkDirty = 1;
                 entityManager.SetComponentData(entity, mana);
             }
@@ -52,25 +50,39 @@ public static class UnitModifierUtility
         if (entityManager.HasComponent<UnitAttackComponent>(entity))
         {
             UnitAttackComponent attack = entityManager.GetComponentData<UnitAttackComponent>(entity);
-            attack.BaseAttackPowerOffset = modifiers.GetBonus(PropertyModifierChannel.AttackPower);
-            attack.BaseSkillRangeOffset = modifiers.GetBonus(PropertyModifierChannel.SkillRange);
-            attack.BaseChantSpeedBonusOffset = modifiers.GetBonus(PropertyModifierChannel.ChantSpeed);
-            entityManager.SetComponentData(entity, attack);
+            if (attack.BaseAttackPowerOffset != properties.AttackPower ||
+                attack.BaseSkillRangeOffset != properties.SkillRange ||
+                attack.BaseChantSpeedBonusOffset != properties.ChantSpeed)
+            {
+                attack.BaseAttackPowerOffset = properties.AttackPower;
+                attack.BaseSkillRangeOffset = properties.SkillRange;
+                attack.BaseChantSpeedBonusOffset = properties.ChantSpeed;
+                entityManager.SetComponentData(entity, attack);
+            }
         }
 
-        ApplyElementBonuses(entityManager, entity, modifiers);
+        ApplyElementBonuses(entityManager, entity, in properties);
     }
 
-    private static void ApplyElementBonuses(EntityManager entityManager, Entity entity, PropertyModifierSet modifiers)
+    private static void ApplyElementBonuses(
+        EntityManager entityManager,
+        Entity entity,
+        in EquipmentPropertyData properties)
     {
         if (!entityManager.HasComponent<UnitElementComponent>(entity))
             return;
 
         UnitElementComponent element = entityManager.GetComponentData<UnitElementComponent>(entity);
-        element.WaterPower = modifiers.GetBonus(PropertyModifierChannel.WaterPower);
-        element.FirePower = modifiers.GetBonus(PropertyModifierChannel.FirePower);
-        element.LightningPower = modifiers.GetBonus(PropertyModifierChannel.LightningPower);
-        element.WindPower = modifiers.GetBonus(PropertyModifierChannel.WindPower);
-        entityManager.SetComponentData(entity, element);
+        if (element.WaterPower != properties.WaterPower ||
+            element.FirePower != properties.FirePower ||
+            element.LightningPower != properties.LightningPower ||
+            element.WindPower != properties.WindPower)
+        {
+            element.WaterPower = properties.WaterPower;
+            element.FirePower = properties.FirePower;
+            element.LightningPower = properties.LightningPower;
+            element.WindPower = properties.WindPower;
+            entityManager.SetComponentData(entity, element);
+        }
     }
 }

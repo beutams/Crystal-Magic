@@ -39,157 +39,83 @@ public struct UnitPerceptionComponent : IComponentData
 public struct UnitPerceptionUnitElement : IBufferElementData
 {
     public Entity Value;
+    public float DistanceSq;
+    public UnitFactionType Faction;
 }
 
-[UnitSourceAuthoring(typeof(UnitPerceptionAuthoring))]
-public sealed class UnitPerceptionSource : UnitComponentSource
+[UnitSourceProvider(typeof(UnitPerceptionComponent), typeof(UnitPerceptionAuthoring))]
+public static class UnitPerceptionSource
 {
-    private static readonly ComparatorParameterDefinition[] s_indexParameter =
+    [UnitSourceGet(0, "unit.perception.searchRadius", UnitValueCategory.Number)]
+    [UnitSourceGet(1, "unit.perception.unitName", UnitValueCategory.String)]
+    [UnitSourceGet(2, "unit.perception.unitCount", UnitValueCategory.Number)]
+    [UnitSourceGet(3, "unit.perception.unitAt", UnitValueCategory.Entity, UnitValueCategory.Number, ParameterNames = new[] { "Index" })]
+    [UnitSourceGet(4, "unit.perception.unitsByFactionCount", UnitValueCategory.Number, UnitValueCategory.Number, ParameterNames = new[] { "Faction" })]
+    [UnitSourceGet(5, "unit.perception.unitByFactionAt", UnitValueCategory.Entity, UnitValueCategory.Number, UnitValueCategory.Number, ParameterNames = new[] { "Faction", "Index" })]
+    [UnitSourceGet(6, "unit.perception.nearestUnitByFaction", UnitValueCategory.Entity, UnitValueCategory.Number, ParameterNames = new[] { "Faction" })]
+    [UnitSourceGet(7, "unit.perception.unitsByNameCount", UnitValueCategory.Number, UnitValueCategory.String, ParameterNames = new[] { "Unit Name" })]
+    [UnitSourceGet(8, "unit.perception.unitByNameAt", UnitValueCategory.Entity, UnitValueCategory.String, UnitValueCategory.Number, ParameterNames = new[] { "Unit Name", "Index" })]
+    [UnitSourceGet(9, "unit.perception.nearestUnitByName", UnitValueCategory.Entity, UnitValueCategory.String, ParameterNames = new[] { "Unit Name" })]
+    public static bool TryGet(
+        int operation,
+        EntityManager entityManager,
+        Entity entity,
+        in UnitSourceArguments arguments,
+        out UnitSourceValue result)
     {
-        new ComparatorParameterDefinition("Index", UnitValueCategory.Number),
-    };
-
-    private static readonly ComparatorParameterDefinition[] s_factionParameter =
-    {
-        new ComparatorParameterDefinition("Faction", UnitValueCategory.Number),
-    };
-
-    private static readonly ComparatorParameterDefinition[] s_factionAndIndexParameters =
-    {
-        new ComparatorParameterDefinition("Faction", UnitValueCategory.Number),
-        new ComparatorParameterDefinition("Index", UnitValueCategory.Number),
-    };
-
-    private static readonly ComparatorParameterDefinition[] s_unitNameParameter =
-    {
-        new ComparatorParameterDefinition("Unit Name", UnitValueCategory.String),
-    };
-
-    private static readonly ComparatorParameterDefinition[] s_unitNameAndIndexParameters =
-    {
-        new ComparatorParameterDefinition("Unit Name", UnitValueCategory.String),
-        new ComparatorParameterDefinition("Index", UnitValueCategory.Number),
-    };
-
-    public override System.Type ComponentType => typeof(UnitPerceptionComponent);
-
-    public override void Describe(UnitSourceSchemaBuilder schema)
-    {
-        schema.AddGet("unit.perception.searchRadius", ComponentType, UnitValueCategory.Number, System.Array.Empty<ComparatorParameterDefinition>());
-        schema.AddGet("unit.perception.unitName", ComponentType, UnitValueCategory.String, System.Array.Empty<ComparatorParameterDefinition>());
-        schema.AddGet("unit.perception.unitCount", ComponentType, UnitValueCategory.Number, System.Array.Empty<ComparatorParameterDefinition>());
-        schema.AddGet("unit.perception.unitAt", ComponentType, UnitValueCategory.Entity, s_indexParameter);
-        schema.AddGet("unit.perception.unitsByFactionCount", ComponentType, UnitValueCategory.Number, s_factionParameter);
-        schema.AddGet("unit.perception.unitByFactionAt", ComponentType, UnitValueCategory.Entity, s_factionAndIndexParameters);
-        schema.AddGet("unit.perception.nearestUnitByFaction", ComponentType, UnitValueCategory.Entity, s_factionParameter);
-        schema.AddGet("unit.perception.unitsByNameCount", ComponentType, UnitValueCategory.Number, s_unitNameParameter);
-        schema.AddGet("unit.perception.unitByNameAt", ComponentType, UnitValueCategory.Entity, s_unitNameAndIndexParameters);
-        schema.AddGet("unit.perception.nearestUnitByName", ComponentType, UnitValueCategory.Entity, s_unitNameParameter);
-    }
-
-    public override void Bind(in UnitSourceBindingContext context, UnitSourceAccessTable table)
-    {
-        EntityManager entityManager = context.EntityManager;
-        Entity entity = context.Entity;
+        result = default;
         if (!entityManager.Exists(entity) ||
             !entityManager.HasComponent<UnitPerceptionComponent>(entity) ||
             !entityManager.HasBuffer<UnitPerceptionUnitElement>(entity))
         {
-            return;
+            return false;
         }
 
-        table.AddGet(new UnitSourceGet(
-            "unit.perception.searchRadius",
-            UnitValueCategory.Number,
-            System.Array.Empty<ComparatorParameterDefinition>(),
-            _ => entityManager.Exists(entity) && entityManager.HasComponent<UnitPerceptionComponent>(entity)
-                ? UnitValue.FromFloat(entityManager.GetComponentData<UnitPerceptionComponent>(entity).SearchRadius)
-                : UnitValue.None));
-        table.AddGet(new UnitSourceGet(
-            "unit.perception.unitName",
-            UnitValueCategory.String,
-            System.Array.Empty<ComparatorParameterDefinition>(),
-            _ => entityManager.Exists(entity) && entityManager.HasComponent<UnitPerceptionComponent>(entity)
-                ? UnitValue.FromString(entityManager.GetComponentData<UnitPerceptionComponent>(entity).UnitName.ToString())
-                : UnitValue.None));
-        table.AddGet(new UnitSourceGet(
-            "unit.perception.unitCount",
-            UnitValueCategory.Number,
-            System.Array.Empty<ComparatorParameterDefinition>(),
-            _ => entityManager.Exists(entity) && entityManager.HasBuffer<UnitPerceptionUnitElement>(entity)
-                ? UnitValue.FromInt(entityManager.GetBuffer<UnitPerceptionUnitElement>(entity).Length)
-                : UnitValue.None));
-        table.AddGet(new UnitSourceGet(
-            "unit.perception.unitAt",
-            UnitValueCategory.Entity,
-            s_indexParameter,
-            input => entityManager.Exists(entity) &&
-                     entityManager.HasBuffer<UnitPerceptionUnitElement>(entity) &&
-                     TryGetIndex(input, out int index) &&
-                     index >= 0 &&
-                     index < entityManager.GetBuffer<UnitPerceptionUnitElement>(entity).Length
-                ? UnitValue.FromEntity(entityManager.GetBuffer<UnitPerceptionUnitElement>(entity)[index].Value)
-                : UnitValue.None));
-        table.AddGet(new UnitSourceGet(
-            "unit.perception.unitsByFactionCount",
-            UnitValueCategory.Number,
-            s_factionParameter,
-            input => TryGetFaction(input, out UnitFactionType faction)
-                ? UnitValue.FromInt(UnitPerceptionQueryUtility.GetCountByFaction(entityManager, entity, faction))
-                : UnitValue.None));
-        table.AddGet(new UnitSourceGet(
-            "unit.perception.unitByFactionAt",
-            UnitValueCategory.Entity,
-            s_factionAndIndexParameters,
-            input => TryGetFactionAndIndex(input, out UnitFactionType faction, out int index)
-                ? UnitValue.FromEntity(UnitPerceptionQueryUtility.GetByFactionAt(entityManager, entity, faction, index))
-                : UnitValue.None));
-        table.AddGet(new UnitSourceGet(
-            "unit.perception.nearestUnitByFaction",
-            UnitValueCategory.Entity,
-            s_factionParameter,
-            input => TryGetFaction(input, out UnitFactionType faction) &&
-                     UnitPerceptionQueryUtility.TryGetNearestByFaction(entityManager, entity, faction, out Entity unit, out _)
-                ? UnitValue.FromEntity(unit)
-                : UnitValue.None));
-        table.AddGet(new UnitSourceGet(
-            "unit.perception.unitsByNameCount",
-            UnitValueCategory.Number,
-            s_unitNameParameter,
-            input => TryGetUnitName(input, out string unitName)
-                ? UnitValue.FromInt(UnitPerceptionQueryUtility.GetCountByName(entityManager, entity, unitName))
-                : UnitValue.None));
-        table.AddGet(new UnitSourceGet(
-            "unit.perception.unitByNameAt",
-            UnitValueCategory.Entity,
-            s_unitNameAndIndexParameters,
-            input => TryGetUnitNameAndIndex(input, out string unitName, out int index)
-                ? UnitValue.FromEntity(UnitPerceptionQueryUtility.GetByNameAt(entityManager, entity, unitName, index))
-                : UnitValue.None));
-        table.AddGet(new UnitSourceGet(
-            "unit.perception.nearestUnitByName",
-            UnitValueCategory.Entity,
-            s_unitNameParameter,
-            input => TryGetUnitName(input, out string unitName) &&
-                     UnitPerceptionQueryUtility.TryGetNearestByName(entityManager, entity, unitName, out Entity unit, out _)
-                ? UnitValue.FromEntity(unit)
-                : UnitValue.None));
+        UnitPerceptionComponent perception = entityManager.GetComponentData<UnitPerceptionComponent>(entity);
+        DynamicBuffer<UnitPerceptionUnitElement> units = entityManager.GetBuffer<UnitPerceptionUnitElement>(entity);
+        switch (operation)
+        {
+            case 0:
+                result = UnitSourceValue.FromFloat(perception.SearchRadius);
+                return true;
+            case 1:
+                result = UnitSourceValue.FromString(perception.UnitName);
+                return true;
+            case 2:
+                result = UnitSourceValue.FromInt(units.Length);
+                return true;
+            case 3 when arguments.TryGetInt(0, out int index) && index >= 0 && index < units.Length:
+                result = UnitSourceValue.FromEntity(units[index].Value);
+                return true;
+            case 4 when TryGetFaction(in arguments, 0, out UnitFactionType faction):
+                result = UnitSourceValue.FromInt(UnitPerceptionQueryUtility.GetCountByFaction(entityManager, entity, faction));
+                return true;
+            case 5 when TryGetFaction(in arguments, 0, out UnitFactionType faction) && arguments.TryGetInt(1, out int index):
+                result = UnitSourceValue.FromEntity(UnitPerceptionQueryUtility.GetByFactionAt(entityManager, entity, faction, index));
+                return true;
+            case 6 when TryGetFaction(in arguments, 0, out UnitFactionType faction) &&
+                             UnitPerceptionQueryUtility.TryGetNearestByFaction(entityManager, entity, faction, out Entity factionUnit, out _):
+                result = UnitSourceValue.FromEntity(factionUnit);
+                return true;
+            case 7 when arguments.TryGetString(0, out FixedString128Bytes unitName):
+                result = UnitSourceValue.FromInt(UnitPerceptionQueryUtility.GetCountByName(entityManager, entity, unitName.ToString()));
+                return true;
+            case 8 when arguments.TryGetString(0, out FixedString128Bytes unitName) && arguments.TryGetInt(1, out int index):
+                result = UnitSourceValue.FromEntity(UnitPerceptionQueryUtility.GetByNameAt(entityManager, entity, unitName.ToString(), index));
+                return true;
+            case 9 when arguments.TryGetString(0, out FixedString128Bytes unitName) &&
+                             UnitPerceptionQueryUtility.TryGetNearestByName(entityManager, entity, unitName.ToString(), out Entity nameUnit, out _):
+                result = UnitSourceValue.FromEntity(nameUnit);
+                return true;
+            default:
+                return false;
+        }
     }
 
-    private static bool TryGetIndex(UnitValue[] input, out int index)
-    {
-        index = 0;
-        if (input == null || input.Length != 1 || !input[0].TryGetNumber(out float value))
-            return false;
-
-        index = Mathf.RoundToInt(value);
-        return Mathf.Abs(value - index) <= 0.0001f;
-    }
-
-    private static bool TryGetFaction(UnitValue[] input, out UnitFactionType faction)
+    private static bool TryGetFaction(in UnitSourceArguments arguments, int index, out UnitFactionType faction)
     {
         faction = default;
-        if (!TryGetIndex(input, out int factionValue) ||
+        if (!arguments.TryGetInt(index, out int factionValue) ||
             !System.Enum.IsDefined(typeof(UnitFactionType), factionValue))
         {
             return false;
@@ -197,33 +123,5 @@ public sealed class UnitPerceptionSource : UnitComponentSource
 
         faction = (UnitFactionType)factionValue;
         return true;
-    }
-
-    private static bool TryGetFactionAndIndex(UnitValue[] input, out UnitFactionType faction, out int index)
-    {
-        faction = default;
-        index = 0;
-        if (input == null || input.Length != 2)
-            return false;
-
-        return TryGetFaction(new[] { input[0] }, out faction) &&
-               TryGetIndex(new[] { input[1] }, out index);
-    }
-
-    private static bool TryGetUnitName(UnitValue[] input, out string unitName)
-    {
-        unitName = string.Empty;
-        return input != null && input.Length == 1 && input[0].TryGetString(out unitName);
-    }
-
-    private static bool TryGetUnitNameAndIndex(UnitValue[] input, out string unitName, out int index)
-    {
-        unitName = string.Empty;
-        index = 0;
-        if (input == null || input.Length != 2)
-            return false;
-
-        return input[0].TryGetString(out unitName) &&
-               TryGetIndex(new[] { input[1] }, out index);
     }
 }

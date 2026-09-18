@@ -63,68 +63,75 @@ public struct UnitControlRuntimeComponent : IComponentData
     public byte NetworkDirty;
 }
 
-[UnitSourceAuthoring(typeof(UnitControlAuthoring))]
-public sealed class UnitControlSource : UnitComponentSource<UnitControlRuntimeComponent>
+[UnitSourceProvider(typeof(UnitControlRuntimeComponent), typeof(UnitControlAuthoring))]
+public static class UnitControlSource
 {
-    private static readonly ComparatorParameterDefinition[] s_indexParameter =
+    [UnitSourceGet(0, "unit.control.entryCount", UnitValueCategory.Number)]
+    [UnitSourceGet(1, "unit.control.hasControl", UnitValueCategory.Bool)]
+    [UnitSourceGet(2, "unit.control.activeType", UnitValueCategory.Number)]
+    [UnitSourceGet(3, "unit.control.activeRemainingTime", UnitValueCategory.Number)]
+    [UnitSourceGet(4, "unit.control.activePriority", UnitValueCategory.Number)]
+    [UnitSourceGet(5, "unit.control.lockMove", UnitValueCategory.Bool)]
+    [UnitSourceGet(6, "unit.control.lockCast", UnitValueCategory.Bool)]
+    [UnitSourceGet(7, "unit.control.activeSourceEntity", UnitValueCategory.Entity)]
+    [UnitSourceGet(8, "unit.control.activeMotionVelocity", UnitValueCategory.Float2)]
+    [UnitSourceGet(9, "unit.control.activeMotionDamping", UnitValueCategory.Number)]
+    public static bool TryGet(
+        int operation,
+        in UnitControlRuntimeComponent value,
+        in UnitSourceArguments arguments,
+        out UnitSourceValue result)
     {
-        new ComparatorParameterDefinition("Index", UnitValueCategory.Number),
-    };
-
-    protected override void Define(UnitSourceDefinitionBuilder<UnitControlRuntimeComponent> builder)
-    {
-        builder.AddGet("unit.control.entryCount", UnitValueCategory.Number,
-            (in UnitControlRuntimeComponent value) => UnitValue.FromInt(value.Entries.Length));
-        builder.AddGet("unit.control.hasControl", UnitValueCategory.Bool,
-            (in UnitControlRuntimeComponent value) => UnitValue.FromBool(value.HasControl != 0));
-        builder.AddGet("unit.control.activeType", UnitValueCategory.Number,
-            (in UnitControlRuntimeComponent value) => UnitValue.FromInt((int)value.ActiveType));
-        builder.AddGet("unit.control.activeRemainingTime", UnitValueCategory.Number,
-            (in UnitControlRuntimeComponent value) => UnitValue.FromFloat(value.ActiveRemainingTime));
-        builder.AddGet("unit.control.activePriority", UnitValueCategory.Number,
-            (in UnitControlRuntimeComponent value) => UnitValue.FromInt(value.ActivePriority));
-        builder.AddGet("unit.control.lockMove", UnitValueCategory.Bool,
-            (in UnitControlRuntimeComponent value) => UnitValue.FromBool(value.LockMove != 0));
-        builder.AddGet("unit.control.lockCast", UnitValueCategory.Bool,
-            (in UnitControlRuntimeComponent value) => UnitValue.FromBool(value.LockCast != 0));
-        builder.AddGet("unit.control.activeSourceEntity", UnitValueCategory.Entity,
-            (in UnitControlRuntimeComponent value) => UnitValue.FromEntity(value.ActiveSourceEntity));
-        builder.AddGet("unit.control.activeMotionVelocity", UnitValueCategory.Float2,
-            (in UnitControlRuntimeComponent value) => UnitValue.FromFloat2(value.ActiveMotionVelocity));
-        builder.AddGet("unit.control.activeMotionDamping", UnitValueCategory.Number,
-            (in UnitControlRuntimeComponent value) => UnitValue.FromFloat(value.ActiveMotionDamping));
-
-        builder.AddGet("unit.control.entryTypeAt", UnitValueCategory.Number, s_indexParameter,
-            (in UnitControlRuntimeComponent value, UnitValue[] input) => GetEntry(value, input, out UnitControlRuntimeEntry entry) ? UnitValue.FromInt((int)entry.ControlType) : UnitValue.None);
-        builder.AddGet("unit.control.entryRemainingTimeAt", UnitValueCategory.Number, s_indexParameter,
-            (in UnitControlRuntimeComponent value, UnitValue[] input) => GetEntry(value, input, out UnitControlRuntimeEntry entry) ? UnitValue.FromFloat(entry.RemainingTime) : UnitValue.None);
-        builder.AddGet("unit.control.entryPriorityAt", UnitValueCategory.Number, s_indexParameter,
-            (in UnitControlRuntimeComponent value, UnitValue[] input) => GetEntry(value, input, out UnitControlRuntimeEntry entry) ? UnitValue.FromInt(entry.Priority) : UnitValue.None);
-        builder.AddGet("unit.control.entryLockMoveAt", UnitValueCategory.Bool, s_indexParameter,
-            (in UnitControlRuntimeComponent value, UnitValue[] input) => GetEntry(value, input, out UnitControlRuntimeEntry entry) ? UnitValue.FromBool(entry.LockMove != 0) : UnitValue.None);
-        builder.AddGet("unit.control.entryLockCastAt", UnitValueCategory.Bool, s_indexParameter,
-            (in UnitControlRuntimeComponent value, UnitValue[] input) => GetEntry(value, input, out UnitControlRuntimeEntry entry) ? UnitValue.FromBool(entry.LockCast != 0) : UnitValue.None);
-        builder.AddGet("unit.control.entryInterruptOnApplyAt", UnitValueCategory.Bool, s_indexParameter,
-            (in UnitControlRuntimeComponent value, UnitValue[] input) => GetEntry(value, input, out UnitControlRuntimeEntry entry) ? UnitValue.FromBool(entry.InterruptOnApply != 0) : UnitValue.None);
-        builder.AddGet("unit.control.entrySourceEntityAt", UnitValueCategory.Entity, s_indexParameter,
-            (in UnitControlRuntimeComponent value, UnitValue[] input) => GetEntry(value, input, out UnitControlRuntimeEntry entry) ? UnitValue.FromEntity(entry.SourceEntity) : UnitValue.None);
-        builder.AddGet("unit.control.entryMotionVelocityAt", UnitValueCategory.Float2, s_indexParameter,
-            (in UnitControlRuntimeComponent value, UnitValue[] input) => GetEntry(value, input, out UnitControlRuntimeEntry entry) ? UnitValue.FromFloat2(entry.MotionVelocity) : UnitValue.None);
-        builder.AddGet("unit.control.entryMotionDampingAt", UnitValueCategory.Number, s_indexParameter,
-            (in UnitControlRuntimeComponent value, UnitValue[] input) => GetEntry(value, input, out UnitControlRuntimeEntry entry) ? UnitValue.FromFloat(entry.MotionDamping) : UnitValue.None);
+        result = operation switch
+        {
+            0 => UnitSourceValue.FromInt(value.Entries.Length),
+            1 => UnitSourceValue.FromBool(value.HasControl != 0),
+            2 => UnitSourceValue.FromInt((int)value.ActiveType),
+            3 => UnitSourceValue.FromFloat(value.ActiveRemainingTime),
+            4 => UnitSourceValue.FromInt(value.ActivePriority),
+            5 => UnitSourceValue.FromBool(value.LockMove != 0),
+            6 => UnitSourceValue.FromBool(value.LockCast != 0),
+            7 => UnitSourceValue.FromEntity(value.ActiveSourceEntity),
+            8 => UnitSourceValue.FromFloat2(value.ActiveMotionVelocity),
+            9 => UnitSourceValue.FromFloat(value.ActiveMotionDamping),
+            _ => UnitSourceValue.None,
+        };
+        return result.Type != UnitValueType.None;
     }
 
-    private static bool GetEntry(in UnitControlRuntimeComponent value, UnitValue[] input, out UnitControlRuntimeEntry entry)
+    [UnitSourceGet(10, "unit.control.entryTypeAt", UnitValueCategory.Number, UnitValueCategory.Number, ParameterNames = new[] { "Index" })]
+    [UnitSourceGet(11, "unit.control.entryRemainingTimeAt", UnitValueCategory.Number, UnitValueCategory.Number, ParameterNames = new[] { "Index" })]
+    [UnitSourceGet(12, "unit.control.entryPriorityAt", UnitValueCategory.Number, UnitValueCategory.Number, ParameterNames = new[] { "Index" })]
+    [UnitSourceGet(13, "unit.control.entryLockMoveAt", UnitValueCategory.Bool, UnitValueCategory.Number, ParameterNames = new[] { "Index" })]
+    [UnitSourceGet(14, "unit.control.entryLockCastAt", UnitValueCategory.Bool, UnitValueCategory.Number, ParameterNames = new[] { "Index" })]
+    [UnitSourceGet(15, "unit.control.entryInterruptOnApplyAt", UnitValueCategory.Bool, UnitValueCategory.Number, ParameterNames = new[] { "Index" })]
+    [UnitSourceGet(16, "unit.control.entrySourceEntityAt", UnitValueCategory.Entity, UnitValueCategory.Number, ParameterNames = new[] { "Index" })]
+    [UnitSourceGet(17, "unit.control.entryMotionVelocityAt", UnitValueCategory.Float2, UnitValueCategory.Number, ParameterNames = new[] { "Index" })]
+    [UnitSourceGet(18, "unit.control.entryMotionDampingAt", UnitValueCategory.Number, UnitValueCategory.Number, ParameterNames = new[] { "Index" })]
+    public static bool TryGetEntry(
+        int operation,
+        in UnitControlRuntimeComponent value,
+        in UnitSourceArguments arguments,
+        out UnitSourceValue result)
     {
-        entry = default;
-        if (input == null || input.Length != 1 || !input[0].TryGetNumber(out float indexValue))
+        result = default;
+        if (!arguments.TryGetInt(0, out int index) || index < 0 || index >= value.Entries.Length)
             return false;
 
-        int index = (int)math.round(indexValue);
-        if (math.abs(indexValue - index) > 0.0001f || index < 0 || index >= value.Entries.Length)
-            return false;
-
-        entry = value.Entries[index];
-        return true;
+        UnitControlRuntimeEntry entry = value.Entries[index];
+        result = operation switch
+        {
+            10 => UnitSourceValue.FromInt((int)entry.ControlType),
+            11 => UnitSourceValue.FromFloat(entry.RemainingTime),
+            12 => UnitSourceValue.FromInt(entry.Priority),
+            13 => UnitSourceValue.FromBool(entry.LockMove != 0),
+            14 => UnitSourceValue.FromBool(entry.LockCast != 0),
+            15 => UnitSourceValue.FromBool(entry.InterruptOnApply != 0),
+            16 => UnitSourceValue.FromEntity(entry.SourceEntity),
+            17 => UnitSourceValue.FromFloat2(entry.MotionVelocity),
+            18 => UnitSourceValue.FromFloat(entry.MotionDamping),
+            _ => UnitSourceValue.None,
+        };
+        return result.Type != UnitValueType.None;
     }
 }

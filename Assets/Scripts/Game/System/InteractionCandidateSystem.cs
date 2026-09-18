@@ -37,11 +37,11 @@ public partial class InteractionCandidateSystem : SystemBase
             return;
         }
 
-        if (!UnitQueryUtility.TryGetTree(EntityManager, UnitQueryTreeKind.Interactable, out UnitQueryTree tree))
+        if (!UnitQueryUtility.TryGetGrid(EntityManager, UnitQueryGridKind.Interactable, out UnitQueryGrid grid))
             return;
 
         float queryRange = math.max(0f, ConfigComponent.Instance.Get<GameConfig>().InteractionRange);
-        tree.QueryCircle(actorPosition, queryRange, _hits);
+        grid.QueryCircle(actorPosition, queryRange, _hits);
 
         Entity bestTarget = Entity.Null;
         UnitInteractionData bestData = default;

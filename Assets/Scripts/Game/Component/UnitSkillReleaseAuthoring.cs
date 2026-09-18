@@ -22,32 +22,21 @@ public sealed class UnitSkillReleaseComponent : IComponentData
     public List<SkillReleaseRequest> PendingRequests = new();
 }
 
-[UnitSourceAuthoring(typeof(UnitSkillReleaseAuthoring))]
-public sealed class UnitSkillReleaseSource : UnitComponentSource
+[UnitSourceProvider(typeof(UnitSkillReleaseComponent), typeof(UnitSkillReleaseAuthoring))]
+public static class UnitSkillReleaseSource
 {
-    private static readonly ComparatorParameterDefinition[] s_noParameters = Array.Empty<ComparatorParameterDefinition>();
-
-    public override Type ComponentType => typeof(UnitSkillReleaseComponent);
-
-    public override void Describe(UnitSourceSchemaBuilder schema)
+    [UnitSourceGet(0, "unit.self.entity", UnitValueCategory.Entity)]
+    public static bool TryGet(
+        int operation,
+        EntityManager entityManager,
+        Entity entity,
+        in UnitSourceArguments arguments,
+        out UnitSourceValue result)
     {
-        schema.AddGet("unit.self.entity", ComponentType, UnitValueCategory.Entity, s_noParameters);
-    }
-
-    public override void Bind(in UnitSourceBindingContext context, UnitSourceAccessTable table)
-    {
-        EntityManager entityManager = context.EntityManager;
-        Entity entity = context.Entity;
-        if (!entityManager.Exists(entity) || !entityManager.HasComponent<UnitSkillReleaseComponent>(entity))
-            return;
-
-        table.AddGet(new UnitSourceGet(
-            "unit.self.entity",
-            UnitValueCategory.Entity,
-            s_noParameters,
-            _ => entityManager.Exists(entity) && entityManager.HasComponent<UnitSkillReleaseComponent>(entity)
-                ? UnitValue.FromEntity(entity)
-                : UnitValue.None));
+        bool valid = operation == 0 && entityManager.Exists(entity) &&
+                     entityManager.HasComponent<UnitSkillReleaseComponent>(entity);
+        result = valid ? UnitSourceValue.FromEntity(entity) : default;
+        return valid;
     }
 }
 

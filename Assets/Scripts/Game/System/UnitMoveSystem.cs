@@ -24,6 +24,12 @@ partial class UnitMoveSystem : SystemBase
                      .WithNone<UnitDeathComponent>()
                      .WithEntityAccess())
         {
+            UnitMoveComponent move = moveRef.ValueRO;
+            float2 requestedDirection = move.Direction;
+            float requestedMoveSpeed = move.CommandMoveSpeed;
+            bool hasFrameVelocity = move.HasFrameVelocity != 0;
+            float2 frameVelocity = move.FrameVelocity;
+
             if (EntityManager.HasComponent<VfxArrivalComponent>(entity))
             {
                 VfxArrivalComponent arrival = EntityManager.GetComponentObject<VfxArrivalComponent>(entity);
@@ -35,6 +41,11 @@ partial class UnitMoveSystem : SystemBase
                 LocalTransform vfxTransform = transformRef.ValueRO;
                 vfxTransform.Position = math.lerp(arrival.StartPosition, arrival.EndPosition, progress);
                 transformRef.ValueRW = vfxTransform;
+                move.Direction = float2.zero;
+                move.CommandMoveSpeed = -1f;
+                move.FrameVelocity = float2.zero;
+                move.HasFrameVelocity = 0;
+                moveRef.ValueRW = move;
 
                 if (progress >= 1f)
                 {
@@ -50,14 +61,10 @@ partial class UnitMoveSystem : SystemBase
                 continue;
             }
 
-            UnitMoveComponent move = moveRef.ValueRO;
             UnitFacingComponent facing = facingRef.ValueRO;
             UnitMoveComponent oldMove = move;
             UnitFacingComponent oldFacing = facing;
             LocalTransform oldTransform = transformRef.ValueRO;
-            bool hasFrameVelocity = move.HasFrameVelocity != 0;
-            float2 frameVelocity = move.FrameVelocity;
-            move.HasFrameVelocity = 0;
 
             if (hasFrameVelocity)
             {
@@ -76,12 +83,12 @@ partial class UnitMoveSystem : SystemBase
             }
             else
             {
-                float2 targetDirection = math.normalizesafe(move.Direction, float2.zero);
+                float2 targetDirection = math.normalizesafe(requestedDirection, float2.zero);
                 if (math.lengthsq(targetDirection) > 0.0001f)
                     facing.Direction = targetDirection;
 
-                float resolvedSpeed = move.CommandMoveSpeed >= 0f
-                    ? move.CommandMoveSpeed
+                float resolvedSpeed = requestedMoveSpeed >= 0f
+                    ? requestedMoveSpeed
                     : UnitModifierResolver.GetMoveSpeed(EntityManager, entity);
                 float targetSpeed = resolvedSpeed * move.StateMoveMultiplier;
                 float maxSpeed = math.abs(targetSpeed);
@@ -98,9 +105,6 @@ partial class UnitMoveSystem : SystemBase
             ApplyPlanarTransform(ref physicsVelocity, ref transform, move.Velocity);
 
             if (!move.Velocity.Equals(oldMove.Velocity) ||
-                !move.Direction.Equals(oldMove.Direction) ||
-                !move.FrameVelocity.Equals(oldMove.FrameVelocity) ||
-                move.HasFrameVelocity != oldMove.HasFrameVelocity ||
                 math.lengthsq(move.Velocity) > 0.0001f ||
                 !math.all(transform.Position == oldTransform.Position))
             {
@@ -110,6 +114,10 @@ partial class UnitMoveSystem : SystemBase
             if (!facing.Direction.Equals(oldFacing.Direction))
                 facing.NetworkDirty = 1;
 
+            move.Direction = float2.zero;
+            move.CommandMoveSpeed = -1f;
+            move.FrameVelocity = float2.zero;
+            move.HasFrameVelocity = 0;
             moveRef.ValueRW = move;
             facingRef.ValueRW = facing;
             physicsVelocityRef.ValueRW = physicsVelocity;
@@ -179,7 +187,6 @@ partial class UnitMoveSystem : SystemBase
     private static void ApplyPlanarTransform(ref PhysicsVelocity physicsVelocity, ref LocalTransform transform, float2 planarVelocity)
     {
         physicsVelocity.Linear = new float3(planarVelocity.x, planarVelocity.y, 0f);
-        physicsVelocity.Angular = float3.zero;
         transform.Position.z = 0f;
     }
 

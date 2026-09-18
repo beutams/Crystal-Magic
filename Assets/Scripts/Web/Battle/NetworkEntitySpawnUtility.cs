@@ -239,6 +239,9 @@ namespace Server
         {
             if (entityInfo.characterData != null)
             {
+                entityInfo.characterData.Equipment ??= new EquipmentData();
+                EquipmentUtility.EnsureValid(entityInfo.characterData.Equipment);
+                EquipmentUtility.RebuildProperties(entityInfo.characterData.Equipment);
                 if (entityManager.HasComponent<PlayerCharacterComponent>(entity))
                 {
                     entityManager.GetComponentObject<PlayerCharacterComponent>(entity).Data = entityInfo.characterData;
@@ -247,6 +250,9 @@ namespace Server
                 {
                     entityManager.AddComponentObject(entity, new PlayerCharacterComponent { Data = entityInfo.characterData });
                 }
+
+                EquipmentUtility.ApplyToUnit(entityManager, entity, entityInfo.characterData.Equipment);
+                PlayerSkillRuntimeDataUtility.Initialize(entityManager, entity, entityInfo.characterData);
             }
 
             if (entityInfo.hasFaction)

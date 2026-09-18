@@ -25,7 +25,7 @@ public partial class SkillProjectileSystem : SystemBase
     protected override void OnUpdate()
     {
         if (_projectileQuery.IsEmptyIgnoreFilter ||
-            !UnitQueryUtility.TryGetTree(EntityManager, UnitQueryTreeKind.Unit, out UnitQueryTree unitTree))
+            !UnitQueryUtility.TryGetGrid(EntityManager, UnitQueryGridKind.Unit, out UnitQueryGrid unitGrid))
         {
             return;
         }
@@ -55,7 +55,7 @@ public partial class SkillProjectileSystem : SystemBase
                 EntityManager.SetComponentData(entity, transform);
                 EntityManager.SetComponentData(entity, projectile);
 
-                if (TryFindHitEntity(unitTree, payload, projectile, hitEntities, transform.Position, out Entity hitEntity, out float3 hitPosition))
+                if (TryFindHitEntity(unitGrid, payload, projectile, hitEntities, transform.Position, out Entity hitEntity, out float3 hitPosition))
                 {
                     hitEntities.Add(new SkillProjectileHitEntityElement { Value = hitEntity });
 
@@ -89,7 +89,7 @@ public partial class SkillProjectileSystem : SystemBase
     }
 
     private bool TryFindHitEntity(
-        UnitQueryTree unitTree,
+        UnitQueryGrid unitGrid,
         SkillProjectilePayloadComponent payload,
         SkillProjectileComponent projectile,
         DynamicBuffer<SkillProjectileHitEntityElement> hitEntities,
@@ -100,7 +100,7 @@ public partial class SkillProjectileSystem : SystemBase
         hitEntity = Entity.Null;
         hitPosition = float3.zero;
 
-        unitTree.QueryCircle(projectilePosition, projectile.HitRadius, _hits);
+        unitGrid.QueryCircle(projectilePosition, projectile.HitRadius, _hits);
 
         float bestDistanceSq = float.MaxValue;
         for (int i = 0; i < _hits.Count; i++)

@@ -108,28 +108,25 @@ public static class UnitNavigationUtility
     }
 }
 
-[UnitSourceAuthoring(typeof(UnitNavigationAuthoring))]
-public sealed class UnitNavigationSource : UnitComponentSource<UnitNavigationComponent>
+[UnitSourceProvider(typeof(UnitNavigationComponent), typeof(UnitNavigationAuthoring))]
+public static class UnitNavigationSource
 {
-    protected override void Define(UnitSourceDefinitionBuilder<UnitNavigationComponent> builder)
+    [UnitSourceSet(0, "unit.navigation.setDestination", UnitValueCategory.Float3,
+        ParameterNames = new[] { "Destination" })]
+    [UnitSourceSet(1, "unit.navigation.stop", UnitValueCategory.Any,
+        ParameterNames = new[] { "Ignored" })]
+    public static bool TrySet(int operation, ref UnitNavigationComponent navigation, in UnitSourceArguments arguments)
     {
-        builder.AddSet("unit.navigation.setDestination", UnitValueCategory.Float3,
-            static (ref UnitNavigationComponent navigation, UnitValue input) =>
-            {
-                if (!input.TryGetFloat3(out float3 destination))
-                    return false;
-
+        switch (operation)
+        {
+            case 0 when arguments.TryGetFloat3(0, out float3 destination):
                 UnitNavigationUtility.SetDestination(ref navigation, destination);
                 return true;
-            });
-
-        // The value is intentionally ignored. Keeping an Any input lets existing
-        // behavior-tree "set zero direction" nodes migrate without changing their ports.
-        builder.AddSet("unit.navigation.stop", UnitValueCategory.Any,
-            static (ref UnitNavigationComponent navigation, UnitValue _) =>
-            {
+            case 1 when arguments.Count == 1:
                 UnitNavigationUtility.Stop(ref navigation);
                 return true;
-            });
+            default:
+                return false;
+        }
     }
 }

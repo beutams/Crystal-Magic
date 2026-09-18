@@ -37,7 +37,7 @@ namespace CrystalMagic.Game.Skill
         public StateScriptRuntime Runtime { get; }
         public EntityManager EntityManager => Runtime.EntityManager;
         public Entity Entity => Runtime.Entity;
-        public UnitSourceAccessTable Sources => Runtime.Sources;
+        public UnitSourceResolver Sources => Runtime.Sources;
         public string EventName { get; }
         public int AdditionId { get; }
     }

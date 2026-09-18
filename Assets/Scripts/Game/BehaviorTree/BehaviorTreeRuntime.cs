@@ -9,14 +9,14 @@ public sealed class BehaviorContext
     public Entity Entity { get; private set; }
     public EntityManager EntityManager { get; private set; }
     public float DeltaTime { get; private set; }
-    public UnitSourceAccessTable Sources { get; private set; }
+    public UnitSourceResolver Sources { get; private set; }
     public BehaviorDebugState Debug { get; } = new();
 
     public void BeginFrame(
         Entity entity,
         EntityManager entityManager,
         float deltaTime,
-        UnitSourceAccessTable sources,
+        UnitSourceResolver sources,
         bool captureDebug)
     {
         Entity = entity;
@@ -37,7 +37,6 @@ public sealed class BehaviorContext
         Debug.SetNodeStatus(nodeGuid, status);
     }
 }
-
 public sealed class BehaviorDebugState
 {
     private readonly Dictionary<string, BehaviorNodeStatus> _nodeStatuses = new(StringComparer.Ordinal);
@@ -80,9 +79,11 @@ public sealed class BehaviorTreeRuntime
     public bool IsValid => _root != null;
     public bool IsBound { get; private set; }
     public string BindingError { get; private set; } = string.Empty;
+    public UnitSourceResolver Sources { get; private set; }
 
-    public bool TryBind(UnitSourceAccessTable sources, out string error)
+    public bool TryBind(UnitSourceResolver sources, out string error)
     {
+        Sources = sources;
         if (_root == null)
         {
             IsBound = false;
@@ -125,7 +126,7 @@ public static class BehaviorTreeBuilder
 
     public static BehaviorTreeRuntime Build(
         BehaviorTreeData data,
-        UnitSourceAccessTable sources,
+        UnitSourceResolver sources,
         out string error)
     {
         error = string.Empty;

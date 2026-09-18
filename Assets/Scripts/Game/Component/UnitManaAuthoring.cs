@@ -1,5 +1,6 @@
 using CrystalMagic.Game.Data;
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 
 public class UnitManaAuthoring : MonoBehaviour
@@ -44,46 +45,75 @@ public struct UnitManaComponent : IComponentData
     public byte NetworkDirty;
 }
 
-[UnitSourceAuthoring(typeof(UnitManaAuthoring))]
-public sealed class UnitManaSource : UnitComponentSource<UnitManaComponent>
+[UnitSourceProvider(typeof(UnitManaComponent), typeof(UnitManaAuthoring))]
+public static class UnitManaSource
 {
-    private static readonly ComparatorParameterDefinition[] s_noParameters = System.Array.Empty<ComparatorParameterDefinition>();
-
-    protected override void Define(UnitSourceDefinitionBuilder<UnitManaComponent> builder)
+    [UnitSourceGet(0, "unit.mana.baseMaxMp", UnitValueCategory.Number)]
+    [UnitSourceGet(1, "unit.mana.baseMaxMpOffset", UnitValueCategory.Number)]
+    [UnitSourceGet(2, "unit.mana.currentMana", UnitValueCategory.Number)]
+    [UnitSourceGet(3, "unit.mana.baseMpRegenPerSecond", UnitValueCategory.Number)]
+    [UnitSourceGet(4, "unit.mana.baseMpRegenPerSecondOffset", UnitValueCategory.Number)]
+    public static bool TryGet(
+        int operation,
+        in UnitManaComponent value,
+        in UnitSourceArguments arguments,
+        out UnitSourceValue result)
     {
-        builder.AddGet("unit.mana.baseMaxMp", UnitValueCategory.Number, (in UnitManaComponent value) => UnitValue.FromFloat(value.BaseMaxMp));
-        builder.AddGet("unit.mana.baseMaxMpOffset", UnitValueCategory.Number, (in UnitManaComponent value) => UnitValue.FromFloat(value.BaseMaxMpOffset));
-        builder.AddGet("unit.mana.currentMana", UnitValueCategory.Number, (in UnitManaComponent value) => UnitValue.FromFloat(value.CurrentMana));
-        builder.AddContextGet("unit.mana.realMaxMp", UnitValueCategory.Number, s_noParameters,
-            (in UnitSourceBindingContext context, in UnitManaComponent _, UnitValue[] _) => UnitValue.FromFloat(UnitModifierResolver.GetMaxMp(context.EntityManager, context.Entity)));
-        builder.AddContextGet("unit.mana.currentManaPercentage", UnitValueCategory.Number, s_noParameters,
-            (in UnitSourceBindingContext context, in UnitManaComponent value, UnitValue[] _) => UnitValue.FromFloat(GetManaPercentage(context, value)));
-        builder.AddGet("unit.mana.baseMpRegenPerSecond", UnitValueCategory.Number, (in UnitManaComponent value) => UnitValue.FromFloat(value.BaseMpRegenPerSecond));
-        builder.AddGet("unit.mana.baseMpRegenPerSecondOffset", UnitValueCategory.Number, (in UnitManaComponent value) => UnitValue.FromFloat(value.BaseMpRegenPerSecondOffset));
-        builder.AddContextGet("unit.mana.realMpRegenPerSecond", UnitValueCategory.Number, s_noParameters,
-            (in UnitSourceBindingContext context, in UnitManaComponent _, UnitValue[] _) => UnitValue.FromFloat(UnitModifierResolver.GetMpRegen(context.EntityManager, context.Entity)));
-
-        builder.AddSet("unit.mana.cost", UnitValueCategory.Number,
-            (ref UnitManaComponent value, UnitValue input) =>
-            {
-                if (!input.TryGetNumber(out float cost) ||
-                    float.IsNaN(cost) ||
-                    float.IsInfinity(cost) ||
-                    cost < 0f ||
-                    value.CurrentMana < cost)
-                {
-                    return false;
-                }
-
-                value.CurrentMana -= cost;
-                value.NetworkDirty = 1;
-                return true;
-            });
+        result = operation switch
+        {
+            0 => UnitSourceValue.FromFloat(value.BaseMaxMp),
+            1 => UnitSourceValue.FromFloat(value.BaseMaxMpOffset),
+            2 => UnitSourceValue.FromFloat(value.CurrentMana),
+            3 => UnitSourceValue.FromFloat(value.BaseMpRegenPerSecond),
+            4 => UnitSourceValue.FromFloat(value.BaseMpRegenPerSecondOffset),
+            _ => UnitSourceValue.None,
+        };
+        return result.Type != UnitValueType.None;
     }
 
-    private static float GetManaPercentage(in UnitSourceBindingContext context, in UnitManaComponent value)
+    [UnitSourceGet(5, "unit.mana.realMaxMp", UnitValueCategory.Number)]
+    [UnitSourceGet(6, "unit.mana.currentManaPercentage", UnitValueCategory.Number)]
+    [UnitSourceGet(7, "unit.mana.realMpRegenPerSecond", UnitValueCategory.Number)]
+    public static bool TryGetResolved(
+        int operation,
+        EntityManager entityManager,
+        Entity entity,
+        in UnitSourceArguments arguments,
+        out UnitSourceValue result)
     {
-        float maxMp = UnitModifierResolver.GetMaxMp(context.EntityManager, context.Entity);
-        return maxMp > 0f ? Mathf.Clamp01(value.CurrentMana / maxMp) : 0f;
+        result = UnitSourceValue.None;
+        if (!entityManager.Exists(entity) || !entityManager.HasComponent<UnitManaComponent>(entity))
+            return false;
+
+        UnitManaComponent value = entityManager.GetComponentData<UnitManaComponent>(entity);
+        switch (operation)
+        {
+            case 5:
+                result = UnitSourceValue.FromFloat(UnitModifierResolver.GetMaxMp(entityManager, entity));
+                return true;
+            case 6:
+                float maxMp = UnitModifierResolver.GetMaxMp(entityManager, entity);
+                result = UnitSourceValue.FromFloat(maxMp > 0f ? Mathf.Clamp01(value.CurrentMana / maxMp) : 0f);
+                return true;
+            case 7:
+                result = UnitSourceValue.FromFloat(UnitModifierResolver.GetMpRegen(entityManager, entity));
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    [UnitSourceSet(0, "unit.mana.cost", UnitValueCategory.Number, ParameterNames = new[] { "Cost" })]
+    public static bool TrySet(int operation, ref UnitManaComponent value, in UnitSourceArguments arguments)
+    {
+        if (operation != 0 || !arguments.TryGetNumber(0, out float cost) ||
+            !math.isfinite(cost) || cost < 0f || value.CurrentMana < cost)
+        {
+            return false;
+        }
+
+        value.CurrentMana -= cost;
+        value.NetworkDirty = 1;
+        return true;
     }
 }

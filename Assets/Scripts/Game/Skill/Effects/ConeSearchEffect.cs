@@ -39,9 +39,9 @@ namespace CrystalMagic.Game.Skill.Effects
             if (math.lengthsq(forward) <= 0.0001f)
                 return;
 
-            if (!UnitQueryUtility.TryGetTree(entityManager, UnitQueryTreeKind.Unit, out UnitQueryTree unitTree))
+            if (!UnitQueryUtility.TryGetGrid(entityManager, UnitQueryGridKind.Unit, out UnitQueryGrid unitGrid))
                 return;
-            unitTree.QueryCone(originPosition, forward, Data.Radius, Data.AngleDegrees, _hits);
+            unitGrid.QueryCone(originPosition, forward, Data.Radius, Data.AngleDegrees, _hits);
 
             for (int i = 0; i < _hits.Count; i++)
             {

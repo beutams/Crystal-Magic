@@ -147,7 +147,6 @@ public partial class UnitNavigationSystem : SystemBase
             return;
 
         move.Direction = direction;
-        move.NetworkDirty = 1;
     }
 
     private sealed class NavigationGrid

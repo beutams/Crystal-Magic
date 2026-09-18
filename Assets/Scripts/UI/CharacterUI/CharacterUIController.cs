@@ -87,14 +87,14 @@ namespace CrystalMagic.UI
             if (!CanEquipToSlot(itemData, equipSlotIndex))
                 return;
 
-            int oldItemId = GetEquippedItemId(equipmentData, equipSlotIndex);
+            int oldItemId = EquipmentUtility.GetEquippedItemId(equipmentData, equipSlotIndex);
             if (!TryConsumeBackpackItem(backpackData, data.SlotIndex, data.ItemId, 1))
                 return;
 
             if (oldItemId >= 0)
                 AddItemToBackpack(backpackData, oldItemId, 1);
 
-            SetEquippedItemId(equipmentData, equipSlotIndex, data.ItemId);
+            EquipmentUtility.SetEquippedItemId(equipmentData, equipSlotIndex, data.ItemId);
             SaveDataComponent.Instance.NotifyBackpackDataChanged();
             SaveDataComponent.Instance.NotifyEquipmentDataChanged();
         }
@@ -106,7 +106,7 @@ namespace CrystalMagic.UI
             if (equipmentData == null || backpackData?.Items == null)
                 return;
 
-            int itemId = GetEquippedItemId(equipmentData, equipSlotIndex);
+            int itemId = EquipmentUtility.GetEquippedItemId(equipmentData, equipSlotIndex);
             if (itemId < 0)
                 return;
 
@@ -114,7 +114,7 @@ namespace CrystalMagic.UI
             if (itemData == null || !IsEquippableItem(itemData.ItemType))
                 return;
 
-            SetEquippedItemId(equipmentData, equipSlotIndex, -1);
+            EquipmentUtility.SetEquippedItemId(equipmentData, equipSlotIndex, -1);
             AddItemToBackpack(backpackData, itemId, 1);
             SaveDataComponent.Instance.NotifyBackpackDataChanged();
             SaveDataComponent.Instance.NotifyEquipmentDataChanged();
@@ -126,15 +126,13 @@ namespace CrystalMagic.UI
                 return;
 
             EquipmentData equipmentData = SaveDataComponent.Instance.GetEquipmentData();
-            if (equipmentData?.SpiritSlots == null || equipmentData.SpiritSlots.Length < 4)
+            if (equipmentData == null)
                 return;
 
             int sourceSpiritIndex = sourceSlotIndex - 1;
             int targetSpiritIndex = targetSlotIndex - 1;
-            int temp = equipmentData.SpiritSlots[sourceSpiritIndex];
-            equipmentData.SpiritSlots[sourceSpiritIndex] = equipmentData.SpiritSlots[targetSpiritIndex];
-            equipmentData.SpiritSlots[targetSpiritIndex] = temp;
-            SaveDataComponent.Instance.NotifyEquipmentDataChanged();
+            if (EquipmentUtility.SwapSpiritSlots(equipmentData, sourceSpiritIndex, targetSpiritIndex))
+                SaveDataComponent.Instance.NotifyEquipmentDataChanged();
         }
 
         private void OnSkillReordered(CharacterSkillDisplayData data, int insertIndex)
@@ -240,39 +238,6 @@ namespace CrystalMagic.UI
                 return itemData.ItemType == ItemType.Spirit;
 
             return false;
-        }
-
-        private int GetEquippedItemId(EquipmentData equipmentData, int equipSlotIndex)
-        {
-            if (equipmentData == null)
-                return -1;
-
-            if (equipSlotIndex == 0)
-                return equipmentData.MagicStoneId;
-
-            int spiritIndex = equipSlotIndex - 1;
-            if (equipmentData.SpiritSlots == null || spiritIndex < 0 || spiritIndex >= equipmentData.SpiritSlots.Length)
-                return -1;
-
-            return equipmentData.SpiritSlots[spiritIndex];
-        }
-
-        private void SetEquippedItemId(EquipmentData equipmentData, int equipSlotIndex, int itemId)
-        {
-            if (equipmentData == null)
-                return;
-
-            if (equipSlotIndex == 0)
-            {
-                equipmentData.MagicStoneId = itemId;
-                return;
-            }
-
-            int spiritIndex = equipSlotIndex - 1;
-            if (equipmentData.SpiritSlots == null || spiritIndex < 0 || spiritIndex >= equipmentData.SpiritSlots.Length)
-                return;
-
-            equipmentData.SpiritSlots[spiritIndex] = itemId;
         }
 
         private bool TryConsumeBackpackItem(BackpackData backpackData, int slotIndex, int itemId, int count)

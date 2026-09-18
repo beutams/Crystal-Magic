@@ -22,7 +22,7 @@ public sealed class SetBehaviorNode : ActionBehaviorNode
         _data = data;
     }
 
-    protected override bool OnBind(UnitSourceAccessTable sources, out string error)
+    protected override bool OnBind(UnitSourceResolver sources, out string error)
     {
         _set = null;
         _key = string.Empty;
@@ -111,7 +111,6 @@ public sealed class SetBehaviorNode : ActionBehaviorNode
         return factory;
     }
 }
-
 [FactoryKey(BehaviorNodeTypes.HitCheck, 13, "Hit Check")]
 public sealed class HitCheckBehaviorNode : ABehaviorNode
 {
@@ -127,7 +126,7 @@ public sealed class HitCheckBehaviorNode : ABehaviorNode
         _data = data;
     }
 
-    protected override bool OnBind(UnitSourceAccessTable sources, out string error)
+    protected override bool OnBind(UnitSourceResolver sources, out string error)
     {
         _targetGetter = null;
         _data.Target ??= new ValueExpression { Literal = UnitValue.FromEntity(Entity.Null) };

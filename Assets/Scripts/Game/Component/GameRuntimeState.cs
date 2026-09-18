@@ -133,10 +133,17 @@ namespace CrystalMagic.Core
             if (!TryGetPlayerEntity(out EntityManager entityManager, out Entity player))
                 return;
 
+            CharacterData boundData = data ?? new CharacterData();
+            boundData.Equipment ??= new EquipmentData();
+            EquipmentUtility.EnsureValid(boundData.Equipment);
+            EquipmentUtility.RebuildProperties(boundData.Equipment);
             if (entityManager.HasComponent<PlayerCharacterComponent>(player))
-                entityManager.GetComponentObject<PlayerCharacterComponent>(player).Data = data ?? new CharacterData();
+                entityManager.GetComponentObject<PlayerCharacterComponent>(player).Data = boundData;
             else
-                entityManager.AddComponentObject(player, new PlayerCharacterComponent { Data = data ?? new CharacterData() });
+                entityManager.AddComponentObject(player, new PlayerCharacterComponent { Data = boundData });
+
+            EquipmentUtility.ApplyToUnit(entityManager, player, boundData.Equipment);
+            PlayerSkillRuntimeDataUtility.Initialize(entityManager, player, boundData);
         }
 
         public static void ClearPlayerCharacterData()
@@ -148,6 +155,8 @@ namespace CrystalMagic.Core
             }
 
             entityManager.RemoveComponent<PlayerCharacterComponent>(player);
+            if (entityManager.HasComponent<PlayerSkillRuntimeDataComponent>(player))
+                entityManager.RemoveComponent<PlayerSkillRuntimeDataComponent>(player);
         }
 
         public static DungeonRunData GetDungeonRunData()

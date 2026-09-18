@@ -6,9 +6,17 @@ using Unity.Entities;
 [UpdateAfter(typeof(BehaviorTreeSystem))]
 public partial class StateScriptSystem : SystemBase
 {
+    private UnitSourceDispatcher _sourceDispatcher;
+
+    protected override void OnCreate()
+    {
+        _sourceDispatcher.Initialize(this);
+    }
+
     protected override void OnUpdate()
     {
         float deltaTime = SystemAPI.Time.DeltaTime;
+        _sourceDispatcher.Update(this);
 
         EntityQuery activeQuery = SystemAPI.QueryBuilder()
             .WithAll<UnitStateScriptComponent>()
@@ -30,7 +38,10 @@ public partial class StateScriptSystem : SystemBase
                 continue;
 
             for (int i = 0; i < component.Runtimes.Count; i++)
+            {
+                component.Runtimes[i].Sources.Update(entity, EntityManager, in _sourceDispatcher);
                 component.Runtimes[i].Tick(deltaTime);
+            }
         }
 
         EntityQuery deadQuery = SystemAPI.QueryBuilder()

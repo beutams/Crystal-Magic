@@ -10,12 +10,14 @@ public partial class UnitSpriteRendererSortingSystem : SystemBase
 
     protected override void OnUpdate()
     {
-        foreach ((UnitAnimationComponent animation, RefRO<LocalTransform> transform) in
-                 SystemAPI.Query<UnitAnimationComponent, RefRO<LocalTransform>>())
+        foreach ((RefRO<UnitAnimationComponent> _, RefRO<LocalTransform> transform, Entity entity) in
+                 SystemAPI.Query<RefRO<UnitAnimationComponent>, RefRO<LocalTransform>>().WithEntityAccess())
         {
-            SpriteRenderer spriteRenderer = animation.Renderer;
-            if (spriteRenderer != null)
-                spriteRenderer.sortingOrder = Mathf.RoundToInt(-transform.ValueRO.Position.y * SortingPrecision);
+            if (!EntityManager.HasComponent<SpriteRenderer>(entity))
+                continue;
+
+            SpriteRenderer spriteRenderer = EntityManager.GetComponentObject<SpriteRenderer>(entity);
+            spriteRenderer.sortingOrder = Mathf.RoundToInt(-transform.ValueRO.Position.y * SortingPrecision);
         }
     }
 }

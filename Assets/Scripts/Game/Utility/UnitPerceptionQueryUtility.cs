@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Transforms;
 
 /// <summary>
 /// Queries the units already discovered by an observer's <see cref="UnitPerceptionComponent"/>.
@@ -36,9 +35,9 @@ public static class UnitPerceptionQueryUtility
 
         for (int i = 0; i < units.Length; i++)
         {
-            Entity unit = units[i].Value;
-            if (MatchesFaction(entityManager, unit, faction))
-                destination.Add(unit);
+            UnitPerceptionUnitElement unit = units[i];
+            if (MatchesFaction(entityManager, in unit, faction))
+                destination.Add(unit.Value);
         }
     }
 
@@ -50,7 +49,8 @@ public static class UnitPerceptionQueryUtility
         int count = 0;
         for (int i = 0; i < units.Length; i++)
         {
-            if (MatchesFaction(entityManager, units[i].Value, faction))
+            UnitPerceptionUnitElement unit = units[i];
+            if (MatchesFaction(entityManager, in unit, faction))
                 count++;
         }
 
@@ -65,12 +65,12 @@ public static class UnitPerceptionQueryUtility
         int currentIndex = 0;
         for (int i = 0; i < units.Length; i++)
         {
-            Entity unit = units[i].Value;
-            if (!MatchesFaction(entityManager, unit, faction))
+            UnitPerceptionUnitElement unit = units[i];
+            if (!MatchesFaction(entityManager, in unit, faction))
                 continue;
 
             if (currentIndex++ == index)
-                return unit;
+                return unit.Value;
         }
 
         return Entity.Null;
@@ -83,12 +83,30 @@ public static class UnitPerceptionQueryUtility
         out Entity unit,
         out float distance)
     {
-        return TryGetNearest(
-            entityManager,
-            observer,
-            candidate => MatchesFaction(entityManager, candidate, faction),
-            out unit,
-            out distance);
+        unit = Entity.Null;
+        distance = 0f;
+        if (!TryGetPerceivedUnits(entityManager, observer, out DynamicBuffer<UnitPerceptionUnitElement> units))
+            return false;
+
+        float nearestDistanceSq = float.MaxValue;
+        for (int i = 0; i < units.Length; i++)
+        {
+            UnitPerceptionUnitElement candidate = units[i];
+            if (!MatchesFaction(entityManager, in candidate, faction) ||
+                candidate.DistanceSq >= nearestDistanceSq)
+            {
+                continue;
+            }
+
+            nearestDistanceSq = candidate.DistanceSq;
+            unit = candidate.Value;
+        }
+
+        if (unit == Entity.Null)
+            return false;
+
+        distance = math.sqrt(nearestDistanceSq);
+        return true;
     }
 
     public static List<Entity> GetByName(EntityManager entityManager, Entity observer, string unitName)
@@ -114,9 +132,9 @@ public static class UnitPerceptionQueryUtility
 
         for (int i = 0; i < units.Length; i++)
         {
-            Entity unit = units[i].Value;
-            if (MatchesUnitName(entityManager, unit, name))
-                destination.Add(unit);
+            UnitPerceptionUnitElement unit = units[i];
+            if (MatchesUnitName(entityManager, in unit, name))
+                destination.Add(unit.Value);
         }
     }
 
@@ -129,7 +147,8 @@ public static class UnitPerceptionQueryUtility
         int count = 0;
         for (int i = 0; i < units.Length; i++)
         {
-            if (MatchesUnitName(entityManager, units[i].Value, name))
+            UnitPerceptionUnitElement unit = units[i];
+            if (MatchesUnitName(entityManager, in unit, name))
                 count++;
         }
 
@@ -148,12 +167,12 @@ public static class UnitPerceptionQueryUtility
         int currentIndex = 0;
         for (int i = 0; i < units.Length; i++)
         {
-            Entity unit = units[i].Value;
-            if (!MatchesUnitName(entityManager, unit, name))
+            UnitPerceptionUnitElement unit = units[i];
+            if (!MatchesUnitName(entityManager, in unit, name))
                 continue;
 
             if (currentIndex++ == index)
-                return unit;
+                return unit.Value;
         }
 
         return Entity.Null;
@@ -167,46 +186,23 @@ public static class UnitPerceptionQueryUtility
         out float distance)
     {
         FixedString128Bytes name = new(unitName ?? string.Empty);
-        return TryGetNearest(
-            entityManager,
-            observer,
-            candidate => MatchesUnitName(entityManager, candidate, name),
-            out unit,
-            out distance);
-    }
-
-    private static bool TryGetNearest(
-        EntityManager entityManager,
-        Entity observer,
-        Func<Entity, bool> predicate,
-        out Entity unit,
-        out float distance)
-    {
         unit = Entity.Null;
         distance = 0f;
-        if (predicate == null ||
-            !TryGetPerceivedUnits(entityManager, observer, out DynamicBuffer<UnitPerceptionUnitElement> units) ||
-            !entityManager.HasComponent<LocalTransform>(observer))
-        {
+        if (!TryGetPerceivedUnits(entityManager, observer, out DynamicBuffer<UnitPerceptionUnitElement> units))
             return false;
-        }
 
-        float3 observerPosition = entityManager.GetComponentData<LocalTransform>(observer).Position;
         float nearestDistanceSq = float.MaxValue;
         for (int i = 0; i < units.Length; i++)
         {
-            Entity candidate = units[i].Value;
-            if (!predicate(candidate) || !entityManager.HasComponent<LocalTransform>(candidate))
+            UnitPerceptionUnitElement candidate = units[i];
+            if (!MatchesUnitName(entityManager, in candidate, name) ||
+                candidate.DistanceSq >= nearestDistanceSq)
+            {
                 continue;
+            }
 
-            float distanceSq = math.distancesq(
-                observerPosition,
-                entityManager.GetComponentData<LocalTransform>(candidate).Position);
-            if (distanceSq >= nearestDistanceSq)
-                continue;
-
-            nearestDistanceSq = distanceSq;
-            unit = candidate;
+            nearestDistanceSq = candidate.DistanceSq;
+            unit = candidate.Value;
         }
 
         if (unit == Entity.Null)
@@ -234,17 +230,22 @@ public static class UnitPerceptionQueryUtility
         return true;
     }
 
-    private static bool MatchesFaction(EntityManager entityManager, Entity unit, UnitFactionType faction)
+    private static bool MatchesFaction(
+        EntityManager entityManager,
+        in UnitPerceptionUnitElement unit,
+        UnitFactionType faction)
     {
-        return IsValidPerceivedUnit(entityManager, unit) &&
-               entityManager.GetComponentData<UnitFactionComponent>(unit).Value == faction;
+        return unit.Faction == faction && IsValidPerceivedUnit(entityManager, unit.Value);
     }
 
-    private static bool MatchesUnitName(EntityManager entityManager, Entity unit, in FixedString128Bytes unitName)
+    private static bool MatchesUnitName(
+        EntityManager entityManager,
+        in UnitPerceptionUnitElement unit,
+        in FixedString128Bytes unitName)
     {
-        return IsValidPerceivedUnit(entityManager, unit) &&
-               entityManager.HasComponent<UnitPerceptionComponent>(unit) &&
-               entityManager.GetComponentData<UnitPerceptionComponent>(unit).UnitName.Equals(unitName);
+        return IsValidPerceivedUnit(entityManager, unit.Value) &&
+               entityManager.HasComponent<UnitPerceptionComponent>(unit.Value) &&
+               entityManager.GetComponentData<UnitPerceptionComponent>(unit.Value).UnitName.Equals(unitName);
     }
 
     private static bool IsValidPerceivedUnit(EntityManager entityManager, Entity unit)

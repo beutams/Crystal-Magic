@@ -21,7 +21,7 @@ public sealed class StateScriptRuntime
         StateScriptInstanceData data,
         Entity entity,
         EntityManager entityManager,
-        UnitSourceAccessTable sources)
+        UnitSourceResolver sources)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
         Entity = entity;
@@ -32,7 +32,7 @@ public sealed class StateScriptRuntime
     public StateScriptInstanceData Data { get; }
     public Entity Entity { get; }
     public EntityManager EntityManager { get; }
-    public UnitSourceAccessTable Sources { get; }
+    public UnitSourceResolver Sources { get; }
     public float DeltaTime { get; private set; }
     public long TickVersion { get; private set; }
     public bool IsStarted { get; private set; }
@@ -222,7 +222,6 @@ public sealed class StateScriptRuntime
         }
     }
 }
-
 public static class StateScriptRuntimeBuilder
 {
     private static readonly StateScriptNodeRuntimeFactory s_factory = CreateFactory();
@@ -231,7 +230,7 @@ public static class StateScriptRuntimeBuilder
         StateScriptInstanceData data,
         Entity entity,
         EntityManager entityManager,
-        UnitSourceAccessTable sources,
+        UnitSourceResolver sources,
         out string error)
     {
         error = string.Empty;

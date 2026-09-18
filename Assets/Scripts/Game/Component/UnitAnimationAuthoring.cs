@@ -11,102 +11,84 @@ public sealed class UnitAnimationAuthoring : MonoBehaviour
         public override void Bake(UnitAnimationAuthoring authoring)
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
-            AddComponentObject(entity, UnitAnimationComponent.CreateDefault());
+            AddComponent(entity, UnitAnimationComponent.CreateDefault());
         }
     }
 }
 
-public sealed class UnitAnimationComponent : IComponentData
+public struct UnitAnimationComponent : IComponentData
 {
-    public SpriteRenderer Renderer;
-    public FixedString64Bytes CurrentAnimationName;
+    public FixedString64Bytes AnimationName;
+    public uint StartFrame;
+    public uint Sequence;
+    public byte NetworkDirty;
     public FixedString64Bytes PlayingAnimationName;
-    public uint RequestedSequence;
     public uint PlayingSequence;
     public float RequestedStartElapsedSeconds;
     public UnitAnimationDirection LastTwoDirectionFacing;
     public float ElapsedSeconds;
-    public AnimationClip CurrentAnimationClip;
     public float CurrentSampleTime;
-    public Sprite CurrentSprite;
+    public float CurrentClipLength;
 
     internal static UnitAnimationComponent CreateDefault()
     {
         return new UnitAnimationComponent
         {
-            Renderer = null,
-            CurrentAnimationName = default,
-            PlayingAnimationName = default,
-            RequestedSequence = 0,
-            PlayingSequence = 0,
-            RequestedStartElapsedSeconds = 0f,
             LastTwoDirectionFacing = UnitAnimationDirection.Right,
-            ElapsedSeconds = 0f,
-            CurrentAnimationClip = null,
-            CurrentSampleTime = 0f,
-            CurrentSprite = null,
         };
     }
 }
 
-[UnitSourceAuthoring(typeof(UnitAnimationAuthoring))]
-public sealed class UnitAnimationSource : UnitManagedComponentSource<UnitAnimationComponent>
+[UnitSourceProvider(typeof(UnitAnimationComponent), typeof(UnitAnimationAuthoring))]
+public static class UnitAnimationSource
 {
-    private static readonly ComparatorParameterDefinition[] s_animationNameParameter =
+    [UnitSourceGet(0, "unit.animation.name", UnitValueCategory.String)]
+    public static bool TryGet(
+        int operation,
+        in UnitAnimationComponent value,
+        in UnitSourceArguments arguments,
+        out UnitSourceValue result)
     {
-        new ComparatorParameterDefinition("AnimationName", UnitValueCategory.String),
-    };
-
-    protected override void Define(UnitSourceDefinitionBuilder<UnitAnimationComponent> builder)
-    {
-        builder.AddGet("unit.animation.name", UnitValueCategory.String,
-            (in UnitAnimationComponent value) => UnitValue.FromString(value?.CurrentAnimationName.ToString() ?? string.Empty));
-        builder.AddContextSet("unit.animation.setName", s_animationNameParameter,
-            (in UnitSourceBindingContext context, ref UnitAnimationComponent value, UnitValue[] input) =>
-                SetAnimation(context, value, input, false));
-        builder.AddContextSet("unit.animation.play", s_animationNameParameter,
-            (in UnitSourceBindingContext context, ref UnitAnimationComponent value, UnitValue[] input) =>
-                SetAnimation(context, value, input, true));
+        result = operation == 0 ? UnitSourceValue.FromString(value.AnimationName) : UnitSourceValue.None;
+        return result.Type != UnitValueType.None;
     }
 
-    private static bool SetAnimation(
-        in UnitSourceBindingContext context,
-        UnitAnimationComponent animation,
-        UnitValue[] input,
-        bool forceRestart)
+    [UnitSourceSet(0, "unit.animation.setName", UnitValueCategory.String,
+        ParameterNames = new[] { "AnimationName" })]
+    [UnitSourceSet(1, "unit.animation.play", UnitValueCategory.String,
+        ParameterNames = new[] { "AnimationName" })]
+    public static bool TrySet(
+        int operation,
+        EntityManager entityManager,
+        Entity entity,
+        in UnitSourceArguments arguments)
     {
-        if (animation == null || input == null || input.Length != 1 ||
-            !input[0].TryGetString(out string name))
+        if ((operation != 0 && operation != 1) ||
+            !arguments.TryGetString(0, out FixedString128Bytes sourceName) ||
+            !entityManager.Exists(entity) || !entityManager.HasComponent<UnitAnimationComponent>(entity))
         {
             return false;
         }
 
-        FixedString64Bytes animationName = new(name.Trim());
-        bool changed = !animation.CurrentAnimationName.Equals(animationName);
-        bool hasState = context.EntityManager.HasComponent<UnitAnimationStateComponent>(context.Entity);
-        if (!hasState)
-            return false;
-
-        if (!changed && !forceRestart && hasState)
+        FixedString64Bytes animationName = new(sourceName.ToString().Trim());
+        UnitAnimationComponent animation = entityManager.GetComponentData<UnitAnimationComponent>(entity);
+        bool forceRestart = operation == 1;
+        bool changed = !animation.AnimationName.Equals(animationName);
+        if (!changed && !forceRestart)
             return true;
 
-        UnitAnimationStateComponent state =
-            context.EntityManager.GetComponentData<UnitAnimationStateComponent>(context.Entity);
-        uint sequence = System.Math.Max(animation.RequestedSequence, state.Sequence) + 1u;
+        uint sequence = animation.Sequence + 1u;
         if (sequence == 0u)
             sequence = 1u;
 
-        uint startFrame = FrameManagerUtility.TryGet(context.EntityManager, out FrameManager frameManager)
+        uint startFrame = FrameManagerUtility.TryGet(entityManager, out FrameManager frameManager)
             ? frameManager.currentFrame
             : 0u;
-        state.AnimationName = animationName;
-        state.StartFrame = startFrame;
-        state.Sequence = sequence;
-        state.NetworkDirty = 1;
-        context.EntityManager.SetComponentData(context.Entity, state);
 
-        animation.CurrentAnimationName = animationName;
-        animation.RequestedSequence = sequence;
+        animation.AnimationName = animationName;
+        animation.StartFrame = startFrame;
+        animation.Sequence = sequence;
+        animation.NetworkDirty = 1;
         animation.RequestedStartElapsedSeconds = 0f;
         if (forceRestart)
         {
@@ -115,6 +97,7 @@ public sealed class UnitAnimationSource : UnitManagedComponentSource<UnitAnimati
             animation.ElapsedSeconds = 0f;
         }
 
+        entityManager.SetComponentData(entity, animation);
         return true;
     }
 }

@@ -30,7 +30,7 @@ partial class UnitAvoidanceSystem : SystemBase
         float deltaTime = math.max(0.00001f, SystemAPI.Time.DeltaTime);
         Entity queryEntity = _queryRuntimeQuery.GetSingletonEntity();
         UnitQueryRuntimeComponent runtime = EntityManager.GetComponentObject<UnitQueryRuntimeComponent>(queryEntity);
-        if (runtime?.UnitTree == null)
+        if (runtime?.UnitGrid == null)
             return;
 
         _activeEntities.Clear();
@@ -99,7 +99,7 @@ partial class UnitAvoidanceSystem : SystemBase
             if (agent.MaxNeighbors <= 0 || agent.NeighborDistance <= 0f)
                 continue;
 
-            runtime.UnitTree.QueryCircle(
+            runtime.UnitGrid.QueryCircle(
                 new float3(agent.Position.X, agent.Position.Y, 0f),
                 agent.NeighborDistance,
                 _queryHits,

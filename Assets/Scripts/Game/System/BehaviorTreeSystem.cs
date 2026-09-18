@@ -5,6 +5,13 @@ using Unity.Entities;
 [UpdateAfter(typeof(UnitPerceptionSystem))]
 partial class BehaviorTreeSystem : SystemBase
 {
+    private UnitSourceDispatcher _sourceDispatcher;
+
+    protected override void OnCreate()
+    {
+        _sourceDispatcher.Initialize(this);
+    }
+
     protected override void OnUpdate()
     {
         GameGateComponent gameGate = GameGateComponent.Instance;
@@ -14,6 +21,7 @@ partial class BehaviorTreeSystem : SystemBase
         bool isDebugEnabled = DebugComponent.Instance.IsEnabled;
         float deltaTime = SystemAPI.Time.DeltaTime;
         EntityManager entityManager = EntityManager;
+        _sourceDispatcher.Update(this);
 
         foreach (var (behaviorTree, entity) in
                  SystemAPI.Query<UnitBehaviorTreeComponent>()
@@ -23,18 +31,19 @@ partial class BehaviorTreeSystem : SystemBase
             if (behaviorTree == null)
                 continue;
 
-            if (!entityManager.HasComponent<UnitSourceRuntimeComponent>(entity))
+            if (!behaviorTree.IsInitialized || behaviorTree.Runtime?.Sources == null)
                 continue;
 
-            UnitSourceRuntimeComponent sourceRuntime = entityManager.GetComponentObject<UnitSourceRuntimeComponent>(entity);
-            if (sourceRuntime?.Table == null)
-                continue;
-
+            behaviorTree.Runtime.Sources.Update(entity, entityManager, in _sourceDispatcher);
             behaviorTree.Context ??= new BehaviorContext();
-            behaviorTree.Context.BeginFrame(entity, entityManager, deltaTime, sourceRuntime.Table, isDebugEnabled);
+            behaviorTree.Context.BeginFrame(
+                entity,
+                entityManager,
+                deltaTime,
+                behaviorTree.Runtime.Sources,
+                isDebugEnabled);
 
-            if (behaviorTree.IsInitialized && behaviorTree.Runtime != null)
-                behaviorTree.Runtime.Tick(behaviorTree.Context);
+            behaviorTree.Runtime.Tick(behaviorTree.Context);
 
             if (isDebugEnabled)
             {

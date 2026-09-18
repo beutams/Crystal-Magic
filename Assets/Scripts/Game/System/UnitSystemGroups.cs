@@ -67,7 +67,18 @@ public partial class UnitPostProcessSystemGroup : ComponentSystemGroup
     WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation,
     WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation)]
 [UpdateInGroup(typeof(SimulationSystemGroup), OrderFirst = true)]
+[UpdateAfter(typeof(FrameReceiveSystem))]
 public partial class ClientInputSystemGroup : ComponentSystemGroup
+{
+}
+
+[WorldSystemFilter(
+    WorldSystemFilterFlags.ClientSimulation,
+    WorldSystemFilterFlags.ClientSimulation)]
+[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateAfter(typeof(ClientInputSystemGroup))]
+[UpdateBefore(typeof(ClientNetworkPresentationSystemGroup))]
+public partial class ClientPlayerPredictionSystemGroup : ComponentSystemGroup
 {
 }
 
@@ -76,6 +87,7 @@ public partial class ClientInputSystemGroup : ComponentSystemGroup
     WorldSystemFilterFlags.ClientSimulation)]
 [UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
 [UpdateAfter(typeof(FrameReceiveSystem))]
+[UpdateAfter(typeof(ClientPlayerPredictionSystemGroup))]
 [UpdateBefore(typeof(ClientPresentationSystemGroup))]
 public partial class ClientNetworkPresentationSystemGroup : ComponentSystemGroup
 {

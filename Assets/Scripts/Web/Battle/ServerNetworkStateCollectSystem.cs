@@ -113,25 +113,10 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
                 continue;
 
             LocalTransform transform = transformRef.ValueRO;
-            states.Add(new NetworkMoveStateData
-            {
-                unitId = identityRef.ValueRO.id,
-                baseMoveSpeed = move.BaseMoveSpeed,
-                baseMoveSpeedOffset = move.BaseMoveSpeedOffset,
-                baseMaxAcceleration = move.BaseMaxAcceleration,
-                directionX = move.Direction.x,
-                directionY = move.Direction.y,
-                stateMoveMultiplier = move.StateMoveMultiplier,
-                velocityX = move.Velocity.x,
-                velocityY = move.Velocity.y,
-                frameVelocityX = move.FrameVelocity.x,
-                frameVelocityY = move.FrameVelocity.y,
-                hasFrameVelocity = move.HasFrameVelocity,
-                commandMoveSpeed = move.CommandMoveSpeed,
-                positionX = transform.Position.x,
-                positionY = transform.Position.y,
-                positionZ = transform.Position.z,
-            });
+            states.Add(NetworkUnitStateSnapshotUtility.CreateMoveState(
+                identityRef.ValueRO.id,
+                move,
+                transform));
             if (onlyDirty)
             {
                 move.NetworkDirty = 0;
@@ -149,12 +134,9 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
             if ((onlyDirty && facing.NetworkDirty == 0) || identityRef.ValueRO.id == Guid.Empty)
                 continue;
 
-            states.Add(new NetworkFacingStateData
-            {
-                unitId = identityRef.ValueRO.id,
-                directionX = facing.Direction.x,
-                directionY = facing.Direction.y,
-            });
+            states.Add(NetworkUnitStateSnapshotUtility.CreateFacingState(
+                identityRef.ValueRO.id,
+                facing));
             if (onlyDirty)
             {
                 facing.NetworkDirty = 0;
@@ -166,10 +148,10 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
     private void CollectAnimationStates(List<NetworkStateData> states, bool onlyDirty)
     {
         foreach ((RefRO<NetworkIdentityComponent> identityRef,
-                  RefRW<UnitAnimationStateComponent> animationRef) in
-                 SystemAPI.Query<RefRO<NetworkIdentityComponent>, RefRW<UnitAnimationStateComponent>>())
+                  RefRW<UnitAnimationComponent> animationRef) in
+                 SystemAPI.Query<RefRO<NetworkIdentityComponent>, RefRW<UnitAnimationComponent>>())
         {
-            UnitAnimationStateComponent animation = animationRef.ValueRO;
+            UnitAnimationComponent animation = animationRef.ValueRO;
             if ((onlyDirty && animation.NetworkDirty == 0) || identityRef.ValueRO.id == Guid.Empty)
                 continue;
 

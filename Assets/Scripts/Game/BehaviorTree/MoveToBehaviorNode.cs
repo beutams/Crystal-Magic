@@ -21,7 +21,7 @@ public sealed class MoveToBehaviorNode : ActionBehaviorNode
         _data = data;
     }
 
-    protected override bool OnBind(UnitSourceAccessTable sources, out string error)
+    protected override bool OnBind(UnitSourceResolver sources, out string error)
     {
         _data.Conditions ??= new System.Collections.Generic.List<ConditionConfig>();
         _data.Destination ??= MoveToBehaviorNodeData.CreateDefaultDestination();
@@ -75,7 +75,6 @@ public sealed class MoveToBehaviorNode : ActionBehaviorNode
         if (move.CommandMoveSpeed != commandSpeed)
         {
             move.CommandMoveSpeed = commandSpeed;
-            move.NetworkDirty = 1;
             entityManager.SetComponentData(entity, move);
         }
 
@@ -89,7 +88,7 @@ public sealed class MoveToBehaviorNode : ActionBehaviorNode
     private static bool TryBindExpression(
         ValueExpression expression,
         UnitValueCategory expectedCategory,
-        UnitSourceAccessTable sources,
+        UnitSourceResolver sources,
         out Func<UnitValue> getter,
         out string error)
     {

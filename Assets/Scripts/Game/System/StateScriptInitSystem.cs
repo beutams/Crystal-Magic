@@ -4,11 +4,14 @@ using Unity.Entities;
 using UnityEngine;
 
 [UpdateInGroup(typeof(UnitInitializationSystemGroup))]
-[UpdateAfter(typeof(UnitSourceInitializationSystem))]
+[UpdateAfter(typeof(UnitSourceDispatcherSystem))]
 public partial class StateScriptInitSystem : SystemBase
 {
     protected override void OnUpdate()
     {
+        if (!UnitSourceDispatcherSystem.TryGet(EntityManager, out UnitSourceDispatcher sourceDispatcher))
+            return;
+
         foreach ((UnitStateScriptComponent component, Entity entity) in
                  SystemAPI.Query<UnitStateScriptComponent>().WithEntityAccess())
         {
@@ -24,9 +27,6 @@ public partial class StateScriptInitSystem : SystemBase
                 continue;
             }
 
-            if (!EntityManager.HasComponent<UnitSourceRuntimeComponent>(entity))
-                continue;
-
             StateScriptData data = DataComponent.Instance.Find<StateScriptData>(row => row.Id == component.UnitDataId);
             if (data == null)
             {
@@ -35,15 +35,13 @@ public partial class StateScriptInitSystem : SystemBase
                 continue;
             }
 
-            UnitSourceRuntimeComponent sourceRuntime = EntityManager.GetComponentObject<UnitSourceRuntimeComponent>(entity);
-            if (sourceRuntime?.Table == null)
-                continue;
-
+            UnitSourceResolver sources = new(entity);
+            sources.Update(entity, EntityManager, in sourceDispatcher);
             data.EnsureValid();
             for (int i = 0; i < data.Graphs.Count; i++)
             {
                 StateScriptRuntime runtime = StateScriptRuntimeBuilder.Build(
-                    data.Graphs[i], entity, EntityManager, sourceRuntime.Table, out string error);
+                    data.Graphs[i], entity, EntityManager, sources, out string error);
                 if (runtime == null)
                 {
                     component.InitializationError = error;

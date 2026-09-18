@@ -25,7 +25,6 @@ public sealed class RootBehaviorNode : ABehaviorNode
         return Children[0].Tick(context);
     }
 }
-
 [FactoryKey(BehaviorNodeTypes.Selector, 0, "Selector")]
 public sealed class SelectorBehaviorNode : CompositeBehaviorNode
 {
@@ -168,7 +167,7 @@ public sealed class CheckBehaviorNode : ABehaviorNode
         _data = data;
     }
 
-    protected override bool OnBind(UnitSourceAccessTable sources, out string error)
+    protected override bool OnBind(UnitSourceResolver sources, out string error)
     {
         _comparator = s_comparatorFactory.BuildComparator(_data?.Conditions, sources);
         if (_comparator == null || !_comparator.IsValid)

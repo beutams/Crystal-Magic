@@ -233,15 +233,14 @@ namespace CrystalMagic.Editor.Unit
 
         public void Draw(UnitRuntimeDrawerContext context)
         {
-            UnitAnimationComponent animation = context.EntityManager.GetComponentObject<UnitAnimationComponent>(context.Entity);
+            UnitAnimationComponent animation = context.GetComponent<UnitAnimationComponent>();
             UnitEditorWindow.DrawSectionHeader("Animation");
-            EditorGUILayout.TextField("Requested", animation?.CurrentAnimationName.ToString() ?? string.Empty);
-            EditorGUILayout.TextField("Playing", animation?.PlayingAnimationName.ToString() ?? string.Empty);
-            EditorGUILayout.TextField("Facing", animation?.LastTwoDirectionFacing.ToString() ?? string.Empty);
-            EditorGUILayout.FloatField("Elapsed", animation?.ElapsedSeconds ?? 0f);
-            EditorGUILayout.FloatField("Sample Time", animation?.CurrentSampleTime ?? 0f);
-            EditorGUILayout.ObjectField("Clip", animation?.CurrentAnimationClip, typeof(AnimationClip), false);
-            EditorGUILayout.ObjectField("Sprite", animation?.CurrentSprite, typeof(Sprite), false);
+            EditorGUILayout.TextField("Requested", animation.AnimationName.ToString());
+            EditorGUILayout.TextField("Playing", animation.PlayingAnimationName.ToString());
+            EditorGUILayout.TextField("Facing", animation.LastTwoDirectionFacing.ToString());
+            EditorGUILayout.FloatField("Elapsed", animation.ElapsedSeconds);
+            EditorGUILayout.FloatField("Sample Time", animation.CurrentSampleTime);
+            EditorGUILayout.FloatField("Clip Length", animation.CurrentClipLength);
         }
     }
 

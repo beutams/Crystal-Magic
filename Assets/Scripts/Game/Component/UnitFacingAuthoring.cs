@@ -23,22 +23,28 @@ public struct UnitFacingComponent : IComponentData
     public byte NetworkDirty;
 }
 
-[UnitSourceAuthoring(typeof(UnitFacingAuthoring))]
-public sealed class UnitFacingSource : UnitComponentSource<UnitFacingComponent>
+[UnitSourceProvider(typeof(UnitFacingComponent), typeof(UnitFacingAuthoring))]
+public static class UnitFacingSource
 {
-    protected override void Define(UnitSourceDefinitionBuilder<UnitFacingComponent> builder)
+    [UnitSourceGet(0, "unit.facing.direction", UnitValueCategory.Float2)]
+    public static bool TryGet(
+        int operation,
+        in UnitFacingComponent value,
+        in UnitSourceArguments arguments,
+        out UnitSourceValue result)
     {
-        builder.AddGet("unit.facing.direction", UnitValueCategory.Float2,
-            (in UnitFacingComponent value) => UnitValue.FromFloat2(value.Direction));
-        builder.AddSet("unit.facing.setDirection", UnitValueCategory.Float2,
-            (ref UnitFacingComponent value, UnitValue input) =>
-            {
-                if (!input.TryGetFloat2(out float2 direction))
-                    return false;
+        result = operation == 0 ? UnitSourceValue.FromFloat2(value.Direction) : UnitSourceValue.None;
+        return result.Type != UnitValueType.None;
+    }
 
-                value.Direction = math.normalizesafe(direction, value.Direction);
-                value.NetworkDirty = 1;
-                return true;
-            });
+    [UnitSourceSet(0, "unit.facing.setDirection", UnitValueCategory.Float2, ParameterNames = new[] { "Direction" })]
+    public static bool TrySet(int operation, ref UnitFacingComponent value, in UnitSourceArguments arguments)
+    {
+        if (operation != 0 || !arguments.TryGetFloat2(0, out float2 direction))
+            return false;
+
+        value.Direction = math.normalizesafe(direction, value.Direction);
+        value.NetworkDirty = 1;
+        return true;
     }
 }

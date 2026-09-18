@@ -249,6 +249,7 @@ namespace CrystalMagic.Core {
     {
         public int MagicStoneId;
         public int[] SpiritSlots = new int[4];
+        public EquipmentPropertyData Properties;
 
         public EquipmentData()
         {
@@ -258,6 +259,24 @@ namespace CrystalMagic.Core {
                 SpiritSlots[i] = -1;
             }
         }
+    }
+
+    [System.Serializable]
+    public struct EquipmentPropertyData
+    {
+        public float MoveSpeed;
+        public float MaxHealth;
+        public float Defense;
+        public float AttackPower;
+        public float SkillRange;
+        public float MaxMp;
+        public float HealthRegen;
+        public float MpRegen;
+        public float ChantSpeed;
+        public float WaterPower;
+        public float FirePower;
+        public float LightningPower;
+        public float WindPower;
     }
 
     /// <summary>

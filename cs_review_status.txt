@@ -270,15 +270,16 @@ Game\
       AreaSearchEffect.cs TRUE DIRTY
       BuffStackEffect.cs FALSE
       CameraShakeEffect.cs FALSE
-      ChainSearchEffect.cs TRUE
-      ConeSearchEffect.cs TRUE
+      ChainSearchEffect.cs TRUE DIRTY
+      ConeSearchEffect.cs TRUE DIRTY
       DamageEffect.cs TRUE DIRTY
       Effect.cs FALSE
-      EffectConditionUtility.cs FALSE
-      ForwardRectSearchEffect.cs TRUE
+      EffectConditionUtility.cs TRUE
+      ForwardRectSearchEffect.cs TRUE DIRTY
       PersistentEffect.cs TRUE
         闁归晲鑳堕悽濠氬箑瑜庨弲銉╁几濠婃劗绀夋繛锝堫嚙婵偞绋夐埀顒佺▔椤忓懎鐦紓渚囧幒閹广垽宕濋垾鍐茬厒缂侇垵宕电划?
       RandomAreaPointEffect.cs FALSE
+      RectSearchEffect.cs TRUE DIRTY
       RecoverEffect.cs FALSE
       SpawnFollowVfxEffect.cs TRUE
       SpawnProjectileEffect.cs TRUE DIRTY
@@ -303,6 +304,7 @@ Game\
       SelfSkill.cs TRUE DIRTY
       Skill.cs TRUE DIRTY
     SkillAnalysisUtility.cs TRUE DIRTY
+    SkillAdditionAction.cs TRUE
     SkillCastTasks.cs TRUE DIRTY
     SkillChainResolver.cs TRUE DIRTY
     SkillContent.cs TRUE
@@ -324,13 +326,13 @@ Game\
   Unit\
     Source\
       Editor\
-        UnitComponentSourceRegistryGenerator.cs TRUE
+        UnitComponentSourceRegistryGenerator.cs TRUE DIRTY
+      GameInteractionSource.cs TRUE
       UnitComponentSource.cs TRUE DIRTY
       UnitComponentSourceRegistry.cs TRUE DIRTY
-      UnitSourceAccessTable.cs TRUE DIRTY
-      UnitSourceInitializationSystem.cs TRUE DIRTY
-      UnitSourceRuntimeComponent.cs TRUE
+      UnitSourceResolver.cs TRUE DIRTY
       UnitSourceSchema.cs TRUE DIRTY
+      UnitSourceValue.cs TRUE
       UnitTransformSource.cs TRUE DIRTY
     Editor\
     BehaviorTree\
@@ -350,7 +352,7 @@ Game\
         缂備礁瀚幃搴ㄦ嚍閸屾粌浠?闁哄鈧弶顐介柤鍝勫€婚崑?
       DecoratorBehaviorNodes.cs TRUE DIRTY
         濞ｅ浂鍣ｉ妶浼存嚍閸屾粌浠?
-      MoveToBehaviorNode.cs TRUE
+      MoveToBehaviorNode.cs TRUE DIRTY
     StateScript\
       Nodes\
         CompareStateScriptNode.cs TRUE DIRTY
@@ -398,8 +400,12 @@ Game\
         閺夆晜鍔橀、鎴﹀籍缁傤敹C濞存嚎鍊撶花鎵嫚闁垮婀撮柛妤佹磻缁?
       PendingEffectExecutionQueueComponent.cs TRUE
       PersistentEffectQueueComponent.cs TRUE
+      PlayerCurrentSkillAuthoring.cs TRUE
+      PlayerInputComponent.cs TRUE
       PlayerSkillComponent.cs TRUE DIRTY
+      PlayerSkillRuntimeDataComponent.cs TRUE DIRTY
       PlayerPhysicsAuthoring.cs TRUE DIRTY
+      UnitPhysicsRotationInitializedComponent.cs TRUE
       PlayerSkillAuthoring.cs TRUE DIRTY
         闁哄倽濮ょ涵鍓佹嫚闁垮婀寸紓浣稿濞嗐垽鏁嶇仦鐣屾憼闁衡偓閹呯闂佹彃锕ラ弬渚€骞庨埀顒勬嚄娴犲鎳犻柛妯煎枎椤劙寮悧鍫濈ウ
       ProjectileEntityPrefabRegistryEntry.cs FALSE
@@ -437,11 +443,12 @@ Game\
       UnitAvoidanceAuthoring.cs TRUE
       UnitMoveAuthoring.cs TRUE DIRTY
         缂佸顕ф慨鈺呭极閻楀牆绁?
-      UnitNavigationAuthoring.cs FALSE
+      UnitNavigationAuthoring.cs TRUE
       UnitPerceptionAuthoring.cs TRUE DIRTY
         缂佷究鍨洪弲顐ょ磼閸曨亝顐介柨娑樼焸閳ь剙鍊块崢顦沶it缂傚倹鐗炵欢顐﹀闯?
         闁告娲戠紞鍛村箥閳ь剟寮垫径瀣楅柤瀹犲Г閺嗙喖骞?
       UnitSkillReleaseAuthoring.cs TRUE DIRTY
+      UnitQueryRuntimeComponent.cs TRUE
       UnitSkillModifierRuntimeAuthoring.cs TRUE DIRTY
       ========濠㈤浜滈ˇ璺ㄧ磼閸曨亝顐介柛锔哄姀缁绘牠鏌岀仦鎯ф綉闁?
       UnitEntityPrefabRegistryEntry.cs TRUE
@@ -512,14 +519,14 @@ Game\
         濞戞挸锕ら惇鐧皍ff濞戞柨顑囩悮顐︽儍閸曨垰娅為柡鈧欢鈧琭fect闁挎稑鐭傞埀顒佷亢缁诲啰鎷犻柨瀣勾闁规亽鍔忕换婊堝礆閻楀牆鈷旈悶娑樿嫰閻即鏌屾繝鍐╂澒
         闁活亞鍠庨悿鍕閵堝嫮闉嶇紒顖濆吹缁椽鏁嶇仦鎯р挃閻炴稑濂斿锔界閹烘洖螡闁绘劕缍婇幗濂稿礆閹殿喚娉㈤柡澶屽枂閳?
       NPCInteractPromptSystem.cs TRUE DIRTY
+      InteractionCandidateSystem.cs TRUE
         缂備胶鍠曢鎼佸箥閳ь剟寮垫径濠傝濞存嚎鍊撶花鎵矓瀹ュ洩顫﹂柨娑樼焸閳ь剙顦崵顓㈠嫉閳ь剚娼婚幋鐘崇暠
       PersistentEffectSystem.cs TRUE DIRTY
         闁告梻濮撮崣鍡涘箰娴ｈ櫣鏁鹃柡浣哥墛閻忓鎷犻柨瀣勾闁挎稑鐬奸崝褔宕ユ惔銈庡悁闁哄啫鐖奸崳鎾绩閻愵剙鐦紓渚囧幗閳ь儸鍕珡闁?
-      PlayerEquipmentPropertySystem.cs TRUE DIRTY
         缂備胶鍠曢鍝ユ啑閸涱収妲甸悘鐐靛仦閳ь儸鍐ㄦ櫢闁稿繈鍎遍惈姗€骞€瑜忕划宥嗙閺堜絻鍘?
         闁活潿鍔嶉崺娑欐綇閹惧啿寮抽悗娑櫭埀?
         濞达綀娉曢弫銈夋焼閹惧啿寰?
-      PlayerPhysicsRotationLockSystem.cs TRUE
+      UnitPhysicsRotationInitializationSystem.cs TRUE DIRTY
       PlayerSkillAnalysisSystem.cs TRUE DIRTY
         闁汇垻鍠愰崹姘跺礂閾氬倻绉奸柟鍨涘亾闁煎啿鈧噥鍤炴慨?
       SkillReleaseSystem.cs TRUE DIRTY
@@ -535,11 +542,10 @@ Game\
       UnitDeathFinalizeSystem.cs TRUE DIRTY
       UnitDropOnDestroySystem.cs TRUE DIRTY
         闁诡剦浜炴晶鍨潰鐠佹娊顎楅柟鍝勵槼閹倝鎮?
-      UnitAvoidanceSystem.cs TRUE
+      UnitAvoidanceSystem.cs TRUE DIRTY
       UnitMoveSystem.cs TRUE DIRTY
         閹煎瓨姊婚弫銈囩矓鐠囨彃袟
-      UnitNavigationSystem.cs TRUE
-      UnitResetSystem.cs TRUE DIRTY
+      UnitNavigationSystem.cs TRUE DIRTY
         闂佹彃绉堕悿鍡椥掕箛鎾村闁轰胶澧楀畵?
       UnitPerceptionSystem.cs TRUE DIRTY
         闁哄被鍎撮妤呭嫉閳ь剚娼婚幋鐘崇暠闁轰礁濂斿Ч澶愬礃濞嗗繐寮崇紒渚垮灪閺咁偆绱掗崟顏咁偨
@@ -552,6 +558,7 @@ Game\
       UnitSkillExecuteSystem.cs TRUE DIRTY
         闁告瑯浜濆Σ鍝ユ媼閿涘嫮鏆柛鎰槻瀹?
       UnitSystemGroups.cs TRUE DIRTY
+      UnitSourceDispatcherSystem.cs TRUE
         闁告帒妫涚悮?
         闁归攱鍎宠ぐ鍥箳婢跺孩鍎伴柣?
     Debug\
@@ -572,7 +579,9 @@ Game\
       WorldDropSpawnUtility.cs FALSE
       UnitFactionUtility.cs TRUE
       UnitFeatureBakeUtility.cs TRUE
-      UnitModifierUtility.cs TRUE
+      EquipmentUtility.cs TRUE
+      UnitModifierUtility.cs TRUE DIRTY
+      UnitPerceptionQueryUtility.cs TRUE
       UnitQueryUtility.cs TRUE DIRTY
       UnitSkillModifierUtility.cs FALSE
     Unit\
@@ -766,6 +775,9 @@ Web\
     BattleWorldContext.cs TRUE
     ClientBattleManager.cs TRUE DIRTY
     NetworkEventDictionary.cs TRUE
+    NetworkUnitStateSnapshotUtility.cs TRUE
+    StateData\
+      NetworkMoveStateData.cs TRUE
   Core\
     ClientNetworkManager.cs TRUE DIRTY
     NetworkTimer.cs TRUE DIRTY
@@ -806,4 +818,4 @@ Tests\
       ConditionExpressionMigrationTests.cs FALSE
 ThirdParty\
   RVO2\
-    OrcaAgent.cs TRUE
+    OrcaAgent.cs TRUE DIRTY

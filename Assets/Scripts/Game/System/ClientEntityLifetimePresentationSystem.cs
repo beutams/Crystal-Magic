@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using CrystalMagic.Core;
+using Server;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -51,15 +52,16 @@ public partial class ClientEntityLifetimePresentationSystem : SystemBase
         if (!EntityManager.HasComponent<UnitAnimationComponent>(entity))
             return;
 
-        UnitAnimationComponent animation = EntityManager.GetComponentObject<UnitAnimationComponent>(entity);
-        if (animation == null)
-            return;
-
-        animation.CurrentAnimationName = new FixedString64Bytes("Death");
-        animation.RequestedSequence++;
-        if (animation.RequestedSequence == 0u)
-            animation.RequestedSequence = 1u;
+        UnitAnimationComponent animation = EntityManager.GetComponentData<UnitAnimationComponent>(entity);
+        animation.AnimationName = new FixedString64Bytes("Death");
+        animation.StartFrame = FrameManagerUtility.TryGet(EntityManager, out FrameManager frameManager)
+            ? frameManager.currentFrame
+            : 0u;
+        animation.Sequence++;
+        if (animation.Sequence == 0u)
+            animation.Sequence = 1u;
         animation.RequestedStartElapsedSeconds = 0f;
+        EntityManager.SetComponentData(entity, animation);
     }
 
     private void ResolveDeathDuration(
@@ -70,8 +72,8 @@ public partial class ClientEntityLifetimePresentationSystem : SystemBase
         if (!EntityManager.HasComponent<UnitAnimationComponent>(entity))
             return;
 
-        UnitAnimationComponent animation = EntityManager.GetComponentObject<UnitAnimationComponent>(entity);
-        if (animation?.CurrentAnimationClip == null ||
+        UnitAnimationComponent animation = EntityManager.GetComponentData<UnitAnimationComponent>(entity);
+        if (animation.CurrentClipLength <= 0f ||
             !animation.PlayingAnimationName.Equals(new FixedString64Bytes("Death")))
         {
             return;
@@ -79,7 +81,7 @@ public partial class ClientEntityLifetimePresentationSystem : SystemBase
 
         float remainingSeconds = math.max(
             0f,
-            animation.CurrentAnimationClip.length - animation.ElapsedSeconds);
+            animation.CurrentClipLength - animation.ElapsedSeconds);
         lifetime.DestroyAtRealtime = realtime + remainingSeconds;
         lifetime.DeathDurationResolved = 1;
     }

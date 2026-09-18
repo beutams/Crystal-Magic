@@ -7,95 +7,82 @@ public sealed class WorldVariableComponent : IComponentData
     public Dictionary<string, UnitValue> Values = new(StringComparer.Ordinal);
 }
 
-public sealed class WorldVariableSource : UnitComponentSource
+[UnitSourceProvider(typeof(WorldVariableComponent), isGlobal: true)]
+public static class WorldVariableSource
 {
-    private static readonly ComparatorParameterDefinition[] s_keyParameter =
+    [UnitSourceGet(0, "world.variables.count", UnitValueCategory.Number)]
+    [UnitSourceGet(1, "world.variables.has", UnitValueCategory.Bool, UnitValueCategory.String, ParameterNames = new[] { "Key" })]
+    [UnitSourceGet(2, "world.variables.get", UnitValueCategory.Any, UnitValueCategory.String, ParameterNames = new[] { "Key" })]
+    [UnitSourceGet(3, "world.variables.getNumber", UnitValueCategory.Number, UnitValueCategory.String, ParameterNames = new[] { "Key" })]
+    [UnitSourceGet(4, "world.variables.getBool", UnitValueCategory.Bool, UnitValueCategory.String, ParameterNames = new[] { "Key" })]
+    [UnitSourceGet(5, "world.variables.getFloat2", UnitValueCategory.Float2, UnitValueCategory.String, ParameterNames = new[] { "Key" })]
+    [UnitSourceGet(6, "world.variables.getFloat3", UnitValueCategory.Float3, UnitValueCategory.String, ParameterNames = new[] { "Key" })]
+    [UnitSourceGet(7, "world.variables.getEntity", UnitValueCategory.Entity, UnitValueCategory.String, ParameterNames = new[] { "Key" })]
+    [UnitSourceGet(8, "world.variables.getString", UnitValueCategory.String, UnitValueCategory.String, ParameterNames = new[] { "Key" })]
+    public static bool TryGet(
+        int operation,
+        EntityManager entityManager,
+        Entity entity,
+        in UnitSourceArguments arguments,
+        out UnitSourceValue result)
     {
-        new ComparatorParameterDefinition("Key", UnitValueCategory.String),
-    };
+        result = default;
+        if (!WorldStateUtility.TryGetEntity(entityManager, out Entity worldEntity))
+            return false;
 
-    private static readonly ComparatorParameterDefinition[] s_valueParameter =
-    {
-        new ComparatorParameterDefinition("Value", UnitValueCategory.Any),
-    };
+        WorldVariableComponent component = GetComponent(entityManager, worldEntity);
+        if (component == null)
+            return false;
 
-    public override Type ComponentType => typeof(WorldVariableComponent);
-    public override bool IsGlobal => true;
+        if (operation == 0)
+        {
+            result = UnitSourceValue.FromInt(component.Values?.Count ?? 0);
+            return true;
+        }
 
-    public override void Describe(UnitSourceSchemaBuilder schema)
-    {
-        schema.AddGet("world.variables.count", ComponentType, UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
-        schema.AddGet("world.variables.has", ComponentType, UnitValueCategory.Bool, s_keyParameter);
-        schema.AddGet("world.variables.get", ComponentType, UnitValueCategory.Any, s_keyParameter);
-        schema.AddGet("world.variables.getNumber", ComponentType, UnitValueCategory.Number, s_keyParameter);
-        schema.AddGet("world.variables.getBool", ComponentType, UnitValueCategory.Bool, s_keyParameter);
-        schema.AddGet("world.variables.getFloat2", ComponentType, UnitValueCategory.Float2, s_keyParameter);
-        schema.AddGet("world.variables.getFloat3", ComponentType, UnitValueCategory.Float3, s_keyParameter);
-        schema.AddGet("world.variables.getEntity", ComponentType, UnitValueCategory.Entity, s_keyParameter);
-        schema.AddGet("world.variables.getString", ComponentType, UnitValueCategory.String, s_keyParameter);
-        schema.AddSet("world.variables.set", ComponentType, s_valueParameter, requiresKey: true);
-        schema.AddSet("world.variables.remove", ComponentType, s_keyParameter);
+        if (!arguments.TryGet(0, out UnitSourceValue keySource))
+            return false;
+
+        UnitValue key = keySource.ToUnitValue();
+        UnitValue value = operation switch
+        {
+            1 => UnitValue.FromBool(Contains(component, key)),
+            2 => Get(component, key),
+            3 => GetCategory(component, key, UnitValueCategory.Number),
+            4 => GetCategory(component, key, UnitValueCategory.Bool),
+            5 => GetCategory(component, key, UnitValueCategory.Float2),
+            6 => GetCategory(component, key, UnitValueCategory.Float3),
+            7 => GetCategory(component, key, UnitValueCategory.Entity),
+            8 => GetCategory(component, key, UnitValueCategory.String),
+            _ => UnitValue.None,
+        };
+        return UnitSourceValue.TryFromUnitValue(value, out result);
     }
 
-    public override void Bind(in UnitSourceBindingContext context, UnitSourceAccessTable table)
+    [UnitSourceSet(0, "world.variables.set", UnitValueCategory.Any,
+        ParameterNames = new[] { "Value" }, RequiresKey = true)]
+    [UnitSourceSet(1, "world.variables.remove", UnitValueCategory.String, ParameterNames = new[] { "Key" })]
+    public static bool TrySet(
+        int operation,
+        EntityManager entityManager,
+        Entity entity,
+        in UnitSourceArguments arguments)
     {
-        if (!WorldStateUtility.TryGetEntity(context.EntityManager, out Entity worldEntity))
-            throw new InvalidOperationException("World state entity must exist before unit sources are initialized.");
+        if (!WorldStateUtility.TryGetEntity(entityManager, out Entity worldEntity))
+            return false;
 
-        EntityManager entityManager = context.EntityManager;
-        table.AddGet(new UnitSourceGet(
-            "world.variables.count",
-            UnitValueCategory.Number,
-            Array.Empty<ComparatorParameterDefinition>(),
-            _ => UnitValue.FromInt(GetComponent(entityManager, worldEntity)?.Values?.Count ?? 0)));
-        table.AddGet(new UnitSourceGet(
-            "world.variables.has",
-            UnitValueCategory.Bool,
-            s_keyParameter,
-            input => UnitValue.FromBool(Contains(GetComponent(entityManager, worldEntity), input[0]))));
-        table.AddGet(new UnitSourceGet(
-            "world.variables.get",
-            UnitValueCategory.Any,
-            s_keyParameter,
-            input => Get(GetComponent(entityManager, worldEntity), input[0])));
-        table.AddGet(new UnitSourceGet(
-            "world.variables.getNumber",
-            UnitValueCategory.Number,
-            s_keyParameter,
-            input => GetCategory(GetComponent(entityManager, worldEntity), input[0], UnitValueCategory.Number)));
-        table.AddGet(new UnitSourceGet(
-            "world.variables.getBool",
-            UnitValueCategory.Bool,
-            s_keyParameter,
-            input => GetCategory(GetComponent(entityManager, worldEntity), input[0], UnitValueCategory.Bool)));
-        table.AddGet(new UnitSourceGet(
-            "world.variables.getFloat2",
-            UnitValueCategory.Float2,
-            s_keyParameter,
-            input => GetCategory(GetComponent(entityManager, worldEntity), input[0], UnitValueCategory.Float2)));
-        table.AddGet(new UnitSourceGet(
-            "world.variables.getFloat3",
-            UnitValueCategory.Float3,
-            s_keyParameter,
-            input => GetCategory(GetComponent(entityManager, worldEntity), input[0], UnitValueCategory.Float3)));
-        table.AddGet(new UnitSourceGet(
-            "world.variables.getEntity",
-            UnitValueCategory.Entity,
-            s_keyParameter,
-            input => GetCategory(GetComponent(entityManager, worldEntity), input[0], UnitValueCategory.Entity)));
-        table.AddGet(new UnitSourceGet(
-            "world.variables.getString",
-            UnitValueCategory.String,
-            s_keyParameter,
-            input => GetCategory(GetComponent(entityManager, worldEntity), input[0], UnitValueCategory.String)));
-        table.AddSet(new UnitSourceSet(
-            "world.variables.set",
-            s_valueParameter,
-            (string key, UnitValue value) => Set(GetComponent(entityManager, worldEntity), key, value)));
-        table.AddSet(new UnitSourceSet(
-            "world.variables.remove",
-            s_keyParameter,
-            input => Remove(GetComponent(entityManager, worldEntity), input[0])));
+        WorldVariableComponent component = GetComponent(entityManager, worldEntity);
+        if (component == null)
+            return false;
+
+        if (operation == 0)
+        {
+            return arguments.HasKey != 0 && arguments.TryGet(0, out UnitSourceValue value) &&
+                   Set(component, arguments.Key.ToString(), value.ToUnitValue());
+        }
+
+        return operation == 1 && arguments.TryGet(0, out UnitSourceValue key) &&
+               Remove(component, key.ToUnitValue());
     }
 
     private static WorldVariableComponent GetComponent(EntityManager entityManager, Entity entity)

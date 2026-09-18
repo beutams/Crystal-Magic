@@ -694,8 +694,25 @@ namespace CrystalMagic.Game.Unit
 
             DynamicBuffer<UnitPerceptionUnitElement> buffer = manager.GetBuffer<UnitPerceptionUnitElement>(entity);
             buffer.Clear();
+            float3 observerPosition = manager.HasComponent<LocalTransform>(entity)
+                ? manager.GetComponentData<LocalTransform>(entity).Position
+                : float3.zero;
             for (int i = 0; i < entries.Count; i++)
-                buffer.Add(new UnitPerceptionUnitElement { Value = entries[i] });
+            {
+                Entity unit = entries[i];
+                UnitFactionType faction = manager.Exists(unit) && manager.HasComponent<UnitFactionComponent>(unit)
+                    ? manager.GetComponentData<UnitFactionComponent>(unit).Value
+                    : default;
+                float3 unitPosition = manager.Exists(unit) && manager.HasComponent<LocalTransform>(unit)
+                    ? manager.GetComponentData<LocalTransform>(unit).Position
+                    : observerPosition;
+                buffer.Add(new UnitPerceptionUnitElement
+                {
+                    Value = unit,
+                    DistanceSq = math.distancesq(observerPosition, unitPosition),
+                    Faction = faction,
+                });
+            }
             return true;
         }
 

@@ -58,64 +58,87 @@ public struct UnitMoveComponent : IComponentData
     public float BaseMoveSpeedValue => BaseMoveSpeed + BaseMoveSpeedOffset;
 }
 
-[UnitSourceAuthoring(typeof(UnitMoveAuthoring))]
-public sealed class UnitMoveSource : UnitComponentSource<UnitMoveComponent>
+[UnitSourceProvider(typeof(UnitMoveComponent), typeof(UnitMoveAuthoring))]
+public static class UnitMoveSource
 {
-    private static readonly ComparatorParameterDefinition[] s_noParameters = System.Array.Empty<ComparatorParameterDefinition>();
-
-    protected override void Define(UnitSourceDefinitionBuilder<UnitMoveComponent> builder)
+    [UnitSourceGet(0, "unit.move.baseMoveSpeed", UnitValueCategory.Number)]
+    [UnitSourceGet(1, "unit.move.baseMaxAcceleration", UnitValueCategory.Number)]
+    [UnitSourceGet(2, "unit.move.direction", UnitValueCategory.Float2)]
+    [UnitSourceGet(3, "unit.move.stateMoveMultiplier", UnitValueCategory.Number)]
+    [UnitSourceGet(4, "unit.move.commandSpeed", UnitValueCategory.Number)]
+    public static bool TryGet(
+        int operation,
+        in UnitMoveComponent value,
+        in UnitSourceArguments arguments,
+        out UnitSourceValue result)
     {
-        builder.AddGet("unit.move.baseMoveSpeed", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.BaseMoveSpeedValue));
-        builder.AddGet("unit.move.baseMaxAcceleration", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.BaseMaxAcceleration));
-        builder.AddContextGet("unit.move.realMoveSpeed", UnitValueCategory.Number, s_noParameters,
-            (in UnitSourceBindingContext context, in UnitMoveComponent _, UnitValue[] _) => UnitValue.FromFloat(UnitModifierResolver.GetMoveSpeed(context.EntityManager, context.Entity)));
-        builder.AddContextGet("unit.move.realMaxAcceleration", UnitValueCategory.Number, s_noParameters,
-            (in UnitSourceBindingContext context, in UnitMoveComponent _, UnitValue[] _) => UnitValue.FromFloat(UnitModifierResolver.GetMaxAcceleration(context.EntityManager, context.Entity)));
-        builder.AddGet("unit.move.direction", UnitValueCategory.Float2, (in UnitMoveComponent value) => UnitValue.FromFloat2(value.Direction));
-        builder.AddGet("unit.move.stateMoveMultiplier", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.StateMoveMultiplier));
-        builder.AddGet("unit.move.commandSpeed", UnitValueCategory.Number, (in UnitMoveComponent value) => UnitValue.FromFloat(value.CommandMoveSpeed));
+        result = operation switch
+        {
+            0 => UnitSourceValue.FromFloat(value.BaseMoveSpeedValue),
+            1 => UnitSourceValue.FromFloat(value.BaseMaxAcceleration),
+            2 => UnitSourceValue.FromFloat2(value.Direction),
+            3 => UnitSourceValue.FromFloat(value.StateMoveMultiplier),
+            4 => UnitSourceValue.FromFloat(value.CommandMoveSpeed),
+            _ => UnitSourceValue.None,
+        };
+        return result.Type != UnitValueType.None;
+    }
 
-        builder.AddSet("unit.move.setDirection", UnitValueCategory.Float2,
-            (ref UnitMoveComponent value, UnitValue input) =>
-            {
-                value.Direction = input.Float2;
-                value.NetworkDirty = 1;
-                return true;
-            });
-        builder.AddSet("unit.move.setVelocity", UnitValueCategory.Float2,
-            (ref UnitMoveComponent value, UnitValue input) =>
-            {
-                value.Velocity = input.Float2;
-                value.NetworkDirty = 1;
-                return true;
-            });
-        builder.AddSet("unit.move.setFrameVelocity", UnitValueCategory.Float2,
-            (ref UnitMoveComponent value, UnitValue input) =>
-            {
-                value.FrameVelocity = input.Float2;
+    [UnitSourceGet(5, "unit.move.realMoveSpeed", UnitValueCategory.Number)]
+    [UnitSourceGet(6, "unit.move.realMaxAcceleration", UnitValueCategory.Number)]
+    public static bool TryGetResolved(
+        int operation,
+        EntityManager entityManager,
+        Entity entity,
+        in UnitSourceArguments arguments,
+        out UnitSourceValue result)
+    {
+        if (!entityManager.Exists(entity) || !entityManager.HasComponent<UnitMoveComponent>(entity))
+        {
+            result = default;
+            return false;
+        }
+
+        result = operation switch
+        {
+            5 => UnitSourceValue.FromFloat(UnitModifierResolver.GetMoveSpeed(entityManager, entity)),
+            6 => UnitSourceValue.FromFloat(UnitModifierResolver.GetMaxAcceleration(entityManager, entity)),
+            _ => UnitSourceValue.None,
+        };
+        return result.Type != UnitValueType.None;
+    }
+
+    [UnitSourceSet(0, "unit.move.setDirection", UnitValueCategory.Float2, ParameterNames = new[] { "Direction" })]
+    [UnitSourceSet(1, "unit.move.setVelocity", UnitValueCategory.Float2, ParameterNames = new[] { "Velocity" })]
+    [UnitSourceSet(2, "unit.move.setFrameVelocity", UnitValueCategory.Float2, ParameterNames = new[] { "Velocity" })]
+    [UnitSourceSet(3, "unit.move.setStateMoveMultiplier", UnitValueCategory.Number, ParameterNames = new[] { "Multiplier" })]
+    [UnitSourceSet(4, "unit.move.setCommandSpeed", UnitValueCategory.Number, ParameterNames = new[] { "Speed" })]
+    public static bool TrySet(int operation, ref UnitMoveComponent value, in UnitSourceArguments arguments)
+    {
+        switch (operation)
+        {
+            case 0 when arguments.TryGetFloat2(0, out float2 direction):
+                value.Direction = direction;
+                break;
+            case 1 when arguments.TryGetFloat2(0, out float2 velocity):
+                value.Velocity = velocity;
+                break;
+            case 2 when arguments.TryGetFloat2(0, out float2 frameVelocity):
+                value.FrameVelocity = frameVelocity;
                 value.HasFrameVelocity = 1;
-                value.NetworkDirty = 1;
-                return true;
-            });
-        builder.AddSet("unit.move.setStateMoveMultiplier", UnitValueCategory.Number,
-            (ref UnitMoveComponent value, UnitValue input) =>
-            {
-                if (!input.TryGetNumber(out float multiplier))
-                    return false;
-
+                break;
+            case 3 when arguments.TryGetNumber(0, out float multiplier):
                 value.StateMoveMultiplier = math.max(0f, multiplier);
-                value.NetworkDirty = 1;
-                return true;
-            });
-        builder.AddSet("unit.move.setCommandSpeed", UnitValueCategory.Number,
-            (ref UnitMoveComponent value, UnitValue input) =>
-            {
-                if (!input.TryGetNumber(out float speed))
-                    return false;
-
+                break;
+            case 4 when arguments.TryGetNumber(0, out float speed):
                 value.CommandMoveSpeed = speed < 0f ? -1f : math.max(0f, speed);
-                value.NetworkDirty = 1;
-                return true;
-            });
+                break;
+            default:
+                return false;
+        }
+
+        if (operation is 1 or 3)
+            value.NetworkDirty = 1;
+        return true;
     }
 }

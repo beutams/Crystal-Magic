@@ -77,9 +77,12 @@ public partial class PlayerInputBridgeSystem : SystemBase
             else
                 EntityManager.AddComponentData(entity, input);
 
-            PlayerSkillSelectionComponent selection = EntityManager.HasComponent<PlayerSkillSelectionComponent>(entity)
-                ? EntityManager.GetComponentData<PlayerSkillSelectionComponent>(entity)
-                : default;
+            if (!EntityManager.HasComponent<PlayerSkillSelectionComponent>(entity))
+                continue;
+
+            PlayerSkillSelectionComponent selection =
+                EntityManager.GetComponentData<PlayerSkillSelectionComponent>(entity);
+            int previousChainIndex = selection.CurrentChainIndex;
             int chainCount = GameRuntimeStateUtility.TryGetPlayerCharacterData(EntityManager, entity, out CharacterData characterData)
                 ? characterData.Skills?.Chains?.Length ?? 0
                 : 0;
@@ -88,17 +91,12 @@ public partial class PlayerInputBridgeSystem : SystemBase
             if (isNextSkillChainPressed && chainCount > 0)
                 selection.CurrentChainIndex = (selection.CurrentChainIndex + 1) % chainCount;
 
-            if (selection.CurrentChainIndex != (EntityManager.HasComponent<PlayerSkillSelectionComponent>(entity)
-                    ? EntityManager.GetComponentData<PlayerSkillSelectionComponent>(entity).CurrentChainIndex
-                    : 0))
+            if (selection.CurrentChainIndex != previousChainIndex)
             {
                 selection.NetworkDirty = 1;
-            }
-
-            if (EntityManager.HasComponent<PlayerSkillSelectionComponent>(entity))
                 EntityManager.SetComponentData(entity, selection);
-            else
-                EntityManager.AddComponentData(entity, selection);
+                PlayerSkillRuntimeDataUtility.SetCurrentChain(EntityManager, entity, selection.CurrentChainIndex);
+            }
 
             if (isSkillPressed || isNextSkillChainPressed)
                 EventComponent.Instance.Publish(new CommonGameEvent(PlayerSkillSelectionComponent.ChangedEventName));

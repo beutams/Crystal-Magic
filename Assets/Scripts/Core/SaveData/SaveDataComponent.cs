@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Entities;
 using UnityEngine;
 using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data;
@@ -609,6 +610,9 @@ namespace CrystalMagic.Core {
 
         public void NotifySkillDataChanged()
         {
+            if (GameRuntimeStateUtility.TryGetPlayerEntity(out EntityManager entityManager, out Entity player))
+                PlayerSkillRuntimeDataUtility.Rebuild(entityManager, player);
+
             EventComponent.Instance.Publish(new CommonGameEvent(SkillDataChangedEventName, GetSkillData()));
             NotifyCharacterDataChanged();
         }
@@ -777,6 +781,10 @@ namespace CrystalMagic.Core {
                 data.Equipment = new EquipmentData();
                 repairedPaths?.Add($"{basePath}.Equipment");
             }
+
+            if (EquipmentUtility.EnsureValid(data.Equipment))
+                repairedPaths?.Add($"{basePath}.Equipment.SpiritSlots");
+            EquipmentUtility.RebuildProperties(data.Equipment);
 
             if (data.Skills == null)
             {

@@ -4,10 +4,14 @@ using Unity.Entities;
 using UnityEngine;
 
 [UpdateInGroup(typeof(UnitInitializationSystemGroup))]
+[UpdateAfter(typeof(UnitSourceDispatcherSystem))]
 partial class BehaviorTreeInitSystem : SystemBase
 {
     protected override void OnUpdate()
     {
+        if (!UnitSourceDispatcherSystem.TryGet(EntityManager, out UnitSourceDispatcher sourceDispatcher))
+            return;
+
         foreach ((UnitBehaviorTreeComponent behaviorTree, Entity entity) in
                  SystemAPI.Query<UnitBehaviorTreeComponent>().WithEntityAccess())
         {
@@ -19,9 +23,6 @@ partial class BehaviorTreeInitSystem : SystemBase
             behaviorTree.CurrentNodeName = "None";
             behaviorTree.LastStatus = "None";
             behaviorTree.InitializationError = string.Empty;
-
-            if (!EntityManager.HasComponent<UnitSourceRuntimeComponent>(entity))
-                continue;
 
             if (behaviorTree.UnitDataId < 0)
             {
@@ -40,8 +41,9 @@ partial class BehaviorTreeInitSystem : SystemBase
                 continue;
             }
 
-            UnitSourceRuntimeComponent sourceRuntime = EntityManager.GetComponentObject<UnitSourceRuntimeComponent>(entity);
-            behaviorTree.Runtime = BehaviorTreeBuilder.Build(data, sourceRuntime?.Table, out string error);
+            UnitSourceResolver sources = new(entity);
+            sources.Update(entity, EntityManager, in sourceDispatcher);
+            behaviorTree.Runtime = BehaviorTreeBuilder.Build(data, sources, out string error);
             if (behaviorTree.Runtime == null)
             {
                 behaviorTree.InitializationError = error;
