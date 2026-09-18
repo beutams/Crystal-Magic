@@ -4,6 +4,7 @@ using System.Reflection;
 using CrystalMagic.Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace CrystalMagic.Game.Data
@@ -81,6 +82,7 @@ namespace CrystalMagic.Game.Data
         public const string HitCheck = "HitCheck";
         public const string Set = "Set";
         public const string Wait = "Wait";
+        public const string MoveTo = "MoveTo";
     }
 
     public enum ParallelSuccessPolicy
@@ -292,6 +294,36 @@ namespace CrystalMagic.Game.Data
         }
     }
 
+    [Serializable]
+    [FactoryKey(BehaviorNodeTypes.MoveTo, 14, "Move To")]
+    public sealed class MoveToBehaviorNodeData : BehaviorNodeData
+    {
+        public List<ConditionConfig> Conditions = new();
+        public ValueExpression Destination = CreateDefaultDestination();
+        public ValueExpression StopDistance = CreateDefaultStopDistance();
+        public ValueExpression Speed = CreateDefaultSpeed();
+
+        public MoveToBehaviorNodeData()
+        {
+            Type = BehaviorNodeTypes.MoveTo;
+        }
+
+        public static ValueExpression CreateDefaultDestination()
+        {
+            return new ValueExpression { Literal = UnitValue.FromFloat3(float3.zero) };
+        }
+
+        public static ValueExpression CreateDefaultStopDistance()
+        {
+            return new ValueExpression { Literal = UnitValue.FromFloat(0.1f) };
+        }
+
+        public static ValueExpression CreateDefaultSpeed()
+        {
+            return new ValueExpression { Literal = UnitValue.FromFloat(-1f) };
+        }
+    }
+
     public static class BehaviorNodeDataRegistry
     {
         private static readonly BehaviorNodeDataFactory s_factory = CreateFactory();
@@ -347,6 +379,7 @@ namespace CrystalMagic.Game.Data
                 HitCheckBehaviorNodeData hitCheck => $"{GetDisplayName(hitCheck.Type)} | {hitCheck.Size.x:0.##} x {hitCheck.Size.y:0.##}",
                 SetBehaviorNodeData set => $"{GetDisplayName(set.Type)} | {set.SetKey}",
                 WaitBehaviorNodeData wait => $"{GetDisplayName(wait.Type)} | {wait.DurationSeconds:0.##}s",
+                MoveToBehaviorNodeData moveTo => $"{GetDisplayName(moveTo.Type)} | Conditions {moveTo.Conditions?.Count ?? 0}",
                 _ => GetDisplayName(ResolveTypeName(node)),
             };
         }

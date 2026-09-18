@@ -458,6 +458,10 @@ namespace CrystalMagic.Editor.Unit
                     case WaitBehaviorNodeData wait:
                         wait.DurationSeconds = Mathf.Max(0f, EditorGUILayout.FloatField("Duration Seconds", wait.DurationSeconds));
                         break;
+
+                    case MoveToBehaviorNodeData moveTo:
+                        DrawMoveToNode(moveTo);
+                        break;
                 }
                 if (EditorGUI.EndChangeCheck())
                 {
@@ -648,6 +652,18 @@ namespace CrystalMagic.Editor.Unit
             node.Size = Vector2.Max(Vector2.zero, EditorGUILayout.Vector2Field("Size", node.Size));
             node.TargetPadding = Mathf.Max(0f, EditorGUILayout.FloatField("Target Padding", node.TargetPadding));
             EditorGUILayout.HelpBox("Local X and Y use world axes. Hit Check never rotates, but mirrors its X offset for left/right facing.", MessageType.None);
+        }
+
+        private void DrawMoveToNode(MoveToBehaviorNodeData node)
+        {
+            node.Conditions ??= new List<ConditionConfig>();
+            DrawConditionList(node.Conditions);
+            node.Destination ??= MoveToBehaviorNodeData.CreateDefaultDestination();
+            node.StopDistance ??= MoveToBehaviorNodeData.CreateDefaultStopDistance();
+            node.Speed ??= MoveToBehaviorNodeData.CreateDefaultSpeed();
+            DrawValueExpression(node.Destination, new ComparatorParameterDefinition("Destination", UnitValueCategory.Float3), 0);
+            DrawValueExpression(node.StopDistance, new ComparatorParameterDefinition("Stop Distance", UnitValueCategory.Number), 0);
+            DrawValueExpression(node.Speed, new ComparatorParameterDefinition("Speed", UnitValueCategory.Number), 0);
         }
 
         private void DrawValueExpression(
@@ -1976,6 +1992,13 @@ namespace CrystalMagic.Editor.Unit
 
                     for (int i = 0; i < set.Inputs.Count; i++)
                         CollectExpression(node.Guid, set.Inputs[i], 0);
+                    break;
+
+                case MoveToBehaviorNodeData moveTo:
+                    CollectConditions(node.Guid, moveTo.Conditions);
+                    CollectExpression(node.Guid, moveTo.Destination, 0);
+                    CollectExpression(node.Guid, moveTo.StopDistance, 0);
+                    CollectExpression(node.Guid, moveTo.Speed, 0);
                     break;
             }
         }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 
@@ -41,6 +42,7 @@ public sealed class UnitVariableSource : UnitComponentSource
     public override void Describe(UnitSourceSchemaBuilder schema)
     {
         schema.AddGet("unit.variables.count", ComponentType, UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
+        schema.AddGet("unit.variables.consumerCount", ComponentType, UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
         schema.AddGet("unit.variables.owner", ComponentType, UnitValueCategory.Entity, Array.Empty<ComparatorParameterDefinition>());
         schema.AddGet("unit.variables.has", ComponentType, UnitValueCategory.Bool, s_keyParameter);
         schema.AddGet("unit.variables.get", ComponentType, UnitValueCategory.Any, s_keyParameter);
@@ -69,6 +71,11 @@ public sealed class UnitVariableSource : UnitComponentSource
             parameters => UnitValue.FromInt(TryResolveOwner(entityManager, entity, out _, out UnitVariableComponent component)
                 ? component.Values?.Count ?? 0
                 : 0)));
+        table.AddGet(new UnitSourceGet(
+            "unit.variables.consumerCount",
+            UnitValueCategory.Number,
+            Array.Empty<ComparatorParameterDefinition>(),
+            _ => UnitValue.FromInt(CountConsumers(entityManager, entity))));
         table.AddGet(new UnitSourceGet(
             "unit.variables.owner",
             UnitValueCategory.Entity,
@@ -178,6 +185,32 @@ public sealed class UnitVariableSource : UnitComponentSource
         ownerEntity = owner;
         component = ownerComponent;
         return true;
+    }
+
+    public static int CountConsumers(EntityManager entityManager, Entity owner)
+    {
+        if (owner == Entity.Null || !entityManager.Exists(owner))
+            return 0;
+
+        EntityQuery query = entityManager.CreateEntityQuery(Unity.Entities.ComponentType.ReadOnly<UnitVariableComponent>());
+        using NativeArray<Entity> entities = query.ToEntityArray(Allocator.Temp);
+        int count = 0;
+        for (int index = 0; index < entities.Length; index++)
+        {
+            Entity candidate = entities[index];
+            if (candidate == owner ||
+                entityManager.HasComponent<DestroyEntityFlag>(candidate) &&
+                entityManager.IsComponentEnabled<DestroyEntityFlag>(candidate))
+            {
+                continue;
+            }
+
+            UnitVariableComponent variables = entityManager.GetComponentObject<UnitVariableComponent>(candidate);
+            if (variables?.Owner == owner)
+                count++;
+        }
+
+        return count;
     }
 
     private static Entity GetOwner(EntityManager entityManager, Entity entity)

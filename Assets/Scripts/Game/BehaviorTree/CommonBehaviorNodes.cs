@@ -38,17 +38,23 @@ public sealed class SelectorBehaviorNode : CompositeBehaviorNode
 
     protected override BehaviorNodeStatus OnTick(BehaviorContext context)
     {
-        int startIndex = _runningChildIndex >= 0 ? _runningChildIndex : 0;
-        for (int i = startIndex; i < Children.Count; i++)
+        int previousRunningChildIndex = _runningChildIndex;
+        for (int i = 0; i < Children.Count; i++)
         {
             BehaviorNodeStatus status = Children[i].Tick(context);
             if (status == BehaviorNodeStatus.Failure)
                 continue;
 
-            _runningChildIndex = status == BehaviorNodeStatus.Running ? i : -1;
+            int nextRunningChildIndex = status == BehaviorNodeStatus.Running ? i : -1;
+            if (previousRunningChildIndex >= 0 && previousRunningChildIndex != nextRunningChildIndex)
+                Children[previousRunningChildIndex].Reset();
+
+            _runningChildIndex = nextRunningChildIndex;
             return status;
         }
 
+        if (previousRunningChildIndex >= 0)
+            Children[previousRunningChildIndex].Reset();
         _runningChildIndex = -1;
         return BehaviorNodeStatus.Failure;
     }

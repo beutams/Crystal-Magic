@@ -78,6 +78,12 @@ namespace CrystalMagic.Game.Data
                     case PublishGameEventStateScriptNodeData publishGameEvent:
                         publishGameEvent.Reference ??= PublishGameEventStateScriptNodeData.CreateDefaultReferenceExpression();
                         break;
+                    case SpawnUnitActionNodeData spawnUnit:
+                        spawnUnit.CandidateUnitNames ??= Array.Empty<string>();
+                        spawnUnit.Count = math.max(1, spawnUnit.Count);
+                        spawnUnit.SpawnRadius = math.max(0f, spawnUnit.SpawnRadius);
+                        spawnUnit.MinSpawnRadius = math.clamp(spawnUnit.MinSpawnRadius, 0f, spawnUnit.SpawnRadius);
+                        break;
                     case TimerStateScriptNodeData timer:
                         timer.Duration ??= TimerStateScriptNodeData.CreateDefaultDurationExpression();
                         break;
@@ -296,6 +302,29 @@ namespace CrystalMagic.Game.Data
         public static InteractionRequestInput CreateDefaultInteraction()
         {
             return new InteractionRequestInput();
+        }
+    }
+
+    [Serializable]
+    [FactoryKey("SpawnUnit", 15, "Spawn Unit")]
+    public sealed class SpawnUnitActionNodeData : ActionStateScriptNodeData
+    {
+        // When set, entries are read from UnitVariableComponent using:
+        // <key>.count and <key>.<index>.(unit|position|monster...).
+        public string VariableListKey = string.Empty;
+        public string UnitName = string.Empty;
+        public string[] CandidateUnitNames = Array.Empty<string>();
+        public int Count = 1;
+        public float SpawnRadius = 1f;
+        public float MinSpawnRadius;
+        public Vector3 CenterOffset;
+        public bool CopyFactionFromSpawner = true;
+        public bool ShareVariablesWithSpawner;
+        public bool RestoreRuntimeState;
+
+        public SpawnUnitActionNodeData()
+        {
+            Type = "SpawnUnit";
         }
     }
 

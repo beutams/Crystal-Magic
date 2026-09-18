@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using CrystalMagic.Core;
-using CrystalMagic.Game.Unit;
-using Server;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -11,7 +8,7 @@ using Unity.Transforms;
 /// <summary>
 /// Runtime-only unit representing one open-field interest point.
 /// The point owns the patrol squad's shared variables and is driven by the
-/// DungeonInterestPoint behavior tree.
+/// DungeonInterestPoint state script.
 /// </summary>
 public sealed class DungeonInterestPointComponent : IComponentData
 {
@@ -21,18 +18,9 @@ public sealed class DungeonInterestPointComponent : IComponentData
     public float PatrolSpeed;
     public float ArrivalDistance;
     public bool PatrolEnabled = true;
-    public bool HasSpawnedPatrol;
-    public bool SpawnPatrolRequested;
     public Entity CurrentTarget = Entity.Null;
     public int TargetCursor;
     public List<Entity> CandidateTargets = new();
-    public List<RuntimeDungeonMonsterSpawnData> MemberSpawns = new();
-    public List<Entity> PatrolMembers = new();
-}
-
-public struct DungeonPatrolMemberComponent : IComponentData
-{
-    public Entity InterestPoint;
 }
 
 /// <summary>
@@ -68,8 +56,9 @@ public sealed class DungeonInterestPointSource : UnitManagedComponentSource<Dung
             (in DungeonInterestPointComponent value) => UnitValue.FromFloat(value.PatrolSpeed));
         builder.AddGet("unit.interestPoint.arrivalDistance", UnitValueCategory.Number,
             (in DungeonInterestPointComponent value) => UnitValue.FromFloat(value.ArrivalDistance));
-        builder.AddGet("unit.interestPoint.hasPatrol", UnitValueCategory.Bool,
-            (in DungeonInterestPointComponent value) => UnitValue.FromBool(value.HasSpawnedPatrol));
+        builder.AddContextGet("unit.interestPoint.hasPatrol", UnitValueCategory.Bool, s_noParameters,
+            static (in UnitSourceBindingContext context, in DungeonInterestPointComponent _, UnitValue[] _) =>
+                UnitValue.FromBool(UnitVariableSource.CountConsumers(context.EntityManager, context.Entity) > 0));
         builder.AddGet("unit.interestPoint.currentTarget", UnitValueCategory.Entity,
             (in DungeonInterestPointComponent value) => UnitValue.FromEntity(value.CurrentTarget));
 
@@ -78,11 +67,11 @@ public sealed class DungeonInterestPointSource : UnitManagedComponentSource<Dung
                 UnitValue.FromFloat(DungeonPatrolRuntimeUtility.GetNearestPlayerDistance(context.EntityManager, context.Entity)));
         builder.AddContextGet("unit.interestPoint.shouldSpawnPatrol", UnitValueCategory.Bool, s_noParameters,
             static (in UnitSourceBindingContext context, in DungeonInterestPointComponent value, UnitValue[] _) =>
-                UnitValue.FromBool(value.PatrolEnabled && !value.HasSpawnedPatrol &&
+                UnitValue.FromBool(value.PatrolEnabled && UnitVariableSource.CountConsumers(context.EntityManager, context.Entity) < 1 &&
                                    DungeonPatrolRuntimeUtility.IsFarFromPlayer(context.EntityManager, context.Entity, value.SpawnDistance)));
         builder.AddContextGet("unit.interestPoint.targetReached", UnitValueCategory.Bool, s_noParameters,
             static (in UnitSourceBindingContext context, in DungeonInterestPointComponent value, UnitValue[] _) =>
-                UnitValue.FromBool(DungeonPatrolRuntimeUtility.IsTargetReached(context.EntityManager, value)));
+                UnitValue.FromBool(DungeonPatrolRuntimeUtility.IsTargetReached(context.EntityManager, context.Entity, value)));
 
         builder.AddContextSet("unit.interestPoint.setPatrolActive", s_boolParameter,
             static (in UnitSourceBindingContext context, ref DungeonInterestPointComponent value, UnitValue[] input) =>
@@ -91,14 +80,10 @@ public sealed class DungeonInterestPointSource : UnitManagedComponentSource<Dung
                     return false;
 
                 value.PatrolEnabled = input[0].Bool;
-                if (!value.PatrolEnabled)
-                {
-                    DungeonPatrolRuntimeUtility.SetSharedPatrolActive(context.EntityManager, context.Entity, false);
-                    return true;
-                }
-
-                if (!value.HasSpawnedPatrol)
-                    value.SpawnPatrolRequested = true;
+                DungeonPatrolRuntimeUtility.SetSharedPatrolActive(
+                    context.EntityManager,
+                    context.Entity,
+                    value.PatrolEnabled);
                 return true;
             });
         builder.AddContextSet("unit.interestPoint.setNextPatrolTarget", s_boolParameter,
@@ -119,8 +104,7 @@ public sealed class DungeonInterestPointSource : UnitManagedComponentSource<Dung
                     return false;
 
                 value.PatrolSpeed = math.max(0f, speed);
-                if (value.HasSpawnedPatrol)
-                    DungeonPatrolRuntimeUtility.SetSharedPatrolValues(context.EntityManager, context.Entity, value);
+                DungeonPatrolRuntimeUtility.SetSharedPatrolValues(context.EntityManager, context.Entity, value);
                 return true;
             });
     }
@@ -133,62 +117,8 @@ public static class DungeonPatrolRuntimeUtility
     public const string PatrolTargetKey = "dungeon.patrol.target";
     public const string PatrolSpeedKey = "dungeon.patrol.speed";
     public const string PatrolArrivalDistanceKey = "dungeon.patrol.arrivalDistance";
+    public const string PatrolSpawnListKey = "dungeon.patrol.spawn";
     public const string InterestPointStateKey = "dungeon.interestPoint.state";
-
-    public static bool TrySpawnPatrol(
-        EntityManager entityManager,
-        Entity pointEntity,
-        DungeonInterestPointComponent point)
-    {
-        if (point == null || point.HasSpawnedPatrol ||
-            pointEntity == Entity.Null || !entityManager.Exists(pointEntity))
-        {
-            return point?.HasSpawnedPatrol ?? false;
-        }
-
-        point.PatrolMembers.Clear();
-        int createdCount = 0;
-        if (point.MemberSpawns != null)
-        {
-            for (int index = 0; index < point.MemberSpawns.Count; index++)
-            {
-                RuntimeDungeonMonsterSpawnData spawn = point.MemberSpawns[index];
-                if (spawn == null || string.IsNullOrWhiteSpace(spawn.PrefabName))
-                {
-                    continue;
-                }
-
-                NetworkEntitySpawnInfo entityInfo = NetworkEntitySpawnUtility.CreateInfo(
-                    NetworkEntityPrefabType.Unit,
-                    spawn.PrefabName,
-                    spawn.WorldPosition);
-                entityInfo.hasMonsterSpawnData = true;
-                entityInfo.monsterSaveId = spawn.SaveId;
-                entityInfo.monsterRegionId = point.EncounterId;
-                entityInfo.monsterSquadId = point.SquadId;
-                entityInfo.monsterIsBoss = spawn.IsBoss;
-                if (!NetworkEntitySpawnUtility.TrySpawn(entityManager, entityInfo, out Entity member))
-                {
-                    continue;
-                }
-
-                GameRuntimeStateUtility.TryRestoreDungeonUnit(entityManager, member);
-                SetOrAddPatrolMember(entityManager, member, pointEntity);
-                SetOrAddVariableOwner(entityManager, member, pointEntity);
-                AddRuntimeOwnedTag(entityManager, member);
-                point.PatrolMembers.Add(member);
-                createdCount++;
-            }
-        }
-
-        if (point.MemberSpawns != null && point.MemberSpawns.Count > 0 && createdCount == 0)
-            return false;
-
-        point.HasSpawnedPatrol = true;
-        point.SpawnPatrolRequested = false;
-        SetSharedPatrolValues(entityManager, pointEntity, point);
-        return true;
-    }
 
     public static bool TrySelectNextTarget(
         EntityManager entityManager,
@@ -219,9 +149,15 @@ public static class DungeonPatrolRuntimeUtility
         return false;
     }
 
-    public static bool IsTargetReached(EntityManager entityManager, DungeonInterestPointComponent point)
+    public static bool IsTargetReached(
+        EntityManager entityManager,
+        Entity pointEntity,
+        DungeonInterestPointComponent point)
     {
-        if (point == null || !point.HasSpawnedPatrol)
+        if (point == null || pointEntity == Entity.Null || !entityManager.Exists(pointEntity))
+            return false;
+
+        if (UnitVariableSource.CountConsumers(entityManager, pointEntity) < 1)
             return false;
 
         if (point.CurrentTarget == Entity.Null)
@@ -233,24 +169,32 @@ public static class DungeonPatrolRuntimeUtility
             return false;
         }
 
-        if (point.PatrolMembers == null || point.PatrolMembers.Count == 0)
-            return true;
-
         float2 targetPosition = entityManager.GetComponentData<LocalTransform>(point.CurrentTarget).Position.xy;
         float arrivalDistance = math.max(0.05f, point.ArrivalDistance);
         float arrivalDistanceSq = arrivalDistance * arrivalDistance;
-        for (int index = 0; index < point.PatrolMembers.Count; index++)
+        EntityQuery query = entityManager.CreateEntityQuery(
+            ComponentType.ReadOnly<UnitVariableComponent>(),
+            ComponentType.ReadOnly<LocalTransform>());
+        using NativeArray<Entity> entities = query.ToEntityArray(Allocator.Temp);
+        bool hasMember = false;
+        for (int index = 0; index < entities.Length; index++)
         {
-            Entity member = point.PatrolMembers[index];
-            if (!entityManager.Exists(member) || !entityManager.HasComponent<LocalTransform>(member))
+            Entity member = entities[index];
+            UnitVariableComponent variables = entityManager.GetComponentObject<UnitVariableComponent>(member);
+            if (variables?.Owner != pointEntity ||
+                entityManager.HasComponent<DestroyEntityFlag>(member) &&
+                entityManager.IsComponentEnabled<DestroyEntityFlag>(member))
+            {
                 continue;
+            }
 
+            hasMember = true;
             float2 memberPosition = entityManager.GetComponentData<LocalTransform>(member).Position.xy;
             if (math.lengthsq(targetPosition - memberPosition) > arrivalDistanceSq)
                 return false;
         }
 
-        return true;
+        return hasMember;
     }
 
     public static bool IsFarFromPlayer(EntityManager entityManager, Entity pointEntity, float distance)
@@ -290,39 +234,6 @@ public static class DungeonPatrolRuntimeUtility
         return nearestDistanceSq == float.MaxValue ? float.MaxValue : math.sqrt(nearestDistanceSq);
     }
 
-    public static bool TryGetSharedPatrolData(
-        EntityManager entityManager,
-        Entity member,
-        out Entity target,
-        out float speed,
-        out float arrivalDistance)
-    {
-        target = Entity.Null;
-        speed = 0f;
-        arrivalDistance = 0.05f;
-        if (!UnitVariableSource.TryResolveOwner(entityManager, member, out _, out UnitVariableComponent variables) ||
-            variables.Values == null ||
-            !TryGetValue(variables, PatrolActiveKey, out UnitValue activeValue) ||
-            activeValue.Type != UnitValueType.Bool || !activeValue.Bool ||
-            !TryGetValue(variables, PatrolTargetKey, out UnitValue targetValue) ||
-            targetValue.Type != UnitValueType.Entity ||
-            !TryGetValue(variables, PatrolSpeedKey, out UnitValue speedValue) ||
-            !speedValue.TryGetNumber(out speed))
-        {
-            return false;
-        }
-
-        target = targetValue.Entity;
-        if (TryGetValue(variables, PatrolArrivalDistanceKey, out UnitValue arrivalValue) &&
-            arrivalValue.TryGetNumber(out float configuredArrivalDistance))
-        {
-            arrivalDistance = math.max(0.05f, configuredArrivalDistance);
-        }
-
-        speed = math.max(0f, speed);
-        return target != Entity.Null;
-    }
-
     public static void SetSharedPatrolActive(EntityManager entityManager, Entity pointEntity, bool active)
     {
         if (!TryGetVariables(entityManager, pointEntity, out UnitVariableComponent variables))
@@ -339,7 +250,7 @@ public static class DungeonPatrolRuntimeUtility
         if (point == null || !TryGetVariables(entityManager, pointEntity, out UnitVariableComponent variables))
             return;
 
-        SetValue(variables, PatrolActiveKey, UnitValue.FromBool(point.HasSpawnedPatrol));
+        SetValue(variables, PatrolActiveKey, UnitValue.FromBool(point.PatrolEnabled));
         SetValue(variables, PatrolTargetKey, UnitValue.FromEntity(point.CurrentTarget));
         SetValue(variables, PatrolSpeedKey, UnitValue.FromFloat(math.max(0f, point.PatrolSpeed)));
         SetValue(variables, PatrolArrivalDistanceKey, UnitValue.FromFloat(math.max(0.05f, point.ArrivalDistance)));
@@ -358,44 +269,10 @@ public static class DungeonPatrolRuntimeUtility
         return variables != null;
     }
 
-    private static bool TryGetValue(UnitVariableComponent variables, string key, out UnitValue value)
-    {
-        if (variables?.Values != null && variables.Values.TryGetValue(key, out value))
-            return true;
-
-        value = UnitValue.None;
-        return false;
-    }
-
     private static void SetValue(UnitVariableComponent variables, string key, UnitValue value)
     {
         variables.Values ??= new Dictionary<string, UnitValue>(StringComparer.Ordinal);
         variables.Values[key] = value;
-    }
-
-    private static void SetOrAddPatrolMember(EntityManager entityManager, Entity member, Entity pointEntity)
-    {
-        DungeonPatrolMemberComponent component = new() { InterestPoint = pointEntity };
-        if (entityManager.HasComponent<DungeonPatrolMemberComponent>(member))
-            entityManager.SetComponentData(member, component);
-        else
-            entityManager.AddComponentData(member, component);
-    }
-
-    private static void SetOrAddVariableOwner(EntityManager entityManager, Entity member, Entity pointEntity)
-    {
-        if (!entityManager.HasComponent<UnitVariableComponent>(member))
-            entityManager.AddComponentObject(member, new UnitVariableComponent());
-
-        UnitVariableComponent variables = entityManager.GetComponentObject<UnitVariableComponent>(member);
-        if (variables != null)
-            variables.Owner = pointEntity;
-    }
-
-    private static void AddRuntimeOwnedTag(EntityManager entityManager, Entity entity)
-    {
-        if (!entityManager.HasComponent<DungeonRuntimeOwnedEntity>(entity))
-            entityManager.AddComponent<DungeonRuntimeOwnedEntity>(entity);
     }
 
 }

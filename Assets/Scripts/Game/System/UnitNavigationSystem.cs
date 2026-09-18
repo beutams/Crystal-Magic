@@ -13,7 +13,7 @@ using UnityEngine;
 /// components, deterministic grid costs, and per-unit clearance radius.
 /// </summary>
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
-[UpdateAfter(typeof(DungeonPatrolMemberDecisionSystem))]
+[UpdateAfter(typeof(BehaviorTreeSystem))]
 [UpdateBefore(typeof(StateScriptSystem))]
 public partial class UnitNavigationSystem : SystemBase
 {

@@ -1,4 +1,4 @@
-﻿{
+{
   "Rows": [
     {
       "UnitDataId": 3,
@@ -46,6 +46,7 @@
             "werewolf_attack01",
             "werewolf_attack02",
             "werewolf_chase",
+            "shared_patrol_move",
             "werewolf_idle"
           ]
         },
@@ -781,6 +782,7 @@
           },
           "ChildGuids": []
         },
+        {"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.active"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Destination":{"Kind":1,"Literal":{"Type":5},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":6},"GetterKey":"unit.variables.getEntity","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.target"},"GetterKey":"","OperationType":"","Inputs":[]}]}]},"StopDistance":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.arrivalDistance"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Speed":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.speed"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Type":"MoveTo","Guid":"shared_patrol_move","EditorPosition":{"x":500.0,"y":760.0},"ChildGuids":[]},
         {
           "Type": "Sequence",
           "Guid": "werewolf_idle",
@@ -1265,6 +1267,7 @@
             "werebear_attack02",
             "werebear_attack03",
             "werebear_chase",
+            "shared_patrol_move",
             "werebear_idle"
           ]
         },
@@ -2000,6 +2003,7 @@
           },
           "ChildGuids": []
         },
+        {"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.active"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Destination":{"Kind":1,"Literal":{"Type":5},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":6},"GetterKey":"unit.variables.getEntity","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.target"},"GetterKey":"","OperationType":"","Inputs":[]}]}]},"StopDistance":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.arrivalDistance"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Speed":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.speed"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Type":"MoveTo","Guid":"shared_patrol_move","EditorPosition":{"x":500.0,"y":760.0},"ChildGuids":[]},
         {
           "Type": "Sequence",
           "Guid": "werebear_idle",
@@ -2828,6 +2832,7 @@
             "swordsman_attack02",
             "swordsman_attack03",
             "swordsman_chase",
+            "shared_patrol_move",
             "swordsman_idle"
           ]
         },
@@ -3563,6 +3568,7 @@
           },
           "ChildGuids": []
         },
+        {"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.active"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Destination":{"Kind":1,"Literal":{"Type":5},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":6},"GetterKey":"unit.variables.getEntity","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.target"},"GetterKey":"","OperationType":"","Inputs":[]}]}]},"StopDistance":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.arrivalDistance"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Speed":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.speed"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Type":"MoveTo","Guid":"shared_patrol_move","EditorPosition":{"x":500.0,"y":760.0},"ChildGuids":[]},
         {
           "Type": "Sequence",
           "Guid": "swordsman_idle",
@@ -4390,6 +4396,7 @@
             "archer_attack01",
             "archer_attack02",
             "archer_chase",
+            "shared_patrol_move",
             "archer_idle"
           ]
         },
@@ -5125,6 +5132,7 @@
           },
           "ChildGuids": []
         },
+        {"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.active"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Destination":{"Kind":1,"Literal":{"Type":5},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":6},"GetterKey":"unit.variables.getEntity","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.target"},"GetterKey":"","OperationType":"","Inputs":[]}]}]},"StopDistance":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.arrivalDistance"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Speed":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.speed"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Type":"MoveTo","Guid":"shared_patrol_move","EditorPosition":{"x":500.0,"y":760.0},"ChildGuids":[]},
         {
           "Type": "Sequence",
           "Guid": "archer_idle",
@@ -5609,6 +5617,7 @@
             "armored_axeman_attack02",
             "armored_axeman_attack03",
             "armored_axeman_chase",
+            "shared_patrol_move",
             "armored_axeman_idle"
           ]
         },
@@ -6344,6 +6353,7 @@
           },
           "ChildGuids": []
         },
+        {"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.active"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Destination":{"Kind":1,"Literal":{"Type":5},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":6},"GetterKey":"unit.variables.getEntity","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.target"},"GetterKey":"","OperationType":"","Inputs":[]}]}]},"StopDistance":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.arrivalDistance"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Speed":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.speed"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Type":"MoveTo","Guid":"shared_patrol_move","EditorPosition":{"x":500.0,"y":760.0},"ChildGuids":[]},
         {
           "Type": "Sequence",
           "Guid": "armored_axeman_idle",
@@ -7172,6 +7182,7 @@
             "armored_orc_attack02",
             "armored_orc_attack03",
             "armored_orc_chase",
+            "shared_patrol_move",
             "armored_orc_idle"
           ]
         },
@@ -7907,6 +7918,7 @@
           },
           "ChildGuids": []
         },
+        {"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.active"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Destination":{"Kind":1,"Literal":{"Type":5},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":6},"GetterKey":"unit.variables.getEntity","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.target"},"GetterKey":"","OperationType":"","Inputs":[]}]}]},"StopDistance":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.arrivalDistance"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Speed":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.speed"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Type":"MoveTo","Guid":"shared_patrol_move","EditorPosition":{"x":500.0,"y":760.0},"ChildGuids":[]},
         {
           "Type": "Sequence",
           "Guid": "armored_orc_idle",
@@ -8734,6 +8746,7 @@
             "armored_skeleton_attack01",
             "armored_skeleton_attack02",
             "armored_skeleton_chase",
+            "shared_patrol_move",
             "armored_skeleton_idle"
           ]
         },
@@ -9469,6 +9482,7 @@
           },
           "ChildGuids": []
         },
+        {"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.active"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Destination":{"Kind":1,"Literal":{"Type":5},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":6},"GetterKey":"unit.variables.getEntity","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.target"},"GetterKey":"","OperationType":"","Inputs":[]}]}]},"StopDistance":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.arrivalDistance"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Speed":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.speed"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Type":"MoveTo","Guid":"shared_patrol_move","EditorPosition":{"x":500.0,"y":760.0},"ChildGuids":[]},
         {
           "Type": "Sequence",
           "Guid": "armored_skeleton_idle",
@@ -9952,6 +9966,7 @@
             "bat_attack01",
             "bat_attack02",
             "bat_chase",
+            "shared_patrol_move",
             "bat_idle"
           ]
         },
@@ -10687,6 +10702,7 @@
           },
           "ChildGuids": []
         },
+        {"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.active"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Destination":{"Kind":1,"Literal":{"Type":5},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":6},"GetterKey":"unit.variables.getEntity","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.target"},"GetterKey":"","OperationType":"","Inputs":[]}]}]},"StopDistance":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.arrivalDistance"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Speed":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.speed"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Type":"MoveTo","Guid":"shared_patrol_move","EditorPosition":{"x":500.0,"y":760.0},"ChildGuids":[]},
         {
           "Type": "Sequence",
           "Guid": "bat_idle",
@@ -11171,6 +11187,7 @@
             "elite_orc_attack02",
             "elite_orc_attack01",
             "elite_orc_chase",
+            "shared_patrol_move",
             "elite_orc_idle"
           ]
         },
@@ -11907,6 +11924,7 @@
           },
           "ChildGuids": []
         },
+        {"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.active"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Destination":{"Kind":1,"Literal":{"Type":5},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":6},"GetterKey":"unit.variables.getEntity","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.target"},"GetterKey":"","OperationType":"","Inputs":[]}]}]},"StopDistance":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.arrivalDistance"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Speed":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.speed"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Type":"MoveTo","Guid":"shared_patrol_move","EditorPosition":{"x":500.0,"y":760.0},"ChildGuids":[]},
         {
           "Type": "Sequence",
           "Guid": "elite_orc_idle",
@@ -12736,6 +12754,7 @@
             "greatsword_skeleton_attack02",
             "greatsword_skeleton_attack03",
             "greatsword_skeleton_chase",
+            "shared_patrol_move",
             "greatsword_skeleton_idle"
           ]
         },
@@ -13471,6 +13490,7 @@
           },
           "ChildGuids": []
         },
+        {"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.active"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Destination":{"Kind":1,"Literal":{"Type":5},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":6},"GetterKey":"unit.variables.getEntity","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.target"},"GetterKey":"","OperationType":"","Inputs":[]}]}]},"StopDistance":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.arrivalDistance"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Speed":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.speed"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Type":"MoveTo","Guid":"shared_patrol_move","EditorPosition":{"x":500.0,"y":760.0},"ChildGuids":[]},
         {
           "Type": "Sequence",
           "Guid": "greatsword_skeleton_idle",
@@ -14299,6 +14319,7 @@
             "knight_attack02",
             "knight_attack03",
             "knight_chase",
+            "shared_patrol_move",
             "knight_idle"
           ]
         },
@@ -15034,6 +15055,7 @@
           },
           "ChildGuids": []
         },
+        {"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.active"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Destination":{"Kind":1,"Literal":{"Type":5},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":6},"GetterKey":"unit.variables.getEntity","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.target"},"GetterKey":"","OperationType":"","Inputs":[]}]}]},"StopDistance":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.arrivalDistance"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Speed":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.speed"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Type":"MoveTo","Guid":"shared_patrol_move","EditorPosition":{"x":500.0,"y":760.0},"ChildGuids":[]},
         {
           "Type": "Sequence",
           "Guid": "knight_idle",
@@ -15862,6 +15884,7 @@
             "knight_templar_attack02",
             "knight_templar_attack03",
             "knight_templar_chase",
+            "shared_patrol_move",
             "knight_templar_idle"
           ]
         },
@@ -16597,6 +16620,7 @@
           },
           "ChildGuids": []
         },
+        {"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.active"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Destination":{"Kind":1,"Literal":{"Type":5},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":6},"GetterKey":"unit.variables.getEntity","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.target"},"GetterKey":"","OperationType":"","Inputs":[]}]}]},"StopDistance":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.arrivalDistance"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Speed":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.speed"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Type":"MoveTo","Guid":"shared_patrol_move","EditorPosition":{"x":500.0,"y":760.0},"ChildGuids":[]},
         {
           "Type": "Sequence",
           "Guid": "knight_templar_idle",
@@ -17425,6 +17449,7 @@
             "lancer_attack02",
             "lancer_attack03",
             "lancer_chase",
+            "shared_patrol_move",
             "lancer_idle"
           ]
         },
@@ -18160,6 +18185,7 @@
           },
           "ChildGuids": []
         },
+        {"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.active"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Destination":{"Kind":1,"Literal":{"Type":5},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":6},"GetterKey":"unit.variables.getEntity","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.target"},"GetterKey":"","OperationType":"","Inputs":[]}]}]},"StopDistance":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.arrivalDistance"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Speed":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.speed"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Type":"MoveTo","Guid":"shared_patrol_move","EditorPosition":{"x":500.0,"y":760.0},"ChildGuids":[]},
         {
           "Type": "Sequence",
           "Guid": "lancer_idle",
@@ -18987,6 +19013,7 @@
             "necromancer_attack01",
             "necromancer_attack02",
             "necromancer_chase",
+            "shared_patrol_move",
             "necromancer_idle"
           ]
         },
@@ -19722,6 +19749,7 @@
           },
           "ChildGuids": []
         },
+        {"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.active"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Destination":{"Kind":1,"Literal":{"Type":5},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":6},"GetterKey":"unit.variables.getEntity","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.target"},"GetterKey":"","OperationType":"","Inputs":[]}]}]},"StopDistance":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.arrivalDistance"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Speed":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.speed"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Type":"MoveTo","Guid":"shared_patrol_move","EditorPosition":{"x":500.0,"y":760.0},"ChildGuids":[]},
         {
           "Type": "Sequence",
           "Guid": "necromancer_idle",
@@ -20205,6 +20233,7 @@
             "orc_attack01",
             "orc_attack02",
             "orc_chase",
+            "shared_patrol_move",
             "orc_idle"
           ]
         },
@@ -20940,6 +20969,7 @@
           },
           "ChildGuids": []
         },
+        {"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.active"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Destination":{"Kind":1,"Literal":{"Type":5},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":6},"GetterKey":"unit.variables.getEntity","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.target"},"GetterKey":"","OperationType":"","Inputs":[]}]}]},"StopDistance":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.arrivalDistance"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Speed":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.speed"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Type":"MoveTo","Guid":"shared_patrol_move","EditorPosition":{"x":500.0,"y":760.0},"ChildGuids":[]},
         {
           "Type": "Sequence",
           "Guid": "orc_idle",
@@ -21395,7 +21425,7 @@
       ],
       "Id": 23
     },
-    {"UnitDataId":24,"Name":"Orc rider","Description":"Copied from Slime baseline.","RootNodeGuid":"orc_rider_root","Nodes":[{"Type":"Root","Guid":"orc_rider_root","EditorPosition":{"x":80.0,"y":120.0},"ChildGuids":["orc_rider_selector"]},{"Type":"Selector","Guid":"orc_rider_selector","EditorPosition":{"x":280.0,"y":120.0},"ChildGuids":["orc_rider_attack01","orc_rider_attack02","orc_rider_attack03","orc_rider_chase","orc_rider_idle"]},{"Type":"Sequence","Guid":"orc_rider_attack01","EditorPosition":{"x":500.0,"y":-80.0},"ChildGuids":["orc_rider_hit01","orc_rider_attack01_behavior_cooldown_ready","orc_rider_stop01","orc_rider_state_attack01"]},{"Target":{"Kind":1,"Literal":{"Type":6,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.perception.nearestUnitByFaction","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},"Center":{"x":0.18730626,"y":0.03498777},"Size":{"x":0.39489254,"y":0.33777222},"TargetPadding":0.0,"Type":"HitCheck","Guid":"orc_rider_hit01","EditorPosition":{"x":730.0,"y":-140.0},"ChildGuids":[]},{"SetKey":"unit.navigation.stop","Key":"","Inputs":[{"Kind":0,"Literal":{"Type":4,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_stop01","EditorPosition":{"x":730.0,"y":-60.0},"ChildGuids":[]},{"SetKey":"unit.variables.set","Key":"ai.intent","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"Attack01"},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_state_attack01","EditorPosition":{"x":730.0,"y":20.0},"ChildGuids":[]},{"Type":"Sequence","Guid":"orc_rider_attack02","EditorPosition":{"x":500.0,"y":140.0},"ChildGuids":["orc_rider_hit02","orc_rider_attack02_behavior_cooldown_ready","orc_rider_stop02","orc_rider_state_attack02"]},{"Target":{"Kind":1,"Literal":{"Type":6,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.perception.nearestUnitByFaction","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},"Center":{"x":0.18509369,"y":0.053218167},"Size":{"x":0.541875,"y":0.5842464},"TargetPadding":0.0,"Type":"HitCheck","Guid":"orc_rider_hit02","EditorPosition":{"x":730.0,"y":100.0},"ChildGuids":[]},{"SetKey":"unit.navigation.stop","Key":"","Inputs":[{"Kind":0,"Literal":{"Type":4,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_stop02","EditorPosition":{"x":730.0,"y":180.0},"ChildGuids":[]},{"SetKey":"unit.variables.set","Key":"ai.intent","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"Attack02"},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_state_attack02","EditorPosition":{"x":730.0,"y":260.0},"ChildGuids":[]},{"Type":"Sequence","Guid":"orc_rider_chase","EditorPosition":{"x":500.0,"y":360.0},"ChildGuids":["orc_rider_has_player","orc_rider_move_to_player","orc_rider_state_chase"]},{"Conditions":[{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":2,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"Distance","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.transform.position","OperationType":"","Inputs":[]},{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.perception.nearestUnitByFaction","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]}]}]},{"Kind":0,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":1.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Type":"Check","Guid":"orc_rider_has_player","EditorPosition":{"x":730.0,"y":340.0},"ChildGuids":[]},{"SetKey":"unit.navigation.setDestination","Key":"","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.perception.nearestUnitByFaction","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]}]}],"Type":"Set","Guid":"orc_rider_move_to_player","EditorPosition":{"x":730.0,"y":420.0},"ChildGuids":[]},{"SetKey":"unit.variables.set","Key":"ai.intent","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"Chase"},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_state_chase","EditorPosition":{"x":730.0,"y":500.0},"ChildGuids":[]},{"Type":"Sequence","Guid":"orc_rider_idle","EditorPosition":{"x":500.0,"y":600.0},"ChildGuids":["orc_rider_stop_idle","orc_rider_state_idle"]},{"SetKey":"unit.navigation.stop","Key":"","Inputs":[{"Kind":0,"Literal":{"Type":4,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_stop_idle","EditorPosition":{"x":730.0,"y":580.0},"ChildGuids":[]},{"SetKey":"unit.variables.set","Key":"ai.intent","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"Idle"},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_state_idle","EditorPosition":{"x":730.0,"y":660.0},"ChildGuids":[]},{"Type":"Sequence","Guid":"orc_rider_attack03","EditorPosition":{"x":500.0,"y":140.0},"ChildGuids":["orc_rider_hit03","orc_rider_attack03_behavior_cooldown_ready","orc_rider_stop03","orc_rider_state_attack03"]},{"Target":{"Kind":1,"Literal":{"Type":6,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.perception.nearestUnitByFaction","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},"Center":{"x":0.03494501,"y":0.05869945},"Size":{"x":0.923059,"y":0.5360898},"TargetPadding":0.0,"Type":"HitCheck","Guid":"orc_rider_hit03","EditorPosition":{"x":730.0,"y":100.0},"ChildGuids":[]},{"SetKey":"unit.navigation.stop","Key":"","Inputs":[{"Kind":0,"Literal":{"Type":4,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_stop03","EditorPosition":{"x":730.0,"y":180.0},"ChildGuids":[]},{"SetKey":"unit.variables.set","Key":"ai.intent","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"Attack03"},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_state_attack03","EditorPosition":{"x":730.0,"y":260.0},"ChildGuids":[]},{"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"ai.skill.coolingDown"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"ai.attack01.coolingDown"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Type":"Check","Guid":"orc_rider_attack01_behavior_cooldown_ready","EditorPosition":{"x":730.0,"y":-40.0},"ChildGuids":[]},{"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"ai.skill.coolingDown"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"ai.attack02.coolingDown"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Type":"Check","Guid":"orc_rider_attack02_behavior_cooldown_ready","EditorPosition":{"x":730.0,"y":180.0},"ChildGuids":[]},{"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"ai.skill.coolingDown"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"ai.attack03.coolingDown"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Type":"Check","Guid":"orc_rider_attack03_behavior_cooldown_ready","EditorPosition":{"x":730.0,"y":180.0},"ChildGuids":[]}],"Id":24},
+    {"UnitDataId":24,"Name":"Orc rider","Description":"Copied from Slime baseline.","RootNodeGuid":"orc_rider_root","Nodes":[{"Type":"Root","Guid":"orc_rider_root","EditorPosition":{"x":80.0,"y":120.0},"ChildGuids":["orc_rider_selector"]},{"Type":"Selector","Guid":"orc_rider_selector","EditorPosition":{"x":280.0,"y":120.0},"ChildGuids":["orc_rider_attack01","orc_rider_attack02","orc_rider_attack03","orc_rider_chase","shared_patrol_move","orc_rider_idle"]},{"Type":"Sequence","Guid":"orc_rider_attack01","EditorPosition":{"x":500.0,"y":-80.0},"ChildGuids":["orc_rider_hit01","orc_rider_attack01_behavior_cooldown_ready","orc_rider_stop01","orc_rider_state_attack01"]},{"Target":{"Kind":1,"Literal":{"Type":6,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.perception.nearestUnitByFaction","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},"Center":{"x":0.18730626,"y":0.03498777},"Size":{"x":0.39489254,"y":0.33777222},"TargetPadding":0.0,"Type":"HitCheck","Guid":"orc_rider_hit01","EditorPosition":{"x":730.0,"y":-140.0},"ChildGuids":[]},{"SetKey":"unit.navigation.stop","Key":"","Inputs":[{"Kind":0,"Literal":{"Type":4,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_stop01","EditorPosition":{"x":730.0,"y":-60.0},"ChildGuids":[]},{"SetKey":"unit.variables.set","Key":"ai.intent","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"Attack01"},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_state_attack01","EditorPosition":{"x":730.0,"y":20.0},"ChildGuids":[]},{"Type":"Sequence","Guid":"orc_rider_attack02","EditorPosition":{"x":500.0,"y":140.0},"ChildGuids":["orc_rider_hit02","orc_rider_attack02_behavior_cooldown_ready","orc_rider_stop02","orc_rider_state_attack02"]},{"Target":{"Kind":1,"Literal":{"Type":6,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.perception.nearestUnitByFaction","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},"Center":{"x":0.18509369,"y":0.053218167},"Size":{"x":0.541875,"y":0.5842464},"TargetPadding":0.0,"Type":"HitCheck","Guid":"orc_rider_hit02","EditorPosition":{"x":730.0,"y":100.0},"ChildGuids":[]},{"SetKey":"unit.navigation.stop","Key":"","Inputs":[{"Kind":0,"Literal":{"Type":4,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_stop02","EditorPosition":{"x":730.0,"y":180.0},"ChildGuids":[]},{"SetKey":"unit.variables.set","Key":"ai.intent","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"Attack02"},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_state_attack02","EditorPosition":{"x":730.0,"y":260.0},"ChildGuids":[]},{"Type":"Sequence","Guid":"orc_rider_chase","EditorPosition":{"x":500.0,"y":360.0},"ChildGuids":["orc_rider_has_player","orc_rider_move_to_player","orc_rider_state_chase"]},{"Conditions":[{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":2,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"Distance","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.transform.position","OperationType":"","Inputs":[]},{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.perception.nearestUnitByFaction","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]}]}]},{"Kind":0,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":1.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Type":"Check","Guid":"orc_rider_has_player","EditorPosition":{"x":730.0,"y":340.0},"ChildGuids":[]},{"SetKey":"unit.navigation.setDestination","Key":"","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.perception.nearestUnitByFaction","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]}]}],"Type":"Set","Guid":"orc_rider_move_to_player","EditorPosition":{"x":730.0,"y":420.0},"ChildGuids":[]},{"SetKey":"unit.variables.set","Key":"ai.intent","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"Chase"},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_state_chase","EditorPosition":{"x":730.0,"y":500.0},"ChildGuids":[]},{"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.active"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Destination":{"Kind":1,"Literal":{"Type":5},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":6},"GetterKey":"unit.variables.getEntity","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.target"},"GetterKey":"","OperationType":"","Inputs":[]}]}]},"StopDistance":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.arrivalDistance"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Speed":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.speed"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Type":"MoveTo","Guid":"shared_patrol_move","EditorPosition":{"x":500.0,"y":760.0},"ChildGuids":[]},{"Type":"Sequence","Guid":"orc_rider_idle","EditorPosition":{"x":500.0,"y":600.0},"ChildGuids":["orc_rider_stop_idle","orc_rider_state_idle"]},{"SetKey":"unit.navigation.stop","Key":"","Inputs":[{"Kind":0,"Literal":{"Type":4,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_stop_idle","EditorPosition":{"x":730.0,"y":580.0},"ChildGuids":[]},{"SetKey":"unit.variables.set","Key":"ai.intent","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"Idle"},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_state_idle","EditorPosition":{"x":730.0,"y":660.0},"ChildGuids":[]},{"Type":"Sequence","Guid":"orc_rider_attack03","EditorPosition":{"x":500.0,"y":140.0},"ChildGuids":["orc_rider_hit03","orc_rider_attack03_behavior_cooldown_ready","orc_rider_stop03","orc_rider_state_attack03"]},{"Target":{"Kind":1,"Literal":{"Type":6,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.perception.nearestUnitByFaction","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},"Center":{"x":0.03494501,"y":0.05869945},"Size":{"x":0.923059,"y":0.5360898},"TargetPadding":0.0,"Type":"HitCheck","Guid":"orc_rider_hit03","EditorPosition":{"x":730.0,"y":100.0},"ChildGuids":[]},{"SetKey":"unit.navigation.stop","Key":"","Inputs":[{"Kind":0,"Literal":{"Type":4,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_stop03","EditorPosition":{"x":730.0,"y":180.0},"ChildGuids":[]},{"SetKey":"unit.variables.set","Key":"ai.intent","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"Attack03"},"GetterKey":"","OperationType":"","Inputs":[]}],"Type":"Set","Guid":"orc_rider_state_attack03","EditorPosition":{"x":730.0,"y":260.0},"ChildGuids":[]},{"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"ai.skill.coolingDown"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"ai.attack01.coolingDown"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Type":"Check","Guid":"orc_rider_attack01_behavior_cooldown_ready","EditorPosition":{"x":730.0,"y":-40.0},"ChildGuids":[]},{"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"ai.skill.coolingDown"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"ai.attack02.coolingDown"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Type":"Check","Guid":"orc_rider_attack02_behavior_cooldown_ready","EditorPosition":{"x":730.0,"y":180.0},"ChildGuids":[]},{"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"ai.skill.coolingDown"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":"ai.attack03.coolingDown"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false,"Int":0,"Float":0.0,"Float2":{"x":0.0,"y":0.0},"Float3":{"x":0.0,"y":0.0,"z":0.0},"Entity":{"Index":0,"Version":0},"String":""},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Type":"Check","Guid":"orc_rider_attack03_behavior_cooldown_ready","EditorPosition":{"x":730.0,"y":180.0},"ChildGuids":[]}],"Id":24},
     {
       "UnitDataId": 25,
       "Name": "Priest",
@@ -21423,6 +21453,7 @@
           "ChildGuids": [
             "priest_attack01",
             "priest_chase",
+            "shared_patrol_move",
             "priest_idle"
           ]
         },
@@ -21995,6 +22026,7 @@
           },
           "ChildGuids": []
         },
+        {"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.active"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Destination":{"Kind":1,"Literal":{"Type":5},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":6},"GetterKey":"unit.variables.getEntity","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.target"},"GetterKey":"","OperationType":"","Inputs":[]}]}]},"StopDistance":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.arrivalDistance"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Speed":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.speed"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Type":"MoveTo","Guid":"shared_patrol_move","EditorPosition":{"x":500.0,"y":760.0},"ChildGuids":[]},
         {
           "Type": "Sequence",
           "Guid": "priest_idle",
@@ -22297,6 +22329,7 @@
             "skeleton_attack01",
             "skeleton_attack02",
             "skeleton_chase",
+            "shared_patrol_move",
             "skeleton_idle"
           ]
         },
@@ -23032,6 +23065,7 @@
           },
           "ChildGuids": []
         },
+        {"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.active"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Destination":{"Kind":1,"Literal":{"Type":5},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":6},"GetterKey":"unit.variables.getEntity","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.target"},"GetterKey":"","OperationType":"","Inputs":[]}]}]},"StopDistance":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.arrivalDistance"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Speed":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.speed"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Type":"MoveTo","Guid":"shared_patrol_move","EditorPosition":{"x":500.0,"y":760.0},"ChildGuids":[]},
         {
           "Type": "Sequence",
           "Guid": "skeleton_idle",
@@ -23514,6 +23548,7 @@
           "ChildGuids": [
             "skeleton_archer_attack01",
             "skeleton_archer_chase",
+            "shared_patrol_move",
             "skeleton_archer_idle"
           ]
         },
@@ -24086,6 +24121,7 @@
           },
           "ChildGuids": []
         },
+        {"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.active"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Destination":{"Kind":1,"Literal":{"Type":5},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":6},"GetterKey":"unit.variables.getEntity","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.target"},"GetterKey":"","OperationType":"","Inputs":[]}]}]},"StopDistance":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.arrivalDistance"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Speed":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.speed"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Type":"MoveTo","Guid":"shared_patrol_move","EditorPosition":{"x":500.0,"y":760.0},"ChildGuids":[]},
         {
           "Type": "Sequence",
           "Guid": "skeleton_archer_idle",
@@ -24388,6 +24424,7 @@
             "slime_attack01",
             "slime_attack02",
             "slime_chase",
+            "shared_patrol_move",
             "slime_idle"
           ]
         },
@@ -25123,6 +25160,7 @@
           },
           "ChildGuids": []
         },
+        {"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.active"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Destination":{"Kind":1,"Literal":{"Type":5},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":6},"GetterKey":"unit.variables.getEntity","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.target"},"GetterKey":"","OperationType":"","Inputs":[]}]}]},"StopDistance":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.arrivalDistance"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Speed":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.speed"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Type":"MoveTo","Guid":"shared_patrol_move","EditorPosition":{"x":500.0,"y":760.0},"ChildGuids":[]},
         {
           "Type": "Sequence",
           "Guid": "slime_idle",
@@ -25607,6 +25645,7 @@
             "soldier_attack02",
             "soldier_attack03",
             "soldier_chase",
+            "shared_patrol_move",
             "soldier_idle"
           ]
         },
@@ -26342,6 +26381,7 @@
           },
           "ChildGuids": []
         },
+        {"Conditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.variables.getBool","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.active"},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"GetterKey":"","OperationType":"","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.perception.unitsByFactionCount","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"GetterKey":"","OperationType":"","Inputs":[]}]}],"Destination":{"Kind":1,"Literal":{"Type":5},"GetterKey":"unit.transform.positionOf","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":6},"GetterKey":"unit.variables.getEntity","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.target"},"GetterKey":"","OperationType":"","Inputs":[]}]}]},"StopDistance":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.arrivalDistance"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Speed":{"Kind":1,"Literal":{"Type":3,"Float":0.0},"GetterKey":"unit.variables.getNumber","OperationType":"","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.speed"},"GetterKey":"","OperationType":"","Inputs":[]}]},"Type":"MoveTo","Guid":"shared_patrol_move","EditorPosition":{"x":500.0,"y":760.0},"ChildGuids":[]},
         {
           "Type": "Sequence",
           "Guid": "soldier_idle",
@@ -27140,289 +27180,6 @@
         }
       ],
       "Id": 29
-    },
-    {
-      "UnitDataId": 30,
-      "Name": "DungeonInterestPoint",
-      "Description": "兴趣点远距离生成巡逻队，并在兴趣点之间轮换目标。",
-      "RootNodeGuid": "interest_point_root",
-      "Nodes": [
-        {
-          "Type": "Root",
-          "Guid": "interest_point_root",
-          "EditorPosition": {
-            "x": 80.0,
-            "y": 120.0
-          },
-          "ChildGuids": [
-            "interest_point_selector"
-          ]
-        },
-        {
-          "Type": "Selector",
-          "Guid": "interest_point_selector",
-          "EditorPosition": {
-            "x": 280.0,
-            "y": 120.0
-          },
-          "ChildGuids": [
-            "interest_point_spawn_sequence",
-            "interest_point_retarget_sequence",
-            "interest_point_wait"
-          ]
-        },
-        {
-          "Type": "Sequence",
-          "Guid": "interest_point_spawn_sequence",
-          "EditorPosition": {
-            "x": 500.0,
-            "y": 0.0
-          },
-          "ChildGuids": [
-            "interest_point_should_spawn",
-            "interest_point_spawn"
-          ]
-        },
-        {
-          "Conditions": [
-            {
-              "ConditionType": 0,
-              "CompareType": "Equal",
-              "Inputs": [
-                {
-                  "Kind": 1,
-                  "Literal": {
-                    "Type": 3,
-                    "Bool": false,
-                    "Int": 0,
-                    "Float": 0.0,
-                    "Float2": {
-                      "x": 0.0,
-                      "y": 0.0
-                    },
-                    "Float3": {
-                      "x": 0.0,
-                      "y": 0.0,
-                      "z": 0.0
-                    },
-                    "Entity": {
-                      "Index": 0,
-                      "Version": 0
-                    },
-                    "String": ""
-                  },
-                  "GetterKey": "unit.interestPoint.shouldSpawnPatrol",
-                  "OperationType": "",
-                  "Inputs": []
-                },
-                {
-                  "Kind": 0,
-                  "Literal": {
-                    "Type": 1,
-                    "Bool": true,
-                    "Int": 0,
-                    "Float": 0.0,
-                    "Float2": {
-                      "x": 0.0,
-                      "y": 0.0
-                    },
-                    "Float3": {
-                      "x": 0.0,
-                      "y": 0.0,
-                      "z": 0.0
-                    },
-                    "Entity": {
-                      "Index": 0,
-                      "Version": 0
-                    },
-                    "String": ""
-                  },
-                  "GetterKey": "",
-                  "OperationType": "",
-                  "Inputs": []
-                }
-              ]
-            }
-          ],
-          "Type": "Check",
-          "Guid": "interest_point_should_spawn",
-          "EditorPosition": {
-            "x": 720.0,
-            "y": -40.0
-          },
-          "ChildGuids": []
-        },
-        {
-          "SetKey": "unit.interestPoint.setPatrolActive",
-          "Key": "",
-          "Inputs": [
-            {
-              "Kind": 0,
-              "Literal": {
-                "Type": 1,
-                "Bool": true,
-                "Int": 0,
-                "Float": 0.0,
-                "Float2": {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                "Float3": {
-                  "x": 0.0,
-                  "y": 0.0,
-                  "z": 0.0
-                },
-                "Entity": {
-                  "Index": 0,
-                  "Version": 0
-                },
-                "String": ""
-              },
-              "GetterKey": "",
-              "OperationType": "",
-              "Inputs": []
-            }
-          ],
-          "Type": "Set",
-          "Guid": "interest_point_spawn",
-          "EditorPosition": {
-            "x": 940.0,
-            "y": -40.0
-          },
-          "ChildGuids": []
-        },
-        {
-          "Type": "Sequence",
-          "Guid": "interest_point_retarget_sequence",
-          "EditorPosition": {
-            "x": 500.0,
-            "y": 160.0
-          },
-          "ChildGuids": [
-            "interest_point_target_reached",
-            "interest_point_retarget"
-          ]
-        },
-        {
-          "Conditions": [
-            {
-              "ConditionType": 0,
-              "CompareType": "Equal",
-              "Inputs": [
-                {
-                  "Kind": 1,
-                  "Literal": {
-                    "Type": 3,
-                    "Bool": false,
-                    "Int": 0,
-                    "Float": 0.0,
-                    "Float2": {
-                      "x": 0.0,
-                      "y": 0.0
-                    },
-                    "Float3": {
-                      "x": 0.0,
-                      "y": 0.0,
-                      "z": 0.0
-                    },
-                    "Entity": {
-                      "Index": 0,
-                      "Version": 0
-                    },
-                    "String": ""
-                  },
-                  "GetterKey": "unit.interestPoint.targetReached",
-                  "OperationType": "",
-                  "Inputs": []
-                },
-                {
-                  "Kind": 0,
-                  "Literal": {
-                    "Type": 1,
-                    "Bool": true,
-                    "Int": 0,
-                    "Float": 0.0,
-                    "Float2": {
-                      "x": 0.0,
-                      "y": 0.0
-                    },
-                    "Float3": {
-                      "x": 0.0,
-                      "y": 0.0,
-                      "z": 0.0
-                    },
-                    "Entity": {
-                      "Index": 0,
-                      "Version": 0
-                    },
-                    "String": ""
-                  },
-                  "GetterKey": "",
-                  "OperationType": "",
-                  "Inputs": []
-                }
-              ]
-            }
-          ],
-          "Type": "Check",
-          "Guid": "interest_point_target_reached",
-          "EditorPosition": {
-            "x": 720.0,
-            "y": 120.0
-          },
-          "ChildGuids": []
-        },
-        {
-          "SetKey": "unit.interestPoint.setNextPatrolTarget",
-          "Key": "",
-          "Inputs": [
-            {
-              "Kind": 0,
-              "Literal": {
-                "Type": 1,
-                "Bool": true,
-                "Int": 0,
-                "Float": 0.0,
-                "Float2": {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                "Float3": {
-                  "x": 0.0,
-                  "y": 0.0,
-                  "z": 0.0
-                },
-                "Entity": {
-                  "Index": 0,
-                  "Version": 0
-                },
-                "String": ""
-              },
-              "GetterKey": "",
-              "OperationType": "",
-              "Inputs": []
-            }
-          ],
-          "Type": "Set",
-          "Guid": "interest_point_retarget",
-          "EditorPosition": {
-            "x": 940.0,
-            "y": 120.0
-          },
-          "ChildGuids": []
-        },
-        {
-          "DurationSeconds": 0.25,
-          "Type": "Wait",
-          "Guid": "interest_point_wait",
-          "EditorPosition": {
-            "x": 500.0,
-            "y": 320.0
-          },
-          "ChildGuids": []
-        }
-      ],
-      "Id": 30
     }
   ]
 }

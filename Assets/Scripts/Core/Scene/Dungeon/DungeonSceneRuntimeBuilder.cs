@@ -471,26 +471,23 @@ namespace CrystalMagic.Core
                 {
                     Value = UnitFactionType.Npc,
                 });
-                entityManager.AddComponentObject(pointEntity, new UnitVariableComponent());
-                entityManager.AddComponentObject(pointEntity, new UnitBehaviorTreeComponent
-                {
-                    UnitDataId = DungeonPatrolRuntimeUtility.InterestPointUnitDataId,
-                });
+                UnitVariableComponent variables = new();
+                PopulatePatrolSpawnVariables(variables, spawn.MemberSpawns);
+                entityManager.AddComponentObject(pointEntity, variables);
                 entityManager.AddComponentObject(pointEntity, new UnitStateScriptComponent
                 {
                     UnitDataId = DungeonPatrolRuntimeUtility.InterestPointUnitDataId,
                 });
-                entityManager.AddComponentObject(pointEntity, new DungeonInterestPointComponent
+                DungeonInterestPointComponent point = new()
                 {
                     EncounterId = spawn.EncounterId,
                     SquadId = spawn.SquadId,
                     SpawnDistance = Mathf.Max(0f, spawn.SpawnDistance),
                     PatrolSpeed = Mathf.Max(0f, spawn.PatrolSpeed),
                     ArrivalDistance = Mathf.Max(0.05f, spawn.ArrivalDistance),
-                    MemberSpawns = spawn.MemberSpawns == null
-                        ? new List<RuntimeDungeonMonsterSpawnData>()
-                        : new List<RuntimeDungeonMonsterSpawnData>(spawn.MemberSpawns),
-                });
+                };
+                entityManager.AddComponentObject(pointEntity, point);
+                DungeonPatrolRuntimeUtility.SetSharedPatrolValues(entityManager, pointEntity, point);
                 entityManager.AddComponent<DungeonRuntimeOwnedEntity>(pointEntity);
 
                 pointEntities.Add(pointEntity);
@@ -565,6 +562,34 @@ namespace CrystalMagic.Core
         {
             EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<EntitySpawnRegistrySingleton>());
             return !query.IsEmptyIgnoreFilter;
+        }
+
+        private static void PopulatePatrolSpawnVariables(
+            UnitVariableComponent variables,
+            List<RuntimeDungeonMonsterSpawnData> memberSpawns)
+        {
+            variables.Values ??= new Dictionary<string, UnitValue>(StringComparer.Ordinal);
+            string listKey = DungeonPatrolRuntimeUtility.PatrolSpawnListKey;
+            int count = memberSpawns?.Count ?? 0;
+            variables.Values[$"{listKey}.count"] = UnitValue.FromInt(count);
+            for (int index = 0; index < count; index++)
+            {
+                RuntimeDungeonMonsterSpawnData spawn = memberSpawns[index];
+                if (spawn == null)
+                    continue;
+
+                string entryKey = $"{listKey}.{index}";
+                variables.Values[$"{entryKey}.unit"] = UnitValue.FromString(spawn.PrefabName);
+                variables.Values[$"{entryKey}.position"] = UnitValue.FromFloat3(new float3(
+                    spawn.WorldPosition.x,
+                    spawn.WorldPosition.y,
+                    spawn.WorldPosition.z));
+                variables.Values[$"{entryKey}.hasMonsterData"] = UnitValue.FromBool(true);
+                variables.Values[$"{entryKey}.monsterSaveId"] = UnitValue.FromInt(spawn.SaveId);
+                variables.Values[$"{entryKey}.monsterRegionId"] = UnitValue.FromInt(spawn.RegionId);
+                variables.Values[$"{entryKey}.monsterSquadId"] = UnitValue.FromInt(spawn.SquadId);
+                variables.Values[$"{entryKey}.monsterIsBoss"] = UnitValue.FromBool(spawn.IsBoss);
+            }
         }
 
         private static void DestroyRuntimeOwnedEntities(EntityManager entityManager)

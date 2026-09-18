@@ -9,7 +9,7 @@ public static class BehaviorTreeRegistry
 {
     private static readonly string[] s_behaviorNodeDataTypeOrder =
     {
-        "Root", "Selector", "Sequence", "Parallel", "Check", "HitCheck", "Set", "Wait",
+        "Root", "Selector", "Sequence", "Parallel", "Check", "HitCheck", "Set", "Wait", "MoveTo",
         "Inverter", "Succeeder", "Failer", "Repeater", "UntilSuccess", "UntilFailure", "Cooldown", "Timeout",
     };
 
@@ -23,6 +23,7 @@ public static class BehaviorTreeRegistry
         { "HitCheck", typeof(HitCheckBehaviorNodeData) },
         { "Set", typeof(SetBehaviorNodeData) },
         { "Wait", typeof(WaitBehaviorNodeData) },
+        { "MoveTo", typeof(MoveToBehaviorNodeData) },
         { "Inverter", typeof(InverterBehaviorNodeData) },
         { "Succeeder", typeof(SucceederBehaviorNodeData) },
         { "Failer", typeof(FailerBehaviorNodeData) },
@@ -43,6 +44,7 @@ public static class BehaviorTreeRegistry
         { typeof(HitCheckBehaviorNodeData), "HitCheck" },
         { typeof(SetBehaviorNodeData), "Set" },
         { typeof(WaitBehaviorNodeData), "Wait" },
+        { typeof(MoveToBehaviorNodeData), "MoveTo" },
         { typeof(InverterBehaviorNodeData), "Inverter" },
         { typeof(SucceederBehaviorNodeData), "Succeeder" },
         { typeof(FailerBehaviorNodeData), "Failer" },
@@ -57,6 +59,7 @@ public static class BehaviorTreeRegistry
     {
         { "Root", "Root" }, { "Selector", "Selector" }, { "Sequence", "Sequence" }, { "Parallel", "Parallel" },
         { "Check", "Check" }, { "HitCheck", "Hit Check" }, { "Set", "Set" }, { "Wait", "Wait" },
+        { "MoveTo", "Move To" },
         { "Inverter", "Inverter" }, { "Succeeder", "Succeeder" }, { "Failer", "Failer" },
         { "Repeater", "Repeater" }, { "UntilSuccess", "Until Success" }, { "UntilFailure", "Until Failure" },
         { "Cooldown", "Cooldown" }, { "Timeout", "Timeout" },
@@ -72,6 +75,7 @@ public static class BehaviorTreeRegistry
         new("HitCheck", "Hit Check", typeof(HitCheckBehaviorNodeData), 13),
         new("Set", "Set", typeof(SetBehaviorNodeData), 11),
         new("Wait", "Wait", typeof(WaitBehaviorNodeData), 12),
+        new("MoveTo", "Move To", typeof(MoveToBehaviorNodeData), 14),
         new("Inverter", "Inverter", typeof(InverterBehaviorNodeData), 20),
         new("Succeeder", "Succeeder", typeof(SucceederBehaviorNodeData), 21),
         new("Failer", "Failer", typeof(FailerBehaviorNodeData), 22),
@@ -104,6 +108,7 @@ public static class BehaviorTreeRegistry
         factory.Register("HitCheck", static () => new HitCheckBehaviorNodeData());
         factory.Register("Set", static () => new SetBehaviorNodeData());
         factory.Register("Wait", static () => new WaitBehaviorNodeData());
+        factory.Register("MoveTo", static () => new MoveToBehaviorNodeData());
         factory.Register("Inverter", static () => new InverterBehaviorNodeData());
         factory.Register("Succeeder", static () => new SucceederBehaviorNodeData());
         factory.Register("Failer", static () => new FailerBehaviorNodeData());
@@ -127,6 +132,7 @@ public static class BehaviorTreeRegistry
         factory.Register(typeof(HitCheckBehaviorNodeData), static data => new HitCheckBehaviorNode((HitCheckBehaviorNodeData)data));
         factory.Register(typeof(SetBehaviorNodeData), static data => new SetBehaviorNode((SetBehaviorNodeData)data));
         factory.Register(typeof(WaitBehaviorNodeData), static data => new WaitBehaviorNode((WaitBehaviorNodeData)data));
+        factory.Register(typeof(MoveToBehaviorNodeData), static data => new MoveToBehaviorNode((MoveToBehaviorNodeData)data));
         factory.Register(typeof(InverterBehaviorNodeData), static data => new InverterBehaviorNode((InverterBehaviorNodeData)data));
         factory.Register(typeof(SucceederBehaviorNodeData), static data => new SucceederBehaviorNode((SucceederBehaviorNodeData)data));
         factory.Register(typeof(FailerBehaviorNodeData), static data => new FailerBehaviorNode((FailerBehaviorNodeData)data));

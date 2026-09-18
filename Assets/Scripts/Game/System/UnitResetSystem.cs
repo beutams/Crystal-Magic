@@ -18,10 +18,15 @@ partial class UnitResetSystem : SystemBase
         foreach (RefRW<UnitMoveComponent> moveRef in SystemAPI.Query<RefRW<UnitMoveComponent>>())
         {
             UnitMoveComponent move = moveRef.ValueRW;
-            if (math.lengthsq(move.Direction) <= 0.0001f)
+            bool hasDirection = math.lengthsq(move.Direction) > 0.0001f;
+            bool hasCommandSpeed = move.CommandMoveSpeed >= 0f;
+            if (!hasDirection && !hasCommandSpeed)
                 continue;
 
-            move.Direction = float2.zero;
+            if (hasDirection)
+                move.Direction = float2.zero;
+            if (hasCommandSpeed)
+                move.CommandMoveSpeed = -1f;
             move.NetworkDirty = 1;
             moveRef.ValueRW = move;
         }

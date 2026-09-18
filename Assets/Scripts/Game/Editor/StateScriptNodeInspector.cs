@@ -77,6 +77,15 @@ namespace CrystalMagic.Editor.Unit
                 return;
             }
 
+            if (node is SpawnUnitActionNodeData spawnUnit)
+            {
+                EditorGUI.BeginChangeCheck();
+                DrawSpawnUnit(spawnUnit);
+                if (EditorGUI.EndChangeCheck())
+                    onChanged?.Invoke();
+                return;
+            }
+
             if (node is TimerStateScriptNodeData timer)
             {
                 EditorGUI.BeginChangeCheck();
@@ -295,6 +304,35 @@ namespace CrystalMagic.Editor.Unit
             publishGameEvent.Reference ??= PublishGameEventStateScriptNodeData.CreateDefaultReferenceExpression();
             EditorGUILayout.LabelField("Reference", EditorStyles.miniBoldLabel);
             StateScriptValueExpressionDrawer.Draw(publishGameEvent.Reference, UnitValueCategory.Any, sourceSchema, onChanged);
+        }
+
+        private static void DrawSpawnUnit(SpawnUnitActionNodeData spawnUnit)
+        {
+            spawnUnit.VariableListKey = EditorGUILayout.TextField(
+                new GUIContent("Variable List Key", "Optional prefix containing count and indexed spawn entries."),
+                spawnUnit.VariableListKey ?? string.Empty);
+            if (string.IsNullOrWhiteSpace(spawnUnit.VariableListKey))
+            {
+                spawnUnit.UnitName = EditorGUILayout.TextField("Unit Name", spawnUnit.UnitName ?? string.Empty);
+                spawnUnit.CandidateUnitNames ??= Array.Empty<string>();
+                int candidateCount = Mathf.Max(0, EditorGUILayout.IntField("Candidate Count", spawnUnit.CandidateUnitNames.Length));
+                if (candidateCount != spawnUnit.CandidateUnitNames.Length)
+                    Array.Resize(ref spawnUnit.CandidateUnitNames, candidateCount);
+                for (int index = 0; index < spawnUnit.CandidateUnitNames.Length; index++)
+                    spawnUnit.CandidateUnitNames[index] = EditorGUILayout.TextField($"Candidate {index + 1}", spawnUnit.CandidateUnitNames[index] ?? string.Empty);
+
+                spawnUnit.Count = Mathf.Max(1, EditorGUILayout.IntField("Count", spawnUnit.Count));
+                spawnUnit.SpawnRadius = Mathf.Max(0f, EditorGUILayout.FloatField("Spawn Radius", spawnUnit.SpawnRadius));
+                spawnUnit.MinSpawnRadius = Mathf.Clamp(
+                    EditorGUILayout.FloatField("Min Spawn Radius", spawnUnit.MinSpawnRadius),
+                    0f,
+                    spawnUnit.SpawnRadius);
+                spawnUnit.CenterOffset = EditorGUILayout.Vector3Field("Center Offset", spawnUnit.CenterOffset);
+            }
+
+            spawnUnit.CopyFactionFromSpawner = EditorGUILayout.Toggle("Copy Faction", spawnUnit.CopyFactionFromSpawner);
+            spawnUnit.ShareVariablesWithSpawner = EditorGUILayout.Toggle("Share Variables", spawnUnit.ShareVariablesWithSpawner);
+            spawnUnit.RestoreRuntimeState = EditorGUILayout.Toggle("Restore Runtime State", spawnUnit.RestoreRuntimeState);
         }
 
         private static void DrawComparatorCondition(

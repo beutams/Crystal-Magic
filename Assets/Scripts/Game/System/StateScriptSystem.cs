@@ -1,4 +1,5 @@
 using CrystalMagic.Core;
+using Unity.Collections;
 using Unity.Entities;
 
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
@@ -9,9 +10,22 @@ public partial class StateScriptSystem : SystemBase
     {
         float deltaTime = SystemAPI.Time.DeltaTime;
 
-        foreach (UnitStateScriptComponent component in
-                 SystemAPI.Query<UnitStateScriptComponent>().WithNone<UnitDeathComponent>())
+        EntityQuery activeQuery = SystemAPI.QueryBuilder()
+            .WithAll<UnitStateScriptComponent>()
+            .WithNone<UnitDeathComponent>()
+            .Build();
+        using NativeArray<Entity> activeEntities = activeQuery.ToEntityArray(Allocator.Temp);
+        for (int entityIndex = 0; entityIndex < activeEntities.Length; entityIndex++)
         {
+            Entity entity = activeEntities[entityIndex];
+            if (!EntityManager.Exists(entity) ||
+                !EntityManager.HasComponent<UnitStateScriptComponent>(entity) ||
+                EntityManager.HasComponent<UnitDeathComponent>(entity))
+            {
+                continue;
+            }
+
+            UnitStateScriptComponent component = EntityManager.GetComponentObject<UnitStateScriptComponent>(entity);
             if (component == null || !component.IsInitialized || component.IsStoppedForDeath)
                 continue;
 
@@ -19,9 +33,17 @@ public partial class StateScriptSystem : SystemBase
                 component.Runtimes[i].Tick(deltaTime);
         }
 
-        foreach (UnitStateScriptComponent component in
-                 SystemAPI.Query<UnitStateScriptComponent>().WithAll<UnitDeathComponent>())
+        EntityQuery deadQuery = SystemAPI.QueryBuilder()
+            .WithAll<UnitStateScriptComponent, UnitDeathComponent>()
+            .Build();
+        using NativeArray<Entity> deadEntities = deadQuery.ToEntityArray(Allocator.Temp);
+        for (int entityIndex = 0; entityIndex < deadEntities.Length; entityIndex++)
         {
+            Entity entity = deadEntities[entityIndex];
+            if (!EntityManager.Exists(entity) || !EntityManager.HasComponent<UnitStateScriptComponent>(entity))
+                continue;
+
+            UnitStateScriptComponent component = EntityManager.GetComponentObject<UnitStateScriptComponent>(entity);
             if (component == null || component.IsStoppedForDeath)
                 continue;
 

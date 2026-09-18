@@ -72121,8 +72121,8 @@
               "Type": "Entry",
               "Guid": "interest_point_state_entry",
               "EditorPosition": {
-                "x": 120.0,
-                "y": 180.0
+                "x": 80.0,
+                "y": 220.0
               }
             },
             {
@@ -72139,8 +72139,112 @@
               "Type": "SetValue",
               "Guid": "interest_point_state_set",
               "EditorPosition": {
-                "x": 400.0,
-                "y": 180.0
+                "x": 300.0,
+                "y": 220.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "LessThan",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": { "Type": 3 },
+                    "GetterKey": "unit.variables.consumerCount",
+                    "OperationType": "",
+                    "Inputs": []
+                  },
+                  {
+                    "Kind": 0,
+                    "Literal": { "Type": 2, "Int": 1 },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ]
+              },
+              "TickOrder": 0,
+              "Type": "Monitor",
+              "Guid": "interest_point_patrol_missing_monitor",
+              "EditorPosition": {
+                "x": 560.0,
+                "y": 80.0
+              }
+            },
+            {
+              "DurationSeconds": 180.0,
+              "TickOrder": 1,
+              "Type": "Keep",
+              "Guid": "interest_point_patrol_respawn_timer",
+              "EditorPosition": {
+                "x": 820.0,
+                "y": 80.0
+              }
+            },
+            {
+              "VariableListKey": "dungeon.patrol.spawn",
+              "UnitName": "",
+              "CandidateUnitNames": [],
+              "Count": 1,
+              "SpawnRadius": 1.0,
+              "MinSpawnRadius": 0.0,
+              "CenterOffset": { "x": 0.0, "y": 0.0, "z": 0.0 },
+              "CopyFactionFromSpawner": true,
+              "ShareVariablesWithSpawner": true,
+              "RestoreRuntimeState": true,
+              "Type": "SpawnUnit",
+              "Guid": "interest_point_spawn_patrol",
+              "EditorPosition": {
+                "x": 1080.0,
+                "y": 80.0
+              }
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "Equal",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "Literal": { "Type": 1 },
+                    "GetterKey": "unit.interestPoint.targetReached",
+                    "OperationType": "",
+                    "Inputs": []
+                  },
+                  {
+                    "Kind": 0,
+                    "Literal": { "Type": 1, "Bool": true },
+                    "GetterKey": "",
+                    "OperationType": "",
+                    "Inputs": []
+                  }
+                ]
+              },
+              "TickOrder": 2,
+              "Type": "Monitor",
+              "Guid": "interest_point_target_reached_monitor",
+              "EditorPosition": {
+                "x": 560.0,
+                "y": 360.0
+              }
+            },
+            {
+              "SetterKey": "unit.interestPoint.setNextPatrolTarget",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": { "Type": 1, "Bool": true },
+                "GetterKey": "",
+                "OperationType": "",
+                "Inputs": []
+              },
+              "Values": [],
+              "Type": "SetValue",
+              "Guid": "interest_point_select_next_target",
+              "EditorPosition": {
+                "x": 1340.0,
+                "y": 260.0
               }
             }
           ],
@@ -72149,6 +72253,42 @@
               "OutputNodeGuid": "interest_point_state_entry",
               "OutputPortName": "Out",
               "InputNodeGuid": "interest_point_state_set",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "interest_point_state_set",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "interest_point_patrol_missing_monitor",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "interest_point_state_set",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "interest_point_target_reached_monitor",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "interest_point_patrol_missing_monitor",
+              "OutputPortName": "True",
+              "InputNodeGuid": "interest_point_patrol_respawn_timer",
+              "InputPortName": "Keep"
+            },
+            {
+              "OutputNodeGuid": "interest_point_patrol_respawn_timer",
+              "OutputPortName": "OnTimeComplete",
+              "InputNodeGuid": "interest_point_spawn_patrol",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "interest_point_spawn_patrol",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "interest_point_select_next_target",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "interest_point_target_reached_monitor",
+              "OutputPortName": "True",
+              "InputNodeGuid": "interest_point_select_next_target",
               "InputPortName": "In"
             }
           ],

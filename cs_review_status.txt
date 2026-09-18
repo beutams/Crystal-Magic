@@ -350,6 +350,7 @@ Game\
         缂備礁瀚幃搴ㄦ嚍閸屾粌浠?闁哄鈧弶顐介柤鍝勫€婚崑?
       DecoratorBehaviorNodes.cs TRUE DIRTY
         濞ｅ浂鍣ｉ妶浼存嚍閸屾粌浠?
+      MoveToBehaviorNode.cs TRUE
     StateScript\
       Nodes\
         CompareStateScriptNode.cs TRUE DIRTY
@@ -365,6 +366,7 @@ Game\
         KeepStateScriptNode.cs TRUE DIRTY
         MonitorStateScriptNode.cs TRUE DIRTY
         NumberMonitorStateScriptNode.cs TRUE DIRTY
+        SpawnUnitActionNode.cs TRUE
       StateScriptInitSystem.cs TRUE DIRTY
       StateScriptNodeFactory.cs TRUE
       StateScriptPort.cs TRUE
@@ -384,6 +386,7 @@ Game\
       DropEntityPrefabRegistryEntry.cs FALSE
       DungeonExitAuthoring.cs TRUE DIRTY
         闁革附澹嗘晶鐑藉礄閸濆嫬缍撶紓浣稿濞?
+      DungeonInterestPointComponent.cs TRUE DIRTY
       DungeonMonsterSpawnComponent.cs TRUE DIRTY
       DungeonTreasureAuthoring.cs TRUE DIRTY
         閻庤绻勯鍫ュ冀閸ヮ亶鍞?
@@ -502,7 +505,6 @@ Game\
         闁告瑥鍊归弳鐔煎礃濞嗗繐寮冲娑欏灦濠㈡﹢鏁嶇仦鎯р挃閻炴稑鐭侀、鎴炵▔閻戞鍩?
       DestroyEntitySystem.cs TRUE DIRTY
         闁告帞濞€濞呭海鏁敂绛嬪姤濞存壕鍓濋悥锝囨媼閹殿喗鐣遍悗鍦仒缂?
-      DungeonPatrolSystem.cs FALSE
       DungeonExitSystem.cs TRUE DIRTY
         闁告帡鏀遍弻濠囧礄閸濆嫬缍撻悷娆欑秮閺€锝夋偐閼哥鍋?
         闁瑰灚鎸哥槐鎴犫偓瑙勭箘椤斿牓鎮介悢绋跨亣闁瑰搫顦抽幆銈夋偋?
@@ -536,7 +538,7 @@ Game\
       UnitAvoidanceSystem.cs TRUE
       UnitMoveSystem.cs TRUE DIRTY
         閹煎瓨姊婚弫銈囩矓鐠囨彃袟
-      UnitNavigationSystem.cs FALSE
+      UnitNavigationSystem.cs TRUE
       UnitResetSystem.cs TRUE DIRTY
         闂佹彃绉堕悿鍡椥掕箛鎾村闁轰胶澧楀畵?
       UnitPerceptionSystem.cs TRUE DIRTY

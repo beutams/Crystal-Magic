@@ -16,6 +16,7 @@ public static class StateScriptRegistry
         { "PublishGameEvent", typeof(PublishGameEventStateScriptNodeData) },
         { "RequestSkillWithAddition", typeof(RequestSkillWithAdditionActionNodeData) },
         { "RequestInteraction", typeof(RequestInteractionActionNodeData) },
+        { "SpawnUnit", typeof(SpawnUnitActionNodeData) },
         { "Timer", typeof(TimerStateScriptNodeData) },
         { "Keep", typeof(KeepStateScriptNodeData) },
         { "Monitor", typeof(MonitorStateScriptNodeData) },
@@ -32,6 +33,7 @@ public static class StateScriptRegistry
         { typeof(PublishGameEventStateScriptNodeData), "PublishGameEvent" },
         { typeof(RequestSkillWithAdditionActionNodeData), "RequestSkillWithAddition" },
         { typeof(RequestInteractionActionNodeData), "RequestInteraction" },
+        { typeof(SpawnUnitActionNodeData), "SpawnUnit" },
         { typeof(TimerStateScriptNodeData), "Timer" },
         { typeof(KeepStateScriptNodeData), "Keep" },
         { typeof(MonitorStateScriptNodeData), "Monitor" },
@@ -48,6 +50,7 @@ public static class StateScriptRegistry
         { "PublishGameEvent", "Publish Game Event" },
         { "RequestSkillWithAddition", "Request Skill With Addition" },
         { "RequestInteraction", "Request Interaction" },
+        { "SpawnUnit", "Spawn Unit" },
         { "Timer", "Timer" },
         { "Keep", "Keep" },
         { "Monitor", "Monitor" },
@@ -64,6 +67,7 @@ public static class StateScriptRegistry
         new("PublishGameEvent", "Publish Game Event", typeof(PublishGameEventStateScriptNodeData), 12),
         new("RequestSkillWithAddition", "Request Skill With Addition", typeof(RequestSkillWithAdditionActionNodeData), 13),
         new("RequestInteraction", "Request Interaction", typeof(RequestInteractionActionNodeData), 14),
+        new("SpawnUnit", "Spawn Unit", typeof(SpawnUnitActionNodeData), 15),
         new("Timer", "Timer", typeof(TimerStateScriptNodeData), 20),
         new("Keep", "Keep", typeof(KeepStateScriptNodeData), 21),
         new("Monitor", "Monitor", typeof(MonitorStateScriptNodeData), 22),
@@ -91,6 +95,7 @@ public static class StateScriptRegistry
         factory.Register("PublishGameEvent", static () => new PublishGameEventStateScriptNodeData());
         factory.Register("RequestSkillWithAddition", static () => new RequestSkillWithAdditionActionNodeData());
         factory.Register("RequestInteraction", static () => new RequestInteractionActionNodeData());
+        factory.Register("SpawnUnit", static () => new SpawnUnitActionNodeData());
         factory.Register("Timer", static () => new TimerStateScriptNodeData());
         factory.Register("Keep", static () => new KeepStateScriptNodeData());
         factory.Register("Monitor", static () => new MonitorStateScriptNodeData());
@@ -117,6 +122,8 @@ public static class StateScriptRegistry
             new RequestSkillWithAdditionActionNode((RequestSkillWithAdditionActionNodeData)request.Data, request.Runtime));
         factory.Register(typeof(RequestInteractionActionNodeData), static request =>
             new RequestInteractionActionNode((RequestInteractionActionNodeData)request.Data, request.Runtime));
+        factory.Register(typeof(SpawnUnitActionNodeData), static request =>
+            new SpawnUnitActionNode((SpawnUnitActionNodeData)request.Data, request.Runtime));
         factory.Register(typeof(TimerStateScriptNodeData), static request =>
             new TimerStateScriptNode((TimerStateScriptNodeData)request.Data, request.Runtime));
         factory.Register(typeof(KeepStateScriptNodeData), static request =>
