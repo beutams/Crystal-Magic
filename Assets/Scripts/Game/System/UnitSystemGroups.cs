@@ -3,8 +3,8 @@ using Server;
 using Unity.Entities;
 
 [WorldSystemFilter(
-    WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.ClientSimulation,
-    WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.ClientSimulation)]
+    WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation,
+    WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateBefore(typeof(UnitDecisionSystemGroup))]
 public partial class UnitInitializationSystemGroup : ComponentSystemGroup
@@ -68,6 +68,16 @@ public partial class UnitPostProcessSystemGroup : ComponentSystemGroup
     WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation)]
 [UpdateInGroup(typeof(SimulationSystemGroup), OrderFirst = true)]
 public partial class ClientInputSystemGroup : ComponentSystemGroup
+{
+}
+
+[WorldSystemFilter(
+    WorldSystemFilterFlags.ClientSimulation,
+    WorldSystemFilterFlags.ClientSimulation)]
+[UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
+[UpdateAfter(typeof(FrameReceiveSystem))]
+[UpdateBefore(typeof(ClientPresentationSystemGroup))]
+public partial class ClientNetworkPresentationSystemGroup : ComponentSystemGroup
 {
 }
 

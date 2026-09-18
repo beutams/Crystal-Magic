@@ -37,6 +37,7 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
         _lastCollectedFrame = currentFrame;
         List<NetworkStateData> states = new();
         CollectStates(states, currentFrame, true);
+        CollectPresentationEvents(states);
 
         if (states.Count > 0)
         {
@@ -70,6 +71,7 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
     {
         CollectMoveStates(states, onlyDirty);
         CollectFacingStates(states, onlyDirty);
+        CollectAnimationStates(states, onlyDirty);
         CollectVitalityStates(states, onlyDirty);
         CollectManaStates(states, onlyDirty);
         CollectBuffStates(states, currentFrame, onlyDirty);
@@ -80,6 +82,23 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
         CollectProjectileStates(states, onlyDirty);
         CollectPlayerPropCooldownStates(states, currentFrame, onlyDirty);
         CollectPlayerSkillSelectionStates(states, onlyDirty);
+        if (onlyDirty)
+            CollectDespawnStates(states);
+    }
+
+    private void CollectPresentationEvents(List<NetworkStateData> states)
+    {
+        EntityQuery query = GetEntityQuery(ComponentType.ReadOnly<NetworkPresentationEventQueueComponent>());
+        if (query.IsEmptyIgnoreFilter)
+            return;
+
+        NetworkPresentationEventQueueComponent queue =
+            EntityManager.GetComponentObject<NetworkPresentationEventQueueComponent>(query.GetSingletonEntity());
+        if (queue == null || queue.Events.Count == 0)
+            return;
+
+        states.AddRange(queue.Events);
+        queue.Events.Clear();
     }
 
     private void CollectMoveStates(List<NetworkStateData> states, bool onlyDirty)
@@ -140,6 +159,31 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
             {
                 facing.NetworkDirty = 0;
                 facingRef.ValueRW = facing;
+            }
+        }
+    }
+
+    private void CollectAnimationStates(List<NetworkStateData> states, bool onlyDirty)
+    {
+        foreach ((RefRO<NetworkIdentityComponent> identityRef,
+                  RefRW<UnitAnimationStateComponent> animationRef) in
+                 SystemAPI.Query<RefRO<NetworkIdentityComponent>, RefRW<UnitAnimationStateComponent>>())
+        {
+            UnitAnimationStateComponent animation = animationRef.ValueRO;
+            if ((onlyDirty && animation.NetworkDirty == 0) || identityRef.ValueRO.id == Guid.Empty)
+                continue;
+
+            states.Add(new NetworkAnimationStateData
+            {
+                unitId = identityRef.ValueRO.id,
+                animationName = animation.AnimationName.ToString(),
+                startFrame = animation.StartFrame,
+                sequence = animation.Sequence,
+            });
+            if (onlyDirty)
+            {
+                animation.NetworkDirty = 0;
+                animationRef.ValueRW = animation;
             }
         }
     }
@@ -421,6 +465,28 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
                 selection.NetworkDirty = 0;
                 selectionRef.ValueRW = selection;
             }
+        }
+    }
+
+    private void CollectDespawnStates(List<NetworkStateData> states)
+    {
+        foreach ((RefRO<NetworkIdentityComponent> identityRef,
+                  EnabledRefRO<DestroyEntityFlag> _,
+                  Entity entity) in
+                 SystemAPI.Query<RefRO<NetworkIdentityComponent>, EnabledRefRO<DestroyEntityFlag>>()
+                     .WithEntityAccess())
+        {
+            Guid unitId = identityRef.ValueRO.id;
+            if (unitId == Guid.Empty)
+                continue;
+
+            bool isDead = EntityManager.HasComponent<UnitDeathComponent>(entity) &&
+                          EntityManager.IsComponentEnabled<UnitDeathComponent>(entity);
+            states.Add(new NetworkEntityDespawnStateData
+            {
+                unitId = unitId,
+                waitForDeathPresentation = isDead ? (byte)1 : (byte)0,
+            });
         }
     }
 

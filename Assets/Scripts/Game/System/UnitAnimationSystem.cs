@@ -89,10 +89,12 @@ partial class UnitAnimationSystem : SystemBase
 
         animation.CurrentAnimationClip = track.SourceClip;
 
-        if (!animation.PlayingAnimationName.Equals(animation.CurrentAnimationName))
+        if (!animation.PlayingAnimationName.Equals(animation.CurrentAnimationName) ||
+            animation.PlayingSequence != animation.RequestedSequence)
         {
             animation.PlayingAnimationName = animation.CurrentAnimationName;
-            animation.ElapsedSeconds = 0f;
+            animation.PlayingSequence = animation.RequestedSequence;
+            animation.ElapsedSeconds = math.max(0f, animation.RequestedStartElapsedSeconds);
         }
         else
         {
@@ -237,6 +239,7 @@ partial class UnitAnimationSystem : SystemBase
     private static void ResetPlayback(UnitAnimationComponent animation)
     {
         animation.PlayingAnimationName = default;
+        animation.PlayingSequence = 0u;
         animation.ElapsedSeconds = 0f;
         animation.CurrentAnimationClip = null;
         animation.CurrentSampleTime = 0f;

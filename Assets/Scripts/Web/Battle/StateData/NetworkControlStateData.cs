@@ -21,6 +21,7 @@ public sealed class NetworkControlStateData : NetworkStateData
             ActiveSourceEntity = Entity.Null,
         };
         int activeIndex = -1;
+        uint activeEndFrame = 0;
         for (int index = 0; index < entries.Count; index++)
         {
             NetworkControlEntryStateData state = entries[index];
@@ -46,6 +47,7 @@ public sealed class NetworkControlStateData : NetworkStateData
             {
                 activeIndex = runtime.Entries.Length - 1;
                 runtime.ActivePriority = state.priority;
+                activeEndFrame = state.endFrame;
             }
         }
 
@@ -64,6 +66,33 @@ public sealed class NetworkControlStateData : NetworkStateData
 
         runtime.NetworkDirty = 0;
         context.SetOrAdd(entity, runtime);
+
+        if (context.IsClient)
+            ApplyPresentationState(context, entity, runtime, activeEndFrame);
+    }
+
+    private static void ApplyPresentationState(
+        NetworkStateApplyContext context,
+        Entity entity,
+        in UnitControlRuntimeComponent runtime,
+        uint activeEndFrame)
+    {
+        ClientControlPresentationComponent presentation = context.EntityManager
+            .HasComponent<ClientControlPresentationComponent>(entity)
+            ? context.EntityManager.GetComponentData<ClientControlPresentationComponent>(entity)
+            : default;
+        bool changed = presentation.Active != runtime.HasControl ||
+                       presentation.DisplayType != runtime.ActiveType ||
+                       presentation.SourceEntity != runtime.ActiveSourceEntity ||
+                       presentation.EndFrame != activeEndFrame;
+        presentation.DisplayType = runtime.ActiveType;
+        presentation.SourceEntity = runtime.ActiveSourceEntity;
+        presentation.EndFrame = activeEndFrame;
+        presentation.DisplayRemainingTime = runtime.ActiveRemainingTime;
+        presentation.Active = runtime.HasControl;
+        if (changed)
+            presentation.Revision++;
+        context.SetOrAdd(entity, presentation);
     }
 }
 

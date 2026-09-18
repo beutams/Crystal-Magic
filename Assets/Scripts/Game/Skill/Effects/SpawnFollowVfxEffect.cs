@@ -29,6 +29,20 @@ namespace CrystalMagic.Game.Skill.Effects
                 Data.AlignToTargetForward);
             float3 offset = new(Data.SpawnOffset.x, Data.SpawnOffset.y, Data.SpawnOffset.z);
             float3 position = targetTransform.Position + math.rotate(rotation, offset);
+            if (NetworkPresentationEventUtility.TryEnqueueFollowVfx(
+                    context.EntityManager,
+                    Data.VfxPrefabName,
+                    target,
+                    position,
+                    offset,
+                    rotation,
+                    Data.Scale,
+                    Data.Duration,
+                    Data.AlignToTargetForward))
+            {
+                return;
+            }
+
             if (!SpriteEffectSpawnUtility.TrySpawn(
                     context.EntityManager,
                     Data.VfxPrefabName,

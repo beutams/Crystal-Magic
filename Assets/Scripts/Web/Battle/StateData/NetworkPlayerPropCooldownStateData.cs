@@ -8,11 +8,23 @@ public sealed class NetworkPlayerPropCooldownStateData : NetworkStateData
 
     public override void Apply(NetworkStateApplyContext context)
     {
-        if (context.TryGetEntity(unitId, out Entity entity))
-            context.SetOrAdd(entity, new PlayerPropCooldownComponent
+        if (!context.TryGetEntity(unitId, out Entity entity))
+            return;
+
+        float remainingTime = context.GetRemainingSeconds(endFrame);
+        context.SetOrAdd(entity, new PlayerPropCooldownComponent
+        {
+            SharedCooldownRemaining = remainingTime,
+            NetworkDirty = 0,
+        });
+
+        if (context.IsClient)
+        {
+            context.SetOrAdd(entity, new ClientCooldownPresentationComponent
             {
-                SharedCooldownRemaining = context.GetRemainingSeconds(endFrame),
-                NetworkDirty = 0,
+                PropCooldownEndFrame = endFrame,
+                PropCooldownRemaining = remainingTime,
             });
+        }
     }
 }

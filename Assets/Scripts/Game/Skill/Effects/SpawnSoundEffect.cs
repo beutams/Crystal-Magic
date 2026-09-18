@@ -17,11 +17,35 @@ namespace CrystalMagic.Game.Skill.Effects
 
         public override void Execute(SkillContent context)
         {
-            if (Data == null || context == null || AudioComponent.Instance == null)
+            if (Data == null || context == null)
                 return;
 
             string assetPath = ResolveAudioAssetPath();
             if (string.IsNullOrWhiteSpace(assetPath))
+                return;
+
+            Entity followSource = Data.FollowCaster && context.HasOriginEntity
+                ? context.OriginEntity
+                : Entity.Null;
+            Vector3 position = TryGetReleasePosition(context, out Vector3 releasePosition)
+                ? releasePosition
+                : Vector3.zero;
+            if (NetworkPresentationEventUtility.TryEnqueueSound(
+                    context.EntityManager,
+                    assetPath,
+                    (int)Data.Channel,
+                    followSource,
+                    new Unity.Mathematics.float3(position.x, position.y, position.z),
+                    Data.Volume,
+                    Data.Pitch,
+                    Data.SpatialBlend,
+                    Data.DelaySeconds,
+                    followSource != Entity.Null))
+            {
+                return;
+            }
+
+            if (AudioComponent.Instance == null)
                 return;
 
             switch (Data.Channel)

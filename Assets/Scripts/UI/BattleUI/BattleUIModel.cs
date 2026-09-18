@@ -225,6 +225,14 @@ namespace CrystalMagic.UI
             if (entityManager.HasComponent<PlayerPropCooldownComponent>(player))
                 snapshot.PropCooldownRemaining = entityManager.GetComponentData<PlayerPropCooldownComponent>(player).SharedCooldownRemaining;
 
+            if (GameWorldManager.Role == GameWorldRole.Client &&
+                entityManager.HasComponent<ClientCooldownPresentationComponent>(player))
+            {
+                snapshot.PropCooldownRemaining = entityManager
+                    .GetComponentData<ClientCooldownPresentationComponent>(player)
+                    .PropCooldownRemaining;
+            }
+
             return snapshot;
         }
 

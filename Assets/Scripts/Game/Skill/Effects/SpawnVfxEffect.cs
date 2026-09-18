@@ -19,6 +19,17 @@ namespace CrystalMagic.Game.Skill.Effects
 
             quaternion rotation = SpriteEffectSpawnUtility.GetFacingRotation(context, Data.AlignToCasterForward);
             position += math.rotate(rotation, new float3(Data.SpawnOffset.x, Data.SpawnOffset.y, Data.SpawnOffset.z));
+            if (NetworkPresentationEventUtility.TryEnqueueVfx(
+                    context.EntityManager,
+                    Data.VfxPrefabName,
+                    position,
+                    rotation,
+                    Data.Scale,
+                    Data.Duration))
+            {
+                return;
+            }
+
             SpriteEffectSpawnUtility.TrySpawn(
                 context.EntityManager,
                 Data.VfxPrefabName,

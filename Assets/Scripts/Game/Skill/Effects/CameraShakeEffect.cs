@@ -14,15 +14,31 @@ namespace CrystalMagic.Game.Skill.Effects
 
         public override void Execute(SkillContent context)
         {
-            if (Data == null || context == null || CameraComponent.Instance == null)
+            if (Data == null || context == null)
                 return;
 
             Vector3 position = TryGetShakePosition(context, out Vector3 shakePosition)
                 ? shakePosition
                 : Vector3.zero;
 
+            Vector3 finalPosition = position + Data.PositionOffset;
+            if (NetworkPresentationEventUtility.TryEnqueueCameraShake(
+                    context.EntityManager,
+                    new Unity.Mathematics.float3(finalPosition.x, finalPosition.y, finalPosition.z),
+                    Data.Duration,
+                    Data.Amplitude,
+                    Data.Frequency,
+                    Data.UseDistanceAttenuation,
+                    Data.Radius))
+            {
+                return;
+            }
+
+            if (CameraComponent.Instance == null)
+                return;
+
             CameraComponent.Instance.AddShake(
-                position + Data.PositionOffset,
+                finalPosition,
                 Data.Duration,
                 Data.Amplitude,
                 Data.Frequency,

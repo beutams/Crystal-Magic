@@ -285,6 +285,25 @@ namespace CrystalMagic.UI
             output.Clear();
             signature = 17;
 
+            if (entityManager.Exists(entity) && entityManager.HasBuffer<ClientBuffPresentationElement>(entity))
+            {
+                DynamicBuffer<ClientBuffPresentationElement> presentation =
+                    entityManager.GetBuffer<ClientBuffPresentationElement>(entity, true);
+                for (int i = 0; i < presentation.Length; i++)
+                {
+                    ClientBuffPresentationElement entry = presentation[i];
+                    AddVisibleBuff(
+                        entityManager,
+                        entry.BuffId,
+                        entry.StackCount,
+                        entry.OriginEntity,
+                        output,
+                        ref signature);
+                }
+
+                return;
+            }
+
             if (!entityManager.Exists(entity) || !entityManager.HasComponent<UnitBuffRuntimeComponent>(entity))
                 return;
 
@@ -295,33 +314,47 @@ namespace CrystalMagic.UI
             for (int i = 0; i < runtimeComponent.Buffs.Count; i++)
             {
                 UnitBuffRuntimeEntry entry = runtimeComponent.Buffs[i];
-                if (entry.BuffId < 0 || entry.StackCount <= 0 || !entry.HasOriginEntity)
-                    continue;
-
-                if (entry.OriginEntity == Entity.Null ||
-                    !entityManager.Exists(entry.OriginEntity) ||
-                    !entityManager.HasComponent<UnitFactionComponent>(entry.OriginEntity) ||
-                    !UnitFactionUtility.IsPlayer(entityManager.GetComponentData<UnitFactionComponent>(entry.OriginEntity).Value))
-                {
-                    continue;
-                }
-
-                BuffData buffData = DataComponent.Instance?.Get<BuffData>(entry.BuffId);
-                string iconPath = buffData?.IconPath;
-                if (string.IsNullOrWhiteSpace(iconPath))
-                    continue;
-
-                output.Add(new UnitHealthBarBuffDisplayData
-                {
-                    BuffId = entry.BuffId,
-                    StackCount = entry.StackCount,
-                    IconPath = iconPath,
-                });
-
-                signature = (signature * 31) + entry.BuffId;
-                signature = (signature * 31) + entry.StackCount;
-                signature = (signature * 31) + iconPath.GetHashCode();
+                AddVisibleBuff(
+                    entityManager,
+                    entry.BuffId,
+                    entry.StackCount,
+                    entry.HasOriginEntity ? entry.OriginEntity : Entity.Null,
+                    output,
+                    ref signature);
             }
+        }
+
+        private static void AddVisibleBuff(
+            EntityManager entityManager,
+            int buffId,
+            int stackCount,
+            Entity originEntity,
+            List<UnitHealthBarBuffDisplayData> output,
+            ref int signature)
+        {
+            if (buffId < 0 || stackCount <= 0 || originEntity == Entity.Null ||
+                !entityManager.Exists(originEntity) ||
+                !entityManager.HasComponent<UnitFactionComponent>(originEntity) ||
+                !UnitFactionUtility.IsPlayer(entityManager.GetComponentData<UnitFactionComponent>(originEntity).Value))
+            {
+                return;
+            }
+
+            BuffData buffData = DataComponent.Instance?.Get<BuffData>(buffId);
+            string iconPath = buffData?.IconPath;
+            if (string.IsNullOrWhiteSpace(iconPath))
+                return;
+
+            output.Add(new UnitHealthBarBuffDisplayData
+            {
+                BuffId = buffId,
+                StackCount = stackCount,
+                IconPath = iconPath,
+            });
+
+            signature = (signature * 31) + buffId;
+            signature = (signature * 31) + stackCount;
+            signature = (signature * 31) + iconPath.GetHashCode();
         }
 
         private void ReleaseAllBars()

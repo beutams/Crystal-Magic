@@ -42,6 +42,21 @@ namespace CrystalMagic.Game.Skill.Effects
                 ? UnitFacingUtility.CreateRotation(direction)
                 : quaternion.identity;
 
+            if (NetworkPresentationEventUtility.TryEnqueueLineVfx(
+                    entityManager,
+                    Data.VfxPrefabName,
+                    firstPosition,
+                    direction,
+                    rotation,
+                    Data.Length,
+                    spacing,
+                    Data.Scale,
+                    Data.Duration,
+                    Data.AlignToLineDirection))
+            {
+                return;
+            }
+
             for (int index = 0; index < segmentCount; index++)
             {
                 float3 position = firstPosition + new float3(direction.x, direction.y, 0f) * (spacing * index);

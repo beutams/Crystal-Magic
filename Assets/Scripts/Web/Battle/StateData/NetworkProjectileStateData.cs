@@ -1,7 +1,6 @@
 using System;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Transforms;
 
 [Serializable]
 public sealed class NetworkProjectileStateData : NetworkStateData
@@ -36,11 +35,6 @@ public sealed class NetworkProjectileStateData : NetworkStateData
             NetworkDirty = 0,
         });
 
-        if (context.EntityManager.HasComponent<LocalTransform>(entity))
-        {
-            LocalTransform transform = context.EntityManager.GetComponentData<LocalTransform>(entity);
-            transform.Position = new float3(positionX, positionY, positionZ);
-            context.EntityManager.SetComponentData(entity, transform);
-        }
+        context.ApplyPosition(entity, new float3(positionX, positionY, positionZ));
     }
 }

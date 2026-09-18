@@ -40,10 +40,13 @@ namespace CrystalMagic.Core
             {
                 Entity entity = entityManager.CreateEntity();
                 entityManager.AddComponentData(entity, context);
+                query.Dispose();
                 return;
             }
 
-            entityManager.SetComponentData(query.GetSingletonEntity(), context);
+            Entity contextEntity = query.GetSingletonEntity();
+            query.Dispose();
+            entityManager.SetComponentData(contextEntity, context);
         }
 
         public static bool TryGet(EntityManager entityManager, out GameWorldContextComponent context)
@@ -51,11 +54,14 @@ namespace CrystalMagic.Core
             EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<GameWorldContextComponent>());
             if (query.IsEmptyIgnoreFilter)
             {
+                query.Dispose();
                 context = default;
                 return false;
             }
 
-            context = entityManager.GetComponentData<GameWorldContextComponent>(query.GetSingletonEntity());
+            Entity contextEntity = query.GetSingletonEntity();
+            query.Dispose();
+            context = entityManager.GetComponentData<GameWorldContextComponent>(contextEntity);
             return true;
         }
 

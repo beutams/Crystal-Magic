@@ -24,6 +24,16 @@ namespace CrystalMagic.Game.Skill.Effects
             float3 moveOffset = new(Data.MoveOffset.x, Data.MoveOffset.y, Data.MoveOffset.z);
             float3 startPosition = releasePosition + startOffset;
             float3 endPosition = startPosition + moveOffset;
+            float duration = math.max(0f, Data.Duration);
+            NetworkPresentationEventUtility.TryEnqueueMoveVfx(
+                context.EntityManager,
+                Data.VfxPrefabName,
+                startPosition,
+                endPosition,
+                Data.Scale,
+                duration,
+                Data.PreservePrefabRotation);
+
             if (!SpriteEffectSpawnUtility.TrySpawn(
                     context.EntityManager,
                     Data.VfxPrefabName,
@@ -42,7 +52,6 @@ namespace CrystalMagic.Game.Skill.Effects
             arrivalContext.HasPosition = true;
             arrivalContext.Position = new Vector3(endPosition.x, endPosition.y, endPosition.z);
 
-            float duration = math.max(0f, Data.Duration);
             float2 planarMove = moveOffset.xy;
             float moveDistance = math.length(planarMove);
             UnitMoveComponent move = new()
