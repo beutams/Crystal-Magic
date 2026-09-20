@@ -43,7 +43,6 @@ namespace CrystalMagic.Core {
         public event Action OnProperty;
         public event Action OnEscape;
         public event Action<int> OnUseProp;
-        public event Action<InputState> OnInputStateChanged;
         #endregion
 
         #region 调用
@@ -118,67 +117,57 @@ namespace CrystalMagic.Core {
         private void HandleMove(InputAction.CallbackContext ctx)
         {
             _currentState.Move = ctx.ReadValue<Vector2>();
-            PublishInputState();
             OnMove?.Invoke(_currentState.Move);
         }
 
         private void HandleMoveCanceled(InputAction.CallbackContext ctx)
         {
             _currentState.Move = Vector2.zero;
-            PublishInputState();
             OnMove?.Invoke(Vector2.zero);
         }
 
         private void HandleClick(InputAction.CallbackContext ctx)
         {
             _currentState.IsPrimaryHeld = true;
-            PublishInputState();
             OnMouseClick?.Invoke();
         }
 
         private void HandleClickCanceled(InputAction.CallbackContext ctx)
         {
             _currentState.IsPrimaryHeld = false;
-            PublishInputState();
         }
 
         private void HandleInteract(InputAction.CallbackContext ctx)
         {
             _currentState.IsInteractHeld = true;
-            PublishInputState();
             OnInteract?.Invoke();
         }
 
         private void HandleInteractCanceled(InputAction.CallbackContext ctx)
         {
             _currentState.IsInteractHeld = false;
-            PublishInputState();
         }
 
         private void HandleInventory(InputAction.CallbackContext ctx)
         {
             _currentState.IsInventoryHeld = true;
-            PublishInputState();
             OnInventory?.Invoke();
         }
 
         private void HandleInventoryCanceled(InputAction.CallbackContext ctx)
         {
             _currentState.IsInventoryHeld = false;
-            PublishInputState();
         }
 
         private void HandleProperty(InputAction.CallbackContext ctx)
         {
             _currentState.IsPropertyHeld = true;
-            PublishInputState();
             OnProperty?.Invoke();
         }
 
         private void HandlePropertyCanceled(InputAction.CallbackContext ctx)
         {
             _currentState.IsPropertyHeld = false;
-            PublishInputState();
         }
 
         private void HandleUseProp(InputAction.CallbackContext ctx)
@@ -190,7 +179,6 @@ namespace CrystalMagic.Core {
 
             _currentState.IsUsePropHeld = true;
             _currentState.PropIndex = shortcutIndex;
-            PublishInputState();
             OnUseProp?.Invoke(shortcutIndex);
         }
 
@@ -198,7 +186,6 @@ namespace CrystalMagic.Core {
         {
             _currentState.IsUsePropHeld = false;
             _currentState.PropIndex = -1;
-            PublishInputState();
         }
 
         private void HandleSkill(InputAction.CallbackContext ctx)
@@ -210,26 +197,22 @@ namespace CrystalMagic.Core {
 
             _currentState.IsSkillHeld = true;
             _currentState.SkillChainIndex = skillChainIndex;
-            PublishInputState();
         }
 
         private void HandleSkillCanceled(InputAction.CallbackContext ctx)
         {
             _currentState.IsSkillHeld = false;
             _currentState.SkillChainIndex = -1;
-            PublishInputState();
         }
 
         private void HandleTab(InputAction.CallbackContext ctx)
         {
             _currentState.IsNextSkillChainHeld = true;
-            PublishInputState();
         }
 
         private void HandleTabCanceled(InputAction.CallbackContext ctx)
         {
             _currentState.IsNextSkillChainHeld = false;
-            PublishInputState();
         }
 
         private void HandleEscape(InputAction.CallbackContext ctx)
@@ -238,14 +221,12 @@ namespace CrystalMagic.Core {
                 return;
 
             _currentState.IsEscapeHeld = true;
-            PublishInputState();
             OnEscape?.Invoke();
         }
 
         private void HandleEscapeCanceled(InputAction.CallbackContext ctx)
         {
             _currentState.IsEscapeHeld = false;
-            PublishInputState();
         }
 
         public void SetBattleInputEnabled(bool enabled)
@@ -281,7 +262,6 @@ namespace CrystalMagic.Core {
             if (_currentState.PointerWorldPosition != worldPos)
             {
                 _currentState.PointerWorldPosition = worldPos;
-                PublishInputState();
             }
 
             OnMouseWorldPosition?.Invoke(worldPos);
@@ -308,7 +288,6 @@ namespace CrystalMagic.Core {
                     if (_uiInputLocked)
                     {
                         _currentState.IsEscapeHeld = false;
-                        PublishInputState();
                     }
                     break;
             }
@@ -354,24 +333,16 @@ namespace CrystalMagic.Core {
             _currentState.IsInteractHeld = false;
             _currentState.IsInventoryHeld = false;
             _currentState.IsPropertyHeld = false;
-            ClearBattleInputState(publish: false);
-            PublishInputState();
+            ClearBattleInputState();
         }
 
-        private void ClearBattleInputState(bool publish = true)
+        private void ClearBattleInputState()
         {
             _currentState.IsSkillHeld = false;
             _currentState.SkillChainIndex = -1;
             _currentState.IsNextSkillChainHeld = false;
             _currentState.IsUsePropHeld = false;
             _currentState.PropIndex = -1;
-            if (publish)
-                PublishInputState();
-        }
-
-        private void PublishInputState()
-        {
-            OnInputStateChanged?.Invoke(_currentState);
         }
     }
 }

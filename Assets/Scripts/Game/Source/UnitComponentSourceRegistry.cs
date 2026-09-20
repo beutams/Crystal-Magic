@@ -979,7 +979,7 @@ public static class UnitComponentSourceRegistry
             builder.AddSet("player.skill.currentChainSlot.clear", typeof(PlayerCurrentSkillComponent), new[] { new ComparatorParameterDefinition("Clear", UnitValueCategory.Bool) }, false);
             builder.AddSet("player.skill.pendingExtraModifiers.add", typeof(PlayerCurrentSkillComponent), new[] { new ComparatorParameterDefinition("Channel", UnitValueCategory.Number), new ComparatorParameterDefinition("Factor", UnitValueCategory.Number), new ComparatorParameterDefinition("Bonus", UnitValueCategory.Number) }, false);
         }
-        if (includeAll || prefab != null && prefab.GetComponentInChildren(typeof(PlayerCurrentSkillAuthoring), true) != null)
+        if (includeAll || prefab != null && prefab.GetComponentInChildren(typeof(PlayerInputAuthoring), true) != null)
         {
             builder.AddGet("player.input.move", typeof(PlayerInputComponent), UnitValueCategory.Float2, Array.Empty<ComparatorParameterDefinition>());
             builder.AddGet("player.input.pointerWorldPosition", typeof(PlayerInputComponent), UnitValueCategory.Float3, Array.Empty<ComparatorParameterDefinition>());
@@ -1277,7 +1277,8 @@ public struct UnitSourceDispatcher
         _UnitVariableConsumerElementBufferLookup = system.GetBufferLookup<UnitVariableConsumerElement>(false);
         _UnitVariableElementBufferLookup = system.GetBufferLookup<UnitVariableElement>(false);
         _WorldVariableElementBufferLookup = system.GetBufferLookup<WorldVariableElement>(false);
-        WorldStateUtility.TryGetEntity(system.EntityManager, out _globalEntity);
+        if (_globalEntity == Entity.Null || !system.EntityManager.Exists(_globalEntity))
+            WorldStateUtility.TryGetEntity(system.EntityManager, out _globalEntity);
     }
 
     public void InitializeReadOnly(SystemBase system)
@@ -1316,7 +1317,8 @@ public struct UnitSourceDispatcher
         _UnitVariableConsumerElementBufferLookup = system.GetBufferLookup<UnitVariableConsumerElement>(true);
         _UnitVariableElementBufferLookup = system.GetBufferLookup<UnitVariableElement>(true);
         _WorldVariableElementBufferLookup = system.GetBufferLookup<WorldVariableElement>(true);
-        WorldStateUtility.TryGetEntity(system.EntityManager, out _globalEntity);
+        if (_globalEntity == Entity.Null || !system.EntityManager.Exists(_globalEntity))
+            WorldStateUtility.TryGetEntity(system.EntityManager, out _globalEntity);
     }
 
     public void Update(SystemBase system)
@@ -1355,7 +1357,8 @@ public struct UnitSourceDispatcher
         _UnitVariableConsumerElementBufferLookup.Update(system);
         _UnitVariableElementBufferLookup.Update(system);
         _WorldVariableElementBufferLookup.Update(system);
-        WorldStateUtility.TryGetEntity(system.EntityManager, out _globalEntity);
+        if (_globalEntity == Entity.Null || !system.EntityManager.Exists(_globalEntity))
+            WorldStateUtility.TryGetEntity(system.EntityManager, out _globalEntity);
     }
 
     public void Initialize(ref SystemState state)
@@ -1394,7 +1397,8 @@ public struct UnitSourceDispatcher
         _UnitVariableConsumerElementBufferLookup = state.GetBufferLookup<UnitVariableConsumerElement>(false);
         _UnitVariableElementBufferLookup = state.GetBufferLookup<UnitVariableElement>(false);
         _WorldVariableElementBufferLookup = state.GetBufferLookup<WorldVariableElement>(false);
-        WorldStateUtility.TryGetEntity(state.EntityManager, out _globalEntity);
+        if (_globalEntity == Entity.Null || !state.EntityManager.Exists(_globalEntity))
+            WorldStateUtility.TryGetEntity(state.EntityManager, out _globalEntity);
     }
 
     public void InitializeReadOnly(ref SystemState state)
@@ -1433,7 +1437,8 @@ public struct UnitSourceDispatcher
         _UnitVariableConsumerElementBufferLookup = state.GetBufferLookup<UnitVariableConsumerElement>(true);
         _UnitVariableElementBufferLookup = state.GetBufferLookup<UnitVariableElement>(true);
         _WorldVariableElementBufferLookup = state.GetBufferLookup<WorldVariableElement>(true);
-        WorldStateUtility.TryGetEntity(state.EntityManager, out _globalEntity);
+        if (_globalEntity == Entity.Null || !state.EntityManager.Exists(_globalEntity))
+            WorldStateUtility.TryGetEntity(state.EntityManager, out _globalEntity);
     }
 
     public void Update(ref SystemState state)
@@ -1472,7 +1477,8 @@ public struct UnitSourceDispatcher
         _UnitVariableConsumerElementBufferLookup.Update(ref state);
         _UnitVariableElementBufferLookup.Update(ref state);
         _WorldVariableElementBufferLookup.Update(ref state);
-        WorldStateUtility.TryGetEntity(state.EntityManager, out _globalEntity);
+        if (_globalEntity == Entity.Null || !state.EntityManager.Exists(_globalEntity))
+            WorldStateUtility.TryGetEntity(state.EntityManager, out _globalEntity);
     }
 
     public bool TryGet(Entity entity, UnitSourceId sourceId, in UnitSourceArguments arguments, out UnitSourceValue value)

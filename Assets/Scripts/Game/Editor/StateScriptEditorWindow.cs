@@ -135,7 +135,7 @@ namespace CrystalMagic.Editor.Unit
                 return;
             }
 
-            StateScriptRuntime runtime = FindDebugRuntime();
+            StateScriptGraphDebugSnapshot runtime = FindDebugRuntime();
             _runtimeDataInspector.Refresh(runtime);
             _graphView.RefreshRuntimeDebug(runtime);
             Repaint();
@@ -816,9 +816,7 @@ namespace CrystalMagic.Editor.Unit
             for (int i = 0; i < entities.Length; i++)
             {
                 Entity entity = entities[i];
-                UnitStateScriptComponent component = entityManager.GetComponentObject<UnitStateScriptComponent>(entity);
-                if (component == null)
-                    continue;
+                UnitStateScriptComponent component = entityManager.GetComponentData<UnitStateScriptComponent>(entity);
 
                 _runtimeUnitEntries.Add(new RuntimeUnitEntry
                 {
@@ -870,7 +868,7 @@ namespace CrystalMagic.Editor.Unit
             _selectedSourceSchema = s_emptySourceSchema;
         }
 
-        private StateScriptRuntime FindDebugRuntime()
+        private StateScriptGraphDebugSnapshot FindDebugRuntime()
         {
             if (!IsRuntimeDebugEnabled || _selectedRuntimeEntity == Entity.Null)
                 return null;
@@ -886,18 +884,44 @@ namespace CrystalMagic.Editor.Unit
                 return null;
             }
 
-            UnitStateScriptComponent component = entityManager.GetComponentObject<UnitStateScriptComponent>(_selectedRuntimeEntity);
-            if (component == null)
+            UnitStateScriptComponent component = entityManager.GetComponentData<UnitStateScriptComponent>(_selectedRuntimeEntity);
+            if (component.IsInitialized == 0 ||
+                !entityManager.HasBuffer<StateScriptGraphStateElement>(_selectedRuntimeEntity) ||
+                !entityManager.HasBuffer<StateScriptNodeStateElement>(_selectedRuntimeEntity))
                 return null;
 
-            for (int runtimeIndex = 0; runtimeIndex < component.Runtimes.Count; runtimeIndex++)
-            {
-                StateScriptRuntime runtime = component.Runtimes[runtimeIndex];
-                if (runtime != null && string.Equals(runtime.Data?.Guid, _selectedGraphGuid, StringComparison.Ordinal))
-                    return runtime;
-            }
+            StateScriptData data = EditorComponents.Data.Find<StateScriptData>(row => row.Id == component.UnitDataId);
+            int graphIndex = data?.Graphs?.FindIndex(graph =>
+                graph != null && string.Equals(graph.Guid, _selectedGraphGuid, StringComparison.Ordinal)) ?? -1;
+            DynamicBuffer<StateScriptGraphStateElement> graphStates =
+                entityManager.GetBuffer<StateScriptGraphStateElement>(_selectedRuntimeEntity);
+            if (graphIndex < 0 || graphIndex >= graphStates.Length)
+                return null;
 
-            return null;
+            StateScriptInstanceData graphData = data.Graphs[graphIndex];
+            DynamicBuffer<StateScriptNodeStateElement> nodeStates =
+                entityManager.GetBuffer<StateScriptNodeStateElement>(_selectedRuntimeEntity);
+            int stateStart = graphStates[graphIndex].NodeStateStart;
+            if (stateStart < 0 || stateStart + graphData.Nodes.Count > nodeStates.Length)
+                return null;
+
+            Dictionary<string, StateScriptNodeDebugState> debugStates = new(StringComparer.Ordinal);
+            for (int nodeIndex = 0; nodeIndex < graphData.Nodes.Count; nodeIndex++)
+            {
+                StateScriptNodeData node = graphData.Nodes[nodeIndex];
+                if (node == null || string.IsNullOrWhiteSpace(node.Guid))
+                    continue;
+                StateScriptNodeStateElement state = nodeStates[stateStart + nodeIndex];
+                debugStates[node.Guid] = new StateScriptNodeDebugState(
+                    node is StateStateScriptNodeData,
+                    state.Status,
+                    state.LastPulseTick);
+            }
+            return new StateScriptGraphDebugSnapshot(
+                entityManager,
+                _selectedRuntimeEntity,
+                graphData,
+                debugStates);
         }
 
         private static ToolbarButton CreateToolbarButton(string text, float width, Action action)
@@ -1215,10 +1239,10 @@ namespace CrystalMagic.Editor.Unit
         private static readonly UnitSourceSchema s_sourceSchema = UnitSourceSchemaFactory.CreateForAllSources();
 
         private readonly Dictionary<string, HashSet<Type>> _nodeComponentTypes = new(StringComparer.Ordinal);
-        private StateScriptRuntime _runtime;
+        private StateScriptGraphDebugSnapshot _runtime;
         private string _selectedNodeGuid;
 
-        public void Refresh(StateScriptRuntime runtime)
+        public void Refresh(StateScriptGraphDebugSnapshot runtime)
         {
             if (ReferenceEquals(_runtime, runtime))
                 return;
@@ -1228,8 +1252,8 @@ namespace CrystalMagic.Editor.Unit
             if (runtime == null)
                 return;
 
-            for (int i = 0; i < runtime.NodesInTraversalOrder.Count; i++)
-                CollectNodeComponents(runtime.NodesInTraversalOrder[i].Data);
+            for (int i = 0; i < runtime.Data.Nodes.Count; i++)
+                CollectNodeComponents(runtime.Data.Nodes[i]);
         }
 
         public void Invalidate()
@@ -1244,7 +1268,7 @@ namespace CrystalMagic.Editor.Unit
             _selectedNodeGuid = nodeGuid;
         }
 
-        public void Draw(StateScriptRuntime runtime)
+        public void Draw(StateScriptGraphDebugSnapshot runtime)
         {
             Refresh(runtime);
             EditorGUILayout.Space(10f);
@@ -1258,7 +1282,7 @@ namespace CrystalMagic.Editor.Unit
             DrawComponentData(runtime);
         }
 
-        private void DrawComponentData(StateScriptRuntime runtime)
+        private void DrawComponentData(StateScriptGraphDebugSnapshot runtime)
         {
             UnitRuntimeDrawerContext context = new(runtime.EntityManager, runtime.Entity, string.Empty, null);
             IReadOnlyList<IUnitRuntimeAttributeDrawer> drawers = UnitRuntimeAttributeDrawerFactory.GetDrawers();

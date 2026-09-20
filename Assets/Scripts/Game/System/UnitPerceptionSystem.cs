@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using CrystalMagic.Core;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -8,41 +7,36 @@ using Unity.Transforms;
 
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateBefore(typeof(BehaviorTreeSystem))]
-partial class UnitPerceptionSystem : SystemBase
+[BurstCompile]
+partial struct UnitPerceptionSystem : ISystem
 {
-    private EntityQuery _queryRuntimeQuery;
-
-    protected override void OnCreate()
+    [BurstCompile]
+    public void OnCreate(ref SystemState state)
     {
-        _queryRuntimeQuery = GetEntityQuery(
-            ComponentType.ReadOnly<UnitQuerySingleton>());
-        RequireForUpdate(_queryRuntimeQuery);
-        RequireForUpdate<UnitPerceptionComponent>();
+        state.RequireForUpdate<UnitQuerySingleton>();
+        state.RequireForUpdate<UnitPerceptionComponent>();
     }
 
-    protected override void OnUpdate()
+    [BurstCompile]
+    public void OnUpdate(ref SystemState state)
     {
-        GameGateComponent gameGate = GameGateComponent.Instance;
-        if (gameGate != null && gameGate.IsSimulationLocked)
-            return;
-
-        if (!UnitQueryUtility.TryGetGrid(
-                EntityManager,
-                UnitQueryGridKind.Unit,
-                out UnitQueryGrid unitGrid))
-            return;
-
-        Dependency = new UnitPerceptionJob
+        UnitQuerySingleton query = SystemAPI.GetSingleton<UnitQuerySingleton>();
+        BufferLookup<UnitQueryEntry> grids = SystemAPI.GetBufferLookup<UnitQueryEntry>(true);
+        if (!grids.TryGetBuffer(
+                query.UnitGridEntity,
+                out DynamicBuffer<UnitQueryEntry> unitEntries))
         {
-            UnitEntries = unitGrid.AsNativeArray(),
-            InverseCellSize = unitGrid.InverseCellSize,
-            Factions = GetComponentLookup<UnitFactionComponent>(true),
-            Deaths = GetComponentLookup<UnitDeathComponent>(true),
-            DestroyFlags = GetComponentLookup<DestroyEntityFlag>(true),
-        }.ScheduleParallel(Dependency);
+            return;
+        }
 
-        // BehaviorTreeSystem consumes the buffers immediately after this system.
-        Dependency.Complete();
+        state.Dependency = new UnitPerceptionJob
+        {
+            UnitEntries = unitEntries.AsNativeArray(),
+            InverseCellSize = query.InverseCellSize,
+            Factions = SystemAPI.GetComponentLookup<UnitFactionComponent>(true),
+            Deaths = SystemAPI.GetComponentLookup<UnitDeathComponent>(true),
+            DestroyFlags = SystemAPI.GetComponentLookup<DestroyEntityFlag>(true),
+        }.ScheduleParallel(state.Dependency);
     }
 }
 

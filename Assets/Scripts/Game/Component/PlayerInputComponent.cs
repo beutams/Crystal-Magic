@@ -19,7 +19,7 @@ public struct PlayerInputComponent : IComponentData
     public byte NetworkDirty;
 }
 
-[UnitSourceProvider(typeof(PlayerInputComponent), typeof(PlayerCurrentSkillAuthoring))]
+[UnitSourceProvider(typeof(PlayerInputComponent), typeof(PlayerInputAuthoring))]
 public static class PlayerInputSource
 {
     [UnitSourceGet(0, "player.input.move", UnitValueCategory.Float2)]

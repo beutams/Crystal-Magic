@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CrystalMagic.Game.Skill;
 using CrystalMagic.Game.Skill.Effects;
 using CrystalMagic.Game.Unit;
 using Server;
@@ -73,6 +74,13 @@ public partial class SkillProjectileSpawnSystem : SystemBase
         else
             EntityManager.GetBuffer<SkillProjectileHitEntityElement>(projectileEntity).Clear();
 
+        GetOrAddBuffer<SkillProjectileConditionInstructionElement>(projectileEntity).Clear();
+        GetOrAddBuffer<SkillProjectileConditionLiteralElement>(projectileEntity).Clear();
+        SetOrAddComponentData(projectileEntity, default(SkillProjectileFrameResultComponent));
+        if (!EntityManager.HasComponent<DestroyEntityFlag>(projectileEntity))
+            EntityManager.AddComponent<DestroyEntityFlag>(projectileEntity);
+        EntityManager.SetComponentEnabled<DestroyEntityFlag>(projectileEntity, false);
+
         ApplyPayloadComponent(projectileEntity, in request);
         SpawnProjectileVisual(projectileEntity, in request, rotation);
     }
@@ -118,9 +126,6 @@ public partial class SkillProjectileSpawnSystem : SystemBase
                 EntityManager.GetComponentData<SkillProjectilePayloadComponent>(entity);
             EffectUtility.ReleaseAfterExecution(EntityManager, existing.OnCollisionEffectListId);
             EffectUtility.ReleaseAfterExecution(EntityManager, existing.OnDestroyEffectListId);
-            EffectDataBridgeUtility.UnregisterConditions(
-                EntityManager,
-                existing.CollisionTargetConditionsId);
             if (existing.OwnsManagedContext != 0)
             {
                 EffectDataBridgeUtility.UnregisterManagedContext(
@@ -129,14 +134,78 @@ public partial class SkillProjectileSpawnSystem : SystemBase
             }
         }
 
+        SkillProjectileConditionState conditionState =
+            CompileCollisionConditions(entity, in request);
+
         SetOrAddComponentData(entity, new SkillProjectilePayloadComponent
         {
             Context = request.Context,
             OwnsManagedContext = request.ReleaseManagedContextOnFailure,
-            CollisionTargetConditionsId = request.CollisionTargetConditionsId,
+            CollisionConditionState = conditionState,
             OnCollisionEffectListId = request.OnCollisionEffectListId,
             OnDestroyEffectListId = request.OnDestroyEffectListId,
         });
+    }
+
+    private SkillProjectileConditionState CompileCollisionConditions(
+        Entity entity,
+        in SkillProjectileSpawnRequest request)
+    {
+        DynamicBuffer<SkillProjectileConditionInstructionElement> instructions =
+            GetOrAddBuffer<SkillProjectileConditionInstructionElement>(entity);
+        DynamicBuffer<SkillProjectileConditionLiteralElement> literals =
+            GetOrAddBuffer<SkillProjectileConditionLiteralElement>(entity);
+        instructions.Clear();
+        literals.Clear();
+
+        if (!request.CollisionTargetConditionsId.IsValid)
+            return SkillProjectileConditionState.None;
+
+        try
+        {
+            if (!EffectDataBridgeUtility.TryGetConditions(
+                    EntityManager,
+                    request.CollisionTargetConditionsId,
+                    out List<ConditionConfig> conditions))
+            {
+                return SkillProjectileConditionState.Invalid;
+            }
+
+            if (conditions.Count == 0)
+                return SkillProjectileConditionState.None;
+
+            SkillContent context = EffectUtility.CreateContext(EntityManager, in request.Context);
+            Comparator comparator = EffectConditionUtility.BuildComparator(conditions, context);
+            if (!comparator.IsValid)
+                return SkillProjectileConditionState.Invalid;
+
+            ExpressionProgram program = comparator.Program;
+            instructions.EnsureCapacity(program.Instructions.Length);
+            literals.EnsureCapacity(program.Literals.Length);
+            for (int index = 0; index < program.Instructions.Length; index++)
+            {
+                instructions.Add(new SkillProjectileConditionInstructionElement
+                {
+                    Value = program.Instructions[index],
+                });
+            }
+
+            for (int index = 0; index < program.Literals.Length; index++)
+            {
+                literals.Add(new SkillProjectileConditionLiteralElement
+                {
+                    Value = program.Literals[index],
+                });
+            }
+
+            return SkillProjectileConditionState.Valid;
+        }
+        finally
+        {
+            EffectDataBridgeUtility.UnregisterConditions(
+                EntityManager,
+                request.CollisionTargetConditionsId);
+        }
     }
 
     private void ReleaseFailedRequest(in SkillProjectileSpawnRequest request)
@@ -164,5 +233,13 @@ public partial class SkillProjectileSpawnSystem : SystemBase
             EntityManager.SetComponentData(entity, value);
         else
             EntityManager.AddComponentData(entity, value);
+    }
+
+    private DynamicBuffer<T> GetOrAddBuffer<T>(Entity entity)
+        where T : unmanaged, IBufferElementData
+    {
+        return EntityManager.HasBuffer<T>(entity)
+            ? EntityManager.GetBuffer<T>(entity)
+            : EntityManager.AddBuffer<T>(entity);
     }
 }

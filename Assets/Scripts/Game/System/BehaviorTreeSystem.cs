@@ -25,10 +25,6 @@ public partial class BehaviorTreeSystem : SystemBase
 
     protected override void OnUpdate()
     {
-        GameGateComponent gameGate = GameGateComponent.Instance;
-        if (gameGate != null && gameGate.IsSimulationLocked)
-            return;
-
         BlobAssetReference<BehaviorTreeRuntimeRegistryBlob> registry =
             SystemAPI.GetSingleton<BehaviorTreeRuntimeRegistryComponent>().Value;
         if (!registry.IsCreated)

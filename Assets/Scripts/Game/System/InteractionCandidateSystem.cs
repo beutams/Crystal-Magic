@@ -16,6 +16,7 @@ public partial class InteractionCandidateSystem : SystemBase
     {
         RequireForUpdate<UnitFactionComponent>();
         RequireForUpdate<InteractionCandidateComponent>();
+        RequireForUpdate<WorldStateComponent>();
     }
 
     protected override void OnUpdate()
@@ -27,7 +28,7 @@ public partial class InteractionCandidateSystem : SystemBase
             IsInteracting = isInteracting,
         };
 
-        if (isInteracting != 0 || GameGateComponent.Instance.IsPlayerInputLocked ||
+        if (isInteracting != 0 || SystemAPI.GetSingleton<WorldStateComponent>().IsPlayerInputLocked ||
             !TryGetFrontEndActor(out float3 actorPosition))
         {
             return;

@@ -17,17 +17,14 @@ namespace CrystalMagic.Editor.Unit
         {
             List<FactoryRegistryGeneratorUtility.MappedType> dataTypes =
                 FactoryRegistryGeneratorUtility.CollectMappedTypes(typeof(StateScriptNodeData), subclassOnly: true);
-            List<FactoryRegistryGeneratorUtility.MappedType> runtimeTypes =
-                FactoryRegistryGeneratorUtility.CollectMappedTypes(typeof(StateScriptNode), subclassOnly: true);
 
-            RegistryGeneratorUtility.WriteFile(OutputPath, BuildRegistry(dataTypes, runtimeTypes));
+            RegistryGeneratorUtility.WriteFile(OutputPath, BuildRegistry(dataTypes));
             AssetDatabase.Refresh();
             Debug.Log($"[StateScriptRegistryGenerator] Generated {OutputPath}.");
         }
 
         private static string BuildRegistry(
-            List<FactoryRegistryGeneratorUtility.MappedType> dataTypes,
-            List<FactoryRegistryGeneratorUtility.MappedType> runtimeTypes)
+            List<FactoryRegistryGeneratorUtility.MappedType> dataTypes)
         {
             StringBuilder builder = new();
             builder.AppendLine("// AUTO-GENERATED - DO NOT EDIT MANUALLY");
@@ -42,7 +39,6 @@ namespace CrystalMagic.Editor.Unit
 
             AppendMetadata(builder, dataTypes);
             AppendDataRegistrations(builder, dataTypes);
-            AppendRuntimeRegistrations(builder, dataTypes, runtimeTypes);
 
             builder.AppendLine("}");
             return builder.ToString();
@@ -121,44 +117,5 @@ namespace CrystalMagic.Editor.Unit
             builder.AppendLine();
         }
 
-        private static void AppendRuntimeRegistrations(
-            StringBuilder builder,
-            List<FactoryRegistryGeneratorUtility.MappedType> dataTypes,
-            List<FactoryRegistryGeneratorUtility.MappedType> runtimeTypes)
-        {
-            builder.AppendLine("    public static void RegisterAll(StateScriptNodeRuntimeFactory factory)");
-            builder.AppendLine("    {");
-            builder.AppendLine("        if (factory == null)");
-            builder.AppendLine("            return;");
-            builder.AppendLine();
-            for (int i = 0; i < dataTypes.Count; i++)
-            {
-                FactoryRegistryGeneratorUtility.MappedType dataType = dataTypes[i];
-                FactoryRegistryGeneratorUtility.MappedType runtimeType = FindByKey(dataType.Mapping.Key, runtimeTypes);
-                if (runtimeType == null)
-                {
-                    Debug.LogWarning($"[StateScriptRegistryGenerator] Missing runtime for {dataType.Type.Name}.");
-                    continue;
-                }
-
-                string dataReference = FactoryRegistryGeneratorUtility.TypeReference(dataType.Type);
-                string runtimeReference = FactoryRegistryGeneratorUtility.TypeReference(runtimeType.Type);
-                builder.AppendLine($"        factory.Register(typeof({dataReference}), static request => new {runtimeReference}(({dataReference})request.Data, request.Runtime));");
-            }
-            builder.AppendLine("    }");
-        }
-
-        private static FactoryRegistryGeneratorUtility.MappedType FindByKey(
-            string key,
-            List<FactoryRegistryGeneratorUtility.MappedType> runtimeTypes)
-        {
-            for (int i = 0; i < runtimeTypes.Count; i++)
-            {
-                if (string.Equals(runtimeTypes[i].Mapping.Key, key, StringComparison.Ordinal))
-                    return runtimeTypes[i];
-            }
-
-            return null;
-        }
     }
 }

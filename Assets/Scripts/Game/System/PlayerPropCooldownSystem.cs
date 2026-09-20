@@ -1,27 +1,45 @@
+using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
 
+[BurstCompile]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 public partial struct PlayerPropCooldownSystem : ISystem
 {
+    [BurstCompile]
+    public void OnCreate(ref SystemState state)
+    {
+        state.RequireForUpdate<PlayerPropCooldownComponent>();
+    }
+
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        float deltaTime = SystemAPI.Time.DeltaTime;
-        foreach (RefRW<PlayerPropCooldownComponent> cooldownRef in
-                 SystemAPI.Query<RefRW<PlayerPropCooldownComponent>>())
+        state.Dependency = new PlayerPropCooldownJob
         {
-            if (cooldownRef.ValueRO.SharedCooldownRemaining <= 0f)
-                continue;
+            DeltaTime = SystemAPI.Time.DeltaTime,
+        }.ScheduleParallel(state.Dependency);
+    }
+}
 
-            float nextCooldown = math.max(
-                0f,
-                cooldownRef.ValueRO.SharedCooldownRemaining - deltaTime);
-            if (nextCooldown == cooldownRef.ValueRO.SharedCooldownRemaining)
-                continue;
+[BurstCompile]
+public partial struct PlayerPropCooldownJob : IJobEntity
+{
+    public float DeltaTime;
 
-            cooldownRef.ValueRW.SharedCooldownRemaining = nextCooldown;
-            if (nextCooldown <= 0f)
-                cooldownRef.ValueRW.NetworkDirty = 1;
-        }
+    private void Execute(ref PlayerPropCooldownComponent cooldown)
+    {
+        if (cooldown.SharedCooldownRemaining <= 0f)
+            return;
+
+        float nextCooldown = math.max(
+            0f,
+            cooldown.SharedCooldownRemaining - DeltaTime);
+        if (nextCooldown == cooldown.SharedCooldownRemaining)
+            return;
+
+        cooldown.SharedCooldownRemaining = nextCooldown;
+        if (nextCooldown <= 0f)
+            cooldown.NetworkDirty = 1;
     }
 }

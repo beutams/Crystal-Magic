@@ -478,10 +478,17 @@ namespace CrystalMagic.Core
                 entityManager.AddBuffer<UnitVariableElement>(pointEntity);
                 entityManager.AddBuffer<UnitVariableConsumerElement>(pointEntity);
                 PopulatePatrolSpawnVariables(entityManager, pointEntity, spawn.MemberSpawns);
-                entityManager.AddComponentObject(pointEntity, new UnitStateScriptComponent
+                entityManager.AddComponentData(pointEntity, new UnitStateScriptComponent
                 {
                     UnitDataId = DungeonPatrolRuntimeUtility.InterestPointUnitDataId,
+                    DefinitionIndex = -1,
                 });
+                entityManager.AddBuffer<StateScriptGraphStateElement>(pointEntity);
+                entityManager.AddBuffer<StateScriptNodeStateElement>(pointEntity);
+                entityManager.AddBuffer<StateScriptSourceCommandElement>(pointEntity);
+                entityManager.AddBuffer<StateScriptSourceCommandArgumentElement>(pointEntity);
+                entityManager.AddBuffer<StateScriptManagedCommandElement>(pointEntity);
+                entityManager.AddBuffer<StateScriptExternalResultElement>(pointEntity);
                 DungeonInterestPointComponent point = new()
                 {
                     EncounterId = spawn.EncounterId,

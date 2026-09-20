@@ -1,19 +1,35 @@
+using Unity.Burst;
 using Unity.Entities;
 
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateBefore(typeof(SkillReleaseSystem))]
+[BurstCompile]
 partial struct UnitControlSystem : ISystem
 {
+    [BurstCompile]
+    public void OnCreate(ref SystemState state)
+    {
+        state.RequireForUpdate<UnitControlRuntimeComponent>();
+    }
+
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        float deltaTime = SystemAPI.Time.DeltaTime;
-        EntityManager entityManager = state.EntityManager;
-
-        foreach (var (_, entity) in SystemAPI.Query<RefRO<UnitControlRuntimeComponent>>()
-                     .WithNone<UnitDeathComponent>()
-                     .WithEntityAccess())
+        state.Dependency = new UnitControlTickJob
         {
-            UnitControlUtility.TickAndRefresh(entityManager, entity, deltaTime);
-        }
+            DeltaTime = SystemAPI.Time.DeltaTime,
+        }.ScheduleParallel(state.Dependency);
+    }
+}
+
+[BurstCompile]
+[WithNone(typeof(UnitDeathComponent))]
+public partial struct UnitControlTickJob : IJobEntity
+{
+    public float DeltaTime;
+
+    private void Execute(ref UnitControlRuntimeComponent runtime)
+    {
+        UnitControlUtility.TickAndRefresh(ref runtime, DeltaTime);
     }
 }

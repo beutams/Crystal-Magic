@@ -103,36 +103,4 @@ public static class StateScriptRegistry
         factory.Register("Addition", static () => new AdditionStateScriptNodeData());
     }
 
-    public static void RegisterAll(StateScriptNodeRuntimeFactory factory)
-    {
-        if (factory == null)
-            return;
-
-        factory.Register(typeof(StateScriptEntryNodeData), static request =>
-            new StateScriptEntryNode((StateScriptEntryNodeData)request.Data, request.Runtime));
-        factory.Register(typeof(CompareStateScriptNodeData), static request =>
-            new CompareStateScriptNode((CompareStateScriptNodeData)request.Data, request.Runtime));
-        factory.Register(typeof(SetValueStateScriptNodeData), static request =>
-            new SetValueStateScriptNode((SetValueStateScriptNodeData)request.Data, request.Runtime));
-        factory.Register(typeof(RequestSkillActionNodeData), static request =>
-            new RequestSkillActionNode((RequestSkillActionNodeData)request.Data, request.Runtime));
-        factory.Register(typeof(PublishGameEventStateScriptNodeData), static request =>
-            new PublishGameEventStateScriptNode((PublishGameEventStateScriptNodeData)request.Data, request.Runtime));
-        factory.Register(typeof(RequestSkillWithAdditionActionNodeData), static request =>
-            new RequestSkillWithAdditionActionNode((RequestSkillWithAdditionActionNodeData)request.Data, request.Runtime));
-        factory.Register(typeof(RequestInteractionActionNodeData), static request =>
-            new RequestInteractionActionNode((RequestInteractionActionNodeData)request.Data, request.Runtime));
-        factory.Register(typeof(SpawnUnitActionNodeData), static request =>
-            new SpawnUnitActionNode((SpawnUnitActionNodeData)request.Data, request.Runtime));
-        factory.Register(typeof(TimerStateScriptNodeData), static request =>
-            new TimerStateScriptNode((TimerStateScriptNodeData)request.Data, request.Runtime));
-        factory.Register(typeof(KeepStateScriptNodeData), static request =>
-            new KeepStateScriptNode((KeepStateScriptNodeData)request.Data, request.Runtime));
-        factory.Register(typeof(MonitorStateScriptNodeData), static request =>
-            new MonitorStateScriptNode((MonitorStateScriptNodeData)request.Data, request.Runtime));
-        factory.Register(typeof(NumberMonitorStateScriptNodeData), static request =>
-            new NumberMonitorStateScriptNode((NumberMonitorStateScriptNodeData)request.Data, request.Runtime));
-        factory.Register(typeof(AdditionStateScriptNodeData), static request =>
-            new AdditionStateScriptNode((AdditionStateScriptNodeData)request.Data, request.Runtime));
-    }
 }

@@ -351,6 +351,69 @@ internal static class CompiledExpressionEvaluator
         return stack.Length == 0;
     }
 
+    public static bool TryEvaluateConditions(
+        NativeArray<ExpressionInstruction> instructions,
+        NativeArray<UnitSourceValue> literals,
+        in UnitSourceContext context,
+        in UnitSourceDispatcher dispatcher)
+    {
+        FixedList4096Bytes<UnitSourceValue> stack = default;
+        for (int index = 0; index < instructions.Length; index++)
+        {
+            ExpressionInstruction instruction = instructions[index];
+            switch (instruction.Kind)
+            {
+                case ExpressionInstructionKind.Literal:
+                    if (instruction.LiteralIndex >= literals.Length ||
+                        !TryPush(ref stack, literals[instruction.LiteralIndex]))
+                    {
+                        return false;
+                    }
+                    break;
+
+                case ExpressionInstructionKind.Source:
+                    if (!TryEvaluateSource(
+                            instruction.SourceId,
+                            instruction.SourceTarget,
+                            instruction.InputCount,
+                            in context,
+                            in dispatcher,
+                            ref stack))
+                    {
+                        return false;
+                    }
+                    break;
+
+                case ExpressionInstructionKind.Operation:
+                    if (!TryEvaluateOperation(instruction.Operation, instruction.InputCount, ref stack))
+                        return false;
+                    break;
+
+                case ExpressionInstructionKind.Compare:
+                    if (!TryEvaluateCompare(
+                            instruction.Compare,
+                            instruction.InputCount,
+                            ref stack,
+                            out bool matches))
+                    {
+                        return false;
+                    }
+
+                    if (instruction.ConditionType == ConditionType.Necessary && !matches ||
+                        instruction.ConditionType == ConditionType.Unallowed && matches)
+                    {
+                        return false;
+                    }
+                    break;
+
+                default:
+                    return false;
+            }
+        }
+
+        return stack.Length == 0;
+    }
+
     private static bool TryEvaluateSource(
         UnitSourceId sourceId,
         UnitSourceTarget sourceTarget,

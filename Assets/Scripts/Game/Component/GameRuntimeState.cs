@@ -269,6 +269,96 @@ namespace CrystalMagic.Core
             }
 
             map.Set(layout, sceneData, floor, seed, attemptCount);
+            SetDungeonNavigationMap(entityManager, dungeonRunEntity, layout, sceneData);
+        }
+
+        private static void SetDungeonNavigationMap(
+            EntityManager entityManager,
+            Entity mapEntity,
+            OpenFieldDungeonLayout layout,
+            RuntimeDungeonSceneData sceneData)
+        {
+            if (layout == null || layout.Width <= 0 || layout.Height <= 0)
+            {
+                if (entityManager.HasComponent<DungeonNavigationMapComponent>(mapEntity))
+                    entityManager.RemoveComponent<DungeonNavigationMapComponent>(mapEntity);
+                if (entityManager.HasBuffer<DungeonNavigationCollisionWord>(mapEntity))
+                    entityManager.RemoveComponent<DungeonNavigationCollisionWord>(mapEntity);
+                return;
+            }
+
+            int version = 1;
+            if (entityManager.HasComponent<DungeonNavigationMapComponent>(mapEntity))
+            {
+                int oldVersion = entityManager.GetComponentData<DungeonNavigationMapComponent>(mapEntity).Version;
+                version = oldVersion == int.MaxValue ? 1 : oldVersion + 1;
+            }
+
+            float cellSize = math.max(0.01f, sceneData?.CellWorldSize ?? 1f);
+            UnityEngine.Vector2 sourceOrigin = sceneData?.TerrainVisual?.WorldOrigin ??
+                                               new UnityEngine.Vector2(
+                                                   -layout.Width * cellSize * 0.5f,
+                                                   -layout.Height * cellSize * 0.5f);
+            DungeonNavigationMapComponent navigationMap = new()
+            {
+                Width = layout.Width,
+                Height = layout.Height,
+                CellSize = cellSize,
+                WorldOrigin = new float2(sourceOrigin.x, sourceOrigin.y),
+                Version = version,
+            };
+
+            if (entityManager.HasComponent<DungeonNavigationMapComponent>(mapEntity))
+                entityManager.SetComponentData(mapEntity, navigationMap);
+            else
+                entityManager.AddComponentData(mapEntity, navigationMap);
+
+            DynamicBuffer<DungeonNavigationCollisionWord> collisionWords =
+                entityManager.HasBuffer<DungeonNavigationCollisionWord>(mapEntity)
+                    ? entityManager.GetBuffer<DungeonNavigationCollisionWord>(mapEntity)
+                    : entityManager.AddBuffer<DungeonNavigationCollisionWord>(mapEntity);
+            collisionWords.ResizeUninitialized(
+                DungeonNavigationMapUtility.GetRequiredWordCount(navigationMap.CellCount));
+            for (int index = 0; index < collisionWords.Length; index++)
+                collisionWords[index] = default;
+
+            for (int y = 0; y < layout.Height; y++)
+            {
+                for (int x = 0; x < layout.Width; x++)
+                {
+                    if (!layout.IsWalkable(x, y))
+                        SetNavigationCollision(collisionWords, y * layout.Width + x);
+                }
+            }
+
+            if (sceneData?.ObstacleSpawns == null)
+                return;
+
+            for (int obstacleIndex = 0; obstacleIndex < sceneData.ObstacleSpawns.Count; obstacleIndex++)
+            {
+                List<UnityEngine.Vector2Int> cells = sceneData.ObstacleSpawns[obstacleIndex]?.CollisionCells;
+                if (cells == null)
+                    continue;
+
+                for (int cellIndex = 0; cellIndex < cells.Count; cellIndex++)
+                {
+                    UnityEngine.Vector2Int cell = cells[cellIndex];
+                    if (cell.x < 0 || cell.x >= layout.Width || cell.y < 0 || cell.y >= layout.Height)
+                        continue;
+
+                    SetNavigationCollision(collisionWords, cell.y * layout.Width + cell.x);
+                }
+            }
+        }
+
+        private static void SetNavigationCollision(
+            DynamicBuffer<DungeonNavigationCollisionWord> collisionWords,
+            int cellIndex)
+        {
+            int wordIndex = cellIndex >> 6;
+            DungeonNavigationCollisionWord word = collisionWords[wordIndex];
+            word.Value |= 1UL << (cellIndex & 63);
+            collisionWords[wordIndex] = word;
         }
 
         public static void RestoreDungeonRuntimeState(UnitRuntimeData playerState)

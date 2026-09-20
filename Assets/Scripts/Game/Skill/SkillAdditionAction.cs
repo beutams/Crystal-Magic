@@ -27,17 +27,23 @@ namespace CrystalMagic.Game.Skill
 
     public sealed class SkillAdditionActionContext
     {
-        public SkillAdditionActionContext(StateScriptRuntime runtime, string eventName, int additionId)
+        public SkillAdditionActionContext(
+            EntityManager entityManager,
+            Entity entity,
+            UnitSourceResolver sources,
+            string eventName,
+            int additionId)
         {
-            Runtime = runtime ?? throw new ArgumentNullException(nameof(runtime));
+            EntityManager = entityManager;
+            Entity = entity;
+            Sources = sources ?? throw new ArgumentNullException(nameof(sources));
             EventName = eventName ?? string.Empty;
             AdditionId = additionId;
         }
 
-        public StateScriptRuntime Runtime { get; }
-        public EntityManager EntityManager => Runtime.EntityManager;
-        public Entity Entity => Runtime.Entity;
-        public UnitSourceResolver Sources => Runtime.Sources;
+        public EntityManager EntityManager { get; }
+        public Entity Entity { get; }
+        public UnitSourceResolver Sources { get; }
         public string EventName { get; }
         public int AdditionId { get; }
     }

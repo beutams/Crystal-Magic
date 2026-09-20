@@ -35,10 +35,30 @@ namespace CrystalMagic.Game.Skill.Effects
                 : UnitVariableSource.GetOther(entityManager, evaluatedEntity);
             sources.Update(evaluatedEntity, other, in dispatcher);
 
-            Comparator comparator = GetComparatorFactory().BuildComparator(
+            Comparator comparator = BuildComparator(conditions, context);
+            return comparator.GetResult(sources);
+        }
+
+        public static Comparator BuildComparator(
+            IReadOnlyList<ConditionConfig> conditions,
+            SkillContent context)
+        {
+            if (conditions == null || conditions.Count == 0)
+            {
+                ExpressionProgram emptyProgram = default;
+                return new Comparator(in emptyProgram);
+            }
+
+            if (context == null)
+            {
+                ExpressionProgram invalidProgram = default;
+                return new Comparator(in invalidProgram, false);
+            }
+
+            UnitSourceResolver sources = new(Entity.Null);
+            return GetComparatorFactory().BuildComparator(
                 conditions,
                 new EffectConditionValueResolver(sources, context));
-            return comparator.GetResult(sources);
         }
 
         private static ComparatorFactory GetComparatorFactory()

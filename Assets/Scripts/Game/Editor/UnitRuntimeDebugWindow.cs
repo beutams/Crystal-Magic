@@ -324,8 +324,8 @@ namespace CrystalMagic.Editor.Unit
 
             if (entityManager.HasComponent<UnitStateScriptComponent>(entity))
             {
-                UnitStateScriptComponent stateScript = entityManager.GetComponentObject<UnitStateScriptComponent>(entity);
-                if (stateScript?.UnitDataId >= 0)
+                UnitStateScriptComponent stateScript = entityManager.GetComponentData<UnitStateScriptComponent>(entity);
+                if (stateScript.UnitDataId >= 0)
                     return stateScript.UnitDataId;
             }
 

@@ -307,6 +307,7 @@ Game\
       Skill.cs TRUE DIRTY
     SkillAnalysisUtility.cs TRUE DIRTY
     SkillAdditionAction.cs TRUE DIRTY
+    SkillAdditionEventDispatcher.cs TRUE DIRTY
     SkillCastTasks.cs TRUE DIRTY
     SkillChainResolver.cs TRUE DIRTY
     SkillContent.cs TRUE DIRTY
@@ -354,28 +355,14 @@ Game\
         缂備礁瀚幃搴ㄦ嚍閸屾粌浠?闁哄鈧弶顐介柤鍝勫€婚崑?
         濞ｅ浂鍣ｉ妶浼存嚍閸屾粌浠?
     StateScript\
-      Nodes\
-        CompareStateScriptNode.cs TRUE DIRTY
-        StateScriptActionNode.cs TRUE
-        StateScriptBoolNode.cs TRUE
-        StateScriptEntryNode.cs TRUE
-        StateScriptNode.cs TRUE DIRTY
-        StateScriptStateNode.cs TRUE DIRTY
-        SetValueStateScriptNode.cs TRUE DIRTY
-        PublishGameEventStateScriptNode.cs FALSE
-        RequestSkillActionNode.cs TRUE DIRTY
-        TimerStateScriptNode.cs TRUE DIRTY
-        KeepStateScriptNode.cs TRUE DIRTY
-        MonitorStateScriptNode.cs TRUE DIRTY
-        NumberMonitorStateScriptNode.cs TRUE DIRTY
-        SpawnUnitActionNode.cs TRUE DIRTY
+      StateScriptCompiler.cs TRUE DIRTY
       StateScriptInitSystem.cs TRUE DIRTY
-      StateScriptNodeFactory.cs TRUE
-      StateScriptPort.cs TRUE
+      StateScriptManagedCommandSystem.cs TRUE DIRTY
+      StateScriptNodeFactory.cs TRUE DIRTY
       StateScriptRegistry.cs TRUE DIRTY
       StateScriptRuntime.cs TRUE DIRTY
       StateScriptSystem.cs TRUE DIRTY
-      UnitStateScriptAuthoring.cs TRUE
+      UnitStateScriptAuthoring.cs TRUE DIRTY
     Component\
       Tag\
         NPCTagAuthoring.cs TRUE
@@ -391,6 +378,7 @@ Game\
       DungeonInterestPointAuthoring.cs TRUE
       DungeonInterestPointComponent.cs TRUE DIRTY
       DungeonMonsterSpawnComponent.cs TRUE DIRTY
+      DungeonRuntimeMapComponent.cs TRUE DIRTY
       DungeonTreasureAuthoring.cs TRUE DIRTY
         閻庤绻勯鍫ュ冀閸ヮ亶鍞?
       DungeonTreasureCandidateItemElement.cs TRUE DIRTY
@@ -449,7 +437,7 @@ Game\
       UnitAvoidanceAuthoring.cs TRUE
       UnitMoveAuthoring.cs TRUE DIRTY
         缂佸顕ф慨鈺呭极閻楀牆绁?
-      UnitNavigationAuthoring.cs TRUE
+      UnitNavigationAuthoring.cs TRUE DIRTY
       UnitPerceptionAuthoring.cs TRUE DIRTY
         缂佷究鍨洪弲顐ょ磼閸曨亝顐介柨娑樼焸閳ь剙鍊块崢顦沶it缂傚倹鐗炵欢顐﹀闯?
         闁告娲戠紞鍛村箥閳ь剟寮垫径瀣楅柤瀹犲Г閺嗙喖骞?
@@ -484,7 +472,7 @@ Game\
       StateScriptEditorWindow.cs TRUE DIRTY
       StateScriptGraphView.cs TRUE DIRTY
       StateScriptNodeInspector.cs TRUE DIRTY
-      StateScriptRegistryGenerator.cs TRUE
+      StateScriptRegistryGenerator.cs TRUE DIRTY
       StateScriptValueExpressionDrawer.cs TRUE DIRTY
       StateScriptAccessorDropdown.cs TRUE
       BehaviorTreeRegistryGenerator.cs TRUE DIRTY
@@ -538,11 +526,13 @@ Game\
         闁活潿鍔嶉崺娑欐綇閹惧啿寮抽悗娑櫭埀?
         濞达綀娉曢弫銈夋焼閹惧啿寰?
       UnitPhysicsRotationInitializationSystem.cs TRUE DIRTY
+      PlayerPropCooldownSystem.cs TRUE DIRTY
       PlayerSkillAnalysisSystem.cs TRUE DIRTY
         闁汇垻鍠愰崹姘跺礂閾氬倻绉奸柟鍨涘亾闁煎啿鈧噥鍤炴慨?
       PlayerSkillDefinitionRegistryInitializationSystem.cs TRUE
       SkillReleaseSystem.cs TRUE DIRTY
       SkillProjectileSpawnSystem.cs TRUE DIRTY
+      SkillProjectileCleanupSystem.cs TRUE
       SkillProjectileSystem.cs TRUE DIRTY
       SpriteEffectAnimationSystem.cs TRUE DIRTY
       UnitBuffSystem.cs TRUE DIRTY
@@ -574,6 +564,7 @@ Game\
       UnitSourceDispatcherSystem.cs TRUE DIRTY
         闁告帒妫涚悮?
         闁归攱鍎宠ぐ鍥箳婢跺孩鍎伴柣?
+      VfxLifetimeSystem.cs TRUE DIRTY
     Debug\
       UnitDebugInspectorUtility.cs TRUE DIRTY
     Utility\
@@ -590,7 +581,7 @@ Game\
       UnitAuthoringUtility.cs FALSE
       UnitBuffHookUtility.cs FALSE
       UnitBuffUtility.cs TRUE DIRTY
-      UnitControlUtility.cs FALSE
+      UnitControlUtility.cs TRUE
       UnitFacingUtility.cs FALSE
       WorldDropSpawnUtility.cs FALSE
       UnitFactionUtility.cs TRUE

@@ -34,10 +34,24 @@ public partial class WorldStateSystem : SystemBase
         uint currentFrame = FrameManagerUtility.TryGet(EntityManager, out FrameManager frameManager)
             ? frameManager.currentFrame
             : 0u;
-        if (worldState.CurrentFrame == currentFrame)
+        GameGateMask gateMask = GameGateMask.None;
+        if (GameWorldContextUtility.TryGet(EntityManager, out GameWorldContextComponent context) &&
+            (context.Role == GameWorldRole.Standalone || context.Role == GameWorldRole.Client))
+        {
+            GameGateComponent gameGate = GameGateComponent.Instance;
+            if (gameGate.IsSimulationLocked)
+                gateMask |= GameGateMask.Simulation;
+            if (gameGate.IsPlayerInputLocked)
+                gateMask |= GameGateMask.PlayerInput;
+            if (gameGate.IsUIInputLocked)
+                gateMask |= GameGateMask.UIInput;
+        }
+
+        if (worldState.CurrentFrame == currentFrame && worldState.GateMask == gateMask)
             return;
 
         worldState.CurrentFrame = currentFrame;
+        worldState.GateMask = gateMask;
         EntityManager.SetComponentData(_worldEntity, worldState);
     }
 }

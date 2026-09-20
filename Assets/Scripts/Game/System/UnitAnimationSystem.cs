@@ -169,8 +169,8 @@ partial class UnitAnimationSystem : SystemBase
         if (!EntityManager.HasComponent<UnitStateScriptComponent>(entity))
             return null;
 
-        UnitStateScriptComponent stateScript = EntityManager.GetComponentObject<UnitStateScriptComponent>(entity);
-        if (stateScript == null || stateScript.UnitDataId < 0)
+        UnitStateScriptComponent stateScript = EntityManager.GetComponentData<UnitStateScriptComponent>(entity);
+        if (stateScript.UnitDataId < 0)
             return null;
 
         foreach (UnitAnimationProfileData profile in profileTable.GetAll())

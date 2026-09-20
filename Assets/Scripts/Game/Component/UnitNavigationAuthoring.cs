@@ -80,7 +80,7 @@ public struct UnitNavigationComponent : IComponentData
 [InternalBufferCapacity(16)]
 public struct UnitNavigationPathElement : IBufferElementData
 {
-    public int2 Cell;
+    public int CellIndex;
 }
 
 public static class UnitNavigationUtility

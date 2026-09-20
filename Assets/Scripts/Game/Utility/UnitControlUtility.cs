@@ -79,11 +79,8 @@ public static class UnitControlUtility
         entityManager.SetComponentData(entity, runtime);
     }
 
-    public static void TickAndRefresh(EntityManager entityManager, Entity entity, float deltaTime)
+    public static void TickAndRefresh(ref UnitControlRuntimeComponent runtime, float deltaTime)
     {
-        if (!TryGetRuntime(entityManager, entity, out UnitControlRuntimeComponent runtime))
-            return;
-
         float safeDeltaTime = math.max(0f, deltaTime);
         bool removed = false;
         for (int i = runtime.Entries.Length - 1; i >= 0; i--)
@@ -104,7 +101,6 @@ public static class UnitControlUtility
         RefreshResolvedState(ref runtime);
         if (removed)
             runtime.NetworkDirty = 1;
-        entityManager.SetComponentData(entity, runtime);
     }
 
     public static bool HasActiveControl(EntityManager entityManager, Entity entity)

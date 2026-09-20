@@ -1,327 +1,257 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using CrystalMagic.Game.Data;
+using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 
-public sealed class StateScriptRuntime
+public enum StateScriptInitializationError : byte
 {
-    private const int MaxPulseDepth = 128;
-    private static readonly ComparatorFactory s_comparatorFactory = CreateComparatorFactory();
+    None,
+    MissingUnitDataId,
+    DefinitionNotFound,
+    InvalidDefinition,
+}
 
-    private readonly Dictionary<string, StateScriptNode> _nodes = new(StringComparer.Ordinal);
-    private readonly List<StateScriptNode> _nodesInTraversalOrder = new();
-    private readonly List<StateScriptStateNode> _statesInTickOrder = new();
-    private Comparator _executionCondition;
-    private bool _hasExecutionCondition;
-    private StateScriptEntryNode _entry;
-    private int _pulseDepth;
-    private bool _isExecutionActive;
+public enum StateScriptStateStatus : byte
+{
+    Stop,
+    Pending,
+    Running,
+}
 
-    internal StateScriptRuntime(
-        StateScriptInstanceData data,
-        Entity entity,
-        EntityManager entityManager,
-        UnitSourceResolver sources)
+public enum StateScriptNodeRuntimeType : byte
+{
+    Entry,
+    Compare,
+    SetValue,
+    RequestSkill,
+    PublishGameEvent,
+    RequestSkillWithAddition,
+    RequestInteraction,
+    SpawnUnit,
+    Timer,
+    Keep,
+    Monitor,
+    NumberMonitor,
+    Addition,
+}
+
+public enum StateScriptManagedCommandType : byte
+{
+    RequestSkill,
+    RequestSkillWithAddition,
+    PublishGameEvent,
+    RequestInteraction,
+    SpawnUnit,
+    StartAddition,
+    StopAddition,
+}
+
+public enum StateScriptExternalResultStatus : byte
+{
+    Completed,
+}
+
+public static class StateScriptPortId
+{
+    public const byte In = 0;
+    public const byte Start = 0;
+    public const byte Abort = 1;
+    public const byte Keep = 2;
+
+    public const byte Out = 0;
+    public const byte True = 0;
+    public const byte False = 1;
+    public const byte OnStart = 0;
+    public const byte OnTick = 1;
+    public const byte OnComplete = 2;
+    public const byte OnAbort = 3;
+    public const byte OnStop = 4;
+    public const byte OnTimeStart = 5;
+    public const byte OnTimeTick = 6;
+    public const byte OnTimeComplete = 7;
+    public const byte OnTimeStop = 8;
+    public const byte MonitorTrue = 5;
+    public const byte MonitorFalse = 6;
+    public const byte OnChangeTrue = 7;
+    public const byte OnChangeFalse = 8;
+    public const byte OnValueChange = 5;
+}
+
+public struct StateScriptNodeDefinition
+{
+    public StateScriptNodeRuntimeType Type;
+    public int ExpressionStart;
+    public byte ExpressionCount;
+    public int OutputRouteStart;
+    public ushort OutputRouteCount;
+    public int StringStart;
+    public ushort StringCount;
+    public int TickOrder;
+    public UnitSourceId SetSourceId;
+    public UnitSourceTarget SetSourceTarget;
+    public FixedString128Bytes Key;
+    public FixedString128Bytes Text;
+    public UnitInteractionData InteractionData;
+    public float4 FloatParameters0;
+    public float4 FloatParameters1;
+    public int4 IntParameters;
+    public FixedString128Bytes Guid;
+}
+
+public struct StateScriptOutputRoute
+{
+    public byte OutputPortId;
+    public int TargetStart;
+    public ushort TargetCount;
+}
+
+public struct StateScriptPulseTarget
+{
+    public int NodeIndex;
+    public byte InputPortId;
+}
+
+public struct StateScriptGraphDefinitionBlob
+{
+    public int EntryNodeIndex;
+    public int ExecutionConditionExpressionIndex;
+    public BlobArray<StateScriptNodeDefinition> Nodes;
+    public BlobArray<StateScriptOutputRoute> OutputRoutes;
+    public BlobArray<StateScriptPulseTarget> PulseTargets;
+    public BlobArray<int> StateNodeIndices;
+    public BlobArray<BehaviorExpressionBlob> Expressions;
+    public BlobArray<FixedString128Bytes> Strings;
+    public FixedString128Bytes Guid;
+    public FixedString128Bytes Name;
+}
+
+public struct StateScriptUnitDefinitionBlob
+{
+    public int UnitDataId;
+    public BlobArray<StateScriptGraphDefinitionBlob> Graphs;
+}
+
+public struct StateScriptRuntimeRegistryBlob
+{
+    public BlobArray<StateScriptUnitDefinitionBlob> Units;
+}
+
+public struct StateScriptRuntimeRegistryComponent : IComponentData
+{
+    public BlobAssetReference<StateScriptRuntimeRegistryBlob> Value;
+}
+
+[InternalBufferCapacity(0)]
+public struct StateScriptGraphStateElement : IBufferElementData
+{
+    public int NodeStateStart;
+    public byte IsActive;
+}
+
+[InternalBufferCapacity(0)]
+public struct StateScriptNodeStateElement : IBufferElementData
+{
+    public StateScriptStateStatus Status;
+    public float Time;
+    public float Auxiliary;
+    public uint PendingTick;
+    public uint LastKeepTick;
+    public uint TimingStartTick;
+    public uint LastPulseTick;
+    public byte Flags;
+}
+
+[InternalBufferCapacity(0)]
+public struct StateScriptSourceCommandElement : IBufferElementData
+{
+    public UnitSourceId SourceId;
+    public Entity TargetEntity;
+    public int ArgumentStart;
+    public ushort ArgumentCount;
+    public FixedString128Bytes Key;
+    public byte HasKey;
+}
+
+[InternalBufferCapacity(0)]
+public struct StateScriptSourceCommandArgumentElement : IBufferElementData
+{
+    public UnitSourceValue Value;
+}
+
+[InternalBufferCapacity(0)]
+public struct StateScriptManagedCommandElement : IBufferElementData
+{
+    public StateScriptManagedCommandType Type;
+    public int GraphIndex;
+    public int NodeIndex;
+    public int IntValue;
+    public float3 Position;
+    public Entity TargetEntity;
+    public UnitSourceValue Value;
+}
+
+[InternalBufferCapacity(0)]
+public struct StateScriptExternalResultElement : IBufferElementData
+{
+    public int GraphIndex;
+    public int NodeIndex;
+    public StateScriptExternalResultStatus Status;
+}
+
+internal struct StateScriptPulse
+{
+    public int NodeIndex;
+    public byte InputPortId;
+}
+
+internal readonly struct StateScriptActionKey : System.IEquatable<StateScriptActionKey>
+{
+    public StateScriptActionKey(Entity entity, int graphIndex, int nodeIndex)
     {
-        Data = data ?? throw new ArgumentNullException(nameof(data));
         Entity = entity;
-        EntityManager = entityManager;
-        Sources = sources ?? throw new ArgumentNullException(nameof(sources));
+        GraphIndex = graphIndex;
+        NodeIndex = nodeIndex;
     }
 
-    public StateScriptInstanceData Data { get; }
     public Entity Entity { get; }
-    public EntityManager EntityManager { get; }
-    public UnitSourceResolver Sources { get; }
-    public float DeltaTime { get; private set; }
-    public long TickVersion { get; private set; }
-    public bool IsStarted { get; private set; }
-    public bool IsBound { get; private set; }
-    public string BindingError { get; private set; } = string.Empty;
-    public IReadOnlyList<StateScriptNode> NodesInTraversalOrder => _nodesInTraversalOrder;
-    public IReadOnlyList<StateScriptStateNode> StatesInTickOrder => _statesInTickOrder;
+    public int GraphIndex { get; }
+    public int NodeIndex { get; }
 
-    public bool TryGetNode(string guid, out StateScriptNode node)
+    public bool Equals(StateScriptActionKey other)
     {
-        return _nodes.TryGetValue(guid ?? string.Empty, out node);
+        return Entity.Equals(other.Entity) && GraphIndex == other.GraphIndex && NodeIndex == other.NodeIndex;
     }
 
-    public void Start()
+    public override bool Equals(object obj)
     {
-        if (!IsBound || IsStarted)
-            return;
-
-        IsStarted = true;
-        BeginExecutionIfNeeded();
+        return obj is StateScriptActionKey other && Equals(other);
     }
 
-    public void Tick(float deltaTime)
+    public override int GetHashCode()
     {
-        if (!IsBound)
-            return;
-
-        if (!IsExecutionEnabled())
+        unchecked
         {
-            if (_isExecutionActive)
-            {
-                StopAllWithoutOutput();
-                _isExecutionActive = false;
-            }
-
-            return;
-        }
-
-        BeginExecutionIfNeeded();
-
-        DeltaTime = deltaTime;
-        TickVersion++;
-
-        for (int i = 0; i < _statesInTickOrder.Count; i++)
-            _statesInTickOrder[i].TryEnterRunning(TickVersion);
-
-        for (int i = 0; i < _statesInTickOrder.Count; i++)
-            _statesInTickOrder[i].TryUpdate();
-    }
-
-    public void StopAllWithoutOutput()
-    {
-        for (int i = 0; i < _statesInTickOrder.Count; i++)
-            _statesInTickOrder[i].StopWithoutOutput();
-    }
-
-    internal bool TryEnterPulse()
-    {
-        if (_pulseDepth >= MaxPulseDepth)
-        {
-            BindingError = $"StateScript pulse depth exceeded {MaxPulseDepth} in graph: {Data.Name}";
-            return false;
-        }
-
-        _pulseDepth++;
-        return true;
-    }
-
-    internal void ExitPulse()
-    {
-        if (_pulseDepth > 0)
-            _pulseDepth--;
-    }
-
-    internal void AddNode(StateScriptNode node)
-    {
-        _nodes.Add(node.Data.Guid, node);
-    }
-
-    internal void SetEntry(StateScriptEntryNode entry)
-    {
-        _entry = entry;
-    }
-
-    internal void CompleteBuild()
-    {
-        if (_entry == null)
-        {
-            BindingError = "StateScript graph has no Entry node.";
-            return;
-        }
-
-        BuildTraversalOrder();
-        if (_nodesInTraversalOrder.Count != _nodes.Count)
-        {
-            BindingError = "StateScript graph contains nodes unreachable from Entry.";
-            return;
-        }
-
-        foreach (StateScriptStateNode state in _nodesInTraversalOrder
-                     .OfType<StateScriptStateNode>()
-                     .OrderBy(state => ((StateStateScriptNodeData)state.Data).TickOrder))
-        {
-            _statesInTickOrder.Add(state);
-        }
-
-        IsBound = true;
-        BindingError = string.Empty;
-    }
-
-    internal bool TryBindExecutionConditions(out string error)
-    {
-        Data.ExecutionConditions ??= new List<ConditionConfig>();
-        if (Data.ExecutionConditions.Count == 0)
-        {
-            _executionCondition = default;
-            _hasExecutionCondition = false;
-            error = string.Empty;
-            return true;
-        }
-
-        for (int i = 0; i < Data.ExecutionConditions.Count; i++)
-        {
-            if (Data.ExecutionConditions[i] != null)
-                Data.ExecutionConditions[i].ConditionType = ConditionType.Necessary;
-        }
-
-        _executionCondition = s_comparatorFactory.BuildComparator(Data.ExecutionConditions, Sources);
-        if (!_executionCondition.IsValid)
-        {
-            error = "StateScript graph execution condition is invalid.";
-            return false;
-        }
-
-        _hasExecutionCondition = true;
-        error = string.Empty;
-        return true;
-    }
-
-    internal void FailBuild(string error)
-    {
-        IsBound = false;
-        BindingError = error ?? string.Empty;
-    }
-
-    private bool IsExecutionEnabled()
-    {
-        return !_hasExecutionCondition || _executionCondition.GetResult(Sources);
-    }
-
-    private void BeginExecutionIfNeeded()
-    {
-        if (_isExecutionActive || _entry == null || !IsExecutionEnabled())
-            return;
-
-        _isExecutionActive = true;
-        _entry.Start();
-    }
-
-    private static ComparatorFactory CreateComparatorFactory()
-    {
-        ComparatorFactory factory = new();
-        ComparatorRegistry.RegisterAll(factory);
-        return factory;
-    }
-
-    private void BuildTraversalOrder()
-    {
-        Queue<StateScriptNode> pending = new();
-        HashSet<StateScriptNode> visited = new();
-        pending.Enqueue(_entry);
-        visited.Add(_entry);
-
-        while (pending.Count > 0)
-        {
-            StateScriptNode current = pending.Dequeue();
-            _nodesInTraversalOrder.Add(current);
-
-            for (int outputIndex = 0; outputIndex < current.Outputs.Count; outputIndex++)
-            {
-                StateScriptOutputPort output = current.Outputs[outputIndex];
-                for (int targetIndex = 0; targetIndex < output.Targets.Count; targetIndex++)
-                {
-                    StateScriptNode next = output.Targets[targetIndex].Owner;
-                    if (visited.Add(next))
-                        pending.Enqueue(next);
-                }
-            }
+            int hash = Entity.GetHashCode();
+            hash = hash * 397 ^ GraphIndex;
+            return hash * 397 ^ NodeIndex;
         }
     }
 }
-public static class StateScriptRuntimeBuilder
+
+internal static class StateScriptUnmanagedContract
 {
-    private static readonly StateScriptNodeRuntimeFactory s_factory = CreateFactory();
-
-    public static StateScriptRuntime Build(
-        StateScriptInstanceData data,
-        Entity entity,
-        EntityManager entityManager,
-        UnitSourceResolver sources,
-        out string error)
+    private static void Validate()
     {
-        error = string.Empty;
-        if (data == null)
-        {
-            error = "StateScript graph data is missing.";
-            return null;
-        }
-
-        data.EnsureValid();
-        if (data.Nodes.Count == 0)
-        {
-            error = "StateScript graph has no nodes.";
-            return null;
-        }
-
-        StateScriptRuntime runtime = new(data, entity, entityManager, sources);
-        if (!runtime.TryBindExecutionConditions(out error))
-            return null;
-
-        for (int i = 0; i < data.Nodes.Count; i++)
-        {
-            StateScriptNodeData nodeData = data.Nodes[i];
-            if (nodeData == null || string.IsNullOrWhiteSpace(nodeData.Guid))
-            {
-                error = "StateScript graph contains a node without Guid.";
-                return null;
-            }
-
-            if (runtime.TryGetNode(nodeData.Guid, out _))
-            {
-                error = $"StateScript graph contains duplicate node Guid: {nodeData.Guid}";
-                return null;
-            }
-
-            StateScriptNode node = s_factory.CreateNode(nodeData, runtime);
-            if (node == null)
-            {
-                error = $"StateScript runtime is not registered for: {nodeData.Type}";
-                return null;
-            }
-
-            if (!node.TryBind(out error))
-                return null;
-
-            runtime.AddNode(node);
-            if (string.Equals(nodeData.Guid, data.EntryNodeGuid, StringComparison.Ordinal) &&
-                node is StateScriptEntryNode entry)
-            {
-                runtime.SetEntry(entry);
-            }
-        }
-
-        for (int i = 0; i < data.Edges.Count; i++)
-        {
-            StateScriptEdgeData edge = data.Edges[i];
-            if (edge == null ||
-                !runtime.TryGetNode(edge.OutputNodeGuid, out StateScriptNode outputNode) ||
-                !runtime.TryGetNode(edge.InputNodeGuid, out StateScriptNode inputNode) ||
-                !outputNode.TryGetOutput(edge.OutputPortName, out StateScriptOutputPort output) ||
-                !inputNode.TryGetInput(edge.InputPortName, out StateScriptInputPort input))
-            {
-                error = "StateScript graph contains an invalid edge.";
-                return null;
-            }
-
-            output.Connect(input);
-        }
-
-        runtime.CompleteBuild();
-        if (!runtime.IsBound)
-        {
-            error = runtime.BindingError;
-            return null;
-        }
-
-        return runtime;
+        RequireUnmanaged<StateScriptNodeDefinition>();
+        RequireUnmanaged<StateScriptGraphStateElement>();
+        RequireUnmanaged<StateScriptNodeStateElement>();
+        RequireUnmanaged<StateScriptSourceCommandElement>();
+        RequireUnmanaged<StateScriptSourceCommandArgumentElement>();
+        RequireUnmanaged<StateScriptManagedCommandElement>();
+        RequireUnmanaged<StateScriptExternalResultElement>();
+        RequireUnmanaged<UnitStateScriptComponent>();
     }
 
-    public static StateScriptNode CreatePrototype(StateScriptNodeData data)
+    private static void RequireUnmanaged<T>() where T : unmanaged
     {
-        return data == null ? null : s_factory.CreateNode(data, null);
-    }
-
-    private static StateScriptNodeRuntimeFactory CreateFactory()
-    {
-        StateScriptNodeRuntimeFactory factory = new();
-        StateScriptRegistry.RegisterAll(factory);
-        return factory;
     }
 }

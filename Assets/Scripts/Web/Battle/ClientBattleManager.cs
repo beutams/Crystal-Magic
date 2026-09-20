@@ -555,6 +555,9 @@ namespace Server
 
                 if (entityInfo.ownerAccountId == localAccountId)
                 {
+                    if (!entityManager.HasComponent<PlayerInputComponent>(entity))
+                        entityManager.AddComponentData(entity, default(PlayerInputComponent));
+
                     if (entityManager.HasComponent<NetworkPlayerComponent>(entity))
                     {
                         entityManager.SetComponentData(entity, new NetworkPlayerComponent { id = entityInfo.unitId });

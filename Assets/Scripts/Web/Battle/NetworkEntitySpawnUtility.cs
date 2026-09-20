@@ -13,7 +13,8 @@ namespace Server
 {
     /// <summary>
     /// 所有同步实体唯一的生成入口。
-    /// Battle Server World 存在生成队列时会自动记录实体信息；单机与客户端只创建实体。
+    /// Server/Client World 会添加网络身份，Battle Server World 存在生成队列时还会自动记录实体信息；
+    /// Standalone World 只复用实体生成和初始化逻辑，不添加任何网络组件。
     /// </summary>
     public static class NetworkEntitySpawnUtility
     {
@@ -60,14 +61,27 @@ namespace Server
 
             SetOrAddLocalTransform(entityManager, entity, new Vector3(entityInfo.x, entityInfo.y, entityInfo.z));
             ApplySpatialData(entityManager, entity, entityInfo);
-            SetOrAddComponent(entityManager, entity, new NetworkIdentityComponent { id = entityInfo.unitId });
-            SetOrAddSpawnInfo(entityManager, entity, entityInfo);
+            WorldFlags worldFlags = entityManager.WorldUnmanaged.Flags;
+            bool isNetworkWorld =
+                (worldFlags & WorldFlags.GameServer) == WorldFlags.GameServer ||
+                (worldFlags & WorldFlags.GameClient) == WorldFlags.GameClient;
+            if (isNetworkWorld)
+            {
+                SetOrAddComponent(entityManager, entity, new NetworkIdentityComponent { id = entityInfo.unitId });
+                SetOrAddSpawnInfo(entityManager, entity, entityInfo);
+            }
             if (!entityManager.HasComponent<DungeonRuntimeOwnedEntity>(entity))
             {
                 entityManager.AddComponent<DungeonRuntimeOwnedEntity>(entity);
             }
             ApplyInitialState(entityManager, entity, entityInfo);
-            EnqueueSpawnInfo(entityManager, entityInfo);
+            if ((worldFlags & WorldFlags.GameClient) == WorldFlags.GameClient &&
+                entityManager.HasComponent<PlayerInputComponent>(entity))
+            {
+                entityManager.RemoveComponent<PlayerInputComponent>(entity);
+            }
+            if (isNetworkWorld)
+                EnqueueSpawnInfo(entityManager, entityInfo);
             return true;
         }
 

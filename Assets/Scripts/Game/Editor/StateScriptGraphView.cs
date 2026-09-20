@@ -55,15 +55,15 @@ namespace CrystalMagic.Editor.Unit
             for (int i = 0; i < graph.Nodes.Count; i++)
             {
                 StateScriptNodeData nodeData = graph.Nodes[i];
-                StateScriptNode prototype = StateScriptRuntimeBuilder.CreatePrototype(nodeData);
-                if (nodeData == null || prototype == null)
+                StateScriptNodeSchema schema = StateScriptNodeSchemaUtility.Create(nodeData);
+                if (nodeData == null || schema == null)
                     continue;
 
                 Rect position = new(nodeData.EditorPosition, Vector2.zero);
                 if (position.position == Vector2.zero && i > 0)
                     position.position = new Vector2(260f + i * 40f, 150f + i * 30f);
 
-                AddNodeView(nodeData, prototype, position);
+                AddNodeView(nodeData, schema, position);
             }
 
             var savedCallback = graphViewChanged;
@@ -107,11 +107,11 @@ namespace CrystalMagic.Editor.Unit
             if (nodeData == null || string.IsNullOrWhiteSpace(nodeData.Guid) || _nodeViews.ContainsKey(nodeData.Guid))
                 return false;
 
-            StateScriptNode prototype = StateScriptRuntimeBuilder.CreatePrototype(nodeData);
-            if (prototype == null)
+            StateScriptNodeSchema schema = StateScriptNodeSchemaUtility.Create(nodeData);
+            if (schema == null)
                 return false;
 
-            StateScriptNodeView view = AddNodeView(nodeData, prototype, new Rect(nodeData.EditorPosition, Vector2.zero));
+            StateScriptNodeView view = AddNodeView(nodeData, schema, new Rect(nodeData.EditorPosition, Vector2.zero));
             ClearSelection();
             AddToSelection(view);
             return true;
@@ -170,13 +170,13 @@ namespace CrystalMagic.Editor.Unit
             graph.Edges = visibleEdges;
         }
 
-        public void RefreshRuntimeDebug(StateScriptRuntime runtime)
+        public void RefreshRuntimeDebug(StateScriptGraphDebugSnapshot runtime)
         {
             foreach (StateScriptNodeView view in _nodeViews.Values)
             {
-                StateScriptNode node = null;
-                runtime?.TryGetNode(view.NodeData.Guid, out node);
-                view.RefreshRuntimeDebug(node, runtime);
+                StateScriptNodeDebugState node = default;
+                bool hasNode = runtime != null && runtime.TryGetNode(view.NodeData.Guid, out node);
+                view.RefreshRuntimeDebug(hasNode ? node : default);
             }
         }
 
@@ -237,9 +237,9 @@ namespace CrystalMagic.Editor.Unit
             graphViewChanged = savedCallback;
         }
 
-        private StateScriptNodeView AddNodeView(StateScriptNodeData nodeData, StateScriptNode prototype, Rect position)
+        private StateScriptNodeView AddNodeView(StateScriptNodeData nodeData, StateScriptNodeSchema schema, Rect position)
         {
-            StateScriptNodeView view = new(nodeData, prototype);
+            StateScriptNodeView view = new(nodeData, schema);
             view.SetPosition(position);
             AddElement(view);
             _nodeViews.Add(nodeData.Guid, view);
@@ -365,16 +365,16 @@ namespace CrystalMagic.Editor.Unit
         private long _lastObservedPulseTick;
         private double _pulseStartedAt;
 
-        public StateScriptNodeView(StateScriptNodeData nodeData, StateScriptNode prototype)
+        public StateScriptNodeView(StateScriptNodeData nodeData, StateScriptNodeSchema schema)
         {
             NodeData = nodeData;
             title = StateScriptNodeDataRegistry.GetDisplayName(nodeData.Type);
             viewDataKey = nodeData.Guid;
 
-            for (int i = 0; i < prototype.Inputs.Count; i++)
-                AddInputPort(prototype.Inputs[i].Name);
-            for (int i = 0; i < prototype.Outputs.Count; i++)
-                AddOutputPort(prototype.Outputs[i].Name);
+            for (int i = 0; i < schema.Inputs.Count; i++)
+                AddInputPort(schema.Inputs[i]);
+            for (int i = 0; i < schema.Outputs.Count; i++)
+                AddOutputPort(schema.Outputs[i]);
 
             RefreshPorts();
             RefreshExpandedState();
@@ -392,17 +392,17 @@ namespace CrystalMagic.Editor.Unit
             return _outputs.TryGetValue(name ?? string.Empty, out port);
         }
 
-        public void RefreshRuntimeDebug(StateScriptNode node, StateScriptRuntime runtime)
+        public void RefreshRuntimeDebug(StateScriptNodeDebugState node)
         {
             ObservePulse(node);
-            if (node is StateScriptStateNode state)
+            if (node.IsValid && node.IsState)
             {
-                if (state.Status == StateScriptStateStatus.Running)
+                if (node.Status == StateScriptStateStatus.Running)
                 {
                     titleContainer.style.backgroundColor = s_runningColor;
                     return;
                 }
-                else if (state.Status == StateScriptStateStatus.Pending)
+                else if (node.Status == StateScriptStateStatus.Pending)
                 {
                     titleContainer.style.backgroundColor = s_pendingColor;
                     return;
@@ -417,9 +417,9 @@ namespace CrystalMagic.Editor.Unit
             titleContainer.style.backgroundColor = new StyleColor(StyleKeyword.Null);
         }
 
-        private void ObservePulse(StateScriptNode node)
+        private void ObservePulse(StateScriptNodeDebugState node)
         {
-            if (node == null)
+            if (!node.IsValid)
             {
                 _hasObservedPulse = false;
                 _lastObservedPulseTick = -1;
@@ -471,6 +471,48 @@ namespace CrystalMagic.Editor.Unit
             port.portName = name;
             outputContainer.Add(port);
             _outputs.Add(name, port);
+        }
+    }
+
+    public readonly struct StateScriptNodeDebugState
+    {
+        public StateScriptNodeDebugState(bool isState, StateScriptStateStatus status, uint lastPulseTick)
+        {
+            IsValid = true;
+            IsState = isState;
+            Status = status;
+            LastPulseTick = lastPulseTick;
+        }
+
+        public bool IsValid { get; }
+        public bool IsState { get; }
+        public StateScriptStateStatus Status { get; }
+        public long LastPulseTick { get; }
+    }
+
+    public sealed class StateScriptGraphDebugSnapshot
+    {
+        private readonly Dictionary<string, StateScriptNodeDebugState> _nodes;
+
+        public StateScriptGraphDebugSnapshot(
+            Unity.Entities.EntityManager entityManager,
+            Unity.Entities.Entity entity,
+            StateScriptInstanceData data,
+            Dictionary<string, StateScriptNodeDebugState> nodes)
+        {
+            EntityManager = entityManager;
+            Entity = entity;
+            Data = data;
+            _nodes = nodes;
+        }
+
+        public Unity.Entities.EntityManager EntityManager { get; }
+        public Unity.Entities.Entity Entity { get; }
+        public StateScriptInstanceData Data { get; }
+
+        public bool TryGetNode(string guid, out StateScriptNodeDebugState state)
+        {
+            return _nodes.TryGetValue(guid ?? string.Empty, out state);
         }
     }
 }

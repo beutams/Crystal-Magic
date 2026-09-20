@@ -1,40 +1,41 @@
-using System.Collections.Generic;
-using CrystalMagic.Core;
+using Unity.Burst;
 using Unity.Entities;
 
+[BurstCompile]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
-[UpdateAfter(typeof(SpriteEffectAnimationSystem))]
-partial class VfxLifetimeSystem : SystemBase
+partial struct VfxLifetimeSystem : ISystem
 {
-    protected override void OnUpdate()
+    [BurstCompile]
+    public void OnCreate(ref SystemState state)
     {
-        float deltaTime = SystemAPI.Time.DeltaTime;
-        List<Entity> pendingDestroy = null;
+        state.RequireForUpdate<VfxLifetimeComponent>();
+    }
 
-        foreach ((RefRW<VfxLifetimeComponent> lifetime, Entity entity) in
-                 SystemAPI.Query<RefRW<VfxLifetimeComponent>>().WithEntityAccess())
+    [BurstCompile]
+    public void OnUpdate(ref SystemState state)
+    {
+        state.Dependency = new VfxLifetimeJob
         {
-            lifetime.ValueRW.RemainingSeconds -= deltaTime;
-            if (lifetime.ValueRO.RemainingSeconds > 0f)
-                continue;
+            DeltaTime = SystemAPI.Time.DeltaTime,
+        }.ScheduleParallel(state.Dependency);
+    }
+}
 
-            pendingDestroy ??= new List<Entity>();
-            pendingDestroy.Add(entity);
-        }
+[BurstCompile]
+[WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)]
+public partial struct VfxLifetimeJob : IJobEntity
+{
+    public float DeltaTime;
 
-        if (pendingDestroy == null)
+    private void Execute(
+        ref VfxLifetimeComponent lifetime,
+        EnabledRefRW<DestroyEntityFlag> destroyFlag)
+    {
+        if (destroyFlag.ValueRO)
             return;
 
-        for (int index = 0; index < pendingDestroy.Count; index++)
-        {
-            Entity entity = pendingDestroy[index];
-            if (!EntityManager.Exists(entity))
-                continue;
-
-            if (!EntityManager.HasComponent<DestroyEntityFlag>(entity))
-                EntityManager.AddComponent<DestroyEntityFlag>(entity);
-
-            EntityManager.SetComponentEnabled<DestroyEntityFlag>(entity, true);
-        }
+        lifetime.RemainingSeconds -= DeltaTime;
+        if (lifetime.RemainingSeconds <= 0f)
+            destroyFlag.ValueRW = true;
     }
 }

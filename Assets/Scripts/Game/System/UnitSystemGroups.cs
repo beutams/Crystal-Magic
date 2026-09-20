@@ -21,6 +21,9 @@ public partial class UnitDecisionSystemGroup : ComponentSystemGroup
 {
     protected override void OnUpdate()
     {
+        if (SystemAPI.TryGetSingleton(out WorldStateComponent worldState) && worldState.IsSimulationLocked)
+            return;
+
         // Battle World 在地图初始化时已经加入 PlayerLoop；这里只阻断开战前的权威战斗逻辑，
         // 不改变 ECS 正常的逐帧更新频率。
         if (FrameManagerUtility.TryGet(EntityManager, out FrameManager frame) && !frame.running)

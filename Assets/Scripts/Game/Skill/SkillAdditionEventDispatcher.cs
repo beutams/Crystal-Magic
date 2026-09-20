@@ -9,21 +9,29 @@ namespace CrystalMagic.Game.Skill
     {
         private static readonly ComparatorFactory s_comparatorFactory = CreateComparatorFactory();
 
-        public static List<SkillAdditionAction> CreateActions(StateScriptRuntime runtime, string eventName)
+        public static List<SkillAdditionAction> CreateActions(
+            EntityManager entityManager,
+            Entity entity,
+            UnitSourceResolver sources,
+            string eventName)
         {
             List<SkillAdditionAction> actions = new();
-            if (runtime == null || string.IsNullOrWhiteSpace(eventName))
+            if (sources == null || string.IsNullOrWhiteSpace(eventName))
                 return actions;
 
-            EntityManager entityManager = runtime.EntityManager;
-            Entity entity = runtime.Entity;
             if (PlayerCurrentSkillUtility.TryGetCurrentAdditionId(entityManager, entity, out int selectedAdditionId))
-                AppendActions(actions, runtime, eventName, selectedAdditionId);
+                AppendActions(actions, entityManager, entity, sources, eventName, selectedAdditionId);
 
             return actions;
         }
 
-        private static void AppendActions(List<SkillAdditionAction> destination, StateScriptRuntime runtime, string eventName, int additionId)
+        private static void AppendActions(
+            List<SkillAdditionAction> destination,
+            EntityManager entityManager,
+            Entity entity,
+            UnitSourceResolver sources,
+            string eventName,
+            int additionId)
         {
             if (additionId < 0)
                 return;
@@ -37,13 +45,13 @@ namespace CrystalMagic.Game.Skill
                 SkillAdditionCallbackData callback = additionData.Callbacks[callbackIndex];
                 if (callback == null ||
                     !string.Equals(callback.EventName, eventName, System.StringComparison.Ordinal) ||
-                    !PassConditions(callback, runtime) ||
+                    !PassConditions(callback, sources) ||
                     callback.Actions == null)
                 {
                     continue;
                 }
 
-                SkillAdditionActionContext context = new(runtime, eventName, additionId);
+                SkillAdditionActionContext context = new(entityManager, entity, sources, eventName, additionId);
                 for (int actionIndex = 0; actionIndex < callback.Actions.Count; actionIndex++)
                 {
                     SkillAdditionAction action = SkillAdditionActionRegistry.Create(callback.Actions[actionIndex], context);
@@ -56,11 +64,11 @@ namespace CrystalMagic.Game.Skill
             }
         }
 
-        private static bool PassConditions(SkillAdditionCallbackData callback, StateScriptRuntime runtime)
+        private static bool PassConditions(SkillAdditionCallbackData callback, UnitSourceResolver sources)
         {
             return callback.Conditions == null ||
                    callback.Conditions.Count == 0 ||
-                   s_comparatorFactory.BuildComparator(callback.Conditions, runtime.Sources).GetResult(runtime.Sources);
+                   s_comparatorFactory.BuildComparator(callback.Conditions, sources).GetResult(sources);
         }
 
         private static ComparatorFactory CreateComparatorFactory()

@@ -1,223 +1,178 @@
-using System;
-using System.Collections.Generic;
 using CrystalMagic.Core;
-using CrystalMagic.Game.OpenField;
+using Unity.Burst;
+using Unity.Collections;
 using Unity.Entities;
+using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
-using UnityEngine;
 
 /// <summary>
-/// Resolves per-unit navigation requests into movement directions. The open set uses
-/// the same binary-min-heap A* strategy as roy-t/AStar, adapted to this project's ECS
-/// components, deterministic grid costs, and per-unit clearance radius.
+/// Resolves navigation requests against the dungeon collision bitset. Dirty paths are
+/// rebuilt by a single Burst job that reuses one fixed-size A* scratch area; following
+/// already-built paths runs in parallel for all units.
 /// </summary>
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateAfter(typeof(BehaviorTreeSystem))]
 [UpdateBefore(typeof(StateScriptSystem))]
-public partial class UnitNavigationSystem : SystemBase
+public partial struct UnitNavigationSystem : ISystem
 {
-    private NavigationGrid _grid;
-    private OpenFieldDungeonLayout _sourceLayout;
-    private RuntimeDungeonSceneData _sourceSceneData;
-    private int _gridVersion;
+    private EntityQuery _mapQuery;
+    private NativeArray<int> _cost;
+    private NativeArray<int> _parent;
+    private NativeArray<int> _seenStamp;
+    private NativeArray<int> _closedStamp;
+    private NativeArray<int> _heapPosition;
+    private NativeArray<NavigationOpenNode> _heap;
+    private NativeArray<int> _searchStamp;
+    private int _scratchCellCount;
 
-    protected override void OnUpdate()
+    public void OnCreate(ref SystemState state)
     {
-        RefreshGrid();
+        _mapQuery = state.GetEntityQuery(
+            ComponentType.ReadOnly<DungeonNavigationMapComponent>(),
+            ComponentType.ReadOnly<DungeonNavigationCollisionWord>());
+        _searchStamp = new NativeArray<int>(1, Allocator.Persistent, NativeArrayOptions.ClearMemory);
+        state.RequireForUpdate<UnitNavigationComponent>();
+    }
 
-        foreach ((RefRW<UnitNavigationComponent> navigationRef,
-                  RefRW<UnitMoveComponent> moveRef,
-                  RefRO<LocalTransform> transformRef,
-                  Entity entity) in
-                 SystemAPI.Query<RefRW<UnitNavigationComponent>, RefRW<UnitMoveComponent>, RefRO<LocalTransform>>()
-                     .WithNone<UnitDeathComponent>()
-                     .WithEntityAccess())
+    public void OnUpdate(ref SystemState state)
+    {
+        if (_mapQuery.IsEmptyIgnoreFilter)
         {
-            ref UnitNavigationComponent navigation = ref navigationRef.ValueRW;
-            ref UnitMoveComponent move = ref moveRef.ValueRW;
+            state.Dependency = new NavigationDirectFollowJob().ScheduleParallel(state.Dependency);
+            return;
+        }
 
+        Entity mapEntity = _mapQuery.GetSingletonEntity();
+        DungeonNavigationMapComponent map =
+            state.EntityManager.GetComponentData<DungeonNavigationMapComponent>(mapEntity);
+        DynamicBuffer<DungeonNavigationCollisionWord> collisionBuffer =
+            state.EntityManager.GetBuffer<DungeonNavigationCollisionWord>(mapEntity, true);
+        int requiredWordCount = DungeonNavigationMapUtility.GetRequiredWordCount(map.CellCount);
+        if (map.Width <= 0 || map.Height <= 0 || map.CellSize <= 0f ||
+            collisionBuffer.Length < requiredWordCount)
+        {
+            state.Dependency = new NavigationDirectFollowJob().ScheduleParallel(state.Dependency);
+            return;
+        }
+
+        EnsureScratchCapacity(ref state, map.CellCount);
+        NativeArray<DungeonNavigationCollisionWord> collisionWords = collisionBuffer.AsNativeArray();
+        JobHandle pathfindHandle = new NavigationPathfindJob
+        {
+            Map = map,
+            CollisionWords = collisionWords,
+            Cost = _cost,
+            Parent = _parent,
+            SeenStamp = _seenStamp,
+            ClosedStamp = _closedStamp,
+            HeapPosition = _heapPosition,
+            Heap = _heap,
+            SearchStamp = _searchStamp,
+        }.Schedule(state.Dependency);
+
+        state.Dependency = new NavigationFollowJob
+        {
+            Map = map,
+        }.ScheduleParallel(pathfindHandle);
+    }
+
+    public void OnDestroy(ref SystemState state)
+    {
+        state.Dependency.Complete();
+        DisposeScratch();
+        if (_searchStamp.IsCreated)
+            _searchStamp.Dispose();
+    }
+
+    private void EnsureScratchCapacity(ref SystemState state, int cellCount)
+    {
+        if (_scratchCellCount == cellCount && _cost.IsCreated)
+            return;
+
+        state.Dependency.Complete();
+        DisposeScratch();
+        _scratchCellCount = cellCount;
+        _cost = new NativeArray<int>(cellCount, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+        _parent = new NativeArray<int>(cellCount, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+        _seenStamp = new NativeArray<int>(cellCount, Allocator.Persistent, NativeArrayOptions.ClearMemory);
+        _closedStamp = new NativeArray<int>(cellCount, Allocator.Persistent, NativeArrayOptions.ClearMemory);
+        _heapPosition = new NativeArray<int>(cellCount, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+        _heap = new NativeArray<NavigationOpenNode>(
+            cellCount,
+            Allocator.Persistent,
+            NativeArrayOptions.UninitializedMemory);
+        _searchStamp[0] = 0;
+    }
+
+    private void DisposeScratch()
+    {
+        if (_cost.IsCreated)
+            _cost.Dispose();
+        if (_parent.IsCreated)
+            _parent.Dispose();
+        if (_seenStamp.IsCreated)
+            _seenStamp.Dispose();
+        if (_closedStamp.IsCreated)
+            _closedStamp.Dispose();
+        if (_heapPosition.IsCreated)
+            _heapPosition.Dispose();
+        if (_heap.IsCreated)
+            _heap.Dispose();
+        _scratchCellCount = 0;
+    }
+
+    [BurstCompile]
+    [WithNone(typeof(UnitDeathComponent))]
+    private partial struct NavigationPathfindJob : IJobEntity
+    {
+        public DungeonNavigationMapComponent Map;
+
+        [ReadOnly]
+        public NativeArray<DungeonNavigationCollisionWord> CollisionWords;
+
+        public NativeArray<int> Cost;
+        public NativeArray<int> Parent;
+        public NativeArray<int> SeenStamp;
+        public NativeArray<int> ClosedStamp;
+        public NativeArray<int> HeapPosition;
+        public NativeArray<NavigationOpenNode> Heap;
+        public NativeArray<int> SearchStamp;
+
+        private void Execute(
+            ref UnitNavigationComponent navigation,
+            in LocalTransform transform,
+            DynamicBuffer<UnitNavigationPathElement> path)
+        {
             if (navigation.HasDestination == 0)
-                continue;
+                return;
 
-            float2 position = transformRef.ValueRO.Position.xy;
+            float2 position = transform.Position.xy;
             float2 target = navigation.Destination.xy;
             float stopDistance = math.max(0f, navigation.StopDistance);
             if (math.distancesq(position, target) <= stopDistance * stopDistance)
-            {
-                WriteDirection(ref move, float2.zero);
-                continue;
-            }
-
-            if (_grid == null)
-            {
-                WriteDirection(ref move, math.normalizesafe(target - position, float2.zero));
-                continue;
-            }
-
-            int2 startCell = _grid.WorldToCell(position);
-            int2 destinationCell = _grid.WorldToCell(target);
-            bool destinationCellChanged = !destinationCell.Equals(navigation.LastDestinationCell);
-            if (destinationCellChanged || navigation.GridVersion != _gridVersion)
-                navigation.PathDirty = 1;
-
-            DynamicBuffer<UnitNavigationPathElement> path = EntityManager.GetBuffer<UnitNavigationPathElement>(entity);
-            if (navigation.PathDirty != 0)
-            {
-                RebuildPath(ref navigation, path, startCell, destinationCell);
-            }
-
-            if (navigation.PathFound == 0 || path.Length == 0)
-            {
-                WriteDirection(ref move, float2.zero);
-                continue;
-            }
-
-            int waypointIndex = math.clamp(navigation.CurrentWaypointIndex, 0, path.Length - 1);
-            float tolerance = math.max(0.01f, navigation.WaypointTolerance);
-            while (waypointIndex < path.Length - 1 &&
-                   (startCell.Equals(path[waypointIndex].Cell) ||
-                    math.distancesq(position, _grid.CellToWorld(path[waypointIndex].Cell)) <= tolerance * tolerance))
-            {
-                waypointIndex++;
-            }
-
-            navigation.CurrentWaypointIndex = waypointIndex;
-            float2 waypoint = waypointIndex == path.Length - 1
-                ? target
-                : _grid.CellToWorld(path[waypointIndex].Cell);
-            WriteDirection(ref move, math.normalizesafe(waypoint - position, float2.zero));
-        }
-    }
-
-    private void RefreshGrid()
-    {
-        DungeonRuntimeMapComponent runtimeMap = null;
-        foreach (DungeonRuntimeMapComponent candidate in SystemAPI.Query<DungeonRuntimeMapComponent>())
-        {
-            if (candidate?.OpenFieldLayout == null)
-                continue;
-
-            runtimeMap = candidate;
-            break;
-        }
-
-        if (runtimeMap == null)
-        {
-            _grid = null;
-            _sourceLayout = null;
-            _sourceSceneData = null;
-            return;
-        }
-
-        if (ReferenceEquals(_sourceLayout, runtimeMap.OpenFieldLayout) &&
-            ReferenceEquals(_sourceSceneData, runtimeMap.SceneData))
-        {
-            return;
-        }
-
-        _sourceLayout = runtimeMap.OpenFieldLayout;
-        _sourceSceneData = runtimeMap.SceneData;
-        _grid = new NavigationGrid(_sourceLayout, _sourceSceneData);
-        _gridVersion++;
-    }
-
-    private void RebuildPath(
-        ref UnitNavigationComponent navigation,
-        DynamicBuffer<UnitNavigationPathElement> path,
-        int2 startCell,
-        int2 destinationCell)
-    {
-        path.Clear();
-        navigation.CurrentWaypointIndex = 0;
-        navigation.LastDestinationCell = destinationCell;
-        navigation.GridVersion = _gridVersion;
-        navigation.PathDirty = 0;
-        navigation.PathFound = 0;
-
-        if (!_grid.TryFindPath(startCell, destinationCell, navigation.ClearanceRadius, path))
-            return;
-
-        navigation.PathFound = 1;
-    }
-
-    private static void WriteDirection(ref UnitMoveComponent move, float2 direction)
-    {
-        if (math.all(move.Direction == direction))
-            return;
-
-        move.Direction = direction;
-    }
-
-    private sealed class NavigationGrid
-    {
-        private static readonly int2[] s_neighborOffsets =
-        {
-            new(-1, 0), new(1, 0), new(0, -1), new(0, 1),
-            new(-1, -1), new(-1, 1), new(1, -1), new(1, 1),
-        };
-
-        private readonly int _width;
-        private readonly int _height;
-        private readonly float _cellSize;
-        private readonly float2 _origin;
-        private readonly bool[] _walkable;
-        private readonly int[] _cost;
-        private readonly int[] _parent;
-        private readonly int[] _seenStamp;
-        private readonly int[] _closedStamp;
-        private readonly List<OpenNode> _open = new();
-        private readonly List<int> _reversePath = new();
-        private int _searchStamp;
-
-        public NavigationGrid(OpenFieldDungeonLayout layout, RuntimeDungeonSceneData sceneData)
-        {
-            _width = layout.Width;
-            _height = layout.Height;
-            _cellSize = math.max(0.01f, sceneData?.CellWorldSize ?? 1f);
-            Vector2 sourceOrigin = sceneData?.TerrainVisual?.WorldOrigin ??
-                                   new Vector2(-_width * _cellSize * 0.5f, -_height * _cellSize * 0.5f);
-            _origin = new float2(sourceOrigin.x, sourceOrigin.y);
-            _walkable = new bool[_width * _height];
-            _cost = new int[_walkable.Length];
-            _parent = new int[_walkable.Length];
-            _seenStamp = new int[_walkable.Length];
-            _closedStamp = new int[_walkable.Length];
-
-            for (int y = 0; y < _height; y++)
-            for (int x = 0; x < _width; x++)
-                _walkable[ToIndex(x, y)] = layout.IsWalkable(x, y);
-
-            if (sceneData?.ObstacleSpawns == null)
                 return;
 
-            for (int obstacleIndex = 0; obstacleIndex < sceneData.ObstacleSpawns.Count; obstacleIndex++)
-            {
-                List<Vector2Int> cells = sceneData.ObstacleSpawns[obstacleIndex]?.CollisionCells;
-                if (cells == null)
-                    continue;
+            int2 startCell = DungeonNavigationMapUtility.WorldToCell(in Map, position);
+            int2 destinationCell = DungeonNavigationMapUtility.WorldToCell(in Map, target);
+            if (!destinationCell.Equals(navigation.LastDestinationCell) || navigation.GridVersion != Map.Version)
+                navigation.PathDirty = 1;
 
-                for (int cellIndex = 0; cellIndex < cells.Count; cellIndex++)
-                {
-                    Vector2Int cell = cells[cellIndex];
-                    if (IsInside(cell.x, cell.y))
-                        _walkable[ToIndex(cell.x, cell.y)] = false;
-                }
-            }
+            if (navigation.PathDirty == 0)
+                return;
+
+            path.Clear();
+            navigation.CurrentWaypointIndex = 0;
+            navigation.LastDestinationCell = destinationCell;
+            navigation.GridVersion = Map.Version;
+            navigation.PathDirty = 0;
+            navigation.PathFound = 0;
+
+            if (TryFindPath(startCell, destinationCell, navigation.ClearanceRadius, path))
+                navigation.PathFound = 1;
         }
 
-        public int2 WorldToCell(float2 worldPosition)
-        {
-            int2 cell = (int2)math.floor((worldPosition - _origin) / _cellSize);
-            return math.clamp(cell, int2.zero, new int2(_width - 1, _height - 1));
-        }
-
-        public float2 CellToWorld(int2 cell)
-        {
-            return _origin + (new float2(cell.x, cell.y) + 0.5f) * _cellSize;
-        }
-
-        public bool TryFindPath(
+        private bool TryFindPath(
             int2 requestedStart,
             int2 requestedGoal,
             float clearanceRadius,
@@ -229,110 +184,150 @@ public partial class UnitNavigationSystem : SystemBase
                 return false;
             }
 
-            if (start.Equals(goal))
+            int startIndex = DungeonNavigationMapUtility.ToIndex(in Map, start);
+            int goalIndex = DungeonNavigationMapUtility.ToIndex(in Map, goal);
+            if (startIndex == goalIndex)
             {
-                result.Add(new UnitNavigationPathElement { Cell = goal });
+                result.Add(new UnitNavigationPathElement { CellIndex = goalIndex });
                 return true;
             }
 
-            BeginSearch();
-            int startIndex = ToIndex(start.x, start.y);
-            int goalIndex = ToIndex(goal.x, goal.y);
-            _seenStamp[startIndex] = _searchStamp;
-            _cost[startIndex] = 0;
-            _parent[startIndex] = -1;
-            Push(new OpenNode(startIndex, 0, Heuristic(start, goal)));
+            int searchStamp = BeginSearch();
+            int heapCount = 0;
+            SeenStamp[startIndex] = searchStamp;
+            Cost[startIndex] = 0;
+            Parent[startIndex] = -1;
+            Push(
+                new NavigationOpenNode
+                {
+                    Index = startIndex,
+                    Cost = 0,
+                    Heuristic = Heuristic(start, goal),
+                },
+                ref heapCount);
 
-            while (_open.Count > 0)
+            while (heapCount > 0)
             {
-                OpenNode current = Pop();
-                if (_closedStamp[current.Index] == _searchStamp ||
-                    _seenStamp[current.Index] != _searchStamp ||
-                    _cost[current.Index] != current.Cost)
-                {
-                    continue;
-                }
-
+                NavigationOpenNode current = Pop(ref heapCount);
                 if (current.Index == goalIndex)
-                {
-                    ReconstructPath(startIndex, goalIndex, result);
-                    return result.Length > 0;
-                }
+                    return ReconstructPath(startIndex, goalIndex, result);
 
-                _closedStamp[current.Index] = _searchStamp;
-                int2 currentCell = ToCell(current.Index);
-                for (int neighborIndex = 0; neighborIndex < s_neighborOffsets.Length; neighborIndex++)
+                ClosedStamp[current.Index] = searchStamp;
+                int2 currentCell = DungeonNavigationMapUtility.ToCell(in Map, current.Index);
+                for (int neighborIndex = 0; neighborIndex < 8; neighborIndex++)
                 {
-                    int2 offset = s_neighborOffsets[neighborIndex];
+                    int2 offset = GetNeighborOffset(neighborIndex);
                     int2 neighbor = currentCell + offset;
-                    if (!CanOccupy(neighbor, clearanceRadius))
-                        continue;
-
-                    bool diagonal = offset.x != 0 && offset.y != 0;
-                    if (diagonal &&
-                        (!CanOccupy(currentCell + new int2(offset.x, 0), clearanceRadius) ||
-                         !CanOccupy(currentCell + new int2(0, offset.y), clearanceRadius)))
+                    if (!DungeonNavigationMapUtility.CanOccupy(
+                            in Map,
+                            CollisionWords,
+                            neighbor,
+                            clearanceRadius))
                     {
                         continue;
                     }
 
-                    int nextIndex = ToIndex(neighbor.x, neighbor.y);
-                    if (_closedStamp[nextIndex] == _searchStamp)
+                    bool diagonal = offset.x != 0 && offset.y != 0;
+                    if (diagonal &&
+                        (!DungeonNavigationMapUtility.CanOccupy(
+                             in Map,
+                             CollisionWords,
+                             currentCell + new int2(offset.x, 0),
+                             clearanceRadius) ||
+                         !DungeonNavigationMapUtility.CanOccupy(
+                             in Map,
+                             CollisionWords,
+                             currentCell + new int2(0, offset.y),
+                             clearanceRadius)))
+                    {
+                        continue;
+                    }
+
+                    int nextIndex = DungeonNavigationMapUtility.ToIndex(in Map, neighbor);
+                    if (ClosedStamp[nextIndex] == searchStamp)
                         continue;
 
                     int newCost = current.Cost + (diagonal ? 14 : 10);
-                    if (_seenStamp[nextIndex] == _searchStamp && newCost >= _cost[nextIndex])
+                    bool wasSeen = SeenStamp[nextIndex] == searchStamp;
+                    if (wasSeen && newCost >= Cost[nextIndex])
                         continue;
 
-                    _seenStamp[nextIndex] = _searchStamp;
-                    _cost[nextIndex] = newCost;
-                    _parent[nextIndex] = current.Index;
-                    Push(new OpenNode(nextIndex, newCost, Heuristic(neighbor, goal)));
+                    SeenStamp[nextIndex] = searchStamp;
+                    Cost[nextIndex] = newCost;
+                    Parent[nextIndex] = current.Index;
+                    NavigationOpenNode openNode = new()
+                    {
+                        Index = nextIndex,
+                        Cost = newCost,
+                        Heuristic = Heuristic(neighbor, goal),
+                    };
+                    if (wasSeen)
+                        Update(openNode);
+                    else
+                        Push(openNode, ref heapCount);
                 }
             }
 
             return false;
         }
 
-        private void BeginSearch()
+        private int BeginSearch()
         {
-            _open.Clear();
-            _reversePath.Clear();
-            if (_searchStamp == int.MaxValue)
+            int nextStamp = SearchStamp[0];
+            if (nextStamp == int.MaxValue)
             {
-                Array.Clear(_seenStamp, 0, _seenStamp.Length);
-                Array.Clear(_closedStamp, 0, _closedStamp.Length);
-                _searchStamp = 1;
+                for (int index = 0; index < SeenStamp.Length; index++)
+                {
+                    SeenStamp[index] = 0;
+                    ClosedStamp[index] = 0;
+                }
+
+                nextStamp = 1;
             }
             else
             {
-                _searchStamp++;
+                nextStamp++;
             }
+
+            SearchStamp[0] = nextStamp;
+            return nextStamp;
         }
 
         private bool TryFindNearestWalkable(int2 requested, float clearanceRadius, out int2 result)
         {
-            if (CanOccupy(requested, clearanceRadius))
+            if (DungeonNavigationMapUtility.CanOccupy(
+                    in Map,
+                    CollisionWords,
+                    requested,
+                    clearanceRadius))
             {
                 result = requested;
                 return true;
             }
 
-            int maxRadius = math.min(8, math.max(_width, _height));
+            int maxRadius = math.min(8, math.max(Map.Width, Map.Height));
             for (int radius = 1; radius <= maxRadius; radius++)
             {
                 for (int y = -radius; y <= radius; y++)
-                for (int x = -radius; x <= radius; x++)
                 {
-                    if (math.max(math.abs(x), math.abs(y)) != radius)
-                        continue;
+                    for (int x = -radius; x <= radius; x++)
+                    {
+                        if (math.max(math.abs(x), math.abs(y)) != radius)
+                            continue;
 
-                    int2 candidate = requested + new int2(x, y);
-                    if (!CanOccupy(candidate, clearanceRadius))
-                        continue;
+                        int2 candidate = requested + new int2(x, y);
+                        if (!DungeonNavigationMapUtility.CanOccupy(
+                                in Map,
+                                CollisionWords,
+                                candidate,
+                                clearanceRadius))
+                        {
+                            continue;
+                        }
 
-                    result = candidate;
-                    return true;
+                        result = candidate;
+                        return true;
+                    }
                 }
             }
 
@@ -340,49 +335,118 @@ public partial class UnitNavigationSystem : SystemBase
             return false;
         }
 
-        private bool CanOccupy(int2 cell, float clearanceRadius)
-        {
-            if (!IsInside(cell.x, cell.y) || !_walkable[ToIndex(cell.x, cell.y)])
-                return false;
-
-            float radius = math.max(0f, clearanceRadius);
-            if (radius <= 0f)
-                return true;
-
-            int radiusInCells = math.max(1, (int)math.ceil(radius / _cellSize));
-            float radiusSquared = radius * radius;
-            for (int y = -radiusInCells; y <= radiusInCells; y++)
-            for (int x = -radiusInCells; x <= radiusInCells; x++)
-            {
-                int checkX = cell.x + x;
-                int checkY = cell.y + y;
-                if (IsInside(checkX, checkY) && _walkable[ToIndex(checkX, checkY)])
-                    continue;
-
-                float edgeX = math.max(math.abs(x) * _cellSize - _cellSize * 0.5f, 0f);
-                float edgeY = math.max(math.abs(y) * _cellSize - _cellSize * 0.5f, 0f);
-                if (edgeX * edgeX + edgeY * edgeY < radiusSquared)
-                    return false;
-            }
-
-            return true;
-        }
-
-        private void ReconstructPath(
+        private bool ReconstructPath(
             int startIndex,
             int goalIndex,
             DynamicBuffer<UnitNavigationPathElement> result)
         {
-            _reversePath.Clear();
             int current = goalIndex;
-            while (current != startIndex && current >= 0)
+            int remaining = Parent.Length;
+            while (current != startIndex && current >= 0 && remaining-- > 0)
             {
-                _reversePath.Add(current);
-                current = _parent[current];
+                result.Add(new UnitNavigationPathElement { CellIndex = current });
+                current = Parent[current];
             }
 
-            for (int index = _reversePath.Count - 1; index >= 0; index--)
-                result.Add(new UnitNavigationPathElement { Cell = ToCell(_reversePath[index]) });
+            if (current != startIndex)
+            {
+                result.Clear();
+                return false;
+            }
+
+            int left = 0;
+            int right = result.Length - 1;
+            while (left < right)
+            {
+                UnitNavigationPathElement temporary = result[left];
+                result[left] = result[right];
+                result[right] = temporary;
+                left++;
+                right--;
+            }
+
+            return result.Length > 0;
+        }
+
+        private void Push(NavigationOpenNode node, ref int heapCount)
+        {
+            int index = heapCount++;
+            Heap[index] = node;
+            HeapPosition[node.Index] = index;
+            BubbleUp(index);
+        }
+
+        private void Update(NavigationOpenNode node)
+        {
+            int index = HeapPosition[node.Index];
+            Heap[index] = node;
+            BubbleUp(index);
+        }
+
+        private NavigationOpenNode Pop(ref int heapCount)
+        {
+            NavigationOpenNode result = Heap[0];
+            HeapPosition[result.Index] = -1;
+            heapCount--;
+            if (heapCount == 0)
+                return result;
+
+            Heap[0] = Heap[heapCount];
+            HeapPosition[Heap[0].Index] = 0;
+            int index = 0;
+            while (true)
+            {
+                int left = index * 2 + 1;
+                if (left >= heapCount)
+                    break;
+
+                int right = left + 1;
+                int best = right < heapCount && IsHigherPriority(Heap[right], Heap[left]) ? right : left;
+                if (!IsHigherPriority(Heap[best], Heap[index]))
+                    break;
+
+                SwapHeapEntries(index, best);
+                index = best;
+            }
+
+            return result;
+        }
+
+        private void BubbleUp(int index)
+        {
+            while (index > 0)
+            {
+                int parent = (index - 1) >> 1;
+                if (!IsHigherPriority(Heap[index], Heap[parent]))
+                    break;
+
+                SwapHeapEntries(index, parent);
+                index = parent;
+            }
+        }
+
+        private void SwapHeapEntries(int leftIndex, int rightIndex)
+        {
+            NavigationOpenNode temporary = Heap[leftIndex];
+            Heap[leftIndex] = Heap[rightIndex];
+            Heap[rightIndex] = temporary;
+            HeapPosition[Heap[leftIndex].Index] = leftIndex;
+            HeapPosition[Heap[rightIndex].Index] = rightIndex;
+        }
+
+        private static int2 GetNeighborOffset(int index)
+        {
+            return index switch
+            {
+                0 => new int2(-1, 0),
+                1 => new int2(1, 0),
+                2 => new int2(0, -1),
+                3 => new int2(0, 1),
+                4 => new int2(-1, -1),
+                5 => new int2(-1, 1),
+                6 => new int2(1, -1),
+                _ => new int2(1, 1),
+            };
         }
 
         private static int Heuristic(int2 from, int2 to)
@@ -393,66 +457,7 @@ public partial class UnitNavigationSystem : SystemBase
             return diagonal * 14 + straight * 10;
         }
 
-        private bool IsInside(int x, int y)
-        {
-            return x >= 0 && x < _width && y >= 0 && y < _height;
-        }
-
-        private int ToIndex(int x, int y)
-        {
-            return y * _width + x;
-        }
-
-        private int2 ToCell(int index)
-        {
-            return new int2(index % _width, index / _width);
-        }
-
-        private void Push(OpenNode node)
-        {
-            int index = _open.Count;
-            _open.Add(node);
-            while (index > 0)
-            {
-                int parent = (index - 1) >> 1;
-                if (!IsHigherPriority(_open[index], _open[parent]))
-                    break;
-
-                (_open[index], _open[parent]) = (_open[parent], _open[index]);
-                index = parent;
-            }
-        }
-
-        private OpenNode Pop()
-        {
-            OpenNode result = _open[0];
-            int lastIndex = _open.Count - 1;
-            OpenNode tail = _open[lastIndex];
-            _open.RemoveAt(lastIndex);
-            if (_open.Count == 0)
-                return result;
-
-            _open[0] = tail;
-            int index = 0;
-            while (true)
-            {
-                int left = index * 2 + 1;
-                if (left >= _open.Count)
-                    break;
-
-                int right = left + 1;
-                int best = right < _open.Count && IsHigherPriority(_open[right], _open[left]) ? right : left;
-                if (!IsHigherPriority(_open[best], _open[index]))
-                    break;
-
-                (_open[index], _open[best]) = (_open[best], _open[index]);
-                index = best;
-            }
-
-            return result;
-        }
-
-        private static bool IsHigherPriority(OpenNode left, OpenNode right)
+        private static bool IsHigherPriority(NavigationOpenNode left, NavigationOpenNode right)
         {
             int leftTotal = left.Cost + left.Heuristic;
             int rightTotal = right.Cost + right.Heuristic;
@@ -462,19 +467,111 @@ public partial class UnitNavigationSystem : SystemBase
                 return left.Heuristic < right.Heuristic;
             return left.Index < right.Index;
         }
+    }
 
-        private readonly struct OpenNode
+    [BurstCompile]
+    [WithNone(typeof(UnitDeathComponent))]
+    private partial struct NavigationFollowJob : IJobEntity
+    {
+        public DungeonNavigationMapComponent Map;
+
+        private void Execute(
+            ref UnitNavigationComponent navigation,
+            ref UnitMoveComponent move,
+            in LocalTransform transform,
+            in DynamicBuffer<UnitNavigationPathElement> path)
         {
-            public OpenNode(int index, int cost, int heuristic)
+            if (navigation.HasDestination == 0)
+                return;
+
+            float2 position = transform.Position.xy;
+            float2 target = navigation.Destination.xy;
+            float stopDistance = math.max(0f, navigation.StopDistance);
+            if (math.distancesq(position, target) <= stopDistance * stopDistance)
             {
-                Index = index;
-                Cost = cost;
-                Heuristic = heuristic;
+                WriteDirection(ref move, float2.zero);
+                return;
             }
 
-            public int Index { get; }
-            public int Cost { get; }
-            public int Heuristic { get; }
+            if (navigation.PathFound == 0 || path.Length == 0)
+            {
+                WriteDirection(ref move, float2.zero);
+                return;
+            }
+
+            int waypointIndex = math.clamp(navigation.CurrentWaypointIndex, 0, path.Length - 1);
+            int startIndex = DungeonNavigationMapUtility.ToIndex(
+                in Map,
+                DungeonNavigationMapUtility.WorldToCell(in Map, position));
+            float tolerance = math.max(0.01f, navigation.WaypointTolerance);
+            while (waypointIndex < path.Length - 1)
+            {
+                int cellIndex = path[waypointIndex].CellIndex;
+                if ((uint)cellIndex >= (uint)Map.CellCount)
+                    break;
+
+                int2 cell = DungeonNavigationMapUtility.ToCell(in Map, cellIndex);
+                if (startIndex != cellIndex &&
+                    math.distancesq(position, DungeonNavigationMapUtility.CellToWorld(in Map, cell)) >
+                    tolerance * tolerance)
+                {
+                    break;
+                }
+
+                waypointIndex++;
+            }
+
+            navigation.CurrentWaypointIndex = waypointIndex;
+            int waypointCellIndex = path[waypointIndex].CellIndex;
+            if ((uint)waypointCellIndex >= (uint)Map.CellCount)
+            {
+                navigation.PathDirty = 1;
+                navigation.PathFound = 0;
+                WriteDirection(ref move, float2.zero);
+                return;
+            }
+
+            float2 waypoint = waypointIndex == path.Length - 1
+                ? target
+                : DungeonNavigationMapUtility.CellToWorld(
+                    in Map,
+                    DungeonNavigationMapUtility.ToCell(in Map, waypointCellIndex));
+            WriteDirection(ref move, math.normalizesafe(waypoint - position, float2.zero));
         }
+    }
+
+    [BurstCompile]
+    [WithNone(typeof(UnitDeathComponent))]
+    private partial struct NavigationDirectFollowJob : IJobEntity
+    {
+        private void Execute(
+            in UnitNavigationComponent navigation,
+            ref UnitMoveComponent move,
+            in LocalTransform transform)
+        {
+            if (navigation.HasDestination == 0)
+                return;
+
+            float2 position = transform.Position.xy;
+            float2 target = navigation.Destination.xy;
+            float stopDistance = math.max(0f, navigation.StopDistance);
+            float2 direction = math.distancesq(position, target) <= stopDistance * stopDistance
+                ? float2.zero
+                : math.normalizesafe(target - position, float2.zero);
+            WriteDirection(ref move, direction);
+        }
+    }
+
+    private struct NavigationOpenNode
+    {
+        public int Index;
+        public int Cost;
+        public int Heuristic;
+    }
+
+    private static void WriteDirection(ref UnitMoveComponent move, float2 direction)
+    {
+        if (!math.all(move.Direction == direction))
+            move.Direction = direction;
     }
 }

@@ -14,19 +14,27 @@ public sealed class UnitStateScriptAuthoring : MonoBehaviour
 
             UnitData unitData = UnitAuthoringUtility.ResolveUnitData(authoring);
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
-            AddComponentObject(entity, new UnitStateScriptComponent
+            AddComponent(entity, new UnitStateScriptComponent
             {
                 UnitDataId = unitData?.Id ?? -1,
+                DefinitionIndex = -1,
             });
+            AddBuffer<StateScriptGraphStateElement>(entity);
+            AddBuffer<StateScriptNodeStateElement>(entity);
+            AddBuffer<StateScriptSourceCommandElement>(entity);
+            AddBuffer<StateScriptSourceCommandArgumentElement>(entity);
+            AddBuffer<StateScriptManagedCommandElement>(entity);
+            AddBuffer<StateScriptExternalResultElement>(entity);
         }
     }
 }
 
-public sealed class UnitStateScriptComponent : IComponentData
+public struct UnitStateScriptComponent : IComponentData
 {
     public int UnitDataId;
-    public bool IsInitialized;
-    public bool IsStoppedForDeath;
-    public string InitializationError = string.Empty;
-    public System.Collections.Generic.List<StateScriptRuntime> Runtimes = new();
+    public int DefinitionIndex;
+    public uint TickVersion;
+    public StateScriptInitializationError InitializationError;
+    public byte IsInitialized;
+    public byte IsStoppedForDeath;
 }
