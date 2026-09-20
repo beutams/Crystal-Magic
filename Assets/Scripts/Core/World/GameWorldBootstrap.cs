@@ -74,12 +74,14 @@ namespace CrystalMagic.Core
     }
 
     /// <summary>
-    /// 菜单阶段不创建 ECS World。进入一局游戏后才由 GameWorldManager 显式创建唯一的 GameWorld。
+    /// 菜单阶段仅创建一个空的 Bootstrap World 来满足 Entities 的默认 World 契约；
+    /// 它不包含系统，也不会加入 PlayerLoop。进入一局游戏后才由 GameWorldManager 显式创建 GameWorld。
     /// </summary>
     public sealed class GameWorldBootstrap : ICustomBootstrap
     {
         public bool Initialize(string defaultWorldName)
         {
+            GameWorldManager.CreateBootstrapWorld(defaultWorldName);
             return true;
         }
     }
@@ -93,6 +95,7 @@ namespace CrystalMagic.Core
     {
         private const string WorldName = "GameWorld";
 
+        private static World _bootstrapWorld;
         private static World _gameWorld;
         private static bool _appendedToPlayerLoop;
 
@@ -122,6 +125,8 @@ namespace CrystalMagic.Core
                 return _gameWorld;
             }
 
+            DisposeBootstrapWorld();
+
             WorldFlags worldFlags = role switch
             {
                 GameWorldRole.Server => WorldFlags.GameServer,
@@ -148,6 +153,18 @@ namespace CrystalMagic.Core
                 AppendGameWorldToPlayerLoop();
 
             return _gameWorld;
+        }
+
+        internal static void CreateBootstrapWorld(string defaultWorldName)
+        {
+            if (_bootstrapWorld != null && _bootstrapWorld.IsCreated)
+            {
+                World.DefaultGameObjectInjectionWorld = _bootstrapWorld;
+                return;
+            }
+
+            _bootstrapWorld = new World(defaultWorldName, WorldFlags.Game);
+            World.DefaultGameObjectInjectionWorld = _bootstrapWorld;
         }
 
         /// <summary>
@@ -235,6 +252,21 @@ namespace CrystalMagic.Core
         public static void Shutdown()
         {
             ShutdownGameWorld();
+            DisposeBootstrapWorld();
+        }
+
+        private static void DisposeBootstrapWorld()
+        {
+            if (_bootstrapWorld == null)
+                return;
+
+            if (World.DefaultGameObjectInjectionWorld == _bootstrapWorld)
+                World.DefaultGameObjectInjectionWorld = null;
+
+            if (_bootstrapWorld.IsCreated)
+                _bootstrapWorld.Dispose();
+
+            _bootstrapWorld = null;
         }
 
         private static GameSceneMode ResolveSceneMode(string sceneName)

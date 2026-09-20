@@ -8,11 +8,11 @@ public static class SkillReleaseUtility
 
     public static bool TryExecute(
         EntityManager entityManager,
-        SkillReleaseRequest request,
+        in SkillReleaseRequest request,
         ResolvedSkillData resolvedSkill,
         SkillContent context)
     {
-        if (request == null || resolvedSkill == null)
+        if (resolvedSkill == null)
             return false;
 
         Skill skill = s_skillFactory.CreateSkill(SkillData.GetEffectiveRuntimeType(resolvedSkill.RuntimeType), resolvedSkill);

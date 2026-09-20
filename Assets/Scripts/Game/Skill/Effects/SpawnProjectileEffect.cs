@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CrystalMagic.Game.Data.Effects;
 using Unity.Collections;
 using Unity.Entities;
@@ -72,7 +71,12 @@ namespace CrystalMagic.Game.Skill.Effects
         private void CreateProjectileSpawnRequest(SkillContent context, Vector3 startPosition, Vector3 direction)
         {
             FixedString128Bytes projectileName = new(string.IsNullOrWhiteSpace(Data.ProjectilePrefabName) ? "Projectile" : Data.ProjectilePrefabName);
-            SkillProjectileSpawnQueueUtility.GetOrCreate(context.EntityManager).Requests.Enqueue(
+            EffectRequestContext requestContext = EffectUtility.CaptureContext(
+                context.EntityManager,
+                context,
+                out bool ownsManagedContext);
+            Entity queueEntity = SkillProjectileSpawnQueueUtility.GetOrCreateEntity(context.EntityManager);
+            context.EntityManager.GetBuffer<SkillProjectileSpawnRequest>(queueEntity).Add(
                 new SkillProjectileSpawnRequest
                 {
                     ProjectileName = projectileName,
@@ -87,12 +91,17 @@ namespace CrystalMagic.Game.Skill.Effects
                     HitRadius = math.max(Data.HitRadius, 0.01f),
                     CanPierce = Data.CanPierce ? (byte)1 : (byte)0,
                     TriggerDestroyEffectsOnMaxRange = Data.TriggerDestroyEffectsOnMaxRange ? (byte)1 : (byte)0,
-                    Context = context.Clone(),
-                    CollisionTargetConditions = Data.CollisionTargetConditions == null
-                        ? new List<ConditionConfig>()
-                        : new List<ConditionConfig>(Data.CollisionTargetConditions),
-                    OnCollisionEffects = Data.OnCollisionEffects,
-                    OnDestroyEffects = Data.OnDestroyEffects,
+                    Context = requestContext,
+                    ReleaseManagedContextOnFailure = ownsManagedContext ? (byte)1 : (byte)0,
+                    CollisionTargetConditionsId = EffectDataBridgeUtility.RegisterConditions(
+                        context.EntityManager,
+                        Data.CollisionTargetConditions),
+                    OnCollisionEffectListId = EffectDataBridgeUtility.Register(
+                        context.EntityManager,
+                        Data.OnCollisionEffects),
+                    OnDestroyEffectListId = EffectDataBridgeUtility.Register(
+                        context.EntityManager,
+                        Data.OnDestroyEffects),
                 });
         }
     }

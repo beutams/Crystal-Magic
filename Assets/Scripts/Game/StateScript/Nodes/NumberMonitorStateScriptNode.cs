@@ -9,7 +9,7 @@ public sealed class NumberMonitorStateScriptNode : StateScriptStateNode
 
     private readonly NumberMonitorStateScriptNodeData _data;
     private readonly StateScriptOutputPort _onValueChangeOutput;
-    private System.Func<UnitValue> _valueGetter;
+    private CompiledValueExpression _valueExpression;
     private bool _hasLastValue;
     private float _lastValue;
 
@@ -22,25 +22,24 @@ public sealed class NumberMonitorStateScriptNode : StateScriptStateNode
 
     protected override bool OnBind(out string error)
     {
-        _valueGetter = null;
+        _valueExpression = default;
         _data.Value ??= NumberMonitorStateScriptNodeData.CreateDefaultValueExpression();
         if (!s_expressionFactory.TryBuildValueExpression(
                 _data.Value,
                 Runtime.Sources,
-                out UnitValueCategory category,
-                out System.Func<UnitValue> valueGetter,
+                out CompiledValueExpression valueExpression,
                 out error))
         {
             return false;
         }
 
-        if (category != UnitValueCategory.Number)
+        if (valueExpression.Category != UnitValueCategory.Number)
         {
-            error = $"Number Monitor Value requires Number, but received {category}.";
+            error = $"Number Monitor Value requires Number, but received {valueExpression.Category}.";
             return false;
         }
 
-        _valueGetter = valueGetter;
+        _valueExpression = valueExpression;
         error = string.Empty;
         return true;
     }
@@ -69,7 +68,8 @@ public sealed class NumberMonitorStateScriptNode : StateScriptStateNode
     private bool TryGetValue(out float value)
     {
         value = 0f;
-        if (_valueGetter == null || !_valueGetter().TryGetNumber(out value))
+        if (!_valueExpression.TryEvaluate(Runtime.Sources, out UnitSourceValue sourceValue) ||
+            !sourceValue.TryGetNumber(out value))
             return false;
 
         return !float.IsNaN(value) && !float.IsInfinity(value);

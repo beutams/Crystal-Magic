@@ -37,9 +37,10 @@ public partial class StateScriptSystem : SystemBase
             if (component == null || !component.IsInitialized || component.IsStoppedForDeath)
                 continue;
 
+            Entity other = UnitVariableSource.GetOther(EntityManager, entity);
             for (int i = 0; i < component.Runtimes.Count; i++)
             {
-                component.Runtimes[i].Sources.Update(entity, EntityManager, in _sourceDispatcher);
+                component.Runtimes[i].Sources.Update(entity, other, in _sourceDispatcher);
                 component.Runtimes[i].Tick(deltaTime);
             }
         }

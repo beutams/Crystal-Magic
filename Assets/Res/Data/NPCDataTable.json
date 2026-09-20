@@ -212,6 +212,32 @@
                                       ],
                      "Id":  5,
                      "DisplayNameKey":  "npc.dungeon_exit.name"
+                 },
+                 {
+                     "NPC":  "NetworkNPC",
+                     "PrefabPath":  "Assets/Res/Prefab/Unit/NetworkNPC.prefab",
+                     "Interactions":  [
+                                          {
+                                              "Key":  "OpenLobby",
+                                              "EnableExpression":  "",
+                                              "EntryNodeGuid":  "38a8c80798f1499e8680f751de20ef21",
+                                              "Nodes":  [
+                                                            {
+                                                                "UIName":  "LobbyUI",
+                                                                "OpenData":  "",
+                                                                "WaitUntilClosed":  true,
+                                                                "Guid":  "38a8c80798f1499e8680f751de20ef21",
+                                                                "Branches":  [
+
+                                                                             ],
+                                                                "Type":  "OpenUI"
+                                                            }
+                                                        ],
+                                              "DisplayNameKey":  "npc.network_lobby.name"
+                                          }
+                                      ],
+                     "Id":  6,
+                     "DisplayNameKey":  "npc.network_lobby.name"
                  }
              ]
 }

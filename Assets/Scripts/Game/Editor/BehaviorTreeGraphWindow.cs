@@ -150,9 +150,9 @@ namespace CrystalMagic.Editor.Unit
             if (EditorApplication.timeSinceStartup >= _nextRuntimeUnitRefreshTime)
                 RefreshRuntimeUnitEntries();
 
-            BehaviorTreeRuntime runtime = FindDebugRuntime();
-            _runtimeDataInspector.Refresh(runtime, SelectedTree);
-            _graphView?.RefreshRuntimeDebug(runtime);
+            BehaviorTreeDebugSnapshot snapshot = FindDebugSnapshot();
+            _runtimeDataInspector.Refresh(SelectedTree);
+            _graphView?.RefreshRuntimeDebug(snapshot);
             _listContainer?.MarkDirtyRepaint();
             _detailContainer?.MarkDirtyRepaint();
             Repaint();
@@ -352,7 +352,7 @@ namespace CrystalMagic.Editor.Unit
 
             if (showRuntimeDebug)
             {
-                _runtimeDataInspector.Draw(FindDebugRuntime(), FindDebugDrawerContext(), SelectedTree);
+                _runtimeDataInspector.Draw(FindDebugDrawerContext(), SelectedTree);
             }
             else if (selected?.UnitData == null)
             {
@@ -632,6 +632,9 @@ namespace CrystalMagic.Editor.Unit
 
             UnitSourceSetSchemaEntry selectedEntry = entries[selectedIndex - 1];
             node.SetKey = selectedEntry.Key;
+            node.SourceTarget = (UnitSourceTarget)EditorGUILayout.EnumPopup(
+                "Source Unit",
+                node.SourceTarget);
             if (selectedEntry.RequiresKey)
             {
                 node.Key = EditorGUILayout.TextField("Key", node.Key ?? string.Empty);
@@ -781,6 +784,9 @@ namespace CrystalMagic.Editor.Unit
 
             UnitSourceGetSchemaEntry selectedEntry = entries[selectedIndex - 1];
             expression.GetterKey = selectedEntry.Key;
+            expression.SourceTarget = (UnitSourceTarget)EditorGUILayout.EnumPopup(
+                "Source Unit",
+                expression.SourceTarget);
             EnsureExpressionCount(ref expression.Inputs, selectedEntry.Parameters);
             for (int i = 0; i < selectedEntry.Parameters.Count; i++)
                 DrawValueExpression(expression.Inputs[i], selectedEntry.Parameters[i], depth);
@@ -1347,9 +1353,8 @@ namespace CrystalMagic.Editor.Unit
             for (int i = 0; i < entities.Length; i++)
             {
                 Entity entity = entities[i];
-                UnitBehaviorTreeComponent component = entityManager.GetComponentObject<UnitBehaviorTreeComponent>(entity);
-                if (component == null)
-                    continue;
+                UnitBehaviorTreeComponent component =
+                    entityManager.GetComponentData<UnitBehaviorTreeComponent>(entity);
 
                 _runtimeUnitEntries.Add(new RuntimeUnitEntry
                 {
@@ -1414,7 +1419,7 @@ namespace CrystalMagic.Editor.Unit
             _selectedUnitDataId = -1;
         }
 
-        private BehaviorTreeRuntime FindDebugRuntime()
+        private BehaviorTreeDebugSnapshot FindDebugSnapshot()
         {
             if (!IsRuntimeDebugEnabled || _selectedRuntimeEntity == Entity.Null)
                 return null;
@@ -1430,7 +1435,36 @@ namespace CrystalMagic.Editor.Unit
                 return null;
             }
 
-            return entityManager.GetComponentObject<UnitBehaviorTreeComponent>(_selectedRuntimeEntity)?.Runtime;
+            UnitBehaviorTreeComponent component =
+                entityManager.GetComponentData<UnitBehaviorTreeComponent>(_selectedRuntimeEntity);
+            if (component.TreeIndex < 0 ||
+                !entityManager.HasBuffer<BehaviorNodeStateElement>(_selectedRuntimeEntity))
+            {
+                return null;
+            }
+
+            EntityQuery registryQuery = entityManager.CreateEntityQuery(
+                ComponentType.ReadOnly<BehaviorTreeRuntimeRegistryComponent>());
+            if (registryQuery.IsEmptyIgnoreFilter)
+                return null;
+
+            BlobAssetReference<BehaviorTreeRuntimeRegistryBlob> registry =
+                registryQuery.GetSingleton<BehaviorTreeRuntimeRegistryComponent>().Value;
+            if (!registry.IsCreated || component.TreeIndex >= registry.Value.Trees.Length)
+                return null;
+
+            ref BehaviorTreeDefinitionBlob tree = ref registry.Value.Trees[component.TreeIndex];
+            DynamicBuffer<BehaviorNodeStateElement> states =
+                entityManager.GetBuffer<BehaviorNodeStateElement>(_selectedRuntimeEntity, true);
+            BehaviorTreeDebugSnapshot snapshot = new(_selectedRuntimeEntity, component.TickVersion);
+            int count = math.min(tree.Nodes.Length, states.Length);
+            for (int index = 0; index < count; index++)
+            {
+                BehaviorNodeStateElement state = states[index];
+                if (component.TickVersion != 0 && state.LastTickVersion == component.TickVersion)
+                    snapshot.Add(tree.Nodes[index].Guid.ToString(), state.LastStatus);
+            }
+            return snapshot;
         }
 
         private UnitRuntimeDrawerContext FindDebugDrawerContext()
@@ -1583,12 +1617,12 @@ namespace CrystalMagic.Editor.Unit
             nodeView?.RefreshDisplay();
         }
 
-        public void RefreshRuntimeDebug(BehaviorTreeRuntime runtime)
+        internal void RefreshRuntimeDebug(BehaviorTreeDebugSnapshot snapshot)
         {
             foreach (BehaviorTreeNodeView view in _nodeViews.Values)
             {
                 BehaviorNodeStatus status = default;
-                bool hasStatus = runtime != null && runtime.TryGetDebugNodeStatus(view.NodeData.Guid, out status);
+                bool hasStatus = snapshot != null && snapshot.TryGetNodeStatus(view.NodeData.Guid, out status);
                 view.RefreshRuntimeDebug(hasStatus, status);
             }
         }
@@ -1881,6 +1915,32 @@ namespace CrystalMagic.Editor.Unit
 
     }
 
+    internal sealed class BehaviorTreeDebugSnapshot
+    {
+        private readonly Dictionary<string, BehaviorNodeStatus> _statuses =
+            new(StringComparer.Ordinal);
+
+        public BehaviorTreeDebugSnapshot(Entity entity, uint tickVersion)
+        {
+            Entity = entity;
+            TickVersion = tickVersion;
+        }
+
+        public Entity Entity { get; }
+        public uint TickVersion { get; }
+
+        public void Add(string guid, BehaviorNodeStatus status)
+        {
+            if (!string.IsNullOrWhiteSpace(guid))
+                _statuses[guid] = status;
+        }
+
+        public bool TryGetNodeStatus(string guid, out BehaviorNodeStatus status)
+        {
+            return _statuses.TryGetValue(guid ?? string.Empty, out status);
+        }
+    }
+
     internal sealed class BehaviorTreeRuntimeDataInspector
     {
         private const int MaxExpressionDepth = 16;
@@ -1888,16 +1948,14 @@ namespace CrystalMagic.Editor.Unit
         private static readonly UnitSourceSchema s_sourceSchema = UnitSourceSchemaFactory.CreateForAllSources();
 
         private readonly Dictionary<string, HashSet<Type>> _nodeComponentTypes = new(StringComparer.Ordinal);
-        private BehaviorTreeRuntime _runtime;
         private BehaviorTreeData _tree;
         private string _selectedNodeGuid;
 
-        public void Refresh(BehaviorTreeRuntime runtime, BehaviorTreeData tree)
+        public void Refresh(BehaviorTreeData tree)
         {
-            if (ReferenceEquals(_runtime, runtime) && ReferenceEquals(_tree, tree))
+            if (ReferenceEquals(_tree, tree))
                 return;
 
-            _runtime = runtime;
             _tree = tree;
             _nodeComponentTypes.Clear();
             if (tree?.Nodes == null)
@@ -1909,7 +1967,6 @@ namespace CrystalMagic.Editor.Unit
 
         public void Invalidate()
         {
-            _runtime = null;
             _tree = null;
             _nodeComponentTypes.Clear();
             _selectedNodeGuid = null;
@@ -1920,9 +1977,9 @@ namespace CrystalMagic.Editor.Unit
             _selectedNodeGuid = nodeGuid;
         }
 
-        public void Draw(BehaviorTreeRuntime runtime, UnitRuntimeDrawerContext context, BehaviorTreeData tree)
+        public void Draw(UnitRuntimeDrawerContext context, BehaviorTreeData tree)
         {
-            Refresh(runtime, tree);
+            Refresh(tree);
             EditorGUILayout.Space(10f);
             EditorGUILayout.LabelField("Component Data", EditorStyles.boldLabel);
             if (context == null)

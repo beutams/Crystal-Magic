@@ -214,7 +214,7 @@ namespace CrystalMagic.UI
 
             if (PlayerCurrentSkillUtility.TryGetCurrentSlot(entityManager, player, out _))
             {
-                PlayerCurrentSkillComponent currentSkill = entityManager.GetComponentObject<PlayerCurrentSkillComponent>(player);
+                PlayerCurrentSkillComponent currentSkill = entityManager.GetComponentData<PlayerCurrentSkillComponent>(player);
                 snapshot.CurrentSkillChainIndex = currentSkill.CurrentChainId;
                 snapshot.CurrentSkillSlotIndex = currentSkill.CurrentSlotIndex;
             }

@@ -47,8 +47,8 @@ namespace CrystalMagic.Game.Data.Effects
             float attributePower = ResolveAttributePower(elementComponent);
             SkillModifierSet runtimeModifiers = CreateModifiersWithAttributePower(modifiers, attributePower);
             DamageEffectData copy = (DamageEffectData)base.CreateRuntimeCopy(runtimeModifiers, elementComponent);
-            float skillDamageFactor = runtimeModifiers?.GetFactor(SkillModifierChannel.Damage) ?? 1f;
-            float skillDamageBonus = runtimeModifiers?.GetBonus(SkillModifierChannel.Damage) ?? 0f;
+            float skillDamageFactor = runtimeModifiers.GetFactor(SkillModifierChannel.Damage);
+            float skillDamageBonus = runtimeModifiers.GetBonus(SkillModifierChannel.Damage);
             float elementMultiplier = Element == ElementType.None
                 ? 1f
                 : math.max(0f, 1f + GetAttributePowerValue(runtimeModifiers));

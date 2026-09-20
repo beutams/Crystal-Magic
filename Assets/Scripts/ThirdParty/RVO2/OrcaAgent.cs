@@ -3,193 +3,216 @@
  * SPDX-FileCopyrightText: 2008 University of North Carolina at Chapel Hill
  * SPDX-License-Identifier: Apache-2.0
  *
- * Modified for Crystal Magic: the internal KD-tree, static-obstacle solver,
- * parallel simulation loop, and position integration were removed. Agent
- * neighbors are supplied by the game's UnitQueryGrid and ECS remains the
- * authoritative owner of positions and velocities.
+ * Modified for Crystal Magic: this is an unmanaged, Burst-compatible ORCA solver.
+ * Neighbor discovery is supplied by the game's ECS UnitQuery buffer and ECS remains
+ * the authoritative owner of positions and velocities.
  */
 
-using System;
-using System.Collections.Generic;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Mathematics;
 
 namespace CrystalMagic.ThirdParty.RVO2
 {
-    internal sealed class Agent
+    internal struct AgentData
     {
-        private readonly List<KeyValuePair<float, Agent>> _agentNeighbors = new();
-        private readonly List<Line> _orcaLines = new();
-        private Vector2 _newVelocity;
+        internal Entity Entity;
+        internal int MaxNeighbors;
+        internal float MaxSpeed;
+        internal float NeighborDistance;
+        internal float Radius;
+        internal float TimeHorizon;
+        internal float2 Position;
+        internal float2 PreferredVelocity;
+        internal float2 Velocity;
+        internal byte HasFrameVelocity;
+    }
 
-        internal int Id { get; private set; }
-        internal int MaxNeighbors { get; private set; }
-        internal float MaxSpeed { get; private set; }
-        internal float NeighborDistance { get; private set; }
-        internal float Radius { get; private set; }
-        internal float TimeHorizon { get; private set; }
-        internal Vector2 Position { get; private set; }
-        internal Vector2 PreferredVelocity { get; private set; }
-        internal Vector2 Velocity { get; private set; }
-        internal Vector2 NewVelocity => _newVelocity;
+    internal struct AgentNeighbor
+    {
+        internal float DistanceSq;
+        internal Entity Entity;
+        internal float2 Position;
+        internal float2 Velocity;
+        internal float Radius;
+    }
 
-        internal void Configure(
-            int id,
-            Vector2 position,
-            Vector2 velocity,
-            Vector2 preferredVelocity,
-            float neighborDistance,
-            int maxNeighbors,
-            float timeHorizon,
-            float radius,
-            float maxSpeed)
+    internal struct OrcaLine
+    {
+        internal float2 Direction;
+        internal float2 Point;
+    }
+
+    internal static class OrcaSolver
+    {
+        private const float Epsilon = 0.00001f;
+
+        internal static void InsertNeighbor(
+            in AgentData self,
+            in AgentData other,
+            ref FixedList4096Bytes<AgentNeighbor> neighbors,
+            ref float rangeSq)
         {
-            Id = id;
-            Position = position;
-            Velocity = velocity;
-            PreferredVelocity = preferredVelocity;
-            NeighborDistance = Math.Max(0f, neighborDistance);
-            MaxNeighbors = Math.Max(0, maxNeighbors);
-            TimeHorizon = Math.Max(RvoMath.Epsilon, timeHorizon);
-            Radius = Math.Max(0f, radius);
-            MaxSpeed = Math.Max(0f, maxSpeed);
-            _newVelocity = velocity;
-        }
-
-        internal void BeginNeighborQuery()
-        {
-            _agentNeighbors.Clear();
-        }
-
-        internal void InsertAgentNeighbor(Agent agent, ref float rangeSq)
-        {
-            if (agent == null || agent == this || MaxNeighbors <= 0)
+            int maxNeighbors = math.min(math.max(0, self.MaxNeighbors), neighbors.Capacity);
+            if (maxNeighbors <= 0 || self.Entity == other.Entity)
                 return;
 
-            float distanceSq = RvoMath.AbsSq(Position - agent.Position);
+            float distanceSq = math.lengthsq(self.Position - other.Position);
             if (distanceSq >= rangeSq)
                 return;
 
-            if (_agentNeighbors.Count < MaxNeighbors)
-                _agentNeighbors.Add(new KeyValuePair<float, Agent>(distanceSq, agent));
-
-            int index = _agentNeighbors.Count - 1;
-            while (index != 0 && distanceSq < _agentNeighbors[index - 1].Key)
+            AgentNeighbor candidate = new()
             {
-                _agentNeighbors[index] = _agentNeighbors[index - 1];
+                DistanceSq = distanceSq,
+                Entity = other.Entity,
+                Position = other.Position,
+                Velocity = other.Velocity,
+                Radius = other.Radius,
+            };
+            if (neighbors.Length < maxNeighbors)
+                neighbors.Add(candidate);
+
+            int index = math.min(neighbors.Length - 1, maxNeighbors - 1);
+            while (index > 0)
+            {
+                AgentNeighbor previous = neighbors[index - 1];
+                if (!IsBefore(in candidate, in previous))
+                    break;
+                neighbors[index] = neighbors[index - 1];
                 index--;
             }
 
-            _agentNeighbors[index] = new KeyValuePair<float, Agent>(distanceSq, agent);
-            if (_agentNeighbors.Count == MaxNeighbors)
-                rangeSq = _agentNeighbors[_agentNeighbors.Count - 1].Key;
+            neighbors[index] = candidate;
+            if (neighbors.Length == maxNeighbors)
+                rangeSq = neighbors[neighbors.Length - 1].DistanceSq;
         }
 
-        internal void ComputeNewVelocity(float timeStep)
+        internal static float2 ComputeNewVelocity(
+            in AgentData self,
+            in FixedList4096Bytes<AgentNeighbor> neighbors,
+            float timeStep)
         {
-            _orcaLines.Clear();
-            float inverseTimeHorizon = 1f / TimeHorizon;
-            float inverseTimeStep = 1f / Math.Max(RvoMath.Epsilon, timeStep);
+            FixedList4096Bytes<OrcaLine> lines = default;
+            float inverseTimeHorizon = 1f / math.max(Epsilon, self.TimeHorizon);
+            float inverseTimeStep = 1f / math.max(Epsilon, timeStep);
 
-            for (int index = 0; index < _agentNeighbors.Count; index++)
+            for (int index = 0; index < neighbors.Length && lines.Length < lines.Capacity; index++)
             {
-                Agent other = _agentNeighbors[index].Value;
-                Vector2 relativePosition = other.Position - Position;
-                Vector2 relativeVelocity = Velocity - other.Velocity;
-                float distanceSq = RvoMath.AbsSq(relativePosition);
-                float combinedRadius = Radius + other.Radius;
+                AgentNeighbor other = neighbors[index];
+                float2 relativePosition = other.Position - self.Position;
+                float2 relativeVelocity = self.Velocity - other.Velocity;
+                float distanceSq = math.lengthsq(relativePosition);
+                float combinedRadius = self.Radius + other.Radius;
                 float combinedRadiusSq = combinedRadius * combinedRadius;
 
-                Line line;
-                Vector2 correction;
-
+                OrcaLine line;
+                float2 correction;
                 if (distanceSq > combinedRadiusSq)
                 {
-                    Vector2 w = relativeVelocity - inverseTimeHorizon * relativePosition;
-                    float wLengthSq = RvoMath.AbsSq(w);
-                    float dotProduct = w * relativePosition;
+                    float2 w = relativeVelocity - inverseTimeHorizon * relativePosition;
+                    float wLengthSq = math.lengthsq(w);
+                    float dotProduct = math.dot(w, relativePosition);
 
                     if (dotProduct < 0f && dotProduct * dotProduct > combinedRadiusSq * wLengthSq)
                     {
-                        float wLength = RvoMath.Sqrt(wLengthSq);
-                        Vector2 unitW = w / wLength;
-                        line.Direction = new Vector2(unitW.Y, -unitW.X);
+                        float wLength = math.sqrt(wLengthSq);
+                        float2 unitW = w / wLength;
+                        line.Direction = new float2(unitW.y, -unitW.x);
                         correction = (combinedRadius * inverseTimeHorizon - wLength) * unitW;
                     }
                     else
                     {
-                        float leg = RvoMath.Sqrt(Math.Max(0f, distanceSq - combinedRadiusSq));
-                        if (RvoMath.Det(relativePosition, w) > 0f)
+                        float leg = math.sqrt(math.max(0f, distanceSq - combinedRadiusSq));
+                        if (Det(relativePosition, w) > 0f)
                         {
-                            line.Direction = new Vector2(
-                                relativePosition.X * leg - relativePosition.Y * combinedRadius,
-                                relativePosition.X * combinedRadius + relativePosition.Y * leg) / distanceSq;
+                            line.Direction = new float2(
+                                relativePosition.x * leg - relativePosition.y * combinedRadius,
+                                relativePosition.x * combinedRadius + relativePosition.y * leg) / distanceSq;
                         }
                         else
                         {
-                            line.Direction = -new Vector2(
-                                relativePosition.X * leg + relativePosition.Y * combinedRadius,
-                                -relativePosition.X * combinedRadius + relativePosition.Y * leg) / distanceSq;
+                            line.Direction = -new float2(
+                                relativePosition.x * leg + relativePosition.y * combinedRadius,
+                                -relativePosition.x * combinedRadius + relativePosition.y * leg) / distanceSq;
                         }
 
-                        float directionDot = relativeVelocity * line.Direction;
-                        correction = directionDot * line.Direction - relativeVelocity;
+                        correction = math.dot(relativeVelocity, line.Direction) * line.Direction - relativeVelocity;
                     }
                 }
                 else
                 {
-                    Vector2 w = relativeVelocity - inverseTimeStep * relativePosition;
-                    float wLength = RvoMath.Abs(w);
-                    Vector2 unitW;
-                    if (wLength > RvoMath.Epsilon)
-                    {
+                    float2 w = relativeVelocity - inverseTimeStep * relativePosition;
+                    float wLength = math.length(w);
+                    float2 unitW;
+                    if (wLength > Epsilon)
                         unitW = w / wLength;
-                    }
-                    else if (distanceSq > RvoMath.Epsilon * RvoMath.Epsilon)
-                    {
-                        unitW = RvoMath.Normalize(-relativePosition);
-                    }
+                    else if (distanceSq > Epsilon * Epsilon)
+                        unitW = math.normalizesafe(-relativePosition);
                     else
-                    {
-                        unitW = Id < other.Id ? new Vector2(1f, 0f) : new Vector2(-1f, 0f);
-                    }
+                        unitW = IsEntityBefore(self.Entity, other.Entity)
+                            ? new float2(1f, 0f)
+                            : new float2(-1f, 0f);
 
-                    line.Direction = new Vector2(unitW.Y, -unitW.X);
+                    line.Direction = new float2(unitW.y, -unitW.x);
                     correction = (combinedRadius * inverseTimeStep - wLength) * unitW;
                 }
 
-                line.Point = Velocity + 0.5f * correction;
-                _orcaLines.Add(line);
+                line.Point = self.Velocity + 0.5f * correction;
+                lines.Add(line);
             }
 
-            int failedLine = LinearProgram2(_orcaLines, MaxSpeed, PreferredVelocity, false, out _newVelocity);
-            if (failedLine < _orcaLines.Count)
-                LinearProgram3(_orcaLines, failedLine, MaxSpeed, ref _newVelocity);
+            int failedLine = LinearProgram2(
+                in lines,
+                self.MaxSpeed,
+                self.PreferredVelocity,
+                false,
+                out float2 result);
+            if (failedLine < lines.Length)
+                LinearProgram3(in lines, failedLine, self.MaxSpeed, ref result);
+            return result;
+        }
+
+        private static bool IsBefore(in AgentNeighbor left, in AgentNeighbor right)
+        {
+            if (left.DistanceSq != right.DistanceSq)
+                return left.DistanceSq < right.DistanceSq;
+            return IsEntityBefore(left.Entity, right.Entity);
+        }
+
+        private static bool IsEntityBefore(Entity left, Entity right)
+        {
+            return left.Index != right.Index
+                ? left.Index < right.Index
+                : left.Version < right.Version;
         }
 
         private static bool LinearProgram1(
-            IReadOnlyList<Line> lines,
+            in FixedList4096Bytes<OrcaLine> lines,
             int lineNumber,
             float radius,
-            Vector2 optimalVelocity,
+            float2 optimalVelocity,
             bool directionOnly,
-            ref Vector2 result)
+            ref float2 result)
         {
-            float dotProduct = lines[lineNumber].Point * lines[lineNumber].Direction;
-            float discriminant = dotProduct * dotProduct + radius * radius - RvoMath.AbsSq(lines[lineNumber].Point);
+            OrcaLine selectedLine = lines[lineNumber];
+            float dotProduct = math.dot(selectedLine.Point, selectedLine.Direction);
+            float discriminant = dotProduct * dotProduct + radius * radius - math.lengthsq(selectedLine.Point);
             if (discriminant < 0f)
                 return false;
 
-            float sqrtDiscriminant = RvoMath.Sqrt(discriminant);
+            float sqrtDiscriminant = math.sqrt(discriminant);
             float left = -dotProduct - sqrtDiscriminant;
             float right = -dotProduct + sqrtDiscriminant;
 
             for (int index = 0; index < lineNumber; index++)
             {
-                float denominator = RvoMath.Det(lines[lineNumber].Direction, lines[index].Direction);
-                float numerator = RvoMath.Det(
-                    lines[index].Direction,
-                    lines[lineNumber].Point - lines[index].Point);
+                OrcaLine previousLine = lines[index];
+                float denominator = Det(selectedLine.Direction, previousLine.Direction);
+                float numerator = Det(
+                    previousLine.Direction,
+                    selectedLine.Point - previousLine.Point);
 
-                if (Math.Abs(denominator) <= RvoMath.Epsilon)
+                if (math.abs(denominator) <= Epsilon)
                 {
                     if (numerator < 0f)
                         return false;
@@ -198,9 +221,9 @@ namespace CrystalMagic.ThirdParty.RVO2
 
                 float t = numerator / denominator;
                 if (denominator >= 0f)
-                    right = Math.Min(right, t);
+                    right = math.min(right, t);
                 else
-                    left = Math.Max(left, t);
+                    left = math.max(left, t);
 
                 if (left > right)
                     return false;
@@ -208,155 +231,111 @@ namespace CrystalMagic.ThirdParty.RVO2
 
             if (directionOnly)
             {
-                result = optimalVelocity * lines[lineNumber].Direction > 0f
-                    ? lines[lineNumber].Point + right * lines[lineNumber].Direction
-                    : lines[lineNumber].Point + left * lines[lineNumber].Direction;
+                result = math.dot(optimalVelocity, selectedLine.Direction) > 0f
+                    ? selectedLine.Point + right * selectedLine.Direction
+                    : selectedLine.Point + left * selectedLine.Direction;
             }
             else
             {
-                float t = lines[lineNumber].Direction * (optimalVelocity - lines[lineNumber].Point);
-                if (t < left)
-                    result = lines[lineNumber].Point + left * lines[lineNumber].Direction;
-                else if (t > right)
-                    result = lines[lineNumber].Point + right * lines[lineNumber].Direction;
-                else
-                    result = lines[lineNumber].Point + t * lines[lineNumber].Direction;
+                float t = math.dot(selectedLine.Direction, optimalVelocity - selectedLine.Point);
+                result = t < left
+                    ? selectedLine.Point + left * selectedLine.Direction
+                    : t > right
+                        ? selectedLine.Point + right * selectedLine.Direction
+                        : selectedLine.Point + t * selectedLine.Direction;
             }
 
             return true;
         }
 
         private static int LinearProgram2(
-            IReadOnlyList<Line> lines,
+            in FixedList4096Bytes<OrcaLine> lines,
             float radius,
-            Vector2 optimalVelocity,
+            float2 optimalVelocity,
             bool directionOnly,
-            out Vector2 result)
+            out float2 result)
         {
             if (directionOnly)
                 result = optimalVelocity * radius;
-            else if (RvoMath.AbsSq(optimalVelocity) > radius * radius)
-                result = RvoMath.Normalize(optimalVelocity) * radius;
+            else if (math.lengthsq(optimalVelocity) > radius * radius)
+                result = math.normalizesafe(optimalVelocity) * radius;
             else
                 result = optimalVelocity;
 
-            for (int index = 0; index < lines.Count; index++)
+            for (int index = 0; index < lines.Length; index++)
             {
-                if (RvoMath.Det(lines[index].Direction, lines[index].Point - result) <= 0f)
+                OrcaLine line = lines[index];
+                if (Det(line.Direction, line.Point - result) <= 0f)
                     continue;
 
-                Vector2 previousResult = result;
-                if (!LinearProgram1(lines, index, radius, optimalVelocity, directionOnly, ref result))
+                float2 previousResult = result;
+                if (!LinearProgram1(in lines, index, radius, optimalVelocity, directionOnly, ref result))
                 {
                     result = previousResult;
                     return index;
                 }
             }
 
-            return lines.Count;
+            return lines.Length;
         }
 
         private static void LinearProgram3(
-            IReadOnlyList<Line> lines,
+            in FixedList4096Bytes<OrcaLine> lines,
             int firstFailedLine,
             float radius,
-            ref Vector2 result)
+            ref float2 result)
         {
             float distance = 0f;
-            for (int index = firstFailedLine; index < lines.Count; index++)
+            for (int index = firstFailedLine; index < lines.Length; index++)
             {
-                if (RvoMath.Det(lines[index].Direction, lines[index].Point - result) <= distance)
+                OrcaLine selectedLine = lines[index];
+                if (Det(selectedLine.Direction, selectedLine.Point - result) <= distance)
                     continue;
 
-                List<Line> projectedLines = new(index);
-                for (int previousIndex = 0; previousIndex < index; previousIndex++)
+                FixedList4096Bytes<OrcaLine> projectedLines = default;
+                for (int previousIndex = 0;
+                     previousIndex < index && projectedLines.Length < projectedLines.Capacity;
+                     previousIndex++)
                 {
-                    Line line;
-                    float determinant = RvoMath.Det(lines[index].Direction, lines[previousIndex].Direction);
-                    if (Math.Abs(determinant) <= RvoMath.Epsilon)
+                    OrcaLine previousLine = lines[previousIndex];
+                    OrcaLine projectedLine;
+                    float determinant = Det(selectedLine.Direction, previousLine.Direction);
+                    if (math.abs(determinant) <= Epsilon)
                     {
-                        if (lines[index].Direction * lines[previousIndex].Direction > 0f)
+                        if (math.dot(selectedLine.Direction, previousLine.Direction) > 0f)
                             continue;
-
-                        line.Point = 0.5f * (lines[index].Point + lines[previousIndex].Point);
+                        projectedLine.Point = 0.5f * (selectedLine.Point + previousLine.Point);
                     }
                     else
                     {
-                        line.Point = lines[index].Point +
-                                     RvoMath.Det(
-                                         lines[previousIndex].Direction,
-                                         lines[index].Point - lines[previousIndex].Point) /
-                                     determinant * lines[index].Direction;
+                        projectedLine.Point = selectedLine.Point +
+                                              Det(previousLine.Direction, selectedLine.Point - previousLine.Point) /
+                                              determinant * selectedLine.Direction;
                     }
 
-                    line.Direction = RvoMath.Normalize(lines[previousIndex].Direction - lines[index].Direction);
-                    projectedLines.Add(line);
+                    projectedLine.Direction = math.normalizesafe(previousLine.Direction - selectedLine.Direction);
+                    projectedLines.Add(projectedLine);
                 }
 
-                Vector2 previousResult = result;
-                Vector2 optimizationDirection = new(-lines[index].Direction.Y, lines[index].Direction.X);
-                if (LinearProgram2(projectedLines, radius, optimizationDirection, true, out result) < projectedLines.Count)
+                float2 previousResult = result;
+                float2 optimizationDirection = new(-selectedLine.Direction.y, selectedLine.Direction.x);
+                if (LinearProgram2(
+                        in projectedLines,
+                        radius,
+                        optimizationDirection,
+                        true,
+                        out result) < projectedLines.Length)
+                {
                     result = previousResult;
+                }
 
-                distance = RvoMath.Det(lines[index].Direction, lines[index].Point - result);
+                distance = Det(selectedLine.Direction, selectedLine.Point - result);
             }
         }
-    }
 
-    internal struct Line
-    {
-        internal Vector2 Direction;
-        internal Vector2 Point;
-    }
-
-    internal static class RvoMath
-    {
-        internal const float Epsilon = 0.00001f;
-
-        internal static float Abs(Vector2 vector) => Sqrt(AbsSq(vector));
-
-        internal static float AbsSq(Vector2 vector) => vector * vector;
-
-        internal static float Det(Vector2 first, Vector2 second) =>
-            first.X * second.Y - first.Y * second.X;
-
-        internal static Vector2 Normalize(Vector2 vector)
+        private static float Det(float2 left, float2 right)
         {
-            float length = Abs(vector);
-            return length <= Epsilon ? new Vector2(0f, 0f) : vector / length;
+            return left.x * right.y - left.y * right.x;
         }
-
-        internal static float Sqrt(float value) => (float)Math.Sqrt(value);
-    }
-
-    internal readonly struct Vector2
-    {
-        internal Vector2(float x, float y)
-        {
-            X = x;
-            Y = y;
-        }
-
-        internal float X { get; }
-        internal float Y { get; }
-
-        public static float operator *(Vector2 first, Vector2 second) =>
-            first.X * second.X + first.Y * second.Y;
-
-        public static Vector2 operator *(float scalar, Vector2 vector) => vector * scalar;
-
-        public static Vector2 operator *(Vector2 vector, float scalar) =>
-            new(vector.X * scalar, vector.Y * scalar);
-
-        public static Vector2 operator /(Vector2 vector, float scalar) =>
-            new(vector.X / scalar, vector.Y / scalar);
-
-        public static Vector2 operator +(Vector2 first, Vector2 second) =>
-            new(first.X + second.X, first.Y + second.Y);
-
-        public static Vector2 operator -(Vector2 first, Vector2 second) =>
-            new(first.X - second.X, first.Y - second.Y);
-
-        public static Vector2 operator -(Vector2 vector) => new(-vector.X, -vector.Y);
     }
 }

@@ -58,21 +58,22 @@ public static class UnitPerceptionSource
     [UnitSourceGet(9, "unit.perception.nearestUnitByName", UnitValueCategory.Entity, UnitValueCategory.String, ParameterNames = new[] { "Unit Name" })]
     public static bool TryGet(
         int operation,
-        EntityManager entityManager,
         Entity entity,
+        in ComponentLookup<UnitPerceptionComponent> perceptions,
+        in BufferLookup<UnitPerceptionUnitElement> perceptionUnits,
+        in ComponentLookup<UnitFactionComponent> factions,
+        in ComponentLookup<UnitDeathComponent> deaths,
+        in ComponentLookup<DestroyEntityFlag> destroyFlags,
         in UnitSourceArguments arguments,
         out UnitSourceValue result)
     {
         result = default;
-        if (!entityManager.Exists(entity) ||
-            !entityManager.HasComponent<UnitPerceptionComponent>(entity) ||
-            !entityManager.HasBuffer<UnitPerceptionUnitElement>(entity))
+        if (!perceptions.TryGetComponent(entity, out UnitPerceptionComponent perception) ||
+            !perceptionUnits.TryGetBuffer(entity, out DynamicBuffer<UnitPerceptionUnitElement> units))
         {
             return false;
         }
 
-        UnitPerceptionComponent perception = entityManager.GetComponentData<UnitPerceptionComponent>(entity);
-        DynamicBuffer<UnitPerceptionUnitElement> units = entityManager.GetBuffer<UnitPerceptionUnitElement>(entity);
         switch (operation)
         {
             case 0:
@@ -88,23 +89,62 @@ public static class UnitPerceptionSource
                 result = UnitSourceValue.FromEntity(units[index].Value);
                 return true;
             case 4 when TryGetFaction(in arguments, 0, out UnitFactionType faction):
-                result = UnitSourceValue.FromInt(UnitPerceptionQueryUtility.GetCountByFaction(entityManager, entity, faction));
+                result = UnitSourceValue.FromInt(GetCountByFaction(
+                    in units,
+                    faction,
+                    in factions,
+                    in deaths,
+                    in destroyFlags));
                 return true;
-            case 5 when TryGetFaction(in arguments, 0, out UnitFactionType faction) && arguments.TryGetInt(1, out int index):
-                result = UnitSourceValue.FromEntity(UnitPerceptionQueryUtility.GetByFactionAt(entityManager, entity, faction, index));
+            case 5 when TryGetFaction(in arguments, 0, out UnitFactionType faction) &&
+                             arguments.TryGetInt(1, out int index):
+                result = UnitSourceValue.FromEntity(GetByFactionAt(
+                    in units,
+                    faction,
+                    index,
+                    in factions,
+                    in deaths,
+                    in destroyFlags));
                 return true;
             case 6 when TryGetFaction(in arguments, 0, out UnitFactionType faction) &&
-                             UnitPerceptionQueryUtility.TryGetNearestByFaction(entityManager, entity, faction, out Entity factionUnit, out _):
+                             TryGetNearestByFaction(
+                                 in units,
+                                 faction,
+                                 in factions,
+                                 in deaths,
+                                 in destroyFlags,
+                                 out Entity factionUnit):
                 result = UnitSourceValue.FromEntity(factionUnit);
                 return true;
             case 7 when arguments.TryGetString(0, out FixedString128Bytes unitName):
-                result = UnitSourceValue.FromInt(UnitPerceptionQueryUtility.GetCountByName(entityManager, entity, unitName.ToString()));
+                result = UnitSourceValue.FromInt(GetCountByName(
+                    in units,
+                    in unitName,
+                    in perceptions,
+                    in factions,
+                    in deaths,
+                    in destroyFlags));
                 return true;
-            case 8 when arguments.TryGetString(0, out FixedString128Bytes unitName) && arguments.TryGetInt(1, out int index):
-                result = UnitSourceValue.FromEntity(UnitPerceptionQueryUtility.GetByNameAt(entityManager, entity, unitName.ToString(), index));
+            case 8 when arguments.TryGetString(0, out FixedString128Bytes unitName) &&
+                             arguments.TryGetInt(1, out int index):
+                result = UnitSourceValue.FromEntity(GetByNameAt(
+                    in units,
+                    in unitName,
+                    index,
+                    in perceptions,
+                    in factions,
+                    in deaths,
+                    in destroyFlags));
                 return true;
             case 9 when arguments.TryGetString(0, out FixedString128Bytes unitName) &&
-                             UnitPerceptionQueryUtility.TryGetNearestByName(entityManager, entity, unitName.ToString(), out Entity nameUnit, out _):
+                             TryGetNearestByName(
+                                 in units,
+                                 in unitName,
+                                 in perceptions,
+                                 in factions,
+                                 in deaths,
+                                 in destroyFlags,
+                                 out Entity nameUnit):
                 result = UnitSourceValue.FromEntity(nameUnit);
                 return true;
             default:
@@ -116,12 +156,196 @@ public static class UnitPerceptionSource
     {
         faction = default;
         if (!arguments.TryGetInt(index, out int factionValue) ||
-            !System.Enum.IsDefined(typeof(UnitFactionType), factionValue))
-        {
+            factionValue < (int)UnitFactionType.Player || factionValue > (int)UnitFactionType.Npc)
             return false;
-        }
 
         faction = (UnitFactionType)factionValue;
         return true;
+    }
+
+    private static int GetCountByFaction(
+        in DynamicBuffer<UnitPerceptionUnitElement> units,
+        UnitFactionType faction,
+        in ComponentLookup<UnitFactionComponent> factions,
+        in ComponentLookup<UnitDeathComponent> deaths,
+        in ComponentLookup<DestroyEntityFlag> destroyFlags)
+    {
+        int count = 0;
+        for (int index = 0; index < units.Length; index++)
+        {
+            UnitPerceptionUnitElement unit = units[index];
+            if (unit.Faction == faction && IsAvailable(unit.Value, in factions, in deaths, in destroyFlags))
+                count++;
+        }
+
+        return count;
+    }
+
+    private static Entity GetByFactionAt(
+        in DynamicBuffer<UnitPerceptionUnitElement> units,
+        UnitFactionType faction,
+        int targetIndex,
+        in ComponentLookup<UnitFactionComponent> factions,
+        in ComponentLookup<UnitDeathComponent> deaths,
+        in ComponentLookup<DestroyEntityFlag> destroyFlags)
+    {
+        if (targetIndex < 0)
+            return Entity.Null;
+
+        int currentIndex = 0;
+        for (int index = 0; index < units.Length; index++)
+        {
+            UnitPerceptionUnitElement unit = units[index];
+            if (unit.Faction != faction || !IsAvailable(unit.Value, in factions, in deaths, in destroyFlags))
+                continue;
+
+            if (currentIndex++ == targetIndex)
+                return unit.Value;
+        }
+
+        return Entity.Null;
+    }
+
+    private static bool TryGetNearestByFaction(
+        in DynamicBuffer<UnitPerceptionUnitElement> units,
+        UnitFactionType faction,
+        in ComponentLookup<UnitFactionComponent> factions,
+        in ComponentLookup<UnitDeathComponent> deaths,
+        in ComponentLookup<DestroyEntityFlag> destroyFlags,
+        out Entity result)
+    {
+        result = Entity.Null;
+        float nearestDistanceSq = float.MaxValue;
+        for (int index = 0; index < units.Length; index++)
+        {
+            UnitPerceptionUnitElement unit = units[index];
+            if (unit.Faction != faction || unit.DistanceSq >= nearestDistanceSq ||
+                !IsAvailable(unit.Value, in factions, in deaths, in destroyFlags))
+            {
+                continue;
+            }
+
+            nearestDistanceSq = unit.DistanceSq;
+            result = unit.Value;
+        }
+
+        return result != Entity.Null;
+    }
+
+    private static int GetCountByName(
+        in DynamicBuffer<UnitPerceptionUnitElement> units,
+        in FixedString128Bytes unitName,
+        in ComponentLookup<UnitPerceptionComponent> perceptions,
+        in ComponentLookup<UnitFactionComponent> factions,
+        in ComponentLookup<UnitDeathComponent> deaths,
+        in ComponentLookup<DestroyEntityFlag> destroyFlags)
+    {
+        int count = 0;
+        for (int index = 0; index < units.Length; index++)
+        {
+            if (MatchesName(
+                    units[index].Value,
+                    in unitName,
+                    in perceptions,
+                    in factions,
+                    in deaths,
+                    in destroyFlags))
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private static Entity GetByNameAt(
+        in DynamicBuffer<UnitPerceptionUnitElement> units,
+        in FixedString128Bytes unitName,
+        int targetIndex,
+        in ComponentLookup<UnitPerceptionComponent> perceptions,
+        in ComponentLookup<UnitFactionComponent> factions,
+        in ComponentLookup<UnitDeathComponent> deaths,
+        in ComponentLookup<DestroyEntityFlag> destroyFlags)
+    {
+        if (targetIndex < 0)
+            return Entity.Null;
+
+        int currentIndex = 0;
+        for (int index = 0; index < units.Length; index++)
+        {
+            Entity candidate = units[index].Value;
+            if (!MatchesName(
+                    candidate,
+                    in unitName,
+                    in perceptions,
+                    in factions,
+                    in deaths,
+                    in destroyFlags))
+            {
+                continue;
+            }
+
+            if (currentIndex++ == targetIndex)
+                return candidate;
+        }
+
+        return Entity.Null;
+    }
+
+    private static bool TryGetNearestByName(
+        in DynamicBuffer<UnitPerceptionUnitElement> units,
+        in FixedString128Bytes unitName,
+        in ComponentLookup<UnitPerceptionComponent> perceptions,
+        in ComponentLookup<UnitFactionComponent> factions,
+        in ComponentLookup<UnitDeathComponent> deaths,
+        in ComponentLookup<DestroyEntityFlag> destroyFlags,
+        out Entity result)
+    {
+        result = Entity.Null;
+        float nearestDistanceSq = float.MaxValue;
+        for (int index = 0; index < units.Length; index++)
+        {
+            UnitPerceptionUnitElement unit = units[index];
+            if (unit.DistanceSq >= nearestDistanceSq ||
+                !MatchesName(
+                    unit.Value,
+                    in unitName,
+                    in perceptions,
+                    in factions,
+                    in deaths,
+                    in destroyFlags))
+            {
+                continue;
+            }
+
+            nearestDistanceSq = unit.DistanceSq;
+            result = unit.Value;
+        }
+
+        return result != Entity.Null;
+    }
+
+    private static bool MatchesName(
+        Entity entity,
+        in FixedString128Bytes unitName,
+        in ComponentLookup<UnitPerceptionComponent> perceptions,
+        in ComponentLookup<UnitFactionComponent> factions,
+        in ComponentLookup<UnitDeathComponent> deaths,
+        in ComponentLookup<DestroyEntityFlag> destroyFlags)
+    {
+        return IsAvailable(entity, in factions, in deaths, in destroyFlags) &&
+               perceptions.TryGetComponent(entity, out UnitPerceptionComponent perception) &&
+               perception.UnitName.Equals(unitName);
+    }
+
+    private static bool IsAvailable(
+        Entity entity,
+        in ComponentLookup<UnitFactionComponent> factions,
+        in ComponentLookup<UnitDeathComponent> deaths,
+        in ComponentLookup<DestroyEntityFlag> destroyFlags)
+    {
+        return entity != Entity.Null && factions.HasComponent(entity) &&
+               (!deaths.HasComponent(entity) || !deaths.IsComponentEnabled(entity)) &&
+               (!destroyFlags.HasComponent(entity) || !destroyFlags.IsComponentEnabled(entity));
     }
 }

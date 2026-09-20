@@ -34,7 +34,6 @@ namespace CrystalMagic.Game.Skill
             if (skillData == null)
                 return null;
 
-            modifiers ??= new SkillModifierSet();
             return new ResolvedSkillData
             {
                 Source = skillData,
@@ -51,7 +50,7 @@ namespace CrystalMagic.Game.Skill
             if (!math.isfinite(baseMpCost))
                 return 0;
 
-            float modifiedMpCost = modifiers?.Apply(SkillModifierChannel.MpCost, baseMpCost) ?? baseMpCost;
+            float modifiedMpCost = modifiers.Apply(SkillModifierChannel.MpCost, baseMpCost);
             return math.max(0, (int)math.round(modifiedMpCost));
         }
     }

@@ -1,18 +1,22 @@
-using System;
 using Unity.Entities;
+using Unity.Mathematics;
 
+/// <summary>
+/// Unmanaged references to the two world query buffers.
+/// </summary>
 public struct UnitQuerySingleton : IComponentData
 {
+    public Entity UnitGridEntity;
+    public Entity InteractableGridEntity;
+    public float InverseCellSize;
 }
 
-public sealed class UnitQueryRuntimeComponent : IComponentData, IDisposable
+/// <summary>
+/// One spatial-query entry. Buffers are sorted by CellKey and then Entity.
+/// </summary>
+public struct UnitQueryEntry : IBufferElementData
 {
-    public readonly UnitQueryGrid UnitGrid = new();
-    public readonly UnitQueryGrid InteractableGrid = new();
-
-    public void Dispose()
-    {
-        UnitGrid.Dispose();
-        InteractableGrid.Dispose();
-    }
+    public long CellKey;
+    public Entity Entity;
+    public float3 Position;
 }

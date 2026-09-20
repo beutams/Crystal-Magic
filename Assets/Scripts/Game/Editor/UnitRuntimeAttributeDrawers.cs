@@ -155,23 +155,21 @@ namespace CrystalMagic.Editor.Unit
         public void Draw(UnitRuntimeDrawerContext context)
         {
             UnitEditorWindow.DrawSectionHeader("Variables");
-            UnitVariableComponent localVariables = context.EntityManager.GetComponentObject<UnitVariableComponent>(context.Entity);
-            Entity configuredOwner = localVariables?.Owner ?? Entity.Null;
-            bool resolved = UnitVariableSource.TryResolveOwner(
+            UnitVariableComponent localVariables = context.EntityManager.GetComponentData<UnitVariableComponent>(context.Entity);
+            Entity other = localVariables.Other;
+            bool resolved = UnitVariableSource.TryGetBuffer(
                 context.EntityManager,
                 context.Entity,
-                out Entity valueOwner,
-                out UnitVariableComponent variables);
-            int count = resolved ? variables.Values?.Count ?? 0 : 0;
+                out DynamicBuffer<UnitVariableElement> variables);
+            int count = resolved ? variables.Length : 0;
 
             using (new EditorGUI.DisabledScope(true))
             {
-                EditorGUILayout.TextField("Owner", configuredOwner == Entity.Null ? "(self)" : configuredOwner.ToString());
-                EditorGUILayout.TextField("Value Owner", resolved ? valueOwner.ToString() : "(invalid)");
+                EditorGUILayout.TextField("Other", other == Entity.Null ? "(none)" : other.ToString());
                 EditorGUILayout.IntField("Count", count);
                 if (!resolved)
                 {
-                    EditorGUILayout.TextField("Values", "(owner is missing or is another consumer)");
+                    EditorGUILayout.TextField("Values", "(local buffer unavailable)");
                     return;
                 }
 
@@ -181,23 +179,26 @@ namespace CrystalMagic.Editor.Unit
                     return;
                 }
 
-                List<KeyValuePair<string, UnitValue>> entries = new(variables.Values);
-                entries.Sort((left, right) => string.Compare(left.Key, right.Key, StringComparison.Ordinal));
+                List<UnitVariableElement> entries = new(variables.Length);
+                for (int index = 0; index < variables.Length; index++)
+                    entries.Add(variables[index]);
+
+                entries.Sort((left, right) => left.Key.CompareTo(right.Key));
                 for (int i = 0; i < entries.Count; i++)
                 {
-                    KeyValuePair<string, UnitValue> entry = entries[i];
-                    DrawValue(entry.Key, entry.Value);
+                    UnitVariableElement entry = entries[i];
+                    DrawValue(entry.Key.ToString(), entry.Value);
                 }
             }
         }
 
-        private static void DrawValue(string key, UnitValue value)
+        private static void DrawValue(string key, UnitSourceValue value)
         {
             string label = $"{key} ({value.Type})";
             switch (value.Type)
             {
                 case UnitValueType.Bool:
-                    EditorGUILayout.Toggle(label, value.Bool);
+                    EditorGUILayout.Toggle(label, value.Bool != 0);
                     break;
                 case UnitValueType.Int:
                     EditorGUILayout.IntField(label, value.Int);
@@ -215,7 +216,7 @@ namespace CrystalMagic.Editor.Unit
                     EditorGUILayout.TextField(label, value.Entity.ToString());
                     break;
                 case UnitValueType.String:
-                    EditorGUILayout.TextField(label, value.String ?? string.Empty);
+                    EditorGUILayout.TextField(label, value.String.ToString());
                     break;
                 default:
                     EditorGUILayout.TextField(label, "(none)");
@@ -253,9 +254,11 @@ namespace CrystalMagic.Editor.Unit
 
         public void Draw(UnitRuntimeDrawerContext context)
         {
-            UnitSkillReleaseComponent release = context.EntityManager.GetComponentObject<UnitSkillReleaseComponent>(context.Entity);
             UnitEditorWindow.DrawSectionHeader("Skill Release");
-            EditorGUILayout.IntField("Pending Requests", release?.PendingRequests?.Count ?? 0);
+            int requestCount = context.EntityManager.HasBuffer<SkillReleaseRequest>(context.Entity)
+                ? context.EntityManager.GetBuffer<SkillReleaseRequest>(context.Entity, true).Length
+                : 0;
+            EditorGUILayout.IntField("Pending Requests", requestCount);
         }
     }
 

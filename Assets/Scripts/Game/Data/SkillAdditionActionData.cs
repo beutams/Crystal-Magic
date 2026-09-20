@@ -35,6 +35,7 @@ namespace CrystalMagic.Game.Data
     public sealed class SetSourceValueSkillAdditionActionData : SkillAdditionActionData
     {
         public string SetterKey = string.Empty;
+        public UnitSourceTarget SourceTarget = UnitSourceTarget.Self;
         public string Key = string.Empty;
         public List<ValueExpression> Values = new();
     }

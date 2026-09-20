@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
@@ -11,17 +9,20 @@ public sealed class UnitVariableAuthoring : MonoBehaviour
         public override void Bake(UnitVariableAuthoring authoring)
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
-            AddComponentObject(entity, new UnitVariableComponent());
+            AddComponent(entity, new UnitVariableComponent
+            {
+                Other = Entity.Null,
+            });
+            AddBuffer<UnitVariableElement>(entity);
+            AddBuffer<UnitVariableConsumerElement>(entity);
         }
     }
 }
 
-public sealed class UnitVariableComponent : IComponentData
+public struct UnitVariableComponent : IComponentData
 {
-    // Entity.Null means this entity owns Values. A non-null owner makes this entity
-    // a variable consumer; all variable source access is redirected to that owner.
-    public Entity Owner = Entity.Null;
-    public Dictionary<string, UnitValue> Values = new(StringComparer.Ordinal);
+    // Variables always remain local. Other only supplies the second entity available to source expressions.
+    public Entity Other;
 }
 
 [UnitSourceProvider(typeof(UnitVariableComponent), typeof(UnitVariableAuthoring))]
@@ -29,7 +30,7 @@ public static class UnitVariableSource
 {
     [UnitSourceGet(0, "unit.variables.count", UnitValueCategory.Number)]
     [UnitSourceGet(1, "unit.variables.consumerCount", UnitValueCategory.Number)]
-    [UnitSourceGet(2, "unit.variables.owner", UnitValueCategory.Entity)]
+    [UnitSourceGet(2, "unit.variables.other", UnitValueCategory.Entity)]
     [UnitSourceGet(3, "unit.variables.has", UnitValueCategory.Bool, UnitValueCategory.String, ParameterNames = new[] { "Key" })]
     [UnitSourceGet(4, "unit.variables.get", UnitValueCategory.Any, UnitValueCategory.String, ParameterNames = new[] { "Key" })]
     [UnitSourceGet(5, "unit.variables.getNumber", UnitValueCategory.Number, UnitValueCategory.String, ParameterNames = new[] { "Key" })]
@@ -40,227 +41,452 @@ public static class UnitVariableSource
     [UnitSourceGet(10, "unit.variables.getString", UnitValueCategory.String, UnitValueCategory.String, ParameterNames = new[] { "Key" })]
     public static bool TryGet(
         int operation,
-        EntityManager entityManager,
         Entity entity,
+        in ComponentLookup<UnitVariableComponent> componentLookup,
+        in BufferLookup<UnitVariableElement> variableLookup,
+        in BufferLookup<UnitVariableConsumerElement> consumerLookup,
+        in ComponentLookup<DestroyEntityFlag> destroyLookup,
         in UnitSourceArguments arguments,
         out UnitSourceValue result)
     {
         result = default;
-        if (!entityManager.Exists(entity) || !entityManager.HasComponent<UnitVariableComponent>(entity))
+        if (!componentLookup.HasComponent(entity))
             return false;
 
         if (operation == 1)
         {
-            result = UnitSourceValue.FromInt(CountConsumers(entityManager, entity));
+            result = UnitSourceValue.FromInt(CountConsumers(
+                entity,
+                in componentLookup,
+                in consumerLookup,
+                in destroyLookup));
             return true;
         }
 
         if (operation == 2)
         {
-            result = UnitSourceValue.FromEntity(GetOwner(entityManager, entity));
+            result = UnitSourceValue.FromEntity(componentLookup[entity].Other);
             return true;
         }
 
-        if (!TryResolveOwner(entityManager, entity, out _, out UnitVariableComponent component))
+        if (!TryGetBuffer(
+                entity,
+                in componentLookup,
+                in variableLookup,
+                out DynamicBuffer<UnitVariableElement> variables))
             return false;
 
         if (operation == 0)
         {
-            result = UnitSourceValue.FromInt(component.Values?.Count ?? 0);
+            result = UnitSourceValue.FromInt(variables.Length);
             return true;
         }
 
-        if (!arguments.TryGet(0, out UnitSourceValue keySource))
+        if (!arguments.TryGetString(0, out FixedString128Bytes key))
             return false;
 
-        UnitValue key = keySource.ToUnitValue();
-        UnitValue value = operation switch
+        UnitSourceValue value = operation switch
         {
-            3 => UnitValue.FromBool(Contains(component, key)),
-            4 => Get(component, key),
-            5 => GetCategory(component, key, UnitValueCategory.Number),
-            6 => GetCategory(component, key, UnitValueCategory.Bool),
-            7 => GetCategory(component, key, UnitValueCategory.Float2),
-            8 => GetCategory(component, key, UnitValueCategory.Float3),
-            9 => GetCategory(component, key, UnitValueCategory.Entity),
-            10 => GetCategory(component, key, UnitValueCategory.String),
-            _ => UnitValue.None,
+            3 => UnitSourceValue.FromBool(Contains(variables, key)),
+            4 => Get(variables, key),
+            5 => GetCategory(variables, key, UnitValueCategory.Number),
+            6 => GetCategory(variables, key, UnitValueCategory.Bool),
+            7 => GetCategory(variables, key, UnitValueCategory.Float2),
+            8 => GetCategory(variables, key, UnitValueCategory.Float3),
+            9 => GetCategory(variables, key, UnitValueCategory.Entity),
+            10 => GetCategory(variables, key, UnitValueCategory.String),
+            _ => UnitSourceValue.None,
         };
-        return UnitSourceValue.TryFromUnitValue(value, out result);
+        result = value;
+        return result.Type != UnitValueType.None;
     }
 
     [UnitSourceSet(0, "unit.variables.set", UnitValueCategory.Any,
         ParameterNames = new[] { "Value" }, RequiresKey = true)]
     [UnitSourceSet(1, "unit.variables.remove", UnitValueCategory.String, ParameterNames = new[] { "Key" })]
-    [UnitSourceSet(2, "unit.variables.setOwner", UnitValueCategory.Entity, ParameterNames = new[] { "Owner" })]
+    [UnitSourceSet(2, "unit.variables.setOther", UnitValueCategory.Entity, ParameterNames = new[] { "Other" })]
     public static bool TrySet(
         int operation,
-        EntityManager entityManager,
         Entity entity,
+        ref ComponentLookup<UnitVariableComponent> componentLookup,
+        ref BufferLookup<UnitVariableElement> variableLookup,
+        ref BufferLookup<UnitVariableConsumerElement> consumerLookup,
         in UnitSourceArguments arguments)
     {
         if (operation == 2)
         {
-            return arguments.TryGet(0, out UnitSourceValue owner) &&
-                   SetOwner(entityManager, entity, owner.ToUnitValue());
+            return arguments.TryGetEntity(0, out Entity other) &&
+                   SetOther(entity, other, ref componentLookup, ref consumerLookup);
         }
 
-        if (!TryResolveOwner(entityManager, entity, out _, out UnitVariableComponent component))
+        if (!TryGetBuffer(
+                entity,
+                in componentLookup,
+                in variableLookup,
+                out DynamicBuffer<UnitVariableElement> variables))
             return false;
 
         if (operation == 0)
         {
             return arguments.HasKey != 0 &&
                    arguments.TryGet(0, out UnitSourceValue sourceValue) &&
-                   Set(component, arguments.Key.ToString(), sourceValue.ToUnitValue());
+                   SetValue(variables, arguments.Key, sourceValue);
         }
 
-        return operation == 1 && arguments.TryGet(0, out UnitSourceValue key) &&
-               Remove(component, key.ToUnitValue());
+        return operation == 1 && arguments.TryGetString(0, out FixedString128Bytes key) &&
+               Remove(variables, key);
     }
 
-    public static bool TryResolveOwner(
-        EntityManager entityManager,
+    private static bool TryGetBuffer(
         Entity entity,
-        out Entity ownerEntity,
-        out UnitVariableComponent component)
+        in ComponentLookup<UnitVariableComponent> componentLookup,
+        in BufferLookup<UnitVariableElement> variableLookup,
+        out DynamicBuffer<UnitVariableElement> variables)
     {
-        ownerEntity = Entity.Null;
-        component = null;
+        variables = default;
+        if (!componentLookup.HasComponent(entity) || !variableLookup.HasBuffer(entity))
+            return false;
+
+        variables = variableLookup[entity];
+        return true;
+    }
+
+    private static bool SetOther(
+        Entity entity,
+        Entity other,
+        ref ComponentLookup<UnitVariableComponent> componentLookup,
+        ref BufferLookup<UnitVariableConsumerElement> consumerLookup)
+    {
+        if (!componentLookup.HasComponent(entity) || !consumerLookup.HasBuffer(entity))
+            return false;
+
+        if (other != Entity.Null &&
+            (other == entity ||
+             !componentLookup.HasComponent(other) ||
+             !consumerLookup.HasBuffer(other)))
+        {
+            return false;
+        }
+
+        UnitVariableComponent component = componentLookup[entity];
+        if (component.Other == other)
+            return true;
+
+        RemoveConsumer(component.Other, entity, ref consumerLookup);
+        AddConsumer(other, entity, ref consumerLookup);
+        component.Other = other;
+        componentLookup[entity] = component;
+        return true;
+    }
+
+    private static int CountConsumers(
+        Entity source,
+        in ComponentLookup<UnitVariableComponent> componentLookup,
+        in BufferLookup<UnitVariableConsumerElement> consumerLookup,
+        in ComponentLookup<DestroyEntityFlag> destroyLookup)
+    {
+        if (source == Entity.Null || !consumerLookup.HasBuffer(source))
+            return 0;
+
+        DynamicBuffer<UnitVariableConsumerElement> consumers = consumerLookup[source];
+        int count = 0;
+        for (int index = 0; index < consumers.Length; index++)
+        {
+            Entity consumer = consumers[index].Value;
+            if (!componentLookup.HasComponent(consumer) || componentLookup[consumer].Other != source)
+                continue;
+            if (destroyLookup.HasComponent(consumer) && destroyLookup.IsComponentEnabled(consumer))
+                continue;
+
+            count++;
+        }
+
+        return count;
+    }
+
+    private static void AddConsumer(
+        Entity source,
+        Entity consumer,
+        ref BufferLookup<UnitVariableConsumerElement> consumerLookup)
+    {
+        if (source == Entity.Null || !consumerLookup.HasBuffer(source))
+            return;
+
+        DynamicBuffer<UnitVariableConsumerElement> consumers = consumerLookup[source];
+        for (int index = 0; index < consumers.Length; index++)
+        {
+            if (consumers[index].Value == consumer)
+                return;
+        }
+
+        consumers.Add(new UnitVariableConsumerElement { Value = consumer });
+    }
+
+    private static void RemoveConsumer(
+        Entity source,
+        Entity consumer,
+        ref BufferLookup<UnitVariableConsumerElement> consumerLookup)
+    {
+        if (source == Entity.Null || !consumerLookup.HasBuffer(source))
+            return;
+
+        DynamicBuffer<UnitVariableConsumerElement> consumers = consumerLookup[source];
+        for (int index = consumers.Length - 1; index >= 0; index--)
+        {
+            if (consumers[index].Value == consumer)
+                consumers.RemoveAtSwapBack(index);
+        }
+    }
+
+    public static Entity GetOther(EntityManager entityManager, Entity entity)
+    {
         if (entity == Entity.Null ||
             !entityManager.Exists(entity) ||
             !entityManager.HasComponent<UnitVariableComponent>(entity))
         {
-            return false;
+            return Entity.Null;
         }
 
-        UnitVariableComponent localComponent = entityManager.GetComponentObject<UnitVariableComponent>(entity);
-        Entity owner = localComponent?.Owner ?? Entity.Null;
-        if (owner == Entity.Null)
+        Entity other = entityManager.GetComponentData<UnitVariableComponent>(entity).Other;
+        return other != Entity.Null && entityManager.Exists(other) ? other : Entity.Null;
+    }
+
+    public static bool TryGetBuffer(
+        EntityManager entityManager,
+        Entity entity,
+        out DynamicBuffer<UnitVariableElement> variables)
+    {
+        variables = default;
+        if (entity == Entity.Null ||
+            !entityManager.Exists(entity) ||
+            !entityManager.HasComponent<UnitVariableComponent>(entity) ||
+            !entityManager.HasBuffer<UnitVariableElement>(entity))
         {
-            ownerEntity = entity;
-            component = localComponent;
-            return component != null;
-        }
-
-        if (owner == entity ||
-            !entityManager.Exists(owner) ||
-            !entityManager.HasComponent<UnitVariableComponent>(owner))
-        {
             return false;
         }
 
-        UnitVariableComponent ownerComponent = entityManager.GetComponentObject<UnitVariableComponent>(owner);
-        if (ownerComponent == null || ownerComponent.Owner != Entity.Null)
-            return false;
-
-        ownerEntity = owner;
-        component = ownerComponent;
+        variables = entityManager.GetBuffer<UnitVariableElement>(entity);
         return true;
     }
 
-    public static int CountConsumers(EntityManager entityManager, Entity owner)
+    public static bool TryGetValue(
+        EntityManager entityManager,
+        Entity entity,
+        string key,
+        out UnitSourceValue value)
     {
-        if (owner == Entity.Null || !entityManager.Exists(owner))
+        value = default;
+        return TryCreateKey(key, out FixedString128Bytes fixedKey) &&
+               TryGetBuffer(entityManager, entity, out DynamicBuffer<UnitVariableElement> variables) &&
+               TryGetValue(variables, fixedKey, out value);
+    }
+
+    public static bool TrySetValue(
+        EntityManager entityManager,
+        Entity entity,
+        string key,
+        in UnitValue value)
+    {
+        return UnitSourceValue.TryFromUnitValue(value, out UnitSourceValue sourceValue) &&
+               TrySetValue(entityManager, entity, key, sourceValue);
+    }
+
+    public static bool TrySetValue(
+        EntityManager entityManager,
+        Entity entity,
+        string key,
+        in UnitSourceValue value)
+    {
+        return TryCreateKey(key, out FixedString128Bytes fixedKey) &&
+               TryGetBuffer(entityManager, entity, out DynamicBuffer<UnitVariableElement> variables) &&
+               SetValue(variables, fixedKey, value);
+    }
+
+    public static int CountConsumers(EntityManager entityManager, Entity source)
+    {
+        if (source == Entity.Null ||
+            !entityManager.Exists(source) ||
+            !entityManager.HasBuffer<UnitVariableConsumerElement>(source))
             return 0;
 
-        EntityQuery query = entityManager.CreateEntityQuery(Unity.Entities.ComponentType.ReadOnly<UnitVariableComponent>());
-        using NativeArray<Entity> entities = query.ToEntityArray(Allocator.Temp);
+        DynamicBuffer<UnitVariableConsumerElement> consumers = entityManager.GetBuffer<UnitVariableConsumerElement>(source);
         int count = 0;
-        for (int index = 0; index < entities.Length; index++)
+        for (int index = 0; index < consumers.Length; index++)
         {
-            Entity candidate = entities[index];
-            if (candidate == owner ||
+            Entity candidate = consumers[index].Value;
+            if (!entityManager.Exists(candidate) ||
+                !entityManager.HasComponent<UnitVariableComponent>(candidate) ||
+                entityManager.GetComponentData<UnitVariableComponent>(candidate).Other != source ||
                 entityManager.HasComponent<DestroyEntityFlag>(candidate) &&
                 entityManager.IsComponentEnabled<DestroyEntityFlag>(candidate))
             {
                 continue;
             }
 
-            UnitVariableComponent variables = entityManager.GetComponentObject<UnitVariableComponent>(candidate);
-            if (variables?.Owner == owner)
-                count++;
+            count++;
         }
 
         return count;
     }
 
-    private static Entity GetOwner(EntityManager entityManager, Entity entity)
+    public static bool SetOther(EntityManager entityManager, Entity entity, Entity other)
     {
-        return entityManager.Exists(entity) && entityManager.HasComponent<UnitVariableComponent>(entity)
-            ? entityManager.GetComponentObject<UnitVariableComponent>(entity)?.Owner ?? Entity.Null
-            : Entity.Null;
-    }
-
-    private static bool SetOwner(EntityManager entityManager, Entity entity, UnitValue ownerValue)
-    {
-        if (ownerValue.Type != UnitValueType.Entity ||
-            !entityManager.Exists(entity) ||
-            !entityManager.HasComponent<UnitVariableComponent>(entity))
+        if (!entityManager.Exists(entity) ||
+            !entityManager.HasComponent<UnitVariableComponent>(entity) ||
+            !entityManager.HasBuffer<UnitVariableElement>(entity) ||
+            !entityManager.HasBuffer<UnitVariableConsumerElement>(entity))
         {
             return false;
         }
 
-        Entity owner = ownerValue.Entity;
-
-        if (owner != Entity.Null &&
-            (owner == entity ||
-             !entityManager.Exists(owner) ||
-             !entityManager.HasComponent<UnitVariableComponent>(owner) ||
-             entityManager.GetComponentObject<UnitVariableComponent>(owner)?.Owner != Entity.Null))
+        if (other != Entity.Null &&
+            (other == entity ||
+             !entityManager.Exists(other) ||
+             !entityManager.HasComponent<UnitVariableComponent>(other) ||
+             !entityManager.HasBuffer<UnitVariableElement>(other) ||
+             !entityManager.HasBuffer<UnitVariableConsumerElement>(other)))
         {
             return false;
         }
 
-        entityManager.GetComponentObject<UnitVariableComponent>(entity).Owner = owner;
+        UnitVariableComponent component = entityManager.GetComponentData<UnitVariableComponent>(entity);
+        if (component.Other == other)
+            return true;
+
+        RemoveConsumer(entityManager, component.Other, entity);
+        AddConsumer(entityManager, other, entity);
+        component.Other = other;
+        entityManager.SetComponentData(entity, component);
         return true;
     }
 
-    private static bool Contains(UnitVariableComponent component, UnitValue keyValue)
+    private static void AddConsumer(EntityManager entityManager, Entity source, Entity consumer)
     {
-        return TryGetKey(keyValue, out string key) &&
-               component?.Values != null &&
-               component.Values.ContainsKey(key);
-    }
-
-    private static UnitValue Get(UnitVariableComponent component, UnitValue keyValue)
-    {
-        if (!TryGetKey(keyValue, out string key) ||
-            component?.Values == null ||
-            !component.Values.TryGetValue(key, out UnitValue value))
+        if (source == Entity.Null ||
+            !entityManager.Exists(source) ||
+            !entityManager.HasBuffer<UnitVariableConsumerElement>(source))
         {
-            return UnitValue.None;
+            return;
         }
 
-        return value;
+        DynamicBuffer<UnitVariableConsumerElement> consumers = entityManager.GetBuffer<UnitVariableConsumerElement>(source);
+        for (int index = 0; index < consumers.Length; index++)
+        {
+            if (consumers[index].Value == consumer)
+                return;
+        }
+
+        consumers.Add(new UnitVariableConsumerElement { Value = consumer });
     }
 
-    private static UnitValue GetCategory(UnitVariableComponent component, UnitValue keyValue, UnitValueCategory category)
+    private static void RemoveConsumer(EntityManager entityManager, Entity source, Entity consumer)
     {
-        UnitValue value = Get(component, keyValue);
-        return value.Category == category ? value : UnitValue.None;
+        if (source == Entity.Null ||
+            !entityManager.Exists(source) ||
+            !entityManager.HasBuffer<UnitVariableConsumerElement>(source))
+        {
+            return;
+        }
+
+        DynamicBuffer<UnitVariableConsumerElement> consumers = entityManager.GetBuffer<UnitVariableConsumerElement>(source);
+        for (int index = consumers.Length - 1; index >= 0; index--)
+        {
+            if (consumers[index].Value == consumer)
+                consumers.RemoveAtSwapBack(index);
+        }
     }
 
-    private static bool Remove(UnitVariableComponent component, UnitValue keyValue)
+    public static bool TryGetValue(
+        in DynamicBuffer<UnitVariableElement> variables,
+        in FixedString128Bytes key,
+        out UnitSourceValue value)
     {
-        return TryGetKey(keyValue, out string key) &&
-               component?.Values != null &&
-               component.Values.Remove(key);
+        int index = FindIndex(variables, key);
+        if (index >= 0)
+        {
+            value = variables[index].Value;
+            return true;
+        }
+
+        value = default;
+        return false;
     }
 
-    private static bool Set(UnitVariableComponent component, string key, UnitValue value)
+    private static bool Contains(
+        in DynamicBuffer<UnitVariableElement> variables,
+        in FixedString128Bytes key)
     {
-        if (string.IsNullOrWhiteSpace(key) || value.Category == UnitValueCategory.None)
+        return FindIndex(variables, key) >= 0;
+    }
+
+    private static UnitSourceValue Get(
+        in DynamicBuffer<UnitVariableElement> variables,
+        in FixedString128Bytes key)
+    {
+        return TryGetValue(variables, key, out UnitSourceValue value)
+            ? value
+            : UnitSourceValue.None;
+    }
+
+    private static UnitSourceValue GetCategory(
+        in DynamicBuffer<UnitVariableElement> variables,
+        in FixedString128Bytes key,
+        UnitValueCategory category)
+    {
+        UnitSourceValue value = Get(variables, key);
+        return value.Category == category ? value : UnitSourceValue.None;
+    }
+
+    private static bool Remove(
+        DynamicBuffer<UnitVariableElement> variables,
+        in FixedString128Bytes key)
+    {
+        int index = FindIndex(variables, key);
+        if (index < 0)
             return false;
 
-        component.Values ??= new Dictionary<string, UnitValue>(StringComparer.Ordinal);
-        component.Values[key] = value;
+        variables.RemoveAtSwapBack(index);
         return true;
     }
 
-    private static bool TryGetKey(UnitValue value, out string key)
+    public static bool SetValue(
+        DynamicBuffer<UnitVariableElement> variables,
+        in FixedString128Bytes key,
+        in UnitSourceValue value)
     {
-        key = string.Empty;
-        return value.TryGetString(out key) && !string.IsNullOrWhiteSpace(key);
+        if (key.Length == 0 || value.Category == UnitValueCategory.None)
+            return false;
+
+        UnitVariableElement element = new()
+        {
+            Key = key,
+            Value = value,
+        };
+        int index = FindIndex(variables, key);
+        if (index >= 0)
+            variables[index] = element;
+        else
+            variables.Add(element);
+
+        return true;
+    }
+
+    private static int FindIndex(
+        in DynamicBuffer<UnitVariableElement> variables,
+        in FixedString128Bytes key)
+    {
+        for (int index = 0; index < variables.Length; index++)
+        {
+            if (variables[index].Key.Equals(key))
+                return index;
+        }
+
+        return -1;
+    }
+
+    private static bool TryCreateKey(string source, out FixedString128Bytes key)
+    {
+        key = default;
+        return !string.IsNullOrWhiteSpace(source) && key.CopyFrom(source) == CopyError.None;
     }
 }

@@ -178,13 +178,17 @@ namespace CrystalMagic.Editor.Unit
             }
             else
             {
-                UnitBehaviorTreeComponent behaviorTree = entityManager.GetComponentObject<UnitBehaviorTreeComponent>(entity);
+                UnitBehaviorTreeComponent behaviorTree =
+                    entityManager.GetComponentData<UnitBehaviorTreeComponent>(entity);
                 using (new EditorGUI.DisabledScope(true))
                 {
                     EditorGUILayout.IntField("Unit Data Id", behaviorTree.UnitDataId);
-                    EditorGUILayout.Toggle("Initialized", behaviorTree.IsInitialized);
-                    EditorGUILayout.TextField("Current Node", behaviorTree.CurrentNodeName ?? "None");
-                    EditorGUILayout.TextField("Last Status", behaviorTree.LastStatus ?? "None");
+                    EditorGUILayout.Toggle("Initialized", behaviorTree.IsInitialized != 0);
+                    EditorGUILayout.TextField(
+                        "Current Node",
+                        ResolveBehaviorNodeName(entityManager, in behaviorTree));
+                    EditorGUILayout.TextField("Last Status", behaviorTree.LastStatus.ToString());
+                    EditorGUILayout.TextField("Initialization Error", behaviorTree.InitializationError.ToString());
                 }
 
                 GUILayout.Space(8f);
@@ -312,8 +316,9 @@ namespace CrystalMagic.Editor.Unit
         {
             if (entityManager.HasComponent<UnitBehaviorTreeComponent>(entity))
             {
-                UnitBehaviorTreeComponent behaviorTree = entityManager.GetComponentObject<UnitBehaviorTreeComponent>(entity);
-                if (behaviorTree?.UnitDataId >= 0)
+                UnitBehaviorTreeComponent behaviorTree =
+                    entityManager.GetComponentData<UnitBehaviorTreeComponent>(entity);
+                if (behaviorTree.UnitDataId >= 0)
                     return behaviorTree.UnitDataId;
             }
 
@@ -325,6 +330,31 @@ namespace CrystalMagic.Editor.Unit
             }
 
             return -1;
+        }
+
+        private static string ResolveBehaviorNodeName(
+            EntityManager entityManager,
+            in UnitBehaviorTreeComponent component)
+        {
+            if (component.CurrentNodeIndex < 0 || component.TreeIndex < 0)
+                return "None";
+
+            EntityQuery query = entityManager.CreateEntityQuery(
+                ComponentType.ReadOnly<BehaviorTreeRuntimeRegistryComponent>());
+            if (query.IsEmptyIgnoreFilter)
+                return $"Node {component.CurrentNodeIndex}";
+
+            BlobAssetReference<BehaviorTreeRuntimeRegistryBlob> registry =
+                query.GetSingleton<BehaviorTreeRuntimeRegistryComponent>().Value;
+            if (!registry.IsCreated || component.TreeIndex >= registry.Value.Trees.Length)
+                return $"Node {component.CurrentNodeIndex}";
+
+            ref BehaviorTreeDefinitionBlob tree = ref registry.Value.Trees[component.TreeIndex];
+            if (component.CurrentNodeIndex >= tree.Nodes.Length)
+                return $"Node {component.CurrentNodeIndex}";
+
+            BehaviorNodeDefinition node = tree.Nodes[component.CurrentNodeIndex];
+            return $"{node.Type} [{node.Guid}]";
         }
 
         private static UnitData ResolveUnitData(int unitDataId)

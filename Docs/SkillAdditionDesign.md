@@ -560,35 +560,33 @@ The Buff ceases to grant Addition IDs when it expires, is removed, or reaches ze
 
 ## 7. Buff Classes and Live Unit Properties
 
-### 7.1 `UnitBuffRuntimeComponent`
+### 7.1 `UnitBuffComponent` and `UnitBuffElement`
 
 File target:
 
 ```text
-Assets/Scripts/Game/Unit/Component/UnitBuffRuntimeAuthoring.cs
+Assets/Scripts/Game/Component/UnitBuffRuntimeAuthoring.cs
 ```
 
 ```csharp
-public sealed class UnitBuffRuntimeComponent : IComponentData
+public struct UnitBuffComponent : IComponentData
 {
-    public List<UnitBuffRuntimeEntry> Buffs = new();
+    public byte NetworkDirty;
 }
 
-public sealed class UnitBuffRuntimeEntry
+public struct UnitBuffElement : IBufferElementData
 {
-    public int BuffId = -1;
-    public float RemainingTime = -1f;
-    public int StackCount = 1;
-    public bool HasOriginEntity;
-    public Entity OriginEntity = Entity.Null;
-    public int SourceSkillId = -1;
-    public List<PropertyModifierEntry> PropertyModifiers = new();
-    public List<SkillModifierEntry> SkillModifiers = new();
-    public List<BuffTriggerRuntimeEntry> TriggerEntries = new();
+    public int BuffId;
+    public int DefinitionIndex;
+    public float RemainingTime;
+    public float ElapsedTime;
+    public int StackCount;
+    public Entity OriginEntity;
+    public int SourceSkillId;
 }
 ```
 
-`UnitBuffRuntimeEntry` is the sole stored state of an active Buff. It stores definitions and lifetime data, not calculated attack, defense, health, movement, or skill Modifier totals.
+One `UnitBuffElement` is the complete runtime state of one active Buff. Static Buff definitions live in `BuffEffectRegistryBlob`. Each definition owns a flat list of `BuffEffectReference { Type, Id }`; filtering `Type` resolves property modifiers, skill modifiers, or triggered effects. Triggered entries hold an `EffectDataListId`, which the managed effect bridge resolves only when the centralized effect executor runs.
 
 ### 7.2 `UnitBuffUtility`
 
@@ -621,20 +619,21 @@ public static int GetStackCount(
     int buffId);
 ```
 
-`Apply`, `Remove`, and `ChangeStack` modify the Buff list immediately. They do not invoke periodic Tick behavior, consume a frame of duration, execute hooks, or aggregate modifiers into Component fields.
+`Apply`, `Remove`, and `ChangeStack` modify the unmanaged Buff buffer immediately. They do not invoke periodic Tick behavior, consume a frame of duration, execute hooks, or aggregate modifiers into Component fields.
 
 The existing Apply-Buff, Remove-Buff, and Change-Buff-Stack Effect runtimes call these functions. The Buff Source setters call these functions too; no Source setter edits `Buffs` directly.
 
 ### 7.3 `UnitBuffSystem`
 
-`UnitBuffSystem.OnUpdate()` has only Buff lifecycle responsibilities:
+`UnitBuffSystem` schedules a Burst-compiled `IJobEntity` with only Buff lifecycle responsibilities:
 
 ```csharp
-private void UpdateBuffEntries(
+private void Execute(
     Entity entity,
-    UnitBuffRuntimeComponent runtimeComponent,
-    PendingEffectExecutionQueueComponent effectExecutionQueue,
-    float deltaTime);
+    ref UnitBuffComponent component,
+    DynamicBuffer<UnitBuffElement> buffs,
+    DynamicBuffer<UnitBuffHookRequestElement> hookRequests,
+    DynamicBuffer<EffectRequestElement> effectRequests);
 ```
 
 It performs:
@@ -642,7 +641,9 @@ It performs:
 ```text
 1. Decrement finite RemainingTime.
 2. Remove expired or zero-stack entries.
-3. Enqueue periodic Buff Tick effects.
+3. Filter the Blob effect references by `BuffEffectType.TriggeredEffect`.
+4. Process buffered hook requests and enqueue periodic Tick requests.
+5. Write unmanaged `EffectRequestElement` entries containing only an `EffectDataListId` and execution context.
 ```
 
 It no longer calls `BuildPropertyModifiers`, `BuildSkillModifiers`, `UnitModifierUtility.ApplyRuntimePropertyModifiers`, or `UnitSkillModifierUtility.AddRuntimeModifiers`.

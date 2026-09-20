@@ -17,11 +17,12 @@ public static class SkillReleaseRequestUtility
         {
             SkillId = skillId,
             OriginEntity = entity,
+            OriginFacing = new float2(1f, 0f),
             TargetPosition = targetPosition,
             HasTargetPosition = true,
             TargetEntity = targetEntity,
             HasTargetEntity = targetEntity != Entity.Null,
-            ExtraModifiers = extraModifiers?.Clone() ?? new SkillModifierSet(),
+            ExtraModifiers = extraModifiers,
         };
 
         if (entityManager.HasComponent<LocalTransform>(entity))

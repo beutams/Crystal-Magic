@@ -13,12 +13,16 @@ public sealed class DungeonInterestPointAuthoring : MonoBehaviour
         public override void Bake(DungeonInterestPointAuthoring authoring)
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
-            AddComponentObject(entity, new DungeonInterestPointComponent
+            AddComponent(entity, new DungeonInterestPointComponent
             {
                 SpawnDistance = Mathf.Max(0f, authoring._spawnDistance),
                 PatrolSpeed = Mathf.Max(0f, authoring._patrolSpeed),
                 ArrivalDistance = Mathf.Max(0.05f, authoring._arrivalDistance),
+                PatrolEnabled = 1,
+                CurrentTarget = Entity.Null,
+                NearestPlayerDistance = float.MaxValue,
             });
+            AddBuffer<DungeonInterestPointCandidateElement>(entity);
         }
     }
 }

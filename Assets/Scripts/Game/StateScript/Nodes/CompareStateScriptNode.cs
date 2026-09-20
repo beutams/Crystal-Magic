@@ -36,10 +36,10 @@ public sealed class CompareStateScriptNode : StateScriptBoolNode
 
     private void Check()
     {
-        if (_comparator == null)
+        if (!_comparator.IsValid)
             return;
 
-        if (_comparator.GetResult())
+        if (_comparator.GetResult(Runtime.Sources))
             _trueOutput.Pulse();
         else
             _falseOutput.Pulse();

@@ -63,16 +63,9 @@ namespace CrystalMagic.Game.Data.Effects
                 : elementComponent.Value.GetPowerBonus(element);
         }
 
-        protected static SkillModifierSet CreateCombinedModifiers(SkillModifierSet modifiers, float elementBonus, Action<float, SkillModifierSet> appendElementModifiers)
-        {
-            SkillModifierSet combined = modifiers?.Clone() ?? new SkillModifierSet();
-            appendElementModifiers?.Invoke(math.max(-1f, elementBonus), combined);
-            return combined;
-        }
-
         protected static SkillModifierSet CreateModifiersWithAttributePower(SkillModifierSet modifiers, float attributePower)
         {
-            SkillModifierSet combined = modifiers?.Clone() ?? new SkillModifierSet();
+            SkillModifierSet combined = modifiers;
             if (math.abs(attributePower) > 0.0001f)
             {
                 combined.Add(new SkillModifierEntry
@@ -87,7 +80,7 @@ namespace CrystalMagic.Game.Data.Effects
 
         protected static float ApplyModifier(SkillModifierSet modifiers, SkillModifierChannel channel, float value)
         {
-            return modifiers == null ? value : modifiers.Apply(channel, value);
+            return modifiers.Apply(channel, value);
         }
 
         protected static float ApplyModifierNonNegative(SkillModifierSet modifiers, SkillModifierChannel channel, float value)
@@ -98,7 +91,7 @@ namespace CrystalMagic.Game.Data.Effects
 
         protected static float GetAttributePowerValue(SkillModifierSet modifiers)
         {
-            return modifiers?.GetAttributePowerValue() ?? 0f;
+            return modifiers.GetAttributePowerValue();
         }
     }
 }

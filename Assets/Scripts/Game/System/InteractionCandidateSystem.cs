@@ -15,11 +15,7 @@ public partial class InteractionCandidateSystem : SystemBase
     protected override void OnCreate()
     {
         RequireForUpdate<UnitFactionComponent>();
-        Entity singleton = EntityManager.CreateEntity();
-        EntityManager.AddComponentData(singleton, new InteractionCandidateComponent
-        {
-            Target = Entity.Null,
-        });
+        RequireForUpdate<InteractionCandidateComponent>();
     }
 
     protected override void OnUpdate()

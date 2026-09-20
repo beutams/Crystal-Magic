@@ -12,34 +12,32 @@ public sealed class NetworkBuffStateData : NetworkStateData
         if (!context.TryGetEntity(unitId, out Entity entity))
             return;
 
-        UnitBuffRuntimeComponent runtime;
-        if (context.EntityManager.HasComponent<UnitBuffRuntimeComponent>(entity))
-            runtime = context.EntityManager.GetComponentObject<UnitBuffRuntimeComponent>(entity);
-        else
-        {
-            runtime = new UnitBuffRuntimeComponent();
-            context.EntityManager.AddComponentObject(entity, runtime);
-        }
-
-        runtime.Buffs.Clear();
+        DynamicBuffer<UnitBuffElement> runtime = UnitBuffUtility.GetOrCreateRuntimeBuffer(context.EntityManager, entity);
+        runtime.Clear();
+        BuffEffectRegistryUtility.TryGet(
+            context.EntityManager,
+            out BlobAssetReference<BuffEffectRegistryBlob> registry);
         for (int index = 0; index < buffs.Count; index++)
         {
             NetworkBuffEntryStateData state = buffs[index];
             bool hasOriginEntity = context.TryGetEntity(state.originUnitId, out Entity originEntity);
-            UnitBuffRuntimeEntry entry = new()
+            runtime.Add(new UnitBuffElement
             {
                 BuffId = state.buffId,
+                DefinitionIndex = registry.IsCreated
+                    ? BuffEffectRegistryUtility.FindBuffIndex(in registry, state.buffId)
+                    : -1,
                 RemainingTime = context.GetRemainingSeconds(state.endFrame),
                 StackCount = state.stackCount,
-                HasOriginEntity = hasOriginEntity,
                 OriginEntity = hasOriginEntity ? originEntity : Entity.Null,
                 SourceSkillId = state.sourceSkillId,
-            };
-            entry.EnsureDefinitionLoaded();
-            runtime.Buffs.Add(entry);
+            });
         }
 
-        runtime.NetworkDirty = 0;
+        UnitBuffComponent component = context.EntityManager.GetComponentData<UnitBuffComponent>(entity);
+        component.NetworkDirty = 0;
+        component.ModifierDirty = 1;
+        context.EntityManager.SetComponentData(entity, component);
 
         if (context.IsClient)
             ApplyPresentationState(context, entity);

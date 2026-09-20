@@ -1,7 +1,6 @@
 using System.Collections.Generic;
-using CrystalMagic.Game.Unit;
-using CrystalMagic.Game.Skill;
 using CrystalMagic.Game.Skill.Effects;
+using CrystalMagic.Game.Unit;
 using Server;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -13,57 +12,75 @@ using UnityEngine;
 [UpdateBefore(typeof(SkillProjectileSystem))]
 public partial class SkillProjectileSpawnSystem : SystemBase
 {
+    private Entity _queueEntity;
+    private readonly List<SkillProjectileSpawnRequest> _pendingRequests = new();
+
+    protected override void OnCreate()
+    {
+        _queueEntity = SkillProjectileSpawnQueueUtility.GetOrCreateEntity(EntityManager);
+    }
+
     protected override void OnUpdate()
     {
-        if (!SkillProjectileSpawnQueueUtility.TryGet(EntityManager, out SkillProjectileSpawnQueueComponent queue) ||
-            queue.Requests.Count == 0)
-            return;
+        DynamicBuffer<SkillProjectileSpawnRequest> requests =
+            EntityManager.GetBuffer<SkillProjectileSpawnRequest>(_queueEntity);
+        _pendingRequests.Clear();
+        for (int i = 0; i < requests.Length; i++)
+            _pendingRequests.Add(requests[i]);
+        requests.Clear();
 
-        while (queue.Requests.Count > 0)
+        for (int i = 0; i < _pendingRequests.Count; i++)
         {
-            SkillProjectileSpawnRequest request = queue.Requests.Dequeue();
+            SkillProjectileSpawnRequest request = _pendingRequests[i];
             NetworkEntitySpawnInfo entityInfo = NetworkEntitySpawnUtility.CreateInfo(
                 NetworkEntityPrefabType.Projectile,
                 request.ProjectileName.ToString(),
                 new Vector3(request.StartPosition.x, request.StartPosition.y, request.StartPosition.z));
             if (!NetworkEntitySpawnUtility.TrySpawn(EntityManager, entityInfo, out Entity projectileEntity))
             {
+                ReleaseFailedRequest(in request);
                 Debug.LogError($"[SkillProjectileSpawnSystem] Missing projectile prefab in registry: {request.ProjectileName}");
                 continue;
             }
 
-            SpawnProjectile(projectileEntity, request);
+            SpawnProjectile(projectileEntity, in request);
         }
+
+        _pendingRequests.Clear();
     }
 
-    private void SpawnProjectile(Entity projectileEntity, SkillProjectileSpawnRequest request)
+    private void SpawnProjectile(Entity projectileEntity, in SkillProjectileSpawnRequest request)
     {
         quaternion rotation = CreateRotation(request.Direction);
 
-        SetOrAddComponentData( projectileEntity, LocalTransform.FromPositionRotationScale(request.StartPosition,rotation,1f));
-
-        SetOrAddComponentData(projectileEntity,new SkillProjectileComponent
-            {
-                Direction = math.normalizesafe(request.Direction, new float3(1f, 0f, 0f)),
-                Speed = request.Speed,
-                MaxRange = request.MaxRange,
-                TraveledDistance = 0f,
-                HitRadius = request.HitRadius,
-                CanPierce = request.CanPierce,
-                TriggerDestroyEffectsOnMaxRange = request.TriggerDestroyEffectsOnMaxRange,
-                NetworkDirty = 1,
-            });
+        SetOrAddComponentData(
+            projectileEntity,
+            LocalTransform.FromPositionRotationScale(request.StartPosition, rotation, 1f));
+        SetOrAddComponentData(projectileEntity, new SkillProjectileComponent
+        {
+            Direction = math.normalizesafe(request.Direction, new float3(1f, 0f, 0f)),
+            Speed = request.Speed,
+            MaxRange = request.MaxRange,
+            TraveledDistance = 0f,
+            HitRadius = request.HitRadius,
+            CanPierce = request.CanPierce,
+            TriggerDestroyEffectsOnMaxRange = request.TriggerDestroyEffectsOnMaxRange,
+            NetworkDirty = 1,
+        });
 
         if (!EntityManager.HasBuffer<SkillProjectileHitEntityElement>(projectileEntity))
             EntityManager.AddBuffer<SkillProjectileHitEntityElement>(projectileEntity);
         else
             EntityManager.GetBuffer<SkillProjectileHitEntityElement>(projectileEntity).Clear();
 
-        ApplyPayloadComponent(projectileEntity, request);
-        SpawnProjectileVisual(projectileEntity, request, rotation);
+        ApplyPayloadComponent(projectileEntity, in request);
+        SpawnProjectileVisual(projectileEntity, in request, rotation);
     }
 
-    private void SpawnProjectileVisual(Entity projectileEntity, SkillProjectileSpawnRequest request, quaternion rotation)
+    private void SpawnProjectileVisual(
+        Entity projectileEntity,
+        in SkillProjectileSpawnRequest request,
+        quaternion rotation)
     {
         if (request.VisualPrefabName.Length == 0 ||
             !SpriteEffectSpawnUtility.TrySpawn(
@@ -88,7 +105,49 @@ public partial class SkillProjectileSpawnSystem : SystemBase
                 AlignRotation = 1,
                 EndWhenTargetMissing = 1,
             });
-        SetOrAddComponentData(projectileEntity, new SkillProjectileVisualLinkComponent { VisualEntity = visualEntity });
+        SetOrAddComponentData(
+            projectileEntity,
+            new SkillProjectileVisualLinkComponent { VisualEntity = visualEntity });
+    }
+
+    private void ApplyPayloadComponent(Entity entity, in SkillProjectileSpawnRequest request)
+    {
+        if (EntityManager.HasComponent<SkillProjectilePayloadComponent>(entity))
+        {
+            SkillProjectilePayloadComponent existing =
+                EntityManager.GetComponentData<SkillProjectilePayloadComponent>(entity);
+            EffectUtility.ReleaseAfterExecution(EntityManager, existing.OnCollisionEffectListId);
+            EffectUtility.ReleaseAfterExecution(EntityManager, existing.OnDestroyEffectListId);
+            EffectDataBridgeUtility.UnregisterConditions(
+                EntityManager,
+                existing.CollisionTargetConditionsId);
+            if (existing.OwnsManagedContext != 0)
+            {
+                EffectDataBridgeUtility.UnregisterManagedContext(
+                    EntityManager,
+                    existing.Context.ManagedContextId);
+            }
+        }
+
+        SetOrAddComponentData(entity, new SkillProjectilePayloadComponent
+        {
+            Context = request.Context,
+            OwnsManagedContext = request.ReleaseManagedContextOnFailure,
+            CollisionTargetConditionsId = request.CollisionTargetConditionsId,
+            OnCollisionEffectListId = request.OnCollisionEffectListId,
+            OnDestroyEffectListId = request.OnDestroyEffectListId,
+        });
+    }
+
+    private void ReleaseFailedRequest(in SkillProjectileSpawnRequest request)
+    {
+        EffectDataBridgeUtility.Unregister(EntityManager, request.OnCollisionEffectListId);
+        EffectDataBridgeUtility.Unregister(EntityManager, request.OnDestroyEffectListId);
+        EffectDataBridgeUtility.UnregisterConditions(
+            EntityManager,
+            request.CollisionTargetConditionsId);
+        if (request.ReleaseManagedContextOnFailure != 0)
+            EffectDataBridgeUtility.UnregisterManagedContext(EntityManager, request.Context.ManagedContextId);
     }
 
     private static quaternion CreateRotation(float3 direction)
@@ -105,40 +164,5 @@ public partial class SkillProjectileSpawnSystem : SystemBase
             EntityManager.SetComponentData(entity, value);
         else
             EntityManager.AddComponentData(entity, value);
-    }
-
-    private void ApplyPayloadComponent(Entity entity, SkillProjectileSpawnRequest payload)
-    {
-        if (EntityManager.HasComponent<SkillProjectilePayloadComponent>(entity))
-        {
-            SkillProjectilePayloadComponent existing = EntityManager.GetComponentObject<SkillProjectilePayloadComponent>(entity);
-            existing.Context = CloneContext(payload.Context);
-            existing.CollisionTargetConditions = CloneCollisionTargetConditions(payload.CollisionTargetConditions);
-            existing.OnCollisionEffects = payload.OnCollisionEffects;
-            existing.OnDestroyEffects = payload.OnDestroyEffects;
-            return;
-        }
-
-        EntityManager.AddComponentObject(
-            entity,
-            new SkillProjectilePayloadComponent
-            {
-                Context = CloneContext(payload.Context),
-                CollisionTargetConditions = CloneCollisionTargetConditions(payload.CollisionTargetConditions),
-                OnCollisionEffects = payload.OnCollisionEffects,
-                OnDestroyEffects = payload.OnDestroyEffects,
-            });
-        }
-
-    private SkillContent CloneContext(SkillContent context)
-    {
-        SkillContent copy = context?.Clone() ?? new SkillContent();
-        copy.EntityManager = EntityManager;
-        return copy;
-    }
-
-    private static List<ConditionConfig> CloneCollisionTargetConditions(List<ConditionConfig> conditions)
-    {
-        return conditions == null ? new List<ConditionConfig>() : new List<ConditionConfig>(conditions);
     }
 }

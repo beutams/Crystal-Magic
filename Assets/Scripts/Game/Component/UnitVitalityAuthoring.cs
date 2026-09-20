@@ -1,5 +1,6 @@
 using CrystalMagic.Game.Data;
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 
 public class UnitVitalityAuthoring : MonoBehaviour
@@ -85,30 +86,39 @@ public static class UnitVitalitySource
     [UnitSourceGet(7, "unit.vitality.realDefense", UnitValueCategory.Number)]
     public static bool TryGetResolved(
         int operation,
-        EntityManager entityManager,
         Entity entity,
+        in ComponentLookup<UnitVitalityComponent> vitalities,
+        in ComponentLookup<UnitModifierComponent> modifiers,
         in UnitSourceArguments arguments,
         out UnitSourceValue result)
     {
         result = UnitSourceValue.None;
-        if (!entityManager.Exists(entity) || !entityManager.HasComponent<UnitVitalityComponent>(entity))
+        if (!vitalities.TryGetComponent(entity, out UnitVitalityComponent vitality))
+        {
             return false;
+        }
+        UnitModifierComponent modifier = modifiers.TryGetComponent(
+            entity,
+            out UnitModifierComponent resolvedModifier)
+            ? resolvedModifier
+            : UnitModifierComponent.CreateIdentity();
 
         switch (operation)
         {
             case 4:
-                result = UnitSourceValue.FromFloat(UnitModifierResolver.GetMaxHealth(entityManager, entity));
+                result = UnitSourceValue.FromFloat(UnitModifierResolver.GetMaxHealth(in vitality, in modifier));
                 return true;
             case 5:
-                float maxHealth = UnitModifierResolver.GetMaxHealth(entityManager, entity);
-                float currentHealth = entityManager.GetComponentData<UnitVitalityComponent>(entity).CurrentHealth;
-                result = UnitSourceValue.FromFloat(maxHealth > 0f ? Mathf.Clamp01(currentHealth / maxHealth) : 0f);
+                float maxHealth = UnitModifierResolver.GetMaxHealth(in vitality, in modifier);
+                result = UnitSourceValue.FromFloat(maxHealth > 0f
+                    ? math.saturate(vitality.CurrentHealth / maxHealth)
+                    : 0f);
                 return true;
             case 6:
-                result = UnitSourceValue.FromFloat(UnitModifierResolver.GetHealthRegen(entityManager, entity));
+                result = UnitSourceValue.FromFloat(UnitModifierResolver.GetHealthRegen(in vitality, in modifier));
                 return true;
             case 7:
-                result = UnitSourceValue.FromFloat(UnitModifierResolver.GetDefense(entityManager, entity));
+                result = UnitSourceValue.FromFloat(UnitModifierResolver.GetDefense(in vitality, in modifier));
                 return true;
             default:
                 return false;

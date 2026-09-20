@@ -87,24 +87,30 @@ public static class UnitAttackSource
     [UnitSourceGet(6, "unit.attack.chantDurationMultiplier", UnitValueCategory.Number)]
     public static bool TryGetResolved(
         int operation,
-        EntityManager entityManager,
         Entity entity,
+        in ComponentLookup<UnitAttackComponent> attacks,
+        in ComponentLookup<UnitModifierComponent> modifiers,
         in UnitSourceArguments arguments,
         out UnitSourceValue result)
     {
-        if (!entityManager.Exists(entity) || !entityManager.HasComponent<UnitAttackComponent>(entity))
+        if (!attacks.TryGetComponent(entity, out UnitAttackComponent attack))
         {
             result = default;
             return false;
         }
+        UnitModifierComponent modifier = modifiers.TryGetComponent(
+            entity,
+            out UnitModifierComponent resolvedModifier)
+            ? resolvedModifier
+            : UnitModifierComponent.CreateIdentity();
 
         result = operation switch
         {
-            3 => UnitSourceValue.FromFloat(UnitModifierResolver.GetAttackPower(entityManager, entity)),
-            4 => UnitSourceValue.FromFloat(UnitModifierResolver.GetSkillRange(entityManager, entity)),
-            5 => UnitSourceValue.FromFloat(UnitModifierResolver.GetChantSpeedBonus(entityManager, entity)),
+            3 => UnitSourceValue.FromFloat(UnitModifierResolver.GetAttackPower(in attack, in modifier)),
+            4 => UnitSourceValue.FromFloat(UnitModifierResolver.GetSkillRange(in attack, in modifier)),
+            5 => UnitSourceValue.FromFloat(UnitModifierResolver.GetChantSpeedBonus(in attack, in modifier)),
             6 => UnitSourceValue.FromFloat(UnitAttackComponent.GetDurationMultiplier(
-                UnitModifierResolver.GetChantSpeedBonus(entityManager, entity))),
+                UnitModifierResolver.GetChantSpeedBonus(in attack, in modifier))),
             _ => UnitSourceValue.None,
         };
         return result.Type != UnitValueType.None;

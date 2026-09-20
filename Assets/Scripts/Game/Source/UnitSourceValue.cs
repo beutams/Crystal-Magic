@@ -2,6 +2,41 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
+public enum UnitSourceTarget : byte
+{
+    Self = 0,
+    Other = 1,
+}
+
+public struct UnitSourceContext
+{
+    public Entity Self;
+    public Entity Other;
+
+    public UnitSourceContext(Entity self, Entity other = default)
+    {
+        Self = self;
+        Other = other;
+    }
+
+    public Entity Resolve(UnitSourceTarget target)
+    {
+        return target == UnitSourceTarget.Other ? Other : Self;
+    }
+}
+
+public readonly struct UnitSourceAccessContext
+{
+    public readonly Entity TargetEntity;
+    public readonly Entity GlobalEntity;
+
+    public UnitSourceAccessContext(Entity targetEntity, Entity globalEntity)
+    {
+        TargetEntity = targetEntity;
+        GlobalEntity = globalEntity;
+    }
+}
+
 public struct UnitSourceValue
 {
     public UnitValueType Type;

@@ -18,8 +18,21 @@ public static class UnitComponentSourceRegistryGenerator
         ComponentGet,
         ComponentSet,
         LookupGet,
-        ManagedGet,
-        ManagedSet,
+        LookupSet,
+        Unsupported,
+    }
+
+    private enum LookupKind
+    {
+        Component,
+        Buffer,
+    }
+
+    private sealed class LookupParameterInfo
+    {
+        public LookupKind Kind;
+        public Type ElementType;
+        public bool IsReadOnly;
     }
 
     private sealed class ProviderInfo
@@ -36,7 +49,7 @@ public static class UnitComponentSourceRegistryGenerator
         public UnitSourceGetAttribute Get;
         public UnitSourceSetAttribute Set;
         public AccessMode Mode;
-        public Type LookupType;
+        public IReadOnlyList<LookupParameterInfo> LookupParameters;
         public string EnumName;
         public int Id;
 
@@ -95,9 +108,9 @@ public static class UnitComponentSourceRegistryGenerator
                     continue;
 
                 provider.Methods.Add(method);
-                Type lookupType = ResolveLookupType(method);
-                AccessMode getMode = ResolveAccessMode(method, true);
-                AccessMode setMode = ResolveAccessMode(method, false);
+                IReadOnlyList<LookupParameterInfo> lookupParameters = ResolveLookupParameters(method);
+                AccessMode getMode = ResolveAccessMode(provider, method, true, lookupParameters);
+                AccessMode setMode = ResolveAccessMode(provider, method, false, lookupParameters);
                 for (int index = 0; index < gets.Length; index++)
                 {
                     entries.Add(new EntryInfo
@@ -106,7 +119,7 @@ public static class UnitComponentSourceRegistryGenerator
                         Method = method,
                         Get = gets[index],
                         Mode = getMode,
-                        LookupType = lookupType,
+                        LookupParameters = lookupParameters,
                     });
                 }
 
@@ -118,7 +131,7 @@ public static class UnitComponentSourceRegistryGenerator
                         Method = method,
                         Set = sets[index],
                         Mode = setMode,
-                        LookupType = lookupType,
+                        LookupParameters = lookupParameters,
                     });
                 }
             }
@@ -130,39 +143,59 @@ public static class UnitComponentSourceRegistryGenerator
             .ToList();
     }
 
-    private static AccessMode ResolveAccessMode(MethodInfo method, bool isGet)
+    private static AccessMode ResolveAccessMode(
+        ProviderInfo provider,
+        MethodInfo method,
+        bool isGet,
+        IReadOnlyList<LookupParameterInfo> lookupParameters)
     {
         ParameterInfo[] parameters = method.GetParameters();
         if (parameters.Any(parameter => parameter.ParameterType == typeof(EntityManager)))
-            return isGet ? AccessMode.ManagedGet : AccessMode.ManagedSet;
+            return AccessMode.Unsupported;
 
-        if (parameters.Any(parameter =>
-                parameter.ParameterType.IsByRef &&
-                parameter.ParameterType.GetElementType()?.IsGenericType == true &&
-                parameter.ParameterType.GetElementType()?.GetGenericTypeDefinition() == typeof(ComponentLookup<>)))
-        {
-            return AccessMode.LookupGet;
-        }
+        if (lookupParameters.Count > 0)
+            return isGet ? AccessMode.LookupGet : AccessMode.LookupSet;
+
+        // ComponentLookup<T> only accepts unmanaged component data. Managed component
+        // providers remain in the generated schema, but have no runtime fallback.
+        if (!provider.Attribute.ComponentType.IsValueType)
+            return AccessMode.Unsupported;
 
         return isGet ? AccessMode.ComponentGet : AccessMode.ComponentSet;
     }
 
-    private static Type ResolveLookupType(MethodInfo method)
+    private static IReadOnlyList<LookupParameterInfo> ResolveLookupParameters(MethodInfo method)
     {
-        ParameterInfo parameter = method.GetParameters().FirstOrDefault(value =>
+        List<LookupParameterInfo> result = new();
+        ParameterInfo[] parameters = method.GetParameters();
+        for (int index = 0; index < parameters.Length; index++)
         {
-            Type type = value.ParameterType.IsByRef
-                ? value.ParameterType.GetElementType()
-                : value.ParameterType;
-            return type?.IsGenericType == true && type.GetGenericTypeDefinition() == typeof(ComponentLookup<>);
-        });
-        if (parameter == null)
-            return null;
+            ParameterInfo parameter = parameters[index];
+            if (!parameter.ParameterType.IsByRef)
+                continue;
 
-        Type parameterType = parameter.ParameterType.IsByRef
-            ? parameter.ParameterType.GetElementType()
-            : parameter.ParameterType;
-        return parameterType.GetGenericArguments()[0];
+            Type parameterType = parameter.ParameterType.GetElementType();
+            if (parameterType?.IsGenericType != true)
+                continue;
+
+            Type genericType = parameterType.GetGenericTypeDefinition();
+            LookupKind kind;
+            if (genericType == typeof(ComponentLookup<>))
+                kind = LookupKind.Component;
+            else if (genericType == typeof(BufferLookup<>))
+                kind = LookupKind.Buffer;
+            else
+                continue;
+
+            result.Add(new LookupParameterInfo
+            {
+                Kind = kind,
+                ElementType = parameterType.GetGenericArguments()[0],
+                IsReadOnly = parameter.IsIn,
+            });
+        }
+
+        return result;
     }
 
     private static void Validate(List<EntryInfo> entries)
@@ -188,6 +221,9 @@ public static class UnitComponentSourceRegistryGenerator
 
     private static void ValidateSignature(EntryInfo entry)
     {
+        if (entry.Mode == AccessMode.Unsupported)
+            return;
+
         ParameterInfo[] parameters = entry.Method.GetParameters();
         bool valid = entry.Mode switch
         {
@@ -200,28 +236,46 @@ public static class UnitComponentSourceRegistryGenerator
                                        parameters[0].ParameterType == typeof(int) &&
                                        IsWritableByRef(parameters[1], entry.Provider.Attribute.ComponentType) &&
                                        IsReadOnlyByRef(parameters[2], typeof(UnitSourceArguments)),
-            AccessMode.LookupGet => parameters.Length == 5 &&
-                                    parameters[0].ParameterType == typeof(int) &&
-                                    parameters[1].ParameterType == typeof(Entity) &&
-                                    IsReadOnlyByRef(parameters[2], typeof(ComponentLookup<>).MakeGenericType(entry.LookupType)) &&
-                                    IsReadOnlyByRef(parameters[3], typeof(UnitSourceArguments)) &&
-                                    IsOut(parameters[4], typeof(UnitSourceValue)),
-            AccessMode.ManagedGet => parameters.Length == 5 &&
-                                     parameters[0].ParameterType == typeof(int) &&
-                                     parameters[1].ParameterType == typeof(EntityManager) &&
-                                     parameters[2].ParameterType == typeof(Entity) &&
-                                     IsReadOnlyByRef(parameters[3], typeof(UnitSourceArguments)) &&
-                                     IsOut(parameters[4], typeof(UnitSourceValue)),
-            AccessMode.ManagedSet => parameters.Length == 4 &&
-                                     parameters[0].ParameterType == typeof(int) &&
-                                     parameters[1].ParameterType == typeof(EntityManager) &&
-                                     parameters[2].ParameterType == typeof(Entity) &&
-                                     IsReadOnlyByRef(parameters[3], typeof(UnitSourceArguments)),
+            AccessMode.LookupGet => ValidateLookupSignature(entry, parameters, true),
+            AccessMode.LookupSet => ValidateLookupSignature(entry, parameters, false),
             _ => false,
         };
 
         if (!valid)
             throw new InvalidOperationException($"Unsupported unit source signature: {entry.Provider.Type.FullName}.{entry.Method.Name}");
+    }
+
+    private static bool ValidateLookupSignature(EntryInfo entry, ParameterInfo[] parameters, bool isGet)
+    {
+        int lookupCount = entry.LookupParameters.Count;
+        int expectedLength = lookupCount + (isGet ? 4 : 3);
+        if (parameters.Length != expectedLength ||
+            parameters[0].ParameterType != typeof(int) ||
+            parameters[1].ParameterType != typeof(Entity) &&
+            parameters[1].ParameterType != typeof(UnitSourceAccessContext))
+        {
+            return false;
+        }
+
+        for (int index = 0; index < lookupCount; index++)
+        {
+            LookupParameterInfo lookup = entry.LookupParameters[index];
+            Type lookupType = lookup.Kind == LookupKind.Component
+                ? typeof(ComponentLookup<>).MakeGenericType(lookup.ElementType)
+                : typeof(BufferLookup<>).MakeGenericType(lookup.ElementType);
+            ParameterInfo parameter = parameters[index + 2];
+            bool valid = lookup.IsReadOnly
+                ? IsReadOnlyByRef(parameter, lookupType)
+                : IsWritableByRef(parameter, lookupType);
+            if (!valid || isGet && !lookup.IsReadOnly)
+                return false;
+        }
+
+        int argumentsIndex = lookupCount + 2;
+        if (!IsReadOnlyByRef(parameters[argumentsIndex], typeof(UnitSourceArguments)))
+            return false;
+
+        return !isGet || IsOut(parameters[argumentsIndex + 1], typeof(UnitSourceValue));
     }
 
     private static bool IsReadOnlyByRef(ParameterInfo parameter, Type type)
@@ -269,7 +323,6 @@ public static class UnitComponentSourceRegistryGenerator
         builder.AppendLine("// Use menu: Tools/Registry/Unit Sources");
         builder.AppendLine();
         builder.AppendLine("using System;");
-        builder.AppendLine("using Unity.Burst;");
         builder.AppendLine("using Unity.Entities;");
         builder.AppendLine("using UnityEngine;");
         builder.AppendLine();
@@ -379,65 +432,138 @@ public static class UnitComponentSourceRegistryGenerator
 
     private static void AppendDispatcher(StringBuilder builder, List<EntryInfo> entries)
     {
-        List<Type> lookupTypes = entries
-            .Where(entry => entry.Mode is AccessMode.ComponentGet or AccessMode.ComponentSet or AccessMode.LookupGet)
-            .Select(entry => entry.LookupType ?? entry.Provider.Attribute.ComponentType)
+        List<Type> componentLookupTypes = entries
+            .Where(entry => entry.Mode is AccessMode.ComponentGet or AccessMode.ComponentSet)
+            .Select(entry => entry.Provider.Attribute.ComponentType)
+            .Concat(entries
+                .Where(entry => entry.Mode is AccessMode.LookupGet or AccessMode.LookupSet)
+                .SelectMany(entry => entry.LookupParameters)
+                .Where(lookup => lookup.Kind == LookupKind.Component)
+                .Select(lookup => lookup.ElementType))
             .Distinct()
             .OrderBy(type => type.FullName, StringComparer.Ordinal)
             .ToList();
-        HashSet<Type> writableLookupTypes = entries
+        List<Type> bufferLookupTypes = entries
+            .Where(entry => entry.Mode is AccessMode.LookupGet or AccessMode.LookupSet)
+            .SelectMany(entry => entry.LookupParameters)
+            .Where(lookup => lookup.Kind == LookupKind.Buffer)
+            .Select(lookup => lookup.ElementType)
+            .Distinct()
+            .OrderBy(type => type.FullName, StringComparer.Ordinal)
+            .ToList();
+        HashSet<Type> writableComponentLookupTypes = entries
             .Where(entry => entry.Mode == AccessMode.ComponentSet)
             .Select(entry => entry.Provider.Attribute.ComponentType)
+            .Concat(entries
+                .Where(entry => entry.Mode == AccessMode.LookupSet)
+                .SelectMany(entry => entry.LookupParameters)
+                .Where(lookup => lookup.Kind == LookupKind.Component && !lookup.IsReadOnly)
+                .Select(lookup => lookup.ElementType))
+            .ToHashSet();
+        HashSet<Type> writableBufferLookupTypes = entries
+            .Where(entry => entry.Mode == AccessMode.LookupSet)
+            .SelectMany(entry => entry.LookupParameters)
+            .Where(lookup => lookup.Kind == LookupKind.Buffer && !lookup.IsReadOnly)
+            .Select(lookup => lookup.ElementType)
             .ToHashSet();
 
         builder.AppendLine("public struct UnitSourceDispatcher");
         builder.AppendLine("{");
-        for (int index = 0; index < lookupTypes.Count; index++)
-            builder.AppendLine($"    private ComponentLookup<{TypeName(lookupTypes[index])}> {FieldName(lookupTypes[index])};");
+        builder.AppendLine("    private Entity _globalEntity;");
+        for (int index = 0; index < componentLookupTypes.Count; index++)
+            builder.AppendLine($"    private ComponentLookup<{TypeName(componentLookupTypes[index])}> {ComponentFieldName(componentLookupTypes[index])};");
+        for (int index = 0; index < bufferLookupTypes.Count; index++)
+            builder.AppendLine($"    private BufferLookup<{TypeName(bufferLookupTypes[index])}> {BufferFieldName(bufferLookupTypes[index])};");
         builder.AppendLine();
-        AppendInitialize(builder, lookupTypes, "SystemBase system", type =>
-            $"system.GetComponentLookup<{TypeName(type)}>({Bool(!writableLookupTypes.Contains(type))})");
-        AppendUpdate(builder, lookupTypes, "SystemBase system", type => $"{FieldName(type)}.Update(system)");
-        AppendInitialize(builder, lookupTypes, "ref SystemState state", type =>
-            $"state.GetComponentLookup<{TypeName(type)}>({Bool(!writableLookupTypes.Contains(type))})");
-        AppendUpdate(builder, lookupTypes, "ref SystemState state", type => $"{FieldName(type)}.Update(ref state)");
+        AppendInitialize(
+            builder,
+            "Initialize",
+            componentLookupTypes,
+            bufferLookupTypes,
+            "SystemBase system",
+            "system.EntityManager",
+            type => $"system.GetComponentLookup<{TypeName(type)}>({Bool(!writableComponentLookupTypes.Contains(type))})",
+            type => $"system.GetBufferLookup<{TypeName(type)}>({Bool(!writableBufferLookupTypes.Contains(type))})");
+        AppendInitialize(
+            builder,
+            "InitializeReadOnly",
+            componentLookupTypes,
+            bufferLookupTypes,
+            "SystemBase system",
+            "system.EntityManager",
+            type => $"system.GetComponentLookup<{TypeName(type)}>(true)",
+            type => $"system.GetBufferLookup<{TypeName(type)}>(true)");
+        AppendUpdate(builder, componentLookupTypes, bufferLookupTypes, "SystemBase system", "system");
+        AppendInitialize(
+            builder,
+            "Initialize",
+            componentLookupTypes,
+            bufferLookupTypes,
+            "ref SystemState state",
+            "state.EntityManager",
+            type => $"state.GetComponentLookup<{TypeName(type)}>({Bool(!writableComponentLookupTypes.Contains(type))})",
+            type => $"state.GetBufferLookup<{TypeName(type)}>({Bool(!writableBufferLookupTypes.Contains(type))})");
+        AppendInitialize(
+            builder,
+            "InitializeReadOnly",
+            componentLookupTypes,
+            bufferLookupTypes,
+            "ref SystemState state",
+            "state.EntityManager",
+            type => $"state.GetComponentLookup<{TypeName(type)}>(true)",
+            type => $"state.GetBufferLookup<{TypeName(type)}>(true)");
+        AppendUpdate(builder, componentLookupTypes, bufferLookupTypes, "ref SystemState state", "ref state");
         AppendTryGet(builder, entries);
         AppendTrySet(builder, entries);
-        builder.AppendLine("    [BurstDiscard]");
-        builder.AppendLine("    public void InvokeManagedInteraction(EntityManager entityManager, ref bool success, ref InteractionRequestSnapshot request)");
+        builder.AppendLine("    public bool TryGetInteraction(out InteractionRequestSnapshot request)");
         builder.AppendLine("    {");
-        builder.AppendLine("        success = GameInteractionSource.TryGetInteraction(entityManager, out request);");
+        builder.AppendLine("        request = default;");
+        builder.AppendLine($"        if (!{ComponentFieldName(typeof(InteractionCandidateComponent))}.TryGetComponent(_globalEntity, out InteractionCandidateComponent candidate))");
+        builder.AppendLine("            return false;");
+        builder.AppendLine("        return GameInteractionSource.TryGetInteraction(in candidate, out request);");
         builder.AppendLine("    }");
         builder.AppendLine();
-        AppendManagedGet(builder, entries);
-        AppendManagedSet(builder, entries);
         builder.AppendLine("}");
     }
 
     private static void AppendInitialize(
         StringBuilder builder,
-        List<Type> lookupTypes,
+        string methodName,
+        List<Type> componentLookupTypes,
+        List<Type> bufferLookupTypes,
         string parameter,
-        Func<Type, string> expression)
+        string entityManagerExpression,
+        Func<Type, string> componentExpression,
+        Func<Type, string> bufferExpression)
     {
-        builder.AppendLine($"    public void Initialize({parameter})");
+        builder.AppendLine($"    public void {methodName}({parameter})");
         builder.AppendLine("    {");
-        for (int index = 0; index < lookupTypes.Count; index++)
-            builder.AppendLine($"        {FieldName(lookupTypes[index])} = {expression(lookupTypes[index])};");
+        for (int index = 0; index < componentLookupTypes.Count; index++)
+            builder.AppendLine($"        {ComponentFieldName(componentLookupTypes[index])} = {componentExpression(componentLookupTypes[index])};");
+        for (int index = 0; index < bufferLookupTypes.Count; index++)
+            builder.AppendLine($"        {BufferFieldName(bufferLookupTypes[index])} = {bufferExpression(bufferLookupTypes[index])};");
+        builder.AppendLine($"        WorldStateUtility.TryGetEntity({entityManagerExpression}, out _globalEntity);");
         builder.AppendLine("    }");
         builder.AppendLine();
     }
 
     private static void AppendUpdate(
         StringBuilder builder,
-        List<Type> lookupTypes,
+        List<Type> componentLookupTypes,
+        List<Type> bufferLookupTypes,
         string parameter,
-        Func<Type, string> expression)
+        string updateArgument)
     {
         builder.AppendLine($"    public void Update({parameter})");
         builder.AppendLine("    {");
-        for (int index = 0; index < lookupTypes.Count; index++)
-            builder.AppendLine($"        {expression(lookupTypes[index])};");
+        for (int index = 0; index < componentLookupTypes.Count; index++)
+            builder.AppendLine($"        {ComponentFieldName(componentLookupTypes[index])}.Update({updateArgument});");
+        for (int index = 0; index < bufferLookupTypes.Count; index++)
+            builder.AppendLine($"        {BufferFieldName(bufferLookupTypes[index])}.Update({updateArgument});");
+        string entityManagerExpression = parameter.StartsWith("ref ", StringComparison.Ordinal)
+            ? "state.EntityManager"
+            : "system.EntityManager";
+        builder.AppendLine($"        WorldStateUtility.TryGetEntity({entityManagerExpression}, out _globalEntity);");
         builder.AppendLine("    }");
         builder.AppendLine();
     }
@@ -452,25 +578,27 @@ public static class UnitComponentSourceRegistryGenerator
         foreach (EntryInfo entry in entries.Where(entry => entry.IsGet && entry.Mode == AccessMode.ComponentGet))
         {
             Type type = entry.Provider.Attribute.ComponentType;
+            string target = entry.Provider.Attribute.IsGlobal ? "_globalEntity" : "entity";
             builder.AppendLine($"            case UnitSourceId.{entry.EnumName}:");
             builder.AppendLine("            {");
-            builder.AppendLine($"                if (!{FieldName(type)}.TryGetComponent(entity, out {TypeName(type)} component))");
+            builder.AppendLine($"                if (!{ComponentFieldName(type)}.TryGetComponent({target}, out {TypeName(type)} component))");
             builder.AppendLine("                    return false;");
             builder.AppendLine($"                return {TypeName(entry.Provider.Type)}.{entry.Method.Name}({entry.Operation}, in component, in arguments, out value);");
             builder.AppendLine("            }");
         }
         foreach (EntryInfo entry in entries.Where(entry => entry.IsGet && entry.Mode == AccessMode.LookupGet))
         {
+            string target = entry.Provider.Attribute.IsGlobal ? "_globalEntity" : "entity";
             builder.AppendLine($"            case UnitSourceId.{entry.EnumName}:");
-            builder.AppendLine($"                return {TypeName(entry.Provider.Type)}.{entry.Method.Name}({entry.Operation}, entity, in {FieldName(entry.LookupType)}, in arguments, out value);");
+            builder.AppendLine($"                return {TypeName(entry.Provider.Type)}.{entry.Method.Name}({entry.Operation}, {BuildTargetArgument(entry, target)}, {BuildLookupArguments(entry)}, in arguments, out value);");
         }
-        List<EntryInfo> managedEntries = entries
-            .Where(entry => entry.IsGet && entry.Mode == AccessMode.ManagedGet)
+        List<EntryInfo> unsupportedEntries = entries
+            .Where(entry => entry.IsGet && entry.Mode == AccessMode.Unsupported)
             .ToList();
-        if (managedEntries.Count > 0)
+        if (unsupportedEntries.Count > 0)
         {
-            for (int index = 0; index < managedEntries.Count; index++)
-                builder.AppendLine($"            case UnitSourceId.{managedEntries[index].EnumName}:");
+            for (int index = 0; index < unsupportedEntries.Count; index++)
+                builder.AppendLine($"            case UnitSourceId.{unsupportedEntries[index].EnumName}:");
             builder.AppendLine("                return false;");
         }
         builder.AppendLine("            default:");
@@ -489,21 +617,28 @@ public static class UnitComponentSourceRegistryGenerator
         foreach (EntryInfo entry in entries.Where(entry => !entry.IsGet && entry.Mode == AccessMode.ComponentSet))
         {
             Type type = entry.Provider.Attribute.ComponentType;
+            string target = entry.Provider.Attribute.IsGlobal ? "_globalEntity" : "entity";
             builder.AppendLine($"            case UnitSourceId.{entry.EnumName}:");
             builder.AppendLine("            {");
-            builder.AppendLine($"                if (!{FieldName(type)}.HasComponent(entity))");
+            builder.AppendLine($"                if (!{ComponentFieldName(type)}.HasComponent({target}))");
             builder.AppendLine("                    return false;");
-            builder.AppendLine($"                RefRW<{TypeName(type)}> component = {FieldName(type)}.GetRefRW(entity);");
+            builder.AppendLine($"                RefRW<{TypeName(type)}> component = {ComponentFieldName(type)}.GetRefRW({target});");
             builder.AppendLine($"                return {TypeName(entry.Provider.Type)}.{entry.Method.Name}({entry.Operation}, ref component.ValueRW, in arguments);");
             builder.AppendLine("            }");
         }
-        List<EntryInfo> managedEntries = entries
-            .Where(entry => !entry.IsGet && entry.Mode == AccessMode.ManagedSet)
-            .ToList();
-        if (managedEntries.Count > 0)
+        foreach (EntryInfo entry in entries.Where(entry => !entry.IsGet && entry.Mode == AccessMode.LookupSet))
         {
-            for (int index = 0; index < managedEntries.Count; index++)
-                builder.AppendLine($"            case UnitSourceId.{managedEntries[index].EnumName}:");
+            string target = entry.Provider.Attribute.IsGlobal ? "_globalEntity" : "entity";
+            builder.AppendLine($"            case UnitSourceId.{entry.EnumName}:");
+            builder.AppendLine($"                return {TypeName(entry.Provider.Type)}.{entry.Method.Name}({entry.Operation}, {BuildTargetArgument(entry, target)}, {BuildLookupArguments(entry)}, in arguments);");
+        }
+        List<EntryInfo> unsupportedEntries = entries
+            .Where(entry => !entry.IsGet && entry.Mode == AccessMode.Unsupported)
+            .ToList();
+        if (unsupportedEntries.Count > 0)
+        {
+            for (int index = 0; index < unsupportedEntries.Count; index++)
+                builder.AppendLine($"            case UnitSourceId.{unsupportedEntries[index].EnumName}:");
             builder.AppendLine("                return false;");
         }
         builder.AppendLine("            default:");
@@ -513,40 +648,17 @@ public static class UnitComponentSourceRegistryGenerator
         builder.AppendLine();
     }
 
-    private static void AppendManagedGet(StringBuilder builder, List<EntryInfo> entries)
+    private static string BuildLookupArguments(EntryInfo entry)
     {
-        builder.AppendLine("    [BurstDiscard]");
-        builder.AppendLine("    public void InvokeManagedGet(EntityManager entityManager, UnitSourceId sourceId, Entity entity, in UnitSourceArguments arguments, ref bool success, ref UnitSourceValue value)");
-        builder.AppendLine("    {");
-        builder.AppendLine("        switch (sourceId)");
-        builder.AppendLine("        {");
-        foreach (EntryInfo entry in entries.Where(entry => entry.IsGet && entry.Mode == AccessMode.ManagedGet))
-        {
-            builder.AppendLine($"            case UnitSourceId.{entry.EnumName}:");
-            builder.AppendLine($"                success = {TypeName(entry.Provider.Type)}.{entry.Method.Name}({entry.Operation}, entityManager, entity, in arguments, out value);");
-            builder.AppendLine("                return;");
-        }
-        builder.AppendLine("        }");
-        builder.AppendLine("    }");
-        builder.AppendLine();
+        return string.Join(", ", entry.LookupParameters.Select(lookup =>
+            $"{(lookup.IsReadOnly ? "in" : "ref")} {(lookup.Kind == LookupKind.Component ? ComponentFieldName(lookup.ElementType) : BufferFieldName(lookup.ElementType))}"));
     }
 
-    private static void AppendManagedSet(StringBuilder builder, List<EntryInfo> entries)
+    private static string BuildTargetArgument(EntryInfo entry, string target)
     {
-        builder.AppendLine("    [BurstDiscard]");
-        builder.AppendLine("    public void InvokeManagedSet(EntityManager entityManager, UnitSourceId sourceId, Entity entity, in UnitSourceArguments arguments, ref bool success)");
-        builder.AppendLine("    {");
-        builder.AppendLine("        switch (sourceId)");
-        builder.AppendLine("        {");
-        foreach (EntryInfo entry in entries.Where(entry => !entry.IsGet && entry.Mode == AccessMode.ManagedSet))
-        {
-            builder.AppendLine($"            case UnitSourceId.{entry.EnumName}:");
-            builder.AppendLine($"                success = {TypeName(entry.Provider.Type)}.{entry.Method.Name}({entry.Operation}, entityManager, entity, in arguments);");
-            builder.AppendLine("                return;");
-        }
-        builder.AppendLine("        }");
-        builder.AppendLine("    }");
-        builder.AppendLine();
+        return entry.Method.GetParameters()[1].ParameterType == typeof(UnitSourceAccessContext)
+            ? $"new UnitSourceAccessContext({target}, _globalEntity)"
+            : target;
     }
 
     private static string BuildParameters(EntryInfo entry)
@@ -570,13 +682,23 @@ public static class UnitComponentSourceRegistryGenerator
         return "global::" + type.FullName.Replace('+', '.');
     }
 
-    private static string FieldName(Type type)
+    private static string ComponentFieldName(Type type)
     {
         StringBuilder builder = new("_");
         string name = type.FullName ?? type.Name;
         for (int index = 0; index < name.Length; index++)
             builder.Append(char.IsLetterOrDigit(name[index]) ? name[index] : '_');
         builder.Append("Lookup");
+        return builder.ToString();
+    }
+
+    private static string BufferFieldName(Type type)
+    {
+        StringBuilder builder = new("_");
+        string name = type.FullName ?? type.Name;
+        for (int index = 0; index < name.Length; index++)
+            builder.Append(char.IsLetterOrDigit(name[index]) ? name[index] : '_');
+        builder.Append("BufferLookup");
         return builder.ToString();
     }
 

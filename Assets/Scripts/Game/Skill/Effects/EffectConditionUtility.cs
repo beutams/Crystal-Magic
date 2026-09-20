@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using CrystalMagic.Game.Data;
 using Unity.Entities;
@@ -31,12 +30,15 @@ namespace CrystalMagic.Game.Skill.Effects
             if (!UnitSourceDispatcherSystem.TryGet(entityManager, out UnitSourceDispatcher dispatcher))
                 return false;
             UnitSourceResolver sources = new(evaluatedEntity);
-            sources.Update(evaluatedEntity, entityManager, in dispatcher);
+            Entity other = context.HasOtherEntity
+                ? context.OtherEntity
+                : UnitVariableSource.GetOther(entityManager, evaluatedEntity);
+            sources.Update(evaluatedEntity, other, in dispatcher);
 
             Comparator comparator = GetComparatorFactory().BuildComparator(
                 conditions,
                 new EffectConditionValueResolver(sources, context));
-            return comparator.GetResult();
+            return comparator.GetResult(sources);
         }
 
         private static ComparatorFactory GetComparatorFactory()
@@ -65,69 +67,57 @@ namespace CrystalMagic.Game.Skill.Effects
                 switch (key)
                 {
                     case OriginEntityKey:
-                        getter = new ContextValueGetter(UnitValueCategory.Entity, GetOriginEntity);
+                        getter = new ContextValueGetter(_context, EffectContextValueKind.OriginEntity);
                         return true;
                     case TargetEntityKey:
-                        getter = new ContextValueGetter(UnitValueCategory.Entity, GetTargetEntity);
+                        getter = new ContextValueGetter(_context, EffectContextValueKind.TargetEntity);
                         return true;
                     case OtherEntityKey:
-                        getter = new ContextValueGetter(UnitValueCategory.Entity, GetOtherEntity);
+                        getter = new ContextValueGetter(_context, EffectContextValueKind.OtherEntity);
                         return true;
                     case PositionKey:
-                        getter = new ContextValueGetter(UnitValueCategory.Float3, GetPosition);
+                        getter = new ContextValueGetter(_context, EffectContextValueKind.Position);
                         return true;
                     case TriggerValueKey:
-                        getter = new ContextValueGetter(UnitValueCategory.Number, GetTriggerValue);
+                        getter = new ContextValueGetter(_context, EffectContextValueKind.TriggerValue);
                         return true;
                     default:
                         return ((IComparatorValueResolver)_unitSources).TryGet(key, out getter);
                 }
             }
 
-            private UnitValue GetOriginEntity()
-            {
-                return _context.HasOriginEntity ? UnitValue.FromEntity(_context.OriginEntity) : UnitValue.None;
-            }
+        }
 
-            private UnitValue GetTargetEntity()
-            {
-                return _context.HasTargetEntity ? UnitValue.FromEntity(_context.TargetEntity) : UnitValue.None;
-            }
-
-            private UnitValue GetOtherEntity()
-            {
-                return _context.HasOtherEntity ? UnitValue.FromEntity(_context.OtherEntity) : UnitValue.None;
-            }
-
-            private UnitValue GetPosition()
-            {
-                if (!_context.HasPosition)
-                    return UnitValue.None;
-
-                return UnitValue.FromFloat3(new float3(
-                    _context.Position.x,
-                    _context.Position.y,
-                    _context.Position.z));
-            }
-
-            private UnitValue GetTriggerValue()
-            {
-                return UnitValue.FromFloat(_context.TriggerValue);
-            }
+        private enum EffectContextValueKind : byte
+        {
+            OriginEntity,
+            TargetEntity,
+            OtherEntity,
+            Position,
+            TriggerValue,
         }
 
         private sealed class ContextValueGetter : IParameterizedUnitValueGetter
         {
-            private static readonly ComparatorParameterDefinition[] s_parameters = Array.Empty<ComparatorParameterDefinition>();
-            private readonly Func<UnitValue> _getValue;
+            private static readonly ComparatorParameterDefinition[] s_parameters = System.Array.Empty<ComparatorParameterDefinition>();
+            private readonly SkillContent _context;
+            private readonly EffectContextValueKind _kind;
 
-            public ContextValueGetter(UnitValueCategory returnType, Func<UnitValue> getValue)
+            public ContextValueGetter(SkillContent context, EffectContextValueKind kind)
             {
-                ReturnType = returnType;
-                _getValue = getValue;
+                _context = context;
+                _kind = kind;
             }
 
-            public UnitValueCategory ReturnType { get; }
+            public UnitValueCategory ReturnType => _kind switch
+            {
+                EffectContextValueKind.OriginEntity => UnitValueCategory.Entity,
+                EffectContextValueKind.TargetEntity => UnitValueCategory.Entity,
+                EffectContextValueKind.OtherEntity => UnitValueCategory.Entity,
+                EffectContextValueKind.Position => UnitValueCategory.Float3,
+                EffectContextValueKind.TriggerValue => UnitValueCategory.Number,
+                _ => UnitValueCategory.None,
+            };
             public IReadOnlyList<ComparatorParameterDefinition> Parameters => s_parameters;
 
             public bool TryGet(UnitValue[] parameters, out UnitValue value)
@@ -138,7 +128,18 @@ namespace CrystalMagic.Game.Skill.Effects
                     return false;
                 }
 
-                value = _getValue();
+                value = _kind switch
+                {
+                    EffectContextValueKind.OriginEntity when _context.HasOriginEntity => UnitValue.FromEntity(_context.OriginEntity),
+                    EffectContextValueKind.TargetEntity when _context.HasTargetEntity => UnitValue.FromEntity(_context.TargetEntity),
+                    EffectContextValueKind.OtherEntity when _context.HasOtherEntity => UnitValue.FromEntity(_context.OtherEntity),
+                    EffectContextValueKind.Position when _context.HasPosition => UnitValue.FromFloat3(new float3(
+                        _context.Position.x,
+                        _context.Position.y,
+                        _context.Position.z)),
+                    EffectContextValueKind.TriggerValue => UnitValue.FromFloat(_context.TriggerValue),
+                    _ => UnitValue.None,
+                };
                 return value.Category == ReturnType;
             }
         }

@@ -1,11 +1,8 @@
-using System.Collections.Generic;
-using CrystalMagic.Game.Data.Effects;
-using CrystalMagic.Game.Skill;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
-public sealed class SkillProjectileSpawnRequest
+public struct SkillProjectileSpawnRequest : IBufferElementData
 {
     public FixedString128Bytes ProjectileName;
     public FixedString128Bytes VisualPrefabName;
@@ -19,42 +16,30 @@ public sealed class SkillProjectileSpawnRequest
     public float HitRadius;
     public byte CanPierce;
     public byte TriggerDestroyEffectsOnMaxRange;
-    public SkillContent Context;
-    public List<ConditionConfig> CollisionTargetConditions;
-    public EffectData[] OnCollisionEffects;
-    public EffectData[] OnDestroyEffects;
+    public EffectRequestContext Context;
+    public byte ReleaseManagedContextOnFailure;
+    public ConditionDataListId CollisionTargetConditionsId;
+    public EffectDataListId OnCollisionEffectListId;
+    public EffectDataListId OnDestroyEffectListId;
 }
 
-public sealed class SkillProjectileSpawnQueueComponent : IComponentData
+public struct SkillProjectileSpawnQueueComponent : IComponentData
 {
-    public readonly Queue<SkillProjectileSpawnRequest> Requests = new();
 }
 
 public static class SkillProjectileSpawnQueueUtility
 {
-    public static SkillProjectileSpawnQueueComponent GetOrCreate(EntityManager entityManager)
+    public static Entity GetOrCreateEntity(EntityManager entityManager)
     {
-        EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<SkillProjectileSpawnQueueComponent>());
+        EntityQuery query = entityManager.CreateEntityQuery(
+            ComponentType.ReadOnly<SkillProjectileSpawnQueueComponent>());
         if (!query.IsEmptyIgnoreFilter)
-            return entityManager.GetComponentObject<SkillProjectileSpawnQueueComponent>(query.GetSingletonEntity());
+            return query.GetSingletonEntity();
 
         Entity entity = entityManager.CreateEntity();
-        SkillProjectileSpawnQueueComponent queue = new();
-        entityManager.AddComponentObject(entity, queue);
-        return queue;
-    }
-
-    public static bool TryGet(EntityManager entityManager, out SkillProjectileSpawnQueueComponent queue)
-    {
-        EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<SkillProjectileSpawnQueueComponent>());
-        if (query.IsEmptyIgnoreFilter)
-        {
-            queue = null;
-            return false;
-        }
-
-        queue = entityManager.GetComponentObject<SkillProjectileSpawnQueueComponent>(query.GetSingletonEntity());
-        return queue != null;
+        entityManager.AddComponent<SkillProjectileSpawnQueueComponent>(entity);
+        entityManager.AddBuffer<SkillProjectileSpawnRequest>(entity);
+        return entity;
     }
 }
 
@@ -63,12 +48,13 @@ public struct SkillProjectileHitEntityElement : IBufferElementData
     public Entity Value;
 }
 
-public sealed class SkillProjectilePayloadComponent : IComponentData
+public struct SkillProjectilePayloadComponent : IComponentData
 {
-    public SkillContent Context;
-    public List<ConditionConfig> CollisionTargetConditions;
-    public EffectData[] OnCollisionEffects;
-    public EffectData[] OnDestroyEffects;
+    public EffectRequestContext Context;
+    public byte OwnsManagedContext;
+    public ConditionDataListId CollisionTargetConditionsId;
+    public EffectDataListId OnCollisionEffectListId;
+    public EffectDataListId OnDestroyEffectListId;
 }
 
 public struct SkillProjectileVisualLinkComponent : IComponentData

@@ -1,6 +1,6 @@
-using System.Collections.Generic;
 using CrystalMagic.Game.Skill;
 using Unity.Entities;
+using Unity.Mathematics;
 
 public static class UnitBuffHookUtility
 {
@@ -20,43 +20,25 @@ public static class UnitBuffHookUtility
     {
         if (targetEntity == Entity.Null ||
             !entityManager.Exists(targetEntity) ||
-            !UnitBuffUtility.TryGetRuntimeComponent(entityManager, targetEntity, out UnitBuffRuntimeComponent runtimeComponent))
+            !entityManager.HasBuffer<UnitBuffElement>(targetEntity) ||
+            !entityManager.HasBuffer<UnitBuffHookRequestElement>(targetEntity))
         {
             return;
         }
 
-        PendingEffectExecutionQueueComponent effectExecutionQueue = PendingEffectExecutionQueueUtility.GetOrCreate(entityManager);
-        BuffHookContext context = new()
-        {
-            EntityManager = entityManager,
-            TargetEntity = targetEntity,
-            EffectExecutionQueue = effectExecutionQueue,
-            HookType = hookType,
-            TriggerSource = triggerSource,
-            HasOriginEntity = hasOriginEntity,
-            OriginEntity = hasOriginEntity ? originEntity : Entity.Null,
-            SourceSkillId = sourceSkillId,
-            HasOtherEntity = hasOtherEntity,
-            OtherEntity = hasOtherEntity ? otherEntity : Entity.Null,
-            HasPosition = hasPosition,
-            Position = position,
-            TriggerValue = triggerValue,
-        };
-
-        List<UnitBuffRuntimeEntry> buffs = runtimeComponent.Buffs;
-        for (int i = buffs.Count - 1; i >= 0; i--)
-        {
-            UnitBuffRuntimeEntry entry = buffs[i];
-            int stackCount = entry.StackCount;
-            if (!entry.OnHook(context))
+        entityManager.GetBuffer<UnitBuffHookRequestElement>(targetEntity).Add(
+            new UnitBuffHookRequestElement
             {
-                buffs.RemoveAt(i);
-                runtimeComponent.NetworkDirty = 1;
-            }
-            else if (entry.StackCount != stackCount)
-            {
-                runtimeComponent.NetworkDirty = 1;
-            }
-        }
+                HookType = hookType,
+                TriggerSource = triggerSource,
+                OriginEntity = hasOriginEntity ? originEntity : Entity.Null,
+                OtherEntity = hasOtherEntity ? otherEntity : Entity.Null,
+                SourceSkillId = sourceSkillId,
+                Position = new float3(position.x, position.y, position.z),
+                TriggerValue = triggerValue,
+                HasOriginEntity = hasOriginEntity ? (byte)1 : (byte)0,
+                HasOtherEntity = hasOtherEntity ? (byte)1 : (byte)0,
+                HasPosition = hasPosition ? (byte)1 : (byte)0,
+            });
     }
 }

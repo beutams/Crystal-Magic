@@ -1,4 +1,3 @@
-using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Data.Effects;
 using CrystalMagic.Game.Skill.Effects;
 using Unity.Entities;
@@ -7,22 +6,6 @@ namespace CrystalMagic.Game.Skill
 {
     public static class SkillExecutor
     {
-        public static void ExecuteSkill(SkillData skillData, SkillContent context)
-        {
-            if (skillData == null || skillData.EffectChain == null)
-                return;
-
-            ExecuteEffects(skillData.EffectChain, context);
-        }
-
-        public static void ExecuteSkill(ResolvedSkillData skillData, SkillContent context)
-        {
-            if (skillData == null || skillData.EffectChain == null)
-                return;
-
-            ExecuteEffects(skillData.EffectChain, context);
-        }
-
         public static void ExecuteEffects(EffectData[] effects, SkillContent context)
         {
             if (effects == null || IsContextDead(context))
@@ -34,7 +17,7 @@ namespace CrystalMagic.Game.Skill
                     continue;
 
                 EffectData runtimeEffectData = effectData;
-                if (context?.RuntimeModifiers != null)
+                if (context != null && !context.RuntimeModifiers.IsEmpty)
                     runtimeEffectData = effectData.CreateRuntimeCopy(context.RuntimeModifiers);
 
                 Effect effect = CreateEffect(runtimeEffectData);

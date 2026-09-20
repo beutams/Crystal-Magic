@@ -1,4 +1,3 @@
-using System;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 
@@ -10,7 +9,7 @@ public sealed class PublishGameEventStateScriptNode : StateScriptActionNode
     private readonly PublishGameEventStateScriptNodeData _data;
     private readonly StateScriptOutputPort _output;
     private string _eventName;
-    private Func<UnitValue> _referenceGetter;
+    private CompiledValueExpression _referenceExpression;
 
     public PublishGameEventStateScriptNode(PublishGameEventStateScriptNodeData data, StateScriptRuntime runtime)
         : base(data, runtime)
@@ -23,7 +22,7 @@ public sealed class PublishGameEventStateScriptNode : StateScriptActionNode
     protected override bool OnBind(out string error)
     {
         _eventName = (_data.EventName ?? string.Empty).Trim();
-        _referenceGetter = null;
+        _referenceExpression = default;
         if (string.IsNullOrWhiteSpace(_eventName))
         {
             error = "PublishGameEvent event name is empty.";
@@ -34,26 +33,26 @@ public sealed class PublishGameEventStateScriptNode : StateScriptActionNode
         if (!s_expressionFactory.TryBuildValueExpression(
                 _data.Reference,
                 Runtime.Sources,
-                out _,
-                out Func<UnitValue> referenceGetter,
+                out CompiledValueExpression referenceExpression,
                 out error))
         {
             return false;
         }
 
-        _referenceGetter = referenceGetter;
+        _referenceExpression = referenceExpression;
         error = string.Empty;
         return true;
     }
 
     private void Publish()
     {
-        if (_referenceGetter == null || !EventComponent.TryGetInstance(out EventComponent eventComponent))
+        if (!_referenceExpression.TryEvaluate(Runtime.Sources, out UnitSourceValue referenceValue) ||
+            !EventComponent.TryGetInstance(out EventComponent eventComponent))
             return;
 
         eventComponent.Publish(new CommonGameEvent(
             _eventName,
-            new GameplayEventReference(Runtime.Entity, _referenceGetter())));
+            new GameplayEventReference(Runtime.Entity, referenceValue.ToUnitValue())));
         _output.Pulse();
     }
 

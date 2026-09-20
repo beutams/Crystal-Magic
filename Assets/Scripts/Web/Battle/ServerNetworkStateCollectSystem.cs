@@ -226,25 +226,23 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
 
     private void CollectBuffStates(List<NetworkStateData> states, uint currentFrame, bool onlyDirty)
     {
-        foreach ((RefRO<NetworkIdentityComponent> identityRef, UnitBuffRuntimeComponent buffRuntime) in
-                 SystemAPI.Query<RefRO<NetworkIdentityComponent>, UnitBuffRuntimeComponent>())
+        foreach ((RefRO<NetworkIdentityComponent> identityRef, RefRW<UnitBuffComponent> buffComponentRef,
+                     DynamicBuffer<UnitBuffElement> buffs) in
+                 SystemAPI.Query<RefRO<NetworkIdentityComponent>, RefRW<UnitBuffComponent>, DynamicBuffer<UnitBuffElement>>())
         {
-            if ((onlyDirty && buffRuntime.NetworkDirty == 0) || identityRef.ValueRO.id == Guid.Empty)
+            if ((onlyDirty && buffComponentRef.ValueRO.NetworkDirty == 0) || identityRef.ValueRO.id == Guid.Empty)
                 continue;
 
             NetworkBuffStateData state = new() { unitId = identityRef.ValueRO.id };
-            for (int index = 0; index < buffRuntime.Buffs.Count; index++)
+            for (int index = 0; index < buffs.Length; index++)
             {
-                UnitBuffRuntimeEntry buff = buffRuntime.Buffs[index];
-                if (buff == null)
-                    continue;
-
+                UnitBuffElement buff = buffs[index];
                 state.buffs.Add(new NetworkBuffEntryStateData
                 {
                     buffId = buff.BuffId,
                     endFrame = GetEndFrame(buff.RemainingTime, currentFrame),
                     stackCount = buff.StackCount,
-                    originUnitId = GetNetworkId(buff.HasOriginEntity ? buff.OriginEntity : Entity.Null),
+                    originUnitId = GetNetworkId(buff.OriginEntity),
                     sourceSkillId = buff.SourceSkillId,
                 });
             }
@@ -252,7 +250,7 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
             states.Add(state);
             if (onlyDirty)
             {
-                buffRuntime.NetworkDirty = 0;
+                buffComponentRef.ValueRW.NetworkDirty = 0;
             }
         }
     }

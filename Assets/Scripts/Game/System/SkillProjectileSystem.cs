@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using CrystalMagic.Game.Skill;
 using CrystalMagic.Game.Skill.Effects;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -31,6 +32,11 @@ public partial class SkillProjectileSystem : SystemBase
         }
 
         float deltaTime = SystemAPI.Time.DeltaTime;
+        Dependency = new ProjectileMoveJob
+        {
+            DeltaTime = deltaTime,
+        }.ScheduleParallel(Dependency);
+        Dependency.Complete();
 
         NativeArray<Entity> entities = _projectileQuery.ToEntityArray(Allocator.Temp);
         NativeArray<SkillProjectileComponent> projectiles = _projectileQuery.ToComponentDataArray<SkillProjectileComponent>(Allocator.Temp);
@@ -43,24 +49,29 @@ public partial class SkillProjectileSystem : SystemBase
                 Entity entity = entities[i];
                 SkillProjectileComponent projectile = projectiles[i];
                 LocalTransform transform = transforms[i];
-                SkillProjectilePayloadComponent payload = EntityManager.GetComponentObject<SkillProjectilePayloadComponent>(entity);
+                SkillProjectilePayloadComponent payload = EntityManager.GetComponentData<SkillProjectilePayloadComponent>(entity);
                 DynamicBuffer<SkillProjectileHitEntityElement> hitEntities = EntityManager.GetBuffer<SkillProjectileHitEntityElement>(entity);
+                SkillContent baseContext = EffectUtility.CreateContext(EntityManager, in payload.Context);
+                EffectDataBridgeUtility.TryGetConditions(
+                    EntityManager,
+                    payload.CollisionTargetConditionsId,
+                    out List<ConditionConfig> collisionTargetConditions);
 
-                float moveDistance = projectile.Speed * deltaTime;
-                transform.Position += projectile.Direction * moveDistance;
-                transform.Rotation = CreateRotation(projectile.Direction);
-                projectile.TraveledDistance += math.abs(moveDistance);
-                projectile.NetworkDirty = 1;
-
-                EntityManager.SetComponentData(entity, transform);
-                EntityManager.SetComponentData(entity, projectile);
-
-                if (TryFindHitEntity(unitGrid, payload, projectile, hitEntities, transform.Position, out Entity hitEntity, out float3 hitPosition))
+                if (TryFindHitEntity(
+                        unitGrid,
+                        in payload,
+                        baseContext,
+                        collisionTargetConditions,
+                        projectile,
+                        hitEntities,
+                        transform.Position,
+                        out Entity hitEntity,
+                        out float3 hitPosition))
                 {
                     hitEntities.Add(new SkillProjectileHitEntityElement { Value = hitEntity });
 
-                    SkillContent hitContext = BuildHitContext(payload.Context, hitEntity, hitPosition);
-                    SkillExecutor.ExecuteEffects(payload.OnCollisionEffects, hitContext);
+                    SkillContent hitContext = BuildHitContext(baseContext, hitEntity, hitPosition);
+                    EffectUtility.Enqueue(EntityManager, payload.OnCollisionEffectListId, hitContext);
 
                     if (projectile.CanPierce == 0)
                     {
@@ -90,7 +101,9 @@ public partial class SkillProjectileSystem : SystemBase
 
     private bool TryFindHitEntity(
         UnitQueryGrid unitGrid,
-        SkillProjectilePayloadComponent payload,
+        in SkillProjectilePayloadComponent payload,
+        SkillContent baseContext,
+        IReadOnlyList<ConditionConfig> collisionTargetConditions,
         SkillProjectileComponent projectile,
         DynamicBuffer<SkillProjectileHitEntityElement> hitEntities,
         float3 projectilePosition,
@@ -106,13 +119,13 @@ public partial class SkillProjectileSystem : SystemBase
         for (int i = 0; i < _hits.Count; i++)
         {
             UnitQueryHit hit = _hits[i];
-            if (payload.Context.HasOriginEntity && hit.Entity == payload.Context.OriginEntity)
+            if (payload.Context.HasOriginEntity != 0 && hit.Entity == payload.Context.OriginEntity)
                 continue;
 
             if (HasHitEntity(hitEntities, hit.Entity))
                 continue;
 
-            if (!EffectConditionUtility.Pass(payload.CollisionTargetConditions, payload.Context, hit.Entity))
+            if (!EffectConditionUtility.Pass(collisionTargetConditions, baseContext, hit.Entity))
                 continue;
 
             float distanceSq = math.lengthsq(hit.Position.xy - projectilePosition.xy);
@@ -147,12 +160,26 @@ public partial class SkillProjectileSystem : SystemBase
     {
         if (triggerDestroyEffects)
         {
-            SkillContent context = destroyContext?.Clone() ?? payload.Context.Clone();
+            SkillContent context = destroyContext?.Clone() ??
+                                   EffectUtility.CreateContext(EntityManager, in payload.Context);
             context.EntityManager = EntityManager;
             context.HasPosition = true;
             context.Position = new UnityEngine.Vector3(destroyPosition.x, destroyPosition.y, destroyPosition.z);
-            SkillExecutor.ExecuteEffects(payload.OnDestroyEffects, context);
+            EffectUtility.Enqueue(EntityManager, payload.OnDestroyEffectListId, context);
         }
+
+        EffectUtility.ReleaseAfterExecution(EntityManager, payload.OnCollisionEffectListId);
+        EffectUtility.ReleaseAfterExecution(EntityManager, payload.OnDestroyEffectListId);
+        EffectDataBridgeUtility.UnregisterConditions(
+            EntityManager,
+            payload.CollisionTargetConditionsId);
+        if (payload.OwnsManagedContext != 0)
+            EffectDataBridgeUtility.UnregisterManagedContext(EntityManager, payload.Context.ManagedContextId);
+        payload.OnCollisionEffectListId = default;
+        payload.OnDestroyEffectListId = default;
+        payload.CollisionTargetConditionsId = default;
+        payload.OwnsManagedContext = 0;
+        EntityManager.SetComponentData(entity, payload);
 
         if (!EntityManager.Exists(entity))
             return;
@@ -182,10 +209,19 @@ public partial class SkillProjectileSystem : SystemBase
         return context;
     }
 
-    private static quaternion CreateRotation(float3 direction)
+    [BurstCompile]
+    private partial struct ProjectileMoveJob : IJobEntity
     {
-        float2 planar = math.normalizesafe(direction.xy, new float2(1f, 0f));
-        float angle = math.atan2(planar.y, planar.x);
-        return quaternion.RotateZ(angle);
+        public float DeltaTime;
+
+        private void Execute(ref SkillProjectileComponent projectile, ref LocalTransform transform)
+        {
+            float moveDistance = projectile.Speed * DeltaTime;
+            transform.Position += projectile.Direction * moveDistance;
+            float2 planar = math.normalizesafe(projectile.Direction.xy, new float2(1f, 0f));
+            transform.Rotation = quaternion.RotateZ(math.atan2(planar.y, planar.x));
+            projectile.TraveledDistance += math.abs(moveDistance);
+            projectile.NetworkDirty = 1;
+        }
     }
 }

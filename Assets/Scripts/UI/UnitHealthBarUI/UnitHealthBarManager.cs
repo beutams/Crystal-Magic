@@ -255,7 +255,8 @@ namespace CrystalMagic.UI
             ReleaseEnemyBuffQuery();
             _enemyBuffQueryWorld = world;
             _enemyBuffQuery = world.EntityManager.CreateEntityQuery(
-                ComponentType.ReadOnly<UnitBuffRuntimeComponent>(),
+                ComponentType.ReadOnly<UnitBuffComponent>(),
+                ComponentType.ReadOnly<UnitBuffElement>(),
                 ComponentType.ReadOnly<UnitFactionComponent>(),
                 ComponentType.ReadOnly<UnitVitalityComponent>(),
                 ComponentType.ReadOnly<LocalToWorld>());
@@ -304,21 +305,18 @@ namespace CrystalMagic.UI
                 return;
             }
 
-            if (!entityManager.Exists(entity) || !entityManager.HasComponent<UnitBuffRuntimeComponent>(entity))
+            if (!entityManager.Exists(entity) || !entityManager.HasBuffer<UnitBuffElement>(entity))
                 return;
 
-            UnitBuffRuntimeComponent runtimeComponent = entityManager.GetComponentObject<UnitBuffRuntimeComponent>(entity);
-            if (runtimeComponent?.Buffs == null)
-                return;
-
-            for (int i = 0; i < runtimeComponent.Buffs.Count; i++)
+            DynamicBuffer<UnitBuffElement> buffs = entityManager.GetBuffer<UnitBuffElement>(entity, true);
+            for (int i = 0; i < buffs.Length; i++)
             {
-                UnitBuffRuntimeEntry entry = runtimeComponent.Buffs[i];
+                UnitBuffElement entry = buffs[i];
                 AddVisibleBuff(
                     entityManager,
                     entry.BuffId,
                     entry.StackCount,
-                    entry.HasOriginEntity ? entry.OriginEntity : Entity.Null,
+                    entry.OriginEntity,
                     output,
                     ref signature);
             }

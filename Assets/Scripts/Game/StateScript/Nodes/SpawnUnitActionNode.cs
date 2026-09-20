@@ -4,6 +4,7 @@ using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Unit;
 using Server;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -44,28 +45,27 @@ public sealed class SpawnUnitActionNode : StateScriptActionNode
             return 0;
         }
 
-        UnitVariableComponent variables = entityManager.GetComponentObject<UnitVariableComponent>(Runtime.Entity);
-        if (!TryGetInt(variables, $"{listKey}.count", out int count) || count <= 0)
+        if (!TryGetInt(entityManager, Runtime.Entity, $"{listKey}.count", out int count) || count <= 0)
             return 0;
 
         int spawnedCount = 0;
         for (int index = 0; index < count; index++)
         {
             string entryKey = $"{listKey}.{index}";
-            if (!TryGetString(variables, $"{entryKey}.unit", out string unitName) ||
-                !TryGetFloat3(variables, $"{entryKey}.position", out float3 position))
+            if (!TryGetString(entityManager, Runtime.Entity, $"{entryKey}.unit", out string unitName) ||
+                !TryGetFloat3(entityManager, Runtime.Entity, $"{entryKey}.position", out float3 position))
             {
                 continue;
             }
 
             NetworkEntitySpawnInfo info = CreateSpawnInfo(unitName, position);
-            if (TryGetBool(variables, $"{entryKey}.hasMonsterData", out bool hasMonsterData) && hasMonsterData)
+            if (TryGetBool(entityManager, Runtime.Entity, $"{entryKey}.hasMonsterData", out bool hasMonsterData) && hasMonsterData)
             {
                 info.hasMonsterSpawnData = true;
-                TryGetInt(variables, $"{entryKey}.monsterSaveId", out info.monsterSaveId);
-                TryGetInt(variables, $"{entryKey}.monsterRegionId", out info.monsterRegionId);
-                TryGetInt(variables, $"{entryKey}.monsterSquadId", out info.monsterSquadId);
-                TryGetBool(variables, $"{entryKey}.monsterIsBoss", out info.monsterIsBoss);
+                TryGetInt(entityManager, Runtime.Entity, $"{entryKey}.monsterSaveId", out info.monsterSaveId);
+                TryGetInt(entityManager, Runtime.Entity, $"{entryKey}.monsterRegionId", out info.monsterRegionId);
+                TryGetInt(entityManager, Runtime.Entity, $"{entryKey}.monsterSquadId", out info.monsterSquadId);
+                TryGetBool(entityManager, Runtime.Entity, $"{entryKey}.monsterIsBoss", out info.monsterIsBoss);
             }
 
             if (TrySpawn(info))
@@ -131,10 +131,13 @@ public sealed class SpawnUnitActionNode : StateScriptActionNode
         if (_data.ShareVariablesWithSpawner)
         {
             if (!entityManager.HasComponent<UnitVariableComponent>(entity))
-                entityManager.AddComponentObject(entity, new UnitVariableComponent());
+                entityManager.AddComponentData(entity, new UnitVariableComponent { Other = Entity.Null });
+            if (!entityManager.HasBuffer<UnitVariableElement>(entity))
+                entityManager.AddBuffer<UnitVariableElement>(entity);
+            if (!entityManager.HasBuffer<UnitVariableConsumerElement>(entity))
+                entityManager.AddBuffer<UnitVariableConsumerElement>(entity);
 
-            UnitVariableComponent variables = entityManager.GetComponentObject<UnitVariableComponent>(entity);
-            variables.Owner = Runtime.Entity;
+            UnitVariableSource.SetOther(entityManager, entity, Runtime.Entity);
         }
 
         if (_data.RestoreRuntimeState)
@@ -174,45 +177,50 @@ public sealed class SpawnUnitActionNode : StateScriptActionNode
         return false;
     }
 
-    private static bool TryGetValue(UnitVariableComponent variables, string key, out UnitValue value)
+    private static bool TryGetValue(
+        EntityManager entityManager,
+        Entity entity,
+        string key,
+        out UnitSourceValue value)
     {
-        if (variables?.Values != null && variables.Values.TryGetValue(key, out value))
-            return true;
-
-        value = UnitValue.None;
-        return false;
+        return UnitVariableSource.TryGetValue(entityManager, entity, key, out value);
     }
 
-    private static bool TryGetInt(UnitVariableComponent variables, string key, out int value)
+    private static bool TryGetInt(EntityManager entityManager, Entity entity, string key, out int value)
     {
         value = 0;
-        return TryGetValue(variables, key, out UnitValue source) &&
+        return TryGetValue(entityManager, entity, key, out UnitSourceValue source) &&
                source.TryGetNumber(out float number) &&
                math.abs(number - math.round(number)) <= 0.0001f &&
                (value = (int)math.round(number)) >= 0;
     }
 
-    private static bool TryGetString(UnitVariableComponent variables, string key, out string value)
+    private static bool TryGetString(EntityManager entityManager, Entity entity, string key, out string value)
     {
         value = string.Empty;
-        return TryGetValue(variables, key, out UnitValue source) &&
-               source.TryGetString(out value) &&
-               !string.IsNullOrWhiteSpace(value);
+        if (!TryGetValue(entityManager, entity, key, out UnitSourceValue source) ||
+            !source.TryGetString(out FixedString128Bytes fixedValue))
+        {
+            return false;
+        }
+
+        value = fixedValue.ToString();
+        return !string.IsNullOrWhiteSpace(value);
     }
 
-    private static bool TryGetFloat3(UnitVariableComponent variables, string key, out float3 value)
+    private static bool TryGetFloat3(EntityManager entityManager, Entity entity, string key, out float3 value)
     {
         value = float3.zero;
-        return TryGetValue(variables, key, out UnitValue source) && source.TryGetFloat3(out value);
+        return TryGetValue(entityManager, entity, key, out UnitSourceValue source) && source.TryGetFloat3(out value);
     }
 
-    private static bool TryGetBool(UnitVariableComponent variables, string key, out bool value)
+    private static bool TryGetBool(EntityManager entityManager, Entity entity, string key, out bool value)
     {
         value = false;
-        if (!TryGetValue(variables, key, out UnitValue source) || source.Type != UnitValueType.Bool)
+        if (!TryGetValue(entityManager, entity, key, out UnitSourceValue source) || source.Type != UnitValueType.Bool)
             return false;
 
-        value = source.Bool;
+        value = source.Bool != 0;
         return true;
     }
 }

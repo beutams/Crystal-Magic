@@ -1,37 +1,35 @@
-using System;
+using Unity.Entities;
 
-public sealed class Comparator
+public struct Comparator
 {
-    // Kept as a read-only data outlet until state-machine callers are migrated.
-    public readonly Condition[] conditions;
+    private ExpressionProgram _program;
+    private byte _isValid;
 
-    public Comparator(Condition[] conditions, bool isValid = true)
+    internal Comparator(in ExpressionProgram program, bool isValid = true)
     {
-        this.conditions = conditions ?? Array.Empty<Condition>();
-        IsValid = isValid;
+        _program = program;
+        _isValid = isValid ? (byte)1 : (byte)0;
     }
 
-    public bool IsValid { get; }
+    public bool IsValid => _isValid != 0;
+    internal ExpressionProgram Program => _program;
 
-    public bool GetResult()
+    public bool GetResult(Entity entity, in UnitSourceDispatcher dispatcher)
     {
-        if (!IsValid)
-            return false;
+        UnitSourceContext context = new(entity);
+        return GetResult(in context, in dispatcher);
+    }
 
-        for (int i = 0; i < conditions.Length; i++)
-        {
-            Condition condition = conditions[i];
-            if (condition == null)
-                return false;
+    public bool GetResult(in UnitSourceContext context, in UnitSourceDispatcher dispatcher)
+    {
+        return IsValid &&
+               CompiledExpressionEvaluator.TryEvaluateConditions(in _program, in context, in dispatcher);
+    }
 
-            bool matches = condition.Compare();
-            if (condition.Type == ConditionType.Necessary && !matches)
-                return false;
-
-            if (condition.Type == ConditionType.Unallowed && matches)
-                return false;
-        }
-
-        return true;
+    public bool GetResult(UnitSourceResolver resolver)
+    {
+        return resolver != null &&
+               resolver.TryGetContext(out UnitSourceContext context, out UnitSourceDispatcher dispatcher) &&
+               GetResult(in context, in dispatcher);
     }
 }

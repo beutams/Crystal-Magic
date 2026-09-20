@@ -11,8 +11,12 @@ public static class UnitModifierResolver
             return 0f;
 
         UnitMoveComponent move = entityManager.GetComponentData<UnitMoveComponent>(entity);
-        return GetPropertyModifier(entityManager, entity, PropertyModifierChannel.MoveSpeed).Apply(move.BaseMoveSpeedValue);
+        UnitModifierComponent modifiers = GetModifiers(entityManager, entity);
+        return GetMoveSpeed(in move, in modifiers);
     }
+
+    public static float GetMoveSpeed(in UnitMoveComponent move, in UnitModifierComponent modifiers) =>
+        modifiers.MoveSpeed.Apply(move.BaseMoveSpeedValue);
 
     public static float GetMaxAcceleration(EntityManager entityManager, Entity entity)
     {
@@ -20,8 +24,12 @@ public static class UnitModifierResolver
             return 0f;
 
         UnitMoveComponent move = entityManager.GetComponentData<UnitMoveComponent>(entity);
-        return GetPropertyModifier(entityManager, entity, PropertyModifierChannel.MoveSpeed).Apply(move.BaseMaxAcceleration);
+        UnitModifierComponent modifiers = GetModifiers(entityManager, entity);
+        return GetMaxAcceleration(in move, in modifiers);
     }
+
+    public static float GetMaxAcceleration(in UnitMoveComponent move, in UnitModifierComponent modifiers) =>
+        modifiers.MoveSpeed.Apply(move.BaseMaxAcceleration);
 
     public static float GetMaxHealth(EntityManager entityManager, Entity entity)
     {
@@ -29,8 +37,12 @@ public static class UnitModifierResolver
             return 0f;
 
         UnitVitalityComponent vitality = entityManager.GetComponentData<UnitVitalityComponent>(entity);
-        return GetPropertyModifier(entityManager, entity, PropertyModifierChannel.MaxHealth).Apply(vitality.BaseMaxHealthValue);
+        UnitModifierComponent modifiers = GetModifiers(entityManager, entity);
+        return GetMaxHealth(in vitality, in modifiers);
     }
+
+    public static float GetMaxHealth(in UnitVitalityComponent vitality, in UnitModifierComponent modifiers) =>
+        modifiers.MaxHealth.Apply(vitality.BaseMaxHealthValue);
 
     public static float GetDefense(EntityManager entityManager, Entity entity)
     {
@@ -38,8 +50,12 @@ public static class UnitModifierResolver
             return 0f;
 
         UnitVitalityComponent vitality = entityManager.GetComponentData<UnitVitalityComponent>(entity);
-        return GetPropertyModifier(entityManager, entity, PropertyModifierChannel.Defense).Apply(vitality.BaseDefenseValue);
+        UnitModifierComponent modifiers = GetModifiers(entityManager, entity);
+        return GetDefense(in vitality, in modifiers);
     }
+
+    public static float GetDefense(in UnitVitalityComponent vitality, in UnitModifierComponent modifiers) =>
+        modifiers.Defense.Apply(vitality.BaseDefenseValue);
 
     public static float GetAttackPower(EntityManager entityManager, Entity entity)
     {
@@ -47,8 +63,12 @@ public static class UnitModifierResolver
             return 0f;
 
         UnitAttackComponent attack = entityManager.GetComponentData<UnitAttackComponent>(entity);
-        return GetPropertyModifier(entityManager, entity, PropertyModifierChannel.AttackPower).Apply(attack.BaseAttackPowerValue);
+        UnitModifierComponent modifiers = GetModifiers(entityManager, entity);
+        return GetAttackPower(in attack, in modifiers);
     }
+
+    public static float GetAttackPower(in UnitAttackComponent attack, in UnitModifierComponent modifiers) =>
+        modifiers.AttackPower.Apply(attack.BaseAttackPowerValue);
 
     public static float GetSkillRange(EntityManager entityManager, Entity entity)
     {
@@ -56,8 +76,12 @@ public static class UnitModifierResolver
             return 0f;
 
         UnitAttackComponent attack = entityManager.GetComponentData<UnitAttackComponent>(entity);
-        return GetPropertyModifier(entityManager, entity, PropertyModifierChannel.SkillRange).Apply(attack.BaseSkillRangeValue);
+        UnitModifierComponent modifiers = GetModifiers(entityManager, entity);
+        return GetSkillRange(in attack, in modifiers);
     }
+
+    public static float GetSkillRange(in UnitAttackComponent attack, in UnitModifierComponent modifiers) =>
+        modifiers.SkillRange.Apply(attack.BaseSkillRangeValue);
 
     public static float GetMaxMp(EntityManager entityManager, Entity entity)
     {
@@ -65,8 +89,12 @@ public static class UnitModifierResolver
             return 0f;
 
         UnitManaComponent mana = entityManager.GetComponentData<UnitManaComponent>(entity);
-        return GetPropertyModifier(entityManager, entity, PropertyModifierChannel.MaxMp).Apply(mana.BaseMaxMp + mana.BaseMaxMpOffset);
+        UnitModifierComponent modifiers = GetModifiers(entityManager, entity);
+        return GetMaxMp(in mana, in modifiers);
     }
+
+    public static float GetMaxMp(in UnitManaComponent mana, in UnitModifierComponent modifiers) =>
+        modifiers.MaxMp.Apply(mana.BaseMaxMp + mana.BaseMaxMpOffset);
 
     public static float GetHealthRegen(EntityManager entityManager, Entity entity)
     {
@@ -74,8 +102,12 @@ public static class UnitModifierResolver
             return 0f;
 
         UnitVitalityComponent vitality = entityManager.GetComponentData<UnitVitalityComponent>(entity);
-        return GetPropertyModifier(entityManager, entity, PropertyModifierChannel.HealthRegen).Apply(vitality.BaseHealthRegenPerSecondValue);
+        UnitModifierComponent modifiers = GetModifiers(entityManager, entity);
+        return GetHealthRegen(in vitality, in modifiers);
     }
+
+    public static float GetHealthRegen(in UnitVitalityComponent vitality, in UnitModifierComponent modifiers) =>
+        modifiers.HealthRegen.Apply(vitality.BaseHealthRegenPerSecondValue);
 
     public static float GetMpRegen(EntityManager entityManager, Entity entity)
     {
@@ -83,8 +115,12 @@ public static class UnitModifierResolver
             return 0f;
 
         UnitManaComponent mana = entityManager.GetComponentData<UnitManaComponent>(entity);
-        return GetPropertyModifier(entityManager, entity, PropertyModifierChannel.MpRegen).Apply(mana.BaseMpRegenPerSecond + mana.BaseMpRegenPerSecondOffset);
+        UnitModifierComponent modifiers = GetModifiers(entityManager, entity);
+        return GetMpRegen(in mana, in modifiers);
     }
+
+    public static float GetMpRegen(in UnitManaComponent mana, in UnitModifierComponent modifiers) =>
+        modifiers.MpRegen.Apply(mana.BaseMpRegenPerSecond + mana.BaseMpRegenPerSecondOffset);
 
     public static float GetChantSpeedBonus(EntityManager entityManager, Entity entity)
     {
@@ -92,9 +128,12 @@ public static class UnitModifierResolver
             return 0f;
 
         UnitAttackComponent attack = entityManager.GetComponentData<UnitAttackComponent>(entity);
-        float value = GetPropertyModifier(entityManager, entity, PropertyModifierChannel.ChantSpeed).Apply(attack.BaseChantSpeedBonusValue);
-        return math.clamp(value, -100f, 100f);
+        UnitModifierComponent modifiers = GetModifiers(entityManager, entity);
+        return GetChantSpeedBonus(in attack, in modifiers);
     }
+
+    public static float GetChantSpeedBonus(in UnitAttackComponent attack, in UnitModifierComponent modifiers) =>
+        math.clamp(modifiers.ChantSpeed.Apply(attack.BaseChantSpeedBonusValue), -100f, 100f);
 
     public static float GetElementPower(EntityManager entityManager, Entity entity, ElementType elementType)
     {
@@ -102,6 +141,15 @@ public static class UnitModifierResolver
             return 0f;
 
         UnitElementComponent element = entityManager.GetComponentData<UnitElementComponent>(entity);
+        UnitModifierComponent modifiers = GetModifiers(entityManager, entity);
+        return GetElementPower(in element, in modifiers, elementType);
+    }
+
+    public static float GetElementPower(
+        in UnitElementComponent element,
+        in UnitModifierComponent modifiers,
+        ElementType elementType)
+    {
         PropertyModifierChannel channel = elementType switch
         {
             ElementType.Water => PropertyModifierChannel.WaterPower,
@@ -112,26 +160,14 @@ public static class UnitModifierResolver
         };
         return elementType == ElementType.None
             ? 0f
-            : GetPropertyModifier(entityManager, entity, channel).Apply(element.GetPowerBonus(elementType));
+            : modifiers.Get(channel).Apply(element.GetPowerBonus(elementType));
     }
 
     public static SkillModifierSet BuildPersistentSkillModifiers(EntityManager entityManager, Entity entity)
     {
-        SkillModifierSet modifiers = new();
-        if (!UnitBuffUtility.TryGetRuntimeComponent(entityManager, entity, out UnitBuffRuntimeComponent runtimeComponent) ||
-            runtimeComponent.Buffs == null)
-        {
-            return modifiers;
-        }
-
-        for (int i = 0; i < runtimeComponent.Buffs.Count; i++)
-        {
-            UnitBuffRuntimeEntry entry = runtimeComponent.Buffs[i];
-            if (entry != null && entry.StackCount > 0)
-                entry.ContributeSkillModifiers(modifiers);
-        }
-
-        return modifiers;
+        return entityManager.HasComponent<UnitModifierComponent>(entity)
+            ? entityManager.GetComponentData<UnitModifierComponent>(entity).SkillModifiers
+            : default;
     }
 
     public static float ApplyDamageTakenModifiers(EntityManager entityManager, Entity entity, float damage)
@@ -139,8 +175,12 @@ public static class UnitModifierResolver
         if (damage <= 0f)
             return 0f;
 
-        return math.max(0f, GetPropertyModifier(entityManager, entity, PropertyModifierChannel.DamageTakenMultiplier).Apply(damage));
+        UnitModifierComponent modifiers = GetModifiers(entityManager, entity);
+        return ApplyDamageTakenModifiers(in modifiers, damage);
     }
+
+    public static float ApplyDamageTakenModifiers(in UnitModifierComponent modifiers, float damage) =>
+        damage <= 0f ? 0f : math.max(0f, modifiers.DamageTakenMultiplier.Apply(damage));
 
     public static bool TryCaptureElementState(EntityManager entityManager, Entity entity, out UnitElementComponent element)
     {
@@ -156,34 +196,10 @@ public static class UnitModifierResolver
         return true;
     }
 
-    private static ModifierValue GetPropertyModifier(EntityManager entityManager, Entity entity, PropertyModifierChannel channel)
+    private static UnitModifierComponent GetModifiers(EntityManager entityManager, Entity entity)
     {
-        PropertyModifierSet modifiers = new();
-        if (UnitBuffUtility.TryGetRuntimeComponent(entityManager, entity, out UnitBuffRuntimeComponent runtimeComponent) &&
-            runtimeComponent.Buffs != null)
-        {
-            for (int i = 0; i < runtimeComponent.Buffs.Count; i++)
-            {
-                UnitBuffRuntimeEntry entry = runtimeComponent.Buffs[i];
-                if (entry != null && entry.StackCount > 0)
-                    entry.ContributePropertyModifiers(modifiers);
-            }
-        }
-
-        return new ModifierValue(modifiers.GetFactor(channel), modifiers.GetBonus(channel));
-    }
-
-    private readonly struct ModifierValue
-    {
-        public ModifierValue(float factor, float bonus)
-        {
-            Factor = factor;
-            Bonus = bonus;
-        }
-
-        public float Factor { get; }
-        public float Bonus { get; }
-
-        public float Apply(float baseValue) => baseValue * Factor + Bonus;
+        return entityManager.HasComponent<UnitModifierComponent>(entity)
+            ? entityManager.GetComponentData<UnitModifierComponent>(entity)
+            : UnitModifierComponent.CreateIdentity();
     }
 }

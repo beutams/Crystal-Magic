@@ -48,16 +48,22 @@ public static class UnitElementSource
     [UnitSourceGet(3, "unit.element.windPower", UnitValueCategory.Number)]
     public static bool TryGet(
         int operation,
-        EntityManager entityManager,
         Entity entity,
+        in ComponentLookup<UnitElementComponent> elements,
+        in ComponentLookup<UnitModifierComponent> modifiers,
         in UnitSourceArguments arguments,
         out UnitSourceValue result)
     {
-        if (!entityManager.Exists(entity) || !entityManager.HasComponent<UnitElementComponent>(entity))
+        if (!elements.TryGetComponent(entity, out UnitElementComponent elementValue))
         {
             result = default;
             return false;
         }
+        UnitModifierComponent modifier = modifiers.TryGetComponent(
+            entity,
+            out UnitModifierComponent resolvedModifier)
+            ? resolvedModifier
+            : UnitModifierComponent.CreateIdentity();
 
         CrystalMagic.Game.Data.Effects.ElementType element = operation switch
         {
@@ -73,7 +79,8 @@ public static class UnitElementSource
             return false;
         }
 
-        result = UnitSourceValue.FromFloat(UnitModifierResolver.GetElementPower(entityManager, entity, element));
+        result = UnitSourceValue.FromFloat(
+            UnitModifierResolver.GetElementPower(in elementValue, in modifier, element));
         return true;
     }
 }

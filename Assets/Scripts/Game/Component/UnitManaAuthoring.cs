@@ -76,27 +76,34 @@ public static class UnitManaSource
     [UnitSourceGet(7, "unit.mana.realMpRegenPerSecond", UnitValueCategory.Number)]
     public static bool TryGetResolved(
         int operation,
-        EntityManager entityManager,
         Entity entity,
+        in ComponentLookup<UnitManaComponent> manaValues,
+        in ComponentLookup<UnitModifierComponent> modifiers,
         in UnitSourceArguments arguments,
         out UnitSourceValue result)
     {
         result = UnitSourceValue.None;
-        if (!entityManager.Exists(entity) || !entityManager.HasComponent<UnitManaComponent>(entity))
+        if (!manaValues.TryGetComponent(entity, out UnitManaComponent mana))
+        {
             return false;
+        }
+        UnitModifierComponent modifier = modifiers.TryGetComponent(
+            entity,
+            out UnitModifierComponent resolvedModifier)
+            ? resolvedModifier
+            : UnitModifierComponent.CreateIdentity();
 
-        UnitManaComponent value = entityManager.GetComponentData<UnitManaComponent>(entity);
         switch (operation)
         {
             case 5:
-                result = UnitSourceValue.FromFloat(UnitModifierResolver.GetMaxMp(entityManager, entity));
+                result = UnitSourceValue.FromFloat(UnitModifierResolver.GetMaxMp(in mana, in modifier));
                 return true;
             case 6:
-                float maxMp = UnitModifierResolver.GetMaxMp(entityManager, entity);
-                result = UnitSourceValue.FromFloat(maxMp > 0f ? Mathf.Clamp01(value.CurrentMana / maxMp) : 0f);
+                float maxMp = UnitModifierResolver.GetMaxMp(in mana, in modifier);
+                result = UnitSourceValue.FromFloat(maxMp > 0f ? math.saturate(mana.CurrentMana / maxMp) : 0f);
                 return true;
             case 7:
-                result = UnitSourceValue.FromFloat(UnitModifierResolver.GetMpRegen(entityManager, entity));
+                result = UnitSourceValue.FromFloat(UnitModifierResolver.GetMpRegen(in mana, in modifier));
                 return true;
             default:
                 return false;

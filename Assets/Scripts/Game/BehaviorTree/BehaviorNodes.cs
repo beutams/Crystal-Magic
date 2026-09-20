@@ -1,114 +1,158 @@
-using System.Collections.Generic;
-using CrystalMagic.Game.Data;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Mathematics;
 
-public enum BehaviorNodeStatus
+public enum BehaviorNodeStatus : byte
 {
     Success,
     Failure,
     Running,
 }
-public abstract class ABehaviorNode
+
+public enum BehaviorNodeRuntimeType : byte
 {
-    protected readonly BehaviorNodeData Data;
-    protected readonly List<ABehaviorNode> Children = new();
+    Root,
+    Selector,
+    Sequence,
+    Parallel,
+    Inverter,
+    Succeeder,
+    Failer,
+    Repeater,
+    UntilSuccess,
+    UntilFailure,
+    Cooldown,
+    Timeout,
+    Check,
+    HitCheck,
+    Set,
+    Wait,
+    MoveTo,
+}
 
-    protected ABehaviorNode(BehaviorNodeData data)
+public enum BehaviorTreeInitializationError : byte
+{
+    None,
+    MissingUnitDataId,
+    TreeNotFound,
+    InvalidTree,
+}
+
+public struct BehaviorNodeDefinition
+{
+    public BehaviorNodeRuntimeType Type;
+    public int ChildStart;
+    public ushort ChildCount;
+    public int ExpressionStart;
+    public byte ExpressionCount;
+    public UnitSourceId SetSourceId;
+    public UnitSourceTarget SetSourceTarget;
+    public FixedString128Bytes Key;
+    public float4 FloatParameters0;
+    public float4 FloatParameters1;
+    public int4 IntParameters;
+    public FixedString128Bytes Guid;
+}
+
+public struct BehaviorExpressionBlob
+{
+    public BlobArray<ExpressionInstruction> Instructions;
+    public BlobArray<UnitSourceValue> Literals;
+    public UnitValueCategory Category;
+    public byte IsCondition;
+}
+
+public struct BehaviorTreeDefinitionBlob
+{
+    public int UnitDataId;
+    public int RootNodeIndex;
+    public BlobArray<BehaviorNodeDefinition> Nodes;
+    public BlobArray<int> Children;
+    public BlobArray<BehaviorExpressionBlob> Expressions;
+}
+
+public struct BehaviorTreeRuntimeRegistryBlob
+{
+    public BlobArray<BehaviorTreeDefinitionBlob> Trees;
+}
+
+public struct BehaviorTreeRuntimeRegistryComponent : IComponentData
+{
+    public BlobAssetReference<BehaviorTreeRuntimeRegistryBlob> Value;
+}
+
+[InternalBufferCapacity(0)]
+public struct BehaviorNodeStateElement : IBufferElementData
+{
+    public int RunningChildIndex;
+    public int Counter;
+    public float Time;
+    public float Auxiliary;
+    public BehaviorNodeStatus LastStatus;
+    public uint LastTickVersion;
+    public byte Flags;
+
+    public static BehaviorNodeStateElement CreateDefault()
     {
-        Data = data;
-    }
-
-    public string Guid => Data?.Guid ?? string.Empty;
-    public string Type => Data?.Type ?? string.Empty;
-    public string DisplayName => BehaviorNodeDataRegistry.GetDisplayName(Type);
-
-    public virtual void AddChild(ABehaviorNode child)
-    {
-        if (child != null)
-            Children.Add(child);
-    }
-
-    public BehaviorNodeStatus Tick(BehaviorContext context)
-    {
-        context?.SetCurrentNode(this);
-        BehaviorNodeStatus status = OnTick(context);
-        context?.SetNodeStatus(Guid, status);
-        return status;
-    }
-
-    public bool TryBind(UnitSourceResolver sources, out string error)
-    {
-        if (sources == null)
+        return new BehaviorNodeStateElement
         {
-            error = $"{DisplayName} requires a unit source table.";
-            return false;
-        }
-
-        if (!OnBind(sources, out error))
-            return false;
-
-        for (int i = 0; i < Children.Count; i++)
-        {
-            ABehaviorNode child = Children[i];
-            if (child == null)
-            {
-                error = $"{DisplayName} has an empty child at index {i}.";
-                return false;
-            }
-
-            if (!child.TryBind(sources, out error))
-                return false;
-        }
-
-        error = string.Empty;
-        return true;
-    }
-
-    public virtual void Reset()
-    {
-        for (int i = 0; i < Children.Count; i++)
-            Children[i]?.Reset();
-    }
-
-    protected virtual bool OnBind(UnitSourceResolver sources, out string error)
-    {
-        error = string.Empty;
-        return true;
-    }
-
-    protected abstract BehaviorNodeStatus OnTick(BehaviorContext context);
-}
-
-public abstract class CompositeBehaviorNode : ABehaviorNode
-{
-    protected CompositeBehaviorNode(BehaviorNodeData data)
-        : base(data)
-    {
+            RunningChildIndex = -1,
+            Auxiliary = 1f,
+        };
     }
 }
 
-public abstract class DecoratorBehaviorNode : ABehaviorNode
+[InternalBufferCapacity(0)]
+public struct BehaviorTreeCommandElement : IBufferElementData
 {
-    protected DecoratorBehaviorNode(BehaviorNodeData data)
-        : base(data)
-    {
-    }
-
-    protected ABehaviorNode Child => Children.Count > 0 ? Children[0] : null;
-
-    public override void AddChild(ABehaviorNode child)
-    {
-        if (child == null)
-            return;
-
-        Children.Clear();
-        Children.Add(child);
-    }
+    public UnitSourceId SourceId;
+    public Entity TargetEntity;
+    public int ArgumentStart;
+    public ushort ArgumentCount;
+    public FixedString128Bytes Key;
+    public byte HasKey;
 }
 
-public abstract class ActionBehaviorNode : ABehaviorNode
+[InternalBufferCapacity(0)]
+public struct BehaviorTreeMoveCommandElement : IBufferElementData
 {
-    protected ActionBehaviorNode(BehaviorNodeData data)
-        : base(data)
+    public float3 Destination;
+    public float StopDistance;
+    public float Speed;
+}
+
+[InternalBufferCapacity(0)]
+public struct BehaviorTreeHitDebugElement : IBufferElementData
+{
+    public float3 QueryOrigin;
+    public float Length;
+    public float Width;
+    public float3 HitOrigin;
+    public float3 HitPosition;
+    public byte HasHit;
+}
+
+[InternalBufferCapacity(0)]
+public struct BehaviorTreeCommandArgumentElement : IBufferElementData
+{
+    public UnitSourceValue Value;
+}
+
+internal static class BehaviorTreeUnmanagedContract
+{
+    private static void Validate()
+    {
+        RequireUnmanaged<BehaviorNodeDefinition>();
+        RequireUnmanaged<BehaviorTreeInitializationError>();
+        RequireUnmanaged<BehaviorNodeStateElement>();
+        RequireUnmanaged<BehaviorTreeCommandElement>();
+        RequireUnmanaged<BehaviorTreeCommandArgumentElement>();
+        RequireUnmanaged<BehaviorTreeMoveCommandElement>();
+        RequireUnmanaged<BehaviorTreeHitDebugElement>();
+        RequireUnmanaged<UnitBehaviorTreeComponent>();
+    }
+
+    private static void RequireUnmanaged<T>() where T : unmanaged
     {
     }
 }

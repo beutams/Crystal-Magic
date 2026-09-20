@@ -471,9 +471,13 @@ namespace CrystalMagic.Core
                 {
                     Value = UnitFactionType.Npc,
                 });
-                UnitVariableComponent variables = new();
-                PopulatePatrolSpawnVariables(variables, spawn.MemberSpawns);
-                entityManager.AddComponentObject(pointEntity, variables);
+                entityManager.AddComponentData(pointEntity, new UnitVariableComponent
+                {
+                    Other = Entity.Null,
+                });
+                entityManager.AddBuffer<UnitVariableElement>(pointEntity);
+                entityManager.AddBuffer<UnitVariableConsumerElement>(pointEntity);
+                PopulatePatrolSpawnVariables(entityManager, pointEntity, spawn.MemberSpawns);
                 entityManager.AddComponentObject(pointEntity, new UnitStateScriptComponent
                 {
                     UnitDataId = DungeonPatrolRuntimeUtility.InterestPointUnitDataId,
@@ -485,8 +489,12 @@ namespace CrystalMagic.Core
                     SpawnDistance = Mathf.Max(0f, spawn.SpawnDistance),
                     PatrolSpeed = Mathf.Max(0f, spawn.PatrolSpeed),
                     ArrivalDistance = Mathf.Max(0.05f, spawn.ArrivalDistance),
+                    PatrolEnabled = 1,
+                    CurrentTarget = Entity.Null,
+                    NearestPlayerDistance = float.MaxValue,
                 };
-                entityManager.AddComponentObject(pointEntity, point);
+                entityManager.AddComponentData(pointEntity, point);
+                entityManager.AddBuffer<DungeonInterestPointCandidateElement>(pointEntity);
                 DungeonPatrolRuntimeUtility.SetSharedPatrolValues(entityManager, pointEntity, point);
                 entityManager.AddComponent<DungeonRuntimeOwnedEntity>(pointEntity);
 
@@ -497,11 +505,17 @@ namespace CrystalMagic.Core
             for (int pointIndex = 0; pointIndex < pointEntities.Count; pointIndex++)
             {
                 Entity pointEntity = pointEntities[pointIndex];
-                DungeonInterestPointComponent point = entityManager.GetComponentObject<DungeonInterestPointComponent>(pointEntity);
+                DynamicBuffer<DungeonInterestPointCandidateElement> candidates =
+                    entityManager.GetBuffer<DungeonInterestPointCandidateElement>(pointEntity);
                 for (int targetIndex = 0; targetIndex < pointEntities.Count; targetIndex++)
                 {
                     if (targetIndex != pointIndex)
-                        point.CandidateTargets.Add(pointEntities[targetIndex]);
+                    {
+                        candidates.Add(new DungeonInterestPointCandidateElement
+                        {
+                            Value = pointEntities[targetIndex],
+                        });
+                    }
                 }
             }
         }
@@ -565,13 +579,13 @@ namespace CrystalMagic.Core
         }
 
         private static void PopulatePatrolSpawnVariables(
-            UnitVariableComponent variables,
+            EntityManager entityManager,
+            Entity entity,
             List<RuntimeDungeonMonsterSpawnData> memberSpawns)
         {
-            variables.Values ??= new Dictionary<string, UnitValue>(StringComparer.Ordinal);
             string listKey = DungeonPatrolRuntimeUtility.PatrolSpawnListKey;
             int count = memberSpawns?.Count ?? 0;
-            variables.Values[$"{listKey}.count"] = UnitValue.FromInt(count);
+            UnitVariableSource.TrySetValue(entityManager, entity, $"{listKey}.count", UnitValue.FromInt(count));
             for (int index = 0; index < count; index++)
             {
                 RuntimeDungeonMonsterSpawnData spawn = memberSpawns[index];
@@ -579,16 +593,16 @@ namespace CrystalMagic.Core
                     continue;
 
                 string entryKey = $"{listKey}.{index}";
-                variables.Values[$"{entryKey}.unit"] = UnitValue.FromString(spawn.PrefabName);
-                variables.Values[$"{entryKey}.position"] = UnitValue.FromFloat3(new float3(
+                UnitVariableSource.TrySetValue(entityManager, entity, $"{entryKey}.unit", UnitValue.FromString(spawn.PrefabName));
+                UnitVariableSource.TrySetValue(entityManager, entity, $"{entryKey}.position", UnitValue.FromFloat3(new float3(
                     spawn.WorldPosition.x,
                     spawn.WorldPosition.y,
-                    spawn.WorldPosition.z));
-                variables.Values[$"{entryKey}.hasMonsterData"] = UnitValue.FromBool(true);
-                variables.Values[$"{entryKey}.monsterSaveId"] = UnitValue.FromInt(spawn.SaveId);
-                variables.Values[$"{entryKey}.monsterRegionId"] = UnitValue.FromInt(spawn.RegionId);
-                variables.Values[$"{entryKey}.monsterSquadId"] = UnitValue.FromInt(spawn.SquadId);
-                variables.Values[$"{entryKey}.monsterIsBoss"] = UnitValue.FromBool(spawn.IsBoss);
+                    spawn.WorldPosition.z)));
+                UnitVariableSource.TrySetValue(entityManager, entity, $"{entryKey}.hasMonsterData", UnitValue.FromBool(true));
+                UnitVariableSource.TrySetValue(entityManager, entity, $"{entryKey}.monsterSaveId", UnitValue.FromInt(spawn.SaveId));
+                UnitVariableSource.TrySetValue(entityManager, entity, $"{entryKey}.monsterRegionId", UnitValue.FromInt(spawn.RegionId));
+                UnitVariableSource.TrySetValue(entityManager, entity, $"{entryKey}.monsterSquadId", UnitValue.FromInt(spawn.SquadId));
+                UnitVariableSource.TrySetValue(entityManager, entity, $"{entryKey}.monsterIsBoss", UnitValue.FromBool(spawn.IsBoss));
             }
         }
 

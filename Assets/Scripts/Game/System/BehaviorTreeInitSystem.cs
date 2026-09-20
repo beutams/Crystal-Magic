@@ -1,55 +1,101 @@
+using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
+using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 
 [UpdateInGroup(typeof(UnitInitializationSystemGroup))]
 [UpdateAfter(typeof(UnitSourceDispatcherSystem))]
-partial class BehaviorTreeInitSystem : SystemBase
+public partial class BehaviorTreeInitSystem : SystemBase
 {
+    private BlobAssetReference<BehaviorTreeRuntimeRegistryBlob> _registry;
+    private EntityQuery _behaviorTreeQuery;
+    private bool _compileFailed;
+
+    protected override void OnCreate()
+    {
+        _behaviorTreeQuery = GetEntityQuery(ComponentType.ReadWrite<UnitBehaviorTreeComponent>());
+    }
+
     protected override void OnUpdate()
     {
-        if (!UnitSourceDispatcherSystem.TryGet(EntityManager, out UnitSourceDispatcher sourceDispatcher))
+        if (!_registry.IsCreated && !_compileFailed)
+            TryCompileRegistry();
+        if (!_registry.IsCreated)
             return;
 
-        foreach ((UnitBehaviorTreeComponent behaviorTree, Entity entity) in
-                 SystemAPI.Query<UnitBehaviorTreeComponent>().WithEntityAccess())
+        using NativeArray<Entity> entities = _behaviorTreeQuery.ToEntityArray(Allocator.Temp);
+        for (int entityIndex = 0; entityIndex < entities.Length; entityIndex++)
         {
-            if (behaviorTree == null || behaviorTree.IsInitialized)
+            Entity entity = entities[entityIndex];
+            UnitBehaviorTreeComponent component = EntityManager.GetComponentData<UnitBehaviorTreeComponent>(entity);
+            if (component.IsInitialized != 0)
                 continue;
 
-            behaviorTree.Context = new BehaviorContext();
-            behaviorTree.Runtime = null;
-            behaviorTree.CurrentNodeName = "None";
-            behaviorTree.LastStatus = "None";
-            behaviorTree.InitializationError = string.Empty;
+            component.TreeIndex = -1;
+            component.CurrentNodeIndex = -1;
+            component.LastStatus = BehaviorNodeStatus.Failure;
+            component.TickVersion = 0;
+            component.InitializationError = BehaviorTreeInitializationError.None;
 
-            if (behaviorTree.UnitDataId < 0)
+            if (component.UnitDataId < 0)
             {
-                behaviorTree.InitializationError = "Unit has no UnitDataId for behavior tree binding.";
-                behaviorTree.IsInitialized = true;
-                continue;
+                component.InitializationError = BehaviorTreeInitializationError.MissingUnitDataId;
+            }
+            else
+            {
+                component.TreeIndex = BehaviorTreeCompiler.FindTreeIndex(in _registry, component.UnitDataId);
+                if (component.TreeIndex < 0)
+                {
+                    component.InitializationError = BehaviorTreeInitializationError.TreeNotFound;
+                    Debug.LogWarning($"[BehaviorTreeInit] BehaviorTreeData not found for UnitDataId: {component.UnitDataId}");
+                }
+                else
+                {
+                    ref BehaviorTreeDefinitionBlob tree = ref _registry.Value.Trees[component.TreeIndex];
+                    DynamicBuffer<BehaviorNodeStateElement> states =
+                        EntityManager.GetBuffer<BehaviorNodeStateElement>(entity);
+                    states.ResizeUninitialized(tree.Nodes.Length);
+                    for (int nodeIndex = 0; nodeIndex < states.Length; nodeIndex++)
+                        states[nodeIndex] = BehaviorNodeStateElement.CreateDefault();
+                }
             }
 
-            BehaviorTreeData data = DataComponent.Instance.Find<BehaviorTreeData>(
-                row => row.UnitDataId == behaviorTree.UnitDataId);
-            if (data == null)
-            {
-                behaviorTree.InitializationError = $"BehaviorTreeData not found for UnitDataId: {behaviorTree.UnitDataId}";
-                Debug.LogWarning($"[BehaviorTreeInit] {behaviorTree.InitializationError}");
-                behaviorTree.IsInitialized = true;
-                continue;
-            }
-
-            UnitSourceResolver sources = new(entity);
-            sources.Update(entity, EntityManager, in sourceDispatcher);
-            behaviorTree.Runtime = BehaviorTreeBuilder.Build(data, sources, out string error);
-            if (behaviorTree.Runtime == null)
-            {
-                behaviorTree.InitializationError = error;
-                Debug.LogWarning($"[BehaviorTreeInit] Failed to bind UnitDataId {behaviorTree.UnitDataId}: {error}");
-            }
-            behaviorTree.IsInitialized = true;
+            EntityManager.GetBuffer<BehaviorTreeCommandElement>(entity).Clear();
+            EntityManager.GetBuffer<BehaviorTreeCommandArgumentElement>(entity).Clear();
+            EntityManager.GetBuffer<BehaviorTreeMoveCommandElement>(entity).Clear();
+            EntityManager.GetBuffer<BehaviorTreeHitDebugElement>(entity).Clear();
+            component.IsInitialized = 1;
+            EntityManager.SetComponentData(entity, component);
         }
+    }
+
+    protected override void OnDestroy()
+    {
+        if (_registry.IsCreated)
+            _registry.Dispose();
+    }
+
+    private void TryCompileRegistry()
+    {
+        DataTable<BehaviorTreeData> table = DataComponent.Instance.GetTable<BehaviorTreeData>();
+        if (table == null)
+            return;
+
+        List<BehaviorTreeData> trees = new(table.GetAll());
+        if (!BehaviorTreeCompiler.TryBuildRegistry(trees, out _registry, out string error))
+        {
+            _compileFailed = true;
+            Debug.LogError($"[BehaviorTreeInit] Failed to compile behavior trees: {error}");
+            return;
+        }
+
+        Entity registryEntity = EntityManager.CreateEntity(typeof(BehaviorTreeRuntimeRegistryComponent));
+        EntityManager.SetName(registryEntity, "BehaviorTreeRuntimeRegistry");
+        EntityManager.SetComponentData(registryEntity, new BehaviorTreeRuntimeRegistryComponent
+        {
+            Value = _registry,
+        });
     }
 }

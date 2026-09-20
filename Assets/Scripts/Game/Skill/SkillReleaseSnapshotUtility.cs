@@ -7,11 +7,11 @@ public static class SkillReleaseSnapshotUtility
 {
     public static bool TryCreate(
         EntityManager entityManager,
-        SkillReleaseRequest request,
+        in SkillReleaseRequest request,
         out ResolvedSkillData resolvedSkill)
     {
         resolvedSkill = null;
-        if (request == null || request.SkillId < 0)
+        if (request.SkillId < 0)
             return false;
 
         SkillData baseSkill = DataComponent.Instance?.Get<SkillData>(request.SkillId);

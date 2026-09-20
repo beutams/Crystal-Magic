@@ -88,21 +88,27 @@ public static class UnitMoveSource
     [UnitSourceGet(6, "unit.move.realMaxAcceleration", UnitValueCategory.Number)]
     public static bool TryGetResolved(
         int operation,
-        EntityManager entityManager,
         Entity entity,
+        in ComponentLookup<UnitMoveComponent> moves,
+        in ComponentLookup<UnitModifierComponent> modifiers,
         in UnitSourceArguments arguments,
         out UnitSourceValue result)
     {
-        if (!entityManager.Exists(entity) || !entityManager.HasComponent<UnitMoveComponent>(entity))
+        if (!moves.TryGetComponent(entity, out UnitMoveComponent move))
         {
             result = default;
             return false;
         }
+        UnitModifierComponent modifier = modifiers.TryGetComponent(
+            entity,
+            out UnitModifierComponent resolvedModifier)
+            ? resolvedModifier
+            : UnitModifierComponent.CreateIdentity();
 
         result = operation switch
         {
-            5 => UnitSourceValue.FromFloat(UnitModifierResolver.GetMoveSpeed(entityManager, entity)),
-            6 => UnitSourceValue.FromFloat(UnitModifierResolver.GetMaxAcceleration(entityManager, entity)),
+            5 => UnitSourceValue.FromFloat(UnitModifierResolver.GetMoveSpeed(in move, in modifier)),
+            6 => UnitSourceValue.FromFloat(UnitModifierResolver.GetMaxAcceleration(in move, in modifier)),
             _ => UnitSourceValue.None,
         };
         return result.Type != UnitValueType.None;

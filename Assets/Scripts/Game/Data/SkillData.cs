@@ -3,6 +3,7 @@ using CrystalMagic.Core;
 using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data.Effects;
 using Newtonsoft.Json;
+using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -111,9 +112,13 @@ namespace CrystalMagic.Game.Data
         public float Bonus;
     }
 
-    public sealed class SkillModifierSet
+    public struct SkillModifierSet
     {
-        private readonly Dictionary<SkillModifierChannel, SkillModifierAccumulator> _entries = new();
+        private FixedList512Bytes<SkillModifierAccumulator> _entries;
+
+        public readonly bool IsEmpty => _entries.Length == 0;
+
+        public void Clear() => _entries.Clear();
 
         public void Add(IEnumerable<SkillModifierEntry> entries, int stacks = 1)
         {
@@ -126,73 +131,106 @@ namespace CrystalMagic.Game.Data
 
         public void Add(SkillModifierEntry entry, int stacks = 1)
         {
-            if (!_entries.TryGetValue(entry.Channel, out SkillModifierAccumulator current))
+            float minimumFactor = ConfigComponent.Instance.Get<ModifierConfig>()
+                .GetSkillModifierMinimumFactor(entry.Channel);
+            Add(in entry, stacks, minimumFactor);
+        }
+
+        public void Add(in SkillModifierEntry entry, int stacks, float minimumFactor)
+        {
+            int index = FindIndex(entry.Channel);
+            SkillModifierAccumulator current;
+            if (index < 0)
             {
-                current.Channel = entry.Channel;
-                current.FactorSum = 0f;
+                current = new SkillModifierAccumulator
+                {
+                    Channel = entry.Channel,
+                    MinimumFactor = minimumFactor,
+                };
+                index = _entries.Length;
+                _entries.Add(current);
+            }
+            else
+            {
+                current = _entries[index];
+                current.MinimumFactor = math.max(current.MinimumFactor, minimumFactor);
             }
 
             current.FactorSum += entry.Factor * math.max(1, stacks);
             current.Bonus += entry.Bonus * math.max(1, stacks);
-            _entries[entry.Channel] = current;
+            _entries[index] = current;
         }
 
-        public float GetFactor(SkillModifierChannel channel)
+        public readonly float GetFactor(SkillModifierChannel channel)
         {
-            if (!_entries.TryGetValue(channel, out SkillModifierAccumulator entry))
+            int index = FindIndex(channel);
+            if (index < 0)
                 return 1f;
 
+            SkillModifierAccumulator entry = _entries[index];
             float factor = math.max(0f, 1f + entry.FactorSum);
-            return math.max(GetMinimumFactor(channel), factor);
+            return math.max(entry.MinimumFactor, factor);
         }
 
-        public float GetBonus(SkillModifierChannel channel)
+        public readonly float GetBonus(SkillModifierChannel channel)
         {
-            if (!_entries.TryGetValue(channel, out SkillModifierAccumulator entry))
-                return 0f;
-
-            return entry.Bonus;
+            int index = FindIndex(channel);
+            return index < 0 ? 0f : _entries[index].Bonus;
         }
 
-        public float Apply(SkillModifierChannel channel, float baseValue)
+        public readonly float Apply(SkillModifierChannel channel, float baseValue)
         {
             return baseValue * GetFactor(channel) + GetBonus(channel);
         }
 
-        public float GetAttributePowerValue()
+        public readonly float GetAttributePowerValue()
         {
             return Apply(SkillModifierChannel.AttributePower, 0f);
         }
 
-        public void Add(SkillModifierSet other)
+        public void Add(in SkillModifierSet other)
         {
-            if (other == null)
-                return;
-
-            foreach (SkillModifierAccumulator entry in other._entries.Values)
+            for (int i = 0; i < other._entries.Length; i++)
             {
-                if (!_entries.TryGetValue(entry.Channel, out SkillModifierAccumulator current))
+                SkillModifierAccumulator entry = other._entries[i];
+                int index = FindIndex(entry.Channel);
+                SkillModifierAccumulator current;
+                if (index < 0)
                 {
-                    current.Channel = entry.Channel;
-                    current.FactorSum = 0f;
+                    current = new SkillModifierAccumulator
+                    {
+                        Channel = entry.Channel,
+                        MinimumFactor = entry.MinimumFactor,
+                    };
+                    index = _entries.Length;
+                    _entries.Add(current);
+                }
+                else
+                {
+                    current = _entries[index];
+                    current.MinimumFactor = math.max(current.MinimumFactor, entry.MinimumFactor);
                 }
 
                 current.FactorSum += entry.FactorSum;
                 current.Bonus += entry.Bonus;
-                _entries[entry.Channel] = current;
+                _entries[index] = current;
             }
         }
 
-        public SkillModifierSet Clone()
+        public readonly SkillModifierSet Clone()
         {
-            SkillModifierSet clone = new();
-            clone.Add(this);
-            return clone;
+            return this;
         }
 
-        private static float GetMinimumFactor(SkillModifierChannel channel)
+        private readonly int FindIndex(SkillModifierChannel channel)
         {
-            return ConfigComponent.Instance.Get<ModifierConfig>().GetSkillModifierMinimumFactor(channel);
+            for (int i = 0; i < _entries.Length; i++)
+            {
+                if (_entries[i].Channel == channel)
+                    return i;
+            }
+
+            return -1;
         }
 
         private struct SkillModifierAccumulator
@@ -200,6 +238,7 @@ namespace CrystalMagic.Game.Data
             public SkillModifierChannel Channel;
             public float FactorSum;
             public float Bonus;
+            public float MinimumFactor;
         }
     }
 

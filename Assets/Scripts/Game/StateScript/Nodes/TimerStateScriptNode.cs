@@ -10,7 +10,7 @@ public sealed class TimerStateScriptNode : StateScriptStateNode
     private readonly TimerStateScriptNodeData _data;
     private float _elapsedSeconds;
     private float _durationSeconds;
-    private System.Func<UnitValue> _durationGetter;
+    private CompiledValueExpression _durationExpression;
 
     public TimerStateScriptNode(TimerStateScriptNodeData data, StateScriptRuntime runtime)
         : base(data, runtime)
@@ -20,25 +20,24 @@ public sealed class TimerStateScriptNode : StateScriptStateNode
 
     protected override bool OnBind(out string error)
     {
-        _durationGetter = null;
+        _durationExpression = default;
         _data.Duration ??= TimerStateScriptNodeData.CreateDefaultDurationExpression();
         if (!s_expressionFactory.TryBuildValueExpression(
                 _data.Duration,
                 Runtime.Sources,
-                out UnitValueCategory category,
-                out System.Func<UnitValue> durationGetter,
+                out CompiledValueExpression durationExpression,
                 out error))
         {
             return false;
         }
 
-        if (category != UnitValueCategory.Number)
+        if (durationExpression.Category != UnitValueCategory.Number)
         {
-            error = $"Timer Duration requires Number, but received {category}.";
+            error = $"Timer Duration requires Number, but received {durationExpression.Category}.";
             return false;
         }
 
-        _durationGetter = durationGetter;
+        _durationExpression = durationExpression;
         error = string.Empty;
         return true;
     }
@@ -70,8 +69,8 @@ public sealed class TimerStateScriptNode : StateScriptStateNode
 
     private float ResolveDurationSeconds()
     {
-        if (_durationGetter == null ||
-            !_durationGetter().TryGetNumber(out float durationSeconds) ||
+        if (!_durationExpression.TryEvaluate(Runtime.Sources, out UnitSourceValue durationValue) ||
+            !durationValue.TryGetNumber(out float durationSeconds) ||
             float.IsNaN(durationSeconds) ||
             float.IsInfinity(durationSeconds))
         {

@@ -905,6 +905,12 @@
             "Key": "ui.confirm.save_success.content",
             "ChineseSimplified": "存档保存成功。",
             "English": "Game saved successfully."
+        },
+        {
+            "Id": 151,
+            "Key": "npc.network_lobby.name",
+            "ChineseSimplified": "联机大厅",
+            "English": "Online Lobby"
         }
     ]
 }

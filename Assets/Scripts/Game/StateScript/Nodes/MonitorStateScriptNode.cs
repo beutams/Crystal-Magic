@@ -42,13 +42,13 @@ public sealed class MonitorStateScriptNode : StateScriptStateNode
 
     protected override void OnActivate()
     {
-        _lastValue = _comparator.GetResult();
+        _lastValue = _comparator.GetResult(Runtime.Sources);
         _hasLastValue = true;
     }
 
     protected override void OnUpdate()
     {
-        bool value = _comparator.GetResult();
+        bool value = _comparator.GetResult(Runtime.Sources);
 
         if (_hasLastValue && value != _lastValue)
         {

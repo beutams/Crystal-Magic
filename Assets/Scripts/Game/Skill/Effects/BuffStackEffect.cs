@@ -26,8 +26,9 @@ namespace CrystalMagic.Game.Skill.Effects
                 return;
 
             SkillContent childContext = context.Clone();
-            childContext.RuntimeModifiers ??= new SkillModifierSet();
-            childContext.RuntimeModifiers.Add(Data.PerStackModifiers, stackCount);
+            SkillModifierSet runtimeModifiers = childContext.RuntimeModifiers;
+            runtimeModifiers.Add(Data.PerStackModifiers, stackCount);
+            childContext.RuntimeModifiers = runtimeModifiers;
             SkillExecutor.ExecuteEffects(Data.OnAfterRead, childContext);
         }
     }

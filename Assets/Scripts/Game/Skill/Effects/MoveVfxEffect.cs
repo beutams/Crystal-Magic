@@ -51,6 +51,10 @@ namespace CrystalMagic.Game.Skill.Effects
             arrivalContext.EntityManager = context.EntityManager;
             arrivalContext.HasPosition = true;
             arrivalContext.Position = new Vector3(endPosition.x, endPosition.y, endPosition.z);
+            EffectRequestContext arrivalRequestContext = EffectUtility.CaptureContext(
+                context.EntityManager,
+                arrivalContext,
+                out bool ownsManagedContext);
 
             float2 planarMove = moveOffset.xy;
             float moveDistance = math.length(planarMove);
@@ -84,23 +88,34 @@ namespace CrystalMagic.Game.Skill.Effects
                 StartPosition = startPosition,
                 EndPosition = endPosition,
                 Duration = duration,
-                ArrivalContext = arrivalContext,
-                OnArrivalEffects = Data.OnArrivalEffects,
+                ArrivalContext = arrivalRequestContext,
+                OnArrivalEffectListId = EffectDataBridgeUtility.Register(
+                    context.EntityManager,
+                    Data.OnArrivalEffects),
+                ReleaseManagedContextAfterExecution = ownsManagedContext ? (byte)1 : (byte)0,
             };
             if (context.EntityManager.HasComponent<VfxArrivalComponent>(effectEntity))
             {
-                VfxArrivalComponent existing = context.EntityManager.GetComponentObject<VfxArrivalComponent>(effectEntity);
-                existing.StartPosition = arrival.StartPosition;
-                existing.EndPosition = arrival.EndPosition;
-                existing.Duration = arrival.Duration;
-                existing.Elapsed = arrival.Elapsed;
-                existing.ArrivalContext = arrival.ArrivalContext;
-                existing.OnArrivalEffects = arrival.OnArrivalEffects;
+                VfxArrivalComponent existing = context.EntityManager.GetComponentData<VfxArrivalComponent>(effectEntity);
+                EffectUtility.ReleaseAfterExecution(context.EntityManager, existing.OnArrivalEffectListId);
+                if (existing.ReleaseManagedContextAfterExecution != 0)
+                {
+                    EffectDataBridgeUtility.UnregisterManagedContext(
+                        context.EntityManager,
+                        existing.ArrivalContext.ManagedContextId);
+                }
+                context.EntityManager.SetComponentData(effectEntity, arrival);
             }
             else
             {
-                context.EntityManager.AddComponentObject(effectEntity, arrival);
+                context.EntityManager.AddComponentData(effectEntity, arrival);
             }
+
+            if (!context.EntityManager.HasBuffer<EffectEntry>(effectEntity))
+                context.EntityManager.AddBuffer<EffectEntry>(effectEntity);
+            if (!context.EntityManager.HasComponent<DestroyEntityFlag>(effectEntity))
+                context.EntityManager.AddComponent<DestroyEntityFlag>(effectEntity);
+            context.EntityManager.SetComponentEnabled<DestroyEntityFlag>(effectEntity, false);
         }
     }
 }

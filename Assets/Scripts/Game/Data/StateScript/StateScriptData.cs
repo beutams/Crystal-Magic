@@ -158,6 +158,7 @@ namespace CrystalMagic.Game.Data
     public sealed class SetValueStateScriptNodeData : ActionStateScriptNodeData
     {
         public string SetterKey = string.Empty;
+        public UnitSourceTarget SourceTarget = UnitSourceTarget.Self;
         public string Key = string.Empty;
         // Legacy one-input data; runtime migrates it into Values when binding old graphs.
         public ValueExpression Value = new();
@@ -319,6 +320,7 @@ namespace CrystalMagic.Game.Data
         public float MinSpawnRadius;
         public Vector3 CenterOffset;
         public bool CopyFactionFromSpawner = true;
+        // Keeps spawned variables local and exposes the spawner through UnitSourceTarget.Other.
         public bool ShareVariablesWithSpawner;
         public bool RestoreRuntimeState;
 

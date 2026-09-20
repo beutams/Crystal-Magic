@@ -17,10 +17,7 @@ namespace CrystalMagic.Editor.Unit
         {
             List<FactoryRegistryGeneratorUtility.MappedType> nodeDataTypes =
                 FactoryRegistryGeneratorUtility.CollectMappedTypes(typeof(BehaviorNodeData), subclassOnly: true);
-            List<FactoryRegistryGeneratorUtility.MappedType> nodeTypes =
-                FactoryRegistryGeneratorUtility.CollectMappedTypes(typeof(ABehaviorNode), subclassOnly: true);
-
-            string content = BuildRegistry(nodeDataTypes, nodeTypes);
+            string content = BuildRegistry(nodeDataTypes);
             RegistryGeneratorUtility.WriteFile(OutputPath, content);
             AssetDatabase.Refresh();
 
@@ -28,8 +25,7 @@ namespace CrystalMagic.Editor.Unit
         }
 
         private static string BuildRegistry(
-            List<FactoryRegistryGeneratorUtility.MappedType> nodeDataTypes,
-            List<FactoryRegistryGeneratorUtility.MappedType> nodeTypes)
+            List<FactoryRegistryGeneratorUtility.MappedType> nodeDataTypes)
         {
             StringBuilder sb = new();
             sb.AppendLine("// AUTO-GENERATED - DO NOT EDIT MANUALLY");
@@ -44,7 +40,6 @@ namespace CrystalMagic.Editor.Unit
 
             AppendMetadata(sb, nodeDataTypes);
             AppendNodeDataRegistration(sb, nodeDataTypes);
-            AppendNodeRegistration(sb, nodeDataTypes, nodeTypes);
 
             sb.AppendLine("}");
             return sb.ToString();
@@ -147,49 +142,5 @@ namespace CrystalMagic.Editor.Unit
             sb.AppendLine();
         }
 
-        private static void AppendNodeRegistration(
-            StringBuilder sb,
-            List<FactoryRegistryGeneratorUtility.MappedType> nodeDataTypes,
-            List<FactoryRegistryGeneratorUtility.MappedType> nodeTypes)
-        {
-            sb.AppendLine("    public static void RegisterAll(BehaviorNodeFactory factory)");
-            sb.AppendLine("    {");
-            sb.AppendLine("        if (factory == null)");
-            sb.AppendLine("            return;");
-            sb.AppendLine();
-            for (int i = 0; i < nodeDataTypes.Count; i++)
-            {
-                var nodeDataType = nodeDataTypes[i];
-                FactoryRegistryGeneratorUtility.MappedType nodeType = FindNodeType(nodeDataType, nodeTypes);
-                if (nodeType == null)
-                {
-                    Debug.LogWarning($"[BehaviorTreeRegistryGenerator] Missing behavior node runtime for node data: {nodeDataType.Type.Name}");
-                    continue;
-                }
-
-                sb.AppendLine($"        factory.Register(typeof({FactoryRegistryGeneratorUtility.TypeReference(nodeDataType.Type)}), static data => new {FactoryRegistryGeneratorUtility.TypeReference(nodeType.Type)}(({FactoryRegistryGeneratorUtility.TypeReference(nodeDataType.Type)})data));");
-            }
-            sb.AppendLine("    }");
-        }
-
-        private static FactoryRegistryGeneratorUtility.MappedType FindNodeType(
-            FactoryRegistryGeneratorUtility.MappedType nodeDataType,
-            List<FactoryRegistryGeneratorUtility.MappedType> nodeTypes)
-        {
-            for (int i = 0; i < nodeTypes.Count; i++)
-            {
-                if (string.Equals(nodeTypes[i].Mapping.Key, nodeDataType.Mapping.Key, StringComparison.Ordinal))
-                    return nodeTypes[i];
-            }
-
-            string expectedName = nodeDataType.Type.Name.Replace("Data", string.Empty);
-            for (int i = 0; i < nodeTypes.Count; i++)
-            {
-                if (nodeTypes[i].Type.Name == expectedName)
-                    return nodeTypes[i];
-            }
-
-            return null;
-        }
     }
 }

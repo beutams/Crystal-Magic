@@ -155,8 +155,7 @@ namespace CrystalMagic.Core
             }
 
             entityManager.RemoveComponent<PlayerCharacterComponent>(player);
-            if (entityManager.HasComponent<PlayerSkillRuntimeDataComponent>(player))
-                entityManager.RemoveComponent<PlayerSkillRuntimeDataComponent>(player);
+            PlayerSkillRuntimeDataUtility.Clear(entityManager, player);
         }
 
         public static DungeonRunData GetDungeonRunData()
@@ -434,7 +433,7 @@ namespace CrystalMagic.Core
             {
                 Faction = entityManager.GetComponentData<UnitFactionComponent>(entity).Value,
                 UnitDataId = entityManager.HasComponent<UnitBehaviorTreeComponent>(entity)
-                    ? entityManager.GetComponentObject<UnitBehaviorTreeComponent>(entity)?.UnitDataId ?? -1
+                    ? entityManager.GetComponentData<UnitBehaviorTreeComponent>(entity).UnitDataId
                     : -1,
             };
 

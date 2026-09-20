@@ -1,19 +1,23 @@
 using System;
 using System.Collections.Generic;
+using Unity.Collections;
 using Unity.Entities;
 
 public sealed class UnitSourceGet : IParameterizedUnitValueGetter
 {
     private readonly UnitSourceResolver _resolver;
     private readonly UnitSourceId _sourceId;
+    private readonly UnitSourceTarget _sourceTarget;
 
     internal UnitSourceGet(
         UnitSourceResolver resolver,
         UnitSourceId sourceId,
+        UnitSourceTarget sourceTarget,
         UnitSourceGetSchemaEntry schema)
     {
         _resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
         _sourceId = sourceId;
+        _sourceTarget = sourceTarget;
         Key = schema.Key;
         ReturnType = schema.ReturnType;
         Parameters = schema.Parameters;
@@ -28,7 +32,7 @@ public sealed class UnitSourceGet : IParameterizedUnitValueGetter
         value = UnitValue.None;
         if (!HasValidParameters(parameters) ||
             !UnitSourceArguments.TryCreate(parameters, null, out UnitSourceArguments arguments) ||
-            !_resolver.TryGet(_sourceId, in arguments, out UnitSourceValue sourceValue))
+            !_resolver.TryGet(_sourceId, _sourceTarget, in arguments, out UnitSourceValue sourceValue))
         {
             return false;
         }
@@ -58,14 +62,17 @@ public sealed class UnitSourceSet
 {
     private readonly UnitSourceResolver _resolver;
     private readonly UnitSourceId _sourceId;
+    private readonly UnitSourceTarget _sourceTarget;
 
     internal UnitSourceSet(
         UnitSourceResolver resolver,
         UnitSourceId sourceId,
+        UnitSourceTarget sourceTarget,
         UnitSourceSetSchemaEntry schema)
     {
         _resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
         _sourceId = sourceId;
+        _sourceTarget = sourceTarget;
         Key = schema.Key;
         Parameters = schema.Parameters;
         RequiresKey = schema.RequiresKey;
@@ -83,7 +90,7 @@ public sealed class UnitSourceSet
             return false;
         }
 
-        return _resolver.TrySet(_sourceId, in arguments);
+        return _resolver.TrySet(_sourceId, _sourceTarget, in arguments);
     }
 
     public bool TrySet(string key, UnitValue value)
@@ -95,7 +102,28 @@ public sealed class UnitSourceSet
             return false;
         }
 
-        return _resolver.TrySet(_sourceId, in arguments);
+        return _resolver.TrySet(_sourceId, _sourceTarget, in arguments);
+    }
+
+    public bool TrySet(in UnitSourceArguments arguments)
+    {
+        return !RequiresKey && HasValidParameters(in arguments) &&
+               _resolver.TrySet(_sourceId, _sourceTarget, in arguments);
+    }
+
+    public bool TrySet(string key, in UnitSourceValue value)
+    {
+        UnitSourceArguments arguments = default;
+        if (!RequiresKey || string.IsNullOrWhiteSpace(key) ||
+            Parameters.Count != 1 || !Parameters[0].Accepts(value.Category) ||
+            arguments.Key.CopyFrom(key) != CopyError.None)
+        {
+            return false;
+        }
+
+        arguments.HasKey = 1;
+        arguments.Values.Add(value);
+        return _resolver.TrySet(_sourceId, _sourceTarget, in arguments);
     }
 
     private bool HasValidParameters(UnitValue[] parameters)
@@ -112,71 +140,90 @@ public sealed class UnitSourceSet
 
         return true;
     }
+
+    private bool HasValidParameters(in UnitSourceArguments arguments)
+    {
+        if (arguments.Count != Parameters.Count)
+            return false;
+
+        for (int index = 0; index < Parameters.Count; index++)
+        {
+            if (!arguments.TryGet(index, out UnitSourceValue value) ||
+                !Parameters[index].Accepts(value.Category))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }
 
-// Managed graph runtimes keep only their entity, world access, and the current generated dispatcher.
+// Managed graph runtimes keep their Self/Other entity context and the current generated dispatcher.
 // There is no per-unit source dictionary, binding callback, or mirrored component state.
 public sealed class UnitSourceResolver : IComparatorValueResolver
 {
-    private EntityManager _entityManager;
     private UnitSourceDispatcher _dispatcher;
+    private UnitSourceContext _context;
     private bool _hasDispatcher;
 
     public UnitSourceResolver(Entity entity)
     {
-        Entity = entity;
+        _context = new UnitSourceContext(entity);
     }
 
-    public Entity Entity { get; private set; }
+    public Entity Entity => _context.Self;
+    public Entity OtherEntity => _context.Other;
+    public UnitSourceContext Context => _context;
     public UnitSourceDispatcher Dispatcher => _dispatcher;
 
-    public void Update(
-        Entity entity,
-        EntityManager entityManager,
-        in UnitSourceDispatcher dispatcher)
+    public bool TryGetContext(out UnitSourceContext context, out UnitSourceDispatcher dispatcher)
     {
-        Entity = entity;
-        _entityManager = entityManager;
+        context = _context;
+        dispatcher = _dispatcher;
+        return _hasDispatcher;
+    }
+
+    public void Update(Entity entity, in UnitSourceDispatcher dispatcher)
+    {
+        Update(entity, Entity.Null, in dispatcher);
+    }
+
+    public void Update(Entity self, Entity other, in UnitSourceDispatcher dispatcher)
+    {
+        _context = new UnitSourceContext(self, other);
         _dispatcher = dispatcher;
         _hasDispatcher = true;
     }
 
     public bool TryGet(UnitSourceId sourceId, in UnitSourceArguments arguments, out UnitSourceValue value)
     {
+        return TryGet(sourceId, UnitSourceTarget.Self, in arguments, out value);
+    }
+
+    public bool TryGet(
+        UnitSourceId sourceId,
+        UnitSourceTarget sourceTarget,
+        in UnitSourceArguments arguments,
+        out UnitSourceValue value)
+    {
         value = default;
-        if (!_hasDispatcher)
-            return false;
-
-        if (_dispatcher.TryGet(Entity, sourceId, in arguments, out value))
-            return true;
-
-        bool success = false;
-        _dispatcher.InvokeManagedGet(
-            _entityManager,
-            sourceId,
-            Entity,
-            in arguments,
-            ref success,
-            ref value);
-        return success;
+        return _hasDispatcher &&
+               _dispatcher.TryGet(_context.Resolve(sourceTarget), sourceId, in arguments, out value);
     }
 
     public bool TrySet(UnitSourceId sourceId, in UnitSourceArguments arguments)
     {
-        if (!_hasDispatcher)
-            return false;
+        return TrySet(sourceId, UnitSourceTarget.Self, in arguments);
+    }
 
-        if (_dispatcher.TrySet(Entity, sourceId, in arguments))
-            return true;
-
-        bool success = false;
-        _dispatcher.InvokeManagedSet(
-            _entityManager,
-            sourceId,
-            Entity,
-            in arguments,
-            ref success);
-        return success;
+    public bool TrySet(
+        UnitSourceId sourceId,
+        UnitSourceTarget sourceTarget,
+        in UnitSourceArguments arguments)
+    {
+        return _hasDispatcher &&
+               _dispatcher.TrySet(_context.Resolve(sourceTarget), sourceId, in arguments);
     }
 
     public bool TryGet(string key, UnitValue[] parameters, out UnitValue value)
@@ -201,16 +248,22 @@ public sealed class UnitSourceResolver : IComparatorValueResolver
             return false;
         }
 
-        bool success = false;
-        _dispatcher.InvokeManagedInteraction(_entityManager, ref success, ref request);
-        return success;
+        return _dispatcher.TryGetInteraction(out request);
     }
 
     public bool TryGetDefinition(string key, out UnitSourceGet sourceGet)
     {
+        return TryGetDefinition(key, UnitSourceTarget.Self, out sourceGet);
+    }
+
+    public bool TryGetDefinition(
+        string key,
+        UnitSourceTarget sourceTarget,
+        out UnitSourceGet sourceGet)
+    {
         if (UnitComponentSourceRegistry.TryGetGet(key, out UnitSourceId sourceId, out UnitSourceGetSchemaEntry schema))
         {
-            sourceGet = new UnitSourceGet(this, sourceId, schema);
+            sourceGet = new UnitSourceGet(this, sourceId, sourceTarget, schema);
             return true;
         }
 
@@ -220,9 +273,17 @@ public sealed class UnitSourceResolver : IComparatorValueResolver
 
     public bool TryGetDefinition(string key, out UnitSourceSet sourceSet)
     {
+        return TryGetDefinition(key, UnitSourceTarget.Self, out sourceSet);
+    }
+
+    public bool TryGetDefinition(
+        string key,
+        UnitSourceTarget sourceTarget,
+        out UnitSourceSet sourceSet)
+    {
         if (UnitComponentSourceRegistry.TryGetSet(key, out UnitSourceId sourceId, out UnitSourceSetSchemaEntry schema))
         {
-            sourceSet = new UnitSourceSet(this, sourceId, schema);
+            sourceSet = new UnitSourceSet(this, sourceId, sourceTarget, schema);
             return true;
         }
 

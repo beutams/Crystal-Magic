@@ -22,8 +22,11 @@ public partial class PlayerInputBridgeSystem : SystemBase
         bool isSkillPressed = _inputState.IsSkillHeld && !_wasSkillHeld;
         bool isNextSkillChainPressed = _inputState.IsNextSkillChainHeld && !_wasNextSkillChainHeld;
         bool hasPlayer = false;
-        foreach ((RefRO<UnitFactionComponent> factionRef, Entity entity) in
-                 SystemAPI.Query<RefRO<UnitFactionComponent>>().WithEntityAccess())
+        foreach ((RefRW<PlayerInputComponent> inputRef,
+                  RefRO<UnitFactionComponent> factionRef,
+                  Entity entity) in
+                 SystemAPI.Query<RefRW<PlayerInputComponent>, RefRO<UnitFactionComponent>>()
+                     .WithEntityAccess())
         {
             if (!UnitFactionUtility.IsPlayer(factionRef.ValueRO.Value))
                 continue;
@@ -53,12 +56,8 @@ public partial class PlayerInputBridgeSystem : SystemBase
                 IsUsePropHeld = _inputState.IsUsePropHeld ? (byte)1 : (byte)0,
                 PropIndex = _inputState.PropIndex,
             };
-            bool hasInput = EntityManager.HasComponent<PlayerInputComponent>(entity);
-            PlayerInputComponent oldInput = hasInput
-                ? EntityManager.GetComponentData<PlayerInputComponent>(entity)
-                : default;
-            bool inputChanged = !hasInput ||
-                                !oldInput.Move.Equals(input.Move) ||
+            PlayerInputComponent oldInput = inputRef.ValueRO;
+            bool inputChanged = !oldInput.Move.Equals(input.Move) ||
                                 !oldInput.PointerWorldPosition.Equals(input.PointerWorldPosition) ||
                                 oldInput.IsPrimaryHeld != input.IsPrimaryHeld ||
                                 oldInput.IsInteractHeld != input.IsInteractHeld ||
@@ -71,11 +70,7 @@ public partial class PlayerInputBridgeSystem : SystemBase
                                 oldInput.IsUsePropHeld != input.IsUsePropHeld ||
                                 oldInput.PropIndex != input.PropIndex;
             input.NetworkDirty = inputChanged ? (byte)1 : oldInput.NetworkDirty;
-
-            if (hasInput)
-                EntityManager.SetComponentData(entity, input);
-            else
-                EntityManager.AddComponentData(entity, input);
+            inputRef.ValueRW = input;
 
             if (!EntityManager.HasComponent<PlayerSkillSelectionComponent>(entity))
                 continue;

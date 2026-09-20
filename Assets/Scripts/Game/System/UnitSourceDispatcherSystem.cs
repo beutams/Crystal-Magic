@@ -1,6 +1,7 @@
 using Unity.Entities;
 
 [UpdateInGroup(typeof(UnitInitializationSystemGroup), OrderFirst = true)]
+[UpdateAfter(typeof(WorldStateSystem))]
 public partial class UnitSourceDispatcherSystem : SystemBase
 {
     public UnitSourceDispatcher Dispatcher { get; private set; }

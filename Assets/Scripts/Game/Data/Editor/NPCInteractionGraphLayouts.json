@@ -94,6 +94,25 @@
                     }
                 ]
             }
+        },
+        {
+            "OwnerKey": "NPC:Assets/Res/Prefab/Unit/NetworkNPC.prefab:Interaction:0:OpenLobby",
+            "Layout": {
+                "ViewPosition": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "ViewScale": 1.0,
+                "Nodes": [
+                    {
+                        "Guid": "38a8c80798f1499e8680f751de20ef21",
+                        "Position": {
+                            "x": 300.0,
+                            "y": 110.0
+                        }
+                    }
+                ]
+            }
         }
     ]
 }

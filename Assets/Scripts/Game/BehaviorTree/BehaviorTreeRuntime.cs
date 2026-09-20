@@ -1,193 +1,528 @@
 using System;
 using System.Collections.Generic;
 using CrystalMagic.Game.Data;
+using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 
-// Per-unit execution context. It never mirrors unit component data.
-public sealed class BehaviorContext
+public static class BehaviorTreeCompiler
 {
-    public Entity Entity { get; private set; }
-    public EntityManager EntityManager { get; private set; }
-    public float DeltaTime { get; private set; }
-    public UnitSourceResolver Sources { get; private set; }
-    public BehaviorDebugState Debug { get; } = new();
-
-    public void BeginFrame(
-        Entity entity,
-        EntityManager entityManager,
-        float deltaTime,
-        UnitSourceResolver sources,
-        bool captureDebug)
+    private sealed class CompiledTree
     {
-        Entity = entity;
-        EntityManager = entityManager;
-        DeltaTime = deltaTime;
-        Sources = sources;
-        Debug.BeginFrame(captureDebug);
+        public int UnitDataId;
+        public int RootNodeIndex;
+        public readonly List<BehaviorNodeDefinition> Nodes = new();
+        public readonly List<int> Children = new();
+        public readonly List<CompiledExpression> Expressions = new();
     }
 
-    public void SetCurrentNode(ABehaviorNode node)
+    private struct CompiledExpression
     {
-        if (node != null)
-            Debug.CurrentNodeName = node.DisplayName;
+        public ExpressionProgram Program;
+        public UnitValueCategory Category;
+        public byte IsCondition;
     }
 
-    public void SetNodeStatus(string nodeGuid, BehaviorNodeStatus status)
+    public static bool TryBuildRegistry(
+        IReadOnlyList<BehaviorTreeData> sourceTrees,
+        out BlobAssetReference<BehaviorTreeRuntimeRegistryBlob> registry,
+        out string error)
     {
-        Debug.SetNodeStatus(nodeGuid, status);
-    }
-}
-public sealed class BehaviorDebugState
-{
-    private readonly Dictionary<string, BehaviorNodeStatus> _nodeStatuses = new(StringComparer.Ordinal);
-    private bool _isEnabled;
-
-    public string CurrentNodeName;
-    public string LastStatus;
-
-    public void BeginFrame(bool isEnabled)
-    {
-        _isEnabled = isEnabled;
-        CurrentNodeName = "None";
-        LastStatus = "None";
-        _nodeStatuses.Clear();
-    }
-
-    public void SetNodeStatus(string nodeGuid, BehaviorNodeStatus status)
-    {
-        if (_isEnabled && !string.IsNullOrWhiteSpace(nodeGuid))
-            _nodeStatuses[nodeGuid] = status;
-    }
-
-    public bool TryGetNodeStatus(string nodeGuid, out BehaviorNodeStatus status)
-    {
-        status = default;
-        return !string.IsNullOrWhiteSpace(nodeGuid) && _nodeStatuses.TryGetValue(nodeGuid, out status);
-    }
-}
-
-public sealed class BehaviorTreeRuntime
-{
-    private readonly ABehaviorNode _root;
-    private BehaviorContext _lastContext;
-
-    public BehaviorTreeRuntime(ABehaviorNode root)
-    {
-        _root = root;
-    }
-
-    public bool IsValid => _root != null;
-    public bool IsBound { get; private set; }
-    public string BindingError { get; private set; } = string.Empty;
-    public UnitSourceResolver Sources { get; private set; }
-
-    public bool TryBind(UnitSourceResolver sources, out string error)
-    {
-        Sources = sources;
-        if (_root == null)
+        registry = default;
+        error = string.Empty;
+        if (sourceTrees == null)
         {
-            IsBound = false;
-            error = "Behavior tree root is missing.";
-            BindingError = error;
+            error = "Behavior tree table is unavailable.";
             return false;
         }
 
-        IsBound = _root.TryBind(sources, out error);
-        BindingError = error ?? string.Empty;
-        return IsBound;
+        List<BehaviorTreeData> orderedTrees = new(sourceTrees.Count);
+        for (int index = 0; index < sourceTrees.Count; index++)
+        {
+            if (sourceTrees[index] != null)
+                orderedTrees.Add(sourceTrees[index]);
+        }
+        orderedTrees.Sort(static (left, right) => left.UnitDataId.CompareTo(right.UnitDataId));
+        for (int index = 1; index < orderedTrees.Count; index++)
+        {
+            if (orderedTrees[index - 1].UnitDataId == orderedTrees[index].UnitDataId)
+            {
+                error = $"Duplicate behavior tree UnitDataId '{orderedTrees[index].UnitDataId}'.";
+                return false;
+            }
+        }
+
+        List<CompiledTree> compiledTrees = new(orderedTrees.Count);
+        for (int index = 0; index < orderedTrees.Count; index++)
+        {
+            if (!TryCompileTree(orderedTrees[index], out CompiledTree compiled, out error))
+            {
+                error = $"Behavior tree '{orderedTrees[index].Name}' failed to compile: {error}";
+                return false;
+            }
+            compiledTrees.Add(compiled);
+        }
+
+        BlobBuilder builder = new(Allocator.Temp);
+        ref BehaviorTreeRuntimeRegistryBlob root = ref builder.ConstructRoot<BehaviorTreeRuntimeRegistryBlob>();
+        BlobBuilderArray<BehaviorTreeDefinitionBlob> treeArray =
+            builder.Allocate(ref root.Trees, compiledTrees.Count);
+        for (int treeIndex = 0; treeIndex < compiledTrees.Count; treeIndex++)
+            WriteTree(ref builder, ref treeArray[treeIndex], compiledTrees[treeIndex]);
+
+        registry = builder.CreateBlobAssetReference<BehaviorTreeRuntimeRegistryBlob>(Allocator.Persistent);
+        builder.Dispose();
+        return true;
     }
 
-    public BehaviorNodeStatus Tick(BehaviorContext context)
+    public static int FindTreeIndex(
+        in BlobAssetReference<BehaviorTreeRuntimeRegistryBlob> registry,
+        int unitDataId)
     {
-        _lastContext = context;
-        if (_root == null || !IsBound || context?.Sources == null)
-            return BehaviorNodeStatus.Failure;
+        if (!registry.IsCreated)
+            return -1;
 
-        BehaviorNodeStatus status = _root.Tick(context);
-        context.Debug.LastStatus = status.ToString();
-        return status;
+        ref BlobArray<BehaviorTreeDefinitionBlob> trees = ref registry.Value.Trees;
+        int low = 0;
+        int high = trees.Length - 1;
+        while (low <= high)
+        {
+            int middle = low + ((high - low) >> 1);
+            int candidate = trees[middle].UnitDataId;
+            if (candidate == unitDataId)
+                return middle;
+            if (candidate < unitDataId)
+                low = middle + 1;
+            else
+                high = middle - 1;
+        }
+        return -1;
     }
 
-    public bool TryGetDebugNodeStatus(string nodeGuid, out BehaviorNodeStatus status)
+    private static bool TryCompileTree(
+        BehaviorTreeData source,
+        out CompiledTree compiled,
+        out string error)
     {
-        status = default;
-        return _lastContext != null && _lastContext.Debug.TryGetNodeStatus(nodeGuid, out status);
+        compiled = null;
+        error = string.Empty;
+        if (source == null || source.Nodes == null || source.Nodes.Count == 0)
+        {
+            error = "Tree has no nodes.";
+            return false;
+        }
+
+        Dictionary<string, int> nodeIndices = new(StringComparer.Ordinal);
+        for (int index = 0; index < source.Nodes.Count; index++)
+        {
+            BehaviorNodeData node = source.Nodes[index];
+            if (node == null || string.IsNullOrWhiteSpace(node.Guid))
+            {
+                error = $"Node {index} has no Guid.";
+                return false;
+            }
+            if (!nodeIndices.TryAdd(node.Guid, index))
+            {
+                error = $"Duplicate node Guid '{node.Guid}'.";
+                return false;
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(source.RootNodeGuid) ||
+            !nodeIndices.TryGetValue(source.RootNodeGuid, out int rootNodeIndex))
+        {
+            error = "Root node is missing.";
+            return false;
+        }
+        if (!TryValidateGraph(source, nodeIndices, rootNodeIndex, out error))
+            return false;
+
+        compiled = new CompiledTree
+        {
+            UnitDataId = source.UnitDataId,
+            RootNodeIndex = rootNodeIndex,
+        };
+        UnitSourceResolver schemaResolver = new(Entity.Null);
+        ComparatorFactory expressionFactory = CreateExpressionFactory();
+
+        for (int index = 0; index < source.Nodes.Count; index++)
+        {
+            BehaviorNodeData sourceNode = source.Nodes[index];
+            if (!TryCompileNode(
+                    sourceNode,
+                    nodeIndices,
+                    schemaResolver,
+                    expressionFactory,
+                    compiled,
+                    out BehaviorNodeDefinition definition,
+                    out error))
+            {
+                error = $"Node '{sourceNode.Guid}' ({sourceNode.Type}): {error}";
+                compiled = null;
+                return false;
+            }
+            compiled.Nodes.Add(definition);
+        }
+
+        return true;
     }
 
-    public void Reset()
+    private static bool TryValidateGraph(
+        BehaviorTreeData source,
+        Dictionary<string, int> nodeIndices,
+        int rootNodeIndex,
+        out string error)
     {
-        _root?.Reset();
+        byte[] visitState = new byte[source.Nodes.Count];
+        string validationError = string.Empty;
+        if (Visit(rootNodeIndex))
+        {
+            error = string.Empty;
+            return true;
+        }
+        error = validationError;
+        return false;
+
+        bool Visit(int nodeIndex)
+        {
+            if (visitState[nodeIndex] == 1)
+            {
+                validationError = $"Cycle detected at node '{source.Nodes[nodeIndex].Guid}'.";
+                return false;
+            }
+            if (visitState[nodeIndex] == 2)
+                return true;
+
+            visitState[nodeIndex] = 1;
+            List<string> children = source.Nodes[nodeIndex].ChildGuids;
+            if (children != null)
+            {
+                for (int childIndex = 0; childIndex < children.Count; childIndex++)
+                {
+                    if (!nodeIndices.TryGetValue(children[childIndex], out int childNodeIndex))
+                    {
+                        validationError = $"Child '{children[childIndex]}' is missing.";
+                        return false;
+                    }
+                    if (!Visit(childNodeIndex))
+                        return false;
+                }
+            }
+
+            visitState[nodeIndex] = 2;
+            return true;
+        }
     }
-}
 
-public static class BehaviorTreeBuilder
-{
-    private static BehaviorNodeFactory s_factory;
+    private static bool TryCompileNode(
+        BehaviorNodeData source,
+        Dictionary<string, int> nodeIndices,
+        UnitSourceResolver schemaResolver,
+        ComparatorFactory expressionFactory,
+        CompiledTree tree,
+        out BehaviorNodeDefinition definition,
+        out string error)
+    {
+        definition = default;
+        error = string.Empty;
+        if (!TryResolveNodeType(source, out BehaviorNodeRuntimeType type))
+        {
+            error = $"Unsupported node type '{source?.Type}'.";
+            return false;
+        }
 
-    public static BehaviorTreeRuntime Build(
-        BehaviorTreeData data,
-        UnitSourceResolver sources,
+        definition.Type = type;
+        definition.ChildStart = tree.Children.Count;
+        definition.ExpressionStart = tree.Expressions.Count;
+        if (!TryCopyFixedString(source.Guid, out definition.Guid))
+        {
+            error = "Guid is too long.";
+            return false;
+        }
+
+        List<string> childGuids = source.ChildGuids ?? new List<string>();
+        if (IsSingleChildNode(type) && childGuids.Count > 1)
+        {
+            error = "Decorator/root nodes may have at most one child.";
+            return false;
+        }
+        if (childGuids.Count > ushort.MaxValue)
+        {
+            error = "Node has too many children.";
+            return false;
+        }
+        for (int childIndex = 0; childIndex < childGuids.Count; childIndex++)
+        {
+            if (!nodeIndices.TryGetValue(childGuids[childIndex], out int resolvedChild))
+            {
+                error = $"Child '{childGuids[childIndex]}' is missing.";
+                return false;
+            }
+            tree.Children.Add(resolvedChild);
+        }
+        definition.ChildCount = (ushort)childGuids.Count;
+
+        switch (source)
+        {
+            case ParallelBehaviorNodeData parallel:
+                definition.IntParameters.x = (int)parallel.SuccessPolicy;
+                definition.IntParameters.y = (int)parallel.FailurePolicy;
+                break;
+            case RepeaterBehaviorNodeData repeater:
+                definition.IntParameters.x = (int)repeater.ExecutionMode;
+                definition.IntParameters.y = repeater.RepeatCount;
+                break;
+            case CooldownBehaviorNodeData cooldown:
+                definition.FloatParameters0.x = math.max(0f, cooldown.CooldownSeconds);
+                break;
+            case TimeoutBehaviorNodeData timeout:
+                definition.FloatParameters0.x = math.max(0f, timeout.TimeoutSeconds);
+                break;
+            case WaitBehaviorNodeData wait:
+                definition.FloatParameters0.x = math.max(0f, wait.DurationSeconds);
+                break;
+            case CheckBehaviorNodeData check:
+                if (!TryAddConditions(check.Conditions, schemaResolver, expressionFactory, tree, out error))
+                    return false;
+                break;
+            case HitCheckBehaviorNodeData hitCheck:
+                definition.FloatParameters0 = new float4(
+                    hitCheck.Center.x,
+                    hitCheck.Center.y,
+                    hitCheck.Size.x,
+                    hitCheck.Size.y);
+                definition.FloatParameters1.x = math.max(0f, hitCheck.TargetPadding);
+                if (!TryAddValueExpression(
+                        hitCheck.Target,
+                        UnitValueCategory.Entity,
+                        schemaResolver,
+                        expressionFactory,
+                        tree,
+                        out error))
+                {
+                    return false;
+                }
+                break;
+            case SetBehaviorNodeData set:
+                if (!TryCompileSet(set, schemaResolver, expressionFactory, tree, ref definition, out error))
+                    return false;
+                break;
+            case MoveToBehaviorNodeData moveTo:
+                if (!TryAddConditions(moveTo.Conditions, schemaResolver, expressionFactory, tree, out error) ||
+                    !TryAddValueExpression(moveTo.Destination, UnitValueCategory.Float3, schemaResolver, expressionFactory, tree, out error) ||
+                    !TryAddValueExpression(moveTo.StopDistance, UnitValueCategory.Number, schemaResolver, expressionFactory, tree, out error) ||
+                    !TryAddValueExpression(moveTo.Speed, UnitValueCategory.Number, schemaResolver, expressionFactory, tree, out error))
+                {
+                    return false;
+                }
+                break;
+        }
+
+        int expressionCount = tree.Expressions.Count - definition.ExpressionStart;
+        if (expressionCount > byte.MaxValue)
+        {
+            error = "Node has too many expressions.";
+            return false;
+        }
+        definition.ExpressionCount = (byte)expressionCount;
+        return true;
+    }
+
+    private static bool TryCompileSet(
+        SetBehaviorNodeData source,
+        UnitSourceResolver schemaResolver,
+        ComparatorFactory expressionFactory,
+        CompiledTree tree,
+        ref BehaviorNodeDefinition definition,
         out string error)
     {
         error = string.Empty;
-        if (data == null || data.Nodes == null || data.Nodes.Count == 0)
+        if (source == null || string.IsNullOrWhiteSpace(source.SetKey) ||
+            !UnitComponentSourceRegistry.TryGetSet(
+                source.SetKey,
+                out UnitSourceId sourceId,
+                out UnitSourceSetSchemaEntry schema))
         {
-            error = "Behavior tree has no nodes.";
-            return null;
+            error = $"Set source '{source?.SetKey}' is unavailable.";
+            return false;
         }
 
-        BehaviorNodeFactory factory = GetFactory();
-        Dictionary<string, ABehaviorNode> runtimeNodes = new(StringComparer.Ordinal);
-        for (int i = 0; i < data.Nodes.Count; i++)
+        List<ValueExpression> inputs = source.Inputs ?? new List<ValueExpression>();
+        if (inputs.Count != schema.Parameters.Count)
         {
-            BehaviorNodeData nodeData = data.Nodes[i];
-            if (nodeData == null || string.IsNullOrWhiteSpace(nodeData.Guid))
-                continue;
-
-            ABehaviorNode node = factory.CreateNode(nodeData);
-            if (node != null)
-                runtimeNodes[nodeData.Guid] = node;
+            error = $"Set source requires {schema.Parameters.Count} input(s).";
+            return false;
+        }
+        if (schema.RequiresKey && !TryCopyFixedString(source.Key, out definition.Key))
+        {
+            error = "Set key is empty or too long.";
+            return false;
         }
 
-        for (int i = 0; i < data.Nodes.Count; i++)
+        definition.SetSourceId = sourceId;
+        definition.SetSourceTarget = source.SourceTarget;
+        definition.IntParameters.x = schema.RequiresKey ? 1 : 0;
+        for (int index = 0; index < inputs.Count; index++)
         {
-            BehaviorNodeData nodeData = data.Nodes[i];
-            if (nodeData == null || string.IsNullOrWhiteSpace(nodeData.Guid) ||
-                !runtimeNodes.TryGetValue(nodeData.Guid, out ABehaviorNode node))
+            if (!TryAddValueExpression(
+                    inputs[index],
+                    schema.Parameters[index].Category,
+                    schemaResolver,
+                    expressionFactory,
+                    tree,
+                    out error))
             {
-                continue;
-            }
-
-            nodeData.ChildGuids ??= new List<string>();
-            for (int childIndex = 0; childIndex < nodeData.ChildGuids.Count; childIndex++)
-            {
-                string childGuid = nodeData.ChildGuids[childIndex];
-                if (!string.IsNullOrWhiteSpace(childGuid) && runtimeNodes.TryGetValue(childGuid, out ABehaviorNode child))
-                    node.AddChild(child);
+                return false;
             }
         }
-
-        if (string.IsNullOrWhiteSpace(data.RootNodeGuid) ||
-            !runtimeNodes.TryGetValue(data.RootNodeGuid, out ABehaviorNode root))
-        {
-            error = "Behavior tree root is missing.";
-            return null;
-        }
-
-        BehaviorTreeRuntime runtime = new(root);
-        if (!runtime.TryBind(sources, out error))
-            return null;
-
-        return runtime;
+        return true;
     }
 
-    private static BehaviorNodeFactory GetFactory()
+    private static bool TryAddConditions(
+        IReadOnlyList<ConditionConfig> conditions,
+        UnitSourceResolver schemaResolver,
+        ComparatorFactory expressionFactory,
+        CompiledTree tree,
+        out string error)
     {
-        if (s_factory != null)
-            return s_factory;
+        Comparator comparator = expressionFactory.BuildComparator(conditions, schemaResolver);
+        if (!comparator.IsValid)
+        {
+            error = "Condition expression is invalid.";
+            return false;
+        }
+        tree.Expressions.Add(new CompiledExpression
+        {
+            Program = comparator.Program,
+            Category = UnitValueCategory.Bool,
+            IsCondition = 1,
+        });
+        error = string.Empty;
+        return true;
+    }
 
-        s_factory = new BehaviorNodeFactory();
-        BehaviorTreeRegistry.RegisterAll(s_factory);
-        return s_factory;
+    private static bool TryAddValueExpression(
+        ValueExpression source,
+        UnitValueCategory expectedCategory,
+        UnitSourceResolver schemaResolver,
+        ComparatorFactory expressionFactory,
+        CompiledTree tree,
+        out string error)
+    {
+        if (!expressionFactory.TryBuildValueExpression(
+                source,
+                schemaResolver,
+                out CompiledValueExpression expression,
+                out error))
+        {
+            return false;
+        }
+        if (expectedCategory != UnitValueCategory.Any && expression.Category != expectedCategory)
+        {
+            error = $"Expected {expectedCategory}, received {expression.Category}.";
+            return false;
+        }
+        tree.Expressions.Add(new CompiledExpression
+        {
+            Program = expression.Program,
+            Category = expression.Category,
+        });
+        return true;
+    }
+
+    private static void WriteTree(
+        ref BlobBuilder builder,
+        ref BehaviorTreeDefinitionBlob target,
+        CompiledTree source)
+    {
+        target.UnitDataId = source.UnitDataId;
+        target.RootNodeIndex = source.RootNodeIndex;
+
+        BlobBuilderArray<BehaviorNodeDefinition> nodes = builder.Allocate(ref target.Nodes, source.Nodes.Count);
+        for (int index = 0; index < source.Nodes.Count; index++)
+            nodes[index] = source.Nodes[index];
+
+        BlobBuilderArray<int> children = builder.Allocate(ref target.Children, source.Children.Count);
+        for (int index = 0; index < source.Children.Count; index++)
+            children[index] = source.Children[index];
+
+        BlobBuilderArray<BehaviorExpressionBlob> expressions =
+            builder.Allocate(ref target.Expressions, source.Expressions.Count);
+        for (int expressionIndex = 0; expressionIndex < source.Expressions.Count; expressionIndex++)
+        {
+            CompiledExpression sourceExpression = source.Expressions[expressionIndex];
+            ref BehaviorExpressionBlob targetExpression = ref expressions[expressionIndex];
+            targetExpression.Category = sourceExpression.Category;
+            targetExpression.IsCondition = sourceExpression.IsCondition;
+
+            BlobBuilderArray<ExpressionInstruction> instructions = builder.Allocate(
+                ref targetExpression.Instructions,
+                sourceExpression.Program.Instructions.Length);
+            for (int instructionIndex = 0;
+                 instructionIndex < sourceExpression.Program.Instructions.Length;
+                 instructionIndex++)
+            {
+                instructions[instructionIndex] = sourceExpression.Program.Instructions[instructionIndex];
+            }
+
+            BlobBuilderArray<UnitSourceValue> literals = builder.Allocate(
+                ref targetExpression.Literals,
+                sourceExpression.Program.Literals.Length);
+            for (int literalIndex = 0; literalIndex < sourceExpression.Program.Literals.Length; literalIndex++)
+                literals[literalIndex] = sourceExpression.Program.Literals[literalIndex];
+        }
+    }
+
+    private static bool TryResolveNodeType(BehaviorNodeData source, out BehaviorNodeRuntimeType type)
+    {
+        type = source switch
+        {
+            RootBehaviorNodeData => BehaviorNodeRuntimeType.Root,
+            SelectorBehaviorNodeData => BehaviorNodeRuntimeType.Selector,
+            SequenceBehaviorNodeData => BehaviorNodeRuntimeType.Sequence,
+            ParallelBehaviorNodeData => BehaviorNodeRuntimeType.Parallel,
+            InverterBehaviorNodeData => BehaviorNodeRuntimeType.Inverter,
+            SucceederBehaviorNodeData => BehaviorNodeRuntimeType.Succeeder,
+            FailerBehaviorNodeData => BehaviorNodeRuntimeType.Failer,
+            RepeaterBehaviorNodeData => BehaviorNodeRuntimeType.Repeater,
+            UntilSuccessBehaviorNodeData => BehaviorNodeRuntimeType.UntilSuccess,
+            UntilFailureBehaviorNodeData => BehaviorNodeRuntimeType.UntilFailure,
+            CooldownBehaviorNodeData => BehaviorNodeRuntimeType.Cooldown,
+            TimeoutBehaviorNodeData => BehaviorNodeRuntimeType.Timeout,
+            CheckBehaviorNodeData => BehaviorNodeRuntimeType.Check,
+            HitCheckBehaviorNodeData => BehaviorNodeRuntimeType.HitCheck,
+            SetBehaviorNodeData => BehaviorNodeRuntimeType.Set,
+            WaitBehaviorNodeData => BehaviorNodeRuntimeType.Wait,
+            MoveToBehaviorNodeData => BehaviorNodeRuntimeType.MoveTo,
+            _ => default,
+        };
+        return source is RootBehaviorNodeData or SelectorBehaviorNodeData or SequenceBehaviorNodeData or
+            ParallelBehaviorNodeData or InverterBehaviorNodeData or SucceederBehaviorNodeData or
+            FailerBehaviorNodeData or RepeaterBehaviorNodeData or UntilSuccessBehaviorNodeData or
+            UntilFailureBehaviorNodeData or CooldownBehaviorNodeData or TimeoutBehaviorNodeData or
+            CheckBehaviorNodeData or HitCheckBehaviorNodeData or SetBehaviorNodeData or
+            WaitBehaviorNodeData or MoveToBehaviorNodeData;
+    }
+
+    private static bool IsSingleChildNode(BehaviorNodeRuntimeType type)
+    {
+        return type is BehaviorNodeRuntimeType.Root or BehaviorNodeRuntimeType.Inverter or
+            BehaviorNodeRuntimeType.Succeeder or BehaviorNodeRuntimeType.Failer or
+            BehaviorNodeRuntimeType.Repeater or BehaviorNodeRuntimeType.UntilSuccess or
+            BehaviorNodeRuntimeType.UntilFailure or BehaviorNodeRuntimeType.Cooldown or
+            BehaviorNodeRuntimeType.Timeout;
+    }
+
+    private static bool TryCopyFixedString(string source, out FixedString128Bytes value)
+    {
+        value = default;
+        return !string.IsNullOrWhiteSpace(source) && value.CopyFrom(source) == CopyError.None;
+    }
+
+    private static ComparatorFactory CreateExpressionFactory()
+    {
+        ComparatorFactory factory = new();
+        ComparatorRegistry.RegisterAll(factory);
+        return factory;
     }
 }

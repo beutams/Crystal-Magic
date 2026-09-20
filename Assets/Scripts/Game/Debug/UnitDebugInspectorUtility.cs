@@ -114,9 +114,8 @@ namespace CrystalMagic.Game.Unit
             AddIfPresent<UnitPerceptionComponent>(entityManager, entity, destination, UnitDebugComponentKind.Perception, "UnitPerceptionComponent");
             AddIfPresent<UnitFacingComponent>(entityManager, entity, destination, UnitDebugComponentKind.Facing, "UnitFacingComponent");
             AddIfPresent<UnitControlRuntimeComponent>(entityManager, entity, destination, UnitDebugComponentKind.Control, "UnitControlRuntimeComponent");
-            // Buff is intentionally exposed even before the first Buff is added. Its Add button
-            // creates the managed runtime component through UnitBuffUtility when necessary.
-            destination.Add(new UnitDebugComponentEntry(UnitDebugComponentKind.Buffs, "UnitBuffRuntimeComponent"));
+            // Buff is intentionally exposed even before the first Buff is added.
+            destination.Add(new UnitDebugComponentEntry(UnitDebugComponentKind.Buffs, "UnitBuffComponent"));
             AddIfPresent<UnitBehaviorTreeComponent>(entityManager, entity, destination, UnitDebugComponentKind.BehaviorTree, "UnitBehaviorTreeComponent (Clear only)");
             AddIfPresent<UnitStateScriptComponent>(entityManager, entity, destination, UnitDebugComponentKind.StateScript, "UnitStateScriptComponent (Clear only)");
             AddIfPresent<UnitDeathComponent>(entityManager, entity, destination, UnitDebugComponentKind.Death, "UnitDeathComponent");
@@ -131,15 +130,12 @@ namespace CrystalMagic.Game.Unit
         public static void GetBuffs(EntityManager entityManager, Entity entity, List<UnitDebugBuffEntry> destination)
         {
             destination.Clear();
-            if (!UnitBuffUtility.TryGetRuntimeComponent(entityManager, entity, out UnitBuffRuntimeComponent component) || component.Buffs == null)
+            if (!UnitBuffUtility.TryGetRuntimeBuffer(entityManager, entity, out DynamicBuffer<UnitBuffElement> buffs))
                 return;
 
-            for (int i = 0; i < component.Buffs.Count; i++)
+            for (int i = 0; i < buffs.Length; i++)
             {
-                UnitBuffRuntimeEntry entry = component.Buffs[i];
-                if (entry == null)
-                    continue;
-
+                UnitBuffElement entry = buffs[i];
                 BuffData data = DataComponent.Instance?.Get<BuffData>(entry.BuffId);
                 string name = string.IsNullOrWhiteSpace(data?.Name) ? $"Buff {entry.BuffId}" : data.Name;
                 destination.Add(new UnitDebugBuffEntry(entry.BuffId, $"{i + 1}. {name}  x{entry.StackCount}  {Format(entry.RemainingTime)}s"));
@@ -329,42 +325,37 @@ namespace CrystalMagic.Game.Unit
                 case UnitDebugComponentKind.PlayerCurrentSkill:
                     if (entityManager.HasComponent<PlayerCurrentSkillComponent>(entity))
                     {
-                        PlayerCurrentSkillComponent value = entityManager.GetComponentObject<PlayerCurrentSkillComponent>(entity);
+                        PlayerCurrentSkillComponent value = entityManager.GetComponentData<PlayerCurrentSkillComponent>(entity);
                         Append(builder, "CurrentChainId", value.CurrentChainId);
                         Append(builder, "CurrentSlotIndex", value.CurrentSlotIndex);
                         builder.AppendLine("PendingExtraModifiers is runtime-owned and not edited here.");
                     }
                     break;
                 case UnitDebugComponentKind.SkillRelease:
-                    if (entityManager.HasComponent<UnitSkillReleaseComponent>(entity))
+                    if (entityManager.HasComponent<UnitSkillReleaseComponent>(entity) &&
+                        entityManager.HasBuffer<SkillReleaseRequest>(entity))
                     {
-                        UnitSkillReleaseComponent value = entityManager.GetComponentObject<UnitSkillReleaseComponent>(entity);
+                        DynamicBuffer<SkillReleaseRequest> requests = entityManager.GetBuffer<SkillReleaseRequest>(entity, true);
                         builder.AppendLine("PendingRequests format: SkillId|OriginEntity|OriginX|OriginY|OriginZ|FacingX|FacingY|HasTargetEntity|TargetEntity|HasTargetPosition|TargetX|TargetY|TargetZ;...");
                         builder.Append("PendingRequests=");
-                        if (value.PendingRequests != null)
+                        for (int i = 0; i < requests.Length; i++)
                         {
-                            for (int i = 0; i < value.PendingRequests.Count; i++)
-                            {
-                                SkillReleaseRequest request = value.PendingRequests[i];
-                                if (request == null)
-                                    continue;
-
-                                if (i > 0)
-                                    builder.Append(';');
-                                builder.Append(request.SkillId).Append('|')
-                                    .Append(Format(request.OriginEntity)).Append('|')
-                                    .Append(Format(request.OriginPosition.x)).Append('|')
-                                    .Append(Format(request.OriginPosition.y)).Append('|')
-                                    .Append(Format(request.OriginPosition.z)).Append('|')
-                                    .Append(Format(request.OriginFacing.x)).Append('|')
-                                    .Append(Format(request.OriginFacing.y)).Append('|')
-                                    .Append(request.HasTargetEntity ? 1 : 0).Append('|')
-                                    .Append(Format(request.TargetEntity)).Append('|')
-                                    .Append(request.HasTargetPosition ? 1 : 0).Append('|')
-                                    .Append(Format(request.TargetPosition.x)).Append('|')
-                                    .Append(Format(request.TargetPosition.y)).Append('|')
-                                    .Append(Format(request.TargetPosition.z));
-                            }
+                            SkillReleaseRequest request = requests[i];
+                            if (i > 0)
+                                builder.Append(';');
+                            builder.Append(request.SkillId).Append('|')
+                                .Append(Format(request.OriginEntity)).Append('|')
+                                .Append(Format(request.OriginPosition.x)).Append('|')
+                                .Append(Format(request.OriginPosition.y)).Append('|')
+                                .Append(Format(request.OriginPosition.z)).Append('|')
+                                .Append(Format(request.OriginFacing.x)).Append('|')
+                                .Append(Format(request.OriginFacing.y)).Append('|')
+                                .Append(request.HasTargetEntity ? 1 : 0).Append('|')
+                                .Append(Format(request.TargetEntity)).Append('|')
+                                .Append(request.HasTargetPosition ? 1 : 0).Append('|')
+                                .Append(Format(request.TargetPosition.x)).Append('|')
+                                .Append(Format(request.TargetPosition.y)).Append('|')
+                                .Append(Format(request.TargetPosition.z));
                         }
                         builder.AppendLine();
                     }
@@ -372,20 +363,22 @@ namespace CrystalMagic.Game.Unit
                 case UnitDebugComponentKind.Variables:
                     if (entityManager.HasComponent<UnitVariableComponent>(entity))
                     {
-                        UnitVariableComponent localValue = entityManager.GetComponentObject<UnitVariableComponent>(entity);
-                        builder.Append("Owner=").Append(localValue?.Owner ?? Entity.Null).AppendLine();
-                        if (!UnitVariableSource.TryResolveOwner(entityManager, entity, out Entity ownerEntity, out UnitVariableComponent value))
+                        UnitVariableComponent localValue = entityManager.GetComponentData<UnitVariableComponent>(entity);
+                        builder.Append("Other=").Append(localValue.Other).AppendLine();
+                        if (!UnitVariableSource.TryGetBuffer(
+                                entityManager,
+                                entity,
+                                out DynamicBuffer<UnitVariableElement> variables))
                         {
-                            builder.AppendLine("Variables could not resolve their owner.");
+                            builder.AppendLine("Local variables are unavailable.");
                             break;
                         }
 
-                        builder.Append("ValueOwner=").Append(ownerEntity).AppendLine();
-                        builder.AppendLine("Variables are a typed runtime dictionary and are displayed read-only.");
-                        if (value.Values != null)
+                        builder.AppendLine("Local variables are a typed runtime buffer and are displayed read-only.");
+                        for (int index = 0; index < variables.Length; index++)
                         {
-                            foreach (KeyValuePair<string, UnitValue> pair in value.Values)
-                                builder.Append(pair.Key).Append('=').Append(pair.Value).AppendLine();
+                            UnitVariableElement variable = variables[index];
+                            builder.Append(variable.Key).Append('=').Append(Format(variable.Value)).AppendLine();
                         }
                     }
                     break;
@@ -456,7 +449,7 @@ namespace CrystalMagic.Game.Unit
 
         public static bool RemoveSelectedBuff(EntityManager entityManager, Entity entity, int selectedBuffIndex, out string message)
         {
-            if (!TryGetBuff(entityManager, entity, selectedBuffIndex, out UnitBuffRuntimeEntry entry))
+            if (!TryGetBuff(entityManager, entity, selectedBuffIndex, out UnitBuffElement entry))
             {
                 message = "Select a Buff first.";
                 return false;
@@ -519,7 +512,7 @@ namespace CrystalMagic.Game.Unit
 
         private static void BuildBuffEditorText(EntityManager entityManager, Entity entity, int selectedBuffIndex, StringBuilder builder)
         {
-            if (!UnitBuffUtility.TryGetRuntimeComponent(entityManager, entity, out UnitBuffRuntimeComponent component) || component.Buffs == null || component.Buffs.Count == 0)
+            if (!UnitBuffUtility.TryGetRuntimeBuffer(entityManager, entity, out DynamicBuffer<UnitBuffElement> buffs) || buffs.Length == 0)
             {
                 builder.AppendLine("No Buff. Add with:");
                 builder.AppendLine("BuffId=-1");
@@ -528,12 +521,9 @@ namespace CrystalMagic.Game.Unit
                 return;
             }
 
-            for (int i = 0; i < component.Buffs.Count; i++)
+            for (int i = 0; i < buffs.Length; i++)
             {
-                UnitBuffRuntimeEntry entry = component.Buffs[i];
-                if (entry == null)
-                    continue;
-
+                UnitBuffElement entry = buffs[i];
                 BuffData data = DataComponent.Instance?.Get<BuffData>(entry.BuffId);
                 string name = string.IsNullOrWhiteSpace(data?.Name) ? $"Buff {entry.BuffId}" : data.Name;
                 builder.Append(i == selectedBuffIndex ? "> " : "  ")
@@ -543,7 +533,7 @@ namespace CrystalMagic.Game.Unit
                     .Append("  RemainingTime=").Append(Format(entry.RemainingTime)).AppendLine();
             }
 
-            if (TryGetBuff(entityManager, entity, selectedBuffIndex, out UnitBuffRuntimeEntry selected))
+            if (TryGetBuff(entityManager, entity, selectedBuffIndex, out UnitBuffElement selected))
             {
                 builder.AppendLine();
                 builder.AppendLine("Selected Buff editable values:");
@@ -763,7 +753,8 @@ namespace CrystalMagic.Game.Unit
 
         private static bool ApplyBuff(EntityManager manager, Entity entity, int selectedBuffIndex, Dictionary<string, string> values)
         {
-            if (!TryGetBuff(manager, entity, selectedBuffIndex, out UnitBuffRuntimeEntry entry))
+            if (!TryGetBuff(manager, entity, selectedBuffIndex, out UnitBuffElement entry) ||
+                !UnitBuffUtility.TryGetRuntimeBuffer(manager, entity, out DynamicBuffer<UnitBuffElement> buffs))
                 return false;
 
             bool changed = false;
@@ -776,6 +767,14 @@ namespace CrystalMagic.Game.Unit
             {
                 entry.RemainingTime = remainingTime < 0f ? -1f : math.max(0f, remainingTime);
                 changed = true;
+            }
+            if (changed)
+            {
+                buffs[selectedBuffIndex] = entry;
+                UnitBuffComponent component = manager.GetComponentData<UnitBuffComponent>(entity);
+                component.NetworkDirty = 1;
+                component.ModifierDirty = 1;
+                manager.SetComponentData(entity, component);
             }
             return changed;
         }
@@ -821,34 +820,43 @@ namespace CrystalMagic.Game.Unit
             if (!manager.HasComponent<PlayerCurrentSkillComponent>(entity))
                 return false;
 
-            PlayerCurrentSkillComponent value = manager.GetComponentObject<PlayerCurrentSkillComponent>(entity);
+            PlayerCurrentSkillComponent value = manager.GetComponentData<PlayerCurrentSkillComponent>(entity);
             bool changed = Set(ref value.CurrentChainId, values, "CurrentChainId") |
                            Set(ref value.CurrentSlotIndex, values, "CurrentSlotIndex");
+            if (changed)
+                manager.SetComponentData(entity, value);
             return changed;
         }
 
         private static bool ApplySkillRelease(EntityManager manager, Entity entity, Dictionary<string, string> values)
         {
             if (!manager.HasComponent<UnitSkillReleaseComponent>(entity) ||
+                !manager.HasBuffer<SkillReleaseRequest>(entity) ||
                 !values.TryGetValue("PendingRequests", out string serializedRequests) ||
                 !TryParseSkillReleaseRequests(serializedRequests, out List<SkillReleaseRequest> requests))
             {
                 return false;
             }
 
-            UnitSkillReleaseComponent value = manager.GetComponentObject<UnitSkillReleaseComponent>(entity);
-            value.PendingRequests = requests;
+            DynamicBuffer<SkillReleaseRequest> buffer = manager.GetBuffer<SkillReleaseRequest>(entity);
+            buffer.Clear();
+            for (int i = 0; i < requests.Count; i++)
+                buffer.Add(requests[i]);
             return true;
         }
 
-        private static bool TryGetBuff(EntityManager manager, Entity entity, int index, out UnitBuffRuntimeEntry entry)
+        private static bool TryGetBuff(EntityManager manager, Entity entity, int index, out UnitBuffElement entry)
         {
-            entry = null;
-            return UnitBuffUtility.TryGetRuntimeComponent(manager, entity, out UnitBuffRuntimeComponent component) &&
-                   component.Buffs != null &&
-                   index >= 0 &&
-                   index < component.Buffs.Count &&
-                   (entry = component.Buffs[index]) != null;
+            entry = default;
+            if (!UnitBuffUtility.TryGetRuntimeBuffer(manager, entity, out DynamicBuffer<UnitBuffElement> buffs) ||
+                index < 0 ||
+                index >= buffs.Length)
+            {
+                return false;
+            }
+
+            entry = buffs[index];
+            return true;
         }
 
         private static Dictionary<string, string> ParseValues(string text)
@@ -1085,5 +1093,20 @@ namespace CrystalMagic.Game.Unit
         private static string Format(float value) => value.ToString("0.###", InvariantCulture);
 
         private static string Format(Entity entity) => entity == Entity.Null ? "null" : $"{entity.Index}:{entity.Version}";
+
+        private static string Format(in UnitSourceValue value)
+        {
+            return value.Type switch
+            {
+                UnitValueType.Bool => (value.Bool != 0).ToString(),
+                UnitValueType.Int => value.Int.ToString(InvariantCulture),
+                UnitValueType.Float => Format(value.Float),
+                UnitValueType.Float2 => $"({Format(value.Float2.x)}, {Format(value.Float2.y)})",
+                UnitValueType.Float3 => $"({Format(value.Float3.x)}, {Format(value.Float3.y)}, {Format(value.Float3.z)})",
+                UnitValueType.Entity => Format(value.Entity),
+                UnitValueType.String => value.String.ToString(),
+                _ => "(none)",
+            };
+        }
     }
 }

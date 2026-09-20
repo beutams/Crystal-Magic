@@ -2,6 +2,7 @@ using Unity.Entities;
 
 public struct WorldStateComponent : IComponentData
 {
+    public uint CurrentFrame;
 }
 
 public static class WorldStateUtility

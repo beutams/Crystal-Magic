@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using CrystalMagic.Core;
-using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data.Effects;
 using CrystalMagic.Game.Skill;
 using Newtonsoft.Json;
+using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -88,51 +88,73 @@ namespace CrystalMagic.Game.Data
         public float Bonus;
     }
 
-    public sealed class PropertyModifierSet
+    public struct PropertyModifierValue
     {
-        private readonly Dictionary<PropertyModifierChannel, PropertyModifierAccumulator> _entries = new();
+        public float Factor;
+        public float Bonus;
 
-        public void Add(IEnumerable<PropertyModifierEntry> entries, int stacks = 1)
+        public static PropertyModifierValue Identity => new() { Factor = 1f };
+
+        public readonly float Apply(float baseValue) => baseValue * Factor + Bonus;
+    }
+
+    public struct PropertyModifierSet
+    {
+        private FixedList512Bytes<PropertyModifierAccumulator> _entries;
+
+        public readonly bool IsEmpty => _entries.Length == 0;
+
+        public void Clear() => _entries.Clear();
+
+        public void Add(in PropertyModifierEntry entry, int stacks, float minimumFactor)
         {
-            if (entries == null)
-                return;
-
-            foreach (PropertyModifierEntry entry in entries)
-                Add(entry, stacks);
-        }
-
-        public void Add(PropertyModifierEntry entry, int stacks = 1)
-        {
-            if (!_entries.TryGetValue(entry.Channel, out PropertyModifierAccumulator current))
+            int index = FindIndex(entry.Channel);
+            PropertyModifierAccumulator current;
+            if (index < 0)
             {
-                current.Channel = entry.Channel;
-                current.FactorSum = 0f;
+                current = new PropertyModifierAccumulator
+                {
+                    Channel = entry.Channel,
+                    MinimumFactor = minimumFactor,
+                };
+                index = _entries.Length;
+                _entries.Add(current);
+            }
+            else
+            {
+                current = _entries[index];
+                current.MinimumFactor = math.max(current.MinimumFactor, minimumFactor);
             }
 
             current.FactorSum += entry.Factor * math.max(1, stacks);
             current.Bonus += entry.Bonus * stacks;
-            _entries[entry.Channel] = current;
+            _entries[index] = current;
         }
 
-        public float GetFactor(PropertyModifierChannel channel)
+        public readonly PropertyModifierValue GetValue(PropertyModifierChannel channel)
         {
-            if (!_entries.TryGetValue(channel, out PropertyModifierAccumulator entry))
-                return 1f;
+            int index = FindIndex(channel);
+            if (index < 0)
+                return PropertyModifierValue.Identity;
 
+            PropertyModifierAccumulator entry = _entries[index];
             float factor = math.max(0f, 1f + entry.FactorSum);
-            return math.max(GetMinimumFactor(channel), factor);
+            return new PropertyModifierValue
+            {
+                Factor = math.max(entry.MinimumFactor, factor),
+                Bonus = entry.Bonus,
+            };
         }
 
-        public float GetBonus(PropertyModifierChannel channel)
+        private readonly int FindIndex(PropertyModifierChannel channel)
         {
-            return _entries.TryGetValue(channel, out PropertyModifierAccumulator entry)
-                ? entry.Bonus
-                : 0f;
-        }
+            for (int i = 0; i < _entries.Length; i++)
+            {
+                if (_entries[i].Channel == channel)
+                    return i;
+            }
 
-        private static float GetMinimumFactor(PropertyModifierChannel channel)
-        {
-            return ConfigComponent.Instance.Get<ModifierConfig>().GetPropertyModifierMinimumFactor(channel);
+            return -1;
         }
 
         private struct PropertyModifierAccumulator
@@ -140,6 +162,7 @@ namespace CrystalMagic.Game.Data
             public PropertyModifierChannel Channel;
             public float FactorSum;
             public float Bonus;
+            public float MinimumFactor;
         }
     }
 

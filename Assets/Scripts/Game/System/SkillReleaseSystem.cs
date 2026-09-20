@@ -16,46 +16,31 @@ public partial class SkillReleaseSystem : SystemBase
     protected override void OnUpdate()
     {
         _pendingRequests.Clear();
-        foreach (UnitSkillReleaseComponent releaseComponent in
-                 SystemAPI.Query<UnitSkillReleaseComponent>())
+        foreach (DynamicBuffer<SkillReleaseRequest> requests in
+                 SystemAPI.Query<DynamicBuffer<SkillReleaseRequest>>())
         {
-            if (releaseComponent?.PendingRequests == null || releaseComponent.PendingRequests.Count == 0)
+            if (requests.IsEmpty)
                 continue;
 
-            _pendingRequests.AddRange(releaseComponent.PendingRequests);
-            releaseComponent.PendingRequests.Clear();
+            for (int i = 0; i < requests.Length; i++)
+                _pendingRequests.Add(requests[i]);
+            requests.Clear();
         }
 
         for (int i = 0; i < _pendingRequests.Count; i++)
         {
             SkillReleaseRequest request = _pendingRequests[i];
-            if (!SkillReleaseSnapshotUtility.TryCreate(EntityManager, request, out ResolvedSkillData resolvedSkill))
+            if (!SkillReleaseSnapshotUtility.TryCreate(EntityManager, in request, out ResolvedSkillData resolvedSkill))
             {
-                Debug.LogError($"[SkillReleaseSystem] Failed to analyze SkillId={request?.SkillId ?? -1}.");
+                Debug.LogError($"[SkillReleaseSystem] Failed to analyze SkillId={request.SkillId}.");
                 continue;
             }
 
-            if (!SkillReleaseUtility.TryExecute(EntityManager, request, resolvedSkill, _context))
+            if (!SkillReleaseUtility.TryExecute(EntityManager, in request, resolvedSkill, _context))
             {
                 Debug.LogError($"[SkillReleaseSystem] Failed to execute SkillId={request.SkillId}.");
                 continue;
             }
-
-            UnitBuffHookUtility.Dispatch(
-                EntityManager,
-                request.OriginEntity,
-                SkillHookType.OnCastComplete,
-                SkillTriggerSource.ActiveCast,
-                hasOriginEntity: true,
-                originEntity: request.OriginEntity,
-                sourceSkillId: request.SkillId,
-                hasOtherEntity: request.HasTargetEntity,
-                otherEntity: request.TargetEntity,
-                hasPosition: request.HasTargetPosition,
-                position: new Vector3(
-                    request.TargetPosition.x,
-                    request.TargetPosition.y,
-                    request.TargetPosition.z));
         }
 
         _pendingRequests.Clear();

@@ -37,7 +37,11 @@ namespace CrystalMagic.Game.Skill
 
         protected virtual void Execute(SkillContent context)
         {
-            SkillExecutor.ExecuteSkill(Data, context);
+            EffectUtility.Enqueue(
+                context.EntityManager,
+                Data?.EffectChain,
+                context,
+                completion: EffectCompletionType.SkillCastComplete);
         }
 
         protected static void SetPosition(SkillContent context, bool hasPosition, Vector3 position)
@@ -75,7 +79,7 @@ namespace CrystalMagic.Game.Skill
             context.Origin = null;
             context.HasPosition = false;
             context.Position = Vector3.zero;
-            context.RuntimeModifiers = null;
+            context.RuntimeModifiers = default;
             context.TriggerSource = SkillTriggerSource.ActiveCast;
             context.HookType = SkillHookType.None;
             context.HasOtherEntity = false;

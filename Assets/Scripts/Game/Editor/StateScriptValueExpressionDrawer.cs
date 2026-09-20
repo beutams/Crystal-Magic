@@ -157,6 +157,15 @@ namespace CrystalMagic.Editor.Unit
 
             UnitSourceGetSchemaEntry selected = entries[selectedIndex];
             expression.GetterKey = selected.Key;
+            if (UnitComponentSourceRegistry.TryGetGet(selected.Key, out _, out _))
+            {
+                EditorGUI.BeginChangeCheck();
+                expression.SourceTarget = (UnitSourceTarget)EditorGUILayout.EnumPopup(
+                    "Source Unit",
+                    expression.SourceTarget);
+                if (EditorGUI.EndChangeCheck())
+                    onChanged?.Invoke();
+            }
             EnsureExpressionCount(ref expression.Inputs, selected.Parameters);
             for (int i = 0; i < selected.Parameters.Count; i++)
                 DrawInput(expression.Inputs[i], selected.Parameters[i], depth + 1, sourceSchema, onChanged);

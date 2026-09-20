@@ -15,8 +15,7 @@ partial class UnitPerceptionSystem : SystemBase
     protected override void OnCreate()
     {
         _queryRuntimeQuery = GetEntityQuery(
-            ComponentType.ReadOnly<UnitQuerySingleton>(),
-            ComponentType.ReadOnly<UnitQueryRuntimeComponent>());
+            ComponentType.ReadOnly<UnitQuerySingleton>());
         RequireForUpdate(_queryRuntimeQuery);
         RequireForUpdate<UnitPerceptionComponent>();
     }
@@ -27,15 +26,16 @@ partial class UnitPerceptionSystem : SystemBase
         if (gameGate != null && gameGate.IsSimulationLocked)
             return;
 
-        Entity queryEntity = _queryRuntimeQuery.GetSingletonEntity();
-        UnitQueryRuntimeComponent runtime = EntityManager.GetComponentObject<UnitQueryRuntimeComponent>(queryEntity);
-        if (runtime?.UnitGrid == null || !runtime.UnitGrid.IsCreated)
+        if (!UnitQueryUtility.TryGetGrid(
+                EntityManager,
+                UnitQueryGridKind.Unit,
+                out UnitQueryGrid unitGrid))
             return;
 
         Dependency = new UnitPerceptionJob
         {
-            UnitEntries = runtime.UnitGrid.AsReadOnly(),
-            InverseCellSize = runtime.UnitGrid.InverseCellSize,
+            UnitEntries = unitGrid.AsNativeArray(),
+            InverseCellSize = unitGrid.InverseCellSize,
             Factions = GetComponentLookup<UnitFactionComponent>(true),
             Deaths = GetComponentLookup<UnitDeathComponent>(true),
             DestroyFlags = GetComponentLookup<DestroyEntityFlag>(true),
@@ -51,7 +51,7 @@ partial class UnitPerceptionSystem : SystemBase
 public partial struct UnitPerceptionJob : IJobEntity
 {
     [ReadOnly]
-    public NativeParallelMultiHashMap<long, UnitQueryHit>.ReadOnly UnitEntries;
+    public NativeArray<UnitQueryEntry> UnitEntries;
 
     [ReadOnly]
     public ComponentLookup<UnitFactionComponent> Factions;
@@ -98,34 +98,36 @@ public partial struct UnitPerceptionJob : IJobEntity
         ref DynamicBuffer<UnitPerceptionUnitElement> nearbyEntities)
     {
         long cellKey = ((long)cell.x << 32) | (uint)cell.y;
-        if (!UnitEntries.TryGetFirstValue(
+        if (!UnitQueryGrid.TryGetCellRange(
+                UnitEntries,
                 cellKey,
-                out UnitQueryHit hit,
-                out NativeParallelMultiHashMapIterator<long> iterator))
+                out int startIndex,
+                out int endIndex))
         {
             return;
         }
 
-        do
+        for (int index = startIndex; index < endIndex; index++)
         {
-            if (hit.Entity == observer)
+            UnitQueryEntry entry = UnitEntries[index];
+            if (entry.Entity == observer)
                 continue;
 
-            float2 planarDifference = hit.Position.xy - center.xy;
+            float2 planarDifference = entry.Position.xy - center.xy;
             if (math.lengthsq(planarDifference) > radiusSq ||
-                !Factions.TryGetComponent(hit.Entity, out UnitFactionComponent faction) ||
-                IsUnavailable(hit.Entity))
+                !Factions.TryGetComponent(entry.Entity, out UnitFactionComponent faction) ||
+                IsUnavailable(entry.Entity))
             {
                 continue;
             }
 
             nearbyEntities.Add(new UnitPerceptionUnitElement
             {
-                Value = hit.Entity,
-                DistanceSq = math.distancesq(hit.Position, center),
+                Value = entry.Entity,
+                DistanceSq = math.distancesq(entry.Position, center),
                 Faction = faction.Value,
             });
-        } while (UnitEntries.TryGetNextValue(out hit, ref iterator));
+        }
     }
 
     private bool IsUnavailable(Entity entity)

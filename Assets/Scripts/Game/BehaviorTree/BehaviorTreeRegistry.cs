@@ -119,27 +119,4 @@ public static class BehaviorTreeRegistry
         factory.Register("Timeout", static () => new TimeoutBehaviorNodeData());
     }
 
-    public static void RegisterAll(BehaviorNodeFactory factory)
-    {
-        if (factory == null)
-            return;
-
-        factory.Register(typeof(RootBehaviorNodeData), static data => new RootBehaviorNode((RootBehaviorNodeData)data));
-        factory.Register(typeof(SelectorBehaviorNodeData), static data => new SelectorBehaviorNode((SelectorBehaviorNodeData)data));
-        factory.Register(typeof(SequenceBehaviorNodeData), static data => new SequenceBehaviorNode((SequenceBehaviorNodeData)data));
-        factory.Register(typeof(ParallelBehaviorNodeData), static data => new ParallelBehaviorNode((ParallelBehaviorNodeData)data));
-        factory.Register(typeof(CheckBehaviorNodeData), static data => new CheckBehaviorNode((CheckBehaviorNodeData)data));
-        factory.Register(typeof(HitCheckBehaviorNodeData), static data => new HitCheckBehaviorNode((HitCheckBehaviorNodeData)data));
-        factory.Register(typeof(SetBehaviorNodeData), static data => new SetBehaviorNode((SetBehaviorNodeData)data));
-        factory.Register(typeof(WaitBehaviorNodeData), static data => new WaitBehaviorNode((WaitBehaviorNodeData)data));
-        factory.Register(typeof(MoveToBehaviorNodeData), static data => new MoveToBehaviorNode((MoveToBehaviorNodeData)data));
-        factory.Register(typeof(InverterBehaviorNodeData), static data => new InverterBehaviorNode((InverterBehaviorNodeData)data));
-        factory.Register(typeof(SucceederBehaviorNodeData), static data => new SucceederBehaviorNode((SucceederBehaviorNodeData)data));
-        factory.Register(typeof(FailerBehaviorNodeData), static data => new FailerBehaviorNode((FailerBehaviorNodeData)data));
-        factory.Register(typeof(RepeaterBehaviorNodeData), static data => new RepeaterBehaviorNode((RepeaterBehaviorNodeData)data));
-        factory.Register(typeof(UntilSuccessBehaviorNodeData), static data => new UntilSuccessBehaviorNode((UntilSuccessBehaviorNodeData)data));
-        factory.Register(typeof(UntilFailureBehaviorNodeData), static data => new UntilFailureBehaviorNode((UntilFailureBehaviorNodeData)data));
-        factory.Register(typeof(CooldownBehaviorNodeData), static data => new CooldownBehaviorNode((CooldownBehaviorNodeData)data));
-        factory.Register(typeof(TimeoutBehaviorNodeData), static data => new TimeoutBehaviorNode((TimeoutBehaviorNodeData)data));
-    }
 }

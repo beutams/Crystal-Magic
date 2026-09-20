@@ -16,9 +16,9 @@ The proposed direction is valid:
   movement, skills, animation, and other gameplay components.
 
 The important boundary is that `UnitVariableComponent` is a shared blackboard,
-not a replacement for all ECS components. Its `Owner` is `Entity.Null` when
-the unit owns its dictionary; otherwise the unit proxies all variable access to
-one designated owner. Health, movement, control, buff lists, rendering data,
+not a replacement for all ECS components. Every unit always owns and accesses
+its own `UnitVariableElement` buffer. `UnitVariableComponent.Other` only identifies
+the second unit available to an expression; it never redirects local storage. Health, movement, control, buff lists, rendering data,
 and other high-frequency or strongly structured data must remain in their
 dedicated components.
 
@@ -30,7 +30,7 @@ becoming a second copy of every unit component.
 | Scope | Owner | Read/write policy | Examples |
 | --- | --- | --- | --- |
 | `unit.*` | Existing ECS component | The component Source explicitly declares each read/write permission | `unit.vitality.currentHealthPercentage`, `unit.perception.targetDistance`, `unit.move.setDirection(...)` |
-| `var.*` | `UnitVariableComponent` owner | Shared read/write state for BT, StateScript, and gameplay systems; consumers proxy to their configured owner | `var.input.castHeld`, `var.cooldown.shieldSlam`, `var.animation.clip` |
+| `var.*` | Each unit's `UnitVariableElement` buffer | Read/write state for BT, StateScript, and gameplay systems; each Source expression explicitly chooses `Self` or `Other` | `var.input.castHeld`, `var.cooldown.shieldSlam`, `var.animation.clip` |
 | `script.*` | One running StateScript graph | Local graph state; never used as cross-graph communication | local timer, local branch flag, temporary loop counter |
 
 Conditions use typed `UnitSource` value expressions. They support booleans,
@@ -41,8 +41,9 @@ the target entity and target position directly. Do not force all data through
 a float expression API.
 
 The variable component supports number, bool, `float2`, `float3`, `Entity`,
-and string. Variable-name strings are authored once and retained by compiled
-nodes; runtime code must not create formatted keys during a per-frame path.
+and string. Runtime keys and string values use `FixedString128Bytes`; oversized
+authored values fail binding or assignment instead of introducing managed
+strings into the hot path.
 
 ## Behavior Tree Source Binding Plan
 
@@ -66,8 +67,8 @@ Each component Source has two responsibilities:
 1. Describe its parameterized `Get` and `Set` functions for the editor. Every
    function declares a fixed return type (for `Get`) and fixed input count and
    input types.
-2. Implement the real static getter or setter against an ECS component,
-   `ComponentLookup`, or an explicitly managed fallback.
+2. Implement the real static getter or setter against an ECS component or any
+   number of `ComponentLookup` / `BufferLookup` parameters.
 
 Sources decide their own permissions. A field with no registered setter is
 read-only. Structured data is not exposed as a collection type: for example,
@@ -79,14 +80,15 @@ and StateScript never access an ECS component directly.
 
 There is no Source component, dictionary, or binding callback on each unit.
 `UnitSourceDispatcherSystem` owns one dispatcher per World and refreshes its
-`ComponentLookup` values. A call resolves its authored string key to a generated
+lookup values. A call resolves its authored string key to a generated
 `UnitSourceId`, then the generated switch calls the provider with the target
-`Entity` and arguments. Native providers therefore remain usable by Burst/jobs;
-providers that still depend on managed data use an explicit main-thread
-`BurstDiscard` fallback.
+`Entity` and arguments. There is no managed runtime fallback. Providers that
+still take `EntityManager` or expose a managed component remain in the schema
+but return `false` until their data access is migrated to lookups.
 
 Behavior Tree and StateScript keep a lightweight `UnitSourceResolver` containing
-their target entity, world access, and the current dispatcher. Comparators use
+an unmanaged `UnitSourceContext` (`Self` and `Other`) plus the current dispatcher. Every
+generated getter instruction and setter node explicitly selects one of those two entities. Comparators use
 the same generated `Get` schema to create input ports. Reflection is restricted
 to editor generation and is absent from the runtime dispatch path.
 
@@ -95,6 +97,15 @@ table. It provides typed `get*`, `set`, `has`, `remove`, and `clear` functions;
 the variable name is its string parameter, normally using the `var.*` naming
 convention. Behavior-tree-local data keeps a separate local scope and is not
 copied into the unit variable component.
+
+`UnitVariableComponent` contains only the optional `Other` entity. Local values live in
+`UnitVariableElement`; referenced units also maintain `UnitVariableConsumerElement` so
+consumer-count queries do not scan every unit. Selecting `Other` changes the entity passed
+to the normal generated Source dispatcher, so expressions can combine both units' variables
+and ordinary components without copying data. `WorldVariableComponent` uses
+the same unmanaged buffer pattern through `WorldVariableElement`, and the
+generated dispatcher routes global sources to the `WorldStateComponent`
+singleton instead of the evaluated unit.
 
 ### Behavior Tree Runtime Changes
 
@@ -125,9 +136,13 @@ affected snapshot keys so a later condition in the same frame reads fresh data.
 
 Behavior Tree continues to use `ComparatorFactory.BuildComparator()`. Getters
 only provide typed values; Comparator owns comparison and value-operation rules.
-Each condition compiles its configured getter/literal/operation inputs into
-delegates during tree initialization. The behavior-tree tick then calls the
-compiled Comparator without creating Sources, Comparators, or reflection data.
+Each condition compiles its configured getter/literal/operation tree into an
+unmanaged postfix instruction program during graph binding. The tick evaluates
+that program with `UnitSourceValue`, fixed-capacity instruction/literal lists,
+and a fixed-capacity value stack; it creates no delegates, source wrappers,
+arrays, Comparators, or reflection data. `ValueExpression`, `ConditionConfig`,
+factories, and editor schemas remain managed configuration/binding data, while
+`CompiledValueExpression` and `Comparator` are the Burst/job-safe runtime form.
 
 The old scalar `ISource`/`ComparatorFactory.RegisterSource` path has been
 removed. Behavior-tree, StateScript, and effect conditions all compile typed
@@ -218,27 +233,30 @@ runtime that will take over its former producer responsibilities.
 | `UnitControlRuntimeComponent` | Active stun, knockback, fear, movement/cast locks, and interruption data. | `UnitControlSource`: exposes every entry field and every resolved active-control field. | Keep. Its application can stop a StateScript graph through a dedicated interrupt action. |
 | `UnitMoveComponent` | Direction command, StateScript movement multiplier, velocity, speed, and acceleration. | `UnitMoveSource`: exposes every stored field and every calculated movement value. | Keep. StateScript writes direction and multiplier independently; `UnitMoveSystem` remains the only integrator. |
 | `UnitNavigationComponent` + `DynamicBuffer<UnitNavigationPathElement>` | Destination, grid-path state, collider-derived clearance radius, and current A* waypoints. | `UnitNavigationSource` exposes destination and stop commands. | Keep. It produces preferred movement direction but never integrates position. |
-| `UnitAvoidanceComponent` | ORCA neighbor settings plus the safe velocity resolved for the current frame. | Internal to `UnitAvoidanceSystem`; behavior graphs continue writing navigation intent. | Keep. It uses the managed unit query tree for neighbors and never becomes a network or position authority. |
+| `UnitAvoidanceComponent` | ORCA neighbor settings plus the safe velocity resolved for the current frame. | Internal to `UnitAvoidanceSystem`; behavior graphs continue writing navigation intent. | Keep. Agent snapshots, neighbor collection, and ORCA solving now run as two Burst jobs over unmanaged data; ECS remains the position authority. |
 | `UnitFacingComponent` | The current facing direction. | `UnitFacingSource`: exposes the complete direction value and scalar projections/angle. | Keep. Graph actions set facing explicitly when a skill needs it. |
 
 ### Decisions And Skill Metadata
 
 | Component | Current role | Source | Decision |
 | --- | --- | --- | --- |
-| `UnitBehaviorTreeComponent` | Managed Behavior Tree runtime, blackboard, debug state. | Not decided yet. | Defer. Do not design or change it in this migration pass. |
+| `UnitBehaviorTreeComponent` + `DynamicBuffer<BehaviorNodeStateElement>` | Unmanaged tree binding, current debug node, tick status, and per-node runtime state; immutable node definitions and expressions are shared through a Blob registry. | `UnitSourceDispatcher` reads source data through read-only lookups; behavior actions emit source or navigation commands that are applied before navigation and StateScript. | Keep. The editor `BehaviorNodeData` graph is compiled once, while `BehaviorTreeSystem` runs a Burst switch interpreter without per-unit managed node objects. |
 | `PlayerSkillComponent` | Old runtime copy of the selected player skill chain and its current index. | Player loadout/skill-chain data remains in save data or graph configuration. | Remove. StateScript owns an executing graph's local progress; no runtime chain component is needed. |
 | `UnitIntentComponent` | Per-frame move, cast, target, interaction, and prop requests. | Replace old intent Sources with `UnitVariableSource` and direct component Sources. | Remove. Player input and BT should write namespaced variables such as `var.input.move`, `var.input.aim`, and `var.input.castPressed`; StateScript consumes them. Movement/skill actions then write the real components. |
 | `UnitCastComponent` | Old prepared-cast state, cast phase timer, hook continuation, current skill id, interruption flags. | `UnitStateScriptSource`: graph running, graph name, cancellation state. | Remove. These fields belong to the StateScript graph runtime rather than a second phase state machine. |
 | `UnitCastTaskPayloadComponent` | Old hook-task payload carrier. | None. | Remove with the hook/phase machine. A StateScript node owns its own task state. |
 | `UnitCastSkillPayloadComponent` | Current resolved-skill snapshot carrier. | Typed `ActiveSkillExecutionSource` if external systems need the snapshot. | Remove as a cast-specific carrier. Keep the single resolved-skill snapshot concept inside `UnitStateScriptRuntimeComponent` or a narrowly scoped `UnitSkillExecutionRuntimeComponent`; it must not become free-form variables. |
 | `UnitCastFollowupRuntimeComponent` | Old long-lived follow-up rule instances for the current chain. | None. | Remove. Followup becomes a temporary chain-lifecycle buff: add it when the chain graph starts and remove it when that graph ends, is cancelled, or the unit dies. |
-| `PlayerCurrentSkillComponent` | Stable selected chain/slot pair plus pending request-local extra modifiers. | `PlayerCurrentSkillSource`: exposes the stored pair, derives current skill/Addition IDs, validates atomic selection, and appends pending modifiers. | Keep. The stored pair is independent from the world's mutable selected chain, so an in-progress chain release remains stable. |
+| `PlayerSkillRuntimeDataComponent` + `PlayerSkillChainElement` + `PlayerSkillChainSlotElement` | Unmanaged selected-chain state plus compact per-player chain ranges and slots. | `PlayerSkillRuntimeDataSource`: all chain, slot, and skill-definition queries use generated component/buffer lookups and the global skill-definition Blob. | Keep. Managed character/save data is converted only when the loadout is initialized or rebuilt. |
+| `PlayerCurrentSkillComponent` | Unmanaged selected chain/slot pair plus pending request-local extra modifiers. | `PlayerCurrentSkillSource`: stored and derived skill values, slot changes, clears, and extra modifiers all use generated unmanaged lookups. | Keep. The stored pair is independent from the world's mutable selected chain, so an in-progress chain release remains stable. |
+| `UnitSkillReleaseComponent` + `SkillReleaseRequest` | Unmanaged marker and dynamic request buffer written by StateScript and consumed by `SkillReleaseSystem`. | `unit.self.entity` uses the marker lookup; release payloads are not exposed as Sources. | Keep. All skill releases now pass through the same buffered execution path. |
 
 ### Buff, Death, And Destruction
 
 | Component | Current role | Source | Decision |
 | --- | --- | --- | --- |
-| `UnitBuffRuntimeComponent` | Managed list of buff instances, stack counts, timers, triggers, and modifiers. | `UnitBuffSource`: expression-facing scalar queries plus typed access to every buff-instance field, modifier, trigger, and source field. | Keep. A variable such as `var.hasPoison` must not replace the authoritative buff list. Followup design is deferred. |
+| `UnitBuffComponent` + `UnitBuffElement` | Unmanaged Buff marker plus one dynamic-buffer element per complete Buff instance. Runtime state stores lifetime, stacks, source, and a Blob definition index; the definition maps `BuffEffectType + Id` to property modifiers, skill modifiers, or triggered effects. | `UnitBuffSource`: expression-facing scalar queries over the runtime buffer. | Keep the runtime buffer unmanaged so lifecycle and trigger evaluation stay in the Burst job. |
+| `UnitModifierComponent` | Unmanaged per-unit cache rebuilt after `UnitBuffSystem`; stores every resolved property channel plus the persistent skill-modifier snapshot. | Attribute readers use the cached values through `UnitModifierResolver`; Burst callers can use its data-only overloads. | Keep. Buff changes after the modifier phase set `ModifierDirty` and become visible on the next frame. |
 | `UnitDeathComponent` | Enableable death flag. Damage enables it immediately; later systems skip the entity. | `UnitDeathSource`: exposes only whether the flag is enabled. | Keep. `UnitDeathFinalizeSystem` publishes `UnitDiedEvent`, enables `DestroyEntityFlag`, and the normal destroy system recycles the entity in the same frame. |
 | `DestroyEntityFlag` | Enableable destroy marker. | `UnitDestroySource`: exposes whether the marker is enabled. | Keep. It is structural lifecycle data. |
 
@@ -263,12 +281,13 @@ because unit perception, interaction, or effect execution use them.
 
 | Component | Current role | Source / access | Decision |
 | --- | --- | --- | --- |
-| `UnitQuerySingleton` + `UnitQueryRuntimeComponent` | World singleton that rebuilds spatial trees for living units and generic interactables. Perception, projectiles, shape-search effects, interaction selection, and ORCA neighbor collection query it. | `UnitQueryUtility` query functions, not a per-unit Source. | Keep. ORCA uses the no-debug circle-query path to avoid per-agent visualization overhead. |
+| `UnitQuerySingleton` + `UnitQueryEntry` buffers | Unmanaged references and sorted spatial buffers for living units and generic interactables. Perception, projectiles, shape-search effects, interaction selection, and ORCA neighbor collection query the same buffers. | `UnitQueryUtility` exposes lightweight buffer views; Burst jobs use cell-range binary search directly. | Keep. Collection and sorting are Burst jobs, with no managed runtime query component or native-container wrapper object. |
 | `InteractionCandidateComponent` | World singleton holding the current front-end candidate descriptor and persistent-interaction flag. | `game.interaction.hasCandidate`, `game.interaction.candidateKind`, `game.interaction.candidateTarget`, `game.interaction.candidate`, and `world.interaction.isInteracting`; prompt UI only reads it. | Keep. It rejects new candidate selection and requests while a persistent interaction is active. |
+| `PlayerSkillDefinitionRegistryComponent` | World-owned Blob containing sorted immutable skill metadata and editable modifier-channel minimum factors. | Player skill Sources use the global entity lookup and binary search by skill ID or modifier channel. | Keep. It avoids copying the complete skill table into every player entity. |
 | `GameInteractionRequest` | World singleton request snapshot containing actor, target, and descriptor. | Written by `RequestInteraction` or other game systems; consumed only by `GameInteractionSystem`. | Keep. |
 | `NPCInteractionRuntimeComponent` | Declared interaction request state: current target, requested target, pending flag. No current system reads or writes it. | None currently. | Delete. It is unused. |
-| `PendingEffectExecutionQueueComponent` | World managed queue of effects that must execute in the execution phase. Buffs currently enqueue trigger effects here. | Queue utility only; not a Source. | Keep unchanged. It is not unit state. Hook-related fields require a separate later review after Hook removal. |
-| `PersistentEffectQueueComponent` | World managed queue for persistent-effect requests. | Queue utility only; not a Source. | Keep unchanged. It is not unit state. |
+| `EffectComponent` + `EffectEntry` + `EffectDataBridgeComponent` | Unmanaged world request buffer plus the managed handle bridge for polymorphic `EffectData`, legacy context references, and condition lists. Buff jobs and managed producers emit the same `EffectEntry` shape; only `EffectExecutionSystem` crosses the bridge. | Queue/bridge utilities only; not Sources. | Keep the execution boundary managed while all ECS queue and context data remains unmanaged. |
+| `PersistentEffectQueueComponent` + `PersistentEffectRequest` | Unmanaged world marker and request buffer. `PersistentEffectData` and legacy context references travel by bridge handle. | Queue utility only; not a Source. | Keep. The system-local instance scheduler is still managed and can be replaced independently later. |
 | `EntitySpawnRegistrySingleton` + prefab registry buffers | World registry mapping names to unit, projectile, drop, environment, and VFX prefab entities. | Spawn registry utility only; not a Source. | Keep unchanged. It is static spawn infrastructure, not unit state. |
 
 ## Independent Entity Components
@@ -279,11 +298,13 @@ interaction systems.
 
 | Component | Current role | Decision |
 | --- | --- | --- |
-| `SkillProjectileComponent` + `SkillProjectileHitEntityElement` + `SkillProjectilePayloadComponent` + `SkillProjectileVisualLinkComponent` | Projectile motion, hit history, managed effect payload, and the link to its independent visual entity. | Keep. Gameplay collision and destruction remain independent from visual playback. |
+| `SkillProjectileComponent` + `SkillProjectileHitEntityElement` + `SkillProjectilePayloadComponent` + `SkillProjectileVisualLinkComponent` | Projectile motion, hit history, unmanaged effect/context handles, and the link to its independent visual entity. Projectile movement is a Burst job; managed collision conditions are resolved only at the collision boundary. | Keep. Gameplay collision and destruction remain independent from visual playback. |
+| `VfxArrivalComponent` | Unmanaged movement snapshot and arrival-effect request context. | Keep. `VfxArrivalSystem` advances it in a Burst job and emits an `EffectEntry` on arrival. |
 | `SpriteEffectAnimationComponent` | Managed Enter/Loop/Exit clip playback state sampled into a SpriteRenderer companion. | Keep. Clips are frame sources only; no Animator is used at runtime. |
 | `EffectVisualFollowComponent` | Makes a sprite effect follow an entity, preserving its last transform and then ending when the target disappears. | Keep. Used by follow effects and projectile visuals. |
 | `UnitInteractableComponent` | Generic kind, ID, amount, variant, range, and availability for spawned drops and other targets. | Keep. |
 | `DungeonMonsterSpawnComponent` | Dungeon region, squad, and boss identity for a spawned monster. | Keep unchanged. |
+| `DungeonInterestPointComponent` + `DungeonInterestPointCandidateElement` | Unmanaged patrol-point settings, current target, candidate points, and per-frame player/member metrics. | Keep. `DungeonInterestPointRuntimeSystem` refreshes derived metrics in a Burst job before decision systems run. |
 | `TreasureComponent` + `DungeonTreasureCandidateItemElement` | Chest state and its generated candidate rewards. | Keep. |
 | `DungeonExitComponent` | Dungeon exit region, target floor, room-clear requirement, and open state. | Keep unchanged. |
 
@@ -291,7 +312,8 @@ interaction systems.
 
 | Component | Responsibility | Notes |
 | --- | --- | --- |
-| `UnitVariableComponent` | Shared unit blackboard for authored runtime variables. | New. It holds only `var.*`, not component mirrors or graph-local temporaries. |
+| `UnitVariableComponent` + `UnitVariableElement` + `UnitVariableConsumerElement` | Unmanaged per-unit blackboard plus an optional second-unit relationship. | The value buffer is always local. The component stores `Other`, and the referenced unit's consumer buffer tracks reverse relationships without a world scan. |
+| `WorldVariableComponent` + `WorldVariableElement` | Unmanaged global blackboard on the WorldState singleton. | Uses the same typed source values as unit variables and is addressed through global generated-source dispatch. |
 | `UnitStateScriptRuntimeComponent` | Managed graph instances, active graph status, cancellation, and graph-local `script.*` variables. | New. It replaces the old state machine and cast phase runtime. State `OnComplete` connections replace cast hooks. It may hold the current resolved-skill snapshot until an execution graph finishes. |
 
 ## First Variable Keys

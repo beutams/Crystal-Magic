@@ -167,6 +167,7 @@ Game\
     Editor\
       ComparatorRegistryGenerator.cs TRUE DIRTY
     Comparator.cs TRUE DIRTY
+    CompiledExpression.cs TRUE DIRTY
     ComparatorFactory.cs TRUE DIRTY
     ComparatorRegistry.cs TRUE DIRTY
     Condition.cs TRUE DIRTY
@@ -201,11 +202,11 @@ Game\
       ChainSearchEffectData.cs FALSE
       ConeSearchEffectData.cs FALSE
       ControlEffectData.cs FALSE
-      DamageEffectData.cs TRUE
-      EffectData.cs FALSE
+      DamageEffectData.cs TRUE DIRTY
+      EffectData.cs TRUE
       ForwardRectSearchEffectData.cs FALSE
       HealthCostEffectData.cs FALSE
-      PersistentEffectData.cs FALSE
+      PersistentEffectData.cs TRUE
       RandomAreaPointEffectData.cs FALSE
       RecoverEffectData.cs FALSE
       SpawnProjectileEffectData.cs TRUE DIRTY
@@ -226,6 +227,7 @@ Game\
     NPCData.cs TRUE DIRTY
     PropData.cs FALSE
     ShopData.cs FALSE
+    SkillAdditionActionData.cs TRUE
     SkillAdditionData.cs FALSE
     SkillCastTaskData.cs TRUE
     SkillData.cs TRUE DIRTY
@@ -268,13 +270,13 @@ Game\
     Effects\
       ApplyBuffEffect.cs FALSE
       AreaSearchEffect.cs TRUE DIRTY
-      BuffStackEffect.cs FALSE
+      BuffStackEffect.cs TRUE
       CameraShakeEffect.cs FALSE
       ChainSearchEffect.cs TRUE DIRTY
       ConeSearchEffect.cs TRUE DIRTY
       DamageEffect.cs TRUE DIRTY
       Effect.cs FALSE
-      EffectConditionUtility.cs TRUE
+      EffectConditionUtility.cs TRUE DIRTY
       ForwardRectSearchEffect.cs TRUE DIRTY
       PersistentEffect.cs TRUE
         闁归晲鑳堕悽濠氬箑瑜庨弲銉╁几濠婃劗绀夋繛锝堫嚙婵偞绋夐埀顒佺▔椤忓懎鐦紓渚囧幒閹广垽宕濋垾鍐茬厒缂侇垵宕电划?
@@ -304,11 +306,13 @@ Game\
       SelfSkill.cs TRUE DIRTY
       Skill.cs TRUE DIRTY
     SkillAnalysisUtility.cs TRUE DIRTY
-    SkillAdditionAction.cs TRUE
+    SkillAdditionAction.cs TRUE DIRTY
     SkillCastTasks.cs TRUE DIRTY
     SkillChainResolver.cs TRUE DIRTY
-    SkillContent.cs TRUE
+    SkillContent.cs TRUE DIRTY
     SkillExecutor.cs TRUE DIRTY
+    PlayerCurrentSkillUtility.cs TRUE DIRTY
+    SkillReleaseRequestUtility.cs TRUE DIRTY
     SkillFactory.cs FALSE
     SkillFollowupConsumeRule.cs FALSE
     SkillFollowupConsumeRuleFactory.cs FALSE
@@ -327,19 +331,18 @@ Game\
     Source\
       Editor\
         UnitComponentSourceRegistryGenerator.cs TRUE DIRTY
-      GameInteractionSource.cs TRUE
+      GameInteractionSource.cs TRUE DIRTY
       UnitComponentSource.cs TRUE DIRTY
       UnitComponentSourceRegistry.cs TRUE DIRTY
       UnitSourceResolver.cs TRUE DIRTY
       UnitSourceSchema.cs TRUE DIRTY
-      UnitSourceValue.cs TRUE
+      UnitSourceValue.cs TRUE DIRTY
       UnitTransformSource.cs TRUE DIRTY
     Editor\
     BehaviorTree\
       ActionBehaviorNodes.cs TRUE DIRTY
         閻炴稑濂旂拹鐔兼嚍閸屾粌浠?
-      LeafBehaviorNodes.cs TRUE DIRTY
-      BehaviorNodeFactory.cs TRUE
+      BehaviorNodeFactory.cs TRUE DIRTY
         閻炴稑濂旂拹鐔煎冀閹存繀绱ｉ柛?
       BehaviorNodes.cs TRUE DIRTY
         閻炴稑濂旂拹鐔煎冀閹达絽螡闁绘劗鎳撻悢鈧紒?
@@ -348,11 +351,8 @@ Game\
       BehaviorTreeRuntime.cs TRUE DIRTY
       ==婵炲备鍓濆﹢浣瑰緞濮橆厸鍋撴笟濠勭闁稿繈鍔戦崕鎾礃濞嗘劦鍔?
         閻炴稑濂旂拹鐔煎冀閹达絽螡闁绘劘顫夐弳鐔煎箲椤曞棛绀夊娑欏灦濠㈡﹢寮悧鍫濈ウ閻庢稒蓱閺備焦寰?
-      CommonBehaviorNodes.cs TRUE DIRTY
         缂備礁瀚幃搴ㄦ嚍閸屾粌浠?闁哄鈧弶顐介柤鍝勫€婚崑?
-      DecoratorBehaviorNodes.cs TRUE DIRTY
         濞ｅ浂鍣ｉ妶浼存嚍閸屾粌浠?
-      MoveToBehaviorNode.cs TRUE DIRTY
     StateScript\
       Nodes\
         CompareStateScriptNode.cs TRUE DIRTY
@@ -368,7 +368,7 @@ Game\
         KeepStateScriptNode.cs TRUE DIRTY
         MonitorStateScriptNode.cs TRUE DIRTY
         NumberMonitorStateScriptNode.cs TRUE DIRTY
-        SpawnUnitActionNode.cs TRUE
+        SpawnUnitActionNode.cs TRUE DIRTY
       StateScriptInitSystem.cs TRUE DIRTY
       StateScriptNodeFactory.cs TRUE
       StateScriptPort.cs TRUE
@@ -388,6 +388,7 @@ Game\
       DropEntityPrefabRegistryEntry.cs FALSE
       DungeonExitAuthoring.cs TRUE DIRTY
         闁革附澹嗘晶鐑藉礄閸濆嫬缍撶紓浣稿濞?
+      DungeonInterestPointAuthoring.cs TRUE
       DungeonInterestPointComponent.cs TRUE DIRTY
       DungeonMonsterSpawnComponent.cs TRUE DIRTY
       DungeonTreasureAuthoring.cs TRUE DIRTY
@@ -398,11 +399,15 @@ Game\
       NPCInteractableAuthoring.cs TRUE
         NPC濞存嚎鍊撶花鎵磼閸曨亝顐?
         閺夆晜鍔橀、鎴﹀籍缁傤敹C濞存嚎鍊撶花鎵嫚闁垮婀撮柛妤佹磻缁?
-      PendingEffectExecutionQueueComponent.cs TRUE
-      PersistentEffectQueueComponent.cs TRUE
-      PlayerCurrentSkillAuthoring.cs TRUE
-      PlayerInputComponent.cs TRUE
+      BuffEffectRegistryComponent.cs TRUE DIRTY
+      EffectComponent.cs TRUE DIRTY
+      EffectDataBridgeComponent.cs TRUE DIRTY
+      GameRuntimeState.cs TRUE DIRTY
+      PersistentEffectQueueComponent.cs TRUE DIRTY
+      PlayerCurrentSkillAuthoring.cs TRUE DIRTY
+      PlayerInputComponent.cs TRUE DIRTY
       PlayerSkillComponent.cs TRUE DIRTY
+      PlayerSkillDefinitionRegistryComponent.cs TRUE
       PlayerSkillRuntimeDataComponent.cs TRUE DIRTY
       PlayerPhysicsAuthoring.cs TRUE DIRTY
       UnitPhysicsRotationInitializedComponent.cs TRUE
@@ -440,6 +445,7 @@ Game\
         闁告娲戠紞鍛村箛韫囨挻绂堥梻鍡楁閹?
       UnitManaAuthoring.cs TRUE DIRTY
         濮掑嫭姊圭涵鍫曞极閻楀牆绁?
+      UnitModifierComponent.cs TRUE
       UnitAvoidanceAuthoring.cs TRUE
       UnitMoveAuthoring.cs TRUE DIRTY
         缂佸顕ф慨鈺呭极閻楀牆绁?
@@ -448,12 +454,15 @@ Game\
         缂佷究鍨洪弲顐ょ磼閸曨亝顐介柨娑樼焸閳ь剙鍊块崢顦沶it缂傚倹鐗炵欢顐﹀闯?
         闁告娲戠紞鍛村箥閳ь剟寮垫径瀣楅柤瀹犲Г閺嗙喖骞?
       UnitSkillReleaseAuthoring.cs TRUE DIRTY
-      UnitQueryRuntimeComponent.cs TRUE
+      UnitQueryRuntimeComponent.cs TRUE DIRTY
       UnitSkillModifierRuntimeAuthoring.cs TRUE DIRTY
       ========濠㈤浜滈ˇ璺ㄧ磼閸曨亝顐介柛锔哄姀缁绘牠鏌岀仦鎯ф綉闁?
       UnitEntityPrefabRegistryEntry.cs TRUE
       UnitVitalityAuthoring.cs TRUE DIRTY
       UnitVariableAuthoring.cs TRUE DIRTY
+      UnitVariableConsumerElement.cs TRUE DIRTY
+      UnitVariableElement.cs TRUE
+      WorldVariableElement.cs TRUE DIRTY
         闁汇垻鍠庨幊锟犲极閻楀牆绁?
       VfxEntityPrefabRegistryEntry.cs FALSE
       WorldDropComponent.cs TRUE
@@ -478,7 +487,7 @@ Game\
       StateScriptRegistryGenerator.cs TRUE
       StateScriptValueExpressionDrawer.cs TRUE DIRTY
       StateScriptAccessorDropdown.cs TRUE
-      BehaviorTreeRegistryGenerator.cs FALSE
+      BehaviorTreeRegistryGenerator.cs TRUE DIRTY
       NPCInteractionNodeRegistryGenerator.cs FALSE
       UnitRuntimeAttributeDrawerFactory.cs FALSE
       UnitRuntimeAttributeDrawers.cs TRUE DIRTY
@@ -507,6 +516,7 @@ Game\
       NPCInteractionSession.cs FALSE
     System\
       BehaviorTreeInitSystem.cs TRUE DIRTY
+      BuffEffectRegistryInitializationSystem.cs TRUE DIRTY
         闁活潿鍔嶉弳鐔煎箲椤旂晫鈧垰顕欓崫鍕瘔閻炴稑濂旂拹鐔煎冀閹达絽螡闁绘劗鎳撻顔炬寬?
       BehaviorTreeSystem.cs TRUE DIRTY
         闁告瑥鍊归弳鐔煎礃濞嗗繐寮冲娑欏灦濠㈡﹢鏁嶇仦鎯р挃閻炴稑鐭侀、鎴炵▔閻戞鍩?
@@ -515,11 +525,12 @@ Game\
       DungeonExitSystem.cs TRUE DIRTY
         闁告帡鏀遍弻濠囧礄閸濆嫬缍撻悷娆欑秮閺€锝夋偐閼哥鍋?
         闁瑰灚鎸哥槐鎴犫偓瑙勭箘椤斿牓鎮介悢绋跨亣闁瑰搫顦抽幆銈夋偋?
+      DungeonInterestPointRuntimeSystem.cs TRUE
       EffectExecutionSystem.cs TRUE DIRTY
         濞戞挸锕ら惇鐧皍ff濞戞柨顑囩悮顐︽儍閸曨垰娅為柡鈧欢鈧琭fect闁挎稑鐭傞埀顒佷亢缁诲啰鎷犻柨瀣勾闁规亽鍔忕换婊堝礆閻楀牆鈷旈悶娑樿嫰閻即鏌屾繝鍐╂澒
         闁活亞鍠庨悿鍕閵堝嫮闉嶇紒顖濆吹缁椽鏁嶇仦鎯р挃閻炴稑濂斿锔界閹烘洖螡闁绘劕缍婇幗濂稿礆閹殿喚娉㈤柡澶屽枂閳?
       NPCInteractPromptSystem.cs TRUE DIRTY
-      InteractionCandidateSystem.cs TRUE
+      InteractionCandidateSystem.cs TRUE DIRTY
         缂備胶鍠曢鎼佸箥閳ь剟寮垫径濠傝濞存嚎鍊撶花鎵矓瀹ュ洩顫﹂柨娑樼焸閳ь剙顦崵顓㈠嫉閳ь剚娼婚幋鐘崇暠
       PersistentEffectSystem.cs TRUE DIRTY
         闁告梻濮撮崣鍡涘箰娴ｈ櫣鏁鹃柡浣哥墛閻忓鎷犻柨瀣勾闁挎稑鐬奸崝褔宕ユ惔銈庡悁闁哄啫鐖奸崳鎾绩閻愵剙鐦紓渚囧幗閳ь儸鍕珡闁?
@@ -529,12 +540,14 @@ Game\
       UnitPhysicsRotationInitializationSystem.cs TRUE DIRTY
       PlayerSkillAnalysisSystem.cs TRUE DIRTY
         闁汇垻鍠愰崹姘跺礂閾氬倻绉奸柟鍨涘亾闁煎啿鈧噥鍤炴慨?
+      PlayerSkillDefinitionRegistryInitializationSystem.cs TRUE
       SkillReleaseSystem.cs TRUE DIRTY
       SkillProjectileSpawnSystem.cs TRUE DIRTY
       SkillProjectileSystem.cs TRUE DIRTY
       SpriteEffectAnimationSystem.cs TRUE DIRTY
       UnitBuffSystem.cs TRUE DIRTY
         缂備胶鍠曢绐ff闁告劖鐟ラ崣鍡欎沪閻愮补鍋撹閹蜂即骞庨埀顒勬嚄閹存帗鍙忔慨婵撶秶缁辨繃娼娆惧殑闁瑰灈鍋撻柤瀹犲Г濡炲倿姊?
+      UnitModifierSystem.cs TRUE
       UnitAnimationSystem.cs TRUE DIRTY
       UnitSpriteRendererSortingSystem.cs TRUE DIRTY
       UnitControlSystem.cs TRUE DIRTY
@@ -558,22 +571,25 @@ Game\
       UnitSkillExecuteSystem.cs TRUE DIRTY
         闁告瑯浜濆Σ鍝ユ媼閿涘嫮鏆柛鎰槻瀹?
       UnitSystemGroups.cs TRUE DIRTY
-      UnitSourceDispatcherSystem.cs TRUE
+      UnitSourceDispatcherSystem.cs TRUE DIRTY
         闁告帒妫涚悮?
         闁归攱鍎宠ぐ鍥箳婢跺孩鍎伴柣?
     Debug\
       UnitDebugInspectorUtility.cs TRUE DIRTY
     Utility\
+      BuffEffectRegistryUtility.cs TRUE DIRTY
+      EffectDataBridgeUtility.cs TRUE DIRTY
       EntitySpawnRegistryUtility.cs TRUE DIRTY
       NPCAuthoringUtility.cs FALSE
-      PendingEffectExecutionQueueUtility.cs FALSE
+      EffectUtility.cs TRUE DIRTY
+      PersistentEffectUtility.cs TRUE DIRTY
       PropUseUtility.cs TRUE DIRTY
       SkillExecutionUtility.cs TRUE DIRTY
-      SkillReleaseUtility.cs FALSE
+      SkillReleaseUtility.cs TRUE DIRTY
       UnitAnimationVisualUtility.cs FALSE
       UnitAuthoringUtility.cs FALSE
       UnitBuffHookUtility.cs FALSE
-      UnitBuffUtility.cs FALSE
+      UnitBuffUtility.cs TRUE DIRTY
       UnitControlUtility.cs FALSE
       UnitFacingUtility.cs FALSE
       WorldDropSpawnUtility.cs FALSE
@@ -581,6 +597,7 @@ Game\
       UnitFeatureBakeUtility.cs TRUE
       EquipmentUtility.cs TRUE
       UnitModifierUtility.cs TRUE DIRTY
+      UnitModifierResolver.cs TRUE
       UnitPerceptionQueryUtility.cs TRUE
       UnitQueryUtility.cs TRUE DIRTY
       UnitSkillModifierUtility.cs FALSE
@@ -590,7 +607,7 @@ Game\
   World\
     WorldInputComponent.cs TRUE
     WorldSkillDataComponent.cs TRUE DIRTY
-    WorldStateComponent.cs TRUE
+    WorldStateComponent.cs TRUE DIRTY
     WorldStateSystem.cs TRUE DIRTY
     WorldVariableComponent.cs TRUE DIRTY
 UI\

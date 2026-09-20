@@ -60,7 +60,7 @@ namespace CrystalMagic.Game.Skill
         {
             return callback.Conditions == null ||
                    callback.Conditions.Count == 0 ||
-                   s_comparatorFactory.BuildComparator(callback.Conditions, runtime.Sources).GetResult();
+                   s_comparatorFactory.BuildComparator(callback.Conditions, runtime.Sources).GetResult(runtime.Sources);
         }
 
         private static ComparatorFactory CreateComparatorFactory()

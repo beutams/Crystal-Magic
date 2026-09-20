@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using Unity.Burst;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -8,18 +10,19 @@ using Unity.Transforms;
 [UpdateInGroup(typeof(UnitInitializationSystemGroup), OrderFirst = true)]
 [UpdateBefore(typeof(UnitPerceptionSystem))]
 [UpdateBefore(typeof(SkillProjectileSystem))]
-partial class UnitQueryBuildSystem : SystemBase
+partial struct UnitQueryBuildSystem : ISystem
 {
     private Entity _singletonEntity;
+    private Entity _unitGridEntity;
+    private Entity _interactableGridEntity;
     private EntityQuery _unitQuery;
     private EntityQuery _interactableQuery;
     private EntityQuery _changedInteractableQuery;
-    private UnitQueryRuntimeComponent _runtime;
-    private int _interactableCount = -1;
+    private int _interactableCount;
 
-    protected override void OnCreate()
+    public void OnCreate(ref SystemState state)
     {
-        _unitQuery = GetEntityQuery(new EntityQueryDesc
+        _unitQuery = state.GetEntityQuery(new EntityQueryDesc
         {
             All = new[]
             {
@@ -32,75 +35,134 @@ partial class UnitQueryBuildSystem : SystemBase
             },
         });
 
-        _interactableQuery = GetEntityQuery(
+        _interactableQuery = state.GetEntityQuery(
             ComponentType.ReadOnly<LocalTransform>(),
             ComponentType.ReadOnly<UnitInteractableComponent>());
-
-        _changedInteractableQuery = GetEntityQuery(
+        _changedInteractableQuery = state.GetEntityQuery(
             ComponentType.ReadOnly<LocalTransform>(),
             ComponentType.ReadOnly<UnitInteractableComponent>());
         _changedInteractableQuery.AddChangedVersionFilter(ComponentType.ReadOnly<LocalTransform>());
 
-        _singletonEntity = EntityManager.CreateEntity(typeof(UnitQuerySingleton));
-        _runtime = new UnitQueryRuntimeComponent();
-        EntityManager.AddComponentObject(_singletonEntity, _runtime);
+        _unitGridEntity = state.EntityManager.CreateEntity();
+        state.EntityManager.AddBuffer<UnitQueryEntry>(_unitGridEntity);
+        _interactableGridEntity = state.EntityManager.CreateEntity();
+        state.EntityManager.AddBuffer<UnitQueryEntry>(_interactableGridEntity);
+
+        _singletonEntity = state.EntityManager.CreateEntity();
+        state.EntityManager.AddComponentData(_singletonEntity, new UnitQuerySingleton
+        {
+            UnitGridEntity = _unitGridEntity,
+            InteractableGridEntity = _interactableGridEntity,
+            InverseCellSize = 1f / UnitQueryGrid.DefaultCellSize,
+        });
+        _interactableCount = -1;
     }
 
-    protected override void OnUpdate()
+    public void OnUpdate(ref SystemState state)
     {
-        Dependency.Complete();
+        // Dynamic-buffer capacity can change while preparing a new frame. Finish the
+        // previous readers/writers before exposing a fresh array to the build jobs.
+        state.Dependency.Complete();
 
-        int unitCount = _unitQuery.CalculateEntityCount();
-        _runtime.UnitGrid.PrepareForBuild(unitCount);
+        UnitQuerySingleton singleton =
+            state.EntityManager.GetComponentData<UnitQuerySingleton>(_singletonEntity);
+        DynamicBuffer<UnitQueryEntry> unitBuffer =
+            state.EntityManager.GetBuffer<UnitQueryEntry>(_unitGridEntity);
+        unitBuffer.ResizeUninitialized(_unitQuery.CalculateEntityCount());
 
         JobHandle unitBuildHandle = new UnitQueryBuildJob
         {
-            Entries = _runtime.UnitGrid.AsParallelWriter(),
-            InverseCellSize = _runtime.UnitGrid.InverseCellSize,
-        }.ScheduleParallel(_unitQuery, Dependency);
+            Entries = unitBuffer.AsNativeArray(),
+            InverseCellSize = singleton.InverseCellSize,
+        }.ScheduleParallel(_unitQuery, default);
+        JobHandle unitSortHandle = new UnitQuerySortJob
+        {
+            Entries = unitBuffer.AsNativeArray(),
+        }.Schedule(unitBuildHandle);
 
         int interactableCount = _interactableQuery.CalculateEntityCount();
-        bool rebuildInteractables = interactableCount != _interactableCount || !_changedInteractableQuery.IsEmpty;
-        JobHandle interactableBuildHandle = Dependency;
+        bool rebuildInteractables =
+            interactableCount != _interactableCount || !_changedInteractableQuery.IsEmpty;
+        JobHandle interactableSortHandle = default;
         if (rebuildInteractables)
         {
-            _runtime.InteractableGrid.PrepareForBuild(interactableCount);
-            interactableBuildHandle = new UnitQueryBuildJob
+            DynamicBuffer<UnitQueryEntry> interactableBuffer =
+                state.EntityManager.GetBuffer<UnitQueryEntry>(_interactableGridEntity);
+            interactableBuffer.ResizeUninitialized(interactableCount);
+            JobHandle interactableBuildHandle = new UnitQueryBuildJob
             {
-                Entries = _runtime.InteractableGrid.AsParallelWriter(),
-                InverseCellSize = _runtime.InteractableGrid.InverseCellSize,
-            }.ScheduleParallel(_interactableQuery, Dependency);
+                Entries = interactableBuffer.AsNativeArray(),
+                InverseCellSize = singleton.InverseCellSize,
+            }.ScheduleParallel(_interactableQuery, default);
+            interactableSortHandle = new UnitQuerySortJob
+            {
+                Entries = interactableBuffer.AsNativeArray(),
+            }.Schedule(interactableBuildHandle);
             _interactableCount = interactableCount;
         }
 
-        Dependency = JobHandle.CombineDependencies(unitBuildHandle, interactableBuildHandle);
-        Dependency.Complete();
+        state.Dependency = rebuildInteractables
+            ? JobHandle.CombineDependencies(unitSortHandle, interactableSortHandle)
+            : unitSortHandle;
+
+        // Managed shape effects can query later in the same frame. Completing here keeps
+        // their view stable while all collection and sorting work itself remains Burst.
+        state.Dependency.Complete();
     }
 
-    protected override void OnDestroy()
+    public void OnDestroy(ref SystemState state)
     {
-        Dependency.Complete();
-        _runtime?.Dispose();
-        _runtime = null;
-        if (EntityManager.Exists(_singletonEntity))
-            EntityManager.DestroyEntity(_singletonEntity);
+        state.Dependency.Complete();
+        if (state.EntityManager.Exists(_singletonEntity))
+            state.EntityManager.DestroyEntity(_singletonEntity);
+        if (state.EntityManager.Exists(_unitGridEntity))
+            state.EntityManager.DestroyEntity(_unitGridEntity);
+        if (state.EntityManager.Exists(_interactableGridEntity))
+            state.EntityManager.DestroyEntity(_interactableGridEntity);
     }
 }
 
 [BurstCompile]
 public partial struct UnitQueryBuildJob : IJobEntity
 {
-    public NativeParallelMultiHashMap<long, UnitQueryHit>.ParallelWriter Entries;
+    [NativeDisableParallelForRestriction]
+    public NativeArray<UnitQueryEntry> Entries;
+
     public float InverseCellSize;
 
-    private void Execute(Entity entity, in LocalTransform transform)
+    private void Execute([EntityIndexInQuery] int index, Entity entity, in LocalTransform transform)
     {
         int2 cell = (int2)math.floor(transform.Position.xy * InverseCellSize);
-        long cellKey = ((long)cell.x << 32) | (uint)cell.y;
-        Entries.Add(cellKey, new UnitQueryHit
+        Entries[index] = new UnitQueryEntry
         {
+            CellKey = UnitQueryGrid.GetCellKey(cell),
             Entity = entity,
             Position = transform.Position,
-        });
+        };
+    }
+}
+
+[BurstCompile]
+public struct UnitQuerySortJob : IJob
+{
+    public NativeArray<UnitQueryEntry> Entries;
+
+    public void Execute()
+    {
+        Entries.Sort(new UnitQueryEntryComparer());
+    }
+}
+
+public struct UnitQueryEntryComparer : IComparer<UnitQueryEntry>
+{
+    public int Compare(UnitQueryEntry left, UnitQueryEntry right)
+    {
+        if (left.CellKey != right.CellKey)
+            return left.CellKey < right.CellKey ? -1 : 1;
+        if (left.Entity.Index != right.Entity.Index)
+            return left.Entity.Index < right.Entity.Index ? -1 : 1;
+        if (left.Entity.Version == right.Entity.Version)
+            return 0;
+        return left.Entity.Version < right.Entity.Version ? -1 : 1;
     }
 }

@@ -261,7 +261,7 @@ namespace CrystalMagic.Game
             else
                 context.EntityManager.AddComponentData(context.UserEntity, cooldown);
 
-            SkillExecutor.ExecuteEffects(propData.EffectChain, skillContent);
+            EffectUtility.Enqueue(context.EntityManager, propData.EffectChain, skillContent);
             SaveDataComponent.Instance.NotifyCharacterPropDataChanged();
             return true;
         }

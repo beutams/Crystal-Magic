@@ -36,7 +36,7 @@ public partial class StateScriptInitSystem : SystemBase
             }
 
             UnitSourceResolver sources = new(entity);
-            sources.Update(entity, EntityManager, in sourceDispatcher);
+            sources.Update(entity, UnitVariableSource.GetOther(EntityManager, entity), in sourceDispatcher);
             data.EnsureValid();
             for (int i = 0; i < data.Graphs.Count; i++)
             {

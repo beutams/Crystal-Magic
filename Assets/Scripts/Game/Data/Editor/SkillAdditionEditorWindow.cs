@@ -247,6 +247,9 @@ namespace CrystalMagic.Editor.Data
             UnitSourceSetSchemaEntry setter = setters[selectedIndex];
             bool changed = !string.Equals(setValue.SetterKey, setter.Key, StringComparison.Ordinal);
             setValue.SetterKey = setter.Key;
+            setValue.SourceTarget = (UnitSourceTarget)EditorGUILayout.EnumPopup(
+                "Source Unit",
+                setValue.SourceTarget);
             if (setter.RequiresKey)
             {
                 setValue.Key = EditorGUILayout.TextField("Key", setValue.Key ?? string.Empty);

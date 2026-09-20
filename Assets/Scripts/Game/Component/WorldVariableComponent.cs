@@ -1,10 +1,8 @@
-using System;
-using System.Collections.Generic;
+using Unity.Collections;
 using Unity.Entities;
 
-public sealed class WorldVariableComponent : IComponentData
+public struct WorldVariableComponent : IComponentData
 {
-    public Dictionary<string, UnitValue> Values = new(StringComparer.Ordinal);
 }
 
 [UnitSourceProvider(typeof(WorldVariableComponent), isGlobal: true)]
@@ -21,42 +19,40 @@ public static class WorldVariableSource
     [UnitSourceGet(8, "world.variables.getString", UnitValueCategory.String, UnitValueCategory.String, ParameterNames = new[] { "Key" })]
     public static bool TryGet(
         int operation,
-        EntityManager entityManager,
         Entity entity,
+        in ComponentLookup<WorldVariableComponent> componentLookup,
+        in BufferLookup<WorldVariableElement> variableLookup,
         in UnitSourceArguments arguments,
         out UnitSourceValue result)
     {
         result = default;
-        if (!WorldStateUtility.TryGetEntity(entityManager, out Entity worldEntity))
+        if (!componentLookup.HasComponent(entity) || !variableLookup.HasBuffer(entity))
             return false;
 
-        WorldVariableComponent component = GetComponent(entityManager, worldEntity);
-        if (component == null)
-            return false;
-
+        DynamicBuffer<WorldVariableElement> variables = variableLookup[entity];
         if (operation == 0)
         {
-            result = UnitSourceValue.FromInt(component.Values?.Count ?? 0);
+            result = UnitSourceValue.FromInt(variables.Length);
             return true;
         }
 
-        if (!arguments.TryGet(0, out UnitSourceValue keySource))
+        if (!arguments.TryGetString(0, out FixedString128Bytes key))
             return false;
 
-        UnitValue key = keySource.ToUnitValue();
-        UnitValue value = operation switch
+        UnitSourceValue value = operation switch
         {
-            1 => UnitValue.FromBool(Contains(component, key)),
-            2 => Get(component, key),
-            3 => GetCategory(component, key, UnitValueCategory.Number),
-            4 => GetCategory(component, key, UnitValueCategory.Bool),
-            5 => GetCategory(component, key, UnitValueCategory.Float2),
-            6 => GetCategory(component, key, UnitValueCategory.Float3),
-            7 => GetCategory(component, key, UnitValueCategory.Entity),
-            8 => GetCategory(component, key, UnitValueCategory.String),
-            _ => UnitValue.None,
+            1 => UnitSourceValue.FromBool(FindIndex(variables, key) >= 0),
+            2 => Get(variables, key),
+            3 => GetCategory(variables, key, UnitValueCategory.Number),
+            4 => GetCategory(variables, key, UnitValueCategory.Bool),
+            5 => GetCategory(variables, key, UnitValueCategory.Float2),
+            6 => GetCategory(variables, key, UnitValueCategory.Float3),
+            7 => GetCategory(variables, key, UnitValueCategory.Entity),
+            8 => GetCategory(variables, key, UnitValueCategory.String),
+            _ => UnitSourceValue.None,
         };
-        return UnitSourceValue.TryFromUnitValue(value, out result);
+        result = value;
+        return result.Type != UnitValueType.None;
     }
 
     [UnitSourceSet(0, "world.variables.set", UnitValueCategory.Any,
@@ -64,79 +60,88 @@ public static class WorldVariableSource
     [UnitSourceSet(1, "world.variables.remove", UnitValueCategory.String, ParameterNames = new[] { "Key" })]
     public static bool TrySet(
         int operation,
-        EntityManager entityManager,
         Entity entity,
+        in ComponentLookup<WorldVariableComponent> componentLookup,
+        ref BufferLookup<WorldVariableElement> variableLookup,
         in UnitSourceArguments arguments)
     {
-        if (!WorldStateUtility.TryGetEntity(entityManager, out Entity worldEntity))
+        if (!componentLookup.HasComponent(entity) || !variableLookup.HasBuffer(entity))
             return false;
 
-        WorldVariableComponent component = GetComponent(entityManager, worldEntity);
-        if (component == null)
-            return false;
-
+        DynamicBuffer<WorldVariableElement> variables = variableLookup[entity];
         if (operation == 0)
         {
-            return arguments.HasKey != 0 && arguments.TryGet(0, out UnitSourceValue value) &&
-                   Set(component, arguments.Key.ToString(), value.ToUnitValue());
+            return arguments.HasKey != 0 &&
+                   arguments.TryGet(0, out UnitSourceValue value) &&
+                   Set(variables, arguments.Key, value);
         }
 
-        return operation == 1 && arguments.TryGet(0, out UnitSourceValue key) &&
-               Remove(component, key.ToUnitValue());
+        return operation == 1 &&
+               arguments.TryGetString(0, out FixedString128Bytes key) &&
+               Remove(variables, key);
     }
 
-    private static WorldVariableComponent GetComponent(EntityManager entityManager, Entity entity)
+    private static UnitSourceValue Get(
+        in DynamicBuffer<WorldVariableElement> variables,
+        in FixedString128Bytes key)
     {
-        return entityManager.Exists(entity) && entityManager.HasComponent<WorldVariableComponent>(entity)
-            ? entityManager.GetComponentObject<WorldVariableComponent>(entity)
-            : null;
+        int index = FindIndex(variables, key);
+        return index >= 0 ? variables[index].Value : UnitSourceValue.None;
     }
 
-    private static bool Contains(WorldVariableComponent component, UnitValue keyValue)
+    private static UnitSourceValue GetCategory(
+        in DynamicBuffer<WorldVariableElement> variables,
+        in FixedString128Bytes key,
+        UnitValueCategory category)
     {
-        return TryGetKey(keyValue, out string key) &&
-               component?.Values != null &&
-               component.Values.ContainsKey(key);
+        UnitSourceValue value = Get(variables, key);
+        return value.Category == category ? value : UnitSourceValue.None;
     }
 
-    private static UnitValue Get(WorldVariableComponent component, UnitValue keyValue)
+    private static bool Set(
+        DynamicBuffer<WorldVariableElement> variables,
+        in FixedString128Bytes key,
+        in UnitSourceValue value)
     {
-        if (!TryGetKey(keyValue, out string key) ||
-            component?.Values == null ||
-            !component.Values.TryGetValue(key, out UnitValue value))
-        {
-            return UnitValue.None;
-        }
-
-        return value;
-    }
-
-    private static UnitValue GetCategory(WorldVariableComponent component, UnitValue keyValue, UnitValueCategory category)
-    {
-        UnitValue value = Get(component, keyValue);
-        return value.Category == category ? value : UnitValue.None;
-    }
-
-    private static bool Remove(WorldVariableComponent component, UnitValue keyValue)
-    {
-        return TryGetKey(keyValue, out string key) &&
-               component?.Values != null &&
-               component.Values.Remove(key);
-    }
-
-    private static bool Set(WorldVariableComponent component, string key, UnitValue value)
-    {
-        if (string.IsNullOrWhiteSpace(key) || value.Category == UnitValueCategory.None)
+        if (key.Length == 0 || value.Category == UnitValueCategory.None)
             return false;
 
-        component.Values ??= new Dictionary<string, UnitValue>(StringComparer.Ordinal);
-        component.Values[key] = value;
+        WorldVariableElement element = new()
+        {
+            Key = key,
+            Value = value,
+        };
+        int index = FindIndex(variables, key);
+        if (index >= 0)
+            variables[index] = element;
+        else
+            variables.Add(element);
+
         return true;
     }
 
-    private static bool TryGetKey(UnitValue value, out string key)
+    private static bool Remove(
+        DynamicBuffer<WorldVariableElement> variables,
+        in FixedString128Bytes key)
     {
-        key = string.Empty;
-        return value.TryGetString(out key) && !string.IsNullOrWhiteSpace(key);
+        int index = FindIndex(variables, key);
+        if (index < 0)
+            return false;
+
+        variables.RemoveAtSwapBack(index);
+        return true;
+    }
+
+    private static int FindIndex(
+        in DynamicBuffer<WorldVariableElement> variables,
+        in FixedString128Bytes key)
+    {
+        for (int index = 0; index < variables.Length; index++)
+        {
+            if (variables[index].Key.Equals(key))
+                return index;
+        }
+
+        return -1;
     }
 }

@@ -1,5 +1,3 @@
-using CrystalMagic.Core;
-using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Data.Effects;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -24,10 +22,6 @@ namespace CrystalMagic.Game.Skill.Effects
             if (target == Entity.Null || !entityManager.Exists(target))
                 return;
 
-            BuffData buffData = DataComponent.Instance?.Get<BuffData>(Data.BuffId);
-            if (buffData == null)
-                return;
-
             if (Data.OnlyOncePerPersistentEffect &&
                 context.PersistentEffectAppliedBuffTargets != null &&
                 !TryRegisterPersistentBuffTarget(context.PersistentEffectAppliedBuffTargets, Data.BuffId, target))
@@ -37,7 +31,6 @@ namespace CrystalMagic.Game.Skill.Effects
 
             int stackToApply = math.max(1, Data.StackCount);
             float duration = Data.DurationSeconds < 0f ? -1f : math.max(0f, Data.DurationSeconds);
-            System.Collections.Generic.List<BuffTriggerRuntimeEntry> runtimeTriggerEntries = CreateRuntimeTriggerEntries(context, buffData);
             bool hasOriginEntity = context.HasOriginEntity && context.OriginEntity != Entity.Null;
             Entity originEntity = hasOriginEntity ? context.OriginEntity : Entity.Null;
             int sourceSkillId = context.SourceSkillId;
@@ -48,8 +41,7 @@ namespace CrystalMagic.Game.Skill.Effects
                 duration,
                 stackToApply,
                 originEntity,
-                sourceSkillId,
-                runtimeTriggerEntries);
+                sourceSkillId);
         }
 
         private static bool TryRegisterPersistentBuffTarget(
@@ -66,43 +58,5 @@ namespace CrystalMagic.Game.Skill.Effects
             return targets.Add(target);
         }
 
-        private static System.Collections.Generic.List<BuffTriggerRuntimeEntry> CreateRuntimeTriggerEntries(SkillContent context, BuffData buffData)
-        {
-            if (buffData == null)
-                return new System.Collections.Generic.List<BuffTriggerRuntimeEntry>();
-
-            UnitElementComponent? originElementComponent = null;
-            if (context.HasOriginEntity &&
-                context.OriginEntity != Entity.Null &&
-                context.EntityManager.Exists(context.OriginEntity) &&
-                context.EntityManager.HasComponent<UnitElementComponent>(context.OriginEntity))
-            {
-                originElementComponent = context.EntityManager.GetComponentData<UnitElementComponent>(context.OriginEntity);
-            }
-
-            System.Collections.Generic.List<BuffTriggerEntry> configuredEntries = buffData.CreateEffectiveTriggerEntries();
-            System.Collections.Generic.List<BuffTriggerRuntimeEntry> runtimeEntries = new(configuredEntries.Count);
-            for (int i = 0; i < configuredEntries.Count; i++)
-            {
-                BuffTriggerEntry configuredEntry = configuredEntries[i];
-                if (configuredEntry == null)
-                    continue;
-
-                runtimeEntries.Add(new BuffTriggerRuntimeEntry
-                {
-                    TriggerType = configuredEntry.TriggerType,
-                    TickIntervalSeconds = math.max(0f, configuredEntry.TickIntervalSeconds),
-                    NextTickTime = math.max(0f, configuredEntry.TickIntervalSeconds),
-                    HookType = configuredEntry.HookType,
-                    ConsumeStackOnTrigger = configuredEntry.ConsumeStackOnTrigger,
-                    RuntimeEffects = EffectData.CreateRuntimeCopies(
-                        configuredEntry.Effects,
-                        context.RuntimeModifiers,
-                        originElementComponent),
-                });
-            }
-
-            return runtimeEntries;
-        }
     }
 }

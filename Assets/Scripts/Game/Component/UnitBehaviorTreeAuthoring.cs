@@ -14,21 +14,28 @@ public class UnitBehaviorTreeAuthoring : MonoBehaviour
 
             UnitData unitData = UnitAuthoringUtility.ResolveUnitData(authoring);
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
-            AddComponentObject(entity, new UnitBehaviorTreeComponent
+            AddComponent(entity, new UnitBehaviorTreeComponent
             {
                 UnitDataId = unitData?.Id ?? -1,
+                TreeIndex = -1,
+                CurrentNodeIndex = -1,
             });
+            AddBuffer<BehaviorNodeStateElement>(entity);
+            AddBuffer<BehaviorTreeCommandElement>(entity);
+            AddBuffer<BehaviorTreeCommandArgumentElement>(entity);
+            AddBuffer<BehaviorTreeMoveCommandElement>(entity);
+            AddBuffer<BehaviorTreeHitDebugElement>(entity);
         }
     }
 }
 
-public class UnitBehaviorTreeComponent : IComponentData
+public struct UnitBehaviorTreeComponent : IComponentData
 {
     public int UnitDataId;
-    public bool IsInitialized;
-    public string CurrentNodeName = "None";
-    public string LastStatus = "None";
-    public string InitializationError = string.Empty;
-    [System.NonSerialized] public BehaviorTreeRuntime Runtime;
-    [System.NonSerialized] public BehaviorContext Context;
+    public int TreeIndex;
+    public int CurrentNodeIndex;
+    public BehaviorNodeStatus LastStatus;
+    public uint TickVersion;
+    public BehaviorTreeInitializationError InitializationError;
+    public byte IsInitialized;
 }

@@ -1,6 +1,5 @@
 using CrystalMagic.Game.Data;
 using Unity.Entities;
-using Unity.Mathematics;
 
 public static class PlayerCurrentSkillUtility
 {
@@ -11,8 +10,7 @@ public static class PlayerCurrentSkillUtility
         int slotIndex)
     {
         if (!TryGetComponent(entityManager, entity, out PlayerCurrentSkillComponent component) ||
-            !TryGetPlayerSkillRuntimeData(entityManager, entity, out PlayerSkillRuntimeDataComponent playerSkillData) ||
-            !playerSkillData.TryGetChainSlot(chainId, slotIndex, out _))
+            !TryGetChainSlot(entityManager, entity, chainId, slotIndex, out _))
         {
             return false;
         }
@@ -21,7 +19,8 @@ public static class PlayerCurrentSkillUtility
         {
             component.CurrentChainId = chainId;
             component.CurrentSlotIndex = slotIndex;
-            component.PendingExtraModifiers = new SkillModifierSet();
+            component.PendingExtraModifiers = default;
+            entityManager.SetComponentData(entity, component);
         }
 
         return true;
@@ -30,20 +29,24 @@ public static class PlayerCurrentSkillUtility
     public static bool TryGetCurrentSlot(
         EntityManager entityManager,
         Entity entity,
-        out PlayerSkillChainSlotData slot)
+        out PlayerSkillChainSlotElement slot)
     {
         slot = default;
         return TryGetComponent(entityManager, entity, out PlayerCurrentSkillComponent component) &&
                component.CurrentChainId >= 0 &&
                component.CurrentSlotIndex >= 0 &&
-               TryGetPlayerSkillRuntimeData(entityManager, entity, out PlayerSkillRuntimeDataComponent playerSkillData) &&
-               playerSkillData.TryGetChainSlot(component.CurrentChainId, component.CurrentSlotIndex, out slot);
+               TryGetChainSlot(
+                   entityManager,
+                   entity,
+                   component.CurrentChainId,
+                   component.CurrentSlotIndex,
+                   out slot);
     }
 
     public static bool TryGetCurrentSkillId(EntityManager entityManager, Entity entity, out int skillId)
     {
         skillId = -1;
-        if (!TryGetCurrentSlot(entityManager, entity, out PlayerSkillChainSlotData slot) || slot.SkillId < 0)
+        if (!TryGetCurrentSlot(entityManager, entity, out PlayerSkillChainSlotElement slot) || slot.SkillId < 0)
             return false;
 
         skillId = slot.SkillId;
@@ -53,7 +56,7 @@ public static class PlayerCurrentSkillUtility
     public static bool TryGetCurrentAdditionId(EntityManager entityManager, Entity entity, out int additionId)
     {
         additionId = -1;
-        if (!TryGetCurrentSlot(entityManager, entity, out PlayerSkillChainSlotData slot) || slot.SkillAdditionId < 0)
+        if (!TryGetCurrentSlot(entityManager, entity, out PlayerSkillChainSlotElement slot) || slot.SkillAdditionId < 0)
             return false;
 
         additionId = slot.SkillAdditionId;
@@ -67,8 +70,13 @@ public static class PlayerCurrentSkillUtility
     {
         inputType = SkillInputType.None;
         if (!TryGetCurrentSkillId(entityManager, entity, out int skillId) ||
-            !TryGetPlayerSkillRuntimeData(entityManager, entity, out PlayerSkillRuntimeDataComponent playerSkillData) ||
-            !playerSkillData.TryGetSkill(skillId, out PlayerSkillInfo skill))
+            !PlayerSkillDefinitionRegistryUtility.TryGet(
+                entityManager,
+                out BlobAssetReference<PlayerSkillDefinitionRegistryBlob> registry) ||
+            !PlayerSkillDefinitionRegistryUtility.TryGetSkill(
+                in registry,
+                skillId,
+                out PlayerSkillDefinitionBlob skill))
         {
             return false;
         }
@@ -87,18 +95,19 @@ public static class PlayerCurrentSkillUtility
             return false;
         }
 
-        component.PendingExtraModifiers ??= new SkillModifierSet();
         component.PendingExtraModifiers.Add(entry);
+        entityManager.SetComponentData(entity, component);
         return true;
     }
 
     public static SkillModifierSet ConsumePendingExtraModifiers(EntityManager entityManager, Entity entity)
     {
         if (!TryGetComponent(entityManager, entity, out PlayerCurrentSkillComponent component))
-            return new SkillModifierSet();
+            return default;
 
-        SkillModifierSet result = component.PendingExtraModifiers?.Clone() ?? new SkillModifierSet();
-        component.PendingExtraModifiers = new SkillModifierSet();
+        SkillModifierSet result = component.PendingExtraModifiers;
+        component.PendingExtraModifiers = default;
+        entityManager.SetComponentData(entity, component);
         return result;
     }
 
@@ -109,25 +118,46 @@ public static class PlayerCurrentSkillUtility
 
         component.CurrentChainId = -1;
         component.CurrentSlotIndex = -1;
-        component.PendingExtraModifiers = new SkillModifierSet();
+        component.PendingExtraModifiers = default;
+        entityManager.SetComponentData(entity, component);
     }
 
-    private static bool TryGetComponent(EntityManager entityManager, Entity entity, out PlayerCurrentSkillComponent component)
+    private static bool TryGetComponent(
+        EntityManager entityManager,
+        Entity entity,
+        out PlayerCurrentSkillComponent component)
     {
-        component = null;
-        if (entity == Entity.Null || !entityManager.Exists(entity) || !entityManager.HasComponent<PlayerCurrentSkillComponent>(entity))
+        component = default;
+        if (entity == Entity.Null ||
+            !entityManager.Exists(entity) ||
+            !entityManager.HasComponent<PlayerCurrentSkillComponent>(entity))
+        {
             return false;
+        }
 
-        component = entityManager.GetComponentObject<PlayerCurrentSkillComponent>(entity);
-        return component != null;
+        component = entityManager.GetComponentData<PlayerCurrentSkillComponent>(entity);
+        return true;
     }
 
-    private static bool TryGetPlayerSkillRuntimeData(EntityManager entityManager, Entity entity, out PlayerSkillRuntimeDataComponent data)
+    private static bool TryGetChainSlot(
+        EntityManager entityManager,
+        Entity entity,
+        int chainId,
+        int slotIndex,
+        out PlayerSkillChainSlotElement slot)
     {
-        data = null;
-        return entity != Entity.Null &&
-               entityManager.Exists(entity) &&
-               entityManager.HasComponent<PlayerSkillRuntimeDataComponent>(entity) &&
-               (data = entityManager.GetComponentObject<PlayerSkillRuntimeDataComponent>(entity)) != null;
+        slot = default;
+        if (entity == Entity.Null ||
+            !entityManager.Exists(entity) ||
+            !entityManager.HasComponent<PlayerSkillRuntimeDataComponent>(entity) ||
+            !entityManager.HasBuffer<PlayerSkillChainElement>(entity) ||
+            !entityManager.HasBuffer<PlayerSkillChainSlotElement>(entity))
+        {
+            return false;
+        }
+
+        DynamicBuffer<PlayerSkillChainElement> chains = entityManager.GetBuffer<PlayerSkillChainElement>(entity);
+        DynamicBuffer<PlayerSkillChainSlotElement> slots = entityManager.GetBuffer<PlayerSkillChainSlotElement>(entity);
+        return PlayerSkillRuntimeDataSource.TryGetChainSlot(chains, slots, chainId, slotIndex, out slot);
     }
 }

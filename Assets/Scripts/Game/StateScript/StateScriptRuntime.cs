@@ -13,6 +13,7 @@ public sealed class StateScriptRuntime
     private readonly List<StateScriptNode> _nodesInTraversalOrder = new();
     private readonly List<StateScriptStateNode> _statesInTickOrder = new();
     private Comparator _executionCondition;
+    private bool _hasExecutionCondition;
     private StateScriptEntryNode _entry;
     private int _pulseDepth;
     private bool _isExecutionActive;
@@ -148,7 +149,8 @@ public sealed class StateScriptRuntime
         Data.ExecutionConditions ??= new List<ConditionConfig>();
         if (Data.ExecutionConditions.Count == 0)
         {
-            _executionCondition = null;
+            _executionCondition = default;
+            _hasExecutionCondition = false;
             error = string.Empty;
             return true;
         }
@@ -160,12 +162,13 @@ public sealed class StateScriptRuntime
         }
 
         _executionCondition = s_comparatorFactory.BuildComparator(Data.ExecutionConditions, Sources);
-        if (_executionCondition == null || !_executionCondition.IsValid)
+        if (!_executionCondition.IsValid)
         {
             error = "StateScript graph execution condition is invalid.";
             return false;
         }
 
+        _hasExecutionCondition = true;
         error = string.Empty;
         return true;
     }
@@ -178,7 +181,7 @@ public sealed class StateScriptRuntime
 
     private bool IsExecutionEnabled()
     {
-        return _executionCondition == null || _executionCondition.GetResult();
+        return !_hasExecutionCondition || _executionCondition.GetResult(Sources);
     }
 
     private void BeginExecutionIfNeeded()

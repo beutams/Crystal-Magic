@@ -1,4 +1,3 @@
-using System;
 using CrystalMagic.Game.Data;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -10,9 +9,9 @@ public sealed class RequestSkillActionNode : StateScriptActionNode
 
     private readonly RequestSkillActionNodeData _data;
     private readonly StateScriptOutputPort _output;
-    private Func<UnitValue> _skillIdGetter;
-    private Func<UnitValue> _positionGetter;
-    private Func<UnitValue> _targetEntityGetter;
+    private CompiledValueExpression _skillIdExpression;
+    private CompiledValueExpression _positionExpression;
+    private CompiledValueExpression _targetEntityExpression;
 
     public RequestSkillActionNode(RequestSkillActionNodeData data, StateScriptRuntime runtime)
         : base(data, runtime)
@@ -24,57 +23,54 @@ public sealed class RequestSkillActionNode : StateScriptActionNode
 
     protected override bool OnBind(out string error)
     {
-        _skillIdGetter = null;
-        _positionGetter = null;
-        _targetEntityGetter = null;
+        _skillIdExpression = default;
+        _positionExpression = default;
+        _targetEntityExpression = default;
         _data.SkillId ??= RequestSkillActionNodeData.CreateDefaultSkillIdExpression();
         _data.Input ??= SkillRequestInputData.CreateDefault();
         _data.Input.EnsureValid();
         if (!s_expressionFactory.TryBuildValueExpression(
                 _data.SkillId,
                 Runtime.Sources,
-                out UnitValueCategory category,
-                out Func<UnitValue> skillIdGetter,
+                out CompiledValueExpression skillIdExpression,
                 out error))
         {
             return false;
         }
 
-        if (category != UnitValueCategory.Number)
+        if (skillIdExpression.Category != UnitValueCategory.Number)
         {
-            error = $"RequestSkill SkillId requires Number, but received {category}.";
+            error = $"RequestSkill SkillId requires Number, but received {skillIdExpression.Category}.";
             return false;
         }
 
         if (!s_expressionFactory.TryBuildValueExpression(
                 _data.Input.Position,
                 Runtime.Sources,
-                out category,
-                out Func<UnitValue> positionGetter,
+                out CompiledValueExpression positionExpression,
                 out error))
         {
             return false;
         }
 
-        if (category != UnitValueCategory.Float3)
+        if (positionExpression.Category != UnitValueCategory.Float3)
         {
-            error = $"RequestSkill Position requires Float3, but received {category}.";
+            error = $"RequestSkill Position requires Float3, but received {positionExpression.Category}.";
             return false;
         }
 
         if (!s_expressionFactory.TryBuildValueExpression(
                 _data.Input.TargetEntity,
                 Runtime.Sources,
-                out category,
-                out Func<UnitValue> targetEntityGetter,
+                out CompiledValueExpression targetEntityExpression,
                 out error))
         {
             return false;
         }
 
-        if (category != UnitValueCategory.Entity)
+        if (targetEntityExpression.Category != UnitValueCategory.Entity)
         {
-            error = $"RequestSkill TargetEntity requires Entity, but received {category}.";
+            error = $"RequestSkill TargetEntity requires Entity, but received {targetEntityExpression.Category}.";
             return false;
         }
 
@@ -84,9 +80,9 @@ public sealed class RequestSkillActionNode : StateScriptActionNode
             return false;
         }
 
-        _skillIdGetter = skillIdGetter;
-        _positionGetter = positionGetter;
-        _targetEntityGetter = targetEntityGetter;
+        _skillIdExpression = skillIdExpression;
+        _positionExpression = positionExpression;
+        _targetEntityExpression = targetEntityExpression;
         error = string.Empty;
         return true;
     }
@@ -101,8 +97,7 @@ public sealed class RequestSkillActionNode : StateScriptActionNode
         if (!entityManager.HasComponent<UnitSkillReleaseComponent>(entity))
             return;
 
-        UnitSkillReleaseComponent releaseComponent = entityManager.GetComponentObject<UnitSkillReleaseComponent>(entity);
-        if (releaseComponent == null)
+        if (!entityManager.HasBuffer<SkillReleaseRequest>(entity))
             return;
 
         SkillReleaseRequest request = SkillReleaseRequestUtility.Create(
@@ -112,14 +107,15 @@ public sealed class RequestSkillActionNode : StateScriptActionNode
             new SkillModifierSet(),
             targetPosition,
             targetEntity);
-        releaseComponent.PendingRequests.Add(request);
+        entityManager.GetBuffer<SkillReleaseRequest>(entity).Add(request);
         _output.Pulse();
     }
 
     private bool TryGetSkillId(out int skillId)
     {
         skillId = -1;
-        if (_skillIdGetter == null || !_skillIdGetter().TryGetNumber(out float rawSkillId) || !math.isfinite(rawSkillId))
+        if (!_skillIdExpression.TryEvaluate(Runtime.Sources, out UnitSourceValue skillIdValue) ||
+            !skillIdValue.TryGetNumber(out float rawSkillId) || !math.isfinite(rawSkillId))
         {
             UnityEngine.Debug.LogWarning("[RequestSkill] SkillId expression did not return a number.");
             return false;
@@ -140,20 +136,20 @@ public sealed class RequestSkillActionNode : StateScriptActionNode
     {
         targetPosition = float3.zero;
         targetEntity = Entity.Null;
-        if (_positionGetter == null || !_positionGetter().TryGetFloat3(out targetPosition))
+        if (!_positionExpression.TryEvaluate(Runtime.Sources, out UnitSourceValue positionValue) ||
+            !positionValue.TryGetFloat3(out targetPosition))
         {
             UnityEngine.Debug.LogWarning("[RequestSkill] Position expression did not return Float3.");
             return false;
         }
 
-        UnitValue targetValue = _targetEntityGetter == null ? UnitValue.None : _targetEntityGetter();
-        if (targetValue.Category != UnitValueCategory.Entity)
+        if (!_targetEntityExpression.TryEvaluate(Runtime.Sources, out UnitSourceValue targetValue) ||
+            !targetValue.TryGetEntity(out targetEntity))
         {
             UnityEngine.Debug.LogWarning("[RequestSkill] TargetEntity expression did not return Entity.");
             return false;
         }
 
-        targetEntity = targetValue.Entity;
         return true;
     }
 

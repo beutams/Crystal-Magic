@@ -1,154 +1,135 @@
-using System.Collections.Generic;
 using CrystalMagic.ThirdParty.RVO2;
+using Unity.Burst;
+using Unity.Collections;
 using Unity.Entities;
+using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
 
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(SkillReleaseSystem))]
 [UpdateBefore(typeof(UnitMoveSystem))]
-partial class UnitAvoidanceSystem : SystemBase
+partial struct UnitAvoidanceSystem : ISystem
 {
-    private readonly Dictionary<Entity, Agent> _agentsByEntity = new();
-    private readonly HashSet<Entity> _activeEntities = new();
-    private readonly List<Entity> _orderedEntities = new();
-    private readonly List<Entity> _removedEntities = new();
-    private readonly List<UnitQueryHit> _queryHits = new();
-    private EntityQuery _queryRuntimeQuery;
+    private EntityQuery _agentQuery;
+    private NativeParallelHashMap<Entity, AgentData> _agents;
 
-    protected override void OnCreate()
+    public void OnCreate(ref SystemState state)
     {
-        _queryRuntimeQuery = GetEntityQuery(
-            ComponentType.ReadOnly<UnitQuerySingleton>(),
-            ComponentType.ReadOnly<UnitQueryRuntimeComponent>());
-        RequireForUpdate(_queryRuntimeQuery);
-        RequireForUpdate<UnitAvoidanceComponent>();
+        _agentQuery = state.GetEntityQuery(new EntityQueryDesc
+        {
+            All = new[]
+            {
+                ComponentType.ReadOnly<UnitAvoidanceComponent>(),
+                ComponentType.ReadOnly<UnitNavigationComponent>(),
+                ComponentType.ReadOnly<UnitMoveComponent>(),
+                ComponentType.ReadOnly<LocalTransform>(),
+            },
+            None = new[]
+            {
+                ComponentType.ReadOnly<UnitDeathComponent>(),
+            },
+        });
+        _agents = new NativeParallelHashMap<Entity, AgentData>(16, Allocator.Persistent);
+        state.RequireForUpdate<UnitQuerySingleton>();
+        state.RequireForUpdate<UnitAvoidanceComponent>();
     }
 
-    protected override void OnUpdate()
+    public void OnUpdate(ref SystemState state)
     {
-        float deltaTime = math.max(0.00001f, SystemAPI.Time.DeltaTime);
-        Entity queryEntity = _queryRuntimeQuery.GetSingletonEntity();
-        UnitQueryRuntimeComponent runtime = EntityManager.GetComponentObject<UnitQueryRuntimeComponent>(queryEntity);
-        if (runtime?.UnitGrid == null)
+        UnitQuerySingleton query = SystemAPI.GetSingleton<UnitQuerySingleton>();
+        if (query.UnitGridEntity == Entity.Null ||
+            !state.EntityManager.Exists(query.UnitGridEntity) ||
+            !state.EntityManager.HasBuffer<UnitQueryEntry>(query.UnitGridEntity))
+        {
             return;
-
-        _activeEntities.Clear();
-        _orderedEntities.Clear();
-
-        foreach ((RefRO<UnitAvoidanceComponent> avoidanceRef,
-                  RefRO<UnitNavigationComponent> navigationRef,
-                  RefRO<UnitMoveComponent> moveRef,
-                  RefRO<LocalTransform> transformRef,
-                  Entity entity) in
-                 SystemAPI.Query<
-                         RefRO<UnitAvoidanceComponent>,
-                         RefRO<UnitNavigationComponent>,
-                         RefRO<UnitMoveComponent>,
-                         RefRO<LocalTransform>>()
-                     .WithNone<UnitDeathComponent>()
-                     .WithEntityAccess())
-        {
-            _activeEntities.Add(entity);
-            _orderedEntities.Add(entity);
-
-            if (!_agentsByEntity.TryGetValue(entity, out Agent agent))
-            {
-                agent = new Agent();
-                _agentsByEntity.Add(entity, agent);
-            }
-
-            UnitAvoidanceComponent avoidance = avoidanceRef.ValueRO;
-            UnitNavigationComponent navigation = navigationRef.ValueRO;
-            UnitMoveComponent move = moveRef.ValueRO;
-            float2 currentVelocity = ResolveCurrentVelocity(move);
-            float resolvedSpeed = move.CommandMoveSpeed >= 0f
-                ? move.CommandMoveSpeed
-                : UnitModifierResolver.GetMoveSpeed(EntityManager, entity);
-            float maxSpeed = math.max(0f, math.abs(resolvedSpeed * move.StateMoveMultiplier));
-            float2 targetDirection = math.normalizesafe(move.Direction, float2.zero);
-            float2 targetVelocity = targetDirection * resolvedSpeed * move.StateMoveMultiplier;
-            float maxAcceleration = math.max(0f, UnitModifierResolver.GetMaxAcceleration(EntityManager, entity));
-            float2 preferredVelocity = move.HasFrameVelocity != 0
-                ? currentVelocity
-                : MoveTowards(currentVelocity, targetVelocity, maxAcceleration * deltaTime, maxSpeed);
-
-            if (move.HasFrameVelocity != 0)
-                maxSpeed = math.max(maxSpeed, math.length(currentVelocity));
-
-            float radius = math.max(0.01f, navigation.ClearanceRadius + avoidance.RadiusPadding);
-            agent.Configure(
-                StableAgentId(entity),
-                ToRvo(transformRef.ValueRO.Position.xy),
-                ToRvo(currentVelocity),
-                ToRvo(preferredVelocity),
-                avoidance.NeighborDistance,
-                avoidance.MaxNeighbors,
-                avoidance.TimeHorizon,
-                radius,
-                maxSpeed);
         }
 
-        RemoveInactiveAgents();
-        _orderedEntities.Sort(CompareEntities);
+        state.Dependency.Complete();
+        int agentCount = _agentQuery.CalculateEntityCount();
+        if (agentCount > _agents.Capacity)
+            _agents.Capacity = math.max(agentCount, _agents.Capacity * 2);
+        _agents.Clear();
 
-        for (int entityIndex = 0; entityIndex < _orderedEntities.Count; entityIndex++)
+        JobHandle prepareHandle = new UnitAvoidancePrepareJob
         {
-            Agent agent = _agentsByEntity[_orderedEntities[entityIndex]];
-            agent.BeginNeighborQuery();
-            if (agent.MaxNeighbors <= 0 || agent.NeighborDistance <= 0f)
-                continue;
+            Agents = _agents.AsParallelWriter(),
+            Modifiers = SystemAPI.GetComponentLookup<UnitModifierComponent>(true),
+            DeltaTime = math.max(0.00001f, SystemAPI.Time.DeltaTime),
+        }.ScheduleParallel(_agentQuery, state.Dependency);
 
-            runtime.UnitGrid.QueryCircle(
-                new float3(agent.Position.X, agent.Position.Y, 0f),
-                agent.NeighborDistance,
-                _queryHits,
-                false);
-
-            float rangeSq = agent.NeighborDistance * agent.NeighborDistance;
-            for (int hitIndex = 0; hitIndex < _queryHits.Count; hitIndex++)
-            {
-                Entity neighborEntity = _queryHits[hitIndex].Entity;
-                if (_agentsByEntity.TryGetValue(neighborEntity, out Agent neighbor))
-                    agent.InsertAgentNeighbor(neighbor, ref rangeSq);
-            }
-        }
-
-        for (int entityIndex = 0; entityIndex < _orderedEntities.Count; entityIndex++)
-            _agentsByEntity[_orderedEntities[entityIndex]].ComputeNewVelocity(deltaTime);
-
-        for (int entityIndex = 0; entityIndex < _orderedEntities.Count; entityIndex++)
+        DynamicBuffer<UnitQueryEntry> unitEntries =
+            state.EntityManager.GetBuffer<UnitQueryEntry>(query.UnitGridEntity, true);
+        state.Dependency = new UnitAvoidanceSolveJob
         {
-            Entity entity = _orderedEntities[entityIndex];
-            UnitAvoidanceComponent avoidance = EntityManager.GetComponentData<UnitAvoidanceComponent>(entity);
-            UnitMoveComponent move = EntityManager.GetComponentData<UnitMoveComponent>(entity);
-            Agent agent = _agentsByEntity[entity];
-            avoidance.ResolvedVelocity = new float2(agent.NewVelocity.X, agent.NewVelocity.Y);
-            avoidance.HasResolvedVelocity = move.HasFrameVelocity == 0 ? (byte)1 : (byte)0;
-            EntityManager.SetComponentData(entity, avoidance);
-        }
+            Agents = _agents,
+            UnitEntries = unitEntries.AsNativeArray(),
+            InverseCellSize = query.InverseCellSize,
+            DeltaTime = math.max(0.00001f, SystemAPI.Time.DeltaTime),
+        }.ScheduleParallel(prepareHandle);
     }
 
-    protected override void OnDestroy()
+    public void OnDestroy(ref SystemState state)
     {
-        _agentsByEntity.Clear();
-        _activeEntities.Clear();
-        _orderedEntities.Clear();
-        _removedEntities.Clear();
-        _queryHits.Clear();
+        state.Dependency.Complete();
+        if (_agents.IsCreated)
+            _agents.Dispose();
     }
+}
 
-    private void RemoveInactiveAgents()
+[BurstCompile]
+[WithNone(typeof(UnitDeathComponent))]
+public partial struct UnitAvoidancePrepareJob : IJobEntity
+{
+    internal NativeParallelHashMap<Entity, AgentData>.ParallelWriter Agents;
+
+    [ReadOnly]
+    public ComponentLookup<UnitModifierComponent> Modifiers;
+
+    public float DeltaTime;
+
+    private void Execute(
+        Entity entity,
+        in UnitAvoidanceComponent avoidance,
+        in UnitNavigationComponent navigation,
+        in UnitMoveComponent move,
+        in LocalTransform transform)
     {
-        _removedEntities.Clear();
-        foreach (KeyValuePair<Entity, Agent> pair in _agentsByEntity)
-        {
-            if (!_activeEntities.Contains(pair.Key))
-                _removedEntities.Add(pair.Key);
-        }
+        UnitModifierComponent modifiers = Modifiers.TryGetComponent(
+            entity,
+            out UnitModifierComponent resolvedModifiers)
+            ? resolvedModifiers
+            : UnitModifierComponent.CreateIdentity();
+        float2 currentVelocity = ResolveCurrentVelocity(in move);
+        float resolvedSpeed = move.CommandMoveSpeed >= 0f
+            ? move.CommandMoveSpeed
+            : UnitModifierResolver.GetMoveSpeed(in move, in modifiers);
+        float maxSpeed = math.max(0f, math.abs(resolvedSpeed * move.StateMoveMultiplier));
+        float2 targetDirection = math.normalizesafe(move.Direction, float2.zero);
+        float2 targetVelocity = targetDirection * resolvedSpeed * move.StateMoveMultiplier;
+        float maxAcceleration = math.max(
+            0f,
+            UnitModifierResolver.GetMaxAcceleration(in move, in modifiers));
+        float2 preferredVelocity = move.HasFrameVelocity != 0
+            ? currentVelocity
+            : MoveTowards(currentVelocity, targetVelocity, maxAcceleration * DeltaTime, maxSpeed);
 
-        for (int index = 0; index < _removedEntities.Count; index++)
-            _agentsByEntity.Remove(_removedEntities[index]);
+        if (move.HasFrameVelocity != 0)
+            maxSpeed = math.max(maxSpeed, math.length(currentVelocity));
+
+        Agents.TryAdd(entity, new AgentData
+        {
+            Entity = entity,
+            Position = transform.Position.xy,
+            Velocity = currentVelocity,
+            PreferredVelocity = preferredVelocity,
+            NeighborDistance = math.max(0f, avoidance.NeighborDistance),
+            MaxNeighbors = math.max(0, avoidance.MaxNeighbors),
+            TimeHorizon = math.max(0.00001f, avoidance.TimeHorizon),
+            Radius = math.max(0.01f, navigation.ClearanceRadius + avoidance.RadiusPadding),
+            MaxSpeed = maxSpeed,
+            HasFrameVelocity = move.HasFrameVelocity,
+        });
     }
 
     private static float2 ResolveCurrentVelocity(in UnitMoveComponent move)
@@ -174,19 +155,77 @@ partial class UnitAvoidanceSystem : SystemBase
         return result;
     }
 
-    private static Vector2 ToRvo(float2 value)
+}
+
+[BurstCompile]
+[WithNone(typeof(UnitDeathComponent))]
+public partial struct UnitAvoidanceSolveJob : IJobEntity
+{
+    [ReadOnly]
+    internal NativeParallelHashMap<Entity, AgentData> Agents;
+
+    [ReadOnly]
+    public NativeArray<UnitQueryEntry> UnitEntries;
+
+    public float InverseCellSize;
+    public float DeltaTime;
+
+    private void Execute(Entity entity, ref UnitAvoidanceComponent avoidance)
     {
-        return new Vector2(value.x, value.y);
+        if (!Agents.TryGetValue(entity, out AgentData self))
+        {
+            avoidance.ResolvedVelocity = float2.zero;
+            avoidance.HasResolvedVelocity = 0;
+            return;
+        }
+
+        FixedList4096Bytes<AgentNeighbor> neighbors = default;
+        float rangeSq = self.NeighborDistance * self.NeighborDistance;
+        if (self.MaxNeighbors > 0 && self.NeighborDistance > 0f)
+        {
+            int2 minCell = UnitQueryGrid.GetCell(
+                self.Position - self.NeighborDistance,
+                InverseCellSize);
+            int2 maxCell = UnitQueryGrid.GetCell(
+                self.Position + self.NeighborDistance,
+                InverseCellSize);
+            for (int y = minCell.y; y <= maxCell.y; y++)
+            {
+                for (int x = minCell.x; x <= maxCell.x; x++)
+                {
+                    AddCellNeighbors(
+                        in self,
+                        UnitQueryGrid.GetCellKey(new int2(x, y)),
+                        ref neighbors,
+                        ref rangeSq);
+                }
+            }
+        }
+
+        avoidance.ResolvedVelocity = OrcaSolver.ComputeNewVelocity(in self, in neighbors, DeltaTime);
+        avoidance.HasResolvedVelocity = self.HasFrameVelocity == 0 ? (byte)1 : (byte)0;
     }
 
-    private static int StableAgentId(Entity entity)
+    private void AddCellNeighbors(
+        in AgentData self,
+        long cellKey,
+        ref FixedList4096Bytes<AgentNeighbor> neighbors,
+        ref float rangeSq)
     {
-        return unchecked(entity.Index * 397 ^ entity.Version);
-    }
+        if (!UnitQueryGrid.TryGetCellRange(
+                UnitEntries,
+                cellKey,
+                out int startIndex,
+                out int endIndex))
+        {
+            return;
+        }
 
-    private static int CompareEntities(Entity left, Entity right)
-    {
-        int indexComparison = left.Index.CompareTo(right.Index);
-        return indexComparison != 0 ? indexComparison : left.Version.CompareTo(right.Version);
+        for (int index = startIndex; index < endIndex; index++)
+        {
+            Entity otherEntity = UnitEntries[index].Entity;
+            if (Agents.TryGetValue(otherEntity, out AgentData other))
+                OrcaSolver.InsertNeighbor(in self, in other, ref neighbors, ref rangeSq);
+        }
     }
 }

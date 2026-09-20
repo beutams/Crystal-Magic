@@ -318,59 +318,58 @@ public class ComparatorFactory
     public bool TryBuildValueExpression(
         ValueExpression expression,
         IComparatorValueResolver resolver,
-        out UnitValueCategory category,
-        out Func<UnitValue> getter,
+        out CompiledValueExpression compiled,
         out string error)
     {
-        if (!TryBuildValueExpression(expression, resolver, out CompiledValueExpression compiled, out error))
+        compiled = default;
+        if (resolver == null)
         {
-            category = UnitValueCategory.None;
-            getter = null;
+            error = "A value resolver is required for source expressions.";
             return false;
         }
 
-        category = compiled.Category;
-        getter = compiled.Getter;
+        ExpressionProgram program = default;
+        if (!TryCompileExpression(expression, resolver, ref program, out UnitValueCategory category, out error))
+            return false;
+
+        compiled = new CompiledValueExpression(category, in program);
+        error = string.Empty;
         return true;
     }
 
-    // New entry point. The caller owns the resolver that maps getter keys to cached delegates.
     public Comparator BuildComparator(IReadOnlyList<ConditionConfig> configs, IComparatorValueResolver resolver)
     {
+        ExpressionProgram program = default;
         if (configs == null || configs.Count == 0)
-            return new Comparator(Array.Empty<Condition>());
+            return new Comparator(in program);
 
         if (resolver == null)
         {
             Debug.LogError("[ComparatorFactory] A value resolver is required for expression conditions.");
-            return new Comparator(Array.Empty<Condition>(), false);
+            return new Comparator(in program, false);
         }
 
-        Condition[] conditions = new Condition[configs.Count];
         for (int i = 0; i < configs.Count; i++)
         {
-            if (!TryBuildExpressionCondition(configs[i], resolver, out Condition condition, out string error))
+            if (!TryCompileCondition(configs[i], resolver, ref program, out string error))
             {
                 Debug.LogError($"[ComparatorFactory] Failed to build condition {i}: {error}");
-                return new Comparator(Array.Empty<Condition>(), false);
+                return new Comparator(in program, false);
             }
-
-            conditions[i] = condition;
         }
 
-        return new Comparator(conditions);
+        return new Comparator(in program);
     }
 
     public int CompareCount => _compareFactories.Count;
     public int OperationCount => _operationFactories.Count;
 
-    private bool TryBuildExpressionCondition(
+    private bool TryCompileCondition(
         ConditionConfig config,
         IComparatorValueResolver resolver,
-        out Condition condition,
+        ref ExpressionProgram program,
         out string error)
     {
-        condition = null;
         if (config == null)
         {
             error = "Configuration is null.";
@@ -384,53 +383,70 @@ public class ComparatorFactory
             return false;
         }
 
-        if (!TryBuildInputs(config.Inputs, compareType.Parameters, resolver, out Func<UnitValue>[] getters, out error))
-            return false;
-
-        condition = new Condition(config.ConditionType, compareType, getters);
-        return true;
-    }
-
-    private bool TryBuildInputs(
-        List<ValueExpression> expressions,
-        IReadOnlyList<ComparatorParameterDefinition> parameters,
-        IComparatorValueResolver resolver,
-        out Func<UnitValue>[] getters,
-        out string error)
-    {
-        getters = null;
-        if (expressions == null || expressions.Count != parameters.Count)
+        if (!TryGetCompareCode(compareType, out CompareOperationCode compareCode))
         {
-            error = $"Expected {parameters.Count} input(s), received {expressions?.Count ?? 0}.";
+            error = $"Compare type '{config.CompareType}' has no unmanaged runtime opcode.";
             return false;
         }
 
-        getters = new Func<UnitValue>[parameters.Count];
-        for (int i = 0; i < parameters.Count; i++)
+        if (!TryCompileInputs(config.Inputs, compareType.Parameters, resolver, ref program, out error))
+            return false;
+
+        if (!TryAppendInstruction(
+                ref program,
+                new ExpressionInstruction
+                {
+                    Kind = ExpressionInstructionKind.Compare,
+                    InputCount = (byte)compareType.Parameters.Count,
+                    Compare = compareCode,
+                    ConditionType = config.ConditionType,
+                },
+                out error))
         {
-            if (!TryBuildValueExpression(expressions[i], resolver, out CompiledValueExpression expression, out error))
-                return false;
-
-            if (!parameters[i].Accepts(expression.Category))
-            {
-                error = $"Input '{parameters[i].Name}' requires {parameters[i].Category}, but received {expression.Category}.";
-                return false;
-            }
-
-            getters[i] = expression.Getter;
+            return false;
         }
 
         error = string.Empty;
         return true;
     }
 
-    private bool TryBuildValueExpression(
-        ValueExpression expression,
+    private bool TryCompileInputs(
+        List<ValueExpression> expressions,
+        IReadOnlyList<ComparatorParameterDefinition> parameters,
         IComparatorValueResolver resolver,
-        out CompiledValueExpression compiled,
+        ref ExpressionProgram program,
         out string error)
     {
-        compiled = default;
+        if (expressions == null || expressions.Count != parameters.Count || parameters.Count > byte.MaxValue)
+        {
+            error = $"Expected {parameters.Count} input(s), received {expressions?.Count ?? 0}.";
+            return false;
+        }
+
+        for (int i = 0; i < parameters.Count; i++)
+        {
+            if (!TryCompileExpression(expressions[i], resolver, ref program, out UnitValueCategory category, out error))
+                return false;
+
+            if (!parameters[i].Accepts(category))
+            {
+                error = $"Input '{parameters[i].Name}' requires {parameters[i].Category}, but received {category}.";
+                return false;
+            }
+        }
+
+        error = string.Empty;
+        return true;
+    }
+
+    private bool TryCompileExpression(
+        ValueExpression expression,
+        IComparatorValueResolver resolver,
+        ref ExpressionProgram program,
+        out UnitValueCategory category,
+        out string error)
+    {
+        category = UnitValueCategory.None;
         if (expression == null)
         {
             error = "Expression is null.";
@@ -446,8 +462,26 @@ public class ComparatorFactory
                     return false;
                 }
 
-                UnitValue literal = expression.Literal;
-                compiled = new CompiledValueExpression(literal.Category, () => literal);
+                if (!UnitSourceValue.TryFromUnitValue(expression.Literal, out UnitSourceValue literal) ||
+                    !program.TryAddLiteral(in literal, out ushort literalIndex))
+                {
+                    error = "Expression contains too many literals or an invalid literal value.";
+                    return false;
+                }
+
+                if (!TryAppendInstruction(
+                        ref program,
+                        new ExpressionInstruction
+                        {
+                            Kind = ExpressionInstructionKind.Literal,
+                            LiteralIndex = literalIndex,
+                        },
+                        out error))
+                {
+                    return false;
+                }
+
+                category = expression.Literal.Category;
                 error = string.Empty;
                 return true;
 
@@ -458,32 +492,42 @@ public class ComparatorFactory
                     return false;
                 }
 
-                if (!resolver.TryGet(expression.GetterKey, out IParameterizedUnitValueGetter getter) || getter == null)
+                if (!UnitComponentSourceRegistry.TryGetGet(
+                        expression.GetterKey,
+                        out UnitSourceId sourceId,
+                        out UnitSourceGetSchemaEntry schema))
                 {
-                    error = $"Getter '{expression.GetterKey}' is unavailable.";
+                    return TryCompileConstantGetter(
+                        expression,
+                        resolver,
+                        ref program,
+                        out category,
+                        out error);
+                }
+
+                if (!TryCompileInputs(expression.Inputs, schema.Parameters, resolver, ref program, out error))
+                    return false;
+
+                if (!TryAppendInstruction(
+                        ref program,
+                        new ExpressionInstruction
+                        {
+                            Kind = ExpressionInstructionKind.Source,
+                            InputCount = (byte)schema.Parameters.Count,
+                            SourceId = sourceId,
+                            SourceTarget = expression.SourceTarget,
+                        },
+                        out error))
+                {
                     return false;
                 }
 
-                if (!TryBuildInputs(expression.Inputs, getter.Parameters, resolver, out Func<UnitValue>[] getterInputs, out error))
-                    return false;
-
-                UnitValue[] getterValues = new UnitValue[getterInputs.Length];
-                Func<UnitValue> getterFunction = () =>
-                {
-                    for (int i = 0; i < getterInputs.Length; i++)
-                        getterValues[i] = getterInputs[i]();
-
-                    return getter.TryGet(getterValues, out UnitValue value)
-                        ? value
-                        : UnitValue.None;
-                };
-
-                compiled = new CompiledValueExpression(getter.ReturnType, getterFunction);
+                category = schema.ReturnType;
                 error = string.Empty;
                 return true;
 
             case ValueExpressionKind.Operation:
-                return TryBuildOperationExpression(expression, resolver, out compiled, out error);
+                return TryCompileOperationExpression(expression, resolver, ref program, out category, out error);
 
             default:
                 error = $"Unsupported expression kind '{expression.Kind}'.";
@@ -491,13 +535,14 @@ public class ComparatorFactory
         }
     }
 
-    private bool TryBuildOperationExpression(
+    private bool TryCompileOperationExpression(
         ValueExpression expression,
         IComparatorValueResolver resolver,
-        out CompiledValueExpression compiled,
+        ref ExpressionProgram program,
+        out UnitValueCategory category,
         out string error)
     {
-        compiled = default;
+        category = UnitValueCategory.None;
         IValueOperation operation = CreateValueOperation(expression.OperationType);
         if (operation == null)
         {
@@ -505,33 +550,130 @@ public class ComparatorFactory
             return false;
         }
 
-        if (!TryBuildInputs(expression.Inputs, operation.Parameters, resolver, out Func<UnitValue>[] childGetters, out error))
+        if (!TryGetOperationCode(operation, out ValueOperationCode operationCode))
+        {
+            error = $"Operation '{expression.OperationType}' has no unmanaged runtime opcode.";
+            return false;
+        }
+
+        if (!TryCompileInputs(expression.Inputs, operation.Parameters, resolver, ref program, out error))
             return false;
 
-        UnitValue[] values = new UnitValue[childGetters.Length];
-        Func<UnitValue> operationGetter = () =>
+        if (!TryAppendInstruction(
+                ref program,
+                new ExpressionInstruction
+                {
+                    Kind = ExpressionInstructionKind.Operation,
+                    InputCount = (byte)operation.Parameters.Count,
+                    Operation = operationCode,
+                },
+                out error))
         {
-            for (int i = 0; i < childGetters.Length; i++)
-                values[i] = childGetters[i]();
+            return false;
+        }
 
-            return operation.TryEvaluate(values, out UnitValue result) ? result : UnitValue.None;
-        };
-
-        compiled = new CompiledValueExpression(operation.ResultCategory, operationGetter);
+        category = operation.ResultCategory;
         error = string.Empty;
         return true;
     }
 
-    private readonly struct CompiledValueExpression
+    private static bool TryAppendInstruction(
+        ref ExpressionProgram program,
+        in ExpressionInstruction instruction,
+        out string error)
     {
-        public CompiledValueExpression(UnitValueCategory category, Func<UnitValue> getter)
+        if (!program.TryAddInstruction(in instruction))
         {
-            Category = category;
-            Getter = getter;
+            error = "Expression contains too many instructions.";
+            return false;
         }
 
-        public UnitValueCategory Category { get; }
-        public Func<UnitValue> Getter { get; }
+        error = string.Empty;
+        return true;
+    }
+
+    private static bool TryGetOperationCode(IValueOperation operation, out ValueOperationCode code)
+    {
+        switch (operation)
+        {
+            case AddOperation: code = ValueOperationCode.Add; return true;
+            case SubtractOperation: code = ValueOperationCode.Subtract; return true;
+            case MultiplyOperation: code = ValueOperationCode.Multiply; return true;
+            case DivideOperation: code = ValueOperationCode.Divide; return true;
+            case MinOperation: code = ValueOperationCode.Min; return true;
+            case MaxOperation: code = ValueOperationCode.Max; return true;
+            case AbsOperation: code = ValueOperationCode.Abs; return true;
+            case ClampOperation: code = ValueOperationCode.Clamp; return true;
+            case DistanceOperation: code = ValueOperationCode.Distance; return true;
+            case DistanceSquaredOperation: code = ValueOperationCode.DistanceSquared; return true;
+            case LengthOperation: code = ValueOperationCode.Length; return true;
+            case Length2Operation: code = ValueOperationCode.Length2; return true;
+            case LengthSquaredOperation: code = ValueOperationCode.LengthSquared; return true;
+            case DotOperation: code = ValueOperationCode.Dot; return true;
+            case ScaleFloat2Operation: code = ValueOperationCode.ScaleFloat2; return true;
+            default: code = default; return false;
+        }
+    }
+
+    private static bool TryCompileConstantGetter(
+        ValueExpression expression,
+        IComparatorValueResolver resolver,
+        ref ExpressionProgram program,
+        out UnitValueCategory category,
+        out string error)
+    {
+        category = UnitValueCategory.None;
+        if (!resolver.TryGet(expression.GetterKey, out IParameterizedUnitValueGetter getter) || getter == null)
+        {
+            error = $"Getter '{expression.GetterKey}' is unavailable.";
+            return false;
+        }
+
+        if (getter.Parameters.Count != 0 || expression.Inputs == null || expression.Inputs.Count != 0)
+        {
+            error = $"Getter '{expression.GetterKey}' is not a generated unmanaged source.";
+            return false;
+        }
+
+        if (!getter.TryGet(Array.Empty<UnitValue>(), out UnitValue value) ||
+            !UnitSourceValue.TryFromUnitValue(value, out UnitSourceValue literal) ||
+            !program.TryAddLiteral(in literal, out ushort literalIndex))
+        {
+            error = $"Getter '{expression.GetterKey}' could not be resolved to a constant value.";
+            return false;
+        }
+
+        if (!TryAppendInstruction(
+                ref program,
+                new ExpressionInstruction
+                {
+                    Kind = ExpressionInstructionKind.Literal,
+                    LiteralIndex = literalIndex,
+                },
+                out error))
+        {
+            return false;
+        }
+
+        category = getter.ReturnType;
+        error = string.Empty;
+        return true;
+    }
+
+    private static bool TryGetCompareCode(ICompareType compare, out CompareOperationCode code)
+    {
+        switch (compare)
+        {
+            case Equal: code = CompareOperationCode.Equal; return true;
+            case NotEqual: code = CompareOperationCode.NotEqual; return true;
+            case GreaterThan: code = CompareOperationCode.GreaterThan; return true;
+            case GreaterOrEqual: code = CompareOperationCode.GreaterOrEqual; return true;
+            case LessThan: code = CompareOperationCode.LessThan; return true;
+            case LessOrEqual: code = CompareOperationCode.LessOrEqual; return true;
+            case IsTrue: code = CompareOperationCode.IsTrue; return true;
+            case IsFalse: code = CompareOperationCode.IsFalse; return true;
+            default: code = default; return false;
+        }
     }
 
     internal static ComparatorParameterDefinition[] NumberPair()

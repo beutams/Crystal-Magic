@@ -145,11 +145,11 @@ namespace CrystalMagic.Game.Skill
             if (!s_expressionFactory.TryBuildValueExpression(
                     expression ?? new ValueExpression { Literal = UnitValue.FromFloat(0f) },
                     Context.Sources,
-                    out UnitValueCategory category,
-                    out Func<UnitValue> getter,
+                    out CompiledValueExpression compiled,
                     out _) ||
-                category != UnitValueCategory.Number ||
-                !getter().TryGetNumber(out value) ||
+                compiled.Category != UnitValueCategory.Number ||
+                !compiled.TryEvaluate(Context.Sources, out UnitSourceValue sourceValue) ||
+                !sourceValue.TryGetNumber(out value) ||
                 float.IsNaN(value) ||
                 float.IsInfinity(value))
             {
@@ -183,7 +183,7 @@ namespace CrystalMagic.Game.Skill
         protected override SkillAdditionActionStatus OnStart()
         {
             if (string.IsNullOrWhiteSpace(_data.SetterKey) ||
-                !Context.Sources.TryGetDefinition(_data.SetterKey, out UnitSourceSet setter) ||
+                !Context.Sources.TryGetDefinition(_data.SetterKey, _data.SourceTarget, out UnitSourceSet setter) ||
                 (setter.RequiresKey && string.IsNullOrWhiteSpace(_data.Key)) ||
                 _data.Values == null ||
                 _data.Values.Count != setter.Parameters.Count)
@@ -191,26 +191,28 @@ namespace CrystalMagic.Game.Skill
                 return SkillAdditionActionStatus.Failed;
             }
 
-            UnitValue[] values = new UnitValue[setter.Parameters.Count];
-            for (int i = 0; i < values.Length; i++)
+            UnitSourceArguments arguments = default;
+            for (int i = 0; i < setter.Parameters.Count; i++)
             {
                 if (!s_expressionFactory.TryBuildValueExpression(
                         _data.Values[i] ?? new ValueExpression(),
                         Context.Sources,
-                        out UnitValueCategory category,
-                        out Func<UnitValue> getter,
+                        out CompiledValueExpression compiled,
                         out _) ||
-                    !setter.Parameters[i].Accepts(category))
+                    !setter.Parameters[i].Accepts(compiled.Category) ||
+                    !compiled.TryEvaluate(Context.Sources, out UnitSourceValue sourceValue) ||
+                    arguments.Values.Length >= arguments.Values.Capacity)
                 {
                     return SkillAdditionActionStatus.Failed;
                 }
 
-                values[i] = getter();
+                arguments.Values.Add(sourceValue);
             }
 
+            UnitSourceValue keyedValue = arguments.Count > 0 ? arguments.Values[0] : default;
             bool didSet = setter.RequiresKey
-                ? setter.TrySet(_data.Key, values[0])
-                : setter.TrySet(values);
+                ? setter.TrySet(_data.Key, in keyedValue)
+                : setter.TrySet(in arguments);
             return didSet ? SkillAdditionActionStatus.Completed : SkillAdditionActionStatus.Failed;
         }
 
@@ -238,7 +240,7 @@ namespace CrystalMagic.Game.Skill
             int sourceSkillId = PlayerCurrentSkillUtility.TryGetCurrentSkillId(Context.EntityManager, Context.Entity, out int currentSkillId)
                 ? currentSkillId
                 : -1;
-            SkillExecutor.ExecuteEffects(_data.Effects, new SkillContent
+            EffectUtility.Enqueue(Context.EntityManager, _data.Effects, new SkillContent
             {
                 EntityManager = Context.EntityManager,
                 TriggerSource = SkillTriggerSource.Script,

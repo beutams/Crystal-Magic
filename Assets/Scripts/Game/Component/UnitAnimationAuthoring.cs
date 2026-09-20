@@ -1,5 +1,4 @@
 using CrystalMagic.Game.Data;
-using Server;
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
@@ -59,19 +58,24 @@ public static class UnitAnimationSource
         ParameterNames = new[] { "AnimationName" })]
     public static bool TrySet(
         int operation,
-        EntityManager entityManager,
-        Entity entity,
+        UnitSourceAccessContext context,
+        ref ComponentLookup<UnitAnimationComponent> animationLookup,
+        in ComponentLookup<WorldStateComponent> worldStateLookup,
         in UnitSourceArguments arguments)
     {
         if ((operation != 0 && operation != 1) ||
             !arguments.TryGetString(0, out FixedString128Bytes sourceName) ||
-            !entityManager.Exists(entity) || !entityManager.HasComponent<UnitAnimationComponent>(entity))
+            !animationLookup.HasComponent(context.TargetEntity))
         {
             return false;
         }
 
-        FixedString64Bytes animationName = new(sourceName.ToString().Trim());
-        UnitAnimationComponent animation = entityManager.GetComponentData<UnitAnimationComponent>(entity);
+        FixedString128Bytes trimmedSourceName = sourceName.Trim();
+        FixedString64Bytes animationName = default;
+        if (animationName.CopyFrom(in trimmedSourceName) != CopyError.None)
+            return false;
+
+        UnitAnimationComponent animation = animationLookup[context.TargetEntity];
         bool forceRestart = operation == 1;
         bool changed = !animation.AnimationName.Equals(animationName);
         if (!changed && !forceRestart)
@@ -81,8 +85,10 @@ public static class UnitAnimationSource
         if (sequence == 0u)
             sequence = 1u;
 
-        uint startFrame = FrameManagerUtility.TryGet(entityManager, out FrameManager frameManager)
-            ? frameManager.currentFrame
+        uint startFrame = worldStateLookup.TryGetComponent(
+            context.GlobalEntity,
+            out WorldStateComponent worldState)
+            ? worldState.CurrentFrame
             : 0u;
 
         animation.AnimationName = animationName;
@@ -97,7 +103,7 @@ public static class UnitAnimationSource
             animation.ElapsedSeconds = 0f;
         }
 
-        entityManager.SetComponentData(entity, animation);
+        animationLookup[context.TargetEntity] = animation;
         return true;
     }
 }

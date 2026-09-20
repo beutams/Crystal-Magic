@@ -37,7 +37,15 @@ namespace CrystalMagic.Game.Data.Effects
         {
             float attributePower = ResolveAttributePower(elementComponent);
             SkillModifierSet runtimeModifiers = CreateModifiersWithAttributePower(modifiers, attributePower);
-            AppendElementModifiers(GetAttributePowerValue(runtimeModifiers), runtimeModifiers);
+            if (Element != ElementType.None)
+            {
+                runtimeModifiers.Add(new SkillModifierEntry
+                {
+                    Channel = SkillModifierChannel.BuffDuration,
+                    Factor = GetAttributePowerValue(runtimeModifiers),
+                });
+            }
+
             PersistentEffectData copy = (PersistentEffectData)base.CreateRuntimeCopy(runtimeModifiers, elementComponent);
             copy.TotalDuration = ApplyModifierNonNegative(runtimeModifiers, SkillModifierChannel.EffectDuration, TotalDuration);
             copy.TotalDuration = ApplyModifierNonNegative(runtimeModifiers, SkillModifierChannel.BuffDuration, copy.TotalDuration);
@@ -48,16 +56,5 @@ namespace CrystalMagic.Game.Data.Effects
             return copy;
         }
 
-        private void AppendElementModifiers(float elementBonus, SkillModifierSet modifiers)
-        {
-            if (Element == ElementType.None)
-                return;
-
-            modifiers.Add(new SkillModifierEntry
-            {
-                Channel = SkillModifierChannel.BuffDuration,
-                Factor = elementBonus,
-            });
-        }
     }
 }

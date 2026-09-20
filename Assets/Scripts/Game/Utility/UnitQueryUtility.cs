@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using CrystalMagic.Core;
 using Unity.Collections;
@@ -21,86 +20,68 @@ public static class UnitQueryUtility
 {
     public static bool TryGetGrid(EntityManager entityManager, UnitQueryGridKind gridKind, out UnitQueryGrid grid)
     {
-        EntityQuery singletonQuery = entityManager.CreateEntityQuery(
-            ComponentType.ReadOnly<UnitQuerySingleton>(),
-            ComponentType.ReadOnly<UnitQueryRuntimeComponent>());
-
-        try
+        using EntityQuery singletonQuery = entityManager.CreateEntityQuery(
+            ComponentType.ReadOnly<UnitQuerySingleton>());
+        if (singletonQuery.IsEmptyIgnoreFilter)
         {
-            if (singletonQuery.IsEmptyIgnoreFilter)
-            {
-                grid = null;
-                return false;
-            }
-
-            Entity singletonEntity = singletonQuery.GetSingletonEntity();
-            UnitQueryRuntimeComponent runtime = entityManager.GetComponentObject<UnitQueryRuntimeComponent>(singletonEntity);
-            if (runtime == null)
-            {
-                grid = null;
-                return false;
-            }
-
-            grid = gridKind == UnitQueryGridKind.Interactable
-                ? runtime.InteractableGrid
-                : runtime.UnitGrid;
-            return grid != null && grid.IsCreated;
+            grid = default;
+            return false;
         }
-        finally
+
+        UnitQuerySingleton singleton =
+            entityManager.GetComponentData<UnitQuerySingleton>(singletonQuery.GetSingletonEntity());
+        Entity gridEntity = gridKind == UnitQueryGridKind.Interactable
+            ? singleton.InteractableGridEntity
+            : singleton.UnitGridEntity;
+        if (gridEntity == Entity.Null ||
+            !entityManager.Exists(gridEntity) ||
+            !entityManager.HasBuffer<UnitQueryEntry>(gridEntity))
         {
-            singletonQuery.Dispose();
+            grid = default;
+            return false;
         }
+
+        grid = new UnitQueryGrid(
+            entityManager.GetBuffer<UnitQueryEntry>(gridEntity, true),
+            singleton.InverseCellSize);
+        return grid.IsCreated;
     }
 }
 
-public sealed class UnitQueryGrid : IDisposable
+/// <summary>
+/// Lightweight view over one sorted ECS query buffer.
+/// </summary>
+public struct UnitQueryGrid
 {
     public const float DefaultCellSize = 4f;
 
     private static readonly UnitQueryHitComparer HitComparer = new();
 
-    private NativeParallelMultiHashMap<long, UnitQueryHit> _entries;
-    private readonly float _inverseCellSize;
+    private DynamicBuffer<UnitQueryEntry> _entries;
+    private float _inverseCellSize;
 
-    public bool IsCreated => _entries.IsCreated;
-    public float InverseCellSize => _inverseCellSize;
-
-    public UnitQueryGrid(int initialCapacity = 16, float cellSize = DefaultCellSize)
+    public UnitQueryGrid(DynamicBuffer<UnitQueryEntry> entries, float inverseCellSize)
     {
-        float resolvedCellSize = math.max(0.01f, cellSize);
-        _inverseCellSize = 1f / resolvedCellSize;
-        _entries = new NativeParallelMultiHashMap<long, UnitQueryHit>(
-            math.max(1, initialCapacity),
-            Allocator.Persistent);
+        _entries = entries;
+        _inverseCellSize = inverseCellSize;
     }
 
-    public void PrepareForBuild(int entryCount)
-    {
-        if (!_entries.IsCreated)
-            return;
+    public readonly bool IsCreated => _entries.IsCreated;
+    public readonly float InverseCellSize => _inverseCellSize;
 
-        if (entryCount > _entries.Capacity)
-            _entries.Capacity = math.max(entryCount, _entries.Capacity * 2);
+    public readonly NativeArray<UnitQueryEntry> AsNativeArray() => _entries.AsNativeArray();
 
-        _entries.Clear();
-    }
-
-    public NativeParallelMultiHashMap<long, UnitQueryHit>.ParallelWriter AsParallelWriter()
-    {
-        return _entries.AsParallelWriter();
-    }
-
-    public NativeParallelMultiHashMap<long, UnitQueryHit>.ReadOnly AsReadOnly()
-    {
-        return _entries.AsReadOnly();
-    }
-
-    public void QueryCircle(float3 center, float radius, List<UnitQueryHit> results, bool reportDebug = true)
+    public readonly void QueryCircle(
+        float3 center,
+        float radius,
+        List<UnitQueryHit> results,
+        bool reportDebug = true)
     {
         results.Clear();
         if (!_entries.IsCreated || radius <= 0f)
             return;
 
+        NativeArray<UnitQueryEntry> entries = _entries.AsNativeArray();
         float2 queryCenter = center.xy;
         float radiusSq = radius * radius;
         int2 minCell = GetCell(queryCenter - radius, _inverseCellSize);
@@ -109,7 +90,7 @@ public sealed class UnitQueryGrid : IDisposable
         for (int y = minCell.y; y <= maxCell.y; y++)
         {
             for (int x = minCell.x; x <= maxCell.x; x++)
-                AddCircleHits(GetCellKey(new int2(x, y)), queryCenter, radiusSq, results);
+                AddCircleHits(entries, GetCellKey(new int2(x, y)), queryCenter, radiusSq, results);
         }
 
         SortResults(results);
@@ -120,12 +101,18 @@ public sealed class UnitQueryGrid : IDisposable
         }
     }
 
-    public void QueryForwardRect(float3 origin, float2 forward, float length, float width, List<UnitQueryHit> results)
+    public readonly void QueryForwardRect(
+        float3 origin,
+        float2 forward,
+        float length,
+        float width,
+        List<UnitQueryHit> results)
     {
         results.Clear();
         if (!_entries.IsCreated || length <= 0f || width <= 0f || math.lengthsq(forward) <= 0.0001f)
             return;
 
+        NativeArray<UnitQueryEntry> entries = _entries.AsNativeArray();
         float2 normalizedForward = math.normalize(forward);
         float2 right = new(-normalizedForward.y, normalizedForward.x);
         float halfWidth = width * 0.5f;
@@ -146,6 +133,7 @@ public sealed class UnitQueryGrid : IDisposable
             for (int x = minCell.x; x <= maxCell.x; x++)
             {
                 AddForwardRectHits(
+                    entries,
                     GetCellKey(new int2(x, y)),
                     origin.xy,
                     normalizedForward,
@@ -161,12 +149,13 @@ public sealed class UnitQueryGrid : IDisposable
         ReportHits(origin, results);
     }
 
-    public void QueryAxisAlignedRect(float3 center, float2 size, List<UnitQueryHit> results)
+    public readonly void QueryAxisAlignedRect(float3 center, float2 size, List<UnitQueryHit> results)
     {
         results.Clear();
         if (!_entries.IsCreated || math.any(size <= 0f))
             return;
 
+        NativeArray<UnitQueryEntry> entries = _entries.AsNativeArray();
         float2 halfSize = size * 0.5f;
         float2 rectMin = center.xy - halfSize;
         float2 rectMax = center.xy + halfSize;
@@ -176,7 +165,14 @@ public sealed class UnitQueryGrid : IDisposable
         for (int y = minCell.y; y <= maxCell.y; y++)
         {
             for (int x = minCell.x; x <= maxCell.x; x++)
-                AddAxisAlignedRectHits(GetCellKey(new int2(x, y)), rectMin, rectMax, results);
+            {
+                AddAxisAlignedRectHits(
+                    entries,
+                    GetCellKey(new int2(x, y)),
+                    rectMin,
+                    rectMax,
+                    results);
+            }
         }
 
         SortResults(results);
@@ -188,12 +184,18 @@ public sealed class UnitQueryGrid : IDisposable
         ReportHits(center, results);
     }
 
-    public void QueryCone(float3 origin, float2 forward, float radius, float angleDegrees, List<UnitQueryHit> results)
+    public readonly void QueryCone(
+        float3 origin,
+        float2 forward,
+        float radius,
+        float angleDegrees,
+        List<UnitQueryHit> results)
     {
         results.Clear();
         if (!_entries.IsCreated || radius <= 0f || angleDegrees <= 0f || math.lengthsq(forward) <= 0.0001f)
             return;
 
+        NativeArray<UnitQueryEntry> entries = _entries.AsNativeArray();
         float2 normalizedForward = math.normalize(forward);
         float radiusSq = radius * radius;
         float minDot = math.cos(math.radians(math.clamp(angleDegrees, 0f, 360f) * 0.5f));
@@ -205,6 +207,7 @@ public sealed class UnitQueryGrid : IDisposable
             for (int x = minCell.x; x <= maxCell.x; x++)
             {
                 AddConeHits(
+                    entries,
                     GetCellKey(new int2(x, y)),
                     origin.xy,
                     normalizedForward,
@@ -219,12 +222,6 @@ public sealed class UnitQueryGrid : IDisposable
         ReportHits(origin, results);
     }
 
-    public void Dispose()
-    {
-        if (_entries.IsCreated)
-            _entries.Dispose();
-    }
-
     public static int2 GetCell(float2 position, float inverseCellSize)
     {
         return (int2)math.floor(position * inverseCellSize);
@@ -235,19 +232,65 @@ public sealed class UnitQueryGrid : IDisposable
         return ((long)cell.x << 32) | (uint)cell.y;
     }
 
-    private void AddCircleHits(long cellKey, float2 center, float radiusSq, List<UnitQueryHit> results)
+    public static bool TryGetCellRange(
+        NativeArray<UnitQueryEntry> entries,
+        long cellKey,
+        out int startIndex,
+        out int endIndex)
     {
-        if (!_entries.TryGetFirstValue(cellKey, out UnitQueryHit hit, out NativeParallelMultiHashMapIterator<long> iterator))
-            return;
-
-        do
+        int low = 0;
+        int high = entries.Length;
+        while (low < high)
         {
-            if (math.lengthsq(hit.Position.xy - center) <= radiusSq)
-                results.Add(hit);
-        } while (_entries.TryGetNextValue(out hit, ref iterator));
+            int middle = low + ((high - low) >> 1);
+            if (entries[middle].CellKey < cellKey)
+                low = middle + 1;
+            else
+                high = middle;
+        }
+
+        startIndex = low;
+        if (startIndex >= entries.Length || entries[startIndex].CellKey != cellKey)
+        {
+            endIndex = startIndex;
+            return false;
+        }
+
+        low = startIndex;
+        high = entries.Length;
+        while (low < high)
+        {
+            int middle = low + ((high - low) >> 1);
+            if (entries[middle].CellKey <= cellKey)
+                low = middle + 1;
+            else
+                high = middle;
+        }
+
+        endIndex = low;
+        return true;
     }
 
-    private void AddForwardRectHits(
+    private static void AddCircleHits(
+        NativeArray<UnitQueryEntry> entries,
+        long cellKey,
+        float2 center,
+        float radiusSq,
+        List<UnitQueryHit> results)
+    {
+        if (!TryGetCellRange(entries, cellKey, out int startIndex, out int endIndex))
+            return;
+
+        for (int index = startIndex; index < endIndex; index++)
+        {
+            UnitQueryEntry entry = entries[index];
+            if (math.lengthsq(entry.Position.xy - center) <= radiusSq)
+                results.Add(new UnitQueryHit { Entity = entry.Entity, Position = entry.Position });
+        }
+    }
+
+    private static void AddForwardRectHits(
+        NativeArray<UnitQueryEntry> entries,
         long cellKey,
         float2 origin,
         float2 normalizedForward,
@@ -256,36 +299,43 @@ public sealed class UnitQueryGrid : IDisposable
         float halfWidth,
         List<UnitQueryHit> results)
     {
-        if (!_entries.TryGetFirstValue(cellKey, out UnitQueryHit hit, out NativeParallelMultiHashMapIterator<long> iterator))
+        if (!TryGetCellRange(entries, cellKey, out int startIndex, out int endIndex))
             return;
 
-        do
+        for (int index = startIndex; index < endIndex; index++)
         {
-            float2 difference = hit.Position.xy - origin;
+            UnitQueryEntry entry = entries[index];
+            float2 difference = entry.Position.xy - origin;
             float forwardDistance = math.dot(difference, normalizedForward);
             if (forwardDistance < 0f || forwardDistance > length)
                 continue;
 
-            float lateralDistance = math.abs(math.dot(difference, right));
-            if (lateralDistance <= halfWidth)
-                results.Add(hit);
-        } while (_entries.TryGetNextValue(out hit, ref iterator));
+            if (math.abs(math.dot(difference, right)) <= halfWidth)
+                results.Add(new UnitQueryHit { Entity = entry.Entity, Position = entry.Position });
+        }
     }
 
-    private void AddAxisAlignedRectHits(long cellKey, float2 rectMin, float2 rectMax, List<UnitQueryHit> results)
+    private static void AddAxisAlignedRectHits(
+        NativeArray<UnitQueryEntry> entries,
+        long cellKey,
+        float2 rectMin,
+        float2 rectMax,
+        List<UnitQueryHit> results)
     {
-        if (!_entries.TryGetFirstValue(cellKey, out UnitQueryHit hit, out NativeParallelMultiHashMapIterator<long> iterator))
+        if (!TryGetCellRange(entries, cellKey, out int startIndex, out int endIndex))
             return;
 
-        do
+        for (int index = startIndex; index < endIndex; index++)
         {
-            float2 position = hit.Position.xy;
+            UnitQueryEntry entry = entries[index];
+            float2 position = entry.Position.xy;
             if (!math.any(position < rectMin) && !math.any(position > rectMax))
-                results.Add(hit);
-        } while (_entries.TryGetNextValue(out hit, ref iterator));
+                results.Add(new UnitQueryHit { Entity = entry.Entity, Position = entry.Position });
+        }
     }
 
-    private void AddConeHits(
+    private static void AddConeHits(
+        NativeArray<UnitQueryEntry> entries,
         long cellKey,
         float2 origin,
         float2 normalizedForward,
@@ -293,12 +343,13 @@ public sealed class UnitQueryGrid : IDisposable
         float minDot,
         List<UnitQueryHit> results)
     {
-        if (!_entries.TryGetFirstValue(cellKey, out UnitQueryHit hit, out NativeParallelMultiHashMapIterator<long> iterator))
+        if (!TryGetCellRange(entries, cellKey, out int startIndex, out int endIndex))
             return;
 
-        do
+        for (int index = startIndex; index < endIndex; index++)
         {
-            float2 difference = hit.Position.xy - origin;
+            UnitQueryEntry entry = entries[index];
+            float2 difference = entry.Position.xy - origin;
             float distanceSq = math.lengthsq(difference);
             if (distanceSq > radiusSq)
                 continue;
@@ -306,9 +357,9 @@ public sealed class UnitQueryGrid : IDisposable
             if (distanceSq <= 0.0001f ||
                 math.dot(normalizedForward, difference * math.rsqrt(distanceSq)) >= minDot)
             {
-                results.Add(hit);
+                results.Add(new UnitQueryHit { Entity = entry.Entity, Position = entry.Position });
             }
-        } while (_entries.TryGetNextValue(out hit, ref iterator));
+        }
     }
 
     private static void SortResults(List<UnitQueryHit> results)

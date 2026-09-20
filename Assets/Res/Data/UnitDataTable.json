@@ -1083,6 +1083,23 @@
       "PrefabPath": "Assets/Res/Prefab/Unit/DungeonInterestPoint.prefab",
       "Modules": [],
       "Id": 30
+    },
+    {
+      "Name": "NetworkNPC",
+      "Description": "联机大厅NPC",
+      "PrefabPath": "Assets/Res/Prefab/Unit/NetworkNPC.prefab",
+      "Modules": [
+        {
+          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+          "Faction": 4
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
+          "BaseMoveSpeed": 5.0,
+          "BaseMaxAcceleration": 30.0
+        }
+      ],
+      "Id": 31
     }
   ]
 }

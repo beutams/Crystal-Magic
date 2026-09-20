@@ -22,14 +22,3 @@ public sealed class BehaviorNodeDataFactory : GeneratedFactory<string, BehaviorN
         return node;
     }
 }
-
-public sealed class BehaviorNodeFactory : GeneratedFactory<Type, BehaviorNodeData, ABehaviorNode>
-{
-    public ABehaviorNode CreateNode(BehaviorNodeData data)
-    {
-        if (data == null)
-            return null;
-
-        return Create(data.GetType(), data);
-    }
-}

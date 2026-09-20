@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class ValueExpression
 {
     public ValueExpressionKind Kind = ValueExpressionKind.Literal;
+    public UnitSourceTarget SourceTarget = UnitSourceTarget.Self;
     public UnitValue Literal = UnitValue.FromFloat(0f);
     public string GetterKey = string.Empty;
     public string OperationType = string.Empty;

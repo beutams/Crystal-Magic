@@ -78,7 +78,7 @@ namespace CrystalMagic.Game.Skill
         public SkillContent Clone()
         {
             SkillContent copy = (SkillContent)MemberwiseClone();
-            copy.RuntimeModifiers = RuntimeModifiers?.Clone();
+            copy.RuntimeModifiers = RuntimeModifiers;
             return copy;
         }
 

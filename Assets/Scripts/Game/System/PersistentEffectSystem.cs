@@ -11,10 +11,11 @@ partial class PersistentEffectSystem : SystemBase
     private readonly List<PersistentEffectInstance> _instances = new();
     private readonly List<PersistentEffectInstance> _pendingInstances = new();
     private bool _isUpdating;
+    private Entity _queueEntity;
 
     protected override void OnCreate()
     {
-        PersistentEffectUtility.GetOrCreate(EntityManager);
+        _queueEntity = PersistentEffectUtility.GetOrCreateEntity(EntityManager);
         RequireForUpdate<PersistentEffectQueueComponent>();
     }
 
@@ -36,18 +37,21 @@ partial class PersistentEffectSystem : SystemBase
                 SkillContent tickContext = instance.Context.Clone();
                 tickContext.EntityManager = EntityManager;
                 tickContext.PersistentEffectAppliedBuffTargets = instance.AppliedBuffTargets;
-                ExecuteEffects(instance.OnTickEffects, tickContext);
+                EffectUtility.Enqueue(EntityManager, instance.OnTickEffectListId, tickContext);
                 instance.NextTickTime += instance.TickIntervalSeconds;
             }
 
             if (instance.Elapsed >= instance.TotalDuration)
             {
-                if (instance.OnEndEffects != null && instance.OnEndEffects.Length > 0)
+                if (instance.OnEndEffectListId.IsValid)
                 {
                     SkillContent endContext = instance.Context.Clone();
                     endContext.EntityManager = EntityManager;
-                    ExecuteEffects(instance.OnEndEffects, endContext);
+                    EffectUtility.Enqueue(EntityManager, instance.OnEndEffectListId, endContext);
                 }
+
+                EffectUtility.ReleaseAfterExecution(EntityManager, instance.OnTickEffectListId);
+                EffectUtility.ReleaseAfterExecution(EntityManager, instance.OnEndEffectListId);
 
                 _instances.RemoveAt(i);
             }
@@ -57,27 +61,45 @@ partial class PersistentEffectSystem : SystemBase
         AppendPendingInstances();
     }
 
-    private void ExecuteEffects(EffectData[] effects, SkillContent context)
-    {
-        SkillExecutor.ExecuteEffects(effects, context);
-    }
-
     private void ConsumePendingRequests()
     {
-        PersistentEffectQueueComponent queue = PersistentEffectUtility.GetOrCreate(EntityManager);
-        if (queue.Requests.Count <= 0)
+        DynamicBuffer<PersistentEffectRequest> requests =
+            EntityManager.GetBuffer<PersistentEffectRequest>(_queueEntity);
+        if (requests.IsEmpty)
             return;
 
-        for (int i = 0; i < queue.Requests.Count; i++)
+        for (int i = 0; i < requests.Length; i++)
         {
-            PersistentEffectRequest request = queue.Requests[i];
-            if (request == null || request.Data == null || request.SourceContext == null)
-                continue;
+            PersistentEffectRequest request = requests[i];
+            if (EffectDataBridgeUtility.TryGet(
+                    EntityManager,
+                    request.PersistentDataId,
+                    out EffectDataList dataList) &&
+                dataList.Effects.Length > 0 &&
+                dataList.Effects[0] is PersistentEffectData data)
+            {
+                SkillContent sourceContext = EffectUtility.CreateContext(
+                    EntityManager,
+                    in request.SourceContext);
+                AddEffectInternal(
+                    data,
+                    sourceContext,
+                    new Vector3(
+                        request.ReleasePosition.x,
+                        request.ReleasePosition.y,
+                        request.ReleasePosition.z));
+            }
 
-            AddEffectInternal(request.Data, request.SourceContext, request.ReleasePosition);
+            EffectDataBridgeUtility.Unregister(EntityManager, request.PersistentDataId);
+            if (request.ReleaseManagedContextAfterConsumption != 0)
+            {
+                EffectDataBridgeUtility.UnregisterManagedContext(
+                    EntityManager,
+                    request.SourceContext.ManagedContextId);
+            }
         }
 
-        queue.Requests.Clear();
+        requests.Clear();
     }
 
     private void AddEffectInternal(PersistentEffectData data, SkillContent sourceContext, Vector3 releasePosition)
@@ -89,7 +111,7 @@ partial class PersistentEffectSystem : SystemBase
         context.HasTargetEntity = false;
         context.TargetEntity = Entity.Null;
 
-        ExecuteEffects(data.OnStartEffects, context);
+        EffectUtility.Enqueue(EntityManager, data.OnStartEffects, context);
 
         bool hasTickEffects = data.TickIntervalSeconds > 0f && data.OnTickEffects != null && data.OnTickEffects.Length > 0;
         bool hasEndEffects = data.OnEndEffects != null && data.OnEndEffects.Length > 0;
@@ -102,8 +124,12 @@ partial class PersistentEffectSystem : SystemBase
             TickIntervalSeconds = data.TickIntervalSeconds,
             NextTickTime = hasTickEffects ? data.TickIntervalSeconds : float.MaxValue,
             Context = context,
-            OnTickEffects = hasTickEffects ? data.OnTickEffects : null,
-            OnEndEffects = hasEndEffects ? data.OnEndEffects : null,
+            OnTickEffectListId = hasTickEffects
+                ? EffectDataBridgeUtility.Register(EntityManager, data.OnTickEffects)
+                : default,
+            OnEndEffectListId = hasEndEffects
+                ? EffectDataBridgeUtility.Register(EntityManager, data.OnEndEffects)
+                : default,
         };
 
         if (_isUpdating)
@@ -128,8 +154,8 @@ partial class PersistentEffectSystem : SystemBase
         public float Elapsed;
         public float NextTickTime;
         public SkillContent Context;
-        public EffectData[] OnTickEffects;
-        public EffectData[] OnEndEffects;
+        public EffectDataListId OnTickEffectListId;
+        public EffectDataListId OnEndEffectListId;
         public Dictionary<int, HashSet<Entity>> AppliedBuffTargets = new();
     }
 }

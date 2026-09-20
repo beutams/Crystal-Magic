@@ -1,32 +1,29 @@
-using System;
-using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
-/// <summary>
-/// Runtime-only unit representing one open-field interest point.
-/// The point owns the patrol squad's shared variables and is driven by the
-/// DungeonInterestPoint state script.
-/// </summary>
-public sealed class DungeonInterestPointComponent : IComponentData
+public struct DungeonInterestPointComponent : IComponentData
 {
     public int EncounterId;
     public int SquadId;
     public float SpawnDistance;
     public float PatrolSpeed;
     public float ArrivalDistance;
-    public bool PatrolEnabled = true;
-    public Entity CurrentTarget = Entity.Null;
+    public byte PatrolEnabled;
+    public Entity CurrentTarget;
     public int TargetCursor;
-    public List<Entity> CandidateTargets = new();
+    public float NearestPlayerDistance;
+    public int ActivePatrolMemberCount;
+    public byte TargetReached;
 }
 
-/// <summary>
-/// Marks entities created by the runtime dungeon builder that are not part of
-/// the initial tracked spawn list (for example, lazy patrol members).
-/// </summary>
+[InternalBufferCapacity(4)]
+public struct DungeonInterestPointCandidateElement : IBufferElementData
+{
+    public Entity Value;
+}
+
 public struct DungeonRuntimeOwnedEntity : IComponentData
 {
 }
@@ -46,19 +43,10 @@ public static class DungeonInterestPointSource
     [UnitSourceGet(9, "unit.interestPoint.targetReached", UnitValueCategory.Bool)]
     public static bool TryGet(
         int operation,
-        EntityManager entityManager,
-        Entity entity,
+        in DungeonInterestPointComponent value,
         in UnitSourceArguments arguments,
         out UnitSourceValue result)
     {
-        result = default;
-        if (!entityManager.Exists(entity) || !entityManager.HasComponent<DungeonInterestPointComponent>(entity))
-            return false;
-
-        DungeonInterestPointComponent value = entityManager.GetComponentObject<DungeonInterestPointComponent>(entity);
-        if (value == null)
-            return false;
-
         result = operation switch
         {
             0 => UnitSourceValue.FromInt(value.EncounterId),
@@ -66,12 +54,15 @@ public static class DungeonInterestPointSource
             2 => UnitSourceValue.FromFloat(value.SpawnDistance),
             3 => UnitSourceValue.FromFloat(value.PatrolSpeed),
             4 => UnitSourceValue.FromFloat(value.ArrivalDistance),
-            5 => UnitSourceValue.FromBool(UnitVariableSource.CountConsumers(entityManager, entity) > 0),
+            5 => UnitSourceValue.FromBool(value.ActivePatrolMemberCount > 0),
             6 => UnitSourceValue.FromEntity(value.CurrentTarget),
-            7 => UnitSourceValue.FromFloat(DungeonPatrolRuntimeUtility.GetNearestPlayerDistance(entityManager, entity)),
-            8 => UnitSourceValue.FromBool(value.PatrolEnabled && UnitVariableSource.CountConsumers(entityManager, entity) < 1 &&
-                                          DungeonPatrolRuntimeUtility.IsFarFromPlayer(entityManager, entity, value.SpawnDistance)),
-            9 => UnitSourceValue.FromBool(DungeonPatrolRuntimeUtility.IsTargetReached(entityManager, entity, value)),
+            7 => UnitSourceValue.FromFloat(value.NearestPlayerDistance),
+            8 => UnitSourceValue.FromBool(
+                value.PatrolEnabled != 0 &&
+                value.ActivePatrolMemberCount < 1 &&
+                (value.NearestPlayerDistance == float.MaxValue ||
+                 value.NearestPlayerDistance >= math.max(0f, value.SpawnDistance))),
+            9 => UnitSourceValue.FromBool(value.TargetReached != 0),
             _ => UnitSourceValue.None,
         };
         return result.Type != UnitValueType.None;
@@ -82,32 +73,172 @@ public static class DungeonInterestPointSource
     [UnitSourceSet(2, "unit.interestPoint.setPatrolSpeed", UnitValueCategory.Number, ParameterNames = new[] { "Value" })]
     public static bool TrySet(
         int operation,
-        EntityManager entityManager,
         Entity entity,
+        ref ComponentLookup<DungeonInterestPointComponent> componentLookup,
+        ref BufferLookup<UnitVariableElement> variableLookup,
+        in BufferLookup<DungeonInterestPointCandidateElement> candidateLookup,
+        in BufferLookup<UnitVariableConsumerElement> consumerLookup,
+        in ComponentLookup<UnitVariableComponent> unitVariableLookup,
+        in ComponentLookup<LocalTransform> transformLookup,
+        in ComponentLookup<DestroyEntityFlag> destroyLookup,
         in UnitSourceArguments arguments)
     {
-        if (!entityManager.Exists(entity) || !entityManager.HasComponent<DungeonInterestPointComponent>(entity))
+        if (!componentLookup.TryGetComponent(entity, out DungeonInterestPointComponent value))
             return false;
 
-        DungeonInterestPointComponent value = entityManager.GetComponentObject<DungeonInterestPointComponent>(entity);
-        if (value == null)
-            return false;
-
+        bool hasVariables = variableLookup.TryGetBuffer(
+            entity,
+            out DynamicBuffer<UnitVariableElement> variables);
         switch (operation)
         {
             case 0 when arguments.TryGetBool(0, out bool active):
-                value.PatrolEnabled = active;
-                DungeonPatrolRuntimeUtility.SetSharedPatrolActive(entityManager, entity, active);
+                value.PatrolEnabled = active ? (byte)1 : (byte)0;
+                componentLookup[entity] = value;
+                if (hasVariables)
+                {
+                    UnitVariableSource.SetValue(
+                        variables,
+                        DungeonPatrolRuntimeUtility.PatrolActiveFixedKey,
+                        UnitSourceValue.FromBool(active));
+                }
                 return true;
             case 1 when arguments.TryGetBool(0, out bool advance):
-                return !advance || DungeonPatrolRuntimeUtility.TrySelectNextTarget(entityManager, entity, value);
+                if (!advance)
+                    return true;
+                if (!candidateLookup.TryGetBuffer(
+                        entity,
+                        out DynamicBuffer<DungeonInterestPointCandidateElement> candidates) ||
+                    !TrySelectNextTarget(entity, candidates, in transformLookup, ref value))
+                {
+                    return false;
+                }
+
+                RefreshMemberState(
+                    entity,
+                    ref value,
+                    in consumerLookup,
+                    in unitVariableLookup,
+                    in transformLookup,
+                    in destroyLookup);
+                componentLookup[entity] = value;
+                if (hasVariables)
+                    SetSharedPatrolValues(variables, in value);
+                return true;
             case 2 when arguments.TryGetNumber(0, out float speed):
                 value.PatrolSpeed = math.max(0f, speed);
-                DungeonPatrolRuntimeUtility.SetSharedPatrolValues(entityManager, entity, value);
+                componentLookup[entity] = value;
+                if (hasVariables)
+                    SetSharedPatrolValues(variables, in value);
                 return true;
             default:
                 return false;
         }
+    }
+
+    public static void RefreshMemberState(
+        Entity pointEntity,
+        ref DungeonInterestPointComponent point,
+        in BufferLookup<UnitVariableConsumerElement> consumerLookup,
+        in ComponentLookup<UnitVariableComponent> unitVariableLookup,
+        in ComponentLookup<LocalTransform> transformLookup,
+        in ComponentLookup<DestroyEntityFlag> destroyLookup)
+    {
+        point.ActivePatrolMemberCount = 0;
+        point.TargetReached = 0;
+        if (!consumerLookup.TryGetBuffer(
+                pointEntity,
+                out DynamicBuffer<UnitVariableConsumerElement> consumers))
+        {
+            return;
+        }
+
+        LocalTransform targetTransform = default;
+        bool hasTargetTransform = point.CurrentTarget != Entity.Null &&
+                                  transformLookup.TryGetComponent(
+                                      point.CurrentTarget,
+                                      out targetTransform);
+        float arrivalDistance = math.max(0.05f, point.ArrivalDistance);
+        float arrivalDistanceSq = arrivalDistance * arrivalDistance;
+        bool hasPositionedMember = false;
+        bool allPositionedMembersReached = true;
+        for (int index = 0; index < consumers.Length; index++)
+        {
+            Entity member = consumers[index].Value;
+            if (!unitVariableLookup.TryGetComponent(member, out UnitVariableComponent variables) ||
+                variables.Other != pointEntity ||
+                destroyLookup.HasComponent(member) && destroyLookup.IsComponentEnabled(member))
+            {
+                continue;
+            }
+
+            point.ActivePatrolMemberCount++;
+            if (!hasTargetTransform || !transformLookup.TryGetComponent(member, out LocalTransform memberTransform))
+                continue;
+
+            hasPositionedMember = true;
+            if (math.lengthsq(targetTransform.Position.xy - memberTransform.Position.xy) > arrivalDistanceSq)
+                allPositionedMembersReached = false;
+        }
+
+        if (point.ActivePatrolMemberCount < 1)
+            return;
+
+        if (point.CurrentTarget == Entity.Null)
+        {
+            point.TargetReached = 1;
+            return;
+        }
+
+        point.TargetReached = hasTargetTransform && hasPositionedMember && allPositionedMembersReached
+            ? (byte)1
+            : (byte)0;
+    }
+
+    private static bool TrySelectNextTarget(
+        Entity pointEntity,
+        in DynamicBuffer<DungeonInterestPointCandidateElement> candidates,
+        in ComponentLookup<LocalTransform> transformLookup,
+        ref DungeonInterestPointComponent point)
+    {
+        if (candidates.Length == 0)
+            return false;
+
+        int startIndex = math.clamp(point.TargetCursor, 0, candidates.Length - 1);
+        for (int offset = 0; offset < candidates.Length; offset++)
+        {
+            int index = (startIndex + offset) % candidates.Length;
+            Entity target = candidates[index].Value;
+            if (target == Entity.Null || target == pointEntity || !transformLookup.HasComponent(target))
+                continue;
+
+            point.TargetCursor = (index + 1) % candidates.Length;
+            point.CurrentTarget = target;
+            return true;
+        }
+
+        return false;
+    }
+
+    private static void SetSharedPatrolValues(
+        DynamicBuffer<UnitVariableElement> variables,
+        in DungeonInterestPointComponent point)
+    {
+        UnitVariableSource.SetValue(
+            variables,
+            DungeonPatrolRuntimeUtility.PatrolActiveFixedKey,
+            UnitSourceValue.FromBool(point.PatrolEnabled != 0));
+        UnitVariableSource.SetValue(
+            variables,
+            DungeonPatrolRuntimeUtility.PatrolTargetFixedKey,
+            UnitSourceValue.FromEntity(point.CurrentTarget));
+        UnitVariableSource.SetValue(
+            variables,
+            DungeonPatrolRuntimeUtility.PatrolSpeedFixedKey,
+            UnitSourceValue.FromFloat(math.max(0f, point.PatrolSpeed)));
+        UnitVariableSource.SetValue(
+            variables,
+            DungeonPatrolRuntimeUtility.PatrolArrivalDistanceFixedKey,
+            UnitSourceValue.FromFloat(math.max(0.05f, point.ArrivalDistance)));
     }
 }
 
@@ -121,159 +252,35 @@ public static class DungeonPatrolRuntimeUtility
     public const string PatrolSpawnListKey = "dungeon.patrol.spawn";
     public const string InterestPointStateKey = "dungeon.interestPoint.state";
 
-    public static bool TrySelectNextTarget(
-        EntityManager entityManager,
-        Entity pointEntity,
-        DungeonInterestPointComponent point)
-    {
-        if (point == null || point.CandidateTargets == null || point.CandidateTargets.Count == 0)
-            return false;
-
-        int candidateCount = point.CandidateTargets.Count;
-        int startIndex = math.clamp(point.TargetCursor, 0, candidateCount - 1);
-        for (int offset = 0; offset < candidateCount; offset++)
-        {
-            int index = (startIndex + offset) % candidateCount;
-            Entity target = point.CandidateTargets[index];
-            if (target == Entity.Null || target == pointEntity ||
-                !entityManager.Exists(target) || !entityManager.HasComponent<LocalTransform>(target))
-            {
-                continue;
-            }
-
-            point.TargetCursor = (index + 1) % candidateCount;
-            point.CurrentTarget = target;
-            SetSharedPatrolValues(entityManager, pointEntity, point);
-            return true;
-        }
-
-        return false;
-    }
-
-    public static bool IsTargetReached(
-        EntityManager entityManager,
-        Entity pointEntity,
-        DungeonInterestPointComponent point)
-    {
-        if (point == null || pointEntity == Entity.Null || !entityManager.Exists(pointEntity))
-            return false;
-
-        if (UnitVariableSource.CountConsumers(entityManager, pointEntity) < 1)
-            return false;
-
-        if (point.CurrentTarget == Entity.Null)
-            return true;
-
-        if (!entityManager.Exists(point.CurrentTarget) ||
-            !entityManager.HasComponent<LocalTransform>(point.CurrentTarget))
-        {
-            return false;
-        }
-
-        float2 targetPosition = entityManager.GetComponentData<LocalTransform>(point.CurrentTarget).Position.xy;
-        float arrivalDistance = math.max(0.05f, point.ArrivalDistance);
-        float arrivalDistanceSq = arrivalDistance * arrivalDistance;
-        EntityQuery query = entityManager.CreateEntityQuery(
-            ComponentType.ReadOnly<UnitVariableComponent>(),
-            ComponentType.ReadOnly<LocalTransform>());
-        using NativeArray<Entity> entities = query.ToEntityArray(Allocator.Temp);
-        bool hasMember = false;
-        for (int index = 0; index < entities.Length; index++)
-        {
-            Entity member = entities[index];
-            UnitVariableComponent variables = entityManager.GetComponentObject<UnitVariableComponent>(member);
-            if (variables?.Owner != pointEntity ||
-                entityManager.HasComponent<DestroyEntityFlag>(member) &&
-                entityManager.IsComponentEnabled<DestroyEntityFlag>(member))
-            {
-                continue;
-            }
-
-            hasMember = true;
-            float2 memberPosition = entityManager.GetComponentData<LocalTransform>(member).Position.xy;
-            if (math.lengthsq(targetPosition - memberPosition) > arrivalDistanceSq)
-                return false;
-        }
-
-        return hasMember;
-    }
-
-    public static bool IsFarFromPlayer(EntityManager entityManager, Entity pointEntity, float distance)
-    {
-        float nearestDistance = GetNearestPlayerDistance(entityManager, pointEntity);
-        return nearestDistance == float.MaxValue || nearestDistance >= math.max(0f, distance);
-    }
-
-    public static float GetNearestPlayerDistance(EntityManager entityManager, Entity pointEntity)
-    {
-        if (pointEntity == Entity.Null || !entityManager.Exists(pointEntity) ||
-            !entityManager.HasComponent<LocalTransform>(pointEntity))
-        {
-            return float.MaxValue;
-        }
-
-        float2 pointPosition = entityManager.GetComponentData<LocalTransform>(pointEntity).Position.xy;
-        EntityQuery query = entityManager.CreateEntityQuery(
-            ComponentType.ReadOnly<UnitFactionComponent>(),
-            ComponentType.ReadOnly<LocalTransform>());
-        using NativeArray<Entity> entities = query.ToEntityArray(Allocator.Temp);
-
-        float nearestDistanceSq = float.MaxValue;
-        for (int index = 0; index < entities.Length; index++)
-        {
-            Entity candidate = entities[index];
-            if (candidate == pointEntity ||
-                entityManager.GetComponentData<UnitFactionComponent>(candidate).Value != UnitFactionType.Player)
-            {
-                continue;
-            }
-
-            float2 candidatePosition = entityManager.GetComponentData<LocalTransform>(candidate).Position.xy;
-            nearestDistanceSq = math.min(nearestDistanceSq, math.lengthsq(candidatePosition - pointPosition));
-        }
-
-        return nearestDistanceSq == float.MaxValue ? float.MaxValue : math.sqrt(nearestDistanceSq);
-    }
-
-    public static void SetSharedPatrolActive(EntityManager entityManager, Entity pointEntity, bool active)
-    {
-        if (!TryGetVariables(entityManager, pointEntity, out UnitVariableComponent variables))
-            return;
-
-        SetValue(variables, PatrolActiveKey, UnitValue.FromBool(active));
-    }
+    public static readonly FixedString128Bytes PatrolActiveFixedKey = PatrolActiveKey;
+    public static readonly FixedString128Bytes PatrolTargetFixedKey = PatrolTargetKey;
+    public static readonly FixedString128Bytes PatrolSpeedFixedKey = PatrolSpeedKey;
+    public static readonly FixedString128Bytes PatrolArrivalDistanceFixedKey = PatrolArrivalDistanceKey;
 
     public static void SetSharedPatrolValues(
         EntityManager entityManager,
         Entity pointEntity,
-        DungeonInterestPointComponent point)
+        in DungeonInterestPointComponent point)
     {
-        if (point == null || !TryGetVariables(entityManager, pointEntity, out UnitVariableComponent variables))
-            return;
-
-        SetValue(variables, PatrolActiveKey, UnitValue.FromBool(point.PatrolEnabled));
-        SetValue(variables, PatrolTargetKey, UnitValue.FromEntity(point.CurrentTarget));
-        SetValue(variables, PatrolSpeedKey, UnitValue.FromFloat(math.max(0f, point.PatrolSpeed)));
-        SetValue(variables, PatrolArrivalDistanceKey, UnitValue.FromFloat(math.max(0.05f, point.ArrivalDistance)));
+        UnitVariableSource.TrySetValue(
+            entityManager,
+            pointEntity,
+            PatrolActiveKey,
+            UnitValue.FromBool(point.PatrolEnabled != 0));
+        UnitVariableSource.TrySetValue(
+            entityManager,
+            pointEntity,
+            PatrolTargetKey,
+            UnitValue.FromEntity(point.CurrentTarget));
+        UnitVariableSource.TrySetValue(
+            entityManager,
+            pointEntity,
+            PatrolSpeedKey,
+            UnitValue.FromFloat(math.max(0f, point.PatrolSpeed)));
+        UnitVariableSource.TrySetValue(
+            entityManager,
+            pointEntity,
+            PatrolArrivalDistanceKey,
+            UnitValue.FromFloat(math.max(0.05f, point.ArrivalDistance)));
     }
-
-    private static bool TryGetVariables(EntityManager entityManager, Entity entity, out UnitVariableComponent variables)
-    {
-        variables = null;
-        if (entity == Entity.Null || !entityManager.Exists(entity) ||
-            !entityManager.HasComponent<UnitVariableComponent>(entity))
-        {
-            return false;
-        }
-
-        variables = entityManager.GetComponentObject<UnitVariableComponent>(entity);
-        return variables != null;
-    }
-
-    private static void SetValue(UnitVariableComponent variables, string key, UnitValue value)
-    {
-        variables.Values ??= new Dictionary<string, UnitValue>(StringComparer.Ordinal);
-        variables.Values[key] = value;
-    }
-
 }

@@ -1,5 +1,4 @@
 using CrystalMagic.Game.Data;
-using System;
 using Unity.Entities;
 
 [FactoryKey("RequestInteraction", 14, "Request Interaction")]
@@ -10,7 +9,7 @@ public sealed class RequestInteractionActionNode : StateScriptActionNode
     private readonly RequestInteractionActionNodeData _data;
     private readonly StateScriptOutputPort _output;
     private InteractionRequestSourceGet _interactionGetter;
-    private Func<UnitValue> _targetGetter;
+    private CompiledValueExpression _targetExpression;
 
     public RequestInteractionActionNode(RequestInteractionActionNodeData data, StateScriptRuntime runtime)
         : base(data, runtime)
@@ -23,7 +22,7 @@ public sealed class RequestInteractionActionNode : StateScriptActionNode
     protected override bool OnBind(out string error)
     {
         _interactionGetter = null;
-        _targetGetter = null;
+        _targetExpression = default;
         _data.Interaction ??= RequestInteractionActionNodeData.CreateDefaultInteraction();
         _data.Interaction.EnsureValid();
 
@@ -48,20 +47,19 @@ public sealed class RequestInteractionActionNode : StateScriptActionNode
         if (!s_expressionFactory.TryBuildValueExpression(
                 _data.Interaction.Target,
                 Runtime.Sources,
-                out UnitValueCategory category,
-                out Func<UnitValue> targetGetter,
+                out CompiledValueExpression targetExpression,
                 out error))
         {
             return false;
         }
 
-        if (category != UnitValueCategory.Entity)
+        if (targetExpression.Category != UnitValueCategory.Entity)
         {
-            error = $"RequestInteraction target requires Entity, but received {category}.";
+            error = $"RequestInteraction target requires Entity, but received {targetExpression.Category}.";
             return false;
         }
 
-        _targetGetter = targetGetter;
+        _targetExpression = targetExpression;
         error = string.Empty;
         return true;
     }
@@ -86,8 +84,8 @@ public sealed class RequestInteractionActionNode : StateScriptActionNode
             return false;
         }
 
-        UnitValue targetValue = _targetGetter == null ? UnitValue.None : _targetGetter();
-        if (targetValue.Category != UnitValueCategory.Entity)
+        if (!_targetExpression.TryEvaluate(Runtime.Sources, out UnitSourceValue targetValue) ||
+            !targetValue.TryGetEntity(out Entity target))
         {
             interaction = default;
             return false;
@@ -95,7 +93,7 @@ public sealed class RequestInteractionActionNode : StateScriptActionNode
 
         interaction = new InteractionRequestSnapshot
         {
-            Target = targetValue.Entity,
+            Target = target,
             Data = _data.Interaction.FixedData,
         };
         return interaction.IsValid;
