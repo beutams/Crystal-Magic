@@ -24,7 +24,7 @@ namespace CrystalMagic.UI
             View.SkillAdditionRequested += OnSkillAdditionRequested;
             View.SkillReordered += OnSkillReordered;
             View.SkillReturnedToInventory += OnSkillReturnedToInventory;
-            BindEvent(new CommonGameEvent(PlayerSkillSelectionComponent.ChangedEventName), _refreshHandler);
+            BindEvent(new CommonGameEvent(PlayerInputComponent.SkillChainChangedEventName), _refreshHandler);
             BindEvent(new CommonGameEvent(SaveDataComponent.SkillDataChangedEventName), _refreshHandler);
             BindEvent(new CommonGameEvent(SaveDataComponent.BackpackDataChangedEventName), _refreshHandler);
             BindEvent(new CommonGameEvent(SaveDataComponent.CharacterPropDataChangedEventName), _refreshHandler);
@@ -57,7 +57,7 @@ namespace CrystalMagic.UI
             if (!TryConsumeBackpackItem(backpackData, data.SlotIndex, data.ItemId, 1))
                 return;
 
-            int skillChainIndex = UnityEngine.Mathf.Clamp(PlayerSkillSelectionUtility.GetCurrentChainIndex(), 0, skillData.Chains.Length - 1);
+            int skillChainIndex = UnityEngine.Mathf.Clamp(PlayerInputUtility.GetSkillChainIndex(), 0, skillData.Chains.Length - 1);
             SkillChainData chain = skillData.Chains[skillChainIndex] ??= new SkillChainData { Index = skillChainIndex };
             chain.EnsureSlots();
             int clampedInsertIndex = UnityEngine.Mathf.Clamp(insertIndex, 0, chain.Slots.Count);
@@ -144,7 +144,7 @@ namespace CrystalMagic.UI
             if (skillData?.Chains == null)
                 return;
 
-            int skillChainIndex = UnityEngine.Mathf.Clamp(PlayerSkillSelectionUtility.GetCurrentChainIndex(), 0, skillData.Chains.Length - 1);
+            int skillChainIndex = UnityEngine.Mathf.Clamp(PlayerInputUtility.GetSkillChainIndex(), 0, skillData.Chains.Length - 1);
             SkillChainData chain = skillData.Chains[skillChainIndex];
             chain?.EnsureSlots();
             if (chain?.Slots == null || data.SkillIndex < 0 || data.SkillIndex >= chain.Slots.Count)
@@ -174,7 +174,7 @@ namespace CrystalMagic.UI
             if (skillData?.Chains == null || backpackData?.Items == null)
                 return;
 
-            int skillChainIndex = UnityEngine.Mathf.Clamp(PlayerSkillSelectionUtility.GetCurrentChainIndex(), 0, skillData.Chains.Length - 1);
+            int skillChainIndex = UnityEngine.Mathf.Clamp(PlayerInputUtility.GetSkillChainIndex(), 0, skillData.Chains.Length - 1);
             SkillChainData chain = skillData.Chains[skillChainIndex];
             chain?.EnsureSlots();
             if (chain?.Slots == null || data.SkillIndex < 0 || data.SkillIndex >= chain.Slots.Count)
@@ -196,7 +196,7 @@ namespace CrystalMagic.UI
             if (skillData?.Chains == null)
                 return;
 
-            int skillChainIndex = UnityEngine.Mathf.Clamp(PlayerSkillSelectionUtility.GetCurrentChainIndex(), 0, skillData.Chains.Length - 1);
+            int skillChainIndex = UnityEngine.Mathf.Clamp(PlayerInputUtility.GetSkillChainIndex(), 0, skillData.Chains.Length - 1);
             SkillChainData chain = skillData.Chains[skillChainIndex];
             chain?.EnsureSlots();
             if (chain?.Slots == null || data.SkillIndex < 0 || data.SkillIndex >= chain.Slots.Count)

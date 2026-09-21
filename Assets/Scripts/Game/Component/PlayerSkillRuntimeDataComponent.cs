@@ -4,7 +4,6 @@ using Unity.Entities;
 
 public struct PlayerSkillRuntimeDataComponent : IComponentData
 {
-    public int CurrentChainId;
 }
 
 [InternalBufferCapacity(4)]
@@ -28,8 +27,8 @@ public static class PlayerSkillRuntimeDataUtility
         if (!entityManager.Exists(player) || characterData == null)
             return;
 
-        if (!entityManager.HasComponent<PlayerSkillSelectionComponent>(player))
-            entityManager.AddComponentData(player, new PlayerSkillSelectionComponent());
+        if (!entityManager.HasComponent<PlayerInputComponent>(player))
+            entityManager.AddComponentData(player, new PlayerInputComponent());
         if (!entityManager.HasComponent<PlayerPropCooldownComponent>(player))
             entityManager.AddComponentData(player, new PlayerPropCooldownComponent());
 
@@ -41,7 +40,7 @@ public static class PlayerSkillRuntimeDataUtility
         if (!GameRuntimeStateUtility.TryGetPlayerCharacterData(entityManager, player, out CharacterData characterData))
             return;
 
-        if (!entityManager.HasComponent<PlayerSkillSelectionComponent>(player) ||
+        if (!entityManager.HasComponent<PlayerInputComponent>(player) ||
             !entityManager.HasComponent<PlayerPropCooldownComponent>(player))
         {
             Initialize(entityManager, player, characterData);
@@ -49,20 +48,6 @@ public static class PlayerSkillRuntimeDataUtility
         }
 
         Rebuild(entityManager, player, characterData);
-    }
-
-    public static void SetCurrentChain(EntityManager entityManager, Entity player, int currentChainId)
-    {
-        if (!entityManager.Exists(player) ||
-            !entityManager.HasComponent<PlayerSkillRuntimeDataComponent>(player))
-        {
-            return;
-        }
-
-        PlayerSkillRuntimeDataComponent runtimeData =
-            entityManager.GetComponentData<PlayerSkillRuntimeDataComponent>(player);
-        runtimeData.CurrentChainId = currentChainId;
-        entityManager.SetComponentData(player, runtimeData);
     }
 
     public static void Clear(EntityManager entityManager, Entity player)
@@ -80,32 +65,30 @@ public static class PlayerSkillRuntimeDataUtility
 
     private static void Rebuild(EntityManager entityManager, Entity player, CharacterData characterData)
     {
-        PlayerSkillSelectionComponent selection =
-            entityManager.GetComponentData<PlayerSkillSelectionComponent>(player);
+        PlayerInputComponent input = entityManager.GetComponentData<PlayerInputComponent>(player);
         int chainCount = characterData.Skills?.Chains?.Length ?? 0;
         int maxIndex = chainCount > 0 ? chainCount - 1 : 0;
-        if (selection.CurrentChainIndex < 0 || selection.CurrentChainIndex > maxIndex)
+        if (input.SkillChainIndex < 0 || input.SkillChainIndex > maxIndex)
         {
-            selection.CurrentChainIndex = 0;
-            selection.NetworkDirty = 1;
-            entityManager.SetComponentData(player, selection);
+            input.SkillChainIndex = 0;
+            input.NetworkDirty = 1;
+            entityManager.SetComponentData(player, input);
         }
 
-        PlayerSkillRuntimeDataComponent runtimeData = new()
-        {
-            CurrentChainId = selection.CurrentChainIndex,
-        };
-        if (entityManager.HasComponent<PlayerSkillRuntimeDataComponent>(player))
-            entityManager.SetComponentData(player, runtimeData);
-        else
-            entityManager.AddComponentData(player, runtimeData);
+        if (!entityManager.HasComponent<PlayerSkillRuntimeDataComponent>(player))
+            entityManager.AddComponent<PlayerSkillRuntimeDataComponent>(player);
 
-        DynamicBuffer<PlayerSkillChainElement> chains = entityManager.HasBuffer<PlayerSkillChainElement>(player)
-            ? entityManager.GetBuffer<PlayerSkillChainElement>(player)
-            : entityManager.AddBuffer<PlayerSkillChainElement>(player);
-        DynamicBuffer<PlayerSkillChainSlotElement> slots = entityManager.HasBuffer<PlayerSkillChainSlotElement>(player)
-            ? entityManager.GetBuffer<PlayerSkillChainSlotElement>(player)
-            : entityManager.AddBuffer<PlayerSkillChainSlotElement>(player);
+        // Complete every structural change before acquiring buffer handles. Adding the
+        // second buffer would otherwise invalidate a handle acquired for the first one.
+        if (!entityManager.HasBuffer<PlayerSkillChainElement>(player))
+            entityManager.AddBuffer<PlayerSkillChainElement>(player);
+        if (!entityManager.HasBuffer<PlayerSkillChainSlotElement>(player))
+            entityManager.AddBuffer<PlayerSkillChainSlotElement>(player);
+
+        DynamicBuffer<PlayerSkillChainElement> chains =
+            entityManager.GetBuffer<PlayerSkillChainElement>(player);
+        DynamicBuffer<PlayerSkillChainSlotElement> slots =
+            entityManager.GetBuffer<PlayerSkillChainSlotElement>(player);
         chains.Clear();
         slots.Clear();
 
@@ -172,6 +155,7 @@ public static class PlayerSkillRuntimeDataSource
         int operation,
         UnitSourceAccessContext context,
         in ComponentLookup<PlayerSkillRuntimeDataComponent> runtimeLookup,
+        in ComponentLookup<PlayerInputComponent> inputLookup,
         in BufferLookup<PlayerSkillChainElement> chainLookup,
         in BufferLookup<PlayerSkillChainSlotElement> slotLookup,
         in ComponentLookup<PlayerSkillDefinitionRegistryComponent> registryLookup,
@@ -182,9 +166,10 @@ public static class PlayerSkillRuntimeDataSource
         if (!TryGetRuntimeData(
                 context.TargetEntity,
                 in runtimeLookup,
+                in inputLookup,
                 in chainLookup,
                 in slotLookup,
-                out PlayerSkillRuntimeDataComponent runtime,
+                out int currentChainId,
                 out DynamicBuffer<PlayerSkillChainElement> chains,
                 out DynamicBuffer<PlayerSkillChainSlotElement> slots))
         {
@@ -194,43 +179,43 @@ public static class PlayerSkillRuntimeDataSource
         switch (operation)
         {
             case 0:
-                result = UnitSourceValue.FromInt(runtime.CurrentChainId);
+                result = UnitSourceValue.FromInt(currentChainId);
                 return true;
             case 1:
-                result = UnitSourceValue.FromBool(IsChainEmpty(chains, runtime.CurrentChainId));
+                result = UnitSourceValue.FromBool(IsChainEmpty(chains, currentChainId));
                 return true;
             case 2:
-                if (!TryGetChainLength(chains, runtime.CurrentChainId, out int currentLength))
+                if (!TryGetChainLength(chains, currentChainId, out int currentLength))
                     return false;
                 result = UnitSourceValue.FromInt(currentLength);
                 return true;
             case 3:
-                if (!TryGetCurrentChainSlot(runtime, chains, slots, in arguments, out PlayerSkillChainSlotElement currentIdSlot))
+                if (!TryGetCurrentChainSlot(currentChainId, chains, slots, in arguments, out PlayerSkillChainSlotElement currentIdSlot))
                     return false;
                 result = UnitSourceValue.FromInt(currentIdSlot.SkillId);
                 return true;
             case 4:
-                if (!TryGetCurrentChainSlot(runtime, chains, slots, in arguments, out PlayerSkillChainSlotElement currentAdditionSlot))
+                if (!TryGetCurrentChainSlot(currentChainId, chains, slots, in arguments, out PlayerSkillChainSlotElement currentAdditionSlot))
                     return false;
                 result = UnitSourceValue.FromInt(currentAdditionSlot.SkillAdditionId);
                 return true;
             case 5:
                 result = UnitSourceValue.FromBool(
-                    TryGetCurrentChainSlot(runtime, chains, slots, in arguments, out PlayerSkillChainSlotElement currentSlot) &&
+                    TryGetCurrentChainSlot(currentChainId, chains, slots, in arguments, out PlayerSkillChainSlotElement currentSlot) &&
                     TryGetSkill(context.GlobalEntity, currentSlot.SkillId, in registryLookup, out _));
                 return true;
             case 6:
-                if (!TryGetCurrentSkill(context.GlobalEntity, runtime, chains, slots, in registryLookup, in arguments, out PlayerSkillDefinitionBlob currentMpSkill))
+                if (!TryGetCurrentSkill(context.GlobalEntity, currentChainId, chains, slots, in registryLookup, in arguments, out PlayerSkillDefinitionBlob currentMpSkill))
                     return false;
                 result = UnitSourceValue.FromInt(currentMpSkill.MpCost);
                 return true;
             case 7:
-                if (!TryGetCurrentSkill(context.GlobalEntity, runtime, chains, slots, in registryLookup, in arguments, out PlayerSkillDefinitionBlob currentChantSkill))
+                if (!TryGetCurrentSkill(context.GlobalEntity, currentChainId, chains, slots, in registryLookup, in arguments, out PlayerSkillDefinitionBlob currentChantSkill))
                     return false;
                 result = UnitSourceValue.FromFloat(currentChantSkill.ChantDuration);
                 return true;
             case 8:
-                if (!TryGetCurrentSkill(context.GlobalEntity, runtime, chains, slots, in registryLookup, in arguments, out PlayerSkillDefinitionBlob currentRuntimeSkill) ||
+                if (!TryGetCurrentSkill(context.GlobalEntity, currentChainId, chains, slots, in registryLookup, in arguments, out PlayerSkillDefinitionBlob currentRuntimeSkill) ||
                     currentRuntimeSkill.RuntimeTypeValid == 0)
                 {
                     return false;
@@ -301,17 +286,24 @@ public static class PlayerSkillRuntimeDataSource
     public static bool TryGetRuntimeData(
         Entity entity,
         in ComponentLookup<PlayerSkillRuntimeDataComponent> runtimeLookup,
+        in ComponentLookup<PlayerInputComponent> inputLookup,
         in BufferLookup<PlayerSkillChainElement> chainLookup,
         in BufferLookup<PlayerSkillChainSlotElement> slotLookup,
-        out PlayerSkillRuntimeDataComponent runtime,
+        out int currentChainId,
         out DynamicBuffer<PlayerSkillChainElement> chains,
         out DynamicBuffer<PlayerSkillChainSlotElement> slots)
     {
-        runtime = default;
+        currentChainId = 0;
         chains = default;
         slots = default;
-        return runtimeLookup.TryGetComponent(entity, out runtime) &&
-               chainLookup.TryGetBuffer(entity, out chains) &&
+        if (!runtimeLookup.HasComponent(entity) ||
+            !inputLookup.TryGetComponent(entity, out PlayerInputComponent input))
+        {
+            return false;
+        }
+
+        currentChainId = input.SkillChainIndex;
+        return chainLookup.TryGetBuffer(entity, out chains) &&
                slotLookup.TryGetBuffer(entity, out slots);
     }
 
@@ -368,7 +360,7 @@ public static class PlayerSkillRuntimeDataSource
     }
 
     private static bool TryGetCurrentChainSlot(
-        in PlayerSkillRuntimeDataComponent runtime,
+        int currentChainId,
         in DynamicBuffer<PlayerSkillChainElement> chains,
         in DynamicBuffer<PlayerSkillChainSlotElement> slots,
         in UnitSourceArguments arguments,
@@ -376,12 +368,12 @@ public static class PlayerSkillRuntimeDataSource
     {
         slot = default;
         return arguments.TryGetInt(0, out int slotIndex) &&
-               TryGetChainSlot(chains, slots, runtime.CurrentChainId, slotIndex, out slot);
+               TryGetChainSlot(chains, slots, currentChainId, slotIndex, out slot);
     }
 
     private static bool TryGetCurrentSkill(
         Entity globalEntity,
-        in PlayerSkillRuntimeDataComponent runtime,
+        int currentChainId,
         in DynamicBuffer<PlayerSkillChainElement> chains,
         in DynamicBuffer<PlayerSkillChainSlotElement> slots,
         in ComponentLookup<PlayerSkillDefinitionRegistryComponent> registryLookup,
@@ -389,7 +381,7 @@ public static class PlayerSkillRuntimeDataSource
         out PlayerSkillDefinitionBlob skill)
     {
         skill = default;
-        return TryGetCurrentChainSlot(runtime, chains, slots, in arguments, out PlayerSkillChainSlotElement slot) &&
+        return TryGetCurrentChainSlot(currentChainId, chains, slots, in arguments, out PlayerSkillChainSlotElement slot) &&
                TryGetSkill(globalEntity, slot.SkillId, in registryLookup, out skill);
     }
 

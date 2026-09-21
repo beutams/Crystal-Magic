@@ -70,33 +70,47 @@ partial struct UnitQueryBuildSystem : ISystem
             state.EntityManager.GetBuffer<UnitQueryEntry>(_unitGridEntity);
         unitBuffer.ResizeUninitialized(_unitQuery.CalculateEntityCount());
 
+        int interactableCount = _interactableQuery.CalculateEntityCount();
+        bool rebuildInteractables =
+            interactableCount != _interactableCount || !_changedInteractableQuery.IsEmpty;
+        DynamicBuffer<UnitQueryEntry> interactableBuffer = default;
+        if (rebuildInteractables)
+        {
+            interactableBuffer =
+                state.EntityManager.GetBuffer<UnitQueryEntry>(_interactableGridEntity);
+            interactableBuffer.ResizeUninitialized(interactableCount);
+        }
+
+        // Resizing any buffer can invalidate an existing alias, so create all array
+        // views only after every buffer has reached its final length for this frame.
+        NativeArray<UnitQueryEntry> unitEntries = unitBuffer.AsNativeArray();
+        NativeArray<UnitQueryEntry> interactableEntries = rebuildInteractables
+            ? interactableBuffer.AsNativeArray()
+            : default;
+
         JobHandle unitBuildHandle = new UnitQueryBuildJob
         {
-            Entries = unitBuffer.AsNativeArray(),
+            Entries = unitEntries,
             InverseCellSize = singleton.InverseCellSize,
         }.ScheduleParallel(_unitQuery, default);
         JobHandle unitSortHandle = new UnitQuerySortJob
         {
-            Entries = unitBuffer.AsNativeArray(),
+            Entries = unitEntries,
         }.Schedule(unitBuildHandle);
 
-        int interactableCount = _interactableQuery.CalculateEntityCount();
-        bool rebuildInteractables =
-            interactableCount != _interactableCount || !_changedInteractableQuery.IsEmpty;
         JobHandle interactableSortHandle = default;
         if (rebuildInteractables)
         {
-            DynamicBuffer<UnitQueryEntry> interactableBuffer =
-                state.EntityManager.GetBuffer<UnitQueryEntry>(_interactableGridEntity);
-            interactableBuffer.ResizeUninitialized(interactableCount);
+            // Both arrays come from UnitQueryEntry buffers, so Unity tracks them through
+            // the same component-type safety handle even though their entities differ.
             JobHandle interactableBuildHandle = new UnitQueryBuildJob
             {
-                Entries = interactableBuffer.AsNativeArray(),
+                Entries = interactableEntries,
                 InverseCellSize = singleton.InverseCellSize,
-            }.ScheduleParallel(_interactableQuery, default);
+            }.ScheduleParallel(_interactableQuery, unitSortHandle);
             interactableSortHandle = new UnitQuerySortJob
             {
-                Entries = interactableBuffer.AsNativeArray(),
+                Entries = interactableEntries,
             }.Schedule(interactableBuildHandle);
             _interactableCount = interactableCount;
         }

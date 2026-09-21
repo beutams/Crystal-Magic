@@ -31,10 +31,10 @@ public sealed class MinimapUI : UIBase<MinimapUIData, MinimapUIModel>
 
         UI.Terrain.Image.enabled = true;
         UI.Terrain.Image.sprite = Model.TerrainSprite;
-        UI.Fog.GameObject.SetActive(Model.HasFog);
-        UI.Fog.Image.sprite = Model.FogSprite;
+        UI.Fog.GameObject.SetActive(false);
+        UI.Fog.Image.sprite = null;
         RenderInterestPoints();
-        RenderMarker(UI.Exit, Model.HasExit && Model.IsExitExplored, Model.ExitPosition, 0f);
+        RenderMarker(UI.Exit, Model.HasExit, Model.ExitPosition, 0f);
         RenderMarker(UI.Player, Model.HasPlayer, Model.PlayerPosition, Model.PlayerRotationDegrees);
     }
 
@@ -55,18 +55,10 @@ public sealed class MinimapUI : UIBase<MinimapUIData, MinimapUIModel>
                         UI.InterestPointRoot.RectTransform);
                     Model.GetInterestPointAnchorRange(layout.InterestPoints[index], out Vector2 anchorMin, out Vector2 anchorMax);
                     view.Render(anchorMin, anchorMax);
+                    view.gameObject.SetActive(true);
                     _interestPointViews.Add(view);
                 }
             }
-        }
-
-        if (layout == null)
-            return;
-
-        for (int index = 0; index < _interestPointViews.Count; index++)
-        {
-            OpenFieldInterestPoint point = layout.InterestPoints[index];
-            _interestPointViews[index].gameObject.SetActive(Model.IsCellExplored(point.Center.X, point.Center.Y));
         }
     }
 

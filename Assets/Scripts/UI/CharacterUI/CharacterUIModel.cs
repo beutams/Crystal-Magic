@@ -32,7 +32,7 @@ namespace CrystalMagic.UI
             if (skillConfig?.Chains == null || skillConfig.Chains.Length == 0)
                 return;
 
-            int selectedIndex = UnityEngine.Mathf.Clamp(PlayerSkillSelectionUtility.GetCurrentChainIndex(), 0, skillConfig.Chains.Length - 1);
+            int selectedIndex = UnityEngine.Mathf.Clamp(PlayerInputUtility.GetSkillChainIndex(), 0, skillConfig.Chains.Length - 1);
             CrystalMagic.Core.SkillChainData chain = skillConfig.Chains[selectedIndex];
             chain?.EnsureSlots();
             if (chain?.Slots == null)

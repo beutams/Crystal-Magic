@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Unity.Entities;
 using Unity.Scenes;
 using System.Collections.Generic;
 
@@ -97,7 +98,7 @@ namespace CrystalMagic.Core {
             while (true)
             {
                 SubScene targetSubScene = FindSubScene(subSceneName);
-                if (targetSubScene != null && targetSubScene.IsLoaded)
+                if (IsSubSceneContentLoaded(targetSubScene))
                 {
                     Debug.Log($"[SceneComponent] SubScene loaded: {subSceneName}");
                     yield break;
@@ -130,7 +131,7 @@ namespace CrystalMagic.Core {
             while (true)
             {
                 SubScene targetSubScene = FindSubScene(subSceneName);
-                if (targetSubScene == null || !targetSubScene.IsLoaded)
+                if (!IsSubSceneContentLoaded(targetSubScene))
                 {
                     Debug.Log($"[SceneComponent] SubScene unloaded: {subSceneName}");
                     yield break;
@@ -154,8 +155,7 @@ namespace CrystalMagic.Core {
 
         public bool IsSubSceneLoaded(string subSceneName)
         {
-            SubScene targetSubScene = FindSubScene(subSceneName);
-            return targetSubScene != null && targetSubScene.IsLoaded;
+            return IsSubSceneContentLoaded(FindSubScene(subSceneName));
         }
 
         public bool TryGetSubSceneGuid(string subSceneName, out Unity.Entities.Hash128 sceneGuid)
@@ -224,6 +224,21 @@ namespace CrystalMagic.Core {
             }
 
             return null;
+        }
+
+        private static bool IsSubSceneContentLoaded(SubScene subScene)
+        {
+            World world = GameWorldManager.GameWorld;
+            if (subScene == null ||
+                !subScene.SceneGUID.IsValid ||
+                world == null ||
+                !world.IsCreated)
+            {
+                return false;
+            }
+
+            Entity sceneEntity = SceneSystem.GetSceneEntity(world.Unmanaged, subScene.SceneGUID);
+            return sceneEntity != Entity.Null && SceneSystem.IsSceneLoaded(world.Unmanaged, sceneEntity);
         }
     }
 }

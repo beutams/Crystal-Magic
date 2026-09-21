@@ -81,7 +81,7 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
         CollectTreasureStates(states, onlyDirty);
         CollectProjectileStates(states, onlyDirty);
         CollectPlayerPropCooldownStates(states, currentFrame, onlyDirty);
-        CollectPlayerSkillSelectionStates(states, onlyDirty);
+        CollectPlayerSkillChainStates(states, onlyDirty);
         if (onlyDirty)
             CollectDespawnStates(states);
     }
@@ -426,24 +426,24 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
         }
     }
 
-    private void CollectPlayerSkillSelectionStates(List<NetworkStateData> states, bool onlyDirty)
+    private void CollectPlayerSkillChainStates(List<NetworkStateData> states, bool onlyDirty)
     {
-        foreach ((RefRO<NetworkIdentityComponent> identityRef, RefRW<PlayerSkillSelectionComponent> selectionRef) in
-                 SystemAPI.Query<RefRO<NetworkIdentityComponent>, RefRW<PlayerSkillSelectionComponent>>())
+        foreach ((RefRO<NetworkIdentityComponent> identityRef, RefRW<PlayerInputComponent> inputRef) in
+                 SystemAPI.Query<RefRO<NetworkIdentityComponent>, RefRW<PlayerInputComponent>>())
         {
-            PlayerSkillSelectionComponent selection = selectionRef.ValueRO;
-            if ((onlyDirty && selection.NetworkDirty == 0) || identityRef.ValueRO.id == Guid.Empty)
+            PlayerInputComponent input = inputRef.ValueRO;
+            if ((onlyDirty && input.NetworkDirty == 0) || identityRef.ValueRO.id == Guid.Empty)
                 continue;
 
-            states.Add(new NetworkPlayerSkillSelectionStateData
+            states.Add(new NetworkPlayerSkillChainStateData
             {
                 unitId = identityRef.ValueRO.id,
-                currentChainIndex = selection.CurrentChainIndex,
+                skillChainIndex = input.SkillChainIndex,
             });
             if (onlyDirty)
             {
-                selection.NetworkDirty = 0;
-                selectionRef.ValueRW = selection;
+                input.NetworkDirty = 0;
+                inputRef.ValueRW = input;
             }
         }
     }

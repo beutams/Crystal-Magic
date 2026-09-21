@@ -22,7 +22,7 @@ namespace CrystalMagic.Core
             SpriteRenderer renderer = fogObject.AddComponent<SpriteRenderer>();
             renderer.sprite = fogData.WorldSprite;
             renderer.sortingOrder = FogSortingOrder;
-            runtimeRoot.TrackRuntimeAssets(fogData.Texture, fogData.WorldSprite, fogData.MinimapSprite);
+            runtimeRoot.TrackRuntimeAssets(fogData.Texture, fogData.WorldSprite);
         }
     }
 }

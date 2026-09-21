@@ -1,4 +1,4 @@
-{
+﻿{
   "Rows": [
     {
       "Graphs": [
@@ -7752,12 +7752,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "werewolf_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "werewolf_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "werewolf_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "werewolf_attack01_lock_motion",
@@ -8682,12 +8676,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "werewolf_attack02_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "werewolf_attack02_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "werewolf_attack02_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "werewolf_attack02_active_true",
@@ -10642,12 +10630,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "werebear_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "werebear_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "werebear_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "werebear_attack01_lock_motion",
@@ -11574,12 +11556,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "werebear_attack02_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "werebear_attack02_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "werebear_attack02_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "werebear_attack02_lock_motion",
@@ -12504,12 +12480,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "werebear_attack03_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "werebear_attack03_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "werebear_attack03_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "werebear_attack03_active_true",
@@ -14464,12 +14434,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "swordsman_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "swordsman_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "swordsman_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "swordsman_attack01_lock_motion",
@@ -15396,12 +15360,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "swordsman_attack02_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "swordsman_attack02_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "swordsman_attack02_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "swordsman_attack02_lock_motion",
@@ -16326,12 +16284,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "swordsman_attack03_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "swordsman_attack03_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "swordsman_attack03_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "swordsman_attack03_active_true",
@@ -18286,12 +18238,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "archer_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "archer_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "archer_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "archer_attack01_lock_motion",
@@ -19216,12 +19162,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "archer_attack02_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "archer_attack02_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "archer_attack02_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "archer_attack02_active_true",
@@ -21176,12 +21116,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "armored_axeman_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "armored_axeman_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "armored_axeman_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "armored_axeman_attack01_lock_motion",
@@ -22108,12 +22042,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "armored_axeman_attack02_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "armored_axeman_attack02_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "armored_axeman_attack02_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "armored_axeman_attack02_lock_motion",
@@ -23038,12 +22966,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "armored_axeman_attack03_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "armored_axeman_attack03_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "armored_axeman_attack03_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "armored_axeman_attack03_active_true",
@@ -32233,12 +32155,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "bat_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "bat_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "bat_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "bat_attack01_lock_motion",
@@ -33163,12 +33079,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "bat_attack02_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "bat_attack02_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "bat_attack02_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "bat_attack02_active_true",
@@ -42830,12 +42740,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "knight_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "knight_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "knight_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "knight_attack01_lock_motion",
@@ -43762,12 +43666,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "knight_attack02_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "knight_attack02_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "knight_attack02_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "knight_attack02_lock_motion",
@@ -44692,12 +44590,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "knight_attack03_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "knight_attack03_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "knight_attack03_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "knight_attack03_active_true",
@@ -46652,12 +46544,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "knight_templar_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "knight_templar_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "knight_templar_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "knight_templar_attack01_lock_motion",
@@ -47584,12 +47470,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "knight_templar_attack02_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "knight_templar_attack02_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "knight_templar_attack02_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "knight_templar_attack02_lock_motion",
@@ -48514,12 +48394,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "knight_templar_attack03_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "knight_templar_attack03_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "knight_templar_attack03_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "knight_templar_attack03_active_true",
@@ -50474,12 +50348,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "lancer_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "lancer_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "lancer_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "lancer_attack01_lock_motion",
@@ -51406,12 +51274,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "lancer_attack02_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "lancer_attack02_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "lancer_attack02_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "lancer_attack02_lock_motion",
@@ -52336,12 +52198,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "lancer_attack03_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "lancer_attack03_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "lancer_attack03_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "lancer_attack03_active_true",
@@ -54296,12 +54152,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "necromancer_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "necromancer_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "necromancer_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "necromancer_attack01_lock_motion",
@@ -55226,12 +55076,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "necromancer_attack02_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "necromancer_attack02_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "necromancer_attack02_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "necromancer_attack02_active_true",
@@ -60109,12 +59953,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "priest_attack01_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "priest_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "priest_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "priest_attack01_active_true",
@@ -65004,12 +64842,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "skeleton_archer_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "skeleton_archer_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "skeleton_archer_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "skeleton_archer_attack01_lock_motion",
@@ -66962,12 +66794,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "slime_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "slime_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "slime_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "slime_attack01_lock_motion",
@@ -67892,12 +67718,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "slime_attack02_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "slime_attack02_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "slime_attack02_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "slime_attack02_active_true",
@@ -69852,12 +69672,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "soldier_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "soldier_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "soldier_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "soldier_attack01_lock_motion",
@@ -70784,12 +70598,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "soldier_attack02_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "soldier_attack02_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "soldier_attack02_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "soldier_attack02_lock_motion",
@@ -71714,12 +71522,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "soldier_attack03_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "soldier_attack03_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "soldier_attack03_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "soldier_attack03_active_true",

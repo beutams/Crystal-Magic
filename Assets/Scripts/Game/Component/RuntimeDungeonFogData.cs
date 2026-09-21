@@ -6,13 +6,11 @@ namespace CrystalMagic.Core
 {
     public sealed class RuntimeDungeonFogData
     {
-        private static readonly Color32 UnexploredColor = new(0, 0, 0, 255);
-        private static readonly Color32 ExploredColor = new(0, 0, 0, 150);
+        private static readonly Color32 HiddenColor = new(0, 0, 0, 150);
         private static readonly Color32 VisibleColor = new(0, 0, 0, 0);
         private const float VisualFadeDurationSeconds = 0.2f;
 
         private readonly OpenFieldDungeonLayout _layout;
-        private readonly bool[] _exploredCells;
         private readonly bool[] _visibleCells;
         private readonly float[] _displayAlpha;
         private readonly Color32[] _pixels;
@@ -29,12 +27,11 @@ namespace CrystalMagic.Core
             TextureWidth = Width + 2;
             TextureHeight = Height + 2;
             VisionRadiusCells = Mathf.Max(1, visionRadiusCells);
-            _exploredCells = new bool[Width * Height];
             _visibleCells = new bool[Width * Height];
             _displayAlpha = new float[Width * Height];
             _pixels = new Color32[TextureWidth * TextureHeight];
             for (int index = 0; index < _displayAlpha.Length; index++)
-                _displayAlpha[index] = UnexploredColor.a;
+                _displayAlpha[index] = HiddenColor.a;
             _cellWorldSize = sceneData != null && sceneData.CellWorldSize > 0f
                 ? sceneData.CellWorldSize
                 : 1f;
@@ -50,12 +47,10 @@ namespace CrystalMagic.Core
         public int TextureWidth { get; }
         public int TextureHeight { get; }
         public int VisionRadiusCells { get; }
-        public int Version { get; private set; }
         public Vector2 WorldOrigin => _worldOrigin;
         public float CellWorldSize => _cellWorldSize;
         public Texture2D Texture { get; private set; }
         public Sprite WorldSprite { get; private set; }
-        public Sprite MinimapSprite { get; private set; }
 
         public void CreateVisualAssets()
         {
@@ -79,15 +74,6 @@ namespace CrystalMagic.Core
                 1f / _cellWorldSize);
             WorldSprite.name = "RuntimeDungeonFogWorldSprite";
             WorldSprite.hideFlags = HideFlags.DontSave;
-
-            MinimapSprite = Sprite.Create(
-                Texture,
-                new Rect(0f, 0f, TextureWidth, TextureHeight),
-                new Vector2(0.5f, 0.5f),
-                1f);
-            MinimapSprite.name = "RuntimeDungeonFogMinimapSprite";
-            MinimapSprite.hideFlags = HideFlags.DontSave;
-            Version++;
         }
 
         public bool TryGetCell(Vector3 worldPosition, out Vector2Int cell)
@@ -96,11 +82,6 @@ namespace CrystalMagic.Core
                 Mathf.FloorToInt((worldPosition.x - _worldOrigin.x) / _cellWorldSize),
                 Mathf.FloorToInt((worldPosition.y - _worldOrigin.y) / _cellWorldSize));
             return _layout.IsInside(cell.x, cell.y);
-        }
-
-        public bool IsExplored(int x, int y)
-        {
-            return _layout.IsInside(x, y) && _exploredCells[GetIndex(x, y)];
         }
 
         public bool IsVisible(int x, int y)
@@ -132,7 +113,6 @@ namespace CrystalMagic.Core
 
                     int index = GetIndex(x, y);
                     _visibleCells[index] = true;
-                    _exploredCells[index] = true;
                 }
             }
 
@@ -163,7 +143,6 @@ namespace CrystalMagic.Core
                 Texture.Apply(false, false);
             }
 
-            Version++;
             return true;
         }
 
@@ -203,7 +182,7 @@ namespace CrystalMagic.Core
         private void RebuildPixels()
         {
             for (int index = 0; index < _pixels.Length; index++)
-                _pixels[index] = UnexploredColor;
+                _pixels[index] = HiddenColor;
 
             for (int y = 0; y < Height; y++)
             {
@@ -228,11 +207,7 @@ namespace CrystalMagic.Core
 
         private float GetTargetAlpha(int index)
         {
-            return _visibleCells[index]
-                ? VisibleColor.a
-                : _exploredCells[index]
-                    ? ExploredColor.a
-                    : UnexploredColor.a;
+            return _visibleCells[index] ? VisibleColor.a : HiddenColor.a;
         }
 
         private void SetPixel(int index)

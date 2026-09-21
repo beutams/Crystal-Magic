@@ -526,6 +526,7 @@ Game\
         闁活潿鍔嶉崺娑欐綇閹惧啿寮抽悗娑櫭埀?
         濞达綀娉曢弫銈夋焼閹惧啿寰?
       UnitPhysicsRotationInitializationSystem.cs TRUE DIRTY
+      PlayerInputBridgeSystem.cs TRUE DIRTY
       PlayerPropCooldownSystem.cs TRUE DIRTY
       PlayerSkillAnalysisSystem.cs TRUE DIRTY
         闁汇垻鍠愰崹姘跺礂閾氬倻绉奸柟鍨涘亾闁煎啿鈧噥鍤炴慨?
@@ -605,7 +606,7 @@ UI\
   BattleUI\
     Sub\
     BattleUI.cs TRUE DIRTY
-    BattleUIController.cs TRUE
+    BattleUIController.cs TRUE DIRTY
     BattleUIData.cs TRUE
     BattleUIModel.cs TRUE DIRTY
   CharacterUI\
@@ -784,8 +785,11 @@ Web\
     ClientBattleManager.cs TRUE DIRTY
     NetworkEventDictionary.cs TRUE
     NetworkUnitStateSnapshotUtility.cs TRUE
+    ServerNetworkStateCollectSystem.cs TRUE DIRTY
     StateData\
       NetworkMoveStateData.cs TRUE
+      NetworkPlayerInputStateData.cs TRUE DIRTY
+      NetworkPlayerSkillChainStateData.cs TRUE
   Core\
     ClientNetworkManager.cs TRUE DIRTY
     NetworkTimer.cs TRUE DIRTY

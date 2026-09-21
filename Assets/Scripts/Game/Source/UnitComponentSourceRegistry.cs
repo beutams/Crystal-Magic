@@ -2,6 +2,7 @@
 // Use menu: Tools/Registry/Unit Sources
 
 using System;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
@@ -1207,35 +1208,56 @@ public struct UnitSourceDispatcher
 {
     private Entity _globalEntity;
     private ComponentLookup<DungeonInterestPointComponent> _DungeonInterestPointComponentLookup;
+    [ReadOnly]
     private ComponentLookup<InteractionCandidateComponent> _InteractionCandidateComponentLookup;
+    [ReadOnly]
     private ComponentLookup<LocalTransform> _LocalTransformLookup;
+    [ReadOnly]
     private ComponentLookup<PlayerInputComponent> _PlayerInputComponentLookup;
     private ComponentLookup<PlayerCurrentSkillComponent> _PlayerCurrentSkillComponentLookup;
+    [ReadOnly]
     private ComponentLookup<PlayerSkillDefinitionRegistryComponent> _PlayerSkillDefinitionRegistryComponentLookup;
+    [ReadOnly]
     private ComponentLookup<PlayerSkillRuntimeDataComponent> _PlayerSkillRuntimeDataComponentLookup;
     private ComponentLookup<UnitAnimationComponent> _UnitAnimationComponentLookup;
+    [ReadOnly]
     private ComponentLookup<UnitAttackComponent> _UnitAttackComponentLookup;
     private ComponentLookup<UnitBuffComponent> _UnitBuffComponentLookup;
+    [ReadOnly]
     private ComponentLookup<UnitControlRuntimeComponent> _UnitControlRuntimeComponentLookup;
+    [ReadOnly]
     private ComponentLookup<DestroyEntityFlag> _DestroyEntityFlagLookup;
+    [ReadOnly]
     private ComponentLookup<UnitDeathComponent> _UnitDeathComponentLookup;
+    [ReadOnly]
     private ComponentLookup<UnitElementComponent> _UnitElementComponentLookup;
     private ComponentLookup<UnitFacingComponent> _UnitFacingComponentLookup;
+    [ReadOnly]
     private ComponentLookup<UnitFactionComponent> _UnitFactionComponentLookup;
     private ComponentLookup<UnitManaComponent> _UnitManaComponentLookup;
     private ComponentLookup<UnitMoveComponent> _UnitMoveComponentLookup;
+    [ReadOnly]
     private ComponentLookup<UnitModifierComponent> _UnitModifierComponentLookup;
     private ComponentLookup<UnitNavigationComponent> _UnitNavigationComponentLookup;
+    [ReadOnly]
     private ComponentLookup<UnitPerceptionComponent> _UnitPerceptionComponentLookup;
+    [ReadOnly]
     private ComponentLookup<UnitSkillReleaseComponent> _UnitSkillReleaseComponentLookup;
     private ComponentLookup<UnitVariableComponent> _UnitVariableComponentLookup;
+    [ReadOnly]
     private ComponentLookup<UnitVitalityComponent> _UnitVitalityComponentLookup;
+    [ReadOnly]
     private ComponentLookup<WorldStateComponent> _WorldStateComponentLookup;
+    [ReadOnly]
     private ComponentLookup<WorldVariableComponent> _WorldVariableComponentLookup;
     private BufferLookup<UnitBuffElement> _UnitBuffElementBufferLookup;
+    [ReadOnly]
     private BufferLookup<DungeonInterestPointCandidateElement> _DungeonInterestPointCandidateElementBufferLookup;
+    [ReadOnly]
     private BufferLookup<PlayerSkillChainElement> _PlayerSkillChainElementBufferLookup;
+    [ReadOnly]
     private BufferLookup<PlayerSkillChainSlotElement> _PlayerSkillChainSlotElementBufferLookup;
+    [ReadOnly]
     private BufferLookup<UnitPerceptionUnitElement> _UnitPerceptionUnitElementBufferLookup;
     private BufferLookup<UnitVariableConsumerElement> _UnitVariableConsumerElementBufferLookup;
     private BufferLookup<UnitVariableElement> _UnitVariableElementBufferLookup;
@@ -1977,45 +1999,45 @@ public struct UnitSourceDispatcher
             case UnitSourceId.PlayerSkillCurrentSkillId:
                 return PlayerCurrentSkillSource.TryGetDerived(2, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerCurrentSkillComponentLookup, in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetChainLength:
-                return PlayerSkillRuntimeDataSource.TryGet(10, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillRuntimeDataSource.TryGet(10, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetChainSkillAdditionId:
-                return PlayerSkillRuntimeDataSource.TryGet(12, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillRuntimeDataSource.TryGet(12, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetChainSkillId:
-                return PlayerSkillRuntimeDataSource.TryGet(11, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillRuntimeDataSource.TryGet(11, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetCurrentChainId:
-                return PlayerSkillRuntimeDataSource.TryGet(0, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillRuntimeDataSource.TryGet(0, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetCurrentChainLength:
-                return PlayerSkillRuntimeDataSource.TryGet(2, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillRuntimeDataSource.TryGet(2, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetCurrentSkillAdditionId:
-                return PlayerSkillRuntimeDataSource.TryGet(4, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillRuntimeDataSource.TryGet(4, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetCurrentSkillChantDuration:
-                return PlayerSkillRuntimeDataSource.TryGet(7, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillRuntimeDataSource.TryGet(7, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetCurrentSkillId:
-                return PlayerSkillRuntimeDataSource.TryGet(3, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillRuntimeDataSource.TryGet(3, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetCurrentSkillMpCost:
-                return PlayerSkillRuntimeDataSource.TryGet(6, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillRuntimeDataSource.TryGet(6, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetCurrentSkillRuntimeType:
-                return PlayerSkillRuntimeDataSource.TryGet(8, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillRuntimeDataSource.TryGet(8, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetInputType:
-                return PlayerSkillRuntimeDataSource.TryGet(18, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillRuntimeDataSource.TryGet(18, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetSkillCastingMoveMultiplier:
-                return PlayerSkillRuntimeDataSource.TryGet(16, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillRuntimeDataSource.TryGet(16, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetSkillChantDuration:
-                return PlayerSkillRuntimeDataSource.TryGet(15, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillRuntimeDataSource.TryGet(15, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetSkillMpCost:
-                return PlayerSkillRuntimeDataSource.TryGet(14, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillRuntimeDataSource.TryGet(14, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetSkillRuntimeType:
-                return PlayerSkillRuntimeDataSource.TryGet(17, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillRuntimeDataSource.TryGet(17, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillHasCurrentSkill:
                 return PlayerCurrentSkillSource.TryGetDerived(5, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerCurrentSkillComponentLookup, in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillHasCurrentSkillAt:
-                return PlayerSkillRuntimeDataSource.TryGet(5, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillRuntimeDataSource.TryGet(5, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillHasSkill:
-                return PlayerSkillRuntimeDataSource.TryGet(13, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillRuntimeDataSource.TryGet(13, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillIsChainEmpty:
-                return PlayerSkillRuntimeDataSource.TryGet(9, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillRuntimeDataSource.TryGet(9, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillIsCurrentChainEmpty:
-                return PlayerSkillRuntimeDataSource.TryGet(1, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillRuntimeDataSource.TryGet(1, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.UnitInterestPointArrivalDistance:
             case UnitSourceId.UnitInterestPointCurrentTarget:
             case UnitSourceId.UnitInterestPointEncounterId:

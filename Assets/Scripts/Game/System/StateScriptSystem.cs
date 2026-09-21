@@ -9,13 +9,11 @@ using Unity.Mathematics;
 [UpdateAfter(typeof(BehaviorTreeSystem))]
 public partial class StateScriptSystem : SystemBase
 {
-    private UnitSourceDispatcher _readSources;
-    private UnitSourceDispatcher _writeSources;
+    private UnitSourceDispatcher _sources;
 
     protected override void OnCreate()
     {
-        _readSources.InitializeReadOnly(this);
-        _writeSources.Initialize(this);
+        _sources.Initialize(this);
         RequireForUpdate<StateScriptRuntimeRegistryComponent>();
     }
 
@@ -26,18 +24,15 @@ public partial class StateScriptSystem : SystemBase
         if (!registry.IsCreated)
             return;
 
-        _readSources.Update(this);
-        _writeSources.Update(this);
+        _sources.Update(this);
+        // SetValue is part of the immediate pulse chain: later nodes in the same
+        // chain must observe its write. Source targets may be Self, Other, or a
+        // global entity, so evaluate serially until writes can be safely partitioned.
         Dependency = new StateScriptEvaluationJob
         {
             Registry = registry,
-            Sources = _readSources,
-            Variables = GetComponentLookup<UnitVariableComponent>(true),
+            Sources = _sources,
             DeltaTime = math.max(0f, SystemAPI.Time.DeltaTime),
-        }.ScheduleParallel(Dependency);
-        Dependency = new StateScriptSourceCommandJob
-        {
-            Sources = _writeSources,
         }.Schedule(Dependency);
         Dependency = new StateScriptDeathJob().ScheduleParallel(Dependency);
     }
@@ -53,11 +48,7 @@ public partial struct StateScriptEvaluationJob : IJobEntity
 
     public BlobAssetReference<StateScriptRuntimeRegistryBlob> Registry;
 
-    [ReadOnly]
     public UnitSourceDispatcher Sources;
-
-    [ReadOnly]
-    public ComponentLookup<UnitVariableComponent> Variables;
 
     public float DeltaTime;
 
@@ -95,9 +86,16 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         component.TickVersion++;
         if (component.TickVersion == 0)
             component.TickVersion = 1;
-        Entity other = Variables.TryGetComponent(entity, out UnitVariableComponent variables)
-            ? variables.Other
-            : Entity.Null;
+        UnitSourceArguments noArguments = default;
+        Entity other = Entity.Null;
+        if (Sources.TryGet(
+                entity,
+                UnitSourceId.UnitVariablesOther,
+                in noArguments,
+                out UnitSourceValue otherValue))
+        {
+            otherValue.TryGetEntity(out other);
+        }
         UnitSourceContext context = new(entity, other);
 
         for (int graphIndex = 0; graphIndex < unit.Graphs.Length; graphIndex++)
@@ -326,7 +324,7 @@ public partial struct StateScriptEvaluationJob : IJobEntity
 
             case StateScriptNodeRuntimeType.SetValue:
                 if (pulse.InputPortId != StateScriptPortId.In ||
-                    !AppendSourceCommand(in node, in context, ref graph, ref sourceCommands, ref sourceArguments))
+                    !TryApplySourceValue(in node, in context, ref graph))
                     return true;
                 return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.Out, ref pulses);
 
@@ -695,32 +693,27 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         });
     }
 
-    private bool AppendSourceCommand(
+    private bool TryApplySourceValue(
         in StateScriptNodeDefinition node,
         in UnitSourceContext context,
-        ref StateScriptGraphDefinitionBlob graph,
-        ref DynamicBuffer<StateScriptSourceCommandElement> commands,
-        ref DynamicBuffer<StateScriptSourceCommandArgumentElement> arguments)
+        ref StateScriptGraphDefinitionBlob graph)
     {
-        int argumentStart = arguments.Length;
+        UnitSourceArguments arguments = default;
+        if (node.ExpressionCount > arguments.Values.Capacity)
+            return false;
         for (int index = 0; index < node.ExpressionCount; index++)
         {
             if (!TryEvaluateValue(ref graph, node.ExpressionStart + index, in context, out UnitSourceValue value))
-            {
-                arguments.ResizeUninitialized(argumentStart);
                 return false;
-            }
-            arguments.Add(new StateScriptSourceCommandArgumentElement { Value = value });
+            arguments.Values.Add(value);
         }
-        commands.Add(new StateScriptSourceCommandElement
-        {
-            SourceId = node.SetSourceId,
-            TargetEntity = context.Resolve(node.SetSourceTarget),
-            ArgumentStart = argumentStart,
-            ArgumentCount = node.ExpressionCount,
-            Key = node.Key,
-            HasKey = node.IntParameters.x != 0 ? (byte)1 : (byte)0,
-        });
+
+        arguments.Key = node.Key;
+        arguments.HasKey = node.IntParameters.x != 0 ? (byte)1 : (byte)0;
+        Sources.TrySet(
+            context.Resolve(node.SetSourceTarget),
+            node.SetSourceId,
+            in arguments);
         return true;
     }
 
@@ -816,35 +809,6 @@ public partial struct StateScriptEvaluationJob : IJobEntity
     private static bool Approximately(float left, float right)
     {
         return math.abs(left - right) <= math.max(0.000001f * math.max(math.abs(left), math.abs(right)), 1.121039E-44f);
-    }
-}
-
-[BurstCompile]
-public partial struct StateScriptSourceCommandJob : IJobEntity
-{
-    public UnitSourceDispatcher Sources;
-
-    private void Execute(
-        ref DynamicBuffer<StateScriptSourceCommandElement> commands,
-        ref DynamicBuffer<StateScriptSourceCommandArgumentElement> commandArguments)
-    {
-        for (int commandIndex = 0; commandIndex < commands.Length; commandIndex++)
-        {
-            StateScriptSourceCommandElement command = commands[commandIndex];
-            if (command.ArgumentStart < 0 ||
-                command.ArgumentCount > 0 && command.ArgumentStart + command.ArgumentCount > commandArguments.Length)
-                continue;
-            UnitSourceArguments arguments = default;
-            if (command.ArgumentCount > arguments.Values.Capacity)
-                continue;
-            for (int argumentIndex = 0; argumentIndex < command.ArgumentCount; argumentIndex++)
-                arguments.Values.Add(commandArguments[command.ArgumentStart + argumentIndex].Value);
-            arguments.Key = command.Key;
-            arguments.HasKey = command.HasKey;
-            Sources.TrySet(command.TargetEntity, command.SourceId, in arguments);
-        }
-        commands.Clear();
-        commandArguments.Clear();
     }
 }
 

@@ -12,7 +12,11 @@ namespace CrystalMagic.Core
         {
             Debug.Log("[TrainingState] Entered Training Ground");
 
-            if (StateData is LoadGameContext context)
+            LoadGameContext context = StateData as LoadGameContext;
+            GameRuntimeStateUtility.BindPlayerCharacterData(context?.Character ?? new CharacterData());
+            GameRuntimeStateUtility.ApplyPlayerRuntimeState(context?.Player);
+
+            if (context != null)
             {
                 Debug.Log($"[TrainingState] Loaded from save slot: {context.SaveIndex}");
             }

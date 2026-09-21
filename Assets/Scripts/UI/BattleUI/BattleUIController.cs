@@ -17,7 +17,7 @@ namespace CrystalMagic.UI
             View.PropShortcutBindRequested += OnPropShortcutBindRequested;
             BindEvent(new CrystalMagic.Core.CommonGameEvent(CrystalMagic.Core.SaveDataComponent.SkillDataChangedEventName), _refreshHandler);
             BindEvent(new CrystalMagic.Core.CommonGameEvent(CrystalMagic.Core.SaveDataComponent.CharacterPropDataChangedEventName), _refreshHandler);
-            BindEvent(new CrystalMagic.Core.CommonGameEvent(PlayerSkillSelectionComponent.ChangedEventName), _refreshHandler);
+            BindEvent(new CrystalMagic.Core.CommonGameEvent(PlayerInputComponent.SkillChainChangedEventName), _refreshHandler);
             Model.Refresh();
         }
 

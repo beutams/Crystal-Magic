@@ -323,6 +323,7 @@ public static class UnitComponentSourceRegistryGenerator
         builder.AppendLine("// Use menu: Tools/Registry/Unit Sources");
         builder.AppendLine();
         builder.AppendLine("using System;");
+        builder.AppendLine("using Unity.Collections;");
         builder.AppendLine("using Unity.Entities;");
         builder.AppendLine("using UnityEngine;");
         builder.AppendLine();
@@ -471,9 +472,17 @@ public static class UnitComponentSourceRegistryGenerator
         builder.AppendLine("{");
         builder.AppendLine("    private Entity _globalEntity;");
         for (int index = 0; index < componentLookupTypes.Count; index++)
+        {
+            if (!writableComponentLookupTypes.Contains(componentLookupTypes[index]))
+                builder.AppendLine("    [ReadOnly]");
             builder.AppendLine($"    private ComponentLookup<{TypeName(componentLookupTypes[index])}> {ComponentFieldName(componentLookupTypes[index])};");
+        }
         for (int index = 0; index < bufferLookupTypes.Count; index++)
+        {
+            if (!writableBufferLookupTypes.Contains(bufferLookupTypes[index]))
+                builder.AppendLine("    [ReadOnly]");
             builder.AppendLine($"    private BufferLookup<{TypeName(bufferLookupTypes[index])}> {BufferFieldName(bufferLookupTypes[index])};");
+        }
         builder.AppendLine();
         AppendInitialize(
             builder,
