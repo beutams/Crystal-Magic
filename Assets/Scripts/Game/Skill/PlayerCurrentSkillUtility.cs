@@ -149,7 +149,6 @@ public static class PlayerCurrentSkillUtility
         slot = default;
         if (entity == Entity.Null ||
             !entityManager.Exists(entity) ||
-            !entityManager.HasComponent<PlayerSkillRuntimeDataComponent>(entity) ||
             !entityManager.HasBuffer<PlayerSkillChainElement>(entity) ||
             !entityManager.HasBuffer<PlayerSkillChainSlotElement>(entity))
         {
@@ -158,6 +157,6 @@ public static class PlayerCurrentSkillUtility
 
         DynamicBuffer<PlayerSkillChainElement> chains = entityManager.GetBuffer<PlayerSkillChainElement>(entity);
         DynamicBuffer<PlayerSkillChainSlotElement> slots = entityManager.GetBuffer<PlayerSkillChainSlotElement>(entity);
-        return PlayerSkillRuntimeDataSource.TryGetChainSlot(chains, slots, chainId, slotIndex, out slot);
+        return PlayerSkillChainSource.TryGetChainSlot(chains, slots, chainId, slotIndex, out slot);
     }
 }

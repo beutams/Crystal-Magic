@@ -37,12 +37,7 @@ public static class PlayerSkillDefinitionRegistryUtility
         out BlobAssetReference<PlayerSkillDefinitionRegistryBlob> registry)
     {
         registry = default;
-        if (!WorldStateUtility.TryGetEntity(entityManager, out Entity worldEntity) ||
-            !entityManager.HasComponent<PlayerSkillDefinitionRegistryComponent>(worldEntity))
-        {
-            return false;
-        }
-
+        Entity worldEntity = WorldStateUtility.GetEntity(entityManager);
         registry = entityManager.GetComponentData<PlayerSkillDefinitionRegistryComponent>(worldEntity).Value;
         return registry.IsCreated;
     }

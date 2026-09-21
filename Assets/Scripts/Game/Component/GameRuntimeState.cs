@@ -143,7 +143,7 @@ namespace CrystalMagic.Core
                 entityManager.AddComponentObject(player, new PlayerCharacterComponent { Data = boundData });
 
             EquipmentUtility.ApplyToUnit(entityManager, player, boundData.Equipment);
-            PlayerSkillRuntimeDataUtility.Initialize(entityManager, player, boundData);
+            PlayerSkillChainUtility.Initialize(entityManager, player, boundData);
         }
 
         public static void ClearPlayerCharacterData()
@@ -155,7 +155,7 @@ namespace CrystalMagic.Core
             }
 
             entityManager.RemoveComponent<PlayerCharacterComponent>(player);
-            PlayerSkillRuntimeDataUtility.Clear(entityManager, player);
+            PlayerSkillChainUtility.Clear(entityManager, player);
         }
 
         public static DungeonRunData GetDungeonRunData()

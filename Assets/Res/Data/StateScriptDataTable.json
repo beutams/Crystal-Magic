@@ -2545,7 +2545,7 @@
                   },
                   "String": ""
                 },
-                "GetterKey": "player.skill.getCurrentChainId",
+                "GetterKey": "player.input.skillChainIndex",
                 "OperationType": "",
                 "Inputs": []
               },
@@ -2572,7 +2572,7 @@
                     },
                     "String": ""
                   },
-                  "GetterKey": "player.skill.getCurrentChainId",
+                  "GetterKey": "player.input.skillChainIndex",
                   "OperationType": "",
                   "Inputs": []
                 },
@@ -4150,7 +4150,7 @@
                   },
                   "String": ""
                 },
-                "GetterKey": "player.skill.getCurrentChainId",
+                "GetterKey": "player.input.skillChainIndex",
                 "OperationType": "",
                 "Inputs": []
               },
@@ -4177,7 +4177,7 @@
                     },
                     "String": ""
                   },
-                  "GetterKey": "player.skill.getCurrentChainId",
+                  "GetterKey": "player.input.skillChainIndex",
                   "OperationType": "",
                   "Inputs": []
                 },

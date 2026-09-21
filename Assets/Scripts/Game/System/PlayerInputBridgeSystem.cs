@@ -1,19 +1,16 @@
 using CrystalMagic.Core;
 using Unity.Entities;
 using Unity.Mathematics;
-using UnityEngine;
 
 [UpdateInGroup(typeof(ClientInputSystemGroup))]
 public partial class PlayerInputBridgeSystem : SystemBase
 {
     private bool _wasSkillHeld;
-    private bool _wasNextSkillChainHeld;
 
     protected override void OnUpdate()
     {
         InputState inputState = InputComponent.Instance.CurrentState;
         bool isSkillPressed = inputState.IsSkillHeld && !_wasSkillHeld;
-        bool isNextSkillChainPressed = inputState.IsNextSkillChainHeld && !_wasNextSkillChainHeld;
         foreach ((RefRW<PlayerInputComponent> inputRef,
                   RefRW<PlayerSkillSelectionComponent> selectionRef,
                   Entity entity) in
@@ -34,7 +31,6 @@ public partial class PlayerInputBridgeSystem : SystemBase
                 IsEscapeHeld = inputState.IsEscapeHeld ? (byte)1 : (byte)0,
                 IsSkillHeld = inputState.IsSkillHeld ? (byte)1 : (byte)0,
                 SkillChainIndex = inputState.SkillChainIndex,
-                IsNextSkillChainHeld = inputState.IsNextSkillChainHeld ? (byte)1 : (byte)0,
                 IsUsePropHeld = inputState.IsUsePropHeld ? (byte)1 : (byte)0,
                 PropIndex = inputState.PropIndex,
             };
@@ -48,7 +44,6 @@ public partial class PlayerInputBridgeSystem : SystemBase
                                 oldInput.IsEscapeHeld != input.IsEscapeHeld ||
                                 oldInput.IsSkillHeld != input.IsSkillHeld ||
                                 oldInput.SkillChainIndex != input.SkillChainIndex ||
-                                oldInput.IsNextSkillChainHeld != input.IsNextSkillChainHeld ||
                                 oldInput.IsUsePropHeld != input.IsUsePropHeld ||
                                 oldInput.PropIndex != input.PropIndex;
             input.NetworkDirty = inputChanged ? (byte)1 : oldInput.NetworkDirty;
@@ -56,27 +51,20 @@ public partial class PlayerInputBridgeSystem : SystemBase
 
             PlayerSkillSelectionComponent selection = selectionRef.ValueRO;
             int previousChainIndex = selection.CurrentChainIndex;
-            int chainCount = GameRuntimeStateUtility.TryGetPlayerCharacterData(EntityManager, entity, out CharacterData characterData)
-                ? characterData.Skills?.Chains?.Length ?? 0
-                : 0;
-            if (isSkillPressed && input.SkillChainIndex >= 0)
-                selection.CurrentChainIndex = Mathf.Clamp(input.SkillChainIndex, 0, chainCount > 0 ? chainCount - 1 : 0);
-            if (isNextSkillChainPressed && chainCount > 0)
-                selection.CurrentChainIndex = (selection.CurrentChainIndex + 1) % chainCount;
+            if (isSkillPressed)
+                selection.CurrentChainIndex = input.SkillChainIndex;
 
             if (selection.CurrentChainIndex != previousChainIndex)
             {
                 selection.NetworkDirty = 1;
                 selectionRef.ValueRW = selection;
-                PlayerSkillRuntimeDataUtility.SetCurrentChain(EntityManager, entity, selection.CurrentChainIndex);
             }
 
-            if (isSkillPressed || isNextSkillChainPressed)
+            if (isSkillPressed)
                 EventComponent.Instance.Publish(new CommonGameEvent(PlayerSkillSelectionComponent.ChangedEventName));
             break;
         }
 
         _wasSkillHeld = inputState.IsSkillHeld;
-        _wasNextSkillChainHeld = inputState.IsNextSkillChainHeld;
     }
 }

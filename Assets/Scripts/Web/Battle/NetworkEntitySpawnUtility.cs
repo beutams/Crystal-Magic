@@ -266,7 +266,7 @@ namespace Server
                 }
 
                 EquipmentUtility.ApplyToUnit(entityManager, entity, entityInfo.characterData.Equipment);
-                PlayerSkillRuntimeDataUtility.Initialize(entityManager, entity, entityInfo.characterData);
+                PlayerSkillChainUtility.Initialize(entityManager, entity, entityInfo.characterData);
             }
 
             if (entityInfo.hasFaction)

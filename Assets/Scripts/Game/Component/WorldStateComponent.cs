@@ -1,3 +1,4 @@
+using CrystalMagic.Core;
 using Unity.Entities;
 
 [System.Flags]
@@ -21,16 +22,30 @@ public struct WorldStateComponent : IComponentData
 
 public static class WorldStateUtility
 {
-    public static bool TryGetEntity(EntityManager entityManager, out Entity entity)
+    public static Entity Create(
+        EntityManager entityManager,
+        GameWorldRole role,
+        GameSceneMode sceneMode)
+    {
+        Entity entity = entityManager.CreateEntity(
+            typeof(WorldStateComponent),
+            typeof(WorldVariableComponent),
+            typeof(InteractionCandidateComponent),
+            typeof(PlayerSkillDefinitionRegistryComponent),
+            typeof(GameWorldContextComponent));
+        entityManager.AddBuffer<WorldVariableElement>(entity);
+        entityManager.SetComponentData(entity, new GameWorldContextComponent
+        {
+            Role = role,
+            SceneMode = sceneMode,
+        });
+        entityManager.SetName(entity, "WorldEntity");
+        return entity;
+    }
+
+    public static Entity GetEntity(EntityManager entityManager)
     {
         using EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<WorldStateComponent>());
-        if (query.IsEmptyIgnoreFilter)
-        {
-            entity = Entity.Null;
-            return false;
-        }
-
-        entity = query.GetSingletonEntity();
-        return true;
+        return query.GetSingletonEntity();
     }
 }

@@ -14,7 +14,6 @@ namespace CrystalMagic.Core {
         public bool IsEscapeHeld;
         public bool IsSkillHeld;
         public int SkillChainIndex;
-        public bool IsNextSkillChainHeld;
         public bool IsUsePropHeld;
         public int PropIndex;
     }
@@ -66,8 +65,6 @@ namespace CrystalMagic.Core {
             _controls.Battle.UseProp.canceled += HandleUsePropCanceled;
             _controls.Battle.Skill.performed += HandleSkill;
             _controls.Battle.Skill.canceled += HandleSkillCanceled;
-            _controls.Battle.Tab.performed += HandleTab;
-            _controls.Battle.Tab.canceled += HandleTabCanceled;
             _controls.Global.ESC.performed += HandleEscape;
             _controls.Global.ESC.canceled += HandleEscapeCanceled;
 
@@ -100,8 +97,6 @@ namespace CrystalMagic.Core {
                 _controls.Battle.UseProp.canceled -= HandleUsePropCanceled;
                 _controls.Battle.Skill.performed -= HandleSkill;
                 _controls.Battle.Skill.canceled -= HandleSkillCanceled;
-                _controls.Battle.Tab.performed -= HandleTab;
-                _controls.Battle.Tab.canceled -= HandleTabCanceled;
                 _controls.Global.ESC.performed -= HandleEscape;
                 _controls.Global.ESC.canceled -= HandleEscapeCanceled;
 
@@ -203,16 +198,6 @@ namespace CrystalMagic.Core {
         {
             _currentState.IsSkillHeld = false;
             _currentState.SkillChainIndex = -1;
-        }
-
-        private void HandleTab(InputAction.CallbackContext ctx)
-        {
-            _currentState.IsNextSkillChainHeld = true;
-        }
-
-        private void HandleTabCanceled(InputAction.CallbackContext ctx)
-        {
-            _currentState.IsNextSkillChainHeld = false;
         }
 
         private void HandleEscape(InputAction.CallbackContext ctx)
@@ -340,7 +325,6 @@ namespace CrystalMagic.Core {
         {
             _currentState.IsSkillHeld = false;
             _currentState.SkillChainIndex = -1;
-            _currentState.IsNextSkillChainHeld = false;
             _currentState.IsUsePropHeld = false;
             _currentState.PropIndex = -1;
         }

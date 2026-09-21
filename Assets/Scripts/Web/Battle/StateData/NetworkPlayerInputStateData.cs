@@ -17,7 +17,6 @@ public sealed class NetworkPlayerInputStateData : NetworkStateData
     public byte isEscapeHeld;
     public byte isSkillHeld;
     public int skillChainIndex;
-    public byte isNextSkillChainHeld;
     public byte isUsePropHeld;
     public int propIndex;
 
@@ -37,7 +36,6 @@ public sealed class NetworkPlayerInputStateData : NetworkStateData
             IsEscapeHeld = isEscapeHeld,
             IsSkillHeld = isSkillHeld,
             SkillChainIndex = skillChainIndex,
-            IsNextSkillChainHeld = isNextSkillChainHeld,
             IsUsePropHeld = isUsePropHeld,
             PropIndex = propIndex,
             NetworkDirty = 0,

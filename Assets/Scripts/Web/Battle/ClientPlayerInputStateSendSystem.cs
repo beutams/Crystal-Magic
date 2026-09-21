@@ -60,7 +60,6 @@ public partial class ClientPlayerInputStateSendSystem : SystemBase
             isEscapeHeld = input.IsEscapeHeld,
             isSkillHeld = input.IsSkillHeld,
             skillChainIndex = input.SkillChainIndex,
-            isNextSkillChainHeld = input.IsNextSkillChainHeld,
             isUsePropHeld = input.IsUsePropHeld,
             propIndex = input.PropIndex,
         };

@@ -672,7 +672,6 @@ internal static class ExpressionUnmanagedContract
         RequireUnmanaged<UnitSourceContext>();
         RequireUnmanaged<UnitSourceAccessContext>();
         RequireUnmanaged<UnitSourceDispatcher>();
-        RequireUnmanaged<PlayerSkillRuntimeDataComponent>();
         RequireUnmanaged<PlayerSkillChainElement>();
         RequireUnmanaged<PlayerSkillChainSlotElement>();
         RequireUnmanaged<PlayerSkillDefinitionRegistryComponent>();

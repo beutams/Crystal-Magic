@@ -53,7 +53,6 @@ public static class PlayerCurrentSkillSource
         int operation,
         UnitSourceAccessContext context,
         in ComponentLookup<PlayerCurrentSkillComponent> currentSkillLookup,
-        in ComponentLookup<PlayerSkillRuntimeDataComponent> runtimeLookup,
         in BufferLookup<PlayerSkillChainElement> chainLookup,
         in BufferLookup<PlayerSkillChainSlotElement> slotLookup,
         in ComponentLookup<PlayerSkillDefinitionRegistryComponent> registryLookup,
@@ -67,7 +66,6 @@ public static class PlayerCurrentSkillSource
         if (!TryGetCurrentSlot(
                 context.TargetEntity,
                 in currentSkillLookup,
-                in runtimeLookup,
                 in chainLookup,
                 in slotLookup,
                 out PlayerSkillChainSlotElement slot))
@@ -85,7 +83,7 @@ public static class PlayerCurrentSkillSource
             case 2 when slot.SkillId >= 0:
                 result = UnitSourceValue.FromInt(slot.SkillId);
                 return true;
-            case 3 when PlayerSkillRuntimeDataSource.TryGetSkill(
+            case 3 when PlayerSkillChainSource.TryGetSkill(
                 context.GlobalEntity,
                 slot.SkillId,
                 in registryLookup,
@@ -111,7 +109,6 @@ public static class PlayerCurrentSkillSource
         int operation,
         UnitSourceAccessContext context,
         ref ComponentLookup<PlayerCurrentSkillComponent> currentSkillLookup,
-        in ComponentLookup<PlayerSkillRuntimeDataComponent> runtimeLookup,
         in BufferLookup<PlayerSkillChainElement> chainLookup,
         in BufferLookup<PlayerSkillChainSlotElement> slotLookup,
         in ComponentLookup<PlayerSkillDefinitionRegistryComponent> registryLookup,
@@ -130,12 +127,11 @@ public static class PlayerCurrentSkillSource
                          arguments.TryGetInt(1, out int slotIndex) &&
                          TryGetRuntimeBuffers(
                              context.TargetEntity,
-                             in runtimeLookup,
                              in chainLookup,
                              in slotLookup,
                              out DynamicBuffer<PlayerSkillChainElement> chains,
                              out DynamicBuffer<PlayerSkillChainSlotElement> slots) &&
-                         PlayerSkillRuntimeDataSource.TryGetChainSlot(
+                         PlayerSkillChainSource.TryGetChainSlot(
                              chains,
                              slots,
                              chainId,
@@ -157,7 +153,6 @@ public static class PlayerCurrentSkillSource
                          TryGetCurrentSlot(
                              context.TargetEntity,
                              in currentSkillLookup,
-                             in runtimeLookup,
                              in chainLookup,
                              in slotLookup,
                              out _) &&
@@ -203,7 +198,6 @@ public static class PlayerCurrentSkillSource
     private static bool TryGetCurrentSlot(
         Entity entity,
         in ComponentLookup<PlayerCurrentSkillComponent> currentSkillLookup,
-        in ComponentLookup<PlayerSkillRuntimeDataComponent> runtimeLookup,
         in BufferLookup<PlayerSkillChainElement> chainLookup,
         in BufferLookup<PlayerSkillChainSlotElement> slotLookup,
         out PlayerSkillChainSlotElement slot)
@@ -214,12 +208,11 @@ public static class PlayerCurrentSkillSource
                current.CurrentSlotIndex >= 0 &&
                TryGetRuntimeBuffers(
                    entity,
-                   in runtimeLookup,
                    in chainLookup,
                    in slotLookup,
                    out DynamicBuffer<PlayerSkillChainElement> chains,
                    out DynamicBuffer<PlayerSkillChainSlotElement> slots) &&
-               PlayerSkillRuntimeDataSource.TryGetChainSlot(
+               PlayerSkillChainSource.TryGetChainSlot(
                    chains,
                    slots,
                    current.CurrentChainId,
@@ -229,7 +222,6 @@ public static class PlayerCurrentSkillSource
 
     private static bool TryGetRuntimeBuffers(
         Entity entity,
-        in ComponentLookup<PlayerSkillRuntimeDataComponent> runtimeLookup,
         in BufferLookup<PlayerSkillChainElement> chainLookup,
         in BufferLookup<PlayerSkillChainSlotElement> slotLookup,
         out DynamicBuffer<PlayerSkillChainElement> chains,
@@ -237,8 +229,7 @@ public static class PlayerCurrentSkillSource
     {
         chains = default;
         slots = default;
-        return runtimeLookup.HasComponent(entity) &&
-               chainLookup.TryGetBuffer(entity, out chains) &&
+        return chainLookup.TryGetBuffer(entity, out chains) &&
                slotLookup.TryGetBuffer(entity, out slots);
     }
 }

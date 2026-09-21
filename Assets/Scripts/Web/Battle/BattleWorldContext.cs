@@ -26,12 +26,15 @@ namespace Server
             try
             {
                 world = new World($"BattleWorld_{battleId}", WorldFlags.GameServer);
+                WorldStateUtility.Create(
+                    world.EntityManager,
+                    GameWorldRole.Server,
+                    GameSceneMode.Dungeon);
                 DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(
                     world,
                     DefaultWorldInitialization.GetAllSystems(
                         WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation));
 
-                GameWorldContextUtility.Bind(world.EntityManager, GameWorldRole.Server, GameSceneMode.Dungeon);
                 FrameManagerUtility.Bind(world.EntityManager, frame);
                 RegistrySceneEntity = SceneSystem.LoadSceneAsync(world.Unmanaged, registrySceneGuid);
                 ScriptBehaviourUpdateOrder.AppendWorldToCurrentPlayerLoop(world);

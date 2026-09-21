@@ -542,8 +542,7 @@ public static class UnitComponentSourceRegistryGenerator
             builder.AppendLine($"        {ComponentFieldName(componentLookupTypes[index])} = {componentExpression(componentLookupTypes[index])};");
         for (int index = 0; index < bufferLookupTypes.Count; index++)
             builder.AppendLine($"        {BufferFieldName(bufferLookupTypes[index])} = {bufferExpression(bufferLookupTypes[index])};");
-        builder.AppendLine($"        if (_globalEntity == Entity.Null || !{entityManagerExpression}.Exists(_globalEntity))");
-        builder.AppendLine($"            WorldStateUtility.TryGetEntity({entityManagerExpression}, out _globalEntity);");
+        builder.AppendLine($"        _globalEntity = WorldStateUtility.GetEntity({entityManagerExpression});");
         builder.AppendLine("    }");
         builder.AppendLine();
     }
@@ -561,11 +560,6 @@ public static class UnitComponentSourceRegistryGenerator
             builder.AppendLine($"        {ComponentFieldName(componentLookupTypes[index])}.Update({updateArgument});");
         for (int index = 0; index < bufferLookupTypes.Count; index++)
             builder.AppendLine($"        {BufferFieldName(bufferLookupTypes[index])}.Update({updateArgument});");
-        string entityManagerExpression = parameter.StartsWith("ref ", StringComparison.Ordinal)
-            ? "state.EntityManager"
-            : "system.EntityManager";
-        builder.AppendLine($"        if (_globalEntity == Entity.Null || !{entityManagerExpression}.Exists(_globalEntity))");
-        builder.AppendLine($"            WorldStateUtility.TryGetEntity({entityManagerExpression}, out _globalEntity);");
         builder.AppendLine("    }");
         builder.AppendLine();
     }

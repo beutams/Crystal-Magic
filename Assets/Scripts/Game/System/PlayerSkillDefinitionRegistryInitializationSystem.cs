@@ -23,8 +23,10 @@ public partial class PlayerSkillDefinitionRegistryInitializationSystem : SystemB
         }
 
         DataTable<SkillData> table = DataComponent.Instance.GetTable<SkillData>();
-        if (table == null || !WorldStateUtility.TryGetEntity(EntityManager, out Entity worldEntity))
+        if (table == null)
             return;
+
+        Entity worldEntity = SystemAPI.GetSingletonEntity<WorldStateComponent>();
 
         List<SkillData> skills = new(table.GetAll());
         skills.RemoveAll(static skill => skill == null);
@@ -74,10 +76,7 @@ public partial class PlayerSkillDefinitionRegistryInitializationSystem : SystemB
 
         _registry = builder.CreateBlobAssetReference<PlayerSkillDefinitionRegistryBlob>(Allocator.Persistent);
         PlayerSkillDefinitionRegistryComponent component = new() { Value = _registry };
-        if (EntityManager.HasComponent<PlayerSkillDefinitionRegistryComponent>(worldEntity))
-            EntityManager.SetComponentData(worldEntity, component);
-        else
-            EntityManager.AddComponentData(worldEntity, component);
+        EntityManager.SetComponentData(worldEntity, component);
 
         Enabled = false;
     }

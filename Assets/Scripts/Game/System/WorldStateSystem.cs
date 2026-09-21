@@ -8,35 +8,21 @@ using Unity.Entities;
 [UpdateBefore(typeof(StateScriptInitSystem))]
 public partial class WorldStateSystem : SystemBase
 {
-    private Entity _worldEntity;
-
     protected override void OnCreate()
     {
-        if (!WorldStateUtility.TryGetEntity(EntityManager, out _worldEntity))
-            _worldEntity = EntityManager.CreateEntity(typeof(WorldStateComponent));
-
-        if (!EntityManager.HasComponent<WorldVariableComponent>(_worldEntity))
-            EntityManager.AddComponentData(_worldEntity, new WorldVariableComponent());
-        if (!EntityManager.HasBuffer<WorldVariableElement>(_worldEntity))
-            EntityManager.AddBuffer<WorldVariableElement>(_worldEntity);
-        if (!EntityManager.HasComponent<InteractionCandidateComponent>(_worldEntity))
-        {
-            EntityManager.AddComponentData(_worldEntity, new InteractionCandidateComponent
-            {
-                Target = Entity.Null,
-            });
-        }
+        RequireForUpdate<WorldStateComponent>();
+        RequireForUpdate<GameWorldContextComponent>();
     }
 
     protected override void OnUpdate()
     {
-        WorldStateComponent worldState = EntityManager.GetComponentData<WorldStateComponent>(_worldEntity);
+        RefRW<WorldStateComponent> worldState = SystemAPI.GetSingletonRW<WorldStateComponent>();
         uint currentFrame = FrameManagerUtility.TryGet(EntityManager, out FrameManager frameManager)
             ? frameManager.currentFrame
             : 0u;
         GameGateMask gateMask = GameGateMask.None;
-        if (GameWorldContextUtility.TryGet(EntityManager, out GameWorldContextComponent context) &&
-            (context.Role == GameWorldRole.Standalone || context.Role == GameWorldRole.Client))
+        GameWorldContextComponent context = SystemAPI.GetSingleton<GameWorldContextComponent>();
+        if (context.Role == GameWorldRole.Standalone || context.Role == GameWorldRole.Client)
         {
             GameGateComponent gameGate = GameGateComponent.Instance;
             if (gameGate.IsSimulationLocked)
@@ -47,11 +33,10 @@ public partial class WorldStateSystem : SystemBase
                 gateMask |= GameGateMask.UIInput;
         }
 
-        if (worldState.CurrentFrame == currentFrame && worldState.GateMask == gateMask)
+        if (worldState.ValueRO.CurrentFrame == currentFrame && worldState.ValueRO.GateMask == gateMask)
             return;
 
-        worldState.CurrentFrame = currentFrame;
-        worldState.GateMask = gateMask;
-        EntityManager.SetComponentData(_worldEntity, worldState);
+        worldState.ValueRW.CurrentFrame = currentFrame;
+        worldState.ValueRW.GateMask = gateMask;
     }
 }

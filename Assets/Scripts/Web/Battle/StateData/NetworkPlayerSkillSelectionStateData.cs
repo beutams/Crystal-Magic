@@ -15,7 +15,6 @@ public sealed class NetworkPlayerSkillSelectionStateData : NetworkStateData
                 CurrentChainIndex = currentChainIndex,
                 NetworkDirty = 0,
             });
-            PlayerSkillRuntimeDataUtility.SetCurrentChain(context.EntityManager, entity, currentChainIndex);
         }
     }
 }

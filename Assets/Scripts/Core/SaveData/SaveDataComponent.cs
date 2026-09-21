@@ -611,7 +611,7 @@ namespace CrystalMagic.Core {
         public void NotifySkillDataChanged()
         {
             if (GameRuntimeStateUtility.TryGetPlayerEntity(out EntityManager entityManager, out Entity player))
-                PlayerSkillRuntimeDataUtility.Rebuild(entityManager, player);
+                PlayerSkillChainUtility.Rebuild(entityManager, player);
 
             EventComponent.Instance.Publish(new CommonGameEvent(SkillDataChangedEventName, GetSkillData()));
             NotifyCharacterDataChanged();
