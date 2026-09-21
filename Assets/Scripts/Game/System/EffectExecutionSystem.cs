@@ -4,6 +4,7 @@ using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(PersistentEffectSystem))]
 partial class EffectExecutionSystem : SystemBase

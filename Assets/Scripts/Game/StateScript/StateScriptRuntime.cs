@@ -27,6 +27,7 @@ public enum StateScriptNodeRuntimeType : byte
     RequestSkillWithAddition,
     RequestInteraction,
     SpawnUnit,
+    QueryUnits,
     Timer,
     Keep,
     Monitor,

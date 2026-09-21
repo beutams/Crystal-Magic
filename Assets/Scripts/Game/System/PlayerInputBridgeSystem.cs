@@ -2,6 +2,7 @@ using CrystalMagic.Core;
 using Unity.Entities;
 using Unity.Mathematics;
 
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation)]
 [UpdateInGroup(typeof(ClientInputSystemGroup))]
 public partial class PlayerInputBridgeSystem : SystemBase
 {
@@ -11,12 +12,14 @@ public partial class PlayerInputBridgeSystem : SystemBase
     {
         InputState inputState = InputComponent.Instance.CurrentState;
         bool isSkillPressed = inputState.IsSkillHeld && !_wasSkillHeld;
-        foreach ((RefRW<PlayerInputComponent> inputRef,
-                  RefRW<PlayerSkillSelectionComponent> selectionRef,
-                  Entity entity) in
-                 SystemAPI.Query<RefRW<PlayerInputComponent>, RefRW<PlayerSkillSelectionComponent>>()
-                     .WithEntityAccess())
+        foreach (RefRW<PlayerInputComponent> inputRef in
+                 SystemAPI.Query<RefRW<PlayerInputComponent>>())
         {
+            PlayerInputComponent oldInput = inputRef.ValueRO;
+            int selectedChainIndex = oldInput.SkillChainIndex;
+            if (isSkillPressed && inputState.SkillChainIndex >= 0)
+                selectedChainIndex = inputState.SkillChainIndex;
+
             PlayerInputComponent input = new()
             {
                 Move = new float2(inputState.Move.x, inputState.Move.y),
@@ -30,11 +33,10 @@ public partial class PlayerInputBridgeSystem : SystemBase
                 IsPropertyHeld = inputState.IsPropertyHeld ? (byte)1 : (byte)0,
                 IsEscapeHeld = inputState.IsEscapeHeld ? (byte)1 : (byte)0,
                 IsSkillHeld = inputState.IsSkillHeld ? (byte)1 : (byte)0,
-                SkillChainIndex = inputState.SkillChainIndex,
+                SkillChainIndex = selectedChainIndex,
                 IsUsePropHeld = inputState.IsUsePropHeld ? (byte)1 : (byte)0,
                 PropIndex = inputState.PropIndex,
             };
-            PlayerInputComponent oldInput = inputRef.ValueRO;
             bool inputChanged = !oldInput.Move.Equals(input.Move) ||
                                 !oldInput.PointerWorldPosition.Equals(input.PointerWorldPosition) ||
                                 oldInput.IsPrimaryHeld != input.IsPrimaryHeld ||
@@ -49,19 +51,8 @@ public partial class PlayerInputBridgeSystem : SystemBase
             input.NetworkDirty = inputChanged ? (byte)1 : oldInput.NetworkDirty;
             inputRef.ValueRW = input;
 
-            PlayerSkillSelectionComponent selection = selectionRef.ValueRO;
-            int previousChainIndex = selection.CurrentChainIndex;
-            if (isSkillPressed)
-                selection.CurrentChainIndex = input.SkillChainIndex;
-
-            if (selection.CurrentChainIndex != previousChainIndex)
-            {
-                selection.NetworkDirty = 1;
-                selectionRef.ValueRW = selection;
-            }
-
-            if (isSkillPressed)
-                EventComponent.Instance.Publish(new CommonGameEvent(PlayerSkillSelectionComponent.ChangedEventName));
+            if (oldInput.SkillChainIndex != input.SkillChainIndex)
+                EventComponent.Instance.Publish(new CommonGameEvent(PlayerInputComponent.SkillChainChangedEventName));
             break;
         }
 

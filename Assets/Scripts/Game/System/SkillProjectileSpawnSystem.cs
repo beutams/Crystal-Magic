@@ -8,6 +8,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(SkillReleaseSystem))]
 [UpdateBefore(typeof(SkillProjectileSystem))]

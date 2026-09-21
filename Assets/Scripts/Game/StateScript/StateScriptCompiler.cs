@@ -367,6 +367,10 @@ public static class StateScriptCompiler
                 if (!TryCompileSpawn(spawn, graph, ref definition, out error))
                     return false;
                 break;
+            case QueryUnitsActionNodeData query:
+                if (!TryCompileQueryUnits(query, schemaResolver, expressionFactory, graph, ref definition, out error))
+                    return false;
+                break;
             case TimerStateScriptNodeData timer:
                 if (!TryAddValueExpression(timer.Duration, UnitValueCategory.Number, schemaResolver, expressionFactory, graph, out error))
                     return false;
@@ -519,6 +523,45 @@ public static class StateScriptCompiler
         return true;
     }
 
+    private static bool TryCompileQueryUnits(
+        QueryUnitsActionNodeData source,
+        UnitSourceResolver schemaResolver,
+        ComparatorFactory expressionFactory,
+        CompiledGraph graph,
+        ref StateScriptNodeDefinition definition,
+        out string error)
+    {
+        source.EnsureValid();
+        error = string.Empty;
+        if (string.IsNullOrWhiteSpace(source.ResultKey) ||
+            !TryCopyFixedString(source.ResultKey.Trim(), out definition.Text))
+        {
+            error = "ResultKey is empty or too long.";
+            return false;
+        }
+        if (definition.Text.Length > 112)
+        {
+            error = "ResultKey is too long for indexed result entries.";
+            return false;
+        }
+
+        definition.IntParameters = new int4(
+            (int)source.Shape,
+            (int)source.FactionMask,
+            source.UnitDataId,
+            math.max(0, source.MaxCount));
+        definition.FloatParameters0 = new float4(
+            (int)source.SortMode,
+            source.ExcludeSelf ? 1f : 0f,
+            source.ExcludeDead ? 1f : 0f,
+            0f);
+        return TryAddValueExpression(source.Center, UnitValueCategory.Float3, schemaResolver, expressionFactory, graph, out error) &&
+               TryAddValueExpression(source.Direction, UnitValueCategory.Float2, schemaResolver, expressionFactory, graph, out error) &&
+               TryAddValueExpression(source.Size, UnitValueCategory.Float2, schemaResolver, expressionFactory, graph, out error) &&
+               TryAddValueExpression(source.Radius, UnitValueCategory.Number, schemaResolver, expressionFactory, graph, out error) &&
+               TryAddValueExpression(source.Angle, UnitValueCategory.Number, schemaResolver, expressionFactory, graph, out error);
+    }
+
     private static bool TryAddConditions(
         IReadOnlyList<ConditionConfig> conditions,
         UnitSourceResolver schemaResolver,
@@ -607,6 +650,7 @@ public static class StateScriptCompiler
             RequestSkillWithAdditionActionNodeData => StateScriptNodeRuntimeType.RequestSkillWithAddition,
             RequestInteractionActionNodeData => StateScriptNodeRuntimeType.RequestInteraction,
             SpawnUnitActionNodeData => StateScriptNodeRuntimeType.SpawnUnit,
+            QueryUnitsActionNodeData => StateScriptNodeRuntimeType.QueryUnits,
             TimerStateScriptNodeData => StateScriptNodeRuntimeType.Timer,
             KeepStateScriptNodeData => StateScriptNodeRuntimeType.Keep,
             MonitorStateScriptNodeData => StateScriptNodeRuntimeType.Monitor,
@@ -617,6 +661,7 @@ public static class StateScriptCompiler
         return source is StateScriptEntryNodeData or CompareStateScriptNodeData or SetValueStateScriptNodeData or
             RequestSkillActionNodeData or PublishGameEventStateScriptNodeData or
             RequestSkillWithAdditionActionNodeData or RequestInteractionActionNodeData or SpawnUnitActionNodeData or
+            QueryUnitsActionNodeData or
             TimerStateScriptNodeData or KeepStateScriptNodeData or MonitorStateScriptNodeData or
             NumberMonitorStateScriptNodeData or AdditionStateScriptNodeData;
     }

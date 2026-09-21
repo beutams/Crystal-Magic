@@ -25,6 +25,15 @@ public sealed class NetworkPlayerInputStateData : NetworkStateData
         if (!context.TryGetEntity(unitId, out Entity entity))
             return;
 
+        byte networkDirty = 0;
+        if (!context.IsClient && context.EntityManager.HasComponent<PlayerInputComponent>(entity))
+        {
+            PlayerInputComponent previous = context.EntityManager.GetComponentData<PlayerInputComponent>(entity);
+            networkDirty = previous.SkillChainIndex != skillChainIndex
+                ? (byte)1
+                : previous.NetworkDirty;
+        }
+
         context.SetOrAdd(entity, new PlayerInputComponent
         {
             Move = new float2(moveX, moveY),
@@ -38,7 +47,7 @@ public sealed class NetworkPlayerInputStateData : NetworkStateData
             SkillChainIndex = skillChainIndex,
             IsUsePropHeld = isUsePropHeld,
             PropIndex = propIndex,
-            NetworkDirty = 0,
+            NetworkDirty = networkDirty,
         });
     }
 }

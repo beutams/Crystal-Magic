@@ -86,6 +86,15 @@ namespace CrystalMagic.Editor.Unit
                 return;
             }
 
+            if (node is QueryUnitsActionNodeData queryUnits)
+            {
+                EditorGUI.BeginChangeCheck();
+                DrawQueryUnits(queryUnits, sourceSchema, onChanged);
+                if (EditorGUI.EndChangeCheck())
+                    onChanged?.Invoke();
+                return;
+            }
+
             if (node is TimerStateScriptNodeData timer)
             {
                 EditorGUI.BeginChangeCheck();
@@ -336,6 +345,48 @@ namespace CrystalMagic.Editor.Unit
             spawnUnit.CopyFactionFromSpawner = EditorGUILayout.Toggle("Copy Faction", spawnUnit.CopyFactionFromSpawner);
             spawnUnit.ShareVariablesWithSpawner = EditorGUILayout.Toggle("Share Variables", spawnUnit.ShareVariablesWithSpawner);
             spawnUnit.RestoreRuntimeState = EditorGUILayout.Toggle("Restore Runtime State", spawnUnit.RestoreRuntimeState);
+        }
+
+        private static void DrawQueryUnits(
+            QueryUnitsActionNodeData query,
+            UnitSourceSchema sourceSchema,
+            Action onChanged)
+        {
+            query.EnsureValid();
+            query.Shape = (UnitQueryShapeType)EditorGUILayout.EnumPopup("Shape", query.Shape);
+            if (query.Shape != UnitQueryShapeType.WholeWorld)
+            {
+                EditorGUILayout.LabelField("Center (Float3)", EditorStyles.miniBoldLabel);
+                StateScriptValueExpressionDrawer.Draw(query.Center, UnitValueCategory.Float3, sourceSchema, onChanged);
+            }
+            if (query.Shape is UnitQueryShapeType.ForwardRect or UnitQueryShapeType.Cone)
+            {
+                EditorGUILayout.LabelField("Direction (Float2)", EditorStyles.miniBoldLabel);
+                StateScriptValueExpressionDrawer.Draw(query.Direction, UnitValueCategory.Float2, sourceSchema, onChanged);
+            }
+            if (query.Shape is UnitQueryShapeType.AxisAlignedRect or UnitQueryShapeType.ForwardRect)
+            {
+                EditorGUILayout.LabelField("Size (Float2)", EditorStyles.miniBoldLabel);
+                StateScriptValueExpressionDrawer.Draw(query.Size, UnitValueCategory.Float2, sourceSchema, onChanged);
+            }
+            if (query.Shape is UnitQueryShapeType.Circle or UnitQueryShapeType.Cone)
+            {
+                EditorGUILayout.LabelField("Radius (Number)", EditorStyles.miniBoldLabel);
+                StateScriptValueExpressionDrawer.Draw(query.Radius, UnitValueCategory.Number, sourceSchema, onChanged);
+            }
+            if (query.Shape == UnitQueryShapeType.Cone)
+            {
+                EditorGUILayout.LabelField("Angle (Number)", EditorStyles.miniBoldLabel);
+                StateScriptValueExpressionDrawer.Draw(query.Angle, UnitValueCategory.Number, sourceSchema, onChanged);
+            }
+
+            query.FactionMask = (UnitFactionMask)EditorGUILayout.EnumFlagsField("Factions", query.FactionMask);
+            query.UnitDataId = EditorGUILayout.IntField("Unit Data ID", query.UnitDataId);
+            query.ExcludeSelf = EditorGUILayout.Toggle("Exclude Self", query.ExcludeSelf);
+            query.ExcludeDead = EditorGUILayout.Toggle("Exclude Dead", query.ExcludeDead);
+            query.MaxCount = Mathf.Max(0, EditorGUILayout.IntField("Max Count", query.MaxCount));
+            query.SortMode = (StateScriptUnitQuerySortMode)EditorGUILayout.EnumPopup("Sort", query.SortMode);
+            query.ResultKey = EditorGUILayout.TextField("Result Key", query.ResultKey ?? string.Empty);
         }
 
         private static void DrawComparatorCondition(

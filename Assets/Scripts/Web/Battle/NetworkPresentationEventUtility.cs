@@ -201,8 +201,7 @@ public static class NetworkPresentationEventUtility
 
     private static bool TryEnqueue(EntityManager entityManager, NetworkPresentationEventStateData state)
     {
-        if (!GameWorldContextUtility.TryGet(entityManager, out GameWorldContextComponent context) ||
-            context.Role != GameWorldRole.Server)
+        if (GameWorldContextUtility.Get(entityManager).Role != GameWorldRole.Server)
         {
             return false;
         }

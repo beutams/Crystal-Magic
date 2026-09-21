@@ -2,6 +2,7 @@ using Unity.Burst;
 using Unity.Entities;
 
 [BurstCompile]
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 partial struct VfxLifetimeSystem : ISystem
 {

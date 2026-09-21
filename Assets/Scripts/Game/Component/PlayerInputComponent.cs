@@ -4,6 +4,8 @@ using Unity.Mathematics;
 
 public struct PlayerInputComponent : IComponentData
 {
+    public const string SkillChainChangedEventName = "Player.Input.SkillChain.Changed";
+
     public float2 Move;
     public float3 PointerWorldPosition;
     public byte IsPrimaryHeld;
@@ -16,6 +18,17 @@ public struct PlayerInputComponent : IComponentData
     public byte IsUsePropHeld;
     public int PropIndex;
     public byte NetworkDirty;
+}
+
+public static class PlayerInputUtility
+{
+    public static int GetSkillChainIndex()
+    {
+        return GameRuntimeStateUtility.TryGetPlayerEntity(out EntityManager entityManager, out Entity player) &&
+               entityManager.HasComponent<PlayerInputComponent>(player)
+            ? entityManager.GetComponentData<PlayerInputComponent>(player).SkillChainIndex
+            : 0;
+    }
 }
 
 [UnitSourceProvider(typeof(PlayerInputComponent), typeof(PlayerInputAuthoring))]

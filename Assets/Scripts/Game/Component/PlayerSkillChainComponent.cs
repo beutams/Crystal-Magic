@@ -26,8 +26,8 @@ public static class PlayerSkillChainUtility
         characterData.Skills ??= new SkillCData();
         characterData.Skills.EnsureValid();
 
-        if (!entityManager.HasComponent<PlayerSkillSelectionComponent>(player))
-            entityManager.AddComponentData(player, new PlayerSkillSelectionComponent());
+        if (!entityManager.HasComponent<PlayerInputComponent>(player))
+            entityManager.AddComponentData(player, new PlayerInputComponent());
         if (!entityManager.HasComponent<PlayerPropCooldownComponent>(player))
             entityManager.AddComponentData(player, new PlayerPropCooldownComponent());
 
@@ -39,7 +39,7 @@ public static class PlayerSkillChainUtility
         if (!GameRuntimeStateUtility.TryGetPlayerCharacterData(entityManager, player, out CharacterData characterData))
             return;
 
-        if (!entityManager.HasComponent<PlayerSkillSelectionComponent>(player) ||
+        if (!entityManager.HasComponent<PlayerInputComponent>(player) ||
             !entityManager.HasComponent<PlayerPropCooldownComponent>(player))
         {
             Initialize(entityManager, player, characterData);
@@ -62,23 +62,27 @@ public static class PlayerSkillChainUtility
 
     private static void Rebuild(EntityManager entityManager, Entity player, CharacterData characterData)
     {
-        PlayerSkillSelectionComponent selection =
-            entityManager.GetComponentData<PlayerSkillSelectionComponent>(player);
+        PlayerInputComponent input = entityManager.GetComponentData<PlayerInputComponent>(player);
         int chainCount = characterData.Skills?.Chains?.Length ?? 0;
         int maxIndex = chainCount > 0 ? chainCount - 1 : 0;
-        if (selection.CurrentChainIndex < 0 || selection.CurrentChainIndex > maxIndex)
+        if (input.SkillChainIndex < 0 || input.SkillChainIndex > maxIndex)
         {
-            selection.CurrentChainIndex = 0;
-            selection.NetworkDirty = 1;
-            entityManager.SetComponentData(player, selection);
+            input.SkillChainIndex = 0;
+            input.NetworkDirty = 1;
+            entityManager.SetComponentData(player, input);
         }
 
-        DynamicBuffer<PlayerSkillChainElement> chains = entityManager.HasBuffer<PlayerSkillChainElement>(player)
-            ? entityManager.GetBuffer<PlayerSkillChainElement>(player)
-            : entityManager.AddBuffer<PlayerSkillChainElement>(player);
-        DynamicBuffer<PlayerSkillChainSlotElement> slots = entityManager.HasBuffer<PlayerSkillChainSlotElement>(player)
-            ? entityManager.GetBuffer<PlayerSkillChainSlotElement>(player)
-            : entityManager.AddBuffer<PlayerSkillChainSlotElement>(player);
+        // Complete every structural change before acquiring buffer handles. Adding the
+        // second buffer would otherwise invalidate a handle acquired for the first one.
+        if (!entityManager.HasBuffer<PlayerSkillChainElement>(player))
+            entityManager.AddBuffer<PlayerSkillChainElement>(player);
+        if (!entityManager.HasBuffer<PlayerSkillChainSlotElement>(player))
+            entityManager.AddBuffer<PlayerSkillChainSlotElement>(player);
+
+        DynamicBuffer<PlayerSkillChainElement> chains =
+            entityManager.GetBuffer<PlayerSkillChainElement>(player);
+        DynamicBuffer<PlayerSkillChainSlotElement> slots =
+            entityManager.GetBuffer<PlayerSkillChainSlotElement>(player);
         chains.Clear();
         slots.Clear();
 
@@ -186,20 +190,20 @@ public static class PlayerSkillChainSource
             case 5:
                 result = UnitSourceValue.FromBool(
                     TryGetCurrentChainSlot(input, chains, slots, in arguments, out PlayerSkillChainSlotElement currentSlot) &&
-                    TryGetSkill(context.GlobalEntity, currentSlot.SkillId, in registryLookup, out _));
+                    TryGetSkill(context.SingletonEntity, currentSlot.SkillId, in registryLookup, out _));
                 return true;
             case 6:
-                if (!TryGetCurrentSkill(context.GlobalEntity, input, chains, slots, in registryLookup, in arguments, out PlayerSkillDefinitionBlob currentMpSkill))
+                if (!TryGetCurrentSkill(context.SingletonEntity, input, chains, slots, in registryLookup, in arguments, out PlayerSkillDefinitionBlob currentMpSkill))
                     return false;
                 result = UnitSourceValue.FromInt(currentMpSkill.MpCost);
                 return true;
             case 7:
-                if (!TryGetCurrentSkill(context.GlobalEntity, input, chains, slots, in registryLookup, in arguments, out PlayerSkillDefinitionBlob currentChantSkill))
+                if (!TryGetCurrentSkill(context.SingletonEntity, input, chains, slots, in registryLookup, in arguments, out PlayerSkillDefinitionBlob currentChantSkill))
                     return false;
                 result = UnitSourceValue.FromFloat(currentChantSkill.ChantDuration);
                 return true;
             case 8:
-                if (!TryGetCurrentSkill(context.GlobalEntity, input, chains, slots, in registryLookup, in arguments, out PlayerSkillDefinitionBlob currentRuntimeSkill) ||
+                if (!TryGetCurrentSkill(context.SingletonEntity, input, chains, slots, in registryLookup, in arguments, out PlayerSkillDefinitionBlob currentRuntimeSkill) ||
                     currentRuntimeSkill.RuntimeTypeValid == 0)
                 {
                     return false;
@@ -232,25 +236,25 @@ public static class PlayerSkillChainSource
             case 13:
                 if (!arguments.TryGetInt(0, out int hasSkillId))
                     return false;
-                result = UnitSourceValue.FromBool(TryGetSkill(context.GlobalEntity, hasSkillId, in registryLookup, out _));
+                result = UnitSourceValue.FromBool(TryGetSkill(context.SingletonEntity, hasSkillId, in registryLookup, out _));
                 return true;
             case 14:
-                if (!TryGetSkill(context.GlobalEntity, in registryLookup, in arguments, out PlayerSkillDefinitionBlob mpSkill))
+                if (!TryGetSkill(context.SingletonEntity, in registryLookup, in arguments, out PlayerSkillDefinitionBlob mpSkill))
                     return false;
                 result = UnitSourceValue.FromInt(mpSkill.MpCost);
                 return true;
             case 15:
-                if (!TryGetSkill(context.GlobalEntity, in registryLookup, in arguments, out PlayerSkillDefinitionBlob chantSkill))
+                if (!TryGetSkill(context.SingletonEntity, in registryLookup, in arguments, out PlayerSkillDefinitionBlob chantSkill))
                     return false;
                 result = UnitSourceValue.FromFloat(chantSkill.ChantDuration);
                 return true;
             case 16:
-                if (!TryGetSkill(context.GlobalEntity, in registryLookup, in arguments, out PlayerSkillDefinitionBlob moveSkill))
+                if (!TryGetSkill(context.SingletonEntity, in registryLookup, in arguments, out PlayerSkillDefinitionBlob moveSkill))
                     return false;
                 result = UnitSourceValue.FromFloat(moveSkill.CastingMoveMultiplier);
                 return true;
             case 17:
-                if (!TryGetSkill(context.GlobalEntity, in registryLookup, in arguments, out PlayerSkillDefinitionBlob runtimeSkill) ||
+                if (!TryGetSkill(context.SingletonEntity, in registryLookup, in arguments, out PlayerSkillDefinitionBlob runtimeSkill) ||
                     runtimeSkill.RuntimeTypeValid == 0)
                 {
                     return false;
@@ -258,7 +262,7 @@ public static class PlayerSkillChainSource
                 result = UnitSourceValue.FromString(in runtimeSkill.RuntimeType);
                 return true;
             case 18:
-                if (!TryGetSkill(context.GlobalEntity, in registryLookup, in arguments, out PlayerSkillDefinitionBlob inputSkill))
+                if (!TryGetSkill(context.SingletonEntity, in registryLookup, in arguments, out PlayerSkillDefinitionBlob inputSkill))
                     return false;
                 result = UnitSourceValue.FromInt((int)inputSkill.InputType);
                 return true;
@@ -308,13 +312,13 @@ public static class PlayerSkillChainSource
     }
 
     public static bool TryGetSkill(
-        Entity globalEntity,
+        Entity registryEntity,
         int skillId,
         in ComponentLookup<PlayerSkillDefinitionRegistryComponent> registryLookup,
         out PlayerSkillDefinitionBlob skill)
     {
         skill = default;
-        return registryLookup.TryGetComponent(globalEntity, out PlayerSkillDefinitionRegistryComponent component) &&
+        return registryLookup.TryGetComponent(registryEntity, out PlayerSkillDefinitionRegistryComponent component) &&
                PlayerSkillDefinitionRegistryUtility.TryGetSkill(in component.Value, skillId, out skill);
     }
 
@@ -349,7 +353,7 @@ public static class PlayerSkillChainSource
     }
 
     private static bool TryGetCurrentSkill(
-        Entity globalEntity,
+        Entity registryEntity,
         in PlayerInputComponent input,
         in DynamicBuffer<PlayerSkillChainElement> chains,
         in DynamicBuffer<PlayerSkillChainSlotElement> slots,
@@ -359,7 +363,7 @@ public static class PlayerSkillChainSource
     {
         skill = default;
         return TryGetCurrentChainSlot(input, chains, slots, in arguments, out PlayerSkillChainSlotElement slot) &&
-               TryGetSkill(globalEntity, slot.SkillId, in registryLookup, out skill);
+               TryGetSkill(registryEntity, slot.SkillId, in registryLookup, out skill);
     }
 
     private static bool TryGetChainSlot(
@@ -375,13 +379,13 @@ public static class PlayerSkillChainSource
     }
 
     private static bool TryGetSkill(
-        Entity globalEntity,
+        Entity registryEntity,
         in ComponentLookup<PlayerSkillDefinitionRegistryComponent> registryLookup,
         in UnitSourceArguments arguments,
         out PlayerSkillDefinitionBlob skill)
     {
         skill = default;
         return arguments.TryGetInt(0, out int skillId) &&
-               TryGetSkill(globalEntity, skillId, in registryLookup, out skill);
+               TryGetSkill(registryEntity, skillId, in registryLookup, out skill);
     }
 }

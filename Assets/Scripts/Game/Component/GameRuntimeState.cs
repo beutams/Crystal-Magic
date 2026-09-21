@@ -453,7 +453,8 @@ namespace CrystalMagic.Core
         public static bool TryGetPlayerEntity(EntityManager entityManager, out Entity player)
         {
             player = Entity.Null;
-            EntityQuery localPlayerQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<NetworkPlayerComponent>());
+            using EntityQuery localPlayerQuery =
+                entityManager.CreateEntityQuery(ComponentType.ReadOnly<NetworkPlayerComponent>());
             if (!localPlayerQuery.IsEmptyIgnoreFilter)
             {
                 using Unity.Collections.NativeArray<Entity> localPlayers =
@@ -465,16 +466,23 @@ namespace CrystalMagic.Core
                 }
             }
 
-            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<UnitFactionComponent>());
+            GameSceneMode sceneMode = GameWorldContextUtility.GetSceneMode(entityManager);
+            bool hasScenePreference = sceneMode != GameSceneMode.None;
+            bool prefersCombatPlayer = sceneMode is GameSceneMode.Dungeon or GameSceneMode.Training;
+            using EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<UnitFactionComponent>());
             using Unity.Collections.NativeArray<Entity> entities = query.ToEntityArray(Unity.Collections.Allocator.Temp);
             for (int index = 0; index < entities.Length; index++)
             {
                 Entity entity = entities[index];
-                if (UnitFactionUtility.IsPlayer(entityManager.GetComponentData<UnitFactionComponent>(entity).Value))
-                {
-                    player = entity;
-                    return true;
-                }
+                if (!UnitFactionUtility.IsPlayer(entityManager.GetComponentData<UnitFactionComponent>(entity).Value))
+                    continue;
+
+                bool isCombatPlayer = entityManager.HasComponent<UnitSkillReleaseComponent>(entity);
+                if (hasScenePreference && isCombatPlayer != prefersCombatPlayer)
+                    continue;
+
+                player = entity;
+                return true;
             }
 
             return false;
@@ -489,8 +497,11 @@ namespace CrystalMagic.Core
             {
                 Entity entity = units[index];
                 UnitRuntimeData state = CreateUnitRuntimeData(entityManager, entity);
-                if (!UnitFactionUtility.IsPlayer(state.Faction))
+                if (!UnitFactionUtility.IsPlayer(state.Faction) &&
+                    !UnitFactionUtility.IsInteractable(state.Faction))
+                {
                     run.Units.Add(state);
+                }
             }
 
             run.ItemDrops = new List<ItemDropData>();

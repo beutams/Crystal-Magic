@@ -56,9 +56,9 @@ namespace CrystalMagic.Game.Skill.Effects
             out UnitQueryHit nextHit)
         {
             nextHit = default;
-            if (!UnitQueryUtility.TryGetGrid(entityManager, UnitQueryGridKind.Unit, out UnitQueryGrid unitGrid))
-                return false;
-            unitGrid.QueryCircle(center, Data.Radius, _hits);
+            UnitQueryTree tree = UnitQueryUtility.GetTree(entityManager);
+            UnitQueryShape shape = UnitQueryShape.Circle(center, Data.Radius);
+            tree.Query(in shape, UnitFactionMask.Combatants, _hits);
 
             bool found = false;
             float bestDistanceSq = float.MaxValue;

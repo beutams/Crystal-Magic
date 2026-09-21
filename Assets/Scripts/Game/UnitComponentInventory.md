@@ -304,7 +304,7 @@ interaction systems.
 | `EffectVisualFollowComponent` | Makes a sprite effect follow an entity, preserving its last transform and then ending when the target disappears. | Keep. Used by follow effects and projectile visuals. |
 | `UnitInteractableComponent` | Generic kind, ID, amount, variant, range, and availability for spawned drops and other targets. | Keep. |
 | `DungeonMonsterSpawnComponent` | Dungeon region, squad, and boss identity for a spawned monster. | Keep unchanged. |
-| `DungeonInterestPointComponent` + `DungeonInterestPointCandidateElement` | Unmanaged patrol-point settings, current target, candidate points, and per-frame player/member metrics. | Keep. `DungeonInterestPointRuntimeSystem` refreshes derived metrics in a Burst job before decision systems run. |
+| `DungeonInterestPointComponent` | Unmanaged patrol-point settings. | Keep. Target discovery and patrol progress now live in state-script variables through `QueryUnits`; no dedicated per-frame interest-point system is required. |
 | `TreasureComponent` + `DungeonTreasureCandidateItemElement` | Chest state and its generated candidate rewards. | Keep. |
 | `DungeonExitComponent` | Dungeon exit region, target floor, room-clear requirement, and open state. | Keep unchanged. |
 

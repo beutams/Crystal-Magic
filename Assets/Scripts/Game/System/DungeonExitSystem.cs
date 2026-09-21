@@ -2,6 +2,7 @@ using CrystalMagic.Core;
 using Unity.Collections;
 using Unity.Entities;
 
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 partial struct DungeonExitSystem : ISystem
 {

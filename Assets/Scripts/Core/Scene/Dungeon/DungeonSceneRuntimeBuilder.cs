@@ -446,7 +446,6 @@ namespace CrystalMagic.Core
             if (sceneData.InterestPointSpawns == null || sceneData.InterestPointSpawns.Count == 0)
                 return;
 
-            List<Entity> pointEntities = new(sceneData.InterestPointSpawns.Count);
             for (int index = 0; index < sceneData.InterestPointSpawns.Count; index++)
             {
                 RuntimeDungeonInterestPointSpawnData spawn = sceneData.InterestPointSpawns[index];
@@ -469,7 +468,7 @@ namespace CrystalMagic.Core
                     1f));
                 entityManager.AddComponentData(pointEntity, new UnitFactionComponent
                 {
-                    Value = UnitFactionType.Npc,
+                    Value = UnitFactionType.Interactable,
                 });
                 entityManager.AddComponentData(pointEntity, new UnitVariableComponent
                 {
@@ -497,33 +496,12 @@ namespace CrystalMagic.Core
                     PatrolSpeed = Mathf.Max(0f, spawn.PatrolSpeed),
                     ArrivalDistance = Mathf.Max(0.05f, spawn.ArrivalDistance),
                     PatrolEnabled = 1,
-                    CurrentTarget = Entity.Null,
-                    NearestPlayerDistance = float.MaxValue,
                 };
                 entityManager.AddComponentData(pointEntity, point);
-                entityManager.AddBuffer<DungeonInterestPointCandidateElement>(pointEntity);
                 DungeonPatrolRuntimeUtility.SetSharedPatrolValues(entityManager, pointEntity, point);
                 entityManager.AddComponent<DungeonRuntimeOwnedEntity>(pointEntity);
 
-                pointEntities.Add(pointEntity);
                 spawnedEntities.Add(pointEntity);
-            }
-
-            for (int pointIndex = 0; pointIndex < pointEntities.Count; pointIndex++)
-            {
-                Entity pointEntity = pointEntities[pointIndex];
-                DynamicBuffer<DungeonInterestPointCandidateElement> candidates =
-                    entityManager.GetBuffer<DungeonInterestPointCandidateElement>(pointEntity);
-                for (int targetIndex = 0; targetIndex < pointEntities.Count; targetIndex++)
-                {
-                    if (targetIndex != pointIndex)
-                    {
-                        candidates.Add(new DungeonInterestPointCandidateElement
-                        {
-                            Value = pointEntities[targetIndex],
-                        });
-                    }
-                }
             }
         }
 

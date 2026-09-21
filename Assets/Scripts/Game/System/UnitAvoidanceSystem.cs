@@ -6,6 +6,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
 
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(SkillReleaseSystem))]
 [UpdateBefore(typeof(UnitMoveSystem))]
@@ -38,9 +39,10 @@ partial struct UnitAvoidanceSystem : ISystem
     public void OnUpdate(ref SystemState state)
     {
         UnitQuerySingleton query = SystemAPI.GetSingleton<UnitQuerySingleton>();
-        if (query.UnitGridEntity == Entity.Null ||
-            !state.EntityManager.Exists(query.UnitGridEntity) ||
-            !state.EntityManager.HasBuffer<UnitQueryEntry>(query.UnitGridEntity))
+        if (query.TreeEntity == Entity.Null ||
+            !state.EntityManager.Exists(query.TreeEntity) ||
+            !state.EntityManager.HasBuffer<UnitQueryNode>(query.TreeEntity) ||
+            !state.EntityManager.HasBuffer<UnitQueryEntry>(query.TreeEntity))
         {
             return;
         }
@@ -58,13 +60,14 @@ partial struct UnitAvoidanceSystem : ISystem
             DeltaTime = math.max(0.00001f, SystemAPI.Time.DeltaTime),
         }.ScheduleParallel(_agentQuery, state.Dependency);
 
-        DynamicBuffer<UnitQueryEntry> unitEntries =
-            state.EntityManager.GetBuffer<UnitQueryEntry>(query.UnitGridEntity, true);
+        DynamicBuffer<UnitQueryNode> treeNodes =
+            state.EntityManager.GetBuffer<UnitQueryNode>(query.TreeEntity, true);
+        DynamicBuffer<UnitQueryEntry> treeEntries =
+            state.EntityManager.GetBuffer<UnitQueryEntry>(query.TreeEntity, true);
         state.Dependency = new UnitAvoidanceSolveJob
         {
             Agents = _agents,
-            UnitEntries = unitEntries.AsNativeArray(),
-            InverseCellSize = query.InverseCellSize,
+            Tree = new UnitQueryTree(treeNodes.AsNativeArray(), treeEntries.AsNativeArray()),
             DeltaTime = math.max(0.00001f, SystemAPI.Time.DeltaTime),
         }.ScheduleParallel(prepareHandle);
     }
@@ -165,9 +168,8 @@ public partial struct UnitAvoidanceSolveJob : IJobEntity
     internal NativeParallelHashMap<Entity, AgentData> Agents;
 
     [ReadOnly]
-    public NativeArray<UnitQueryEntry> UnitEntries;
+    public UnitQueryTree Tree;
 
-    public float InverseCellSize;
     public float DeltaTime;
 
     private void Execute(Entity entity, ref UnitAvoidanceComponent avoidance)
@@ -179,53 +181,39 @@ public partial struct UnitAvoidanceSolveJob : IJobEntity
             return;
         }
 
-        FixedList4096Bytes<AgentNeighbor> neighbors = default;
-        float rangeSq = self.NeighborDistance * self.NeighborDistance;
+        AvoidanceVisitor visitor = new()
+        {
+            Self = self,
+            Agents = Agents,
+            RangeSq = self.NeighborDistance * self.NeighborDistance,
+        };
         if (self.MaxNeighbors > 0 && self.NeighborDistance > 0f)
         {
-            int2 minCell = UnitQueryGrid.GetCell(
-                self.Position - self.NeighborDistance,
-                InverseCellSize);
-            int2 maxCell = UnitQueryGrid.GetCell(
-                self.Position + self.NeighborDistance,
-                InverseCellSize);
-            for (int y = minCell.y; y <= maxCell.y; y++)
-            {
-                for (int x = minCell.x; x <= maxCell.x; x++)
-                {
-                    AddCellNeighbors(
-                        in self,
-                        UnitQueryGrid.GetCellKey(new int2(x, y)),
-                        ref neighbors,
-                        ref rangeSq);
-                }
-            }
+            UnitQueryShape shape = UnitQueryShape.Circle(
+                new float3(self.Position, 0f),
+                self.NeighborDistance);
+            Tree.Query(in shape, UnitFactionMask.Combatants, ref visitor);
         }
 
-        avoidance.ResolvedVelocity = OrcaSolver.ComputeNewVelocity(in self, in neighbors, DeltaTime);
+        avoidance.ResolvedVelocity = OrcaSolver.ComputeNewVelocity(in self, in visitor.Neighbors, DeltaTime);
         avoidance.HasResolvedVelocity = self.HasFrameVelocity == 0 ? (byte)1 : (byte)0;
     }
 
-    private void AddCellNeighbors(
-        in AgentData self,
-        long cellKey,
-        ref FixedList4096Bytes<AgentNeighbor> neighbors,
-        ref float rangeSq)
+    private struct AvoidanceVisitor : IUnitQueryVisitor
     {
-        if (!UnitQueryGrid.TryGetCellRange(
-                UnitEntries,
-                cellKey,
-                out int startIndex,
-                out int endIndex))
-        {
-            return;
-        }
+        public AgentData Self;
 
-        for (int index = startIndex; index < endIndex; index++)
+        [ReadOnly]
+        public NativeParallelHashMap<Entity, AgentData> Agents;
+
+        public FixedList4096Bytes<AgentNeighbor> Neighbors;
+        public float RangeSq;
+
+        public bool Visit(in UnitQueryEntry entry)
         {
-            Entity otherEntity = UnitEntries[index].Entity;
-            if (Agents.TryGetValue(otherEntity, out AgentData other))
-                OrcaSolver.InsertNeighbor(in self, in other, ref neighbors, ref rangeSq);
+            if (Agents.TryGetValue(entry.Entity, out AgentData other))
+                OrcaSolver.InsertNeighbor(in Self, in other, ref Neighbors, ref RangeSq);
+            return true;
         }
     }
 }

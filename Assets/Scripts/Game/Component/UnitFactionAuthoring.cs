@@ -8,7 +8,7 @@ public enum UnitFactionType
     Friend = 1,
     Enemy = 2,
     Boss = 3,
-    Npc = 4,
+    Interactable = 4,
 }
 
 public class UnitFactionAuthoring : MonoBehaviour

@@ -1,4 +1,4 @@
-{
+﻿{
   "Rows": [
     {
       "Graphs": [
@@ -7752,12 +7752,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "werewolf_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "werewolf_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "werewolf_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "werewolf_attack01_lock_motion",
@@ -8682,12 +8676,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "werewolf_attack02_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "werewolf_attack02_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "werewolf_attack02_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "werewolf_attack02_active_true",
@@ -10642,12 +10630,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "werebear_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "werebear_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "werebear_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "werebear_attack01_lock_motion",
@@ -11574,12 +11556,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "werebear_attack02_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "werebear_attack02_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "werebear_attack02_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "werebear_attack02_lock_motion",
@@ -12504,12 +12480,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "werebear_attack03_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "werebear_attack03_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "werebear_attack03_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "werebear_attack03_active_true",
@@ -14464,12 +14434,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "swordsman_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "swordsman_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "swordsman_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "swordsman_attack01_lock_motion",
@@ -15396,12 +15360,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "swordsman_attack02_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "swordsman_attack02_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "swordsman_attack02_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "swordsman_attack02_lock_motion",
@@ -16326,12 +16284,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "swordsman_attack03_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "swordsman_attack03_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "swordsman_attack03_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "swordsman_attack03_active_true",
@@ -18286,12 +18238,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "archer_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "archer_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "archer_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "archer_attack01_lock_motion",
@@ -19216,12 +19162,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "archer_attack02_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "archer_attack02_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "archer_attack02_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "archer_attack02_active_true",
@@ -21176,12 +21116,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "armored_axeman_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "armored_axeman_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "armored_axeman_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "armored_axeman_attack01_lock_motion",
@@ -22108,12 +22042,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "armored_axeman_attack02_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "armored_axeman_attack02_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "armored_axeman_attack02_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "armored_axeman_attack02_lock_motion",
@@ -23038,12 +22966,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "armored_axeman_attack03_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "armored_axeman_attack03_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "armored_axeman_attack03_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "armored_axeman_attack03_active_true",
@@ -32233,12 +32155,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "bat_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "bat_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "bat_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "bat_attack01_lock_motion",
@@ -33163,12 +33079,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "bat_attack02_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "bat_attack02_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "bat_attack02_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "bat_attack02_active_true",
@@ -42830,12 +42740,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "knight_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "knight_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "knight_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "knight_attack01_lock_motion",
@@ -43762,12 +43666,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "knight_attack02_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "knight_attack02_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "knight_attack02_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "knight_attack02_lock_motion",
@@ -44692,12 +44590,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "knight_attack03_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "knight_attack03_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "knight_attack03_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "knight_attack03_active_true",
@@ -46652,12 +46544,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "knight_templar_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "knight_templar_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "knight_templar_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "knight_templar_attack01_lock_motion",
@@ -47584,12 +47470,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "knight_templar_attack02_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "knight_templar_attack02_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "knight_templar_attack02_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "knight_templar_attack02_lock_motion",
@@ -48514,12 +48394,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "knight_templar_attack03_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "knight_templar_attack03_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "knight_templar_attack03_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "knight_templar_attack03_active_true",
@@ -50474,12 +50348,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "lancer_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "lancer_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "lancer_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "lancer_attack01_lock_motion",
@@ -51406,12 +51274,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "lancer_attack02_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "lancer_attack02_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "lancer_attack02_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "lancer_attack02_lock_motion",
@@ -52336,12 +52198,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "lancer_attack03_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "lancer_attack03_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "lancer_attack03_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "lancer_attack03_active_true",
@@ -54296,12 +54152,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "necromancer_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "necromancer_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "necromancer_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "necromancer_attack01_lock_motion",
@@ -55226,12 +55076,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "necromancer_attack02_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "necromancer_attack02_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "necromancer_attack02_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "necromancer_attack02_active_true",
@@ -60109,12 +59953,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "priest_attack01_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "priest_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "priest_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "priest_attack01_active_true",
@@ -65004,12 +64842,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "skeleton_archer_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "skeleton_archer_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "skeleton_archer_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "skeleton_archer_attack01_lock_motion",
@@ -66962,12 +66794,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "slime_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "slime_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "slime_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "slime_attack01_lock_motion",
@@ -67892,12 +67718,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "slime_attack02_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "slime_attack02_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "slime_attack02_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "slime_attack02_active_true",
@@ -69852,12 +69672,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "soldier_attack01_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "soldier_attack01_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "soldier_attack01_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "soldier_attack01_lock_motion",
@@ -70782,12 +70596,6 @@
               "OutputPortName": "True",
               "InputNodeGuid": "soldier_attack02_cooldown_ready",
               "InputPortName": "Check"
-            },
-            {
-              "OutputNodeGuid": "soldier_attack02_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "soldier_attack02_internal_cooldown_ready",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "soldier_attack02_active_true",
@@ -71716,12 +71524,6 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "soldier_attack03_cooldown_ready",
-              "OutputPortName": "True",
-              "InputNodeGuid": "soldier_attack03_internal_cooldown_ready",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "soldier_attack03_active_true",
               "OutputPortName": "Out",
               "InputNodeGuid": "soldier_attack03_lock_motion",
@@ -72117,186 +71919,49 @@
           "Name": "Patrol",
           "EntryNodeGuid": "interest_point_state_entry",
           "Nodes": [
-            {
-              "Type": "Entry",
-              "Guid": "interest_point_state_entry",
-              "EditorPosition": {
-                "x": 80.0,
-                "y": 220.0
-              }
-            },
-            {
-              "SetterKey": "unit.variables.set",
-              "Key": "dungeon.interestPoint.state",
-              "Value": {
-                "Kind": 0,
-                "Literal": {
-                  "Type": 7,
-                  "String": "Patrol"
-                }
-              },
-              "Values": [],
-              "Type": "SetValue",
-              "Guid": "interest_point_state_set",
-              "EditorPosition": {
-                "x": 300.0,
-                "y": 220.0
-              }
-            },
-            {
-              "Condition": {
-                "ConditionType": 0,
-                "CompareType": "LessThan",
-                "Inputs": [
-                  {
-                    "Kind": 1,
-                    "Literal": { "Type": 3 },
-                    "GetterKey": "unit.variables.consumerCount",
-                    "OperationType": "",
-                    "Inputs": []
-                  },
-                  {
-                    "Kind": 0,
-                    "Literal": { "Type": 2, "Int": 1 },
-                    "GetterKey": "",
-                    "OperationType": "",
-                    "Inputs": []
-                  }
-                ]
-              },
-              "TickOrder": 0,
-              "Type": "Monitor",
-              "Guid": "interest_point_patrol_missing_monitor",
-              "EditorPosition": {
-                "x": 560.0,
-                "y": 80.0
-              }
-            },
-            {
-              "DurationSeconds": 180.0,
-              "TickOrder": 1,
-              "Type": "Keep",
-              "Guid": "interest_point_patrol_respawn_timer",
-              "EditorPosition": {
-                "x": 820.0,
-                "y": 80.0
-              }
-            },
-            {
-              "VariableListKey": "dungeon.patrol.spawn",
-              "UnitName": "",
-              "CandidateUnitNames": [],
-              "Count": 1,
-              "SpawnRadius": 1.0,
-              "MinSpawnRadius": 0.0,
-              "CenterOffset": { "x": 0.0, "y": 0.0, "z": 0.0 },
-              "CopyFactionFromSpawner": true,
-              "ShareVariablesWithSpawner": true,
-              "RestoreRuntimeState": true,
-              "Type": "SpawnUnit",
-              "Guid": "interest_point_spawn_patrol",
-              "EditorPosition": {
-                "x": 1080.0,
-                "y": 80.0
-              }
-            },
-            {
-              "Condition": {
-                "ConditionType": 0,
-                "CompareType": "Equal",
-                "Inputs": [
-                  {
-                    "Kind": 1,
-                    "Literal": { "Type": 1 },
-                    "GetterKey": "unit.interestPoint.targetReached",
-                    "OperationType": "",
-                    "Inputs": []
-                  },
-                  {
-                    "Kind": 0,
-                    "Literal": { "Type": 1, "Bool": true },
-                    "GetterKey": "",
-                    "OperationType": "",
-                    "Inputs": []
-                  }
-                ]
-              },
-              "TickOrder": 2,
-              "Type": "Monitor",
-              "Guid": "interest_point_target_reached_monitor",
-              "EditorPosition": {
-                "x": 560.0,
-                "y": 360.0
-              }
-            },
-            {
-              "SetterKey": "unit.interestPoint.setNextPatrolTarget",
-              "Key": "",
-              "Value": {
-                "Kind": 0,
-                "Literal": { "Type": 1, "Bool": true },
-                "GetterKey": "",
-                "OperationType": "",
-                "Inputs": []
-              },
-              "Values": [],
-              "Type": "SetValue",
-              "Guid": "interest_point_select_next_target",
-              "EditorPosition": {
-                "x": 1340.0,
-                "y": 260.0
-              }
-            }
+            {"Type":"Entry","Guid":"interest_point_state_entry","EditorPosition":{"x":40.0,"y":220.0}},
+            {"Shape":0,"Center":{"Kind":1,"GetterKey":"unit.transform.position","Inputs":[]},"Direction":{"Kind":0,"Literal":{"Type":4,"Float2":{"x":1.0,"y":0.0}},"Inputs":[]},"Size":{"Kind":0,"Literal":{"Type":4,"Float2":{"x":1.0,"y":1.0}},"Inputs":[]},"Radius":{"Kind":0,"Literal":{"Type":3,"Float":1.0},"Inputs":[]},"Angle":{"Kind":0,"Literal":{"Type":3,"Float":90.0},"Inputs":[]},"FactionMask":16,"UnitDataId":30,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":0,"SortMode":1,"ResultKey":"dungeon.patrol.targets","Type":"QueryUnits","Guid":"interest_point_query_targets","EditorPosition":{"x":260.0,"y":220.0}},
+            {"SetterKey":"unit.variables.set","Key":"dungeon.interestPoint.state","Values":[{"Kind":0,"Literal":{"Type":7,"String":"Patrol"},"Inputs":[]}],"Type":"SetValue","Guid":"interest_point_state_set","EditorPosition":{"x":480.0,"y":220.0}},
+            {"SetterKey":"unit.variables.set","Key":"dungeon.patrol.targetIndex","Values":[{"Kind":0,"Literal":{"Type":2,"Int":-1},"Inputs":[]}],"Type":"SetValue","Guid":"interest_point_index_init","EditorPosition":{"x":700.0,"y":220.0}},
+            {"SetterKey":"unit.variables.set","Key":"dungeon.patrol.targetVersion","Values":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}],"Type":"SetValue","Guid":"interest_point_version_init","EditorPosition":{"x":920.0,"y":220.0}},
+            {"SetterKey":"unit.variables.set","Key":"dungeon.patrol.reachedCount","Values":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}],"Type":"SetValue","Guid":"interest_point_reached_init","EditorPosition":{"x":1140.0,"y":220.0}},
+            {"Condition":{"ConditionType":0,"CompareType":"LessThan","Inputs":[{"Kind":1,"GetterKey":"unit.variables.consumerCount","Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":1},"Inputs":[]}]},"TickOrder":0,"Type":"Monitor","Guid":"interest_point_patrol_missing_monitor","EditorPosition":{"x":1380.0,"y":20.0}},
+            {"DurationSeconds":180.0,"TickOrder":1,"Type":"Keep","Guid":"interest_point_patrol_respawn_timer","EditorPosition":{"x":1600.0,"y":20.0}},
+            {"VariableListKey":"dungeon.patrol.spawn","UnitName":"","CandidateUnitNames":[],"Count":1,"SpawnRadius":1.0,"MinSpawnRadius":0.0,"CenterOffset":{"x":0.0,"y":0.0,"z":0.0},"CopyFactionFromSpawner":false,"ShareVariablesWithSpawner":true,"RestoreRuntimeState":true,"Type":"SpawnUnit","Guid":"interest_point_spawn_patrol","EditorPosition":{"x":1820.0,"y":20.0}},
+            {"Condition":{"ConditionType":0,"CompareType":"GreaterOrEqual","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.reachedCount"},"Inputs":[]}]},{"Kind":2,"OperationType":"Max","Inputs":[{"Kind":1,"GetterKey":"unit.variables.consumerCount","Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":1},"Inputs":[]}]}]},"TickOrder":3,"Type":"Monitor","Guid":"interest_point_target_reached_monitor","EditorPosition":{"x":1380.0,"y":360.0}},
+            {"Value":{"Kind":1,"GetterKey":"unit.variables.consumerCount","Inputs":[]},"TickOrder":2,"Type":"NumberMonitor","Guid":"interest_point_member_count_monitor","EditorPosition":{"x":1380.0,"y":560.0}},
+            {"SetterKey":"unit.variables.set","Key":"dungeon.patrol.targetIndex","Values":[{"Kind":2,"OperationType":"Add","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.targetIndex"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":1},"Inputs":[]}]}],"Type":"SetValue","Guid":"interest_point_advance_index","EditorPosition":{"x":1600.0,"y":300.0}},
+            {"Condition":{"ConditionType":0,"CompareType":"GreaterOrEqual","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.targetIndex"},"Inputs":[]}]},{"Kind":1,"GetterKey":"unit.variables.getNumber","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.targets.count"},"Inputs":[]}]}]},"Type":"Compare","Guid":"interest_point_wrap_index_check","EditorPosition":{"x":1820.0,"y":300.0}},
+            {"SetterKey":"unit.variables.set","Key":"dungeon.patrol.targetIndex","Values":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}],"Type":"SetValue","Guid":"interest_point_wrap_index","EditorPosition":{"x":2040.0,"y":220.0}},
+            {"SetterKey":"unit.variables.set","Key":"dungeon.patrol.target","Values":[{"Kind":1,"GetterKey":"unit.variables.listEntity","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.targets"},"Inputs":[]},{"Kind":1,"GetterKey":"unit.variables.getNumber","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.targetIndex"},"Inputs":[]}]}]}],"Type":"SetValue","Guid":"interest_point_set_target","EditorPosition":{"x":2260.0,"y":300.0}},
+            {"SetterKey":"unit.variables.set","Key":"dungeon.patrol.reachedCount","Values":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}],"Type":"SetValue","Guid":"interest_point_reset_reached","EditorPosition":{"x":2480.0,"y":300.0}},
+            {"SetterKey":"unit.variables.addNumber","Key":"dungeon.patrol.targetVersion","Values":[{"Kind":0,"Literal":{"Type":2,"Int":1},"Inputs":[]}],"Type":"SetValue","Guid":"interest_point_bump_version","EditorPosition":{"x":2700.0,"y":300.0}}
           ],
           "Edges": [
-            {
-              "OutputNodeGuid": "interest_point_state_entry",
-              "OutputPortName": "Out",
-              "InputNodeGuid": "interest_point_state_set",
-              "InputPortName": "In"
-            },
-            {
-              "OutputNodeGuid": "interest_point_state_set",
-              "OutputPortName": "Out",
-              "InputNodeGuid": "interest_point_patrol_missing_monitor",
-              "InputPortName": "Start"
-            },
-            {
-              "OutputNodeGuid": "interest_point_state_set",
-              "OutputPortName": "Out",
-              "InputNodeGuid": "interest_point_target_reached_monitor",
-              "InputPortName": "Start"
-            },
-            {
-              "OutputNodeGuid": "interest_point_patrol_missing_monitor",
-              "OutputPortName": "True",
-              "InputNodeGuid": "interest_point_patrol_respawn_timer",
-              "InputPortName": "Keep"
-            },
-            {
-              "OutputNodeGuid": "interest_point_patrol_respawn_timer",
-              "OutputPortName": "OnTimeComplete",
-              "InputNodeGuid": "interest_point_spawn_patrol",
-              "InputPortName": "In"
-            },
-            {
-              "OutputNodeGuid": "interest_point_spawn_patrol",
-              "OutputPortName": "Out",
-              "InputNodeGuid": "interest_point_select_next_target",
-              "InputPortName": "In"
-            },
-            {
-              "OutputNodeGuid": "interest_point_target_reached_monitor",
-              "OutputPortName": "True",
-              "InputNodeGuid": "interest_point_select_next_target",
-              "InputPortName": "In"
-            }
+            {"OutputNodeGuid":"interest_point_state_entry","OutputPortName":"Out","InputNodeGuid":"interest_point_query_targets","InputPortName":"In"},
+            {"OutputNodeGuid":"interest_point_query_targets","OutputPortName":"Out","InputNodeGuid":"interest_point_state_set","InputPortName":"In"},
+            {"OutputNodeGuid":"interest_point_state_set","OutputPortName":"Out","InputNodeGuid":"interest_point_index_init","InputPortName":"In"},
+            {"OutputNodeGuid":"interest_point_index_init","OutputPortName":"Out","InputNodeGuid":"interest_point_version_init","InputPortName":"In"},
+            {"OutputNodeGuid":"interest_point_version_init","OutputPortName":"Out","InputNodeGuid":"interest_point_reached_init","InputPortName":"In"},
+            {"OutputNodeGuid":"interest_point_reached_init","OutputPortName":"Out","InputNodeGuid":"interest_point_patrol_missing_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"interest_point_reached_init","OutputPortName":"Out","InputNodeGuid":"interest_point_target_reached_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"interest_point_reached_init","OutputPortName":"Out","InputNodeGuid":"interest_point_member_count_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"interest_point_reached_init","OutputPortName":"Out","InputNodeGuid":"interest_point_advance_index","InputPortName":"In"},
+            {"OutputNodeGuid":"interest_point_patrol_missing_monitor","OutputPortName":"OnStart","InputNodeGuid":"interest_point_patrol_respawn_timer","InputPortName":"Start"},
+            {"OutputNodeGuid":"interest_point_patrol_missing_monitor","OutputPortName":"OnChangeTrue","InputNodeGuid":"interest_point_patrol_respawn_timer","InputPortName":"Start"},
+            {"OutputNodeGuid":"interest_point_patrol_missing_monitor","OutputPortName":"True","InputNodeGuid":"interest_point_patrol_respawn_timer","InputPortName":"Keep"},
+            {"OutputNodeGuid":"interest_point_patrol_respawn_timer","OutputPortName":"OnTimeComplete","InputNodeGuid":"interest_point_spawn_patrol","InputPortName":"In"},
+            {"OutputNodeGuid":"interest_point_target_reached_monitor","OutputPortName":"True","InputNodeGuid":"interest_point_advance_index","InputPortName":"In"},
+            {"OutputNodeGuid":"interest_point_member_count_monitor","OutputPortName":"OnValueChange","InputNodeGuid":"interest_point_reset_reached","InputPortName":"In"},
+            {"OutputNodeGuid":"interest_point_advance_index","OutputPortName":"Out","InputNodeGuid":"interest_point_wrap_index_check","InputPortName":"Check"},
+            {"OutputNodeGuid":"interest_point_wrap_index_check","OutputPortName":"True","InputNodeGuid":"interest_point_wrap_index","InputPortName":"In"},
+            {"OutputNodeGuid":"interest_point_wrap_index_check","OutputPortName":"False","InputNodeGuid":"interest_point_set_target","InputPortName":"In"},
+            {"OutputNodeGuid":"interest_point_wrap_index","OutputPortName":"Out","InputNodeGuid":"interest_point_set_target","InputPortName":"In"},
+            {"OutputNodeGuid":"interest_point_set_target","OutputPortName":"Out","InputNodeGuid":"interest_point_reset_reached","InputPortName":"In"},
+            {"OutputNodeGuid":"interest_point_reset_reached","OutputPortName":"Out","InputNodeGuid":"interest_point_bump_version","InputPortName":"In"}
           ],
-          "ViewPosition": {
-            "x": 0.0,
-            "y": 0.0
-          },
-          "ViewScale": 1.0
+          "ViewPosition":{"x":0.0,"y":0.0},
+          "ViewScale":1.0
         }
       ],
       "Id": 30

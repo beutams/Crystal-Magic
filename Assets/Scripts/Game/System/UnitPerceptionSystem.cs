@@ -5,6 +5,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateBefore(typeof(BehaviorTreeSystem))]
 [BurstCompile]
@@ -21,19 +22,17 @@ partial struct UnitPerceptionSystem : ISystem
     public void OnUpdate(ref SystemState state)
     {
         UnitQuerySingleton query = SystemAPI.GetSingleton<UnitQuerySingleton>();
-        BufferLookup<UnitQueryEntry> grids = SystemAPI.GetBufferLookup<UnitQueryEntry>(true);
-        if (!grids.TryGetBuffer(
-                query.UnitGridEntity,
-                out DynamicBuffer<UnitQueryEntry> unitEntries))
+        BufferLookup<UnitQueryNode> nodes = SystemAPI.GetBufferLookup<UnitQueryNode>(true);
+        BufferLookup<UnitQueryEntry> entries = SystemAPI.GetBufferLookup<UnitQueryEntry>(true);
+        if (!nodes.TryGetBuffer(query.TreeEntity, out DynamicBuffer<UnitQueryNode> treeNodes) ||
+            !entries.TryGetBuffer(query.TreeEntity, out DynamicBuffer<UnitQueryEntry> treeEntries))
         {
             return;
         }
 
         state.Dependency = new UnitPerceptionJob
         {
-            UnitEntries = unitEntries.AsNativeArray(),
-            InverseCellSize = query.InverseCellSize,
-            Factions = SystemAPI.GetComponentLookup<UnitFactionComponent>(true),
+            Tree = new UnitQueryTree(treeNodes.AsNativeArray(), treeEntries.AsNativeArray()),
             Deaths = SystemAPI.GetComponentLookup<UnitDeathComponent>(true),
             DestroyFlags = SystemAPI.GetComponentLookup<DestroyEntityFlag>(true),
         }.ScheduleParallel(state.Dependency);
@@ -45,18 +44,13 @@ partial struct UnitPerceptionSystem : ISystem
 public partial struct UnitPerceptionJob : IJobEntity
 {
     [ReadOnly]
-    public NativeArray<UnitQueryEntry> UnitEntries;
-
-    [ReadOnly]
-    public ComponentLookup<UnitFactionComponent> Factions;
+    public UnitQueryTree Tree;
 
     [ReadOnly]
     public ComponentLookup<UnitDeathComponent> Deaths;
 
     [ReadOnly]
     public ComponentLookup<DestroyEntityFlag> DestroyFlags;
-
-    public float InverseCellSize;
 
     private void Execute(
         Entity entity,
@@ -71,63 +65,51 @@ public partial struct UnitPerceptionJob : IJobEntity
             return;
 
         float3 center = transform.Position;
-        float radiusSq = radius * radius;
-        int2 minCell = (int2)math.floor((center.xy - radius) * InverseCellSize);
-        int2 maxCell = (int2)math.floor((center.xy + radius) * InverseCellSize);
-
-        for (int y = minCell.y; y <= maxCell.y; y++)
+        UnitQueryShape shape = UnitQueryShape.Circle(center, radius);
+        PerceptionVisitor visitor = new()
         {
-            for (int x = minCell.x; x <= maxCell.x; x++)
-                AddCellUnits(entity, center, radiusSq, new int2(x, y), ref nearbyEntities);
-        }
+            Observer = entity,
+            Center = center,
+            NearbyEntities = nearbyEntities,
+            Deaths = Deaths,
+            DestroyFlags = DestroyFlags,
+        };
+        Tree.Query(in shape, UnitFactionMask.Combatants, ref visitor);
 
         SortByEntity(ref nearbyEntities);
     }
 
-    private void AddCellUnits(
-        Entity observer,
-        float3 center,
-        float radiusSq,
-        int2 cell,
-        ref DynamicBuffer<UnitPerceptionUnitElement> nearbyEntities)
+    private struct PerceptionVisitor : IUnitQueryVisitor
     {
-        long cellKey = ((long)cell.x << 32) | (uint)cell.y;
-        if (!UnitQueryGrid.TryGetCellRange(
-                UnitEntries,
-                cellKey,
-                out int startIndex,
-                out int endIndex))
+        public Entity Observer;
+        public float3 Center;
+        public DynamicBuffer<UnitPerceptionUnitElement> NearbyEntities;
+
+        [ReadOnly]
+        public ComponentLookup<UnitDeathComponent> Deaths;
+
+        [ReadOnly]
+        public ComponentLookup<DestroyEntityFlag> DestroyFlags;
+
+        public bool Visit(in UnitQueryEntry entry)
         {
-            return;
-        }
+            if (entry.Entity == Observer || IsUnavailable(entry.Entity))
+                return true;
 
-        for (int index = startIndex; index < endIndex; index++)
-        {
-            UnitQueryEntry entry = UnitEntries[index];
-            if (entry.Entity == observer)
-                continue;
-
-            float2 planarDifference = entry.Position.xy - center.xy;
-            if (math.lengthsq(planarDifference) > radiusSq ||
-                !Factions.TryGetComponent(entry.Entity, out UnitFactionComponent faction) ||
-                IsUnavailable(entry.Entity))
-            {
-                continue;
-            }
-
-            nearbyEntities.Add(new UnitPerceptionUnitElement
+            NearbyEntities.Add(new UnitPerceptionUnitElement
             {
                 Value = entry.Entity,
-                DistanceSq = math.distancesq(entry.Position, center),
-                Faction = faction.Value,
+                DistanceSq = math.distancesq(entry.Position, Center),
+                Faction = entry.Faction,
             });
+            return true;
         }
-    }
 
-    private bool IsUnavailable(Entity entity)
-    {
-        return Deaths.HasComponent(entity) && Deaths.IsComponentEnabled(entity) ||
-               DestroyFlags.HasComponent(entity) && DestroyFlags.IsComponentEnabled(entity);
+        private bool IsUnavailable(Entity entity)
+        {
+            return Deaths.HasComponent(entity) && Deaths.IsComponentEnabled(entity) ||
+                   DestroyFlags.HasComponent(entity) && DestroyFlags.IsComponentEnabled(entity);
+        }
     }
 
     private static void SortByEntity(ref DynamicBuffer<UnitPerceptionUnitElement> units)

@@ -11,6 +11,7 @@ using Unity.Transforms;
 /// rebuilt by a single Burst job that reuses one fixed-size A* scratch area; following
 /// already-built paths runs in parallel for all units.
 /// </summary>
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateAfter(typeof(BehaviorTreeSystem))]
 [UpdateBefore(typeof(StateScriptSystem))]

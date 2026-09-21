@@ -26,7 +26,7 @@ namespace Server
             try
             {
                 world = new World($"BattleWorld_{battleId}", WorldFlags.GameServer);
-                WorldStateUtility.Create(
+                GameSingletonUtility.Create(
                     world.EntityManager,
                     GameWorldRole.Server,
                     GameSceneMode.Dungeon);

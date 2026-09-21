@@ -1,6 +1,7 @@
 using CrystalMagic.Core;
 using Unity.Entities;
 
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitPostProcessSystemGroup))]
 [UpdateBefore(typeof(UnitDropOnDestroySystem))]
 [UpdateBefore(typeof(DestroyEntitySystem))]

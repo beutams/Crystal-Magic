@@ -36,9 +36,7 @@ public static class PlayerSkillDefinitionRegistryUtility
         EntityManager entityManager,
         out BlobAssetReference<PlayerSkillDefinitionRegistryBlob> registry)
     {
-        registry = default;
-        Entity worldEntity = WorldStateUtility.GetEntity(entityManager);
-        registry = entityManager.GetComponentData<PlayerSkillDefinitionRegistryComponent>(worldEntity).Value;
+        registry = GameSingletonUtility.Get<PlayerSkillDefinitionRegistryComponent>(entityManager).Value;
         return registry.IsCreated;
     }
 

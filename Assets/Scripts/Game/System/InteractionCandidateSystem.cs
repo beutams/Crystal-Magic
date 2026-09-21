@@ -5,6 +5,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(UnitMoveSystem))]
 [UpdateBefore(typeof(GameInteractionSystem))]
@@ -16,7 +17,6 @@ public partial class InteractionCandidateSystem : SystemBase
     {
         RequireForUpdate<UnitFactionComponent>();
         RequireForUpdate<InteractionCandidateComponent>();
-        RequireForUpdate<WorldStateComponent>();
     }
 
     protected override void OnUpdate()
@@ -28,17 +28,18 @@ public partial class InteractionCandidateSystem : SystemBase
             IsInteracting = isInteracting,
         };
 
-        if (isInteracting != 0 || SystemAPI.GetSingleton<WorldStateComponent>().IsPlayerInputLocked ||
+        bool isPlayerInputLocked =
+            SystemAPI.TryGetSingleton(out GameGateStateComponent gameGate) && gameGate.IsPlayerInputLocked;
+        if (isInteracting != 0 || isPlayerInputLocked ||
             !TryGetFrontEndActor(out float3 actorPosition))
         {
             return;
         }
 
-        if (!UnitQueryUtility.TryGetGrid(EntityManager, UnitQueryGridKind.Interactable, out UnitQueryGrid grid))
-            return;
-
+        UnitQueryTree tree = UnitQueryUtility.GetTree(EntityManager);
         float queryRange = math.max(0f, ConfigComponent.Instance.Get<GameConfig>().InteractionRange);
-        grid.QueryCircle(actorPosition, queryRange, _hits);
+        UnitQueryShape shape = UnitQueryShape.Circle(actorPosition, queryRange);
+        tree.Query(in shape, UnitFactionType.Interactable, _hits);
 
         Entity bestTarget = Entity.Null;
         UnitInteractionData bestData = default;

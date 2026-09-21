@@ -6,24 +6,16 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitInitializationSystemGroup), OrderFirst = true)]
 [UpdateBefore(typeof(UnitBuffSystem))]
 public partial class BuffEffectRegistryInitializationSystem : SystemBase
 {
     private BlobAssetReference<BuffEffectRegistryBlob> _registry;
 
-    protected override void OnUpdate()
+    protected override void OnCreate()
     {
-        if (_registry.IsCreated)
-        {
-            Enabled = false;
-            return;
-        }
-
         DataTable<BuffData> table = DataComponent.Instance.GetTable<BuffData>();
-        if (table == null)
-            return;
-
         List<BuffData> buffs = new(table.GetAll());
         buffs.Sort(static (left, right) => left.Id.CompareTo(right.Id));
 
@@ -129,6 +121,10 @@ public partial class BuffEffectRegistryInitializationSystem : SystemBase
         Entity entity = EntityManager.CreateEntity();
         EntityManager.AddComponentData(entity, new BuffEffectRegistryComponent { Value = _registry });
         Enabled = false;
+    }
+
+    protected override void OnUpdate()
+    {
     }
 
     protected override void OnDestroy()

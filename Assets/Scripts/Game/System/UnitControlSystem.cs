@@ -1,6 +1,7 @@
 using Unity.Burst;
 using Unity.Entities;
 
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateBefore(typeof(SkillReleaseSystem))]
 [BurstCompile]

@@ -7,6 +7,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(InteractionCandidateSystem))]
 public partial class GameInteractionSystem : SystemBase
@@ -306,26 +307,19 @@ public partial class GameInteractionSystem : SystemBase
 
     private void SetInteractionActive(bool isActive)
     {
-        EntityQuery candidateQuery = EntityManager.CreateEntityQuery(ComponentType.ReadWrite<InteractionCandidateComponent>());
-        if (candidateQuery.IsEmptyIgnoreFilter)
-            return;
-
-        Entity candidateEntity = candidateQuery.GetSingletonEntity();
-        InteractionCandidateComponent candidate = EntityManager.GetComponentData<InteractionCandidateComponent>(candidateEntity);
-        candidate.IsInteracting = isActive ? (byte)1 : (byte)0;
+        RefRW<InteractionCandidateComponent> candidate =
+            SystemAPI.GetSingletonRW<InteractionCandidateComponent>();
+        candidate.ValueRW.IsInteracting = isActive ? (byte)1 : (byte)0;
         if (isActive)
         {
-            candidate.Target = Entity.Null;
-            candidate.Data = default;
+            candidate.ValueRW.Target = Entity.Null;
+            candidate.ValueRW.Data = default;
         }
-
-        EntityManager.SetComponentData(candidateEntity, candidate);
     }
 
     private bool IsInteractionActive()
     {
-        EntityQuery candidateQuery = EntityManager.CreateEntityQuery(ComponentType.ReadOnly<InteractionCandidateComponent>());
-        return !candidateQuery.IsEmptyIgnoreFilter && candidateQuery.GetSingleton<InteractionCandidateComponent>().IsInteracting != 0;
+        return SystemAPI.GetSingleton<InteractionCandidateComponent>().IsInteracting != 0;
     }
 
     private void MarkDestroyed(Entity target)

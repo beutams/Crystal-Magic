@@ -4,6 +4,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(SkillProjectileSpawnSystem))]
 public partial struct SkillProjectileSystem : ISystem
@@ -20,10 +21,10 @@ public partial struct SkillProjectileSystem : ISystem
     public void OnUpdate(ref SystemState state)
     {
         UnitQuerySingleton query = SystemAPI.GetSingleton<UnitQuerySingleton>();
-        BufferLookup<UnitQueryEntry> grids = SystemAPI.GetBufferLookup<UnitQueryEntry>(true);
-        if (!grids.TryGetBuffer(
-                query.UnitGridEntity,
-                out DynamicBuffer<UnitQueryEntry> unitEntries))
+        BufferLookup<UnitQueryNode> nodes = SystemAPI.GetBufferLookup<UnitQueryNode>(true);
+        BufferLookup<UnitQueryEntry> entries = SystemAPI.GetBufferLookup<UnitQueryEntry>(true);
+        if (!nodes.TryGetBuffer(query.TreeEntity, out DynamicBuffer<UnitQueryNode> treeNodes) ||
+            !entries.TryGetBuffer(query.TreeEntity, out DynamicBuffer<UnitQueryEntry> treeEntries))
         {
             return;
         }
@@ -31,10 +32,9 @@ public partial struct SkillProjectileSystem : ISystem
         _sources.Update(ref state);
         state.Dependency = new SkillProjectileSimulationJob
         {
-            UnitEntries = unitEntries.AsNativeArray(),
+            Tree = new UnitQueryTree(treeNodes.AsNativeArray(), treeEntries.AsNativeArray()),
             Variables = SystemAPI.GetComponentLookup<UnitVariableComponent>(true),
             Sources = _sources,
-            InverseCellSize = query.InverseCellSize,
             DeltaTime = SystemAPI.Time.DeltaTime,
         }.ScheduleParallel(state.Dependency);
     }
@@ -44,7 +44,7 @@ public partial struct SkillProjectileSystem : ISystem
 public partial struct SkillProjectileSimulationJob : IJobEntity
 {
     [ReadOnly]
-    public NativeArray<UnitQueryEntry> UnitEntries;
+    public UnitQueryTree Tree;
 
     [ReadOnly]
     public ComponentLookup<UnitVariableComponent> Variables;
@@ -52,7 +52,6 @@ public partial struct SkillProjectileSimulationJob : IJobEntity
     [ReadOnly]
     public UnitSourceDispatcher Sources;
 
-    public float InverseCellSize;
     public float DeltaTime;
 
     private void Execute(
@@ -130,130 +129,105 @@ public partial struct SkillProjectileSimulationJob : IJobEntity
         NativeArray<UnitSourceValue> literals =
             conditionLiterals.Reinterpret<UnitSourceValue>().AsNativeArray();
 
-        float2 center = projectilePosition.xy;
-        float radiusSq = projectile.HitRadius * projectile.HitRadius;
-        int2 minCell = UnitQueryGrid.GetCell(center - projectile.HitRadius, InverseCellSize);
-        int2 maxCell = UnitQueryGrid.GetCell(center + projectile.HitRadius, InverseCellSize);
-        float bestDistanceSq = float.MaxValue;
-
-        for (int y = minCell.y; y <= maxCell.y; y++)
+        ProjectileHitVisitor visitor = new()
         {
-            for (int x = minCell.x; x <= maxCell.x; x++)
-            {
-                FindBestHitInCell(
-                    projectileEntity,
-                    UnitQueryGrid.GetCellKey(new int2(x, y)),
-                    center,
-                    projectilePosition.z,
-                    radiusSq,
-                    in payload,
-                    ref hitEntities,
-                    instructions,
-                    literals,
-                    ref bestDistanceSq,
-                    ref hitEntity,
-                    ref hitPosition);
-            }
-        }
-
+            ProjectileEntity = projectileEntity,
+            ProjectilePosition = projectilePosition,
+            Payload = payload,
+            HitEntities = hitEntities,
+            ConditionInstructions = instructions,
+            ConditionLiterals = literals,
+            Variables = Variables,
+            Sources = Sources,
+            BestDistanceSq = float.MaxValue,
+        };
+        UnitQueryShape shape = UnitQueryShape.Circle(projectilePosition, projectile.HitRadius);
+        Tree.Query(in shape, UnitFactionMask.Combatants, ref visitor);
+        hitEntity = visitor.HitEntity;
+        hitPosition = visitor.HitPosition;
         return hitEntity != Entity.Null;
     }
 
-    private void FindBestHitInCell(
-        Entity projectileEntity,
-        long cellKey,
-        float2 center,
-        float projectileZ,
-        float radiusSq,
-        in SkillProjectilePayloadComponent payload,
-        ref DynamicBuffer<SkillProjectileHitEntityElement> hitEntities,
-        NativeArray<ExpressionInstruction> conditionInstructions,
-        NativeArray<UnitSourceValue> conditionLiterals,
-        ref float bestDistanceSq,
-        ref Entity hitEntity,
-        ref float3 hitPosition)
+    private struct ProjectileHitVisitor : IUnitQueryVisitor
     {
-        if (!UnitQueryGrid.TryGetCellRange(
-                UnitEntries,
-                cellKey,
-                out int startIndex,
-                out int endIndex))
+        public Entity ProjectileEntity;
+        public float3 ProjectilePosition;
+        public SkillProjectilePayloadComponent Payload;
+        public DynamicBuffer<SkillProjectileHitEntityElement> HitEntities;
+
+        [ReadOnly]
+        public NativeArray<ExpressionInstruction> ConditionInstructions;
+
+        [ReadOnly]
+        public NativeArray<UnitSourceValue> ConditionLiterals;
+
+        [ReadOnly]
+        public ComponentLookup<UnitVariableComponent> Variables;
+
+        [ReadOnly]
+        public UnitSourceDispatcher Sources;
+
+        public float BestDistanceSq;
+        public Entity HitEntity;
+        public float3 HitPosition;
+
+        public bool Visit(in UnitQueryEntry entry)
         {
-            return;
-        }
-
-        for (int index = startIndex; index < endIndex; index++)
-        {
-            UnitQueryEntry entry = UnitEntries[index];
-            if (entry.Entity == projectileEntity ||
-                payload.Context.HasOriginEntity != 0 && entry.Entity == payload.Context.OriginEntity ||
-                HasHitEntity(in hitEntities, entry.Entity))
+            if (entry.Entity == ProjectileEntity ||
+                Payload.Context.HasOriginEntity != 0 && entry.Entity == Payload.Context.OriginEntity ||
+                HasHitEntity(entry.Entity) ||
+                !PassesConditions(entry.Entity))
             {
-                continue;
-            }
-
-            float distanceSq = math.lengthsq(entry.Position.xy - center);
-            if (distanceSq > radiusSq ||
-                !PassesConditions(
-                    entry.Entity,
-                    in payload,
-                    conditionInstructions,
-                    conditionLiterals))
-            {
-                continue;
-            }
-
-            if (distanceSq > bestDistanceSq ||
-                distanceSq == bestDistanceSq && !IsEntityBefore(entry.Entity, hitEntity))
-            {
-                continue;
-            }
-
-            bestDistanceSq = distanceSq;
-            hitEntity = entry.Entity;
-            hitPosition = new float3(entry.Position.x, entry.Position.y, projectileZ);
-        }
-    }
-
-    private bool PassesConditions(
-        Entity evaluatedEntity,
-        in SkillProjectilePayloadComponent payload,
-        NativeArray<ExpressionInstruction> conditionInstructions,
-        NativeArray<UnitSourceValue> conditionLiterals)
-    {
-        if (payload.CollisionConditionState == SkillProjectileConditionState.None)
-            return true;
-
-        Entity other = payload.Context.HasOtherEntity != 0
-            ? payload.Context.OtherEntity
-            : Variables.TryGetComponent(evaluatedEntity, out UnitVariableComponent variables)
-                ? variables.Other
-                : Entity.Null;
-        UnitSourceContext context = new(evaluatedEntity, other);
-        return CompiledExpressionEvaluator.TryEvaluateConditions(
-            conditionInstructions,
-            conditionLiterals,
-            in context,
-            in Sources);
-    }
-
-    private static bool HasHitEntity(
-        in DynamicBuffer<SkillProjectileHitEntityElement> hitEntities,
-        Entity entity)
-    {
-        for (int index = 0; index < hitEntities.Length; index++)
-        {
-            if (hitEntities[index].Value == entity)
                 return true;
+            }
+
+            float distanceSq = math.lengthsq(entry.Position.xy - ProjectilePosition.xy);
+            if (distanceSq > BestDistanceSq ||
+                distanceSq == BestDistanceSq && !IsEntityBefore(entry.Entity, HitEntity))
+            {
+                return true;
+            }
+
+            BestDistanceSq = distanceSq;
+            HitEntity = entry.Entity;
+            HitPosition = new float3(entry.Position.x, entry.Position.y, ProjectilePosition.z);
+            return true;
         }
 
-        return false;
-    }
+        private bool PassesConditions(Entity evaluatedEntity)
+        {
+            if (Payload.CollisionConditionState == SkillProjectileConditionState.None)
+                return true;
 
-    private static bool IsEntityBefore(Entity candidate, Entity current)
-    {
-        return current == Entity.Null ||
-               candidate.Index < current.Index ||
-               candidate.Index == current.Index && candidate.Version < current.Version;
+            Entity other = Payload.Context.HasOtherEntity != 0
+                ? Payload.Context.OtherEntity
+                : Variables.TryGetComponent(evaluatedEntity, out UnitVariableComponent variables)
+                    ? variables.Other
+                    : Entity.Null;
+            UnitSourceContext context = new(evaluatedEntity, other);
+            return CompiledExpressionEvaluator.TryEvaluateConditions(
+                ConditionInstructions,
+                ConditionLiterals,
+                in context,
+                in Sources);
+        }
+
+        private bool HasHitEntity(Entity entity)
+        {
+            for (int index = 0; index < HitEntities.Length; index++)
+            {
+                if (HitEntities[index].Value == entity)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool IsEntityBefore(Entity candidate, Entity current)
+        {
+            return current == Entity.Null ||
+                   candidate.Index < current.Index ||
+                   candidate.Index == current.Index && candidate.Version < current.Version;
+        }
     }
 }

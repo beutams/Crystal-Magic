@@ -10,6 +10,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateAfter(typeof(StateScriptSystem))]
 public partial class StateScriptManagedCommandSystem : SystemBase

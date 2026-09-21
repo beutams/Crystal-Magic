@@ -3,6 +3,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 
 [BurstCompile]
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 public partial struct PlayerPropCooldownSystem : ISystem
 {

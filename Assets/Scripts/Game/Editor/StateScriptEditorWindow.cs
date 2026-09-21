@@ -22,6 +22,7 @@ namespace CrystalMagic.Editor.Unit
         private const float ListPanelWidth = 270f;
         private const float InspectorPanelMinWidth = 300f;
         private const double RuntimeUnitRefreshIntervalSeconds = 0.5d;
+        private const double RuntimeDebugRefreshIntervalSeconds = 0.2d;
 
         private readonly List<StateScriptData> _rows = new();
         private readonly List<UnitPrefabEntry> _unitEntries = new();
@@ -37,6 +38,9 @@ namespace CrystalMagic.Editor.Unit
         private string _statusText = string.Empty;
         private Vector2 _listScroll;
         private double _nextRuntimeUnitRefreshTime;
+        private double _nextRuntimeDebugRefreshTime;
+        private bool _runtimeDebugActive;
+        private StateScriptGraphDebugSnapshot _runtimeDebugSnapshot;
 
         private StateScriptGraphView _graphView;
         private IMGUIContainer _inspectorContainer;
@@ -91,11 +95,14 @@ namespace CrystalMagic.Editor.Unit
         {
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
             _nextRuntimeUnitRefreshTime = 0d;
+            _nextRuntimeDebugRefreshTime = 0d;
         }
 
         private void OnDisable()
         {
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+            _runtimeDebugSnapshot = null;
+            _runtimeDebugActive = false;
         }
 
         private void CreateGUI()
@@ -118,26 +125,59 @@ namespace CrystalMagic.Editor.Unit
 
             if (!IsRuntimeDebugEnabled)
             {
+                if (!_runtimeDebugActive &&
+                    _runtimeUnitEntries.Count == 0 &&
+                    _runtimeDebugSnapshot == null)
+                {
+                    return;
+                }
+
+                _runtimeDebugActive = false;
                 _runtimeUnitEntries.Clear();
                 _selectedRuntimeEntity = Entity.Null;
+                _runtimeDebugSnapshot = null;
                 _runtimeDataInspector.Refresh(null);
                 _graphView?.RefreshRuntimeDebug(null);
                 Repaint();
                 return;
             }
 
-            if (EditorApplication.timeSinceStartup >= _nextRuntimeUnitRefreshTime)
-                RefreshRuntimeUnitEntries();
-
-            if (_graphView == null || SelectedGraph == null)
+            _runtimeDebugActive = true;
+            double currentTime = EditorApplication.timeSinceStartup;
+            bool runtimeUnitsRefreshed = false;
+            if (currentTime >= _nextRuntimeUnitRefreshTime)
             {
-                Repaint();
+                RefreshRuntimeUnitEntries();
+                runtimeUnitsRefreshed = true;
+            }
+
+            if (currentTime < _nextRuntimeDebugRefreshTime)
+            {
+                if (runtimeUnitsRefreshed)
+                    Repaint();
                 return;
             }
 
-            StateScriptGraphDebugSnapshot runtime = FindDebugRuntime();
-            _runtimeDataInspector.Refresh(runtime);
-            _graphView.RefreshRuntimeDebug(runtime);
+            _nextRuntimeDebugRefreshTime = currentTime + RuntimeDebugRefreshIntervalSeconds;
+
+            if (_graphView == null || SelectedGraph == null)
+            {
+                bool hadRuntimeSnapshot = _runtimeDebugSnapshot != null;
+                _runtimeDebugSnapshot = null;
+                if (hadRuntimeSnapshot)
+                {
+                    _runtimeDataInspector.Refresh(null);
+                    _graphView?.RefreshRuntimeDebug(null);
+                }
+                if (runtimeUnitsRefreshed || hadRuntimeSnapshot)
+                    Repaint();
+                return;
+            }
+
+            _runtimeDebugSnapshot = FindDebugRuntime();
+            _runtimeDataInspector.Refresh(_runtimeDebugSnapshot);
+            _graphView.RefreshRuntimeDebug(_runtimeDebugSnapshot);
+            _inspectorContainer?.MarkDirtyRepaint();
             Repaint();
         }
 
@@ -148,6 +188,8 @@ namespace CrystalMagic.Editor.Unit
                 ClearRuntimeSelection();
                 _runtimeUnitEntries.Clear();
                 _nextRuntimeUnitRefreshTime = 0d;
+                _nextRuntimeDebugRefreshTime = 0d;
+                _runtimeDebugSnapshot = null;
                 RefreshRuntimeUnitEntries();
                 RebuildGraph();
                 Repaint();
@@ -160,6 +202,9 @@ namespace CrystalMagic.Editor.Unit
             _runtimeUnitEntries.Clear();
             _selectedRuntimeEntity = Entity.Null;
             _nextRuntimeUnitRefreshTime = 0d;
+            _nextRuntimeDebugRefreshTime = 0d;
+            _runtimeDebugSnapshot = null;
+            _runtimeDebugActive = false;
             if (GetSelectedUnitEntry() == null)
             {
                 _selectedUnitDataId = _unitEntries.FirstOrDefault(entry => entry.UnitData != null)?.UnitData.Id ?? -1;
@@ -327,7 +372,7 @@ namespace CrystalMagic.Editor.Unit
             }
 
             if (showRuntimeDebug)
-                _runtimeDataInspector.Draw(FindDebugRuntime());
+                _runtimeDataInspector.Draw(_runtimeDebugSnapshot);
 
             EditorGUILayout.Space(8f);
             if (selectedEntry.Prefab.GetComponent<UnitStateScriptAuthoring>() == null)
@@ -687,6 +732,8 @@ namespace CrystalMagic.Editor.Unit
 
         internal void RebuildGraph()
         {
+            _runtimeDebugSnapshot = null;
+            _nextRuntimeDebugRefreshTime = 0d;
             _runtimeDataInspector.Invalidate();
             if (_graphView == null)
                 return;
@@ -763,6 +810,13 @@ namespace CrystalMagic.Editor.Unit
             if (!AssetDatabase.IsValidFolder(UnitPrefabDirectory))
                 return;
 
+            Dictionary<string, UnitData> unitDataByPrefabPath = new(StringComparer.Ordinal);
+            foreach (UnitData unitData in EditorComponents.Data.FindAll<UnitData>(static _ => true))
+            {
+                if (unitData != null && !string.IsNullOrWhiteSpace(unitData.PrefabPath))
+                    unitDataByPrefabPath.TryAdd(unitData.PrefabPath, unitData);
+            }
+
             string[] prefabGuids = AssetDatabase.FindAssets("t:Prefab", new[] { UnitPrefabDirectory });
             for (int i = 0; i < prefabGuids.Length; i++)
             {
@@ -771,8 +825,7 @@ namespace CrystalMagic.Editor.Unit
                 if (prefab == null)
                     continue;
 
-                UnitData unitData = EditorComponents.Data.Find<UnitData>(row =>
-                    string.Equals(row.PrefabPath, path, StringComparison.Ordinal));
+                unitDataByPrefabPath.TryGetValue(path, out UnitData unitData);
                 _unitEntries.Add(new UnitPrefabEntry
                 {
                     AssetPath = path,
@@ -810,7 +863,7 @@ namespace CrystalMagic.Editor.Unit
                 return;
 
             EntityManager entityManager = world.EntityManager;
-            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<UnitStateScriptComponent>());
+            using EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<UnitStateScriptComponent>());
             using NativeArray<Entity> entities = query.ToEntityArray(Allocator.Temp);
             bool selectedEntityFound = _selectedRuntimeEntity == Entity.Null;
             for (int i = 0; i < entities.Length; i++)
@@ -866,6 +919,8 @@ namespace CrystalMagic.Editor.Unit
             _selectedUnitDataId = -1;
             _selectedGraphGuid = null;
             _selectedSourceSchema = s_emptySourceSchema;
+            _runtimeDebugSnapshot = null;
+            _nextRuntimeDebugRefreshTime = 0d;
         }
 
         private StateScriptGraphDebugSnapshot FindDebugRuntime()
@@ -890,7 +945,7 @@ namespace CrystalMagic.Editor.Unit
                 !entityManager.HasBuffer<StateScriptNodeStateElement>(_selectedRuntimeEntity))
                 return null;
 
-            StateScriptData data = EditorComponents.Data.Find<StateScriptData>(row => row.Id == component.UnitDataId);
+            StateScriptData data = _rows.FirstOrDefault(row => row.Id == component.UnitDataId);
             int graphIndex = data?.Graphs?.FindIndex(graph =>
                 graph != null && string.Equals(graph.Guid, _selectedGraphGuid, StringComparison.Ordinal)) ?? -1;
             DynamicBuffer<StateScriptGraphStateElement> graphStates =
@@ -1247,7 +1302,11 @@ namespace CrystalMagic.Editor.Unit
             if (ReferenceEquals(_runtime, runtime))
                 return;
 
+            StateScriptInstanceData previousData = _runtime?.Data;
             _runtime = runtime;
+            if (ReferenceEquals(previousData, runtime?.Data))
+                return;
+
             _nodeComponentTypes.Clear();
             if (runtime == null)
                 return;

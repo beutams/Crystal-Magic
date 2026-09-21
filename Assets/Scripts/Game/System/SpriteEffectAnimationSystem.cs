@@ -6,6 +6,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation)]
 [UpdateInGroup(typeof(ClientPresentationSystemGroup))]
 [UpdateAfter(typeof(SkillProjectileSystem))]
 [UpdateBefore(typeof(DestroyEntitySystem))]

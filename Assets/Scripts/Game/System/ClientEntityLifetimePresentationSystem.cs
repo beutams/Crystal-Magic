@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using CrystalMagic.Core;
-using Server;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -54,9 +53,6 @@ public partial class ClientEntityLifetimePresentationSystem : SystemBase
 
         UnitAnimationComponent animation = EntityManager.GetComponentData<UnitAnimationComponent>(entity);
         animation.AnimationName = new FixedString64Bytes("Death");
-        animation.StartFrame = FrameManagerUtility.TryGet(EntityManager, out FrameManager frameManager)
-            ? frameManager.currentFrame
-            : 0u;
         animation.Sequence++;
         if (animation.Sequence == 0u)
             animation.Sequence = 1u;

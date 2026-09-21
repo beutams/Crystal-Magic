@@ -156,7 +156,7 @@ public static class UnitPerceptionSource
     {
         faction = default;
         if (!arguments.TryGetInt(index, out int factionValue) ||
-            factionValue < (int)UnitFactionType.Player || factionValue > (int)UnitFactionType.Npc)
+            factionValue < (int)UnitFactionType.Player || factionValue > (int)UnitFactionType.Interactable)
             return false;
 
         faction = (UnitFactionType)factionValue;

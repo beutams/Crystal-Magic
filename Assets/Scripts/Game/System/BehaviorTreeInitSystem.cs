@@ -5,6 +5,7 @@ using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitInitializationSystemGroup))]
 [UpdateAfter(typeof(UnitSourceDispatcherSystem))]
 public partial class BehaviorTreeInitSystem : SystemBase

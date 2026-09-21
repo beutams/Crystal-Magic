@@ -25,8 +25,7 @@ public sealed class NetworkStateApplyContext
         Frame = frame;
         FrameInterval = Math.Max(1, frameInterval);
         ApplyRealtime = Time.realtimeSinceStartupAsDouble;
-        IsClient = GameWorldContextUtility.TryGet(entityManager, out GameWorldContextComponent worldContext) &&
-                   worldContext.Role == GameWorldRole.Client;
+        IsClient = GameWorldContextUtility.Get(entityManager).Role == GameWorldRole.Client;
 
         if (IsClient)
             UpdateClientPresentationClock();

@@ -375,7 +375,7 @@ Game\
       DropEntityPrefabRegistryEntry.cs FALSE
       DungeonExitAuthoring.cs TRUE DIRTY
         闁革附澹嗘晶鐑藉礄閸濆嫬缍撶紓浣稿濞?
-      DungeonInterestPointAuthoring.cs TRUE
+      DungeonInterestPointAuthoring.cs TRUE DIRTY
       DungeonInterestPointComponent.cs TRUE DIRTY
       DungeonMonsterSpawnComponent.cs TRUE DIRTY
       DungeonRuntimeMapComponent.cs TRUE DIRTY
@@ -395,7 +395,7 @@ Game\
       PlayerCurrentSkillAuthoring.cs TRUE DIRTY
       PlayerInputComponent.cs TRUE DIRTY
       PlayerSkillComponent.cs TRUE DIRTY
-      PlayerSkillDefinitionRegistryComponent.cs TRUE
+      PlayerSkillDefinitionRegistryComponent.cs TRUE DIRTY
       PlayerSkillRuntimeDataComponent.cs TRUE DIRTY
       PlayerPhysicsAuthoring.cs TRUE DIRTY
       UnitPhysicsRotationInitializedComponent.cs TRUE
@@ -513,12 +513,12 @@ Game\
       DungeonExitSystem.cs TRUE DIRTY
         闁告帡鏀遍弻濠囧礄閸濆嫬缍撻悷娆欑秮閺€锝夋偐閼哥鍋?
         闁瑰灚鎸哥槐鎴犫偓瑙勭箘椤斿牓鎮介悢绋跨亣闁瑰搫顦抽幆銈夋偋?
-      DungeonInterestPointRuntimeSystem.cs TRUE
       EffectExecutionSystem.cs TRUE DIRTY
         濞戞挸锕ら惇鐧皍ff濞戞柨顑囩悮顐︽儍閸曨垰娅為柡鈧欢鈧琭fect闁挎稑鐭傞埀顒佷亢缁诲啰鎷犻柨瀣勾闁规亽鍔忕换婊堝礆閻楀牆鈷旈悶娑樿嫰閻即鏌屾繝鍐╂澒
         闁活亞鍠庨悿鍕閵堝嫮闉嶇紒顖濆吹缁椽鏁嶇仦鎯р挃閻炴稑濂斿锔界閹烘洖螡闁绘劕缍婇幗濂稿礆閹殿喚娉㈤柡澶屽枂閳?
       NPCInteractPromptSystem.cs TRUE DIRTY
       InteractionCandidateSystem.cs TRUE DIRTY
+      UnitInteractableFactionInitializationSystem.cs TRUE
         缂備胶鍠曢鎼佸箥閳ь剟寮垫径濠傝濞存嚎鍊撶花鎵矓瀹ュ洩顫﹂柨娑樼焸閳ь剙顦崵顓㈠嫉閳ь剚娼婚幋鐘崇暠
       PersistentEffectSystem.cs TRUE DIRTY
         闁告梻濮撮崣鍡涘箰娴ｈ櫣鏁鹃柡浣哥墛閻忓鎷犻柨瀣勾闁挎稑鐬奸崝褔宕ユ惔銈庡悁闁哄啫鐖奸崳鎾绩閻愵剙鐦紓渚囧幗閳ь儸鍕珡闁?
@@ -526,18 +526,19 @@ Game\
         闁活潿鍔嶉崺娑欐綇閹惧啿寮抽悗娑櫭埀?
         濞达綀娉曢弫銈夋焼閹惧啿寰?
       UnitPhysicsRotationInitializationSystem.cs TRUE DIRTY
+      PlayerInputBridgeSystem.cs TRUE DIRTY
       PlayerPropCooldownSystem.cs TRUE DIRTY
       PlayerSkillAnalysisSystem.cs TRUE DIRTY
         闁汇垻鍠愰崹姘跺礂閾氬倻绉奸柟鍨涘亾闁煎啿鈧噥鍤炴慨?
-      PlayerSkillDefinitionRegistryInitializationSystem.cs TRUE
+      PlayerSkillDefinitionRegistryInitializationSystem.cs TRUE DIRTY
       SkillReleaseSystem.cs TRUE DIRTY
       SkillProjectileSpawnSystem.cs TRUE DIRTY
-      SkillProjectileCleanupSystem.cs TRUE
+      SkillProjectileCleanupSystem.cs TRUE DIRTY
       SkillProjectileSystem.cs TRUE DIRTY
       SpriteEffectAnimationSystem.cs TRUE DIRTY
       UnitBuffSystem.cs TRUE DIRTY
         缂備胶鍠曢绐ff闁告劖鐟ラ崣鍡欎沪閻愮补鍋撹閹蜂即骞庨埀顒勬嚄閹存帗鍙忔慨婵撶秶缁辨繃娼娆惧殑闁瑰灈鍋撻柤瀹犲Г濡炲倿姊?
-      UnitModifierSystem.cs TRUE
+      UnitModifierSystem.cs TRUE DIRTY
       UnitAnimationSystem.cs TRUE DIRTY
       UnitSpriteRendererSortingSystem.cs TRUE DIRTY
       UnitControlSystem.cs TRUE DIRTY
@@ -561,6 +562,7 @@ Game\
       UnitSkillExecuteSystem.cs TRUE DIRTY
         闁告瑯浜濆Σ鍝ユ媼閿涘嫮鏆柛鎰槻瀹?
       UnitSystemGroups.cs TRUE DIRTY
+      UnitSimulationGateSystem.cs TRUE
       UnitSourceDispatcherSystem.cs TRUE DIRTY
         闁告帒妫涚悮?
         闁归攱鍎宠ぐ鍥箳婢跺孩鍎伴柣?
@@ -584,7 +586,7 @@ Game\
       UnitControlUtility.cs TRUE
       UnitFacingUtility.cs FALSE
       WorldDropSpawnUtility.cs FALSE
-      UnitFactionUtility.cs TRUE
+      UnitFactionUtility.cs TRUE DIRTY
       UnitFeatureBakeUtility.cs TRUE
       EquipmentUtility.cs TRUE
       UnitModifierUtility.cs TRUE DIRTY
@@ -598,14 +600,15 @@ Game\
   World\
     WorldInputComponent.cs TRUE
     WorldSkillDataComponent.cs TRUE DIRTY
-    WorldStateComponent.cs TRUE DIRTY
-    WorldStateSystem.cs TRUE DIRTY
+    GameGateStateComponent.cs TRUE
+    GameGateStateSystem.cs TRUE
+    GameSingletonUtility.cs TRUE
     WorldVariableComponent.cs TRUE DIRTY
 UI\
   BattleUI\
     Sub\
     BattleUI.cs TRUE DIRTY
-    BattleUIController.cs TRUE
+    BattleUIController.cs TRUE DIRTY
     BattleUIData.cs TRUE
     BattleUIModel.cs TRUE DIRTY
   CharacterUI\
@@ -780,12 +783,15 @@ UI\
     UISelectableListItem.cs FALSE
 Web\
   Battle\
-    BattleWorldContext.cs TRUE
+    BattleWorldContext.cs TRUE DIRTY
     ClientBattleManager.cs TRUE DIRTY
     NetworkEventDictionary.cs TRUE
     NetworkUnitStateSnapshotUtility.cs TRUE
+    ServerNetworkStateCollectSystem.cs TRUE DIRTY
     StateData\
       NetworkMoveStateData.cs TRUE
+      NetworkPlayerInputStateData.cs TRUE DIRTY
+      NetworkPlayerSkillChainStateData.cs TRUE
   Core\
     ClientNetworkManager.cs TRUE DIRTY
     NetworkTimer.cs TRUE DIRTY

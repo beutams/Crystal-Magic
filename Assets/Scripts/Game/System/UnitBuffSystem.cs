@@ -6,6 +6,7 @@ using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
 
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitInitializationSystemGroup))]
 [UpdateAfter(typeof(BuffEffectRegistryInitializationSystem))]
 [UpdateBefore(typeof(UnitRecoverySystem))]

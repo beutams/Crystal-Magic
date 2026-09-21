@@ -27,27 +27,14 @@ namespace CrystalMagic.Core
 
     public static class GameWorldContextUtility
     {
-        public static bool TryGet(EntityManager entityManager, out GameWorldContextComponent context)
+        public static GameWorldContextComponent Get(EntityManager entityManager)
         {
-            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<GameWorldContextComponent>());
-            if (query.IsEmptyIgnoreFilter)
-            {
-                query.Dispose();
-                context = default;
-                return false;
-            }
-
-            Entity contextEntity = query.GetSingletonEntity();
-            query.Dispose();
-            context = entityManager.GetComponentData<GameWorldContextComponent>(contextEntity);
-            return true;
+            return GameSingletonUtility.Get<GameWorldContextComponent>(entityManager);
         }
 
         public static GameSceneMode GetSceneMode(EntityManager entityManager)
         {
-            return TryGet(entityManager, out GameWorldContextComponent context)
-                ? context.SceneMode
-                : GameSceneMode.None;
+            return Get(entityManager).SceneMode;
         }
     }
 
@@ -75,7 +62,6 @@ namespace CrystalMagic.Core
 
         private static World _bootstrapWorld;
         private static World _gameWorld;
-        private static Entity _worldEntity;
         private static bool _appendedToPlayerLoop;
 
         public static bool HasGameWorld => _gameWorld != null && _gameWorld.IsCreated;
@@ -122,7 +108,7 @@ namespace CrystalMagic.Core
             _gameWorld = new World(WorldName, worldFlags);
             Role = role;
             SceneMode = GameSceneMode.None;
-            _worldEntity = WorldStateUtility.Create(_gameWorld.EntityManager, role, SceneMode);
+            GameSingletonUtility.Create(_gameWorld.EntityManager, role, SceneMode);
             World.DefaultGameObjectInjectionWorld = _gameWorld;
 
             DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(
@@ -203,7 +189,7 @@ namespace CrystalMagic.Core
                 return;
 
             SceneMode = sceneMode;
-            _gameWorld.EntityManager.SetComponentData(_worldEntity, new GameWorldContextComponent
+            GameSingletonUtility.Set(_gameWorld.EntityManager, new GameWorldContextComponent
             {
                 Role = Role,
                 SceneMode = SceneMode,
@@ -227,7 +213,6 @@ namespace CrystalMagic.Core
 
             _gameWorld.Dispose();
             _gameWorld = null;
-            _worldEntity = Entity.Null;
             _appendedToPlayerLoop = false;
             SceneMode = GameSceneMode.None;
             Role = GameWorldRole.None;

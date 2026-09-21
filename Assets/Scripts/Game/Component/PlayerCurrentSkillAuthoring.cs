@@ -84,7 +84,7 @@ public static class PlayerCurrentSkillSource
                 result = UnitSourceValue.FromInt(slot.SkillId);
                 return true;
             case 3 when PlayerSkillChainSource.TryGetSkill(
-                context.GlobalEntity,
+                context.SingletonEntity,
                 slot.SkillId,
                 in registryLookup,
                 out PlayerSkillDefinitionBlob skill):
@@ -157,7 +157,7 @@ public static class PlayerCurrentSkillSource
                              in slotLookup,
                              out _) &&
                          registryLookup.TryGetComponent(
-                             context.GlobalEntity,
+                             context.SingletonEntity,
                              out PlayerSkillDefinitionRegistryComponent registry) &&
                          PlayerSkillDefinitionRegistryUtility.TryGetModifierMinimumFactor(
                              in registry.Value,

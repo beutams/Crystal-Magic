@@ -5,6 +5,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 
 [BurstCompile]
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateBefore(typeof(UnitControlSystem))]
 public partial struct UnitRecoverySystem : ISystem

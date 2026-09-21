@@ -84,6 +84,9 @@ namespace CrystalMagic.Game.Data
                         spawnUnit.SpawnRadius = math.max(0f, spawnUnit.SpawnRadius);
                         spawnUnit.MinSpawnRadius = math.clamp(spawnUnit.MinSpawnRadius, 0f, spawnUnit.SpawnRadius);
                         break;
+                    case QueryUnitsActionNodeData queryUnits:
+                        queryUnits.EnsureValid();
+                        break;
                     case TimerStateScriptNodeData timer:
                         timer.Duration ??= TimerStateScriptNodeData.CreateDefaultDurationExpression();
                         break;
@@ -327,6 +330,78 @@ namespace CrystalMagic.Game.Data
         public SpawnUnitActionNodeData()
         {
             Type = "SpawnUnit";
+        }
+    }
+
+    [Serializable]
+    public enum StateScriptUnitQuerySortMode : byte
+    {
+        None,
+        DistanceAscending,
+        DistanceDescending,
+    }
+
+    [Serializable]
+    [FactoryKey("QueryUnits", 16, "Query Units")]
+    public sealed class QueryUnitsActionNodeData : ActionStateScriptNodeData
+    {
+        public UnitQueryShapeType Shape = UnitQueryShapeType.WholeWorld;
+        public ValueExpression Center = CreateDefaultCenterExpression();
+        public ValueExpression Direction = CreateDefaultDirectionExpression();
+        public ValueExpression Size = CreateDefaultSizeExpression();
+        public ValueExpression Radius = CreateDefaultRadiusExpression();
+        public ValueExpression Angle = CreateDefaultAngleExpression();
+        public UnitFactionMask FactionMask = UnitFactionMask.All;
+        public int UnitDataId = -1;
+        public bool ExcludeSelf = true;
+        public bool ExcludeDead = true;
+        public int MaxCount;
+        public StateScriptUnitQuerySortMode SortMode;
+        public string ResultKey = string.Empty;
+
+        public QueryUnitsActionNodeData()
+        {
+            Type = "QueryUnits";
+        }
+
+        public void EnsureValid()
+        {
+            Center ??= CreateDefaultCenterExpression();
+            Direction ??= CreateDefaultDirectionExpression();
+            Size ??= CreateDefaultSizeExpression();
+            Radius ??= CreateDefaultRadiusExpression();
+            Angle ??= CreateDefaultAngleExpression();
+            MaxCount = math.max(0, MaxCount);
+            ResultKey ??= string.Empty;
+        }
+
+        public static ValueExpression CreateDefaultCenterExpression()
+        {
+            return new ValueExpression
+            {
+                Kind = ValueExpressionKind.Getter,
+                GetterKey = "unit.transform.position",
+            };
+        }
+
+        public static ValueExpression CreateDefaultDirectionExpression()
+        {
+            return new ValueExpression { Literal = UnitValue.FromFloat2(new float2(1f, 0f)) };
+        }
+
+        public static ValueExpression CreateDefaultSizeExpression()
+        {
+            return new ValueExpression { Literal = UnitValue.FromFloat2(new float2(1f)) };
+        }
+
+        public static ValueExpression CreateDefaultRadiusExpression()
+        {
+            return new ValueExpression { Literal = UnitValue.FromFloat(1f) };
+        }
+
+        public static ValueExpression CreateDefaultAngleExpression()
+        {
+            return new ValueExpression { Literal = UnitValue.FromFloat(90f) };
         }
     }
 

@@ -58,14 +58,13 @@ public static class UnitAnimationSource
         ParameterNames = new[] { "AnimationName" })]
     public static bool TrySet(
         int operation,
-        UnitSourceAccessContext context,
+        Entity entity,
         ref ComponentLookup<UnitAnimationComponent> animationLookup,
-        in ComponentLookup<WorldStateComponent> worldStateLookup,
         in UnitSourceArguments arguments)
     {
         if ((operation != 0 && operation != 1) ||
             !arguments.TryGetString(0, out FixedString128Bytes sourceName) ||
-            !animationLookup.HasComponent(context.TargetEntity))
+            !animationLookup.HasComponent(entity))
         {
             return false;
         }
@@ -75,7 +74,7 @@ public static class UnitAnimationSource
         if (animationName.CopyFrom(in trimmedSourceName) != CopyError.None)
             return false;
 
-        UnitAnimationComponent animation = animationLookup[context.TargetEntity];
+        UnitAnimationComponent animation = animationLookup[entity];
         bool forceRestart = operation == 1;
         bool changed = !animation.AnimationName.Equals(animationName);
         if (!changed && !forceRestart)
@@ -85,14 +84,7 @@ public static class UnitAnimationSource
         if (sequence == 0u)
             sequence = 1u;
 
-        uint startFrame = worldStateLookup.TryGetComponent(
-            context.GlobalEntity,
-            out WorldStateComponent worldState)
-            ? worldState.CurrentFrame
-            : 0u;
-
         animation.AnimationName = animationName;
-        animation.StartFrame = startFrame;
         animation.Sequence = sequence;
         animation.NetworkDirty = 1;
         animation.RequestedStartElapsedSeconds = 0f;
@@ -103,7 +95,7 @@ public static class UnitAnimationSource
             animation.ElapsedSeconds = 0f;
         }
 
-        animationLookup[context.TargetEntity] = animation;
+        animationLookup[entity] = animation;
         return true;
     }
 }

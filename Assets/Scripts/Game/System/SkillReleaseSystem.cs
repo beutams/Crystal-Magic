@@ -4,6 +4,7 @@ using CrystalMagic.Game.Skill;
 using Unity.Entities;
 using UnityEngine;
 
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateBefore(typeof(SkillProjectileSpawnSystem))]
 [UpdateBefore(typeof(PersistentEffectSystem))]

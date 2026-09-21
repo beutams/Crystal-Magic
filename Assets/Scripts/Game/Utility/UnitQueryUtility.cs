@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CrystalMagic.Core;
 using Unity.Collections;
@@ -8,374 +9,351 @@ public struct UnitQueryHit
 {
     public Entity Entity;
     public float3 Position;
+    public UnitFactionType Faction;
 }
 
-public enum UnitQueryGridKind
+[Flags]
+public enum UnitFactionMask : byte
 {
-    Unit,
-    Interactable,
+    None = 0,
+    Player = 1 << (int)UnitFactionType.Player,
+    Friend = 1 << (int)UnitFactionType.Friend,
+    Enemy = 1 << (int)UnitFactionType.Enemy,
+    Boss = 1 << (int)UnitFactionType.Boss,
+    Interactable = 1 << (int)UnitFactionType.Interactable,
+    Combatants = Player | Friend | Enemy | Boss,
+    All = Combatants | Interactable,
 }
 
-public static class UnitQueryUtility
+public enum UnitQueryShapeType : byte
 {
-    public static bool TryGetGrid(EntityManager entityManager, UnitQueryGridKind gridKind, out UnitQueryGrid grid)
-    {
-        using EntityQuery singletonQuery = entityManager.CreateEntityQuery(
-            ComponentType.ReadOnly<UnitQuerySingleton>());
-        if (singletonQuery.IsEmptyIgnoreFilter)
-        {
-            grid = default;
-            return false;
-        }
-
-        UnitQuerySingleton singleton =
-            entityManager.GetComponentData<UnitQuerySingleton>(singletonQuery.GetSingletonEntity());
-        Entity gridEntity = gridKind == UnitQueryGridKind.Interactable
-            ? singleton.InteractableGridEntity
-            : singleton.UnitGridEntity;
-        if (gridEntity == Entity.Null ||
-            !entityManager.Exists(gridEntity) ||
-            !entityManager.HasBuffer<UnitQueryEntry>(gridEntity))
-        {
-            grid = default;
-            return false;
-        }
-
-        grid = new UnitQueryGrid(
-            entityManager.GetBuffer<UnitQueryEntry>(gridEntity, true),
-            singleton.InverseCellSize);
-        return grid.IsCreated;
-    }
+    WholeWorld,
+    Circle,
+    AxisAlignedRect,
+    ForwardRect,
+    Cone,
 }
 
 /// <summary>
-/// Lightweight view over one sorted ECS query buffer.
+/// Unmanaged description of a spatial query. The same value can be used by managed code or Burst jobs.
 /// </summary>
-public struct UnitQueryGrid
+public struct UnitQueryShape
 {
-    public const float DefaultCellSize = 4f;
+    public UnitQueryShapeType Type;
+    public float2 Origin;
+    public float2 Direction;
+    public float2 Size;
+    public float Radius;
+    public float AngleDegrees;
 
-    private static readonly UnitQueryHitComparer HitComparer = new();
-
-    private DynamicBuffer<UnitQueryEntry> _entries;
-    private float _inverseCellSize;
-
-    public UnitQueryGrid(DynamicBuffer<UnitQueryEntry> entries, float inverseCellSize)
+    public static UnitQueryShape Circle(float3 center, float radius)
     {
-        _entries = entries;
-        _inverseCellSize = inverseCellSize;
+        return new UnitQueryShape
+        {
+            Type = UnitQueryShapeType.Circle,
+            Origin = center.xy,
+            Radius = math.max(0f, radius),
+        };
     }
 
-    public readonly bool IsCreated => _entries.IsCreated;
-    public readonly float InverseCellSize => _inverseCellSize;
+    public static UnitQueryShape AxisAlignedRect(float3 center, float2 size)
+    {
+        return new UnitQueryShape
+        {
+            Type = UnitQueryShapeType.AxisAlignedRect,
+            Origin = center.xy,
+            Size = math.max(float2.zero, size),
+        };
+    }
 
-    public readonly NativeArray<UnitQueryEntry> AsNativeArray() => _entries.AsNativeArray();
+    public static UnitQueryShape ForwardRect(float3 origin, float2 forward, float length, float width)
+    {
+        return new UnitQueryShape
+        {
+            Type = UnitQueryShapeType.ForwardRect,
+            Origin = origin.xy,
+            Direction = math.normalizesafe(forward),
+            Size = new float2(math.max(0f, length), math.max(0f, width)),
+        };
+    }
 
-    public readonly void QueryCircle(
-        float3 center,
-        float radius,
+    public static UnitQueryShape Cone(float3 origin, float2 forward, float radius, float angleDegrees)
+    {
+        return new UnitQueryShape
+        {
+            Type = UnitQueryShapeType.Cone,
+            Origin = origin.xy,
+            Direction = math.normalizesafe(forward),
+            Radius = math.max(0f, radius),
+            AngleDegrees = math.clamp(angleDegrees, 0f, 360f),
+        };
+    }
+
+    public readonly bool TryGetBounds(out float2 minimum, out float2 maximum)
+    {
+        switch (Type)
+        {
+            case UnitQueryShapeType.WholeWorld:
+                minimum = new float2(float.MinValue);
+                maximum = new float2(float.MaxValue);
+                return true;
+
+            case UnitQueryShapeType.Circle:
+                if (Radius <= 0f)
+                    break;
+                minimum = Origin - Radius;
+                maximum = Origin + Radius;
+                return true;
+
+            case UnitQueryShapeType.AxisAlignedRect:
+                if (math.any(Size <= 0f))
+                    break;
+                float2 halfSize = Size * 0.5f;
+                minimum = Origin - halfSize;
+                maximum = Origin + halfSize;
+                return true;
+
+            case UnitQueryShapeType.ForwardRect:
+                if (math.any(Size <= 0f) || math.lengthsq(Direction) <= 0.0001f)
+                    break;
+                GetForwardRectBounds(out minimum, out maximum);
+                return true;
+
+            case UnitQueryShapeType.Cone:
+                if (Radius <= 0f || AngleDegrees <= 0f || math.lengthsq(Direction) <= 0.0001f)
+                    break;
+                minimum = Origin - Radius;
+                maximum = Origin + Radius;
+                return true;
+        }
+
+        minimum = default;
+        maximum = default;
+        return false;
+    }
+
+    public readonly bool Contains(float2 position)
+    {
+        switch (Type)
+        {
+            case UnitQueryShapeType.WholeWorld:
+                return true;
+
+            case UnitQueryShapeType.Circle:
+                return math.lengthsq(position - Origin) <= Radius * Radius;
+
+            case UnitQueryShapeType.AxisAlignedRect:
+                float2 halfSize = Size * 0.5f;
+                return !math.any(position < Origin - halfSize) &&
+                       !math.any(position > Origin + halfSize);
+
+            case UnitQueryShapeType.ForwardRect:
+                float2 difference = position - Origin;
+                float forwardDistance = math.dot(difference, Direction);
+                float2 right = new(-Direction.y, Direction.x);
+                return forwardDistance >= 0f &&
+                       forwardDistance <= Size.x &&
+                       math.abs(math.dot(difference, right)) <= Size.y * 0.5f;
+
+            case UnitQueryShapeType.Cone:
+                float2 coneDifference = position - Origin;
+                float distanceSq = math.lengthsq(coneDifference);
+                if (distanceSq > Radius * Radius)
+                    return false;
+                if (distanceSq <= 0.0001f)
+                    return true;
+                float minimumDot = math.cos(math.radians(AngleDegrees * 0.5f));
+                return math.dot(Direction, coneDifference * math.rsqrt(distanceSq)) >= minimumDot;
+        }
+
+        return false;
+    }
+
+    private readonly void GetForwardRectBounds(out float2 minimum, out float2 maximum)
+    {
+        float2 right = new(-Direction.y, Direction.x);
+        float halfWidth = Size.y * 0.5f;
+        float2 end = Origin + Direction * Size.x;
+        float2 corner0 = Origin - right * halfWidth;
+        float2 corner1 = Origin + right * halfWidth;
+        float2 corner2 = end - right * halfWidth;
+        float2 corner3 = end + right * halfWidth;
+        minimum = math.min(math.min(corner0, corner1), math.min(corner2, corner3));
+        maximum = math.max(math.max(corner0, corner1), math.max(corner2, corner3));
+    }
+}
+
+public interface IUnitQueryVisitor
+{
+    bool Visit(in UnitQueryEntry entry);
+}
+
+/// <summary>
+/// Read-only view of the current frame's quadtree.
+/// </summary>
+public struct UnitQueryTree
+{
+    [ReadOnly]
+    private NativeArray<UnitQueryNode> _nodes;
+
+    [ReadOnly]
+    private NativeArray<UnitQueryEntry> _entries;
+
+    public UnitQueryTree(NativeArray<UnitQueryNode> nodes, NativeArray<UnitQueryEntry> entries)
+    {
+        _nodes = nodes;
+        _entries = entries;
+    }
+
+    public readonly bool IsCreated => _nodes.IsCreated && _entries.IsCreated;
+
+    public readonly void Query<TVisitor>(
+        in UnitQueryShape shape,
+        UnitFactionType faction,
+        ref TVisitor visitor,
+        bool includeDead = false)
+        where TVisitor : struct, IUnitQueryVisitor
+    {
+        Query(in shape, UnitQueryUtility.GetMask(faction), ref visitor, includeDead);
+    }
+
+    public readonly void Query<TVisitor>(
+        in UnitQueryShape shape,
+        UnitFactionMask factions,
+        ref TVisitor visitor,
+        bool includeDead = false)
+        where TVisitor : struct, IUnitQueryVisitor
+    {
+        if (!IsCreated || _nodes.Length == 0 || factions == UnitFactionMask.None ||
+            !shape.TryGetBounds(out float2 queryMin, out float2 queryMax))
+        {
+            return;
+        }
+
+        FixedList512Bytes<int> pendingNodes = default;
+        pendingNodes.Add(0);
+        while (pendingNodes.Length > 0)
+        {
+            int lastIndex = pendingNodes.Length - 1;
+            int nodeIndex = pendingNodes[lastIndex];
+            pendingNodes.RemoveAt(lastIndex);
+            UnitQueryNode node = _nodes[nodeIndex];
+            if (node.Count <= 0 || !Overlaps(node.Min, node.Max, queryMin, queryMax))
+                continue;
+
+            if (!node.IsLeaf)
+            {
+                // Reverse push order keeps traversal stable from quadrant 0 to 3.
+                pendingNodes.Add(node.FirstChildIndex + 3);
+                pendingNodes.Add(node.FirstChildIndex + 2);
+                pendingNodes.Add(node.FirstChildIndex + 1);
+                pendingNodes.Add(node.FirstChildIndex);
+                continue;
+            }
+
+            int endIndex = node.StartIndex + node.Count;
+            for (int entryIndex = node.StartIndex; entryIndex < endIndex; entryIndex++)
+            {
+                UnitQueryEntry entry = _entries[entryIndex];
+                if ((factions & UnitQueryUtility.GetMask(entry.Faction)) == 0 ||
+                    !includeDead && entry.IsDead != 0 ||
+                    !shape.Contains(entry.Position.xy))
+                {
+                    continue;
+                }
+
+                if (!visitor.Visit(in entry))
+                    return;
+            }
+        }
+    }
+
+    public readonly void Query(
+        in UnitQueryShape shape,
+        UnitFactionType faction,
+        List<UnitQueryHit> results,
+        bool reportDebug = true)
+    {
+        Query(in shape, UnitQueryUtility.GetMask(faction), results, reportDebug);
+    }
+
+    public readonly void Query(
+        in UnitQueryShape shape,
+        UnitFactionMask factions,
         List<UnitQueryHit> results,
         bool reportDebug = true)
     {
         results.Clear();
-        if (!_entries.IsCreated || radius <= 0f)
-            return;
-
-        NativeArray<UnitQueryEntry> entries = _entries.AsNativeArray();
-        float2 queryCenter = center.xy;
-        float radiusSq = radius * radius;
-        int2 minCell = GetCell(queryCenter - radius, _inverseCellSize);
-        int2 maxCell = GetCell(queryCenter + radius, _inverseCellSize);
-
-        for (int y = minCell.y; y <= maxCell.y; y++)
-        {
-            for (int x = minCell.x; x <= maxCell.x; x++)
-                AddCircleHits(entries, GetCellKey(new int2(x, y)), queryCenter, radiusSq, results);
-        }
-
-        SortResults(results);
-        if (reportDebug)
-        {
-            DebugQueryShapeReporter.ReportCircle(center, radius);
-            ReportHits(center, results);
-        }
-    }
-
-    public readonly void QueryForwardRect(
-        float3 origin,
-        float2 forward,
-        float length,
-        float width,
-        List<UnitQueryHit> results)
-    {
-        results.Clear();
-        if (!_entries.IsCreated || length <= 0f || width <= 0f || math.lengthsq(forward) <= 0.0001f)
-            return;
-
-        NativeArray<UnitQueryEntry> entries = _entries.AsNativeArray();
-        float2 normalizedForward = math.normalize(forward);
-        float2 right = new(-normalizedForward.y, normalizedForward.x);
-        float halfWidth = width * 0.5f;
-        float2 start = origin.xy;
-        float2 end = origin.xy + normalizedForward * length;
-
-        float2 corner0 = start - right * halfWidth;
-        float2 corner1 = start + right * halfWidth;
-        float2 corner2 = end - right * halfWidth;
-        float2 corner3 = end + right * halfWidth;
-        float2 rectMin = math.min(math.min(corner0, corner1), math.min(corner2, corner3));
-        float2 rectMax = math.max(math.max(corner0, corner1), math.max(corner2, corner3));
-        int2 minCell = GetCell(rectMin, _inverseCellSize);
-        int2 maxCell = GetCell(rectMax, _inverseCellSize);
-
-        for (int y = minCell.y; y <= maxCell.y; y++)
-        {
-            for (int x = minCell.x; x <= maxCell.x; x++)
-            {
-                AddForwardRectHits(
-                    entries,
-                    GetCellKey(new int2(x, y)),
-                    origin.xy,
-                    normalizedForward,
-                    right,
-                    length,
-                    halfWidth,
-                    results);
-            }
-        }
-
-        SortResults(results);
-        DebugQueryShapeReporter.ReportForwardRect(origin, normalizedForward, length, width);
-        ReportHits(origin, results);
-    }
-
-    public readonly void QueryAxisAlignedRect(float3 center, float2 size, List<UnitQueryHit> results)
-    {
-        results.Clear();
-        if (!_entries.IsCreated || math.any(size <= 0f))
-            return;
-
-        NativeArray<UnitQueryEntry> entries = _entries.AsNativeArray();
-        float2 halfSize = size * 0.5f;
-        float2 rectMin = center.xy - halfSize;
-        float2 rectMax = center.xy + halfSize;
-        int2 minCell = GetCell(rectMin, _inverseCellSize);
-        int2 maxCell = GetCell(rectMax, _inverseCellSize);
-
-        for (int y = minCell.y; y <= maxCell.y; y++)
-        {
-            for (int x = minCell.x; x <= maxCell.x; x++)
-            {
-                AddAxisAlignedRectHits(
-                    entries,
-                    GetCellKey(new int2(x, y)),
-                    rectMin,
-                    rectMax,
-                    results);
-            }
-        }
-
-        SortResults(results);
-        DebugQueryShapeReporter.ReportForwardRect(
-            new float3(rectMin.x, center.y, center.z),
-            new float2(1f, 0f),
-            size.x,
-            size.y);
-        ReportHits(center, results);
-    }
-
-    public readonly void QueryCone(
-        float3 origin,
-        float2 forward,
-        float radius,
-        float angleDegrees,
-        List<UnitQueryHit> results)
-    {
-        results.Clear();
-        if (!_entries.IsCreated || radius <= 0f || angleDegrees <= 0f || math.lengthsq(forward) <= 0.0001f)
-            return;
-
-        NativeArray<UnitQueryEntry> entries = _entries.AsNativeArray();
-        float2 normalizedForward = math.normalize(forward);
-        float radiusSq = radius * radius;
-        float minDot = math.cos(math.radians(math.clamp(angleDegrees, 0f, 360f) * 0.5f));
-        int2 minCell = GetCell(origin.xy - radius, _inverseCellSize);
-        int2 maxCell = GetCell(origin.xy + radius, _inverseCellSize);
-
-        for (int y = minCell.y; y <= maxCell.y; y++)
-        {
-            for (int x = minCell.x; x <= maxCell.x; x++)
-            {
-                AddConeHits(
-                    entries,
-                    GetCellKey(new int2(x, y)),
-                    origin.xy,
-                    normalizedForward,
-                    radiusSq,
-                    minDot,
-                    results);
-            }
-        }
-
-        SortResults(results);
-        DebugQueryShapeReporter.ReportCone(origin, normalizedForward, radius, angleDegrees);
-        ReportHits(origin, results);
-    }
-
-    public static int2 GetCell(float2 position, float inverseCellSize)
-    {
-        return (int2)math.floor(position * inverseCellSize);
-    }
-
-    public static long GetCellKey(int2 cell)
-    {
-        return ((long)cell.x << 32) | (uint)cell.y;
-    }
-
-    public static bool TryGetCellRange(
-        NativeArray<UnitQueryEntry> entries,
-        long cellKey,
-        out int startIndex,
-        out int endIndex)
-    {
-        int low = 0;
-        int high = entries.Length;
-        while (low < high)
-        {
-            int middle = low + ((high - low) >> 1);
-            if (entries[middle].CellKey < cellKey)
-                low = middle + 1;
-            else
-                high = middle;
-        }
-
-        startIndex = low;
-        if (startIndex >= entries.Length || entries[startIndex].CellKey != cellKey)
-        {
-            endIndex = startIndex;
-            return false;
-        }
-
-        low = startIndex;
-        high = entries.Length;
-        while (low < high)
-        {
-            int middle = low + ((high - low) >> 1);
-            if (entries[middle].CellKey <= cellKey)
-                low = middle + 1;
-            else
-                high = middle;
-        }
-
-        endIndex = low;
-        return true;
-    }
-
-    private static void AddCircleHits(
-        NativeArray<UnitQueryEntry> entries,
-        long cellKey,
-        float2 center,
-        float radiusSq,
-        List<UnitQueryHit> results)
-    {
-        if (!TryGetCellRange(entries, cellKey, out int startIndex, out int endIndex))
-            return;
-
-        for (int index = startIndex; index < endIndex; index++)
-        {
-            UnitQueryEntry entry = entries[index];
-            if (math.lengthsq(entry.Position.xy - center) <= radiusSq)
-                results.Add(new UnitQueryHit { Entity = entry.Entity, Position = entry.Position });
-        }
-    }
-
-    private static void AddForwardRectHits(
-        NativeArray<UnitQueryEntry> entries,
-        long cellKey,
-        float2 origin,
-        float2 normalizedForward,
-        float2 right,
-        float length,
-        float halfWidth,
-        List<UnitQueryHit> results)
-    {
-        if (!TryGetCellRange(entries, cellKey, out int startIndex, out int endIndex))
-            return;
-
-        for (int index = startIndex; index < endIndex; index++)
-        {
-            UnitQueryEntry entry = entries[index];
-            float2 difference = entry.Position.xy - origin;
-            float forwardDistance = math.dot(difference, normalizedForward);
-            if (forwardDistance < 0f || forwardDistance > length)
-                continue;
-
-            if (math.abs(math.dot(difference, right)) <= halfWidth)
-                results.Add(new UnitQueryHit { Entity = entry.Entity, Position = entry.Position });
-        }
-    }
-
-    private static void AddAxisAlignedRectHits(
-        NativeArray<UnitQueryEntry> entries,
-        long cellKey,
-        float2 rectMin,
-        float2 rectMax,
-        List<UnitQueryHit> results)
-    {
-        if (!TryGetCellRange(entries, cellKey, out int startIndex, out int endIndex))
-            return;
-
-        for (int index = startIndex; index < endIndex; index++)
-        {
-            UnitQueryEntry entry = entries[index];
-            float2 position = entry.Position.xy;
-            if (!math.any(position < rectMin) && !math.any(position > rectMax))
-                results.Add(new UnitQueryHit { Entity = entry.Entity, Position = entry.Position });
-        }
-    }
-
-    private static void AddConeHits(
-        NativeArray<UnitQueryEntry> entries,
-        long cellKey,
-        float2 origin,
-        float2 normalizedForward,
-        float radiusSq,
-        float minDot,
-        List<UnitQueryHit> results)
-    {
-        if (!TryGetCellRange(entries, cellKey, out int startIndex, out int endIndex))
-            return;
-
-        for (int index = startIndex; index < endIndex; index++)
-        {
-            UnitQueryEntry entry = entries[index];
-            float2 difference = entry.Position.xy - origin;
-            float distanceSq = math.lengthsq(difference);
-            if (distanceSq > radiusSq)
-                continue;
-
-            if (distanceSq <= 0.0001f ||
-                math.dot(normalizedForward, difference * math.rsqrt(distanceSq)) >= minDot)
-            {
-                results.Add(new UnitQueryHit { Entity = entry.Entity, Position = entry.Position });
-            }
-        }
-    }
-
-    private static void SortResults(List<UnitQueryHit> results)
-    {
+        UnitQueryListVisitor visitor = new() { Results = results };
+        Query(in shape, factions, ref visitor);
         if (results.Count > 1)
-            results.Sort(HitComparer);
+            results.Sort(UnitQueryHitComparer.Instance);
+        if (reportDebug)
+            ReportQuery(in shape, results);
     }
 
-    private static void ReportHits(float3 origin, List<UnitQueryHit> results)
+    private static bool Overlaps(float2 leftMin, float2 leftMax, float2 rightMin, float2 rightMax)
     {
-        for (int i = 0; i < results.Count; i++)
-            DebugQueryShapeReporter.ReportHit(origin, results[i].Position);
+        return !math.any(leftMax < rightMin) && !math.any(leftMin > rightMax);
+    }
+
+    private static void ReportQuery(in UnitQueryShape shape, List<UnitQueryHit> results)
+    {
+        float3 origin = new(shape.Origin, 0f);
+        switch (shape.Type)
+        {
+            case UnitQueryShapeType.Circle:
+                DebugQueryShapeReporter.ReportCircle(origin, shape.Radius);
+                break;
+            case UnitQueryShapeType.WholeWorld:
+                break;
+            case UnitQueryShapeType.AxisAlignedRect:
+                DebugQueryShapeReporter.ReportForwardRect(
+                    new float3(shape.Origin - shape.Size * 0.5f, 0f),
+                    new float2(1f, 0f),
+                    shape.Size.x,
+                    shape.Size.y);
+                break;
+            case UnitQueryShapeType.ForwardRect:
+                DebugQueryShapeReporter.ReportForwardRect(
+                    origin,
+                    shape.Direction,
+                    shape.Size.x,
+                    shape.Size.y);
+                break;
+            case UnitQueryShapeType.Cone:
+                DebugQueryShapeReporter.ReportCone(
+                    origin,
+                    shape.Direction,
+                    shape.Radius,
+                    shape.AngleDegrees);
+                break;
+        }
+
+        for (int index = 0; index < results.Count; index++)
+            DebugQueryShapeReporter.ReportHit(origin, results[index].Position);
+    }
+
+    private struct UnitQueryListVisitor : IUnitQueryVisitor
+    {
+        public List<UnitQueryHit> Results;
+
+        public bool Visit(in UnitQueryEntry entry)
+        {
+            Results.Add(new UnitQueryHit
+            {
+                Entity = entry.Entity,
+                Position = entry.Position,
+                Faction = entry.Faction,
+            });
+            return true;
+        }
     }
 
     private sealed class UnitQueryHitComparer : IComparer<UnitQueryHit>
     {
+        public static readonly UnitQueryHitComparer Instance = new();
+
         public int Compare(UnitQueryHit left, UnitQueryHit right)
         {
             int indexComparison = left.Entity.Index.CompareTo(right.Entity.Index);
@@ -383,5 +361,24 @@ public struct UnitQueryGrid
                 ? indexComparison
                 : left.Entity.Version.CompareTo(right.Entity.Version);
         }
+    }
+}
+
+public static class UnitQueryUtility
+{
+    public static UnitFactionMask GetMask(UnitFactionType faction)
+    {
+        int value = (int)faction;
+        return value >= 0 && value < 8
+            ? (UnitFactionMask)(1 << value)
+            : UnitFactionMask.None;
+    }
+
+    public static UnitQueryTree GetTree(EntityManager entityManager)
+    {
+        UnitQuerySingleton singleton = GameSingletonUtility.Get<UnitQuerySingleton>(entityManager);
+        return new UnitQueryTree(
+            entityManager.GetBuffer<UnitQueryNode>(singleton.TreeEntity, true).AsNativeArray(),
+            entityManager.GetBuffer<UnitQueryEntry>(singleton.TreeEntity, true).AsNativeArray());
     }
 }

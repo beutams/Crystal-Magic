@@ -5,17 +5,16 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateAfter(typeof(BehaviorTreeSystem))]
 public partial class StateScriptSystem : SystemBase
 {
-    private UnitSourceDispatcher _readSources;
-    private UnitSourceDispatcher _writeSources;
+    private UnitSourceDispatcher _sources;
 
     protected override void OnCreate()
     {
-        _readSources.InitializeReadOnly(this);
-        _writeSources.Initialize(this);
+        _sources.Initialize(this);
         RequireForUpdate<StateScriptRuntimeRegistryComponent>();
     }
 
@@ -26,18 +25,34 @@ public partial class StateScriptSystem : SystemBase
         if (!registry.IsCreated)
             return;
 
-        _readSources.Update(this);
-        _writeSources.Update(this);
+        _sources.Update(this);
+        UnitQueryTree queryTree = default;
+        int queryCapacity = 1;
+        if (SystemAPI.TryGetSingleton(out UnitQuerySingleton querySingleton) &&
+            querySingleton.TreeEntity != Entity.Null &&
+            EntityManager.Exists(querySingleton.TreeEntity) &&
+            EntityManager.HasBuffer<UnitQueryNode>(querySingleton.TreeEntity) &&
+            EntityManager.HasBuffer<UnitQueryEntry>(querySingleton.TreeEntity))
+        {
+            NativeArray<UnitQueryNode> nodes = EntityManager
+                .GetBuffer<UnitQueryNode>(querySingleton.TreeEntity, true)
+                .AsNativeArray();
+            NativeArray<UnitQueryEntry> entries = EntityManager
+                .GetBuffer<UnitQueryEntry>(querySingleton.TreeEntity, true)
+                .AsNativeArray();
+            queryTree = new UnitQueryTree(nodes, entries);
+            queryCapacity = math.max(1, entries.Length);
+        }
+        // SetValue is part of the immediate pulse chain: later nodes in the same
+        // chain must observe its write. Source targets may be Self, Other, or a
+        // global entity, so evaluate serially until writes can be safely partitioned.
         Dependency = new StateScriptEvaluationJob
         {
             Registry = registry,
-            Sources = _readSources,
-            Variables = GetComponentLookup<UnitVariableComponent>(true),
+            Sources = _sources,
+            QueryTree = queryTree,
+            QueryResults = new NativeList<UnitQueryHit>(queryCapacity, Allocator.TempJob),
             DeltaTime = math.max(0f, SystemAPI.Time.DeltaTime),
-        }.ScheduleParallel(Dependency);
-        Dependency = new StateScriptSourceCommandJob
-        {
-            Sources = _writeSources,
         }.Schedule(Dependency);
         Dependency = new StateScriptDeathJob().ScheduleParallel(Dependency);
     }
@@ -53,11 +68,13 @@ public partial struct StateScriptEvaluationJob : IJobEntity
 
     public BlobAssetReference<StateScriptRuntimeRegistryBlob> Registry;
 
-    [ReadOnly]
     public UnitSourceDispatcher Sources;
 
     [ReadOnly]
-    public ComponentLookup<UnitVariableComponent> Variables;
+    public UnitQueryTree QueryTree;
+
+    [DeallocateOnJobCompletion]
+    public NativeList<UnitQueryHit> QueryResults;
 
     public float DeltaTime;
 
@@ -95,9 +112,16 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         component.TickVersion++;
         if (component.TickVersion == 0)
             component.TickVersion = 1;
-        Entity other = Variables.TryGetComponent(entity, out UnitVariableComponent variables)
-            ? variables.Other
-            : Entity.Null;
+        UnitSourceArguments noArguments = default;
+        Entity other = Entity.Null;
+        if (Sources.TryGet(
+                entity,
+                UnitSourceId.UnitVariablesOther,
+                in noArguments,
+                out UnitSourceValue otherValue))
+        {
+            otherValue.TryGetEntity(out other);
+        }
         UnitSourceContext context = new(entity, other);
 
         for (int graphIndex = 0; graphIndex < unit.Graphs.Length; graphIndex++)
@@ -326,7 +350,7 @@ public partial struct StateScriptEvaluationJob : IJobEntity
 
             case StateScriptNodeRuntimeType.SetValue:
                 if (pulse.InputPortId != StateScriptPortId.In ||
-                    !AppendSourceCommand(in node, in context, ref graph, ref sourceCommands, ref sourceArguments))
+                    !TryApplySourceValue(in node, in context, ref graph))
                     return true;
                 return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.Out, ref pulses);
 
@@ -386,6 +410,14 @@ public partial struct StateScriptEvaluationJob : IJobEntity
                     NodeIndex = pulse.NodeIndex,
                     IntValue = (int)component.TickVersion,
                 });
+                return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.Out, ref pulses);
+
+            case StateScriptNodeRuntimeType.QueryUnits:
+                if (pulse.InputPortId != StateScriptPortId.In ||
+                    !TryQueryUnits(entity, in node, in context, ref graph))
+                {
+                    return true;
+                }
                 return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.Out, ref pulses);
 
             case StateScriptNodeRuntimeType.Timer:
@@ -695,32 +727,27 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         });
     }
 
-    private bool AppendSourceCommand(
+    private bool TryApplySourceValue(
         in StateScriptNodeDefinition node,
         in UnitSourceContext context,
-        ref StateScriptGraphDefinitionBlob graph,
-        ref DynamicBuffer<StateScriptSourceCommandElement> commands,
-        ref DynamicBuffer<StateScriptSourceCommandArgumentElement> arguments)
+        ref StateScriptGraphDefinitionBlob graph)
     {
-        int argumentStart = arguments.Length;
+        UnitSourceArguments arguments = default;
+        if (node.ExpressionCount > arguments.Values.Capacity)
+            return false;
         for (int index = 0; index < node.ExpressionCount; index++)
         {
             if (!TryEvaluateValue(ref graph, node.ExpressionStart + index, in context, out UnitSourceValue value))
-            {
-                arguments.ResizeUninitialized(argumentStart);
                 return false;
-            }
-            arguments.Add(new StateScriptSourceCommandArgumentElement { Value = value });
+            arguments.Values.Add(value);
         }
-        commands.Add(new StateScriptSourceCommandElement
-        {
-            SourceId = node.SetSourceId,
-            TargetEntity = context.Resolve(node.SetSourceTarget),
-            ArgumentStart = argumentStart,
-            ArgumentCount = node.ExpressionCount,
-            Key = node.Key,
-            HasKey = node.IntParameters.x != 0 ? (byte)1 : (byte)0,
-        });
+
+        arguments.Key = node.Key;
+        arguments.HasKey = node.IntParameters.x != 0 ? (byte)1 : (byte)0;
+        Sources.TrySet(
+            context.Resolve(node.SetSourceTarget),
+            node.SetSourceId,
+            in arguments);
         return true;
     }
 
@@ -783,6 +810,189 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         return CompiledExpressionEvaluator.TryEvaluateConditions(ref expression, in context, in Sources);
     }
 
+    private bool TryQueryUnits(
+        Entity entity,
+        in StateScriptNodeDefinition node,
+        in UnitSourceContext context,
+        ref StateScriptGraphDefinitionBlob graph)
+    {
+        if (node.ExpressionCount != 5 ||
+            !TryEvaluateValue(ref graph, node.ExpressionStart, in context, out UnitSourceValue centerValue) ||
+            !centerValue.TryGetFloat3(out float3 center) ||
+            !TryEvaluateValue(ref graph, node.ExpressionStart + 1, in context, out UnitSourceValue directionValue) ||
+            !directionValue.TryGetFloat2(out float2 direction) ||
+            !TryEvaluateValue(ref graph, node.ExpressionStart + 2, in context, out UnitSourceValue sizeValue) ||
+            !sizeValue.TryGetFloat2(out float2 size) ||
+            !TryEvaluateNumber(ref graph, node.ExpressionStart + 3, in context, out float radius) ||
+            !TryEvaluateNumber(ref graph, node.ExpressionStart + 4, in context, out float angle))
+        {
+            return false;
+        }
+
+        UnitQueryShape shape = (UnitQueryShapeType)node.IntParameters.x switch
+        {
+            UnitQueryShapeType.WholeWorld => new UnitQueryShape { Type = UnitQueryShapeType.WholeWorld },
+            UnitQueryShapeType.Circle => UnitQueryShape.Circle(center, radius),
+            UnitQueryShapeType.AxisAlignedRect => UnitQueryShape.AxisAlignedRect(center, size),
+            UnitQueryShapeType.ForwardRect => UnitQueryShape.ForwardRect(center, direction, size.x, size.y),
+            UnitQueryShapeType.Cone => UnitQueryShape.Cone(center, direction, radius, angle),
+            _ => default,
+        };
+
+        QueryResults.Clear();
+        StateScriptUnitQueryVisitor visitor = new()
+        {
+            Results = QueryResults,
+            Self = entity,
+            UnitDataId = node.IntParameters.z,
+            ExcludeSelf = node.FloatParameters0.y > 0.5f ? (byte)1 : (byte)0,
+        };
+        QueryTree.Query(
+            in shape,
+            (UnitFactionMask)node.IntParameters.y,
+            ref visitor,
+            includeDead: node.FloatParameters0.z <= 0.5f);
+
+        SortQueryResults(
+            (StateScriptUnitQuerySortMode)(int)node.FloatParameters0.x,
+            center,
+            ref QueryResults);
+        int resultCount = node.IntParameters.w > 0
+            ? math.min(node.IntParameters.w, QueryResults.Length)
+            : QueryResults.Length;
+        return WriteQueryResults(entity, node.Text, resultCount);
+    }
+
+    private bool WriteQueryResults(Entity entity, in FixedString128Bytes resultKey, int resultCount)
+    {
+        if (!TryBuildResultKey(resultKey, "count", out FixedString128Bytes countKey))
+            return false;
+
+        int oldCount = 0;
+        UnitSourceArguments getCountArguments = default;
+        getCountArguments.Values.Add(UnitSourceValue.FromString(in countKey));
+        if (Sources.TryGet(
+                entity,
+                UnitSourceId.UnitVariablesGetNumber,
+                in getCountArguments,
+                out UnitSourceValue oldCountValue))
+        {
+            oldCountValue.TryGetInt(out oldCount);
+        }
+
+        for (int index = resultCount; index < oldCount; index++)
+        {
+            if (!TryBuildResultKey(resultKey, index, out FixedString128Bytes staleKey))
+                return false;
+            UnitSourceArguments removeArguments = default;
+            removeArguments.Values.Add(UnitSourceValue.FromString(in staleKey));
+            Sources.TrySet(entity, UnitSourceId.UnitVariablesRemove, in removeArguments);
+        }
+
+        for (int index = 0; index < resultCount; index++)
+        {
+            if (!TryBuildResultKey(resultKey, index, out FixedString128Bytes entryKey) ||
+                !SetVariable(entity, entryKey, UnitSourceValue.FromEntity(QueryResults[index].Entity)))
+            {
+                return false;
+            }
+        }
+        return SetVariable(entity, countKey, UnitSourceValue.FromInt(resultCount));
+    }
+
+    private bool SetVariable(
+        Entity entity,
+        in FixedString128Bytes key,
+        in UnitSourceValue value)
+    {
+        UnitSourceArguments arguments = default;
+        arguments.Key = key;
+        arguments.HasKey = 1;
+        arguments.Values.Add(value);
+        return Sources.TrySet(entity, UnitSourceId.UnitVariablesSet, in arguments);
+    }
+
+    private static bool TryBuildResultKey(
+        in FixedString128Bytes prefix,
+        int index,
+        out FixedString128Bytes key)
+    {
+        key = prefix;
+        return key.Append('.') == FormatError.None &&
+               key.Append(index) == FormatError.None;
+    }
+
+    private static bool TryBuildResultKey(
+        in FixedString128Bytes prefix,
+        in FixedString32Bytes suffix,
+        out FixedString128Bytes key)
+    {
+        key = prefix;
+        return key.Append('.') == FormatError.None &&
+               key.Append(suffix) == FormatError.None;
+    }
+
+    private static void SortQueryResults(
+        StateScriptUnitQuerySortMode sortMode,
+        float3 center,
+        ref NativeList<UnitQueryHit> results)
+    {
+        if (sortMode == StateScriptUnitQuerySortMode.None)
+            return;
+
+        for (int index = 1; index < results.Length; index++)
+        {
+            UnitQueryHit current = results[index];
+            float currentDistance = math.lengthsq(current.Position.xy - center.xy);
+            int insertIndex = index;
+            while (insertIndex > 0)
+            {
+                UnitQueryHit previous = results[insertIndex - 1];
+                float previousDistance = math.lengthsq(previous.Position.xy - center.xy);
+                int comparison = currentDistance.CompareTo(previousDistance);
+                if (sortMode == StateScriptUnitQuerySortMode.DistanceDescending)
+                    comparison = -comparison;
+                if (comparison == 0)
+                {
+                    comparison = current.Entity.Index.CompareTo(previous.Entity.Index);
+                    if (comparison == 0)
+                        comparison = current.Entity.Version.CompareTo(previous.Entity.Version);
+                }
+                if (comparison >= 0)
+                    break;
+
+                results[insertIndex] = previous;
+                insertIndex--;
+            }
+            results[insertIndex] = current;
+        }
+    }
+
+    private struct StateScriptUnitQueryVisitor : IUnitQueryVisitor
+    {
+        public NativeList<UnitQueryHit> Results;
+        public Entity Self;
+        public int UnitDataId;
+        public byte ExcludeSelf;
+
+        public bool Visit(in UnitQueryEntry entry)
+        {
+            if (ExcludeSelf != 0 && entry.Entity == Self ||
+                UnitDataId >= 0 && entry.UnitDataId != UnitDataId)
+            {
+                return true;
+            }
+
+            Results.Add(new UnitQueryHit
+            {
+                Entity = entry.Entity,
+                Position = entry.Position,
+                Faction = entry.Faction,
+            });
+            return true;
+        }
+    }
+
     private static bool Emit(
         ref StateScriptGraphDefinitionBlob graph,
         int nodeIndex,
@@ -816,35 +1026,6 @@ public partial struct StateScriptEvaluationJob : IJobEntity
     private static bool Approximately(float left, float right)
     {
         return math.abs(left - right) <= math.max(0.000001f * math.max(math.abs(left), math.abs(right)), 1.121039E-44f);
-    }
-}
-
-[BurstCompile]
-public partial struct StateScriptSourceCommandJob : IJobEntity
-{
-    public UnitSourceDispatcher Sources;
-
-    private void Execute(
-        ref DynamicBuffer<StateScriptSourceCommandElement> commands,
-        ref DynamicBuffer<StateScriptSourceCommandArgumentElement> commandArguments)
-    {
-        for (int commandIndex = 0; commandIndex < commands.Length; commandIndex++)
-        {
-            StateScriptSourceCommandElement command = commands[commandIndex];
-            if (command.ArgumentStart < 0 ||
-                command.ArgumentCount > 0 && command.ArgumentStart + command.ArgumentCount > commandArguments.Length)
-                continue;
-            UnitSourceArguments arguments = default;
-            if (command.ArgumentCount > arguments.Values.Capacity)
-                continue;
-            for (int argumentIndex = 0; argumentIndex < command.ArgumentCount; argumentIndex++)
-                arguments.Values.Add(commandArguments[command.ArgumentStart + argumentIndex].Value);
-            arguments.Key = command.Key;
-            arguments.HasKey = command.HasKey;
-            Sources.TrySet(command.TargetEntity, command.SourceId, in arguments);
-        }
-        commands.Clear();
-        commandArguments.Clear();
     }
 }
 

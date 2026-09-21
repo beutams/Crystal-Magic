@@ -219,8 +219,8 @@ namespace CrystalMagic.UI
                 snapshot.CurrentSkillSlotIndex = currentSkill.CurrentSlotIndex;
             }
 
-            if (entityManager.HasComponent<PlayerSkillSelectionComponent>(player))
-                snapshot.SelectedSkillChainIndex = entityManager.GetComponentData<PlayerSkillSelectionComponent>(player).CurrentChainIndex;
+            if (entityManager.HasComponent<PlayerInputComponent>(player))
+                snapshot.SelectedSkillChainIndex = entityManager.GetComponentData<PlayerInputComponent>(player).SkillChainIndex;
 
             if (entityManager.HasComponent<PlayerPropCooldownComponent>(player))
                 snapshot.PropCooldownRemaining = entityManager.GetComponentData<PlayerPropCooldownComponent>(player).SharedCooldownRemaining;

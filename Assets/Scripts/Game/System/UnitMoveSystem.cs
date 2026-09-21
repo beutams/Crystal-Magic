@@ -6,6 +6,7 @@ using Unity.Physics;
 using Unity.Transforms;
 
 [BurstCompile]
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(UnitAvoidanceSystem))]
 [UpdateBefore(typeof(VfxArrivalSystem))]
@@ -148,6 +149,7 @@ partial struct UnitMoveSystem : ISystem
 }
 
 [BurstCompile]
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(UnitMoveSystem))]
 [UpdateBefore(typeof(EffectExecutionSystem))]
