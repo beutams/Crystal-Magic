@@ -3,7 +3,6 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 
-[RequireComponent(typeof(UnitFacingAuthoring))]
 public class UnitMoveAuthoring : MonoBehaviour
 {
     class UnitMoveBaker : Baker<UnitMoveAuthoring>
@@ -48,6 +47,8 @@ public struct UnitMoveComponent : IComponentData
     public float2 Direction;
     public float StateMoveMultiplier;
     public float2 Velocity;
+    // 上次移动系统观察到的位置，用于检测物理或其他系统造成的位移。
+    public float3 LastObservedPosition;
     public float2 FrameVelocity;
     public byte HasFrameVelocity;
     // A non-negative value is an externally commanded speed. -1 means use

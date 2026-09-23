@@ -12,28 +12,44 @@ public partial class BehaviorTreeInitSystem : SystemBase
 {
     private BlobAssetReference<BehaviorTreeRuntimeRegistryBlob> _registry;
     private EntityQuery _behaviorTreeQuery;
-    private bool _compileFailed;
 
     protected override void OnCreate()
     {
-        _behaviorTreeQuery = GetEntityQuery(ComponentType.ReadWrite<UnitBehaviorTreeComponent>());
+        _behaviorTreeQuery = GetEntityQuery(
+            ComponentType.ReadWrite<UnitBehaviorTreeComponent>(),
+            ComponentType.ReadOnly<UnitInitializationPendingTag>());
+
+        DataTable<BehaviorTreeData> table = DataComponent.Instance.GetTable<BehaviorTreeData>();
+        if (table == null)
+        {
+            Debug.LogError("[BehaviorTreeInit] BehaviorTreeData table is not loaded.");
+            Enabled = false;
+            return;
+        }
+
+        List<BehaviorTreeData> trees = new(table.GetAll());
+        if (!BehaviorTreeCompiler.TryBuildRegistry(trees, out _registry, out string error))
+        {
+            Debug.LogError($"[BehaviorTreeInit] Failed to compile behavior trees: {error}");
+            Enabled = false;
+            return;
+        }
+
+        Entity registryEntity = EntityManager.CreateEntity(typeof(BehaviorTreeRuntimeRegistryComponent));
+        EntityManager.SetName(registryEntity, "BehaviorTreeRuntimeRegistry");
+        EntityManager.SetComponentData(registryEntity, new BehaviorTreeRuntimeRegistryComponent
+        {
+            Value = _registry,
+        });
     }
 
     protected override void OnUpdate()
     {
-        if (!_registry.IsCreated && !_compileFailed)
-            TryCompileRegistry();
-        if (!_registry.IsCreated)
-            return;
-
         using NativeArray<Entity> entities = _behaviorTreeQuery.ToEntityArray(Allocator.Temp);
         for (int entityIndex = 0; entityIndex < entities.Length; entityIndex++)
         {
             Entity entity = entities[entityIndex];
             UnitBehaviorTreeComponent component = EntityManager.GetComponentData<UnitBehaviorTreeComponent>(entity);
-            if (component.IsInitialized != 0)
-                continue;
-
             component.TreeIndex = -1;
             component.CurrentNodeIndex = -1;
             component.LastStatus = BehaviorNodeStatus.Failure;
@@ -67,7 +83,6 @@ public partial class BehaviorTreeInitSystem : SystemBase
             EntityManager.GetBuffer<BehaviorTreeCommandArgumentElement>(entity).Clear();
             EntityManager.GetBuffer<BehaviorTreeMoveCommandElement>(entity).Clear();
             EntityManager.GetBuffer<BehaviorTreeHitDebugElement>(entity).Clear();
-            component.IsInitialized = 1;
             EntityManager.SetComponentData(entity, component);
         }
     }
@@ -76,27 +91,5 @@ public partial class BehaviorTreeInitSystem : SystemBase
     {
         if (_registry.IsCreated)
             _registry.Dispose();
-    }
-
-    private void TryCompileRegistry()
-    {
-        DataTable<BehaviorTreeData> table = DataComponent.Instance.GetTable<BehaviorTreeData>();
-        if (table == null)
-            return;
-
-        List<BehaviorTreeData> trees = new(table.GetAll());
-        if (!BehaviorTreeCompiler.TryBuildRegistry(trees, out _registry, out string error))
-        {
-            _compileFailed = true;
-            Debug.LogError($"[BehaviorTreeInit] Failed to compile behavior trees: {error}");
-            return;
-        }
-
-        Entity registryEntity = EntityManager.CreateEntity(typeof(BehaviorTreeRuntimeRegistryComponent));
-        EntityManager.SetName(registryEntity, "BehaviorTreeRuntimeRegistry");
-        EntityManager.SetComponentData(registryEntity, new BehaviorTreeRuntimeRegistryComponent
-        {
-            Value = _registry,
-        });
     }
 }

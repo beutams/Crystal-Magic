@@ -37,5 +37,4 @@ public struct UnitBehaviorTreeComponent : IComponentData
     public BehaviorNodeStatus LastStatus;
     public uint TickVersion;
     public BehaviorTreeInitializationError InitializationError;
-    public byte IsInitialized;
 }

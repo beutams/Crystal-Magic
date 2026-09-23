@@ -9,7 +9,6 @@ using Unity.Transforms;
 [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitPostProcessSystemGroup), OrderLast = true)]
 [UpdateAfter(typeof(ServerNetworkEntitySpawnCollectSystem))]
-[UpdateBefore(typeof(DestroyEntitySystem))]
 public partial class ServerNetworkStateCollectSystem : SystemBase
 {
     private uint _lastCollectedFrame = uint.MaxValue;
@@ -31,13 +30,17 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
 
         _frameInterval = frame.frameInterval;
         uint currentFrame = frame.currentFrame;
-        if (_lastCollectedFrame == currentFrame)
-            return;
-
-        _lastCollectedFrame = currentFrame;
         List<NetworkStateData> states = new();
-        CollectStates(states, currentFrame, true);
-        CollectPresentationEvents(states);
+        bool collectFrame = _lastCollectedFrame != currentFrame;
+        if (collectFrame)
+        {
+            _lastCollectedFrame = currentFrame;
+            CollectStates(states, currentFrame, true);
+            CollectPresentationEvents(states);
+        }
+
+        // 实体会在本次 ECS Update 末尾销毁，生命周期消息不能等下一网络帧。
+        CollectDespawnStates(states);
 
         if (states.Count > 0)
         {
@@ -51,7 +54,7 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
                 queue.Enqueue(states[index]);
         }
 
-        if (_snapshotCallbacks.Count == 0)
+        if (!collectFrame || _snapshotCallbacks.Count == 0)
         {
             return;
         }
@@ -82,8 +85,6 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
         CollectProjectileStates(states, onlyDirty);
         CollectPlayerPropCooldownStates(states, currentFrame, onlyDirty);
         CollectPlayerSkillChainStates(states, onlyDirty);
-        if (onlyDirty)
-            CollectDespawnStates(states);
     }
 
     private void CollectPresentationEvents(List<NetworkStateData> states)
@@ -465,11 +466,36 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
 
             bool isDead = EntityManager.HasComponent<UnitDeathComponent>(entity) &&
                           EntityManager.IsComponentEnabled<UnitDeathComponent>(entity);
-            states.Add(new NetworkEntityDespawnStateData
+            if (isDead)
+            {
+                states.Add(new NetworkDeathStateData
+                {
+                    unitId = unitId,
+                    isDead = 1,
+                });
+            }
+
+            if (EntityManager.HasComponent<UnitFacingComponent>(entity))
+            {
+                states.Add(NetworkUnitStateSnapshotUtility.CreateFacingState(
+                    unitId,
+                    EntityManager.GetComponentData<UnitFacingComponent>(entity)));
+            }
+
+            NetworkEntityDespawnStateData despawn = new()
             {
                 unitId = unitId,
                 waitForDeathPresentation = isDead ? (byte)1 : (byte)0,
-            });
+            };
+            if (EntityManager.HasComponent<LocalTransform>(entity))
+            {
+                float3 position = EntityManager.GetComponentData<LocalTransform>(entity).Position;
+                despawn.hasPosition = true;
+                despawn.positionX = position.x;
+                despawn.positionY = position.y;
+                despawn.positionZ = position.z;
+            }
+            states.Add(despawn);
         }
     }
 

@@ -15,7 +15,7 @@ public partial struct UnitInteractableFactionInitializationSystem : ISystem
     public void OnCreate(ref SystemState state)
     {
         _missingFactionQuery = new EntityQueryBuilder(Allocator.Temp)
-            .WithAll<UnitInteractableComponent>()
+            .WithAll<UnitInteractableComponent, UnitInitializationPendingTag>()
             .WithNone<UnitFactionComponent>()
             .Build(ref state);
         state.RequireForUpdate(_missingFactionQuery);

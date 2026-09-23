@@ -27,6 +27,7 @@ public sealed class NetworkMoveStateData : NetworkStateData
             BaseMaxAcceleration = baseMaxAcceleration,
             StateMoveMultiplier = stateMoveMultiplier,
             Velocity = new float2(velocityX, velocityY),
+            LastObservedPosition = new float3(positionX, positionY, positionZ),
             CommandMoveSpeed = -1f,
             NetworkDirty = 0,
         });

@@ -3,7 +3,7 @@ using Unity.Entities;
 
 [WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
-[UpdateBefore(typeof(SkillReleaseSystem))]
+[UpdateBefore(typeof(UnitAvoidanceSystem))]
 [BurstCompile]
 partial struct UnitControlSystem : ISystem
 {

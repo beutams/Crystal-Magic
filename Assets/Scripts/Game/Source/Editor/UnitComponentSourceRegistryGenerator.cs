@@ -351,8 +351,6 @@ public static class UnitComponentSourceRegistryGenerator
     {
         builder.AppendLine("public static class UnitComponentSourceRegistry");
         builder.AppendLine("{");
-        builder.AppendLine("    public const string InteractionRequestKey = \"game.interaction.candidate\";");
-        builder.AppendLine();
         AppendLookup(builder, entries.Where(entry => entry.IsGet), true);
         builder.AppendLine();
         AppendLookup(builder, entries.Where(entry => !entry.IsGet), false);
@@ -383,8 +381,6 @@ public static class UnitComponentSourceRegistryGenerator
                 }
             }
 
-            if (provider.Type == typeof(GameInteractionSource))
-                builder.AppendLine($"            schema.AddInteractionGet(InteractionRequestKey, typeof({TypeName(provider.Attribute.ComponentType)}));");
             builder.AppendLine("        }");
         }
         builder.AppendLine("        return schema.Build();");
@@ -536,14 +532,6 @@ public static class UnitComponentSourceRegistryGenerator
         AppendUpdate(builder, componentLookupTypes, bufferLookupTypes, "ref SystemState state", "ref state");
         AppendTryGet(builder, entries);
         AppendTrySet(builder, entries);
-        builder.AppendLine("    public bool TryGetInteraction(out InteractionRequestSnapshot request)");
-        builder.AppendLine("    {");
-        builder.AppendLine("        request = default;");
-        builder.AppendLine($"        if (!{ComponentFieldName(typeof(InteractionCandidateComponent))}.TryGetComponent({SingletonEntityFieldName(typeof(InteractionCandidateComponent))}, out InteractionCandidateComponent candidate))");
-        builder.AppendLine("            return false;");
-        builder.AppendLine("        return GameInteractionSource.TryGetInteraction(in candidate, out request);");
-        builder.AppendLine("    }");
-        builder.AppendLine();
         builder.AppendLine("}");
     }
 

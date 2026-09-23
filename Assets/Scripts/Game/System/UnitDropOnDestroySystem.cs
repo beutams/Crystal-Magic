@@ -7,9 +7,16 @@ using Unity.Transforms;
 
 [WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitPostProcessSystemGroup))]
-[UpdateBefore(typeof(DestroyEntitySystem))]
+[UpdateAfter(typeof(UnitDeathFinalizeSystem))]
 partial class UnitDropOnDestroySystem : SystemBase
 {
+    private const float MinScatterRadius = 0.35f;
+    private const float MaxScatterRadius = 1.35f;
+    private const float MinScatterDuration = 0.35f;
+    private const float MaxScatterDuration = 0.65f;
+    private const float MinArcHeight = 0.4f;
+    private const float MaxArcHeight = 0.85f;
+
     protected override void OnUpdate()
     {
         foreach ((EnabledRefRO<DestroyEntityFlag> destroyFlag,
@@ -45,7 +52,22 @@ partial class UnitDropOnDestroySystem : SystemBase
                 if (quantity <= 0)
                     continue;
 
-                WorldDropSpawnUtility.TrySpawnDrop(EntityManager, entry.DropType, entry.ItemId, quantity, transform.ValueRO.Position);
+                float3 startPosition = transform.ValueRO.Position;
+                float angle = random.NextFloat(0f, math.PI * 2f);
+                math.sincos(angle, out float sin, out float cos);
+                float radius = math.lerp(MinScatterRadius, MaxScatterRadius, math.sqrt(random.NextFloat()));
+                float3 targetPosition = startPosition + new float3(cos * radius, sin * radius, 0f);
+                float duration = random.NextFloat(MinScatterDuration, MaxScatterDuration);
+                float arcHeight = random.NextFloat(MinArcHeight, MaxArcHeight);
+                WorldDropSpawnUtility.TrySpawnScatteredDrop(
+                    EntityManager,
+                    entry.DropType,
+                    entry.ItemId,
+                    quantity,
+                    startPosition,
+                    targetPosition,
+                    duration,
+                    arcHeight);
             }
         }
     }

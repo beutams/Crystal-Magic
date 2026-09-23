@@ -11,7 +11,6 @@ public sealed class UnitSkillReleaseAuthoring : MonoBehaviour
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             AddComponent<UnitSkillReleaseComponent>(entity);
-            AddBuffer<SkillReleaseRequest>(entity);
         }
     }
 }
@@ -37,8 +36,8 @@ public static class UnitSkillReleaseSource
     }
 }
 
-// This is a raw release request. SkillReleaseSystem creates the immutable release snapshot.
-public struct SkillReleaseRequest : IBufferElementData
+// Synchronous input used while resolving a state-script skill command.
+public struct SkillReleaseRequest
 {
     public int SkillId;
     public Entity OriginEntity;

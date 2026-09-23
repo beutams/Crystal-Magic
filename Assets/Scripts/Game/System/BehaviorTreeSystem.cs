@@ -105,6 +105,7 @@ internal struct BehaviorExecutionFrame
 }
 
 [BurstCompile]
+[WithNone(typeof(UnitInitializationPendingTag))]
 [WithNone(typeof(UnitDeathComponent))]
 public partial struct BehaviorTreeEvaluationJob : IJobEntity
 {
@@ -149,8 +150,7 @@ public partial struct BehaviorTreeEvaluationJob : IJobEntity
         moveCommands.Clear();
         hitDebugShapes.Clear();
 
-        if (component.IsInitialized == 0 ||
-            component.InitializationError != BehaviorTreeInitializationError.None ||
+        if (component.InitializationError != BehaviorTreeInitializationError.None ||
             component.TreeIndex < 0 ||
             component.TreeIndex >= Registry.Value.Trees.Length)
         {
@@ -1032,6 +1032,7 @@ public partial struct BehaviorTreeEvaluationJob : IJobEntity
 }
 
 [BurstCompile]
+[WithNone(typeof(UnitInitializationPendingTag))]
 public partial struct BehaviorTreeSourceCommandJob : IJobEntity
 {
     public UnitSourceDispatcher Sources;
@@ -1069,6 +1070,7 @@ public partial struct BehaviorTreeSourceCommandJob : IJobEntity
 }
 
 [BurstCompile]
+[WithNone(typeof(UnitInitializationPendingTag))]
 public partial struct BehaviorTreeMoveCommandJob : IJobEntity
 {
     private void Execute(

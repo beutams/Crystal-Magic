@@ -12,7 +12,7 @@ namespace CrystalMagic.Game.Config
         public int StartingGold = 100;
 
         [EditorLabel("Money Icon Path")]
-        public string MoneyIconPath = "Assets/Res/Sprites/Buy.png";
+        public string MoneyIconPath = "Assets/Res/Sprites/UISprites/Wood UI/Sprites/Icons/Gold Coin.png";
 
         [EditorLabel("Initial Backpack Size")]
         public int InitialBackpackSize = 20;

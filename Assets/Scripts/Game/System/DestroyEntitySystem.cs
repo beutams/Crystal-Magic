@@ -1,34 +1,26 @@
-using Unity.Burst;
+using Unity.Collections;
 using Unity.Entities;
 
-[BurstCompile]
-[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
-[UpdateInGroup(typeof(UnitPostProcessSystemGroup), OrderLast = true)]
-[UpdateBefore(typeof(EndSimulationEntityCommandBufferSystem))]
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation |
+                   WorldSystemFilterFlags.ServerSimulation |
+                   WorldSystemFilterFlags.ClientSimulation)]
+[UpdateInGroup(typeof(GamePresentationSystemGroup), OrderLast = true)]
 partial struct DestroyEntitySystem : ISystem
 {
-    [BurstCompile]
+    private EntityQuery _destroyQuery;
+
     public void OnCreate(ref SystemState state)
     {
-        state.RequireForUpdate<EndSimulationEntityCommandBufferSystem.Singleton>();
+        _destroyQuery = state.GetEntityQuery(ComponentType.ReadOnly<DestroyEntityFlag>());
     }
 
-    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        EntityCommandBuffer ecb = SystemAPI
-            .GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>()
-            .CreateCommandBuffer(state.WorldUnmanaged);
-
-        foreach ((EnabledRefRO<DestroyEntityFlag> destroyFlag, Entity entity) in
-                 SystemAPI.Query<EnabledRefRO<DestroyEntityFlag>>()
-                     .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)
-                     .WithEntityAccess())
+        using NativeArray<Entity> entities = _destroyQuery.ToEntityArray(Allocator.Temp);
+        for (int index = 0; index < entities.Length; index++)
         {
-            if (!destroyFlag.ValueRO)
-                continue;
-
-            ecb.DestroyEntity(entity);
+            if (state.EntityManager.Exists(entities[index]))
+                state.EntityManager.DestroyEntity(entities[index]);
         }
     }
 }

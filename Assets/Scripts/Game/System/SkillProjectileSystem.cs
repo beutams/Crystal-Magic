@@ -6,7 +6,6 @@ using Unity.Transforms;
 
 [WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
-[UpdateAfter(typeof(SkillProjectileSpawnSystem))]
 public partial struct SkillProjectileSystem : ISystem
 {
     private UnitSourceDispatcher _sources;

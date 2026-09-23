@@ -75,6 +75,7 @@ namespace CrystalMagic.Editor.Unit
         private static JsonSerializerSettings JsonSettings => new()
         {
             Formatting = Formatting.Indented,
+            TypeNameHandling = TypeNameHandling.Auto,
             NullValueHandling = NullValueHandling.Ignore,
             Converters = new List<JsonConverter>
             {
@@ -940,7 +941,7 @@ namespace CrystalMagic.Editor.Unit
             }
 
             UnitStateScriptComponent component = entityManager.GetComponentData<UnitStateScriptComponent>(_selectedRuntimeEntity);
-            if (component.IsInitialized == 0 ||
+            if (entityManager.HasComponent<UnitInitializationPendingTag>(_selectedRuntimeEntity) ||
                 !entityManager.HasBuffer<StateScriptGraphStateElement>(_selectedRuntimeEntity) ||
                 !entityManager.HasBuffer<StateScriptNodeStateElement>(_selectedRuntimeEntity))
                 return null;
@@ -1035,6 +1036,7 @@ namespace CrystalMagic.Editor.Unit
         private static readonly ComparatorFactory s_comparatorFactory = CreateComparatorFactory();
         private static readonly JsonSerializerSettings s_jsonSettings = new()
         {
+            TypeNameHandling = TypeNameHandling.Auto,
             NullValueHandling = NullValueHandling.Ignore,
             Converters = new List<JsonConverter>
             {
@@ -1142,6 +1144,10 @@ namespace CrystalMagic.Editor.Unit
                     return IsConditionSupported(monitor.Condition, targetSchema);
                 case RequestSkillActionNodeData requestSkill:
                     return IsRequestSkillSupported(requestSkill, targetPrefab, targetSchema);
+                case QueryUnitsActionNodeData queryUnits:
+                    return IsQueryUnitsSupported(queryUnits, targetPrefab, targetSchema);
+                case ExecuteEffectActionNodeData executeEffect:
+                    return IsExecuteEffectSupported(executeEffect, targetSchema);
                 case TimerStateScriptNodeData timer:
                     return IsTimerSupported(timer, targetSchema);
                 case NumberMonitorStateScriptNodeData numberMonitor:
@@ -1208,6 +1214,43 @@ namespace CrystalMagic.Editor.Unit
             return timer != null &&
                    TryGetExpressionCategory(timer.Duration, schema, 0, out UnitValueCategory category) &&
                    category == UnitValueCategory.Number;
+        }
+
+        private static bool IsQueryUnitsSupported(
+            QueryUnitsActionNodeData query,
+            GameObject targetPrefab,
+            UnitSourceSchema schema)
+        {
+            return query != null &&
+                   targetPrefab != null &&
+                   targetPrefab.GetComponentInChildren<UnitVariableAuthoring>(true) != null &&
+                   TryGetExpressionCategory(query.Center, schema, 0, out UnitValueCategory centerCategory) &&
+                   centerCategory == UnitValueCategory.Float3 &&
+                   TryGetExpressionCategory(query.Direction, schema, 0, out UnitValueCategory directionCategory) &&
+                   directionCategory == UnitValueCategory.Float2 &&
+                   TryGetExpressionCategory(query.Size, schema, 0, out UnitValueCategory sizeCategory) &&
+                   sizeCategory == UnitValueCategory.Float2 &&
+                   TryGetExpressionCategory(query.Radius, schema, 0, out UnitValueCategory radiusCategory) &&
+                   radiusCategory == UnitValueCategory.Number &&
+                   TryGetExpressionCategory(query.Angle, schema, 0, out UnitValueCategory angleCategory) &&
+                   angleCategory == UnitValueCategory.Number;
+        }
+
+        private static bool IsExecuteEffectSupported(
+            ExecuteEffectActionNodeData executeEffect,
+            UnitSourceSchema schema)
+        {
+            return executeEffect != null &&
+                   TryGetExpressionCategory(executeEffect.TargetEntity, schema, 0, out UnitValueCategory targetCategory) &&
+                   targetCategory == UnitValueCategory.Entity &&
+                   TryGetExpressionCategory(executeEffect.OtherEntity, schema, 0, out UnitValueCategory otherCategory) &&
+                   otherCategory == UnitValueCategory.Entity &&
+                   TryGetExpressionCategory(executeEffect.Position, schema, 0, out UnitValueCategory positionCategory) &&
+                   positionCategory == UnitValueCategory.Float3 &&
+                   TryGetExpressionCategory(executeEffect.TriggerValue, schema, 0, out UnitValueCategory triggerCategory) &&
+                   triggerCategory == UnitValueCategory.Number &&
+                   TryGetExpressionCategory(executeEffect.SourceSkillId, schema, 0, out UnitValueCategory skillCategory) &&
+                   skillCategory == UnitValueCategory.Number;
         }
 
         private static bool IsNumberMonitorSupported(NumberMonitorStateScriptNodeData numberMonitor, UnitSourceSchema schema)
@@ -1417,11 +1460,32 @@ namespace CrystalMagic.Editor.Unit
                     break;
 
                 case RequestInteractionActionNodeData requestInteraction:
-                    CollectInteractionInput(node.Guid, requestInteraction.Interaction);
+                    CollectExpression(node.Guid, requestInteraction.Target, 0);
+                    break;
+
+                case CompleteInteractionActionNodeData completeInteraction:
+                    CollectExpression(node.Guid, completeInteraction.Result, 0);
                     break;
 
                 case PublishGameEventStateScriptNodeData publishGameEvent:
                     CollectExpression(node.Guid, publishGameEvent.Reference, 0);
+                    break;
+
+                case QueryUnitsActionNodeData queryUnits:
+                    TrackComponent(node.Guid, typeof(UnitVariableComponent));
+                    CollectExpression(node.Guid, queryUnits.Center, 0);
+                    CollectExpression(node.Guid, queryUnits.Direction, 0);
+                    CollectExpression(node.Guid, queryUnits.Size, 0);
+                    CollectExpression(node.Guid, queryUnits.Radius, 0);
+                    CollectExpression(node.Guid, queryUnits.Angle, 0);
+                    break;
+
+                case ExecuteEffectActionNodeData executeEffect:
+                    CollectExpression(node.Guid, executeEffect.TargetEntity, 0);
+                    CollectExpression(node.Guid, executeEffect.OtherEntity, 0);
+                    CollectExpression(node.Guid, executeEffect.Position, 0);
+                    CollectExpression(node.Guid, executeEffect.TriggerValue, 0);
+                    CollectExpression(node.Guid, executeEffect.SourceSkillId, 0);
                     break;
 
                 case TimerStateScriptNodeData timer:
@@ -1462,20 +1526,6 @@ namespace CrystalMagic.Editor.Unit
             CollectExpression(nodeGuid, input.TargetEntity, 0);
         }
 
-        private void CollectInteractionInput(string nodeGuid, InteractionRequestInput interaction)
-        {
-            if (interaction == null)
-                return;
-
-            if (interaction.Source == InteractionRequestSource.Getter)
-            {
-                TrackSource(nodeGuid, interaction.GetterKey);
-                return;
-            }
-
-            CollectExpression(nodeGuid, interaction.Target, 0);
-        }
-
         private void CollectExpression(string nodeGuid, ValueExpression expression, int depth)
         {
             if (expression == null || depth >= MaxExpressionDepth)
@@ -1508,8 +1558,6 @@ namespace CrystalMagic.Editor.Unit
                 return;
             }
 
-            if (s_sourceSchema.TryGetInteraction(sourceKey, out InteractionRequestGetSchemaEntry interactionEntry))
-                TrackComponent(nodeGuid, interactionEntry.ComponentType);
         }
 
         private void TrackComponent(string nodeGuid, Type componentType)

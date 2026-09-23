@@ -28,6 +28,12 @@ public enum StateScriptNodeRuntimeType : byte
     RequestInteraction,
     SpawnUnit,
     QueryUnits,
+    ExecuteEffect,
+    DestroySelf,
+    CompleteInteraction,
+    AcknowledgeInteraction,
+    CollectInteraction,
+    StartNpcInteraction,
     Timer,
     Keep,
     Monitor,
@@ -42,6 +48,12 @@ public enum StateScriptManagedCommandType : byte
     PublishGameEvent,
     RequestInteraction,
     SpawnUnit,
+    ExecuteEffect,
+    DestroySelf,
+    CompleteInteraction,
+    AcknowledgeInteraction,
+    CollectInteraction,
+    StartNpcInteraction,
     StartAddition,
     StopAddition,
 }
@@ -188,6 +200,7 @@ public struct StateScriptManagedCommandElement : IBufferElementData
     public float3 Position;
     public Entity TargetEntity;
     public UnitSourceValue Value;
+    public EffectRequestContext EffectContext;
 }
 
 [InternalBufferCapacity(0)]

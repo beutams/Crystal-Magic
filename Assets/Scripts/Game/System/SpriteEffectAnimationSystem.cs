@@ -7,7 +7,7 @@ using Unity.Transforms;
 using UnityEngine;
 
 [WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation)]
-[UpdateInGroup(typeof(ClientPresentationSystemGroup))]
+[UpdateInGroup(typeof(GamePresentationSystemGroup))]
 [UpdateAfter(typeof(SkillProjectileSystem))]
 [UpdateBefore(typeof(DestroyEntitySystem))]
 public partial class SpriteEffectAnimationSystem : SystemBase

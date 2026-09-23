@@ -8,17 +8,10 @@ public sealed class NetworkPlayerSkillChainStateData : NetworkStateData
 
     public override void Apply(NetworkStateApplyContext context)
     {
-        if (!context.TryGetEntity(unitId, out Entity entity))
+        // 远端玩家没有本地输入职能，状态同步不能为其补回输入组件。
+        if (!context.TryGetEntity(unitId, out Entity entity) ||
+            !context.EntityManager.HasComponent<PlayerInputComponent>(entity))
             return;
-
-        if (!context.EntityManager.HasComponent<PlayerInputComponent>(entity))
-        {
-            context.EntityManager.AddComponentData(entity, new PlayerInputComponent
-            {
-                SkillChainIndex = skillChainIndex,
-            });
-            return;
-        }
 
         PlayerInputComponent input = context.EntityManager.GetComponentData<PlayerInputComponent>(entity);
         input.SkillChainIndex = skillChainIndex;

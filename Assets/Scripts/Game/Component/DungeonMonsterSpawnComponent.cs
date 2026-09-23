@@ -6,4 +6,6 @@ public struct DungeonMonsterSpawnComponent : IComponentData
     public int RegionId;
     public int SquadId;
     public byte IsBoss;
+    public byte CountsAsGuard;
+    public byte CountsAsPatrol;
 }

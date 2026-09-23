@@ -28,6 +28,10 @@ partial struct UnitQueryBuildSystem : ISystem
                 ComponentType.ReadOnly<LocalTransform>(),
                 ComponentType.ReadOnly<UnitFactionComponent>(),
             },
+            None = new[]
+            {
+                ComponentType.ReadOnly<UnitInitializationPendingTag>(),
+            },
         });
 
         _treeEntity = state.EntityManager.CreateEntity();

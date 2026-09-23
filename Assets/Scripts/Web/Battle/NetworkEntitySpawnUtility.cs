@@ -189,15 +189,20 @@ namespace Server
                     entityInfo.interactionEnabled = interactable.IsEnabled != 0;
                 }
 
-                if (entityManager.HasComponent<DungeonExitComponent>(entity))
+                if (entityManager.HasComponent<DropScatterComponent>(entity))
                 {
-                    DungeonExitComponent exit = entityManager.GetComponentData<DungeonExitComponent>(entity);
-                    entityInfo.hasExitData = true;
-                    entityInfo.exitRegionId = exit.RegionId;
-                    entityInfo.exitTargetThemeKey = exit.TargetThemeId;
-                    entityInfo.exitTargetFloor = exit.TargetFloor;
-                    entityInfo.exitRequiresRoomClear = exit.RequiresRoomClear != 0;
-                    entityInfo.exitIsOpen = exit.IsOpen != 0;
+                    DropScatterComponent scatter = entityManager.GetComponentData<DropScatterComponent>(entity);
+                    entityInfo.hasDropScatter = true;
+                    entityInfo.dropScatterStartX = scatter.StartPosition.x;
+                    entityInfo.dropScatterStartY = scatter.StartPosition.y;
+                    entityInfo.dropScatterStartZ = scatter.StartPosition.z;
+                    entityInfo.dropScatterTargetX = scatter.TargetPosition.x;
+                    entityInfo.dropScatterTargetY = scatter.TargetPosition.y;
+                    entityInfo.dropScatterTargetZ = scatter.TargetPosition.z;
+                    entityInfo.dropScatterDurationSeconds = scatter.DurationSeconds;
+                    entityInfo.dropScatterElapsedSeconds = scatter.ElapsedSeconds;
+                    entityInfo.dropScatterArcHeight = scatter.ArcHeight;
+                    entityInfo.dropScatterLanded = scatter.IsLanded != 0;
                 }
 
                 if (entityManager.HasComponent<TreasureComponent>(entity))
@@ -302,18 +307,6 @@ namespace Server
                 });
             }
 
-            if (entityInfo.hasExitData)
-            {
-                SetOrAddComponent(entityManager, entity, new DungeonExitComponent
-                {
-                    RegionId = entityInfo.exitRegionId,
-                    TargetThemeId = entityInfo.exitTargetThemeKey,
-                    TargetFloor = Mathf.Max(1, entityInfo.exitTargetFloor),
-                    RequiresRoomClear = entityInfo.exitRequiresRoomClear ? (byte)1 : (byte)0,
-                    IsOpen = entityInfo.exitIsOpen ? (byte)1 : (byte)0,
-                });
-            }
-
             if (entityInfo.hasTreasureData)
             {
                 SetOrAddComponent(entityManager, entity, new TreasureComponent
@@ -367,6 +360,36 @@ namespace Server
                     IsEnabled = entityInfo.interactionEnabled ? (byte)1 : (byte)0,
                 });
             }
+
+            if (entityInfo.hasDropScatter)
+            {
+                DropScatterComponent scatter = new()
+                {
+                    StartPosition = new float3(
+                        entityInfo.dropScatterStartX,
+                        entityInfo.dropScatterStartY,
+                        entityInfo.dropScatterStartZ),
+                    TargetPosition = new float3(
+                        entityInfo.dropScatterTargetX,
+                        entityInfo.dropScatterTargetY,
+                        entityInfo.dropScatterTargetZ),
+                    DurationSeconds = math.max(0f, entityInfo.dropScatterDurationSeconds),
+                    ElapsedSeconds = math.max(0f, entityInfo.dropScatterElapsedSeconds),
+                    ArcHeight = math.max(0f, entityInfo.dropScatterArcHeight),
+                    IsLanded = entityInfo.dropScatterLanded ? (byte)1 : (byte)0,
+                };
+                SetOrAddComponent(entityManager, entity, scatter);
+                if (scatter.IsLanded != 0)
+                {
+                    SetOrAddLocalTransform(
+                        entityManager,
+                        entity,
+                        new Vector3(
+                            scatter.TargetPosition.x,
+                            scatter.TargetPosition.y,
+                            scatter.TargetPosition.z));
+                }
+            }
         }
 
         private static void EnqueueSpawnInfo(EntityManager entityManager, NetworkEntitySpawnInfo entityInfo)
@@ -411,17 +434,22 @@ namespace Server
                 interactionVariant = source.interactionVariant,
                 interactionRangeSq = source.interactionRangeSq,
                 interactionEnabled = source.interactionEnabled,
+                hasDropScatter = source.hasDropScatter,
+                dropScatterStartX = source.dropScatterStartX,
+                dropScatterStartY = source.dropScatterStartY,
+                dropScatterStartZ = source.dropScatterStartZ,
+                dropScatterTargetX = source.dropScatterTargetX,
+                dropScatterTargetY = source.dropScatterTargetY,
+                dropScatterTargetZ = source.dropScatterTargetZ,
+                dropScatterDurationSeconds = source.dropScatterDurationSeconds,
+                dropScatterElapsedSeconds = source.dropScatterElapsedSeconds,
+                dropScatterArcHeight = source.dropScatterArcHeight,
+                dropScatterLanded = source.dropScatterLanded,
                 hasMonsterSpawnData = source.hasMonsterSpawnData,
                 monsterSaveId = source.monsterSaveId,
                 monsterRegionId = source.monsterRegionId,
                 monsterSquadId = source.monsterSquadId,
                 monsterIsBoss = source.monsterIsBoss,
-                hasExitData = source.hasExitData,
-                exitRegionId = source.exitRegionId,
-                exitTargetThemeKey = source.exitTargetThemeKey,
-                exitTargetFloor = source.exitTargetFloor,
-                exitRequiresRoomClear = source.exitRequiresRoomClear,
-                exitIsOpen = source.exitIsOpen,
                 hasTreasureData = source.hasTreasureData,
                 treasureRegionId = source.treasureRegionId,
                 treasureRandomSeed = source.treasureRandomSeed,

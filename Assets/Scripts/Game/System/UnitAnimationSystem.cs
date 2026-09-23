@@ -7,7 +7,7 @@ using Unity.Mathematics;
 using UnityEngine;
 
 [WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation)]
-[UpdateInGroup(typeof(ClientPresentationSystemGroup))]
+[UpdateInGroup(typeof(GamePresentationSystemGroup))]
 [UpdateAfter(typeof(StateScriptSystem))]
 partial class UnitAnimationSystem : SystemBase
 {

@@ -38,3 +38,39 @@ public struct TreasureComponent : IComponentData
     public byte IsOpened;
     public byte NetworkDirty;
 }
+
+[UnitSourceProvider(typeof(TreasureComponent), typeof(DungeonTreasureAuthoring))]
+public static class TreasureSource
+{
+    [UnitSourceGet(0, "unit.treasure.opened", UnitValueCategory.Bool)]
+    public static bool TryGet(
+        int operation,
+        in TreasureComponent value,
+        in UnitSourceArguments arguments,
+        out UnitSourceValue result)
+    {
+        result = operation == 0
+            ? UnitSourceValue.FromBool(value.IsOpened != 0)
+            : UnitSourceValue.None;
+        return result.Type != UnitValueType.None;
+    }
+
+    [UnitSourceSet(0, "unit.treasure.setOpened", UnitValueCategory.Bool,
+        ParameterNames = new[] { "Opened" })]
+    public static bool TrySet(
+        int operation,
+        ref TreasureComponent value,
+        in UnitSourceArguments arguments)
+    {
+        if (operation != 0 || !arguments.TryGetBool(0, out bool opened))
+            return false;
+
+        byte nextValue = opened ? (byte)1 : (byte)0;
+        if (value.IsOpened == nextValue)
+            return true;
+
+        value.IsOpened = nextValue;
+        value.NetworkDirty = 1;
+        return true;
+    }
+}

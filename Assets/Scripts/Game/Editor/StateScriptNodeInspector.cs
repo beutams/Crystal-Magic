@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CrystalMagic.Editor.EffectGraph;
 using CrystalMagic.Game.Data;
 using UnityEditor;
 using UnityEngine;
@@ -86,12 +87,47 @@ namespace CrystalMagic.Editor.Unit
                 return;
             }
 
+            if (node is CompleteInteractionActionNodeData completeInteraction)
+            {
+                EditorGUI.BeginChangeCheck();
+                completeInteraction.ResultCode = (InteractionResultCode)EditorGUILayout.EnumPopup(
+                    "Result Code",
+                    completeInteraction.ResultCode);
+                completeInteraction.Result ??= CompleteInteractionActionNodeData.CreateDefaultResultExpression();
+                EditorGUILayout.LabelField("Result", EditorStyles.miniBoldLabel);
+                StateScriptValueExpressionDrawer.Draw(
+                    completeInteraction.Result,
+                    UnitValueCategory.Any,
+                    sourceSchema,
+                    onChanged);
+                if (EditorGUI.EndChangeCheck())
+                    onChanged?.Invoke();
+                return;
+            }
+
             if (node is QueryUnitsActionNodeData queryUnits)
             {
                 EditorGUI.BeginChangeCheck();
                 DrawQueryUnits(queryUnits, sourceSchema, onChanged);
                 if (EditorGUI.EndChangeCheck())
                     onChanged?.Invoke();
+                return;
+            }
+
+            if (node is ExecuteEffectActionNodeData executeEffect)
+            {
+                EditorGUI.BeginChangeCheck();
+                DrawExecuteEffect(executeEffect, sourceSchema, onChanged);
+                if (EditorGUI.EndChangeCheck())
+                    onChanged?.Invoke();
+                return;
+            }
+
+            if (node is DestroySelfActionNodeData)
+            {
+                EditorGUILayout.HelpBox(
+                    "Marks this entity for the normal end-of-frame destruction pipeline.",
+                    MessageType.Info);
                 return;
             }
 
@@ -260,51 +296,9 @@ namespace CrystalMagic.Editor.Unit
             UnitSourceSchema sourceSchema,
             Action onChanged)
         {
-            requestInteraction.Interaction ??= RequestInteractionActionNodeData.CreateDefaultInteraction();
-            InteractionRequestInput interaction = requestInteraction.Interaction;
-            interaction.EnsureValid();
-            interaction.Source = (InteractionRequestSource)EditorGUILayout.EnumPopup("Source", interaction.Source);
-
-            if (interaction.Source == InteractionRequestSource.Getter)
-            {
-                List<InteractionRequestGetSchemaEntry> entries = (sourceSchema?.InteractionGets ??
-                                                                   Enumerable.Empty<InteractionRequestGetSchemaEntry>())
-                    .OrderBy(entry => entry.Key, StringComparer.Ordinal)
-                    .ToList();
-                if (entries.Count == 0)
-                {
-                    EditorGUILayout.HelpBox("No interaction request getters are registered.", MessageType.Warning);
-                    return;
-                }
-
-                StateScriptAccessorDropdown.Draw(
-                    "Getter",
-                    interaction.GetterKey,
-                    entries.Select(entry => entry.Key),
-                    "(Select interaction getter)",
-                    selectedKey =>
-                    {
-                        if (string.Equals(interaction.GetterKey, selectedKey, StringComparison.Ordinal))
-                            return;
-
-                        interaction.GetterKey = selectedKey;
-                        GUI.changed = true;
-                        onChanged?.Invoke();
-                    });
-                if (entries.All(entry => !string.Equals(entry.Key, interaction.GetterKey, StringComparison.Ordinal)))
-                    EditorGUILayout.HelpBox($"'{interaction.GetterKey}' is not available on this unit.", MessageType.Warning);
-
-                return;
-            }
-
+            requestInteraction.Target ??= RequestInteractionActionNodeData.CreateDefaultTargetExpression();
             EditorGUILayout.LabelField("Target (Entity)", EditorStyles.miniBoldLabel);
-            StateScriptValueExpressionDrawer.Draw(interaction.Target, UnitValueCategory.Entity, sourceSchema, onChanged);
-            EditorGUILayout.Space(4f);
-            EditorGUILayout.LabelField("Fixed Interaction Data", EditorStyles.miniBoldLabel);
-            interaction.FixedData.Kind = (InteractionKind)EditorGUILayout.EnumPopup("Kind", interaction.FixedData.Kind);
-            interaction.FixedData.DataId = EditorGUILayout.IntField("Data ID", interaction.FixedData.DataId);
-            interaction.FixedData.Amount = EditorGUILayout.IntField("Amount", interaction.FixedData.Amount);
-            interaction.FixedData.Variant = EditorGUILayout.IntField("Variant", interaction.FixedData.Variant);
+            StateScriptValueExpressionDrawer.Draw(requestInteraction.Target, UnitValueCategory.Entity, sourceSchema, onChanged);
         }
 
         private static void DrawPublishGameEvent(
@@ -384,9 +378,85 @@ namespace CrystalMagic.Editor.Unit
             query.UnitDataId = EditorGUILayout.IntField("Unit Data ID", query.UnitDataId);
             query.ExcludeSelf = EditorGUILayout.Toggle("Exclude Self", query.ExcludeSelf);
             query.ExcludeDead = EditorGUILayout.Toggle("Exclude Dead", query.ExcludeDead);
+            query.RequireAvailableInteraction = EditorGUILayout.Toggle(
+                "Require Available Interaction",
+                query.RequireAvailableInteraction);
+            query.ExcludedEntitiesKey = EditorGUILayout.TextField(
+                new GUIContent(
+                    "Excluded Entities Key",
+                    "Optional UnitVariable entity-list prefix using <key>.count and <key>.<index>."),
+                query.ExcludedEntitiesKey ?? string.Empty);
+            using (new EditorGUI.DisabledScope(string.IsNullOrWhiteSpace(query.ExcludedEntitiesKey)))
+            {
+                query.RememberResultsInExcludedEntities = EditorGUILayout.Toggle(
+                    new GUIContent(
+                        "Remember Results",
+                        "Appends this query's returned entities to the exclusion list."),
+                    query.RememberResultsInExcludedEntities);
+            }
+            if (string.IsNullOrWhiteSpace(query.ExcludedEntitiesKey))
+                query.RememberResultsInExcludedEntities = false;
             query.MaxCount = Mathf.Max(0, EditorGUILayout.IntField("Max Count", query.MaxCount));
             query.SortMode = (StateScriptUnitQuerySortMode)EditorGUILayout.EnumPopup("Sort", query.SortMode);
             query.ResultKey = EditorGUILayout.TextField("Result Key", query.ResultKey ?? string.Empty);
+        }
+
+        private static void DrawExecuteEffect(
+            ExecuteEffectActionNodeData executeEffect,
+            UnitSourceSchema sourceSchema,
+            Action onChanged)
+        {
+            executeEffect.EnsureValid();
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField($"{executeEffect.Effects.Length} effect(s)");
+            if (GUILayout.Button("Edit Effect Graph", GUILayout.Width(150f)))
+            {
+                EffectGraphWindow.Open(new EffectGraphBinding(
+                    $"StateScript:Node:{executeEffect.Guid}:Effects",
+                    $"State Script Execute Effect [{executeEffect.Guid}]",
+                    () => executeEffect.Effects,
+                    effects => executeEffect.Effects = effects,
+                    onChanged ?? (() => { })));
+            }
+            EditorGUILayout.EndHorizontal();
+
+            executeEffect.OriginSource = (StateScriptEffectOriginSource)EditorGUILayout.EnumPopup(
+                "Origin Entity",
+                executeEffect.OriginSource);
+            executeEffect.RepeatCount = Mathf.Max(
+                1,
+                EditorGUILayout.IntField("Repeat Count", executeEffect.RepeatCount));
+
+            EditorGUILayout.LabelField("Target Entity", EditorStyles.miniBoldLabel);
+            StateScriptValueExpressionDrawer.Draw(
+                executeEffect.TargetEntity,
+                UnitValueCategory.Entity,
+                sourceSchema,
+                onChanged);
+            EditorGUILayout.LabelField("Other Entity", EditorStyles.miniBoldLabel);
+            StateScriptValueExpressionDrawer.Draw(
+                executeEffect.OtherEntity,
+                UnitValueCategory.Entity,
+                sourceSchema,
+                onChanged);
+            EditorGUILayout.LabelField("Position", EditorStyles.miniBoldLabel);
+            StateScriptValueExpressionDrawer.Draw(
+                executeEffect.Position,
+                UnitValueCategory.Float3,
+                sourceSchema,
+                onChanged);
+            EditorGUILayout.LabelField("Trigger Value", EditorStyles.miniBoldLabel);
+            StateScriptValueExpressionDrawer.Draw(
+                executeEffect.TriggerValue,
+                UnitValueCategory.Number,
+                sourceSchema,
+                onChanged);
+            EditorGUILayout.LabelField("Source Skill ID", EditorStyles.miniBoldLabel);
+            StateScriptValueExpressionDrawer.Draw(
+                executeEffect.SourceSkillId,
+                UnitValueCategory.Number,
+                sourceSchema,
+                onChanged);
         }
 
         private static void DrawComparatorCondition(

@@ -45,7 +45,6 @@ partial struct UnitMoveSystem : ISystem
         private void Execute(
             Entity entity,
             ref UnitMoveComponent move,
-            ref UnitFacingComponent facing,
             ref PhysicsVelocity physicsVelocity,
             ref LocalTransform transform)
         {
@@ -54,8 +53,6 @@ partial struct UnitMoveSystem : ISystem
             bool hasFrameVelocity = move.HasFrameVelocity != 0;
             float2 frameVelocity = move.FrameVelocity;
             UnitMoveComponent oldMove = move;
-            UnitFacingComponent oldFacing = facing;
-            LocalTransform oldTransform = transform;
 
             if (hasFrameVelocity)
             {
@@ -65,16 +62,10 @@ partial struct UnitMoveSystem : ISystem
                      avoidance.HasResolvedVelocity != 0)
             {
                 move.Velocity = avoidance.ResolvedVelocity;
-                float2 resolvedDirection = math.normalizesafe(move.Velocity, float2.zero);
-                if (math.lengthsq(resolvedDirection) > 0.0001f)
-                    facing.Direction = resolvedDirection;
             }
             else
             {
                 float2 targetDirection = math.normalizesafe(requestedDirection, float2.zero);
-                if (math.lengthsq(targetDirection) > 0.0001f)
-                    facing.Direction = targetDirection;
-
                 UnitModifierComponent modifier = Modifiers.TryGetComponent(
                     entity,
                     out UnitModifierComponent resolvedModifier)
@@ -99,13 +90,12 @@ partial struct UnitMoveSystem : ISystem
 
             if (!move.Velocity.Equals(oldMove.Velocity) ||
                 math.lengthsq(move.Velocity) > 0.0001f ||
-                !math.all(transform.Position == oldTransform.Position))
+                !math.all(transform.Position == move.LastObservedPosition))
             {
                 move.NetworkDirty = 1;
             }
 
-            if (!facing.Direction.Equals(oldFacing.Direction))
-                facing.NetworkDirty = 1;
+            move.LastObservedPosition = transform.Position;
 
             move.Direction = float2.zero;
             move.CommandMoveSpeed = -1f;

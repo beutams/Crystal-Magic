@@ -12,28 +12,44 @@ public partial class StateScriptInitSystem : SystemBase
 {
     private BlobAssetReference<StateScriptRuntimeRegistryBlob> _registry;
     private EntityQuery _stateScriptQuery;
-    private bool _compileFailed;
 
     protected override void OnCreate()
     {
-        _stateScriptQuery = GetEntityQuery(ComponentType.ReadWrite<UnitStateScriptComponent>());
+        _stateScriptQuery = GetEntityQuery(
+            ComponentType.ReadWrite<UnitStateScriptComponent>(),
+            ComponentType.ReadOnly<UnitInitializationPendingTag>());
+
+        DataTable<StateScriptData> table = DataComponent.Instance.GetTable<StateScriptData>();
+        if (table == null)
+        {
+            Debug.LogError("[StateScriptInit] StateScriptData table is not loaded.");
+            Enabled = false;
+            return;
+        }
+
+        List<StateScriptData> rows = new(table.GetAll());
+        if (!StateScriptCompiler.TryBuildRegistry(rows, out _registry, out string error))
+        {
+            Debug.LogError($"[StateScriptInit] Failed to compile state scripts: {error}");
+            Enabled = false;
+            return;
+        }
+
+        Entity registryEntity = EntityManager.CreateEntity(typeof(StateScriptRuntimeRegistryComponent));
+        EntityManager.SetName(registryEntity, "StateScriptRuntimeRegistry");
+        EntityManager.SetComponentData(registryEntity, new StateScriptRuntimeRegistryComponent
+        {
+            Value = _registry,
+        });
     }
 
     protected override void OnUpdate()
     {
-        if (!_registry.IsCreated && !_compileFailed)
-            TryCompileRegistry();
-        if (!_registry.IsCreated)
-            return;
-
         using NativeArray<Entity> entities = _stateScriptQuery.ToEntityArray(Allocator.Temp);
         for (int entityIndex = 0; entityIndex < entities.Length; entityIndex++)
         {
             Entity entity = entities[entityIndex];
             UnitStateScriptComponent component = EntityManager.GetComponentData<UnitStateScriptComponent>(entity);
-            if (component.IsInitialized != 0)
-                continue;
-
             component.DefinitionIndex = -1;
             component.TickVersion = 0;
             component.InitializationError = StateScriptInitializationError.None;
@@ -60,7 +76,6 @@ public partial class StateScriptInitSystem : SystemBase
             EntityManager.GetBuffer<StateScriptSourceCommandArgumentElement>(entity).Clear();
             EntityManager.GetBuffer<StateScriptManagedCommandElement>(entity).Clear();
             EntityManager.GetBuffer<StateScriptExternalResultElement>(entity).Clear();
-            component.IsInitialized = 1;
             EntityManager.SetComponentData(entity, component);
         }
     }
@@ -94,25 +109,4 @@ public partial class StateScriptInitSystem : SystemBase
             nodeStates[index] = default;
     }
 
-    private void TryCompileRegistry()
-    {
-        DataTable<StateScriptData> table = DataComponent.Instance.GetTable<StateScriptData>();
-        if (table == null)
-            return;
-
-        List<StateScriptData> rows = new(table.GetAll());
-        if (!StateScriptCompiler.TryBuildRegistry(rows, out _registry, out string error))
-        {
-            _compileFailed = true;
-            Debug.LogError($"[StateScriptInit] Failed to compile state scripts: {error}");
-            return;
-        }
-
-        Entity registryEntity = EntityManager.CreateEntity(typeof(StateScriptRuntimeRegistryComponent));
-        EntityManager.SetName(registryEntity, "StateScriptRuntimeRegistry");
-        EntityManager.SetComponentData(registryEntity, new StateScriptRuntimeRegistryComponent
-        {
-            Value = _registry,
-        });
-    }
 }

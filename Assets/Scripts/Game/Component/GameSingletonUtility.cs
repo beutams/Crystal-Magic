@@ -20,8 +20,9 @@ public static class GameSingletonUtility
         entityManager.AddBuffer<WorldVariableElement>(variableEntity);
         entityManager.SetName(variableEntity, nameof(WorldVariableComponent));
 
-        Entity interactionEntity = entityManager.CreateEntity(typeof(InteractionCandidateComponent));
-        entityManager.SetName(interactionEntity, nameof(InteractionCandidateComponent));
+        Entity interactionEntity = entityManager.CreateEntity(typeof(GameInteractionComponent));
+        entityManager.AddBuffer<InteractionTransactionElement>(interactionEntity);
+        entityManager.SetName(interactionEntity, nameof(GameInteractionComponent));
 
         Entity skillRegistryEntity = entityManager.CreateEntity(typeof(PlayerSkillDefinitionRegistryComponent));
         entityManager.SetName(skillRegistryEntity, nameof(PlayerSkillDefinitionRegistryComponent));

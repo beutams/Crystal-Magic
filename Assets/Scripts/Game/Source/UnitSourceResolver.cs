@@ -239,18 +239,6 @@ public sealed class UnitSourceResolver : IComparatorValueResolver
                sourceSet.TrySet(parameters);
     }
 
-    public bool TryGetInteraction(string key, out InteractionRequestSnapshot request)
-    {
-        request = default;
-        if (!_hasDispatcher ||
-            !string.Equals(key, UnitComponentSourceRegistry.InteractionRequestKey, StringComparison.Ordinal))
-        {
-            return false;
-        }
-
-        return _dispatcher.TryGetInteraction(out request);
-    }
-
     public bool TryGetDefinition(string key, out UnitSourceGet sourceGet)
     {
         return TryGetDefinition(key, UnitSourceTarget.Self, out sourceGet);
@@ -291,18 +279,6 @@ public sealed class UnitSourceResolver : IComparatorValueResolver
         return false;
     }
 
-    public bool TryGetInteractionDefinition(string key, out InteractionRequestSourceGet sourceGet)
-    {
-        if (!string.Equals(key, UnitComponentSourceRegistry.InteractionRequestKey, StringComparison.Ordinal))
-        {
-            sourceGet = null;
-            return false;
-        }
-
-        sourceGet = new InteractionRequestSourceGet(key, TryGetInteractionCandidate);
-        return true;
-    }
-
     bool IComparatorValueResolver.TryGet(string key, out IParameterizedUnitValueGetter getter)
     {
         if (TryGetDefinition(key, out UnitSourceGet sourceGet))
@@ -315,8 +291,4 @@ public sealed class UnitSourceResolver : IComparatorValueResolver
         return false;
     }
 
-    private bool TryGetInteractionCandidate(out InteractionRequestSnapshot request)
-    {
-        return TryGetInteraction(UnitComponentSourceRegistry.InteractionRequestKey, out request);
-    }
 }

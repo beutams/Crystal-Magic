@@ -8,7 +8,6 @@ using Unity.Transforms;
 
 [WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
-[UpdateAfter(typeof(SkillReleaseSystem))]
 [UpdateBefore(typeof(UnitMoveSystem))]
 partial struct UnitAvoidanceSystem : ISystem
 {

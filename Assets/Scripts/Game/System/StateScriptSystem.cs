@@ -1,5 +1,6 @@
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
+using CrystalMagic.Game.Skill;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -52,6 +53,7 @@ public partial class StateScriptSystem : SystemBase
             Sources = _sources,
             QueryTree = queryTree,
             QueryResults = new NativeList<UnitQueryHit>(queryCapacity, Allocator.TempJob),
+            QueryExclusions = new NativeList<Entity>(queryCapacity, Allocator.TempJob),
             DeltaTime = math.max(0f, SystemAPI.Time.DeltaTime),
         }.Schedule(Dependency);
         Dependency = new StateScriptDeathJob().ScheduleParallel(Dependency);
@@ -59,6 +61,7 @@ public partial class StateScriptSystem : SystemBase
 }
 
 [BurstCompile]
+[WithNone(typeof(UnitInitializationPendingTag))]
 [WithNone(typeof(UnitDeathComponent))]
 public partial struct StateScriptEvaluationJob : IJobEntity
 {
@@ -76,6 +79,9 @@ public partial struct StateScriptEvaluationJob : IJobEntity
     [DeallocateOnJobCompletion]
     public NativeList<UnitQueryHit> QueryResults;
 
+    [DeallocateOnJobCompletion]
+    public NativeList<Entity> QueryExclusions;
+
     public float DeltaTime;
 
     private void Execute(
@@ -91,8 +97,7 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         sourceCommands.Clear();
         sourceArguments.Clear();
         managedCommands.Clear();
-        if (component.IsInitialized == 0 ||
-            component.IsStoppedForDeath != 0 ||
+        if (component.IsStoppedForDeath != 0 ||
             component.InitializationError != StateScriptInitializationError.None ||
             component.DefinitionIndex < 0 ||
             component.DefinitionIndex >= Registry.Value.Units.Length)
@@ -381,16 +386,10 @@ public partial struct StateScriptEvaluationJob : IJobEntity
                 return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.Out, ref pulses);
 
             case StateScriptNodeRuntimeType.RequestInteraction:
-                if (pulse.InputPortId != StateScriptPortId.In)
-                    return false;
-                Entity target = Entity.Null;
-                if ((InteractionRequestSource)node.IntParameters.x == InteractionRequestSource.Fixed &&
-                    (node.ExpressionCount != 1 ||
-                     !TryEvaluateValue(ref graph, node.ExpressionStart, in context, out UnitSourceValue targetValue) ||
-                     !targetValue.TryGetEntity(out target)))
-                {
+                if (pulse.InputPortId != StateScriptPortId.In || node.ExpressionCount != 1 ||
+                    !TryEvaluateValue(ref graph, node.ExpressionStart, in context, out UnitSourceValue targetValue) ||
+                    !targetValue.TryGetEntity(out Entity target) || target == Entity.Null)
                     return true;
-                }
                 managedCommands.Add(new StateScriptManagedCommandElement
                 {
                     Type = StateScriptManagedCommandType.RequestInteraction,
@@ -412,12 +411,67 @@ public partial struct StateScriptEvaluationJob : IJobEntity
                 });
                 return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.Out, ref pulses);
 
+            case StateScriptNodeRuntimeType.CompleteInteraction:
+                if (pulse.InputPortId != StateScriptPortId.In || node.ExpressionCount != 1 ||
+                    !TryEvaluateValue(ref graph, node.ExpressionStart, in context, out UnitSourceValue interactionResult))
+                    return true;
+                managedCommands.Add(new StateScriptManagedCommandElement
+                {
+                    Type = StateScriptManagedCommandType.CompleteInteraction,
+                    GraphIndex = graphIndex,
+                    NodeIndex = pulse.NodeIndex,
+                    IntValue = node.IntParameters.x,
+                    Value = interactionResult,
+                });
+                return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.Out, ref pulses);
+
+            case StateScriptNodeRuntimeType.AcknowledgeInteraction:
+            case StateScriptNodeRuntimeType.CollectInteraction:
+            case StateScriptNodeRuntimeType.StartNpcInteraction:
+                if (pulse.InputPortId != StateScriptPortId.In)
+                    return false;
+                managedCommands.Add(new StateScriptManagedCommandElement
+                {
+                    Type = node.Type switch
+                    {
+                        StateScriptNodeRuntimeType.AcknowledgeInteraction => StateScriptManagedCommandType.AcknowledgeInteraction,
+                        StateScriptNodeRuntimeType.CollectInteraction => StateScriptManagedCommandType.CollectInteraction,
+                        _ => StateScriptManagedCommandType.StartNpcInteraction,
+                    },
+                    GraphIndex = graphIndex,
+                    NodeIndex = pulse.NodeIndex,
+                });
+                return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.Out, ref pulses);
+
             case StateScriptNodeRuntimeType.QueryUnits:
                 if (pulse.InputPortId != StateScriptPortId.In ||
                     !TryQueryUnits(entity, in node, in context, ref graph))
                 {
                     return true;
                 }
+                return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.Out, ref pulses);
+
+            case StateScriptNodeRuntimeType.ExecuteEffect:
+                if (pulse.InputPortId != StateScriptPortId.In ||
+                    !TryBuildEffectCommand(in node, ref graph, in context, out StateScriptManagedCommandElement effectCommand))
+                {
+                    return true;
+                }
+                effectCommand.Type = StateScriptManagedCommandType.ExecuteEffect;
+                effectCommand.GraphIndex = graphIndex;
+                effectCommand.NodeIndex = pulse.NodeIndex;
+                managedCommands.Add(effectCommand);
+                return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.Out, ref pulses);
+
+            case StateScriptNodeRuntimeType.DestroySelf:
+                if (pulse.InputPortId != StateScriptPortId.In)
+                    return false;
+                managedCommands.Add(new StateScriptManagedCommandElement
+                {
+                    Type = StateScriptManagedCommandType.DestroySelf,
+                    GraphIndex = graphIndex,
+                    NodeIndex = pulse.NodeIndex,
+                });
                 return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.Out, ref pulses);
 
             case StateScriptNodeRuntimeType.Timer:
@@ -775,6 +829,58 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         return true;
     }
 
+    private bool TryBuildEffectCommand(
+        in StateScriptNodeDefinition node,
+        ref StateScriptGraphDefinitionBlob graph,
+        in UnitSourceContext context,
+        out StateScriptManagedCommandElement command)
+    {
+        command = default;
+        if (node.ExpressionCount != 5 ||
+            !TryEvaluateValue(ref graph, node.ExpressionStart, in context, out UnitSourceValue targetValue) ||
+            !targetValue.TryGetEntity(out Entity target) ||
+            !TryEvaluateValue(ref graph, node.ExpressionStart + 1, in context, out UnitSourceValue otherValue) ||
+            !otherValue.TryGetEntity(out Entity other) ||
+            !TryEvaluateValue(ref graph, node.ExpressionStart + 2, in context, out UnitSourceValue positionValue) ||
+            !positionValue.TryGetFloat3(out float3 position) ||
+            !TryEvaluateNumber(ref graph, node.ExpressionStart + 3, in context, out float triggerValue) ||
+            !TryEvaluateNumber(ref graph, node.ExpressionStart + 4, in context, out float rawSkillId))
+        {
+            return false;
+        }
+
+        float roundedSkillId = math.round(rawSkillId);
+        if (roundedSkillId < -1f ||
+            roundedSkillId > int.MaxValue ||
+            math.abs(rawSkillId - roundedSkillId) > 0.0001f)
+        {
+            return false;
+        }
+
+        Entity origin = (StateScriptEffectOriginSource)node.IntParameters.x switch
+        {
+            StateScriptEffectOriginSource.Self => context.Self,
+            StateScriptEffectOriginSource.Other => context.Other,
+            _ => Entity.Null,
+        };
+        command.IntValue = math.max(1, node.IntParameters.y);
+        command.EffectContext = new EffectRequestContext
+        {
+            TriggerSource = SkillTriggerSource.Script,
+            HasOriginEntity = origin != Entity.Null ? (byte)1 : (byte)0,
+            OriginEntity = origin,
+            HasTargetEntity = target != Entity.Null ? (byte)1 : (byte)0,
+            TargetEntity = target,
+            HasOtherEntity = other != Entity.Null ? (byte)1 : (byte)0,
+            OtherEntity = other,
+            HasPosition = 1,
+            Position = position,
+            TriggerValue = triggerValue,
+            SourceSkillId = (int)roundedSkillId,
+        };
+        return true;
+    }
+
     private bool TryEvaluateValue(
         ref StateScriptGraphDefinitionBlob graph,
         int expressionIndex,
@@ -840,12 +946,19 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         };
 
         QueryResults.Clear();
+        QueryExclusions.Clear();
+        if (!TryReadQueryExclusions(entity, node.Key, out int excludedEntityCount))
+            return false;
         StateScriptUnitQueryVisitor visitor = new()
         {
             Results = QueryResults,
+            ExcludedEntities = QueryExclusions.AsArray(),
             Self = entity,
             UnitDataId = node.IntParameters.z,
             ExcludeSelf = node.FloatParameters0.y > 0.5f ? (byte)1 : (byte)0,
+            RequireAvailableInteraction = node.FloatParameters1.x > 0.5f ? (byte)1 : (byte)0,
+            QueryCenter = center,
+            Sources = Sources,
         };
         QueryTree.Query(
             in shape,
@@ -860,7 +973,75 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         int resultCount = node.IntParameters.w > 0
             ? math.min(node.IntParameters.w, QueryResults.Length)
             : QueryResults.Length;
-        return WriteQueryResults(entity, node.Text, resultCount);
+        if (!WriteQueryResults(entity, node.Text, resultCount))
+            return false;
+        return node.FloatParameters0.w <= 0.5f ||
+               AppendQueryResultsToExclusions(entity, node.Key, excludedEntityCount, resultCount);
+    }
+
+    private bool TryReadQueryExclusions(
+        Entity entity,
+        in FixedString128Bytes exclusionKey,
+        out int storedCount)
+    {
+        storedCount = 0;
+        if (exclusionKey.Length == 0)
+            return true;
+        if (!TryBuildResultKey(exclusionKey, "count", out FixedString128Bytes countKey))
+            return false;
+
+        UnitSourceArguments countArguments = default;
+        countArguments.Values.Add(UnitSourceValue.FromString(in countKey));
+        if (!Sources.TryGet(
+                entity,
+                UnitSourceId.UnitVariablesGetNumber,
+                in countArguments,
+                out UnitSourceValue countValue))
+        {
+            return true;
+        }
+        if (!countValue.TryGetInt(out storedCount) || storedCount < 0)
+            return false;
+
+        for (int index = 0; index < storedCount; index++)
+        {
+            if (!TryBuildResultKey(exclusionKey, index, out FixedString128Bytes entryKey))
+                return false;
+            UnitSourceArguments entryArguments = default;
+            entryArguments.Values.Add(UnitSourceValue.FromString(in entryKey));
+            if (Sources.TryGet(
+                    entity,
+                    UnitSourceId.UnitVariablesGetEntity,
+                    in entryArguments,
+                    out UnitSourceValue entryValue) &&
+                entryValue.TryGetEntity(out Entity excludedEntity) &&
+                excludedEntity != Entity.Null)
+            {
+                QueryExclusions.Add(excludedEntity);
+            }
+        }
+        return true;
+    }
+
+    private bool AppendQueryResultsToExclusions(
+        Entity entity,
+        in FixedString128Bytes exclusionKey,
+        int storedCount,
+        int resultCount)
+    {
+        if (exclusionKey.Length == 0)
+            return false;
+        for (int index = 0; index < resultCount; index++)
+        {
+            if (!TryBuildResultKey(exclusionKey, storedCount + index, out FixedString128Bytes entryKey) ||
+                !SetVariable(entity, entryKey, UnitSourceValue.FromEntity(QueryResults[index].Entity)))
+            {
+                return false;
+            }
+        }
+        if (!TryBuildResultKey(exclusionKey, "count", out FixedString128Bytes countKey))
+            return false;
+        return SetVariable(entity, countKey, UnitSourceValue.FromInt(storedCount + resultCount));
     }
 
     private bool WriteQueryResults(Entity entity, in FixedString128Bytes resultKey, int resultCount)
@@ -971,16 +1152,49 @@ public partial struct StateScriptEvaluationJob : IJobEntity
     private struct StateScriptUnitQueryVisitor : IUnitQueryVisitor
     {
         public NativeList<UnitQueryHit> Results;
+
+        [ReadOnly]
+        public NativeArray<Entity> ExcludedEntities;
+
         public Entity Self;
         public int UnitDataId;
         public byte ExcludeSelf;
+        public byte RequireAvailableInteraction;
+        public float3 QueryCenter;
+        public UnitSourceDispatcher Sources;
 
         public bool Visit(in UnitQueryEntry entry)
         {
             if (ExcludeSelf != 0 && entry.Entity == Self ||
-                UnitDataId >= 0 && entry.UnitDataId != UnitDataId)
+                UnitDataId >= 0 && entry.UnitDataId != UnitDataId ||
+                IsExcluded(entry.Entity))
             {
                 return true;
+            }
+
+            if (RequireAvailableInteraction != 0)
+            {
+                UnitSourceArguments arguments = default;
+                if (!Sources.TryGet(
+                        entry.Entity,
+                        UnitSourceId.UnitInteractableEnabled,
+                        in arguments,
+                        out UnitSourceValue enabledValue) ||
+                    !enabledValue.TryGetBool(out bool enabled) || !enabled)
+                {
+                    return true;
+                }
+
+                if (Sources.TryGet(
+                        entry.Entity,
+                        UnitSourceId.UnitInteractableRangeSq,
+                        in arguments,
+                        out UnitSourceValue rangeValue) &&
+                    rangeValue.TryGetNumber(out float rangeSq) && rangeSq > 0f &&
+                    math.lengthsq((entry.Position - QueryCenter).xy) > rangeSq)
+                {
+                    return true;
+                }
             }
 
             Results.Add(new UnitQueryHit
@@ -990,6 +1204,16 @@ public partial struct StateScriptEvaluationJob : IJobEntity
                 Faction = entry.Faction,
             });
             return true;
+        }
+
+        private bool IsExcluded(Entity entity)
+        {
+            for (int index = 0; index < ExcludedEntities.Length; index++)
+            {
+                if (ExcludedEntities[index] == entity)
+                    return true;
+            }
+            return false;
         }
     }
 
@@ -1030,6 +1254,7 @@ public partial struct StateScriptEvaluationJob : IJobEntity
 }
 
 [BurstCompile]
+[WithNone(typeof(UnitInitializationPendingTag))]
 [WithAll(typeof(UnitDeathComponent))]
 public partial struct StateScriptDeathJob : IJobEntity
 {

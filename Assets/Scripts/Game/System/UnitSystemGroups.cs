@@ -42,12 +42,13 @@ public partial class ClientPlayerPredictionSystemGroup : ComponentSystemGroup
 [UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
 [UpdateAfter(typeof(FrameReceiveSystem))]
 [UpdateAfter(typeof(ClientPlayerPredictionSystemGroup))]
-[UpdateBefore(typeof(ClientPresentationSystemGroup))]
+[UpdateBefore(typeof(GamePresentationSystemGroup))]
 public partial class ClientNetworkPresentationSystemGroup : ComponentSystemGroup
 {
 }
 
 [UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
-public partial class ClientPresentationSystemGroup : ComponentSystemGroup
+[UpdateAfter(typeof(UnitPostProcessSystemGroup))]
+public partial class GamePresentationSystemGroup : ComponentSystemGroup
 {
 }

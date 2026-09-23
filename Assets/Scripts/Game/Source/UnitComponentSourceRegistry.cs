@@ -10,9 +10,9 @@ using UnityEngine;
 public enum UnitSourceId : ushort
 {
     None = 0,
-    GameInteractionCandidateKind = 1,
-    GameInteractionCandidateTarget = 2,
-    GameInteractionHasCandidate = 3,
+    WorldInteractionHasPending = 1,
+    WorldInteractionPendingActor = 2,
+    WorldInteractionPendingRequestId = 3,
     PlayerInputEscapeHeld = 4,
     PlayerInputInteractHeld = 5,
     PlayerInputInventoryHeld = 6,
@@ -167,7 +167,7 @@ public enum UnitSourceId : ushort
     UnitVitalityRealDefense = 165,
     UnitVitalityRealHealthRegenPerSecond = 166,
     UnitVitalityRealMaxHealth = 167,
-    WorldInteractionIsInteracting = 168,
+    WorldInteractionIsBusy = 168,
     WorldVariablesCount = 169,
     WorldVariablesGet = 170,
     WorldVariablesGetBool = 171,
@@ -182,27 +182,38 @@ public enum UnitSourceId : ushort
     UnitVariablesListEntity = 180,
     UnitVariablesAddNumber = 181,
     UnitVariablesGetNumberOrDefault = 182,
+    UnitInterestPointAliveGuardCount = 183,
+    UnitInterestPointEncounterReady = 184,
+    UnitInterestPointPatrolTarget = 185,
+    UnitInterestPointPatrolUnitCount = 186,
+    UnitInterestPointSetPatrolTarget = 187,
+    UnitInteractableEnabled = 188,
+    UnitInteractableSetEnabled = 189,
+    WorldInteractionHasResult = 190,
+    WorldInteractionResultCode = 191,
+    WorldInteractionResult = 192,
+    UnitInteractableRangeSq = 193,
+    UnitTreasureOpened = 194,
+    UnitTreasureSetOpened = 195,
 }
 
 public static class UnitComponentSourceRegistry
 {
-    public const string InteractionRequestKey = "game.interaction.candidate";
-
     public static bool TryGetGet(string key, out UnitSourceId sourceId, out UnitSourceGetSchemaEntry schema)
     {
         switch (key)
         {
-            case "game.interaction.candidateKind":
-                sourceId = UnitSourceId.GameInteractionCandidateKind;
-                schema = new UnitSourceGetSchemaEntry("game.interaction.candidateKind", typeof(InteractionCandidateComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
+            case "world.interaction.hasPending":
+                sourceId = UnitSourceId.WorldInteractionHasPending;
+                schema = new UnitSourceGetSchemaEntry("world.interaction.hasPending", typeof(GameInteractionComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Target", UnitValueCategory.Entity) });
                 return true;
-            case "game.interaction.candidateTarget":
-                sourceId = UnitSourceId.GameInteractionCandidateTarget;
-                schema = new UnitSourceGetSchemaEntry("game.interaction.candidateTarget", typeof(InteractionCandidateComponent), UnitValueCategory.Entity, Array.Empty<ComparatorParameterDefinition>());
+            case "world.interaction.pendingActor":
+                sourceId = UnitSourceId.WorldInteractionPendingActor;
+                schema = new UnitSourceGetSchemaEntry("world.interaction.pendingActor", typeof(GameInteractionComponent), UnitValueCategory.Entity, new[] { new ComparatorParameterDefinition("Target", UnitValueCategory.Entity) });
                 return true;
-            case "game.interaction.hasCandidate":
-                sourceId = UnitSourceId.GameInteractionHasCandidate;
-                schema = new UnitSourceGetSchemaEntry("game.interaction.hasCandidate", typeof(InteractionCandidateComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
+            case "world.interaction.pendingRequestId":
+                sourceId = UnitSourceId.WorldInteractionPendingRequestId;
+                schema = new UnitSourceGetSchemaEntry("world.interaction.pendingRequestId", typeof(GameInteractionComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Target", UnitValueCategory.Entity) });
                 return true;
             case "player.input.escapeHeld":
                 sourceId = UnitSourceId.PlayerInputEscapeHeld;
@@ -528,13 +539,29 @@ public static class UnitComponentSourceRegistry
                 sourceId = UnitSourceId.UnitInterestPointArrivalDistance;
                 schema = new UnitSourceGetSchemaEntry("unit.interestPoint.arrivalDistance", typeof(DungeonInterestPointComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
                 return true;
+            case "unit.interestPoint.aliveGuardCount":
+                sourceId = UnitSourceId.UnitInterestPointAliveGuardCount;
+                schema = new UnitSourceGetSchemaEntry("unit.interestPoint.aliveGuardCount", typeof(DungeonInterestPointComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
+                return true;
             case "unit.interestPoint.encounterId":
                 sourceId = UnitSourceId.UnitInterestPointEncounterId;
                 schema = new UnitSourceGetSchemaEntry("unit.interestPoint.encounterId", typeof(DungeonInterestPointComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
                 return true;
+            case "unit.interestPoint.encounterReady":
+                sourceId = UnitSourceId.UnitInterestPointEncounterReady;
+                schema = new UnitSourceGetSchemaEntry("unit.interestPoint.encounterReady", typeof(DungeonInterestPointComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
+                return true;
             case "unit.interestPoint.patrolSpeed":
                 sourceId = UnitSourceId.UnitInterestPointPatrolSpeed;
                 schema = new UnitSourceGetSchemaEntry("unit.interestPoint.patrolSpeed", typeof(DungeonInterestPointComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
+                return true;
+            case "unit.interestPoint.patrolTarget":
+                sourceId = UnitSourceId.UnitInterestPointPatrolTarget;
+                schema = new UnitSourceGetSchemaEntry("unit.interestPoint.patrolTarget", typeof(DungeonInterestPointComponent), UnitValueCategory.Entity, Array.Empty<ComparatorParameterDefinition>());
+                return true;
+            case "unit.interestPoint.patrolUnitCount":
+                sourceId = UnitSourceId.UnitInterestPointPatrolUnitCount;
+                schema = new UnitSourceGetSchemaEntry("unit.interestPoint.patrolUnitCount", typeof(DungeonInterestPointComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
                 return true;
             case "unit.interestPoint.spawnDistance":
                 sourceId = UnitSourceId.UnitInterestPointSpawnDistance;
@@ -543,6 +570,18 @@ public static class UnitComponentSourceRegistry
             case "unit.interestPoint.squadId":
                 sourceId = UnitSourceId.UnitInterestPointSquadId;
                 schema = new UnitSourceGetSchemaEntry("unit.interestPoint.squadId", typeof(DungeonInterestPointComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
+                return true;
+            case "unit.interactable.enabled":
+                sourceId = UnitSourceId.UnitInteractableEnabled;
+                schema = new UnitSourceGetSchemaEntry("unit.interactable.enabled", typeof(UnitInteractableComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
+                return true;
+            case "unit.interactable.rangeSq":
+                sourceId = UnitSourceId.UnitInteractableRangeSq;
+                schema = new UnitSourceGetSchemaEntry("unit.interactable.rangeSq", typeof(UnitInteractableComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
+                return true;
+            case "unit.treasure.opened":
+                sourceId = UnitSourceId.UnitTreasureOpened;
+                schema = new UnitSourceGetSchemaEntry("unit.treasure.opened", typeof(TreasureComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
                 return true;
             case "unit.mana.baseMaxMp":
                 sourceId = UnitSourceId.UnitManaBaseMaxMp;
@@ -752,9 +791,21 @@ public static class UnitComponentSourceRegistry
                 sourceId = UnitSourceId.UnitVitalityRealMaxHealth;
                 schema = new UnitSourceGetSchemaEntry("unit.vitality.realMaxHealth", typeof(UnitVitalityComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
                 return true;
-            case "world.interaction.isInteracting":
-                sourceId = UnitSourceId.WorldInteractionIsInteracting;
-                schema = new UnitSourceGetSchemaEntry("world.interaction.isInteracting", typeof(InteractionCandidateComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
+            case "world.interaction.isBusy":
+                sourceId = UnitSourceId.WorldInteractionIsBusy;
+                schema = new UnitSourceGetSchemaEntry("world.interaction.isBusy", typeof(GameInteractionComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Actor", UnitValueCategory.Entity) });
+                return true;
+            case "world.interaction.hasResult":
+                sourceId = UnitSourceId.WorldInteractionHasResult;
+                schema = new UnitSourceGetSchemaEntry("world.interaction.hasResult", typeof(GameInteractionComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Actor", UnitValueCategory.Entity) });
+                return true;
+            case "world.interaction.resultCode":
+                sourceId = UnitSourceId.WorldInteractionResultCode;
+                schema = new UnitSourceGetSchemaEntry("world.interaction.resultCode", typeof(GameInteractionComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Actor", UnitValueCategory.Entity) });
+                return true;
+            case "world.interaction.result":
+                sourceId = UnitSourceId.WorldInteractionResult;
+                schema = new UnitSourceGetSchemaEntry("world.interaction.result", typeof(GameInteractionComponent), UnitValueCategory.Any, new[] { new ComparatorParameterDefinition("Actor", UnitValueCategory.Entity) });
                 return true;
             case "world.variables.count":
                 sourceId = UnitSourceId.WorldVariablesCount;
@@ -835,6 +886,18 @@ public static class UnitComponentSourceRegistry
                 sourceId = UnitSourceId.UnitFacingSetDirection;
                 schema = new UnitSourceSetSchemaEntry("unit.facing.setDirection", typeof(UnitFacingComponent), new[] { new ComparatorParameterDefinition("Direction", UnitValueCategory.Float2) }, false);
                 return true;
+            case "unit.interestPoint.setPatrolTarget":
+                sourceId = UnitSourceId.UnitInterestPointSetPatrolTarget;
+                schema = new UnitSourceSetSchemaEntry("unit.interestPoint.setPatrolTarget", typeof(DungeonInterestPointComponent), new[] { new ComparatorParameterDefinition("Target", UnitValueCategory.Entity) }, false);
+                return true;
+            case "unit.interactable.setEnabled":
+                sourceId = UnitSourceId.UnitInteractableSetEnabled;
+                schema = new UnitSourceSetSchemaEntry("unit.interactable.setEnabled", typeof(UnitInteractableComponent), new[] { new ComparatorParameterDefinition("Enabled", UnitValueCategory.Bool) }, false);
+                return true;
+            case "unit.treasure.setOpened":
+                sourceId = UnitSourceId.UnitTreasureSetOpened;
+                schema = new UnitSourceSetSchemaEntry("unit.treasure.setOpened", typeof(TreasureComponent), new[] { new ComparatorParameterDefinition("Opened", UnitValueCategory.Bool) }, false);
+                return true;
             case "unit.mana.cost":
                 sourceId = UnitSourceId.UnitManaCost;
                 schema = new UnitSourceSetSchemaEntry("unit.mana.cost", typeof(UnitManaComponent), new[] { new ComparatorParameterDefinition("Cost", UnitValueCategory.Number) }, false);
@@ -903,11 +966,13 @@ public static class UnitComponentSourceRegistry
         UnitSourceSchemaBuilder builder = new();
         if (true)
         {
-            builder.AddGet("game.interaction.hasCandidate", typeof(InteractionCandidateComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
-            builder.AddGet("game.interaction.candidateKind", typeof(InteractionCandidateComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
-            builder.AddGet("game.interaction.candidateTarget", typeof(InteractionCandidateComponent), UnitValueCategory.Entity, Array.Empty<ComparatorParameterDefinition>());
-            builder.AddGet("world.interaction.isInteracting", typeof(InteractionCandidateComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
-            builder.AddInteractionGet(InteractionRequestKey, typeof(InteractionCandidateComponent));
+            builder.AddGet("world.interaction.hasPending", typeof(GameInteractionComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Target", UnitValueCategory.Entity) });
+            builder.AddGet("world.interaction.pendingActor", typeof(GameInteractionComponent), UnitValueCategory.Entity, new[] { new ComparatorParameterDefinition("Target", UnitValueCategory.Entity) });
+            builder.AddGet("world.interaction.pendingRequestId", typeof(GameInteractionComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Target", UnitValueCategory.Entity) });
+            builder.AddGet("world.interaction.isBusy", typeof(GameInteractionComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Actor", UnitValueCategory.Entity) });
+            builder.AddGet("world.interaction.hasResult", typeof(GameInteractionComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Actor", UnitValueCategory.Entity) });
+            builder.AddGet("world.interaction.resultCode", typeof(GameInteractionComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Actor", UnitValueCategory.Entity) });
+            builder.AddGet("world.interaction.result", typeof(GameInteractionComponent), UnitValueCategory.Any, new[] { new ComparatorParameterDefinition("Actor", UnitValueCategory.Entity) });
         }
         if (includeAll || prefab != null && prefab.GetComponentInChildren(typeof(DungeonInterestPointAuthoring), true) != null)
         {
@@ -916,6 +981,22 @@ public static class UnitComponentSourceRegistry
             builder.AddGet("unit.interestPoint.spawnDistance", typeof(DungeonInterestPointComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
             builder.AddGet("unit.interestPoint.patrolSpeed", typeof(DungeonInterestPointComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
             builder.AddGet("unit.interestPoint.arrivalDistance", typeof(DungeonInterestPointComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
+            builder.AddGet("unit.interestPoint.aliveGuardCount", typeof(DungeonInterestPointComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
+            builder.AddGet("unit.interestPoint.patrolUnitCount", typeof(DungeonInterestPointComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
+            builder.AddGet("unit.interestPoint.patrolTarget", typeof(DungeonInterestPointComponent), UnitValueCategory.Entity, Array.Empty<ComparatorParameterDefinition>());
+            builder.AddGet("unit.interestPoint.encounterReady", typeof(DungeonInterestPointComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
+            builder.AddSet("unit.interestPoint.setPatrolTarget", typeof(DungeonInterestPointComponent), new[] { new ComparatorParameterDefinition("Target", UnitValueCategory.Entity) }, false);
+        }
+        if (includeAll || prefab != null && prefab.GetComponentInChildren(typeof(NPCInteractableAuthoring), true) != null)
+        {
+            builder.AddGet("unit.interactable.enabled", typeof(UnitInteractableComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
+            builder.AddGet("unit.interactable.rangeSq", typeof(UnitInteractableComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
+            builder.AddSet("unit.interactable.setEnabled", typeof(UnitInteractableComponent), new[] { new ComparatorParameterDefinition("Enabled", UnitValueCategory.Bool) }, false);
+        }
+        if (includeAll || prefab != null && prefab.GetComponentInChildren(typeof(DungeonTreasureAuthoring), true) != null)
+        {
+            builder.AddGet("unit.treasure.opened", typeof(TreasureComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
+            builder.AddSet("unit.treasure.setOpened", typeof(TreasureComponent), new[] { new ComparatorParameterDefinition("Opened", UnitValueCategory.Bool) }, false);
         }
         if (includeAll || prefab != null && prefab.GetComponentInChildren(typeof(UnityEngine.Transform), true) != null)
         {
@@ -1164,12 +1245,14 @@ public static class UnitSourceSchemaFactory
 
 public struct UnitSourceDispatcher
 {
-    private Entity _InteractionCandidateComponentEntity;
+    private Entity _GameInteractionComponentEntity;
     private Entity _PlayerSkillDefinitionRegistryComponentEntity;
     private Entity _WorldVariableComponentEntity;
     private ComponentLookup<DungeonInterestPointComponent> _DungeonInterestPointComponentLookup;
+    private ComponentLookup<UnitInteractableComponent> _UnitInteractableComponentLookup;
     [ReadOnly]
-    private ComponentLookup<InteractionCandidateComponent> _InteractionCandidateComponentLookup;
+    private ComponentLookup<GameInteractionComponent> _GameInteractionComponentLookup;
+    private ComponentLookup<TreasureComponent> _TreasureComponentLookup;
     [ReadOnly]
     private ComponentLookup<LocalTransform> _LocalTransformLookup;
     [ReadOnly]
@@ -1216,11 +1299,15 @@ public struct UnitSourceDispatcher
     private BufferLookup<UnitVariableConsumerElement> _UnitVariableConsumerElementBufferLookup;
     private BufferLookup<UnitVariableElement> _UnitVariableElementBufferLookup;
     private BufferLookup<WorldVariableElement> _WorldVariableElementBufferLookup;
+    [ReadOnly]
+    private BufferLookup<InteractionTransactionElement> _InteractionTransactionElementBufferLookup;
 
     public void Initialize(SystemBase system)
     {
         _DungeonInterestPointComponentLookup = system.GetComponentLookup<DungeonInterestPointComponent>(false);
-        _InteractionCandidateComponentLookup = system.GetComponentLookup<InteractionCandidateComponent>(true);
+        _UnitInteractableComponentLookup = system.GetComponentLookup<UnitInteractableComponent>(false);
+        _GameInteractionComponentLookup = system.GetComponentLookup<GameInteractionComponent>(true);
+        _TreasureComponentLookup = system.GetComponentLookup<TreasureComponent>(false);
         _LocalTransformLookup = system.GetComponentLookup<LocalTransform>(true);
         _PlayerInputComponentLookup = system.GetComponentLookup<PlayerInputComponent>(true);
         _PlayerCurrentSkillComponentLookup = system.GetComponentLookup<PlayerCurrentSkillComponent>(false);
@@ -1250,7 +1337,8 @@ public struct UnitSourceDispatcher
         _UnitVariableConsumerElementBufferLookup = system.GetBufferLookup<UnitVariableConsumerElement>(false);
         _UnitVariableElementBufferLookup = system.GetBufferLookup<UnitVariableElement>(false);
         _WorldVariableElementBufferLookup = system.GetBufferLookup<WorldVariableElement>(false);
-        _InteractionCandidateComponentEntity = GameSingletonUtility.GetEntity<InteractionCandidateComponent>(system.EntityManager);
+        _InteractionTransactionElementBufferLookup = system.GetBufferLookup<InteractionTransactionElement>(true);
+        _GameInteractionComponentEntity = GameSingletonUtility.GetEntity<GameInteractionComponent>(system.EntityManager);
         _PlayerSkillDefinitionRegistryComponentEntity = GameSingletonUtility.GetEntity<PlayerSkillDefinitionRegistryComponent>(system.EntityManager);
         _WorldVariableComponentEntity = GameSingletonUtility.GetEntity<WorldVariableComponent>(system.EntityManager);
     }
@@ -1258,7 +1346,9 @@ public struct UnitSourceDispatcher
     public void InitializeReadOnly(SystemBase system)
     {
         _DungeonInterestPointComponentLookup = system.GetComponentLookup<DungeonInterestPointComponent>(true);
-        _InteractionCandidateComponentLookup = system.GetComponentLookup<InteractionCandidateComponent>(true);
+        _UnitInteractableComponentLookup = system.GetComponentLookup<UnitInteractableComponent>(true);
+        _GameInteractionComponentLookup = system.GetComponentLookup<GameInteractionComponent>(true);
+        _TreasureComponentLookup = system.GetComponentLookup<TreasureComponent>(true);
         _LocalTransformLookup = system.GetComponentLookup<LocalTransform>(true);
         _PlayerInputComponentLookup = system.GetComponentLookup<PlayerInputComponent>(true);
         _PlayerCurrentSkillComponentLookup = system.GetComponentLookup<PlayerCurrentSkillComponent>(true);
@@ -1288,7 +1378,8 @@ public struct UnitSourceDispatcher
         _UnitVariableConsumerElementBufferLookup = system.GetBufferLookup<UnitVariableConsumerElement>(true);
         _UnitVariableElementBufferLookup = system.GetBufferLookup<UnitVariableElement>(true);
         _WorldVariableElementBufferLookup = system.GetBufferLookup<WorldVariableElement>(true);
-        _InteractionCandidateComponentEntity = GameSingletonUtility.GetEntity<InteractionCandidateComponent>(system.EntityManager);
+        _InteractionTransactionElementBufferLookup = system.GetBufferLookup<InteractionTransactionElement>(true);
+        _GameInteractionComponentEntity = GameSingletonUtility.GetEntity<GameInteractionComponent>(system.EntityManager);
         _PlayerSkillDefinitionRegistryComponentEntity = GameSingletonUtility.GetEntity<PlayerSkillDefinitionRegistryComponent>(system.EntityManager);
         _WorldVariableComponentEntity = GameSingletonUtility.GetEntity<WorldVariableComponent>(system.EntityManager);
     }
@@ -1296,7 +1387,9 @@ public struct UnitSourceDispatcher
     public void Update(SystemBase system)
     {
         _DungeonInterestPointComponentLookup.Update(system);
-        _InteractionCandidateComponentLookup.Update(system);
+        _UnitInteractableComponentLookup.Update(system);
+        _GameInteractionComponentLookup.Update(system);
+        _TreasureComponentLookup.Update(system);
         _LocalTransformLookup.Update(system);
         _PlayerInputComponentLookup.Update(system);
         _PlayerCurrentSkillComponentLookup.Update(system);
@@ -1326,12 +1419,15 @@ public struct UnitSourceDispatcher
         _UnitVariableConsumerElementBufferLookup.Update(system);
         _UnitVariableElementBufferLookup.Update(system);
         _WorldVariableElementBufferLookup.Update(system);
+        _InteractionTransactionElementBufferLookup.Update(system);
     }
 
     public void Initialize(ref SystemState state)
     {
         _DungeonInterestPointComponentLookup = state.GetComponentLookup<DungeonInterestPointComponent>(false);
-        _InteractionCandidateComponentLookup = state.GetComponentLookup<InteractionCandidateComponent>(true);
+        _UnitInteractableComponentLookup = state.GetComponentLookup<UnitInteractableComponent>(false);
+        _GameInteractionComponentLookup = state.GetComponentLookup<GameInteractionComponent>(true);
+        _TreasureComponentLookup = state.GetComponentLookup<TreasureComponent>(false);
         _LocalTransformLookup = state.GetComponentLookup<LocalTransform>(true);
         _PlayerInputComponentLookup = state.GetComponentLookup<PlayerInputComponent>(true);
         _PlayerCurrentSkillComponentLookup = state.GetComponentLookup<PlayerCurrentSkillComponent>(false);
@@ -1361,7 +1457,8 @@ public struct UnitSourceDispatcher
         _UnitVariableConsumerElementBufferLookup = state.GetBufferLookup<UnitVariableConsumerElement>(false);
         _UnitVariableElementBufferLookup = state.GetBufferLookup<UnitVariableElement>(false);
         _WorldVariableElementBufferLookup = state.GetBufferLookup<WorldVariableElement>(false);
-        _InteractionCandidateComponentEntity = GameSingletonUtility.GetEntity<InteractionCandidateComponent>(state.EntityManager);
+        _InteractionTransactionElementBufferLookup = state.GetBufferLookup<InteractionTransactionElement>(true);
+        _GameInteractionComponentEntity = GameSingletonUtility.GetEntity<GameInteractionComponent>(state.EntityManager);
         _PlayerSkillDefinitionRegistryComponentEntity = GameSingletonUtility.GetEntity<PlayerSkillDefinitionRegistryComponent>(state.EntityManager);
         _WorldVariableComponentEntity = GameSingletonUtility.GetEntity<WorldVariableComponent>(state.EntityManager);
     }
@@ -1369,7 +1466,9 @@ public struct UnitSourceDispatcher
     public void InitializeReadOnly(ref SystemState state)
     {
         _DungeonInterestPointComponentLookup = state.GetComponentLookup<DungeonInterestPointComponent>(true);
-        _InteractionCandidateComponentLookup = state.GetComponentLookup<InteractionCandidateComponent>(true);
+        _UnitInteractableComponentLookup = state.GetComponentLookup<UnitInteractableComponent>(true);
+        _GameInteractionComponentLookup = state.GetComponentLookup<GameInteractionComponent>(true);
+        _TreasureComponentLookup = state.GetComponentLookup<TreasureComponent>(true);
         _LocalTransformLookup = state.GetComponentLookup<LocalTransform>(true);
         _PlayerInputComponentLookup = state.GetComponentLookup<PlayerInputComponent>(true);
         _PlayerCurrentSkillComponentLookup = state.GetComponentLookup<PlayerCurrentSkillComponent>(true);
@@ -1399,7 +1498,8 @@ public struct UnitSourceDispatcher
         _UnitVariableConsumerElementBufferLookup = state.GetBufferLookup<UnitVariableConsumerElement>(true);
         _UnitVariableElementBufferLookup = state.GetBufferLookup<UnitVariableElement>(true);
         _WorldVariableElementBufferLookup = state.GetBufferLookup<WorldVariableElement>(true);
-        _InteractionCandidateComponentEntity = GameSingletonUtility.GetEntity<InteractionCandidateComponent>(state.EntityManager);
+        _InteractionTransactionElementBufferLookup = state.GetBufferLookup<InteractionTransactionElement>(true);
+        _GameInteractionComponentEntity = GameSingletonUtility.GetEntity<GameInteractionComponent>(state.EntityManager);
         _PlayerSkillDefinitionRegistryComponentEntity = GameSingletonUtility.GetEntity<PlayerSkillDefinitionRegistryComponent>(state.EntityManager);
         _WorldVariableComponentEntity = GameSingletonUtility.GetEntity<WorldVariableComponent>(state.EntityManager);
     }
@@ -1407,7 +1507,9 @@ public struct UnitSourceDispatcher
     public void Update(ref SystemState state)
     {
         _DungeonInterestPointComponentLookup.Update(ref state);
-        _InteractionCandidateComponentLookup.Update(ref state);
+        _UnitInteractableComponentLookup.Update(ref state);
+        _GameInteractionComponentLookup.Update(ref state);
+        _TreasureComponentLookup.Update(ref state);
         _LocalTransformLookup.Update(ref state);
         _PlayerInputComponentLookup.Update(ref state);
         _PlayerCurrentSkillComponentLookup.Update(ref state);
@@ -1437,6 +1539,7 @@ public struct UnitSourceDispatcher
         _UnitVariableConsumerElementBufferLookup.Update(ref state);
         _UnitVariableElementBufferLookup.Update(ref state);
         _WorldVariableElementBufferLookup.Update(ref state);
+        _InteractionTransactionElementBufferLookup.Update(ref state);
     }
 
     public bool TryGet(Entity entity, UnitSourceId sourceId, in UnitSourceArguments arguments, out UnitSourceValue value)
@@ -1444,24 +1547,12 @@ public struct UnitSourceDispatcher
         value = default;
         switch (sourceId)
         {
-            case UnitSourceId.GameInteractionCandidateKind:
-            {
-                if (!_InteractionCandidateComponentLookup.TryGetComponent(_InteractionCandidateComponentEntity, out InteractionCandidateComponent component))
-                    return false;
-                return GameInteractionSource.TryGet(1, in component, in arguments, out value);
-            }
-            case UnitSourceId.GameInteractionCandidateTarget:
-            {
-                if (!_InteractionCandidateComponentLookup.TryGetComponent(_InteractionCandidateComponentEntity, out InteractionCandidateComponent component))
-                    return false;
-                return GameInteractionSource.TryGet(2, in component, in arguments, out value);
-            }
-            case UnitSourceId.GameInteractionHasCandidate:
-            {
-                if (!_InteractionCandidateComponentLookup.TryGetComponent(_InteractionCandidateComponentEntity, out InteractionCandidateComponent component))
-                    return false;
-                return GameInteractionSource.TryGet(0, in component, in arguments, out value);
-            }
+            case UnitSourceId.WorldInteractionHasPending:
+                return GameInteractionSource.TryGet(0, _GameInteractionComponentEntity, in _GameInteractionComponentLookup, in _InteractionTransactionElementBufferLookup, in arguments, out value);
+            case UnitSourceId.WorldInteractionPendingActor:
+                return GameInteractionSource.TryGet(1, _GameInteractionComponentEntity, in _GameInteractionComponentLookup, in _InteractionTransactionElementBufferLookup, in arguments, out value);
+            case UnitSourceId.WorldInteractionPendingRequestId:
+                return GameInteractionSource.TryGet(2, _GameInteractionComponentEntity, in _GameInteractionComponentLookup, in _InteractionTransactionElementBufferLookup, in arguments, out value);
             case UnitSourceId.PlayerInputEscapeHeld:
             {
                 if (!_PlayerInputComponentLookup.TryGetComponent(entity, out PlayerInputComponent component))
@@ -1920,12 +2011,14 @@ public struct UnitSourceDispatcher
                 return WorldVariableSource.TryGet(8, _WorldVariableComponentEntity, in _WorldVariableComponentLookup, in _WorldVariableElementBufferLookup, in arguments, out value);
             case UnitSourceId.WorldVariablesHas:
                 return WorldVariableSource.TryGet(1, _WorldVariableComponentEntity, in _WorldVariableComponentLookup, in _WorldVariableElementBufferLookup, in arguments, out value);
-            case UnitSourceId.WorldInteractionIsInteracting:
-            {
-                if (!_InteractionCandidateComponentLookup.TryGetComponent(_InteractionCandidateComponentEntity, out InteractionCandidateComponent component))
-                    return false;
-                return GameInteractionSource.TryGet(3, in component, in arguments, out value);
-            }
+            case UnitSourceId.WorldInteractionIsBusy:
+                return GameInteractionSource.TryGet(3, _GameInteractionComponentEntity, in _GameInteractionComponentLookup, in _InteractionTransactionElementBufferLookup, in arguments, out value);
+            case UnitSourceId.WorldInteractionHasResult:
+                return GameInteractionSource.TryGet(4, _GameInteractionComponentEntity, in _GameInteractionComponentLookup, in _InteractionTransactionElementBufferLookup, in arguments, out value);
+            case UnitSourceId.WorldInteractionResultCode:
+                return GameInteractionSource.TryGet(5, _GameInteractionComponentEntity, in _GameInteractionComponentLookup, in _InteractionTransactionElementBufferLookup, in arguments, out value);
+            case UnitSourceId.WorldInteractionResult:
+                return GameInteractionSource.TryGet(6, _GameInteractionComponentEntity, in _GameInteractionComponentLookup, in _InteractionTransactionElementBufferLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillCurrentAdditionId:
                 return PlayerCurrentSkillSource.TryGetDerived(4, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), in _PlayerCurrentSkillComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillCurrentInputType:
@@ -1971,8 +2064,12 @@ public struct UnitSourceDispatcher
             case UnitSourceId.PlayerSkillIsCurrentChainEmpty:
                 return PlayerSkillChainSource.TryGet(1, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.UnitInterestPointArrivalDistance:
+            case UnitSourceId.UnitInterestPointAliveGuardCount:
             case UnitSourceId.UnitInterestPointEncounterId:
+            case UnitSourceId.UnitInterestPointEncounterReady:
             case UnitSourceId.UnitInterestPointPatrolSpeed:
+            case UnitSourceId.UnitInterestPointPatrolTarget:
+            case UnitSourceId.UnitInterestPointPatrolUnitCount:
             case UnitSourceId.UnitInterestPointSpawnDistance:
             case UnitSourceId.UnitInterestPointSquadId:
             {
@@ -1985,9 +2082,31 @@ public struct UnitSourceDispatcher
                     UnitSourceId.UnitInterestPointSpawnDistance => 2,
                     UnitSourceId.UnitInterestPointPatrolSpeed => 3,
                     UnitSourceId.UnitInterestPointArrivalDistance => 4,
+                    UnitSourceId.UnitInterestPointAliveGuardCount => 5,
+                    UnitSourceId.UnitInterestPointPatrolUnitCount => 6,
+                    UnitSourceId.UnitInterestPointPatrolTarget => 7,
+                    UnitSourceId.UnitInterestPointEncounterReady => 8,
                     _ => -1,
                 };
                 return DungeonInterestPointSource.TryGet(operation, in component, in arguments, out value);
+            }
+            case UnitSourceId.UnitInteractableEnabled:
+            {
+                if (!_UnitInteractableComponentLookup.TryGetComponent(entity, out UnitInteractableComponent component))
+                    return false;
+                return UnitInteractableSource.TryGet(0, in component, in arguments, out value);
+            }
+            case UnitSourceId.UnitInteractableRangeSq:
+            {
+                if (!_UnitInteractableComponentLookup.TryGetComponent(entity, out UnitInteractableComponent component))
+                    return false;
+                return UnitInteractableSource.TryGet(1, in component, in arguments, out value);
+            }
+            case UnitSourceId.UnitTreasureOpened:
+            {
+                if (!_TreasureComponentLookup.TryGetComponent(entity, out TreasureComponent component))
+                    return false;
+                return TreasureSource.TryGet(0, in component, in arguments, out value);
             }
             default:
                 return false;
@@ -2019,6 +2138,27 @@ public struct UnitSourceDispatcher
                     return false;
                 RefRW<UnitFacingComponent> component = _UnitFacingComponentLookup.GetRefRW(entity);
                 return UnitFacingSource.TrySet(0, ref component.ValueRW, in arguments);
+            }
+            case UnitSourceId.UnitInterestPointSetPatrolTarget:
+            {
+                if (!_DungeonInterestPointComponentLookup.HasComponent(entity))
+                    return false;
+                RefRW<DungeonInterestPointComponent> component = _DungeonInterestPointComponentLookup.GetRefRW(entity);
+                return DungeonInterestPointSource.TrySet(0, ref component.ValueRW, in arguments);
+            }
+            case UnitSourceId.UnitInteractableSetEnabled:
+            {
+                if (!_UnitInteractableComponentLookup.HasComponent(entity))
+                    return false;
+                RefRW<UnitInteractableComponent> component = _UnitInteractableComponentLookup.GetRefRW(entity);
+                return UnitInteractableSource.TrySet(0, ref component.ValueRW, in arguments);
+            }
+            case UnitSourceId.UnitTreasureSetOpened:
+            {
+                if (!_TreasureComponentLookup.HasComponent(entity))
+                    return false;
+                RefRW<TreasureComponent> component = _TreasureComponentLookup.GetRefRW(entity);
+                return TreasureSource.TrySet(0, ref component.ValueRW, in arguments);
             }
             case UnitSourceId.UnitManaCost:
             {
@@ -2095,14 +2235,6 @@ public struct UnitSourceDispatcher
             default:
                 return false;
         }
-    }
-
-    public bool TryGetInteraction(out InteractionRequestSnapshot request)
-    {
-        request = default;
-        if (!_InteractionCandidateComponentLookup.TryGetComponent(_InteractionCandidateComponentEntity, out InteractionCandidateComponent candidate))
-            return false;
-        return GameInteractionSource.TryGetInteraction(in candidate, out request);
     }
 
 }

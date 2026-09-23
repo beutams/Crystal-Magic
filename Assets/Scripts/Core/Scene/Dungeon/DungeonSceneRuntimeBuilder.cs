@@ -41,6 +41,7 @@ namespace CrystalMagic.Core
             GameObject rootObject = new(RuntimeRootName);
             DungeonSceneRuntimeRoot runtimeRoot = rootObject.AddComponent<DungeonSceneRuntimeRoot>();
             List<Entity> spawnedEntities = new();
+            Dictionary<Entity, int> controlledSceneObjects = new();
             string resourceOwnerKey = $"{RuntimeRootName}_{Guid.NewGuid():N}";
             RuntimeDungeonSceneData sceneData = mapData.SceneData;
 
@@ -89,7 +90,7 @@ namespace CrystalMagic.Core
             yield return null;
 
             reportProgress?.Invoke(0.996f, "Building dungeon scene", "Spawning scene objects");
-            SpawnSceneObjects(entityManager, sceneData, resourceOwnerKey, spawnedEntities);
+            SpawnSceneObjects(entityManager, sceneData, resourceOwnerKey, spawnedEntities, controlledSceneObjects);
             yield return null;
             DungeonFlowTiming.EndStage(15, "视觉、碰撞和场景对象已完成");
 
@@ -99,11 +100,14 @@ namespace CrystalMagic.Core
             yield return null;
 
             reportProgress?.Invoke(0.9975f, "Building dungeon scene", "Spawning interest point units");
-            SpawnInterestPoints(entityManager, sceneData, spawnedEntities);
+            Dictionary<int, Entity> interestPoints = new();
+            SpawnInterestPoints(entityManager, sceneData, spawnedEntities, interestPoints);
+            LinkSceneObjectsToInterestPoints(entityManager, controlledSceneObjects, interestPoints);
             yield return null;
 
             reportProgress?.Invoke(0.998f, "Building dungeon scene", "Spawning monsters");
-            SpawnMonsters(entityManager, sceneData, spawnedEntities);
+            SpawnMonsters(entityManager, sceneData, spawnedEntities, interestPoints);
+            SetInterestPointsReady(entityManager, interestPoints);
 
             runtimeRoot.Initialize(resourceOwnerKey, spawnedEntities);
             DungeonFlowTiming.EndStage(16, $"SpawnedEntities={spawnedEntities.Count}");
@@ -127,6 +131,7 @@ namespace CrystalMagic.Core
             NetworkEntitySpawnUtility.EnsureSpawnQueue(entityManager);
             NetworkEntitySpawnUtility.ClearSpawnQueue(entityManager);
             List<Entity> spawnedEntities = new();
+            Dictionary<Entity, int> controlledSceneObjects = new();
             RuntimeDungeonSceneData sceneData = mapPlan.sceneData;
 
             GameRuntimeStateUtility.SetDungeonRuntimeMap(
@@ -139,7 +144,7 @@ namespace CrystalMagic.Core
 
             SpawnObstacles(entityManager, null, sceneData, null, spawnedEntities);
             SpawnEnvironment(entityManager, sceneData, null, spawnedEntities, false);
-            SpawnSceneObjects(entityManager, sceneData, null, spawnedEntities, false);
+            SpawnSceneObjects(entityManager, sceneData, null, spawnedEntities, controlledSceneObjects, false);
 
             if (playerInfos != null)
             {
@@ -159,8 +164,11 @@ namespace CrystalMagic.Core
             }
 
             // 兴趣点是服务器 AI 的控制实体，不向客户端同步；它们后续生成的巡逻单位会走动态 Spawn 包。
-            SpawnInterestPoints(entityManager, sceneData, spawnedEntities);
-            SpawnMonsters(entityManager, sceneData, spawnedEntities);
+            Dictionary<int, Entity> interestPoints = new();
+            SpawnInterestPoints(entityManager, sceneData, spawnedEntities, interestPoints);
+            LinkSceneObjectsToInterestPoints(entityManager, controlledSceneObjects, interestPoints);
+            SpawnMonsters(entityManager, sceneData, spawnedEntities, interestPoints);
+            SetInterestPointsReady(entityManager, interestPoints);
 
             for (int index = 0; index < spawnedEntities.Count; index++)
             {
@@ -329,6 +337,7 @@ namespace CrystalMagic.Core
             RuntimeDungeonSceneData sceneData,
             string resourceOwnerKey,
             List<Entity> spawnedEntities,
+            IDictionary<Entity, int> controlledSceneObjects,
             bool createVisual = true)
         {
             List<RuntimeDungeonSceneObjectSpawnData> sceneObjects = sceneData.SceneObjects;
@@ -351,16 +360,7 @@ namespace CrystalMagic.Core
                 entityInfo.colliderSizeX = sceneObject.Size.x;
                 entityInfo.colliderSizeY = sceneObject.Size.y;
                 entityInfo.colliderSizeZ = sceneObject.Size.z;
-                if (sceneObject.ObjectType == RuntimeDungeonSceneObjectType.Exit)
-                {
-                    entityInfo.hasExitData = true;
-                    entityInfo.exitRegionId = sceneObject.RegionId;
-                    entityInfo.exitTargetThemeKey = sceneObject.TargetThemeId;
-                    entityInfo.exitTargetFloor = sceneObject.TargetFloor;
-                    entityInfo.exitRequiresRoomClear = sceneObject.RequiresRoomClear;
-                    entityInfo.exitIsOpen = false;
-                }
-                else if (sceneObject.ObjectType == RuntimeDungeonSceneObjectType.Treasure)
+                if (sceneObject.ObjectType == RuntimeDungeonSceneObjectType.Treasure)
                 {
                     entityInfo.hasTreasureData = true;
                     entityInfo.treasureRegionId = sceneObject.RegionId;
@@ -371,6 +371,36 @@ namespace CrystalMagic.Core
                 }
                 if (!NetworkEntitySpawnUtility.TrySpawn(entityManager, entityInfo, out Entity entity))
                     continue;
+
+                if (sceneObject.ObjectType == RuntimeDungeonSceneObjectType.Exit)
+                {
+                    DungeonExitRuntimeUtility.SetDestination(
+                        entityManager,
+                        entity,
+                        sceneObject.TargetThemeId,
+                        sceneObject.TargetFloor);
+                    if (entityManager.HasComponent<UnitInteractableComponent>(entity))
+                    {
+                        UnitInteractableComponent interactable =
+                            entityManager.GetComponentData<UnitInteractableComponent>(entity);
+                        interactable.IsEnabled = sceneObject.RequiresRoomClear ? (byte)0 : (byte)1;
+                        interactable.NetworkDirty = 0;
+                        entityManager.SetComponentData(entity, interactable);
+                        entityInfo.hasInteractableData = true;
+                        entityInfo.interactionKind = interactable.Data.Kind;
+                        entityInfo.interactionDataId = interactable.Data.DataId;
+                        entityInfo.interactionAmount = interactable.Data.Amount;
+                        entityInfo.interactionVariant = interactable.Data.Variant;
+                        entityInfo.interactionRangeSq = interactable.RangeSq;
+                        entityInfo.interactionEnabled = interactable.IsEnabled != 0;
+                    }
+                    if (sceneObject.RequiresRoomClear)
+                        controlledSceneObjects[entity] = sceneObject.RegionId;
+                }
+                else if (sceneObject.ObjectType == RuntimeDungeonSceneObjectType.Treasure)
+                {
+                    controlledSceneObjects[entity] = sceneObject.RegionId;
+                }
 
                 if (createVisual)
                 {
@@ -412,36 +442,78 @@ namespace CrystalMagic.Core
         private static void SpawnMonsters(
             EntityManager entityManager,
             RuntimeDungeonSceneData sceneData,
-            List<Entity> spawnedEntities)
+            List<Entity> spawnedEntities,
+            IReadOnlyDictionary<int, Entity> interestPoints)
         {
             List<RuntimeDungeonMonsterSpawnData> monsterSpawns = sceneData.MonsterSpawns;
             for (int i = 0; i < monsterSpawns.Count; i++)
             {
                 RuntimeDungeonMonsterSpawnData spawn = monsterSpawns[i];
-                if (spawn == null || string.IsNullOrWhiteSpace(spawn.PrefabName))
-                    continue;
-
-                NetworkEntitySpawnInfo entityInfo = NetworkEntitySpawnUtility.CreateInfo(
-                    NetworkEntityPrefabType.Unit,
-                    spawn.PrefabName,
-                    spawn.WorldPosition);
-                spawn.SaveId = i + 1;
-                entityInfo.hasMonsterSpawnData = true;
-                entityInfo.monsterSaveId = spawn.SaveId;
-                entityInfo.monsterRegionId = spawn.RegionId;
-                entityInfo.monsterSquadId = spawn.SquadId;
-                entityInfo.monsterIsBoss = spawn.IsBoss;
-                if (!NetworkEntitySpawnUtility.TrySpawn(entityManager, entityInfo, out Entity monster))
-                    continue;
-
-                spawnedEntities.Add(monster);
+                if (spawn != null)
+                    spawn.SaveId = i + 1;
+                SpawnMonster(entityManager, spawn, spawnedEntities, interestPoints, false);
             }
+
+            if (sceneData.InterestPointSpawns == null)
+                return;
+
+            for (int pointIndex = 0; pointIndex < sceneData.InterestPointSpawns.Count; pointIndex++)
+            {
+                RuntimeDungeonInterestPointSpawnData pointSpawn = sceneData.InterestPointSpawns[pointIndex];
+                if (pointSpawn?.MemberSpawns == null)
+                    continue;
+
+                for (int memberIndex = 0; memberIndex < pointSpawn.MemberSpawns.Count; memberIndex++)
+                {
+                    SpawnMonster(
+                        entityManager,
+                        pointSpawn.MemberSpawns[memberIndex],
+                        spawnedEntities,
+                        interestPoints,
+                        true);
+                }
+            }
+        }
+
+        private static void SpawnMonster(
+            EntityManager entityManager,
+            RuntimeDungeonMonsterSpawnData spawn,
+            List<Entity> spawnedEntities,
+            IReadOnlyDictionary<int, Entity> interestPoints,
+            bool countsAsPatrol)
+        {
+            if (spawn == null || string.IsNullOrWhiteSpace(spawn.PrefabName))
+                return;
+
+            NetworkEntitySpawnInfo entityInfo = NetworkEntitySpawnUtility.CreateInfo(
+                NetworkEntityPrefabType.Unit,
+                spawn.PrefabName,
+                spawn.WorldPosition);
+            entityInfo.hasMonsterSpawnData = true;
+            entityInfo.monsterSaveId = spawn.SaveId;
+            entityInfo.monsterRegionId = spawn.RegionId;
+            entityInfo.monsterSquadId = spawn.SquadId;
+            entityInfo.monsterIsBoss = spawn.IsBoss;
+            if (!NetworkEntitySpawnUtility.TrySpawn(entityManager, entityInfo, out Entity monster))
+                return;
+
+            if (interestPoints.TryGetValue(spawn.RegionId, out Entity interestPoint))
+            {
+                DungeonInterestPointUtility.AttachMember(
+                    entityManager,
+                    monster,
+                    interestPoint,
+                    true,
+                    countsAsPatrol);
+            }
+            spawnedEntities.Add(monster);
         }
 
         private static void SpawnInterestPoints(
             EntityManager entityManager,
             RuntimeDungeonSceneData sceneData,
-            List<Entity> spawnedEntities)
+            List<Entity> spawnedEntities,
+            IDictionary<int, Entity> interestPoints)
         {
             if (sceneData.InterestPointSpawns == null || sceneData.InterestPointSpawns.Count == 0)
                 return;
@@ -495,6 +567,7 @@ namespace CrystalMagic.Core
                     SpawnDistance = Mathf.Max(0f, spawn.SpawnDistance),
                     PatrolSpeed = Mathf.Max(0f, spawn.PatrolSpeed),
                     ArrivalDistance = Mathf.Max(0.05f, spawn.ArrivalDistance),
+                    PatrolTarget = Entity.Null,
                     PatrolEnabled = 1,
                 };
                 entityManager.AddComponentData(pointEntity, point);
@@ -502,6 +575,32 @@ namespace CrystalMagic.Core
                 entityManager.AddComponent<DungeonRuntimeOwnedEntity>(pointEntity);
 
                 spawnedEntities.Add(pointEntity);
+                interestPoints[spawn.EncounterId] = pointEntity;
+            }
+        }
+
+        private static void LinkSceneObjectsToInterestPoints(
+            EntityManager entityManager,
+            IReadOnlyDictionary<Entity, int> controlledSceneObjects,
+            IReadOnlyDictionary<int, Entity> interestPoints)
+        {
+            foreach (KeyValuePair<Entity, int> pair in controlledSceneObjects)
+            {
+                if (interestPoints.TryGetValue(pair.Value, out Entity interestPoint))
+                    DungeonInterestPointUtility.AttachMember(entityManager, pair.Key, interestPoint);
+            }
+        }
+
+        private static void SetInterestPointsReady(
+            EntityManager entityManager,
+            IReadOnlyDictionary<int, Entity> interestPoints)
+        {
+            foreach (KeyValuePair<int, Entity> pair in interestPoints)
+            {
+                DungeonInterestPointComponent point =
+                    entityManager.GetComponentData<DungeonInterestPointComponent>(pair.Value);
+                point.EncounterReady = 1;
+                entityManager.SetComponentData(pair.Value, point);
             }
         }
 

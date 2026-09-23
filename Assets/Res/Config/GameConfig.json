@@ -1,6 +1,6 @@
 ﻿{
   "StartingGold": 500,
-  "MoneyIconPath": "Assets/Res/Sprites/Buy.png",
+  "MoneyIconPath": "Assets/Res/Sprites/UISprites/Wood UI/Sprites/Icons/Gold Coin.png",
   "InitialBackpackSize": 20,
   "InitialStashSize": -1,
   "MaxSaveSlots": 20,

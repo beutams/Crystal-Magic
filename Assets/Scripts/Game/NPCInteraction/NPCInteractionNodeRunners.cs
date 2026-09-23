@@ -161,11 +161,8 @@ public sealed class NPCEnterDungeonInteractionNodeRunner : NPCInteractionNodeRun
 
         SaveDataComponent saveDataComponent = SaveDataComponent.Instance;
         SaveAreaType currentAreaType = saveDataComponent?.GetLocationData()?.AreaType ?? SaveAreaType.Town;
-        if (!saveDataComponent.IsDungeonThemeUnlocked(dungeonThemeId))
-        {
-            Debug.LogWarning($"[NPCInteraction] Dungeon theme {dungeonThemeId} is locked.");
-            return;
-        }
+        if (saveDataComponent != null && !saveDataComponent.IsDungeonThemeUnlocked(dungeonThemeId))
+            saveDataComponent.UnlockDungeonTheme(dungeonThemeId);
 
         if (currentAreaType != SaveAreaType.Dungeon)
             saveDataComponent?.ClearDungeonRun();
@@ -188,11 +185,15 @@ public sealed class NPCEnterDungeonInteractionNodeRunner : NPCInteractionNodeRun
             if (world != null && world.IsCreated)
             {
                 EntityManager entityManager = world.EntityManager;
-                if (entityManager.Exists(session.Target) && entityManager.HasComponent<DungeonExitComponent>(session.Target))
+                if (entityManager.Exists(session.Target) &&
+                    DungeonExitRuntimeUtility.TryGetDestination(
+                        entityManager,
+                        session.Target,
+                        out int targetThemeId,
+                        out int targetFloor))
                 {
-                    DungeonExitComponent exit = entityManager.GetComponentData<DungeonExitComponent>(session.Target);
-                    dungeonThemeId = exit.TargetThemeId;
-                    dungeonFloor = Math.Max(1, exit.TargetFloor);
+                    dungeonThemeId = targetThemeId;
+                    dungeonFloor = Math.Max(1, targetFloor);
                 }
             }
         }

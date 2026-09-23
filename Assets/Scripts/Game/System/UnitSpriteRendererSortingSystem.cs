@@ -3,7 +3,7 @@ using Unity.Transforms;
 using UnityEngine;
 
 [WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation)]
-[UpdateInGroup(typeof(ClientPresentationSystemGroup))]
+[UpdateInGroup(typeof(GamePresentationSystemGroup))]
 [UpdateAfter(typeof(UnitAnimationSystem))]
 public partial class UnitSpriteRendererSortingSystem : SystemBase
 {
