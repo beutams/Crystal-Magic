@@ -27,6 +27,7 @@ namespace CrystalMagic.Game.Skill.Effects
             if (target == Entity.Null ||
                 !entityManager.Exists(target) ||
                 !entityManager.HasComponent<UnitVitalityComponent>(target) ||
+                entityManager.HasComponent<BattleSpectatorComponent>(target) ||
                 EffectTargetUtility.IsDead(entityManager, target))
                 return;
 

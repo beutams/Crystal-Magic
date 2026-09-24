@@ -10,13 +10,14 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
     private float _hpMaskBaseWidth = -1f;
     private float _mpMaskBaseWidth = -1f;
     private float _chantMaskBaseWidth = -1f;
+    private readonly BattleUI_PropSlotClickHandler[] _propSlotHandlers = new BattleUI_PropSlotClickHandler[3];
 
     public event Action<int> PropShortcutUseRequested;
-    public event Action<int, int> PropShortcutBindRequested;
 
     public override void OnOpen()
     {
         EnsureSkillItemTemplateView();
+        BindPropSlotHandlers();
         CacheBarWidths();
         UI.Bar.GameObject.SetActive(false);
         base.OnOpen();
@@ -42,6 +43,7 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
         RenderSkillChain(Model.SkillItems);
         RenderChantProgress(Model.IsChanting, Model.ChantProgress);
         RenderVitalityAndMana(Model.HpRatio, Model.MpRatio, Model.CurrentHp, Model.CurrentMp);
+        RenderPropShortcuts(Model.PropShortcutItems);
     }
 
     private void RenderSkillChain(IReadOnlyList<BattleSkillDisplayData> skillItems)
@@ -99,6 +101,72 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
         SetValueText(UI.MP_Value.TextMeshProUGUI, currentMp);
     }
 
+    private void RenderPropShortcuts(IReadOnlyList<BattlePropShortcutDisplayData> items)
+    {
+        RenderPropShortcut(
+            UI.PropShortcuts_PropSlot1_Icon,
+            UI.PropShortcuts_PropSlot1_Count,
+            UI.PropShortcuts_PropSlot1_Key,
+            UI.PropShortcuts_PropSlot1_Cooldown,
+            items != null && items.Count > 0 ? items[0] : null,
+            "Z");
+        RenderPropShortcut(
+            UI.PropShortcuts_PropSlot2_Icon,
+            UI.PropShortcuts_PropSlot2_Count,
+            UI.PropShortcuts_PropSlot2_Key,
+            UI.PropShortcuts_PropSlot2_Cooldown,
+            items != null && items.Count > 1 ? items[1] : null,
+            "X");
+        RenderPropShortcut(
+            UI.PropShortcuts_PropSlot3_Icon,
+            UI.PropShortcuts_PropSlot3_Count,
+            UI.PropShortcuts_PropSlot3_Key,
+            UI.PropShortcuts_PropSlot3_Cooldown,
+            items != null && items.Count > 2 ? items[2] : null,
+            "C");
+    }
+
+    private void RenderPropShortcut(
+        UINode iconNode,
+        UINode countNode,
+        UINode keyNode,
+        UINode cooldownNode,
+        BattlePropShortcutDisplayData data,
+        string key)
+    {
+        iconNode.Image.sprite = LoadPropIcon(data != null ? data.IconPath : string.Empty);
+        iconNode.Image.color = data != null && data.ItemId >= 0
+            ? Color.white
+            : new Color(1f, 1f, 1f, 0.2f);
+        countNode.TextMeshProUGUI.text = data != null && data.Count > 0 ? data.Count.ToString() : string.Empty;
+        keyNode.TextMeshProUGUI.text = key;
+
+        float remainingRatio = data != null ? Mathf.Clamp01(data.CooldownRatio) : 0f;
+        cooldownNode.GameObject.SetActive(remainingRatio > 0f);
+        RectTransform cooldown = cooldownNode.RectTransform;
+        Vector2 anchorMin = cooldown.anchorMin;
+        anchorMin.y = 1f - remainingRatio;
+        cooldown.anchorMin = anchorMin;
+        cooldown.offsetMin = Vector2.zero;
+        cooldown.offsetMax = Vector2.zero;
+    }
+
+    private void BindPropSlotHandlers()
+    {
+        BindPropSlotHandler(0, UI.PropShortcuts_PropSlot1.GameObject);
+        BindPropSlotHandler(1, UI.PropShortcuts_PropSlot2.GameObject);
+        BindPropSlotHandler(2, UI.PropShortcuts_PropSlot3.GameObject);
+    }
+
+    private void BindPropSlotHandler(int slotIndex, GameObject gameObject)
+    {
+        BattleUI_PropSlotClickHandler handler = gameObject.GetComponent<BattleUI_PropSlotClickHandler>();
+        handler.Initialize(slotIndex);
+        handler.Clicked -= RequestPropShortcutUse;
+        handler.Clicked += RequestPropShortcutUse;
+        _propSlotHandlers[slotIndex] = handler;
+    }
+
     private void CacheBarWidths()
     {
         if (_hpMaskBaseWidth <= 0f)
@@ -148,9 +216,9 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
         PropShortcutUseRequested?.Invoke(shortcutIndex);
     }
 
-    public void RequestPropShortcutBind(int propSlotIndex, int shortcutIndex)
+    private Sprite LoadPropIcon(string iconPath)
     {
-        PropShortcutBindRequested?.Invoke(propSlotIndex, shortcutIndex);
+        return string.IsNullOrEmpty(iconPath) ? null : LoadManagedSprite(iconPath);
     }
 }
 

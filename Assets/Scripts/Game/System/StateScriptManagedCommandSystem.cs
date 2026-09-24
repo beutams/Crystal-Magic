@@ -11,7 +11,9 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation |
+                   WorldSystemFilterFlags.ClientSimulation |
+                   WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateAfter(typeof(StateScriptSystem))]
 public partial class StateScriptManagedCommandSystem : SystemBase
@@ -30,9 +32,11 @@ public partial class StateScriptManagedCommandSystem : SystemBase
     private Entity _interactionEntity;
     private NPCInteractionNodeRunnerFactory _npcRunnerFactory;
     private bool _npcInputLocked;
+    private GameWorldRole _worldRole;
 
     protected override void OnCreate()
     {
+        _worldRole = GameWorldContextUtility.Get(EntityManager).Role;
         _sourceDispatcher.Initialize(this);
         _interactionEntity = GameSingletonUtility.GetEntity<GameInteractionComponent>(EntityManager);
         _npcRunnerFactory = new NPCInteractionNodeRunnerFactory();
@@ -71,7 +75,7 @@ public partial class StateScriptManagedCommandSystem : SystemBase
                 continue;
             }
 
-            if (component.IsStoppedForDeath != 0 ||
+            if (component.IsStoppedForDeath != 0 || EntityManager.HasComponent<BattleSpectatorComponent>(entity) ||
                 (EntityManager.HasComponent<UnitDeathComponent>(entity) &&
                  EntityManager.IsComponentEnabled<UnitDeathComponent>(entity)))
             {
@@ -104,15 +108,23 @@ public partial class StateScriptManagedCommandSystem : SystemBase
 
     protected override void OnDestroy()
     {
-        foreach (KeyValuePair<StateScriptActionKey, List<SkillAdditionAction>> pair in _runningActions)
-            StopActions(pair.Value);
-        _runningActions.Clear();
+        ResetScene();
         foreach (EffectDataListId effectListId in _effectLists.Values)
             EffectDataBridgeUtility.Unregister(EntityManager, effectListId);
         _effectLists.Clear();
+    }
+
+    public void ResetScene()
+    {
+        foreach (KeyValuePair<StateScriptActionKey, List<SkillAdditionAction>> pair in _runningActions)
+            StopActions(pair.Value);
+        _runningActions.Clear();
         foreach (NPCInteractionSession session in _npcSessions.Values)
             session.Cancel();
         _npcSessions.Clear();
+        _completedKeys.Clear();
+        _completedNpcTargets.Clear();
+        _missingDestroyFlags.Clear();
         ReleaseNpcInput();
     }
 
@@ -145,7 +157,7 @@ public partial class StateScriptManagedCommandSystem : SystemBase
 
                     EffectDataListId effectListId = EffectDataBridgeUtility.Register(
                         EntityManager,
-                        executeEffect.Effects);
+                        executeEffect.Effects, registry: true);
                     if (effectListId.IsValid)
                     {
                         _effectLists[new StateScriptEffectKey(row.Id, graphIndex, nodeIndex)] = effectListId;
@@ -208,10 +220,12 @@ public partial class StateScriptManagedCommandSystem : SystemBase
         switch (command.Type)
         {
             case StateScriptManagedCommandType.RequestSkill:
-                EnqueueSkillEffects(entity, command, false);
+                if (_worldRole != GameWorldRole.Client)
+                    EnqueueSkillEffects(entity, command, false);
                 break;
             case StateScriptManagedCommandType.RequestSkillWithAddition:
-                EnqueueSkillEffects(entity, command, true);
+                if (_worldRole != GameWorldRole.Client)
+                    EnqueueSkillEffects(entity, command, true);
                 break;
             case StateScriptManagedCommandType.PublishGameEvent:
                 if (EventComponent.TryGetInstance(out EventComponent eventComponent))
@@ -325,8 +339,9 @@ public partial class StateScriptManagedCommandSystem : SystemBase
                     GameRuntimeStateUtility.TryGetPlayerCharacterData(EntityManager, transaction.Actor, out CharacterData characterData))
                 {
                     characterData.Money = System.Math.Max(0L, characterData.Money + amount);
-                    SaveDataComponent.Instance.NotifyCharacterDataChanged();
+                    PlayerCharacterUtility.MarkChanged(EntityManager, transaction.Actor);
                     resultCode = InteractionResultCode.Success;
+                    PublishPickupFeedback(transaction.Actor, PickupFeedbackType.Money, -1, amount);
                 }
                 else
                 {
@@ -336,6 +351,7 @@ public partial class StateScriptManagedCommandSystem : SystemBase
                         stashData.Money = System.Math.Max(0L, stashData.Money + amount);
                         SaveDataComponent.Instance.NotifyStashDataChanged();
                         resultCode = InteractionResultCode.Success;
+                        PublishPickupFeedback(transaction.Actor, PickupFeedbackType.Money, -1, amount);
                     }
                 }
             }
@@ -353,15 +369,13 @@ public partial class StateScriptManagedCommandSystem : SystemBase
                         data.DataId,
                         amount) == amount)
                 {
-                    SaveDataComponent.Instance.NotifyBackpackDataChanged();
+                    PlayerCharacterUtility.MarkChanged(EntityManager, transaction.Actor);
                     resultCode = InteractionResultCode.Success;
+                    PublishPickupFeedback(transaction.Actor, PickupFeedbackType.Item, data.DataId, amount);
                 }
-                else if (GameWorldContextUtility.Get(EntityManager).Role == GameWorldRole.Standalone)
+                else
                 {
-                    UIComponent.Instance.Open<TipForm>(new TipFormOpenData
-                    {
-                        Info = LocalizationComponent.Instance.Get("ui.shop.inventory_full"),
-                    });
+                    PublishPickupFeedback(transaction.Actor, PickupFeedbackType.BackpackFull, data.DataId, amount);
                 }
             }
         }
@@ -374,6 +388,14 @@ public partial class StateScriptManagedCommandSystem : SystemBase
             UnitSourceValue.FromBool(resultCode == InteractionResultCode.Success));
         if (resultCode == InteractionResultCode.Success)
             MarkForDestroy(target);
+    }
+
+    private void PublishPickupFeedback(Entity player, PickupFeedbackType type, int itemId, int amount)
+    {
+        if (NetworkPresentationEventUtility.TryEnqueuePickupFeedback(EntityManager, player, type, itemId, amount))
+            return;
+
+        EventComponent.Instance.Publish(new PickupFeedbackEvent(type, itemId, amount));
     }
 
     private void StartNpcInteraction(Entity target)
@@ -411,7 +433,7 @@ public partial class StateScriptManagedCommandSystem : SystemBase
             return;
         }
 
-        NPCInteractionSession session = new(target, npcData, interaction);
+        NPCInteractionSession session = new(target, npcData, interaction, transaction.Actor);
         _npcSessions.Add(target, session);
         AcquireNpcInput();
         EventComponent.Instance.Publish(new NPCInteractionStartedEvent(target, npcData, interaction));
@@ -433,6 +455,8 @@ public partial class StateScriptManagedCommandSystem : SystemBase
         {
             NPCInteractionSession session = pair.Value;
             if (!session.IsTargetValid(EntityManager) ||
+                !EntityManager.Exists(session.Actor) ||
+                BattlePlayerStatusUtility.IsInputLocked(EntityManager, session.Actor) ||
                 (EntityManager.HasComponent<UnitDeathComponent>(session.Target) &&
                  EntityManager.IsComponentEnabled<UnitDeathComponent>(session.Target)))
             {
@@ -459,6 +483,12 @@ public partial class StateScriptManagedCommandSystem : SystemBase
             {
                 FinishNpcSession(session, false);
                 return;
+            }
+
+            if (!GameWorldExecutionTargetUtility.Contains(currentNode.ExecutionTargets, _worldRole))
+            {
+                session.CurrentNodeGuid = ResolveNextNodeGuid(currentNode, null);
+                continue;
             }
 
             if (session.CurrentRunner == null)
@@ -527,7 +557,7 @@ public partial class StateScriptManagedCommandSystem : SystemBase
 
     private void AcquireNpcInput()
     {
-        if (_npcInputLocked || GameWorldContextUtility.Get(EntityManager).Role != GameWorldRole.Standalone)
+        if (_npcInputLocked || _worldRole == GameWorldRole.Server)
             return;
         GameGateComponent.Instance.Lock(GameGateType.PlayerInput, NpcSessionInputLockReason);
         _npcInputLocked = true;
@@ -571,6 +601,7 @@ public partial class StateScriptManagedCommandSystem : SystemBase
         {
             StateScriptActionKey key = pair.Key;
             if (!EntityManager.Exists(key.Entity) ||
+                EntityManager.HasComponent<BattleSpectatorComponent>(key.Entity) ||
                 (EntityManager.HasComponent<UnitDeathComponent>(key.Entity) &&
                  EntityManager.IsComponentEnabled<UnitDeathComponent>(key.Entity)) ||
                 !EntityManager.HasComponent<UnitStateScriptComponent>(key.Entity))

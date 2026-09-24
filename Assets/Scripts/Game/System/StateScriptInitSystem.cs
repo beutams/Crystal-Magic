@@ -5,7 +5,9 @@ using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 
-[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation |
+                   WorldSystemFilterFlags.ClientSimulation |
+                   WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitInitializationSystemGroup))]
 [UpdateAfter(typeof(UnitSourceDispatcherSystem))]
 public partial class StateScriptInitSystem : SystemBase

@@ -36,7 +36,12 @@ public partial class ClientPresentationEventSystem : SystemBase
             if (presentationEvent.Sequence == 0u || presentationEvent.Sequence <= lastConsumedSequence)
                 continue;
 
-            Play(presentationEvent);
+            if (!ClientSkillVisualPredictionUtility.TryReconcileNetworkEvent(
+                    EntityManager,
+                    presentationEvent))
+            {
+                Play(presentationEvent);
+            }
             lastConsumedSequence = presentationEvent.Sequence;
         }
 
@@ -73,6 +78,9 @@ public partial class ClientPresentationEventSystem : SystemBase
             case ClientPresentationEventType.CameraShake:
                 PlayCameraShake(presentationEvent);
                 break;
+            case ClientPresentationEventType.PickupFeedback:
+                PlayPickupFeedback(presentationEvent);
+                break;
         }
     }
 
@@ -95,6 +103,19 @@ public partial class ClientPresentationEventSystem : SystemBase
             target,
             vitality.CurrentHealth,
             UnitModifierResolver.GetMaxHealth(EntityManager, target)));
+    }
+
+    private void PlayPickupFeedback(in ClientPresentationEventElement presentationEvent)
+    {
+        Entity target = presentationEvent.Target;
+        if (target == Entity.Null || !EntityManager.Exists(target) ||
+            !EntityManager.HasComponent<PlayerInputComponent>(target))
+            return;
+
+        EventComponent.Instance.Publish(new PickupFeedbackEvent(
+            (PickupFeedbackType)presentationEvent.FlagA,
+            presentationEvent.IntValue,
+            Mathf.RoundToInt(presentationEvent.ValueA)));
     }
 
     private void SpawnVfx(in ClientPresentationEventElement presentationEvent)

@@ -11,43 +11,36 @@ public sealed class NetworkPlayerInputStateData : NetworkStateData
     public float pointerY;
     public float pointerZ;
     public byte isPrimaryHeld;
-    public byte isInteractHeld;
-    public byte isInventoryHeld;
-    public byte isPropertyHeld;
-    public byte isEscapeHeld;
-    public byte isSkillHeld;
-    public int skillChainIndex;
-    public byte isUsePropHeld;
-    public int propIndex;
 
     public override void Apply(NetworkStateApplyContext context)
     {
         if (!context.TryGetEntity(unitId, out Entity entity))
             return;
 
-        byte networkDirty = 0;
-        if (!context.IsClient && context.EntityManager.HasComponent<PlayerInputComponent>(entity))
+        BattlePlayerStatusComponent status = context.EntityManager.HasComponent<BattlePlayerStatusComponent>(entity)
+            ? context.EntityManager.GetComponentData<BattlePlayerStatusComponent>(entity) : default;
+        bool transitionWaiting = status.IsWaitingForTransition;
+        PlayerInputComponent input = context.EntityManager.HasComponent<PlayerInputComponent>(entity)
+            ? context.EntityManager.GetComponentData<PlayerInputComponent>(entity)
+            : default;
+        input.Move = status.ConnectionState == BattlePlayerConnectionState.Offline || transitionWaiting
+            ? float2.zero
+            : new float2(moveX, moveY);
+        input.PointerWorldPosition = new float3(pointerX, pointerY, pointerZ);
+        input.ContinuousPrimaryHeld = status.IsInputLocked ? (byte)0 : isPrimaryHeld;
+        input.IsPrimaryHeld = input.ContinuousPrimaryHeld;
+        // 回传该输入帧下的选择结果；即便上一帧的切链事件迟到被丢弃，也能纠正客户端。
+        input.NetworkDirty = 1;
+        if (status.IsInputLocked)
         {
-            PlayerInputComponent previous = context.EntityManager.GetComponentData<PlayerInputComponent>(entity);
-            networkDirty = previous.SkillChainIndex != skillChainIndex
-                ? (byte)1
-                : previous.NetworkDirty;
+            input.IsInteractHeld = 0;
+            input.IsInventoryHeld = 0;
+            input.IsPropertyHeld = 0;
+            input.IsEscapeHeld = 0;
+            input.IsSkillHeld = 0;
+            input.IsUsePropHeld = 0;
+            input.PropIndex = -1;
         }
-
-        context.SetOrAdd(entity, new PlayerInputComponent
-        {
-            Move = new float2(moveX, moveY),
-            PointerWorldPosition = new float3(pointerX, pointerY, pointerZ),
-            IsPrimaryHeld = isPrimaryHeld,
-            IsInteractHeld = isInteractHeld,
-            IsInventoryHeld = isInventoryHeld,
-            IsPropertyHeld = isPropertyHeld,
-            IsEscapeHeld = isEscapeHeld,
-            IsSkillHeld = isSkillHeld,
-            SkillChainIndex = skillChainIndex,
-            IsUsePropHeld = isUsePropHeld,
-            PropIndex = propIndex,
-            NetworkDirty = networkDirty,
-        });
+        context.SetOrAdd(entity, input);
     }
 }

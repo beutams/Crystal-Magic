@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using CrystalMagic.UI;
+using Server;
 using Unity.Entities;
 using UnityEngine;
 
@@ -146,13 +147,13 @@ public sealed class NPCEnterDungeonInteractionNodeRunner : NPCInteractionNodeRun
     {
         _completed = true;
 
+        ResolveDungeonDestination(session, out int dungeonThemeId, out int dungeonFloor);
         if (GameFlowComponent.Instance == null)
         {
             Debug.LogWarning("[NPCInteraction] GameFlowComponent is not available for EnterDungeon node.");
             return;
         }
 
-        ResolveDungeonDestination(session, out int dungeonThemeId, out int dungeonFloor);
         if (dungeonThemeId < 0)
         {
             Debug.LogWarning("[NPCInteraction] The dungeon exit has no next theme configured.");
@@ -260,6 +261,27 @@ public sealed class NPCEnterTownInteractionNodeRunner : NPCInteractionNodeRunner
     {
         return _completed;
     }
+}
+
+public sealed class NPCRequestBattleExitInteractionNodeRunner : NPCInteractionNodeRunner
+{
+    private readonly NPCRequestBattleExitInteractionNodeData _node;
+
+    public NPCRequestBattleExitInteractionNodeRunner(NPCRequestBattleExitInteractionNodeData node)
+    {
+        _node = node;
+    }
+
+    public override void Enter(NPCInteractionSession session)
+    {
+        ClientBattleManager battle = NetworkComponent.Instance.clientBattleManager;
+        if (_node.RequestType == BattleExitRequestType.Retreat)
+            battle.RequestRetreat(session.Target);
+        else
+            battle.RequestNextTheme(session.Target);
+    }
+
+    public override bool IsCompleted(NPCInteractionSession session) => true;
 }
 
 public sealed class NPCSelectInteractionNodeRunner : NPCInteractionNodeRunner

@@ -31,6 +31,8 @@ public class UnitMoveAuthoring : MonoBehaviour
                 Direction = float2.zero,
                 StateMoveMultiplier = 1f,
                 Velocity = float2.zero,
+                PredictedPosition = float3.zero,
+                HasPredictedPosition = 0,
                 FrameVelocity = float2.zero,
                 HasFrameVelocity = 0,
                 CommandMoveSpeed = -1f,
@@ -47,6 +49,9 @@ public struct UnitMoveComponent : IComponentData
     public float2 Direction;
     public float StateMoveMultiplier;
     public float2 Velocity;
+    // 客户端本地玩家的逻辑位置。它随 SS 预测回滚，不能由表现平滑结果反写。
+    public float3 PredictedPosition;
+    public byte HasPredictedPosition;
     // 上次移动系统观察到的位置，用于检测物理或其他系统造成的位移。
     public float3 LastObservedPosition;
     public float2 FrameVelocity;

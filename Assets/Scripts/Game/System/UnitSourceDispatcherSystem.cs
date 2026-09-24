@@ -1,6 +1,8 @@
 using Unity.Entities;
 
-[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation |
+                   WorldSystemFilterFlags.ClientSimulation |
+                   WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitInitializationSystemGroup), OrderFirst = true)]
 public partial class UnitSourceDispatcherSystem : SystemBase
 {

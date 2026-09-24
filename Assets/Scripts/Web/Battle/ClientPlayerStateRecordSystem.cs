@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Server;
 using Unity.Entities;
 
@@ -9,6 +8,12 @@ public partial class ClientPlayerStateRecordSystem : SystemBase
     private ClientFrameManager _frameManager;
     private uint _lastRecordedFrame;
     private bool _hasRecordedFrame;
+
+    public void ResetScene()
+    {
+        _lastRecordedFrame = 0;
+        _hasRecordedFrame = false;
+    }
 
     protected override void OnUpdate()
     {
@@ -31,11 +36,11 @@ public partial class ClientPlayerStateRecordSystem : SystemBase
                      .WithAll<NetworkPlayerComponent>()
                      .WithEntityAccess())
         {
-            Queue<NetworkStateData> states = NetworkUnitStateSnapshotUtility.CapturePlayerState(
+            ClientPlayerPredictionSnapshot snapshot = ClientPlayerPredictionSnapshot.Capture(
                 EntityManager,
                 entity,
                 identityRef.ValueRO.id);
-            frame.RecordPlayerStates(currentFrame, states);
+            frame.RecordPlayerStates(currentFrame, snapshot);
             _lastRecordedFrame = currentFrame;
             _hasRecordedFrame = true;
             break;

@@ -33,6 +33,8 @@ namespace Server
         public bool PreparationFailed => preparationFailed;
         public string PreparationError => preparationError;
         public bool RestoreStandaloneRequested => restoreStandaloneRequested;
+        public bool ThemeTransitionRequested => themeTransitionRequested;
+        public bool HasPendingSettlement => pendingSettlement;
         public bool HasPreBattleSnapshot => preBattleSaveIndex >= 0 &&
             Guid.TryParse(preBattleSaveGuid, out _) &&
             preBattleCharacterData != null;
@@ -52,6 +54,12 @@ namespace Server
         private bool preparationFailed;
         private bool cleaningUp;
         private bool restoreStandaloneRequested;
+        private bool themeTransitionRequested;
+        private bool pendingSettlement;
+        private bool exitRequestPending;
+        private C2B_BattleExitRequest deferredExitRequest;
+        private BattleSettlementOutcome settlementOutcome;
+        private CharacterData settlementCharacterData;
         private string preparationError;
         private CharacterData preBattleCharacterData;
         private int preBattleSaveIndex = -1;
@@ -127,6 +135,14 @@ namespace Server
             {
                 return false;
             }
+
+            if (pendingSettlement)
+            {
+                context.Character = settlementOutcome == BattleSettlementOutcome.Defeated
+                    ? new CharacterData()
+                    : PlayerCharacterUtility.Clone(settlementCharacterData) ?? new CharacterData();
+                context.Player = null;
+            }
             return true;
         }
 
@@ -136,6 +152,9 @@ namespace Server
             preBattleSaveIndex = -1;
             preBattleSaveGuid = null;
             restoreStandaloneRequested = false;
+            themeTransitionRequested = false;
+            pendingSettlement = false;
+            settlementCharacterData = null;
         }
 
         public void StopBattle()
@@ -152,6 +171,9 @@ namespace Server
                 battleConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<B2C_CreateNetworkEntities>(), OnCreateNetworkEntities);
                 battleConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<B2C_ReloadBattleSnapshot>(), OnReloadBattleSnapshot);
                 battleConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<B2C_StartFrame>(), OnStartFrame);
+                battleConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<B2C_BattleSettlement>(), OnBattleSettlement);
+                battleConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<B2C_BeginBattleTheme>(), OnBeginBattleTheme);
+                battleConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<B2C_BattleExitResult>(), OnBattleExitResult);
                 battleConnect.OnConnected -= OnBattleConnected;
                 battleConnect.OnDisconnected -= OnBattleDisconnected;
                 battleServic.Disconnect(battleConnect);
@@ -160,6 +182,53 @@ namespace Server
 
             ClearBattleData();
             cleaningUp = wasCleaningUp;
+        }
+
+        public bool RequestNextTheme(Entity exit)
+        {
+            return SendExitRequest(BattleExitRequestType.NextTheme, exit);
+        }
+
+        public bool RequestRetreat(Entity exit)
+        {
+            return SendExitRequest(BattleExitRequestType.Retreat, exit);
+        }
+
+        public void ConsumeThemeTransitionRequest()
+        {
+            themeTransitionRequested = false;
+        }
+
+        private bool SendExitRequest(BattleExitRequestType type, Entity exit)
+        {
+            if (exitRequestPending || !battleStarted || battleConnect == null || battleData == null ||
+                !GameWorldManager.TryGetEntityManager(out EntityManager entityManager) ||
+                !entityManager.Exists(exit) || !entityManager.HasComponent<NetworkIdentityComponent>(exit))
+            {
+                return false;
+            }
+
+            exitRequestPending = true;
+            frame.CharacterEditsBlocked = true;
+            SetLocalExitWaiting(true);
+            deferredExitRequest = new C2B_BattleExitRequest
+            {
+                battleId = battleData.battleId,
+                connectVersion = connectVersion,
+                sceneVersion = battleData.sceneVersion,
+                type = type,
+                exitUnitId = entityManager.GetComponentData<NetworkIdentityComponent>(exit).id,
+            };
+            return true;
+        }
+
+        public void Update()
+        {
+            if (deferredExitRequest == null || frame.HasPendingCharacterEdit)
+                return;
+
+            battleConnect.Send(deferredExitRequest);
+            deferredExitRequest = null;
         }
 
         public void ConnectWithTicket(string ticket, ulong accountId, bool reload)
@@ -193,6 +262,9 @@ namespace Server
             battleConnect.RegisterCallback(TCPPacketCode.GetOpcode<B2C_CreateNetworkEntities>(), OnCreateNetworkEntities);
             battleConnect.RegisterCallback(TCPPacketCode.GetOpcode<B2C_ReloadBattleSnapshot>(), OnReloadBattleSnapshot);
             battleConnect.RegisterCallback(TCPPacketCode.GetOpcode<B2C_StartFrame>(), OnStartFrame);
+            battleConnect.RegisterCallback(TCPPacketCode.GetOpcode<B2C_BattleSettlement>(), OnBattleSettlement);
+            battleConnect.RegisterCallback(TCPPacketCode.GetOpcode<B2C_BeginBattleTheme>(), OnBeginBattleTheme);
+            battleConnect.RegisterCallback(TCPPacketCode.GetOpcode<B2C_BattleExitResult>(), OnBattleExitResult);
             StartPreparationTimeout(BattlePreparationStage.Connecting);
         }
 
@@ -318,6 +390,7 @@ namespace Server
                 battleData == null ||
                 realMessage.battleId != battleData.battleId ||
                 realMessage.connectVersion != connectVersion ||
+                realMessage.sceneVersion != battleData.sceneVersion ||
                 !entitiesInitialized)
             {
                 return;
@@ -332,7 +405,84 @@ namespace Server
 
             StopPreparationTimeout();
             battleStarted = true;
-            frame.Start(realMessage.startFrame);
+            frame.sceneVersion = battleData.sceneVersion;
+            frame.AddConnect(connect);
+            frame.Start(realMessage.startFrame, realMessage.frameInterval, realMessage.frameElapsedMs);
+        }
+
+        private void OnBattleExitResult(IMessage message, Connect connect)
+        {
+            if (connect != battleConnect || message is not B2C_BattleExitResult result ||
+                battleData == null || result.battleId != battleData.battleId ||
+                result.sceneVersion != battleData.sceneVersion)
+                return;
+
+            if (!result.accepted)
+            {
+                exitRequestPending = false;
+                frame.CharacterEditsBlocked = false;
+                SetLocalExitWaiting(false);
+                UIComponent.Instance.Open<ConfirmSingleUI>(new CrystalMagic.UI.ConfirmUIOpenData(
+                    "操作失败", result.error, showCancelButton: false));
+            }
+        }
+
+        private static void SetLocalExitWaiting(bool waiting)
+        {
+            if (!GameRuntimeStateUtility.TryGetPlayerEntity(out EntityManager entityManager, out Entity player) ||
+                !entityManager.HasComponent<BattlePlayerStatusComponent>(player))
+            {
+                return;
+            }
+
+            BattlePlayerStatusComponent status =
+                entityManager.GetComponentData<BattlePlayerStatusComponent>(player);
+            status.TransitionReady = waiting ? (byte)1 : (byte)0;
+            BattlePlayerStatusUtility.Apply(entityManager, player, status);
+        }
+
+        private void OnBeginBattleTheme(IMessage message, Connect connect)
+        {
+            if (connect != battleConnect || message is not B2C_BeginBattleTheme begin ||
+                begin.connectVersion != connectVersion || begin.sceneVersion <= frame.sceneVersion ||
+                (battleData != null && battleData.battleId != begin.battleId))
+                return;
+
+            frame.Stop();
+            frame.sceneVersion = begin.sceneVersion;
+            frame.AddConnect(connect);
+            battleData = null;
+            runningReload = false;
+            sceneInitialized = false;
+            entitiesInitialized = false;
+            battleStarted = false;
+            pendingEntityInfos = null;
+            pendingReloadSnapshot = null;
+            networkEntities.Clear();
+            themeTransitionRequested = true;
+            exitRequestPending = false;
+            deferredExitRequest = null;
+            frame.CharacterEditsBlocked = false;
+            StartPreparationTimeout(BattlePreparationStage.WaitingForScene);
+        }
+
+        private void OnBattleSettlement(IMessage message, Connect connect)
+        {
+            if (message is not B2C_BattleSettlement settlement ||
+                connect != battleConnect || battleData == null ||
+                settlement.battleId != battleData.battleId)
+            {
+                return;
+            }
+
+            StopPreparationTimeout();
+            frame.Stop();
+            pendingSettlement = true;
+            exitRequestPending = false;
+            deferredExitRequest = null;
+            settlementOutcome = settlement.outcome;
+            settlementCharacterData = PlayerCharacterUtility.Clone(settlement.characterData);
+            restoreStandaloneRequested = true;
         }
 
         private void OnEnterBattleScene(IMessage message, Connect connect)
@@ -342,6 +492,7 @@ namespace Server
                 connect != battleConnect ||
                 realMessage.battleData == null ||
                 realMessage.battleData.battleId == 0UL ||
+                realMessage.battleData.sceneVersion < frame.sceneVersion ||
                 realMessage.connectVersion != connectVersion)
             {
                 return;
@@ -352,12 +503,33 @@ namespace Server
                 if (battleData.battleId != realMessage.battleData.battleId)
                 {
                     Debug.LogError("[Battle] Received a scene message for another battle.");
+                    return;
                 }
 
+                if (realMessage.battleData.sceneVersion <= battleData.sceneVersion)
+                    return;
+
+                frame.Stop();
+                frame.sceneVersion = realMessage.battleData.sceneVersion;
+                frame.AddConnect(connect);
+                battleData = realMessage.battleData;
+                runningReload = false;
+                sceneInitialized = false;
+                entitiesInitialized = false;
+                battleStarted = false;
+                pendingEntityInfos = null;
+                pendingReloadSnapshot = null;
+                networkEntities.Clear();
+                themeTransitionRequested = true;
+                exitRequestPending = false;
+                deferredExitRequest = null;
+                frame.CharacterEditsBlocked = false;
+                StartPreparationTimeout(BattlePreparationStage.WaitingForScene);
                 return;
             }
 
             battleData = realMessage.battleData;
+            frame.sceneVersion = battleData.sceneVersion;
             sceneInitialized = false;
             entitiesInitialized = false;
             battleStarted = false;
@@ -413,6 +585,7 @@ namespace Server
             {
                 battleId = battleData.battleId,
                 connectVersion = connectVersion,
+                sceneVersion = battleData.sceneVersion,
             });
             TryInitializeNetworkEntities();
             TryInitializeReloadSnapshot();
@@ -426,6 +599,7 @@ namespace Server
                 battleData == null ||
                 realMessage.battleId != battleData.battleId ||
                 realMessage.connectVersion != connectVersion ||
+                realMessage.sceneVersion != battleData.sceneVersion ||
                 runningReload ||
                 entitiesInitialized)
             {
@@ -461,6 +635,7 @@ namespace Server
                 {
                     battleId = battleData.battleId,
                     connectVersion = connectVersion,
+                    sceneVersion = battleData.sceneVersion,
                 });
             }
         }
@@ -473,6 +648,7 @@ namespace Server
                 battleData == null ||
                 realMessage.battleId != battleData.battleId ||
                 realMessage.connectVersion != connectVersion ||
+                realMessage.sceneVersion != battleData.sceneVersion ||
                 !runningReload ||
                 entitiesInitialized)
             {
@@ -524,6 +700,7 @@ namespace Server
                 {
                     battleId = battleData.battleId,
                     connectVersion = connectVersion,
+                    sceneVersion = battleData.sceneVersion,
                     snapshotFrame = snapshotFrame,
                 });
             }
@@ -641,6 +818,7 @@ namespace Server
 
         private void ClearBattleData()
         {
+            frame.sceneVersion = 0U;
             ticket = null;
             localAccountId = 0UL;
             reload = false;
@@ -653,6 +831,10 @@ namespace Server
             sceneInitialized = false;
             entitiesInitialized = false;
             battleStarted = false;
+            themeTransitionRequested = false;
+            exitRequestPending = false;
+            deferredExitRequest = null;
+            frame.CharacterEditsBlocked = false;
         }
     }
 }

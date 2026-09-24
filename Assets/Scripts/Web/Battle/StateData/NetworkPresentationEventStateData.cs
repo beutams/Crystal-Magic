@@ -9,6 +9,7 @@ public sealed class NetworkPresentationEventStateData : NetworkStateData
     public ClientPresentationEventType eventType;
     public Guid sourceUnitId;
     public Guid targetUnitId;
+    public int sourceSkillId = -1;
     public string assetName;
     public float positionX;
     public float positionY;
@@ -49,6 +50,7 @@ public sealed class NetworkPresentationEventStateData : NetworkStateData
             Type = eventType,
             Source = source,
             Target = target,
+            SourceSkillId = sourceSkillId,
             AssetName = new FixedString128Bytes(assetName ?? string.Empty),
             Position = new Unity.Mathematics.float3(positionX, positionY, positionZ),
             SecondaryPosition = new Unity.Mathematics.float3(secondaryX, secondaryY, secondaryZ),

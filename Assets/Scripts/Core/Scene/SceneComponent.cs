@@ -97,6 +97,7 @@ namespace CrystalMagic.Core {
 
             while (true)
             {
+                GameWorldManager.UpdateGameWorld();
                 SubScene targetSubScene = FindSubScene(subSceneName);
                 if (IsSubSceneContentLoaded(targetSubScene))
                 {
@@ -130,6 +131,7 @@ namespace CrystalMagic.Core {
 
             while (true)
             {
+                GameWorldManager.UpdateGameWorld();
                 SubScene targetSubScene = FindSubScene(subSceneName);
                 if (!IsSubSceneContentLoaded(targetSubScene))
                 {

@@ -13,6 +13,7 @@ namespace CrystalMagic.Core
         private GameMenuUI _gameMenuUI;
         private UnitHealthBarManager _unitHealthBarManager;
         private DamageNumberManager _damageNumberManager;
+        private PickupTipManager _pickupTipManager;
         private InteractionPromptManager _interactionPromptManager;
         private bool _inputBound;
         private bool _playerInputLockedByUI;
@@ -28,6 +29,8 @@ namespace CrystalMagic.Core
             _unitHealthBarManager.Initialize();
             _damageNumberManager ??= new DamageNumberManager();
             _damageNumberManager.Initialize();
+            _pickupTipManager ??= new PickupTipManager();
+            _pickupTipManager.Initialize();
             _interactionPromptManager ??= new InteractionPromptManager();
             _interactionPromptManager.Initialize();
             OpenBattleUI();
@@ -37,8 +40,13 @@ namespace CrystalMagic.Core
         public sealed override void OnUpdate()
         {
             OnUpdateBattle();
+            if (_characterUI != null && _characterUI.gameObject.activeSelf &&
+                GameRuntimeStateUtility.TryGetPlayerEntity(out EntityManager entityManager, out Entity player) &&
+                BattlePlayerStatusUtility.IsInputLocked(entityManager, player))
+                _characterUI.Close();
             _unitHealthBarManager?.Tick();
             _damageNumberManager?.Tick();
+            _pickupTipManager?.Tick();
             _interactionPromptManager?.Tick();
             RefreshUIInputLock();
         }
@@ -49,6 +57,8 @@ namespace CrystalMagic.Core
             _unitHealthBarManager = null;
             _damageNumberManager?.Dispose();
             _damageNumberManager = null;
+            _pickupTipManager?.Dispose();
+            _pickupTipManager = null;
             _interactionPromptManager?.Dispose();
             _interactionPromptManager = null;
             InputComponent.Instance?.SetBattleInputEnabled(false);
@@ -112,6 +122,9 @@ namespace CrystalMagic.Core
 
         private void HandleInventory()
         {
+            if (GameRuntimeStateUtility.TryGetPlayerEntity(out EntityManager entityManager, out Entity player) &&
+                BattlePlayerStatusUtility.IsInputLocked(entityManager, player))
+                return;
             if (_characterUI == null || !UIComponent.Instance.IsManaged(_characterUI))
             {
                 _characterUI = UIComponent.Instance.Open<CharacterUI>();

@@ -40,6 +40,7 @@ public sealed class EffectDataList
 public sealed class EffectDataBridgeComponent : IComponentData
 {
     public readonly Dictionary<int, EffectDataList> Values = new();
+    public readonly HashSet<int> RegistryIds = new();
     public readonly Dictionary<int, EffectManagedContextState> ManagedContexts = new();
     public readonly Dictionary<int, List<ConditionConfig>> ConditionLists = new();
 }

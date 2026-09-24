@@ -35,6 +35,11 @@ namespace Server
         public bool hasHealth;
         public bool hasMana;
         public CharacterData characterData;
+        public ulong characterRevision;
+        public bool hasBattlePlayerStatus;
+        public BattlePlayerLifeState battlePlayerLifeState;
+        public BattlePlayerConnectionState battlePlayerConnectionState;
+        public bool battlePlayerTransitionReady;
         public bool hasFaction;
         public UnitFactionType faction;
         public bool hasInteractableData;

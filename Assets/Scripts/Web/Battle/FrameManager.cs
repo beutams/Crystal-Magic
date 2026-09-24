@@ -10,8 +10,10 @@ namespace Server
     {
         public int frameInterval = 33;
         public bool running;
+        // 下一轮要执行的逻辑帧；只在这一轮 ECS 完成后递增。
         public uint currentFrame;
-        public long timerId;
+        public uint sceneVersion;
+        public readonly BattleFrameClock clock = new BattleFrameClock();
 
         public SortedDictionary<uint, Queue<NetworkState>> receivedOrder = new SortedDictionary<uint, Queue<NetworkState>>();
         public SortedDictionary<uint, Queue<NetworkStateData>> sendOrder = new SortedDictionary<uint, Queue<NetworkStateData>>();
@@ -20,9 +22,9 @@ namespace Server
         public Action<uint, Queue<NetworkStateData>> onSendMessage;
         public virtual void OnTick()
         {
-            HandleReceive();
             SendMessage();
-            currentFrame++;
+            if (running)
+                currentFrame++;
         }
         public virtual void SendMessage()
         {
@@ -40,7 +42,7 @@ namespace Server
         public virtual void OnReceiveMessage(IMessage message,Connect connect)
         {
             General_FrameStateData realMessage = message as General_FrameStateData;
-            if (realMessage == null || realMessage.data == null)
+            if (realMessage == null || realMessage.data == null || realMessage.sceneVersion != sceneVersion)
             {
                 return;
             }
@@ -75,20 +77,15 @@ namespace Server
                 return;
 
             currentFrame = startFrame;
-            timerId = NetworkTimer.Instance.AddRepeated(frameInterval, OnTick);
+            clock.Reset(NetworkTimer.Instance.TimeNow);
             running = true;
         }
         public virtual void Stop()
         {
-            if (running)
-            {
-                NetworkTimer.Instance.Remove(timerId);
-            }
-
             ClearOrders();
             currentFrame = 0;
             running = false;
-            timerId = -1;
+            clock.Reset(NetworkTimer.Instance.TimeNow);
         }
     }
 
@@ -106,10 +103,11 @@ namespace Server
             {
                 Entity entity = entityManager.CreateEntity();
                 entityManager.AddComponentObject(entity, new FrameManagerComponent { manager = manager });
-                return;
             }
+            else
+                entityManager.GetComponentObject<FrameManagerComponent>(query.GetSingletonEntity()).manager = manager;
 
-            entityManager.GetComponentObject<FrameManagerComponent>(query.GetSingletonEntity()).manager = manager;
+            BattleSimulationSystemGroup.Bind(entityManager.World, manager);
         }
 
         public static bool TryGet(EntityManager entityManager, out FrameManager manager)

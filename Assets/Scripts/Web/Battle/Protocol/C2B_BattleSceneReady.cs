@@ -8,5 +8,6 @@ namespace Server
     {
         public ulong battleId;
         public uint connectVersion;
+        public uint sceneVersion;
     }
 }

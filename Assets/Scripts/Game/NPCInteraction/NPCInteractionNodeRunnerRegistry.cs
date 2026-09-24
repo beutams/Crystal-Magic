@@ -18,5 +18,6 @@ public static class NPCInteractionNodeRunnerRegistry
         factory.Register(typeof(CrystalMagic.Game.Data.NPCEnterDungeonInteractionNodeData), static node => new NPCEnterDungeonInteractionNodeRunner((CrystalMagic.Game.Data.NPCEnterDungeonInteractionNodeData)node));
         factory.Register(typeof(CrystalMagic.Game.Data.NPCEnterTrainingGroundInteractionNodeData), static node => new NPCEnterTrainingGroundInteractionNodeRunner((CrystalMagic.Game.Data.NPCEnterTrainingGroundInteractionNodeData)node));
         factory.Register(typeof(CrystalMagic.Game.Data.NPCEnterTownInteractionNodeData), static node => new NPCEnterTownInteractionNodeRunner((CrystalMagic.Game.Data.NPCEnterTownInteractionNodeData)node));
+        factory.Register(typeof(CrystalMagic.Game.Data.NPCRequestBattleExitInteractionNodeData), static node => new NPCRequestBattleExitInteractionNodeRunner((CrystalMagic.Game.Data.NPCRequestBattleExitInteractionNodeData)node));
     }
 }

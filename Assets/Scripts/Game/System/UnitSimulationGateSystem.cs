@@ -1,7 +1,7 @@
 using Server;
 using Unity.Entities;
 
-[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.ClientSimulation)]
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateAfter(typeof(UnitInitializationSystemGroup))]
 [UpdateBefore(typeof(UnitDecisionSystemGroup))]

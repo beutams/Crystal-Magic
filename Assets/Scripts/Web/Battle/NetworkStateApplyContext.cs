@@ -19,7 +19,11 @@ public sealed class NetworkStateApplyContext
     public bool IsClient { get; }
     public double ApplyRealtime { get; }
 
-    public NetworkStateApplyContext(EntityManager entityManager, uint frame, int frameInterval)
+    public NetworkStateApplyContext(
+        EntityManager entityManager,
+        uint frame,
+        int frameInterval,
+        bool updateClientPresentationClock = true)
     {
         EntityManager = entityManager;
         Frame = frame;
@@ -27,7 +31,7 @@ public sealed class NetworkStateApplyContext
         ApplyRealtime = Time.realtimeSinceStartupAsDouble;
         IsClient = GameWorldContextUtility.Get(entityManager).Role == GameWorldRole.Client;
 
-        if (IsClient)
+        if (IsClient && updateClientPresentationClock)
             UpdateClientPresentationClock();
 
         EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<NetworkIdentityComponent>());
@@ -121,6 +125,12 @@ public sealed class NetworkStateApplyContext
             return;
         }
 
+        if (EntityManager.HasComponent<NetworkPlayerComponent>(entity))
+        {
+            ApplyLocalPlayerPosition(entity, position);
+            return;
+        }
+
         LocalTransform renderTransform = EntityManager.GetComponentData<LocalTransform>(entity);
         if (!EntityManager.HasComponent<ClientTransformInterpolationComponent>(entity))
         {
@@ -149,6 +159,37 @@ public sealed class NetworkStateApplyContext
         interpolation.Duration = math.max(0.001f, FrameInterval / 1000f);
         interpolation.Initialized = 1;
         EntityManager.SetComponentData(entity, interpolation);
+    }
+
+    private void ApplyLocalPlayerPosition(Entity entity, float3 position)
+    {
+        LocalTransform transform = EntityManager.GetComponentData<LocalTransform>(entity);
+        if (!EntityManager.HasComponent<ClientPlayerMovePresentationComponent>(entity))
+        {
+            transform.Position = position;
+            EntityManager.SetComponentData(entity, transform);
+            EntityManager.AddComponentData(entity, new ClientPlayerMovePresentationComponent
+            {
+                CurrentPosition = position,
+                Initialized = 1,
+            });
+        }
+        else
+        {
+            ClientPlayerMovePresentationComponent presentation =
+                EntityManager.GetComponentData<ClientPlayerMovePresentationComponent>(entity);
+            if (presentation.Initialized == 0)
+            {
+                presentation.CurrentPosition = transform.Position;
+                presentation.Initialized = 1;
+            }
+            presentation.ReconciliationPending = 1;
+            EntityManager.SetComponentData(entity, presentation);
+        }
+
+        // 本地玩家由预测表现系统驱动，不能同时再吃远端实体插值。
+        if (EntityManager.HasComponent<ClientTransformInterpolationComponent>(entity))
+            EntityManager.RemoveComponent<ClientTransformInterpolationComponent>(entity);
     }
 
     private void UpdateClientPresentationClock()

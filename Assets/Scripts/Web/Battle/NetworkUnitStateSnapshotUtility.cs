@@ -51,6 +51,8 @@ public static class NetworkUnitStateSnapshotUtility
         {
             UnitMoveComponent move = entityManager.GetComponentData<UnitMoveComponent>(entity);
             LocalTransform transform = entityManager.GetComponentData<LocalTransform>(entity);
+            if (move.HasPredictedPosition != 0)
+                transform.Position = move.PredictedPosition;
             states.Enqueue(CreateMoveState(unitId, move, transform));
         }
 

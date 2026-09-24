@@ -6,6 +6,8 @@ namespace CrystalMagic.UI
 {
     public sealed class EffectSelectUIOpenData
     {
+        public PlayerCharacterEdit Edit;
+        public int SkillChainIndex;
         public int SkillSlotIndex;
         public int SelectedAdditionId;
     }
@@ -27,11 +29,15 @@ namespace CrystalMagic.UI
         private readonly List<EffectSelectAdditionDisplayData> _items = new();
 
         public IReadOnlyList<EffectSelectAdditionDisplayData> Items => _items;
+        public PlayerCharacterEdit Edit { get; private set; }
+        public int SkillChainIndex { get; private set; }
         public int SkillSlotIndex { get; private set; }
         public int SelectedAdditionId { get; private set; }
 
         public void SetOpenData(EffectSelectUIOpenData data)
         {
+            Edit = data?.Edit;
+            SkillChainIndex = data?.SkillChainIndex ?? 0;
             SkillSlotIndex = data != null ? data.SkillSlotIndex : 0;
             SelectedAdditionId = data != null ? data.SelectedAdditionId : -1;
             Refresh();

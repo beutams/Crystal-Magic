@@ -141,7 +141,7 @@ public static class GameInteractionUtility
         transactions[index] = transaction;
     }
 
-    private static InteractionResultCode ValidateTarget(EntityManager entityManager, Entity actor, Entity target)
+    public static InteractionResultCode ValidateTarget(EntityManager entityManager, Entity actor, Entity target)
     {
         if (target == Entity.Null || !entityManager.Exists(target) ||
             !entityManager.HasComponent<UnitInteractableComponent>(target))

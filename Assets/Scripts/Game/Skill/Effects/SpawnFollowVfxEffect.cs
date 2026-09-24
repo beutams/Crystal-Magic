@@ -38,7 +38,9 @@ namespace CrystalMagic.Game.Skill.Effects
                     rotation,
                     Data.Scale,
                     Data.Duration,
-                    Data.AlignToTargetForward))
+                    Data.AlignToTargetForward,
+                    context.OriginEntity,
+                    context.SourceSkillId))
             {
                 return;
             }

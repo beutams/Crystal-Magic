@@ -17,6 +17,36 @@ public enum GameWorldRole
     Client = 3,
 }
 
+[Flags]
+public enum GameWorldExecutionTarget : byte
+{
+    None = 0,
+    Standalone = 1 << 0,
+    Client = 1 << 1,
+    Server = 1 << 2,
+    All = Standalone | Client | Server,
+}
+
+public static class GameWorldExecutionTargetUtility
+{
+    public static GameWorldExecutionTarget FromRole(GameWorldRole role)
+    {
+        return role switch
+        {
+            GameWorldRole.Standalone => GameWorldExecutionTarget.Standalone,
+            GameWorldRole.Client => GameWorldExecutionTarget.Client,
+            GameWorldRole.Server => GameWorldExecutionTarget.Server,
+            _ => GameWorldExecutionTarget.None,
+        };
+    }
+
+    public static bool Contains(GameWorldExecutionTarget targets, GameWorldRole role)
+    {
+        GameWorldExecutionTarget target = FromRole(role);
+        return target != GameWorldExecutionTarget.None && (targets & target) != 0;
+    }
+}
+
 namespace CrystalMagic.Core
 {
     public struct GameWorldContextComponent : IComponentData
@@ -154,6 +184,14 @@ namespace CrystalMagic.Core
             ScriptBehaviourUpdateOrder.AppendWorldToCurrentPlayerLoop(_gameWorld);
             _appendedToPlayerLoop = true;
             return true;
+        }
+
+        public static void RemoveGameWorldFromPlayerLoop()
+        {
+            if (!HasGameWorld || !_appendedToPlayerLoop)
+                return;
+            ScriptBehaviourUpdateOrder.RemoveWorldFromCurrentPlayerLoop(_gameWorld);
+            _appendedToPlayerLoop = false;
         }
 
         public static bool TryGetEntityManager(out EntityManager entityManager)

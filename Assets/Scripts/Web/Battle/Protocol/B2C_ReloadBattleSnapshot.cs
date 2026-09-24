@@ -9,6 +9,7 @@ namespace Server
     {
         public ulong battleId;
         public uint connectVersion;
+        public uint sceneVersion;
         public uint snapshotFrame;
         public NetworkEntitySpawnInfo[] entityInfos;
         public List<NetworkStateData> states;

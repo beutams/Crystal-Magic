@@ -13,6 +13,15 @@ partial class EffectExecutionSystem : SystemBase
     private Entity _worldQueueEntity;
     private readonly List<EffectEntry> _pendingEntries = new();
 
+    public void ResetScene()
+    {
+        _pendingEntries.Clear();
+        using NativeArray<Entity> entities = _effectRequestQuery.ToEntityArray(Allocator.Temp);
+        foreach (Entity entity in entities)
+            EntityManager.GetBuffer<EffectEntry>(entity).Clear();
+        EntityManager.GetBuffer<EffectReleaseEntry>(_worldQueueEntity).Clear();
+    }
+
     protected override void OnCreate()
     {
         _worldQueueEntity = EffectUtility.GetOrCreateEntity(EntityManager);

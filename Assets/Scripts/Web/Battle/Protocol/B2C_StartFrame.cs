@@ -8,6 +8,9 @@ namespace Server
     {
         public ulong battleId;
         public uint connectVersion;
+        public uint sceneVersion;
         public uint startFrame;
+        public int frameInterval = 33;
+        public double frameElapsedMs;
     }
 }

@@ -29,6 +29,7 @@ public static class StateScriptRegistry
         { "Monitor", typeof(MonitorStateScriptNodeData) },
         { "NumberMonitor", typeof(NumberMonitorStateScriptNodeData) },
         { "Addition", typeof(AdditionStateScriptNodeData) },
+        { "PlayerInputEvent", typeof(PlayerInputEventStateScriptNodeData) },
     };
 
     private static readonly Dictionary<Type, string> s_nodeDataKeys = new()
@@ -53,6 +54,7 @@ public static class StateScriptRegistry
         { typeof(MonitorStateScriptNodeData), "Monitor" },
         { typeof(NumberMonitorStateScriptNodeData), "NumberMonitor" },
         { typeof(AdditionStateScriptNodeData), "Addition" },
+        { typeof(PlayerInputEventStateScriptNodeData), "PlayerInputEvent" },
     };
 
     private static readonly Dictionary<string, string> s_nodeDataDisplayNames = new(StringComparer.Ordinal)
@@ -77,6 +79,7 @@ public static class StateScriptRegistry
         { "Monitor", "Monitor" },
         { "NumberMonitor", "Number Monitor" },
         { "Addition", "Addition" },
+        { "PlayerInputEvent", "Player Input Event" },
     };
 
     private static readonly FactoryTypeInfo[] s_nodeDataTypeInfos =
@@ -101,6 +104,7 @@ public static class StateScriptRegistry
         new("AcknowledgeInteraction", "Acknowledge Interaction", typeof(AcknowledgeInteractionActionNodeData), 25),
         new("CollectInteraction", "Collect Interaction", typeof(CollectInteractionActionNodeData), 26),
         new("StartNpcInteraction", "Start NPC Interaction", typeof(StartNpcInteractionActionNodeData), 27),
+        new("PlayerInputEvent", "Player Input Event", typeof(PlayerInputEventStateScriptNodeData), 28),
     };
 
     public static string DefaultNodeDataKey => "Entry";
@@ -136,6 +140,7 @@ public static class StateScriptRegistry
         factory.Register("AcknowledgeInteraction", static () => new AcknowledgeInteractionActionNodeData());
         factory.Register("CollectInteraction", static () => new CollectInteractionActionNodeData());
         factory.Register("StartNpcInteraction", static () => new StartNpcInteractionActionNodeData());
+        factory.Register("PlayerInputEvent", static () => new PlayerInputEventStateScriptNodeData());
     }
 
 }

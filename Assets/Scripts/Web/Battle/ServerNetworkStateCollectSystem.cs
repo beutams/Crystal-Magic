@@ -15,6 +15,12 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
     private int _frameInterval = 33;
     private readonly List<Action<uint, NetworkEntitySpawnInfo[], List<NetworkStateData>>> _snapshotCallbacks = new();
 
+    public void ResetScene()
+    {
+        _lastCollectedFrame = uint.MaxValue;
+        _snapshotCallbacks.Clear();
+    }
+
     public void RequestSnapshot(Action<uint, NetworkEntitySpawnInfo[], List<NetworkStateData>> callback)
     {
         if (callback != null)
@@ -79,12 +85,58 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
         CollectManaStates(states, onlyDirty);
         CollectBuffStates(states, currentFrame, onlyDirty);
         CollectControlStates(states, currentFrame, onlyDirty);
+        CollectBattlePlayerStatusStates(states, onlyDirty);
         CollectDeathStates(states, onlyDirty);
         CollectInteractableStates(states, onlyDirty);
         CollectTreasureStates(states, onlyDirty);
         CollectProjectileStates(states, onlyDirty);
         CollectPlayerPropCooldownStates(states, currentFrame, onlyDirty);
         CollectPlayerSkillChainStates(states, onlyDirty);
+        CollectCharacterStates(states, onlyDirty);
+    }
+
+    private void CollectBattlePlayerStatusStates(List<NetworkStateData> states, bool onlyDirty)
+    {
+        foreach ((RefRO<NetworkIdentityComponent> identityRef,
+                  RefRW<BattlePlayerStatusComponent> statusRef) in
+                 SystemAPI.Query<RefRO<NetworkIdentityComponent>, RefRW<BattlePlayerStatusComponent>>())
+        {
+            BattlePlayerStatusComponent status = statusRef.ValueRO;
+            if ((onlyDirty && status.NetworkDirty == 0) || identityRef.ValueRO.id == Guid.Empty)
+                continue;
+
+            states.Add(new NetworkBattlePlayerStatusStateData
+            {
+                unitId = identityRef.ValueRO.id,
+                lifeState = status.LifeState,
+                connectionState = status.ConnectionState,
+                transitionReady = status.TransitionReady,
+            });
+            if (onlyDirty)
+            {
+                status.NetworkDirty = 0;
+                statusRef.ValueRW = status;
+            }
+        }
+    }
+
+    private void CollectCharacterStates(List<NetworkStateData> states, bool onlyDirty)
+    {
+        foreach ((PlayerCharacterComponent character, RefRO<NetworkIdentityComponent> identity) in
+                 SystemAPI.Query<PlayerCharacterComponent, RefRO<NetworkIdentityComponent>>())
+        {
+            if ((onlyDirty && character.NetworkDirty == 0) || identity.ValueRO.id == Guid.Empty)
+                continue;
+
+            states.Add(new NetworkCharacterStateData
+            {
+                unitId = identity.ValueRO.id,
+                revision = character.Revision,
+                characterData = PlayerCharacterUtility.Clone(character.Data),
+            });
+            if (onlyDirty)
+                character.NetworkDirty = 0;
+        }
     }
 
     private void CollectPresentationEvents(List<NetworkStateData> states)
@@ -310,7 +362,10 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
             states.Add(new NetworkDeathStateData
             {
                 unitId = identityRef.ValueRO.id,
-                isDead = EntityManager.IsComponentEnabled<UnitDeathComponent>(entity) ? (byte)1 : (byte)0,
+                // 联机玩家死亡后保留实体并进入观战状态，不能触发客户端的死亡销毁表现。
+                isDead = EntityManager.HasComponent<BattlePlayerStatusComponent>(entity)
+                    ? (byte)0
+                    : EntityManager.IsComponentEnabled<UnitDeathComponent>(entity) ? (byte)1 : (byte)0,
             });
             if (onlyDirty)
             {

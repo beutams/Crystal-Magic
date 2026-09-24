@@ -10,6 +10,7 @@ namespace Server
         public ulong ownerAccountId;
         public int themeKey;
         public int seed;
+        public uint sceneVersion;
         public BattlePhase phase;
         public long phaseTimerId;
         public uint phaseVersion;
@@ -17,6 +18,9 @@ namespace Server
         public NetworkEntitySpawnInfo[] entityInfos;
         public ServerFrameManager frame;
         public BattleWorldContext world;
+        public bool exitSelectionActive;
+        public BattleExitRequestType exitRequestType;
+        public int exitTargetThemeKey = -1;
         public Dictionary<ulong, BattlePlayer> players;
         public Dictionary<string, BattlePlayer> secretKeys;
         public static BattleRoom CreateRoom(
@@ -35,6 +39,7 @@ namespace Server
             room.ownerAccountId = ownerAccountId;
             room.themeKey = Math.Max(0, themeKey);
             room.seed = ServerUtility.CreateBattleSeed();
+            room.sceneVersion = 1U;
             room.players = new Dictionary<ulong, BattlePlayer>();
             room.secretKeys = new Dictionary<string, BattlePlayer>();
             room.entityInfos = Array.Empty<NetworkEntitySpawnInfo>();

@@ -2,7 +2,7 @@ using CrystalMagic.Core;
 using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Skill;
-using Unity.Collections;
+using Server;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -22,6 +22,7 @@ namespace CrystalMagic.Game
         MissingUseData = 7,
         TargetMissing = 8,
         ConsumeFailed = 9,
+        BattleNotReady = 10,
     }
 
     public struct PropUseRequestContext
@@ -41,12 +42,26 @@ namespace CrystalMagic.Game
             if (!TryBuildDefaultContext(out PropUseRequestContext context, out failureReason))
                 return false;
 
-            return TryUsePropSlot(slotIndex, context, out failureReason);
+            return TryUsePropSlot(slotIndex, context, true, out failureReason);
         }
 
         public static bool TryUsePropSlot(int slotIndex, PropUseRequestContext context, out PropUseFailureReason failureReason)
         {
+            return TryUsePropSlot(slotIndex, context, false, out failureReason);
+        }
+
+        private static bool TryUsePropSlot(
+            int slotIndex,
+            PropUseRequestContext context,
+            bool queuePlayerOperation,
+            out PropUseFailureReason failureReason)
+        {
             failureReason = PropUseFailureReason.None;
+            if (BattlePlayerStatusUtility.IsInputLocked(context.EntityManager, context.UserEntity))
+            {
+                failureReason = PropUseFailureReason.BattleNotReady;
+                return false;
+            }
             if (!IsBattleArea(context.EntityManager))
             {
                 failureReason = PropUseFailureReason.NotInBattleArea;
@@ -77,7 +92,14 @@ namespace CrystalMagic.Game
                 return false;
             }
 
-            return TryUseResolvedPropSlot(propData, slotIndex, propSlot.ItemId, context, out failureReason);
+            return TryUseResolvedPropSlot(
+                propData,
+                slotIndex,
+                propSlot.ItemId,
+                context,
+                queuePlayerOperation,
+                true,
+                out failureReason);
         }
 
         public static bool TryUseShortcutSlot(int shortcutIndex, out PropUseFailureReason failureReason)
@@ -85,10 +107,19 @@ namespace CrystalMagic.Game
             if (!TryBuildDefaultContext(out PropUseRequestContext context, out failureReason))
                 return false;
 
-            return TryUseShortcutSlot(shortcutIndex, context, out failureReason);
+            return TryUseShortcutSlot(shortcutIndex, context, true, out failureReason);
         }
 
         public static bool TryUseShortcutSlot(int shortcutIndex, PropUseRequestContext context, out PropUseFailureReason failureReason)
+        {
+            return TryUseShortcutSlot(shortcutIndex, context, false, out failureReason);
+        }
+
+        private static bool TryUseShortcutSlot(
+            int shortcutIndex,
+            PropUseRequestContext context,
+            bool queuePlayerOperation,
+            out PropUseFailureReason failureReason)
         {
             failureReason = PropUseFailureReason.None;
             if (!TryGetCharacterPropData(context, out CharacterPropData propData))
@@ -96,13 +127,13 @@ namespace CrystalMagic.Game
                 failureReason = PropUseFailureReason.PlayerNotFound;
                 return false;
             }
-            if (!PropInventoryUtility.TryGetShortcutPropSlot(propData, shortcutIndex, out int propSlotIndex))
+            if (propData?.Slots == null || shortcutIndex < 0 || shortcutIndex >= propData.Slots.Count)
             {
                 failureReason = PropUseFailureReason.InvalidPropSlot;
                 return false;
             }
 
-            return TryUsePropSlot(propSlotIndex, context, out failureReason);
+            return TryUsePropSlot(shortcutIndex, context, queuePlayerOperation, out failureReason);
         }
 
         public static bool TryUsePropItem(int itemId, out PropUseFailureReason failureReason)
@@ -110,10 +141,19 @@ namespace CrystalMagic.Game
             if (!TryBuildDefaultContext(out PropUseRequestContext context, out failureReason))
                 return false;
 
-            return TryUsePropItem(itemId, context, out failureReason);
+            return TryUsePropItem(itemId, context, true, out failureReason);
         }
 
         public static bool TryUsePropItem(int itemId, PropUseRequestContext context, out PropUseFailureReason failureReason)
+        {
+            return TryUsePropItem(itemId, context, false, out failureReason);
+        }
+
+        private static bool TryUsePropItem(
+            int itemId,
+            PropUseRequestContext context,
+            bool queuePlayerOperation,
+            out PropUseFailureReason failureReason)
         {
             failureReason = PropUseFailureReason.None;
             if (!TryGetCharacterPropData(context, out CharacterPropData propData))
@@ -128,22 +168,53 @@ namespace CrystalMagic.Game
                 return false;
             }
 
-            return TryUseResolvedPropSlot(propData, slotIndex, itemId, context, out failureReason);
+            return TryUseResolvedPropSlot(
+                propData,
+                slotIndex,
+                itemId,
+                context,
+                queuePlayerOperation,
+                true,
+                out failureReason);
         }
 
-        public static bool TryBindShortcutSlot(int shortcutIndex, int propSlotIndex)
+        /// <summary>
+        /// 在逻辑帧中执行输入队列里的道具事件。expectedItemId 防止同一槽位在等待期间
+        /// 已换成别的道具时误用新道具；事件本身由输入桥按原顺序写入。
+        /// </summary>
+        public static bool TryApplyQueuedPropSlot(
+            int slotIndex,
+            int expectedItemId,
+            PropUseRequestContext context,
+            out PropUseFailureReason failureReason)
         {
-            if (!TryBuildDefaultContext(out PropUseRequestContext context, out _) ||
-                !TryGetCharacterPropData(context, out CharacterPropData propData))
+            failureReason = PropUseFailureReason.None;
+            if (!TryGetCharacterPropData(context, out CharacterPropData propData))
             {
+                failureReason = PropUseFailureReason.PlayerNotFound;
                 return false;
             }
 
-            if (!PropInventoryUtility.TryBindShortcut(propData, shortcutIndex, propSlotIndex))
+            if (!PropInventoryUtility.TryGetSlot(propData, slotIndex, out CharacterPropSlotData propSlot))
+            {
+                failureReason = PropUseFailureReason.InvalidPropSlot;
                 return false;
+            }
 
-            SaveDataComponent.Instance.NotifyCharacterPropDataChanged();
-            return true;
+            if (propSlot.ItemId != expectedItemId || propSlot.Quantity <= 0)
+            {
+                failureReason = PropUseFailureReason.ItemNotFound;
+                return false;
+            }
+
+            return TryUseResolvedPropSlot(
+                propData,
+                slotIndex,
+                expectedItemId,
+                context,
+                false,
+                false,
+                out failureReason);
         }
 
         public static bool TryBuildDefaultContext(out PropUseRequestContext context, out PropUseFailureReason failureReason)
@@ -151,27 +222,13 @@ namespace CrystalMagic.Game
             context = default;
             failureReason = PropUseFailureReason.None;
 
-            World world = World.DefaultGameObjectInjectionWorld;
-            if (world == null || !world.IsCreated)
+            if (!GameRuntimeStateUtility.TryGetPlayerEntity(out EntityManager entityManager, out Entity player))
             {
                 failureReason = PropUseFailureReason.PlayerNotFound;
                 return false;
             }
 
-            EntityManager entityManager = world.EntityManager;
-            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<UnitFactionComponent>());
-            using NativeArray<Entity> entities = query.ToEntityArray(Allocator.Temp);
-            for (int i = 0; i < entities.Length; i++)
-            {
-                Entity entity = entities[i];
-                if (!UnitFactionUtility.IsPlayer(entityManager.GetComponentData<UnitFactionComponent>(entity).Value))
-                    continue;
-
-                return TryBuildContext(entityManager, entity, out context, out failureReason);
-            }
-
-            failureReason = PropUseFailureReason.PlayerNotFound;
-            return false;
+            return TryBuildContext(entityManager, player, out context, out failureReason);
         }
 
         public static bool TryBuildContext(
@@ -202,9 +259,42 @@ namespace CrystalMagic.Game
             int slotIndex,
             int itemId,
             PropUseRequestContext context,
+            bool queuePlayerOperation,
+            bool emitInputEvent,
             out PropUseFailureReason failureReason)
         {
             failureReason = PropUseFailureReason.None;
+
+            if (queuePlayerOperation)
+            {
+                GameWorldRole role = GameWorldContextUtility.Get(context.EntityManager).Role;
+                if (role == GameWorldRole.Client &&
+                    (!FrameManagerUtility.TryGet(context.EntityManager, out ClientFrameManager frame) || !frame.running))
+                {
+                    failureReason = PropUseFailureReason.BattleNotReady;
+                    return false;
+                }
+
+                if (role != GameWorldRole.Client && role != GameWorldRole.Standalone)
+                {
+                    failureReason = PropUseFailureReason.BattleNotReady;
+                    return false;
+                }
+
+                if (!InputComponent.Instance.QueuePropUse(slotIndex, itemId))
+                {
+                    failureReason = PropUseFailureReason.BattleNotReady;
+                    return false;
+                }
+                return true;
+            }
+
+            if (emitInputEvent && context.EntityManager.HasComponent<PlayerInputComponent>(context.UserEntity))
+            {
+                PlayerInputComponent input = context.EntityManager.GetComponentData<PlayerInputComponent>(context.UserEntity);
+                input.PropIndex = slotIndex;
+                PlayerInputEventUtility.Append(context.EntityManager, context.UserEntity, PlayerInputOperationType.UseProp, input);
+            }
 
             if (!IsBattleArea(context.EntityManager))
             {
@@ -262,7 +352,7 @@ namespace CrystalMagic.Game
                 context.EntityManager.AddComponentData(context.UserEntity, cooldown);
 
             EffectUtility.Enqueue(context.EntityManager, propData.EffectChain, skillContent);
-            SaveDataComponent.Instance.NotifyCharacterPropDataChanged();
+            PlayerCharacterUtility.MarkChanged(context.EntityManager, context.UserEntity);
             return true;
         }
 

@@ -156,7 +156,19 @@ namespace Server
 
                 if (entityManager.HasComponent<PlayerCharacterComponent>(entity))
                 {
-                    entityInfo.characterData = entityManager.GetComponentObject<PlayerCharacterComponent>(entity).Data;
+                    PlayerCharacterComponent character = entityManager.GetComponentObject<PlayerCharacterComponent>(entity);
+                    entityInfo.characterData = PlayerCharacterUtility.Clone(character.Data);
+                    entityInfo.characterRevision = character.Revision;
+                }
+
+                if (entityManager.HasComponent<BattlePlayerStatusComponent>(entity))
+                {
+                    BattlePlayerStatusComponent status =
+                        entityManager.GetComponentData<BattlePlayerStatusComponent>(entity);
+                    entityInfo.hasBattlePlayerStatus = true;
+                    entityInfo.battlePlayerLifeState = status.LifeState;
+                    entityInfo.battlePlayerConnectionState = status.ConnectionState;
+                    entityInfo.battlePlayerTransitionReady = status.IsWaitingForTransition;
                 }
 
                 if (entityManager.HasComponent<UnitFactionComponent>(entity))
@@ -258,20 +270,39 @@ namespace Server
         {
             if (entityInfo.characterData != null)
             {
-                entityInfo.characterData.Equipment ??= new EquipmentData();
-                EquipmentUtility.EnsureValid(entityInfo.characterData.Equipment);
-                EquipmentUtility.RebuildProperties(entityInfo.characterData.Equipment);
+                CharacterData characterData = PlayerCharacterUtility.Clone(entityInfo.characterData);
+                characterData.Equipment ??= new EquipmentData();
+                EquipmentUtility.EnsureValid(characterData.Equipment);
+                EquipmentUtility.RebuildProperties(characterData.Equipment);
                 if (entityManager.HasComponent<PlayerCharacterComponent>(entity))
                 {
-                    entityManager.GetComponentObject<PlayerCharacterComponent>(entity).Data = entityInfo.characterData;
+                    PlayerCharacterComponent character = entityManager.GetComponentObject<PlayerCharacterComponent>(entity);
+                    character.Data = characterData;
+                    character.Revision = entityInfo.characterRevision;
+                    character.NetworkDirty = 0;
                 }
                 else
                 {
-                    entityManager.AddComponentObject(entity, new PlayerCharacterComponent { Data = entityInfo.characterData });
+                    entityManager.AddComponentObject(entity, new PlayerCharacterComponent
+                    {
+                        Data = characterData,
+                        Revision = entityInfo.characterRevision,
+                    });
                 }
 
-                EquipmentUtility.ApplyToUnit(entityManager, entity, entityInfo.characterData.Equipment);
-                PlayerSkillChainUtility.Initialize(entityManager, entity, entityInfo.characterData);
+                EquipmentUtility.ApplyToUnit(entityManager, entity, characterData.Equipment);
+                PlayerSkillChainUtility.Initialize(entityManager, entity, characterData);
+            }
+
+            if (entityInfo.hasBattlePlayerStatus)
+            {
+                BattlePlayerStatusUtility.Apply(entityManager, entity, new BattlePlayerStatusComponent
+                {
+                    LifeState = entityInfo.battlePlayerLifeState,
+                    ConnectionState = entityInfo.battlePlayerConnectionState,
+                    TransitionReady = entityInfo.battlePlayerTransitionReady ? (byte)1 : (byte)0,
+                    NetworkDirty = 0,
+                });
             }
 
             if (entityInfo.hasFaction)
@@ -424,7 +455,12 @@ namespace Server
                 mana = source.mana,
                 hasHealth = source.hasHealth,
                 hasMana = source.hasMana,
-                characterData = source.characterData,
+                characterData = PlayerCharacterUtility.Clone(source.characterData),
+                characterRevision = source.characterRevision,
+                hasBattlePlayerStatus = source.hasBattlePlayerStatus,
+                battlePlayerLifeState = source.battlePlayerLifeState,
+                battlePlayerConnectionState = source.battlePlayerConnectionState,
+                battlePlayerTransitionReady = source.battlePlayerTransitionReady,
                 hasFaction = source.hasFaction,
                 faction = source.faction,
                 hasInteractableData = source.hasInteractableData,

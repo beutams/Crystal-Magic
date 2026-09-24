@@ -31,16 +31,21 @@ public static class NetworkPresentationEventUtility
         quaternion rotation,
         float scale,
         float duration,
-        bool preservePrefabRotation = false)
+        bool preservePrefabRotation = false,
+        Entity source = default,
+        int sourceSkillId = -1)
     {
         return TryEnqueue(entityManager, CreateVfxEvent(
+            entityManager,
             ClientPresentationEventType.SpawnVfx,
             prefabName,
             position,
             rotation,
             scale,
             duration,
-            preservePrefabRotation));
+            preservePrefabRotation,
+            source,
+            sourceSkillId));
     }
 
     public static bool TryEnqueueFollowVfx(
@@ -52,16 +57,21 @@ public static class NetworkPresentationEventUtility
         quaternion rotation,
         float scale,
         float duration,
-        bool alignRotation)
+        bool alignRotation,
+        Entity source = default,
+        int sourceSkillId = -1)
     {
         NetworkPresentationEventStateData state = CreateVfxEvent(
+            entityManager,
             ClientPresentationEventType.SpawnFollowVfx,
             prefabName,
             position,
             rotation,
             scale,
             duration,
-            false);
+            false,
+            source,
+            sourceSkillId);
         state.targetUnitId = GetNetworkId(entityManager, target);
         state.secondaryX = offset.x;
         state.secondaryY = offset.y;
@@ -80,16 +90,21 @@ public static class NetworkPresentationEventUtility
         float spacing,
         float scale,
         float duration,
-        bool alignRotation)
+        bool alignRotation,
+        Entity source = default,
+        int sourceSkillId = -1)
     {
         NetworkPresentationEventStateData state = CreateVfxEvent(
+            entityManager,
             ClientPresentationEventType.SpawnLineVfx,
             prefabName,
             firstPosition,
             rotation,
             scale,
             duration,
-            !alignRotation);
+            !alignRotation,
+            source,
+            sourceSkillId);
         state.secondaryX = direction.x;
         state.secondaryY = direction.y;
         state.valueA = length;
@@ -105,16 +120,21 @@ public static class NetworkPresentationEventUtility
         float3 endPosition,
         float scale,
         float duration,
-        bool preservePrefabRotation)
+        bool preservePrefabRotation,
+        Entity source = default,
+        int sourceSkillId = -1)
     {
         NetworkPresentationEventStateData state = CreateVfxEvent(
+            entityManager,
             ClientPresentationEventType.MoveVfx,
             prefabName,
             startPosition,
             quaternion.identity,
             scale,
             duration,
-            preservePrefabRotation);
+            preservePrefabRotation,
+            source,
+            sourceSkillId);
         state.secondaryX = endPosition.x;
         state.secondaryY = endPosition.y;
         state.secondaryZ = endPosition.z;
@@ -173,18 +193,40 @@ public static class NetworkPresentationEventUtility
         });
     }
 
+    public static bool TryEnqueuePickupFeedback(
+        EntityManager entityManager,
+        Entity player,
+        PickupFeedbackType type,
+        int itemId,
+        int amount)
+    {
+        return TryEnqueue(entityManager, new NetworkPresentationEventStateData
+        {
+            eventType = ClientPresentationEventType.PickupFeedback,
+            targetUnitId = GetNetworkId(entityManager, player),
+            intValue = itemId,
+            valueA = amount,
+            flagA = (byte)type,
+        });
+    }
+
     private static NetworkPresentationEventStateData CreateVfxEvent(
+        EntityManager entityManager,
         ClientPresentationEventType type,
         string prefabName,
         float3 position,
         quaternion rotation,
         float scale,
         float duration,
-        bool preservePrefabRotation)
+        bool preservePrefabRotation,
+        Entity source,
+        int sourceSkillId)
     {
         return new NetworkPresentationEventStateData
         {
             eventType = type,
+            sourceUnitId = GetNetworkId(entityManager, source),
+            sourceSkillId = sourceSkillId,
             assetName = prefabName,
             positionX = position.x,
             positionY = position.y,

@@ -72,7 +72,7 @@ public partial class BehaviorTreeSystem : SystemBase
     {
         foreach (DynamicBuffer<BehaviorTreeHitDebugElement> debugShapes in
                  SystemAPI.Query<DynamicBuffer<BehaviorTreeHitDebugElement>>()
-                     .WithNone<UnitDeathComponent>())
+                     .WithNone<UnitDeathComponent, BattleSpectatorComponent>())
         {
             for (int index = 0; index < debugShapes.Length; index++)
             {
@@ -106,7 +106,7 @@ internal struct BehaviorExecutionFrame
 
 [BurstCompile]
 [WithNone(typeof(UnitInitializationPendingTag))]
-[WithNone(typeof(UnitDeathComponent))]
+[WithNone(typeof(UnitDeathComponent), typeof(BattleSpectatorComponent))]
 public partial struct BehaviorTreeEvaluationJob : IJobEntity
 {
     public BlobAssetReference<BehaviorTreeRuntimeRegistryBlob> Registry;

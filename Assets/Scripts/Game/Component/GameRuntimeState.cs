@@ -38,6 +38,25 @@ namespace CrystalMagic.Core
     public sealed class PlayerCharacterComponent : IComponentData
     {
         public CharacterData Data = new();
+        public ulong Revision;
+        public byte NetworkDirty;
+
+        public void MarkChanged()
+        {
+            Revision++;
+            NetworkDirty = 1;
+        }
+
+        public bool TryEdit(ulong revision, CharacterData data)
+        {
+            if (revision != Revision || data?.Backpack == null || data.Equipment == null ||
+                data.Skills == null || data.Props == null)
+                return false;
+
+            Data = PlayerCharacterUtility.Clone(data);
+            MarkChanged();
+            return true;
+        }
     }
 
     /// <summary>

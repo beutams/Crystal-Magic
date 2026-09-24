@@ -3,7 +3,9 @@ using Unity.Collections;
 using Unity.Entities;
 
 [BurstCompile]
-[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation |
+                   WorldSystemFilterFlags.ClientSimulation |
+                   WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitInitializationSystemGroup), OrderLast = true)]
 [UpdateAfter(typeof(BehaviorTreeInitSystem))]
 [UpdateAfter(typeof(StateScriptInitSystem))]

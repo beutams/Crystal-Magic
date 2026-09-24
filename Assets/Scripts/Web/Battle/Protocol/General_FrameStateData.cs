@@ -7,11 +7,13 @@ namespace Server
     public class General_FrameStateData : IMessage
     {
         public NetworkFrameData data;
+        public uint sceneVersion;
 
         // Client -> server: monotonically increasing sequence of this client's battle frame.
         public uint clientFrameSequence;
 
         // Server -> client: latest clientFrameSequence received from that connection.
         public uint acknowledgedClientFrameSequence;
+
     }
 }

@@ -9,12 +9,37 @@ using UnityEngine;
 
 namespace Server
 {
+    public enum DisconnectReason
+    {
+        None,
+        LocalClose,
+        CloseAfterSend,
+        RemoteClosed,
+        Timeout,
+        ReceiveError,
+        SendError,
+        InvalidPacket,
+        UnknownOpcode,
+        DeserializeError,
+        HandlerError,
+        ConnectFailed,
+    }
+
+    public sealed class DisconnectInfo
+    {
+        public DisconnectReason Reason { get; internal set; }
+        public string Phase { get; internal set; }
+        public string Detail { get; internal set; }
+        public Exception Exception { get; internal set; }
+    }
+
     public class Connect : IDisposable
     {
         public long startTime {  get; set; }
         public long LastReceiveTime { get; set; }
         public long RttMs { get; private set; }
         public uint LastReceivedBattleFrameSequence { get; private set; }
+        public DisconnectInfo LastDisconnectInfo { get; internal set; }
 
         protected Dictionary<int,Action<IMessage,Connect>> callback = new Dictionary<int, Action<IMessage,Connect>>();
         private readonly Dictionary<uint, long> pendingBattleFrameSendTimes = new Dictionary<uint, long>();
@@ -35,14 +60,8 @@ namespace Server
             readSteam = new MemoryStream();
             sendSteam = new MemoryStream();
         }
-        public void OnRead(ushort opcode, byte[] body, Connect connect)
+        public void OnRead(ushort opcode, IMessage message, Connect connect)
         {
-            IMessage message = TCPPacketCode.ToMessage(body, opcode);
-            if(message == null)
-            {
-                Debug.LogError($"Message Translate Fail opcode={opcode} body={body}");
-                return;
-            }
             if (callback.TryGetValue(opcode, out Action<IMessage,Connect> action))
             {
                 action?.Invoke(message, connect);
@@ -112,7 +131,11 @@ namespace Server
         }
         public void Dispose()
         {
-            
+            callback.Clear();
+            pendingBattleFrameSendTimes.Clear();
+            acknowledgedBattleFrameSequences.Clear();
+            OnConnected = null;
+            OnDisconnected = null;
         }
     }
     public enum ConnectState

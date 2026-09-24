@@ -10,6 +10,7 @@
             {
               "Type": "Entry",
               "Guid": "0f50a70f992842af9448924c6b2bbe40",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 119.333313,
                 "y": 184.666672
@@ -104,6 +105,7 @@
               "TickOrder": 0,
               "Type": "Monitor",
               "Guid": "e354f96e1123420db0039336b0fcf18e",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 263.333344,
                 "y": 184.666672
@@ -141,6 +143,7 @@
               "Values": [],
               "Type": "SetValue",
               "Guid": "be078000b5da40518ffb05cf852989fb",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 548.6666,
                 "y": 287.3333
@@ -234,6 +237,7 @@
               },
               "Type": "Compare",
               "Guid": "f7562bbbf3794e788336651440cb788c",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 555.3334,
                 "y": 477.333344
@@ -271,6 +275,7 @@
               "Values": [],
               "Type": "SetValue",
               "Guid": "f77fbdec209a4218ab5ceabffb4f74c7",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 719.3334,
                 "y": 477.333344
@@ -364,6 +369,7 @@
               },
               "Type": "Compare",
               "Guid": "9c0d17627ad34f87aea11931b23a4b04",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 555.3334,
                 "y": 628.0
@@ -401,6 +407,7 @@
               "Values": [],
               "Type": "SetValue",
               "Guid": "0b09a2fb498841e6ac64aafec177dbb4",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 719.3334,
                 "y": 628.0
@@ -438,6 +445,7 @@
               "Values": [],
               "Type": "SetValue",
               "Guid": "24acec5d189344b9b1938b67bb60858e",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 548.6666,
                 "y": 183.333344
@@ -532,6 +540,7 @@
               "TickOrder": 0,
               "Type": "Monitor",
               "Guid": "717b9e3603714bff8e2777022fed1608",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 263.333344,
                 "y": 479.333344
@@ -569,6 +578,7 @@
               "Values": [],
               "Type": "SetValue",
               "Guid": "34a869493d824526a7c12b1b987d85a0",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 548.6666,
                 "y": 380.0
@@ -651,44 +661,14 @@
               }
             },
             {
-              "Condition": {
-                "ConditionType": 0,
-                "CompareType": "IsTrue",
-                "Inputs": [
-                  {
-                    "Kind": 1,
-                    "Literal": {
-                      "Type": 3,
-                      "Bool": false,
-                      "Int": 0,
-                      "Float": 0.0,
-                      "Float2": {
-                        "x": 0.0,
-                        "y": 0.0
-                      },
-                      "Float3": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                      },
-                      "Entity": {
-                        "Index": 0,
-                        "Version": 0
-                      },
-                      "String": ""
-                    },
-                    "GetterKey": "player.input.interactHeld",
-                    "OperationType": "",
-                    "Inputs": []
-                  }
-                ]
-              },
+              "EventType": 1,
+              "RepeatWhileHeld": false,
               "TickOrder": 0,
-              "Type": "Monitor",
+              "Type": "PlayerInputEvent",
               "Guid": "ab5a14342f1b48179aa6a8c8f4de78c1",
               "EditorPosition": {
-                "x": 350.0,
-                "y": 180.0
+                "x": 350,
+                "y": 180
               }
             },
             {
@@ -781,7 +761,7 @@
             },
             {
               "OutputNodeGuid": "ab5a14342f1b48179aa6a8c8f4de78c1",
-              "OutputPortName": "OnChangeTrue",
+              "OutputPortName": "OnEvent",
               "InputNodeGuid": "5897add0f36b4c9f86a68ce00d1bd5fd",
               "InputPortName": "In"
             },
@@ -841,6 +821,7 @@
             {
               "Type": "Entry",
               "Guid": "825384f2bd554ce2850e442495427730",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 119.333313,
                 "y": 184.666672
@@ -935,6 +916,7 @@
               "TickOrder": 0,
               "Type": "Monitor",
               "Guid": "8f0550915e5d43d3855071af18b9f8f0",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 263.333344,
                 "y": 184.666672
@@ -972,6 +954,7 @@
               "Values": [],
               "Type": "SetValue",
               "Guid": "d63e770aac2749409cb87a3d46c62517",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 719.0,
                 "y": 287.0
@@ -1065,6 +1048,7 @@
               },
               "Type": "Compare",
               "Guid": "f21d6e3440144c2b894276e8da98de31",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 555.3334,
                 "y": 477.333344
@@ -1102,6 +1086,7 @@
               "Values": [],
               "Type": "SetValue",
               "Guid": "2752a5278894499a862df4b130387a49",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 719.3334,
                 "y": 477.333344
@@ -1195,6 +1180,7 @@
               },
               "Type": "Compare",
               "Guid": "35af0e1dafaa4a0b8f1345df15968b0a",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 555.3334,
                 "y": 628.0
@@ -1232,6 +1218,7 @@
               "Values": [],
               "Type": "SetValue",
               "Guid": "e01e7f803a904c76a34a15d369b31855",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 719.3334,
                 "y": 628.0
@@ -1269,6 +1256,7 @@
               "Values": [],
               "Type": "SetValue",
               "Guid": "1d3fee866cc0474fa77258d352cdd2f1",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 719.0,
                 "y": 183.0
@@ -1363,6 +1351,7 @@
               "TickOrder": 0,
               "Type": "Monitor",
               "Guid": "29dc32386d1741afa53606cca9da2a5d",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 263.333344,
                 "y": 479.333344
@@ -1400,6 +1389,7 @@
               "Values": [],
               "Type": "SetValue",
               "Guid": "2c19fa621b454a5ea108fb36633ca3db",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 555.0,
                 "y": 326.0
@@ -1441,6 +1431,7 @@
               "TickOrder": 0,
               "Type": "Monitor",
               "Guid": "3e1c7aee2f114ac49a98f70f77de45a6",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 263.333344,
                 "y": 780.0
@@ -1481,6 +1472,7 @@
               },
               "Type": "Compare",
               "Guid": "afc587aab4e04322a5d42945a6e0c4f0",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 555.0,
                 "y": 186.0
@@ -1518,6 +1510,7 @@
               "Values": [],
               "Type": "SetValue",
               "Guid": "e6a4f5d19e194470a22de1ef847e5c9b",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 548.6666,
                 "y": 780.0
@@ -1555,6 +1548,7 @@
               "Values": [],
               "Type": "SetValue",
               "Guid": "8b49d33a7d1b4b7e8b98dc2f6e995b53",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 719.3334,
                 "y": 780.0
@@ -1592,6 +1586,7 @@
               "Values": [],
               "Type": "SetValue",
               "Guid": "a42b7a9e3abf4e94a747d9dd5fa2125b",
+              "ExecutionTargets": 7,
               "EditorPosition": {
                 "x": 431.0,
                 "y": 88.0
@@ -1966,40 +1961,10 @@
               }
             },
             {
-              "Condition": {
-                "ConditionType": 0,
-                "CompareType": "IsTrue",
-                "Inputs": [
-                  {
-                    "Kind": 1,
-                    "Literal": {
-                      "Type": 3,
-                      "Bool": false,
-                      "Int": 0,
-                      "Float": 0.0,
-                      "Float2": {
-                        "x": 0.0,
-                        "y": 0.0
-                      },
-                      "Float3": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                      },
-                      "Entity": {
-                        "Index": 0,
-                        "Version": 0
-                      },
-                      "String": ""
-                    },
-                    "GetterKey": "player.input.primaryHeld",
-                    "OperationType": "",
-                    "Inputs": []
-                  }
-                ]
-              },
+              "EventType": 0,
+              "RepeatWhileHeld": true,
               "TickOrder": 0,
-              "Type": "Monitor",
+              "Type": "PlayerInputEvent",
               "Guid": "79e975ab68c34db195c675eab876aef6",
               "EditorPosition": {
                 "x": 5.333313,
@@ -4529,7 +4494,7 @@
             },
             {
               "OutputNodeGuid": "79e975ab68c34db195c675eab876aef6",
-              "OutputPortName": "True",
+              "OutputPortName": "OnEvent",
               "InputNodeGuid": "7aa301ef3adc4b34b8fbe56f4a210ca1",
               "InputPortName": "Check"
             },
@@ -5771,6 +5736,169 @@
           "ViewScale": 1.0
         },
         {
+          "Guid": "client_battle_exit_interaction",
+          "Name": "Client Exit Interaction",
+          "EntryNodeGuid": "149e6a412bca443c8de3adf715a21a3a_client",
+          "Nodes": [
+            {
+              "Type": "Entry",
+              "Guid": "149e6a412bca443c8de3adf715a21a3a_client",
+              "EditorPosition": {
+                "x": 120,
+                "y": 180
+              },
+              "ExecutionTargets": 2
+            },
+            {
+              "EventType": 1,
+              "RepeatWhileHeld": false,
+              "TickOrder": 0,
+              "Type": "PlayerInputEvent",
+              "Guid": "e17763e4cc344b8ba012afedbcacd46d_client",
+              "EditorPosition": {
+                "x": 350,
+                "y": 180
+              },
+              "ExecutionTargets": 2
+            },
+            {
+              "Shape": 1,
+              "Center": {
+                "Kind": 1,
+                "GetterKey": "unit.transform.position",
+                "Inputs": []
+              },
+              "Radius": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 3,
+                  "Float": 4
+                },
+                "Inputs": []
+              },
+              "FactionMask": 16,
+              "UnitDataId": 32,
+              "ExcludeSelf": true,
+              "ExcludeDead": true,
+              "RequireAvailableInteraction": true,
+              "MaxCount": 1,
+              "SortMode": 1,
+              "ResultKey": "game.interaction.candidates",
+              "Type": "QueryUnits",
+              "Guid": "8887ea79cf8f4f45943ba1ab192192a1_client",
+              "EditorPosition": {
+                "x": 600,
+                "y": 180
+              },
+              "ExecutionTargets": 2
+            },
+            {
+              "Target": {
+                "Kind": 1,
+                "GetterKey": "unit.variables.listEntity",
+                "Inputs": [
+                  {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 7,
+                      "String": "game.interaction.candidates"
+                    },
+                    "Inputs": []
+                  },
+                  {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 2,
+                      "Int": 0
+                    },
+                    "Inputs": []
+                  }
+                ]
+              },
+              "Type": "RequestInteraction",
+              "Guid": "8ec8b1ff44ba4ec49d3d70d999c8ef00_client",
+              "EditorPosition": {
+                "x": 850,
+                "y": 180
+              },
+              "ExecutionTargets": 2
+            },
+            {
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsTrue",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "GetterKey": "world.interaction.hasResult",
+                    "Inputs": [
+                      {
+                        "Kind": 1,
+                        "GetterKey": "unit.self.entity",
+                        "Inputs": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              "TickOrder": 1,
+              "Type": "Monitor",
+              "Guid": "dungeon_interaction_result_monitor_client",
+              "EditorPosition": {
+                "x": 600,
+                "y": 340
+              },
+              "ExecutionTargets": 2
+            },
+            {
+              "Type": "AcknowledgeInteraction",
+              "Guid": "dungeon_interaction_acknowledge_client",
+              "EditorPosition": {
+                "x": 850,
+                "y": 340
+              },
+              "ExecutionTargets": 2
+            }
+          ],
+          "Edges": [
+            {
+              "OutputNodeGuid": "149e6a412bca443c8de3adf715a21a3a_client",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "e17763e4cc344b8ba012afedbcacd46d_client",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "e17763e4cc344b8ba012afedbcacd46d_client",
+              "OutputPortName": "OnTick",
+              "InputNodeGuid": "8887ea79cf8f4f45943ba1ab192192a1_client",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "e17763e4cc344b8ba012afedbcacd46d_client",
+              "OutputPortName": "OnEvent",
+              "InputNodeGuid": "8ec8b1ff44ba4ec49d3d70d999c8ef00_client",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "149e6a412bca443c8de3adf715a21a3a_client",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "dungeon_interaction_result_monitor_client",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "dungeon_interaction_result_monitor_client",
+              "OutputPortName": "True",
+              "InputNodeGuid": "dungeon_interaction_acknowledge_client",
+              "InputPortName": "In"
+            }
+          ],
+          "ViewPosition": {
+            "x": -160,
+            "y": -9.333333
+          },
+          "ViewScale": 1
+        },
+        {
           "Guid": "b43d5a04427549cd865621ebc82a56dd",
           "Name": "Interaction",
           "EntryNodeGuid": "149e6a412bca443c8de3adf715a21a3a",
@@ -5784,44 +5912,14 @@
               }
             },
             {
-              "Condition": {
-                "ConditionType": 0,
-                "CompareType": "IsTrue",
-                "Inputs": [
-                  {
-                    "Kind": 1,
-                    "Literal": {
-                      "Type": 3,
-                      "Bool": false,
-                      "Int": 0,
-                      "Float": 0.0,
-                      "Float2": {
-                        "x": 0.0,
-                        "y": 0.0
-                      },
-                      "Float3": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                      },
-                      "Entity": {
-                        "Index": 0,
-                        "Version": 0
-                      },
-                      "String": ""
-                    },
-                    "GetterKey": "player.input.interactHeld",
-                    "OperationType": "",
-                    "Inputs": []
-                  }
-                ]
-              },
+              "EventType": 1,
+              "RepeatWhileHeld": false,
               "TickOrder": 0,
-              "Type": "Monitor",
+              "Type": "PlayerInputEvent",
               "Guid": "e17763e4cc344b8ba012afedbcacd46d",
               "EditorPosition": {
-                "x": 350.0,
-                "y": 180.0
+                "x": 350,
+                "y": 180
               }
             },
             {
@@ -5880,7 +5978,7 @@
             },
             {
               "OutputNodeGuid": "e17763e4cc344b8ba012afedbcacd46d",
-              "OutputPortName": "OnChangeTrue",
+              "OutputPortName": "OnEvent",
               "InputNodeGuid": "8ec8b1ff44ba4ec49d3d70d999c8ef00",
               "InputPortName": "In"
             },
@@ -71919,9 +72017,9 @@
           "Name":"Interaction",
           "EntryNodeGuid":"dungeon_exit_interaction_entry",
           "Nodes":[
-            {"Type":"Entry","Guid":"dungeon_exit_interaction_entry","EditorPosition":{"x":40.0,"y":160.0}},
-            {"Condition":{"ConditionType":0,"CompareType":"IsTrue","Inputs":[{"Kind":1,"GetterKey":"world.interaction.hasPending","Inputs":[{"Kind":1,"GetterKey":"unit.self.entity","Inputs":[]}]}]},"TickOrder":0,"Type":"Monitor","Guid":"dungeon_exit_interaction_monitor","EditorPosition":{"x":280.0,"y":160.0}},
-            {"Type":"StartNpcInteraction","Guid":"dungeon_exit_interaction_start","EditorPosition":{"x":540.0,"y":160.0}}
+            {"Type":"Entry","ExecutionTargets":7,"Guid":"dungeon_exit_interaction_entry","EditorPosition":{"x":40.0,"y":160.0}},
+            {"Condition":{"ConditionType":0,"CompareType":"IsTrue","Inputs":[{"Kind":1,"GetterKey":"world.interaction.hasPending","Inputs":[{"Kind":1,"GetterKey":"unit.self.entity","Inputs":[]}]}]},"TickOrder":0,"Type":"Monitor","ExecutionTargets":7,"Guid":"dungeon_exit_interaction_monitor","EditorPosition":{"x":280.0,"y":160.0}},
+            {"Type":"StartNpcInteraction","ExecutionTargets":7,"Guid":"dungeon_exit_interaction_start","EditorPosition":{"x":540.0,"y":160.0}}
           ],
           "Edges":[
             {"OutputNodeGuid":"dungeon_exit_interaction_entry","OutputPortName":"Out","InputNodeGuid":"dungeon_exit_interaction_monitor","InputPortName":"Start"},

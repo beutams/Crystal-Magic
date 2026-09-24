@@ -39,6 +39,7 @@ public enum StateScriptNodeRuntimeType : byte
     Monitor,
     NumberMonitor,
     Addition,
+    PlayerInputEvent,
 }
 
 public enum StateScriptManagedCommandType : byte
@@ -87,11 +88,13 @@ public static class StateScriptPortId
     public const byte OnChangeTrue = 7;
     public const byte OnChangeFalse = 8;
     public const byte OnValueChange = 5;
+    public const byte OnInputEvent = 5;
 }
 
 public struct StateScriptNodeDefinition
 {
     public StateScriptNodeRuntimeType Type;
+    public GameWorldExecutionTarget ExecutionTargets;
     public int ExpressionStart;
     public byte ExpressionCount;
     public int OutputRouteStart;

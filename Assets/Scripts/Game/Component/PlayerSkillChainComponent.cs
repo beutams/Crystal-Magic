@@ -39,13 +39,6 @@ public static class PlayerSkillChainUtility
         if (!GameRuntimeStateUtility.TryGetPlayerCharacterData(entityManager, player, out CharacterData characterData))
             return;
 
-        if (!entityManager.HasComponent<PlayerInputComponent>(player) ||
-            !entityManager.HasComponent<PlayerPropCooldownComponent>(player))
-        {
-            Initialize(entityManager, player, characterData);
-            return;
-        }
-
         Rebuild(entityManager, player, characterData);
     }
 
@@ -62,14 +55,17 @@ public static class PlayerSkillChainUtility
 
     private static void Rebuild(EntityManager entityManager, Entity player, CharacterData characterData)
     {
-        PlayerInputComponent input = entityManager.GetComponentData<PlayerInputComponent>(player);
         int chainCount = characterData.Skills?.Chains?.Length ?? 0;
         int maxIndex = chainCount > 0 ? chainCount - 1 : 0;
-        if (input.SkillChainIndex < 0 || input.SkillChainIndex > maxIndex)
+        if (entityManager.HasComponent<PlayerInputComponent>(player))
         {
-            input.SkillChainIndex = 0;
-            input.NetworkDirty = 1;
-            entityManager.SetComponentData(player, input);
+            PlayerInputComponent input = entityManager.GetComponentData<PlayerInputComponent>(player);
+            if (input.SkillChainIndex < 0 || input.SkillChainIndex > maxIndex)
+            {
+                input.SkillChainIndex = 0;
+                input.NetworkDirty = 1;
+                entityManager.SetComponentData(player, input);
+            }
         }
 
         // Complete every structural change before acquiring buffer handles. Adding the

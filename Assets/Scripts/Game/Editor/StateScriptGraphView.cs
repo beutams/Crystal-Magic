@@ -180,6 +180,12 @@ namespace CrystalMagic.Editor.Unit
             }
         }
 
+        public void RefreshExecutionTargetBadges()
+        {
+            foreach (StateScriptNodeView view in _nodeViews.Values)
+                view.RefreshExecutionTargetBadges();
+        }
+
         public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
         {
             StateScriptInstanceData graph = _window.SelectedGraph;
@@ -239,7 +245,7 @@ namespace CrystalMagic.Editor.Unit
 
         private StateScriptNodeView AddNodeView(StateScriptNodeData nodeData, StateScriptNodeSchema schema, Rect position)
         {
-            StateScriptNodeView view = new(nodeData, schema);
+            StateScriptNodeView view = new(nodeData, schema, _window.MarkDirty);
             view.SetPosition(position);
             AddElement(view);
             _nodeViews.Add(nodeData.Guid, view);
@@ -361,15 +367,22 @@ namespace CrystalMagic.Editor.Unit
 
         private readonly Dictionary<string, Port> _inputs = new(StringComparer.Ordinal);
         private readonly Dictionary<string, Port> _outputs = new(StringComparer.Ordinal);
+        private readonly VisualElement _executionTargetBadges;
         private bool _hasObservedPulse;
         private long _lastObservedPulseTick;
         private double _pulseStartedAt;
 
-        public StateScriptNodeView(StateScriptNodeData nodeData, StateScriptNodeSchema schema)
+        public StateScriptNodeView(StateScriptNodeData nodeData, StateScriptNodeSchema schema, Action onChanged)
         {
             NodeData = nodeData;
             title = StateScriptNodeDataRegistry.GetDisplayName(nodeData.Type);
             viewDataKey = nodeData.Guid;
+            titleContainer.style.paddingRight = 52f;
+            _executionTargetBadges = GameWorldExecutionTargetEditorUtility.CreateBadges(
+                () => NodeData.ExecutionTargets,
+                targets => NodeData.ExecutionTargets = targets,
+                onChanged);
+            titleContainer.Add(_executionTargetBadges);
 
             for (int i = 0; i < schema.Inputs.Count; i++)
                 AddInputPort(schema.Inputs[i]);
@@ -381,6 +394,11 @@ namespace CrystalMagic.Editor.Unit
         }
 
         public StateScriptNodeData NodeData { get; }
+
+        public void RefreshExecutionTargetBadges()
+        {
+            GameWorldExecutionTargetEditorUtility.RefreshBadges(_executionTargetBadges);
+        }
 
         public bool TryGetInputPort(string name, out Port port)
         {

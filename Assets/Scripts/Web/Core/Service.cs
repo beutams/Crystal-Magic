@@ -12,8 +12,8 @@ namespace Server
         protected long startTime;
         protected byte[] cache = new byte[8192];
         protected Dictionary<Guid,TCPPair> connects = new Dictionary<Guid, TCPPair>();
-        protected List<Guid> disconnectList = new List<Guid>();
-        protected List<Guid> closeAfterSendList = new List<Guid>();
+        protected Dictionary<Guid, DisconnectInfo> pendingDisconnects = new Dictionary<Guid, DisconnectInfo>();
+        protected HashSet<Guid> closeAfterSendList = new HashSet<Guid>();
 
 
         public Action<Connect> OnSend;
@@ -35,11 +35,7 @@ namespace Server
                     continue;
                 }
 
-                connect.State = ConnectState.Close;
-                if (!disconnectList.Contains(pair.Key))
-                {
-                    disconnectList.Add(pair.Key);
-                }
+                MarkDisconnected(pair.Key, DisconnectReason.LocalClose, "Disconnect");
                 return;
             }
         }
@@ -57,11 +53,58 @@ namespace Server
                     continue;
                 }
 
-                if (!closeAfterSendList.Contains(pair.Key))
-                {
-                    closeAfterSendList.Add(pair.Key);
-                }
+                closeAfterSendList.Add(pair.Key);
                 return;
+            }
+        }
+
+        protected void MarkDisconnected(
+            Guid id,
+            DisconnectReason reason,
+            string phase,
+            Exception exception = null,
+            string detail = null)
+        {
+            if (!connects.TryGetValue(id, out TCPPair pair) || pendingDisconnects.ContainsKey(id))
+                return;
+
+            pair.connect.State = ConnectState.Close;
+            DisconnectInfo info = new()
+            {
+                Reason = reason,
+                Phase = phase,
+                Detail = detail,
+                Exception = exception,
+            };
+            pair.connect.LastDisconnectInfo = info;
+            pendingDisconnects.Add(id, info);
+
+            string message = $"[TCP][DisconnectPending] Connect={id}, Remote={pair.IPEndPoint}, Reason={reason}, Phase={phase}";
+            if (!string.IsNullOrEmpty(detail))
+                message += $", Detail={detail}";
+            if (exception != null)
+                message += $", Error={exception.Message}";
+            Debug.LogWarning(message);
+        }
+
+        protected static void InvokeConnectionEventSafely(
+            Action<Connect> handlers,
+            Connect connect,
+            string eventName)
+        {
+            if (handlers == null)
+                return;
+
+            foreach (Action<Connect> handler in handlers.GetInvocationList())
+            {
+                try
+                {
+                    handler(connect);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogError($"[TCP][Callback] {eventName} failed for {connect?.IPEndPoint}: {exception}");
+                }
             }
         }
         protected virtual void HandleSend()
@@ -75,26 +118,24 @@ namespace Server
 
                 if (connect.State != ConnectState.Connected)
                     continue;
-                if (sendStream.Length == 0)
-                {
-                    if (closeAfterSendList.Contains(id) && !disconnectList.Contains(id))
-                    {
-                        disconnectList.Add(id);
-                    }
-                    continue;
-                }
-                if (!socket.Poll(0, SelectMode.SelectWrite))
-                    continue;
-
                 try
                 {
+                    if (sendStream.Length == 0)
+                    {
+                        if (closeAfterSendList.Contains(id))
+                            MarkDisconnected(id, DisconnectReason.CloseAfterSend, "SendComplete");
+                        continue;
+                    }
+
+                    if (!socket.Poll(0, SelectMode.SelectWrite))
+                        continue;
+
                     int totalLength = (int)sendStream.Length;
                     Debug.Log($"[TCP][Send] Sending {totalLength} bytes to {pair.Value.IPEndPoint}, Connect={id}");
                     int sentLength = socket.Send(sendStream.GetBuffer(), 0, totalLength, SocketFlags.None);
-                    OnSend?.Invoke(connect);
                     if (sentLength <= 0)
                     {
-                        disconnectList.Add(id);
+                        MarkDisconnected(id, DisconnectReason.SendError, "Send", detail: "Socket.Send returned zero bytes.");
                         continue;
                     }
 
@@ -105,17 +146,24 @@ namespace Server
                     }
                     sendStream.SetLength(remainLength);
                     sendStream.Position = remainLength;
+                    // 回调可以排入新消息，必须先移走已发送的数据，避免覆盖回调新入队的字节。
+                    InvokeConnectionEventSafely(OnSend, connect, nameof(OnSend));
                     Debug.Log($"[TCP][Send] Sent {sentLength} bytes, remaining={remainLength}, Connect={id}");
-                    if (remainLength == 0 && closeAfterSendList.Contains(id) && !disconnectList.Contains(id))
-                    {
-                        disconnectList.Add(id);
-                    }
+                    if (sendStream.Length == 0 && closeAfterSendList.Contains(id))
+                        MarkDisconnected(id, DisconnectReason.CloseAfterSend, "SendComplete");
                 }
                 catch (SocketException e) when (e.SocketErrorCode == SocketError.WouldBlock) { }
                 catch (SocketException e)
                 {
-                    Debug.LogError($"[TCP][Send] Failed for Connect={id}: {e.SocketErrorCode} - {e.Message}");
-                    disconnectList.Add(id);
+                    MarkDisconnected(id, DisconnectReason.SendError, "Send", e, e.SocketErrorCode.ToString());
+                }
+                catch (ObjectDisposedException e)
+                {
+                    MarkDisconnected(id, DisconnectReason.SendError, "Send", e);
+                }
+                catch (Exception e)
+                {
+                    MarkDisconnected(id, DisconnectReason.SendError, "Send", e);
                 }
             }
         }
@@ -130,64 +178,141 @@ namespace Server
 
                 if (connect.State != ConnectState.Connected)
                     continue;
-                if (!socket.Poll(0, SelectMode.SelectRead))
-                    continue;
-                int count;
+
                 try
                 {
-                    count = socket.Receive(cache);
+                    if (!socket.Poll(0, SelectMode.SelectRead))
+                        continue;
+
+                    int count = socket.Receive(cache);
+                    Debug.Log($"[TCP][Recv] Received {count} raw bytes from {pair.Value.IPEndPoint}, Connect={id}");
+                    if (count == 0)
+                    {
+                        MarkDisconnected(id, DisconnectReason.RemoteClosed, "Receive");
+                        continue;
+                    }
+
+                    readStream.Position = readStream.Length;
+                    readStream.Write(cache, 0, count);
+                    while (connect.State == ConnectState.Connected)
+                    {
+                        PacketReadResult packetResult = TCPPacketCode.TryUnPack(
+                            readStream,
+                            out byte[] body,
+                            out ushort opcode,
+                            out string packetError);
+                        if (packetResult == PacketReadResult.NeedMoreData)
+                            break;
+                        if (packetResult == PacketReadResult.Invalid)
+                        {
+                            MarkDisconnected(id, DisconnectReason.InvalidPacket, "Unpack", detail: packetError);
+                            break;
+                        }
+
+                        MessageDecodeResult decodeResult = TCPPacketCode.TryToMessage(
+                            body,
+                            opcode,
+                            out IMessage message,
+                            out Exception decodeException);
+                        if (decodeResult == MessageDecodeResult.UnknownOpcode)
+                        {
+                            MarkDisconnected(
+                                id,
+                                DisconnectReason.UnknownOpcode,
+                                "Opcode",
+                                detail: opcode.ToString());
+                            break;
+                        }
+                        if (decodeResult == MessageDecodeResult.InvalidPayload)
+                        {
+                            MarkDisconnected(
+                                id,
+                                DisconnectReason.DeserializeError,
+                                "Deserialize",
+                                decodeException,
+                                $"opcode={opcode}");
+                            break;
+                        }
+
+                        connect.LastReceiveTime = NetworkTimer.Instance.TimeNow;
+                        Debug.Log($"[TCP][Recv] Packet opcode={opcode}, body={body.Length} bytes, Connect={id}");
+                        try
+                        {
+                            connect.OnRead(opcode, message, connect);
+                            InvokeConnectionEventSafely(OnRecv, connect, nameof(OnRecv));
+                        }
+                        catch (Exception handlerException)
+                        {
+                            MarkDisconnected(
+                                id,
+                                DisconnectReason.HandlerError,
+                                "Dispatch",
+                                handlerException,
+                                $"opcode={opcode}");
+                            break;
+                        }
+                    }
                 }
                 catch (SocketException e) when (e.SocketErrorCode == SocketError.WouldBlock)
                 {
-                    continue;
                 }
-                //count=0 断开连接
-                Debug.Log($"[TCP][Recv] Received {count} raw bytes from {pair.Value.IPEndPoint}, Connect={id}");
-                if (count == 0)
+                catch (SocketException e)
                 {
-                    Debug.LogWarning($"[TCP][Recv] Remote closed Connect={id}, Remote={pair.Value.IPEndPoint}");
-                    disconnectList.Add(id);
-                    continue;
+                    MarkDisconnected(id, DisconnectReason.ReceiveError, "Receive", e, e.SocketErrorCode.ToString());
                 }
-                //count!=0 有新消息
-                readStream.Position = readStream.Length;
-                readStream.Write(cache, 0, count);
-                while (TCPPacketCode.TryUnPack(readStream, out byte[] body, out ushort opcode))
+                catch (ObjectDisposedException e)
                 {
-                    connect.LastReceiveTime = NetworkTimer.Instance.TimeNow;
-                    Debug.Log($"[TCP][Recv] Packet opcode={opcode}, body={body.Length} bytes, Connect={id}");
-                    connect.OnRead(opcode, body, connect);
-                    OnRecv?.Invoke(connect);
+                    MarkDisconnected(id, DisconnectReason.ReceiveError, "Receive", e);
+                }
+                catch (Exception e)
+                {
+                    MarkDisconnected(id, DisconnectReason.ReceiveError, "Receive", e);
                 }
             }
         }
         protected virtual void HandleDisconnect()
         {
-            foreach (var id in disconnectList)
+            if (pendingDisconnects.Count == 0)
+                return;
+
+            List<Guid> pendingIds = new List<Guid>(pendingDisconnects.Keys);
+            foreach (Guid id in pendingIds)
             {
-                if (connects.TryGetValue(id, out TCPPair pair))
+                pendingDisconnects.Remove(id);
+                if (!connects.TryGetValue(id, out TCPPair pair))
+                    continue;
+
+                connects.Remove(id);
+                closeAfterSendList.Remove(id);
+                pair.connect.State = ConnectState.Close;
+                Debug.Log(
+                    $"[TCP][Disconnect] Connect={id}, Remote={pair.IPEndPoint}, " +
+                    $"Reason={pair.connect.LastDisconnectInfo?.Reason}, Phase={pair.connect.LastDisconnectInfo?.Phase}");
+
+                try
                 {
-                    Debug.Log($"[TCP][Disconnect] Connect={id}, Remote={pair.IPEndPoint}, State={pair.connect.State}");
-                    try
-                    {
-                        connects.Remove(id);
-                        pair.socket.Shutdown(SocketShutdown.Both);
-                    }
-                    catch (SocketException) { }
-                    finally
-                    {
-                        OnDisconnected?.Invoke(pair.connect);
-                        pair.connect.OnDisconnected?.Invoke(pair.connect);
-                        pair.socket.Close();
-                        pair.socket.Dispose();
-                        pair.connect.readSteam.Dispose();
-                        pair.connect.sendSteam.Dispose();
-                        pair.connect.Dispose();
-                        closeAfterSendList.Remove(id);
-                    }
+                    pair.socket.Shutdown(SocketShutdown.Both);
                 }
+                catch (SocketException) { }
+                catch (ObjectDisposedException) { }
+                catch (Exception exception)
+                {
+                    Debug.LogError($"[TCP][Disconnect] Socket shutdown failed: {exception}");
+                }
+
+                try { pair.socket.Close(); }
+                catch (Exception exception) { Debug.LogError($"[TCP][Disconnect] Socket close failed: {exception}"); }
+                try { pair.socket.Dispose(); }
+                catch (Exception exception) { Debug.LogError($"[TCP][Disconnect] Socket dispose failed: {exception}"); }
+                try { pair.connect.readSteam.Dispose(); }
+                catch (Exception exception) { Debug.LogError($"[TCP][Disconnect] Read stream dispose failed: {exception}"); }
+                try { pair.connect.sendSteam.Dispose(); }
+                catch (Exception exception) { Debug.LogError($"[TCP][Disconnect] Send stream dispose failed: {exception}"); }
+
+                InvokeConnectionEventSafely(OnDisconnected, pair.connect, nameof(OnDisconnected));
+                InvokeConnectionEventSafely(pair.connect.OnDisconnected, pair.connect, nameof(Connect.OnDisconnected));
+                pair.connect.Dispose();
             }
-            disconnectList.Clear();
         }
         protected virtual void HandleTimeout()
         {
@@ -202,9 +327,11 @@ namespace Server
 
                 if(NetworkTimer.Instance.TimeNow - connect.LastReceiveTime > ServerUtility.Timeout)
                 {
-                    Debug.LogWarning($"[TCP][Timeout] Connect={guid}, Remote={pair.Value.IPEndPoint}, LastReceive={connect.LastReceiveTime}ms");
-                    connect.State = ConnectState.Close;
-                    disconnectList.Add(guid);
+                    MarkDisconnected(
+                        guid,
+                        DisconnectReason.Timeout,
+                        "Timeout",
+                        detail: $"LastReceive={connect.LastReceiveTime}ms");
                 }
             }
         }

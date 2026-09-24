@@ -25,8 +25,7 @@ public partial class ClientPlayerInputStateSendSystem : SystemBase
             if (!frame.inputOrder.ContainsKey(currentFrame) || input.NetworkDirty != 0)
                 frame.RecordInput(currentFrame, inputState);
 
-            if (input.NetworkDirty == 0)
-                continue;
+            // 每个逻辑帧携带完整输入：网络卡顿后旧帧被丢弃，仍可恢复持续按键/松键状态。
 
             if (!frame.sendOrder.TryGetValue(currentFrame, out Queue<NetworkStateData> queue))
             {
@@ -35,6 +34,7 @@ public partial class ClientPlayerInputStateSendSystem : SystemBase
             }
 
             queue.Enqueue(inputState);
+            frame.AppendPendingOperations(identityRef.ValueRO.id, queue);
 
             input.NetworkDirty = 0;
             inputRef.ValueRW = input;
@@ -53,15 +53,7 @@ public partial class ClientPlayerInputStateSendSystem : SystemBase
             pointerX = input.PointerWorldPosition.x,
             pointerY = input.PointerWorldPosition.y,
             pointerZ = input.PointerWorldPosition.z,
-            isPrimaryHeld = input.IsPrimaryHeld,
-            isInteractHeld = input.IsInteractHeld,
-            isInventoryHeld = input.IsInventoryHeld,
-            isPropertyHeld = input.IsPropertyHeld,
-            isEscapeHeld = input.IsEscapeHeld,
-            isSkillHeld = input.IsSkillHeld,
-            skillChainIndex = input.SkillChainIndex,
-            isUsePropHeld = input.IsUsePropHeld,
-            propIndex = input.PropIndex,
+            isPrimaryHeld = input.ContinuousPrimaryHeld,
         };
     }
 }

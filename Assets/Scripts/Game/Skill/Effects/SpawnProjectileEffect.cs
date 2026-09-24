@@ -121,17 +121,37 @@ namespace CrystalMagic.Game.Skill.Effects
             entityManager.SetComponentEnabled<DestroyEntityFlag>(projectileEntity, false);
 
             ApplyPayloadComponent(entityManager, projectileEntity, context);
-            SpawnProjectileVisual(entityManager, projectileEntity, position, rotation);
+            SpawnProjectileVisual(entityManager, projectileEntity, context, position, rotation);
         }
 
         private void SpawnProjectileVisual(
             EntityManager entityManager,
             Entity projectileEntity,
+            SkillContent context,
             float3 startPosition,
             quaternion rotation)
         {
-            if (string.IsNullOrWhiteSpace(Data.VisualPrefabName) ||
-                !SpriteEffectSpawnUtility.TrySpawn(
+            if (string.IsNullOrWhiteSpace(Data.VisualPrefabName))
+                return;
+
+            float3 offset = new(Data.VisualOffset.x, Data.VisualOffset.y, Data.VisualOffset.z);
+            if (NetworkPresentationEventUtility.TryEnqueueFollowVfx(
+                    entityManager,
+                    Data.VisualPrefabName,
+                    projectileEntity,
+                    startPosition,
+                    offset,
+                    rotation,
+                    Data.VisualScale,
+                    0f,
+                    true,
+                    context.OriginEntity,
+                    context.SourceSkillId))
+            {
+                return;
+            }
+
+            if (!SpriteEffectSpawnUtility.TrySpawn(
                     entityManager,
                     Data.VisualPrefabName,
                     startPosition,
@@ -149,7 +169,7 @@ namespace CrystalMagic.Game.Skill.Effects
                 new EffectVisualFollowComponent
                 {
                     Target = projectileEntity,
-                    Offset = new float3(Data.VisualOffset.x, Data.VisualOffset.y, Data.VisualOffset.z),
+                    Offset = offset,
                     AlignRotation = 1,
                     EndWhenTargetMissing = 1,
                 });

@@ -12,6 +12,7 @@ public enum ClientPresentationEventType : byte
     MoveVfx = 5,
     Sound = 6,
     CameraShake = 7,
+    PickupFeedback = 8,
 }
 
 public struct ClientPresentationEventElement : IBufferElementData
@@ -21,6 +22,7 @@ public struct ClientPresentationEventElement : IBufferElementData
     public ClientPresentationEventType Type;
     public Entity Source;
     public Entity Target;
+    public int SourceSkillId;
     public FixedString128Bytes AssetName;
     public float3 Position;
     public float3 SecondaryPosition;

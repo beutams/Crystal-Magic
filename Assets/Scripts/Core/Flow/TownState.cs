@@ -12,6 +12,7 @@ namespace CrystalMagic.Core {
         private const string UIPlayerInputLockReason = "TownState.UIOpen";
         private CharacterUI _characterUI;
         private InteractionPromptManager _interactionPromptManager;
+        private PickupTipManager _pickupTipManager;
         private GameMenuUI _gameMenuUI;
         private bool _inputBound;
         private bool _playerInputLockedByUI;
@@ -25,6 +26,8 @@ namespace CrystalMagic.Core {
             GameRuntimeStateUtility.ApplyPlayerRuntimeState(context?.Player);
             _interactionPromptManager ??= new InteractionPromptManager();
             _interactionPromptManager.Initialize();
+            _pickupTipManager ??= new PickupTipManager();
+            _pickupTipManager.Initialize();
             BindInput();
             
             // 可以在这里访问 StateData（如果是从读档进入）
@@ -39,6 +42,8 @@ namespace CrystalMagic.Core {
             Debug.Log("[TownState] Exited Town");
             _interactionPromptManager?.Dispose();
             _interactionPromptManager = null;
+            _pickupTipManager?.Dispose();
+            _pickupTipManager = null;
             ReleaseUIInputLock();
             UnbindInput();
         }
@@ -46,6 +51,7 @@ namespace CrystalMagic.Core {
         public override void OnUpdate()
         {
             _interactionPromptManager?.Tick();
+            _pickupTipManager?.Tick();
             RefreshUIInputLock();
         }
 

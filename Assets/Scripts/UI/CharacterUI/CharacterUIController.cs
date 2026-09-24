@@ -19,16 +19,17 @@ namespace CrystalMagic.UI
             View.BindModel(Model);
             View.InventorySkillStoneDropped += OnInventorySkillStoneDropped;
             View.InventoryEquipDropped += OnInventoryEquipDropped;
+            View.InventoryItemMoved += OnInventoryItemMoved;
+            View.InventoryPropDropped += OnInventoryPropDropped;
             View.EquipReturnedToInventory += OnEquipReturnedToInventory;
             View.SpiritEquipSwapped += OnSpiritEquipSwapped;
             View.SkillAdditionRequested += OnSkillAdditionRequested;
             View.SkillReordered += OnSkillReordered;
             View.SkillReturnedToInventory += OnSkillReturnedToInventory;
+            View.PropReturnedToInventory += OnPropReturnedToInventory;
+            View.PropSlotMoved += OnPropSlotMoved;
             BindEvent(new CommonGameEvent(PlayerInputComponent.SkillChainChangedEventName), _refreshHandler);
-            BindEvent(new CommonGameEvent(SaveDataComponent.SkillDataChangedEventName), _refreshHandler);
-            BindEvent(new CommonGameEvent(SaveDataComponent.BackpackDataChangedEventName), _refreshHandler);
-            BindEvent(new CommonGameEvent(SaveDataComponent.CharacterPropDataChangedEventName), _refreshHandler);
-            BindEvent(new CommonGameEvent(SaveDataComponent.EquipmentDataChangedEventName), _refreshHandler);
+            BindEvent(new CommonGameEvent(SaveDataComponent.CharacterDataChangedEventName), _refreshHandler);
             Model.Refresh();
         }
 
@@ -36,11 +37,15 @@ namespace CrystalMagic.UI
         {
             View.InventorySkillStoneDropped -= OnInventorySkillStoneDropped;
             View.InventoryEquipDropped -= OnInventoryEquipDropped;
+            View.InventoryItemMoved -= OnInventoryItemMoved;
+            View.InventoryPropDropped -= OnInventoryPropDropped;
             View.EquipReturnedToInventory -= OnEquipReturnedToInventory;
             View.SpiritEquipSwapped -= OnSpiritEquipSwapped;
             View.SkillAdditionRequested -= OnSkillAdditionRequested;
             View.SkillReordered -= OnSkillReordered;
             View.SkillReturnedToInventory -= OnSkillReturnedToInventory;
+            View.PropReturnedToInventory -= OnPropReturnedToInventory;
+            View.PropSlotMoved -= OnPropSlotMoved;
             CloseEffectSelectUI();
         }
 
@@ -49,8 +54,10 @@ namespace CrystalMagic.UI
             if (data == null || data.ItemType != ItemType.SkillStone)
                 return;
 
-            BackpackData backpackData = SaveDataComponent.Instance.GetBackpackData();
-            SkillCData skillData = SaveDataComponent.Instance.GetSkillData();
+            if (!PlayerCharacterUtility.TryBeginEdit(out PlayerCharacterEdit edit))
+                return;
+            BackpackData backpackData = edit.Data.Backpack;
+            SkillCData skillData = edit.Data.Skills;
             if (backpackData?.Items == null || skillData?.Chains == null)
                 return;
 
@@ -66,8 +73,7 @@ namespace CrystalMagic.UI
                 SkillStoneItemId = data.ItemId,
             });
 
-            SaveDataComponent.Instance.NotifyBackpackDataChanged();
-            SaveDataComponent.Instance.NotifySkillDataChanged();
+            PlayerCharacterUtility.CommitEdit(edit);
         }
 
         private void OnInventoryEquipDropped(CharacterInventoryDisplayData data, int equipSlotIndex)
@@ -75,8 +81,10 @@ namespace CrystalMagic.UI
             if (data == null || !IsEquippableItem(data.ItemType))
                 return;
 
-            BackpackData backpackData = SaveDataComponent.Instance.GetBackpackData();
-            EquipmentData equipmentData = SaveDataComponent.Instance.GetEquipmentData();
+            if (!PlayerCharacterUtility.TryBeginEdit(out PlayerCharacterEdit edit))
+                return;
+            BackpackData backpackData = edit.Data.Backpack;
+            EquipmentData equipmentData = edit.Data.Equipment;
             if (backpackData?.Items == null || equipmentData == null)
                 return;
 
@@ -92,17 +100,49 @@ namespace CrystalMagic.UI
                 return;
 
             if (oldItemId >= 0)
-                AddItemToBackpack(backpackData, oldItemId, 1);
+            {
+                if (InventoryUtility.AddItemToBackpack(backpackData, oldItemId, 1) != 1)
+                {
+                    PublishBackpackFull();
+                    return;
+                }
+            }
 
             EquipmentUtility.SetEquippedItemId(equipmentData, equipSlotIndex, data.ItemId);
-            SaveDataComponent.Instance.NotifyBackpackDataChanged();
-            SaveDataComponent.Instance.NotifyEquipmentDataChanged();
+            PlayerCharacterUtility.CommitEdit(edit);
         }
 
-        private void OnEquipReturnedToInventory(int equipSlotIndex)
+        private void OnInventoryItemMoved(CharacterInventoryDisplayData data, int targetSlotIndex)
         {
-            EquipmentData equipmentData = SaveDataComponent.Instance.GetEquipmentData();
-            BackpackData backpackData = SaveDataComponent.Instance.GetBackpackData();
+            if (data == null || !PlayerCharacterUtility.TryBeginEdit(out PlayerCharacterEdit edit))
+                return;
+
+            if (InventoryUtility.TryMoveBackpackSlot(edit.Data.Backpack, data.SlotIndex, targetSlotIndex))
+                PlayerCharacterUtility.CommitEdit(edit);
+        }
+
+        private void OnInventoryPropDropped(CharacterInventoryDisplayData data, int propSlotIndex)
+        {
+            if (data == null || data.ItemType != ItemType.Prop ||
+                !PlayerCharacterUtility.TryBeginEdit(out PlayerCharacterEdit edit))
+                return;
+
+            if (PropInventoryUtility.TryMoveBackpackToPropSlot(
+                    edit.Data.Backpack,
+                    edit.Data.Props,
+                    data.SlotIndex,
+                    propSlotIndex))
+            {
+                PlayerCharacterUtility.CommitEdit(edit);
+            }
+        }
+
+        private void OnEquipReturnedToInventory(int equipSlotIndex, int inventorySlotIndex)
+        {
+            if (!PlayerCharacterUtility.TryBeginEdit(out PlayerCharacterEdit edit))
+                return;
+            EquipmentData equipmentData = edit.Data.Equipment;
+            BackpackData backpackData = edit.Data.Backpack;
             if (equipmentData == null || backpackData?.Items == null)
                 return;
 
@@ -114,10 +154,19 @@ namespace CrystalMagic.UI
             if (itemData == null || !IsEquippableItem(itemData.ItemType))
                 return;
 
+            if (!InventoryUtility.TryAddItemToBackpackSlot(
+                    backpackData,
+                    inventorySlotIndex,
+                    itemId,
+                    1,
+                    itemData.ItemType))
+            {
+                PublishBackpackFull();
+                return;
+            }
+
             EquipmentUtility.SetEquippedItemId(equipmentData, equipSlotIndex, -1);
-            AddItemToBackpack(backpackData, itemId, 1);
-            SaveDataComponent.Instance.NotifyBackpackDataChanged();
-            SaveDataComponent.Instance.NotifyEquipmentDataChanged();
+            PlayerCharacterUtility.CommitEdit(edit);
         }
 
         private void OnSpiritEquipSwapped(int sourceSlotIndex, int targetSlotIndex)
@@ -125,14 +174,16 @@ namespace CrystalMagic.UI
             if (sourceSlotIndex < 1 || sourceSlotIndex > 4 || targetSlotIndex < 1 || targetSlotIndex > 4 || sourceSlotIndex == targetSlotIndex)
                 return;
 
-            EquipmentData equipmentData = SaveDataComponent.Instance.GetEquipmentData();
+            if (!PlayerCharacterUtility.TryBeginEdit(out PlayerCharacterEdit edit))
+                return;
+            EquipmentData equipmentData = edit.Data.Equipment;
             if (equipmentData == null)
                 return;
 
             int sourceSpiritIndex = sourceSlotIndex - 1;
             int targetSpiritIndex = targetSlotIndex - 1;
             if (EquipmentUtility.SwapSpiritSlots(equipmentData, sourceSpiritIndex, targetSpiritIndex))
-                SaveDataComponent.Instance.NotifyEquipmentDataChanged();
+                PlayerCharacterUtility.CommitEdit(edit);
         }
 
         private void OnSkillReordered(CharacterSkillDisplayData data, int insertIndex)
@@ -140,7 +191,9 @@ namespace CrystalMagic.UI
             if (data == null)
                 return;
 
-            SkillCData skillData = SaveDataComponent.Instance.GetSkillData();
+            if (!PlayerCharacterUtility.TryBeginEdit(out PlayerCharacterEdit edit))
+                return;
+            SkillCData skillData = edit.Data.Skills;
             if (skillData?.Chains == null)
                 return;
 
@@ -161,16 +214,18 @@ namespace CrystalMagic.UI
             SkillChainSlotData slotData = chain.Slots[sourceIndex];
             chain.Slots.RemoveAt(sourceIndex);
             chain.Slots.Insert(targetIndex, slotData);
-            SaveDataComponent.Instance.NotifySkillDataChanged();
+            PlayerCharacterUtility.CommitEdit(edit);
         }
 
-        private void OnSkillReturnedToInventory(CharacterSkillDisplayData data)
+        private void OnSkillReturnedToInventory(CharacterSkillDisplayData data, int inventorySlotIndex)
         {
             if (data == null)
                 return;
 
-            SkillCData skillData = SaveDataComponent.Instance.GetSkillData();
-            BackpackData backpackData = SaveDataComponent.Instance.GetBackpackData();
+            if (!PlayerCharacterUtility.TryBeginEdit(out PlayerCharacterEdit edit))
+                return;
+            SkillCData skillData = edit.Data.Skills;
+            BackpackData backpackData = edit.Data.Backpack;
             if (skillData?.Chains == null || backpackData?.Items == null)
                 return;
 
@@ -181,10 +236,53 @@ namespace CrystalMagic.UI
                 return;
 
             int skillId = chain.Slots[data.SkillIndex].SkillStoneItemId;
+            if (!InventoryUtility.TryAddItemToBackpackSlot(
+                    backpackData,
+                    inventorySlotIndex,
+                    skillId,
+                    1,
+                    ItemType.SkillStone))
+            {
+                PublishBackpackFull();
+                return;
+            }
+
             chain.Slots.RemoveAt(data.SkillIndex);
-            AddItemToBackpack(backpackData, skillId, 1);
-            SaveDataComponent.Instance.NotifyBackpackDataChanged();
-            SaveDataComponent.Instance.NotifySkillDataChanged();
+            PlayerCharacterUtility.CommitEdit(edit);
+        }
+
+        private void OnPropReturnedToInventory(int propSlotIndex, int inventorySlotIndex)
+        {
+            if (!PlayerCharacterUtility.TryBeginEdit(out PlayerCharacterEdit edit))
+                return;
+
+            if (PropInventoryUtility.TryMovePropToBackpackSlot(
+                    edit.Data.Backpack,
+                    edit.Data.Props,
+                    propSlotIndex,
+                    inventorySlotIndex))
+            {
+                PlayerCharacterUtility.CommitEdit(edit);
+                return;
+            }
+
+            PublishBackpackFull();
+        }
+
+        private void OnPropSlotMoved(int sourceSlotIndex, int targetSlotIndex)
+        {
+            if (!PlayerCharacterUtility.TryBeginEdit(out PlayerCharacterEdit edit) ||
+                edit.Data.Props?.Slots == null ||
+                sourceSlotIndex < 0 || sourceSlotIndex >= edit.Data.Props.Slots.Count ||
+                targetSlotIndex < 0 || targetSlotIndex >= edit.Data.Props.Slots.Count ||
+                sourceSlotIndex == targetSlotIndex)
+            {
+                return;
+            }
+
+            (edit.Data.Props.Slots[sourceSlotIndex], edit.Data.Props.Slots[targetSlotIndex]) =
+                (edit.Data.Props.Slots[targetSlotIndex], edit.Data.Props.Slots[sourceSlotIndex]);
+            PlayerCharacterUtility.CommitEdit(edit);
         }
 
         private void OnSkillAdditionRequested(CharacterSkillDisplayData data)
@@ -192,7 +290,9 @@ namespace CrystalMagic.UI
             if (data == null || data.SkillIndex <= 0)
                 return;
 
-            SkillCData skillData = SaveDataComponent.Instance.GetSkillData();
+            if (!PlayerCharacterUtility.TryBeginEdit(out PlayerCharacterEdit edit))
+                return;
+            SkillCData skillData = edit.Data.Skills;
             if (skillData?.Chains == null)
                 return;
 
@@ -207,6 +307,8 @@ namespace CrystalMagic.UI
             CloseEffectSelectUI();
             _effectSelectUI = UIComponent.Instance.OpenChild<EffectSelectUI>(View, new EffectSelectUIOpenData
             {
+                Edit = edit,
+                SkillChainIndex = skillChainIndex,
                 SkillSlotIndex = data.SkillIndex,
                 SelectedAdditionId = slot?.SkillAdditionId ?? -1,
             });
@@ -245,9 +347,12 @@ namespace CrystalMagic.UI
             return InventoryUtility.TryConsumeBackpackItem(backpackData, slotIndex, itemId, count);
         }
 
-        private void AddItemToBackpack(BackpackData backpackData, int itemId, int quantity)
+        private static void PublishBackpackFull()
         {
-            InventoryUtility.AddItemToBackpack(backpackData, itemId, quantity);
+            EventComponent.Instance.Publish(new PickupFeedbackEvent(
+                PickupFeedbackType.BackpackFull,
+                -1,
+                0));
         }
 
     }

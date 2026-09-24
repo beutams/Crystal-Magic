@@ -373,12 +373,11 @@ namespace CrystalMagic.Core {
 
         public void AddCharacterMoney(long amount)
         {
-            CharacterData character = GetCharacterData();
-            if (amount == 0 || character == null)
+            if (amount == 0 || !PlayerCharacterUtility.TryBeginEdit(out PlayerCharacterEdit edit))
                 return;
 
-            character.Money = Math.Max(0L, character.Money + amount);
-            NotifyCharacterDataChanged();
+            edit.Data.Money = Math.Max(0L, edit.Data.Money + amount);
+            PlayerCharacterUtility.CommitEdit(edit);
         }
 
         public CharacterData GetCharacterData()
@@ -586,7 +585,23 @@ namespace CrystalMagic.Core {
 
         public void NotifyCharacterDataChanged()
         {
+            if (GameRuntimeStateUtility.TryGetPlayerEntity(out EntityManager entityManager, out Entity player) &&
+                entityManager.HasComponent<PlayerCharacterComponent>(player))
+                entityManager.GetComponentObject<PlayerCharacterComponent>(player).MarkChanged();
+
             EventComponent.Instance.Publish(new CommonGameEvent(CharacterDataChangedEventName, GetCharacterData()));
+            NotifyTownDataChanged();
+        }
+
+        // 收到权威数据只刷新表现，不再置脏或重新发出编辑请求。
+        public void RefreshCharacterData()
+        {
+            CharacterData character = GetCharacterData();
+            EventComponent.Instance.Publish(new CommonGameEvent(BackpackDataChangedEventName, character?.Backpack));
+            EventComponent.Instance.Publish(new CommonGameEvent(EquipmentDataChangedEventName, character?.Equipment));
+            EventComponent.Instance.Publish(new CommonGameEvent(SkillDataChangedEventName, character?.Skills));
+            EventComponent.Instance.Publish(new CommonGameEvent(CharacterPropDataChangedEventName, character?.Props));
+            EventComponent.Instance.Publish(new CommonGameEvent(CharacterDataChangedEventName, character));
             NotifyTownDataChanged();
         }
 
@@ -808,6 +823,7 @@ namespace CrystalMagic.Core {
 
             if (data.Backpack.Capacity <= 0)
                 data.Backpack.Capacity = Mathf.Max(1, GetGameConfig().InitialBackpackSize);
+            InventoryUtility.EnsureBackpackSlots(data.Backpack);
 
             if (data.Props == null)
             {
@@ -815,7 +831,30 @@ namespace CrystalMagic.Core {
                 repairedPaths?.Add($"{basePath}.Props");
             }
 
-            data.Props.EnsureValid(GetPropSlotCount(), GetPropShortcutSlotCount(), repairedPaths, $"{basePath}.Props");
+            int propSlotCount = GetPropSlotCount();
+            if (data.Props.Slots != null && data.Props.Slots.Count > propSlotCount)
+            {
+                for (int i = propSlotCount; i < data.Props.Slots.Count; i++)
+                {
+                    CharacterPropSlotData overflow = data.Props.Slots[i];
+                    if (overflow == null || overflow.IsEmpty)
+                        continue;
+
+                    int remaining = overflow.Quantity - InventoryUtility.AddItemToBackpack(
+                        data.Backpack,
+                        overflow.ItemId,
+                        overflow.Quantity);
+                    while (remaining > 0)
+                    {
+                        data.Backpack.Capacity++;
+                        InventoryUtility.EnsureBackpackSlots(data.Backpack);
+                        remaining -= InventoryUtility.AddItemToBackpack(data.Backpack, overflow.ItemId, remaining);
+                    }
+                    repairedPaths?.Add($"{basePath}.Props.Slots[{i}]");
+                }
+            }
+
+            data.Props.EnsureValid(propSlotCount, repairedPaths, $"{basePath}.Props");
         }
 
         private void EnsureDungeonRunDataValid(
@@ -1008,10 +1047,6 @@ namespace CrystalMagic.Core {
             return Mathf.Max(0, GetGameConfig().BattlePropSlotCount);
         }
 
-        private int GetPropShortcutSlotCount()
-        {
-            return Mathf.Max(0, GetGameConfig().BattlePropShortcutSlotCount);
-        }
         #endregion
     }
 

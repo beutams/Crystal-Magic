@@ -68,6 +68,9 @@ public static class StateScriptNodeSchemaUtility
             NumberMonitorStateScriptNodeData => new StateScriptNodeSchema(
                 s_stateInputs,
                 new[] { "OnStart", "OnTick", "OnComplete", "OnAbort", "OnStop", "OnValueChange" }),
+            PlayerInputEventStateScriptNodeData => new StateScriptNodeSchema(
+                s_stateInputs,
+                new[] { "OnStart", "OnTick", "OnComplete", "OnAbort", "OnStop", "OnEvent" }),
             StateStateScriptNodeData => new StateScriptNodeSchema(s_stateInputs, s_stateOutputs),
             ActionStateScriptNodeData => new StateScriptNodeSchema(s_actionInputs, s_actionOutputs),
             _ => null,

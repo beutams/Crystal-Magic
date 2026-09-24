@@ -21,6 +21,15 @@ namespace CrystalMagic.Editor.Unit
             EditorGUILayout.LabelField("Type", StateScriptNodeDataRegistry.GetDisplayName(node.Type));
             EditorGUILayout.SelectableLabel(node.Guid ?? string.Empty, EditorStyles.textField, GUILayout.Height(EditorGUIUtility.singleLineHeight));
             EditorGUILayout.Space(6f);
+            EditorGUI.BeginChangeCheck();
+            node.ExecutionTargets = (GameWorldExecutionTarget)EditorGUILayout.EnumFlagsField(
+                new GUIContent("Execution Targets", "World roles in which this node is allowed to execute."),
+                node.ExecutionTargets);
+            if (EditorGUI.EndChangeCheck())
+                onChanged?.Invoke();
+            if (node.ExecutionTargets == GameWorldExecutionTarget.None)
+                EditorGUILayout.HelpBox("This node is disabled in every world role.", MessageType.Warning);
+            EditorGUILayout.Space(6f);
             if (node is StateStateScriptNodeData stateNode)
             {
                 EditorGUI.BeginChangeCheck();
@@ -148,6 +157,18 @@ namespace CrystalMagic.Editor.Unit
                 numberMonitor.Value ??= NumberMonitorStateScriptNodeData.CreateDefaultValueExpression();
                 EditorGUILayout.LabelField("Observed Value (Number)", EditorStyles.miniBoldLabel);
                 StateScriptValueExpressionDrawer.Draw(numberMonitor.Value, UnitValueCategory.Number, sourceSchema, onChanged);
+                if (EditorGUI.EndChangeCheck())
+                    onChanged?.Invoke();
+                return;
+            }
+
+            if (node is PlayerInputEventStateScriptNodeData inputEvent)
+            {
+                EditorGUI.BeginChangeCheck();
+                inputEvent.EventType = (CrystalMagic.Core.PlayerInputOperationType)EditorGUILayout.EnumPopup(
+                    "Input Event", inputEvent.EventType);
+                inputEvent.RepeatWhileHeld = inputEvent.EventType == CrystalMagic.Core.PlayerInputOperationType.PrimaryPressed &&
+                    EditorGUILayout.Toggle("Repeat While Held", inputEvent.RepeatWhileHeld);
                 if (EditorGUI.EndChangeCheck())
                     onChanged?.Invoke();
                 return;

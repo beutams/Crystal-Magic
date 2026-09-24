@@ -80,7 +80,7 @@ partial struct UnitAvoidanceSystem : ISystem
 }
 
 [BurstCompile]
-[WithNone(typeof(UnitDeathComponent))]
+[WithNone(typeof(UnitDeathComponent), typeof(BattleSpectatorComponent))]
 public partial struct UnitAvoidancePrepareJob : IJobEntity
 {
     internal NativeParallelHashMap<Entity, AgentData>.ParallelWriter Agents;
@@ -160,7 +160,7 @@ public partial struct UnitAvoidancePrepareJob : IJobEntity
 }
 
 [BurstCompile]
-[WithNone(typeof(UnitDeathComponent))]
+[WithNone(typeof(UnitDeathComponent), typeof(BattleSpectatorComponent))]
 public partial struct UnitAvoidanceSolveJob : IJobEntity
 {
     [ReadOnly]

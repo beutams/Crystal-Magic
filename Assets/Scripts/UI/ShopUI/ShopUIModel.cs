@@ -63,6 +63,7 @@ namespace CrystalMagic.UI
             System.Array.Clear(_inventoryItems, 0, _inventoryItems.Length);
 
             BackpackData backpackData = SaveDataComponent.Instance.GetBackpackData();
+            InventoryUtility.EnsureBackpackSlots(backpackData);
             List<InventoryItemData> backpackItems = backpackData?.Items;
             if (backpackItems == null)
                 return;
@@ -71,7 +72,7 @@ namespace CrystalMagic.UI
             for (int i = 0; i < count; i++)
             {
                 InventoryItemData inventoryItem = backpackItems[i];
-                if (inventoryItem == null)
+                if (inventoryItem == null || inventoryItem.IsEmpty)
                     continue;
 
                 ItemData itemData = DataComponent.Instance.Get<ItemData>(inventoryItem.ItemId);

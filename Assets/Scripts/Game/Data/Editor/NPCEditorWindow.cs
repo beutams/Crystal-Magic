@@ -459,9 +459,15 @@ namespace CrystalMagic.Editor.Data
             string nodeDisplayName = NPCInteractionNodeDataRegistry.GetDisplayName(nodeTypeName);
             Rect headerRect = EditorGUILayout.GetControlRect(false, 22f);
             EditorGUI.DrawRect(headerRect, GetGraphNodeColor(node));
-            GUI.Label(new Rect(headerRect.x + 8f, headerRect.y + 3f, headerRect.width - 16f, headerRect.height - 6f),
+            GUI.Label(new Rect(headerRect.x + 8f, headerRect.y + 3f, headerRect.width - 68f, headerRect.height - 6f),
                 $"{nodeDisplayName}{(string.Equals(interaction.EntryNodeGuid, node.Guid, StringComparison.Ordinal) ? "  [ENTRY]" : string.Empty)}",
                 EditorStyles.whiteBoldLabel);
+            GameWorldExecutionTarget previousTargets = node.ExecutionTargets;
+            node.ExecutionTargets = GameWorldExecutionTargetEditorUtility.DrawImGuiBadges(
+                headerRect,
+                node.ExecutionTargets);
+            if (node.ExecutionTargets != previousTargets)
+                _isDirty = true;
 
             EditorGUILayout.Space(2f);
             EditorGUILayout.BeginHorizontal();
@@ -485,6 +491,11 @@ namespace CrystalMagic.Editor.Data
             EditorGUILayout.Space(2f);
 
             EditorGUI.BeginChangeCheck();
+            node.ExecutionTargets = (GameWorldExecutionTarget)EditorGUILayout.EnumFlagsField(
+                "Execution Targets",
+                node.ExecutionTargets);
+            if (node.ExecutionTargets == GameWorldExecutionTarget.None)
+                EditorGUILayout.HelpBox("This node is disabled in every world role.", MessageType.Warning);
             switch (node)
             {
                 case NPCDialogueInteractionNodeData dialogue:
@@ -510,6 +521,13 @@ namespace CrystalMagic.Editor.Data
                 case NPCEnterDungeonInteractionNodeData enterDungeon:
                     enterDungeon.DungeonThemeId = Mathf.Max(0, EditorGUILayout.IntField("Dungeon Theme Id", enterDungeon.DungeonThemeId));
                     EditorGUILayout.HelpBox("This node immediately ends the current interaction and enters the dungeon flow.", MessageType.None);
+                    DrawBranchList(interaction, node);
+                    break;
+                case NPCRequestBattleExitInteractionNodeData request:
+                    request.RequestType = (Server.BattleExitRequestType)EditorGUILayout.EnumPopup("出口操作", request.RequestType);
+                    break;
+                case NPCEnterTownInteractionNodeData:
+                    DrawBranchList(interaction, node);
                     break;
                 case NPCEnterTrainingGroundInteractionNodeData:
                     EditorGUILayout.HelpBox("This node immediately ends the current interaction and enters the training ground flow.", MessageType.None);
@@ -984,6 +1002,7 @@ namespace CrystalMagic.Editor.Data
             }
 
             newNode.Guid = oldNode.Guid;
+            newNode.ExecutionTargets = oldNode.ExecutionTargets;
             newNode.Branches = oldNode.Branches ?? new List<NPCInteractionBranchData>();
             interaction.Nodes[index] = newNode;
             _isDirty = true;

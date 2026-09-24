@@ -9,6 +9,7 @@ public struct PlayerInputComponent : IComponentData
     public float2 Move;
     public float3 PointerWorldPosition;
     public byte IsPrimaryHeld;
+    public byte ContinuousPrimaryHeld;
     public byte IsInteractHeld;
     public byte IsInventoryHeld;
     public byte IsPropertyHeld;

@@ -14,6 +14,14 @@ partial class PersistentEffectSystem : SystemBase
     private bool _isUpdating;
     private Entity _queueEntity;
 
+    public void ResetScene()
+    {
+        _instances.Clear();
+        _pendingInstances.Clear();
+        _isUpdating = false;
+        EntityManager.GetBuffer<PersistentEffectRequest>(_queueEntity).Clear();
+    }
+
     protected override void OnCreate()
     {
         _queueEntity = PersistentEffectUtility.GetOrCreateEntity(EntityManager);

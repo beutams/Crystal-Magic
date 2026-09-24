@@ -301,6 +301,7 @@ public static class StateScriptCompiler
             return false;
         }
         definition.Type = type;
+        definition.ExecutionTargets = source.ExecutionTargets;
         definition.ExpressionStart = graph.Expressions.Count;
         definition.StringStart = graph.Strings.Count;
         if (!TryCopyFixedString(source.Guid, out definition.Guid))
@@ -381,6 +382,10 @@ public static class StateScriptCompiler
                 break;
             case KeepStateScriptNodeData keep:
                 definition.FloatParameters0.x = math.max(0f, keep.DurationSeconds);
+                break;
+            case PlayerInputEventStateScriptNodeData inputEvent:
+                definition.IntParameters.x = (int)inputEvent.EventType;
+                definition.IntParameters.y = inputEvent.RepeatWhileHeld ? 1 : 0;
                 break;
             case MonitorStateScriptNodeData monitor:
                 if (!TryAddConditions(new[] { monitor.Condition }, schemaResolver, expressionFactory, graph, out error))
@@ -735,6 +740,7 @@ public static class StateScriptCompiler
             MonitorStateScriptNodeData => StateScriptNodeRuntimeType.Monitor,
             NumberMonitorStateScriptNodeData => StateScriptNodeRuntimeType.NumberMonitor,
             AdditionStateScriptNodeData => StateScriptNodeRuntimeType.Addition,
+            PlayerInputEventStateScriptNodeData => StateScriptNodeRuntimeType.PlayerInputEvent,
             _ => default,
         };
         return source is StateScriptEntryNodeData or CompareStateScriptNodeData or SetValueStateScriptNodeData or
@@ -744,7 +750,7 @@ public static class StateScriptCompiler
             CompleteInteractionActionNodeData or AcknowledgeInteractionActionNodeData or
             CollectInteractionActionNodeData or StartNpcInteractionActionNodeData or
             TimerStateScriptNodeData or KeepStateScriptNodeData or MonitorStateScriptNodeData or
-            NumberMonitorStateScriptNodeData or AdditionStateScriptNodeData;
+            NumberMonitorStateScriptNodeData or AdditionStateScriptNodeData or PlayerInputEventStateScriptNodeData;
     }
 
     private static bool TryGetInputPort(StateScriptNodeRuntimeType type, string name, out byte portId)
@@ -820,6 +826,11 @@ public static class StateScriptCompiler
             portId = StateScriptPortId.OnValueChange;
             return true;
         }
+        if (type == StateScriptNodeRuntimeType.PlayerInputEvent && string.Equals(name, "OnEvent", StringComparison.Ordinal))
+        {
+            portId = StateScriptPortId.OnInputEvent;
+            return true;
+        }
         return false;
     }
 
@@ -829,7 +840,7 @@ public static class StateScriptCompiler
             return 1;
         if (type == StateScriptNodeRuntimeType.Keep || type == StateScriptNodeRuntimeType.Monitor)
             return 8;
-        if (type == StateScriptNodeRuntimeType.NumberMonitor)
+        if (type is StateScriptNodeRuntimeType.NumberMonitor or StateScriptNodeRuntimeType.PlayerInputEvent)
             return 5;
         return IsStateNode(type) ? (byte)4 : (byte)0;
     }
@@ -838,7 +849,7 @@ public static class StateScriptCompiler
     {
         return type is StateScriptNodeRuntimeType.Timer or StateScriptNodeRuntimeType.Keep or
             StateScriptNodeRuntimeType.Monitor or StateScriptNodeRuntimeType.NumberMonitor or
-            StateScriptNodeRuntimeType.Addition;
+            StateScriptNodeRuntimeType.Addition or StateScriptNodeRuntimeType.PlayerInputEvent;
     }
 
     private static void WriteUnit(

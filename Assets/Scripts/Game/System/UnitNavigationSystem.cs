@@ -124,7 +124,7 @@ public partial struct UnitNavigationSystem : ISystem
     }
 
     [BurstCompile]
-    [WithNone(typeof(UnitDeathComponent))]
+    [WithNone(typeof(UnitDeathComponent), typeof(BattleSpectatorComponent))]
     private partial struct NavigationPathfindJob : IJobEntity
     {
         public DungeonNavigationMapComponent Map;
@@ -471,7 +471,7 @@ public partial struct UnitNavigationSystem : ISystem
     }
 
     [BurstCompile]
-    [WithNone(typeof(UnitDeathComponent))]
+    [WithNone(typeof(UnitDeathComponent), typeof(BattleSpectatorComponent))]
     private partial struct NavigationFollowJob : IJobEntity
     {
         public DungeonNavigationMapComponent Map;
@@ -542,7 +542,7 @@ public partial struct UnitNavigationSystem : ISystem
     }
 
     [BurstCompile]
-    [WithNone(typeof(UnitDeathComponent))]
+    [WithNone(typeof(UnitDeathComponent), typeof(BattleSpectatorComponent))]
     private partial struct NavigationDirectFollowJob : IJobEntity
     {
         private void Execute(

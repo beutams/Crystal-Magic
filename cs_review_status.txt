@@ -59,7 +59,7 @@ Core\
     MainMenuState.cs TRUE
     TownState.cs TRUE DIRTY
     TrainingState.cs TRUE DIRTY
-    TransitionState.cs TRUE
+    TransitionState.cs TRUE DIRTY
   GameGate\
     GameGateComponent.cs TRUE
   Input\
@@ -125,7 +125,7 @@ Core\
   Timer\
     TimerComponent.cs TRUE
   Transition\
-    TransitionComponent.cs FALSE
+    TransitionComponent.cs TRUE
   UI\
     Editor\
       UIClassGenerator.cs FALSE
@@ -183,6 +183,7 @@ Game\
       EquipEditorWindow.cs TRUE DIRTY
       ItemDataEditorWindow.cs TRUE
       LocalizationEditorWindow.cs TRUE
+      NPCInteractionGraphWindow.cs TRUE DIRTY
     NPCEditorWindow.cs TRUE DIRTY
       PropEditorWindow.cs TRUE DIRTY
       ShopDataEditorWindow.cs TRUE DIRTY
@@ -283,9 +284,11 @@ Game\
       RandomAreaPointEffect.cs FALSE
       RectSearchEffect.cs TRUE DIRTY
       RecoverEffect.cs FALSE
-      SpawnFollowVfxEffect.cs TRUE
+      MoveVfxEffect.cs TRUE DIRTY
+      SpawnFollowVfxEffect.cs TRUE DIRTY
+      SpawnLineVfxEffect.cs TRUE DIRTY
       SpawnProjectileEffect.cs TRUE DIRTY
-      SpriteEffectSpawnUtility.cs TRUE
+      SpriteEffectSpawnUtility.cs TRUE DIRTY
       SpawnSoundEffect.cs FALSE
       SpawnUnitEffect.cs TRUE
       SpawnVfxEffect.cs TRUE DIRTY
@@ -364,6 +367,9 @@ Game\
       StateScriptSystem.cs TRUE DIRTY
       UnitStateScriptAuthoring.cs TRUE DIRTY
     Component\
+      ClientPresentationEventElement.cs TRUE DIRTY
+      ClientPlayerMovePresentationComponent.cs TRUE
+      ClientSkillVisualRuntime.cs TRUE
       Tag\
         NPCTagAuthoring.cs TRUE
           Tag
@@ -391,11 +397,14 @@ Game\
       EffectComponent.cs TRUE DIRTY
       EffectDataBridgeComponent.cs TRUE DIRTY
       GameRuntimeState.cs TRUE DIRTY
+      PlayerSkillChainComponent.cs TRUE DIRTY
       GameInteractionComponent.cs TRUE DIRTY
       InteractionTransactionElement.cs TRUE DIRTY
       PersistentEffectQueueComponent.cs TRUE DIRTY
       PlayerCurrentSkillAuthoring.cs TRUE DIRTY
       PlayerInputComponent.cs TRUE DIRTY
+      PlayerInputAuthoring.cs TRUE DIRTY
+      PlayerInputEventElement.cs TRUE
       PlayerSkillComponent.cs TRUE DIRTY
       PlayerSkillDefinitionRegistryComponent.cs TRUE DIRTY
       PlayerSkillRuntimeDataComponent.cs TRUE DIRTY
@@ -429,6 +438,8 @@ Game\
         闁瑰搫顦抽幆銈夋偋閳哄倹娈堕柟?
       UnitDungeonFootprintAuthoring.cs TRUE
       UnitDeathAuthoring.cs TRUE DIRTY
+      BattlePlayerStatusComponent.cs TRUE DIRTY
+      BattleSpectatorComponent.cs TRUE DIRTY
       UnitElementAuthoring.cs TRUE DIRTY
         闁稿繐鍟扮粈宀€浠﹂悙绮瑰亾瑜庨弳鐔煎箲?
       UnitFacingAuthoring.cs TRUE DIRTY
@@ -476,6 +487,7 @@ Game\
       UnitVisualFeatureAuthoring.cs FALSE
     Editor\
       BehaviorTreeGraphWindow.cs TRUE DIRTY
+      GameWorldExecutionTargetEditorUtility.cs TRUE
       StateScriptEditorWindow.cs TRUE DIRTY
       StateScriptGraphView.cs TRUE DIRTY
       StateScriptNodeInspector.cs TRUE DIRTY
@@ -498,17 +510,17 @@ Game\
         JSON閺夌儐鍓欑€?
       NPCInteractionNodeDataFactory.cs TRUE
         鐎规悶鍎卞?
-     NPCInteractionNodeDataRegistry.cs TRUE
+     NPCInteractionNodeDataRegistry.cs TRUE DIRTY
         鐎规悶鍎卞璺衡枖閵娿儱鏂€闁?
       NPCInteractionNodeRunnerFactory.cs FALSE
         鐎规悶鍎卞?
-      NPCInteractionNodeRunnerRegistry.cs TRUE
+      NPCInteractionNodeRunnerRegistry.cs TRUE DIRTY
         鐎规悶鍎卞璺衡枖閵娿儱鏂€闁?
       NPCInteractionNodeRunner.cs TRUE
         濞存嚎鍊撶花浼存嚍閸屾粌浠柣鏍у鐞?
       NPCInteractionNodeRunners.cs TRUE DIRTY
         濞存嚎鍊撶花浼存嚍閸屾粌浠悗娑欏姉鐞?
-      NPCInteractionSession.cs FALSE
+      NPCInteractionSession.cs TRUE DIRTY
     Interaction\
       Utility\
         DungeonExitRuntimeUtility.cs TRUE DIRTY
@@ -516,6 +528,12 @@ Game\
         GameInteractionTargetUtility.cs TRUE DIRTY
     System\
       BehaviorTreeInitSystem.cs TRUE DIRTY
+      ClientPredictedProjectileSystem.cs TRUE
+      ClientPlayerMovePresentationSystem.cs TRUE
+      ClientPresentationEventSystem.cs TRUE DIRTY
+      ClientSkillVisualCaptureSystem.cs TRUE
+      ClientSkillVisualExecutionSystem.cs TRUE
+      ClientTransformInterpolationSystem.cs TRUE DIRTY
       BuffEffectRegistryInitializationSystem.cs TRUE DIRTY
         闁活潿鍔嶉弳鐔煎箲椤旂晫鈧垰顕欓崫鍕瘔閻炴稑濂旂拹鐔煎冀閹达絽螡闁绘劗鎳撻顔炬寬?
       BehaviorTreeSystem.cs TRUE DIRTY
@@ -535,6 +553,7 @@ Game\
         濞达綀娉曢弫銈夋焼閹惧啿寰?
       UnitPhysicsRotationInitializationSystem.cs TRUE DIRTY
       PlayerInputBridgeSystem.cs TRUE DIRTY
+      PlayerInputPulseResetSystem.cs TRUE DIRTY
       PlayerPropCooldownSystem.cs TRUE DIRTY
       PlayerSkillAnalysisSystem.cs TRUE DIRTY
         闁汇垻鍠愰崹姘跺礂閾氬倻绉奸柟鍨涘亾闁煎啿鈧噥鍤炴慨?
@@ -556,6 +575,7 @@ Game\
       DropScatterSystem.cs TRUE DIRTY
       DropSpritePresentationSystem.cs TRUE DIRTY
       UnitDeathFinalizeSystem.cs TRUE DIRTY
+      BattlePlayerStatusPresentationSystem.cs TRUE DIRTY
       UnitDropOnDestroySystem.cs TRUE DIRTY
         闁诡剦浜炴晶鍨潰鐠佹娊顎楅柟鍝勵槼閹倝鎮?
       UnitAvoidanceSystem.cs TRUE DIRTY
@@ -575,7 +595,7 @@ Game\
         闁告瑯浜濆Σ鍝ユ媼閿涘嫮鏆柛鎰槻瀹?
       UnitSystemGroups.cs TRUE DIRTY
       UnitInitializationFinalizeSystem.cs TRUE DIRTY
-      UnitSimulationGateSystem.cs TRUE
+      UnitSimulationGateSystem.cs TRUE DIRTY
       UnitSourceDispatcherSystem.cs TRUE DIRTY
         闁告帒妫涚悮?
         闁归攱鍎宠ぐ鍥箳婢跺孩鍎伴柣?
@@ -584,12 +604,15 @@ Game\
       UnitDebugInspectorUtility.cs TRUE DIRTY
     Utility\
       BuffEffectRegistryUtility.cs TRUE DIRTY
+      ClientSkillVisualPredictionUtility.cs TRUE
       EffectDataBridgeUtility.cs TRUE DIRTY
       EntitySpawnRegistryUtility.cs TRUE DIRTY
       NPCAuthoringUtility.cs FALSE
       EffectUtility.cs TRUE DIRTY
       PersistentEffectUtility.cs TRUE DIRTY
       PropUseUtility.cs TRUE DIRTY
+      PlayerCharacterUtility.cs TRUE DIRTY
+      BattlePlayerStatusUtility.cs TRUE DIRTY
       SkillExecutionUtility.cs TRUE DIRTY
       SkillReleaseUtility.cs TRUE DIRTY
       UnitAnimationVisualUtility.cs FALSE
@@ -601,9 +624,10 @@ Game\
       WorldDropSpawnUtility.cs TRUE DIRTY
       UnitFactionUtility.cs TRUE DIRTY
       UnitFeatureBakeUtility.cs TRUE
-      EquipmentUtility.cs TRUE
+      EquipmentUtility.cs TRUE DIRTY
       UnitModifierUtility.cs TRUE DIRTY
       UnitModifierResolver.cs TRUE
+      UnitMoveSimulationUtility.cs TRUE DIRTY
       UnitPerceptionQueryUtility.cs TRUE
       UnitQueryUtility.cs TRUE DIRTY
       UnitSkillModifierUtility.cs FALSE
@@ -630,7 +654,7 @@ UI\
       CharacterUI_InventoryItemView.cs TRUE
       CharacterUI_SkillItemData.cs TRUE
         CharacterUI_SkillItemView.cs TRUE DIRTY
-    CharacterUI.cs TRUE
+    CharacterUI.cs TRUE DIRTY
     CharacterUIController.cs TRUE DIRTY
     CharacterUIData.cs TRUE
     CharacterUIModel.cs TRUE DIRTY
@@ -658,9 +682,9 @@ UI\
       EffectSelectUI_ItemData.cs FALSE
       EffectSelectUI_ItemView.cs FALSE
     EffectSelectUI.cs FALSE
-    EffectSelectUIController.cs FALSE
-    EffectSelectUIData.cs FALSE
-    EffectSelectUIModel.cs FALSE
+    EffectSelectUIController.cs TRUE
+    EffectSelectUIData.cs TRUE
+    EffectSelectUIModel.cs TRUE
   GameMenuUI\
   GameSaveUI\
     Sub\
@@ -797,20 +821,42 @@ UI\
 Web\
   Battle\
     BattleWorldContext.cs TRUE DIRTY
+    BattleSceneResetUtility.cs TRUE DIRTY
+    BattleFrameClock.cs TRUE
+    BattleFrameRateManager.cs TRUE
+    BattleSimulationSystemGroup.cs TRUE
+    ClientFrameManager.cs TRUE DIRTY
+    ClientPlayerPredictionSnapshot.cs TRUE
+    ClientPlayerPredictionSystem.cs TRUE
+    ClientPlayerInputStateSendSystem.cs TRUE DIRTY
+    ClientPlayerStateRecordSystem.cs TRUE DIRTY
+    FrameManager.cs TRUE DIRTY
+    FrameReceiveSystem.cs TRUE DIRTY
+    ServerFrameManager.cs TRUE DIRTY
     ClientBattleManager.cs TRUE DIRTY
     NetworkEventDictionary.cs TRUE
     NetworkEntitySpawnInfo.cs TRUE DIRTY
     NetworkEntitySpawnUtility.cs TRUE DIRTY
-    NetworkUnitStateSnapshotUtility.cs TRUE
+    NetworkPresentationEventUtility.cs TRUE DIRTY
+    NetworkStateApplyContext.cs TRUE DIRTY
+    NetworkUnitStateSnapshotUtility.cs TRUE DIRTY
     ServerNetworkEntitySpawnCollectSystem.cs TRUE DIRTY
     ServerNetworkStateCollectSystem.cs TRUE DIRTY
     StateData\
+      NetworkBattlePlayerStatusStateData.cs TRUE DIRTY
+      NetworkCharacterEditData.cs TRUE DIRTY
+      NetworkCharacterStateData.cs TRUE
+      NetworkPlayerOperationData.cs TRUE DIRTY
+      NetworkPropUseData.cs TRUE DIRTY
       NetworkEntityDespawnStateData.cs TRUE DIRTY
       NetworkMoveStateData.cs TRUE DIRTY
       NetworkPlayerInputStateData.cs TRUE DIRTY
       NetworkPlayerSkillChainStateData.cs TRUE DIRTY
+      NetworkPresentationEventStateData.cs TRUE DIRTY
   Core\
     ClientNetworkManager.cs TRUE DIRTY
+    Connect.cs TRUE DIRTY
+    NetworkComponent.cs TRUE DIRTY
     NetworkTimer.cs TRUE DIRTY
     ServerUtility.cs TRUE
     Protocol\
@@ -828,7 +874,7 @@ Web\
       C2L_SetDungeonFloor.cs TRUE
       L2B_StartRoom.cs TRUE DIRTY
   Battle\
-    BattleEnterData.cs TRUE
+    BattleEnterData.cs TRUE DIRTY
     BattlePlayer.cs TRUE DIRTY
     BattleRoom.cs TRUE DIRTY
     BattleUnitData.cs TRUE
@@ -837,7 +883,20 @@ Web\
       NetworkIdentityAuthoring.cs TRUE DIRTY
       NetworkPlayerAuthoring.cs TRUE DIRTY
     Protocol\
+      General_FrameStateData.cs TRUE DIRTY
+      B2C_BattleSettlement.cs TRUE DIRTY
+      B2C_BeginBattleTheme.cs TRUE DIRTY
+      B2C_BattleExitResult.cs TRUE DIRTY
+      B2C_CreateNetworkEntities.cs TRUE DIRTY
+      B2C_ReloadBattleSnapshot.cs TRUE DIRTY
+      C2B_BattleExitRequest.cs TRUE DIRTY
+      C2B_BattleReady.cs TRUE DIRTY
+      C2B_BattleSceneReady.cs TRUE DIRTY
+      C2B_ReloadBattleReady.cs TRUE DIRTY
       B2C_CreateBattleUnit.cs TRUE
+      B2C_StartFrame.cs TRUE DIRTY
+      B2C_FramePong.cs TRUE DIRTY
+      C2B_FramePing.cs TRUE DIRTY
       B2C_EnterBattleResult.cs TRUE DIRTY
       C2B_SendUserData.cs TRUE
 Core\
@@ -845,6 +904,11 @@ Core\
     OnlineBattlePreparationState.cs TRUE DIRTY
 Tests\
   Editor\
+    BattleFrameClockTests.cs TRUE
+    NetworkInputAndProtocolTests.cs TRUE DIRTY
+    PlayerInputEventTests.cs TRUE DIRTY
+    PlayerCharacterSyncTests.cs TRUE DIRTY
+    BattleLifecycleTests.cs TRUE DIRTY
     Comparator\
       ConditionExpressionMigrationTests.cs FALSE
 ThirdParty\

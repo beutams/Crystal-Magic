@@ -133,26 +133,114 @@ namespace CrystalMagic.Core
             return true;
         }
 
-        public static bool TryBindShortcut(CharacterPropData propData, int shortcutIndex, int propSlotIndex)
+        public static bool TryMoveBackpackToPropSlot(
+            BackpackData backpackData,
+            CharacterPropData propData,
+            int backpackSlotIndex,
+            int propSlotIndex)
         {
-            if (propData?.ShortcutSlotIndexes == null || shortcutIndex < 0 || shortcutIndex >= propData.ShortcutSlotIndexes.Length)
+            InventoryUtility.EnsureBackpackSlots(backpackData);
+            if (!InventoryUtility.IsValidBackpackSlot(backpackData, backpackSlotIndex) ||
+                propData?.Slots == null || propSlotIndex < 0 || propSlotIndex >= propData.Slots.Count)
                 return false;
 
-            if (propSlotIndex < -1 || propData.Slots == null || propSlotIndex >= propData.Slots.Count)
+            InventoryItemData source = backpackData.Items[backpackSlotIndex];
+            if (source == null || source.IsEmpty || !IsPropItem(source.ItemId))
                 return false;
 
-            propData.ShortcutSlotIndexes[shortcutIndex] = propSlotIndex;
+            CharacterPropSlotData target = propData.Slots[propSlotIndex] ??= new CharacterPropSlotData();
+            int carryLimit = GetCarryLimit(source.ItemId);
+            if (carryLimit <= 0)
+                return false;
+
+            int sourceItemCountOutsideTarget = GetItemCount(propData, source.ItemId);
+            if (!target.IsEmpty && target.ItemId == source.ItemId)
+                sourceItemCountOutsideTarget -= target.Quantity;
+            int availableCarryCount = Mathf.Max(0, carryLimit - sourceItemCountOutsideTarget);
+
+            if (target.IsEmpty || target.ItemId == source.ItemId)
+            {
+                int moveCount = Mathf.Min(source.Quantity, Mathf.Max(0, availableCarryCount - (target.IsEmpty ? 0 : target.Quantity)));
+                if (moveCount <= 0)
+                    return false;
+
+                if (target.IsEmpty)
+                    target.ItemId = source.ItemId;
+                target.Quantity += moveCount;
+                source.Quantity -= moveCount;
+                if (source.Quantity <= 0)
+                    source.Clear();
+                return true;
+            }
+
+            if (source.Quantity > availableCarryCount)
+                return false;
+
+            int oldItemId = target.ItemId;
+            int oldQuantity = target.Quantity;
+            ItemData oldItemData = DataComponent.Instance.Get<ItemData>(oldItemId);
+            int oldMaxStack = oldItemData != null && oldItemData.MaxStack > 0 ? oldItemData.MaxStack : 1;
+            if (oldQuantity > oldMaxStack)
+                return false;
+
+            target.ItemId = source.ItemId;
+            target.Quantity = source.Quantity;
+            source.ItemId = oldItemId;
+            source.Quantity = oldQuantity;
+            source.ItemType = oldItemData != null ? oldItemData.ItemType : ItemType.Prop;
             return true;
         }
 
-        public static bool TryGetShortcutPropSlot(CharacterPropData propData, int shortcutIndex, out int propSlotIndex)
+        public static bool TryMovePropToBackpackSlot(
+            BackpackData backpackData,
+            CharacterPropData propData,
+            int propSlotIndex,
+            int backpackSlotIndex)
         {
-            propSlotIndex = -1;
-            if (propData?.ShortcutSlotIndexes == null || shortcutIndex < 0 || shortcutIndex >= propData.ShortcutSlotIndexes.Length)
+            InventoryUtility.EnsureBackpackSlots(backpackData);
+            if (!InventoryUtility.IsValidBackpackSlot(backpackData, backpackSlotIndex) ||
+                !TryGetSlot(propData, propSlotIndex, out CharacterPropSlotData source))
                 return false;
 
-            propSlotIndex = propData.ShortcutSlotIndexes[shortcutIndex];
-            return propSlotIndex >= 0 && propData.Slots != null && propSlotIndex < propData.Slots.Count;
+            InventoryItemData target = backpackData.Items[backpackSlotIndex];
+            ItemData sourceItemData = DataComponent.Instance.Get<ItemData>(source.ItemId);
+            int sourceMaxStack = sourceItemData != null && sourceItemData.MaxStack > 0 ? sourceItemData.MaxStack : 1;
+            if (target.IsEmpty || target.ItemId == source.ItemId)
+            {
+                int moveCount = Mathf.Min(source.Quantity, Mathf.Max(0, sourceMaxStack - (target.IsEmpty ? 0 : target.Quantity)));
+                if (moveCount <= 0)
+                    return false;
+
+                if (target.IsEmpty)
+                {
+                    target.ItemId = source.ItemId;
+                    target.ItemType = sourceItemData != null ? sourceItemData.ItemType : ItemType.Prop;
+                }
+                target.Quantity += moveCount;
+                source.Quantity -= moveCount;
+                if (source.Quantity <= 0)
+                    source.Clear();
+                return true;
+            }
+
+            if (!IsPropItem(target.ItemId) || source.Quantity > sourceMaxStack)
+                return false;
+
+            int targetCarryLimit = GetCarryLimit(target.ItemId);
+            int targetItemCountOutsideSource = GetItemCount(propData, target.ItemId);
+            if (source.ItemId == target.ItemId)
+                targetItemCountOutsideSource -= source.Quantity;
+            if (target.Quantity > Mathf.Max(0, targetCarryLimit - targetItemCountOutsideSource))
+                return false;
+
+            int oldItemId = source.ItemId;
+            int oldQuantity = source.Quantity;
+            source.ItemId = target.ItemId;
+            source.Quantity = target.Quantity;
+            target.ItemId = oldItemId;
+            target.Quantity = oldQuantity;
+            target.ItemType = sourceItemData != null ? sourceItemData.ItemType : ItemType.Prop;
+            return true;
         }
 
         private static int FindFirstEmptySlot(CharacterPropData propData)

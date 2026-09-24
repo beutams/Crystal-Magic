@@ -6,7 +6,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
 
-[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.ClientSimulation)]
 [UpdateInGroup(typeof(UnitInitializationSystemGroup), OrderFirst = true)]
 [UpdateBefore(typeof(UnitPerceptionSystem))]
 [UpdateBefore(typeof(SkillProjectileSystem))]
@@ -31,6 +31,7 @@ partial struct UnitQueryBuildSystem : ISystem
             None = new[]
             {
                 ComponentType.ReadOnly<UnitInitializationPendingTag>(),
+                ComponentType.ReadOnly<BattleSpectatorComponent>(),
             },
         });
 

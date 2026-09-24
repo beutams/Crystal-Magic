@@ -26,12 +26,15 @@ partial struct UnitMoveSystem : ISystem
             DeltaTime = SystemAPI.Time.DeltaTime,
             Avoidances = SystemAPI.GetComponentLookup<UnitAvoidanceComponent>(true),
             Modifiers = SystemAPI.GetComponentLookup<UnitModifierComponent>(true),
+            Deaths = SystemAPI.GetComponentLookup<UnitDeathComponent>(true),
+            PlayerInputs = SystemAPI.GetComponentLookup<PlayerInputComponent>(true),
+            BattlePlayerStatuses = SystemAPI.GetComponentLookup<BattlePlayerStatusComponent>(true),
         };
         state.Dependency = job.ScheduleParallel(state.Dependency);
     }
 
     [BurstCompile]
-    [WithNone(typeof(UnitDeathComponent), typeof(VfxArrivalComponent))]
+    [WithNone(typeof(VfxArrivalComponent))]
     private partial struct UnitMoveJob : IJobEntity
     {
         public float DeltaTime;
@@ -41,6 +44,15 @@ partial struct UnitMoveSystem : ISystem
 
         [ReadOnly]
         public ComponentLookup<UnitModifierComponent> Modifiers;
+
+        [ReadOnly]
+        public ComponentLookup<UnitDeathComponent> Deaths;
+
+        [ReadOnly]
+        public ComponentLookup<PlayerInputComponent> PlayerInputs;
+
+        [ReadOnly]
+        public ComponentLookup<BattlePlayerStatusComponent> BattlePlayerStatuses;
 
         private void Execute(
             Entity entity,
@@ -53,40 +65,57 @@ partial struct UnitMoveSystem : ISystem
             bool hasFrameVelocity = move.HasFrameVelocity != 0;
             float2 frameVelocity = move.FrameVelocity;
             UnitMoveComponent oldMove = move;
+            bool isDead = Deaths.HasComponent(entity) && Deaths.IsComponentEnabled(entity);
+            bool isBattleSpectator = BattlePlayerStatuses.TryGetComponent(
+                entity, out BattlePlayerStatusComponent status) && status.IsSpectator;
+            bool isWaitingForTransition = status.IsWaitingForTransition;
 
-            if (hasFrameVelocity)
+            if (isWaitingForTransition)
+            {
+                move.Velocity = float2.zero;
+                physicsVelocity = default;
+                hasFrameVelocity = false;
+            }
+            else if (isBattleSpectator)
+            {
+                requestedDirection = status.ConnectionState == BattlePlayerConnectionState.Online &&
+                                     PlayerInputs.TryGetComponent(entity, out PlayerInputComponent input)
+                    ? input.Move : float2.zero;
+                UnitModifierComponent identity = UnitModifierComponent.CreateIdentity();
+                move.Velocity = math.normalizesafe(requestedDirection) *
+                                UnitModifierResolver.GetMoveSpeed(in move, in identity);
+                // 观战不参与物理碰撞，也不受死亡时遗留的控制/施法移动倍率影响。
+                transform.Position += new float3(move.Velocity, 0f) * DeltaTime;
+                physicsVelocity = default;
+                hasFrameVelocity = false;
+            }
+            else if (isDead)
+            {
+                move.Velocity = float2.zero;
+            }
+            else if (hasFrameVelocity)
             {
                 move.Velocity = frameVelocity;
             }
-            else if (Avoidances.TryGetComponent(entity, out UnitAvoidanceComponent avoidance) &&
+            else if (!isDead && Avoidances.TryGetComponent(entity, out UnitAvoidanceComponent avoidance) &&
                      avoidance.HasResolvedVelocity != 0)
             {
                 move.Velocity = avoidance.ResolvedVelocity;
             }
             else
             {
-                float2 targetDirection = math.normalizesafe(requestedDirection, float2.zero);
                 UnitModifierComponent modifier = Modifiers.TryGetComponent(
                     entity,
                     out UnitModifierComponent resolvedModifier)
                     ? resolvedModifier
                     : UnitModifierComponent.CreateIdentity();
-                float resolvedSpeed = requestedMoveSpeed >= 0f
-                    ? requestedMoveSpeed
-                    : UnitModifierResolver.GetMoveSpeed(in move, in modifier);
-                float targetSpeed = resolvedSpeed * move.StateMoveMultiplier;
-                float maxSpeed = math.abs(targetSpeed);
-                float maxAcceleration = math.max(
-                    0f,
-                    UnitModifierResolver.GetMaxAcceleration(in move, in modifier));
-                float2 targetVelocity = targetDirection * targetSpeed;
-                if (move.StateMoveMultiplier <= 0f)
-                    move.Velocity = float2.zero;
-                else
-                    UpdateMoveVelocity(ref move, targetVelocity, maxAcceleration, maxSpeed, DeltaTime);
+                move.Direction = requestedDirection;
+                move.CommandMoveSpeed = requestedMoveSpeed;
+                UnitMoveSimulationUtility.ResolveDesiredVelocity(ref move, in modifier, DeltaTime);
             }
 
-            ApplyPlanarTransform(ref physicsVelocity, ref transform, move.Velocity);
+            if (!isBattleSpectator && !isWaitingForTransition)
+                ApplyPlanarTransform(ref physicsVelocity, ref transform, move.Velocity);
 
             if (!move.Velocity.Equals(oldMove.Velocity) ||
                 math.lengthsq(move.Velocity) > 0.0001f ||
@@ -97,34 +126,7 @@ partial struct UnitMoveSystem : ISystem
 
             move.LastObservedPosition = transform.Position;
 
-            move.Direction = float2.zero;
-            move.CommandMoveSpeed = -1f;
-            move.FrameVelocity = float2.zero;
-            move.HasFrameVelocity = 0;
-        }
-
-        private static void UpdateMoveVelocity(
-            ref UnitMoveComponent move,
-            float2 targetVelocity,
-            float maxAcceleration,
-            float maxSpeed,
-            float deltaTime)
-        {
-            float2 difference = targetVelocity - move.Velocity;
-            float differenceLength = math.length(difference);
-
-            if (differenceLength > 0.0001f)
-            {
-                float step = maxAcceleration * deltaTime;
-                if (step >= differenceLength)
-                    move.Velocity = targetVelocity;
-                else
-                    move.Velocity += difference / differenceLength * step;
-            }
-
-            float velocityLength = math.length(move.Velocity);
-            if (velocityLength > maxSpeed && velocityLength > 0.0001f)
-                move.Velocity = move.Velocity / velocityLength * maxSpeed;
+            UnitMoveSimulationUtility.ClearFrameCommands(ref move);
         }
 
         private static void ApplyPlanarTransform(

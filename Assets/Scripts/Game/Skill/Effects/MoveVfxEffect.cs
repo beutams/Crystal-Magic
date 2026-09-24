@@ -32,7 +32,9 @@ namespace CrystalMagic.Game.Skill.Effects
                 endPosition,
                 Data.Scale,
                 duration,
-                Data.PreservePrefabRotation);
+                Data.PreservePrefabRotation,
+                context.OriginEntity,
+                context.SourceSkillId);
 
             if (!SpriteEffectSpawnUtility.TrySpawn(
                     context.EntityManager,

@@ -17,6 +17,7 @@ namespace CrystalMagic.Game.Data
             "EnterDungeon",
             "EnterTrainingGround",
             "EnterTown",
+            "RequestBattleExit",
         };
 
         private static readonly Dictionary<string, Type> s_types = new(StringComparer.Ordinal)
@@ -28,6 +29,7 @@ namespace CrystalMagic.Game.Data
             { "EnterDungeon", typeof(CrystalMagic.Game.Data.NPCEnterDungeonInteractionNodeData) },
             { "EnterTrainingGround", typeof(CrystalMagic.Game.Data.NPCEnterTrainingGroundInteractionNodeData) },
             { "EnterTown", typeof(CrystalMagic.Game.Data.NPCEnterTownInteractionNodeData) },
+            { "RequestBattleExit", typeof(CrystalMagic.Game.Data.NPCRequestBattleExitInteractionNodeData) },
         };
 
         private static readonly Dictionary<Type, string> s_keys = new()
@@ -39,6 +41,7 @@ namespace CrystalMagic.Game.Data
             { typeof(CrystalMagic.Game.Data.NPCEnterDungeonInteractionNodeData), "EnterDungeon" },
             { typeof(CrystalMagic.Game.Data.NPCEnterTrainingGroundInteractionNodeData), "EnterTrainingGround" },
             { typeof(CrystalMagic.Game.Data.NPCEnterTownInteractionNodeData), "EnterTown" },
+            { typeof(CrystalMagic.Game.Data.NPCRequestBattleExitInteractionNodeData), "RequestBattleExit" },
         };
 
         private static readonly Dictionary<string, string> s_displayNames = new(StringComparer.Ordinal)
@@ -50,6 +53,7 @@ namespace CrystalMagic.Game.Data
             { "EnterDungeon", "Enter Dungeon" },
             { "EnterTrainingGround", "Enter Training Ground" },
             { "EnterTown", "Enter Town" },
+            { "RequestBattleExit", "联机出口请求" },
         };
 
         public static IReadOnlyList<string> TypeOrder => s_typeOrder;
@@ -88,6 +92,7 @@ namespace CrystalMagic.Game.Data
             factory.Register("EnterDungeon", static () => new CrystalMagic.Game.Data.NPCEnterDungeonInteractionNodeData());
             factory.Register("EnterTrainingGround", static () => new CrystalMagic.Game.Data.NPCEnterTrainingGroundInteractionNodeData());
             factory.Register("EnterTown", static () => new CrystalMagic.Game.Data.NPCEnterTownInteractionNodeData());
+            factory.Register("RequestBattleExit", static () => new CrystalMagic.Game.Data.NPCRequestBattleExitInteractionNodeData());
         }
     }
 }

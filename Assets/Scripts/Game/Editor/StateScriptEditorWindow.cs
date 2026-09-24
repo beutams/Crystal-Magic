@@ -727,6 +727,7 @@ namespace CrystalMagic.Editor.Unit
         {
             _isDirty = true;
             _runtimeDataInspector.Invalidate();
+            _graphView?.RefreshExecutionTargetBadges();
             SetStatus("Modified.");
             _inspectorContainer?.MarkDirtyRepaint();
         }
@@ -1122,6 +1123,7 @@ namespace CrystalMagic.Editor.Unit
 
                 resetNode.Guid = node.Guid;
                 resetNode.EditorPosition = node.EditorPosition;
+                resetNode.ExecutionTargets = node.ExecutionTargets;
                 graph.Nodes[i] = resetNode;
                 resetNodeCount++;
             }

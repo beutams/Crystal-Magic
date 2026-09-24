@@ -8,19 +8,22 @@ namespace CrystalMagic.UI
         public override string ChangedEventName => DataChangedEventName;
 
         private readonly System.Collections.Generic.List<CharacterSkillDisplayData> _skillItems = new();
-        private readonly CharacterInventoryDisplayData[] _inventoryItems = new CharacterInventoryDisplayData[32];
+        private readonly System.Collections.Generic.List<CharacterInventoryDisplayData> _inventoryItems = new();
         private readonly CharacterEquipDisplayData[] _equipItems = new CharacterEquipDisplayData[5];
+        private readonly CharacterPropDisplayData[] _propItems = new CharacterPropDisplayData[3];
 
         public System.Collections.Generic.IReadOnlyList<CharacterSkillDisplayData> SkillItems => _skillItems;
-        public CharacterInventoryDisplayData[] InventoryItems => _inventoryItems;
+        public System.Collections.Generic.IReadOnlyList<CharacterInventoryDisplayData> InventoryItems => _inventoryItems;
         public CharacterEquipDisplayData[] EquipItems => _equipItems;
-        public int InventorySlotCount => 32;
+        public CharacterPropDisplayData[] PropItems => _propItems;
+        public int InventorySlotCount => _inventoryItems.Count;
 
         public void Refresh()
         {
             RefreshSkill();
             RefreshInventory();
             RefreshEquip();
+            RefreshProps();
             CrystalMagic.Core.EventComponent.Instance.Publish(new CrystalMagic.Core.CommonGameEvent(DataChangedEventName, this));
         }
 
@@ -63,21 +66,23 @@ namespace CrystalMagic.UI
 
         private void RefreshInventory()
         {
-            System.Array.Clear(_inventoryItems, 0, _inventoryItems.Length);
-
-            System.Collections.Generic.List<CrystalMagic.Core.InventoryItemData> backpackItems = CrystalMagic.Core.SaveDataComponent.Instance.GetBackpackData()?.Items;
-            if (backpackItems == null)
+            _inventoryItems.Clear();
+            CrystalMagic.Core.BackpackData backpack = CrystalMagic.Core.SaveDataComponent.Instance.GetBackpackData();
+            if (backpack == null)
                 return;
 
-            int count = backpackItems.Count < _inventoryItems.Length ? backpackItems.Count : _inventoryItems.Length;
-            for (int i = 0; i < count; i++)
+            CrystalMagic.Core.InventoryUtility.EnsureBackpackSlots(backpack);
+            for (int i = 0; i < backpack.Items.Count; i++)
             {
-                CrystalMagic.Core.InventoryItemData inventoryItem = backpackItems[i];
-                if (inventoryItem == null)
+                CrystalMagic.Core.InventoryItemData inventoryItem = backpack.Items[i];
+                if (inventoryItem == null || inventoryItem.IsEmpty)
+                {
+                    _inventoryItems.Add(null);
                     continue;
+                }
 
                 CrystalMagic.Game.Data.ItemData itemData = CrystalMagic.Core.DataComponent.Instance.Get<CrystalMagic.Game.Data.ItemData>(inventoryItem.ItemId);
-                _inventoryItems[i] = new CharacterInventoryDisplayData
+                _inventoryItems.Add(new CharacterInventoryDisplayData
                 {
                     SlotIndex = i,
                     ItemId = inventoryItem.ItemId,
@@ -85,7 +90,7 @@ namespace CrystalMagic.UI
                     ItemType = itemData != null ? itemData.ItemType : inventoryItem.ItemType,
                     Name = itemData != null ? itemData.Name : string.Empty,
                     IconPath = itemData != null ? itemData.IconPath : string.Empty,
-                };
+                });
             }
         }
 
@@ -141,6 +146,32 @@ namespace CrystalMagic.UI
             }
         }
 
+        private void RefreshProps()
+        {
+            System.Array.Clear(_propItems, 0, _propItems.Length);
+            CrystalMagic.Core.CharacterPropData propData = CrystalMagic.Core.SaveDataComponent.Instance.GetCharacterPropData();
+            if (propData?.Slots == null)
+                return;
+
+            int count = UnityEngine.Mathf.Min(_propItems.Length, propData.Slots.Count);
+            for (int i = 0; i < count; i++)
+            {
+                CrystalMagic.Core.CharacterPropSlotData slot = propData.Slots[i];
+                if (slot == null || slot.IsEmpty)
+                    continue;
+
+                CrystalMagic.Game.Data.ItemData itemData = CrystalMagic.Core.DataComponent.Instance.Get<CrystalMagic.Game.Data.ItemData>(slot.ItemId);
+                _propItems[i] = new CharacterPropDisplayData
+                {
+                    SlotIndex = i,
+                    ItemId = slot.ItemId,
+                    Count = slot.Quantity,
+                    Name = itemData != null ? itemData.Name : string.Empty,
+                    IconPath = itemData != null ? itemData.IconPath : string.Empty,
+                };
+            }
+        }
+
     }
 
     public sealed class CharacterSkillDisplayData
@@ -168,6 +199,15 @@ namespace CrystalMagic.UI
         public int SlotIndex;
         public int ItemId;
         public CrystalMagic.Game.Data.ItemType ItemType;
+        public string Name;
+        public string IconPath;
+    }
+
+    public sealed class CharacterPropDisplayData
+    {
+        public int SlotIndex;
+        public int ItemId;
+        public int Count;
         public string Name;
         public string IconPath;
     }

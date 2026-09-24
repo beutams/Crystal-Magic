@@ -67,7 +67,7 @@ public partial class BuffEffectRegistryInitializationSystem : SystemBase
                 if (trigger == null)
                     continue;
 
-                EffectDataListId effectListId = EffectDataBridgeUtility.Register(EntityManager, trigger.Effects);
+                EffectDataListId effectListId = EffectDataBridgeUtility.Register(EntityManager, trigger.Effects, registry: true);
                 int id = triggeredEffects.Count;
                 triggeredEffects.Add(new BuffTriggeredEffectBlob
                 {

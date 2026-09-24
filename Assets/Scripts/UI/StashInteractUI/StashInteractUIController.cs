@@ -80,7 +80,7 @@
             AddItem(stashData.Items, Model.ItemId, quantity, inventoryItem.ItemType);
             inventoryItem.Quantity -= quantity;
             if (inventoryItem.Quantity <= 0)
-                backpackData.Items.RemoveAt(slotIndex);
+                inventoryItem.Clear();
 
             CrystalMagic.Core.SaveDataComponent.Instance.NotifyStashDataChanged();
             CrystalMagic.Core.SaveDataComponent.Instance.NotifyBackpackDataChanged();

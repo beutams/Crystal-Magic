@@ -1,4 +1,6 @@
 using System;
+using CrystalMagic.Core;
+using Server;
 using Unity.Entities;
 
 [Serializable]
@@ -13,8 +15,18 @@ public sealed class NetworkPlayerSkillChainStateData : NetworkStateData
             !context.EntityManager.HasComponent<PlayerInputComponent>(entity))
             return;
 
+        if (context.IsClient &&
+            FrameManagerUtility.TryGet(context.EntityManager, out ClientFrameManager frame) &&
+            !frame.ShouldApplySkillChainState(context.Frame))
+        {
+            return;
+        }
+
         PlayerInputComponent input = context.EntityManager.GetComponentData<PlayerInputComponent>(entity);
+        int previousIndex = input.SkillChainIndex;
         input.SkillChainIndex = skillChainIndex;
         context.EntityManager.SetComponentData(entity, input);
+        if (context.IsClient && previousIndex != skillChainIndex)
+            EventComponent.Instance.Publish(new CommonGameEvent(PlayerInputComponent.SkillChainChangedEventName));
     }
 }

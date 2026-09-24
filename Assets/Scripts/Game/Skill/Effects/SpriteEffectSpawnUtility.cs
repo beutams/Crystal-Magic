@@ -41,6 +41,9 @@ namespace CrystalMagic.Game.Skill.Effects
             if (!EntitySpawnRegistryUtility.TryInstantiateVfx(entityManager, new FixedString128Bytes(prefabName), out entity))
                 return false;
 
+            if (!entityManager.HasComponent<DungeonRuntimeOwnedEntity>(entity))
+                entityManager.AddComponent<DungeonRuntimeOwnedEntity>(entity);
+
             LocalTransform transform = preservePrefabRotation && entityManager.HasComponent<LocalTransform>(entity)
                 ? entityManager.GetComponentData<LocalTransform>(entity)
                 : LocalTransform.FromPositionRotationScale(position, rotation, math.max(0.01f, scale));

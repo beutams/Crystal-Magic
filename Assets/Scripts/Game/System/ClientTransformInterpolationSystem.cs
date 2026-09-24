@@ -10,8 +10,9 @@ public partial class ClientTransformInterpolationSystem : SystemBase
     {
         double realtime = UnityEngine.Time.realtimeSinceStartupAsDouble;
         foreach ((RefRO<ClientTransformInterpolationComponent> interpolationRef,
-                  RefRW<LocalTransform> transformRef) in
-                 SystemAPI.Query<RefRO<ClientTransformInterpolationComponent>, RefRW<LocalTransform>>())
+                 RefRW<LocalTransform> transformRef) in
+                 SystemAPI.Query<RefRO<ClientTransformInterpolationComponent>, RefRW<LocalTransform>>()
+                     .WithNone<NetworkPlayerComponent>())
         {
             ClientTransformInterpolationComponent interpolation = interpolationRef.ValueRO;
             if (interpolation.Initialized == 0)

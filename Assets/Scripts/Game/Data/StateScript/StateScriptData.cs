@@ -127,6 +127,8 @@ namespace CrystalMagic.Game.Data
         public string Type;
         public string Guid;
         public Vector2 EditorPosition;
+        public GameWorldExecutionTarget ExecutionTargets =
+            GameWorldExecutionTarget.Standalone | GameWorldExecutionTarget.Server;
     }
 
     [Serializable]
@@ -592,6 +594,20 @@ namespace CrystalMagic.Game.Data
         public AdditionStateScriptNodeData()
         {
             Type = "Addition";
+        }
+    }
+
+    [Serializable]
+    [FactoryKey("PlayerInputEvent", 28, "Player Input Event")]
+    public sealed class PlayerInputEventStateScriptNodeData : StateStateScriptNodeData
+    {
+        public PlayerInputOperationType EventType;
+        // 仅主操作可额外保持原有的按住连续施法；当帧已有点击时不重复触发。
+        public bool RepeatWhileHeld;
+
+        public PlayerInputEventStateScriptNodeData()
+        {
+            Type = "PlayerInputEvent";
         }
     }
 

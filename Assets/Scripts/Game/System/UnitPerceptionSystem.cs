@@ -40,7 +40,7 @@ partial struct UnitPerceptionSystem : ISystem
 }
 
 [BurstCompile]
-[WithNone(typeof(UnitDeathComponent))]
+[WithNone(typeof(UnitDeathComponent), typeof(BattleSpectatorComponent))]
 public partial struct UnitPerceptionJob : IJobEntity
 {
     [ReadOnly]

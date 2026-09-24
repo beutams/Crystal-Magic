@@ -32,6 +32,7 @@ public partial struct UnitRecoverySystem : ISystem
 }
 
 [BurstCompile]
+[WithNone(typeof(BattleSpectatorComponent))]
 public partial struct UnitHealthRecoveryJob : IJobEntity
 {
     public float DeltaTime;
@@ -69,6 +70,7 @@ public partial struct UnitHealthRecoveryJob : IJobEntity
 }
 
 [BurstCompile]
+[WithNone(typeof(BattleSpectatorComponent))]
 public partial struct UnitManaRecoveryJob : IJobEntity
 {
     public float DeltaTime;

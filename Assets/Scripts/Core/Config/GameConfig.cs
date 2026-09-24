@@ -27,10 +27,7 @@ namespace CrystalMagic.Game.Config
         public float BattlePropSharedCooldownSeconds = 3f;
 
         [EditorLabel("Battle Prop Slot Count")]
-        public int BattlePropSlotCount = 4;
-
-        [EditorLabel("Battle Prop Shortcut Slot Count")]
-        public int BattlePropShortcutSlotCount = 4;
+        public int BattlePropSlotCount = 3;
 
         [EditorLabel("Interaction Range")]
         public float InteractionRange = 2f;

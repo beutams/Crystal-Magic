@@ -140,7 +140,7 @@ namespace CrystalMagic.UI
         private static List<BattlePropShortcutDisplayData> BuildPropShortcutItems(CharacterPropData propConfig, float cooldownRemaining)
         {
             List<BattlePropShortcutDisplayData> items = new();
-            if (propConfig?.ShortcutSlotIndexes == null)
+            if (propConfig?.Slots == null)
                 return items;
 
             cooldownRemaining = Mathf.Max(0f, cooldownRemaining);
@@ -150,14 +150,11 @@ namespace CrystalMagic.UI
                 ? Mathf.Clamp01(cooldownRemaining / cooldownDuration)
                 : 0f;
 
-            for (int i = 0; i < propConfig.ShortcutSlotIndexes.Length; i++)
+            int slotCount = Mathf.Min(3, propConfig.Slots.Count);
+            for (int i = 0; i < slotCount; i++)
             {
-                int propSlotIndex = propConfig.ShortcutSlotIndexes[i];
-                CharacterPropSlotData propSlot = propConfig.Slots != null &&
-                                                 propSlotIndex >= 0 &&
-                                                 propSlotIndex < propConfig.Slots.Count
-                    ? propConfig.Slots[propSlotIndex]
-                    : null;
+                int propSlotIndex = i;
+                CharacterPropSlotData propSlot = propConfig.Slots[i];
                 int itemId = propSlot != null && !propSlot.IsEmpty ? propSlot.ItemId : -1;
                 ItemData itemData = itemId >= 0 ? DataComponent.Instance.Get<ItemData>(itemId) : null;
 
