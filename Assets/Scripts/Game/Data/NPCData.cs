@@ -108,6 +108,9 @@ namespace CrystalMagic.Game.Data
     {
         public string Guid;
 
+        public GameWorldExecutionTarget ExecutionTargets =
+            GameWorldExecutionTarget.Standalone | GameWorldExecutionTarget.Server;
+
         public List<NPCInteractionBranchData> Branches = new();
     }
 
@@ -186,6 +189,18 @@ namespace CrystalMagic.Game.Data
         public string Dialog;
 
         public List<NPCSelectOptionData> Options = new();
+    }
+
+    [Serializable]
+    [FactoryKey("RequestBattleExit", 7, "联机出口请求")]
+    public sealed class NPCRequestBattleExitInteractionNodeData : NPCInteractionNodeData
+    {
+        public Server.BattleExitRequestType RequestType;
+
+        public NPCRequestBattleExitInteractionNodeData()
+        {
+            ExecutionTargets = GameWorldExecutionTarget.Client;
+        }
     }
 
     [Serializable]

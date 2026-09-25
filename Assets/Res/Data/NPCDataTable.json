@@ -186,25 +186,38 @@
                                                                                 }
                                                                             ],
                                                                 "Guid":  "exit_select",
+                                                                "ExecutionTargets":  3,
                                                                 "Branches":  [
 
                                                                              ],
                                                                 "Type":  "Select"
                                                             },
                                                             {
-                                                                "DungeonThemeId":  0,
-                                                                "Guid":  "exit_next_floor",
-                                                                "Branches":  [
-
-                                                                             ],
-                                                                "Type":  "EnterDungeon"
+                                                                "DungeonThemeId": 0,
+                                                                "Guid": "exit_next_floor",
+                                                                "ExecutionTargets": 1,
+                                                                "Branches": [{ "NextNodeGuid": "exit_request_next_theme" }],
+                                                                "Type": "EnterDungeon"
                                                             },
                                                             {
-                                                                "Guid":  "exit_retreat",
-                                                                "Branches":  [
-
-                                                                             ],
-                                                                "Type":  "EnterTown"
+                                                                "Guid": "exit_retreat",
+                                                                "ExecutionTargets": 1,
+                                                                "Branches": [{ "NextNodeGuid": "exit_request_retreat" }],
+                                                                "Type": "EnterTown"
+                                                            },
+                                                            {
+                                                                "Guid": "exit_request_next_theme",
+                                                                "ExecutionTargets": 2,
+                                                                "RequestType": 0,
+                                                                "Branches": [],
+                                                                "Type": "RequestBattleExit"
+                                                            },
+                                                            {
+                                                                "Guid": "exit_request_retreat",
+                                                                "ExecutionTargets": 2,
+                                                                "RequestType": 1,
+                                                                "Branches": [],
+                                                                "Type": "RequestBattleExit"
                                                             }
                                                         ],
                                               "DisplayNameKey":  "npc.dungeon_exit.name"

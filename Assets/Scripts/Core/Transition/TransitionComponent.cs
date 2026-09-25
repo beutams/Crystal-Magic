@@ -94,17 +94,37 @@ namespace CrystalMagic.Core {
                     yield return StartCoroutine(preLoadCoroutine);
             }
 
-            yield return StartCoroutine(LoadSceneAsync(transitionData));
-            if (transitionData.PostLoadCoroutineFactory != null)
+            if (transitionData.LoadError == null)
+                yield return StartCoroutine(LoadSceneAsync(transitionData));
+            if (transitionData.LoadError == null && transitionData.PostLoadCoroutineFactory != null)
             {
                 IEnumerator postLoadCoroutine = transitionData.PostLoadCoroutineFactory();
                 if (postLoadCoroutine != null)
                     yield return StartCoroutine(postLoadCoroutine);
             }
 
+            if (transitionData.LoadError != null)
+            {
+                Debug.LogError(transitionData.LoadError);
+                // 失败不能进入原来的目标状态，更不能执行成功后的保存/清理回调。
+                transitionData.OnComplete = null;
+                if (transitionData.OnLoadFailed != null)
+                    transitionData.OnLoadFailed(transitionData.LoadError);
+                else
+                {
+                    transitionData.TargetStateType = typeof(MainMenuState);
+                    transitionData.TargetStateData = null;
+                }
+            }
+
             DungeonFlowTiming.BeginStage(17, "淡出转场、进入 DungeonState 并解锁输入");
-            EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.LoadCompleted, transitionData.TargetSceneName, 1f));
-            PublishLoadProgress(transitionData.TargetSceneName, 1f, "Load complete", transitionData.TargetSceneName);
+            if (transitionData.LoadError == null)
+            {
+                EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.LoadCompleted, transitionData.TargetSceneName, 1f));
+                PublishLoadProgress(transitionData.TargetSceneName, 1f, "Load complete", transitionData.TargetSceneName);
+            }
+            else
+                PublishLoadProgress(transitionData.TargetSceneName, 1f, "Load failed", transitionData.LoadError);
             yield return StartCoroutine(FadeOutAsync(transitionUI, transitionData.TargetSceneName));
 
             GameGateComponent gate = GameGateComponent.Instance;
@@ -156,6 +176,11 @@ namespace CrystalMagic.Core {
             {
                 PublishLoadProgress(transitionData.TargetSceneName, 0.27f, "Loading sub-scene", subSceneName);
                 yield return StartCoroutine(SceneComponent.Instance.WaitForSubSceneLoadedCoroutine(subSceneName));
+                if (!SceneComponent.Instance.IsSubSceneLoaded(subSceneName))
+                {
+                    transitionData.LoadError = $"加载子场景超时：{subSceneName}。";
+                    yield break;
+                }
             }
             DungeonFlowTiming.EndStage(6, "目标 SubScene 已完成");
         }

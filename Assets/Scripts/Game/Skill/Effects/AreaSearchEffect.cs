@@ -32,9 +32,9 @@ namespace CrystalMagic.Game.Skill.Effects
             Vector3 offset = Data.CenterOffset;
             center += new float3(offset.x, offset.y, offset.z);
 
-            if (!UnitQueryUtility.TryGetGrid(entityManager, UnitQueryGridKind.Unit, out UnitQueryGrid unitGrid))
-                return;
-            unitGrid.QueryCircle(center, Data.Radius, _hits);
+            UnitQueryTree tree = UnitQueryUtility.GetTree(entityManager);
+            UnitQueryShape shape = UnitQueryShape.Circle(center, Data.Radius);
+            tree.Query(in shape, UnitFactionMask.Combatants, _hits);
 
             int nearestHitIndex = -1;
             float nearestDistanceSq = float.MaxValue;

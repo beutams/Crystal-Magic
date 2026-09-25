@@ -17,6 +17,36 @@ public enum GameWorldRole
     Client = 3,
 }
 
+[Flags]
+public enum GameWorldExecutionTarget : byte
+{
+    None = 0,
+    Standalone = 1 << 0,
+    Client = 1 << 1,
+    Server = 1 << 2,
+    All = Standalone | Client | Server,
+}
+
+public static class GameWorldExecutionTargetUtility
+{
+    public static GameWorldExecutionTarget FromRole(GameWorldRole role)
+    {
+        return role switch
+        {
+            GameWorldRole.Standalone => GameWorldExecutionTarget.Standalone,
+            GameWorldRole.Client => GameWorldExecutionTarget.Client,
+            GameWorldRole.Server => GameWorldExecutionTarget.Server,
+            _ => GameWorldExecutionTarget.None,
+        };
+    }
+
+    public static bool Contains(GameWorldExecutionTarget targets, GameWorldRole role)
+    {
+        GameWorldExecutionTarget target = FromRole(role);
+        return target != GameWorldExecutionTarget.None && (targets & target) != 0;
+    }
+}
+
 namespace CrystalMagic.Core
 {
     public struct GameWorldContextComponent : IComponentData
@@ -27,49 +57,14 @@ namespace CrystalMagic.Core
 
     public static class GameWorldContextUtility
     {
-        public static void Bind(EntityManager entityManager, GameWorldRole role, GameSceneMode sceneMode)
+        public static GameWorldContextComponent Get(EntityManager entityManager)
         {
-            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<GameWorldContextComponent>());
-            GameWorldContextComponent context = new()
-            {
-                Role = role,
-                SceneMode = sceneMode,
-            };
-
-            if (query.IsEmptyIgnoreFilter)
-            {
-                Entity entity = entityManager.CreateEntity();
-                entityManager.AddComponentData(entity, context);
-                query.Dispose();
-                return;
-            }
-
-            Entity contextEntity = query.GetSingletonEntity();
-            query.Dispose();
-            entityManager.SetComponentData(contextEntity, context);
-        }
-
-        public static bool TryGet(EntityManager entityManager, out GameWorldContextComponent context)
-        {
-            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<GameWorldContextComponent>());
-            if (query.IsEmptyIgnoreFilter)
-            {
-                query.Dispose();
-                context = default;
-                return false;
-            }
-
-            Entity contextEntity = query.GetSingletonEntity();
-            query.Dispose();
-            context = entityManager.GetComponentData<GameWorldContextComponent>(contextEntity);
-            return true;
+            return GameSingletonUtility.Get<GameWorldContextComponent>(entityManager);
         }
 
         public static GameSceneMode GetSceneMode(EntityManager entityManager)
         {
-            return TryGet(entityManager, out GameWorldContextComponent context)
-                ? context.SceneMode
-                : GameSceneMode.None;
+            return Get(entityManager).SceneMode;
         }
     }
 
@@ -142,13 +137,13 @@ namespace CrystalMagic.Core
 
             _gameWorld = new World(WorldName, worldFlags);
             Role = role;
+            SceneMode = GameSceneMode.None;
+            GameSingletonUtility.Create(_gameWorld.EntityManager, role, SceneMode);
             World.DefaultGameObjectInjectionWorld = _gameWorld;
 
             DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(
                 _gameWorld,
                 DefaultWorldInitialization.GetAllSystems(systemFilter));
-            SceneMode = GameSceneMode.None;
-            GameWorldContextUtility.Bind(_gameWorld.EntityManager, role, SceneMode);
             if (appendToPlayerLoop)
                 AppendGameWorldToPlayerLoop();
 
@@ -191,6 +186,14 @@ namespace CrystalMagic.Core
             return true;
         }
 
+        public static void RemoveGameWorldFromPlayerLoop()
+        {
+            if (!HasGameWorld || !_appendedToPlayerLoop)
+                return;
+            ScriptBehaviourUpdateOrder.RemoveWorldFromCurrentPlayerLoop(_gameWorld);
+            _appendedToPlayerLoop = false;
+        }
+
         public static bool TryGetEntityManager(out EntityManager entityManager)
         {
             if (!HasGameWorld)
@@ -224,7 +227,11 @@ namespace CrystalMagic.Core
                 return;
 
             SceneMode = sceneMode;
-            GameWorldContextUtility.Bind(_gameWorld.EntityManager, Role, SceneMode);
+            GameSingletonUtility.Set(_gameWorld.EntityManager, new GameWorldContextComponent
+            {
+                Role = Role,
+                SceneMode = SceneMode,
+            });
         }
 
         public static void ShutdownGameWorld()

@@ -6,15 +6,17 @@ using UnityEngine.EventSystems;
 public class CharacterUI_InventoryItemView : UISubView<CharacterUI_InventoryItemData>, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
     private CrystalMagic.UI.CharacterInventoryDisplayData _data;
+    public int SlotIndex { get; private set; } = -1;
 
     public event Action<CrystalMagic.UI.CharacterInventoryDisplayData, PointerEventData> DragStarted;
     public event Action<CrystalMagic.UI.CharacterInventoryDisplayData, PointerEventData> Dragging;
     public event Action<CrystalMagic.UI.CharacterInventoryDisplayData, PointerEventData> DragEnded;
 
-    public void Render(CrystalMagic.UI.CharacterInventoryDisplayData data)
+    public void Render(CrystalMagic.UI.CharacterInventoryDisplayData data, int slotIndex)
     {
         Rebind();
         _data = data;
+        SlotIndex = slotIndex;
 
         if (data == null)
         {

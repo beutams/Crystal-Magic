@@ -1,8 +1,37 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace CrystalMagic.Core {
+    public enum PlayerInputOperationType : byte
+    {
+        PrimaryPressed,
+        Interact,
+        SelectSkillChain,
+        UseProp,
+    }
+
+    public readonly struct PlayerInputOperation
+    {
+        public readonly PlayerInputOperationType Type;
+        public readonly int IntValue;
+        public readonly Vector3 PointerWorldPosition;
+        public readonly int ItemId;
+
+        public PlayerInputOperation(
+            PlayerInputOperationType type,
+            int intValue = 0,
+            Vector3 pointerWorldPosition = default,
+            int itemId = 0)
+        {
+            Type = type;
+            IntValue = intValue;
+            PointerWorldPosition = pointerWorldPosition;
+            ItemId = itemId;
+        }
+    }
+
     public struct InputState
     {
         public Vector2 Move;
@@ -14,7 +43,6 @@ namespace CrystalMagic.Core {
         public bool IsEscapeHeld;
         public bool IsSkillHeld;
         public int SkillChainIndex;
-        public bool IsNextSkillChainHeld;
         public bool IsUsePropHeld;
         public int PropIndex;
     }
@@ -30,8 +58,32 @@ namespace CrystalMagic.Core {
         private bool _uiInputLocked;
         private bool _battleInputEnabled;
         private InputState _currentState;
+        private readonly Queue<PlayerInputOperation> _pendingBattleOperations = new();
 
         public InputState CurrentState => _currentState;
+
+        public bool QueuePropUse(int slotIndex, int itemId)
+        {
+            if (!_battleInputEnabled || _playerInputLocked)
+                return false;
+
+            // 与鼠标、交互、切链共用采集队列，不能由 UI 提前越过尚未发送的输入。
+            _pendingBattleOperations.Enqueue(new PlayerInputOperation(
+                PlayerInputOperationType.UseProp, slotIndex, itemId: itemId));
+            return true;
+        }
+
+        public bool TryDequeueBattleOperation(out PlayerInputOperation operation)
+        {
+            if (_pendingBattleOperations.Count == 0)
+            {
+                operation = default;
+                return false;
+            }
+
+            operation = _pendingBattleOperations.Dequeue();
+            return true;
+        }
 
         #region 事件
         public event Action<Vector2> OnMove;
@@ -66,8 +118,6 @@ namespace CrystalMagic.Core {
             _controls.Battle.UseProp.canceled += HandleUsePropCanceled;
             _controls.Battle.Skill.performed += HandleSkill;
             _controls.Battle.Skill.canceled += HandleSkillCanceled;
-            _controls.Battle.Tab.performed += HandleTab;
-            _controls.Battle.Tab.canceled += HandleTabCanceled;
             _controls.Global.ESC.performed += HandleEscape;
             _controls.Global.ESC.canceled += HandleEscapeCanceled;
 
@@ -100,8 +150,6 @@ namespace CrystalMagic.Core {
                 _controls.Battle.UseProp.canceled -= HandleUsePropCanceled;
                 _controls.Battle.Skill.performed -= HandleSkill;
                 _controls.Battle.Skill.canceled -= HandleSkillCanceled;
-                _controls.Battle.Tab.performed -= HandleTab;
-                _controls.Battle.Tab.canceled -= HandleTabCanceled;
                 _controls.Global.ESC.performed -= HandleEscape;
                 _controls.Global.ESC.canceled -= HandleEscapeCanceled;
 
@@ -111,6 +159,8 @@ namespace CrystalMagic.Core {
                 _controls.Dispose();
                 _controls = null;
             }
+
+            _pendingBattleOperations.Clear();
 
             base.Cleanup();
         }
@@ -128,7 +178,11 @@ namespace CrystalMagic.Core {
 
         private void HandleClick(InputAction.CallbackContext ctx)
         {
+            UpdateWorldPosition();
             _currentState.IsPrimaryHeld = true;
+            _pendingBattleOperations.Enqueue(new PlayerInputOperation(
+                PlayerInputOperationType.PrimaryPressed,
+                pointerWorldPosition: _currentState.PointerWorldPosition));
             OnMouseClick?.Invoke();
         }
 
@@ -140,6 +194,8 @@ namespace CrystalMagic.Core {
         private void HandleInteract(InputAction.CallbackContext ctx)
         {
             _currentState.IsInteractHeld = true;
+            // Interaction 在城镇也启用，不能被 Battle action map 的开关屏蔽。
+            _pendingBattleOperations.Enqueue(new PlayerInputOperation(PlayerInputOperationType.Interact));
             OnInteract?.Invoke();
         }
 
@@ -197,22 +253,15 @@ namespace CrystalMagic.Core {
 
             _currentState.IsSkillHeld = true;
             _currentState.SkillChainIndex = skillChainIndex;
+            _pendingBattleOperations.Enqueue(new PlayerInputOperation(
+                PlayerInputOperationType.SelectSkillChain,
+                skillChainIndex));
         }
 
         private void HandleSkillCanceled(InputAction.CallbackContext ctx)
         {
             _currentState.IsSkillHeld = false;
             _currentState.SkillChainIndex = -1;
-        }
-
-        private void HandleTab(InputAction.CallbackContext ctx)
-        {
-            _currentState.IsNextSkillChainHeld = true;
-        }
-
-        private void HandleTabCanceled(InputAction.CallbackContext ctx)
-        {
-            _currentState.IsNextSkillChainHeld = false;
         }
 
         private void HandleEscape(InputAction.CallbackContext ctx)
@@ -340,9 +389,9 @@ namespace CrystalMagic.Core {
         {
             _currentState.IsSkillHeld = false;
             _currentState.SkillChainIndex = -1;
-            _currentState.IsNextSkillChainHeld = false;
             _currentState.IsUsePropHeld = false;
             _currentState.PropIndex = -1;
+            _pendingBattleOperations.Clear();
         }
     }
 }

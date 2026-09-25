@@ -18,7 +18,7 @@ partial struct UnitPhysicsRotationInitializationSystem : ISystem
         _uninitializedUnitQuery = new EntityQueryBuilder(Allocator.Temp)
             .WithAll<UnitFactionComponent>()
             .WithAllRW<PhysicsMass, PhysicsVelocity>()
-            .WithNone<UnitDeathComponent, UnitPhysicsRotationInitializedComponent>()
+            .WithNone<UnitDeathComponent, UnitInteractableComponent, UnitPhysicsRotationInitializedComponent>()
             .Build(ref state);
 
         state.RequireForUpdate(_uninitializedUnitQuery);

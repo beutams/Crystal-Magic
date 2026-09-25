@@ -1087,7 +1087,7 @@
     {
       "Name": "NetworkNPC",
       "Description": "联机大厅NPC",
-      "PrefabPath": "Assets/Res/Prefab/Unit/NetworkNPC.prefab",
+      "PrefabPath": "Assets/Res/Prefab/Unit/NPCNetwork.prefab",
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
@@ -1100,6 +1100,27 @@
         }
       ],
       "Id": 31
+    },
+    {
+      "Name": "DungeonExit",
+      "Description": "由所属兴趣点状态脚本控制的地牢出口",
+      "PrefabPath": "Assets/Res/Prefab/Environment/Exit.prefab",
+      "Modules": [],
+      "Id": 32
+    },
+    {
+      "Name": "Treasure",
+      "Description": "由状态脚本处理开启流程的地牢宝箱",
+      "PrefabPath": "Assets/Res/Prefab/Environment/Treasure.prefab",
+      "Modules": [],
+      "Id": 33
+    },
+    {
+      "Name": "Drop",
+      "Description": "由状态脚本处理拾取流程的世界掉落物",
+      "PrefabPath": "Assets/Res/Prefab/Drop/Drop.prefab",
+      "Modules": [],
+      "Id": 34
     }
   ]
 }

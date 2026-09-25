@@ -156,7 +156,19 @@ namespace Server
 
                 if (entityManager.HasComponent<PlayerCharacterComponent>(entity))
                 {
-                    entityInfo.characterData = entityManager.GetComponentObject<PlayerCharacterComponent>(entity).Data;
+                    PlayerCharacterComponent character = entityManager.GetComponentObject<PlayerCharacterComponent>(entity);
+                    entityInfo.characterData = PlayerCharacterUtility.Clone(character.Data);
+                    entityInfo.characterRevision = character.Revision;
+                }
+
+                if (entityManager.HasComponent<BattlePlayerStatusComponent>(entity))
+                {
+                    BattlePlayerStatusComponent status =
+                        entityManager.GetComponentData<BattlePlayerStatusComponent>(entity);
+                    entityInfo.hasBattlePlayerStatus = true;
+                    entityInfo.battlePlayerLifeState = status.LifeState;
+                    entityInfo.battlePlayerConnectionState = status.ConnectionState;
+                    entityInfo.battlePlayerTransitionReady = status.IsWaitingForTransition;
                 }
 
                 if (entityManager.HasComponent<UnitFactionComponent>(entity))
@@ -189,15 +201,20 @@ namespace Server
                     entityInfo.interactionEnabled = interactable.IsEnabled != 0;
                 }
 
-                if (entityManager.HasComponent<DungeonExitComponent>(entity))
+                if (entityManager.HasComponent<DropScatterComponent>(entity))
                 {
-                    DungeonExitComponent exit = entityManager.GetComponentData<DungeonExitComponent>(entity);
-                    entityInfo.hasExitData = true;
-                    entityInfo.exitRegionId = exit.RegionId;
-                    entityInfo.exitTargetThemeKey = exit.TargetThemeId;
-                    entityInfo.exitTargetFloor = exit.TargetFloor;
-                    entityInfo.exitRequiresRoomClear = exit.RequiresRoomClear != 0;
-                    entityInfo.exitIsOpen = exit.IsOpen != 0;
+                    DropScatterComponent scatter = entityManager.GetComponentData<DropScatterComponent>(entity);
+                    entityInfo.hasDropScatter = true;
+                    entityInfo.dropScatterStartX = scatter.StartPosition.x;
+                    entityInfo.dropScatterStartY = scatter.StartPosition.y;
+                    entityInfo.dropScatterStartZ = scatter.StartPosition.z;
+                    entityInfo.dropScatterTargetX = scatter.TargetPosition.x;
+                    entityInfo.dropScatterTargetY = scatter.TargetPosition.y;
+                    entityInfo.dropScatterTargetZ = scatter.TargetPosition.z;
+                    entityInfo.dropScatterDurationSeconds = scatter.DurationSeconds;
+                    entityInfo.dropScatterElapsedSeconds = scatter.ElapsedSeconds;
+                    entityInfo.dropScatterArcHeight = scatter.ArcHeight;
+                    entityInfo.dropScatterLanded = scatter.IsLanded != 0;
                 }
 
                 if (entityManager.HasComponent<TreasureComponent>(entity))
@@ -253,20 +270,39 @@ namespace Server
         {
             if (entityInfo.characterData != null)
             {
-                entityInfo.characterData.Equipment ??= new EquipmentData();
-                EquipmentUtility.EnsureValid(entityInfo.characterData.Equipment);
-                EquipmentUtility.RebuildProperties(entityInfo.characterData.Equipment);
+                CharacterData characterData = PlayerCharacterUtility.Clone(entityInfo.characterData);
+                characterData.Equipment ??= new EquipmentData();
+                EquipmentUtility.EnsureValid(characterData.Equipment);
+                EquipmentUtility.RebuildProperties(characterData.Equipment);
                 if (entityManager.HasComponent<PlayerCharacterComponent>(entity))
                 {
-                    entityManager.GetComponentObject<PlayerCharacterComponent>(entity).Data = entityInfo.characterData;
+                    PlayerCharacterComponent character = entityManager.GetComponentObject<PlayerCharacterComponent>(entity);
+                    character.Data = characterData;
+                    character.Revision = entityInfo.characterRevision;
+                    character.NetworkDirty = 0;
                 }
                 else
                 {
-                    entityManager.AddComponentObject(entity, new PlayerCharacterComponent { Data = entityInfo.characterData });
+                    entityManager.AddComponentObject(entity, new PlayerCharacterComponent
+                    {
+                        Data = characterData,
+                        Revision = entityInfo.characterRevision,
+                    });
                 }
 
-                EquipmentUtility.ApplyToUnit(entityManager, entity, entityInfo.characterData.Equipment);
-                PlayerSkillRuntimeDataUtility.Initialize(entityManager, entity, entityInfo.characterData);
+                EquipmentUtility.ApplyToUnit(entityManager, entity, characterData.Equipment);
+                PlayerSkillChainUtility.Initialize(entityManager, entity, characterData);
+            }
+
+            if (entityInfo.hasBattlePlayerStatus)
+            {
+                BattlePlayerStatusUtility.Apply(entityManager, entity, new BattlePlayerStatusComponent
+                {
+                    LifeState = entityInfo.battlePlayerLifeState,
+                    ConnectionState = entityInfo.battlePlayerConnectionState,
+                    TransitionReady = entityInfo.battlePlayerTransitionReady ? (byte)1 : (byte)0,
+                    NetworkDirty = 0,
+                });
             }
 
             if (entityInfo.hasFaction)
@@ -299,18 +335,6 @@ namespace Server
                     RegionId = entityInfo.monsterRegionId,
                     SquadId = entityInfo.monsterSquadId,
                     IsBoss = entityInfo.monsterIsBoss ? (byte)1 : (byte)0,
-                });
-            }
-
-            if (entityInfo.hasExitData)
-            {
-                SetOrAddComponent(entityManager, entity, new DungeonExitComponent
-                {
-                    RegionId = entityInfo.exitRegionId,
-                    TargetThemeId = entityInfo.exitTargetThemeKey,
-                    TargetFloor = Mathf.Max(1, entityInfo.exitTargetFloor),
-                    RequiresRoomClear = entityInfo.exitRequiresRoomClear ? (byte)1 : (byte)0,
-                    IsOpen = entityInfo.exitIsOpen ? (byte)1 : (byte)0,
                 });
             }
 
@@ -367,6 +391,36 @@ namespace Server
                     IsEnabled = entityInfo.interactionEnabled ? (byte)1 : (byte)0,
                 });
             }
+
+            if (entityInfo.hasDropScatter)
+            {
+                DropScatterComponent scatter = new()
+                {
+                    StartPosition = new float3(
+                        entityInfo.dropScatterStartX,
+                        entityInfo.dropScatterStartY,
+                        entityInfo.dropScatterStartZ),
+                    TargetPosition = new float3(
+                        entityInfo.dropScatterTargetX,
+                        entityInfo.dropScatterTargetY,
+                        entityInfo.dropScatterTargetZ),
+                    DurationSeconds = math.max(0f, entityInfo.dropScatterDurationSeconds),
+                    ElapsedSeconds = math.max(0f, entityInfo.dropScatterElapsedSeconds),
+                    ArcHeight = math.max(0f, entityInfo.dropScatterArcHeight),
+                    IsLanded = entityInfo.dropScatterLanded ? (byte)1 : (byte)0,
+                };
+                SetOrAddComponent(entityManager, entity, scatter);
+                if (scatter.IsLanded != 0)
+                {
+                    SetOrAddLocalTransform(
+                        entityManager,
+                        entity,
+                        new Vector3(
+                            scatter.TargetPosition.x,
+                            scatter.TargetPosition.y,
+                            scatter.TargetPosition.z));
+                }
+            }
         }
 
         private static void EnqueueSpawnInfo(EntityManager entityManager, NetworkEntitySpawnInfo entityInfo)
@@ -401,7 +455,12 @@ namespace Server
                 mana = source.mana,
                 hasHealth = source.hasHealth,
                 hasMana = source.hasMana,
-                characterData = source.characterData,
+                characterData = PlayerCharacterUtility.Clone(source.characterData),
+                characterRevision = source.characterRevision,
+                hasBattlePlayerStatus = source.hasBattlePlayerStatus,
+                battlePlayerLifeState = source.battlePlayerLifeState,
+                battlePlayerConnectionState = source.battlePlayerConnectionState,
+                battlePlayerTransitionReady = source.battlePlayerTransitionReady,
                 hasFaction = source.hasFaction,
                 faction = source.faction,
                 hasInteractableData = source.hasInteractableData,
@@ -411,17 +470,22 @@ namespace Server
                 interactionVariant = source.interactionVariant,
                 interactionRangeSq = source.interactionRangeSq,
                 interactionEnabled = source.interactionEnabled,
+                hasDropScatter = source.hasDropScatter,
+                dropScatterStartX = source.dropScatterStartX,
+                dropScatterStartY = source.dropScatterStartY,
+                dropScatterStartZ = source.dropScatterStartZ,
+                dropScatterTargetX = source.dropScatterTargetX,
+                dropScatterTargetY = source.dropScatterTargetY,
+                dropScatterTargetZ = source.dropScatterTargetZ,
+                dropScatterDurationSeconds = source.dropScatterDurationSeconds,
+                dropScatterElapsedSeconds = source.dropScatterElapsedSeconds,
+                dropScatterArcHeight = source.dropScatterArcHeight,
+                dropScatterLanded = source.dropScatterLanded,
                 hasMonsterSpawnData = source.hasMonsterSpawnData,
                 monsterSaveId = source.monsterSaveId,
                 monsterRegionId = source.monsterRegionId,
                 monsterSquadId = source.monsterSquadId,
                 monsterIsBoss = source.monsterIsBoss,
-                hasExitData = source.hasExitData,
-                exitRegionId = source.exitRegionId,
-                exitTargetThemeKey = source.exitTargetThemeKey,
-                exitTargetFloor = source.exitTargetFloor,
-                exitRequiresRoomClear = source.exitRequiresRoomClear,
-                exitIsOpen = source.exitIsOpen,
                 hasTreasureData = source.hasTreasureData,
                 treasureRegionId = source.treasureRegionId,
                 treasureRandomSeed = source.treasureRandomSeed,

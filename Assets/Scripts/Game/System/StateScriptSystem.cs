@@ -1,19 +1,33 @@
+using System;
+using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
+using CrystalMagic.Game.Skill;
+using Server;
 using Unity.Burst;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
+using Unity.Jobs;
 using Unity.Mathematics;
+using Unity.Transforms;
 
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation |
+                   WorldSystemFilterFlags.ClientSimulation |
+                   WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateAfter(typeof(BehaviorTreeSystem))]
 public partial class StateScriptSystem : SystemBase
 {
     private UnitSourceDispatcher _sources;
+    private EntityQuery _localPlayerQuery;
 
     protected override void OnCreate()
     {
         _sources.Initialize(this);
+        _localPlayerQuery = GetEntityQuery(
+            ComponentType.ReadOnly<NetworkPlayerComponent>(),
+            ComponentType.ReadOnly<UnitStateScriptComponent>());
         RequireForUpdate<StateScriptRuntimeRegistryComponent>();
     }
 
@@ -25,21 +39,272 @@ public partial class StateScriptSystem : SystemBase
             return;
 
         _sources.Update(this);
+        GameWorldRole role = GameWorldContextUtility.Get(EntityManager).Role;
+        GameWorldExecutionTarget executionTarget = GameWorldExecutionTargetUtility.FromRole(role);
+        Entity localPlayer = Entity.Null;
+        bool hasLocalPlayer = role != GameWorldRole.Client || TryGetLocalPlayer(out localPlayer);
+        ClientFrameManager clientFrame = null;
+        if (role == GameWorldRole.Client)
+            FrameManagerUtility.TryGet(EntityManager, out clientFrame);
+        UnitQueryTree queryTree = default;
+        int queryCapacity = 1;
+        if (SystemAPI.TryGetSingleton(out UnitQuerySingleton querySingleton) &&
+            querySingleton.TreeEntity != Entity.Null &&
+            EntityManager.Exists(querySingleton.TreeEntity) &&
+            EntityManager.HasBuffer<UnitQueryNode>(querySingleton.TreeEntity) &&
+            EntityManager.HasBuffer<UnitQueryEntry>(querySingleton.TreeEntity))
+        {
+            NativeArray<UnitQueryNode> nodes = EntityManager
+                .GetBuffer<UnitQueryNode>(querySingleton.TreeEntity, true)
+                .AsNativeArray();
+            NativeArray<UnitQueryEntry> entries = EntityManager
+                .GetBuffer<UnitQueryEntry>(querySingleton.TreeEntity, true)
+                .AsNativeArray();
+            queryTree = new UnitQueryTree(nodes, entries);
+            queryCapacity = math.max(1, entries.Length);
+        }
+
+        if (role == GameWorldRole.Client && hasLocalPlayer && clientFrame != null &&
+            clientFrame.TryConsumePredictionReplay(out uint authoritativeFrame))
+        {
+            Dependency.Complete();
+            PlayerInputComponent currentInput = default;
+            bool restoreCurrentInput = EntityManager.HasComponent<PlayerInputComponent>(localPlayer);
+            if (restoreCurrentInput)
+                currentInput = EntityManager.GetComponentData<PlayerInputComponent>(localPlayer);
+            NativeArray<PlayerInputEventElement> currentInputEvents = default;
+            bool restoreCurrentInputEvents = EntityManager.HasBuffer<PlayerInputEventElement>(localPlayer);
+            if (restoreCurrentInputEvents)
+            {
+                currentInputEvents = EntityManager
+                    .GetBuffer<PlayerInputEventElement>(localPlayer, true)
+                    .ToNativeArray(Allocator.Temp);
+            }
+
+            ClientSkillVisualPredictionUtility.RequestRollback(EntityManager, authoritativeFrame);
+
+            ReplayClientPrediction(
+                clientFrame,
+                localPlayer,
+                authoritativeFrame,
+                registry,
+                queryTree,
+                queryCapacity,
+                executionTarget);
+
+            if (restoreCurrentInput && EntityManager.Exists(localPlayer))
+                EntityManager.SetComponentData(localPlayer, currentInput);
+            if (restoreCurrentInputEvents && EntityManager.Exists(localPlayer))
+            {
+                DynamicBuffer<PlayerInputEventElement> events =
+                    EntityManager.GetBuffer<PlayerInputEventElement>(localPlayer);
+                events.Clear();
+                events.AddRange(currentInputEvents);
+            }
+            if (currentInputEvents.IsCreated)
+                currentInputEvents.Dispose();
+            Dependency = default;
+            _sources.Update(this);
+        }
+
         // SetValue is part of the immediate pulse chain: later nodes in the same
         // chain must observe its write. Source targets may be Self, Other, or a
         // global entity, so evaluate serially until writes can be safely partitioned.
-        Dependency = new StateScriptEvaluationJob
+        if (hasLocalPlayer)
+        {
+            Dependency = ScheduleEvaluation(
+                Dependency,
+                registry,
+                queryTree,
+                queryCapacity,
+                math.max(0f, SystemAPI.Time.DeltaTime),
+                executionTarget,
+                role == GameWorldRole.Client ? localPlayer : Entity.Null,
+                processInputEvents: true);
+            if (role == GameWorldRole.Client)
+                Dependency = ScheduleClientMovePrediction(Dependency, math.max(0f, SystemAPI.Time.DeltaTime));
+        }
+        Dependency = new StateScriptDeathJob().ScheduleParallel(Dependency);
+    }
+
+    private JobHandle ScheduleEvaluation(
+        JobHandle dependency,
+        BlobAssetReference<StateScriptRuntimeRegistryBlob> registry,
+        UnitQueryTree queryTree,
+        int queryCapacity,
+        float deltaTime,
+        GameWorldExecutionTarget executionTarget,
+        Entity targetEntity,
+        bool processInputEvents)
+    {
+        return new StateScriptEvaluationJob
         {
             Registry = registry,
             Sources = _sources,
-            DeltaTime = math.max(0f, SystemAPI.Time.DeltaTime),
-        }.Schedule(Dependency);
-        Dependency = new StateScriptDeathJob().ScheduleParallel(Dependency);
+            InputEvents = GetBufferLookup<PlayerInputEventElement>(true),
+            PlayerInputs = GetComponentLookup<PlayerInputComponent>(),
+            QueryTree = queryTree,
+            QueryResults = new NativeList<UnitQueryHit>(queryCapacity, Allocator.TempJob),
+            QueryExclusions = new NativeList<Entity>(queryCapacity, Allocator.TempJob),
+            DeltaTime = deltaTime,
+            ExecutionTarget = executionTarget,
+            TargetEntity = targetEntity,
+            ProcessInputEventBuffer = processInputEvents ? (byte)1 : (byte)0,
+        }.Schedule(dependency);
+    }
+
+    private JobHandle ScheduleClientMovePrediction(JobHandle dependency, float deltaTime)
+    {
+        return new ClientPlayerStateScriptMoveJob
+        {
+            DeltaTime = deltaTime,
+            Modifiers = GetComponentLookup<UnitModifierComponent>(true),
+            Deaths = GetComponentLookup<UnitDeathComponent>(true),
+            PlayerInputs = GetComponentLookup<PlayerInputComponent>(true),
+            BattlePlayerStatuses = GetComponentLookup<BattlePlayerStatusComponent>(true),
+        }.ScheduleParallel(dependency);
+    }
+
+    private void ReplayClientPrediction(
+        ClientFrameManager frame,
+        Entity player,
+        uint authoritativeFrame,
+        BlobAssetReference<StateScriptRuntimeRegistryBlob> registry,
+        UnitQueryTree queryTree,
+        int queryCapacity,
+        GameWorldExecutionTarget executionTarget)
+    {
+        if (authoritativeFrame >= frame.currentFrame ||
+            !EntityManager.HasComponent<NetworkIdentityComponent>(player))
+        {
+            return;
+        }
+
+        Guid unitId = EntityManager.GetComponentData<NetworkIdentityComponent>(player).id;
+        float fixedDeltaTime = math.max(0.001f, frame.frameInterval / 1000f);
+        for (uint replayFrame = authoritativeFrame + 1;
+             replayFrame < frame.currentFrame;
+             replayFrame++)
+        {
+            ApplyReplayInput(frame, player, replayFrame);
+            _sources.Update(this);
+            JobHandle replayDependency = ScheduleEvaluation(
+                default,
+                registry,
+                queryTree,
+                queryCapacity,
+                fixedDeltaTime,
+                executionTarget,
+                player,
+                processInputEvents: true);
+            replayDependency = ScheduleClientMovePrediction(replayDependency, fixedDeltaTime);
+            replayDependency.Complete();
+
+            ClientSkillVisualPredictionUtility.CaptureSkillRequests(
+                EntityManager,
+                player,
+                replayFrame);
+
+            frame.RecordPlayerStates(
+                replayFrame,
+                ClientPlayerPredictionSnapshot.Capture(EntityManager, player, unitId));
+
+            if (replayFrame == uint.MaxValue)
+                break;
+        }
+    }
+
+    private void ApplyReplayInput(ClientFrameManager frame, Entity player, uint replayFrame)
+    {
+        if (!EntityManager.Exists(player) || !EntityManager.HasComponent<PlayerInputComponent>(player))
+            return;
+
+        if (EntityManager.HasBuffer<PlayerInputEventElement>(player))
+            EntityManager.GetBuffer<PlayerInputEventElement>(player).Clear();
+
+        PlayerInputComponent frameInput = EntityManager.GetComponentData<PlayerInputComponent>(player);
+        frameInput.IsPrimaryHeld = frameInput.ContinuousPrimaryHeld;
+        frameInput.IsInteractHeld = 0;
+        frameInput.IsSkillHeld = 0;
+        frameInput.IsUsePropHeld = 0;
+        frameInput.PropIndex = -1;
+        EntityManager.SetComponentData(player, frameInput);
+
+        if (!frame.inputOrder.TryGetValue(replayFrame, out Queue<NetworkStateData> inputs))
+            return;
+
+        NetworkStateApplyContext context = new(
+            EntityManager,
+            replayFrame,
+            frame.frameInterval,
+            updateClientPresentationClock: false);
+        foreach (NetworkStateData input in inputs)
+        {
+            if (input is NetworkPlayerInputStateData)
+                input.Apply(context);
+            else if (input is NetworkPlayerOperationData operation)
+                ApplyReplayOperation(player, operation);
+        }
+    }
+
+    private void ApplyReplayOperation(Entity player, NetworkPlayerOperationData operation)
+    {
+        PlayerInputComponent input = EntityManager.GetComponentData<PlayerInputComponent>(player);
+        switch (operation)
+        {
+            case NetworkPrimaryPressData primary:
+                input.PointerWorldPosition = new float3(primary.pointerX, primary.pointerY, primary.pointerZ);
+                PlayerInputEventUtility.Append(
+                    EntityManager,
+                    player,
+                    PlayerInputOperationType.PrimaryPressed,
+                    input);
+                break;
+            case NetworkInteractData:
+                PlayerInputEventUtility.Append(
+                    EntityManager,
+                    player,
+                    PlayerInputOperationType.Interact,
+                    input);
+                break;
+            case NetworkSkillChainSelectData select:
+                input.SkillChainIndex = select.skillChainIndex;
+                EntityManager.SetComponentData(player, input);
+                PlayerInputEventUtility.Append(
+                    EntityManager,
+                    player,
+                    PlayerInputOperationType.SelectSkillChain,
+                    input);
+                break;
+            case NetworkPropUseData prop:
+                input.PropIndex = prop.slotIndex;
+                PlayerInputEventUtility.Append(
+                    EntityManager,
+                    player,
+                    PlayerInputOperationType.UseProp,
+                    input);
+                break;
+        }
+    }
+
+    private bool TryGetLocalPlayer(out Entity player)
+    {
+        if (_localPlayerQuery.IsEmptyIgnoreFilter)
+        {
+            player = Entity.Null;
+            return false;
+        }
+
+        using NativeArray<Entity> entities = _localPlayerQuery.ToEntityArray(Allocator.Temp);
+        player = entities.Length > 0 ? entities[0] : Entity.Null;
+        return player != Entity.Null;
     }
 }
 
 [BurstCompile]
+[WithNone(typeof(UnitInitializationPendingTag))]
 [WithNone(typeof(UnitDeathComponent))]
+[WithNone(typeof(BattleSpectatorComponent))]
 public partial struct StateScriptEvaluationJob : IJobEntity
 {
     private const int MaxPulseDepth = 128;
@@ -50,7 +315,30 @@ public partial struct StateScriptEvaluationJob : IJobEntity
 
     public UnitSourceDispatcher Sources;
 
+    [ReadOnly]
+    public BufferLookup<PlayerInputEventElement> InputEvents;
+
+    // 此 Job 串行执行。Source 内持有同一输入组件的只读 lookup；处理事件时
+    // 临时恢复该次输入快照，让后续表达式看到当时的鼠标/技能链，结束后还原。
+    [NativeDisableContainerSafetyRestriction]
+    public ComponentLookup<PlayerInputComponent> PlayerInputs;
+
+    [ReadOnly]
+    public UnitQueryTree QueryTree;
+
+    [DeallocateOnJobCompletion]
+    public NativeList<UnitQueryHit> QueryResults;
+
+    [DeallocateOnJobCompletion]
+    public NativeList<Entity> QueryExclusions;
+
     public float DeltaTime;
+
+    public GameWorldExecutionTarget ExecutionTarget;
+
+    public Entity TargetEntity;
+
+    public byte ProcessInputEventBuffer;
 
     private void Execute(
         Entity entity,
@@ -62,11 +350,13 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         ref DynamicBuffer<StateScriptManagedCommandElement> managedCommands,
         ref DynamicBuffer<StateScriptExternalResultElement> externalResults)
     {
+        if (TargetEntity != Entity.Null && entity != TargetEntity)
+            return;
+
         sourceCommands.Clear();
         sourceArguments.Clear();
         managedCommands.Clear();
-        if (component.IsInitialized == 0 ||
-            component.IsStoppedForDeath != 0 ||
+        if (component.IsStoppedForDeath != 0 ||
             component.InitializationError != StateScriptInitializationError.None ||
             component.DefinitionIndex < 0 ||
             component.DefinitionIndex >= Registry.Value.Units.Length)
@@ -97,6 +387,9 @@ public partial struct StateScriptEvaluationJob : IJobEntity
             otherValue.TryGetEntity(out other);
         }
         UnitSourceContext context = new(entity, other);
+        bool hasInputEvents = ProcessInputEventBuffer != 0 &&
+                              InputEvents.HasBuffer(entity) &&
+                              InputEvents[entity].Length > 0;
 
         for (int graphIndex = 0; graphIndex < unit.Graphs.Length; graphIndex++)
         {
@@ -109,8 +402,9 @@ public partial struct StateScriptEvaluationJob : IJobEntity
                 return;
             }
 
-            bool enabled = graph.ExecutionConditionExpressionIndex < 0 ||
-                TryEvaluateCondition(ref graph, graph.ExecutionConditionExpressionIndex, in context);
+            bool enabled = IsNodeEnabled(graph.Nodes[graph.EntryNodeIndex]) &&
+                (graph.ExecutionConditionExpressionIndex < 0 ||
+                 TryEvaluateCondition(ref graph, graph.ExecutionConditionExpressionIndex, in context));
             if (!enabled)
             {
                 if (graphState.IsActive != 0)
@@ -202,6 +496,8 @@ public partial struct StateScriptEvaluationJob : IJobEntity
             for (int stateOrderIndex = 0; stateOrderIndex < graph.StateNodeIndices.Length; stateOrderIndex++)
             {
                 int nodeIndex = graph.StateNodeIndices[stateOrderIndex];
+                if (!IsNodeEnabled(graph.Nodes[nodeIndex]))
+                    continue;
                 int stateIndex = graphState.NodeStateStart + nodeIndex;
                 StateScriptNodeStateElement state = nodeStates[stateIndex];
                 if (state.Status == StateScriptStateStatus.Pending && state.PendingTick < component.TickVersion)
@@ -211,50 +507,123 @@ public partial struct StateScriptEvaluationJob : IJobEntity
                 }
             }
 
-            for (int stateOrderIndex = 0; stateOrderIndex < graph.StateNodeIndices.Length; stateOrderIndex++)
+            // 没有输入事件的单位保持原来的逐图更新顺序。
+            if (!hasInputEvents && !TickGraph(entity, graphIndex, ref graph, graphState.NodeStateStart,
+                    in context, ref component, ref nodeStates, ref sourceCommands, ref sourceArguments, ref managedCommands))
             {
-                int nodeIndex = graph.StateNodeIndices[stateOrderIndex];
-                int stateIndex = graphState.NodeStateStart + nodeIndex;
-                if (nodeStates[stateIndex].Status != StateScriptStateStatus.Running)
-                    continue;
-                if (!UpdateStateNode(
-                        entity,
-                        graphIndex,
-                        nodeIndex,
-                        ref graph,
-                        graphState.NodeStateStart,
-                        in context,
-                        ref component,
-                        ref nodeStates,
-                        ref sourceCommands,
-                        ref sourceArguments,
-                        ref managedCommands,
-                        ref pulses))
-                {
-                    component.InitializationError = StateScriptInitializationError.InvalidDefinition;
-                    externalResults.Clear();
-                    return;
-                }
-                if (!DrainPulses(
-                        entity,
-                        graphIndex,
-                        ref graph,
-                        graphState.NodeStateStart,
-                        in context,
-                        ref component,
-                        ref nodeStates,
-                        ref sourceCommands,
-                        ref sourceArguments,
-                        ref managedCommands,
-                        ref pulses))
-                {
-                    component.InitializationError = StateScriptInitializationError.InvalidDefinition;
-                    externalResults.Clear();
-                    return;
-                }
+                component.InitializationError = StateScriptInitializationError.InvalidDefinition;
+                externalResults.Clear();
+                return;
+            }
+        }
+
+        if (!hasInputEvents)
+        {
+            externalResults.Clear();
+            return;
+        }
+
+        // 先按事件顺序处理所有监听节点，再推进一次状态时间；事件多不会多走计时器。
+        if (!ProcessInputEvents(entity, ref unit, in context, ref component, ref graphStates,
+                ref nodeStates, ref sourceCommands, ref sourceArguments, ref managedCommands))
+        {
+            component.InitializationError = StateScriptInitializationError.InvalidDefinition;
+            externalResults.Clear();
+            return;
+        }
+
+        for (int graphIndex = 0; graphIndex < unit.Graphs.Length; graphIndex++)
+        {
+            StateScriptGraphStateElement graphState = graphStates[graphIndex];
+            if (graphState.IsActive == 0)
+                continue;
+            ref StateScriptGraphDefinitionBlob graph = ref unit.Graphs[graphIndex];
+            if (!TickGraph(entity, graphIndex, ref graph, graphState.NodeStateStart,
+                    in context, ref component, ref nodeStates, ref sourceCommands, ref sourceArguments, ref managedCommands))
+            {
+                component.InitializationError = StateScriptInitializationError.InvalidDefinition;
+                externalResults.Clear();
+                return;
             }
         }
         externalResults.Clear();
+    }
+
+    private bool TickGraph(
+        Entity entity, int graphIndex, ref StateScriptGraphDefinitionBlob graph, int stateStart,
+        in UnitSourceContext context, ref UnitStateScriptComponent component,
+        ref DynamicBuffer<StateScriptNodeStateElement> nodeStates,
+        ref DynamicBuffer<StateScriptSourceCommandElement> sourceCommands,
+        ref DynamicBuffer<StateScriptSourceCommandArgumentElement> sourceArguments,
+        ref DynamicBuffer<StateScriptManagedCommandElement> managedCommands)
+    {
+        FixedList4096Bytes<StateScriptPulse> pulses = default;
+        for (int order = 0; order < graph.StateNodeIndices.Length; order++)
+        {
+            int nodeIndex = graph.StateNodeIndices[order];
+            if (!IsNodeEnabled(graph.Nodes[nodeIndex]) ||
+                nodeStates[stateStart + nodeIndex].Status != StateScriptStateStatus.Running)
+                continue;
+            if (!UpdateStateNode(entity, graphIndex, nodeIndex, ref graph, stateStart, in context,
+                    ref component, ref nodeStates, ref sourceCommands, ref sourceArguments, ref managedCommands, ref pulses) ||
+                !DrainPulses(entity, graphIndex, ref graph, stateStart, in context,
+                    ref component, ref nodeStates, ref sourceCommands, ref sourceArguments, ref managedCommands, ref pulses))
+                return false;
+        }
+        return true;
+    }
+
+    private bool ProcessInputEvents(
+        Entity entity,
+        ref StateScriptUnitDefinitionBlob unit,
+        in UnitSourceContext context,
+        ref UnitStateScriptComponent component,
+        ref DynamicBuffer<StateScriptGraphStateElement> graphStates,
+        ref DynamicBuffer<StateScriptNodeStateElement> nodeStates,
+        ref DynamicBuffer<StateScriptSourceCommandElement> sourceCommands,
+        ref DynamicBuffer<StateScriptSourceCommandArgumentElement> sourceArguments,
+        ref DynamicBuffer<StateScriptManagedCommandElement> managedCommands)
+    {
+        if (!InputEvents.HasBuffer(entity) || !PlayerInputs.HasComponent(entity))
+            return true;
+
+        DynamicBuffer<PlayerInputEventElement> events = InputEvents[entity];
+        PlayerInputComponent currentInput = PlayerInputs[entity];
+        bool success = true;
+        for (int eventIndex = 0; eventIndex < events.Length && success; eventIndex++)
+        {
+            PlayerInputEventElement inputEvent = events[eventIndex];
+            PlayerInputs[entity] = inputEvent.Input;
+            for (int graphIndex = 0; graphIndex < unit.Graphs.Length && success; graphIndex++)
+            {
+                StateScriptGraphStateElement graphState = graphStates[graphIndex];
+                if (graphState.IsActive == 0)
+                    continue;
+                ref StateScriptGraphDefinitionBlob graph = ref unit.Graphs[graphIndex];
+                FixedList4096Bytes<StateScriptPulse> pulses = default;
+                for (int order = 0; order < graph.StateNodeIndices.Length; order++)
+                {
+                    int nodeIndex = graph.StateNodeIndices[order];
+                    StateScriptNodeDefinition node = graph.Nodes[nodeIndex];
+                    int stateIndex = graphState.NodeStateStart + nodeIndex;
+                    if (node.Type != StateScriptNodeRuntimeType.PlayerInputEvent ||
+                        node.IntParameters.x != (int)inputEvent.Type || !IsNodeEnabled(node) ||
+                        nodeStates[stateIndex].Status == StateScriptStateStatus.Stop)
+                        continue;
+
+                    StateScriptNodeStateElement state = nodeStates[stateIndex];
+                    state.LastPulseTick = component.TickVersion;
+                    nodeStates[stateIndex] = state;
+                    success = EmitAndDrain(entity, graphIndex, nodeIndex, StateScriptPortId.OnInputEvent,
+                        ref graph, graphState.NodeStateStart, in context, ref component, ref nodeStates,
+                        ref sourceCommands, ref sourceArguments, ref managedCommands, ref pulses);
+                    if (!success)
+                        break;
+                }
+            }
+        }
+        PlayerInputs[entity] = currentInput;
+        return success;
     }
 
     private bool DrainPulses(
@@ -316,6 +685,8 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         if ((uint)pulse.NodeIndex >= (uint)graph.Nodes.Length)
             return false;
         StateScriptNodeDefinition node = graph.Nodes[pulse.NodeIndex];
+        if (!IsNodeEnabled(node))
+            return true;
         int stateIndex = stateStart + pulse.NodeIndex;
         StateScriptNodeStateElement state = states[stateIndex];
         state.LastPulseTick = component.TickVersion;
@@ -407,16 +778,10 @@ public partial struct StateScriptEvaluationJob : IJobEntity
                 return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.Out, ref pulses);
 
             case StateScriptNodeRuntimeType.RequestInteraction:
-                if (pulse.InputPortId != StateScriptPortId.In)
-                    return false;
-                Entity target = Entity.Null;
-                if ((InteractionRequestSource)node.IntParameters.x == InteractionRequestSource.Fixed &&
-                    (node.ExpressionCount != 1 ||
-                     !TryEvaluateValue(ref graph, node.ExpressionStart, in context, out UnitSourceValue targetValue) ||
-                     !targetValue.TryGetEntity(out target)))
-                {
+                if (pulse.InputPortId != StateScriptPortId.In || node.ExpressionCount != 1 ||
+                    !TryEvaluateValue(ref graph, node.ExpressionStart, in context, out UnitSourceValue targetValue) ||
+                    !targetValue.TryGetEntity(out Entity target) || target == Entity.Null)
                     return true;
-                }
                 managedCommands.Add(new StateScriptManagedCommandElement
                 {
                     Type = StateScriptManagedCommandType.RequestInteraction,
@@ -438,11 +803,75 @@ public partial struct StateScriptEvaluationJob : IJobEntity
                 });
                 return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.Out, ref pulses);
 
+            case StateScriptNodeRuntimeType.CompleteInteraction:
+                if (pulse.InputPortId != StateScriptPortId.In || node.ExpressionCount != 1 ||
+                    !TryEvaluateValue(ref graph, node.ExpressionStart, in context, out UnitSourceValue interactionResult))
+                    return true;
+                managedCommands.Add(new StateScriptManagedCommandElement
+                {
+                    Type = StateScriptManagedCommandType.CompleteInteraction,
+                    GraphIndex = graphIndex,
+                    NodeIndex = pulse.NodeIndex,
+                    IntValue = node.IntParameters.x,
+                    Value = interactionResult,
+                });
+                return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.Out, ref pulses);
+
+            case StateScriptNodeRuntimeType.AcknowledgeInteraction:
+            case StateScriptNodeRuntimeType.CollectInteraction:
+            case StateScriptNodeRuntimeType.StartNpcInteraction:
+                if (pulse.InputPortId != StateScriptPortId.In)
+                    return false;
+                managedCommands.Add(new StateScriptManagedCommandElement
+                {
+                    Type = node.Type switch
+                    {
+                        StateScriptNodeRuntimeType.AcknowledgeInteraction => StateScriptManagedCommandType.AcknowledgeInteraction,
+                        StateScriptNodeRuntimeType.CollectInteraction => StateScriptManagedCommandType.CollectInteraction,
+                        _ => StateScriptManagedCommandType.StartNpcInteraction,
+                    },
+                    GraphIndex = graphIndex,
+                    NodeIndex = pulse.NodeIndex,
+                });
+                return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.Out, ref pulses);
+
+            case StateScriptNodeRuntimeType.QueryUnits:
+                if (pulse.InputPortId != StateScriptPortId.In ||
+                    !TryQueryUnits(entity, in node, in context, ref graph))
+                {
+                    return true;
+                }
+                return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.Out, ref pulses);
+
+            case StateScriptNodeRuntimeType.ExecuteEffect:
+                if (pulse.InputPortId != StateScriptPortId.In ||
+                    !TryBuildEffectCommand(in node, ref graph, in context, out StateScriptManagedCommandElement effectCommand))
+                {
+                    return true;
+                }
+                effectCommand.Type = StateScriptManagedCommandType.ExecuteEffect;
+                effectCommand.GraphIndex = graphIndex;
+                effectCommand.NodeIndex = pulse.NodeIndex;
+                managedCommands.Add(effectCommand);
+                return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.Out, ref pulses);
+
+            case StateScriptNodeRuntimeType.DestroySelf:
+                if (pulse.InputPortId != StateScriptPortId.In)
+                    return false;
+                managedCommands.Add(new StateScriptManagedCommandElement
+                {
+                    Type = StateScriptManagedCommandType.DestroySelf,
+                    GraphIndex = graphIndex,
+                    NodeIndex = pulse.NodeIndex,
+                });
+                return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.Out, ref pulses);
+
             case StateScriptNodeRuntimeType.Timer:
             case StateScriptNodeRuntimeType.Keep:
             case StateScriptNodeRuntimeType.Monitor:
             case StateScriptNodeRuntimeType.NumberMonitor:
             case StateScriptNodeRuntimeType.Addition:
+            case StateScriptNodeRuntimeType.PlayerInputEvent:
                 return ProcessStatePulse(
                     entity,
                     graphIndex,
@@ -582,6 +1011,21 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         StateScriptNodeStateElement state = states[stateIndex];
         switch (node.Type)
         {
+            case StateScriptNodeRuntimeType.PlayerInputEvent:
+                if (ProcessInputEventBuffer != 0 &&
+                    node.IntParameters.x == (int)PlayerInputOperationType.PrimaryPressed &&
+                    node.IntParameters.y != 0 && state.LastPulseTick != component.TickVersion &&
+                    PlayerInputs.HasComponent(entity) && PlayerInputs[entity].ContinuousPrimaryHeld != 0)
+                {
+                    state.LastPulseTick = component.TickVersion;
+                    states[stateIndex] = state;
+                    if (!EmitAndDrain(entity, graphIndex, nodeIndex, StateScriptPortId.OnInputEvent,
+                            ref graph, stateStart, in context, ref component, ref states,
+                            ref sourceCommands, ref sourceArguments, ref managedCommands, ref pulses))
+                        return false;
+                }
+                break;
+
             case StateScriptNodeRuntimeType.Timer:
                 state.Time += DeltaTime;
                 states[stateIndex] = state;
@@ -879,6 +1323,63 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         return true;
     }
 
+    private bool IsNodeEnabled(in StateScriptNodeDefinition node)
+    {
+        return (node.ExecutionTargets & ExecutionTarget) != 0;
+    }
+
+    private bool TryBuildEffectCommand(
+        in StateScriptNodeDefinition node,
+        ref StateScriptGraphDefinitionBlob graph,
+        in UnitSourceContext context,
+        out StateScriptManagedCommandElement command)
+    {
+        command = default;
+        if (node.ExpressionCount != 5 ||
+            !TryEvaluateValue(ref graph, node.ExpressionStart, in context, out UnitSourceValue targetValue) ||
+            !targetValue.TryGetEntity(out Entity target) ||
+            !TryEvaluateValue(ref graph, node.ExpressionStart + 1, in context, out UnitSourceValue otherValue) ||
+            !otherValue.TryGetEntity(out Entity other) ||
+            !TryEvaluateValue(ref graph, node.ExpressionStart + 2, in context, out UnitSourceValue positionValue) ||
+            !positionValue.TryGetFloat3(out float3 position) ||
+            !TryEvaluateNumber(ref graph, node.ExpressionStart + 3, in context, out float triggerValue) ||
+            !TryEvaluateNumber(ref graph, node.ExpressionStart + 4, in context, out float rawSkillId))
+        {
+            return false;
+        }
+
+        float roundedSkillId = math.round(rawSkillId);
+        if (roundedSkillId < -1f ||
+            roundedSkillId > int.MaxValue ||
+            math.abs(rawSkillId - roundedSkillId) > 0.0001f)
+        {
+            return false;
+        }
+
+        Entity origin = (StateScriptEffectOriginSource)node.IntParameters.x switch
+        {
+            StateScriptEffectOriginSource.Self => context.Self,
+            StateScriptEffectOriginSource.Other => context.Other,
+            _ => Entity.Null,
+        };
+        command.IntValue = math.max(1, node.IntParameters.y);
+        command.EffectContext = new EffectRequestContext
+        {
+            TriggerSource = SkillTriggerSource.Script,
+            HasOriginEntity = origin != Entity.Null ? (byte)1 : (byte)0,
+            OriginEntity = origin,
+            HasTargetEntity = target != Entity.Null ? (byte)1 : (byte)0,
+            TargetEntity = target,
+            HasOtherEntity = other != Entity.Null ? (byte)1 : (byte)0,
+            OtherEntity = other,
+            HasPosition = 1,
+            Position = position,
+            TriggerValue = triggerValue,
+            SourceSkillId = (int)roundedSkillId,
+        };
+        return true;
+    }
+
     private bool TryEvaluateValue(
         ref StateScriptGraphDefinitionBlob graph,
         int expressionIndex,
@@ -989,6 +1490,306 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         });
     }
 #endif
+    private bool TryQueryUnits(
+        Entity entity,
+        in StateScriptNodeDefinition node,
+        in UnitSourceContext context,
+        ref StateScriptGraphDefinitionBlob graph)
+    {
+        if (node.ExpressionCount != 5 ||
+            !TryEvaluateValue(ref graph, node.ExpressionStart, in context, out UnitSourceValue centerValue) ||
+            !centerValue.TryGetFloat3(out float3 center) ||
+            !TryEvaluateValue(ref graph, node.ExpressionStart + 1, in context, out UnitSourceValue directionValue) ||
+            !directionValue.TryGetFloat2(out float2 direction) ||
+            !TryEvaluateValue(ref graph, node.ExpressionStart + 2, in context, out UnitSourceValue sizeValue) ||
+            !sizeValue.TryGetFloat2(out float2 size) ||
+            !TryEvaluateNumber(ref graph, node.ExpressionStart + 3, in context, out float radius) ||
+            !TryEvaluateNumber(ref graph, node.ExpressionStart + 4, in context, out float angle))
+        {
+            return false;
+        }
+
+        UnitQueryShape shape = (UnitQueryShapeType)node.IntParameters.x switch
+        {
+            UnitQueryShapeType.WholeWorld => new UnitQueryShape { Type = UnitQueryShapeType.WholeWorld },
+            UnitQueryShapeType.Circle => UnitQueryShape.Circle(center, radius),
+            UnitQueryShapeType.AxisAlignedRect => UnitQueryShape.AxisAlignedRect(center, size),
+            UnitQueryShapeType.ForwardRect => UnitQueryShape.ForwardRect(center, direction, size.x, size.y),
+            UnitQueryShapeType.Cone => UnitQueryShape.Cone(center, direction, radius, angle),
+            _ => default,
+        };
+
+        QueryResults.Clear();
+        QueryExclusions.Clear();
+        if (!TryReadQueryExclusions(entity, node.Key, out int excludedEntityCount))
+            return false;
+        StateScriptUnitQueryVisitor visitor = new()
+        {
+            Results = QueryResults,
+            ExcludedEntities = QueryExclusions.AsArray(),
+            Self = entity,
+            UnitDataId = node.IntParameters.z,
+            ExcludeSelf = node.FloatParameters0.y > 0.5f ? (byte)1 : (byte)0,
+            RequireAvailableInteraction = node.FloatParameters1.x > 0.5f ? (byte)1 : (byte)0,
+            QueryCenter = center,
+            Sources = Sources,
+        };
+        QueryTree.Query(
+            in shape,
+            (UnitFactionMask)node.IntParameters.y,
+            ref visitor,
+            includeDead: node.FloatParameters0.z <= 0.5f);
+
+        SortQueryResults(
+            (StateScriptUnitQuerySortMode)(int)node.FloatParameters0.x,
+            center,
+            ref QueryResults);
+        int resultCount = node.IntParameters.w > 0
+            ? math.min(node.IntParameters.w, QueryResults.Length)
+            : QueryResults.Length;
+        if (!WriteQueryResults(entity, node.Text, resultCount))
+            return false;
+        return node.FloatParameters0.w <= 0.5f ||
+               AppendQueryResultsToExclusions(entity, node.Key, excludedEntityCount, resultCount);
+    }
+
+    private bool TryReadQueryExclusions(
+        Entity entity,
+        in FixedString128Bytes exclusionKey,
+        out int storedCount)
+    {
+        storedCount = 0;
+        if (exclusionKey.Length == 0)
+            return true;
+        if (!TryBuildResultKey(exclusionKey, "count", out FixedString128Bytes countKey))
+            return false;
+
+        UnitSourceArguments countArguments = default;
+        countArguments.Values.Add(UnitSourceValue.FromString(in countKey));
+        if (!Sources.TryGet(
+                entity,
+                UnitSourceId.UnitVariablesGetNumber,
+                in countArguments,
+                out UnitSourceValue countValue))
+        {
+            return true;
+        }
+        if (!countValue.TryGetInt(out storedCount) || storedCount < 0)
+            return false;
+
+        for (int index = 0; index < storedCount; index++)
+        {
+            if (!TryBuildResultKey(exclusionKey, index, out FixedString128Bytes entryKey))
+                return false;
+            UnitSourceArguments entryArguments = default;
+            entryArguments.Values.Add(UnitSourceValue.FromString(in entryKey));
+            if (Sources.TryGet(
+                    entity,
+                    UnitSourceId.UnitVariablesGetEntity,
+                    in entryArguments,
+                    out UnitSourceValue entryValue) &&
+                entryValue.TryGetEntity(out Entity excludedEntity) &&
+                excludedEntity != Entity.Null)
+            {
+                QueryExclusions.Add(excludedEntity);
+            }
+        }
+        return true;
+    }
+
+    private bool AppendQueryResultsToExclusions(
+        Entity entity,
+        in FixedString128Bytes exclusionKey,
+        int storedCount,
+        int resultCount)
+    {
+        if (exclusionKey.Length == 0)
+            return false;
+        for (int index = 0; index < resultCount; index++)
+        {
+            if (!TryBuildResultKey(exclusionKey, storedCount + index, out FixedString128Bytes entryKey) ||
+                !SetVariable(entity, entryKey, UnitSourceValue.FromEntity(QueryResults[index].Entity)))
+            {
+                return false;
+            }
+        }
+        if (!TryBuildResultKey(exclusionKey, "count", out FixedString128Bytes countKey))
+            return false;
+        return SetVariable(entity, countKey, UnitSourceValue.FromInt(storedCount + resultCount));
+    }
+
+    private bool WriteQueryResults(Entity entity, in FixedString128Bytes resultKey, int resultCount)
+    {
+        if (!TryBuildResultKey(resultKey, "count", out FixedString128Bytes countKey))
+            return false;
+
+        int oldCount = 0;
+        UnitSourceArguments getCountArguments = default;
+        getCountArguments.Values.Add(UnitSourceValue.FromString(in countKey));
+        if (Sources.TryGet(
+                entity,
+                UnitSourceId.UnitVariablesGetNumber,
+                in getCountArguments,
+                out UnitSourceValue oldCountValue))
+        {
+            oldCountValue.TryGetInt(out oldCount);
+        }
+
+        for (int index = resultCount; index < oldCount; index++)
+        {
+            if (!TryBuildResultKey(resultKey, index, out FixedString128Bytes staleKey))
+                return false;
+            UnitSourceArguments removeArguments = default;
+            removeArguments.Values.Add(UnitSourceValue.FromString(in staleKey));
+            Sources.TrySet(entity, UnitSourceId.UnitVariablesRemove, in removeArguments);
+        }
+
+        for (int index = 0; index < resultCount; index++)
+        {
+            if (!TryBuildResultKey(resultKey, index, out FixedString128Bytes entryKey) ||
+                !SetVariable(entity, entryKey, UnitSourceValue.FromEntity(QueryResults[index].Entity)))
+            {
+                return false;
+            }
+        }
+        return SetVariable(entity, countKey, UnitSourceValue.FromInt(resultCount));
+    }
+
+    private bool SetVariable(
+        Entity entity,
+        in FixedString128Bytes key,
+        in UnitSourceValue value)
+    {
+        UnitSourceArguments arguments = default;
+        arguments.Key = key;
+        arguments.HasKey = 1;
+        arguments.Values.Add(value);
+        return Sources.TrySet(entity, UnitSourceId.UnitVariablesSet, in arguments);
+    }
+
+    private static bool TryBuildResultKey(
+        in FixedString128Bytes prefix,
+        int index,
+        out FixedString128Bytes key)
+    {
+        key = prefix;
+        return key.Append('.') == FormatError.None &&
+               key.Append(index) == FormatError.None;
+    }
+
+    private static bool TryBuildResultKey(
+        in FixedString128Bytes prefix,
+        in FixedString32Bytes suffix,
+        out FixedString128Bytes key)
+    {
+        key = prefix;
+        return key.Append('.') == FormatError.None &&
+               key.Append(suffix) == FormatError.None;
+    }
+
+    private static void SortQueryResults(
+        StateScriptUnitQuerySortMode sortMode,
+        float3 center,
+        ref NativeList<UnitQueryHit> results)
+    {
+        if (sortMode == StateScriptUnitQuerySortMode.None)
+            return;
+
+        for (int index = 1; index < results.Length; index++)
+        {
+            UnitQueryHit current = results[index];
+            float currentDistance = math.lengthsq(current.Position.xy - center.xy);
+            int insertIndex = index;
+            while (insertIndex > 0)
+            {
+                UnitQueryHit previous = results[insertIndex - 1];
+                float previousDistance = math.lengthsq(previous.Position.xy - center.xy);
+                int comparison = currentDistance.CompareTo(previousDistance);
+                if (sortMode == StateScriptUnitQuerySortMode.DistanceDescending)
+                    comparison = -comparison;
+                if (comparison == 0)
+                {
+                    comparison = current.Entity.Index.CompareTo(previous.Entity.Index);
+                    if (comparison == 0)
+                        comparison = current.Entity.Version.CompareTo(previous.Entity.Version);
+                }
+                if (comparison >= 0)
+                    break;
+
+                results[insertIndex] = previous;
+                insertIndex--;
+            }
+            results[insertIndex] = current;
+        }
+    }
+
+    private struct StateScriptUnitQueryVisitor : IUnitQueryVisitor
+    {
+        public NativeList<UnitQueryHit> Results;
+
+        [ReadOnly]
+        public NativeArray<Entity> ExcludedEntities;
+
+        public Entity Self;
+        public int UnitDataId;
+        public byte ExcludeSelf;
+        public byte RequireAvailableInteraction;
+        public float3 QueryCenter;
+        public UnitSourceDispatcher Sources;
+
+        public bool Visit(in UnitQueryEntry entry)
+        {
+            if (ExcludeSelf != 0 && entry.Entity == Self ||
+                UnitDataId >= 0 && entry.UnitDataId != UnitDataId ||
+                IsExcluded(entry.Entity))
+            {
+                return true;
+            }
+
+            if (RequireAvailableInteraction != 0)
+            {
+                UnitSourceArguments arguments = default;
+                if (!Sources.TryGet(
+                        entry.Entity,
+                        UnitSourceId.UnitInteractableEnabled,
+                        in arguments,
+                        out UnitSourceValue enabledValue) ||
+                    !enabledValue.TryGetBool(out bool enabled) || !enabled)
+                {
+                    return true;
+                }
+
+                if (Sources.TryGet(
+                        entry.Entity,
+                        UnitSourceId.UnitInteractableRangeSq,
+                        in arguments,
+                        out UnitSourceValue rangeValue) &&
+                    rangeValue.TryGetNumber(out float rangeSq) && rangeSq > 0f &&
+                    math.lengthsq((entry.Position - QueryCenter).xy) > rangeSq)
+                {
+                    return true;
+                }
+            }
+
+            Results.Add(new UnitQueryHit
+            {
+                Entity = entry.Entity,
+                Position = entry.Position,
+                Faction = entry.Faction,
+            });
+            return true;
+        }
+
+        private bool IsExcluded(Entity entity)
+        {
+            for (int index = 0; index < ExcludedEntities.Length; index++)
+            {
+                if (ExcludedEntities[index] == entity)
+                    return true;
+            }
+            return false;
+        }
+    }
 
     private static bool Emit(
         ref StateScriptGraphDefinitionBlob graph,
@@ -1027,6 +1828,79 @@ public partial struct StateScriptEvaluationJob : IJobEntity
 }
 
 [BurstCompile]
+[WithAll(typeof(NetworkPlayerComponent))]
+[WithNone(typeof(UnitInitializationPendingTag))]
+public partial struct ClientPlayerStateScriptMoveJob : IJobEntity
+{
+    public float DeltaTime;
+
+    [ReadOnly]
+    public ComponentLookup<UnitModifierComponent> Modifiers;
+
+    [ReadOnly]
+    public ComponentLookup<UnitDeathComponent> Deaths;
+
+    [ReadOnly]
+    public ComponentLookup<PlayerInputComponent> PlayerInputs;
+
+    [ReadOnly]
+    public ComponentLookup<BattlePlayerStatusComponent> BattlePlayerStatuses;
+
+    private void Execute(
+        Entity entity,
+        ref UnitMoveComponent move,
+        in LocalTransform transform)
+    {
+        if (move.HasPredictedPosition == 0)
+        {
+            move.PredictedPosition = transform.Position;
+            move.HasPredictedPosition = 1;
+        }
+
+        bool isDead = Deaths.HasComponent(entity) && Deaths.IsComponentEnabled(entity);
+        bool hasStatus = BattlePlayerStatuses.TryGetComponent(
+            entity,
+            out BattlePlayerStatusComponent status);
+        bool isWaitingForTransition = hasStatus && status.IsWaitingForTransition;
+        bool isSpectator = hasStatus && status.IsSpectator;
+        if (isWaitingForTransition)
+        {
+            move.Velocity = float2.zero;
+        }
+        else if (isSpectator)
+        {
+            float2 direction = status.ConnectionState == BattlePlayerConnectionState.Online &&
+                               PlayerInputs.TryGetComponent(entity, out PlayerInputComponent input)
+                ? input.Move
+                : float2.zero;
+            UnitModifierComponent identity = UnitModifierComponent.CreateIdentity();
+            move.Velocity = math.normalizesafe(direction) *
+                            UnitModifierResolver.GetMoveSpeed(in move, in identity);
+            move.PredictedPosition += new float3(move.Velocity, 0f) * DeltaTime;
+            move.PredictedPosition.z = 0f;
+        }
+        else if (isDead)
+        {
+            move.Velocity = float2.zero;
+        }
+        else
+        {
+            UnitModifierComponent modifier = Modifiers.TryGetComponent(
+                entity,
+                out UnitModifierComponent resolvedModifier)
+                ? resolvedModifier
+                : UnitModifierComponent.CreateIdentity();
+            UnitMoveSimulationUtility.ResolveDesiredVelocity(ref move, in modifier, DeltaTime);
+            move.PredictedPosition += new float3(move.Velocity, 0f) * DeltaTime;
+            move.PredictedPosition.z = 0f;
+        }
+
+        UnitMoveSimulationUtility.ClearFrameCommands(ref move);
+    }
+}
+
+[BurstCompile]
+[WithNone(typeof(UnitInitializationPendingTag))]
 [WithAll(typeof(UnitDeathComponent))]
 public partial struct StateScriptDeathJob : IJobEntity
 {

@@ -4,6 +4,7 @@ using CrystalMagic.Game.Skill;
 using Unity.Entities;
 using UnityEngine;
 
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(SkillProjectileSystem))]
 partial class PersistentEffectSystem : SystemBase
@@ -12,6 +13,14 @@ partial class PersistentEffectSystem : SystemBase
     private readonly List<PersistentEffectInstance> _pendingInstances = new();
     private bool _isUpdating;
     private Entity _queueEntity;
+
+    public void ResetScene()
+    {
+        _instances.Clear();
+        _pendingInstances.Clear();
+        _isUpdating = false;
+        EntityManager.GetBuffer<PersistentEffectRequest>(_queueEntity).Clear();
+    }
 
     protected override void OnCreate()
     {

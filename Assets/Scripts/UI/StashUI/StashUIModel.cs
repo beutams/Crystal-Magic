@@ -40,6 +40,7 @@
             System.Array.Clear(_inventoryItems, 0, _inventoryItems.Length);
 
             CrystalMagic.Core.BackpackData backpackData = CrystalMagic.Core.SaveDataComponent.Instance.GetBackpackData();
+            CrystalMagic.Core.InventoryUtility.EnsureBackpackSlots(backpackData);
             System.Collections.Generic.List<CrystalMagic.Core.InventoryItemData> backpackItems = backpackData?.Items;
             if (backpackItems == null)
                 return;
@@ -48,7 +49,7 @@
             for (int i = 0; i < count; i++)
             {
                 CrystalMagic.Core.InventoryItemData inventoryItem = backpackItems[i];
-                if (inventoryItem == null)
+                if (inventoryItem == null || inventoryItem.IsEmpty)
                     continue;
 
                 CrystalMagic.Game.Data.ItemData itemData = CrystalMagic.Core.DataComponent.Instance.Get<CrystalMagic.Game.Data.ItemData>(inventoryItem.ItemId);

@@ -7,8 +7,8 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitInitializationSystemGroup), OrderFirst = true)]
-[UpdateAfter(typeof(WorldStateSystem))]
 [UpdateBefore(typeof(UnitSourceDispatcherSystem))]
 public partial class PlayerSkillDefinitionRegistryInitializationSystem : SystemBase
 {
@@ -23,7 +23,7 @@ public partial class PlayerSkillDefinitionRegistryInitializationSystem : SystemB
         }
 
         DataTable<SkillData> table = DataComponent.Instance.GetTable<SkillData>();
-        if (table == null || !WorldStateUtility.TryGetEntity(EntityManager, out Entity worldEntity))
+        if (table == null)
             return;
 
         List<SkillData> skills = new(table.GetAll());
@@ -73,11 +73,7 @@ public partial class PlayerSkillDefinitionRegistryInitializationSystem : SystemB
             minimumFactorArray[index] = minimumFactors[index];
 
         _registry = builder.CreateBlobAssetReference<PlayerSkillDefinitionRegistryBlob>(Allocator.Persistent);
-        PlayerSkillDefinitionRegistryComponent component = new() { Value = _registry };
-        if (EntityManager.HasComponent<PlayerSkillDefinitionRegistryComponent>(worldEntity))
-            EntityManager.SetComponentData(worldEntity, component);
-        else
-            EntityManager.AddComponentData(worldEntity, component);
+        SystemAPI.GetSingletonRW<PlayerSkillDefinitionRegistryComponent>().ValueRW.Value = _registry;
 
         Enabled = false;
     }

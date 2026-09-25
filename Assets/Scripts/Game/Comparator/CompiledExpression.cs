@@ -672,7 +672,6 @@ internal static class ExpressionUnmanagedContract
         RequireUnmanaged<UnitSourceContext>();
         RequireUnmanaged<UnitSourceAccessContext>();
         RequireUnmanaged<UnitSourceDispatcher>();
-        RequireUnmanaged<PlayerSkillRuntimeDataComponent>();
         RequireUnmanaged<PlayerSkillChainElement>();
         RequireUnmanaged<PlayerSkillChainSlotElement>();
         RequireUnmanaged<PlayerSkillDefinitionRegistryComponent>();
@@ -680,7 +679,6 @@ internal static class ExpressionUnmanagedContract
         RequireUnmanaged<PlayerSkillDefinitionBlob>();
         RequireUnmanaged<PlayerSkillModifierMinimumFactorBlob>();
         RequireUnmanaged<DungeonInterestPointComponent>();
-        RequireUnmanaged<DungeonInterestPointCandidateElement>();
         RequireUnmanaged<UnitVariableComponent>();
         RequireUnmanaged<UnitVariableElement>();
         RequireUnmanaged<WorldVariableComponent>();

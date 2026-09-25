@@ -28,11 +28,10 @@ namespace CrystalMagic.Game.Skill.Effects
             }
 
             float2 size = math.max(float2.zero, new float2(Data.Size.x, Data.Size.y));
-            if (math.any(size <= 0f) ||
-                !UnitQueryUtility.TryGetGrid(context.EntityManager, UnitQueryGridKind.Unit, out UnitQueryGrid unitGrid))
-            {
+            if (math.any(size <= 0f))
                 return;
-            }
+
+            UnitQueryTree tree = UnitQueryUtility.GetTree(context.EntityManager);
 
             LocalTransform originTransform = context.EntityManager.GetComponentData<LocalTransform>(context.OriginEntity);
             float horizontalFacingSign = Data.UseHorizontalFacing
@@ -42,7 +41,8 @@ namespace CrystalMagic.Game.Skill.Effects
                 Data.CenterOffset.x * horizontalFacingSign,
                 Data.CenterOffset.y,
                 Data.CenterOffset.z);
-            unitGrid.QueryAxisAlignedRect(center, size, _hits);
+            UnitQueryShape shape = UnitQueryShape.AxisAlignedRect(center, size);
+            tree.Query(in shape, UnitFactionMask.Combatants, _hits);
 
             for (int i = 0; i < _hits.Count; i++)
             {

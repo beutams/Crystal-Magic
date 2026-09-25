@@ -61,4 +61,25 @@ namespace CrystalMagic.Core {
         public Entity Entity { get; }
     }
 
+    public enum PickupFeedbackType : byte
+    {
+        Item = 0,
+        Money = 1,
+        BackpackFull = 2,
+    }
+
+    public readonly struct PickupFeedbackEvent : IGameEvent
+    {
+        public PickupFeedbackEvent(PickupFeedbackType type, int itemId, int amount)
+        {
+            Type = type;
+            ItemId = itemId;
+            Amount = amount;
+        }
+
+        public PickupFeedbackType Type { get; }
+        public int ItemId { get; }
+        public int Amount { get; }
+    }
+
 }

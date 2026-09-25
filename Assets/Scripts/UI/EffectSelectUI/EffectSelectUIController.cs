@@ -50,11 +50,11 @@ namespace CrystalMagic.UI
             if (data == null)
                 return;
 
-            CrystalMagic.Core.SkillCData skillData = CrystalMagic.Core.SaveDataComponent.Instance.GetSkillData();
+            CrystalMagic.Core.SkillCData skillData = Model.Edit?.Data.Skills;
             if (skillData?.Chains == null)
                 return;
 
-            int skillChainIndex = UnityEngine.Mathf.Clamp(PlayerInputUtility.GetSkillChainIndex(), 0, skillData.Chains.Length - 1);
+            int skillChainIndex = Model.SkillChainIndex;
             CrystalMagic.Core.SkillChainData chain = skillData.Chains[skillChainIndex];
             chain?.EnsureSlots();
             if (chain?.Slots == null || Model.SkillSlotIndex < 0 || Model.SkillSlotIndex >= chain.Slots.Count)
@@ -65,7 +65,7 @@ namespace CrystalMagic.UI
                 return;
 
             slot.SkillAdditionId = data.AdditionId;
-            CrystalMagic.Core.SaveDataComponent.Instance.NotifySkillDataChanged();
+            PlayerCharacterUtility.CommitEdit(Model.Edit);
             View.Close();
         }
 

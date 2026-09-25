@@ -255,10 +255,8 @@ namespace CrystalMagic.Editor.Unit
         public void Draw(UnitRuntimeDrawerContext context)
         {
             UnitEditorWindow.DrawSectionHeader("Skill Release");
-            int requestCount = context.EntityManager.HasBuffer<SkillReleaseRequest>(context.Entity)
-                ? context.EntityManager.GetBuffer<SkillReleaseRequest>(context.Entity, true).Length
-                : 0;
-            EditorGUILayout.IntField("Pending Requests", requestCount);
+            using (new EditorGUI.DisabledScope(true))
+                EditorGUILayout.Toggle("Direct Dispatch", true);
         }
     }
 

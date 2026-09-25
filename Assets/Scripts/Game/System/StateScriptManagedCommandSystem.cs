@@ -3,6 +3,7 @@ using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Skill;
 using CrystalMagic.Game.Unit;
+using CrystalMagic.UI;
 using Server;
 using Unity.Collections;
 using Unity.Entities;
@@ -10,10 +11,15 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation |
+                   WorldSystemFilterFlags.ClientSimulation |
+                   WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateAfter(typeof(StateScriptSystem))]
 public partial class StateScriptManagedCommandSystem : SystemBase
 {
+    private const string NpcSessionInputLockReason = "StateScript.NpcSession";
+
     private sealed class RunningAddition
     {
         public uint ExecutionVersion;
@@ -22,14 +28,29 @@ public partial class StateScriptManagedCommandSystem : SystemBase
 
     private readonly Dictionary<StateScriptActionKey, RunningAddition> _runningActions = new();
     private readonly List<StateScriptActionKey> _completedKeys = new();
+    private readonly Dictionary<StateScriptEffectKey, EffectDataListId> _effectLists = new();
+    private readonly List<Entity> _missingDestroyFlags = new();
+    private readonly SkillContent _skillContext = new();
+    private readonly Dictionary<Entity, NPCInteractionSession> _npcSessions = new();
+    private readonly List<Entity> _completedNpcTargets = new();
     private UnitSourceDispatcher _sourceDispatcher;
     private EntityQuery _commandQuery;
+    private Entity _interactionEntity;
+    private NPCInteractionNodeRunnerFactory _npcRunnerFactory;
+    private bool _npcInputLocked;
+    private GameWorldRole _worldRole;
 
     protected override void OnCreate()
     {
+        _worldRole = GameWorldContextUtility.Get(EntityManager).Role;
         _sourceDispatcher.Initialize(this);
+        _interactionEntity = GameSingletonUtility.GetEntity<GameInteractionComponent>(EntityManager);
+        _npcRunnerFactory = new NPCInteractionNodeRunnerFactory();
+        NPCInteractionNodeRunnerRegistry.RegisterAll(_npcRunnerFactory);
+        RegisterEffectLists();
         _commandQuery = GetEntityQuery(
             ComponentType.ReadOnly<UnitStateScriptComponent>(),
+            ComponentType.Exclude<UnitInitializationPendingTag>(),
             ComponentType.ReadWrite<StateScriptManagedCommandElement>());
         RequireForUpdate<StateScriptRuntimeRegistryComponent>();
     }
@@ -44,6 +65,8 @@ public partial class StateScriptManagedCommandSystem : SystemBase
 
         _sourceDispatcher.Update(this);
         TickRunningActions();
+        TickNpcSessions(SystemAPI.Time.DeltaTime);
+        _missingDestroyFlags.Clear();
         using NativeArray<Entity> entities = _commandQuery.ToEntityArray(Allocator.Temp);
         for (int entityIndex = 0; entityIndex < entities.Length; entityIndex++)
         {
@@ -58,7 +81,9 @@ public partial class StateScriptManagedCommandSystem : SystemBase
                 continue;
             }
 
-            if (component.IsStoppedForDeath != 0 || EntityManager.HasComponent<UnitDeathComponent>(entity))
+            if (component.IsStoppedForDeath != 0 || EntityManager.HasComponent<BattleSpectatorComponent>(entity) ||
+                (EntityManager.HasComponent<UnitDeathComponent>(entity) &&
+                 EntityManager.IsComponentEnabled<UnitDeathComponent>(entity)))
             {
                 StopActions(entity);
                 commands.Clear();
@@ -84,13 +109,111 @@ public partial class StateScriptManagedCommandSystem : SystemBase
                 ExecuteCommand(entity, command, ref graph, ref node, resolver);
             }
         }
+        AddMissingDestroyFlags();
     }
 
     protected override void OnDestroy()
     {
+        ResetScene();
+        foreach (EffectDataListId effectListId in _effectLists.Values)
+            EffectDataBridgeUtility.Unregister(EntityManager, effectListId);
+        _effectLists.Clear();
+    }
+
+    public void ResetScene()
+    {
         foreach (KeyValuePair<StateScriptActionKey, RunningAddition> pair in _runningActions)
             StopActions(pair.Value.Actions);
         _runningActions.Clear();
+        foreach (NPCInteractionSession session in _npcSessions.Values)
+            session.Cancel();
+        _npcSessions.Clear();
+        _completedKeys.Clear();
+        _completedNpcTargets.Clear();
+        _missingDestroyFlags.Clear();
+        ReleaseNpcInput();
+    }
+
+    private void RegisterEffectLists()
+    {
+        DataTable<StateScriptData> table = DataComponent.Instance.GetTable<StateScriptData>();
+        if (table == null)
+            return;
+
+        List<StateScriptData> rows = new(table.GetAll());
+        for (int rowIndex = 0; rowIndex < rows.Count; rowIndex++)
+        {
+            StateScriptData row = rows[rowIndex];
+            if (row == null)
+                continue;
+            row.EnsureValid();
+            for (int graphIndex = 0; graphIndex < row.Graphs.Count; graphIndex++)
+            {
+                StateScriptInstanceData graph = row.Graphs[graphIndex];
+                if (graph?.Nodes == null)
+                    continue;
+                for (int nodeIndex = 0; nodeIndex < graph.Nodes.Count; nodeIndex++)
+                {
+                    if (graph.Nodes[nodeIndex] is not ExecuteEffectActionNodeData executeEffect ||
+                        executeEffect.Effects == null ||
+                        executeEffect.Effects.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    EffectDataListId effectListId = EffectDataBridgeUtility.Register(
+                        EntityManager,
+                        executeEffect.Effects, registry: true);
+                    if (effectListId.IsValid)
+                    {
+                        _effectLists[new StateScriptEffectKey(row.Id, graphIndex, nodeIndex)] = effectListId;
+                    }
+                }
+            }
+        }
+    }
+
+    private void ExecuteEffects(Entity entity, StateScriptManagedCommandElement command)
+    {
+        UnitStateScriptComponent component = EntityManager.GetComponentData<UnitStateScriptComponent>(entity);
+        if (!_effectLists.TryGetValue(
+                new StateScriptEffectKey(component.UnitDataId, command.GraphIndex, command.NodeIndex),
+                out EffectDataListId effectListId))
+        {
+            return;
+        }
+
+        SkillContent context = EffectUtility.CreateContext(EntityManager, in command.EffectContext);
+        EffectUtility.Enqueue(
+            EntityManager,
+            effectListId,
+            context,
+            math.max(1, command.IntValue));
+    }
+
+    private void MarkForDestroy(Entity entity)
+    {
+        if (EntityManager.HasComponent<DestroyEntityFlag>(entity))
+        {
+            EntityManager.SetComponentEnabled<DestroyEntityFlag>(entity, true);
+            return;
+        }
+
+        _missingDestroyFlags.Add(entity);
+    }
+
+    private void AddMissingDestroyFlags()
+    {
+        for (int index = 0; index < _missingDestroyFlags.Count; index++)
+        {
+            Entity entity = _missingDestroyFlags[index];
+            if (!EntityManager.Exists(entity))
+                continue;
+            if (!EntityManager.HasComponent<DestroyEntityFlag>(entity))
+                EntityManager.AddComponent<DestroyEntityFlag>(entity);
+            EntityManager.SetComponentEnabled<DestroyEntityFlag>(entity, true);
+        }
+        _missingDestroyFlags.Clear();
     }
 
     private void ExecuteCommand(
@@ -103,10 +226,12 @@ public partial class StateScriptManagedCommandSystem : SystemBase
         switch (command.Type)
         {
             case StateScriptManagedCommandType.RequestSkill:
-                AppendSkillRequest(entity, command, false);
+                if (_worldRole != GameWorldRole.Client)
+                    EnqueueSkillEffects(entity, command, false);
                 break;
             case StateScriptManagedCommandType.RequestSkillWithAddition:
-                AppendSkillRequest(entity, command, true);
+                if (_worldRole != GameWorldRole.Client)
+                    EnqueueSkillEffects(entity, command, true);
                 break;
             case StateScriptManagedCommandType.PublishGameEvent:
                 if (EventComponent.TryGetInstance(out EventComponent eventComponent))
@@ -117,11 +242,35 @@ public partial class StateScriptManagedCommandSystem : SystemBase
                 }
                 break;
             case StateScriptManagedCommandType.RequestInteraction:
-                SubmitInteraction(entity, command, in node);
+                GameInteractionUtility.TryRequest(EntityManager, _interactionEntity, entity, command.TargetEntity);
+                break;
+            case StateScriptManagedCommandType.CompleteInteraction:
+                GameInteractionUtility.Complete(
+                    EntityManager,
+                    _interactionEntity,
+                    entity,
+                    (InteractionResultCode)command.IntValue,
+                    command.Value);
+                break;
+            case StateScriptManagedCommandType.AcknowledgeInteraction:
+                GameInteractionUtility.Acknowledge(EntityManager, _interactionEntity, entity);
+                break;
+            case StateScriptManagedCommandType.CollectInteraction:
+                CollectInteraction(entity);
+                break;
+            case StateScriptManagedCommandType.StartNpcInteraction:
+                StartNpcInteraction(entity);
                 break;
             case StateScriptManagedCommandType.SpawnUnit:
                 SpawnUnits(entity, command.GraphIndex, command.NodeIndex, command.IntValue, ref graph, in node);
                 RefreshResolver(entity, resolver);
+                break;
+            case StateScriptManagedCommandType.ExecuteEffect:
+                ExecuteEffects(entity, command);
+                break;
+            case StateScriptManagedCommandType.DestroySelf:
+                GameInteractionUtility.FailTarget(EntityManager, _interactionEntity, entity);
+                MarkForDestroy(entity);
                 break;
             case StateScriptManagedCommandType.StartAddition:
                 StartAddition(
@@ -176,11 +325,11 @@ public partial class StateScriptManagedCommandSystem : SystemBase
         }
     }
 
-    private void AppendSkillRequest(Entity entity, StateScriptManagedCommandElement command, bool withAddition)
+    private void EnqueueSkillEffects(Entity entity, StateScriptManagedCommandElement command, bool withAddition)
     {
-        if (!EntityManager.HasComponent<UnitSkillReleaseComponent>(entity) ||
-            !EntityManager.HasBuffer<SkillReleaseRequest>(entity))
+        if (!EntityManager.HasComponent<UnitSkillReleaseComponent>(entity))
             return;
+
         SkillModifierSet modifiers = withAddition
             ? PlayerCurrentSkillUtility.ConsumePendingExtraModifiers(EntityManager, entity)
             : new SkillModifierSet();
@@ -191,7 +340,14 @@ public partial class StateScriptManagedCommandSystem : SystemBase
             modifiers,
             command.Position,
             command.TargetEntity);
-        EntityManager.GetBuffer<SkillReleaseRequest>(entity).Add(request);
+        if (!SkillReleaseSnapshotUtility.TryCreate(EntityManager, in request, out ResolvedSkillData resolvedSkill))
+        {
+            Debug.LogError($"[StateScriptManagedCommand] Failed to analyze SkillId={request.SkillId}.");
+            return;
+        }
+
+        if (!SkillReleaseUtility.TryExecute(EntityManager, in request, resolvedSkill, _skillContext))
+            Debug.LogError($"[StateScriptManagedCommand] Failed to execute SkillId={request.SkillId}.");
     }
 
     private void RefreshResolver(Entity entity, UnitSourceResolver resolver)
@@ -200,26 +356,268 @@ public partial class StateScriptManagedCommandSystem : SystemBase
         resolver.Update(entity, UnitVariableSource.GetOther(EntityManager, entity), in _sourceDispatcher);
     }
 
-    private void SubmitInteraction(
-        Entity entity,
-        StateScriptManagedCommandElement command,
-        in StateScriptNodeDefinition node)
+    private void CollectInteraction(Entity target)
     {
-        InteractionRequestSnapshot interaction;
-        if ((InteractionRequestSource)node.IntParameters.x == InteractionRequestSource.Getter)
+        if (!GameInteractionUtility.TryBegin(
+                EntityManager,
+                _interactionEntity,
+                target,
+                out InteractionTransactionElement transaction))
+            return;
+
+        if (!EntityManager.HasComponent<UnitInteractableComponent>(target))
         {
-            if (!_sourceDispatcher.TryGetInteraction(out interaction))
-                return;
+            GameInteractionUtility.Complete(
+                EntityManager,
+                _interactionEntity,
+                target,
+                InteractionResultCode.InvalidTarget,
+                UnitSourceValue.FromBool(false));
+            return;
         }
-        else
+
+        UnitInteractionData data = EntityManager.GetComponentData<UnitInteractableComponent>(target).Data;
+        int amount = math.max(0, data.Amount);
+        InteractionResultCode resultCode = InteractionResultCode.Failed;
+        if (data.Kind == InteractionKind.Drop && amount > 0)
         {
-            interaction = new InteractionRequestSnapshot
+            DropRewardType dropType = (DropRewardType)data.Variant;
+            if (dropType == DropRewardType.Money)
             {
-                Target = command.TargetEntity,
-                Data = node.InteractionData,
-            };
+                if (GameWorldContextUtility.GetSceneMode(EntityManager) == GameSceneMode.Dungeon &&
+                    GameRuntimeStateUtility.TryGetPlayerCharacterData(EntityManager, transaction.Actor, out CharacterData characterData))
+                {
+                    characterData.Money = System.Math.Max(0L, characterData.Money + amount);
+                    PlayerCharacterUtility.MarkChanged(EntityManager, transaction.Actor);
+                    resultCode = InteractionResultCode.Success;
+                    PublishPickupFeedback(transaction.Actor, PickupFeedbackType.Money, -1, amount);
+                }
+                else
+                {
+                    StashData stashData = GameRuntimeStateUtility.GetStashData();
+                    if (stashData != null)
+                    {
+                        stashData.Money = System.Math.Max(0L, stashData.Money + amount);
+                        SaveDataComponent.Instance.NotifyStashDataChanged();
+                        resultCode = InteractionResultCode.Success;
+                        PublishPickupFeedback(transaction.Actor, PickupFeedbackType.Money, -1, amount);
+                    }
+                }
+            }
+            else if (dropType == DropRewardType.Item && data.DataId >= 0 &&
+                     GameRuntimeStateUtility.TryGetPlayerCharacterData(EntityManager, transaction.Actor, out CharacterData playerData))
+            {
+                if (InventoryUtility.CanAddItemToCharacterInventory(
+                        playerData.Backpack,
+                        playerData.Props,
+                        data.DataId,
+                        amount) &&
+                    InventoryUtility.AddItemToCharacterInventory(
+                        playerData.Backpack,
+                        playerData.Props,
+                        data.DataId,
+                        amount) == amount)
+                {
+                    PlayerCharacterUtility.MarkChanged(EntityManager, transaction.Actor);
+                    resultCode = InteractionResultCode.Success;
+                    PublishPickupFeedback(transaction.Actor, PickupFeedbackType.Item, data.DataId, amount);
+                }
+                else
+                {
+                    PublishPickupFeedback(transaction.Actor, PickupFeedbackType.BackpackFull, data.DataId, amount);
+                }
+            }
         }
-        GameInteractionRequestUtility.TrySubmit(EntityManager, entity, interaction);
+
+        GameInteractionUtility.Complete(
+            EntityManager,
+            _interactionEntity,
+            target,
+            resultCode,
+            UnitSourceValue.FromBool(resultCode == InteractionResultCode.Success));
+        if (resultCode == InteractionResultCode.Success)
+            MarkForDestroy(target);
+    }
+
+    private void PublishPickupFeedback(Entity player, PickupFeedbackType type, int itemId, int amount)
+    {
+        if (NetworkPresentationEventUtility.TryEnqueuePickupFeedback(EntityManager, player, type, itemId, amount))
+            return;
+
+        EventComponent.Instance.Publish(new PickupFeedbackEvent(type, itemId, amount));
+    }
+
+    private void StartNpcInteraction(Entity target)
+    {
+        if (_npcSessions.ContainsKey(target) ||
+            !GameInteractionUtility.TryBegin(
+                EntityManager,
+                _interactionEntity,
+                target,
+                out InteractionTransactionElement transaction))
+            return;
+
+        if (!EntityManager.HasComponent<UnitInteractableComponent>(target))
+        {
+            GameInteractionUtility.Complete(
+                EntityManager,
+                _interactionEntity,
+                target,
+                InteractionResultCode.InvalidTarget,
+                UnitSourceValue.FromBool(false));
+            return;
+        }
+
+        int dataId = EntityManager.GetComponentData<UnitInteractableComponent>(target).Data.DataId;
+        NPCData npcData = DataComponent.Instance.Get<NPCData>(dataId);
+        NPCInteractionData interaction = SelectNpcInteraction(npcData);
+        if (npcData == null || interaction?.GetEntryNode() == null)
+        {
+            GameInteractionUtility.Complete(
+                EntityManager,
+                _interactionEntity,
+                target,
+                InteractionResultCode.Failed,
+                UnitSourceValue.FromBool(false));
+            return;
+        }
+
+        NPCInteractionSession session = new(target, npcData, interaction, transaction.Actor);
+        _npcSessions.Add(target, session);
+        AcquireNpcInput();
+        EventComponent.Instance.Publish(new NPCInteractionStartedEvent(target, npcData, interaction));
+    }
+
+    private static NPCInteractionData SelectNpcInteraction(NPCData npcData)
+    {
+        if (npcData == null)
+            return null;
+        foreach (NPCInteractionData interaction in npcData.GetEnabledInteractions())
+            return interaction;
+        return null;
+    }
+
+    private void TickNpcSessions(float deltaTime)
+    {
+        _completedNpcTargets.Clear();
+        foreach (KeyValuePair<Entity, NPCInteractionSession> pair in _npcSessions)
+        {
+            NPCInteractionSession session = pair.Value;
+            if (!session.IsTargetValid(EntityManager) ||
+                !EntityManager.Exists(session.Actor) ||
+                BattlePlayerStatusUtility.IsInputLocked(EntityManager, session.Actor) ||
+                (EntityManager.HasComponent<UnitDeathComponent>(session.Target) &&
+                 EntityManager.IsComponentEnabled<UnitDeathComponent>(session.Target)))
+            {
+                FinishNpcSession(session, true);
+                continue;
+            }
+
+            AdvanceNpcSessionUntilBlocked(session, deltaTime);
+        }
+
+        for (int index = 0; index < _completedNpcTargets.Count; index++)
+            _npcSessions.Remove(_completedNpcTargets[index]);
+        if (_npcSessions.Count == 0)
+            ReleaseNpcInput();
+    }
+
+    private void AdvanceNpcSessionUntilBlocked(NPCInteractionSession session, float deltaTime)
+    {
+        int maxSteps = session.Interaction?.Nodes?.Count + 1 ?? 1;
+        for (int index = 0; index < maxSteps; index++)
+        {
+            NPCInteractionNodeData currentNode = session.GetCurrentNode();
+            if (currentNode == null)
+            {
+                FinishNpcSession(session, false);
+                return;
+            }
+
+            if (!GameWorldExecutionTargetUtility.Contains(currentNode.ExecutionTargets, _worldRole))
+            {
+                session.CurrentNodeGuid = ResolveNextNodeGuid(currentNode, null);
+                continue;
+            }
+
+            if (session.CurrentRunner == null)
+            {
+                session.CurrentRunner = _npcRunnerFactory.Create(currentNode);
+                if (session.CurrentRunner == null)
+                {
+                    session.CurrentNodeGuid = ResolveNextNodeGuid(currentNode, null);
+                    continue;
+                }
+
+                EventComponent.Instance.Publish(new NPCInteractionNodeStartedEvent(
+                    session.Target,
+                    session.NpcData,
+                    session.Interaction,
+                    currentNode));
+                session.SelectedNextNodeGuid = null;
+                session.CurrentRunner.Enter(session);
+            }
+
+            session.CurrentRunner.Update(session, deltaTime);
+            if (!session.CurrentRunner.IsCompleted(session))
+                return;
+
+            session.CurrentRunner.Exit(session);
+            session.CurrentRunner = null;
+            session.CurrentNodeGuid = ResolveNextNodeGuid(currentNode, session.SelectedNextNodeGuid);
+            session.SelectedNextNodeGuid = null;
+        }
+
+        FinishNpcSession(session, true);
+    }
+
+    private void FinishNpcSession(NPCInteractionSession session, bool wasCancelled)
+    {
+        if (wasCancelled)
+            session.Cancel();
+        EventComponent.Instance.Publish(new NPCInteractionFinishedEvent(
+            session.Target,
+            session.NpcData,
+            session.Interaction,
+            wasCancelled));
+        GameInteractionUtility.Complete(
+            EntityManager,
+            _interactionEntity,
+            session.Target,
+            wasCancelled ? InteractionResultCode.Cancelled : InteractionResultCode.Success,
+            UnitSourceValue.FromBool(!wasCancelled));
+        _completedNpcTargets.Add(session.Target);
+    }
+
+    private static string ResolveNextNodeGuid(NPCInteractionNodeData node, string selectedNextNodeGuid)
+    {
+        if (!string.IsNullOrWhiteSpace(selectedNextNodeGuid))
+            return selectedNextNodeGuid;
+        if (node?.Branches == null)
+            return null;
+        for (int index = 0; index < node.Branches.Count; index++)
+        {
+            NPCInteractionBranchData branch = node.Branches[index];
+            if (branch != null && branch.IsEnabled())
+                return branch.NextNodeGuid;
+        }
+        return null;
+    }
+
+    private void AcquireNpcInput()
+    {
+        if (_npcInputLocked || _worldRole == GameWorldRole.Server)
+            return;
+        GameGateComponent.Instance.Lock(GameGateType.PlayerInput, NpcSessionInputLockReason);
+        _npcInputLocked = true;
+    }
+
+    private void ReleaseNpcInput()
+    {
+        if (!_npcInputLocked)
+            return;
+        GameGateComponent.Instance.Unlock(GameGateType.PlayerInput, NpcSessionInputLockReason);
+        _npcInputLocked = false;
     }
 
     private void StartAddition(
@@ -265,7 +663,9 @@ public partial class StateScriptManagedCommandSystem : SystemBase
             StateScriptActionKey key = pair.Key;
             RunningAddition execution = pair.Value;
             if (!EntityManager.Exists(key.Entity) ||
-                EntityManager.HasComponent<UnitDeathComponent>(key.Entity) ||
+                EntityManager.HasComponent<BattleSpectatorComponent>(key.Entity) ||
+                (EntityManager.HasComponent<UnitDeathComponent>(key.Entity) &&
+                 EntityManager.IsComponentEnabled<UnitDeathComponent>(key.Entity)) ||
                 !EntityManager.HasComponent<UnitStateScriptComponent>(key.Entity))
             {
                 StopActions(execution.Actions);
@@ -464,9 +864,25 @@ public partial class StateScriptManagedCommandSystem : SystemBase
             if (!EntityManager.HasBuffer<UnitVariableConsumerElement>(spawned))
                 EntityManager.AddBuffer<UnitVariableConsumerElement>(spawned);
             UnitVariableSource.SetOther(EntityManager, spawned, spawner);
+
+            UnitOwnerComponent owner = new() { Owner = spawner };
+            if (EntityManager.HasComponent<UnitOwnerComponent>(spawned))
+                EntityManager.SetComponentData(spawned, owner);
+            else
+                EntityManager.AddComponentData(spawned, owner);
         }
-        if (node.IntParameters.w != 0)
-            GameRuntimeStateUtility.TryRestoreDungeonUnit(EntityManager, spawned);
+
+        if (node.IntParameters.z == 0 && node.IntParameters.w == 0)
+            return;
+
+        UnitSpawnInitializationComponent initialization = new()
+        {
+            RestoreRuntimeState = (byte)(node.IntParameters.w != 0 ? 1 : 0),
+        };
+        if (EntityManager.HasComponent<UnitSpawnInitializationComponent>(spawned))
+            EntityManager.SetComponentData(spawned, initialization);
+        else
+            EntityManager.AddComponentData(spawned, initialization);
     }
 
     private bool TryGetValue(Entity entity, string key, out UnitSourceValue value)
@@ -506,5 +922,41 @@ public partial class StateScriptManagedCommandSystem : SystemBase
             return false;
         value = source.Bool != 0;
         return true;
+    }
+}
+
+internal readonly struct StateScriptEffectKey : System.IEquatable<StateScriptEffectKey>
+{
+    public StateScriptEffectKey(int unitDataId, int graphIndex, int nodeIndex)
+    {
+        UnitDataId = unitDataId;
+        GraphIndex = graphIndex;
+        NodeIndex = nodeIndex;
+    }
+
+    private int UnitDataId { get; }
+    private int GraphIndex { get; }
+    private int NodeIndex { get; }
+
+    public bool Equals(StateScriptEffectKey other)
+    {
+        return UnitDataId == other.UnitDataId &&
+               GraphIndex == other.GraphIndex &&
+               NodeIndex == other.NodeIndex;
+    }
+
+    public override bool Equals(object obj)
+    {
+        return obj is StateScriptEffectKey other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        unchecked
+        {
+            int hash = UnitDataId;
+            hash = hash * 397 ^ GraphIndex;
+            return hash * 397 ^ NodeIndex;
+        }
     }
 }

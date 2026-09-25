@@ -159,12 +159,21 @@ namespace CrystalMagic.UI
             if (_runtimeQuery.IsEmptyIgnoreFilter)
                 return false;
 
-            InteractionCandidateComponent candidate = _runtimeQuery.GetSingleton<InteractionCandidateComponent>();
-            if (candidate.Target == Entity.Null || !candidate.Data.IsValid)
+            EntityManager entityManager = world.EntityManager;
+            Entity player = _runtimeQuery.GetSingletonEntity();
+            if (!UnitVariableSource.TryGetValue(
+                    entityManager,
+                    player,
+                    "game.interaction.candidates.0",
+                    out UnitSourceValue candidateValue) ||
+                !candidateValue.TryGetEntity(out Entity target) || target == Entity.Null ||
+                !entityManager.Exists(target) ||
+                !entityManager.HasComponent<UnitInteractableComponent>(target))
                 return false;
 
-            EntityManager entityManager = world.EntityManager;
-            Entity target = candidate.Target;
+            UnitInteractableComponent interactable = entityManager.GetComponentData<UnitInteractableComponent>(target);
+            if (!GameInteractionTargetUtility.IsAvailable(entityManager, target, interactable))
+                return false;
             if (!entityManager.Exists(target) ||
                 !entityManager.HasComponent<LocalToWorld>(target))
             {
@@ -178,7 +187,7 @@ namespace CrystalMagic.UI
             }
 
             LocalToWorld localToWorld = entityManager.GetComponentData<LocalToWorld>(target);
-            if (!TryBuildDisplayName(entityManager, target, candidate.Data, out displayName, out worldYOffset))
+            if (!TryBuildDisplayName(entityManager, target, interactable.Data, out displayName, out worldYOffset))
                 return false;
 
             if (string.IsNullOrWhiteSpace(displayName))
@@ -198,7 +207,9 @@ namespace CrystalMagic.UI
 
             ReleaseRuntimeQuery();
             _runtimeQueryWorld = world;
-            _runtimeQuery = world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<InteractionCandidateComponent>());
+            _runtimeQuery = world.EntityManager.CreateEntityQuery(
+                ComponentType.ReadOnly<PlayerInputComponent>(),
+                ComponentType.ReadOnly<UnitVariableComponent>());
             return true;
         }
 
@@ -235,9 +246,7 @@ namespace CrystalMagic.UI
                     return true;
 
                 case InteractionKind.Npc:
-                    worldYOffset = entityManager.HasComponent<DungeonExitComponent>(target)
-                        ? DefaultWorldYOffset
-                        : CharacterWorldYOffset;
+                    worldYOffset = CharacterWorldYOffset;
                     NPCData npcData = DataComponent.Instance.Get<NPCData>(interaction.DataId);
                     string npcName = npcData?.DisplayName;
                     if (string.IsNullOrWhiteSpace(npcName))

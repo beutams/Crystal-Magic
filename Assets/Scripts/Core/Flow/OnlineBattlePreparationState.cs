@@ -25,7 +25,8 @@ namespace CrystalMagic.Core
                 TransitionUIName = "TransitionUI",
                 KeepCurrentMainScene = true,
                 ActiveSubSceneNames = new[] { DungeonState.RegistrySubSceneName },
-                PreLoadCoroutineFactory = () => PrepareBattleWorld(battleManager),
+                PreLoadCoroutineFactory = () => PrepareBattleWorld(battleManager, transitionData),
+                OnLoadFailed = error => battleManager.FailPreparation(error),
                 PostLoadCoroutineFactory = () => InitializeBattleScene(
                     transitionData,
                     battleManager,
@@ -47,19 +48,62 @@ namespace CrystalMagic.Core
                 KeepCurrentMainScene = true,
                 ActiveSubSceneNames = new[] { TownState.SubSceneName },
                 PreLoadCoroutineFactory = () => RestoreTownWorld(battleManager, transitionData),
+                OnLoadFailed = error =>
+                {
+                    transitionData.TargetStateType = typeof(OnlineBattleRecoveryState);
+                    transitionData.TargetStateData = new BattleRecoveryContext { Manager = battleManager, Error = error };
+                },
                 OnComplete = () =>
                 {
-                    battleManager?.ClearPreBattleSnapshot();
+                    if (battleManager.HasPendingSettlement && !SaveDataComponent.Instance.Save())
+                    {
+                        GameFlowComponent.Instance.SetState<OnlineBattleRecoveryState>(new BattleRecoveryContext
+                        {
+                            Manager = battleManager,
+                            Error = "结算数据写入存档失败，已保留当前角色和结算结果，请重试。",
+                            SaveContext = (LoadGameContext)transitionData.TargetStateData,
+                        });
+                        return;
+                    }
+                    battleManager.ClearPreBattleSnapshot();
                 },
             };
             return transitionData;
         }
 
-        private static IEnumerator PrepareBattleWorld(ClientBattleManager battleManager)
+        public static TransitionData CreateNextThemeTransitionData(ClientBattleManager battleManager)
+        {
+            TransitionData transitionData = null;
+            transitionData = new TransitionData
+            {
+                TargetSceneName = SceneName,
+                TargetStateType = typeof(OnlineBattlePreparationState),
+                TargetStateData = battleManager,
+                TransitionUIName = "TransitionUI",
+                KeepCurrentMainScene = true,
+                ActiveSubSceneNames = new[] { DungeonState.RegistrySubSceneName },
+                PreLoadCoroutineFactory = () => PrepareBattleWorld(battleManager, transitionData),
+                OnLoadFailed = error => battleManager.FailPreparation(error),
+                PostLoadCoroutineFactory = () => InitializePreparedBattleScene(transitionData, battleManager),
+            };
+            return transitionData;
+        }
+
+        private static IEnumerator PrepareBattleWorld(ClientBattleManager battleManager, TransitionData transitionData)
         {
             if (battleManager == null || !battleManager.HasPreBattleSnapshot)
             {
                 battleManager?.FailPreparation("战前存档快照不可用。");
+                transitionData.LoadError = "战前存档快照不可用。";
+                yield break;
+            }
+
+            if (GameWorldManager.HasGameWorld && GameWorldManager.Role == GameWorldRole.Client)
+            {
+                GameWorldManager.RemoveGameWorldFromPlayerLoop();
+                BattleSceneResetUtility.Reset(GameWorldManager.GameWorld);
+                DungeonSceneRuntimeBuilder.DestroyCurrentDungeonScene();
+                yield return null; // 等旧场景 Root 完成实体/资源释放，再创建新地图。
                 yield break;
             }
 
@@ -68,9 +112,12 @@ namespace CrystalMagic.Core
 
             SceneComponent.Instance.SetSubScenesActive(Array.Empty<string>());
             yield return SceneComponent.Instance.WaitForSubSceneUnloadedCoroutine(TownState.SubSceneName);
-            if (SceneComponent.Instance.IsSubSceneLoaded(TownState.SubSceneName))
+            yield return SceneComponent.Instance.WaitForSubSceneUnloadedCoroutine(DungeonState.RegistrySubSceneName);
+            if (SceneComponent.Instance.IsSubSceneLoaded(TownState.SubSceneName) ||
+                SceneComponent.Instance.IsSubSceneLoaded(DungeonState.RegistrySubSceneName))
             {
-                battleManager.FailPreparation("城镇场景未能完成卸载。");
+                battleManager.FailPreparation("旧的游戏子场景未能完成卸载。");
+                transitionData.LoadError = battleManager.PreparationError;
                 yield break;
             }
 
@@ -85,6 +132,7 @@ namespace CrystalMagic.Core
             {
                 Debug.LogException(exception);
                 battleManager.FailPreparation("初始化客户端战斗世界失败。");
+                transitionData.LoadError = battleManager.PreparationError;
             }
         }
 
@@ -96,6 +144,13 @@ namespace CrystalMagic.Core
 
             SceneComponent.Instance.SetSubScenesActive(Array.Empty<string>());
             yield return SceneComponent.Instance.WaitForSubSceneUnloadedCoroutine(DungeonState.RegistrySubSceneName);
+            yield return SceneComponent.Instance.WaitForSubSceneUnloadedCoroutine(TownState.SubSceneName);
+            if (SceneComponent.Instance.IsSubSceneLoaded(DungeonState.RegistrySubSceneName) ||
+                SceneComponent.Instance.IsSubSceneLoaded(TownState.SubSceneName))
+            {
+                transitionData.LoadError = "旧场景未能完成卸载，无法恢复单机存档。";
+                yield break;
+            }
 
             GameWorldManager.ShutdownGameWorld();
             LoadGameContext context = null;
@@ -114,6 +169,7 @@ namespace CrystalMagic.Core
             if (!restored)
             {
                 Debug.LogError("[OnlineBattlePreparationState] Failed to restore the pre-battle save.");
+                transitionData.LoadError = "无法读取战前存档，存档可能不可用或 GUID 不匹配。已保留恢复信息，请修复后重试。";
                 yield break;
             }
 
@@ -127,79 +183,51 @@ namespace CrystalMagic.Core
             ulong accountId,
             bool reload)
         {
-            if (battleManager == null || string.IsNullOrEmpty(ticket) || accountId == 0UL)
-            {
-                Debug.LogError("[OnlineBattlePreparationState] Battle ticket is invalid.");
+            if (battleManager == null || string.IsNullOrEmpty(ticket) || accountId == 0UL ||
+                battleManager.PreparationFailed)
                 yield break;
-            }
-
-            if (battleManager.PreparationFailed)
-            {
-                yield break;
-            }
 
             battleManager.ConnectWithTicket(ticket, accountId, reload);
-            while (battleManager != null &&
-                !battleManager.PreparationFailed &&
-                battleManager.battleConnect != null &&
-                battleManager.BattleData == null)
-            {
-                GameWorldManager.UpdateGameWorld();
-                yield return null;
-            }
+            yield return InitializePreparedBattleScene(transitionData, battleManager);
+        }
 
-            if (battleManager == null ||
-                battleManager.PreparationFailed ||
-                battleManager.battleConnect == null ||
-                battleManager.BattleData == null)
+        private static IEnumerator InitializePreparedBattleScene(
+            TransitionData transitionData,
+            ClientBattleManager battleManager)
+        {
+            while (battleManager != null && !battleManager.PreparationFailed && battleManager.battleConnect != null)
             {
-                Debug.LogError("[OnlineBattlePreparationState] Battle scene data was not received.");
-                yield break;
-            }
-
-            bool registryInitialized = false;
-            while (!battleManager.PreparationFailed && battleManager.battleConnect != null)
-            {
-                GameWorldManager.UpdateGameWorld();
-                World world = GameWorldManager.GameWorld;
-                if (world != null && world.IsCreated)
+                // 重连初始化期间也可能收到全队转层。仍在同一个黑屏里重建新主题。
+                if (battleManager.ThemeTransitionRequested)
                 {
-                    EntityManager entityManager = world.EntityManager;
-                    EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<EntitySpawnRegistrySingleton>());
-                    if (!query.IsEmptyIgnoreFilter)
+                    battleManager.ConsumeThemeTransitionRequest();
+                    yield return PrepareBattleWorld(battleManager, transitionData);
+                    if (battleManager.PreparationFailed)
+                        yield break;
+                    SceneComponent.Instance.SetSubScenesActive(new[] { DungeonState.RegistrySubSceneName });
+                }
+
+                GameWorldManager.UpdateGameWorld();
+                if (battleManager.BattleData != null && !battleManager.SceneInitialized)
+                {
+                    World world = GameWorldManager.GameWorld;
+                    if (world != null && world.IsCreated)
                     {
-                        battleManager.OnBattleSceneInitialized();
-                        registryInitialized = true;
-                        break;
+                        using EntityQuery query = world.EntityManager.CreateEntityQuery(
+                            ComponentType.ReadOnly<EntitySpawnRegistrySingleton>());
+                        if (!query.IsEmptyIgnoreFilter)
+                            battleManager.OnBattleSceneInitialized();
                     }
                 }
 
+                if (battleManager.SceneInitialized && battleManager.EntitiesInitialized && battleManager.BattleStarted)
+                {
+                    transitionData.TargetStateType = typeof(OnlineBattleState);
+                    transitionData.TargetStateData = battleManager;
+                    yield break;
+                }
+
                 yield return null;
-            }
-
-            if (!registryInitialized)
-            {
-                yield break;
-            }
-
-            while (!battleManager.PreparationFailed &&
-                battleManager.battleConnect != null
-                && (!battleManager.SceneInitialized || !battleManager.EntitiesInitialized || !battleManager.BattleStarted))
-            {
-                GameWorldManager.UpdateGameWorld();
-                yield return null;
-            }
-
-            if (!battleManager.SceneInitialized)
-                Debug.LogError("[OnlineBattlePreparationState] Battle scene was not initialized.");
-            else if (!battleManager.EntitiesInitialized)
-                Debug.LogError("[OnlineBattlePreparationState] Network entities were not initialized.");
-            else if (!battleManager.BattleStarted)
-                Debug.LogError("[OnlineBattlePreparationState] Battle start frame was not received.");
-            else
-            {
-                transitionData.TargetStateType = typeof(OnlineBattleState);
-                transitionData.TargetStateData = battleManager;
             }
         }
 
@@ -229,6 +257,50 @@ namespace CrystalMagic.Core
         }
     }
 
+    public sealed class BattleRecoveryContext
+    {
+        public ClientBattleManager Manager;
+        public string Error;
+        public LoadGameContext SaveContext;
+    }
+
+    // 读写存档失败不生成空角色，也不放行城镇操作；恢复凭据和结算数据仍由 BattleManager 持有。
+    public sealed class OnlineBattleRecoveryState : GameState
+    {
+        private BattleRecoveryContext context;
+        private ConfirmSingleUI prompt;
+
+        public override void OnEnter()
+        {
+            context = (BattleRecoveryContext)StateData;
+            prompt = null;
+            InputComponent.Instance.SetBattleInputEnabled(false);
+            GameWorldManager.RemoveGameWorldFromPlayerLoop();
+        }
+
+        public override void OnUpdate()
+        {
+            if (TransitionComponent.Instance.IsTransitioning ||
+                (prompt != null && UIComponent.Instance.IsManaged(prompt) && prompt.gameObject.activeSelf))
+                return;
+            prompt = UIComponent.Instance.Open<ConfirmSingleUI>(new ConfirmUIOpenData("恢复失败", context.Error, () =>
+            {
+                if (context.SaveContext == null)
+                {
+                    GameFlowComponent.Instance.BeginTransition(OnlineBattlePreparationState.CreateReturnToTownTransitionData(context.Manager));
+                    return;
+                }
+
+                // 保存失败时直接重试写入当前 Town，不重新读取可能尚未写完整的存档文件。
+                if (!SaveDataComponent.Instance.Save())
+                    return;
+                context.Manager.ClearPreBattleSnapshot();
+                GameWorldManager.AppendGameWorldToPlayerLoop();
+                GameFlowComponent.Instance.SetState<TownState>(context.SaveContext);
+            }, confirmLabel: "重试", showCancelButton: false));
+        }
+    }
+
     public sealed class OnlineBattleState : BattleStateBase
     {
         protected override string BattleSceneName => DungeonState.SceneName;
@@ -254,10 +326,22 @@ namespace CrystalMagic.Core
 
         protected override void OnUpdateBattle()
         {
-            if (restoreRequested || battleManager == null || !battleManager.RestoreStandaloneRequested)
+            if (restoreRequested || battleManager == null)
             {
                 return;
             }
+
+            if (battleManager.ThemeTransitionRequested)
+            {
+                restoreRequested = true;
+                battleManager.ConsumeThemeTransitionRequest();
+                GameFlowComponent.Instance.BeginTransition(
+                    OnlineBattlePreparationState.CreateNextThemeTransitionData(battleManager));
+                return;
+            }
+
+            if (!battleManager.RestoreStandaloneRequested)
+                return;
 
             restoreRequested = true;
             GameFlowComponent.Instance.BeginTransition(

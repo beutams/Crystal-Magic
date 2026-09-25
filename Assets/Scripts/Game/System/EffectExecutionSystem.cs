@@ -4,6 +4,7 @@ using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(PersistentEffectSystem))]
 partial class EffectExecutionSystem : SystemBase
@@ -11,6 +12,15 @@ partial class EffectExecutionSystem : SystemBase
     private EntityQuery _effectRequestQuery;
     private Entity _worldQueueEntity;
     private readonly List<EffectEntry> _pendingEntries = new();
+
+    public void ResetScene()
+    {
+        _pendingEntries.Clear();
+        using NativeArray<Entity> entities = _effectRequestQuery.ToEntityArray(Allocator.Temp);
+        foreach (Entity entity in entities)
+            EntityManager.GetBuffer<EffectEntry>(entity).Clear();
+        EntityManager.GetBuffer<EffectReleaseEntry>(_worldQueueEntity).Clear();
+    }
 
     protected override void OnCreate()
     {

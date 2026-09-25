@@ -10,14 +10,13 @@ using UnityEngine;
 public enum UnitSourceId : ushort
 {
     None = 0,
-    GameInteractionCandidateKind = 1,
-    GameInteractionCandidateTarget = 2,
-    GameInteractionHasCandidate = 3,
+    WorldInteractionHasPending = 1,
+    WorldInteractionPendingActor = 2,
+    WorldInteractionPendingRequestId = 3,
     PlayerInputEscapeHeld = 4,
     PlayerInputInteractHeld = 5,
     PlayerInputInventoryHeld = 6,
     PlayerInputMove = 7,
-    PlayerInputNextSkillChainHeld = 8,
     PlayerInputPointerWorldPosition = 9,
     PlayerInputPrimaryHeld = 10,
     PlayerInputPropertyHeld = 11,
@@ -35,7 +34,6 @@ public enum UnitSourceId : ushort
     PlayerSkillGetChainLength = 23,
     PlayerSkillGetChainSkillAdditionId = 24,
     PlayerSkillGetChainSkillId = 25,
-    PlayerSkillGetCurrentChainId = 26,
     PlayerSkillGetCurrentChainLength = 27,
     PlayerSkillGetCurrentSkillAdditionId = 28,
     PlayerSkillGetCurrentSkillChantDuration = 29,
@@ -104,18 +102,10 @@ public enum UnitSourceId : ushort
     UnitFactionIsEnemyTo = 92,
     UnitFactionValue = 93,
     UnitInterestPointArrivalDistance = 94,
-    UnitInterestPointCurrentTarget = 95,
     UnitInterestPointEncounterId = 96,
-    UnitInterestPointHasPatrol = 97,
     UnitInterestPointPatrolSpeed = 98,
-    UnitInterestPointPlayerDistance = 99,
-    UnitInterestPointSetNextPatrolTarget = 100,
-    UnitInterestPointSetPatrolActive = 101,
-    UnitInterestPointSetPatrolSpeed = 102,
-    UnitInterestPointShouldSpawnPatrol = 103,
     UnitInterestPointSpawnDistance = 104,
     UnitInterestPointSquadId = 105,
-    UnitInterestPointTargetReached = 106,
     UnitManaBaseMaxMp = 107,
     UnitManaBaseMaxMpOffset = 108,
     UnitManaBaseMpRegenPerSecond = 109,
@@ -177,7 +167,7 @@ public enum UnitSourceId : ushort
     UnitVitalityRealDefense = 165,
     UnitVitalityRealHealthRegenPerSecond = 166,
     UnitVitalityRealMaxHealth = 167,
-    WorldInteractionIsInteracting = 168,
+    WorldInteractionIsBusy = 168,
     WorldVariablesCount = 169,
     WorldVariablesGet = 170,
     WorldVariablesGetBool = 171,
@@ -189,27 +179,41 @@ public enum UnitSourceId : ushort
     WorldVariablesHas = 177,
     WorldVariablesRemove = 178,
     WorldVariablesSet = 179,
+    UnitVariablesListEntity = 180,
+    UnitVariablesAddNumber = 181,
+    UnitVariablesGetNumberOrDefault = 182,
+    UnitInterestPointAliveGuardCount = 183,
+    UnitInterestPointEncounterReady = 184,
+    UnitInterestPointPatrolTarget = 185,
+    UnitInterestPointPatrolUnitCount = 186,
+    UnitInterestPointSetPatrolTarget = 187,
+    UnitInteractableEnabled = 188,
+    UnitInteractableSetEnabled = 189,
+    WorldInteractionHasResult = 190,
+    WorldInteractionResultCode = 191,
+    WorldInteractionResult = 192,
+    UnitInteractableRangeSq = 193,
+    UnitTreasureOpened = 194,
+    UnitTreasureSetOpened = 195,
 }
 
 public static class UnitComponentSourceRegistry
 {
-    public const string InteractionRequestKey = "game.interaction.candidate";
-
     public static bool TryGetGet(string key, out UnitSourceId sourceId, out UnitSourceGetSchemaEntry schema)
     {
         switch (key)
         {
-            case "game.interaction.candidateKind":
-                sourceId = UnitSourceId.GameInteractionCandidateKind;
-                schema = new UnitSourceGetSchemaEntry("game.interaction.candidateKind", typeof(InteractionCandidateComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
+            case "world.interaction.hasPending":
+                sourceId = UnitSourceId.WorldInteractionHasPending;
+                schema = new UnitSourceGetSchemaEntry("world.interaction.hasPending", typeof(GameInteractionComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Target", UnitValueCategory.Entity) });
                 return true;
-            case "game.interaction.candidateTarget":
-                sourceId = UnitSourceId.GameInteractionCandidateTarget;
-                schema = new UnitSourceGetSchemaEntry("game.interaction.candidateTarget", typeof(InteractionCandidateComponent), UnitValueCategory.Entity, Array.Empty<ComparatorParameterDefinition>());
+            case "world.interaction.pendingActor":
+                sourceId = UnitSourceId.WorldInteractionPendingActor;
+                schema = new UnitSourceGetSchemaEntry("world.interaction.pendingActor", typeof(GameInteractionComponent), UnitValueCategory.Entity, new[] { new ComparatorParameterDefinition("Target", UnitValueCategory.Entity) });
                 return true;
-            case "game.interaction.hasCandidate":
-                sourceId = UnitSourceId.GameInteractionHasCandidate;
-                schema = new UnitSourceGetSchemaEntry("game.interaction.hasCandidate", typeof(InteractionCandidateComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
+            case "world.interaction.pendingRequestId":
+                sourceId = UnitSourceId.WorldInteractionPendingRequestId;
+                schema = new UnitSourceGetSchemaEntry("world.interaction.pendingRequestId", typeof(GameInteractionComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Target", UnitValueCategory.Entity) });
                 return true;
             case "player.input.escapeHeld":
                 sourceId = UnitSourceId.PlayerInputEscapeHeld;
@@ -226,10 +230,6 @@ public static class UnitComponentSourceRegistry
             case "player.input.move":
                 sourceId = UnitSourceId.PlayerInputMove;
                 schema = new UnitSourceGetSchemaEntry("player.input.move", typeof(PlayerInputComponent), UnitValueCategory.Float2, Array.Empty<ComparatorParameterDefinition>());
-                return true;
-            case "player.input.nextSkillChainHeld":
-                sourceId = UnitSourceId.PlayerInputNextSkillChainHeld;
-                schema = new UnitSourceGetSchemaEntry("player.input.nextSkillChainHeld", typeof(PlayerInputComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
                 return true;
             case "player.input.pointerWorldPosition":
                 sourceId = UnitSourceId.PlayerInputPointerWorldPosition;
@@ -281,63 +281,59 @@ public static class UnitComponentSourceRegistry
                 return true;
             case "player.skill.getChainLength":
                 sourceId = UnitSourceId.PlayerSkillGetChainLength;
-                schema = new UnitSourceGetSchemaEntry("player.skill.getChainLength", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Chain ID", UnitValueCategory.Number) });
+                schema = new UnitSourceGetSchemaEntry("player.skill.getChainLength", typeof(PlayerInputComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Chain ID", UnitValueCategory.Number) });
                 return true;
             case "player.skill.getChainSkillAdditionId":
                 sourceId = UnitSourceId.PlayerSkillGetChainSkillAdditionId;
-                schema = new UnitSourceGetSchemaEntry("player.skill.getChainSkillAdditionId", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Chain ID", UnitValueCategory.Number), new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
+                schema = new UnitSourceGetSchemaEntry("player.skill.getChainSkillAdditionId", typeof(PlayerInputComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Chain ID", UnitValueCategory.Number), new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
                 return true;
             case "player.skill.getChainSkillId":
                 sourceId = UnitSourceId.PlayerSkillGetChainSkillId;
-                schema = new UnitSourceGetSchemaEntry("player.skill.getChainSkillId", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Chain ID", UnitValueCategory.Number), new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
-                return true;
-            case "player.skill.getCurrentChainId":
-                sourceId = UnitSourceId.PlayerSkillGetCurrentChainId;
-                schema = new UnitSourceGetSchemaEntry("player.skill.getCurrentChainId", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
+                schema = new UnitSourceGetSchemaEntry("player.skill.getChainSkillId", typeof(PlayerInputComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Chain ID", UnitValueCategory.Number), new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
                 return true;
             case "player.skill.getCurrentChainLength":
                 sourceId = UnitSourceId.PlayerSkillGetCurrentChainLength;
-                schema = new UnitSourceGetSchemaEntry("player.skill.getCurrentChainLength", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
+                schema = new UnitSourceGetSchemaEntry("player.skill.getCurrentChainLength", typeof(PlayerInputComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
                 return true;
             case "player.skill.getCurrentSkillAdditionId":
                 sourceId = UnitSourceId.PlayerSkillGetCurrentSkillAdditionId;
-                schema = new UnitSourceGetSchemaEntry("player.skill.getCurrentSkillAdditionId", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
+                schema = new UnitSourceGetSchemaEntry("player.skill.getCurrentSkillAdditionId", typeof(PlayerInputComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
                 return true;
             case "player.skill.getCurrentSkillChantDuration":
                 sourceId = UnitSourceId.PlayerSkillGetCurrentSkillChantDuration;
-                schema = new UnitSourceGetSchemaEntry("player.skill.getCurrentSkillChantDuration", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
+                schema = new UnitSourceGetSchemaEntry("player.skill.getCurrentSkillChantDuration", typeof(PlayerInputComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
                 return true;
             case "player.skill.getCurrentSkillId":
                 sourceId = UnitSourceId.PlayerSkillGetCurrentSkillId;
-                schema = new UnitSourceGetSchemaEntry("player.skill.getCurrentSkillId", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
+                schema = new UnitSourceGetSchemaEntry("player.skill.getCurrentSkillId", typeof(PlayerInputComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
                 return true;
             case "player.skill.getCurrentSkillMpCost":
                 sourceId = UnitSourceId.PlayerSkillGetCurrentSkillMpCost;
-                schema = new UnitSourceGetSchemaEntry("player.skill.getCurrentSkillMpCost", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
+                schema = new UnitSourceGetSchemaEntry("player.skill.getCurrentSkillMpCost", typeof(PlayerInputComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
                 return true;
             case "player.skill.getCurrentSkillRuntimeType":
                 sourceId = UnitSourceId.PlayerSkillGetCurrentSkillRuntimeType;
-                schema = new UnitSourceGetSchemaEntry("player.skill.getCurrentSkillRuntimeType", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.String, new[] { new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
+                schema = new UnitSourceGetSchemaEntry("player.skill.getCurrentSkillRuntimeType", typeof(PlayerInputComponent), UnitValueCategory.String, new[] { new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
                 return true;
             case "player.skill.getInputType":
                 sourceId = UnitSourceId.PlayerSkillGetInputType;
-                schema = new UnitSourceGetSchemaEntry("player.skill.getInputType", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number) });
+                schema = new UnitSourceGetSchemaEntry("player.skill.getInputType", typeof(PlayerInputComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number) });
                 return true;
             case "player.skill.getSkillCastingMoveMultiplier":
                 sourceId = UnitSourceId.PlayerSkillGetSkillCastingMoveMultiplier;
-                schema = new UnitSourceGetSchemaEntry("player.skill.getSkillCastingMoveMultiplier", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number) });
+                schema = new UnitSourceGetSchemaEntry("player.skill.getSkillCastingMoveMultiplier", typeof(PlayerInputComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number) });
                 return true;
             case "player.skill.getSkillChantDuration":
                 sourceId = UnitSourceId.PlayerSkillGetSkillChantDuration;
-                schema = new UnitSourceGetSchemaEntry("player.skill.getSkillChantDuration", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number) });
+                schema = new UnitSourceGetSchemaEntry("player.skill.getSkillChantDuration", typeof(PlayerInputComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number) });
                 return true;
             case "player.skill.getSkillMpCost":
                 sourceId = UnitSourceId.PlayerSkillGetSkillMpCost;
-                schema = new UnitSourceGetSchemaEntry("player.skill.getSkillMpCost", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number) });
+                schema = new UnitSourceGetSchemaEntry("player.skill.getSkillMpCost", typeof(PlayerInputComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number) });
                 return true;
             case "player.skill.getSkillRuntimeType":
                 sourceId = UnitSourceId.PlayerSkillGetSkillRuntimeType;
-                schema = new UnitSourceGetSchemaEntry("player.skill.getSkillRuntimeType", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.String, new[] { new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number) });
+                schema = new UnitSourceGetSchemaEntry("player.skill.getSkillRuntimeType", typeof(PlayerInputComponent), UnitValueCategory.String, new[] { new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number) });
                 return true;
             case "player.skill.hasCurrentSkill":
                 sourceId = UnitSourceId.PlayerSkillHasCurrentSkill;
@@ -345,19 +341,19 @@ public static class UnitComponentSourceRegistry
                 return true;
             case "player.skill.hasCurrentSkillAt":
                 sourceId = UnitSourceId.PlayerSkillHasCurrentSkillAt;
-                schema = new UnitSourceGetSchemaEntry("player.skill.hasCurrentSkillAt", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
+                schema = new UnitSourceGetSchemaEntry("player.skill.hasCurrentSkillAt", typeof(PlayerInputComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
                 return true;
             case "player.skill.hasSkill":
                 sourceId = UnitSourceId.PlayerSkillHasSkill;
-                schema = new UnitSourceGetSchemaEntry("player.skill.hasSkill", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number) });
+                schema = new UnitSourceGetSchemaEntry("player.skill.hasSkill", typeof(PlayerInputComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number) });
                 return true;
             case "player.skill.isChainEmpty":
                 sourceId = UnitSourceId.PlayerSkillIsChainEmpty;
-                schema = new UnitSourceGetSchemaEntry("player.skill.isChainEmpty", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Chain ID", UnitValueCategory.Number) });
+                schema = new UnitSourceGetSchemaEntry("player.skill.isChainEmpty", typeof(PlayerInputComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Chain ID", UnitValueCategory.Number) });
                 return true;
             case "player.skill.isCurrentChainEmpty":
                 sourceId = UnitSourceId.PlayerSkillIsCurrentChainEmpty;
-                schema = new UnitSourceGetSchemaEntry("player.skill.isCurrentChainEmpty", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
+                schema = new UnitSourceGetSchemaEntry("player.skill.isCurrentChainEmpty", typeof(PlayerInputComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
                 return true;
             case "unit.animation.name":
                 sourceId = UnitSourceId.UnitAnimationName;
@@ -543,29 +539,29 @@ public static class UnitComponentSourceRegistry
                 sourceId = UnitSourceId.UnitInterestPointArrivalDistance;
                 schema = new UnitSourceGetSchemaEntry("unit.interestPoint.arrivalDistance", typeof(DungeonInterestPointComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
                 return true;
-            case "unit.interestPoint.currentTarget":
-                sourceId = UnitSourceId.UnitInterestPointCurrentTarget;
-                schema = new UnitSourceGetSchemaEntry("unit.interestPoint.currentTarget", typeof(DungeonInterestPointComponent), UnitValueCategory.Entity, Array.Empty<ComparatorParameterDefinition>());
+            case "unit.interestPoint.aliveGuardCount":
+                sourceId = UnitSourceId.UnitInterestPointAliveGuardCount;
+                schema = new UnitSourceGetSchemaEntry("unit.interestPoint.aliveGuardCount", typeof(DungeonInterestPointComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
                 return true;
             case "unit.interestPoint.encounterId":
                 sourceId = UnitSourceId.UnitInterestPointEncounterId;
                 schema = new UnitSourceGetSchemaEntry("unit.interestPoint.encounterId", typeof(DungeonInterestPointComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
                 return true;
-            case "unit.interestPoint.hasPatrol":
-                sourceId = UnitSourceId.UnitInterestPointHasPatrol;
-                schema = new UnitSourceGetSchemaEntry("unit.interestPoint.hasPatrol", typeof(DungeonInterestPointComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
+            case "unit.interestPoint.encounterReady":
+                sourceId = UnitSourceId.UnitInterestPointEncounterReady;
+                schema = new UnitSourceGetSchemaEntry("unit.interestPoint.encounterReady", typeof(DungeonInterestPointComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
                 return true;
             case "unit.interestPoint.patrolSpeed":
                 sourceId = UnitSourceId.UnitInterestPointPatrolSpeed;
                 schema = new UnitSourceGetSchemaEntry("unit.interestPoint.patrolSpeed", typeof(DungeonInterestPointComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
                 return true;
-            case "unit.interestPoint.playerDistance":
-                sourceId = UnitSourceId.UnitInterestPointPlayerDistance;
-                schema = new UnitSourceGetSchemaEntry("unit.interestPoint.playerDistance", typeof(DungeonInterestPointComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
+            case "unit.interestPoint.patrolTarget":
+                sourceId = UnitSourceId.UnitInterestPointPatrolTarget;
+                schema = new UnitSourceGetSchemaEntry("unit.interestPoint.patrolTarget", typeof(DungeonInterestPointComponent), UnitValueCategory.Entity, Array.Empty<ComparatorParameterDefinition>());
                 return true;
-            case "unit.interestPoint.shouldSpawnPatrol":
-                sourceId = UnitSourceId.UnitInterestPointShouldSpawnPatrol;
-                schema = new UnitSourceGetSchemaEntry("unit.interestPoint.shouldSpawnPatrol", typeof(DungeonInterestPointComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
+            case "unit.interestPoint.patrolUnitCount":
+                sourceId = UnitSourceId.UnitInterestPointPatrolUnitCount;
+                schema = new UnitSourceGetSchemaEntry("unit.interestPoint.patrolUnitCount", typeof(DungeonInterestPointComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
                 return true;
             case "unit.interestPoint.spawnDistance":
                 sourceId = UnitSourceId.UnitInterestPointSpawnDistance;
@@ -575,9 +571,17 @@ public static class UnitComponentSourceRegistry
                 sourceId = UnitSourceId.UnitInterestPointSquadId;
                 schema = new UnitSourceGetSchemaEntry("unit.interestPoint.squadId", typeof(DungeonInterestPointComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
                 return true;
-            case "unit.interestPoint.targetReached":
-                sourceId = UnitSourceId.UnitInterestPointTargetReached;
-                schema = new UnitSourceGetSchemaEntry("unit.interestPoint.targetReached", typeof(DungeonInterestPointComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
+            case "unit.interactable.enabled":
+                sourceId = UnitSourceId.UnitInteractableEnabled;
+                schema = new UnitSourceGetSchemaEntry("unit.interactable.enabled", typeof(UnitInteractableComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
+                return true;
+            case "unit.interactable.rangeSq":
+                sourceId = UnitSourceId.UnitInteractableRangeSq;
+                schema = new UnitSourceGetSchemaEntry("unit.interactable.rangeSq", typeof(UnitInteractableComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
+                return true;
+            case "unit.treasure.opened":
+                sourceId = UnitSourceId.UnitTreasureOpened;
+                schema = new UnitSourceGetSchemaEntry("unit.treasure.opened", typeof(TreasureComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
                 return true;
             case "unit.mana.baseMaxMp":
                 sourceId = UnitSourceId.UnitManaBaseMaxMp;
@@ -743,6 +747,14 @@ public static class UnitComponentSourceRegistry
                 sourceId = UnitSourceId.UnitVariablesHas;
                 schema = new UnitSourceGetSchemaEntry("unit.variables.has", typeof(UnitVariableComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Key", UnitValueCategory.String) });
                 return true;
+            case "unit.variables.getNumberOrDefault":
+                sourceId = UnitSourceId.UnitVariablesGetNumberOrDefault;
+                schema = new UnitSourceGetSchemaEntry("unit.variables.getNumberOrDefault", typeof(UnitVariableComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Key", UnitValueCategory.String), new ComparatorParameterDefinition("Default", UnitValueCategory.Number) });
+                return true;
+            case "unit.variables.listEntity":
+                sourceId = UnitSourceId.UnitVariablesListEntity;
+                schema = new UnitSourceGetSchemaEntry("unit.variables.listEntity", typeof(UnitVariableComponent), UnitValueCategory.Entity, new[] { new ComparatorParameterDefinition("Key", UnitValueCategory.String), new ComparatorParameterDefinition("Index", UnitValueCategory.Number) });
+                return true;
             case "unit.variables.other":
                 sourceId = UnitSourceId.UnitVariablesOther;
                 schema = new UnitSourceGetSchemaEntry("unit.variables.other", typeof(UnitVariableComponent), UnitValueCategory.Entity, Array.Empty<ComparatorParameterDefinition>());
@@ -779,9 +791,21 @@ public static class UnitComponentSourceRegistry
                 sourceId = UnitSourceId.UnitVitalityRealMaxHealth;
                 schema = new UnitSourceGetSchemaEntry("unit.vitality.realMaxHealth", typeof(UnitVitalityComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
                 return true;
-            case "world.interaction.isInteracting":
-                sourceId = UnitSourceId.WorldInteractionIsInteracting;
-                schema = new UnitSourceGetSchemaEntry("world.interaction.isInteracting", typeof(InteractionCandidateComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
+            case "world.interaction.isBusy":
+                sourceId = UnitSourceId.WorldInteractionIsBusy;
+                schema = new UnitSourceGetSchemaEntry("world.interaction.isBusy", typeof(GameInteractionComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Actor", UnitValueCategory.Entity) });
+                return true;
+            case "world.interaction.hasResult":
+                sourceId = UnitSourceId.WorldInteractionHasResult;
+                schema = new UnitSourceGetSchemaEntry("world.interaction.hasResult", typeof(GameInteractionComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Actor", UnitValueCategory.Entity) });
+                return true;
+            case "world.interaction.resultCode":
+                sourceId = UnitSourceId.WorldInteractionResultCode;
+                schema = new UnitSourceGetSchemaEntry("world.interaction.resultCode", typeof(GameInteractionComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Actor", UnitValueCategory.Entity) });
+                return true;
+            case "world.interaction.result":
+                sourceId = UnitSourceId.WorldInteractionResult;
+                schema = new UnitSourceGetSchemaEntry("world.interaction.result", typeof(GameInteractionComponent), UnitValueCategory.Any, new[] { new ComparatorParameterDefinition("Actor", UnitValueCategory.Entity) });
                 return true;
             case "world.variables.count":
                 sourceId = UnitSourceId.WorldVariablesCount;
@@ -862,17 +886,17 @@ public static class UnitComponentSourceRegistry
                 sourceId = UnitSourceId.UnitFacingSetDirection;
                 schema = new UnitSourceSetSchemaEntry("unit.facing.setDirection", typeof(UnitFacingComponent), new[] { new ComparatorParameterDefinition("Direction", UnitValueCategory.Float2) }, false);
                 return true;
-            case "unit.interestPoint.setNextPatrolTarget":
-                sourceId = UnitSourceId.UnitInterestPointSetNextPatrolTarget;
-                schema = new UnitSourceSetSchemaEntry("unit.interestPoint.setNextPatrolTarget", typeof(DungeonInterestPointComponent), new[] { new ComparatorParameterDefinition("Value", UnitValueCategory.Bool) }, false);
+            case "unit.interestPoint.setPatrolTarget":
+                sourceId = UnitSourceId.UnitInterestPointSetPatrolTarget;
+                schema = new UnitSourceSetSchemaEntry("unit.interestPoint.setPatrolTarget", typeof(DungeonInterestPointComponent), new[] { new ComparatorParameterDefinition("Target", UnitValueCategory.Entity) }, false);
                 return true;
-            case "unit.interestPoint.setPatrolActive":
-                sourceId = UnitSourceId.UnitInterestPointSetPatrolActive;
-                schema = new UnitSourceSetSchemaEntry("unit.interestPoint.setPatrolActive", typeof(DungeonInterestPointComponent), new[] { new ComparatorParameterDefinition("Value", UnitValueCategory.Bool) }, false);
+            case "unit.interactable.setEnabled":
+                sourceId = UnitSourceId.UnitInteractableSetEnabled;
+                schema = new UnitSourceSetSchemaEntry("unit.interactable.setEnabled", typeof(UnitInteractableComponent), new[] { new ComparatorParameterDefinition("Enabled", UnitValueCategory.Bool) }, false);
                 return true;
-            case "unit.interestPoint.setPatrolSpeed":
-                sourceId = UnitSourceId.UnitInterestPointSetPatrolSpeed;
-                schema = new UnitSourceSetSchemaEntry("unit.interestPoint.setPatrolSpeed", typeof(DungeonInterestPointComponent), new[] { new ComparatorParameterDefinition("Value", UnitValueCategory.Number) }, false);
+            case "unit.treasure.setOpened":
+                sourceId = UnitSourceId.UnitTreasureSetOpened;
+                schema = new UnitSourceSetSchemaEntry("unit.treasure.setOpened", typeof(TreasureComponent), new[] { new ComparatorParameterDefinition("Opened", UnitValueCategory.Bool) }, false);
                 return true;
             case "unit.mana.cost":
                 sourceId = UnitSourceId.UnitManaCost;
@@ -910,6 +934,10 @@ public static class UnitComponentSourceRegistry
                 sourceId = UnitSourceId.UnitVariablesRemove;
                 schema = new UnitSourceSetSchemaEntry("unit.variables.remove", typeof(UnitVariableComponent), new[] { new ComparatorParameterDefinition("Key", UnitValueCategory.String) }, false);
                 return true;
+            case "unit.variables.addNumber":
+                sourceId = UnitSourceId.UnitVariablesAddNumber;
+                schema = new UnitSourceSetSchemaEntry("unit.variables.addNumber", typeof(UnitVariableComponent), new[] { new ComparatorParameterDefinition("Delta", UnitValueCategory.Number) }, true);
+                return true;
             case "unit.variables.set":
                 sourceId = UnitSourceId.UnitVariablesSet;
                 schema = new UnitSourceSetSchemaEntry("unit.variables.set", typeof(UnitVariableComponent), new[] { new ComparatorParameterDefinition("Value", UnitValueCategory.Any) }, true);
@@ -938,11 +966,13 @@ public static class UnitComponentSourceRegistry
         UnitSourceSchemaBuilder builder = new();
         if (true)
         {
-            builder.AddGet("game.interaction.hasCandidate", typeof(InteractionCandidateComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
-            builder.AddGet("game.interaction.candidateKind", typeof(InteractionCandidateComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
-            builder.AddGet("game.interaction.candidateTarget", typeof(InteractionCandidateComponent), UnitValueCategory.Entity, Array.Empty<ComparatorParameterDefinition>());
-            builder.AddGet("world.interaction.isInteracting", typeof(InteractionCandidateComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
-            builder.AddInteractionGet(InteractionRequestKey, typeof(InteractionCandidateComponent));
+            builder.AddGet("world.interaction.hasPending", typeof(GameInteractionComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Target", UnitValueCategory.Entity) });
+            builder.AddGet("world.interaction.pendingActor", typeof(GameInteractionComponent), UnitValueCategory.Entity, new[] { new ComparatorParameterDefinition("Target", UnitValueCategory.Entity) });
+            builder.AddGet("world.interaction.pendingRequestId", typeof(GameInteractionComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Target", UnitValueCategory.Entity) });
+            builder.AddGet("world.interaction.isBusy", typeof(GameInteractionComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Actor", UnitValueCategory.Entity) });
+            builder.AddGet("world.interaction.hasResult", typeof(GameInteractionComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Actor", UnitValueCategory.Entity) });
+            builder.AddGet("world.interaction.resultCode", typeof(GameInteractionComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Actor", UnitValueCategory.Entity) });
+            builder.AddGet("world.interaction.result", typeof(GameInteractionComponent), UnitValueCategory.Any, new[] { new ComparatorParameterDefinition("Actor", UnitValueCategory.Entity) });
         }
         if (includeAll || prefab != null && prefab.GetComponentInChildren(typeof(DungeonInterestPointAuthoring), true) != null)
         {
@@ -951,14 +981,22 @@ public static class UnitComponentSourceRegistry
             builder.AddGet("unit.interestPoint.spawnDistance", typeof(DungeonInterestPointComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
             builder.AddGet("unit.interestPoint.patrolSpeed", typeof(DungeonInterestPointComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
             builder.AddGet("unit.interestPoint.arrivalDistance", typeof(DungeonInterestPointComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
-            builder.AddGet("unit.interestPoint.hasPatrol", typeof(DungeonInterestPointComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
-            builder.AddGet("unit.interestPoint.currentTarget", typeof(DungeonInterestPointComponent), UnitValueCategory.Entity, Array.Empty<ComparatorParameterDefinition>());
-            builder.AddGet("unit.interestPoint.playerDistance", typeof(DungeonInterestPointComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
-            builder.AddGet("unit.interestPoint.shouldSpawnPatrol", typeof(DungeonInterestPointComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
-            builder.AddGet("unit.interestPoint.targetReached", typeof(DungeonInterestPointComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
-            builder.AddSet("unit.interestPoint.setPatrolActive", typeof(DungeonInterestPointComponent), new[] { new ComparatorParameterDefinition("Value", UnitValueCategory.Bool) }, false);
-            builder.AddSet("unit.interestPoint.setNextPatrolTarget", typeof(DungeonInterestPointComponent), new[] { new ComparatorParameterDefinition("Value", UnitValueCategory.Bool) }, false);
-            builder.AddSet("unit.interestPoint.setPatrolSpeed", typeof(DungeonInterestPointComponent), new[] { new ComparatorParameterDefinition("Value", UnitValueCategory.Number) }, false);
+            builder.AddGet("unit.interestPoint.aliveGuardCount", typeof(DungeonInterestPointComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
+            builder.AddGet("unit.interestPoint.patrolUnitCount", typeof(DungeonInterestPointComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
+            builder.AddGet("unit.interestPoint.patrolTarget", typeof(DungeonInterestPointComponent), UnitValueCategory.Entity, Array.Empty<ComparatorParameterDefinition>());
+            builder.AddGet("unit.interestPoint.encounterReady", typeof(DungeonInterestPointComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
+            builder.AddSet("unit.interestPoint.setPatrolTarget", typeof(DungeonInterestPointComponent), new[] { new ComparatorParameterDefinition("Target", UnitValueCategory.Entity) }, false);
+        }
+        if (includeAll || prefab != null && prefab.GetComponentInChildren(typeof(NPCInteractableAuthoring), true) != null)
+        {
+            builder.AddGet("unit.interactable.enabled", typeof(UnitInteractableComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
+            builder.AddGet("unit.interactable.rangeSq", typeof(UnitInteractableComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
+            builder.AddSet("unit.interactable.setEnabled", typeof(UnitInteractableComponent), new[] { new ComparatorParameterDefinition("Enabled", UnitValueCategory.Bool) }, false);
+        }
+        if (includeAll || prefab != null && prefab.GetComponentInChildren(typeof(DungeonTreasureAuthoring), true) != null)
+        {
+            builder.AddGet("unit.treasure.opened", typeof(TreasureComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
+            builder.AddSet("unit.treasure.setOpened", typeof(TreasureComponent), new[] { new ComparatorParameterDefinition("Opened", UnitValueCategory.Bool) }, false);
         }
         if (includeAll || prefab != null && prefab.GetComponentInChildren(typeof(UnityEngine.Transform), true) != null)
         {
@@ -991,31 +1029,29 @@ public static class UnitComponentSourceRegistry
             builder.AddGet("player.input.escapeHeld", typeof(PlayerInputComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
             builder.AddGet("player.input.skillHeld", typeof(PlayerInputComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
             builder.AddGet("player.input.skillChainIndex", typeof(PlayerInputComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
-            builder.AddGet("player.input.nextSkillChainHeld", typeof(PlayerInputComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
             builder.AddGet("player.input.usePropHeld", typeof(PlayerInputComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
             builder.AddGet("player.input.propIndex", typeof(PlayerInputComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
         }
         if (includeAll || prefab != null && prefab.GetComponentInChildren(typeof(PlayerCurrentSkillAuthoring), true) != null)
         {
-            builder.AddGet("player.skill.getCurrentChainId", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
-            builder.AddGet("player.skill.isCurrentChainEmpty", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
-            builder.AddGet("player.skill.getCurrentChainLength", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
-            builder.AddGet("player.skill.getCurrentSkillId", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
-            builder.AddGet("player.skill.getCurrentSkillAdditionId", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
-            builder.AddGet("player.skill.hasCurrentSkillAt", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
-            builder.AddGet("player.skill.getCurrentSkillMpCost", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
-            builder.AddGet("player.skill.getCurrentSkillChantDuration", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
-            builder.AddGet("player.skill.getCurrentSkillRuntimeType", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.String, new[] { new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
-            builder.AddGet("player.skill.isChainEmpty", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Chain ID", UnitValueCategory.Number) });
-            builder.AddGet("player.skill.getChainLength", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Chain ID", UnitValueCategory.Number) });
-            builder.AddGet("player.skill.getChainSkillId", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Chain ID", UnitValueCategory.Number), new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
-            builder.AddGet("player.skill.getChainSkillAdditionId", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Chain ID", UnitValueCategory.Number), new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
-            builder.AddGet("player.skill.hasSkill", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number) });
-            builder.AddGet("player.skill.getSkillMpCost", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number) });
-            builder.AddGet("player.skill.getSkillChantDuration", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number) });
-            builder.AddGet("player.skill.getSkillCastingMoveMultiplier", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number) });
-            builder.AddGet("player.skill.getSkillRuntimeType", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.String, new[] { new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number) });
-            builder.AddGet("player.skill.getInputType", typeof(PlayerSkillRuntimeDataComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number) });
+            builder.AddGet("player.skill.isCurrentChainEmpty", typeof(PlayerInputComponent), UnitValueCategory.Bool, Array.Empty<ComparatorParameterDefinition>());
+            builder.AddGet("player.skill.getCurrentChainLength", typeof(PlayerInputComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
+            builder.AddGet("player.skill.getCurrentSkillId", typeof(PlayerInputComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
+            builder.AddGet("player.skill.getCurrentSkillAdditionId", typeof(PlayerInputComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
+            builder.AddGet("player.skill.hasCurrentSkillAt", typeof(PlayerInputComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
+            builder.AddGet("player.skill.getCurrentSkillMpCost", typeof(PlayerInputComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
+            builder.AddGet("player.skill.getCurrentSkillChantDuration", typeof(PlayerInputComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
+            builder.AddGet("player.skill.getCurrentSkillRuntimeType", typeof(PlayerInputComponent), UnitValueCategory.String, new[] { new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
+            builder.AddGet("player.skill.isChainEmpty", typeof(PlayerInputComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Chain ID", UnitValueCategory.Number) });
+            builder.AddGet("player.skill.getChainLength", typeof(PlayerInputComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Chain ID", UnitValueCategory.Number) });
+            builder.AddGet("player.skill.getChainSkillId", typeof(PlayerInputComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Chain ID", UnitValueCategory.Number), new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
+            builder.AddGet("player.skill.getChainSkillAdditionId", typeof(PlayerInputComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Chain ID", UnitValueCategory.Number), new ComparatorParameterDefinition("Slot Index", UnitValueCategory.Number) });
+            builder.AddGet("player.skill.hasSkill", typeof(PlayerInputComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number) });
+            builder.AddGet("player.skill.getSkillMpCost", typeof(PlayerInputComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number) });
+            builder.AddGet("player.skill.getSkillChantDuration", typeof(PlayerInputComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number) });
+            builder.AddGet("player.skill.getSkillCastingMoveMultiplier", typeof(PlayerInputComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number) });
+            builder.AddGet("player.skill.getSkillRuntimeType", typeof(PlayerInputComponent), UnitValueCategory.String, new[] { new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number) });
+            builder.AddGet("player.skill.getInputType", typeof(PlayerInputComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Skill ID", UnitValueCategory.Number) });
         }
         if (includeAll || prefab != null && prefab.GetComponentInChildren(typeof(UnitAnimationAuthoring), true) != null)
         {
@@ -1148,11 +1184,14 @@ public static class UnitComponentSourceRegistry
             builder.AddGet("unit.variables.has", typeof(UnitVariableComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Key", UnitValueCategory.String) });
             builder.AddGet("unit.variables.get", typeof(UnitVariableComponent), UnitValueCategory.Any, new[] { new ComparatorParameterDefinition("Key", UnitValueCategory.String) });
             builder.AddGet("unit.variables.getNumber", typeof(UnitVariableComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Key", UnitValueCategory.String) });
+            builder.AddGet("unit.variables.getNumberOrDefault", typeof(UnitVariableComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Key", UnitValueCategory.String), new ComparatorParameterDefinition("Default", UnitValueCategory.Number) });
             builder.AddGet("unit.variables.getBool", typeof(UnitVariableComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Key", UnitValueCategory.String) });
             builder.AddGet("unit.variables.getFloat2", typeof(UnitVariableComponent), UnitValueCategory.Float2, new[] { new ComparatorParameterDefinition("Key", UnitValueCategory.String) });
             builder.AddGet("unit.variables.getFloat3", typeof(UnitVariableComponent), UnitValueCategory.Float3, new[] { new ComparatorParameterDefinition("Key", UnitValueCategory.String) });
             builder.AddGet("unit.variables.getEntity", typeof(UnitVariableComponent), UnitValueCategory.Entity, new[] { new ComparatorParameterDefinition("Key", UnitValueCategory.String) });
             builder.AddGet("unit.variables.getString", typeof(UnitVariableComponent), UnitValueCategory.String, new[] { new ComparatorParameterDefinition("Key", UnitValueCategory.String) });
+            builder.AddGet("unit.variables.listEntity", typeof(UnitVariableComponent), UnitValueCategory.Entity, new[] { new ComparatorParameterDefinition("Key", UnitValueCategory.String), new ComparatorParameterDefinition("Index", UnitValueCategory.Number) });
+            builder.AddSet("unit.variables.addNumber", typeof(UnitVariableComponent), new[] { new ComparatorParameterDefinition("Delta", UnitValueCategory.Number) }, true);
             builder.AddSet("unit.variables.set", typeof(UnitVariableComponent), new[] { new ComparatorParameterDefinition("Value", UnitValueCategory.Any) }, true);
             builder.AddSet("unit.variables.remove", typeof(UnitVariableComponent), new[] { new ComparatorParameterDefinition("Key", UnitValueCategory.String) }, false);
             builder.AddSet("unit.variables.setOther", typeof(UnitVariableComponent), new[] { new ComparatorParameterDefinition("Other", UnitValueCategory.Entity) }, false);
@@ -1206,10 +1245,14 @@ public static class UnitSourceSchemaFactory
 
 public struct UnitSourceDispatcher
 {
-    private Entity _globalEntity;
+    private Entity _GameInteractionComponentEntity;
+    private Entity _PlayerSkillDefinitionRegistryComponentEntity;
+    private Entity _WorldVariableComponentEntity;
     private ComponentLookup<DungeonInterestPointComponent> _DungeonInterestPointComponentLookup;
+    private ComponentLookup<UnitInteractableComponent> _UnitInteractableComponentLookup;
     [ReadOnly]
-    private ComponentLookup<InteractionCandidateComponent> _InteractionCandidateComponentLookup;
+    private ComponentLookup<GameInteractionComponent> _GameInteractionComponentLookup;
+    private ComponentLookup<TreasureComponent> _TreasureComponentLookup;
     [ReadOnly]
     private ComponentLookup<LocalTransform> _LocalTransformLookup;
     [ReadOnly]
@@ -1217,8 +1260,6 @@ public struct UnitSourceDispatcher
     private ComponentLookup<PlayerCurrentSkillComponent> _PlayerCurrentSkillComponentLookup;
     [ReadOnly]
     private ComponentLookup<PlayerSkillDefinitionRegistryComponent> _PlayerSkillDefinitionRegistryComponentLookup;
-    [ReadOnly]
-    private ComponentLookup<PlayerSkillRuntimeDataComponent> _PlayerSkillRuntimeDataComponentLookup;
     private ComponentLookup<UnitAnimationComponent> _UnitAnimationComponentLookup;
     [ReadOnly]
     private ComponentLookup<UnitAttackComponent> _UnitAttackComponentLookup;
@@ -1247,12 +1288,8 @@ public struct UnitSourceDispatcher
     [ReadOnly]
     private ComponentLookup<UnitVitalityComponent> _UnitVitalityComponentLookup;
     [ReadOnly]
-    private ComponentLookup<WorldStateComponent> _WorldStateComponentLookup;
-    [ReadOnly]
     private ComponentLookup<WorldVariableComponent> _WorldVariableComponentLookup;
     private BufferLookup<UnitBuffElement> _UnitBuffElementBufferLookup;
-    [ReadOnly]
-    private BufferLookup<DungeonInterestPointCandidateElement> _DungeonInterestPointCandidateElementBufferLookup;
     [ReadOnly]
     private BufferLookup<PlayerSkillChainElement> _PlayerSkillChainElementBufferLookup;
     [ReadOnly]
@@ -1262,16 +1299,19 @@ public struct UnitSourceDispatcher
     private BufferLookup<UnitVariableConsumerElement> _UnitVariableConsumerElementBufferLookup;
     private BufferLookup<UnitVariableElement> _UnitVariableElementBufferLookup;
     private BufferLookup<WorldVariableElement> _WorldVariableElementBufferLookup;
+    [ReadOnly]
+    private BufferLookup<InteractionTransactionElement> _InteractionTransactionElementBufferLookup;
 
     public void Initialize(SystemBase system)
     {
         _DungeonInterestPointComponentLookup = system.GetComponentLookup<DungeonInterestPointComponent>(false);
-        _InteractionCandidateComponentLookup = system.GetComponentLookup<InteractionCandidateComponent>(true);
+        _UnitInteractableComponentLookup = system.GetComponentLookup<UnitInteractableComponent>(false);
+        _GameInteractionComponentLookup = system.GetComponentLookup<GameInteractionComponent>(true);
+        _TreasureComponentLookup = system.GetComponentLookup<TreasureComponent>(false);
         _LocalTransformLookup = system.GetComponentLookup<LocalTransform>(true);
         _PlayerInputComponentLookup = system.GetComponentLookup<PlayerInputComponent>(true);
         _PlayerCurrentSkillComponentLookup = system.GetComponentLookup<PlayerCurrentSkillComponent>(false);
         _PlayerSkillDefinitionRegistryComponentLookup = system.GetComponentLookup<PlayerSkillDefinitionRegistryComponent>(true);
-        _PlayerSkillRuntimeDataComponentLookup = system.GetComponentLookup<PlayerSkillRuntimeDataComponent>(true);
         _UnitAnimationComponentLookup = system.GetComponentLookup<UnitAnimationComponent>(false);
         _UnitAttackComponentLookup = system.GetComponentLookup<UnitAttackComponent>(true);
         _UnitBuffComponentLookup = system.GetComponentLookup<UnitBuffComponent>(false);
@@ -1289,29 +1329,30 @@ public struct UnitSourceDispatcher
         _UnitSkillReleaseComponentLookup = system.GetComponentLookup<UnitSkillReleaseComponent>(true);
         _UnitVariableComponentLookup = system.GetComponentLookup<UnitVariableComponent>(false);
         _UnitVitalityComponentLookup = system.GetComponentLookup<UnitVitalityComponent>(true);
-        _WorldStateComponentLookup = system.GetComponentLookup<WorldStateComponent>(true);
         _WorldVariableComponentLookup = system.GetComponentLookup<WorldVariableComponent>(true);
         _UnitBuffElementBufferLookup = system.GetBufferLookup<UnitBuffElement>(false);
-        _DungeonInterestPointCandidateElementBufferLookup = system.GetBufferLookup<DungeonInterestPointCandidateElement>(true);
         _PlayerSkillChainElementBufferLookup = system.GetBufferLookup<PlayerSkillChainElement>(true);
         _PlayerSkillChainSlotElementBufferLookup = system.GetBufferLookup<PlayerSkillChainSlotElement>(true);
         _UnitPerceptionUnitElementBufferLookup = system.GetBufferLookup<UnitPerceptionUnitElement>(true);
         _UnitVariableConsumerElementBufferLookup = system.GetBufferLookup<UnitVariableConsumerElement>(false);
         _UnitVariableElementBufferLookup = system.GetBufferLookup<UnitVariableElement>(false);
         _WorldVariableElementBufferLookup = system.GetBufferLookup<WorldVariableElement>(false);
-        if (_globalEntity == Entity.Null || !system.EntityManager.Exists(_globalEntity))
-            WorldStateUtility.TryGetEntity(system.EntityManager, out _globalEntity);
+        _InteractionTransactionElementBufferLookup = system.GetBufferLookup<InteractionTransactionElement>(true);
+        _GameInteractionComponentEntity = GameSingletonUtility.GetEntity<GameInteractionComponent>(system.EntityManager);
+        _PlayerSkillDefinitionRegistryComponentEntity = GameSingletonUtility.GetEntity<PlayerSkillDefinitionRegistryComponent>(system.EntityManager);
+        _WorldVariableComponentEntity = GameSingletonUtility.GetEntity<WorldVariableComponent>(system.EntityManager);
     }
 
     public void InitializeReadOnly(SystemBase system)
     {
         _DungeonInterestPointComponentLookup = system.GetComponentLookup<DungeonInterestPointComponent>(true);
-        _InteractionCandidateComponentLookup = system.GetComponentLookup<InteractionCandidateComponent>(true);
+        _UnitInteractableComponentLookup = system.GetComponentLookup<UnitInteractableComponent>(true);
+        _GameInteractionComponentLookup = system.GetComponentLookup<GameInteractionComponent>(true);
+        _TreasureComponentLookup = system.GetComponentLookup<TreasureComponent>(true);
         _LocalTransformLookup = system.GetComponentLookup<LocalTransform>(true);
         _PlayerInputComponentLookup = system.GetComponentLookup<PlayerInputComponent>(true);
         _PlayerCurrentSkillComponentLookup = system.GetComponentLookup<PlayerCurrentSkillComponent>(true);
         _PlayerSkillDefinitionRegistryComponentLookup = system.GetComponentLookup<PlayerSkillDefinitionRegistryComponent>(true);
-        _PlayerSkillRuntimeDataComponentLookup = system.GetComponentLookup<PlayerSkillRuntimeDataComponent>(true);
         _UnitAnimationComponentLookup = system.GetComponentLookup<UnitAnimationComponent>(true);
         _UnitAttackComponentLookup = system.GetComponentLookup<UnitAttackComponent>(true);
         _UnitBuffComponentLookup = system.GetComponentLookup<UnitBuffComponent>(true);
@@ -1329,29 +1370,30 @@ public struct UnitSourceDispatcher
         _UnitSkillReleaseComponentLookup = system.GetComponentLookup<UnitSkillReleaseComponent>(true);
         _UnitVariableComponentLookup = system.GetComponentLookup<UnitVariableComponent>(true);
         _UnitVitalityComponentLookup = system.GetComponentLookup<UnitVitalityComponent>(true);
-        _WorldStateComponentLookup = system.GetComponentLookup<WorldStateComponent>(true);
         _WorldVariableComponentLookup = system.GetComponentLookup<WorldVariableComponent>(true);
         _UnitBuffElementBufferLookup = system.GetBufferLookup<UnitBuffElement>(true);
-        _DungeonInterestPointCandidateElementBufferLookup = system.GetBufferLookup<DungeonInterestPointCandidateElement>(true);
         _PlayerSkillChainElementBufferLookup = system.GetBufferLookup<PlayerSkillChainElement>(true);
         _PlayerSkillChainSlotElementBufferLookup = system.GetBufferLookup<PlayerSkillChainSlotElement>(true);
         _UnitPerceptionUnitElementBufferLookup = system.GetBufferLookup<UnitPerceptionUnitElement>(true);
         _UnitVariableConsumerElementBufferLookup = system.GetBufferLookup<UnitVariableConsumerElement>(true);
         _UnitVariableElementBufferLookup = system.GetBufferLookup<UnitVariableElement>(true);
         _WorldVariableElementBufferLookup = system.GetBufferLookup<WorldVariableElement>(true);
-        if (_globalEntity == Entity.Null || !system.EntityManager.Exists(_globalEntity))
-            WorldStateUtility.TryGetEntity(system.EntityManager, out _globalEntity);
+        _InteractionTransactionElementBufferLookup = system.GetBufferLookup<InteractionTransactionElement>(true);
+        _GameInteractionComponentEntity = GameSingletonUtility.GetEntity<GameInteractionComponent>(system.EntityManager);
+        _PlayerSkillDefinitionRegistryComponentEntity = GameSingletonUtility.GetEntity<PlayerSkillDefinitionRegistryComponent>(system.EntityManager);
+        _WorldVariableComponentEntity = GameSingletonUtility.GetEntity<WorldVariableComponent>(system.EntityManager);
     }
 
     public void Update(SystemBase system)
     {
         _DungeonInterestPointComponentLookup.Update(system);
-        _InteractionCandidateComponentLookup.Update(system);
+        _UnitInteractableComponentLookup.Update(system);
+        _GameInteractionComponentLookup.Update(system);
+        _TreasureComponentLookup.Update(system);
         _LocalTransformLookup.Update(system);
         _PlayerInputComponentLookup.Update(system);
         _PlayerCurrentSkillComponentLookup.Update(system);
         _PlayerSkillDefinitionRegistryComponentLookup.Update(system);
-        _PlayerSkillRuntimeDataComponentLookup.Update(system);
         _UnitAnimationComponentLookup.Update(system);
         _UnitAttackComponentLookup.Update(system);
         _UnitBuffComponentLookup.Update(system);
@@ -1369,29 +1411,27 @@ public struct UnitSourceDispatcher
         _UnitSkillReleaseComponentLookup.Update(system);
         _UnitVariableComponentLookup.Update(system);
         _UnitVitalityComponentLookup.Update(system);
-        _WorldStateComponentLookup.Update(system);
         _WorldVariableComponentLookup.Update(system);
         _UnitBuffElementBufferLookup.Update(system);
-        _DungeonInterestPointCandidateElementBufferLookup.Update(system);
         _PlayerSkillChainElementBufferLookup.Update(system);
         _PlayerSkillChainSlotElementBufferLookup.Update(system);
         _UnitPerceptionUnitElementBufferLookup.Update(system);
         _UnitVariableConsumerElementBufferLookup.Update(system);
         _UnitVariableElementBufferLookup.Update(system);
         _WorldVariableElementBufferLookup.Update(system);
-        if (_globalEntity == Entity.Null || !system.EntityManager.Exists(_globalEntity))
-            WorldStateUtility.TryGetEntity(system.EntityManager, out _globalEntity);
+        _InteractionTransactionElementBufferLookup.Update(system);
     }
 
     public void Initialize(ref SystemState state)
     {
         _DungeonInterestPointComponentLookup = state.GetComponentLookup<DungeonInterestPointComponent>(false);
-        _InteractionCandidateComponentLookup = state.GetComponentLookup<InteractionCandidateComponent>(true);
+        _UnitInteractableComponentLookup = state.GetComponentLookup<UnitInteractableComponent>(false);
+        _GameInteractionComponentLookup = state.GetComponentLookup<GameInteractionComponent>(true);
+        _TreasureComponentLookup = state.GetComponentLookup<TreasureComponent>(false);
         _LocalTransformLookup = state.GetComponentLookup<LocalTransform>(true);
         _PlayerInputComponentLookup = state.GetComponentLookup<PlayerInputComponent>(true);
         _PlayerCurrentSkillComponentLookup = state.GetComponentLookup<PlayerCurrentSkillComponent>(false);
         _PlayerSkillDefinitionRegistryComponentLookup = state.GetComponentLookup<PlayerSkillDefinitionRegistryComponent>(true);
-        _PlayerSkillRuntimeDataComponentLookup = state.GetComponentLookup<PlayerSkillRuntimeDataComponent>(true);
         _UnitAnimationComponentLookup = state.GetComponentLookup<UnitAnimationComponent>(false);
         _UnitAttackComponentLookup = state.GetComponentLookup<UnitAttackComponent>(true);
         _UnitBuffComponentLookup = state.GetComponentLookup<UnitBuffComponent>(false);
@@ -1409,29 +1449,30 @@ public struct UnitSourceDispatcher
         _UnitSkillReleaseComponentLookup = state.GetComponentLookup<UnitSkillReleaseComponent>(true);
         _UnitVariableComponentLookup = state.GetComponentLookup<UnitVariableComponent>(false);
         _UnitVitalityComponentLookup = state.GetComponentLookup<UnitVitalityComponent>(true);
-        _WorldStateComponentLookup = state.GetComponentLookup<WorldStateComponent>(true);
         _WorldVariableComponentLookup = state.GetComponentLookup<WorldVariableComponent>(true);
         _UnitBuffElementBufferLookup = state.GetBufferLookup<UnitBuffElement>(false);
-        _DungeonInterestPointCandidateElementBufferLookup = state.GetBufferLookup<DungeonInterestPointCandidateElement>(true);
         _PlayerSkillChainElementBufferLookup = state.GetBufferLookup<PlayerSkillChainElement>(true);
         _PlayerSkillChainSlotElementBufferLookup = state.GetBufferLookup<PlayerSkillChainSlotElement>(true);
         _UnitPerceptionUnitElementBufferLookup = state.GetBufferLookup<UnitPerceptionUnitElement>(true);
         _UnitVariableConsumerElementBufferLookup = state.GetBufferLookup<UnitVariableConsumerElement>(false);
         _UnitVariableElementBufferLookup = state.GetBufferLookup<UnitVariableElement>(false);
         _WorldVariableElementBufferLookup = state.GetBufferLookup<WorldVariableElement>(false);
-        if (_globalEntity == Entity.Null || !state.EntityManager.Exists(_globalEntity))
-            WorldStateUtility.TryGetEntity(state.EntityManager, out _globalEntity);
+        _InteractionTransactionElementBufferLookup = state.GetBufferLookup<InteractionTransactionElement>(true);
+        _GameInteractionComponentEntity = GameSingletonUtility.GetEntity<GameInteractionComponent>(state.EntityManager);
+        _PlayerSkillDefinitionRegistryComponentEntity = GameSingletonUtility.GetEntity<PlayerSkillDefinitionRegistryComponent>(state.EntityManager);
+        _WorldVariableComponentEntity = GameSingletonUtility.GetEntity<WorldVariableComponent>(state.EntityManager);
     }
 
     public void InitializeReadOnly(ref SystemState state)
     {
         _DungeonInterestPointComponentLookup = state.GetComponentLookup<DungeonInterestPointComponent>(true);
-        _InteractionCandidateComponentLookup = state.GetComponentLookup<InteractionCandidateComponent>(true);
+        _UnitInteractableComponentLookup = state.GetComponentLookup<UnitInteractableComponent>(true);
+        _GameInteractionComponentLookup = state.GetComponentLookup<GameInteractionComponent>(true);
+        _TreasureComponentLookup = state.GetComponentLookup<TreasureComponent>(true);
         _LocalTransformLookup = state.GetComponentLookup<LocalTransform>(true);
         _PlayerInputComponentLookup = state.GetComponentLookup<PlayerInputComponent>(true);
         _PlayerCurrentSkillComponentLookup = state.GetComponentLookup<PlayerCurrentSkillComponent>(true);
         _PlayerSkillDefinitionRegistryComponentLookup = state.GetComponentLookup<PlayerSkillDefinitionRegistryComponent>(true);
-        _PlayerSkillRuntimeDataComponentLookup = state.GetComponentLookup<PlayerSkillRuntimeDataComponent>(true);
         _UnitAnimationComponentLookup = state.GetComponentLookup<UnitAnimationComponent>(true);
         _UnitAttackComponentLookup = state.GetComponentLookup<UnitAttackComponent>(true);
         _UnitBuffComponentLookup = state.GetComponentLookup<UnitBuffComponent>(true);
@@ -1449,29 +1490,30 @@ public struct UnitSourceDispatcher
         _UnitSkillReleaseComponentLookup = state.GetComponentLookup<UnitSkillReleaseComponent>(true);
         _UnitVariableComponentLookup = state.GetComponentLookup<UnitVariableComponent>(true);
         _UnitVitalityComponentLookup = state.GetComponentLookup<UnitVitalityComponent>(true);
-        _WorldStateComponentLookup = state.GetComponentLookup<WorldStateComponent>(true);
         _WorldVariableComponentLookup = state.GetComponentLookup<WorldVariableComponent>(true);
         _UnitBuffElementBufferLookup = state.GetBufferLookup<UnitBuffElement>(true);
-        _DungeonInterestPointCandidateElementBufferLookup = state.GetBufferLookup<DungeonInterestPointCandidateElement>(true);
         _PlayerSkillChainElementBufferLookup = state.GetBufferLookup<PlayerSkillChainElement>(true);
         _PlayerSkillChainSlotElementBufferLookup = state.GetBufferLookup<PlayerSkillChainSlotElement>(true);
         _UnitPerceptionUnitElementBufferLookup = state.GetBufferLookup<UnitPerceptionUnitElement>(true);
         _UnitVariableConsumerElementBufferLookup = state.GetBufferLookup<UnitVariableConsumerElement>(true);
         _UnitVariableElementBufferLookup = state.GetBufferLookup<UnitVariableElement>(true);
         _WorldVariableElementBufferLookup = state.GetBufferLookup<WorldVariableElement>(true);
-        if (_globalEntity == Entity.Null || !state.EntityManager.Exists(_globalEntity))
-            WorldStateUtility.TryGetEntity(state.EntityManager, out _globalEntity);
+        _InteractionTransactionElementBufferLookup = state.GetBufferLookup<InteractionTransactionElement>(true);
+        _GameInteractionComponentEntity = GameSingletonUtility.GetEntity<GameInteractionComponent>(state.EntityManager);
+        _PlayerSkillDefinitionRegistryComponentEntity = GameSingletonUtility.GetEntity<PlayerSkillDefinitionRegistryComponent>(state.EntityManager);
+        _WorldVariableComponentEntity = GameSingletonUtility.GetEntity<WorldVariableComponent>(state.EntityManager);
     }
 
     public void Update(ref SystemState state)
     {
         _DungeonInterestPointComponentLookup.Update(ref state);
-        _InteractionCandidateComponentLookup.Update(ref state);
+        _UnitInteractableComponentLookup.Update(ref state);
+        _GameInteractionComponentLookup.Update(ref state);
+        _TreasureComponentLookup.Update(ref state);
         _LocalTransformLookup.Update(ref state);
         _PlayerInputComponentLookup.Update(ref state);
         _PlayerCurrentSkillComponentLookup.Update(ref state);
         _PlayerSkillDefinitionRegistryComponentLookup.Update(ref state);
-        _PlayerSkillRuntimeDataComponentLookup.Update(ref state);
         _UnitAnimationComponentLookup.Update(ref state);
         _UnitAttackComponentLookup.Update(ref state);
         _UnitBuffComponentLookup.Update(ref state);
@@ -1489,18 +1531,15 @@ public struct UnitSourceDispatcher
         _UnitSkillReleaseComponentLookup.Update(ref state);
         _UnitVariableComponentLookup.Update(ref state);
         _UnitVitalityComponentLookup.Update(ref state);
-        _WorldStateComponentLookup.Update(ref state);
         _WorldVariableComponentLookup.Update(ref state);
         _UnitBuffElementBufferLookup.Update(ref state);
-        _DungeonInterestPointCandidateElementBufferLookup.Update(ref state);
         _PlayerSkillChainElementBufferLookup.Update(ref state);
         _PlayerSkillChainSlotElementBufferLookup.Update(ref state);
         _UnitPerceptionUnitElementBufferLookup.Update(ref state);
         _UnitVariableConsumerElementBufferLookup.Update(ref state);
         _UnitVariableElementBufferLookup.Update(ref state);
         _WorldVariableElementBufferLookup.Update(ref state);
-        if (_globalEntity == Entity.Null || !state.EntityManager.Exists(_globalEntity))
-            WorldStateUtility.TryGetEntity(state.EntityManager, out _globalEntity);
+        _InteractionTransactionElementBufferLookup.Update(ref state);
     }
 
     public bool TryGet(Entity entity, UnitSourceId sourceId, in UnitSourceArguments arguments, out UnitSourceValue value)
@@ -1508,24 +1547,12 @@ public struct UnitSourceDispatcher
         value = default;
         switch (sourceId)
         {
-            case UnitSourceId.GameInteractionCandidateKind:
-            {
-                if (!_InteractionCandidateComponentLookup.TryGetComponent(_globalEntity, out InteractionCandidateComponent component))
-                    return false;
-                return GameInteractionSource.TryGet(1, in component, in arguments, out value);
-            }
-            case UnitSourceId.GameInteractionCandidateTarget:
-            {
-                if (!_InteractionCandidateComponentLookup.TryGetComponent(_globalEntity, out InteractionCandidateComponent component))
-                    return false;
-                return GameInteractionSource.TryGet(2, in component, in arguments, out value);
-            }
-            case UnitSourceId.GameInteractionHasCandidate:
-            {
-                if (!_InteractionCandidateComponentLookup.TryGetComponent(_globalEntity, out InteractionCandidateComponent component))
-                    return false;
-                return GameInteractionSource.TryGet(0, in component, in arguments, out value);
-            }
+            case UnitSourceId.WorldInteractionHasPending:
+                return GameInteractionSource.TryGet(0, _GameInteractionComponentEntity, in _GameInteractionComponentLookup, in _InteractionTransactionElementBufferLookup, in arguments, out value);
+            case UnitSourceId.WorldInteractionPendingActor:
+                return GameInteractionSource.TryGet(1, _GameInteractionComponentEntity, in _GameInteractionComponentLookup, in _InteractionTransactionElementBufferLookup, in arguments, out value);
+            case UnitSourceId.WorldInteractionPendingRequestId:
+                return GameInteractionSource.TryGet(2, _GameInteractionComponentEntity, in _GameInteractionComponentLookup, in _InteractionTransactionElementBufferLookup, in arguments, out value);
             case UnitSourceId.PlayerInputEscapeHeld:
             {
                 if (!_PlayerInputComponentLookup.TryGetComponent(entity, out PlayerInputComponent component))
@@ -1549,12 +1576,6 @@ public struct UnitSourceDispatcher
                 if (!_PlayerInputComponentLookup.TryGetComponent(entity, out PlayerInputComponent component))
                     return false;
                 return PlayerInputSource.TryGet(0, in component, in arguments, out value);
-            }
-            case UnitSourceId.PlayerInputNextSkillChainHeld:
-            {
-                if (!_PlayerInputComponentLookup.TryGetComponent(entity, out PlayerInputComponent component))
-                    return false;
-                return PlayerInputSource.TryGet(9, in component, in arguments, out value);
             }
             case UnitSourceId.PlayerInputPointerWorldPosition:
             {
@@ -1962,92 +1983,95 @@ public struct UnitSourceDispatcher
                 return UnitVariableSource.TryGet(8, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in arguments, out value);
             case UnitSourceId.UnitVariablesGetNumber:
                 return UnitVariableSource.TryGet(5, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in arguments, out value);
+            case UnitSourceId.UnitVariablesGetNumberOrDefault:
+                return UnitVariableSource.TryGet(12, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in arguments, out value);
             case UnitSourceId.UnitVariablesGetString:
                 return UnitVariableSource.TryGet(10, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in arguments, out value);
             case UnitSourceId.UnitVariablesHas:
                 return UnitVariableSource.TryGet(3, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in arguments, out value);
+            case UnitSourceId.UnitVariablesListEntity:
+                return UnitVariableSource.TryGet(11, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in arguments, out value);
             case UnitSourceId.UnitVariablesOther:
                 return UnitVariableSource.TryGet(2, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in arguments, out value);
             case UnitSourceId.WorldVariablesCount:
-                return WorldVariableSource.TryGet(0, _globalEntity, in _WorldVariableComponentLookup, in _WorldVariableElementBufferLookup, in arguments, out value);
+                return WorldVariableSource.TryGet(0, _WorldVariableComponentEntity, in _WorldVariableComponentLookup, in _WorldVariableElementBufferLookup, in arguments, out value);
             case UnitSourceId.WorldVariablesGet:
-                return WorldVariableSource.TryGet(2, _globalEntity, in _WorldVariableComponentLookup, in _WorldVariableElementBufferLookup, in arguments, out value);
+                return WorldVariableSource.TryGet(2, _WorldVariableComponentEntity, in _WorldVariableComponentLookup, in _WorldVariableElementBufferLookup, in arguments, out value);
             case UnitSourceId.WorldVariablesGetBool:
-                return WorldVariableSource.TryGet(4, _globalEntity, in _WorldVariableComponentLookup, in _WorldVariableElementBufferLookup, in arguments, out value);
+                return WorldVariableSource.TryGet(4, _WorldVariableComponentEntity, in _WorldVariableComponentLookup, in _WorldVariableElementBufferLookup, in arguments, out value);
             case UnitSourceId.WorldVariablesGetEntity:
-                return WorldVariableSource.TryGet(7, _globalEntity, in _WorldVariableComponentLookup, in _WorldVariableElementBufferLookup, in arguments, out value);
+                return WorldVariableSource.TryGet(7, _WorldVariableComponentEntity, in _WorldVariableComponentLookup, in _WorldVariableElementBufferLookup, in arguments, out value);
             case UnitSourceId.WorldVariablesGetFloat2:
-                return WorldVariableSource.TryGet(5, _globalEntity, in _WorldVariableComponentLookup, in _WorldVariableElementBufferLookup, in arguments, out value);
+                return WorldVariableSource.TryGet(5, _WorldVariableComponentEntity, in _WorldVariableComponentLookup, in _WorldVariableElementBufferLookup, in arguments, out value);
             case UnitSourceId.WorldVariablesGetFloat3:
-                return WorldVariableSource.TryGet(6, _globalEntity, in _WorldVariableComponentLookup, in _WorldVariableElementBufferLookup, in arguments, out value);
+                return WorldVariableSource.TryGet(6, _WorldVariableComponentEntity, in _WorldVariableComponentLookup, in _WorldVariableElementBufferLookup, in arguments, out value);
             case UnitSourceId.WorldVariablesGetNumber:
-                return WorldVariableSource.TryGet(3, _globalEntity, in _WorldVariableComponentLookup, in _WorldVariableElementBufferLookup, in arguments, out value);
+                return WorldVariableSource.TryGet(3, _WorldVariableComponentEntity, in _WorldVariableComponentLookup, in _WorldVariableElementBufferLookup, in arguments, out value);
             case UnitSourceId.WorldVariablesGetString:
-                return WorldVariableSource.TryGet(8, _globalEntity, in _WorldVariableComponentLookup, in _WorldVariableElementBufferLookup, in arguments, out value);
+                return WorldVariableSource.TryGet(8, _WorldVariableComponentEntity, in _WorldVariableComponentLookup, in _WorldVariableElementBufferLookup, in arguments, out value);
             case UnitSourceId.WorldVariablesHas:
-                return WorldVariableSource.TryGet(1, _globalEntity, in _WorldVariableComponentLookup, in _WorldVariableElementBufferLookup, in arguments, out value);
-            case UnitSourceId.WorldInteractionIsInteracting:
-            {
-                if (!_InteractionCandidateComponentLookup.TryGetComponent(_globalEntity, out InteractionCandidateComponent component))
-                    return false;
-                return GameInteractionSource.TryGet(3, in component, in arguments, out value);
-            }
+                return WorldVariableSource.TryGet(1, _WorldVariableComponentEntity, in _WorldVariableComponentLookup, in _WorldVariableElementBufferLookup, in arguments, out value);
+            case UnitSourceId.WorldInteractionIsBusy:
+                return GameInteractionSource.TryGet(3, _GameInteractionComponentEntity, in _GameInteractionComponentLookup, in _InteractionTransactionElementBufferLookup, in arguments, out value);
+            case UnitSourceId.WorldInteractionHasResult:
+                return GameInteractionSource.TryGet(4, _GameInteractionComponentEntity, in _GameInteractionComponentLookup, in _InteractionTransactionElementBufferLookup, in arguments, out value);
+            case UnitSourceId.WorldInteractionResultCode:
+                return GameInteractionSource.TryGet(5, _GameInteractionComponentEntity, in _GameInteractionComponentLookup, in _InteractionTransactionElementBufferLookup, in arguments, out value);
+            case UnitSourceId.WorldInteractionResult:
+                return GameInteractionSource.TryGet(6, _GameInteractionComponentEntity, in _GameInteractionComponentLookup, in _InteractionTransactionElementBufferLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillCurrentAdditionId:
-                return PlayerCurrentSkillSource.TryGetDerived(4, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerCurrentSkillComponentLookup, in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerCurrentSkillSource.TryGetDerived(4, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), in _PlayerCurrentSkillComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillCurrentInputType:
-                return PlayerCurrentSkillSource.TryGetDerived(3, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerCurrentSkillComponentLookup, in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerCurrentSkillSource.TryGetDerived(3, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), in _PlayerCurrentSkillComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillCurrentSkillId:
-                return PlayerCurrentSkillSource.TryGetDerived(2, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerCurrentSkillComponentLookup, in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerCurrentSkillSource.TryGetDerived(2, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), in _PlayerCurrentSkillComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetChainLength:
-                return PlayerSkillRuntimeDataSource.TryGet(10, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillChainSource.TryGet(10, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetChainSkillAdditionId:
-                return PlayerSkillRuntimeDataSource.TryGet(12, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillChainSource.TryGet(12, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetChainSkillId:
-                return PlayerSkillRuntimeDataSource.TryGet(11, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
-            case UnitSourceId.PlayerSkillGetCurrentChainId:
-                return PlayerSkillRuntimeDataSource.TryGet(0, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillChainSource.TryGet(11, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetCurrentChainLength:
-                return PlayerSkillRuntimeDataSource.TryGet(2, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillChainSource.TryGet(2, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetCurrentSkillAdditionId:
-                return PlayerSkillRuntimeDataSource.TryGet(4, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillChainSource.TryGet(4, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetCurrentSkillChantDuration:
-                return PlayerSkillRuntimeDataSource.TryGet(7, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillChainSource.TryGet(7, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetCurrentSkillId:
-                return PlayerSkillRuntimeDataSource.TryGet(3, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillChainSource.TryGet(3, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetCurrentSkillMpCost:
-                return PlayerSkillRuntimeDataSource.TryGet(6, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillChainSource.TryGet(6, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetCurrentSkillRuntimeType:
-                return PlayerSkillRuntimeDataSource.TryGet(8, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillChainSource.TryGet(8, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetInputType:
-                return PlayerSkillRuntimeDataSource.TryGet(18, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillChainSource.TryGet(18, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetSkillCastingMoveMultiplier:
-                return PlayerSkillRuntimeDataSource.TryGet(16, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillChainSource.TryGet(16, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetSkillChantDuration:
-                return PlayerSkillRuntimeDataSource.TryGet(15, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillChainSource.TryGet(15, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetSkillMpCost:
-                return PlayerSkillRuntimeDataSource.TryGet(14, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillChainSource.TryGet(14, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillGetSkillRuntimeType:
-                return PlayerSkillRuntimeDataSource.TryGet(17, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillChainSource.TryGet(17, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillHasCurrentSkill:
-                return PlayerCurrentSkillSource.TryGetDerived(5, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerCurrentSkillComponentLookup, in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerCurrentSkillSource.TryGetDerived(5, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), in _PlayerCurrentSkillComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillHasCurrentSkillAt:
-                return PlayerSkillRuntimeDataSource.TryGet(5, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillChainSource.TryGet(5, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillHasSkill:
-                return PlayerSkillRuntimeDataSource.TryGet(13, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillChainSource.TryGet(13, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillIsChainEmpty:
-                return PlayerSkillRuntimeDataSource.TryGet(9, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillChainSource.TryGet(9, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.PlayerSkillIsCurrentChainEmpty:
-                return PlayerSkillRuntimeDataSource.TryGet(1, new UnitSourceAccessContext(entity, _globalEntity), in _PlayerSkillRuntimeDataComponentLookup, in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
+                return PlayerSkillChainSource.TryGet(1, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), in _PlayerInputComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments, out value);
             case UnitSourceId.UnitInterestPointArrivalDistance:
-            case UnitSourceId.UnitInterestPointCurrentTarget:
+            case UnitSourceId.UnitInterestPointAliveGuardCount:
             case UnitSourceId.UnitInterestPointEncounterId:
-            case UnitSourceId.UnitInterestPointHasPatrol:
+            case UnitSourceId.UnitInterestPointEncounterReady:
             case UnitSourceId.UnitInterestPointPatrolSpeed:
-            case UnitSourceId.UnitInterestPointPlayerDistance:
-            case UnitSourceId.UnitInterestPointShouldSpawnPatrol:
+            case UnitSourceId.UnitInterestPointPatrolTarget:
+            case UnitSourceId.UnitInterestPointPatrolUnitCount:
             case UnitSourceId.UnitInterestPointSpawnDistance:
             case UnitSourceId.UnitInterestPointSquadId:
-            case UnitSourceId.UnitInterestPointTargetReached:
             {
                 if (!_DungeonInterestPointComponentLookup.TryGetComponent(entity, out DungeonInterestPointComponent component))
                     return false;
@@ -2058,14 +2082,31 @@ public struct UnitSourceDispatcher
                     UnitSourceId.UnitInterestPointSpawnDistance => 2,
                     UnitSourceId.UnitInterestPointPatrolSpeed => 3,
                     UnitSourceId.UnitInterestPointArrivalDistance => 4,
-                    UnitSourceId.UnitInterestPointHasPatrol => 5,
-                    UnitSourceId.UnitInterestPointCurrentTarget => 6,
-                    UnitSourceId.UnitInterestPointPlayerDistance => 7,
-                    UnitSourceId.UnitInterestPointShouldSpawnPatrol => 8,
-                    UnitSourceId.UnitInterestPointTargetReached => 9,
+                    UnitSourceId.UnitInterestPointAliveGuardCount => 5,
+                    UnitSourceId.UnitInterestPointPatrolUnitCount => 6,
+                    UnitSourceId.UnitInterestPointPatrolTarget => 7,
+                    UnitSourceId.UnitInterestPointEncounterReady => 8,
                     _ => -1,
                 };
                 return DungeonInterestPointSource.TryGet(operation, in component, in arguments, out value);
+            }
+            case UnitSourceId.UnitInteractableEnabled:
+            {
+                if (!_UnitInteractableComponentLookup.TryGetComponent(entity, out UnitInteractableComponent component))
+                    return false;
+                return UnitInteractableSource.TryGet(0, in component, in arguments, out value);
+            }
+            case UnitSourceId.UnitInteractableRangeSq:
+            {
+                if (!_UnitInteractableComponentLookup.TryGetComponent(entity, out UnitInteractableComponent component))
+                    return false;
+                return UnitInteractableSource.TryGet(1, in component, in arguments, out value);
+            }
+            case UnitSourceId.UnitTreasureOpened:
+            {
+                if (!_TreasureComponentLookup.TryGetComponent(entity, out TreasureComponent component))
+                    return false;
+                return TreasureSource.TryGet(0, in component, in arguments, out value);
             }
             default:
                 return false;
@@ -2084,9 +2125,9 @@ public struct UnitSourceDispatcher
                 return PlayerCurrentSkillSource.TryClear(1, ref component.ValueRW, in arguments);
             }
             case UnitSourceId.UnitAnimationPlay:
-                return UnitAnimationSource.TrySet(1, new UnitSourceAccessContext(entity, _globalEntity), ref _UnitAnimationComponentLookup, in _WorldStateComponentLookup, in arguments);
+                return UnitAnimationSource.TrySet(1, entity, ref _UnitAnimationComponentLookup, in arguments);
             case UnitSourceId.UnitAnimationSetName:
-                return UnitAnimationSource.TrySet(0, new UnitSourceAccessContext(entity, _globalEntity), ref _UnitAnimationComponentLookup, in _WorldStateComponentLookup, in arguments);
+                return UnitAnimationSource.TrySet(0, entity, ref _UnitAnimationComponentLookup, in arguments);
             case UnitSourceId.UnitBuffsRemove:
                 return UnitBuffSource.TrySet(0, entity, ref _UnitBuffComponentLookup, ref _UnitBuffElementBufferLookup, in arguments);
             case UnitSourceId.UnitBuffsRemoveStacks:
@@ -2097,6 +2138,27 @@ public struct UnitSourceDispatcher
                     return false;
                 RefRW<UnitFacingComponent> component = _UnitFacingComponentLookup.GetRefRW(entity);
                 return UnitFacingSource.TrySet(0, ref component.ValueRW, in arguments);
+            }
+            case UnitSourceId.UnitInterestPointSetPatrolTarget:
+            {
+                if (!_DungeonInterestPointComponentLookup.HasComponent(entity))
+                    return false;
+                RefRW<DungeonInterestPointComponent> component = _DungeonInterestPointComponentLookup.GetRefRW(entity);
+                return DungeonInterestPointSource.TrySet(0, ref component.ValueRW, in arguments);
+            }
+            case UnitSourceId.UnitInteractableSetEnabled:
+            {
+                if (!_UnitInteractableComponentLookup.HasComponent(entity))
+                    return false;
+                RefRW<UnitInteractableComponent> component = _UnitInteractableComponentLookup.GetRefRW(entity);
+                return UnitInteractableSource.TrySet(0, ref component.ValueRW, in arguments);
+            }
+            case UnitSourceId.UnitTreasureSetOpened:
+            {
+                if (!_TreasureComponentLookup.HasComponent(entity))
+                    return false;
+                RefRW<TreasureComponent> component = _TreasureComponentLookup.GetRefRW(entity);
+                return TreasureSource.TrySet(0, ref component.ValueRW, in arguments);
             }
             case UnitSourceId.UnitManaCost:
             {
@@ -2156,35 +2218,23 @@ public struct UnitSourceDispatcher
             }
             case UnitSourceId.UnitVariablesRemove:
                 return UnitVariableSource.TrySet(1, entity, ref _UnitVariableComponentLookup, ref _UnitVariableElementBufferLookup, ref _UnitVariableConsumerElementBufferLookup, in arguments);
+            case UnitSourceId.UnitVariablesAddNumber:
+                return UnitVariableSource.TrySet(3, entity, ref _UnitVariableComponentLookup, ref _UnitVariableElementBufferLookup, ref _UnitVariableConsumerElementBufferLookup, in arguments);
             case UnitSourceId.UnitVariablesSet:
                 return UnitVariableSource.TrySet(0, entity, ref _UnitVariableComponentLookup, ref _UnitVariableElementBufferLookup, ref _UnitVariableConsumerElementBufferLookup, in arguments);
             case UnitSourceId.UnitVariablesSetOther:
                 return UnitVariableSource.TrySet(2, entity, ref _UnitVariableComponentLookup, ref _UnitVariableElementBufferLookup, ref _UnitVariableConsumerElementBufferLookup, in arguments);
             case UnitSourceId.WorldVariablesRemove:
-                return WorldVariableSource.TrySet(1, _globalEntity, in _WorldVariableComponentLookup, ref _WorldVariableElementBufferLookup, in arguments);
+                return WorldVariableSource.TrySet(1, _WorldVariableComponentEntity, in _WorldVariableComponentLookup, ref _WorldVariableElementBufferLookup, in arguments);
             case UnitSourceId.WorldVariablesSet:
-                return WorldVariableSource.TrySet(0, _globalEntity, in _WorldVariableComponentLookup, ref _WorldVariableElementBufferLookup, in arguments);
+                return WorldVariableSource.TrySet(0, _WorldVariableComponentEntity, in _WorldVariableComponentLookup, ref _WorldVariableElementBufferLookup, in arguments);
             case UnitSourceId.PlayerSkillCurrentChainSlotSet:
-                return PlayerCurrentSkillSource.TrySet(0, new UnitSourceAccessContext(entity, _globalEntity), ref _PlayerCurrentSkillComponentLookup, in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments);
+                return PlayerCurrentSkillSource.TrySet(0, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), ref _PlayerCurrentSkillComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments);
             case UnitSourceId.PlayerSkillPendingExtraModifiersAdd:
-                return PlayerCurrentSkillSource.TrySet(2, new UnitSourceAccessContext(entity, _globalEntity), ref _PlayerCurrentSkillComponentLookup, in _PlayerSkillRuntimeDataComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments);
-            case UnitSourceId.UnitInterestPointSetNextPatrolTarget:
-                return DungeonInterestPointSource.TrySet(1, entity, ref _DungeonInterestPointComponentLookup, ref _UnitVariableElementBufferLookup, in _DungeonInterestPointCandidateElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _UnitVariableComponentLookup, in _LocalTransformLookup, in _DestroyEntityFlagLookup, in arguments);
-            case UnitSourceId.UnitInterestPointSetPatrolActive:
-                return DungeonInterestPointSource.TrySet(0, entity, ref _DungeonInterestPointComponentLookup, ref _UnitVariableElementBufferLookup, in _DungeonInterestPointCandidateElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _UnitVariableComponentLookup, in _LocalTransformLookup, in _DestroyEntityFlagLookup, in arguments);
-            case UnitSourceId.UnitInterestPointSetPatrolSpeed:
-                return DungeonInterestPointSource.TrySet(2, entity, ref _DungeonInterestPointComponentLookup, ref _UnitVariableElementBufferLookup, in _DungeonInterestPointCandidateElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _UnitVariableComponentLookup, in _LocalTransformLookup, in _DestroyEntityFlagLookup, in arguments);
+                return PlayerCurrentSkillSource.TrySet(2, new UnitSourceAccessContext(entity, _PlayerSkillDefinitionRegistryComponentEntity), ref _PlayerCurrentSkillComponentLookup, in _PlayerSkillChainElementBufferLookup, in _PlayerSkillChainSlotElementBufferLookup, in _PlayerSkillDefinitionRegistryComponentLookup, in arguments);
             default:
                 return false;
         }
-    }
-
-    public bool TryGetInteraction(out InteractionRequestSnapshot request)
-    {
-        request = default;
-        if (!_InteractionCandidateComponentLookup.TryGetComponent(_globalEntity, out InteractionCandidateComponent candidate))
-            return false;
-        return GameInteractionSource.TryGetInteraction(in candidate, out request);
     }
 
 }

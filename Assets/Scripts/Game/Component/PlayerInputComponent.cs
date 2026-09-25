@@ -9,13 +9,13 @@ public struct PlayerInputComponent : IComponentData
     public float2 Move;
     public float3 PointerWorldPosition;
     public byte IsPrimaryHeld;
+    public byte ContinuousPrimaryHeld;
     public byte IsInteractHeld;
     public byte IsInventoryHeld;
     public byte IsPropertyHeld;
     public byte IsEscapeHeld;
     public byte IsSkillHeld;
     public int SkillChainIndex;
-    public byte IsNextSkillChainHeld;
     public byte IsUsePropHeld;
     public int PropIndex;
     public byte NetworkDirty;
@@ -44,7 +44,6 @@ public static class PlayerInputSource
     [UnitSourceGet(6, "player.input.escapeHeld", UnitValueCategory.Bool)]
     [UnitSourceGet(7, "player.input.skillHeld", UnitValueCategory.Bool)]
     [UnitSourceGet(8, "player.input.skillChainIndex", UnitValueCategory.Number)]
-    [UnitSourceGet(9, "player.input.nextSkillChainHeld", UnitValueCategory.Bool)]
     [UnitSourceGet(10, "player.input.usePropHeld", UnitValueCategory.Bool)]
     [UnitSourceGet(11, "player.input.propIndex", UnitValueCategory.Number)]
     public static bool TryGet(
@@ -64,7 +63,6 @@ public static class PlayerInputSource
             6 => UnitSourceValue.FromBool(value.IsEscapeHeld != 0),
             7 => UnitSourceValue.FromBool(value.IsSkillHeld != 0),
             8 => UnitSourceValue.FromInt(value.SkillChainIndex),
-            9 => UnitSourceValue.FromBool(value.IsNextSkillChainHeld != 0),
             10 => UnitSourceValue.FromBool(value.IsUsePropHeld != 0),
             11 => UnitSourceValue.FromInt(value.PropIndex),
             _ => UnitSourceValue.None,

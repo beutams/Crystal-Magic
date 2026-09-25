@@ -7,6 +7,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateAfter(typeof(UnitPerceptionSystem))]
 [UpdateBefore(typeof(UnitNavigationSystem))]
@@ -71,7 +72,7 @@ public partial class BehaviorTreeSystem : SystemBase
     {
         foreach (DynamicBuffer<BehaviorTreeHitDebugElement> debugShapes in
                  SystemAPI.Query<DynamicBuffer<BehaviorTreeHitDebugElement>>()
-                     .WithNone<UnitDeathComponent>())
+                     .WithNone<UnitDeathComponent, BattleSpectatorComponent>())
         {
             for (int index = 0; index < debugShapes.Length; index++)
             {
@@ -104,7 +105,8 @@ internal struct BehaviorExecutionFrame
 }
 
 [BurstCompile]
-[WithNone(typeof(UnitDeathComponent))]
+[WithNone(typeof(UnitInitializationPendingTag))]
+[WithNone(typeof(UnitDeathComponent), typeof(BattleSpectatorComponent))]
 public partial struct BehaviorTreeEvaluationJob : IJobEntity
 {
     public BlobAssetReference<BehaviorTreeRuntimeRegistryBlob> Registry;
@@ -148,8 +150,7 @@ public partial struct BehaviorTreeEvaluationJob : IJobEntity
         moveCommands.Clear();
         hitDebugShapes.Clear();
 
-        if (component.IsInitialized == 0 ||
-            component.InitializationError != BehaviorTreeInitializationError.None ||
+        if (component.InitializationError != BehaviorTreeInitializationError.None ||
             component.TreeIndex < 0 ||
             component.TreeIndex >= Registry.Value.Trees.Length)
         {
@@ -1031,6 +1032,7 @@ public partial struct BehaviorTreeEvaluationJob : IJobEntity
 }
 
 [BurstCompile]
+[WithNone(typeof(UnitInitializationPendingTag))]
 public partial struct BehaviorTreeSourceCommandJob : IJobEntity
 {
     public UnitSourceDispatcher Sources;
@@ -1068,6 +1070,7 @@ public partial struct BehaviorTreeSourceCommandJob : IJobEntity
 }
 
 [BurstCompile]
+[WithNone(typeof(UnitInitializationPendingTag))]
 public partial struct BehaviorTreeMoveCommandJob : IJobEntity
 {
     private void Execute(

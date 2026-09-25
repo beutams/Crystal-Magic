@@ -183,7 +183,9 @@ namespace CrystalMagic.Editor.Unit
                 using (new EditorGUI.DisabledScope(true))
                 {
                     EditorGUILayout.IntField("Unit Data Id", behaviorTree.UnitDataId);
-                    EditorGUILayout.Toggle("Initialized", behaviorTree.IsInitialized != 0);
+                    EditorGUILayout.Toggle(
+                        "Initialized",
+                        !entityManager.HasComponent<UnitInitializationPendingTag>(entity));
                     EditorGUILayout.TextField(
                         "Current Node",
                         ResolveBehaviorNodeName(entityManager, in behaviorTree));

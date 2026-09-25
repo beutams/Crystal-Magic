@@ -52,7 +52,9 @@ namespace CrystalMagic.Game.Skill.Effects
                     spacing,
                     Data.Scale,
                     Data.Duration,
-                    Data.AlignToLineDirection))
+                    Data.AlignToLineDirection,
+                    context.OriginEntity,
+                    context.SourceSkillId))
             {
                 return;
             }

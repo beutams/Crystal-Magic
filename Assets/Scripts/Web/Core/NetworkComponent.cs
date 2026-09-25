@@ -13,6 +13,7 @@ namespace Server
     public class NetworkComponent : GameComponent<NetworkComponent>
     {
         [SerializeField] private NetworkRole debugRole = NetworkRole.Client;
+        [SerializeField] private bool debugFrameSpeedAdjustment = true;
 
         public ClientService clientServic;
         public ClientLobbyManager clientLobbyManager;
@@ -51,6 +52,7 @@ namespace Server
                     clientServic = new ClientService();
                     clientServic.Init();
                     clientBattleManager = new ClientBattleManager();
+                    clientBattleManager.frame.SetFrameSpeedAdjustmentEnabled(debugFrameSpeedAdjustment);
                     clientLobbyManager = new ClientLobbyManager();
                     break;
                 case NetworkRole.LobbyServer:
@@ -70,6 +72,7 @@ namespace Server
             {
                 case NetworkRole.Client:
                     clientServic.Update();
+                    clientBattleManager.Update();
                     break;
                 case NetworkRole.LobbyServer:
                     serverLobbyManager.Update();
@@ -80,6 +83,34 @@ namespace Server
             }
 
             NetworkTimer.Instance.Update();
+        }
+
+        public void SetFrameSpeedAdjustmentEnabled(bool enabled)
+        {
+            debugFrameSpeedAdjustment = enabled;
+            clientBattleManager?.frame.SetFrameSpeedAdjustmentEnabled(enabled);
+        }
+
+        private void OnValidate()
+        {
+            clientBattleManager?.frame.SetFrameSpeedAdjustmentEnabled(debugFrameSpeedAdjustment);
+        }
+
+        [ContextMenu("Debug/启用客户端帧调速")]
+        public void EnableFrameSpeedAdjustment() => SetFrameSpeedAdjustmentEnabled(true);
+
+        [ContextMenu("Debug/停用客户端帧调速")]
+        public void DisableFrameSpeedAdjustment() => SetFrameSpeedAdjustmentEnabled(false);
+
+        [ContextMenu("Debug/输出客户端帧时钟")]
+        public void LogFrameClock()
+        {
+            if (clientBattleManager == null)
+                return;
+            ClientFrameManager frame = clientBattleManager.frame;
+            Debug.Log($"[FrameClock] enabled={frame.FrameSpeedAdjustmentEnabled}, frame={frame.currentFrame}, " +
+                $"server≈{frame.EstimatedServerFrame:F2}, ahead={frame.CurrentAheadFrames:F2}/{frame.TargetAheadFrames}, " +
+                $"RTT={frame.SmoothedRttMs:F1}ms, jitter={frame.RttJitterMs:F1}ms, speed={frame.SimulationSpeed:F3}");
         }
 
         public override void Cleanup()

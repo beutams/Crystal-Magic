@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CrystalMagic.Editor.EffectGraph;
 using CrystalMagic.Game.Data;
 using UnityEditor;
 using UnityEngine;
@@ -19,6 +20,15 @@ namespace CrystalMagic.Editor.Unit
 
             EditorGUILayout.LabelField("Type", StateScriptNodeDataRegistry.GetDisplayName(node.Type));
             EditorGUILayout.SelectableLabel(node.Guid ?? string.Empty, EditorStyles.textField, GUILayout.Height(EditorGUIUtility.singleLineHeight));
+            EditorGUILayout.Space(6f);
+            EditorGUI.BeginChangeCheck();
+            node.ExecutionTargets = (GameWorldExecutionTarget)EditorGUILayout.EnumFlagsField(
+                new GUIContent("Execution Targets", "World roles in which this node is allowed to execute."),
+                node.ExecutionTargets);
+            if (EditorGUI.EndChangeCheck())
+                onChanged?.Invoke();
+            if (node.ExecutionTargets == GameWorldExecutionTarget.None)
+                EditorGUILayout.HelpBox("This node is disabled in every world role.", MessageType.Warning);
             EditorGUILayout.Space(6f);
             if (node is StateStateScriptNodeData stateNode)
             {
@@ -86,6 +96,50 @@ namespace CrystalMagic.Editor.Unit
                 return;
             }
 
+            if (node is CompleteInteractionActionNodeData completeInteraction)
+            {
+                EditorGUI.BeginChangeCheck();
+                completeInteraction.ResultCode = (InteractionResultCode)EditorGUILayout.EnumPopup(
+                    "Result Code",
+                    completeInteraction.ResultCode);
+                completeInteraction.Result ??= CompleteInteractionActionNodeData.CreateDefaultResultExpression();
+                EditorGUILayout.LabelField("Result", EditorStyles.miniBoldLabel);
+                StateScriptValueExpressionDrawer.Draw(
+                    completeInteraction.Result,
+                    UnitValueCategory.Any,
+                    sourceSchema,
+                    onChanged);
+                if (EditorGUI.EndChangeCheck())
+                    onChanged?.Invoke();
+                return;
+            }
+
+            if (node is QueryUnitsActionNodeData queryUnits)
+            {
+                EditorGUI.BeginChangeCheck();
+                DrawQueryUnits(queryUnits, sourceSchema, onChanged);
+                if (EditorGUI.EndChangeCheck())
+                    onChanged?.Invoke();
+                return;
+            }
+
+            if (node is ExecuteEffectActionNodeData executeEffect)
+            {
+                EditorGUI.BeginChangeCheck();
+                DrawExecuteEffect(executeEffect, sourceSchema, onChanged);
+                if (EditorGUI.EndChangeCheck())
+                    onChanged?.Invoke();
+                return;
+            }
+
+            if (node is DestroySelfActionNodeData)
+            {
+                EditorGUILayout.HelpBox(
+                    "Marks this entity for the normal end-of-frame destruction pipeline.",
+                    MessageType.Info);
+                return;
+            }
+
             if (node is TimerStateScriptNodeData timer)
             {
                 EditorGUI.BeginChangeCheck();
@@ -103,6 +157,18 @@ namespace CrystalMagic.Editor.Unit
                 numberMonitor.Value ??= NumberMonitorStateScriptNodeData.CreateDefaultValueExpression();
                 EditorGUILayout.LabelField("Observed Value (Number)", EditorStyles.miniBoldLabel);
                 StateScriptValueExpressionDrawer.Draw(numberMonitor.Value, UnitValueCategory.Number, sourceSchema, onChanged);
+                if (EditorGUI.EndChangeCheck())
+                    onChanged?.Invoke();
+                return;
+            }
+
+            if (node is PlayerInputEventStateScriptNodeData inputEvent)
+            {
+                EditorGUI.BeginChangeCheck();
+                inputEvent.EventType = (CrystalMagic.Core.PlayerInputOperationType)EditorGUILayout.EnumPopup(
+                    "Input Event", inputEvent.EventType);
+                inputEvent.RepeatWhileHeld = inputEvent.EventType == CrystalMagic.Core.PlayerInputOperationType.PrimaryPressed &&
+                    EditorGUILayout.Toggle("Repeat While Held", inputEvent.RepeatWhileHeld);
                 if (EditorGUI.EndChangeCheck())
                     onChanged?.Invoke();
                 return;
@@ -260,51 +326,9 @@ namespace CrystalMagic.Editor.Unit
             UnitSourceSchema sourceSchema,
             Action onChanged)
         {
-            requestInteraction.Interaction ??= RequestInteractionActionNodeData.CreateDefaultInteraction();
-            InteractionRequestInput interaction = requestInteraction.Interaction;
-            interaction.EnsureValid();
-            interaction.Source = (InteractionRequestSource)EditorGUILayout.EnumPopup("Source", interaction.Source);
-
-            if (interaction.Source == InteractionRequestSource.Getter)
-            {
-                List<InteractionRequestGetSchemaEntry> entries = (sourceSchema?.InteractionGets ??
-                                                                   Enumerable.Empty<InteractionRequestGetSchemaEntry>())
-                    .OrderBy(entry => entry.Key, StringComparer.Ordinal)
-                    .ToList();
-                if (entries.Count == 0)
-                {
-                    EditorGUILayout.HelpBox("No interaction request getters are registered.", MessageType.Warning);
-                    return;
-                }
-
-                StateScriptAccessorDropdown.Draw(
-                    "Getter",
-                    interaction.GetterKey,
-                    entries.Select(entry => entry.Key),
-                    "(Select interaction getter)",
-                    selectedKey =>
-                    {
-                        if (string.Equals(interaction.GetterKey, selectedKey, StringComparison.Ordinal))
-                            return;
-
-                        interaction.GetterKey = selectedKey;
-                        GUI.changed = true;
-                        onChanged?.Invoke();
-                    });
-                if (entries.All(entry => !string.Equals(entry.Key, interaction.GetterKey, StringComparison.Ordinal)))
-                    EditorGUILayout.HelpBox($"'{interaction.GetterKey}' is not available on this unit.", MessageType.Warning);
-
-                return;
-            }
-
+            requestInteraction.Target ??= RequestInteractionActionNodeData.CreateDefaultTargetExpression();
             EditorGUILayout.LabelField("Target (Entity)", EditorStyles.miniBoldLabel);
-            StateScriptValueExpressionDrawer.Draw(interaction.Target, UnitValueCategory.Entity, sourceSchema, onChanged);
-            EditorGUILayout.Space(4f);
-            EditorGUILayout.LabelField("Fixed Interaction Data", EditorStyles.miniBoldLabel);
-            interaction.FixedData.Kind = (InteractionKind)EditorGUILayout.EnumPopup("Kind", interaction.FixedData.Kind);
-            interaction.FixedData.DataId = EditorGUILayout.IntField("Data ID", interaction.FixedData.DataId);
-            interaction.FixedData.Amount = EditorGUILayout.IntField("Amount", interaction.FixedData.Amount);
-            interaction.FixedData.Variant = EditorGUILayout.IntField("Variant", interaction.FixedData.Variant);
+            StateScriptValueExpressionDrawer.Draw(requestInteraction.Target, UnitValueCategory.Entity, sourceSchema, onChanged);
         }
 
         private static void DrawPublishGameEvent(
@@ -345,6 +369,124 @@ namespace CrystalMagic.Editor.Unit
             spawnUnit.CopyFactionFromSpawner = EditorGUILayout.Toggle("Copy Faction", spawnUnit.CopyFactionFromSpawner);
             spawnUnit.ShareVariablesWithSpawner = EditorGUILayout.Toggle("Share Variables", spawnUnit.ShareVariablesWithSpawner);
             spawnUnit.RestoreRuntimeState = EditorGUILayout.Toggle("Restore Runtime State", spawnUnit.RestoreRuntimeState);
+        }
+
+        private static void DrawQueryUnits(
+            QueryUnitsActionNodeData query,
+            UnitSourceSchema sourceSchema,
+            Action onChanged)
+        {
+            query.EnsureValid();
+            query.Shape = (UnitQueryShapeType)EditorGUILayout.EnumPopup("Shape", query.Shape);
+            if (query.Shape != UnitQueryShapeType.WholeWorld)
+            {
+                EditorGUILayout.LabelField("Center (Float3)", EditorStyles.miniBoldLabel);
+                StateScriptValueExpressionDrawer.Draw(query.Center, UnitValueCategory.Float3, sourceSchema, onChanged);
+            }
+            if (query.Shape is UnitQueryShapeType.ForwardRect or UnitQueryShapeType.Cone)
+            {
+                EditorGUILayout.LabelField("Direction (Float2)", EditorStyles.miniBoldLabel);
+                StateScriptValueExpressionDrawer.Draw(query.Direction, UnitValueCategory.Float2, sourceSchema, onChanged);
+            }
+            if (query.Shape is UnitQueryShapeType.AxisAlignedRect or UnitQueryShapeType.ForwardRect)
+            {
+                EditorGUILayout.LabelField("Size (Float2)", EditorStyles.miniBoldLabel);
+                StateScriptValueExpressionDrawer.Draw(query.Size, UnitValueCategory.Float2, sourceSchema, onChanged);
+            }
+            if (query.Shape is UnitQueryShapeType.Circle or UnitQueryShapeType.Cone)
+            {
+                EditorGUILayout.LabelField("Radius (Number)", EditorStyles.miniBoldLabel);
+                StateScriptValueExpressionDrawer.Draw(query.Radius, UnitValueCategory.Number, sourceSchema, onChanged);
+            }
+            if (query.Shape == UnitQueryShapeType.Cone)
+            {
+                EditorGUILayout.LabelField("Angle (Number)", EditorStyles.miniBoldLabel);
+                StateScriptValueExpressionDrawer.Draw(query.Angle, UnitValueCategory.Number, sourceSchema, onChanged);
+            }
+
+            query.FactionMask = (UnitFactionMask)EditorGUILayout.EnumFlagsField("Factions", query.FactionMask);
+            query.UnitDataId = EditorGUILayout.IntField("Unit Data ID", query.UnitDataId);
+            query.ExcludeSelf = EditorGUILayout.Toggle("Exclude Self", query.ExcludeSelf);
+            query.ExcludeDead = EditorGUILayout.Toggle("Exclude Dead", query.ExcludeDead);
+            query.RequireAvailableInteraction = EditorGUILayout.Toggle(
+                "Require Available Interaction",
+                query.RequireAvailableInteraction);
+            query.ExcludedEntitiesKey = EditorGUILayout.TextField(
+                new GUIContent(
+                    "Excluded Entities Key",
+                    "Optional UnitVariable entity-list prefix using <key>.count and <key>.<index>."),
+                query.ExcludedEntitiesKey ?? string.Empty);
+            using (new EditorGUI.DisabledScope(string.IsNullOrWhiteSpace(query.ExcludedEntitiesKey)))
+            {
+                query.RememberResultsInExcludedEntities = EditorGUILayout.Toggle(
+                    new GUIContent(
+                        "Remember Results",
+                        "Appends this query's returned entities to the exclusion list."),
+                    query.RememberResultsInExcludedEntities);
+            }
+            if (string.IsNullOrWhiteSpace(query.ExcludedEntitiesKey))
+                query.RememberResultsInExcludedEntities = false;
+            query.MaxCount = Mathf.Max(0, EditorGUILayout.IntField("Max Count", query.MaxCount));
+            query.SortMode = (StateScriptUnitQuerySortMode)EditorGUILayout.EnumPopup("Sort", query.SortMode);
+            query.ResultKey = EditorGUILayout.TextField("Result Key", query.ResultKey ?? string.Empty);
+        }
+
+        private static void DrawExecuteEffect(
+            ExecuteEffectActionNodeData executeEffect,
+            UnitSourceSchema sourceSchema,
+            Action onChanged)
+        {
+            executeEffect.EnsureValid();
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField($"{executeEffect.Effects.Length} effect(s)");
+            if (GUILayout.Button("Edit Effect Graph", GUILayout.Width(150f)))
+            {
+                EffectGraphWindow.Open(new EffectGraphBinding(
+                    $"StateScript:Node:{executeEffect.Guid}:Effects",
+                    $"State Script Execute Effect [{executeEffect.Guid}]",
+                    () => executeEffect.Effects,
+                    effects => executeEffect.Effects = effects,
+                    onChanged ?? (() => { })));
+            }
+            EditorGUILayout.EndHorizontal();
+
+            executeEffect.OriginSource = (StateScriptEffectOriginSource)EditorGUILayout.EnumPopup(
+                "Origin Entity",
+                executeEffect.OriginSource);
+            executeEffect.RepeatCount = Mathf.Max(
+                1,
+                EditorGUILayout.IntField("Repeat Count", executeEffect.RepeatCount));
+
+            EditorGUILayout.LabelField("Target Entity", EditorStyles.miniBoldLabel);
+            StateScriptValueExpressionDrawer.Draw(
+                executeEffect.TargetEntity,
+                UnitValueCategory.Entity,
+                sourceSchema,
+                onChanged);
+            EditorGUILayout.LabelField("Other Entity", EditorStyles.miniBoldLabel);
+            StateScriptValueExpressionDrawer.Draw(
+                executeEffect.OtherEntity,
+                UnitValueCategory.Entity,
+                sourceSchema,
+                onChanged);
+            EditorGUILayout.LabelField("Position", EditorStyles.miniBoldLabel);
+            StateScriptValueExpressionDrawer.Draw(
+                executeEffect.Position,
+                UnitValueCategory.Float3,
+                sourceSchema,
+                onChanged);
+            EditorGUILayout.LabelField("Trigger Value", EditorStyles.miniBoldLabel);
+            StateScriptValueExpressionDrawer.Draw(
+                executeEffect.TriggerValue,
+                UnitValueCategory.Number,
+                sourceSchema,
+                onChanged);
+            EditorGUILayout.LabelField("Source Skill ID", EditorStyles.miniBoldLabel);
+            StateScriptValueExpressionDrawer.Draw(
+                executeEffect.SourceSkillId,
+                UnitValueCategory.Number,
+                sourceSchema,
+                onChanged);
         }
 
         private static void DrawComparatorCondition(

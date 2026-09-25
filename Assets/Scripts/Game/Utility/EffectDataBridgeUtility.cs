@@ -17,13 +17,16 @@ public static class EffectDataBridgeUtility
         return bridge;
     }
 
-    public static EffectDataListId Register(EntityManager entityManager, EffectData[] effects)
+    public static EffectDataListId Register(EntityManager entityManager, EffectData[] effects, bool registry = false)
     {
         if (effects == null || effects.Length == 0)
             return default;
 
         EffectDataListId id = EffectDataListIdAllocator.Allocate();
-        GetOrCreate(entityManager).Values.Add(id.Value, new EffectDataList(effects));
+        EffectDataBridgeComponent bridge = GetOrCreate(entityManager);
+        bridge.Values.Add(id.Value, new EffectDataList(effects));
+        if (registry)
+            bridge.RegistryIds.Add(id.Value);
         return id;
     }
 
@@ -39,7 +42,11 @@ public static class EffectDataBridgeUtility
     public static void Unregister(EntityManager entityManager, EffectDataListId id)
     {
         if (id.IsValid)
-            GetOrCreate(entityManager).Values.Remove(id.Value);
+        {
+            EffectDataBridgeComponent bridge = GetOrCreate(entityManager);
+            bridge.Values.Remove(id.Value);
+            bridge.RegistryIds.Remove(id.Value);
+        }
     }
 
     public static EffectManagedContextId RegisterManagedContext(

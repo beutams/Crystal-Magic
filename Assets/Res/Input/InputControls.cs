@@ -253,15 +253,6 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": true
                 },
                 {
-                    ""name"": ""Tab"",
-                    ""type"": ""Button"",
-                    ""id"": ""94cd6c66-bdf5-48b1-97c0-14107825ab66"",
-                    ""expectedControlType"": """",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false
-                },
-                {
                     ""name"": ""UseProp"",
                     ""type"": ""Value"",
                     ""id"": ""2a60ad94-4492-4415-acc0-d1a9890f0ea7"",
@@ -324,17 +315,6 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
                     ""processors"": ""Scale(factor=5)"",
                     ""groups"": """",
                     ""action"": ""Skill"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""460eb1d5-dea0-4166-bb0b-53df635d0ff8"",
-                    ""path"": ""<Keyboard>/tab"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Tab"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -414,7 +394,6 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         // Battle
         m_Battle = asset.FindActionMap("Battle", throwIfNotFound: true);
         m_Battle_Skill = m_Battle.FindAction("Skill", throwIfNotFound: true);
-        m_Battle_Tab = m_Battle.FindAction("Tab", throwIfNotFound: true);
         m_Battle_UseProp = m_Battle.FindAction("UseProp", throwIfNotFound: true);
         // Global
         m_Global = asset.FindActionMap("Global", throwIfNotFound: true);
@@ -642,7 +621,6 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
     private readonly InputActionMap m_Battle;
     private List<IBattleActions> m_BattleActionsCallbackInterfaces = new List<IBattleActions>();
     private readonly InputAction m_Battle_Skill;
-    private readonly InputAction m_Battle_Tab;
     private readonly InputAction m_Battle_UseProp;
     /// <summary>
     /// Provides access to input actions defined in input action map "Battle".
@@ -659,10 +637,6 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Battle/Skill".
         /// </summary>
         public InputAction @Skill => m_Wrapper.m_Battle_Skill;
-        /// <summary>
-        /// Provides access to the underlying input action "Battle/Tab".
-        /// </summary>
-        public InputAction @Tab => m_Wrapper.m_Battle_Tab;
         /// <summary>
         /// Provides access to the underlying input action "Battle/UseProp".
         /// </summary>
@@ -696,9 +670,6 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
             @Skill.started += instance.OnSkill;
             @Skill.performed += instance.OnSkill;
             @Skill.canceled += instance.OnSkill;
-            @Tab.started += instance.OnTab;
-            @Tab.performed += instance.OnTab;
-            @Tab.canceled += instance.OnTab;
             @UseProp.started += instance.OnUseProp;
             @UseProp.performed += instance.OnUseProp;
             @UseProp.canceled += instance.OnUseProp;
@@ -716,9 +687,6 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
             @Skill.started -= instance.OnSkill;
             @Skill.performed -= instance.OnSkill;
             @Skill.canceled -= instance.OnSkill;
-            @Tab.started -= instance.OnTab;
-            @Tab.performed -= instance.OnTab;
-            @Tab.canceled -= instance.OnTab;
             @UseProp.started -= instance.OnUseProp;
             @UseProp.performed -= instance.OnUseProp;
             @UseProp.canceled -= instance.OnUseProp;
@@ -908,13 +876,6 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnSkill(InputAction.CallbackContext context);
-        /// <summary>
-        /// Method invoked when associated input action "Tab" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
-        /// </summary>
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnTab(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "UseProp" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>

@@ -93,6 +93,7 @@ namespace CrystalMagic.Editor.Data
         internal void MarkDataChanged()
         {
             _owner?.MarkDirtyFromGraph();
+            _graphView?.RefreshExecutionTargetBadges();
             _inspector?.MarkDirtyRepaint();
         }
 
@@ -162,6 +163,12 @@ namespace CrystalMagic.Editor.Data
             EditorGUILayout.Space(6f);
 
             EditorGUI.BeginChangeCheck();
+            _selectedNode.ExecutionTargets = (GameWorldExecutionTarget)EditorGUILayout.EnumFlagsField(
+                new GUIContent("Execution Targets", "World roles in which this node is allowed to execute."),
+                _selectedNode.ExecutionTargets);
+            if (_selectedNode.ExecutionTargets == GameWorldExecutionTarget.None)
+                EditorGUILayout.HelpBox("This node is disabled in every world role.", MessageType.Warning);
+            EditorGUILayout.Space(6f);
             switch (_selectedNode)
             {
                 case NPCDialogueInteractionNodeData dialogue:
@@ -199,6 +206,9 @@ namespace CrystalMagic.Editor.Data
 
                 case NPCEnterTownInteractionNodeData:
                     EditorGUILayout.HelpBox("This node ends the interaction and enters the town flow.", MessageType.None);
+                    break;
+                case NPCRequestBattleExitInteractionNodeData request:
+                    request.RequestType = (Server.BattleExitRequestType)EditorGUILayout.EnumPopup("出口操作", request.RequestType);
                     break;
             }
 
@@ -458,6 +468,17 @@ namespace CrystalMagic.Editor.Data
             _window.SetSelection(node);
         }
 
+        public void NotifyNodeChanged()
+        {
+            _window.MarkDataChanged();
+        }
+
+        public void RefreshExecutionTargetBadges()
+        {
+            foreach (NPCInteractionNodeView view in _nodeViews.Values)
+                view.RefreshExecutionTargetBadges();
+        }
+
         public void ChangeNodeType(NPCInteractionNodeData node, string typeName)
         {
             NPCInteractionData interaction = _window.Interaction;
@@ -470,6 +491,7 @@ namespace CrystalMagic.Editor.Data
                 return;
 
             replacement.Guid = node.Guid;
+            replacement.ExecutionTargets = node.ExecutionTargets;
             replacement.Branches = node.Branches ?? new List<NPCInteractionBranchData>();
             interaction.Nodes[index] = replacement;
             _window.SetSelection(replacement);
@@ -659,12 +681,19 @@ namespace CrystalMagic.Editor.Data
     internal sealed class NPCInteractionNodeView : TopBottomPortNode
     {
         private readonly List<NPCInteractionGraphOutputLink> _outputLinks = new();
+        private readonly VisualElement _executionTargetBadges;
 
         public NPCInteractionNodeView(NPCInteractionNodeData nodeData, NPCInteractionGraphView graphView)
         {
             NodeData = nodeData;
             title = NPCInteractionNodeDataRegistry.GetDisplayName(NPCInteractionGraphWindow.ResolveNodeTypeName(nodeData));
             titleContainer.style.backgroundColor = NPCInteractionGraphWindow.GetNodeColor(nodeData);
+            titleContainer.style.paddingRight = 52f;
+            _executionTargetBadges = GameWorldExecutionTargetEditorUtility.CreateBadges(
+                () => NodeData.ExecutionTargets,
+                targets => NodeData.ExecutionTargets = targets,
+                graphView.NotifyNodeChanged);
+            titleContainer.Add(_executionTargetBadges);
             viewDataKey = nodeData.Guid;
             Input = CreateTopInput("Input", Port.Capacity.Multi, typeof(bool));
             CreateOutputPorts();
@@ -677,6 +706,11 @@ namespace CrystalMagic.Editor.Data
         public Port Input { get; }
 
         public IReadOnlyList<NPCInteractionGraphOutputLink> OutputLinks => _outputLinks;
+
+        public void RefreshExecutionTargetBadges()
+        {
+            GameWorldExecutionTargetEditorUtility.RefreshBadges(_executionTargetBadges);
+        }
 
         private void CreateOutputPorts()
         {
@@ -696,7 +730,7 @@ namespace CrystalMagic.Editor.Data
                 return;
             }
 
-            if (NodeData is NPCEnterDungeonInteractionNodeData or NPCEnterTrainingGroundInteractionNodeData or NPCEnterTownInteractionNodeData)
+            if (NodeData is NPCEnterTrainingGroundInteractionNodeData or NPCRequestBattleExitInteractionNodeData)
                 return;
 
             NodeData.Branches ??= new List<NPCInteractionBranchData>();

@@ -50,6 +50,8 @@ namespace Server
                 return;
             }
 
+            player.exitReady = false;
+            SetBattlePlayerConnectionState(player, BattlePlayerConnectionState.Offline);
             StopReloadTimeout(player);
             player.connect = null;
             player.offline = true;
@@ -61,6 +63,7 @@ namespace Server
             player.reloadSnapshotRequested = false;
             player.reloadSnapshotSent = false;
             TryAdvancePhase(player.room);
+            TryCompleteBattleExitSelection(player.room);
         }
 
         private void OnAccept(Connect connect)
@@ -70,6 +73,90 @@ namespace Server
             connect.RegisterCallback(TCPPacketCode.GetOpcode<C2B_BattleSceneReady>(), OnBattleSceneReady);
             connect.RegisterCallback(TCPPacketCode.GetOpcode<C2B_BattleReady>(), OnBattleReady);
             connect.RegisterCallback(TCPPacketCode.GetOpcode<C2B_ReloadBattleReady>(), OnReloadBattleReady);
+            connect.RegisterCallback(TCPPacketCode.GetOpcode<C2B_FramePing>(), OnFramePing);
+            connect.RegisterCallback(TCPPacketCode.GetOpcode<C2B_BattleExitRequest>(), OnBattleExitRequest);
+        }
+
+        private void OnBattleExitRequest(IMessage message, Connect connect)
+        {
+            if (message is not C2B_BattleExitRequest request ||
+                !connectDic.TryGetValue(connect, out BattlePlayer player) || player.connect != connect)
+                return;
+
+            BattleRoom room = player.room;
+            string error = null;
+            int targetThemeKey = -1;
+            if (player.offline || !player.active || room.phase != BattlePhase.Running ||
+                room.battleId != request.battleId || player.connectVersion != request.connectVersion ||
+                room.sceneVersion != request.sceneVersion || room.world == null ||
+                !room.world.TryGetEntityManager(out EntityManager entityManager))
+            {
+                error = "当前无法使用出口，请稍后重试。";
+            }
+            else
+            {
+                NetworkStateApplyContext context = new(entityManager, room.frame.currentFrame, room.frame.frameInterval);
+                if (!entityManager.Exists(player.entity) ||
+                    BattlePlayerStatusUtility.IsSpectator(entityManager, player.entity) ||
+                    !context.TryGetEntity(request.exitUnitId, out Entity exit) ||
+                    GameInteractionUtility.ValidateTarget(entityManager, player.entity, exit) != InteractionResultCode.Success ||
+                    !DungeonExitRuntimeUtility.TryGetDestination(entityManager, exit, out targetThemeKey, out _))
+                    error = "出口尚不可用，或者角色已经进入观战。";
+                else if (request.type == BattleExitRequestType.NextTheme && targetThemeKey < 0)
+                    error = "这个出口没有配置下一个主题。";
+                else if (request.type != BattleExitRequestType.NextTheme && request.type != BattleExitRequestType.Retreat)
+                    error = "未知的出口操作。";
+                else if (room.exitSelectionActive &&
+                         (room.exitRequestType != request.type ||
+                          (request.type == BattleExitRequestType.NextTheme &&
+                           room.exitTargetThemeKey != targetThemeKey)))
+                    error = "其他玩家已经选择了另一个出口。";
+            }
+
+            if (error == null)
+            {
+                if (!room.exitSelectionActive)
+                {
+                    room.exitSelectionActive = true;
+                    room.exitRequestType = request.type;
+                    room.exitTargetThemeKey = request.type == BattleExitRequestType.NextTheme
+                        ? targetThemeKey
+                        : -1;
+                }
+
+                SetBattlePlayerExitReady(player, true);
+            }
+
+            connect.Send(new B2C_BattleExitResult
+            {
+                battleId = request.battleId,
+                sceneVersion = request.sceneVersion,
+                accepted = error == null,
+                error = error,
+            });
+            if (error != null)
+                return;
+
+            TryCompleteBattleExitSelection(room);
+        }
+
+        private void OnFramePing(IMessage message, Connect connect)
+        {
+            if (message is not C2B_FramePing ping ||
+                !connectDic.TryGetValue(connect, out BattlePlayer player) || player.connect != connect)
+                return;
+
+            ServerFrameManager frame = player.room.frame;
+            if (ping.sceneVersion != player.room.sceneVersion)
+                return;
+            connect.Send(new B2C_FramePong
+            {
+                sceneVersion = player.room.sceneVersion,
+                clientSendTime = ping.clientSendTime,
+                running = frame.running,
+                serverFrame = frame.currentFrame,
+                frameElapsedMs = frame.clock.GetFrameElapsedMilliseconds(NetworkTimer.Instance.TimeNow, frame.frameInterval),
+            });
         }
 
         private void OnLobbyAccept(Connect connect)
@@ -192,6 +279,7 @@ namespace Server
             player.sceneReady = false;
             player.entitiesSent = false;
             player.ready = false;
+            player.exitReady = false;
             player.runningReload = false;
             player.reloadSnapshotRequested = false;
             player.reloadSnapshotSent = false;
@@ -236,6 +324,7 @@ namespace Server
             player.sceneReady = false;
             player.entitiesSent = false;
             player.ready = false;
+            player.exitReady = false;
             player.runningReload = runningReload;
             player.reloadSnapshotRequested = false;
             player.reloadSnapshotSent = false;
@@ -252,6 +341,14 @@ namespace Server
                 connect.Send(new B2C_ReloadBattleResult { type = BattleRequestType.ReloadBattleFail });
                 battleService.DisconnectAfterSend(connect);
                 return;
+            }
+
+            if (room.world != null && room.world.TryGetEntityManager(out EntityManager reloadManager) &&
+                reloadManager.Exists(player.entity) && reloadManager.HasComponent<PlayerInputComponent>(player.entity))
+            {
+                PlayerInputComponent input = reloadManager.GetComponentData<PlayerInputComponent>(player.entity);
+                input.NetworkDirty = 1;
+                reloadManager.SetComponentData(player.entity, input);
             }
 
             connect.UnRegisterCallback(TCPPacketCode.GetOpcode<C2B_ReloadBattle>(), OnReloadBattle);
@@ -280,6 +377,7 @@ namespace Server
                 player.room.phase != BattlePhase.WaitingForClientReady ||
                 player.room.battleId != realMessage.battleId ||
                 player.connectVersion != realMessage.connectVersion ||
+                player.room.sceneVersion != realMessage.sceneVersion ||
                 !player.sceneReady ||
                 !player.entitiesSent ||
                 player.runningReload ||
@@ -301,6 +399,7 @@ namespace Server
                 player.offline ||
                 player.room.battleId != realMessage.battleId ||
                 player.connectVersion != realMessage.connectVersion ||
+                player.room.sceneVersion != realMessage.sceneVersion ||
                 player.sceneReady)
             {
                 return;
@@ -331,6 +430,7 @@ namespace Server
                 player.room.phase != BattlePhase.Running ||
                 player.room.battleId != realMessage.battleId ||
                 player.connectVersion != realMessage.connectVersion ||
+                player.room.sceneVersion != realMessage.sceneVersion ||
                 player.snapshotFrame != realMessage.snapshotFrame)
             {
                 return;
@@ -341,12 +441,16 @@ namespace Server
             player.reloadSnapshotRequested = false;
             player.reloadSnapshotSent = false;
             player.active = true;
+            SetBattlePlayerConnectionState(player, BattlePlayerConnectionState.Online);
             player.room.frame.PromoteSyncingConnect(connect);
             connect.Send(new B2C_StartFrame
             {
                 battleId = player.room.battleId,
                 connectVersion = player.connectVersion,
+                sceneVersion = player.room.sceneVersion,
                 startFrame = player.room.frame.currentFrame,
+                frameInterval = player.room.frame.frameInterval,
+                frameElapsedMs = player.room.frame.clock.GetFrameElapsedMilliseconds(NetworkTimer.Instance.TimeNow, player.room.frame.frameInterval),
             });
         }
 
@@ -424,7 +528,11 @@ namespace Server
 
         private void BeginInitialize(BattleRoom room)
         {
+            room.frame.sceneVersion = room.sceneVersion;
             SetPhase(room, BattlePhase.Initializing);
+
+            if (room.world != null && room.world.IsCreated)
+                return;
 
             try
             {
@@ -508,6 +616,7 @@ namespace Server
             {
                 battleId = room.battleId,
                 connectVersion = player.connectVersion,
+                sceneVersion = room.sceneVersion,
                 entityInfos = room.entityInfos ?? Array.Empty<NetworkEntitySpawnInfo>(),
             });
         }
@@ -559,11 +668,12 @@ namespace Server
                 {
                     battleId = room.battleId,
                     connectVersion = connectVersion,
+                    sceneVersion = room.sceneVersion,
                     snapshotFrame = snapshotFrame,
                     entityInfos = entityInfos,
                     states = states,
                 });
-                room.frame.AddSyncingConnect(snapshotConnect);
+                room.frame.AddSyncingConnect(snapshotConnect, player.unitId);
             });
             StartReloadTimeout(player, ServerUtility.BattleReadyTimeout);
         }
@@ -580,10 +690,12 @@ namespace Server
                 }
 
                 player.active = true;
-                frame.AddConnect(player.connect);
+                SetBattlePlayerConnectionState(player, BattlePlayerConnectionState.Online);
+                frame.AddConnect(player.connect, player.unitId);
             }
 
             SetPhase(room, BattlePhase.Running);
+            frame.Start(startFrame);
             foreach (BattlePlayer player in room.players.Values)
             {
                 if (!player.active || player.connect == null)
@@ -595,11 +707,12 @@ namespace Server
                 {
                     battleId = room.battleId,
                     connectVersion = player.connectVersion,
+                    sceneVersion = room.sceneVersion,
                     startFrame = startFrame,
+                    frameInterval = frame.frameInterval,
+                    frameElapsedMs = frame.clock.GetFrameElapsedMilliseconds(NetworkTimer.Instance.TimeNow, frame.frameInterval),
                 });
             }
-
-            frame.Start(startFrame);
         }
 
         private void SetPhase(BattleRoom room, BattlePhase phase)
@@ -721,6 +834,8 @@ namespace Server
                 return;
             }
 
+            player.exitReady = false;
+            SetBattlePlayerConnectionState(player, BattlePlayerConnectionState.Offline);
             StopReloadTimeout(player);
             player.offline = true;
             player.active = false;
@@ -732,6 +847,7 @@ namespace Server
             player.reloadSnapshotSent = false;
             if (player.connect == null)
             {
+                TryCompleteBattleExitSelection(player.room);
                 return;
             }
 
@@ -740,6 +856,120 @@ namespace Server
             connectDic.Remove(connect);
             player.room.frame.RemoveConnect(connect);
             battleService.Disconnect(connect);
+            TryCompleteBattleExitSelection(player.room);
+        }
+
+        private void SetBattlePlayerConnectionState(
+            BattlePlayer player,
+            BattlePlayerConnectionState connectionState)
+        {
+            if (player?.room?.world == null ||
+                !player.room.world.TryGetEntityManager(out EntityManager entityManager) ||
+                player.entity == Entity.Null ||
+                !entityManager.Exists(player.entity) ||
+                !entityManager.HasComponent<BattlePlayerStatusComponent>(player.entity))
+            {
+                return;
+            }
+
+            BattlePlayerStatusComponent status =
+                entityManager.GetComponentData<BattlePlayerStatusComponent>(player.entity);
+            byte transitionReady = player.exitReady ? (byte)1 : (byte)0;
+            if (status.ConnectionState != connectionState || status.TransitionReady != transitionReady)
+            {
+                status.ConnectionState = connectionState;
+                status.TransitionReady = transitionReady;
+                status.NetworkDirty = 1;
+                BattlePlayerStatusUtility.Apply(entityManager, player.entity, status);
+            }
+
+            if (connectionState != BattlePlayerConnectionState.Offline ||
+                !entityManager.HasComponent<PlayerInputComponent>(player.entity))
+            {
+                return;
+            }
+
+            PlayerInputComponent input = entityManager.GetComponentData<PlayerInputComponent>(player.entity);
+            input.Move = Unity.Mathematics.float2.zero;
+            input.IsPrimaryHeld = 0;
+            input.ContinuousPrimaryHeld = 0;
+            input.IsInteractHeld = 0;
+            input.IsInventoryHeld = 0;
+            input.IsPropertyHeld = 0;
+            input.IsEscapeHeld = 0;
+            input.IsSkillHeld = 0;
+            input.IsUsePropHeld = 0;
+            entityManager.SetComponentData(player.entity, input);
+            if (entityManager.HasBuffer<PlayerInputEventElement>(player.entity))
+                entityManager.GetBuffer<PlayerInputEventElement>(player.entity).Clear();
+        }
+
+        private void SetBattlePlayerExitReady(BattlePlayer player, bool ready)
+        {
+            if (player == null)
+                return;
+
+            player.exitReady = ready;
+            if (player.room?.world == null ||
+                !player.room.world.TryGetEntityManager(out EntityManager entityManager) ||
+                player.entity == Entity.Null ||
+                !entityManager.Exists(player.entity) ||
+                !entityManager.HasComponent<BattlePlayerStatusComponent>(player.entity))
+            {
+                return;
+            }
+
+            BattlePlayerStatusComponent status =
+                entityManager.GetComponentData<BattlePlayerStatusComponent>(player.entity);
+            byte value = ready ? (byte)1 : (byte)0;
+            if (status.TransitionReady == value)
+                return;
+
+            status.TransitionReady = value;
+            status.NetworkDirty = 1;
+            BattlePlayerStatusUtility.Apply(entityManager, player.entity, status);
+        }
+
+        private bool TryCompleteBattleExitSelection(BattleRoom room)
+        {
+            if (room == null || !room.exitSelectionActive || room.phase != BattlePhase.Running ||
+                room.world == null || !room.world.TryGetEntityManager(out EntityManager entityManager))
+            {
+                return false;
+            }
+
+            bool hasLivingPlayer = false;
+            foreach (BattlePlayer player in room.players.Values)
+            {
+                if (player.offline || !player.active || player.connect == null || !player.entered)
+                    continue;
+                if (player.entity == Entity.Null || !entityManager.Exists(player.entity) ||
+                    !entityManager.HasComponent<BattlePlayerStatusComponent>(player.entity))
+                    return false;
+
+                BattlePlayerStatusComponent status =
+                    entityManager.GetComponentData<BattlePlayerStatusComponent>(player.entity);
+                player.lifeState = status.LifeState;
+                if (status.LifeState == BattlePlayerLifeState.Dead)
+                    continue;
+
+                hasLivingPlayer = true;
+                if (!player.exitReady)
+                    return false;
+            }
+
+            if (!hasLivingPlayer)
+                return false;
+
+            BattleExitRequestType requestType = room.exitRequestType;
+            int targetThemeKey = room.exitTargetThemeKey;
+            room.exitSelectionActive = false;
+            room.exitTargetThemeKey = -1;
+            if (requestType == BattleExitRequestType.Retreat)
+                SettleRoom(room, BattleSettlementOutcome.Escaped);
+            else
+                BeginNextTheme(room, targetThemeKey);
+            return true;
         }
 
         private void FinishRoom(BattleRoom room)
@@ -760,6 +990,151 @@ namespace Server
             foreach (BattlePlayer player in room.players.Values)
             {
                 SetPlayerOffline(player);
+            }
+
+            room.world?.Dispose();
+            room.world = null;
+            room.secretKeys.Clear();
+            battleRooms.Remove(room.battleId);
+        }
+
+        private void BeginNextTheme(BattleRoom room, int targetThemeKey)
+        {
+            if (room == null || room.phase != BattlePhase.Running || targetThemeKey < 0)
+                return;
+
+            if (room.world != null && room.world.TryGetEntityManager(out EntityManager entityManager))
+            {
+                foreach (BattlePlayer player in room.players.Values)
+                {
+                    if (player.entity != Entity.Null && entityManager.Exists(player.entity) &&
+                        entityManager.HasComponent<PlayerCharacterComponent>(player.entity))
+                    {
+                        PlayerCharacterComponent character =
+                            entityManager.GetComponentObject<PlayerCharacterComponent>(player.entity);
+                        player.characterData = PlayerCharacterUtility.Clone(character.Data);
+                        player.hasTransferVitals = true;
+                        player.reviveOnTransfer = entityManager.GetComponentData<BattlePlayerStatusComponent>(player.entity).LifeState == BattlePlayerLifeState.Dead;
+                        player.transferHealth = entityManager.GetComponentData<UnitVitalityComponent>(player.entity).CurrentHealth;
+                        player.transferMana = entityManager.GetComponentData<UnitManaComponent>(player.entity).CurrentMana;
+                    }
+                }
+            }
+
+            room.frame.Stop();
+            BattleSceneResetUtility.Reset(room.world.World);
+            room.themeKey = targetThemeKey;
+            room.seed = ServerUtility.CreateBattleSeed();
+            room.sceneVersion++;
+            room.frame.sceneVersion = room.sceneVersion;
+            room.battleData = null;
+            room.entityInfos = Array.Empty<NetworkEntitySpawnInfo>();
+            room.exitSelectionActive = false;
+            room.exitTargetThemeKey = -1;
+
+            foreach (BattlePlayer player in room.players.Values)
+            {
+                StopReloadTimeout(player);
+                player.lifeState = BattlePlayerLifeState.Alive;
+                if (!player.offline && player.connect != null)
+                    player.connect.Send(new B2C_BeginBattleTheme
+                    {
+                        battleId = room.battleId,
+                        sceneVersion = room.sceneVersion,
+                        connectVersion = player.connectVersion,
+                    });
+                player.unitId = Guid.Empty;
+                player.entity = Entity.Null;
+                player.sceneReady = false;
+                player.entitiesSent = false;
+                player.ready = false;
+                player.exitReady = false;
+                player.active = false;
+                player.runningReload = false;
+                player.reloadSnapshotRequested = false;
+                player.reloadSnapshotSent = false;
+            }
+
+            BeginInitialize(room);
+        }
+
+        private void TrySettleDefeatedRoom(BattleRoom room)
+        {
+            if (room == null || room.phase != BattlePhase.Running || room.world == null ||
+                !room.world.TryGetEntityManager(out EntityManager entityManager))
+            {
+                return;
+            }
+
+            bool hasBattlePlayer = false;
+            bool hasLivingPlayer = false;
+            foreach (BattlePlayer player in room.players.Values)
+            {
+                if (!player.entered || player.entity == Entity.Null || !entityManager.Exists(player.entity) ||
+                    !entityManager.HasComponent<BattlePlayerStatusComponent>(player.entity))
+                {
+                    continue;
+                }
+
+                hasBattlePlayer = true;
+                BattlePlayerStatusComponent status =
+                    entityManager.GetComponentData<BattlePlayerStatusComponent>(player.entity);
+                player.lifeState = status.LifeState;
+                if (status.LifeState == BattlePlayerLifeState.Alive)
+                    hasLivingPlayer = true;
+            }
+
+            if (hasBattlePlayer && !hasLivingPlayer)
+                SettleRoom(room, BattleSettlementOutcome.Defeated);
+        }
+
+        private void SettleRoom(BattleRoom room, BattleSettlementOutcome outcome)
+        {
+            if (room == null || room.phase == BattlePhase.Finished)
+                return;
+
+            if (room.world != null && room.world.TryGetEntityManager(out EntityManager entityManager))
+            {
+                foreach (BattlePlayer player in room.players.Values)
+                {
+                    if (player.entity != Entity.Null && entityManager.Exists(player.entity) &&
+                        entityManager.HasComponent<PlayerCharacterComponent>(player.entity))
+                    {
+                        PlayerCharacterComponent character =
+                            entityManager.GetComponentObject<PlayerCharacterComponent>(player.entity);
+                        player.characterData = PlayerCharacterUtility.Clone(character.Data);
+                    }
+                }
+            }
+
+            if (room.phaseTimerId != 0)
+            {
+                NetworkTimer.Instance.Remove(room.phaseTimerId);
+                room.phaseTimerId = 0;
+            }
+
+            room.phase = BattlePhase.Finished;
+            room.frame.Stop();
+            foreach (BattlePlayer player in room.players.Values)
+            {
+                StopReloadTimeout(player);
+                player.offline = true;
+                player.active = false;
+                if (player.connect == null)
+                    continue;
+
+                Connect connect = player.connect;
+                player.connect = null;
+                connectDic.Remove(connect);
+                connect.Send(new B2C_BattleSettlement
+                {
+                    battleId = room.battleId,
+                    outcome = outcome,
+                    characterData = outcome == BattleSettlementOutcome.Escaped
+                        ? PlayerCharacterUtility.Clone(player.characterData)
+                        : null,
+                });
+                battleService.DisconnectAfterSend(connect);
             }
 
             room.world?.Dispose();
@@ -819,12 +1194,18 @@ namespace Server
             battleRooms.Values.CopyTo(rooms, 0);
             foreach (BattleRoom room in rooms)
             {
-                if (room == null || room.phase != BattlePhase.Initializing)
+                if (room == null)
                 {
                     continue;
                 }
 
-                TryBuildBattleWorld(room);
+                if (room.phase == BattlePhase.Initializing)
+                    TryBuildBattleWorld(room);
+                else if (room.phase == BattlePhase.Running)
+                {
+                    if (!TryCompleteBattleExitSelection(room))
+                        TrySettleDefeatedRoom(room);
+                }
             }
         }
 
@@ -931,7 +1312,7 @@ namespace Server
             List<NetworkEntitySpawnInfo> playerInfos = new();
             foreach (BattlePlayer player in orderedPlayers)
             {
-                if (player.offline || !player.entered || player.characterData == null)
+                if (!player.entered || player.characterData == null)
                 {
                     continue;
                 }
@@ -942,6 +1323,14 @@ namespace Server
                     player.spawnWorldPosition,
                     player.accountId);
                 playerInfo.characterData = player.characterData;
+                playerInfo.hasBattlePlayerStatus = true;
+                playerInfo.battlePlayerLifeState = BattlePlayerLifeState.Alive;
+                playerInfo.battlePlayerConnectionState = player.offline
+                    ? BattlePlayerConnectionState.Offline
+                    : BattlePlayerConnectionState.Online;
+                playerInfo.battlePlayerTransitionReady = false;
+                player.lifeState = BattlePlayerLifeState.Alive;
+                player.exitReady = false;
                 player.unitId = playerInfo.unitId;
                 playerInfos.Add(playerInfo);
             }
@@ -964,13 +1353,26 @@ namespace Server
                 if (player.unitId != Guid.Empty)
                 {
                     NetworkEntitySpawnUtility.TryFindEntity(entityManager, player.unitId, out player.entity);
+                    if (player.hasTransferVitals && entityManager.Exists(player.entity))
+                    {
+                        UnitVitalityComponent vitality = entityManager.GetComponentData<UnitVitalityComponent>(player.entity);
+                        float maxHealth = UnitModifierResolver.GetMaxHealth(entityManager, player.entity);
+                        vitality.CurrentHealth = player.reviveOnTransfer ? maxHealth : Mathf.Clamp(player.transferHealth, 0f, maxHealth);
+                        entityManager.SetComponentData(player.entity, vitality);
+                        UnitManaComponent mana = entityManager.GetComponentData<UnitManaComponent>(player.entity);
+                        mana.CurrentMana = Mathf.Clamp(player.transferMana, 0f, UnitModifierResolver.GetMaxMp(entityManager, player.entity));
+                        entityManager.SetComponentData(player.entity, mana);
+                        player.hasTransferVitals = false;
+                    }
                 }
             }
 
-            room.entityInfos = NetworkEntitySpawnUtility.TakeSpawnQueue(entityManager);
+            NetworkEntitySpawnUtility.ClearSpawnQueue(entityManager);
+            room.entityInfos = NetworkEntitySpawnUtility.CreateSnapshotInfos(entityManager);
             room.battleData = new BattleEnterData
             {
                 battleId = room.battleId,
+                sceneVersion = room.sceneVersion,
                 themeKey = room.themeKey,
                 seed = room.seed,
             };
@@ -1001,6 +1403,10 @@ namespace Server
                 player.spawnWorldPosition,
                 player.accountId);
             entityInfo.characterData = player.characterData;
+            entityInfo.hasBattlePlayerStatus = true;
+            entityInfo.battlePlayerLifeState = player.lifeState;
+            entityInfo.battlePlayerConnectionState = BattlePlayerConnectionState.Offline;
+            entityInfo.battlePlayerTransitionReady = false;
             if (!NetworkEntitySpawnUtility.TrySpawn(entityManager, entityInfo, out Entity playerEntity))
             {
                 return false;

@@ -11,6 +11,7 @@ using Unity.Transforms;
 /// rebuilt by a single Burst job that reuses one fixed-size A* scratch area; following
 /// already-built paths runs in parallel for all units.
 /// </summary>
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitDecisionSystemGroup))]
 [UpdateAfter(typeof(BehaviorTreeSystem))]
 [UpdateBefore(typeof(StateScriptSystem))]
@@ -123,7 +124,7 @@ public partial struct UnitNavigationSystem : ISystem
     }
 
     [BurstCompile]
-    [WithNone(typeof(UnitDeathComponent))]
+    [WithNone(typeof(UnitDeathComponent), typeof(BattleSpectatorComponent))]
     private partial struct NavigationPathfindJob : IJobEntity
     {
         public DungeonNavigationMapComponent Map;
@@ -470,7 +471,7 @@ public partial struct UnitNavigationSystem : ISystem
     }
 
     [BurstCompile]
-    [WithNone(typeof(UnitDeathComponent))]
+    [WithNone(typeof(UnitDeathComponent), typeof(BattleSpectatorComponent))]
     private partial struct NavigationFollowJob : IJobEntity
     {
         public DungeonNavigationMapComponent Map;
@@ -541,7 +542,7 @@ public partial struct UnitNavigationSystem : ISystem
     }
 
     [BurstCompile]
-    [WithNone(typeof(UnitDeathComponent))]
+    [WithNone(typeof(UnitDeathComponent), typeof(BattleSpectatorComponent))]
     private partial struct NavigationDirectFollowJob : IJobEntity
     {
         private void Execute(

@@ -332,33 +332,8 @@ namespace CrystalMagic.Game.Unit
                     }
                     break;
                 case UnitDebugComponentKind.SkillRelease:
-                    if (entityManager.HasComponent<UnitSkillReleaseComponent>(entity) &&
-                        entityManager.HasBuffer<SkillReleaseRequest>(entity))
-                    {
-                        DynamicBuffer<SkillReleaseRequest> requests = entityManager.GetBuffer<SkillReleaseRequest>(entity, true);
-                        builder.AppendLine("PendingRequests format: SkillId|OriginEntity|OriginX|OriginY|OriginZ|FacingX|FacingY|HasTargetEntity|TargetEntity|HasTargetPosition|TargetX|TargetY|TargetZ;...");
-                        builder.Append("PendingRequests=");
-                        for (int i = 0; i < requests.Length; i++)
-                        {
-                            SkillReleaseRequest request = requests[i];
-                            if (i > 0)
-                                builder.Append(';');
-                            builder.Append(request.SkillId).Append('|')
-                                .Append(Format(request.OriginEntity)).Append('|')
-                                .Append(Format(request.OriginPosition.x)).Append('|')
-                                .Append(Format(request.OriginPosition.y)).Append('|')
-                                .Append(Format(request.OriginPosition.z)).Append('|')
-                                .Append(Format(request.OriginFacing.x)).Append('|')
-                                .Append(Format(request.OriginFacing.y)).Append('|')
-                                .Append(request.HasTargetEntity ? 1 : 0).Append('|')
-                                .Append(Format(request.TargetEntity)).Append('|')
-                                .Append(request.HasTargetPosition ? 1 : 0).Append('|')
-                                .Append(Format(request.TargetPosition.x)).Append('|')
-                                .Append(Format(request.TargetPosition.y)).Append('|')
-                                .Append(Format(request.TargetPosition.z));
-                        }
-                        builder.AppendLine();
-                    }
+                    if (entityManager.HasComponent<UnitSkillReleaseComponent>(entity))
+                        Append(builder, "DirectDispatch", 1);
                     break;
                 case UnitDebugComponentKind.Variables:
                     if (entityManager.HasComponent<UnitVariableComponent>(entity))
@@ -421,7 +396,7 @@ namespace CrystalMagic.Game.Unit
                 UnitDebugComponentKind.Drop => ApplyDrop(entityManager, entity, values),
                 UnitDebugComponentKind.Interactable => ApplyInteractable(entityManager, entity, values),
                 UnitDebugComponentKind.PlayerCurrentSkill => ApplyPlayerCurrentSkill(entityManager, entity, values),
-                UnitDebugComponentKind.SkillRelease => ApplySkillRelease(entityManager, entity, values),
+                UnitDebugComponentKind.SkillRelease => false,
                 _ => false,
             };
 
@@ -828,23 +803,6 @@ namespace CrystalMagic.Game.Unit
             return changed;
         }
 
-        private static bool ApplySkillRelease(EntityManager manager, Entity entity, Dictionary<string, string> values)
-        {
-            if (!manager.HasComponent<UnitSkillReleaseComponent>(entity) ||
-                !manager.HasBuffer<SkillReleaseRequest>(entity) ||
-                !values.TryGetValue("PendingRequests", out string serializedRequests) ||
-                !TryParseSkillReleaseRequests(serializedRequests, out List<SkillReleaseRequest> requests))
-            {
-                return false;
-            }
-
-            DynamicBuffer<SkillReleaseRequest> buffer = manager.GetBuffer<SkillReleaseRequest>(entity);
-            buffer.Clear();
-            for (int i = 0; i < requests.Count; i++)
-                buffer.Add(requests[i]);
-            return true;
-        }
-
         private static bool TryGetBuff(EntityManager manager, Entity entity, int index, out UnitBuffElement entry)
         {
             entry = default;
@@ -1010,50 +968,6 @@ namespace CrystalMagic.Game.Unit
             }
 
             entity = new Entity { Index = index, Version = version };
-            return true;
-        }
-
-        private static bool TryParseSkillReleaseRequests(string source, out List<SkillReleaseRequest> requests)
-        {
-            requests = new List<SkillReleaseRequest>();
-            if (string.IsNullOrWhiteSpace(source))
-                return true;
-
-            string[] items = source.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
-            for (int i = 0; i < items.Length; i++)
-            {
-                string[] fields = items[i].Split('|');
-                if (fields.Length != 13 ||
-                    !int.TryParse(fields[0], NumberStyles.Integer, InvariantCulture, out int skillId) ||
-                    !TryParseEntity(fields[1], out Entity originEntity) ||
-                    !TryParseFloat(fields[2], out float originX) ||
-                    !TryParseFloat(fields[3], out float originY) ||
-                    !TryParseFloat(fields[4], out float originZ) ||
-                    !TryParseFloat(fields[5], out float facingX) ||
-                    !TryParseFloat(fields[6], out float facingY) ||
-                    !TryParseBool(fields[7], out bool hasTargetEntity) ||
-                    !TryParseEntity(fields[8], out Entity targetEntity) ||
-                    !TryParseBool(fields[9], out bool hasTargetPosition) ||
-                    !TryParseFloat(fields[10], out float targetX) ||
-                    !TryParseFloat(fields[11], out float targetY) ||
-                    !TryParseFloat(fields[12], out float targetZ))
-                {
-                    return false;
-                }
-
-                requests.Add(new SkillReleaseRequest
-                {
-                    SkillId = skillId,
-                    OriginEntity = originEntity,
-                    OriginPosition = new float3(originX, originY, originZ),
-                    OriginFacing = new float2(facingX, facingY),
-                    HasTargetEntity = hasTargetEntity,
-                    TargetEntity = targetEntity,
-                    HasTargetPosition = hasTargetPosition,
-                    TargetPosition = new float3(targetX, targetY, targetZ),
-                });
-            }
-
             return true;
         }
 

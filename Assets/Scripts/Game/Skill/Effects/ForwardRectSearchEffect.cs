@@ -42,9 +42,9 @@ namespace CrystalMagic.Game.Skill.Effects
             forward = math.normalize(forward);
             originPosition += new float3(forward.x, forward.y, 0f) * math.max(0f, Data.OriginOffsetDistance);
 
-            if (!UnitQueryUtility.TryGetGrid(entityManager, UnitQueryGridKind.Unit, out UnitQueryGrid unitGrid))
-                return;
-            unitGrid.QueryForwardRect(originPosition, forward, Data.Length, Data.Width, _hits);
+            UnitQueryTree tree = UnitQueryUtility.GetTree(entityManager);
+            UnitQueryShape shape = UnitQueryShape.ForwardRect(originPosition, forward, Data.Length, Data.Width);
+            tree.Query(in shape, UnitFactionMask.Combatants, _hits);
 
             for (int i = 0; i < _hits.Count; i++)
             {

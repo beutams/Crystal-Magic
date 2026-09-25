@@ -57,7 +57,6 @@ public static class EquipmentUtility
             equipmentData.SpiritSlots[equipSlotIndex - 1] = itemId;
 
         RebuildProperties(equipmentData);
-        ApplyToBoundPlayer(equipmentData);
         return true;
     }
 
@@ -102,18 +101,6 @@ public static class EquipmentUtility
             return;
 
         UnitModifierUtility.ApplyEquipmentProperties(entityManager, entity, in equipmentData.Properties);
-    }
-
-    private static void ApplyToBoundPlayer(EquipmentData equipmentData)
-    {
-        if (!GameRuntimeStateUtility.TryGetPlayerEntity(out EntityManager entityManager, out Entity player) ||
-            !GameRuntimeStateUtility.TryGetPlayerCharacterData(entityManager, player, out CharacterData characterData) ||
-            !ReferenceEquals(characterData.Equipment, equipmentData))
-        {
-            return;
-        }
-
-        ApplyToUnit(entityManager, player, equipmentData);
     }
 
     private static void AddEquipmentItem(ref EquipmentPropertyData properties, int itemId)

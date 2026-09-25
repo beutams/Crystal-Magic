@@ -42,6 +42,19 @@ public class CharacterUIData : UIData
     public UINode SkillDrag;
     public UINode SkillDrag_Mask;
     public UINode SkillDrag_Mask_Icon;
+    public UINode PropSlots;
+    public UINode PropSlots_PropSlot1;
+    public UINode PropSlots_PropSlot1_Icon;
+    public UINode PropSlots_PropSlot1_Count;
+    public UINode PropSlots_PropSlot1_Key;
+    public UINode PropSlots_PropSlot2;
+    public UINode PropSlots_PropSlot2_Icon;
+    public UINode PropSlots_PropSlot2_Count;
+    public UINode PropSlots_PropSlot2_Key;
+    public UINode PropSlots_PropSlot3;
+    public UINode PropSlots_PropSlot3_Icon;
+    public UINode PropSlots_PropSlot3_Count;
+    public UINode PropSlots_PropSlot3_Key;
 
     public override void Bind(Transform root)
     {
@@ -81,5 +94,18 @@ public class CharacterUIData : UIData
         SkillDrag = UINode.From(Find(root, "SkillDrag"));
         SkillDrag_Mask = UINode.From(Find(root, "SkillDrag/Mask"));
         SkillDrag_Mask_Icon = UINode.From(Find(root, "SkillDrag/Mask/Icon"));
+        PropSlots = UINode.From(Find(root, "PropSlots"));
+        PropSlots_PropSlot1 = UINode.From(Find(root, "PropSlots/PropSlot1"));
+        PropSlots_PropSlot1_Icon = UINode.From(Find(root, "PropSlots/PropSlot1/Icon"));
+        PropSlots_PropSlot1_Count = UINode.From(Find(root, "PropSlots/PropSlot1/Count"));
+        PropSlots_PropSlot1_Key = UINode.From(Find(root, "PropSlots/PropSlot1/Key"));
+        PropSlots_PropSlot2 = UINode.From(Find(root, "PropSlots/PropSlot2"));
+        PropSlots_PropSlot2_Icon = UINode.From(Find(root, "PropSlots/PropSlot2/Icon"));
+        PropSlots_PropSlot2_Count = UINode.From(Find(root, "PropSlots/PropSlot2/Count"));
+        PropSlots_PropSlot2_Key = UINode.From(Find(root, "PropSlots/PropSlot2/Key"));
+        PropSlots_PropSlot3 = UINode.From(Find(root, "PropSlots/PropSlot3"));
+        PropSlots_PropSlot3_Icon = UINode.From(Find(root, "PropSlots/PropSlot3/Icon"));
+        PropSlots_PropSlot3_Count = UINode.From(Find(root, "PropSlots/PropSlot3/Count"));
+        PropSlots_PropSlot3_Key = UINode.From(Find(root, "PropSlots/PropSlot3/Key"));
     }
 }

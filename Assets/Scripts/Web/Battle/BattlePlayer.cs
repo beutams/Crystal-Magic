@@ -30,5 +30,11 @@ namespace Server
         public Entity entity;
         public Vector3 spawnWorldPosition;
         public CharacterData characterData;
+        public BattlePlayerLifeState lifeState;
+        public bool exitReady;
+        public bool hasTransferVitals;
+        public bool reviveOnTransfer;
+        public float transferHealth;
+        public float transferMana;
     }
 }

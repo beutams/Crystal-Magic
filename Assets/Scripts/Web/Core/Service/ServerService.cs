@@ -91,7 +91,7 @@ namespace Server
             }
 
             connects.Clear();
-            disconnectList.Clear();
+            pendingDisconnects.Clear();
             closeAfterSendList.Clear();
 
             if (socket == null)
@@ -117,13 +117,11 @@ namespace Server
                 return;
             }
 
-            if (!socket.Poll(0, SelectMode.SelectRead))
-            {
-                return;
-            }
-
             try
             {
+                if (!socket.Poll(0, SelectMode.SelectRead))
+                    return;
+
                 Socket clientSocket = socket.Accept();
                 clientSocket.NoDelay = true;
 
@@ -135,12 +133,23 @@ namespace Server
                 connect.startTime = NetworkTimer.Instance.TimeNow;
                 connect.LastReceiveTime = NetworkTimer.Instance.TimeNow;
                 Debug.Log($"[TCP][Server] Accepted {clientSocket.RemoteEndPoint}, Connect={id}");
-                OnAccept?.Invoke(connect);
+                try
+                {
+                    OnAccept?.Invoke(connect);
+                }
+                catch (Exception exception)
+                {
+                    MarkDisconnected(id, DisconnectReason.HandlerError, "AcceptCallback", exception);
+                }
             }
             catch (SocketException e) when (e.SocketErrorCode == SocketError.WouldBlock) { }
             catch (SocketException e)
             {
                 Debug.LogError($"Accept 失败: {e}");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[TCP][Server] Accept failed: {e}");
             }
         }
     }

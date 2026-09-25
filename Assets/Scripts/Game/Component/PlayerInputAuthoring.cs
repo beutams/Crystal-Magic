@@ -10,6 +10,7 @@ public sealed class PlayerInputAuthoring : MonoBehaviour
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
             AddComponent<PlayerInputComponent>(entity);
+            AddBuffer<PlayerInputEventElement>(entity);
         }
     }
 }

@@ -14,7 +14,7 @@ namespace CrystalMagic.UI
         {
             View.BindModel(Model);
             View.PropShortcutUseRequested += OnPropShortcutUseRequested;
-            View.PropShortcutBindRequested += OnPropShortcutBindRequested;
+            CrystalMagic.Core.InputComponent.Instance.OnUseProp += OnPropShortcutUseRequested;
             BindEvent(new CrystalMagic.Core.CommonGameEvent(CrystalMagic.Core.SaveDataComponent.SkillDataChangedEventName), _refreshHandler);
             BindEvent(new CrystalMagic.Core.CommonGameEvent(CrystalMagic.Core.SaveDataComponent.CharacterPropDataChangedEventName), _refreshHandler);
             BindEvent(new CrystalMagic.Core.CommonGameEvent(PlayerInputComponent.SkillChainChangedEventName), _refreshHandler);
@@ -24,7 +24,7 @@ namespace CrystalMagic.UI
         protected override void OnClose()
         {
             View.PropShortcutUseRequested -= OnPropShortcutUseRequested;
-            View.PropShortcutBindRequested -= OnPropShortcutBindRequested;
+            CrystalMagic.Core.InputComponent.Instance.OnUseProp -= OnPropShortcutUseRequested;
         }
 
         private void OnPropShortcutUseRequested(int shortcutIndex)
@@ -32,9 +32,5 @@ namespace CrystalMagic.UI
             CrystalMagic.Game.PropUseUtility.TryUseShortcutSlot(shortcutIndex, out _);
         }
 
-        private void OnPropShortcutBindRequested(int propSlotIndex, int shortcutIndex)
-        {
-            CrystalMagic.Game.PropUseUtility.TryBindShortcutSlot(shortcutIndex, propSlotIndex);
-        }
     }
 }

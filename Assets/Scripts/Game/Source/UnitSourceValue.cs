@@ -28,12 +28,12 @@ public struct UnitSourceContext
 public readonly struct UnitSourceAccessContext
 {
     public readonly Entity TargetEntity;
-    public readonly Entity GlobalEntity;
+    public readonly Entity SingletonEntity;
 
-    public UnitSourceAccessContext(Entity targetEntity, Entity globalEntity)
+    public UnitSourceAccessContext(Entity targetEntity, Entity singletonEntity)
     {
         TargetEntity = targetEntity;
-        GlobalEntity = globalEntity;
+        SingletonEntity = singletonEntity;
     }
 }
 

@@ -2,7 +2,8 @@ using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
 
-[UpdateInGroup(typeof(ClientPresentationSystemGroup))]
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation)]
+[UpdateInGroup(typeof(GamePresentationSystemGroup))]
 [UpdateAfter(typeof(UnitAnimationSystem))]
 public partial class UnitSpriteRendererSortingSystem : SystemBase
 {

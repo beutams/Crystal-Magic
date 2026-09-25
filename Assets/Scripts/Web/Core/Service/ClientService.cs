@@ -53,24 +53,8 @@ namespace Server
 
             TCPPair pendingPair = pendingConnects[pendingId];
             pendingConnects.Remove(pendingId);
-            connect.State = ConnectState.Close;
-            try
-            {
-                pendingPair.socket.Shutdown(SocketShutdown.Both);
-            }
-            catch (SocketException)
-            {
-            }
-            finally
-            {
-                OnDisconnected?.Invoke(connect);
-                connect.OnDisconnected?.Invoke(connect);
-                pendingPair.socket.Close();
-                pendingPair.socket.Dispose();
-                connect.readSteam.Dispose();
-                connect.sendSteam.Dispose();
-                connect.Dispose();
-            }
+            connects.Add(pendingId, pendingPair);
+            MarkDisconnected(pendingId, DisconnectReason.LocalClose, "PendingDisconnect");
         }
         public override void Init()
         {
@@ -121,7 +105,7 @@ namespace Server
             ClosePairs(connects);
             ClosePairs(pendingConnects);
             connectingTask?.Clear();
-            disconnectList.Clear();
+            pendingDisconnects.Clear();
             closeAfterSendList.Clear();
             OnConnecting = null;
             OnConnectedSuccess = null;
@@ -156,10 +140,14 @@ namespace Server
                     }
                     catch (SocketException e)
                     {
-                        Debug.LogError($"[TCP][Client] Connect start failed: {e.SocketErrorCode} - {e.Message}");
-                        connect.State = ConnectState.Close;
-                        disconnectList.Add(id);
-                        OnConnectedFail?.Invoke(connect);
+                        MarkDisconnected(id, DisconnectReason.ConnectFailed, "ConnectStart", e, e.SocketErrorCode.ToString());
+                        InvokeConnectionEventSafely(OnConnectedFail, connect, nameof(OnConnectedFail));
+                        connectingTask.Remove(id);
+                    }
+                    catch (Exception e)
+                    {
+                        MarkDisconnected(id, DisconnectReason.ConnectFailed, "ConnectStart", e);
+                        InvokeConnectionEventSafely(OnConnectedFail, connect, nameof(OnConnectedFail));
                         connectingTask.Remove(id);
                     }
                 }
@@ -188,16 +176,20 @@ namespace Server
                     connect.LastReceiveTime = NetworkTimer.Instance.TimeNow;
 
                     Debug.Log($"[TCP][Client] Connect succeeded: {connect.IPEndPoint}, Connect={id}");
-                    OnConnectedSuccess.Invoke(connect);
-                    connect.OnConnected?.Invoke(connect);
+                    InvokeConnectionEventSafely(OnConnectedSuccess, connect, nameof(OnConnectedSuccess));
+                    InvokeConnectionEventSafely(connect.OnConnected, connect, "Connect.OnConnected");
                     completeList.Add(id);
                 }
                 catch(SocketException e) 
                 {
-                    Debug.LogError($"[TCP][Client] Connect failed: {e.SocketErrorCode} - {e.Message}");
-                    connect.State = ConnectState.Close;
-                    disconnectList.Add(id);
-                    OnConnectedFail?.Invoke(connect);
+                    MarkDisconnected(id, DisconnectReason.ConnectFailed, "ConnectComplete", e, e.SocketErrorCode.ToString());
+                    InvokeConnectionEventSafely(OnConnectedFail, connect, nameof(OnConnectedFail));
+                    completeList.Add(id);
+                }
+                catch(Exception e)
+                {
+                    MarkDisconnected(id, DisconnectReason.ConnectFailed, "ConnectComplete", e);
+                    InvokeConnectionEventSafely(OnConnectedFail, connect, nameof(OnConnectedFail));
                     completeList.Add(id);
                 }
             }

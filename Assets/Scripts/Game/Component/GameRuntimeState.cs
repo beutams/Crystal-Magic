@@ -38,6 +38,25 @@ namespace CrystalMagic.Core
     public sealed class PlayerCharacterComponent : IComponentData
     {
         public CharacterData Data = new();
+        public ulong Revision;
+        public byte NetworkDirty;
+
+        public void MarkChanged()
+        {
+            Revision++;
+            NetworkDirty = 1;
+        }
+
+        public bool TryEdit(ulong revision, CharacterData data)
+        {
+            if (revision != Revision || data?.Backpack == null || data.Equipment == null ||
+                data.Skills == null || data.Props == null)
+                return false;
+
+            Data = PlayerCharacterUtility.Clone(data);
+            MarkChanged();
+            return true;
+        }
     }
 
     /// <summary>
@@ -143,7 +162,7 @@ namespace CrystalMagic.Core
                 entityManager.AddComponentObject(player, new PlayerCharacterComponent { Data = boundData });
 
             EquipmentUtility.ApplyToUnit(entityManager, player, boundData.Equipment);
-            PlayerSkillRuntimeDataUtility.Initialize(entityManager, player, boundData);
+            PlayerSkillChainUtility.Initialize(entityManager, player, boundData);
         }
 
         public static void ClearPlayerCharacterData()
@@ -155,7 +174,7 @@ namespace CrystalMagic.Core
             }
 
             entityManager.RemoveComponent<PlayerCharacterComponent>(player);
-            PlayerSkillRuntimeDataUtility.Clear(entityManager, player);
+            PlayerSkillChainUtility.Clear(entityManager, player);
         }
 
         public static DungeonRunData GetDungeonRunData()
@@ -497,8 +516,11 @@ namespace CrystalMagic.Core
             {
                 Entity entity = units[index];
                 UnitRuntimeData state = CreateUnitRuntimeData(entityManager, entity);
-                if (!UnitFactionUtility.IsPlayer(state.Faction))
+                if (!UnitFactionUtility.IsPlayer(state.Faction) &&
+                    !UnitFactionUtility.IsInteractable(state.Faction))
+                {
                     run.Units.Add(state);
+                }
             }
 
             run.ItemDrops = new List<ItemDropData>();

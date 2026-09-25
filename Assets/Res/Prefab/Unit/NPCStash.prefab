@@ -20,6 +20,7 @@ GameObject:
   - component: {fileID: 179306298853915962}
   - component: {fileID: 8376740575142331723}
   - component: {fileID: 4527126922094046142}
+  - component: {fileID: 910000000000000701}
   m_Layer: 0
   m_Name: NPCStash
   m_TagString: Untagged
@@ -27,6 +28,18 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &910000000000000701
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7307774103284855405}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5aa0c57b6dc648bc9be25e46a501e001, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
 --- !u!4 &2042160920895624217
 Transform:
   m_ObjectHideFlags: 0

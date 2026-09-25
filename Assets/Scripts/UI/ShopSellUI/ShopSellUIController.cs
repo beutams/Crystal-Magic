@@ -71,7 +71,7 @@ namespace CrystalMagic.UI
 
             inventoryItem.Quantity -= quantity;
             if (inventoryItem.Quantity <= 0)
-                backpackData.Items.RemoveAt(slotIndex);
+                inventoryItem.Clear();
 
             SaveDataComponent.Instance.NotifyBackpackDataChanged();
             View.Close();

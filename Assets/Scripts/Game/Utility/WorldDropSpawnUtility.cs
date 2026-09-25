@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data;
@@ -6,8 +5,6 @@ using Server;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Rendering;
-using Unity.Transforms;
 using UnityEngine;
 
 namespace CrystalMagic.Game.Unit
@@ -15,7 +12,6 @@ namespace CrystalMagic.Game.Unit
     public static class WorldDropSpawnUtility
     {
         private static readonly FixedString128Bytes DropPrefabName = "Drop";
-        private static readonly Dictionary<string, Material> DropMaterials = new();
         private static bool s_loggedMissingDropPrefab;
 
         public static bool CanSpawnDrop(EntityManager entityManager)
@@ -29,6 +25,51 @@ namespace CrystalMagic.Game.Unit
 
         public static bool TrySpawnDrop(EntityManager entityManager, DropRewardType dropType, int itemId, int amount, float3 position)
         {
+            return TrySpawnDropInternal(
+                entityManager,
+                dropType,
+                itemId,
+                amount,
+                position,
+                position,
+                0f,
+                0f,
+                false);
+        }
+
+        public static bool TrySpawnScatteredDrop(
+            EntityManager entityManager,
+            DropRewardType dropType,
+            int itemId,
+            int amount,
+            float3 startPosition,
+            float3 targetPosition,
+            float durationSeconds,
+            float arcHeight)
+        {
+            return TrySpawnDropInternal(
+                entityManager,
+                dropType,
+                itemId,
+                amount,
+                startPosition,
+                targetPosition,
+                math.max(0.0001f, durationSeconds),
+                math.max(0f, arcHeight),
+                true);
+        }
+
+        private static bool TrySpawnDropInternal(
+            EntityManager entityManager,
+            DropRewardType dropType,
+            int itemId,
+            int amount,
+            float3 startPosition,
+            float3 targetPosition,
+            float durationSeconds,
+            float arcHeight,
+            bool hasScatter)
+        {
             if (amount <= 0)
                 return false;
 
@@ -36,7 +77,7 @@ namespace CrystalMagic.Game.Unit
             NetworkEntitySpawnInfo entityInfo = NetworkEntitySpawnUtility.CreateInfo(
                 NetworkEntityPrefabType.Drop,
                 DropPrefabName.ToString(),
-                new Vector3(position.x, position.y, position.z));
+                new Vector3(startPosition.x, startPosition.y, startPosition.z));
             entityInfo.hasInteractableData = true;
             entityInfo.interactionKind = interactionData.Kind;
             entityInfo.interactionDataId = interactionData.DataId;
@@ -44,61 +85,25 @@ namespace CrystalMagic.Game.Unit
             entityInfo.interactionVariant = interactionData.Variant;
             float interactionRange = math.max(0f, ConfigComponent.Instance.Get<GameConfig>().InteractionRange);
             entityInfo.interactionRangeSq = interactionRange * interactionRange;
-            entityInfo.interactionEnabled = true;
-            if (!NetworkEntitySpawnUtility.TrySpawn(entityManager, entityInfo, out Entity dropEntity))
+            entityInfo.interactionEnabled = !hasScatter;
+            entityInfo.hasDropScatter = hasScatter;
+            entityInfo.dropScatterStartX = startPosition.x;
+            entityInfo.dropScatterStartY = startPosition.y;
+            entityInfo.dropScatterStartZ = startPosition.z;
+            entityInfo.dropScatterTargetX = targetPosition.x;
+            entityInfo.dropScatterTargetY = targetPosition.y;
+            entityInfo.dropScatterTargetZ = targetPosition.z;
+            entityInfo.dropScatterDurationSeconds = durationSeconds;
+            entityInfo.dropScatterElapsedSeconds = 0f;
+            entityInfo.dropScatterArcHeight = arcHeight;
+            entityInfo.dropScatterLanded = !hasScatter;
+            if (!NetworkEntitySpawnUtility.TrySpawn(entityManager, entityInfo, out _))
             {
                 LogMissingDropPrefabOnce();
                 return false;
             }
 
-            ApplyDropVisual(entityManager, dropEntity, dropType, itemId);
             return true;
-        }
-
-        private static void ApplyDropVisual(EntityManager entityManager, Entity dropEntity, DropRewardType dropType, int itemId)
-        {
-            if (!entityManager.HasComponent<MaterialMeshInfo>(dropEntity))
-                return;
-
-            RenderMeshArray renderMeshArray = entityManager.GetSharedComponentManaged<RenderMeshArray>(dropEntity);
-            UnityObjectRef<Mesh>[] meshReferences = renderMeshArray.MeshReferences;
-            UnityObjectRef<Material>[] materialReferences = renderMeshArray.MaterialReferences;
-            Mesh dropMesh = meshReferences != null && meshReferences.Length > 0 ? meshReferences[0].Value : null;
-            Material baseMaterial = materialReferences != null && materialReferences.Length > 0 ? materialReferences[0].Value : null;
-            Material dropMaterial = GetOrCreateDropMaterial(dropType, itemId, baseMaterial);
-            if (dropMaterial == null || dropMesh == null)
-                return;
-
-            entityManager.SetSharedComponentManaged(dropEntity, new RenderMeshArray(new[] { dropMaterial }, new[] { dropMesh }));
-            entityManager.SetComponentData(dropEntity, MaterialMeshInfo.FromRenderMeshArrayIndices(0, 0));
-        }
-
-        private static Material GetOrCreateDropMaterial(DropRewardType dropType, int itemId, Material baseMaterial)
-        {
-            string iconPath = AssetPathHelper.GetImageAsset(GetIconPath(dropType, itemId));
-            if (string.IsNullOrWhiteSpace(iconPath) || baseMaterial == null)
-                return null;
-
-            if (DropMaterials.TryGetValue(iconPath, out Material material) && material != null)
-                return material;
-
-            Texture texture = ResourceComponent.Instance.Load<Texture>(iconPath);
-            if (texture == null)
-                return null;
-
-            material = new Material(baseMaterial);
-            material.SetTexture("_BaseMap", texture);
-            DropMaterials[iconPath] = material;
-            return material;
-        }
-
-        private static string GetIconPath(DropRewardType dropType, int itemId)
-        {
-            if (dropType == DropRewardType.Money)
-                return ConfigComponent.Instance.Get<GameConfig>().MoneyIconPath;
-
-            ItemData itemData = DataComponent.Instance.Get<ItemData>(itemId);
-            return itemData?.IconPath;
         }
 
         private static void LogMissingDropPrefabOnce()

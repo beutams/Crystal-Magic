@@ -27,11 +27,19 @@ public enum StateScriptNodeRuntimeType : byte
     RequestSkillWithAddition,
     RequestInteraction,
     SpawnUnit,
+    QueryUnits,
+    ExecuteEffect,
+    DestroySelf,
+    CompleteInteraction,
+    AcknowledgeInteraction,
+    CollectInteraction,
+    StartNpcInteraction,
     Timer,
     Keep,
     Monitor,
     NumberMonitor,
     Addition,
+    PlayerInputEvent,
 }
 
 public enum StateScriptManagedCommandType : byte
@@ -41,6 +49,12 @@ public enum StateScriptManagedCommandType : byte
     PublishGameEvent,
     RequestInteraction,
     SpawnUnit,
+    ExecuteEffect,
+    DestroySelf,
+    CompleteInteraction,
+    AcknowledgeInteraction,
+    CollectInteraction,
+    StartNpcInteraction,
     StartAddition,
     StopAddition,
 #if UNITY_EDITOR
@@ -96,11 +110,13 @@ public static class StateScriptPortId
     public const byte OnChangeTrue = 7;
     public const byte OnChangeFalse = 8;
     public const byte OnValueChange = 5;
+    public const byte OnInputEvent = 5;
 }
 
 public struct StateScriptNodeDefinition
 {
     public StateScriptNodeRuntimeType Type;
+    public GameWorldExecutionTarget ExecutionTargets;
     public int ExpressionStart;
     public byte ExpressionCount;
     public int OutputRouteStart;
@@ -211,6 +227,7 @@ public struct StateScriptManagedCommandElement : IBufferElementData
     public float3 Position;
     public Entity TargetEntity;
     public UnitSourceValue Value;
+    public EffectRequestContext EffectContext;
 }
 
 [InternalBufferCapacity(0)]

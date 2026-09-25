@@ -19,10 +19,11 @@ public sealed class DungeonInterestPointAuthoring : MonoBehaviour
                 PatrolSpeed = Mathf.Max(0f, authoring._patrolSpeed),
                 ArrivalDistance = Mathf.Max(0.05f, authoring._arrivalDistance),
                 PatrolEnabled = 1,
-                CurrentTarget = Entity.Null,
-                NearestPlayerDistance = float.MaxValue,
             });
-            AddBuffer<DungeonInterestPointCandidateElement>(entity);
+            AddComponent(entity, new UnitFactionComponent
+            {
+                Value = UnitFactionType.Interactable,
+            });
         }
     }
 }

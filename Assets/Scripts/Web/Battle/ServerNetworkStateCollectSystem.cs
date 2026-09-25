@@ -9,12 +9,17 @@ using Unity.Transforms;
 [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitPostProcessSystemGroup), OrderLast = true)]
 [UpdateAfter(typeof(ServerNetworkEntitySpawnCollectSystem))]
-[UpdateBefore(typeof(DestroyEntitySystem))]
 public partial class ServerNetworkStateCollectSystem : SystemBase
 {
     private uint _lastCollectedFrame = uint.MaxValue;
     private int _frameInterval = 33;
     private readonly List<Action<uint, NetworkEntitySpawnInfo[], List<NetworkStateData>>> _snapshotCallbacks = new();
+
+    public void ResetScene()
+    {
+        _lastCollectedFrame = uint.MaxValue;
+        _snapshotCallbacks.Clear();
+    }
 
     public void RequestSnapshot(Action<uint, NetworkEntitySpawnInfo[], List<NetworkStateData>> callback)
     {
@@ -31,13 +36,17 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
 
         _frameInterval = frame.frameInterval;
         uint currentFrame = frame.currentFrame;
-        if (_lastCollectedFrame == currentFrame)
-            return;
-
-        _lastCollectedFrame = currentFrame;
         List<NetworkStateData> states = new();
-        CollectStates(states, currentFrame, true);
-        CollectPresentationEvents(states);
+        bool collectFrame = _lastCollectedFrame != currentFrame;
+        if (collectFrame)
+        {
+            _lastCollectedFrame = currentFrame;
+            CollectStates(states, currentFrame, true);
+            CollectPresentationEvents(states);
+        }
+
+        // 实体会在本次 ECS Update 末尾销毁，生命周期消息不能等下一网络帧。
+        CollectDespawnStates(states);
 
         if (states.Count > 0)
         {
@@ -51,7 +60,7 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
                 queue.Enqueue(states[index]);
         }
 
-        if (_snapshotCallbacks.Count == 0)
+        if (!collectFrame || _snapshotCallbacks.Count == 0)
         {
             return;
         }
@@ -71,19 +80,63 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
     {
         CollectMoveStates(states, onlyDirty);
         CollectFacingStates(states, onlyDirty);
-        CollectAnimationStates(states, onlyDirty);
+        CollectAnimationStates(states, currentFrame, onlyDirty);
         CollectVitalityStates(states, onlyDirty);
         CollectManaStates(states, onlyDirty);
         CollectBuffStates(states, currentFrame, onlyDirty);
         CollectControlStates(states, currentFrame, onlyDirty);
+        CollectBattlePlayerStatusStates(states, onlyDirty);
         CollectDeathStates(states, onlyDirty);
         CollectInteractableStates(states, onlyDirty);
         CollectTreasureStates(states, onlyDirty);
         CollectProjectileStates(states, onlyDirty);
         CollectPlayerPropCooldownStates(states, currentFrame, onlyDirty);
         CollectPlayerSkillChainStates(states, onlyDirty);
-        if (onlyDirty)
-            CollectDespawnStates(states);
+        CollectCharacterStates(states, onlyDirty);
+    }
+
+    private void CollectBattlePlayerStatusStates(List<NetworkStateData> states, bool onlyDirty)
+    {
+        foreach ((RefRO<NetworkIdentityComponent> identityRef,
+                  RefRW<BattlePlayerStatusComponent> statusRef) in
+                 SystemAPI.Query<RefRO<NetworkIdentityComponent>, RefRW<BattlePlayerStatusComponent>>())
+        {
+            BattlePlayerStatusComponent status = statusRef.ValueRO;
+            if ((onlyDirty && status.NetworkDirty == 0) || identityRef.ValueRO.id == Guid.Empty)
+                continue;
+
+            states.Add(new NetworkBattlePlayerStatusStateData
+            {
+                unitId = identityRef.ValueRO.id,
+                lifeState = status.LifeState,
+                connectionState = status.ConnectionState,
+                transitionReady = status.TransitionReady,
+            });
+            if (onlyDirty)
+            {
+                status.NetworkDirty = 0;
+                statusRef.ValueRW = status;
+            }
+        }
+    }
+
+    private void CollectCharacterStates(List<NetworkStateData> states, bool onlyDirty)
+    {
+        foreach ((PlayerCharacterComponent character, RefRO<NetworkIdentityComponent> identity) in
+                 SystemAPI.Query<PlayerCharacterComponent, RefRO<NetworkIdentityComponent>>())
+        {
+            if ((onlyDirty && character.NetworkDirty == 0) || identity.ValueRO.id == Guid.Empty)
+                continue;
+
+            states.Add(new NetworkCharacterStateData
+            {
+                unitId = identity.ValueRO.id,
+                revision = character.Revision,
+                characterData = PlayerCharacterUtility.Clone(character.Data),
+            });
+            if (onlyDirty)
+                character.NetworkDirty = 0;
+        }
     }
 
     private void CollectPresentationEvents(List<NetworkStateData> states)
@@ -145,7 +198,7 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
         }
     }
 
-    private void CollectAnimationStates(List<NetworkStateData> states, bool onlyDirty)
+    private void CollectAnimationStates(List<NetworkStateData> states, uint currentFrame, bool onlyDirty)
     {
         foreach ((RefRO<NetworkIdentityComponent> identityRef,
                   RefRW<UnitAnimationComponent> animationRef) in
@@ -154,6 +207,9 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
             UnitAnimationComponent animation = animationRef.ValueRO;
             if ((onlyDirty && animation.NetworkDirty == 0) || identityRef.ValueRO.id == Guid.Empty)
                 continue;
+
+            if (onlyDirty)
+                animation.StartFrame = currentFrame;
 
             states.Add(new NetworkAnimationStateData
             {
@@ -306,7 +362,10 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
             states.Add(new NetworkDeathStateData
             {
                 unitId = identityRef.ValueRO.id,
-                isDead = EntityManager.IsComponentEnabled<UnitDeathComponent>(entity) ? (byte)1 : (byte)0,
+                // 联机玩家死亡后保留实体并进入观战状态，不能触发客户端的死亡销毁表现。
+                isDead = EntityManager.HasComponent<BattlePlayerStatusComponent>(entity)
+                    ? (byte)0
+                    : EntityManager.IsComponentEnabled<UnitDeathComponent>(entity) ? (byte)1 : (byte)0,
             });
             if (onlyDirty)
             {
@@ -462,11 +521,36 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
 
             bool isDead = EntityManager.HasComponent<UnitDeathComponent>(entity) &&
                           EntityManager.IsComponentEnabled<UnitDeathComponent>(entity);
-            states.Add(new NetworkEntityDespawnStateData
+            if (isDead)
+            {
+                states.Add(new NetworkDeathStateData
+                {
+                    unitId = unitId,
+                    isDead = 1,
+                });
+            }
+
+            if (EntityManager.HasComponent<UnitFacingComponent>(entity))
+            {
+                states.Add(NetworkUnitStateSnapshotUtility.CreateFacingState(
+                    unitId,
+                    EntityManager.GetComponentData<UnitFacingComponent>(entity)));
+            }
+
+            NetworkEntityDespawnStateData despawn = new()
             {
                 unitId = unitId,
                 waitForDeathPresentation = isDead ? (byte)1 : (byte)0,
-            });
+            };
+            if (EntityManager.HasComponent<LocalTransform>(entity))
+            {
+                float3 position = EntityManager.GetComponentData<LocalTransform>(entity).Position;
+                despawn.hasPosition = true;
+                despawn.positionX = position.x;
+                despawn.positionY = position.y;
+                despawn.positionZ = position.z;
+            }
+            states.Add(despawn);
         }
     }
 

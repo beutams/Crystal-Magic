@@ -20,6 +20,7 @@ GameObject:
   - component: {fileID: 9156645729405422591}
   - component: {fileID: 1241455818070531358}
   - component: {fileID: 6382672789456283339}
+  - component: {fileID: 910000000000000801}
   m_Layer: 0
   m_Name: NPCTraining
   m_TagString: Untagged
@@ -27,6 +28,18 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &910000000000000801
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6977492858261363131}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5aa0c57b6dc648bc9be25e46a501e001, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
 --- !u!4 &2128642704882324699
 Transform:
   m_ObjectHideFlags: 0

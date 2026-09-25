@@ -39,6 +39,12 @@ public static class UnitVariableSource
     [UnitSourceGet(8, "unit.variables.getFloat3", UnitValueCategory.Float3, UnitValueCategory.String, ParameterNames = new[] { "Key" })]
     [UnitSourceGet(9, "unit.variables.getEntity", UnitValueCategory.Entity, UnitValueCategory.String, ParameterNames = new[] { "Key" })]
     [UnitSourceGet(10, "unit.variables.getString", UnitValueCategory.String, UnitValueCategory.String, ParameterNames = new[] { "Key" })]
+    [UnitSourceGet(11, "unit.variables.listEntity", UnitValueCategory.Entity,
+        UnitValueCategory.String, UnitValueCategory.Number,
+        ParameterNames = new[] { "Key", "Index" })]
+    [UnitSourceGet(12, "unit.variables.getNumberOrDefault", UnitValueCategory.Number,
+        UnitValueCategory.String, UnitValueCategory.Number,
+        ParameterNames = new[] { "Key", "Default" })]
     public static bool TryGet(
         int operation,
         Entity entity,
@@ -85,6 +91,31 @@ public static class UnitVariableSource
         if (!arguments.TryGetString(0, out FixedString128Bytes key))
             return false;
 
+        if (operation == 11)
+        {
+            if (!arguments.TryGetInt(1, out int index) || index < 0 ||
+                !TryBuildListKey(key, "count", out FixedString128Bytes countKey) ||
+                !TryGetValue(variables, countKey, out UnitSourceValue countValue) ||
+                !countValue.TryGetInt(out int count) || index >= count ||
+                !TryBuildListKey(key, index, out FixedString128Bytes entryKey))
+            {
+                return false;
+            }
+
+            result = GetCategory(variables, entryKey, UnitValueCategory.Entity);
+            return result.Type != UnitValueType.None;
+        }
+
+        if (operation == 12)
+        {
+            if (!arguments.TryGetNumber(1, out float defaultValue))
+                return false;
+            result = GetCategory(variables, key, UnitValueCategory.Number);
+            if (result.Type == UnitValueType.None)
+                result = UnitSourceValue.FromFloat(defaultValue);
+            return true;
+        }
+
         UnitSourceValue value = operation switch
         {
             3 => UnitSourceValue.FromBool(Contains(variables, key)),
@@ -105,6 +136,8 @@ public static class UnitVariableSource
         ParameterNames = new[] { "Value" }, RequiresKey = true)]
     [UnitSourceSet(1, "unit.variables.remove", UnitValueCategory.String, ParameterNames = new[] { "Key" })]
     [UnitSourceSet(2, "unit.variables.setOther", UnitValueCategory.Entity, ParameterNames = new[] { "Other" })]
+    [UnitSourceSet(3, "unit.variables.addNumber", UnitValueCategory.Number,
+        ParameterNames = new[] { "Delta" }, RequiresKey = true)]
     public static bool TrySet(
         int operation,
         Entity entity,
@@ -133,6 +166,20 @@ public static class UnitVariableSource
                    SetValue(variables, arguments.Key, sourceValue);
         }
 
+        if (operation == 3)
+        {
+            if (arguments.HasKey == 0 || !arguments.TryGetNumber(0, out float delta))
+                return false;
+
+            float current = 0f;
+            if (TryGetValue(variables, arguments.Key, out UnitSourceValue currentValue) &&
+                !currentValue.TryGetNumber(out current))
+            {
+                return false;
+            }
+            return SetValue(variables, arguments.Key, UnitSourceValue.FromFloat(current + delta));
+        }
+
         return operation == 1 && arguments.TryGetString(0, out FixedString128Bytes key) &&
                Remove(variables, key);
     }
@@ -149,6 +196,26 @@ public static class UnitVariableSource
 
         variables = variableLookup[entity];
         return true;
+    }
+
+    private static bool TryBuildListKey(
+        in FixedString128Bytes prefix,
+        int index,
+        out FixedString128Bytes key)
+    {
+        key = prefix;
+        return key.Append('.') == FormatError.None &&
+               key.Append(index) == FormatError.None;
+    }
+
+    private static bool TryBuildListKey(
+        in FixedString128Bytes prefix,
+        in FixedString32Bytes suffix,
+        out FixedString128Bytes key)
+    {
+        key = prefix;
+        return key.Append('.') == FormatError.None &&
+               key.Append(suffix) == FormatError.None;
     }
 
     private static bool SetOther(

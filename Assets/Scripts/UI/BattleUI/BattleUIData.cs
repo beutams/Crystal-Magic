@@ -33,6 +33,22 @@ public class BattleUIData : UIData
     public UINode MP_BarMask_Bar;
     public UINode MP_Border;
     public UINode MP_Value;
+    public UINode PropShortcuts;
+    public UINode PropShortcuts_PropSlot1;
+    public UINode PropShortcuts_PropSlot1_Icon;
+    public UINode PropShortcuts_PropSlot1_Cooldown;
+    public UINode PropShortcuts_PropSlot1_Count;
+    public UINode PropShortcuts_PropSlot1_Key;
+    public UINode PropShortcuts_PropSlot2;
+    public UINode PropShortcuts_PropSlot2_Icon;
+    public UINode PropShortcuts_PropSlot2_Cooldown;
+    public UINode PropShortcuts_PropSlot2_Count;
+    public UINode PropShortcuts_PropSlot2_Key;
+    public UINode PropShortcuts_PropSlot3;
+    public UINode PropShortcuts_PropSlot3_Icon;
+    public UINode PropShortcuts_PropSlot3_Cooldown;
+    public UINode PropShortcuts_PropSlot3_Count;
+    public UINode PropShortcuts_PropSlot3_Key;
 
     public override void Bind(Transform root)
     {
@@ -63,5 +79,21 @@ public class BattleUIData : UIData
         MP_BarMask_Bar = UINode.From(Find(root, "MP/BarMask/Bar"));
         MP_Border = UINode.From(Find(root, "MP/Border"));
         MP_Value = UINode.From(Find(root, "MP/Value"));
+        PropShortcuts = UINode.From(Find(root, "PropShortcuts"));
+        PropShortcuts_PropSlot1 = UINode.From(Find(root, "PropShortcuts/PropSlot1"));
+        PropShortcuts_PropSlot1_Icon = UINode.From(Find(root, "PropShortcuts/PropSlot1/Icon"));
+        PropShortcuts_PropSlot1_Cooldown = UINode.From(Find(root, "PropShortcuts/PropSlot1/Cooldown"));
+        PropShortcuts_PropSlot1_Count = UINode.From(Find(root, "PropShortcuts/PropSlot1/Count"));
+        PropShortcuts_PropSlot1_Key = UINode.From(Find(root, "PropShortcuts/PropSlot1/Key"));
+        PropShortcuts_PropSlot2 = UINode.From(Find(root, "PropShortcuts/PropSlot2"));
+        PropShortcuts_PropSlot2_Icon = UINode.From(Find(root, "PropShortcuts/PropSlot2/Icon"));
+        PropShortcuts_PropSlot2_Cooldown = UINode.From(Find(root, "PropShortcuts/PropSlot2/Cooldown"));
+        PropShortcuts_PropSlot2_Count = UINode.From(Find(root, "PropShortcuts/PropSlot2/Count"));
+        PropShortcuts_PropSlot2_Key = UINode.From(Find(root, "PropShortcuts/PropSlot2/Key"));
+        PropShortcuts_PropSlot3 = UINode.From(Find(root, "PropShortcuts/PropSlot3"));
+        PropShortcuts_PropSlot3_Icon = UINode.From(Find(root, "PropShortcuts/PropSlot3/Icon"));
+        PropShortcuts_PropSlot3_Cooldown = UINode.From(Find(root, "PropShortcuts/PropSlot3/Cooldown"));
+        PropShortcuts_PropSlot3_Count = UINode.From(Find(root, "PropShortcuts/PropSlot3/Count"));
+        PropShortcuts_PropSlot3_Key = UINode.From(Find(root, "PropShortcuts/PropSlot3/Key"));
     }
 }

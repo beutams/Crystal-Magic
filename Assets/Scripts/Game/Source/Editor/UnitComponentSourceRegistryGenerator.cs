@@ -351,8 +351,6 @@ public static class UnitComponentSourceRegistryGenerator
     {
         builder.AppendLine("public static class UnitComponentSourceRegistry");
         builder.AppendLine("{");
-        builder.AppendLine("    public const string InteractionRequestKey = \"game.interaction.candidate\";");
-        builder.AppendLine();
         AppendLookup(builder, entries.Where(entry => entry.IsGet), true);
         builder.AppendLine();
         AppendLookup(builder, entries.Where(entry => !entry.IsGet), false);
@@ -383,8 +381,6 @@ public static class UnitComponentSourceRegistryGenerator
                 }
             }
 
-            if (provider.Type == typeof(GameInteractionSource))
-                builder.AppendLine($"            schema.AddInteractionGet(InteractionRequestKey, typeof({TypeName(provider.Attribute.ComponentType)}));");
             builder.AppendLine("        }");
         }
         builder.AppendLine("        return schema.Build();");
@@ -467,10 +463,18 @@ public static class UnitComponentSourceRegistryGenerator
             .Where(lookup => lookup.Kind == LookupKind.Buffer && !lookup.IsReadOnly)
             .Select(lookup => lookup.ElementType)
             .ToHashSet();
+        List<Type> singletonComponentTypes = entries
+            .Where(entry => entry.Provider.Attribute.IsGlobal)
+            .Select(entry => entry.Provider.Attribute.ComponentType)
+            .Append(typeof(PlayerSkillDefinitionRegistryComponent))
+            .Distinct()
+            .OrderBy(type => type.FullName, StringComparer.Ordinal)
+            .ToList();
 
         builder.AppendLine("public struct UnitSourceDispatcher");
         builder.AppendLine("{");
-        builder.AppendLine("    private Entity _globalEntity;");
+        for (int index = 0; index < singletonComponentTypes.Count; index++)
+            builder.AppendLine($"    private Entity {SingletonEntityFieldName(singletonComponentTypes[index])};");
         for (int index = 0; index < componentLookupTypes.Count; index++)
         {
             if (!writableComponentLookupTypes.Contains(componentLookupTypes[index]))
@@ -489,6 +493,7 @@ public static class UnitComponentSourceRegistryGenerator
             "Initialize",
             componentLookupTypes,
             bufferLookupTypes,
+            singletonComponentTypes,
             "SystemBase system",
             "system.EntityManager",
             type => $"system.GetComponentLookup<{TypeName(type)}>({Bool(!writableComponentLookupTypes.Contains(type))})",
@@ -498,6 +503,7 @@ public static class UnitComponentSourceRegistryGenerator
             "InitializeReadOnly",
             componentLookupTypes,
             bufferLookupTypes,
+            singletonComponentTypes,
             "SystemBase system",
             "system.EntityManager",
             type => $"system.GetComponentLookup<{TypeName(type)}>(true)",
@@ -508,6 +514,7 @@ public static class UnitComponentSourceRegistryGenerator
             "Initialize",
             componentLookupTypes,
             bufferLookupTypes,
+            singletonComponentTypes,
             "ref SystemState state",
             "state.EntityManager",
             type => $"state.GetComponentLookup<{TypeName(type)}>({Bool(!writableComponentLookupTypes.Contains(type))})",
@@ -517,6 +524,7 @@ public static class UnitComponentSourceRegistryGenerator
             "InitializeReadOnly",
             componentLookupTypes,
             bufferLookupTypes,
+            singletonComponentTypes,
             "ref SystemState state",
             "state.EntityManager",
             type => $"state.GetComponentLookup<{TypeName(type)}>(true)",
@@ -524,14 +532,6 @@ public static class UnitComponentSourceRegistryGenerator
         AppendUpdate(builder, componentLookupTypes, bufferLookupTypes, "ref SystemState state", "ref state");
         AppendTryGet(builder, entries);
         AppendTrySet(builder, entries);
-        builder.AppendLine("    public bool TryGetInteraction(out InteractionRequestSnapshot request)");
-        builder.AppendLine("    {");
-        builder.AppendLine("        request = default;");
-        builder.AppendLine($"        if (!{ComponentFieldName(typeof(InteractionCandidateComponent))}.TryGetComponent(_globalEntity, out InteractionCandidateComponent candidate))");
-        builder.AppendLine("            return false;");
-        builder.AppendLine("        return GameInteractionSource.TryGetInteraction(in candidate, out request);");
-        builder.AppendLine("    }");
-        builder.AppendLine();
         builder.AppendLine("}");
     }
 
@@ -540,6 +540,7 @@ public static class UnitComponentSourceRegistryGenerator
         string methodName,
         List<Type> componentLookupTypes,
         List<Type> bufferLookupTypes,
+        List<Type> singletonComponentTypes,
         string parameter,
         string entityManagerExpression,
         Func<Type, string> componentExpression,
@@ -551,8 +552,8 @@ public static class UnitComponentSourceRegistryGenerator
             builder.AppendLine($"        {ComponentFieldName(componentLookupTypes[index])} = {componentExpression(componentLookupTypes[index])};");
         for (int index = 0; index < bufferLookupTypes.Count; index++)
             builder.AppendLine($"        {BufferFieldName(bufferLookupTypes[index])} = {bufferExpression(bufferLookupTypes[index])};");
-        builder.AppendLine($"        if (_globalEntity == Entity.Null || !{entityManagerExpression}.Exists(_globalEntity))");
-        builder.AppendLine($"            WorldStateUtility.TryGetEntity({entityManagerExpression}, out _globalEntity);");
+        for (int index = 0; index < singletonComponentTypes.Count; index++)
+            builder.AppendLine($"        {SingletonEntityFieldName(singletonComponentTypes[index])} = GameSingletonUtility.GetEntity<{TypeName(singletonComponentTypes[index])}>({entityManagerExpression});");
         builder.AppendLine("    }");
         builder.AppendLine();
     }
@@ -570,11 +571,6 @@ public static class UnitComponentSourceRegistryGenerator
             builder.AppendLine($"        {ComponentFieldName(componentLookupTypes[index])}.Update({updateArgument});");
         for (int index = 0; index < bufferLookupTypes.Count; index++)
             builder.AppendLine($"        {BufferFieldName(bufferLookupTypes[index])}.Update({updateArgument});");
-        string entityManagerExpression = parameter.StartsWith("ref ", StringComparison.Ordinal)
-            ? "state.EntityManager"
-            : "system.EntityManager";
-        builder.AppendLine($"        if (_globalEntity == Entity.Null || !{entityManagerExpression}.Exists(_globalEntity))");
-        builder.AppendLine($"            WorldStateUtility.TryGetEntity({entityManagerExpression}, out _globalEntity);");
         builder.AppendLine("    }");
         builder.AppendLine();
     }
@@ -589,7 +585,9 @@ public static class UnitComponentSourceRegistryGenerator
         foreach (EntryInfo entry in entries.Where(entry => entry.IsGet && entry.Mode == AccessMode.ComponentGet))
         {
             Type type = entry.Provider.Attribute.ComponentType;
-            string target = entry.Provider.Attribute.IsGlobal ? "_globalEntity" : "entity";
+            string target = entry.Provider.Attribute.IsGlobal
+                ? SingletonEntityFieldName(type)
+                : "entity";
             builder.AppendLine($"            case UnitSourceId.{entry.EnumName}:");
             builder.AppendLine("            {");
             builder.AppendLine($"                if (!{ComponentFieldName(type)}.TryGetComponent({target}, out {TypeName(type)} component))");
@@ -599,7 +597,9 @@ public static class UnitComponentSourceRegistryGenerator
         }
         foreach (EntryInfo entry in entries.Where(entry => entry.IsGet && entry.Mode == AccessMode.LookupGet))
         {
-            string target = entry.Provider.Attribute.IsGlobal ? "_globalEntity" : "entity";
+            string target = entry.Provider.Attribute.IsGlobal
+                ? SingletonEntityFieldName(entry.Provider.Attribute.ComponentType)
+                : "entity";
             builder.AppendLine($"            case UnitSourceId.{entry.EnumName}:");
             builder.AppendLine($"                return {TypeName(entry.Provider.Type)}.{entry.Method.Name}({entry.Operation}, {BuildTargetArgument(entry, target)}, {BuildLookupArguments(entry)}, in arguments, out value);");
         }
@@ -628,7 +628,9 @@ public static class UnitComponentSourceRegistryGenerator
         foreach (EntryInfo entry in entries.Where(entry => !entry.IsGet && entry.Mode == AccessMode.ComponentSet))
         {
             Type type = entry.Provider.Attribute.ComponentType;
-            string target = entry.Provider.Attribute.IsGlobal ? "_globalEntity" : "entity";
+            string target = entry.Provider.Attribute.IsGlobal
+                ? SingletonEntityFieldName(type)
+                : "entity";
             builder.AppendLine($"            case UnitSourceId.{entry.EnumName}:");
             builder.AppendLine("            {");
             builder.AppendLine($"                if (!{ComponentFieldName(type)}.HasComponent({target}))");
@@ -639,7 +641,9 @@ public static class UnitComponentSourceRegistryGenerator
         }
         foreach (EntryInfo entry in entries.Where(entry => !entry.IsGet && entry.Mode == AccessMode.LookupSet))
         {
-            string target = entry.Provider.Attribute.IsGlobal ? "_globalEntity" : "entity";
+            string target = entry.Provider.Attribute.IsGlobal
+                ? SingletonEntityFieldName(entry.Provider.Attribute.ComponentType)
+                : "entity";
             builder.AppendLine($"            case UnitSourceId.{entry.EnumName}:");
             builder.AppendLine($"                return {TypeName(entry.Provider.Type)}.{entry.Method.Name}({entry.Operation}, {BuildTargetArgument(entry, target)}, {BuildLookupArguments(entry)}, in arguments);");
         }
@@ -668,7 +672,7 @@ public static class UnitComponentSourceRegistryGenerator
     private static string BuildTargetArgument(EntryInfo entry, string target)
     {
         return entry.Method.GetParameters()[1].ParameterType == typeof(UnitSourceAccessContext)
-            ? $"new UnitSourceAccessContext({target}, _globalEntity)"
+            ? $"new UnitSourceAccessContext({target}, {SingletonEntityFieldName(typeof(PlayerSkillDefinitionRegistryComponent))})"
             : target;
     }
 
@@ -700,6 +704,16 @@ public static class UnitComponentSourceRegistryGenerator
         for (int index = 0; index < name.Length; index++)
             builder.Append(char.IsLetterOrDigit(name[index]) ? name[index] : '_');
         builder.Append("Lookup");
+        return builder.ToString();
+    }
+
+    private static string SingletonEntityFieldName(Type type)
+    {
+        StringBuilder builder = new("_");
+        string name = type.FullName ?? type.Name;
+        for (int index = 0; index < name.Length; index++)
+            builder.Append(char.IsLetterOrDigit(name[index]) ? name[index] : '_');
+        builder.Append("Entity");
         return builder.ToString();
     }
 

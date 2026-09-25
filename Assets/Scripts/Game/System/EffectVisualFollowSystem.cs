@@ -4,7 +4,8 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
-[UpdateInGroup(typeof(ClientPresentationSystemGroup))]
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation)]
+[UpdateInGroup(typeof(GamePresentationSystemGroup))]
 [UpdateAfter(typeof(SkillProjectileSystem))]
 [UpdateBefore(typeof(SpriteEffectAnimationSystem))]
 partial class EffectVisualFollowSystem : SystemBase

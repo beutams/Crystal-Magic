@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using CrystalMagic.Core;
+using CrystalMagic.Game.Data.Effects;
 using Newtonsoft.Json;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -72,8 +73,10 @@ namespace CrystalMagic.Game.Data
                         requestSkillWithAddition.Input.EnsureValid();
                         break;
                     case RequestInteractionActionNodeData requestInteraction:
-                        requestInteraction.Interaction ??= RequestInteractionActionNodeData.CreateDefaultInteraction();
-                        requestInteraction.Interaction.EnsureValid();
+                        requestInteraction.Target ??= RequestInteractionActionNodeData.CreateDefaultTargetExpression();
+                        break;
+                    case CompleteInteractionActionNodeData completeInteraction:
+                        completeInteraction.Result ??= CompleteInteractionActionNodeData.CreateDefaultResultExpression();
                         break;
                     case PublishGameEventStateScriptNodeData publishGameEvent:
                         publishGameEvent.Reference ??= PublishGameEventStateScriptNodeData.CreateDefaultReferenceExpression();
@@ -83,6 +86,12 @@ namespace CrystalMagic.Game.Data
                         spawnUnit.Count = math.max(1, spawnUnit.Count);
                         spawnUnit.SpawnRadius = math.max(0f, spawnUnit.SpawnRadius);
                         spawnUnit.MinSpawnRadius = math.clamp(spawnUnit.MinSpawnRadius, 0f, spawnUnit.SpawnRadius);
+                        break;
+                    case QueryUnitsActionNodeData queryUnits:
+                        queryUnits.EnsureValid();
+                        break;
+                    case ExecuteEffectActionNodeData executeEffect:
+                        executeEffect.EnsureValid();
                         break;
                     case TimerStateScriptNodeData timer:
                         timer.Duration ??= TimerStateScriptNodeData.CreateDefaultDurationExpression();
@@ -118,6 +127,8 @@ namespace CrystalMagic.Game.Data
         public string Type;
         public string Guid;
         public Vector2 EditorPosition;
+        public GameWorldExecutionTarget ExecutionTargets =
+            GameWorldExecutionTarget.Standalone | GameWorldExecutionTarget.Server;
     }
 
     [Serializable]
@@ -260,49 +271,67 @@ namespace CrystalMagic.Game.Data
     }
 
     [Serializable]
-    public enum InteractionRequestSource : byte
-    {
-        Getter = 0,
-        Fixed = 1,
-    }
-
-    [Serializable]
-    public sealed class InteractionRequestInput
-    {
-        public InteractionRequestSource Source = InteractionRequestSource.Getter;
-        public string GetterKey = "game.interaction.candidate";
-        public ValueExpression Target = CreateDefaultTargetExpression();
-        public UnitInteractionData FixedData;
-
-        public void EnsureValid()
-        {
-            GetterKey ??= string.Empty;
-            Target ??= CreateDefaultTargetExpression();
-        }
-
-        public static ValueExpression CreateDefaultTargetExpression()
-        {
-            return new ValueExpression
-            {
-                Literal = UnitValue.FromEntity(Entity.Null),
-            };
-        }
-    }
-
-    [Serializable]
     [FactoryKey("RequestInteraction", 14, "Request Interaction")]
     public sealed class RequestInteractionActionNodeData : ActionStateScriptNodeData
     {
-        public InteractionRequestInput Interaction = CreateDefaultInteraction();
+        public ValueExpression Target = CreateDefaultTargetExpression();
 
         public RequestInteractionActionNodeData()
         {
             Type = "RequestInteraction";
         }
 
-        public static InteractionRequestInput CreateDefaultInteraction()
+        public static ValueExpression CreateDefaultTargetExpression()
         {
-            return new InteractionRequestInput();
+            return new ValueExpression { Literal = UnitValue.FromEntity(Entity.Null) };
+        }
+    }
+
+    [Serializable]
+    [FactoryKey("CompleteInteraction", 19, "Complete Interaction")]
+    public sealed class CompleteInteractionActionNodeData : ActionStateScriptNodeData
+    {
+        public InteractionResultCode ResultCode = InteractionResultCode.Success;
+        public ValueExpression Result = CreateDefaultResultExpression();
+
+        public CompleteInteractionActionNodeData()
+        {
+            Type = "CompleteInteraction";
+        }
+
+        public static ValueExpression CreateDefaultResultExpression()
+        {
+            return new ValueExpression { Literal = UnitValue.FromBool(true) };
+        }
+    }
+
+    [Serializable]
+    [FactoryKey("AcknowledgeInteraction", 25, "Acknowledge Interaction")]
+    public sealed class AcknowledgeInteractionActionNodeData : ActionStateScriptNodeData
+    {
+        public AcknowledgeInteractionActionNodeData()
+        {
+            Type = "AcknowledgeInteraction";
+        }
+    }
+
+    [Serializable]
+    [FactoryKey("CollectInteraction", 26, "Collect Interaction")]
+    public sealed class CollectInteractionActionNodeData : ActionStateScriptNodeData
+    {
+        public CollectInteractionActionNodeData()
+        {
+            Type = "CollectInteraction";
+        }
+    }
+
+    [Serializable]
+    [FactoryKey("StartNpcInteraction", 27, "Start NPC Interaction")]
+    public sealed class StartNpcInteractionActionNodeData : ActionStateScriptNodeData
+    {
+        public StartNpcInteractionActionNodeData()
+        {
+            Type = "StartNpcInteraction";
         }
     }
 
@@ -327,6 +356,147 @@ namespace CrystalMagic.Game.Data
         public SpawnUnitActionNodeData()
         {
             Type = "SpawnUnit";
+        }
+    }
+
+    [Serializable]
+    public enum StateScriptUnitQuerySortMode : byte
+    {
+        None,
+        DistanceAscending,
+        DistanceDescending,
+    }
+
+    [Serializable]
+    [FactoryKey("QueryUnits", 16, "Query Units")]
+    public sealed class QueryUnitsActionNodeData : ActionStateScriptNodeData
+    {
+        public UnitQueryShapeType Shape = UnitQueryShapeType.WholeWorld;
+        public ValueExpression Center = CreateDefaultCenterExpression();
+        public ValueExpression Direction = CreateDefaultDirectionExpression();
+        public ValueExpression Size = CreateDefaultSizeExpression();
+        public ValueExpression Radius = CreateDefaultRadiusExpression();
+        public ValueExpression Angle = CreateDefaultAngleExpression();
+        public UnitFactionMask FactionMask = UnitFactionMask.All;
+        public int UnitDataId = -1;
+        public bool ExcludeSelf = true;
+        public bool ExcludeDead = true;
+        // Optional UnitVariable entity-list prefix: <key>.count and <key>.<index>.
+        public string ExcludedEntitiesKey = string.Empty;
+        public bool RememberResultsInExcludedEntities;
+        public bool RequireAvailableInteraction;
+        public int MaxCount;
+        public StateScriptUnitQuerySortMode SortMode;
+        public string ResultKey = string.Empty;
+
+        public QueryUnitsActionNodeData()
+        {
+            Type = "QueryUnits";
+        }
+
+        public void EnsureValid()
+        {
+            Center ??= CreateDefaultCenterExpression();
+            Direction ??= CreateDefaultDirectionExpression();
+            Size ??= CreateDefaultSizeExpression();
+            Radius ??= CreateDefaultRadiusExpression();
+            Angle ??= CreateDefaultAngleExpression();
+            MaxCount = math.max(0, MaxCount);
+            ResultKey ??= string.Empty;
+            ExcludedEntitiesKey ??= string.Empty;
+        }
+
+        public static ValueExpression CreateDefaultCenterExpression()
+        {
+            return new ValueExpression
+            {
+                Kind = ValueExpressionKind.Getter,
+                GetterKey = "unit.transform.position",
+            };
+        }
+
+        public static ValueExpression CreateDefaultDirectionExpression()
+        {
+            return new ValueExpression { Literal = UnitValue.FromFloat2(new float2(1f, 0f)) };
+        }
+
+        public static ValueExpression CreateDefaultSizeExpression()
+        {
+            return new ValueExpression { Literal = UnitValue.FromFloat2(new float2(1f)) };
+        }
+
+        public static ValueExpression CreateDefaultRadiusExpression()
+        {
+            return new ValueExpression { Literal = UnitValue.FromFloat(1f) };
+        }
+
+        public static ValueExpression CreateDefaultAngleExpression()
+        {
+            return new ValueExpression { Literal = UnitValue.FromFloat(90f) };
+        }
+    }
+
+    [Serializable]
+    public enum StateScriptEffectOriginSource : byte
+    {
+        None,
+        Self,
+        Other,
+    }
+
+    [Serializable]
+    [FactoryKey("ExecuteEffect", 17, "Execute Effect")]
+    public sealed class ExecuteEffectActionNodeData : ActionStateScriptNodeData
+    {
+        [SerializeReference]
+        public EffectData[] Effects = Array.Empty<EffectData>();
+        public StateScriptEffectOriginSource OriginSource = StateScriptEffectOriginSource.Self;
+        public ValueExpression TargetEntity = CreateDefaultEntityExpression();
+        public ValueExpression OtherEntity = CreateDefaultEntityExpression();
+        public ValueExpression Position = QueryUnitsActionNodeData.CreateDefaultCenterExpression();
+        public ValueExpression TriggerValue = CreateDefaultTriggerValueExpression();
+        public ValueExpression SourceSkillId = CreateDefaultSourceSkillIdExpression();
+        public int RepeatCount = 1;
+
+        public ExecuteEffectActionNodeData()
+        {
+            Type = "ExecuteEffect";
+        }
+
+        public void EnsureValid()
+        {
+            Effects ??= Array.Empty<EffectData>();
+            TargetEntity ??= CreateDefaultEntityExpression();
+            OtherEntity ??= CreateDefaultEntityExpression();
+            Position ??= QueryUnitsActionNodeData.CreateDefaultCenterExpression();
+            TriggerValue ??= CreateDefaultTriggerValueExpression();
+            SourceSkillId ??= CreateDefaultSourceSkillIdExpression();
+            RepeatCount = math.max(1, RepeatCount);
+        }
+
+        public static ValueExpression CreateDefaultEntityExpression()
+        {
+            return new ValueExpression { Literal = UnitValue.FromEntity(Entity.Null) };
+        }
+
+        public static ValueExpression CreateDefaultTriggerValueExpression()
+        {
+            return new ValueExpression { Literal = UnitValue.FromFloat(0f) };
+        }
+
+        public static ValueExpression CreateDefaultSourceSkillIdExpression()
+        {
+            return new ValueExpression { Literal = UnitValue.FromInt(-1) };
+        }
+    }
+
+    [Serializable]
+    [FactoryKey("DestroySelf", 18, "Destroy Self")]
+    public sealed class DestroySelfActionNodeData : ActionStateScriptNodeData
+    {
+        public DestroySelfActionNodeData()
+        {
+            Type = "DestroySelf";
         }
     }
 
@@ -424,6 +594,20 @@ namespace CrystalMagic.Game.Data
         public AdditionStateScriptNodeData()
         {
             Type = "Addition";
+        }
+    }
+
+    [Serializable]
+    [FactoryKey("PlayerInputEvent", 28, "Player Input Event")]
+    public sealed class PlayerInputEventStateScriptNodeData : StateStateScriptNodeData
+    {
+        public PlayerInputOperationType EventType;
+        // 仅主操作可额外保持原有的按住连续施法；当帧已有点击时不重复触发。
+        public bool RepeatWhileHeld;
+
+        public PlayerInputEventStateScriptNodeData()
+        {
+            Type = "PlayerInputEvent";
         }
     }
 

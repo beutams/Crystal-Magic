@@ -94,9 +94,8 @@ namespace CrystalMagic.Core {
     public class CharacterPropData
     {
         public List<CharacterPropSlotData> Slots = new();
-        public int[] ShortcutSlotIndexes = Array.Empty<int>();
 
-        public void EnsureValid(int slotCount, int shortcutSlotCount, List<string> repairedPaths = null, string path = "Props")
+        public void EnsureValid(int slotCount, List<string> repairedPaths = null, string path = "Props")
         {
             if (Slots == null)
             {
@@ -124,34 +123,6 @@ namespace CrystalMagic.Core {
                     repairedPaths?.Add($"{path}.Slots[{i}]");
                 }
                 Slots[i].EnsureValid();
-            }
-
-            int clampedShortcutCount = Math.Max(0, shortcutSlotCount);
-            if (ShortcutSlotIndexes == null || ShortcutSlotIndexes.Length != clampedShortcutCount)
-            {
-                int[] resizedShortcuts = new int[clampedShortcutCount];
-                for (int i = 0; i < resizedShortcuts.Length; i++)
-                {
-                    resizedShortcuts[i] = i < clampedSlotCount ? i : -1;
-                }
-
-                if (ShortcutSlotIndexes != null)
-                {
-                    int copyCount = Math.Min(ShortcutSlotIndexes.Length, resizedShortcuts.Length);
-                    for (int i = 0; i < copyCount; i++)
-                    {
-                        resizedShortcuts[i] = ShortcutSlotIndexes[i];
-                    }
-                }
-
-                ShortcutSlotIndexes = resizedShortcuts;
-                repairedPaths?.Add($"{path}.ShortcutSlotIndexes");
-            }
-
-            for (int i = 0; i < ShortcutSlotIndexes.Length; i++)
-            {
-                if (ShortcutSlotIndexes[i] < -1 || ShortcutSlotIndexes[i] >= clampedSlotCount)
-                    ShortcutSlotIndexes[i] = -1;
             }
         }
 
@@ -285,9 +256,18 @@ namespace CrystalMagic.Core {
     [System.Serializable]
     public class InventoryItemData
     {
-        public int ItemId;
+        public int ItemId = -1;
         public int Quantity;
         public ItemType ItemType;
+
+        public bool IsEmpty => ItemId < 0 || Quantity <= 0;
+
+        public void Clear()
+        {
+            ItemId = -1;
+            Quantity = 0;
+            ItemType = ItemType.None;
+        }
     }
 
     /// <summary>

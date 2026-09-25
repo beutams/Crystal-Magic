@@ -8,7 +8,6 @@ using Unity.Entities;
 public partial class ServerNetworkEntitySpawnCollectSystem : SystemBase
 {
     private EntityQuery _queueQuery;
-    private uint _lastCollectedFrame = uint.MaxValue;
 
     protected override void OnCreate()
     {
@@ -32,12 +31,6 @@ public partial class ServerNetworkEntitySpawnCollectSystem : SystemBase
         }
 
         uint currentFrame = frame.currentFrame;
-        if (_lastCollectedFrame == currentFrame)
-        {
-            return;
-        }
-
-        _lastCollectedFrame = currentFrame;
         if (!frame.sendOrder.TryGetValue(currentFrame, out Queue<NetworkStateData> states))
         {
             states = new Queue<NetworkStateData>();

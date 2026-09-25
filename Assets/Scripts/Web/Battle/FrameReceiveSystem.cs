@@ -41,12 +41,14 @@ public partial class FrameReceiveSystem : SystemBase
                 _frameManager.onHandleReceive -= OnReceiveFrame;
 
             _frameManager = frameManager;
-            _frameInterval = frameManager.frameInterval;
             _frameManager.onHandleReceive += OnReceiveFrame;
         }
 
+        _frameInterval = frameManager.frameInterval;
         Entity bufferEntity = _bufferQuery.GetSingletonEntity();
         FrameReceiveBufferComponent buffer = EntityManager.GetComponentObject<FrameReceiveBufferComponent>(bufferEntity);
+        if (_frameManager.running)
+            _frameManager.HandleReceive();
         while (buffer.frames.Count > 0)
         {
             KeyValuePair<uint, Queue<NetworkState>> frame = buffer.frames.First();
@@ -64,7 +66,8 @@ public partial class FrameReceiveSystem : SystemBase
             while (frame.Value.Count > 0)
             {
                 NetworkStateData state = frame.Value.Dequeue().data;
-                if (state == null || (playerFrameHandled && state.unitId == localPlayerId))
+                if (state == null || (playerFrameHandled && state.unitId == localPlayerId &&
+                                     state is not NetworkCharacterStateData and not NetworkBattlePlayerStatusStateData))
                     continue;
 
                 state.Apply(context);
@@ -93,7 +96,8 @@ public partial class FrameReceiveSystem : SystemBase
 
         foreach (NetworkState state in states)
         {
-            if (state.data != null && state.data.unitId == localPlayerId)
+            if (state.data != null && state.data.unitId == localPlayerId &&
+                state.data is not NetworkCharacterStateData and not NetworkBattlePlayerStatusStateData)
                 result.Add(state.data);
         }
 

@@ -41,5 +41,7 @@ namespace CrystalMagic.Core {
         public System.Func<System.Collections.IEnumerator> PreLoadCoroutineFactory { get; set; }
         public System.Func<System.Collections.IEnumerator> PostLoadCoroutineFactory { get; set; }
         public System.Action OnComplete { get; set; }
+        public string LoadError { get; set; }
+        public System.Action<string> OnLoadFailed { get; set; }
     }
 }

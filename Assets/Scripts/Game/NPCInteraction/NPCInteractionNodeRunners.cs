@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using CrystalMagic.UI;
+using Server;
 using Unity.Entities;
 using UnityEngine;
 
@@ -146,13 +147,13 @@ public sealed class NPCEnterDungeonInteractionNodeRunner : NPCInteractionNodeRun
     {
         _completed = true;
 
+        ResolveDungeonDestination(session, out int dungeonThemeId, out int dungeonFloor);
         if (GameFlowComponent.Instance == null)
         {
             Debug.LogWarning("[NPCInteraction] GameFlowComponent is not available for EnterDungeon node.");
             return;
         }
 
-        ResolveDungeonDestination(session, out int dungeonThemeId, out int dungeonFloor);
         if (dungeonThemeId < 0)
         {
             Debug.LogWarning("[NPCInteraction] The dungeon exit has no next theme configured.");
@@ -161,11 +162,8 @@ public sealed class NPCEnterDungeonInteractionNodeRunner : NPCInteractionNodeRun
 
         SaveDataComponent saveDataComponent = SaveDataComponent.Instance;
         SaveAreaType currentAreaType = saveDataComponent?.GetLocationData()?.AreaType ?? SaveAreaType.Town;
-        if (!saveDataComponent.IsDungeonThemeUnlocked(dungeonThemeId))
-        {
-            Debug.LogWarning($"[NPCInteraction] Dungeon theme {dungeonThemeId} is locked.");
-            return;
-        }
+        if (saveDataComponent != null && !saveDataComponent.IsDungeonThemeUnlocked(dungeonThemeId))
+            saveDataComponent.UnlockDungeonTheme(dungeonThemeId);
 
         if (currentAreaType != SaveAreaType.Dungeon)
             saveDataComponent?.ClearDungeonRun();
@@ -188,11 +186,15 @@ public sealed class NPCEnterDungeonInteractionNodeRunner : NPCInteractionNodeRun
             if (world != null && world.IsCreated)
             {
                 EntityManager entityManager = world.EntityManager;
-                if (entityManager.Exists(session.Target) && entityManager.HasComponent<DungeonExitComponent>(session.Target))
+                if (entityManager.Exists(session.Target) &&
+                    DungeonExitRuntimeUtility.TryGetDestination(
+                        entityManager,
+                        session.Target,
+                        out int targetThemeId,
+                        out int targetFloor))
                 {
-                    DungeonExitComponent exit = entityManager.GetComponentData<DungeonExitComponent>(session.Target);
-                    dungeonThemeId = exit.TargetThemeId;
-                    dungeonFloor = Math.Max(1, exit.TargetFloor);
+                    dungeonThemeId = targetThemeId;
+                    dungeonFloor = Math.Max(1, targetFloor);
                 }
             }
         }
@@ -259,6 +261,27 @@ public sealed class NPCEnterTownInteractionNodeRunner : NPCInteractionNodeRunner
     {
         return _completed;
     }
+}
+
+public sealed class NPCRequestBattleExitInteractionNodeRunner : NPCInteractionNodeRunner
+{
+    private readonly NPCRequestBattleExitInteractionNodeData _node;
+
+    public NPCRequestBattleExitInteractionNodeRunner(NPCRequestBattleExitInteractionNodeData node)
+    {
+        _node = node;
+    }
+
+    public override void Enter(NPCInteractionSession session)
+    {
+        ClientBattleManager battle = NetworkComponent.Instance.clientBattleManager;
+        if (_node.RequestType == BattleExitRequestType.Retreat)
+            battle.RequestRetreat(session.Target);
+        else
+            battle.RequestNextTheme(session.Target);
+    }
+
+    public override bool IsCompleted(NPCInteractionSession session) => true;
 }
 
 public sealed class NPCSelectInteractionNodeRunner : NPCInteractionNodeRunner

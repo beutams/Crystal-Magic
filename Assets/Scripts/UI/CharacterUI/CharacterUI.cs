@@ -10,26 +10,32 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
     private readonly List<CharacterUI_SkillItemView> _skillItemViews = new();
     private readonly List<CharacterUI_InventoryItemView> _inventoryItemViews = new();
     private readonly List<CrystalMagic.UI.CharacterSkillDisplayData> _currentSkillItems = new();
-    private readonly CrystalMagic.UI.CharacterInventoryDisplayData[] _currentInventoryItems = new CrystalMagic.UI.CharacterInventoryDisplayData[32];
     private readonly CrystalMagic.UI.CharacterEquipDisplayData[] _currentEquipItems = new CrystalMagic.UI.CharacterEquipDisplayData[5];
+    private readonly CrystalMagic.UI.CharacterPropDisplayData[] _currentPropItems = new CrystalMagic.UI.CharacterPropDisplayData[3];
 
     private bool _itemDragRaycastDisabled;
     private bool _skillDragRaycastDisabled;
     private CrystalMagic.UI.CharacterInventoryDisplayData _draggedInventoryItem;
     private CrystalMagic.UI.CharacterEquipDisplayData _draggedEquipItem;
     private CrystalMagic.UI.CharacterSkillDisplayData _draggedSkillItem;
+    private CrystalMagic.UI.CharacterPropDisplayData _draggedPropItem;
 
     public event Action<CrystalMagic.UI.CharacterInventoryDisplayData, int> InventorySkillStoneDropped;
     public event Action<CrystalMagic.UI.CharacterInventoryDisplayData, int> InventoryEquipDropped;
-    public event Action<int> EquipReturnedToInventory;
+    public event Action<CrystalMagic.UI.CharacterInventoryDisplayData, int> InventoryItemMoved;
+    public event Action<CrystalMagic.UI.CharacterInventoryDisplayData, int> InventoryPropDropped;
+    public event Action<int, int> EquipReturnedToInventory;
     public event Action<int, int> SpiritEquipSwapped;
     public event Action<CrystalMagic.UI.CharacterSkillDisplayData> SkillAdditionRequested;
     public event Action<CrystalMagic.UI.CharacterSkillDisplayData, int> SkillReordered;
-    public event Action<CrystalMagic.UI.CharacterSkillDisplayData> SkillReturnedToInventory;
+    public event Action<CrystalMagic.UI.CharacterSkillDisplayData, int> SkillReturnedToInventory;
+    public event Action<int, int> PropReturnedToInventory;
+    public event Action<int, int> PropSlotMoved;
 
     public override void OnOpen()
     {
         EnsureEquipSlotHandlers();
+        EnsurePropSlotHandlers();
         EnsureItemDragInitialized();
         EnsureSkillDragInitialized();
         SetItemDragVisible(false);
@@ -42,6 +48,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         _draggedInventoryItem = null;
         _draggedEquipItem = null;
         _draggedSkillItem = null;
+        _draggedPropItem = null;
         SetItemDragVisible(false);
         SetSkillDragVisible(false);
         UISubViewBase.ReleaseAllToPool(_skillItemViews);
@@ -57,6 +64,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         RenderSkill(Model.SkillItems);
         RenderInventory(Model.InventoryItems, Model.InventorySlotCount);
         RenderEquip(Model.EquipItems);
+        RenderProps(Model.PropItems);
     }
 
     private void RenderSkill(IReadOnlyList<CrystalMagic.UI.CharacterSkillDisplayData> skillItems)
@@ -74,16 +82,14 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         }
     }
 
-    private void RenderInventory(CrystalMagic.UI.CharacterInventoryDisplayData[] inventoryItems, int slotCount)
+    private void RenderInventory(IReadOnlyList<CrystalMagic.UI.CharacterInventoryDisplayData> inventoryItems, int slotCount)
     {
-        Array.Clear(_currentInventoryItems, 0, _currentInventoryItems.Length);
         EnsureInventoryItemViews(slotCount);
 
         for (int i = 0; i < _inventoryItemViews.Count; i++)
         {
-            CrystalMagic.UI.CharacterInventoryDisplayData data = inventoryItems != null && i < inventoryItems.Length ? inventoryItems[i] : null;
-            _currentInventoryItems[i] = data;
-            _inventoryItemViews[i].Render(data);
+            CrystalMagic.UI.CharacterInventoryDisplayData data = inventoryItems != null && i < inventoryItems.Count ? inventoryItems[i] : null;
+            _inventoryItemViews[i].Render(data, i);
         }
     }
 
@@ -97,6 +103,23 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         RenderEquipSlot(UI.Equip_Equip2Border_Equip2, _currentEquipItems[2]);
         RenderEquipSlot(UI.Equip_Equip3Border_Equip3, _currentEquipItems[3]);
         RenderEquipSlot(UI.Equip_Equip4Border_Equip4, _currentEquipItems[4]);
+    }
+
+    private void RenderProps(CrystalMagic.UI.CharacterPropDisplayData[] propItems)
+    {
+        for (int i = 0; i < _currentPropItems.Length; i++)
+            _currentPropItems[i] = propItems != null && i < propItems.Length ? propItems[i] : null;
+
+        RenderPropSlot(UI.PropSlots_PropSlot1_Icon, UI.PropSlots_PropSlot1_Count, _currentPropItems[0]);
+        RenderPropSlot(UI.PropSlots_PropSlot2_Icon, UI.PropSlots_PropSlot2_Count, _currentPropItems[1]);
+        RenderPropSlot(UI.PropSlots_PropSlot3_Icon, UI.PropSlots_PropSlot3_Count, _currentPropItems[2]);
+    }
+
+    private void RenderPropSlot(UINode iconNode, UINode countNode, CrystalMagic.UI.CharacterPropDisplayData data)
+    {
+        iconNode.Image.sprite = LoadIcon(data != null ? data.IconPath : string.Empty);
+        iconNode.Image.color = data != null ? Color.white : new Color(1f, 1f, 1f, 0.2f);
+        countNode.TextMeshProUGUI.text = data != null && data.Count > 0 ? data.Count.ToString() : string.Empty;
     }
 
     private void RenderEquipSlot(UINode node, CrystalMagic.UI.CharacterEquipDisplayData data)
@@ -201,6 +224,25 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         BindEquipSlotHandler(4, UI.Equip_Equip4Border.GameObject);
     }
 
+    private void EnsurePropSlotHandlers()
+    {
+        BindPropSlotHandler(0, UI.PropSlots_PropSlot1.GameObject);
+        BindPropSlotHandler(1, UI.PropSlots_PropSlot2.GameObject);
+        BindPropSlotHandler(2, UI.PropSlots_PropSlot3.GameObject);
+    }
+
+    private void BindPropSlotHandler(int slotIndex, GameObject target)
+    {
+        CharacterUI_PropSlotDragHandler handler = target.GetComponent<CharacterUI_PropSlotDragHandler>();
+        handler.Initialize(slotIndex);
+        handler.DragStarted -= HandlePropDragStarted;
+        handler.Dragging -= HandlePropDragging;
+        handler.DragEnded -= HandlePropDragEnded;
+        handler.DragStarted += HandlePropDragStarted;
+        handler.Dragging += HandlePropDragging;
+        handler.DragEnded += HandlePropDragEnded;
+    }
+
     private void BindEquipSlotHandler(int slotIndex, GameObject target)
     {
         if (target == null)
@@ -226,6 +268,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
 
         _draggedEquipItem = null;
         _draggedSkillItem = null;
+        _draggedPropItem = null;
         _draggedInventoryItem = data;
         UI.ItemDrag_Mask_Icon.Image.sprite = LoadIcon(data.IconPath);
         SetItemDragVisible(true);
@@ -258,6 +301,15 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         {
             InventoryEquipDropped?.Invoke(data, equipSlotIndex);
         }
+        else if (data.ItemType == CrystalMagic.Game.Data.ItemType.Prop &&
+                 TryGetHoveredPropSlotIndex(eventData, out int propSlotIndex))
+        {
+            InventoryPropDropped?.Invoke(data, propSlotIndex);
+        }
+        else if (TryGetHoveredInventorySlotIndex(eventData, out int inventorySlotIndex))
+        {
+            InventoryItemMoved?.Invoke(data, inventorySlotIndex);
+        }
 
         _draggedInventoryItem = null;
         SetItemDragVisible(false);
@@ -274,6 +326,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
 
         _draggedInventoryItem = null;
         _draggedSkillItem = null;
+        _draggedPropItem = null;
         _draggedEquipItem = data;
         UI.ItemDrag_Mask_Icon.Image.sprite = LoadIcon(data.IconPath);
         SetItemDragVisible(true);
@@ -300,9 +353,10 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
             && hoveredSlotIndex <= 4
             && hoveredSlotIndex != slotIndex;
 
+        int inventorySlotIndex = -1;
         bool shouldReturnToInventory = _draggedEquipItem != null
             && _draggedEquipItem.SlotIndex == slotIndex
-            && IsPointerOverInventory(eventData);
+            && TryGetHoveredInventorySlotIndex(eventData, out inventorySlotIndex);
 
         _draggedEquipItem = null;
         SetItemDragVisible(false);
@@ -311,7 +365,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
             SpiritEquipSwapped?.Invoke(slotIndex, hoveredSlotIndex);
 
         if (shouldReturnToInventory)
-            EquipReturnedToInventory?.Invoke(slotIndex);
+            EquipReturnedToInventory?.Invoke(slotIndex, inventorySlotIndex);
     }
 
     private void HandleSkillDragStarted(CrystalMagic.UI.CharacterSkillDisplayData data, PointerEventData eventData)
@@ -321,6 +375,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
 
         _draggedInventoryItem = null;
         _draggedEquipItem = null;
+        _draggedPropItem = null;
         _draggedSkillItem = data;
         UI.SkillDrag_Mask_Icon.Image.sprite = LoadIcon(data.SkillIconPath);
         SetSkillDragVisible(true);
@@ -349,9 +404,9 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         {
             SkillReordered?.Invoke(data, skillInsertIndex);
         }
-        else if (IsPointerOverInventory(eventData))
+        else if (TryGetHoveredInventorySlotIndex(eventData, out int inventorySlotIndex))
         {
-            SkillReturnedToInventory?.Invoke(data);
+            SkillReturnedToInventory?.Invoke(data, inventorySlotIndex);
         }
 
         _draggedSkillItem = null;
@@ -364,6 +419,51 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
             return;
 
         SkillAdditionRequested?.Invoke(data);
+    }
+
+    private void HandlePropDragStarted(int slotIndex, PointerEventData eventData)
+    {
+        if (eventData == null || slotIndex < 0 || slotIndex >= _currentPropItems.Length)
+            return;
+
+        CrystalMagic.UI.CharacterPropDisplayData data = _currentPropItems[slotIndex];
+        if (data == null || data.ItemId < 0)
+            return;
+
+        _draggedInventoryItem = null;
+        _draggedEquipItem = null;
+        _draggedSkillItem = null;
+        _draggedPropItem = data;
+        UI.ItemDrag_Mask_Icon.Image.sprite = LoadIcon(data.IconPath);
+        SetItemDragVisible(true);
+        UpdateItemDragPosition(eventData);
+    }
+
+    private void HandlePropDragging(int slotIndex, PointerEventData eventData)
+    {
+        if (eventData == null || _draggedPropItem == null || _draggedPropItem.SlotIndex != slotIndex)
+            return;
+
+        UpdateItemDragPosition(eventData);
+    }
+
+    private void HandlePropDragEnded(int slotIndex, PointerEventData eventData)
+    {
+        bool validSource = _draggedPropItem != null && _draggedPropItem.SlotIndex == slotIndex;
+        int targetPropSlotIndex = -1;
+        int targetInventorySlotIndex = -1;
+        bool moveToProp = validSource && TryGetHoveredPropSlotIndex(eventData, out targetPropSlotIndex) &&
+                          targetPropSlotIndex != slotIndex;
+        bool moveToInventory = validSource &&
+                               TryGetHoveredInventorySlotIndex(eventData, out targetInventorySlotIndex);
+
+        _draggedPropItem = null;
+        SetItemDragVisible(false);
+
+        if (moveToProp)
+            PropSlotMoved?.Invoke(slotIndex, targetPropSlotIndex);
+        else if (moveToInventory)
+            PropReturnedToInventory?.Invoke(slotIndex, targetInventorySlotIndex);
     }
 
     private void EnsureItemDragInitialized()
@@ -470,13 +570,32 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         return _currentSkillItems.Count;
     }
 
-    private bool IsPointerOverInventory(PointerEventData eventData)
+    private bool TryGetHoveredInventorySlotIndex(PointerEventData eventData, out int slotIndex)
     {
-        if (eventData == null)
+        slotIndex = -1;
+        GameObject hovered = eventData?.pointerCurrentRaycast.gameObject;
+        CharacterUI_InventoryItemView itemView = hovered != null
+            ? hovered.GetComponentInParent<CharacterUI_InventoryItemView>()
+            : null;
+        if (itemView == null)
             return false;
 
-        Camera eventCamera = eventData.pressEventCamera != null ? eventData.pressEventCamera : eventData.enterEventCamera;
-        return RectTransformUtility.RectangleContainsScreenPoint(UI.InventoryView.RectTransform, eventData.position, eventCamera);
+        slotIndex = itemView.SlotIndex;
+        return slotIndex >= 0;
+    }
+
+    private bool TryGetHoveredPropSlotIndex(PointerEventData eventData, out int slotIndex)
+    {
+        slotIndex = -1;
+        GameObject hovered = eventData?.pointerCurrentRaycast.gameObject;
+        CharacterUI_PropSlotDragHandler handler = hovered != null
+            ? hovered.GetComponentInParent<CharacterUI_PropSlotDragHandler>()
+            : null;
+        if (handler == null)
+            return false;
+
+        slotIndex = handler.SlotIndex;
+        return slotIndex >= 0;
     }
 
     private bool TryGetHoveredEquipSlotIndex(PointerEventData eventData, out int slotIndex)

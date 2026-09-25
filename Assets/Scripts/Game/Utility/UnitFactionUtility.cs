@@ -5,9 +5,9 @@ public static class UnitFactionUtility
         return faction == UnitFactionType.Player;
     }
 
-    public static bool IsNpc(UnitFactionType faction)
+    public static bool IsInteractable(UnitFactionType faction)
     {
-        return faction == UnitFactionType.Npc;
+        return faction == UnitFactionType.Interactable;
     }
 
     public static bool IsHostile(UnitFactionType faction)

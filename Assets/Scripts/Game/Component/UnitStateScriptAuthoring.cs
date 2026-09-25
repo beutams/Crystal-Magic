@@ -19,6 +19,7 @@ public sealed class UnitStateScriptAuthoring : MonoBehaviour
                 UnitDataId = unitData?.Id ?? -1,
                 DefinitionIndex = -1,
             });
+            AddComponent<UnitInitializationPendingTag>(entity);
             AddBuffer<StateScriptGraphStateElement>(entity);
             AddBuffer<StateScriptNodeStateElement>(entity);
             AddBuffer<StateScriptSourceCommandElement>(entity);
@@ -35,6 +36,5 @@ public struct UnitStateScriptComponent : IComponentData
     public int DefinitionIndex;
     public uint TickVersion;
     public StateScriptInitializationError InitializationError;
-    public byte IsInitialized;
     public byte IsStoppedForDeath;
 }

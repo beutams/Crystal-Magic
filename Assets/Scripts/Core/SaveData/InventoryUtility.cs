@@ -6,13 +6,76 @@ namespace CrystalMagic.Core
 {
     public static class InventoryUtility
     {
+        public static void EnsureBackpackSlots(BackpackData backpackData)
+        {
+            if (backpackData == null)
+                return;
+
+            backpackData.Items ??= new List<InventoryItemData>();
+            int slotCount = Mathf.Max(1, backpackData.Capacity);
+            if (backpackData.Items.Count > slotCount)
+                backpackData.Capacity = backpackData.Items.Count;
+
+            if (backpackData.Capacity < slotCount)
+                backpackData.Capacity = slotCount;
+
+            slotCount = Mathf.Max(slotCount, backpackData.Items.Count);
+            for (int i = 0; i < backpackData.Items.Count; i++)
+            {
+                InventoryItemData item = backpackData.Items[i];
+                if (item == null)
+                {
+                    backpackData.Items[i] = new InventoryItemData();
+                    continue;
+                }
+
+                if (item.IsEmpty)
+                    item.Clear();
+            }
+
+            while (backpackData.Items.Count < slotCount)
+                backpackData.Items.Add(new InventoryItemData());
+        }
+
         public static int AddItemToBackpack(BackpackData backpackData, int itemId, int quantity)
         {
             if (backpackData == null)
                 return 0;
 
-            backpackData.Items ??= new List<InventoryItemData>();
-            return AddItem(backpackData.Items, backpackData.Capacity, itemId, quantity, ItemType.None);
+            EnsureBackpackSlots(backpackData);
+            if (itemId < 0 || quantity <= 0)
+                return 0;
+
+            ItemData itemData = DataComponent.Instance.Get<ItemData>(itemId);
+            int maxStack = itemData != null && itemData.MaxStack > 0 ? itemData.MaxStack : 1;
+            ItemType itemType = itemData != null ? itemData.ItemType : ItemType.None;
+            int remaining = quantity;
+
+            for (int i = 0; i < backpackData.Items.Count && remaining > 0; i++)
+            {
+                InventoryItemData item = backpackData.Items[i];
+                if (item.IsEmpty || item.ItemId != itemId || item.Quantity >= maxStack)
+                    continue;
+
+                int addCount = Mathf.Min(maxStack - item.Quantity, remaining);
+                item.Quantity += addCount;
+                remaining -= addCount;
+            }
+
+            for (int i = 0; i < backpackData.Items.Count && remaining > 0; i++)
+            {
+                InventoryItemData item = backpackData.Items[i];
+                if (!item.IsEmpty)
+                    continue;
+
+                int addCount = Mathf.Min(maxStack, remaining);
+                item.ItemId = itemId;
+                item.Quantity = addCount;
+                item.ItemType = itemType;
+                remaining -= addCount;
+            }
+
+            return quantity - remaining;
         }
 
         public static bool CanAddItemToBackpack(BackpackData backpackData, int itemId, int quantity)
@@ -20,8 +83,8 @@ namespace CrystalMagic.Core
             if (backpackData == null)
                 return false;
 
-            backpackData.Items ??= new List<InventoryItemData>();
-            return CanAddItem(backpackData.Items, backpackData.Capacity, itemId, quantity);
+            EnsureBackpackSlots(backpackData);
+            return quantity > 0 && GetAvailableAddCountInBackpack(backpackData, itemId) >= quantity;
         }
 
         public static int AddItemToCharacterInventory(BackpackData backpackData, CharacterPropData propData, int itemId, int quantity)
@@ -95,8 +158,23 @@ namespace CrystalMagic.Core
             if (backpackData == null)
                 return 0;
 
-            backpackData.Items ??= new List<InventoryItemData>();
-            return GetAvailableAddCount(backpackData.Items, backpackData.Capacity, itemId);
+            EnsureBackpackSlots(backpackData);
+            if (itemId < 0)
+                return 0;
+
+            ItemData itemData = DataComponent.Instance.Get<ItemData>(itemId);
+            int maxStack = itemData != null && itemData.MaxStack > 0 ? itemData.MaxStack : 1;
+            long available = 0;
+            for (int i = 0; i < backpackData.Items.Count; i++)
+            {
+                InventoryItemData item = backpackData.Items[i];
+                if (item.IsEmpty)
+                    available += maxStack;
+                else if (item.ItemId == itemId && item.Quantity < maxStack)
+                    available += maxStack - item.Quantity;
+            }
+
+            return available > int.MaxValue ? int.MaxValue : (int)available;
         }
 
         public static int GetAvailableAddCount(List<InventoryItemData> items, int capacity, int itemId)
@@ -148,7 +226,7 @@ namespace CrystalMagic.Core
             for (int i = 0; i < backpackData.Items.Count; i++)
             {
                 InventoryItemData inventoryItem = backpackData.Items[i];
-                if (inventoryItem != null && inventoryItem.ItemId == itemId && inventoryItem.Quantity > 0)
+                if (inventoryItem != null && !inventoryItem.IsEmpty && inventoryItem.ItemId == itemId)
                     return i;
             }
 
@@ -166,9 +244,82 @@ namespace CrystalMagic.Core
 
             inventoryItem.Quantity -= count;
             if (inventoryItem.Quantity <= 0)
-                backpackData.Items.RemoveAt(slotIndex);
+                inventoryItem.Clear();
 
             return true;
+        }
+
+        public static bool TryMoveBackpackSlot(BackpackData backpackData, int sourceSlotIndex, int targetSlotIndex)
+        {
+            EnsureBackpackSlots(backpackData);
+            if (!IsValidBackpackSlot(backpackData, sourceSlotIndex) ||
+                !IsValidBackpackSlot(backpackData, targetSlotIndex) ||
+                sourceSlotIndex == targetSlotIndex)
+                return false;
+
+            InventoryItemData source = backpackData.Items[sourceSlotIndex];
+            InventoryItemData target = backpackData.Items[targetSlotIndex];
+            if (source.IsEmpty)
+                return false;
+
+            if (target.IsEmpty)
+            {
+                backpackData.Items[targetSlotIndex] = source;
+                backpackData.Items[sourceSlotIndex] = new InventoryItemData();
+                return true;
+            }
+
+            if (source.ItemId != target.ItemId)
+            {
+                backpackData.Items[targetSlotIndex] = source;
+                backpackData.Items[sourceSlotIndex] = target;
+                return true;
+            }
+
+            ItemData itemData = DataComponent.Instance.Get<ItemData>(source.ItemId);
+            int maxStack = itemData != null && itemData.MaxStack > 0 ? itemData.MaxStack : 1;
+            int moveCount = Mathf.Min(source.Quantity, Mathf.Max(0, maxStack - target.Quantity));
+            if (moveCount <= 0)
+                return false;
+
+            target.Quantity += moveCount;
+            source.Quantity -= moveCount;
+            if (source.Quantity <= 0)
+                source.Clear();
+            return true;
+        }
+
+        public static bool TryAddItemToBackpackSlot(
+            BackpackData backpackData,
+            int targetSlotIndex,
+            int itemId,
+            int quantity,
+            ItemType fallbackItemType = ItemType.None)
+        {
+            EnsureBackpackSlots(backpackData);
+            if (!IsValidBackpackSlot(backpackData, targetSlotIndex) || itemId < 0 || quantity <= 0)
+                return false;
+
+            InventoryItemData target = backpackData.Items[targetSlotIndex];
+            ItemData itemData = DataComponent.Instance.Get<ItemData>(itemId);
+            int maxStack = itemData != null && itemData.MaxStack > 0 ? itemData.MaxStack : 1;
+            if (!target.IsEmpty && target.ItemId != itemId)
+                return false;
+            if ((!target.IsEmpty ? target.Quantity : 0) + quantity > maxStack)
+                return false;
+
+            if (target.IsEmpty)
+            {
+                target.ItemId = itemId;
+                target.ItemType = itemData != null ? itemData.ItemType : fallbackItemType;
+            }
+            target.Quantity += quantity;
+            return true;
+        }
+
+        public static bool IsValidBackpackSlot(BackpackData backpackData, int slotIndex)
+        {
+            return backpackData?.Items != null && slotIndex >= 0 && slotIndex < backpackData.Items.Count;
         }
     }
 }

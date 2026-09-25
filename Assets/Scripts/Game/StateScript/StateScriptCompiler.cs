@@ -301,6 +301,7 @@ public static class StateScriptCompiler
             return false;
         }
         definition.Type = type;
+        definition.ExecutionTargets = source.ExecutionTargets;
         definition.ExpressionStart = graph.Expressions.Count;
         definition.StringStart = graph.Strings.Count;
         if (!TryCopyFixedString(source.Guid, out definition.Guid))
@@ -339,33 +340,41 @@ public static class StateScriptCompiler
                     return false;
                 break;
             case RequestInteractionActionNodeData interaction:
-                interaction.Interaction ??= RequestInteractionActionNodeData.CreateDefaultInteraction();
-                interaction.Interaction.EnsureValid();
-                definition.IntParameters.x = (int)interaction.Interaction.Source;
-                if (interaction.Interaction.Source == InteractionRequestSource.Getter)
-                {
-                    if (!schemaResolver.TryGetInteractionDefinition(interaction.Interaction.GetterKey, out _) ||
-                        !TryCopyFixedString(interaction.Interaction.GetterKey, out definition.Text))
-                    {
-                        error = $"Interaction getter '{interaction.Interaction.GetterKey}' is unavailable or too long.";
-                        return false;
-                    }
-                }
-                else
-                {
-                    if (!interaction.Interaction.FixedData.IsValid)
-                    {
-                        error = "Fixed interaction requires a Kind.";
-                        return false;
-                    }
-                    definition.InteractionData = interaction.Interaction.FixedData;
-                    if (!TryAddValueExpression(interaction.Interaction.Target, UnitValueCategory.Entity, schemaResolver, expressionFactory, graph, out error))
-                        return false;
-                }
+                interaction.Target ??= RequestInteractionActionNodeData.CreateDefaultTargetExpression();
+                if (!TryAddValueExpression(interaction.Target, UnitValueCategory.Entity, schemaResolver, expressionFactory, graph, out error))
+                    return false;
+                break;
+            case CompleteInteractionActionNodeData completeInteraction:
+                completeInteraction.Result ??= CompleteInteractionActionNodeData.CreateDefaultResultExpression();
+                definition.IntParameters.x = (int)completeInteraction.ResultCode;
+                if (!TryAddValueExpression(completeInteraction.Result, UnitValueCategory.Any, schemaResolver, expressionFactory, graph, out error))
+                    return false;
+                break;
+            case AcknowledgeInteractionActionNodeData:
+            case CollectInteractionActionNodeData:
+            case StartNpcInteractionActionNodeData:
                 break;
             case SpawnUnitActionNodeData spawn:
                 if (!TryCompileSpawn(spawn, graph, ref definition, out error))
                     return false;
+                break;
+            case QueryUnitsActionNodeData query:
+                if (!TryCompileQueryUnits(query, schemaResolver, expressionFactory, graph, ref definition, out error))
+                    return false;
+                break;
+            case ExecuteEffectActionNodeData executeEffect:
+                if (!TryCompileExecuteEffect(
+                        executeEffect,
+                        schemaResolver,
+                        expressionFactory,
+                        graph,
+                        ref definition,
+                        out error))
+                {
+                    return false;
+                }
+                break;
+            case DestroySelfActionNodeData:
                 break;
             case TimerStateScriptNodeData timer:
                 if (!TryAddValueExpression(timer.Duration, UnitValueCategory.Number, schemaResolver, expressionFactory, graph, out error))
@@ -373,6 +382,10 @@ public static class StateScriptCompiler
                 break;
             case KeepStateScriptNodeData keep:
                 definition.FloatParameters0.x = math.max(0f, keep.DurationSeconds);
+                break;
+            case PlayerInputEventStateScriptNodeData inputEvent:
+                definition.IntParameters.x = (int)inputEvent.EventType;
+                definition.IntParameters.y = inputEvent.RepeatWhileHeld ? 1 : 0;
                 break;
             case MonitorStateScriptNodeData monitor:
                 if (!TryAddConditions(new[] { monitor.Condition }, schemaResolver, expressionFactory, graph, out error))
@@ -519,6 +532,114 @@ public static class StateScriptCompiler
         return true;
     }
 
+    private static bool TryCompileQueryUnits(
+        QueryUnitsActionNodeData source,
+        UnitSourceResolver schemaResolver,
+        ComparatorFactory expressionFactory,
+        CompiledGraph graph,
+        ref StateScriptNodeDefinition definition,
+        out string error)
+    {
+        source.EnsureValid();
+        error = string.Empty;
+        if (string.IsNullOrWhiteSpace(source.ResultKey) ||
+            !TryCopyFixedString(source.ResultKey.Trim(), out definition.Text))
+        {
+            error = "ResultKey is empty or too long.";
+            return false;
+        }
+        if (definition.Text.Length > 112)
+        {
+            error = "ResultKey is too long for indexed result entries.";
+            return false;
+        }
+
+        definition.IntParameters = new int4(
+            (int)source.Shape,
+            (int)source.FactionMask,
+            source.UnitDataId,
+            math.max(0, source.MaxCount));
+        definition.FloatParameters0 = new float4(
+            (int)source.SortMode,
+            source.ExcludeSelf ? 1f : 0f,
+            source.ExcludeDead ? 1f : 0f,
+            source.RememberResultsInExcludedEntities ? 1f : 0f);
+        definition.FloatParameters1.x = source.RequireAvailableInteraction ? 1f : 0f;
+        if (!string.IsNullOrWhiteSpace(source.ExcludedEntitiesKey))
+        {
+            string excludedEntitiesKey = source.ExcludedEntitiesKey.Trim();
+            if (!TryCopyFixedString(excludedEntitiesKey, out definition.Key) || definition.Key.Length > 112)
+            {
+                error = "ExcludedEntitiesKey is too long for indexed entries.";
+                return false;
+            }
+            if (source.RememberResultsInExcludedEntities &&
+                string.Equals(excludedEntitiesKey, source.ResultKey.Trim(), StringComparison.Ordinal))
+            {
+                error = "ResultKey and ExcludedEntitiesKey must differ when results are remembered.";
+                return false;
+            }
+        }
+        else if (source.RememberResultsInExcludedEntities)
+        {
+            error = "RememberResultsInExcludedEntities requires ExcludedEntitiesKey.";
+            return false;
+        }
+        return TryAddValueExpression(source.Center, UnitValueCategory.Float3, schemaResolver, expressionFactory, graph, out error) &&
+               TryAddValueExpression(source.Direction, UnitValueCategory.Float2, schemaResolver, expressionFactory, graph, out error) &&
+               TryAddValueExpression(source.Size, UnitValueCategory.Float2, schemaResolver, expressionFactory, graph, out error) &&
+               TryAddValueExpression(source.Radius, UnitValueCategory.Number, schemaResolver, expressionFactory, graph, out error) &&
+               TryAddValueExpression(source.Angle, UnitValueCategory.Number, schemaResolver, expressionFactory, graph, out error);
+    }
+
+    private static bool TryCompileExecuteEffect(
+        ExecuteEffectActionNodeData source,
+        UnitSourceResolver schemaResolver,
+        ComparatorFactory expressionFactory,
+        CompiledGraph graph,
+        ref StateScriptNodeDefinition definition,
+        out string error)
+    {
+        source.EnsureValid();
+        definition.IntParameters.x = (int)source.OriginSource;
+        definition.IntParameters.y = math.max(1, source.RepeatCount);
+        return TryAddValueExpression(
+                   source.TargetEntity,
+                   UnitValueCategory.Entity,
+                   schemaResolver,
+                   expressionFactory,
+                   graph,
+                   out error) &&
+               TryAddValueExpression(
+                   source.OtherEntity,
+                   UnitValueCategory.Entity,
+                   schemaResolver,
+                   expressionFactory,
+                   graph,
+                   out error) &&
+               TryAddValueExpression(
+                   source.Position,
+                   UnitValueCategory.Float3,
+                   schemaResolver,
+                   expressionFactory,
+                   graph,
+                   out error) &&
+               TryAddValueExpression(
+                   source.TriggerValue,
+                   UnitValueCategory.Number,
+                   schemaResolver,
+                   expressionFactory,
+                   graph,
+                   out error) &&
+               TryAddValueExpression(
+                   source.SourceSkillId,
+                   UnitValueCategory.Number,
+                   schemaResolver,
+                   expressionFactory,
+                   graph,
+                   out error);
+    }
+
     private static bool TryAddConditions(
         IReadOnlyList<ConditionConfig> conditions,
         UnitSourceResolver schemaResolver,
@@ -607,18 +728,29 @@ public static class StateScriptCompiler
             RequestSkillWithAdditionActionNodeData => StateScriptNodeRuntimeType.RequestSkillWithAddition,
             RequestInteractionActionNodeData => StateScriptNodeRuntimeType.RequestInteraction,
             SpawnUnitActionNodeData => StateScriptNodeRuntimeType.SpawnUnit,
+            QueryUnitsActionNodeData => StateScriptNodeRuntimeType.QueryUnits,
+            ExecuteEffectActionNodeData => StateScriptNodeRuntimeType.ExecuteEffect,
+            DestroySelfActionNodeData => StateScriptNodeRuntimeType.DestroySelf,
+            CompleteInteractionActionNodeData => StateScriptNodeRuntimeType.CompleteInteraction,
+            AcknowledgeInteractionActionNodeData => StateScriptNodeRuntimeType.AcknowledgeInteraction,
+            CollectInteractionActionNodeData => StateScriptNodeRuntimeType.CollectInteraction,
+            StartNpcInteractionActionNodeData => StateScriptNodeRuntimeType.StartNpcInteraction,
             TimerStateScriptNodeData => StateScriptNodeRuntimeType.Timer,
             KeepStateScriptNodeData => StateScriptNodeRuntimeType.Keep,
             MonitorStateScriptNodeData => StateScriptNodeRuntimeType.Monitor,
             NumberMonitorStateScriptNodeData => StateScriptNodeRuntimeType.NumberMonitor,
             AdditionStateScriptNodeData => StateScriptNodeRuntimeType.Addition,
+            PlayerInputEventStateScriptNodeData => StateScriptNodeRuntimeType.PlayerInputEvent,
             _ => default,
         };
         return source is StateScriptEntryNodeData or CompareStateScriptNodeData or SetValueStateScriptNodeData or
             RequestSkillActionNodeData or PublishGameEventStateScriptNodeData or
             RequestSkillWithAdditionActionNodeData or RequestInteractionActionNodeData or SpawnUnitActionNodeData or
+            QueryUnitsActionNodeData or ExecuteEffectActionNodeData or DestroySelfActionNodeData or
+            CompleteInteractionActionNodeData or AcknowledgeInteractionActionNodeData or
+            CollectInteractionActionNodeData or StartNpcInteractionActionNodeData or
             TimerStateScriptNodeData or KeepStateScriptNodeData or MonitorStateScriptNodeData or
-            NumberMonitorStateScriptNodeData or AdditionStateScriptNodeData;
+            NumberMonitorStateScriptNodeData or AdditionStateScriptNodeData or PlayerInputEventStateScriptNodeData;
     }
 
     private static bool TryGetInputPort(StateScriptNodeRuntimeType type, string name, out byte portId)
@@ -694,6 +826,11 @@ public static class StateScriptCompiler
             portId = StateScriptPortId.OnValueChange;
             return true;
         }
+        if (type == StateScriptNodeRuntimeType.PlayerInputEvent && string.Equals(name, "OnEvent", StringComparison.Ordinal))
+        {
+            portId = StateScriptPortId.OnInputEvent;
+            return true;
+        }
         return false;
     }
 
@@ -703,7 +840,7 @@ public static class StateScriptCompiler
             return 1;
         if (type == StateScriptNodeRuntimeType.Keep || type == StateScriptNodeRuntimeType.Monitor)
             return 8;
-        if (type == StateScriptNodeRuntimeType.NumberMonitor)
+        if (type is StateScriptNodeRuntimeType.NumberMonitor or StateScriptNodeRuntimeType.PlayerInputEvent)
             return 5;
         return IsStateNode(type) ? (byte)4 : (byte)0;
     }
@@ -712,7 +849,7 @@ public static class StateScriptCompiler
     {
         return type is StateScriptNodeRuntimeType.Timer or StateScriptNodeRuntimeType.Keep or
             StateScriptNodeRuntimeType.Monitor or StateScriptNodeRuntimeType.NumberMonitor or
-            StateScriptNodeRuntimeType.Addition;
+            StateScriptNodeRuntimeType.Addition or StateScriptNodeRuntimeType.PlayerInputEvent;
     }
 
     private static void WriteUnit(
