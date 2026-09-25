@@ -79,6 +79,7 @@ namespace CrystalMagic.Editor.Unit
             Converters = new List<JsonConverter>
             {
                 new StateScriptVector2Converter(),
+                new StateScriptVector3Converter(),
                 new StateScriptUnitValueConverter(),
             },
         };
@@ -1039,6 +1040,7 @@ namespace CrystalMagic.Editor.Unit
             Converters = new List<JsonConverter>
             {
                 new StateScriptVector2Converter(),
+                new StateScriptVector3Converter(),
                 new StateScriptUnitValueConverter(),
             },
         };

@@ -14,7 +14,13 @@ using UnityEngine;
 [UpdateAfter(typeof(StateScriptSystem))]
 public partial class StateScriptManagedCommandSystem : SystemBase
 {
-    private readonly Dictionary<StateScriptActionKey, List<SkillAdditionAction>> _runningActions = new();
+    private sealed class RunningAddition
+    {
+        public uint ExecutionVersion;
+        public List<SkillAdditionAction> Actions;
+    }
+
+    private readonly Dictionary<StateScriptActionKey, RunningAddition> _runningActions = new();
     private readonly List<StateScriptActionKey> _completedKeys = new();
     private UnitSourceDispatcher _sourceDispatcher;
     private EntityQuery _commandQuery;
@@ -82,8 +88,8 @@ public partial class StateScriptManagedCommandSystem : SystemBase
 
     protected override void OnDestroy()
     {
-        foreach (KeyValuePair<StateScriptActionKey, List<SkillAdditionAction>> pair in _runningActions)
-            StopActions(pair.Value);
+        foreach (KeyValuePair<StateScriptActionKey, RunningAddition> pair in _runningActions)
+            StopActions(pair.Value.Actions);
         _runningActions.Clear();
     }
 
@@ -118,12 +124,55 @@ public partial class StateScriptManagedCommandSystem : SystemBase
                 RefreshResolver(entity, resolver);
                 break;
             case StateScriptManagedCommandType.StartAddition:
-                StartAddition(entity, command.GraphIndex, command.NodeIndex, in node, resolver);
+                StartAddition(
+                    entity,
+                    command.GraphIndex,
+                    command.NodeIndex,
+                    command.ExecutionVersion,
+                    in node,
+                    resolver);
                 RefreshResolver(entity, resolver);
                 break;
             case StateScriptManagedCommandType.StopAddition:
-                StopAddition(new StateScriptActionKey(entity, command.GraphIndex, command.NodeIndex));
+                StopAddition(
+                    new StateScriptActionKey(entity, command.GraphIndex, command.NodeIndex),
+                    command.ExecutionVersion);
                 break;
+#if UNITY_EDITOR
+            case StateScriptManagedCommandType.TraceTimerStarted:
+                Debug.Log(
+                    $"[StateScriptTrace] Timer started: Entity={entity}, Graph='{graph.Name}', Node='{node.Guid}', " +
+                    $"Duration={command.Position.x:0.###}, DeltaTime={command.Position.y:0.######}, Tick={command.IntValue}.");
+                break;
+            case StateScriptManagedCommandType.TraceTimerCompleted:
+                Debug.Log(
+                    $"[StateScriptTrace] Timer completed: Entity={entity}, Graph='{graph.Name}', Node='{node.Guid}', " +
+                    $"Elapsed={command.Position.x:0.###}, Duration={command.Position.y:0.###}, " +
+                    $"DeltaTime={command.Position.z:0.######}, Tick={command.IntValue}.");
+                break;
+            case StateScriptManagedCommandType.TraceCurrentInputType:
+                Debug.Log(
+                    $"[StateScriptTrace] Current input comparison: Entity={entity}, Graph='{graph.Name}', " +
+                    $"Node='{node.Guid}', Result={command.Value.Bool != 0}, " +
+                    $"SkillId={command.Position.x:0}, CurrentInputType={command.Position.y:0}, " +
+                    $"DirectInputType={command.Position.z:0}, SuccessMask={command.IntValue}.");
+                break;
+            case StateScriptManagedCommandType.TraceSkillRequestBuilt:
+                Debug.Log(
+                    $"[StateScriptTrace] Skill request built: Entity={entity}, Graph='{graph.Name}', Node='{node.Guid}', " +
+                    $"SkillId={command.IntValue}, Position={command.Position}, Target={command.TargetEntity}.");
+                break;
+            case StateScriptManagedCommandType.TraceSkillRequestFailed:
+                Debug.LogError(
+                    $"[StateScriptTrace] Skill request build failed: Entity={entity}, Graph='{graph.Name}', " +
+                    $"Node='{node.Guid}', Reason={(StateScriptSkillRequestBuildError)command.IntValue}.");
+                break;
+            case StateScriptManagedCommandType.TraceAdditionResultConsumed:
+                Debug.Log(
+                    $"[StateScriptAdditionTrace] Completion consumed: Entity={entity}, Graph='{graph.Name}', " +
+                    $"Node='{node.Guid}', Version={command.ExecutionVersion}.");
+                break;
+#endif
         }
     }
 
@@ -177,6 +226,7 @@ public partial class StateScriptManagedCommandSystem : SystemBase
         Entity entity,
         int graphIndex,
         int nodeIndex,
+        uint executionVersion,
         in StateScriptNodeDefinition node,
         UnitSourceResolver resolver)
     {
@@ -187,30 +237,42 @@ public partial class StateScriptManagedCommandSystem : SystemBase
             entity,
             resolver,
             node.Text.ToString());
+        int createdActionCount = actions.Count;
         RemoveFinishedActions(actions);
+#if UNITY_EDITOR
+        Debug.Log(
+            $"[StateScriptAdditionTrace] Started: Entity={entity}, GraphIndex={graphIndex}, " +
+            $"NodeIndex={nodeIndex}, Node='{node.Guid}', Event='{node.Text}', Version={executionVersion}, " +
+            $"CreatedActions={createdActionCount}, RunningActions={actions.Count}.");
+#endif
         if (actions.Count == 0)
         {
-            AppendExternalCompletion(key);
+            AppendExternalCompletion(key, executionVersion);
             return;
         }
-        _runningActions.Add(key, actions);
+        _runningActions.Add(key, new RunningAddition
+        {
+            ExecutionVersion = executionVersion,
+            Actions = actions,
+        });
     }
 
     private void TickRunningActions()
     {
         _completedKeys.Clear();
-        foreach (KeyValuePair<StateScriptActionKey, List<SkillAdditionAction>> pair in _runningActions)
+        foreach (KeyValuePair<StateScriptActionKey, RunningAddition> pair in _runningActions)
         {
             StateScriptActionKey key = pair.Key;
+            RunningAddition execution = pair.Value;
             if (!EntityManager.Exists(key.Entity) ||
                 EntityManager.HasComponent<UnitDeathComponent>(key.Entity) ||
                 !EntityManager.HasComponent<UnitStateScriptComponent>(key.Entity))
             {
-                StopActions(pair.Value);
+                StopActions(execution.Actions);
                 _completedKeys.Add(key);
                 continue;
             }
-            List<SkillAdditionAction> actions = pair.Value;
+            List<SkillAdditionAction> actions = execution.Actions;
             for (int actionIndex = actions.Count - 1; actionIndex >= 0; actionIndex--)
             {
                 SkillAdditionAction action = actions[actionIndex];
@@ -220,7 +282,7 @@ public partial class StateScriptManagedCommandSystem : SystemBase
             }
             if (actions.Count == 0)
             {
-                AppendExternalCompletion(key);
+                AppendExternalCompletion(key, execution.ExecutionVersion);
                 _completedKeys.Add(key);
             }
         }
@@ -228,39 +290,66 @@ public partial class StateScriptManagedCommandSystem : SystemBase
             _runningActions.Remove(_completedKeys[index]);
     }
 
-    private void AppendExternalCompletion(StateScriptActionKey key)
+    private void AppendExternalCompletion(StateScriptActionKey key, uint executionVersion)
     {
         if (!EntityManager.Exists(key.Entity) ||
             !EntityManager.HasBuffer<StateScriptExternalResultElement>(key.Entity))
+        {
+#if UNITY_EDITOR
+            Debug.LogWarning(
+                $"[StateScriptAdditionTrace] Completion dropped: Entity={key.Entity}, " +
+                $"GraphIndex={key.GraphIndex}, NodeIndex={key.NodeIndex}, Version={executionVersion}, " +
+                $"EntityExists={EntityManager.Exists(key.Entity)}.");
+#endif
             return;
-        EntityManager.GetBuffer<StateScriptExternalResultElement>(key.Entity).Add(
+        }
+        DynamicBuffer<StateScriptExternalResultElement> results =
+            EntityManager.GetBuffer<StateScriptExternalResultElement>(key.Entity);
+        results.Add(
             new StateScriptExternalResultElement
             {
                 GraphIndex = key.GraphIndex,
                 NodeIndex = key.NodeIndex,
+                ExecutionVersion = executionVersion,
                 Status = StateScriptExternalResultStatus.Completed,
             });
+#if UNITY_EDITOR
+        Debug.Log(
+            $"[StateScriptAdditionTrace] Completion queued: Entity={key.Entity}, " +
+            $"GraphIndex={key.GraphIndex}, NodeIndex={key.NodeIndex}, Version={executionVersion}, " +
+            $"PendingResults={results.Length}.");
+#endif
     }
 
     private void StopActions(Entity entity)
     {
         _completedKeys.Clear();
-        foreach (KeyValuePair<StateScriptActionKey, List<SkillAdditionAction>> pair in _runningActions)
+        foreach (KeyValuePair<StateScriptActionKey, RunningAddition> pair in _runningActions)
         {
             if (pair.Key.Entity != entity)
                 continue;
-            StopActions(pair.Value);
+            StopActions(pair.Value.Actions);
             _completedKeys.Add(pair.Key);
         }
         for (int index = 0; index < _completedKeys.Count; index++)
             _runningActions.Remove(_completedKeys[index]);
     }
 
+    private void StopAddition(StateScriptActionKey key, uint executionVersion)
+    {
+        if (!_runningActions.TryGetValue(key, out RunningAddition execution) ||
+            execution.ExecutionVersion != executionVersion)
+        {
+            return;
+        }
+        StopAddition(key);
+    }
+
     private void StopAddition(StateScriptActionKey key)
     {
-        if (!_runningActions.TryGetValue(key, out List<SkillAdditionAction> actions))
+        if (!_runningActions.TryGetValue(key, out RunningAddition execution))
             return;
-        StopActions(actions);
+        StopActions(execution.Actions);
         _runningActions.Remove(key);
     }
 

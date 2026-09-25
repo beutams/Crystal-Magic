@@ -43,7 +43,29 @@ public enum StateScriptManagedCommandType : byte
     SpawnUnit,
     StartAddition,
     StopAddition,
+#if UNITY_EDITOR
+    TraceTimerStarted,
+    TraceTimerCompleted,
+    TraceCurrentInputType,
+    TraceSkillRequestBuilt,
+    TraceSkillRequestFailed,
+    TraceAdditionResultConsumed,
+#endif
 }
+
+#if UNITY_EDITOR
+public enum StateScriptSkillRequestBuildError : byte
+{
+    None,
+    InvalidExpressionCount,
+    SkillIdEvaluationFailed,
+    SkillIdNotInteger,
+    PositionEvaluationFailed,
+    PositionTypeMismatch,
+    TargetEvaluationFailed,
+    TargetTypeMismatch,
+}
+#endif
 
 public enum StateScriptExternalResultStatus : byte
 {
@@ -153,6 +175,7 @@ public struct StateScriptNodeStateElement : IBufferElementData
     public StateScriptStateStatus Status;
     public float Time;
     public float Auxiliary;
+    public uint ExecutionVersion;
     public uint PendingTick;
     public uint LastKeepTick;
     public uint TimingStartTick;
@@ -183,6 +206,7 @@ public struct StateScriptManagedCommandElement : IBufferElementData
     public StateScriptManagedCommandType Type;
     public int GraphIndex;
     public int NodeIndex;
+    public uint ExecutionVersion;
     public int IntValue;
     public float3 Position;
     public Entity TargetEntity;
@@ -194,6 +218,7 @@ public struct StateScriptExternalResultElement : IBufferElementData
 {
     public int GraphIndex;
     public int NodeIndex;
+    public uint ExecutionVersion;
     public StateScriptExternalResultStatus Status;
 }
 

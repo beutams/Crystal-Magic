@@ -162,11 +162,23 @@ public partial struct StateScriptEvaluationJob : IJobEntity
                     continue;
                 }
                 int stateIndex = graphState.NodeStateStart + result.NodeIndex;
-                if (nodeStates[stateIndex].Status == StateScriptStateStatus.Stop)
-                    continue;
                 StateScriptNodeStateElement state = nodeStates[stateIndex];
+                if (state.Status == StateScriptStateStatus.Stop ||
+                    state.ExecutionVersion != result.ExecutionVersion)
+                {
+                    continue;
+                }
                 state.Status = StateScriptStateStatus.Stop;
                 nodeStates[stateIndex] = state;
+#if UNITY_EDITOR
+                managedCommands.Add(new StateScriptManagedCommandElement
+                {
+                    Type = StateScriptManagedCommandType.TraceAdditionResultConsumed,
+                    GraphIndex = graphIndex,
+                    NodeIndex = result.NodeIndex,
+                    ExecutionVersion = result.ExecutionVersion,
+                });
+#endif
                 if (!Emit(ref graph, result.NodeIndex, StateScriptPortId.OnComplete, ref pulses) ||
                     !DrainPulses(
                         entity,
@@ -314,12 +326,21 @@ public partial struct StateScriptEvaluationJob : IJobEntity
             case StateScriptNodeRuntimeType.Compare:
                 if (pulse.InputPortId != StateScriptPortId.In || node.ExpressionCount != 1)
                     return false;
+                bool matches = TryEvaluateCondition(ref graph, node.ExpressionStart, in context);
+#if UNITY_EDITOR
+                AppendCurrentInputTypeTrace(
+                    graphIndex,
+                    pulse.NodeIndex,
+                    node.ExpressionStart,
+                    matches,
+                    ref graph,
+                    in context,
+                    ref managedCommands);
+#endif
                 return Emit(
                     ref graph,
                     pulse.NodeIndex,
-                    TryEvaluateCondition(ref graph, node.ExpressionStart, in context)
-                        ? StateScriptPortId.True
-                        : StateScriptPortId.False,
+                    matches ? StateScriptPortId.True : StateScriptPortId.False,
                     ref pulses);
 
             case StateScriptNodeRuntimeType.SetValue:
@@ -330,15 +351,46 @@ public partial struct StateScriptEvaluationJob : IJobEntity
 
             case StateScriptNodeRuntimeType.RequestSkill:
             case StateScriptNodeRuntimeType.RequestSkillWithAddition:
-                if (pulse.InputPortId != StateScriptPortId.In ||
-                    !TryBuildSkillCommand(in node, ref graph, in context, out StateScriptManagedCommandElement skillCommand))
+                if (pulse.InputPortId != StateScriptPortId.In)
+                    return false;
+                if (!TryBuildSkillCommand(
+                        in node,
+                        ref graph,
+                        in context,
+                        out StateScriptManagedCommandElement skillCommand
+#if UNITY_EDITOR
+                        , out StateScriptSkillRequestBuildError buildError
+#endif
+                    ))
+                {
+#if UNITY_EDITOR
+                    managedCommands.Add(new StateScriptManagedCommandElement
+                    {
+                        Type = StateScriptManagedCommandType.TraceSkillRequestFailed,
+                        GraphIndex = graphIndex,
+                        NodeIndex = pulse.NodeIndex,
+                        IntValue = (int)buildError,
+                    });
+#endif
                     return true;
+                }
                 skillCommand.Type = node.Type == StateScriptNodeRuntimeType.RequestSkill
                     ? StateScriptManagedCommandType.RequestSkill
                     : StateScriptManagedCommandType.RequestSkillWithAddition;
                 skillCommand.GraphIndex = graphIndex;
                 skillCommand.NodeIndex = pulse.NodeIndex;
                 managedCommands.Add(skillCommand);
+#if UNITY_EDITOR
+                managedCommands.Add(new StateScriptManagedCommandElement
+                {
+                    Type = StateScriptManagedCommandType.TraceSkillRequestBuilt,
+                    GraphIndex = graphIndex,
+                    NodeIndex = pulse.NodeIndex,
+                    IntValue = skillCommand.IntValue,
+                    Position = skillCommand.Position,
+                    TargetEntity = skillCommand.TargetEntity,
+                });
+#endif
                 return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.Out, ref pulses);
 
             case StateScriptNodeRuntimeType.PublishGameEvent:
@@ -427,14 +479,28 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         {
             if (state.Status != StateScriptStateStatus.Stop)
                 return true;
+            uint nextExecutionVersion = state.ExecutionVersion + 1;
+            if (nextExecutionVersion == 0)
+                nextExecutionVersion = 1;
             state = default;
             state.Status = StateScriptStateStatus.Pending;
+            state.ExecutionVersion = nextExecutionVersion;
             state.PendingTick = component.TickVersion;
             if (node.Type == StateScriptNodeRuntimeType.Timer)
             {
                 state.Auxiliary = TryEvaluateNumber(ref graph, node.ExpressionStart, in context, out float duration)
                     ? math.max(0f, duration)
                     : 0f;
+#if UNITY_EDITOR
+                managedCommands.Add(new StateScriptManagedCommandElement
+                {
+                    Type = StateScriptManagedCommandType.TraceTimerStarted,
+                    GraphIndex = graphIndex,
+                    NodeIndex = pulse.NodeIndex,
+                    IntValue = (int)component.TickVersion,
+                    Position = new float3(state.Auxiliary, DeltaTime, 0f),
+                });
+#endif
             }
             else if (node.Type == StateScriptNodeRuntimeType.Monitor)
             {
@@ -456,6 +522,7 @@ public partial struct StateScriptEvaluationJob : IJobEntity
                     Type = StateScriptManagedCommandType.StartAddition,
                     GraphIndex = graphIndex,
                     NodeIndex = pulse.NodeIndex,
+                    ExecutionVersion = state.ExecutionVersion,
                 });
             }
             return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.OnStart, ref pulses);
@@ -468,7 +535,13 @@ public partial struct StateScriptEvaluationJob : IJobEntity
             state.Status = StateScriptStateStatus.Stop;
             states[stateIndex] = state;
             if (node.Type == StateScriptNodeRuntimeType.Addition)
-                AppendStopAddition(graphIndex, pulse.NodeIndex, ref managedCommands);
+            {
+                AppendStopAddition(
+                    graphIndex,
+                    pulse.NodeIndex,
+                    state.ExecutionVersion,
+                    ref managedCommands);
+            }
             return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.OnAbort, ref pulses);
         }
 
@@ -512,9 +585,21 @@ public partial struct StateScriptEvaluationJob : IJobEntity
             case StateScriptNodeRuntimeType.Timer:
                 state.Time += DeltaTime;
                 states[stateIndex] = state;
-                if (state.Time >= state.Auxiliary &&
-                    !CompleteState(ref graph, nodeIndex, stateIndex, ref states, ref pulses))
-                    return false;
+                if (state.Time >= state.Auxiliary)
+                {
+#if UNITY_EDITOR
+                    managedCommands.Add(new StateScriptManagedCommandElement
+                    {
+                        Type = StateScriptManagedCommandType.TraceTimerCompleted,
+                        GraphIndex = graphIndex,
+                        NodeIndex = nodeIndex,
+                        IntValue = (int)component.TickVersion,
+                        Position = new float3(state.Time, state.Auxiliary, DeltaTime),
+                    });
+#endif
+                    if (!CompleteState(ref graph, nodeIndex, stateIndex, ref states, ref pulses))
+                        return false;
+                }
                 break;
 
             case StateScriptNodeRuntimeType.Keep:
@@ -672,17 +757,22 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         {
             int nodeIndex = graph.StateNodeIndices[index];
             int stateIndex = stateStart + nodeIndex;
-            if (states[stateIndex].Status == StateScriptStateStatus.Stop)
+            StateScriptNodeStateElement state = states[stateIndex];
+            if (state.Status == StateScriptStateStatus.Stop)
                 continue;
-            states[stateIndex] = default;
+            uint executionVersion = state.ExecutionVersion;
+            state = default;
+            state.ExecutionVersion = executionVersion;
+            states[stateIndex] = state;
             if (graph.Nodes[nodeIndex].Type == StateScriptNodeRuntimeType.Addition)
-                AppendStopAddition(graphIndex, nodeIndex, ref managedCommands);
+                AppendStopAddition(graphIndex, nodeIndex, executionVersion, ref managedCommands);
         }
     }
 
     private static void AppendStopAddition(
         int graphIndex,
         int nodeIndex,
+        uint executionVersion,
         ref DynamicBuffer<StateScriptManagedCommandElement> managedCommands)
     {
         managedCommands.Add(new StateScriptManagedCommandElement
@@ -690,6 +780,7 @@ public partial struct StateScriptEvaluationJob : IJobEntity
             Type = StateScriptManagedCommandType.StopAddition,
             GraphIndex = graphIndex,
             NodeIndex = nodeIndex,
+            ExecutionVersion = executionVersion,
         });
     }
 
@@ -721,20 +812,67 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         in StateScriptNodeDefinition node,
         ref StateScriptGraphDefinitionBlob graph,
         in UnitSourceContext context,
-        out StateScriptManagedCommandElement command)
+        out StateScriptManagedCommandElement command
+#if UNITY_EDITOR
+        , out StateScriptSkillRequestBuildError error
+#endif
+        )
     {
         command = default;
-        if (node.ExpressionCount != 3 ||
-            !TryEvaluateNumber(ref graph, node.ExpressionStart, in context, out float rawSkillId) ||
+#if UNITY_EDITOR
+        error = StateScriptSkillRequestBuildError.None;
+#endif
+        if (node.ExpressionCount != 3)
+        {
+#if UNITY_EDITOR
+            error = StateScriptSkillRequestBuildError.InvalidExpressionCount;
+#endif
+            return false;
+        }
+        if (!TryEvaluateNumber(ref graph, node.ExpressionStart, in context, out float rawSkillId) ||
             !math.isfinite(rawSkillId))
+        {
+#if UNITY_EDITOR
+            error = StateScriptSkillRequestBuildError.SkillIdEvaluationFailed;
+#endif
             return false;
+        }
         float rounded = math.round(rawSkillId);
-        if (rounded < 0f || rounded > int.MaxValue || math.abs(rawSkillId - rounded) > 0.0001f ||
-            !TryEvaluateValue(ref graph, node.ExpressionStart + 1, in context, out UnitSourceValue positionValue) ||
-            !positionValue.TryGetFloat3(out float3 position) ||
-            !TryEvaluateValue(ref graph, node.ExpressionStart + 2, in context, out UnitSourceValue targetValue) ||
-            !targetValue.TryGetEntity(out Entity target))
+        if (rounded < 0f || rounded > int.MaxValue || math.abs(rawSkillId - rounded) > 0.0001f)
+        {
+#if UNITY_EDITOR
+            error = StateScriptSkillRequestBuildError.SkillIdNotInteger;
+#endif
             return false;
+        }
+        if (!TryEvaluateValue(ref graph, node.ExpressionStart + 1, in context, out UnitSourceValue positionValue))
+        {
+#if UNITY_EDITOR
+            error = StateScriptSkillRequestBuildError.PositionEvaluationFailed;
+#endif
+            return false;
+        }
+        if (!positionValue.TryGetFloat3(out float3 position))
+        {
+#if UNITY_EDITOR
+            error = StateScriptSkillRequestBuildError.PositionTypeMismatch;
+#endif
+            return false;
+        }
+        if (!TryEvaluateValue(ref graph, node.ExpressionStart + 2, in context, out UnitSourceValue targetValue))
+        {
+#if UNITY_EDITOR
+            error = StateScriptSkillRequestBuildError.TargetEvaluationFailed;
+#endif
+            return false;
+        }
+        if (!targetValue.TryGetEntity(out Entity target))
+        {
+#if UNITY_EDITOR
+            error = StateScriptSkillRequestBuildError.TargetTypeMismatch;
+#endif
+            return false;
+        }
         command.IntValue = (int)rounded;
         command.Position = position;
         command.TargetEntity = target;
@@ -775,6 +913,82 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         ref BehaviorExpressionBlob expression = ref graph.Expressions[expressionIndex];
         return CompiledExpressionEvaluator.TryEvaluateConditions(ref expression, in context, in Sources);
     }
+
+#if UNITY_EDITOR
+    private void AppendCurrentInputTypeTrace(
+        int graphIndex,
+        int nodeIndex,
+        int expressionIndex,
+        bool conditionResult,
+        ref StateScriptGraphDefinitionBlob graph,
+        in UnitSourceContext context,
+        ref DynamicBuffer<StateScriptManagedCommandElement> managedCommands)
+    {
+        if ((uint)expressionIndex >= (uint)graph.Expressions.Length)
+            return;
+
+        ref BehaviorExpressionBlob expression = ref graph.Expressions[expressionIndex];
+        bool usesCurrentInputType = false;
+        for (int index = 0; index < expression.Instructions.Length; index++)
+        {
+            ExpressionInstruction instruction = expression.Instructions[index];
+            if (instruction.Kind == ExpressionInstructionKind.Source &&
+                instruction.SourceId == UnitSourceId.PlayerSkillCurrentInputType)
+            {
+                usesCurrentInputType = true;
+                break;
+            }
+        }
+        if (!usesCurrentInputType)
+            return;
+
+        UnitSourceArguments emptyArguments = default;
+        float skillId = -999f;
+        bool hasSkillId = Sources.TryGet(
+                              context.Self,
+                              UnitSourceId.PlayerSkillCurrentSkillId,
+                              in emptyArguments,
+                              out UnitSourceValue skillIdValue) &&
+                          skillIdValue.TryGetNumber(out skillId);
+        float currentInputType = -999f;
+        bool hasCurrentInputType = Sources.TryGet(
+                                       context.Self,
+                                       UnitSourceId.PlayerSkillCurrentInputType,
+                                       in emptyArguments,
+                                       out UnitSourceValue currentInputTypeValue) &&
+                                   currentInputTypeValue.TryGetNumber(out currentInputType);
+
+        bool hasDirectInputType = false;
+        float directInputType = -999f;
+        if (hasSkillId)
+        {
+            UnitSourceArguments directArguments = default;
+            directArguments.Values.Add(skillIdValue);
+            hasDirectInputType = Sources.TryGet(
+                                     context.Self,
+                                     UnitSourceId.PlayerSkillGetInputType,
+                                     in directArguments,
+                                     out UnitSourceValue directInputTypeValue) &&
+                                 directInputTypeValue.TryGetNumber(out directInputType);
+        }
+
+        int successMask = (hasSkillId ? 1 : 0) |
+                          (hasCurrentInputType ? 2 : 0) |
+                          (hasDirectInputType ? 4 : 0);
+        managedCommands.Add(new StateScriptManagedCommandElement
+        {
+            Type = StateScriptManagedCommandType.TraceCurrentInputType,
+            GraphIndex = graphIndex,
+            NodeIndex = nodeIndex,
+            IntValue = successMask,
+            Position = new float3(
+                hasSkillId ? skillId : -999f,
+                hasCurrentInputType ? currentInputType : -999f,
+                hasDirectInputType ? directInputType : -999f),
+            Value = UnitSourceValue.FromBool(conditionResult),
+        });
+    }
+#endif
 
     private static bool Emit(
         ref StateScriptGraphDefinitionBlob graph,

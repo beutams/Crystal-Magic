@@ -108,6 +108,38 @@ namespace CrystalMagic.Game.Data
         }
     }
 
+    public sealed class StateScriptVector3Converter : JsonConverter
+    {
+        public override bool CanConvert(Type objectType)
+        {
+            return objectType == typeof(Vector3);
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            if (reader.TokenType == JsonToken.Null)
+                return Vector3.zero;
+
+            JObject json = JObject.Load(reader);
+            return new Vector3(
+                json.Value<float?>("x") ?? 0f,
+                json.Value<float?>("y") ?? 0f,
+                json.Value<float?>("z") ?? 0f);
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            Vector3 vector = (Vector3)value;
+            JObject json = new()
+            {
+                ["x"] = vector.x,
+                ["y"] = vector.y,
+                ["z"] = vector.z,
+            };
+            json.WriteTo(writer);
+        }
+    }
+
     public sealed class StateScriptUnitValueConverter : JsonConverter
     {
         public override bool CanConvert(Type objectType)

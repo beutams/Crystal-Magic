@@ -30,6 +30,11 @@ public partial class SkillReleaseSystem : SystemBase
         for (int i = 0; i < _pendingRequests.Count; i++)
         {
             SkillReleaseRequest request = _pendingRequests[i];
+#if UNITY_EDITOR
+            Debug.Log(
+                $"[StateScriptTrace] Skill release received: Entity={request.OriginEntity}, " +
+                $"SkillId={request.SkillId}, Position={request.TargetPosition}, Target={request.TargetEntity}.");
+#endif
             if (!SkillReleaseSnapshotUtility.TryCreate(EntityManager, in request, out ResolvedSkillData resolvedSkill))
             {
                 Debug.LogError($"[SkillReleaseSystem] Failed to analyze SkillId={request.SkillId}.");

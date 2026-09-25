@@ -132,6 +132,15 @@ namespace CrystalMagic.Editor.Unit
                 return;
             }
 
+            if (node is AdditionStateScriptNodeData addition)
+            {
+                EditorGUI.BeginChangeCheck();
+                addition.EventName = EditorGUILayout.TextField("Event Name", addition.EventName ?? string.Empty);
+                if (EditorGUI.EndChangeCheck())
+                    onChanged?.Invoke();
+                return;
+            }
+
             EditorGUILayout.HelpBox("This first version only provides the StateScript structure. Concrete State, Bool, and Action nodes will add their own configuration here.", MessageType.Info);
         }
 
