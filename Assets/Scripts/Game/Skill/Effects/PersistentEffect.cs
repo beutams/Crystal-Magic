@@ -19,9 +19,16 @@ namespace CrystalMagic.Game.Skill.Effects
             if (!TryGetReleasePosition(context, context.EntityManager, out Vector3 position))
                 return;
 
-            SkillContent persistentContext = context.Clone();
-            CaptureOriginPositionSnapshot(persistentContext, context.EntityManager);
-            PersistentEffectUtility.AddEffect(Data, persistentContext, position);
+            SkillContent persistentContext = SkillContentReferencePool.Get(context);
+            try
+            {
+                CaptureOriginPositionSnapshot(persistentContext, context.EntityManager);
+                PersistentEffectUtility.AddEffect(Data, persistentContext, position);
+            }
+            finally
+            {
+                SkillContentReferencePool.Return(persistentContext);
+            }
         }
 
         private static void CaptureOriginPositionSnapshot(SkillContent context, EntityManager entityManager)

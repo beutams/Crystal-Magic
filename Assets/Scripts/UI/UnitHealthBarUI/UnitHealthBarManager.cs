@@ -13,6 +13,9 @@ namespace CrystalMagic.UI
     {
         private const string GroupName = "Bottom";
         private const float WorldYOffset = -1.4f;
+        private const float BuffRefreshIntervalSeconds = 0.1f;
+        private const float BuffDiscoveryPauseSeconds = 0.1f;
+        private const int BuffDiscoveryBudgetPerFrame = 32;
 
         private readonly Dictionary<Entity, ActiveBar> _activeBars = new();
         private readonly List<Entity> _cleanupEntities = new();
@@ -23,6 +26,9 @@ namespace CrystalMagic.UI
         private Camera _currentCamera;
         private World _enemyBuffQueryWorld;
         private EntityQuery _enemyBuffQuery;
+        private NativeArray<Entity> _buffDiscoveryEntities;
+        private int _buffDiscoveryIndex;
+        private float _nextBuffDiscoveryTime;
         private bool _initialized;
 
         public void Initialize()
@@ -41,7 +47,7 @@ namespace CrystalMagic.UI
             if (!_initialized)
                 return;
 
-            if (!ResolveFloatingRoot())
+            if ((_rootRect == null || _currentCamera == null) && !ResolveFloatingRoot())
                 return;
 
             UpdateBars();
@@ -71,7 +77,6 @@ namespace CrystalMagic.UI
                 return;
 
             bar.HideAtTime = Time.time + UIComponent.Instance.GetUnitHealthBarShowSeconds();
-            _rootView?.UpdateBar(bar.Handle, gameEvent.CurrentHealth, gameEvent.MaxHealth, Vector2.zero, true);
         }
 
         private bool ResolveFloatingRoot()
@@ -108,7 +113,8 @@ namespace CrystalMagic.UI
             if (_activeBars.TryGetValue(entity, out ActiveBar existingBar) && existingBar.Handle != null)
                 return existingBar;
 
-            if (!EnsureRootView() || !ResolveFloatingRoot())
+            if (!EnsureRootView()
+                || ((_rootRect == null || _currentCamera == null) && !ResolveFloatingRoot()))
                 return null;
 
             UnitHealthBarUI.BarHandle handle = _rootView.AcquireBar();
@@ -131,8 +137,9 @@ namespace CrystalMagic.UI
                 return;
 
             EntityManager entityManager = world.EntityManager;
-            EnsureBarsForVisibleBuffs(world, entityManager);
+            DiscoverBarsWithVisibleBuffs(world, entityManager);
             _cleanupEntities.Clear();
+            float now = Time.time;
 
             foreach (KeyValuePair<Entity, ActiveBar> pair in _activeBars)
             {
@@ -145,6 +152,7 @@ namespace CrystalMagic.UI
 
                 Entity entity = pair.Key;
                 if (!entityManager.Exists(entity)
+                    || !IsEnemyUnit(entityManager, entity)
                     || !entityManager.HasComponent<LocalToWorld>(entity)
                     || !entityManager.HasComponent<UnitVitalityComponent>(entity)
                     || (entityManager.HasComponent<UnitDeathComponent>(entity) &&
@@ -154,9 +162,20 @@ namespace CrystalMagic.UI
                     continue;
                 }
 
-                BuildVisibleBuffs(entityManager, entity, _buffDisplayBuffer, out int signature);
-                bool hasVisibleBuffs = _buffDisplayBuffer.Count > 0;
-                if (Time.time >= bar.HideAtTime && !hasVisibleBuffs)
+                if (now >= bar.NextBuffRefreshTime)
+                {
+                    BuildVisibleBuffs(
+                        entityManager,
+                        entity,
+                        _buffDisplayBuffer,
+                        requirePlayerOrigin: true,
+                        out int signature);
+                    bar.HasVisibleBuffs = _buffDisplayBuffer.Count > 0;
+                    bar.NextBuffRefreshTime = now + BuffRefreshIntervalSeconds;
+                    UpdateBuffDisplay(bar, signature);
+                }
+
+                if (now >= bar.HideAtTime && !bar.HasVisibleBuffs)
                 {
                     _cleanupEntities.Add(pair.Key);
                     continue;
@@ -175,7 +194,6 @@ namespace CrystalMagic.UI
                 if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_rootRect, screenPosition, _currentCamera, out Vector2 localPoint))
                 {
                     _rootView?.UpdateBar(bar.Handle, vitality.CurrentHealth, UnitModifierResolver.GetMaxHealth(entityManager, entity), localPoint, true);
-                    UpdateBuffDisplay(bar, signature);
                 }
             }
 
@@ -191,10 +209,20 @@ namespace CrystalMagic.UI
             if (world == null || !world.IsCreated)
                 return false;
 
-            EntityManager entityManager = world.EntityManager;
+            return IsEnemyUnit(world.EntityManager, entity);
+        }
+
+        private static bool IsEnemyUnit(EntityManager entityManager, Entity entity)
+        {
             if (!entityManager.Exists(entity)
                 || !entityManager.HasComponent<UnitVitalityComponent>(entity)
                 || !entityManager.HasComponent<UnitFactionComponent>(entity))
+            {
+                return false;
+            }
+
+            if (entityManager.HasComponent<NetworkPlayerComponent>(entity) ||
+                entityManager.HasComponent<PlayerInputComponent>(entity))
             {
                 return false;
             }
@@ -224,24 +252,48 @@ namespace CrystalMagic.UI
             _rootView.UpdateBuffIcons(bar.Handle, _buffDisplayBuffer);
         }
 
-        private void EnsureBarsForVisibleBuffs(World world, EntityManager entityManager)
+        private void DiscoverBarsWithVisibleBuffs(World world, EntityManager entityManager)
         {
             if (!EnsureEnemyBuffQuery(world))
                 return;
 
-            using NativeArray<Entity> entities = _enemyBuffQuery.ToEntityArray(Allocator.Temp);
-            for (int i = 0; i < entities.Length; i++)
+            if (!_buffDiscoveryEntities.IsCreated)
             {
-                Entity entity = entities[i];
-                if (!IsEnemyUnit(entity))
+                if (Time.time < _nextBuffDiscoveryTime)
+                    return;
+
+                _buffDiscoveryEntities = _enemyBuffQuery.ToEntityArray(Allocator.Persistent);
+                _buffDiscoveryIndex = 0;
+                if (_buffDiscoveryEntities.Length == 0)
+                {
+                    CompleteBuffDiscoveryCycle();
+                    return;
+                }
+            }
+
+            int endIndex = Math.Min(
+                _buffDiscoveryIndex + BuffDiscoveryBudgetPerFrame,
+                _buffDiscoveryEntities.Length);
+            for (; _buffDiscoveryIndex < endIndex; _buffDiscoveryIndex++)
+            {
+                Entity entity = _buffDiscoveryEntities[_buffDiscoveryIndex];
+                if (!IsEnemyUnit(entityManager, entity))
                     continue;
 
-                BuildVisibleBuffs(entityManager, entity, _buffDisplayBuffer, out _);
+                BuildVisibleBuffs(
+                    entityManager,
+                    entity,
+                    _buffDisplayBuffer,
+                    requirePlayerOrigin: true,
+                    out _);
                 if (_buffDisplayBuffer.Count <= 0)
                     continue;
 
                 GetOrCreateBar(entity);
             }
+
+            if (_buffDiscoveryIndex >= _buffDiscoveryEntities.Length)
+                CompleteBuffDiscoveryCycle();
         }
 
         private bool EnsureEnemyBuffQuery(World world)
@@ -265,6 +317,9 @@ namespace CrystalMagic.UI
 
         private void ReleaseEnemyBuffQuery()
         {
+            ReleaseBuffDiscoveryEntities();
+            _nextBuffDiscoveryTime = 0f;
+
             if (_enemyBuffQueryWorld == null || !_enemyBuffQueryWorld.IsCreated)
             {
                 _enemyBuffQueryWorld = null;
@@ -277,10 +332,26 @@ namespace CrystalMagic.UI
             _enemyBuffQuery = default;
         }
 
-        private static void BuildVisibleBuffs(
+        private void CompleteBuffDiscoveryCycle()
+        {
+            ReleaseBuffDiscoveryEntities();
+            _nextBuffDiscoveryTime = Time.time + BuffDiscoveryPauseSeconds;
+        }
+
+        private void ReleaseBuffDiscoveryEntities()
+        {
+            if (_buffDiscoveryEntities.IsCreated)
+                _buffDiscoveryEntities.Dispose();
+
+            _buffDiscoveryEntities = default;
+            _buffDiscoveryIndex = 0;
+        }
+
+        internal static void BuildVisibleBuffs(
             EntityManager entityManager,
             Entity entity,
             List<UnitHealthBarBuffDisplayData> output,
+            bool requirePlayerOrigin,
             out int signature)
         {
             output.Clear();
@@ -299,6 +370,7 @@ namespace CrystalMagic.UI
                         entry.StackCount,
                         entry.OriginEntity,
                         output,
+                        requirePlayerOrigin,
                         ref signature);
                 }
 
@@ -318,6 +390,7 @@ namespace CrystalMagic.UI
                     entry.StackCount,
                     entry.OriginEntity,
                     output,
+                    requirePlayerOrigin,
                     ref signature);
             }
         }
@@ -328,12 +401,20 @@ namespace CrystalMagic.UI
             int stackCount,
             Entity originEntity,
             List<UnitHealthBarBuffDisplayData> output,
+            bool requirePlayerOrigin,
             ref int signature)
         {
-            if (buffId < 0 || stackCount <= 0 || originEntity == Entity.Null ||
-                !entityManager.Exists(originEntity) ||
-                !entityManager.HasComponent<UnitFactionComponent>(originEntity) ||
-                !UnitFactionUtility.IsPlayer(entityManager.GetComponentData<UnitFactionComponent>(originEntity).Value))
+            if (buffId < 0 || stackCount <= 0)
+            {
+                return;
+            }
+
+            if (requirePlayerOrigin &&
+                (originEntity == Entity.Null ||
+                 !entityManager.Exists(originEntity) ||
+                 !entityManager.HasComponent<UnitFactionComponent>(originEntity) ||
+                 !UnitFactionUtility.IsPlayer(entityManager
+                     .GetComponentData<UnitFactionComponent>(originEntity).Value)))
             {
                 return;
             }
@@ -382,6 +463,8 @@ namespace CrystalMagic.UI
             public UnitHealthBarUI.BarHandle Handle;
             public float HideAtTime;
             public int LastBuffSignature;
+            public float NextBuffRefreshTime;
+            public bool HasVisibleBuffs;
         }
     }
 }

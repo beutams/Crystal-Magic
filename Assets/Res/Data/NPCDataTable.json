@@ -228,7 +228,7 @@
                  },
                  {
                      "NPC":  "NetworkNPC",
-                     "PrefabPath":  "Assets/Res/Prefab/Unit/NetworkNPC.prefab",
+                     "PrefabPath":  "Assets/Res/Prefab/Unit/NPCNetwork.prefab",
                      "Interactions":  [
                                           {
                                               "Key":  "OpenLobby",

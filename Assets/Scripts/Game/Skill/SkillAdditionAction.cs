@@ -246,16 +246,22 @@ namespace CrystalMagic.Game.Skill
             int sourceSkillId = PlayerCurrentSkillUtility.TryGetCurrentSkillId(Context.EntityManager, Context.Entity, out int currentSkillId)
                 ? currentSkillId
                 : -1;
-            EffectUtility.Enqueue(Context.EntityManager, _data.Effects, new SkillContent
+            SkillContent content = SkillContentReferencePool.Get();
+            try
             {
-                EntityManager = Context.EntityManager,
-                TriggerSource = SkillTriggerSource.Script,
-                HasOriginEntity = true,
-                OriginEntity = Context.Entity,
-                SourceSkillId = sourceSkillId,
-                HasTargetEntity = true,
-                TargetEntity = Context.Entity,
-            });
+                content.EntityManager = Context.EntityManager;
+                content.TriggerSource = SkillTriggerSource.Script;
+                content.HasOriginEntity = true;
+                content.OriginEntity = Context.Entity;
+                content.SourceSkillId = sourceSkillId;
+                content.HasTargetEntity = true;
+                content.TargetEntity = Context.Entity;
+                EffectUtility.Enqueue(Context.EntityManager, _data.Effects, content);
+            }
+            finally
+            {
+                SkillContentReferencePool.Return(content);
+            }
             return SkillAdditionActionStatus.Completed;
         }
     }

@@ -6,6 +6,8 @@ using Unity.Entities;
 [UpdateInGroup(typeof(UnitInitializationSystemGroup), OrderFirst = true)]
 public partial class UnitSourceDispatcherSystem : SystemBase
 {
+    private int _entityOrderVersion;
+
     public UnitSourceDispatcher Dispatcher { get; private set; }
 
     protected override void OnCreate()
@@ -13,6 +15,7 @@ public partial class UnitSourceDispatcherSystem : SystemBase
         UnitSourceDispatcher dispatcher = default;
         dispatcher.Initialize(this);
         Dispatcher = dispatcher;
+        _entityOrderVersion = EntityManager.EntityOrderVersion;
     }
 
     protected override void OnUpdate()
@@ -20,6 +23,7 @@ public partial class UnitSourceDispatcherSystem : SystemBase
         UnitSourceDispatcher dispatcher = Dispatcher;
         dispatcher.Update(this);
         Dispatcher = dispatcher;
+        _entityOrderVersion = EntityManager.EntityOrderVersion;
     }
 
     public static bool TryGet(EntityManager entityManager, out UnitSourceDispatcher dispatcher)
@@ -34,6 +38,16 @@ public partial class UnitSourceDispatcherSystem : SystemBase
             return false;
 
         dispatcher = system.Dispatcher;
+        int entityOrderVersion = entityManager.EntityOrderVersion;
+        if (system._entityOrderVersion != entityOrderVersion)
+        {
+            // Managed effects can perform structural changes several times after
+            // the initialization group. Refresh once per structural-change version.
+            dispatcher.Update(system);
+            system.Dispatcher = dispatcher;
+            system._entityOrderVersion = entityOrderVersion;
+        }
+
         return true;
     }
 }

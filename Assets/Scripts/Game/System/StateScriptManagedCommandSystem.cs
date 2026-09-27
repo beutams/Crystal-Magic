@@ -8,6 +8,7 @@ using Server;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Profiling;
 using Unity.Transforms;
 using UnityEngine;
 
@@ -19,6 +20,25 @@ using UnityEngine;
 public partial class StateScriptManagedCommandSystem : SystemBase
 {
     private const string NpcSessionInputLockReason = "StateScript.NpcSession";
+
+    private static readonly ProfilerMarker WaitForScheduledJobsMarker =
+        new("StateScript.Managed.WaitForScheduledJobs");
+    private static readonly ProfilerMarker UpdateSourceDispatcherMarker =
+        new("StateScript.Managed.UpdateSourceDispatcher");
+    private static readonly ProfilerMarker TickRunningActionsMarker =
+        new("StateScript.Managed.TickRunningActions");
+    private static readonly ProfilerMarker TickNpcSessionsMarker =
+        new("StateScript.Managed.TickNpcSessions");
+    private static readonly ProfilerMarker ResolveSourcesMarker =
+        new("StateScript.Managed.ResolveSources");
+    private static readonly ProfilerMarker CopyCommandQueueMarker =
+        new("StateScript.Managed.CopyCommandQueue");
+    private static readonly ProfilerMarker<int> ExecuteCommandsMarker =
+        new("StateScript.Managed.ExecuteCommands", "Command Count");
+    private static readonly ProfilerMarker TraceCommandsMarker =
+        new("StateScript.Managed.TraceCommands");
+    private static readonly ProfilerMarker AddMissingDestroyFlagsMarker =
+        new("StateScript.Managed.AddMissingDestroyFlags");
 
     private sealed class RunningAddition
     {
@@ -34,7 +54,8 @@ public partial class StateScriptManagedCommandSystem : SystemBase
     private readonly Dictionary<Entity, NPCInteractionSession> _npcSessions = new();
     private readonly List<Entity> _completedNpcTargets = new();
     private UnitSourceDispatcher _sourceDispatcher;
-    private EntityQuery _commandQuery;
+    private EntityQuery _commandQueueQuery;
+    private Entity _commandQueueEntity;
     private Entity _interactionEntity;
     private NPCInteractionNodeRunnerFactory _npcRunnerFactory;
     private bool _npcInputLocked;
@@ -44,72 +65,87 @@ public partial class StateScriptManagedCommandSystem : SystemBase
     {
         _worldRole = GameWorldContextUtility.Get(EntityManager).Role;
         _sourceDispatcher.Initialize(this);
+        _commandQueueEntity = StateScriptManagedCommandQueueUtility.GetOrCreateEntity(EntityManager);
+        _commandQueueQuery = GetEntityQuery(
+            ComponentType.ReadOnly<StateScriptManagedCommandQueueComponent>(),
+            ComponentType.ReadWrite<StateScriptManagedCommandElement>());
         _interactionEntity = GameSingletonUtility.GetEntity<GameInteractionComponent>(EntityManager);
         _npcRunnerFactory = new NPCInteractionNodeRunnerFactory();
         NPCInteractionNodeRunnerRegistry.RegisterAll(_npcRunnerFactory);
         RegisterEffectLists();
-        _commandQuery = GetEntityQuery(
-            ComponentType.ReadOnly<UnitStateScriptComponent>(),
-            ComponentType.Exclude<UnitInitializationPendingTag>(),
-            ComponentType.ReadWrite<StateScriptManagedCommandElement>());
         RequireForUpdate<StateScriptRuntimeRegistryComponent>();
+        RequireForUpdate<StateScriptManagedCommandQueueComponent>();
     }
 
     protected override void OnUpdate()
     {
-        Dependency.Complete();
+        using (WaitForScheduledJobsMarker.Auto())
+            Dependency.Complete();
+
         BlobAssetReference<StateScriptRuntimeRegistryBlob> registry =
             SystemAPI.GetSingleton<StateScriptRuntimeRegistryComponent>().Value;
         if (!registry.IsCreated)
             return;
 
-        _sourceDispatcher.Update(this);
-        TickRunningActions();
-        TickNpcSessions(SystemAPI.Time.DeltaTime);
+        using (UpdateSourceDispatcherMarker.Auto())
+            _sourceDispatcher.Update(this);
+        using (TickRunningActionsMarker.Auto())
+            TickRunningActions();
+        using (TickNpcSessionsMarker.Auto())
+            TickNpcSessions(SystemAPI.Time.DeltaTime);
+
         _missingDestroyFlags.Clear();
-        using NativeArray<Entity> entities = _commandQuery.ToEntityArray(Allocator.Temp);
-        for (int entityIndex = 0; entityIndex < entities.Length; entityIndex++)
+        DynamicBuffer<StateScriptManagedCommandElement> commandQueue =
+            _commandQueueQuery.GetSingletonBuffer<StateScriptManagedCommandElement>();
+        if (!commandQueue.IsEmpty)
         {
-            Entity entity = entities[entityIndex];
-            UnitStateScriptComponent component = EntityManager.GetComponentData<UnitStateScriptComponent>(entity);
-            DynamicBuffer<StateScriptManagedCommandElement> commands =
-                EntityManager.GetBuffer<StateScriptManagedCommandElement>(entity);
-            if (component.DefinitionIndex < 0 ||
-                component.DefinitionIndex >= registry.Value.Units.Length)
+            NativeArray<StateScriptManagedCommandElement> pendingCommands;
+            using (CopyCommandQueueMarker.Auto())
             {
-                commands.Clear();
-                continue;
+                pendingCommands = commandQueue.ToNativeArray(Allocator.Temp);
+                commandQueue.Clear();
             }
 
-            if (component.IsStoppedForDeath != 0 || EntityManager.HasComponent<BattleSpectatorComponent>(entity) ||
-                (EntityManager.HasComponent<UnitDeathComponent>(entity) &&
-                 EntityManager.IsComponentEnabled<UnitDeathComponent>(entity)))
+            using (pendingCommands)
+            using (ExecuteCommandsMarker.Auto(pendingCommands.Length))
             {
-                StopActions(entity);
-                commands.Clear();
-                continue;
-            }
+                Entity currentEntity = Entity.Null;
+                int currentDefinitionIndex = -1;
+                bool currentEntityCanExecute = false;
+                UnitSourceResolver resolver = null;
+                for (int commandIndex = 0; commandIndex < pendingCommands.Length; commandIndex++)
+                {
+                    StateScriptManagedCommandElement command = pendingCommands[commandIndex];
+                    Entity entity = command.SourceEntity;
+                    if (entity != currentEntity)
+                    {
+                        currentEntity = entity;
+                        currentDefinitionIndex = -1;
+                        currentEntityCanExecute = TryPrepareEntity(
+                            entity,
+                            in registry,
+                            out currentDefinitionIndex);
+                        resolver = null;
+                    }
 
-            ref StateScriptUnitDefinitionBlob unit = ref registry.Value.Units[component.DefinitionIndex];
-            Entity other = UnitVariableSource.GetOther(EntityManager, entity);
-            UnitSourceResolver resolver = new(entity);
-            resolver.Update(entity, other, in _sourceDispatcher);
-            using NativeArray<StateScriptManagedCommandElement> pendingCommands =
-                commands.ToNativeArray(Allocator.Temp);
-            commands.Clear();
-            for (int commandIndex = 0; commandIndex < pendingCommands.Length; commandIndex++)
-            {
-                StateScriptManagedCommandElement command = pendingCommands[commandIndex];
-                if ((uint)command.GraphIndex >= (uint)unit.Graphs.Length)
-                    continue;
-                ref StateScriptGraphDefinitionBlob graph = ref unit.Graphs[command.GraphIndex];
-                if ((uint)command.NodeIndex >= (uint)graph.Nodes.Length)
-                    continue;
-                ref StateScriptNodeDefinition node = ref graph.Nodes[command.NodeIndex];
-                ExecuteCommand(entity, command, ref graph, ref node, resolver);
+                    if (!currentEntityCanExecute)
+                        continue;
+
+                    ref StateScriptUnitDefinitionBlob unit =
+                        ref registry.Value.Units[currentDefinitionIndex];
+                    if ((uint)command.GraphIndex >= (uint)unit.Graphs.Length)
+                        continue;
+                    ref StateScriptGraphDefinitionBlob graph = ref unit.Graphs[command.GraphIndex];
+                    if ((uint)command.NodeIndex >= (uint)graph.Nodes.Length)
+                        continue;
+                    ref StateScriptNodeDefinition node = ref graph.Nodes[command.NodeIndex];
+                    ExecuteCommand(entity, command, ref graph, ref node, ref resolver);
+                }
             }
         }
-        AddMissingDestroyFlags();
+
+        using (AddMissingDestroyFlagsMarker.Auto())
+            AddMissingDestroyFlags();
     }
 
     protected override void OnDestroy()
@@ -122,6 +158,8 @@ public partial class StateScriptManagedCommandSystem : SystemBase
 
     public void ResetScene()
     {
+        if (_commandQueueEntity != Entity.Null && EntityManager.Exists(_commandQueueEntity))
+            EntityManager.GetBuffer<StateScriptManagedCommandElement>(_commandQueueEntity).Clear();
         foreach (KeyValuePair<StateScriptActionKey, RunningAddition> pair in _runningActions)
             StopActions(pair.Value.Actions);
         _runningActions.Clear();
@@ -132,6 +170,37 @@ public partial class StateScriptManagedCommandSystem : SystemBase
         _completedNpcTargets.Clear();
         _missingDestroyFlags.Clear();
         ReleaseNpcInput();
+    }
+
+    private bool TryPrepareEntity(
+        Entity entity,
+        in BlobAssetReference<StateScriptRuntimeRegistryBlob> registry,
+        out int definitionIndex)
+    {
+        definitionIndex = -1;
+        if (entity == Entity.Null ||
+            !EntityManager.Exists(entity) ||
+            EntityManager.HasComponent<UnitInitializationPendingTag>(entity) ||
+            !EntityManager.HasComponent<UnitStateScriptComponent>(entity))
+        {
+            return false;
+        }
+
+        UnitStateScriptComponent component = EntityManager.GetComponentData<UnitStateScriptComponent>(entity);
+        definitionIndex = component.DefinitionIndex;
+        if (definitionIndex < 0 || definitionIndex >= registry.Value.Units.Length)
+            return false;
+
+        if (component.IsStoppedForDeath == 0 &&
+            !EntityManager.HasComponent<BattleSpectatorComponent>(entity) &&
+            (!EntityManager.HasComponent<UnitDeathComponent>(entity) ||
+             !EntityManager.IsComponentEnabled<UnitDeathComponent>(entity)))
+        {
+            return true;
+        }
+
+        StopActions(entity);
+        return false;
     }
 
     private void RegisterEffectLists()
@@ -183,12 +252,19 @@ public partial class StateScriptManagedCommandSystem : SystemBase
             return;
         }
 
-        SkillContent context = EffectUtility.CreateContext(EntityManager, in command.EffectContext);
-        EffectUtility.Enqueue(
-            EntityManager,
-            effectListId,
-            context,
-            math.max(1, command.IntValue));
+        SkillContent context = EffectUtility.GetContext(EntityManager, in command.EffectContext);
+        try
+        {
+            EffectUtility.Enqueue(
+                EntityManager,
+                effectListId,
+                context,
+                math.max(1, command.IntValue));
+        }
+        finally
+        {
+            EffectUtility.ReturnContext(context);
+        }
     }
 
     private void MarkForDestroy(Entity entity)
@@ -221,7 +297,7 @@ public partial class StateScriptManagedCommandSystem : SystemBase
         StateScriptManagedCommandElement command,
         ref StateScriptGraphDefinitionBlob graph,
         ref StateScriptNodeDefinition node,
-        UnitSourceResolver resolver)
+        ref UnitSourceResolver resolver)
     {
         switch (command.Type)
         {
@@ -263,7 +339,8 @@ public partial class StateScriptManagedCommandSystem : SystemBase
                 break;
             case StateScriptManagedCommandType.SpawnUnit:
                 SpawnUnits(entity, command.GraphIndex, command.NodeIndex, command.IntValue, ref graph, in node);
-                RefreshResolver(entity, resolver);
+                if (resolver != null)
+                    RefreshResolver(entity, resolver);
                 break;
             case StateScriptManagedCommandType.ExecuteEffect:
                 ExecuteEffects(entity, command);
@@ -279,7 +356,7 @@ public partial class StateScriptManagedCommandSystem : SystemBase
                     command.NodeIndex,
                     command.ExecutionVersion,
                     in node,
-                    resolver);
+                    GetOrCreateResolver(entity, ref resolver));
                 RefreshResolver(entity, resolver);
                 break;
             case StateScriptManagedCommandType.StopAddition:
@@ -287,39 +364,57 @@ public partial class StateScriptManagedCommandSystem : SystemBase
                     new StateScriptActionKey(entity, command.GraphIndex, command.NodeIndex),
                     command.ExecutionVersion);
                 break;
-#if UNITY_EDITOR
+#if UNITY_EDITOR && STATE_SCRIPT_TRACE
             case StateScriptManagedCommandType.TraceTimerStarted:
-                Debug.Log(
-                    $"[StateScriptTrace] Timer started: Entity={entity}, Graph='{graph.Name}', Node='{node.Guid}', " +
-                    $"Duration={command.Position.x:0.###}, DeltaTime={command.Position.y:0.######}, Tick={command.IntValue}.");
+                using (TraceCommandsMarker.Auto())
+                {
+                    Debug.Log(
+                        $"[StateScriptTrace] Timer started: Entity={entity}, Graph='{graph.Name}', Node='{node.Guid}', " +
+                        $"Duration={command.Position.x:0.###}, DeltaTime={command.Position.y:0.######}, Tick={command.IntValue}.");
+                }
                 break;
             case StateScriptManagedCommandType.TraceTimerCompleted:
-                Debug.Log(
-                    $"[StateScriptTrace] Timer completed: Entity={entity}, Graph='{graph.Name}', Node='{node.Guid}', " +
-                    $"Elapsed={command.Position.x:0.###}, Duration={command.Position.y:0.###}, " +
-                    $"DeltaTime={command.Position.z:0.######}, Tick={command.IntValue}.");
+                using (TraceCommandsMarker.Auto())
+                {
+                    Debug.Log(
+                        $"[StateScriptTrace] Timer completed: Entity={entity}, Graph='{graph.Name}', Node='{node.Guid}', " +
+                        $"Elapsed={command.Position.x:0.###}, Duration={command.Position.y:0.###}, " +
+                        $"DeltaTime={command.Position.z:0.######}, Tick={command.IntValue}.");
+                }
                 break;
             case StateScriptManagedCommandType.TraceCurrentInputType:
-                Debug.Log(
-                    $"[StateScriptTrace] Current input comparison: Entity={entity}, Graph='{graph.Name}', " +
-                    $"Node='{node.Guid}', Result={command.Value.Bool != 0}, " +
-                    $"SkillId={command.Position.x:0}, CurrentInputType={command.Position.y:0}, " +
-                    $"DirectInputType={command.Position.z:0}, SuccessMask={command.IntValue}.");
+                using (TraceCommandsMarker.Auto())
+                {
+                    Debug.Log(
+                        $"[StateScriptTrace] Current input comparison: Entity={entity}, Graph='{graph.Name}', " +
+                        $"Node='{node.Guid}', Result={command.Value.Bool != 0}, " +
+                        $"SkillId={command.Position.x:0}, CurrentInputType={command.Position.y:0}, " +
+                        $"DirectInputType={command.Position.z:0}, SuccessMask={command.IntValue}.");
+                }
                 break;
             case StateScriptManagedCommandType.TraceSkillRequestBuilt:
-                Debug.Log(
-                    $"[StateScriptTrace] Skill request built: Entity={entity}, Graph='{graph.Name}', Node='{node.Guid}', " +
-                    $"SkillId={command.IntValue}, Position={command.Position}, Target={command.TargetEntity}.");
+                using (TraceCommandsMarker.Auto())
+                {
+                    Debug.Log(
+                        $"[StateScriptTrace] Skill request built: Entity={entity}, Graph='{graph.Name}', Node='{node.Guid}', " +
+                        $"SkillId={command.IntValue}, Position={command.Position}, Target={command.TargetEntity}.");
+                }
                 break;
             case StateScriptManagedCommandType.TraceSkillRequestFailed:
-                Debug.LogError(
-                    $"[StateScriptTrace] Skill request build failed: Entity={entity}, Graph='{graph.Name}', " +
-                    $"Node='{node.Guid}', Reason={(StateScriptSkillRequestBuildError)command.IntValue}.");
+                using (TraceCommandsMarker.Auto())
+                {
+                    Debug.LogError(
+                        $"[StateScriptTrace] Skill request build failed: Entity={entity}, Graph='{graph.Name}', " +
+                        $"Node='{node.Guid}', Reason={(StateScriptSkillRequestBuildError)command.IntValue}.");
+                }
                 break;
             case StateScriptManagedCommandType.TraceAdditionResultConsumed:
-                Debug.Log(
-                    $"[StateScriptAdditionTrace] Completion consumed: Entity={entity}, Graph='{graph.Name}', " +
-                    $"Node='{node.Guid}', Version={command.ExecutionVersion}.");
+                using (TraceCommandsMarker.Auto())
+                {
+                    Debug.Log(
+                        $"[StateScriptAdditionTrace] Completion consumed: Entity={entity}, Graph='{graph.Name}', " +
+                        $"Node='{node.Guid}', Version={command.ExecutionVersion}.");
+                }
                 break;
 #endif
         }
@@ -354,6 +449,21 @@ public partial class StateScriptManagedCommandSystem : SystemBase
     {
         _sourceDispatcher.Update(this);
         resolver.Update(entity, UnitVariableSource.GetOther(EntityManager, entity), in _sourceDispatcher);
+    }
+
+    private UnitSourceResolver GetOrCreateResolver(Entity entity, ref UnitSourceResolver resolver)
+    {
+        if (resolver != null)
+            return resolver;
+
+        using (ResolveSourcesMarker.Auto())
+        {
+            Entity other = UnitVariableSource.GetOther(EntityManager, entity);
+            resolver = new UnitSourceResolver(entity);
+            resolver.Update(entity, other, in _sourceDispatcher);
+        }
+
+        return resolver;
     }
 
     private void CollectInteraction(Entity target)
@@ -637,7 +747,7 @@ public partial class StateScriptManagedCommandSystem : SystemBase
             node.Text.ToString());
         int createdActionCount = actions.Count;
         RemoveFinishedActions(actions);
-#if UNITY_EDITOR
+#if UNITY_EDITOR && STATE_SCRIPT_TRACE
         Debug.Log(
             $"[StateScriptAdditionTrace] Started: Entity={entity}, GraphIndex={graphIndex}, " +
             $"NodeIndex={nodeIndex}, Node='{node.Guid}', Event='{node.Text}', Version={executionVersion}, " +
@@ -695,7 +805,7 @@ public partial class StateScriptManagedCommandSystem : SystemBase
         if (!EntityManager.Exists(key.Entity) ||
             !EntityManager.HasBuffer<StateScriptExternalResultElement>(key.Entity))
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR && STATE_SCRIPT_TRACE
             Debug.LogWarning(
                 $"[StateScriptAdditionTrace] Completion dropped: Entity={key.Entity}, " +
                 $"GraphIndex={key.GraphIndex}, NodeIndex={key.NodeIndex}, Version={executionVersion}, " +
@@ -713,7 +823,7 @@ public partial class StateScriptManagedCommandSystem : SystemBase
                 ExecutionVersion = executionVersion,
                 Status = StateScriptExternalResultStatus.Completed,
             });
-#if UNITY_EDITOR
+#if UNITY_EDITOR && STATE_SCRIPT_TRACE
         Debug.Log(
             $"[StateScriptAdditionTrace] Completion queued: Entity={key.Entity}, " +
             $"GraphIndex={key.GraphIndex}, NodeIndex={key.NodeIndex}, Version={executionVersion}, " +

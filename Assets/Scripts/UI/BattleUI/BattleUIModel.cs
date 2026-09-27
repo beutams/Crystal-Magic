@@ -14,6 +14,8 @@ namespace CrystalMagic.UI
 
         private readonly List<BattleSkillDisplayData> _skillItems = new();
         private readonly List<BattlePropShortcutDisplayData> _propShortcutItems = new();
+        private readonly List<UnitHealthBarBuffDisplayData> _buffItems = new();
+        private readonly List<UnitHealthBarBuffDisplayData> _nextBuffItems = new();
         private Entity _cachedPlayerEntity = Entity.Null;
         private float _hpRatio = 1f;
         private float _mpRatio = 1f;
@@ -25,6 +27,7 @@ namespace CrystalMagic.UI
         public override string ChangedEventName => DataChangedEventName;
         public IReadOnlyList<BattleSkillDisplayData> SkillItems => _skillItems;
         public IReadOnlyList<BattlePropShortcutDisplayData> PropShortcutItems => _propShortcutItems;
+        public IReadOnlyList<UnitHealthBarBuffDisplayData> BuffItems => _buffItems;
         public float HpRatio => _hpRatio;
         public float MpRatio => _mpRatio;
         public float CurrentHp => _currentHp;
@@ -59,7 +62,7 @@ namespace CrystalMagic.UI
         {
             SkillCData skillConfig = SaveDataComponent.Instance.GetSkillData();
             CharacterPropData propConfig = SaveDataComponent.Instance.GetCharacterPropData();
-            PlayerCombatSnapshot snapshot = ReadPlayerSnapshot();
+            PlayerCombatSnapshot snapshot = ReadPlayerSnapshot(_nextBuffItems);
             List<BattleSkillDisplayData> nextItems = BuildSkillItems(
                 skillConfig,
                 snapshot.SelectedSkillChainIndex,
@@ -74,6 +77,7 @@ namespace CrystalMagic.UI
 
             bool changed = !AreSkillItemsEqual(_skillItems, nextItems)
                 || !ArePropShortcutItemsEqual(_propShortcutItems, nextPropItems)
+                || !AreBuffItemsEqual(_buffItems, _nextBuffItems)
                 || !Mathf.Approximately(_hpRatio, nextHpRatio)
                 || !Mathf.Approximately(_mpRatio, nextMpRatio)
                 || !Mathf.Approximately(_currentHp, nextCurrentHp)
@@ -86,6 +90,8 @@ namespace CrystalMagic.UI
             _skillItems.AddRange(nextItems);
             _propShortcutItems.Clear();
             _propShortcutItems.AddRange(nextPropItems);
+            _buffItems.Clear();
+            _buffItems.AddRange(_nextBuffItems);
             _hpRatio = nextHpRatio;
             _mpRatio = nextMpRatio;
             _currentHp = nextCurrentHp;
@@ -176,7 +182,7 @@ namespace CrystalMagic.UI
             return items;
         }
 
-        private PlayerCombatSnapshot ReadPlayerSnapshot()
+        private PlayerCombatSnapshot ReadPlayerSnapshot(List<UnitHealthBarBuffDisplayData> buffItems)
         {
             PlayerCombatSnapshot snapshot = new()
             {
@@ -186,6 +192,13 @@ namespace CrystalMagic.UI
 
             if (!TryGetPlayerEntity(out EntityManager entityManager, out Entity player))
                 return snapshot;
+
+            UnitHealthBarManager.BuildVisibleBuffs(
+                entityManager,
+                player,
+                buffItems,
+                requirePlayerOrigin: false,
+                out _);
 
             if (entityManager.HasComponent<UnitVitalityComponent>(player))
             {
@@ -335,6 +348,38 @@ namespace CrystalMagic.UI
                     !Mathf.Approximately(a.CooldownRemaining, b.CooldownRemaining) ||
                     !Mathf.Approximately(a.CooldownRatio, b.CooldownRatio) ||
                     !string.Equals(a.Name, b.Name, System.StringComparison.Ordinal) ||
+                    !string.Equals(a.IconPath, b.IconPath, System.StringComparison.Ordinal))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static bool AreBuffItemsEqual(
+            IReadOnlyList<UnitHealthBarBuffDisplayData> left,
+            IReadOnlyList<UnitHealthBarBuffDisplayData> right)
+        {
+            if (ReferenceEquals(left, right))
+                return true;
+
+            if (left == null || right == null || left.Count != right.Count)
+                return false;
+
+            for (int i = 0; i < left.Count; i++)
+            {
+                UnitHealthBarBuffDisplayData a = left[i];
+                UnitHealthBarBuffDisplayData b = right[i];
+                if (a == null || b == null)
+                {
+                    if (!ReferenceEquals(a, b))
+                        return false;
+                    continue;
+                }
+
+                if (a.BuffId != b.BuffId ||
+                    a.StackCount != b.StackCount ||
                     !string.Equals(a.IconPath, b.IconPath, System.StringComparison.Ordinal))
                 {
                     return false;

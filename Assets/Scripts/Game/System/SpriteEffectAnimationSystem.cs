@@ -14,6 +14,7 @@ public partial class SpriteEffectAnimationSystem : SystemBase
 {
     private const string FrameLibraryPath = "Assets/Res/Data/UnitAnimationFrameLibrary.asset";
 
+    private readonly List<Entity> _pendingDestroy = new();
     private UnitAnimationFrameLibrary _frameLibrary;
 
     protected override void OnUpdate()
@@ -26,14 +27,14 @@ public partial class SpriteEffectAnimationSystem : SystemBase
             return;
 
         float deltaTime = SystemAPI.Time.DeltaTime;
-        List<Entity> pendingDestroy = null;
+        _pendingDestroy.Clear();
         foreach ((SpriteEffectAnimationComponent animation, Entity entity) in
                  SystemAPI.Query<SpriteEffectAnimationComponent>().WithEntityAccess())
         {
-            UpdateAnimation(entity, animation, deltaTime, ref pendingDestroy);
+            UpdateAnimation(entity, animation, deltaTime, _pendingDestroy);
         }
 
-        ApplyPendingDestroy(pendingDestroy);
+        ApplyPendingDestroy(_pendingDestroy);
     }
 
     protected override void OnDestroy()
@@ -61,10 +62,10 @@ public partial class SpriteEffectAnimationSystem : SystemBase
         Entity entity,
         SpriteEffectAnimationComponent animation,
         float deltaTime,
-        ref List<Entity> pendingDestroy)
+        List<Entity> pendingDestroy)
     {
         animation.Renderer = EntityManager.GetComponentObject<SpriteRenderer>(entity);
-        if (!EnsureActivePhase(animation, ref pendingDestroy, entity))
+        if (!EnsureActivePhase(animation, pendingDestroy, entity))
             return;
 
         if (animation.Phase == SpriteEffectAnimationPhase.Loop && animation.RemainingLoopSeconds >= 0f)
@@ -76,14 +77,14 @@ public partial class SpriteEffectAnimationSystem : SystemBase
 
         if (animation.Phase == SpriteEffectAnimationPhase.Loop && animation.EndRequested != 0)
         {
-            if (!BeginExitOrDestroy(animation, ref pendingDestroy, entity))
+            if (!BeginExitOrDestroy(animation, pendingDestroy, entity))
                 return;
         }
 
         UnitAnimationFrameTrack track = _frameLibrary.Find(animation.CurrentClip);
         if (track == null)
         {
-            QueueDestroy(entity, ref pendingDestroy);
+            QueueDestroy(entity, pendingDestroy);
             return;
         }
 
@@ -96,12 +97,12 @@ public partial class SpriteEffectAnimationSystem : SystemBase
         animation.CurrentSprite = animation.Renderer.sprite;
 
         if (!loop && animation.PhaseElapsedSeconds >= track.Length)
-            AdvanceOneShot(animation, ref pendingDestroy, entity);
+            AdvanceOneShot(animation, pendingDestroy, entity);
     }
 
     private static bool EnsureActivePhase(
         SpriteEffectAnimationComponent animation,
-        ref List<Entity> pendingDestroy,
+        List<Entity> pendingDestroy,
         Entity entity)
     {
         if (animation.Phase != SpriteEffectAnimationPhase.Uninitialized)
@@ -119,12 +120,12 @@ public partial class SpriteEffectAnimationSystem : SystemBase
             return true;
         }
 
-        return BeginExitOrDestroy(animation, ref pendingDestroy, entity);
+        return BeginExitOrDestroy(animation, pendingDestroy, entity);
     }
 
     private static void AdvanceOneShot(
         SpriteEffectAnimationComponent animation,
-        ref List<Entity> pendingDestroy,
+        List<Entity> pendingDestroy,
         Entity entity)
     {
         if (animation.Phase == SpriteEffectAnimationPhase.Enter &&
@@ -134,12 +135,12 @@ public partial class SpriteEffectAnimationSystem : SystemBase
             return;
         }
 
-        BeginExitOrDestroy(animation, ref pendingDestroy, entity);
+        BeginExitOrDestroy(animation, pendingDestroy, entity);
     }
 
     private static bool BeginExitOrDestroy(
         SpriteEffectAnimationComponent animation,
-        ref List<Entity> pendingDestroy,
+        List<Entity> pendingDestroy,
         Entity entity)
     {
         if (animation.Phase != SpriteEffectAnimationPhase.Exit && animation.ExitClip != null)
@@ -148,7 +149,7 @@ public partial class SpriteEffectAnimationSystem : SystemBase
             return true;
         }
 
-        QueueDestroy(entity, ref pendingDestroy);
+        QueueDestroy(entity, pendingDestroy);
         return false;
     }
 
@@ -173,9 +174,8 @@ public partial class SpriteEffectAnimationSystem : SystemBase
         return loop ? clampedElapsed % length : math.min(clampedElapsed, length);
     }
 
-    private static void QueueDestroy(Entity entity, ref List<Entity> pendingDestroy)
+    private static void QueueDestroy(Entity entity, List<Entity> pendingDestroy)
     {
-        pendingDestroy ??= new List<Entity>();
         pendingDestroy.Add(entity);
     }
 

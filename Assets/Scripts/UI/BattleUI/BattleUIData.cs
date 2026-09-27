@@ -27,6 +27,9 @@ public class BattleUIData : UIData
     public UINode HP_BarMask_Bar;
     public UINode HP_Border;
     public UINode HP_Value;
+    public UINode HP_BuffRoot;
+    public UINode HP_BuffRoot_BuffIcon;
+    public UINode HP_BuffRoot_BuffIcon_StackCount;
     public UINode MP;
     public UINode MP_BarIcon;
     public UINode MP_BarMask;
@@ -73,6 +76,9 @@ public class BattleUIData : UIData
         HP_BarMask_Bar = UINode.From(Find(root, "HP/BarMask/Bar"));
         HP_Border = UINode.From(Find(root, "HP/Border"));
         HP_Value = UINode.From(Find(root, "HP/Value"));
+        HP_BuffRoot = UINode.From(Find(root, "HP/BuffRoot"));
+        HP_BuffRoot_BuffIcon = UINode.From(Find(root, "HP/BuffRoot/BuffIcon"));
+        HP_BuffRoot_BuffIcon_StackCount = UINode.From(Find(root, "HP/BuffRoot/BuffIcon/StackCount"));
         MP = UINode.From(Find(root, "MP"));
         MP_BarIcon = UINode.From(Find(root, "MP/BarIcon"));
         MP_BarMask = UINode.From(Find(root, "MP/BarMask"));

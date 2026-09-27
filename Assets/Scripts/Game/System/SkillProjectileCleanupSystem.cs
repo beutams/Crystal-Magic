@@ -30,31 +30,56 @@ public partial class SkillProjectileCleanupSystem : SystemBase
                 continue;
 
             SkillProjectilePayloadComponent payload = payloadReference.ValueRO;
-            SkillContent baseContext = EffectUtility.CreateContext(EntityManager, in payload.Context);
+            SkillContent baseContext = EffectUtility.GetContext(EntityManager, in payload.Context);
             SkillContent hitContext = null;
-            if (result.HasHit != 0)
+            try
             {
-                hitContext = BuildHitContext(baseContext, result.HitEntity, result.HitPosition);
-                EffectUtility.Enqueue(EntityManager, payload.OnCollisionEffectListId, hitContext);
-            }
-
-            if (result.ShouldDestroy != 0)
-            {
-                if (result.TriggerDestroyEffects != 0)
+                if (result.HasHit != 0)
                 {
-                    SkillContent destroyContext = result.DestroyUsesHitContext != 0 && hitContext != null
-                        ? hitContext
-                        : BuildDestroyContext(baseContext, transformReference.ValueRO.Position);
-                    EffectUtility.Enqueue(EntityManager, payload.OnDestroyEffectListId, destroyContext);
+                    hitContext = BuildHitContext(baseContext, result.HitEntity, result.HitPosition);
+                    EffectUtility.Enqueue(EntityManager, payload.OnCollisionEffectListId, hitContext);
                 }
 
-                ReleasePayload(ref payload);
-                payloadReference.ValueRW = payload;
-                EndVisual(entity);
-                MarkForDestroy(entity);
-            }
+                if (result.ShouldDestroy != 0)
+                {
+                    if (result.TriggerDestroyEffects != 0)
+                    {
+                        if (result.DestroyUsesHitContext != 0 && hitContext != null)
+                        {
+                            EffectUtility.Enqueue(EntityManager, payload.OnDestroyEffectListId, hitContext);
+                        }
+                        else
+                        {
+                            SkillContent destroyContext =
+                                BuildDestroyContext(baseContext, transformReference.ValueRO.Position);
+                            try
+                            {
+                                EffectUtility.Enqueue(
+                                    EntityManager,
+                                    payload.OnDestroyEffectListId,
+                                    destroyContext);
+                            }
+                            finally
+                            {
+                                SkillContentReferencePool.Return(destroyContext);
+                            }
+                        }
+                    }
 
-            resultReference.ValueRW = default;
+                    ReleasePayload(ref payload);
+                    payloadReference.ValueRW = payload;
+                    EndVisual(entity);
+                    MarkForDestroy(entity);
+                }
+
+                resultReference.ValueRW = default;
+            }
+            finally
+            {
+                if (hitContext != null)
+                    SkillContentReferencePool.Return(hitContext);
+                EffectUtility.ReturnContext(baseContext);
+            }
         }
 
         AddMissingDestroyFlags();
@@ -118,7 +143,7 @@ public partial class SkillProjectileCleanupSystem : SystemBase
         Entity hitEntity,
         float3 hitPosition)
     {
-        SkillContent context = baseContext.Clone();
+        SkillContent context = SkillContentReferencePool.Get(baseContext);
         context.HasPosition = true;
         context.Position = new UnityEngine.Vector3(hitPosition.x, hitPosition.y, hitPosition.z);
         context.HasTargetEntity = true;
@@ -130,7 +155,7 @@ public partial class SkillProjectileCleanupSystem : SystemBase
 
     private static SkillContent BuildDestroyContext(SkillContent baseContext, float3 position)
     {
-        SkillContent context = baseContext.Clone();
+        SkillContent context = SkillContentReferencePool.Get(baseContext);
         context.HasPosition = true;
         context.Position = new UnityEngine.Vector3(position.x, position.y, position.z);
         return context;

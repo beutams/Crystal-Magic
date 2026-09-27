@@ -57,6 +57,13 @@ namespace CrystalMagic.Core
 
     public static class GameWorldContextUtility
     {
+        public static bool TryGet(EntityManager entityManager, out GameWorldContextComponent context)
+        {
+            using EntityQuery query =
+                entityManager.CreateEntityQuery(ComponentType.ReadOnly<GameWorldContextComponent>());
+            return query.TryGetSingleton(out context);
+        }
+
         public static GameWorldContextComponent Get(EntityManager entityManager)
         {
             return GameSingletonUtility.Get<GameWorldContextComponent>(entityManager);

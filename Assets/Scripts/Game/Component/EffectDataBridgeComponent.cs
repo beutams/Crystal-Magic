@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CrystalMagic.Core;
 using System.Threading;
 using CrystalMagic.Game.Data.Effects;
 using Unity.Entities;
@@ -27,14 +28,37 @@ public readonly struct EffectDataListId : IEquatable<EffectDataListId>
     public static bool operator !=(EffectDataListId left, EffectDataListId right) => !left.Equals(right);
 }
 
-public sealed class EffectDataList
+public sealed class EffectDataList : IPoolable
 {
+    public EffectDataList()
+    {
+        Effects = Array.Empty<EffectData>();
+    }
+
     public EffectDataList(EffectData[] effects)
+    {
+        Initialize(effects);
+    }
+
+    public EffectData[] Effects { get; private set; }
+    internal bool IsPoolOwned { get; private set; }
+
+    public void Initialize(EffectData[] effects)
     {
         Effects = effects ?? Array.Empty<EffectData>();
     }
 
-    public EffectData[] Effects { get; }
+    public void OnGetFromPool()
+    {
+        Effects = Array.Empty<EffectData>();
+        IsPoolOwned = true;
+    }
+
+    public void OnReturnToPool()
+    {
+        Effects = Array.Empty<EffectData>();
+        IsPoolOwned = false;
+    }
 }
 
 public sealed class EffectDataBridgeComponent : IComponentData
@@ -60,12 +84,30 @@ public readonly struct EffectManagedContextId : IEquatable<EffectManagedContextI
     public override int GetHashCode() => Value;
 }
 
-public sealed class EffectManagedContextState
+public sealed class EffectManagedContextState : IPoolable
 {
     public bool HasTarget;
     public GameObject Target;
     public GameObject Origin;
     public Dictionary<int, HashSet<Entity>> PersistentEffectAppliedBuffTargets;
+
+    public void OnGetFromPool()
+    {
+        Reset();
+    }
+
+    public void OnReturnToPool()
+    {
+        Reset();
+    }
+
+    private void Reset()
+    {
+        HasTarget = false;
+        Target = null;
+        Origin = null;
+        PersistentEffectAppliedBuffTargets = null;
+    }
 }
 
 public readonly struct ConditionDataListId : IEquatable<ConditionDataListId>

@@ -253,31 +253,38 @@ namespace CrystalMagic.Game.Skill.Effects
                 if (conditions.Count == 0)
                     return SkillProjectileConditionState.None;
 
-                SkillContent context = EffectUtility.CreateContext(entityManager, in requestContext);
-                Comparator comparator = EffectConditionUtility.BuildComparator(conditions, context);
-                if (!comparator.IsValid)
-                    return SkillProjectileConditionState.Invalid;
-
-                ExpressionProgram program = comparator.Program;
-                instructions.EnsureCapacity(program.Instructions.Length);
-                literals.EnsureCapacity(program.Literals.Length);
-                for (int index = 0; index < program.Instructions.Length; index++)
+                SkillContent context = EffectUtility.GetContext(entityManager, in requestContext);
+                try
                 {
-                    instructions.Add(new SkillProjectileConditionInstructionElement
-                    {
-                        Value = program.Instructions[index],
-                    });
-                }
+                    Comparator comparator = EffectConditionUtility.BuildComparator(conditions, context);
+                    if (!comparator.IsValid)
+                        return SkillProjectileConditionState.Invalid;
 
-                for (int index = 0; index < program.Literals.Length; index++)
+                    ExpressionProgram program = comparator.Program;
+                    instructions.EnsureCapacity(program.Instructions.Length);
+                    literals.EnsureCapacity(program.Literals.Length);
+                    for (int index = 0; index < program.Instructions.Length; index++)
+                    {
+                        instructions.Add(new SkillProjectileConditionInstructionElement
+                        {
+                            Value = program.Instructions[index],
+                        });
+                    }
+
+                    for (int index = 0; index < program.Literals.Length; index++)
+                    {
+                        literals.Add(new SkillProjectileConditionLiteralElement
+                        {
+                            Value = program.Literals[index],
+                        });
+                    }
+
+                    return SkillProjectileConditionState.Valid;
+                }
+                finally
                 {
-                    literals.Add(new SkillProjectileConditionLiteralElement
-                    {
-                        Value = program.Literals[index],
-                    });
+                    EffectUtility.ReturnContext(context);
                 }
-
-                return SkillProjectileConditionState.Valid;
             }
             finally
             {

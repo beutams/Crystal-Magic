@@ -60,7 +60,17 @@ namespace CrystalMagic.Core
             grid.cellSize = Vector3.one * Mathf.Max(0.01f, terrainVisual.CellWorldSize);
             Dictionary<RuntimeDungeonTilemapLayer, Tilemap> tilemaps = CreateRuntimeTilemaps(grid.transform);
             PopulateRuleTiles(terrainVisual.Placements, tilemaps, resourceOwnerKey);
-            BuildObstacleColumns(runtimeRoot, grid.transform, terrainVisual, resourceOwnerKey);
+            List<TilemapRenderer> obstacleRenderers = BuildObstacleGroups(
+                runtimeRoot,
+                grid.transform,
+                terrainVisual,
+                resourceOwnerKey);
+            if (obstacleRenderers.Count > 0)
+            {
+                DungeonTilemapVisibilityController visibilityController =
+                    gridObject.AddComponent<DungeonTilemapVisibilityController>();
+                visibilityController.Initialize(obstacleRenderers);
+            }
         }
 
         private static Dictionary<RuntimeDungeonTilemapLayer, Tilemap> CreateRuntimeTilemaps(Transform parent)
@@ -74,15 +84,15 @@ namespace CrystalMagic.Core
             };
         }
 
-        private static void BuildObstacleColumns(
+        private static List<TilemapRenderer> BuildObstacleGroups(
             DungeonSceneRuntimeRoot runtimeRoot,
             Transform gridParent,
             RuntimeDungeonTerrainVisualData terrainVisual,
             string resourceOwnerKey)
         {
-            List<ObstacleColumn> columns = GetObstacleColumns(terrainVisual.Placements);
-            if (columns.Count == 0)
-                return;
+            List<ObstacleRenderGroup> groups = GetObstacleRenderGroups(terrainVisual.Placements);
+            if (groups.Count == 0)
+                return new List<TilemapRenderer>();
 
             Tilemap ruleContext = CreateRuntimeTilemap(gridParent, "__ObstacleRuleContext", 0);
             ruleContext.GetComponent<TilemapRenderer>().enabled = false;
@@ -104,20 +114,21 @@ namespace CrystalMagic.Core
 
             float cellWorldSize = Mathf.Max(0.01f, terrainVisual.CellWorldSize);
             Dictionary<ResolvedObstacleTileKey, Tile> tileAssets = new();
-            for (int columnIndex = 0; columnIndex < columns.Count; columnIndex++)
+            List<TilemapRenderer> renderers = new(groups.Count);
+            for (int groupIndex = 0; groupIndex < groups.Count; groupIndex++)
             {
-                ObstacleColumn column = columns[columnIndex];
+                ObstacleRenderGroup group = groups[groupIndex];
                 float anchorWorldY = gridParent.TransformPoint(
-                    new Vector3(0f, column.LowestCellY * cellWorldSize, 0f)).y;
+                    new Vector3(0f, group.LowestCellY * cellWorldSize, 0f)).y;
                 int sortingOrder = Mathf.RoundToInt(-anchorWorldY * WorldSortingPrecision);
                 Tilemap tilemap = CreateRuntimeTilemap(
                     gridParent,
-                    $"ObstacleColumn_x{column.X}_y{column.LowestCellY}",
+                    $"ObstacleMountain_{group.MountainIndex}",
                     sortingOrder);
 
-                for (int placementIndex = 0; placementIndex < column.Placements.Count; placementIndex++)
+                for (int placementIndex = 0; placementIndex < group.Placements.Count; placementIndex++)
                 {
-                    RuntimeDungeonRuleTilePlacement placement = column.Placements[placementIndex];
+                    RuntimeDungeonRuleTilePlacement placement = group.Placements[placementIndex];
                     if (!resolvedByCell.TryGetValue(placement.Cell, out ResolvedDungeonTileSprite resolved))
                         continue;
 
@@ -129,10 +140,13 @@ namespace CrystalMagic.Core
                 }
 
                 tilemap.RefreshAllTiles();
+                renderers.Add(tilemap.GetComponent<TilemapRenderer>());
             }
+
+            return renderers;
         }
 
-        private static List<ObstacleColumn> GetObstacleColumns(
+        private static List<ObstacleRenderGroup> GetObstacleRenderGroups(
             IReadOnlyList<RuntimeDungeonRuleTilePlacement> placements)
         {
             Dictionary<Vector2Int, RuntimeDungeonRuleTilePlacement> finalTiles = new();
@@ -148,44 +162,73 @@ namespace CrystalMagic.Core
                 finalTiles[placement.Cell] = placement;
             }
 
-            Dictionary<int, List<RuntimeDungeonRuleTilePlacement>> tilesByX = new();
+            Dictionary<Vector2Int, int> mountainByCell = GetObstacleMountainIndices(finalTiles);
+            Dictionary<int, ObstacleRenderGroup> groupsByMountain = new();
             foreach (RuntimeDungeonRuleTilePlacement placement in finalTiles.Values)
             {
-                if (!tilesByX.TryGetValue(placement.Cell.x, out List<RuntimeDungeonRuleTilePlacement> column))
+                int mountainIndex = mountainByCell[placement.Cell];
+                if (!groupsByMountain.TryGetValue(mountainIndex, out ObstacleRenderGroup group))
                 {
-                    column = new List<RuntimeDungeonRuleTilePlacement>();
-                    tilesByX.Add(placement.Cell.x, column);
+                    group = new ObstacleRenderGroup(mountainIndex);
+                    groupsByMountain.Add(mountainIndex, group);
                 }
 
-                column.Add(placement);
+                group.Add(placement);
             }
 
-            List<int> xs = new(tilesByX.Keys);
-            xs.Sort();
-            List<ObstacleColumn> columns = new();
-            for (int xIndex = 0; xIndex < xs.Count; xIndex++)
+            List<ObstacleRenderGroup> groups = new(groupsByMountain.Values);
+            groups.Sort((left, right) => left.MountainIndex.CompareTo(right.MountainIndex));
+            return groups;
+        }
+
+        private static Dictionary<Vector2Int, int> GetObstacleMountainIndices(
+            IReadOnlyDictionary<Vector2Int, RuntimeDungeonRuleTilePlacement> finalTiles)
+        {
+            List<Vector2Int> cells = new(finalTiles.Keys);
+            cells.Sort((left, right) =>
             {
-                int x = xs[xIndex];
-                List<RuntimeDungeonRuleTilePlacement> columnTiles = tilesByX[x];
-                columnTiles.Sort((left, right) => left.Cell.y.CompareTo(right.Cell.y));
+                int xComparison = left.x.CompareTo(right.x);
+                return xComparison != 0 ? xComparison : left.y.CompareTo(right.y);
+            });
 
-                ObstacleColumn currentColumn = null;
-                int previousY = int.MinValue;
-                for (int tileIndex = 0; tileIndex < columnTiles.Count; tileIndex++)
+            Dictionary<Vector2Int, int> mountainByCell = new();
+            Queue<Vector2Int> pendingCells = new();
+            int mountainIndex = 0;
+            for (int cellIndex = 0; cellIndex < cells.Count; cellIndex++)
+            {
+                Vector2Int startCell = cells[cellIndex];
+                if (mountainByCell.ContainsKey(startCell))
+                    continue;
+
+                mountainByCell.Add(startCell, mountainIndex);
+                pendingCells.Enqueue(startCell);
+                while (pendingCells.Count > 0)
                 {
-                    RuntimeDungeonRuleTilePlacement placement = columnTiles[tileIndex];
-                    if (currentColumn == null || placement.Cell.y != previousY + 1)
-                    {
-                        currentColumn = new ObstacleColumn(x, placement.Cell.y);
-                        columns.Add(currentColumn);
-                    }
-
-                    currentColumn.Placements.Add(placement);
-                    previousY = placement.Cell.y;
+                    Vector2Int cell = pendingCells.Dequeue();
+                    AddConnectedObstacleCell(finalTiles, mountainByCell, pendingCells, cell + Vector2Int.up, mountainIndex);
+                    AddConnectedObstacleCell(finalTiles, mountainByCell, pendingCells, cell + Vector2Int.right, mountainIndex);
+                    AddConnectedObstacleCell(finalTiles, mountainByCell, pendingCells, cell + Vector2Int.down, mountainIndex);
+                    AddConnectedObstacleCell(finalTiles, mountainByCell, pendingCells, cell + Vector2Int.left, mountainIndex);
                 }
+
+                mountainIndex++;
             }
 
-            return columns;
+            return mountainByCell;
+        }
+
+        private static void AddConnectedObstacleCell(
+            IReadOnlyDictionary<Vector2Int, RuntimeDungeonRuleTilePlacement> finalTiles,
+            IDictionary<Vector2Int, int> mountainByCell,
+            Queue<Vector2Int> pendingCells,
+            Vector2Int cell,
+            int mountainIndex)
+        {
+            if (!finalTiles.ContainsKey(cell) || mountainByCell.ContainsKey(cell))
+                return;
+
+            mountainByCell.Add(cell, mountainIndex);
+            pendingCells.Enqueue(cell);
         }
 
         private static Tile GetOrCreateResolvedObstacleTile(
@@ -207,17 +250,23 @@ namespace CrystalMagic.Core
             return runtimeTile;
         }
 
-        private sealed class ObstacleColumn
+        private sealed class ObstacleRenderGroup
         {
-            public ObstacleColumn(int x, int lowestCellY)
+            public ObstacleRenderGroup(int mountainIndex)
             {
-                X = x;
-                LowestCellY = lowestCellY;
+                MountainIndex = mountainIndex;
+                LowestCellY = int.MaxValue;
             }
 
-            public int X { get; }
-            public int LowestCellY { get; }
+            public int MountainIndex { get; }
+            public int LowestCellY { get; private set; }
             public List<RuntimeDungeonRuleTilePlacement> Placements { get; } = new();
+
+            public void Add(RuntimeDungeonRuleTilePlacement placement)
+            {
+                Placements.Add(placement);
+                LowestCellY = Mathf.Min(LowestCellY, placement.Cell.y);
+            }
         }
 
         private readonly struct ResolvedObstacleTileKey : IEquatable<ResolvedObstacleTileKey>
@@ -381,5 +430,103 @@ namespace CrystalMagic.Core
             return resolvedSprites;
         }
 
+    }
+
+    /// <summary>
+    /// Keeps static obstacle Tilemaps outside the gameplay camera frustum disabled so URP does not
+    /// schedule one Tilemap culling job for every sorting group on every frame.
+    /// </summary>
+    [DefaultExecutionOrder(10000)]
+    internal sealed class DungeonTilemapVisibilityController : MonoBehaviour
+    {
+        private const float BoundsPadding = 1f;
+
+        private readonly Plane[] _frustumPlanes = new Plane[6];
+        private VisibilityEntry[] _entries = Array.Empty<VisibilityEntry>();
+        private Camera _lastCamera;
+        private Matrix4x4 _lastViewProjection;
+        private bool _hasLastViewProjection;
+
+        public void Initialize(IReadOnlyList<TilemapRenderer> renderers)
+        {
+            if (renderers == null || renderers.Count == 0)
+            {
+                _entries = Array.Empty<VisibilityEntry>();
+                return;
+            }
+
+            _entries = new VisibilityEntry[renderers.Count];
+            for (int index = 0; index < renderers.Count; index++)
+            {
+                TilemapRenderer renderer = renderers[index];
+                Bounds bounds = renderer != null ? renderer.bounds : default;
+                bounds.Expand(new Vector3(BoundsPadding * 2f, BoundsPadding * 2f, 2f));
+                _entries[index] = new VisibilityEntry(renderer, bounds);
+            }
+
+            _hasLastViewProjection = false;
+        }
+
+        private void LateUpdate()
+        {
+            if (_entries.Length == 0)
+                return;
+
+            Camera camera = CameraComponent.Instance != null ? CameraComponent.Instance.Current : Camera.main;
+            if (camera == null)
+            {
+                SetAllVisible();
+                _hasLastViewProjection = false;
+                return;
+            }
+
+            Matrix4x4 viewProjection = camera.projectionMatrix * camera.worldToCameraMatrix;
+            if (_hasLastViewProjection && camera == _lastCamera && viewProjection == _lastViewProjection)
+                return;
+
+            GeometryUtility.CalculateFrustumPlanes(viewProjection, _frustumPlanes);
+            for (int index = 0; index < _entries.Length; index++)
+            {
+                TilemapRenderer renderer = _entries[index].Renderer;
+                if (renderer == null)
+                    continue;
+
+                bool visible = GeometryUtility.TestPlanesAABB(_frustumPlanes, _entries[index].Bounds);
+                if (renderer.enabled != visible)
+                    renderer.enabled = visible;
+            }
+
+            _lastCamera = camera;
+            _lastViewProjection = viewProjection;
+            _hasLastViewProjection = true;
+        }
+
+        private void OnDisable()
+        {
+            SetAllVisible();
+            _hasLastViewProjection = false;
+        }
+
+        private void SetAllVisible()
+        {
+            for (int index = 0; index < _entries.Length; index++)
+            {
+                TilemapRenderer renderer = _entries[index].Renderer;
+                if (renderer != null)
+                    renderer.enabled = true;
+            }
+        }
+
+        private readonly struct VisibilityEntry
+        {
+            public VisibilityEntry(TilemapRenderer renderer, Bounds bounds)
+            {
+                Renderer = renderer;
+                Bounds = bounds;
+            }
+
+            public TilemapRenderer Renderer { get; }
+            public Bounds Bounds { get; }
+        }
     }
 }

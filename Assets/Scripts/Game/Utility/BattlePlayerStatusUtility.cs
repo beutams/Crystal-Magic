@@ -69,7 +69,6 @@ public static class BattlePlayerStatusUtility
                 for (int index = 0; index < nodes.Length; index++)
                     nodes[index] = default;
                 entityManager.GetBuffer<StateScriptExternalResultElement>(entity).Clear();
-                entityManager.GetBuffer<StateScriptManagedCommandElement>(entity).Clear();
                 entityManager.GetBuffer<StateScriptSourceCommandElement>(entity).Clear();
                 entityManager.GetBuffer<StateScriptSourceCommandArgumentElement>(entity).Clear();
             }

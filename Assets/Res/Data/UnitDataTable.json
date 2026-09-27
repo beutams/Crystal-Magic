@@ -1081,7 +1081,12 @@
       "Name": "DungeonInterestPoint",
       "Description": "开放场景兴趣点控制单位（运行时创建，无渲染实体）",
       "PrefabPath": "Assets/Res/Prefab/Unit/DungeonInterestPoint.prefab",
-      "Modules": [],
+      "Modules": [
+        {
+          "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",
+          "Faction": 4
+        }
+      ],
       "Id": 30
     },
     {

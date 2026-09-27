@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CrystalMagic.Game.OpenField;
 using UnityEngine;
 
@@ -12,8 +13,11 @@ namespace CrystalMagic.Core
 
         private readonly OpenFieldDungeonLayout _layout;
         private readonly bool[] _visibleCells;
+        private readonly bool[] _fadingCellFlags;
         private readonly float[] _displayAlpha;
         private readonly Color32[] _pixels;
+        private readonly List<int> _visibleCellIndices;
+        private readonly List<int> _fadingCellIndices;
         private readonly Vector2 _worldOrigin;
         private readonly float _cellWorldSize;
 
@@ -27,9 +31,15 @@ namespace CrystalMagic.Core
             TextureWidth = Width + 2;
             TextureHeight = Height + 2;
             VisionRadiusCells = Mathf.Max(1, visionRadiusCells);
-            _visibleCells = new bool[Width * Height];
-            _displayAlpha = new float[Width * Height];
+            int cellCount = Width * Height;
+            int visionDiameter = VisionRadiusCells * 2 + 1;
+            int visibleCellCapacity = Mathf.Min(cellCount, visionDiameter * visionDiameter);
+            _visibleCells = new bool[cellCount];
+            _fadingCellFlags = new bool[cellCount];
+            _displayAlpha = new float[cellCount];
             _pixels = new Color32[TextureWidth * TextureHeight];
+            _visibleCellIndices = new List<int>(visibleCellCapacity);
+            _fadingCellIndices = new List<int>(Mathf.Min(cellCount, visibleCellCapacity * 2));
             for (int index = 0; index < _displayAlpha.Length; index++)
                 _displayAlpha[index] = HiddenColor.a;
             _cellWorldSize = sceneData != null && sceneData.CellWorldSize > 0f
@@ -95,7 +105,14 @@ namespace CrystalMagic.Core
                 return false;
 
             _lastPlayerCell = playerCell;
-            Array.Clear(_visibleCells, 0, _visibleCells.Length);
+            for (int index = 0; index < _visibleCellIndices.Count; index++)
+            {
+                int cellIndex = _visibleCellIndices[index];
+                _visibleCells[cellIndex] = false;
+                MarkCellForVisualUpdate(cellIndex);
+            }
+            _visibleCellIndices.Clear();
+
             int radiusSquared = VisionRadiusCells * VisionRadiusCells;
             int minimumX = Mathf.Max(0, playerCell.x - VisionRadiusCells);
             int maximumX = Mathf.Min(Width - 1, playerCell.x + VisionRadiusCells);
@@ -113,6 +130,8 @@ namespace CrystalMagic.Core
 
                     int index = GetIndex(x, y);
                     _visibleCells[index] = true;
+                    _visibleCellIndices.Add(index);
+                    MarkCellForVisualUpdate(index);
                 }
             }
 
@@ -121,17 +140,31 @@ namespace CrystalMagic.Core
 
         public bool UpdateVisual(float deltaTime)
         {
-            float maxAlphaChange = 255f * Mathf.Max(0f, deltaTime) / VisualFadeDurationSeconds;
-            bool changed = false;
-            for (int index = 0; index < _displayAlpha.Length; index++)
-            {
-                float nextAlpha = Mathf.MoveTowards(_displayAlpha[index], GetTargetAlpha(index), maxAlphaChange);
-                if (Mathf.Abs(nextAlpha - _displayAlpha[index]) < 0.01f)
-                    continue;
+            if (_fadingCellIndices.Count == 0)
+                return false;
 
-                _displayAlpha[index] = nextAlpha;
-                SetPixel(index);
+            float maxAlphaChange = 255f * Mathf.Max(0f, deltaTime) / VisualFadeDurationSeconds;
+            if (maxAlphaChange <= 0f)
+                return false;
+
+            bool changed = false;
+            for (int listIndex = _fadingCellIndices.Count - 1; listIndex >= 0; listIndex--)
+            {
+                int cellIndex = _fadingCellIndices[listIndex];
+                float targetAlpha = GetTargetAlpha(cellIndex);
+                float currentAlpha = _displayAlpha[cellIndex];
+                if (Mathf.Abs(targetAlpha - currentAlpha) < 0.01f)
+                {
+                    RemoveFadingCellAt(listIndex);
+                    continue;
+                }
+
+                float nextAlpha = Mathf.MoveTowards(currentAlpha, targetAlpha, maxAlphaChange);
+                _displayAlpha[cellIndex] = nextAlpha;
+                SetPixel(cellIndex);
                 changed = true;
+                if (Mathf.Abs(targetAlpha - nextAlpha) < 0.01f)
+                    RemoveFadingCellAt(listIndex);
             }
 
             if (!changed)
@@ -144,6 +177,25 @@ namespace CrystalMagic.Core
             }
 
             return true;
+        }
+
+        private void MarkCellForVisualUpdate(int cellIndex)
+        {
+            if (_fadingCellFlags[cellIndex])
+                return;
+
+            _fadingCellFlags[cellIndex] = true;
+            _fadingCellIndices.Add(cellIndex);
+        }
+
+        private void RemoveFadingCellAt(int listIndex)
+        {
+            int cellIndex = _fadingCellIndices[listIndex];
+            int lastIndex = _fadingCellIndices.Count - 1;
+            _fadingCellFlags[cellIndex] = false;
+            if (listIndex != lastIndex)
+                _fadingCellIndices[listIndex] = _fadingCellIndices[lastIndex];
+            _fadingCellIndices.RemoveAt(lastIndex);
         }
 
         private bool HasLineOfSight(Vector2Int source, Vector2Int target)

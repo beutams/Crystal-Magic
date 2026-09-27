@@ -131,7 +131,9 @@ namespace Server
                         continue;
 
                     int totalLength = (int)sendStream.Length;
+#if UNITY_EDITOR && NETWORK_TRACE
                     Debug.Log($"[TCP][Send] Sending {totalLength} bytes to {pair.Value.IPEndPoint}, Connect={id}");
+#endif
                     int sentLength = socket.Send(sendStream.GetBuffer(), 0, totalLength, SocketFlags.None);
                     if (sentLength <= 0)
                     {
@@ -148,7 +150,9 @@ namespace Server
                     sendStream.Position = remainLength;
                     // 回调可以排入新消息，必须先移走已发送的数据，避免覆盖回调新入队的字节。
                     InvokeConnectionEventSafely(OnSend, connect, nameof(OnSend));
+#if UNITY_EDITOR && NETWORK_TRACE
                     Debug.Log($"[TCP][Send] Sent {sentLength} bytes, remaining={remainLength}, Connect={id}");
+#endif
                     if (sendStream.Length == 0 && closeAfterSendList.Contains(id))
                         MarkDisconnected(id, DisconnectReason.CloseAfterSend, "SendComplete");
                 }
@@ -185,7 +189,9 @@ namespace Server
                         continue;
 
                     int count = socket.Receive(cache);
+#if UNITY_EDITOR && NETWORK_TRACE
                     Debug.Log($"[TCP][Recv] Received {count} raw bytes from {pair.Value.IPEndPoint}, Connect={id}");
+#endif
                     if (count == 0)
                     {
                         MarkDisconnected(id, DisconnectReason.RemoteClosed, "Receive");
@@ -235,7 +241,9 @@ namespace Server
                         }
 
                         connect.LastReceiveTime = NetworkTimer.Instance.TimeNow;
+#if UNITY_EDITOR && NETWORK_TRACE
                         Debug.Log($"[TCP][Recv] Packet opcode={opcode}, body={body.Length} bytes, Connect={id}");
+#endif
                         try
                         {
                             connect.OnRead(opcode, message, connect);

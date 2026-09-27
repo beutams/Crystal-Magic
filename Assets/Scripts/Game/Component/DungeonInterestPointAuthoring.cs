@@ -20,10 +20,6 @@ public sealed class DungeonInterestPointAuthoring : MonoBehaviour
                 ArrivalDistance = Mathf.Max(0.05f, authoring._arrivalDistance),
                 PatrolEnabled = 1,
             });
-            AddComponent(entity, new UnitFactionComponent
-            {
-                Value = UnitFactionType.Interactable,
-            });
         }
     }
 }

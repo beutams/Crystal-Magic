@@ -558,7 +558,6 @@ namespace CrystalMagic.Core
                 entityManager.AddBuffer<StateScriptNodeStateElement>(pointEntity);
                 entityManager.AddBuffer<StateScriptSourceCommandElement>(pointEntity);
                 entityManager.AddBuffer<StateScriptSourceCommandArgumentElement>(pointEntity);
-                entityManager.AddBuffer<StateScriptManagedCommandElement>(pointEntity);
                 entityManager.AddBuffer<StateScriptExternalResultElement>(pointEntity);
                 DungeonInterestPointComponent point = new()
                 {

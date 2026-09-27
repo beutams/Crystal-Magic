@@ -8,9 +8,22 @@ namespace CrystalMagic.Core
     [UpdateInGroup(typeof(GamePresentationSystemGroup))]
     public partial class DungeonFogOfWarSystem : SystemBase
     {
+        private EntityQuery _runtimeMapQuery;
+
+        protected override void OnCreate()
+        {
+            _runtimeMapQuery = GetEntityQuery(ComponentType.ReadOnly<DungeonRuntimeMapComponent>());
+        }
+
         protected override void OnUpdate()
         {
-            RuntimeDungeonFogData fogData = GameRuntimeStateUtility.GetDungeonRuntimeMap()?.FogData;
+            if (_runtimeMapQuery.IsEmptyIgnoreFilter)
+                return;
+
+            Entity runtimeMapEntity = _runtimeMapQuery.GetSingletonEntity();
+            RuntimeDungeonFogData fogData = EntityManager
+                .GetComponentObject<DungeonRuntimeMapComponent>(runtimeMapEntity)
+                ?.FogData;
             if (fogData == null)
                 return;
 

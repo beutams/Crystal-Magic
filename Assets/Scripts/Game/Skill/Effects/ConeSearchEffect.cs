@@ -52,9 +52,19 @@ namespace CrystalMagic.Game.Skill.Effects
                 }
 
                 Vector3 hitPosition = new(hit.Position.x, hit.Position.y, hit.Position.z);
-                SkillContent targetContext = context.CloneForTarget(hit.Entity, hitPosition);
-                targetContext.EntityManager = entityManager;
-                SkillExecutor.ExecuteEffects(Data.OnAfterSearch, targetContext);
+                SkillContent targetContext = SkillContentReferencePool.GetForTarget(
+                    context,
+                    hit.Entity,
+                    hitPosition);
+                try
+                {
+                    targetContext.EntityManager = entityManager;
+                    SkillExecutor.ExecuteEffects(Data.OnAfterSearch, targetContext);
+                }
+                finally
+                {
+                    SkillContentReferencePool.Return(targetContext);
+                }
             }
         }
 

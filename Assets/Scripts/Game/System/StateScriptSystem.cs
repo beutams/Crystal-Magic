@@ -21,10 +21,15 @@ public partial class StateScriptSystem : SystemBase
 {
     private UnitSourceDispatcher _sources;
     private EntityQuery _localPlayerQuery;
+    private EntityQuery _managedCommandQueueQuery;
 
     protected override void OnCreate()
     {
         _sources.Initialize(this);
+        StateScriptManagedCommandQueueUtility.GetOrCreateEntity(EntityManager);
+        _managedCommandQueueQuery = GetEntityQuery(
+            ComponentType.ReadOnly<StateScriptManagedCommandQueueComponent>(),
+            ComponentType.ReadWrite<StateScriptManagedCommandElement>());
         _localPlayerQuery = GetEntityQuery(
             ComponentType.ReadOnly<NetworkPlayerComponent>(),
             ComponentType.ReadOnly<UnitStateScriptComponent>());
@@ -112,17 +117,19 @@ public partial class StateScriptSystem : SystemBase
         // global entity, so evaluate serially until writes can be safely partitioned.
         if (hasLocalPlayer)
         {
+            float deltaTime = math.max(0f, SystemAPI.Time.DeltaTime);
+            Entity targetEntity = role == GameWorldRole.Client ? localPlayer : Entity.Null;
             Dependency = ScheduleEvaluation(
                 Dependency,
                 registry,
                 queryTree,
                 queryCapacity,
-                math.max(0f, SystemAPI.Time.DeltaTime),
+                deltaTime,
                 executionTarget,
-                role == GameWorldRole.Client ? localPlayer : Entity.Null,
+                targetEntity,
                 processInputEvents: true);
             if (role == GameWorldRole.Client)
-                Dependency = ScheduleClientMovePrediction(Dependency, math.max(0f, SystemAPI.Time.DeltaTime));
+                Dependency = ScheduleClientMovePrediction(Dependency, deltaTime);
         }
         Dependency = new StateScriptDeathJob().ScheduleParallel(Dependency);
     }
@@ -137,20 +144,30 @@ public partial class StateScriptSystem : SystemBase
         Entity targetEntity,
         bool processInputEvents)
     {
-        return new StateScriptEvaluationJob
+        DynamicBuffer<StateScriptManagedCommandElement> managedCommands =
+            _managedCommandQueueQuery.GetSingletonBuffer<StateScriptManagedCommandElement>();
+        managedCommands.Clear();
+        NativeList<UnitQueryHit> queryResults = new(queryCapacity, Allocator.TempJob);
+        NativeList<Entity> queryExclusions = new(queryCapacity, Allocator.TempJob);
+        JobHandle evaluationHandle = new StateScriptEvaluationJob
         {
             Registry = registry,
             Sources = _sources,
             InputEvents = GetBufferLookup<PlayerInputEventElement>(true),
             PlayerInputs = GetComponentLookup<PlayerInputComponent>(),
             QueryTree = queryTree,
-            QueryResults = new NativeList<UnitQueryHit>(queryCapacity, Allocator.TempJob),
-            QueryExclusions = new NativeList<Entity>(queryCapacity, Allocator.TempJob),
+            QueryResults = queryResults,
+            QueryExclusions = queryExclusions,
+            ManagedCommands = managedCommands,
             DeltaTime = deltaTime,
             ExecutionTarget = executionTarget,
             TargetEntity = targetEntity,
             ProcessInputEventBuffer = processInputEvents ? (byte)1 : (byte)0,
         }.Schedule(dependency);
+
+        JobHandle queryResultsDisposeHandle = queryResults.Dispose(evaluationHandle);
+        JobHandle queryExclusionsDisposeHandle = queryExclusions.Dispose(evaluationHandle);
+        return JobHandle.CombineDependencies(queryResultsDisposeHandle, queryExclusionsDisposeHandle);
     }
 
     private JobHandle ScheduleClientMovePrediction(JobHandle dependency, float deltaTime)
@@ -326,11 +343,11 @@ public partial struct StateScriptEvaluationJob : IJobEntity
     [ReadOnly]
     public UnitQueryTree QueryTree;
 
-    [DeallocateOnJobCompletion]
     public NativeList<UnitQueryHit> QueryResults;
 
-    [DeallocateOnJobCompletion]
     public NativeList<Entity> QueryExclusions;
+
+    public DynamicBuffer<StateScriptManagedCommandElement> ManagedCommands;
 
     public float DeltaTime;
 
@@ -347,15 +364,14 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         ref DynamicBuffer<StateScriptNodeStateElement> nodeStates,
         ref DynamicBuffer<StateScriptSourceCommandElement> sourceCommands,
         ref DynamicBuffer<StateScriptSourceCommandArgumentElement> sourceArguments,
-        ref DynamicBuffer<StateScriptManagedCommandElement> managedCommands,
         ref DynamicBuffer<StateScriptExternalResultElement> externalResults)
     {
+        DynamicBuffer<StateScriptManagedCommandElement> managedCommands = ManagedCommands;
         if (TargetEntity != Entity.Null && entity != TargetEntity)
             return;
 
         sourceCommands.Clear();
         sourceArguments.Clear();
-        managedCommands.Clear();
         if (component.IsStoppedForDeath != 0 ||
             component.InitializationError != StateScriptInitializationError.None ||
             component.DefinitionIndex < 0 ||
@@ -373,6 +389,10 @@ public partial struct StateScriptEvaluationJob : IJobEntity
             return;
         }
 
+        bool hasInputEvents = ProcessInputEventBuffer != 0 &&
+                              InputEvents.HasBuffer(entity) &&
+                              InputEvents[entity].Length > 0;
+
         component.TickVersion++;
         if (component.TickVersion == 0)
             component.TickVersion = 1;
@@ -387,9 +407,6 @@ public partial struct StateScriptEvaluationJob : IJobEntity
             otherValue.TryGetEntity(out other);
         }
         UnitSourceContext context = new(entity, other);
-        bool hasInputEvents = ProcessInputEventBuffer != 0 &&
-                              InputEvents.HasBuffer(entity) &&
-                              InputEvents[entity].Length > 0;
 
         for (int graphIndex = 0; graphIndex < unit.Graphs.Length; graphIndex++)
         {
@@ -410,6 +427,7 @@ public partial struct StateScriptEvaluationJob : IJobEntity
                 if (graphState.IsActive != 0)
                 {
                     StopGraph(
+                        entity,
                         graphIndex,
                         ref graph,
                         graphState.NodeStateStart,
@@ -464,8 +482,8 @@ public partial struct StateScriptEvaluationJob : IJobEntity
                 }
                 state.Status = StateScriptStateStatus.Stop;
                 nodeStates[stateIndex] = state;
-#if UNITY_EDITOR
-                managedCommands.Add(new StateScriptManagedCommandElement
+#if UNITY_EDITOR && STATE_SCRIPT_TRACE
+                AddManagedCommand(entity, ref managedCommands, new StateScriptManagedCommandElement
                 {
                     Type = StateScriptManagedCommandType.TraceAdditionResultConsumed,
                     GraphIndex = graphIndex,
@@ -509,7 +527,8 @@ public partial struct StateScriptEvaluationJob : IJobEntity
 
             // 没有输入事件的单位保持原来的逐图更新顺序。
             if (!hasInputEvents && !TickGraph(entity, graphIndex, ref graph, graphState.NodeStateStart,
-                    in context, ref component, ref nodeStates, ref sourceCommands, ref sourceArguments, ref managedCommands))
+                    in context, ref component, ref nodeStates, ref sourceCommands,
+                    ref sourceArguments, ref managedCommands))
             {
                 component.InitializationError = StateScriptInitializationError.InvalidDefinition;
                 externalResults.Clear();
@@ -539,7 +558,8 @@ public partial struct StateScriptEvaluationJob : IJobEntity
                 continue;
             ref StateScriptGraphDefinitionBlob graph = ref unit.Graphs[graphIndex];
             if (!TickGraph(entity, graphIndex, ref graph, graphState.NodeStateStart,
-                    in context, ref component, ref nodeStates, ref sourceCommands, ref sourceArguments, ref managedCommands))
+                    in context, ref component, ref nodeStates, ref sourceCommands,
+                    ref sourceArguments, ref managedCommands))
             {
                 component.InitializationError = StateScriptInitializationError.InvalidDefinition;
                 externalResults.Clear();
@@ -565,7 +585,8 @@ public partial struct StateScriptEvaluationJob : IJobEntity
                 nodeStates[stateStart + nodeIndex].Status != StateScriptStateStatus.Running)
                 continue;
             if (!UpdateStateNode(entity, graphIndex, nodeIndex, ref graph, stateStart, in context,
-                    ref component, ref nodeStates, ref sourceCommands, ref sourceArguments, ref managedCommands, ref pulses) ||
+                    ref component, ref nodeStates, ref sourceCommands, ref sourceArguments,
+                    ref managedCommands, ref pulses) ||
                 !DrainPulses(entity, graphIndex, ref graph, stateStart, in context,
                     ref component, ref nodeStates, ref sourceCommands, ref sourceArguments, ref managedCommands, ref pulses))
                 return false;
@@ -698,7 +719,7 @@ public partial struct StateScriptEvaluationJob : IJobEntity
                 if (pulse.InputPortId != StateScriptPortId.In || node.ExpressionCount != 1)
                     return false;
                 bool matches = TryEvaluateCondition(ref graph, node.ExpressionStart, in context);
-#if UNITY_EDITOR
+#if UNITY_EDITOR && STATE_SCRIPT_TRACE
                 AppendCurrentInputTypeTrace(
                     graphIndex,
                     pulse.NodeIndex,
@@ -729,13 +750,13 @@ public partial struct StateScriptEvaluationJob : IJobEntity
                         ref graph,
                         in context,
                         out StateScriptManagedCommandElement skillCommand
-#if UNITY_EDITOR
+#if UNITY_EDITOR && STATE_SCRIPT_TRACE
                         , out StateScriptSkillRequestBuildError buildError
 #endif
                     ))
                 {
-#if UNITY_EDITOR
-                    managedCommands.Add(new StateScriptManagedCommandElement
+#if UNITY_EDITOR && STATE_SCRIPT_TRACE
+                    AddManagedCommand(entity, ref managedCommands, new StateScriptManagedCommandElement
                     {
                         Type = StateScriptManagedCommandType.TraceSkillRequestFailed,
                         GraphIndex = graphIndex,
@@ -750,9 +771,9 @@ public partial struct StateScriptEvaluationJob : IJobEntity
                     : StateScriptManagedCommandType.RequestSkillWithAddition;
                 skillCommand.GraphIndex = graphIndex;
                 skillCommand.NodeIndex = pulse.NodeIndex;
-                managedCommands.Add(skillCommand);
-#if UNITY_EDITOR
-                managedCommands.Add(new StateScriptManagedCommandElement
+                AddManagedCommand(entity, ref managedCommands, skillCommand);
+#if UNITY_EDITOR && STATE_SCRIPT_TRACE
+                AddManagedCommand(entity, ref managedCommands, new StateScriptManagedCommandElement
                 {
                     Type = StateScriptManagedCommandType.TraceSkillRequestBuilt,
                     GraphIndex = graphIndex,
@@ -768,7 +789,7 @@ public partial struct StateScriptEvaluationJob : IJobEntity
                 if (pulse.InputPortId != StateScriptPortId.In || node.ExpressionCount != 1 ||
                     !TryEvaluateValue(ref graph, node.ExpressionStart, in context, out UnitSourceValue reference))
                     return true;
-                managedCommands.Add(new StateScriptManagedCommandElement
+                AddManagedCommand(entity, ref managedCommands, new StateScriptManagedCommandElement
                 {
                     Type = StateScriptManagedCommandType.PublishGameEvent,
                     GraphIndex = graphIndex,
@@ -782,7 +803,7 @@ public partial struct StateScriptEvaluationJob : IJobEntity
                     !TryEvaluateValue(ref graph, node.ExpressionStart, in context, out UnitSourceValue targetValue) ||
                     !targetValue.TryGetEntity(out Entity target) || target == Entity.Null)
                     return true;
-                managedCommands.Add(new StateScriptManagedCommandElement
+                AddManagedCommand(entity, ref managedCommands, new StateScriptManagedCommandElement
                 {
                     Type = StateScriptManagedCommandType.RequestInteraction,
                     GraphIndex = graphIndex,
@@ -794,7 +815,7 @@ public partial struct StateScriptEvaluationJob : IJobEntity
             case StateScriptNodeRuntimeType.SpawnUnit:
                 if (pulse.InputPortId != StateScriptPortId.In)
                     return false;
-                managedCommands.Add(new StateScriptManagedCommandElement
+                AddManagedCommand(entity, ref managedCommands, new StateScriptManagedCommandElement
                 {
                     Type = StateScriptManagedCommandType.SpawnUnit,
                     GraphIndex = graphIndex,
@@ -807,7 +828,7 @@ public partial struct StateScriptEvaluationJob : IJobEntity
                 if (pulse.InputPortId != StateScriptPortId.In || node.ExpressionCount != 1 ||
                     !TryEvaluateValue(ref graph, node.ExpressionStart, in context, out UnitSourceValue interactionResult))
                     return true;
-                managedCommands.Add(new StateScriptManagedCommandElement
+                AddManagedCommand(entity, ref managedCommands, new StateScriptManagedCommandElement
                 {
                     Type = StateScriptManagedCommandType.CompleteInteraction,
                     GraphIndex = graphIndex,
@@ -822,7 +843,7 @@ public partial struct StateScriptEvaluationJob : IJobEntity
             case StateScriptNodeRuntimeType.StartNpcInteraction:
                 if (pulse.InputPortId != StateScriptPortId.In)
                     return false;
-                managedCommands.Add(new StateScriptManagedCommandElement
+                AddManagedCommand(entity, ref managedCommands, new StateScriptManagedCommandElement
                 {
                     Type = node.Type switch
                     {
@@ -852,13 +873,13 @@ public partial struct StateScriptEvaluationJob : IJobEntity
                 effectCommand.Type = StateScriptManagedCommandType.ExecuteEffect;
                 effectCommand.GraphIndex = graphIndex;
                 effectCommand.NodeIndex = pulse.NodeIndex;
-                managedCommands.Add(effectCommand);
+                AddManagedCommand(entity, ref managedCommands, effectCommand);
                 return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.Out, ref pulses);
 
             case StateScriptNodeRuntimeType.DestroySelf:
                 if (pulse.InputPortId != StateScriptPortId.In)
                     return false;
-                managedCommands.Add(new StateScriptManagedCommandElement
+                AddManagedCommand(entity, ref managedCommands, new StateScriptManagedCommandElement
                 {
                     Type = StateScriptManagedCommandType.DestroySelf,
                     GraphIndex = graphIndex,
@@ -920,8 +941,8 @@ public partial struct StateScriptEvaluationJob : IJobEntity
                 state.Auxiliary = TryEvaluateNumber(ref graph, node.ExpressionStart, in context, out float duration)
                     ? math.max(0f, duration)
                     : 0f;
-#if UNITY_EDITOR
-                managedCommands.Add(new StateScriptManagedCommandElement
+#if UNITY_EDITOR && STATE_SCRIPT_TRACE
+                AddManagedCommand(entity, ref managedCommands, new StateScriptManagedCommandElement
                 {
                     Type = StateScriptManagedCommandType.TraceTimerStarted,
                     GraphIndex = graphIndex,
@@ -946,7 +967,7 @@ public partial struct StateScriptEvaluationJob : IJobEntity
             states[stateIndex] = state;
             if (node.Type == StateScriptNodeRuntimeType.Addition)
             {
-                managedCommands.Add(new StateScriptManagedCommandElement
+                AddManagedCommand(entity, ref managedCommands, new StateScriptManagedCommandElement
                 {
                     Type = StateScriptManagedCommandType.StartAddition,
                     GraphIndex = graphIndex,
@@ -966,6 +987,7 @@ public partial struct StateScriptEvaluationJob : IJobEntity
             if (node.Type == StateScriptNodeRuntimeType.Addition)
             {
                 AppendStopAddition(
+                    entity,
                     graphIndex,
                     pulse.NodeIndex,
                     state.ExecutionVersion,
@@ -1031,8 +1053,8 @@ public partial struct StateScriptEvaluationJob : IJobEntity
                 states[stateIndex] = state;
                 if (state.Time >= state.Auxiliary)
                 {
-#if UNITY_EDITOR
-                    managedCommands.Add(new StateScriptManagedCommandElement
+#if UNITY_EDITOR && STATE_SCRIPT_TRACE
+                    AddManagedCommand(entity, ref managedCommands, new StateScriptManagedCommandElement
                     {
                         Type = StateScriptManagedCommandType.TraceTimerCompleted,
                         GraphIndex = graphIndex,
@@ -1191,6 +1213,7 @@ public partial struct StateScriptEvaluationJob : IJobEntity
     }
 
     private static void StopGraph(
+        Entity entity,
         int graphIndex,
         ref StateScriptGraphDefinitionBlob graph,
         int stateStart,
@@ -1209,23 +1232,33 @@ public partial struct StateScriptEvaluationJob : IJobEntity
             state.ExecutionVersion = executionVersion;
             states[stateIndex] = state;
             if (graph.Nodes[nodeIndex].Type == StateScriptNodeRuntimeType.Addition)
-                AppendStopAddition(graphIndex, nodeIndex, executionVersion, ref managedCommands);
+                AppendStopAddition(entity, graphIndex, nodeIndex, executionVersion, ref managedCommands);
         }
     }
 
     private static void AppendStopAddition(
+        Entity entity,
         int graphIndex,
         int nodeIndex,
         uint executionVersion,
         ref DynamicBuffer<StateScriptManagedCommandElement> managedCommands)
     {
-        managedCommands.Add(new StateScriptManagedCommandElement
+        AddManagedCommand(entity, ref managedCommands, new StateScriptManagedCommandElement
         {
             Type = StateScriptManagedCommandType.StopAddition,
             GraphIndex = graphIndex,
             NodeIndex = nodeIndex,
             ExecutionVersion = executionVersion,
         });
+    }
+
+    private static void AddManagedCommand(
+        Entity sourceEntity,
+        ref DynamicBuffer<StateScriptManagedCommandElement> managedCommands,
+        StateScriptManagedCommandElement command)
+    {
+        command.SourceEntity = sourceEntity;
+        managedCommands.Add(command);
     }
 
     private bool TryApplySourceValue(
@@ -1257,18 +1290,18 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         ref StateScriptGraphDefinitionBlob graph,
         in UnitSourceContext context,
         out StateScriptManagedCommandElement command
-#if UNITY_EDITOR
+#if UNITY_EDITOR && STATE_SCRIPT_TRACE
         , out StateScriptSkillRequestBuildError error
 #endif
         )
     {
         command = default;
-#if UNITY_EDITOR
+#if UNITY_EDITOR && STATE_SCRIPT_TRACE
         error = StateScriptSkillRequestBuildError.None;
 #endif
         if (node.ExpressionCount != 3)
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR && STATE_SCRIPT_TRACE
             error = StateScriptSkillRequestBuildError.InvalidExpressionCount;
 #endif
             return false;
@@ -1276,7 +1309,7 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         if (!TryEvaluateNumber(ref graph, node.ExpressionStart, in context, out float rawSkillId) ||
             !math.isfinite(rawSkillId))
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR && STATE_SCRIPT_TRACE
             error = StateScriptSkillRequestBuildError.SkillIdEvaluationFailed;
 #endif
             return false;
@@ -1284,35 +1317,35 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         float rounded = math.round(rawSkillId);
         if (rounded < 0f || rounded > int.MaxValue || math.abs(rawSkillId - rounded) > 0.0001f)
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR && STATE_SCRIPT_TRACE
             error = StateScriptSkillRequestBuildError.SkillIdNotInteger;
 #endif
             return false;
         }
         if (!TryEvaluateValue(ref graph, node.ExpressionStart + 1, in context, out UnitSourceValue positionValue))
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR && STATE_SCRIPT_TRACE
             error = StateScriptSkillRequestBuildError.PositionEvaluationFailed;
 #endif
             return false;
         }
         if (!positionValue.TryGetFloat3(out float3 position))
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR && STATE_SCRIPT_TRACE
             error = StateScriptSkillRequestBuildError.PositionTypeMismatch;
 #endif
             return false;
         }
         if (!TryEvaluateValue(ref graph, node.ExpressionStart + 2, in context, out UnitSourceValue targetValue))
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR && STATE_SCRIPT_TRACE
             error = StateScriptSkillRequestBuildError.TargetEvaluationFailed;
 #endif
             return false;
         }
         if (!targetValue.TryGetEntity(out Entity target))
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR && STATE_SCRIPT_TRACE
             error = StateScriptSkillRequestBuildError.TargetTypeMismatch;
 #endif
             return false;
@@ -1415,7 +1448,7 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         return CompiledExpressionEvaluator.TryEvaluateConditions(ref expression, in context, in Sources);
     }
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR && STATE_SCRIPT_TRACE
     private void AppendCurrentInputTypeTrace(
         int graphIndex,
         int nodeIndex,
@@ -1476,7 +1509,7 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         int successMask = (hasSkillId ? 1 : 0) |
                           (hasCurrentInputType ? 2 : 0) |
                           (hasDirectInputType ? 4 : 0);
-        managedCommands.Add(new StateScriptManagedCommandElement
+        AddManagedCommand(context.Self, ref managedCommands, new StateScriptManagedCommandElement
         {
             Type = StateScriptManagedCommandType.TraceCurrentInputType,
             GraphIndex = graphIndex,
@@ -1825,6 +1858,7 @@ public partial struct StateScriptEvaluationJob : IJobEntity
     {
         return math.abs(left - right) <= math.max(0.000001f * math.max(math.abs(left), math.abs(right)), 1.121039E-44f);
     }
+
 }
 
 [BurstCompile]

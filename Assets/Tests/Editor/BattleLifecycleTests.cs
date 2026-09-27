@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
+using CrystalMagic.Game.Data.Effects;
+using CrystalMagic.Game.Skill;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using Server;
@@ -12,6 +14,79 @@ using System.Reflection;
 
 public sealed class BattleLifecycleTests
 {
+    [Test]
+    public void SkillContentReferencePoolClearsReturnedState()
+    {
+        SkillContent first = SkillContentReferencePool.Get();
+        first.TriggerSource = SkillTriggerSource.BuffHook;
+        first.HasOriginEntity = true;
+        first.OriginEntity = new Entity { Index = 7, Version = 1 };
+        first.SourceSkillId = 42;
+        first.HasTarget = true;
+        UnityEngine.GameObject target = new("Pooled target");
+        first.Target = target;
+        SkillContentReferencePool.Return(first);
+
+        SkillContent recycled = SkillContentReferencePool.Get();
+        try
+        {
+            Assert.That(recycled, Is.SameAs(first));
+            Assert.That(recycled.TriggerSource, Is.EqualTo(SkillTriggerSource.None));
+            Assert.That(recycled.HasOriginEntity, Is.False);
+            Assert.That(recycled.OriginEntity, Is.EqualTo(Entity.Null));
+            Assert.That(recycled.SourceSkillId, Is.EqualTo(-1));
+            Assert.That(recycled.HasTarget, Is.False);
+            Assert.That(recycled.Target, Is.Null);
+        }
+        finally
+        {
+            UnityEngine.Object.DestroyImmediate(target);
+            SkillContentReferencePool.Return(recycled);
+        }
+    }
+
+    [Test]
+    public void EffectDataBridgeReusesReleasedListWrapper()
+    {
+        using World world = new("Effect bridge pool test");
+        EntityManager manager = world.EntityManager;
+        EffectData[] firstEffects = { new DamageEffectData() };
+        EffectDataListId firstId = EffectDataBridgeUtility.Register(manager, firstEffects);
+        Assert.That(EffectDataBridgeUtility.TryGet(manager, firstId, out EffectDataList first), Is.True);
+
+        EffectDataBridgeUtility.Unregister(manager, firstId);
+
+        EffectData[] secondEffects = { new DamageEffectData() };
+        EffectDataListId secondId = EffectDataBridgeUtility.Register(manager, secondEffects);
+        Assert.That(EffectDataBridgeUtility.TryGet(manager, secondId, out EffectDataList second), Is.True);
+        Assert.That(second, Is.SameAs(first));
+        Assert.That(second.Effects, Is.SameAs(secondEffects));
+
+        EffectDataBridgeUtility.Unregister(manager, secondId);
+    }
+
+    [Test]
+    public void ApplyBuffRuntimeCopyPreservesInfiniteDurationSentinel()
+    {
+        SkillModifierSet modifiers = default;
+        SkillModifierEntry modifier = new()
+        {
+            Channel = SkillModifierChannel.BuffDuration,
+            Factor = 0.5f,
+            Bonus = 2f,
+        };
+        modifiers.Add(in modifier, 1, 0f);
+
+        ApplyBuffEffectData infinite = new() { DurationSeconds = -1f };
+        ApplyBuffEffectData finite = new() { DurationSeconds = 4f };
+
+        ApplyBuffEffectData infiniteCopy = (ApplyBuffEffectData)infinite.CreateRuntimeCopy(modifiers);
+        ApplyBuffEffectData finiteCopy = (ApplyBuffEffectData)finite.CreateRuntimeCopy(modifiers);
+
+        Assert.That(infiniteCopy.DurationSeconds, Is.EqualTo(-1f));
+        Assert.That(finiteCopy.DurationSeconds, Is.EqualTo(8f));
+    }
+
     [Test]
     public void RemovedConnectionCannotLeaveCommandsForReloadedPlayer()
     {

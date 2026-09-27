@@ -472,6 +472,9 @@ namespace CrystalMagic.Core
         public static bool TryGetPlayerEntity(EntityManager entityManager, out Entity player)
         {
             player = Entity.Null;
+            if (!GameWorldContextUtility.TryGet(entityManager, out GameWorldContextComponent worldContext))
+                return false;
+
             using EntityQuery localPlayerQuery =
                 entityManager.CreateEntityQuery(ComponentType.ReadOnly<NetworkPlayerComponent>());
             if (!localPlayerQuery.IsEmptyIgnoreFilter)
@@ -485,7 +488,7 @@ namespace CrystalMagic.Core
                 }
             }
 
-            GameSceneMode sceneMode = GameWorldContextUtility.GetSceneMode(entityManager);
+            GameSceneMode sceneMode = worldContext.SceneMode;
             bool hasScenePreference = sceneMode != GameSceneMode.None;
             bool prefersCombatPlayer = sceneMode is GameSceneMode.Dungeon or GameSceneMode.Training;
             using EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<UnitFactionComponent>());

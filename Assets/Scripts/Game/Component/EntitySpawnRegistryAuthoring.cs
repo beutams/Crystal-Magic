@@ -28,13 +28,13 @@ namespace CrystalMagic.Game.Unit
         public IReadOnlyList<GameObject> EnvironmentPrefabs => _environmentPrefabs;
         public IReadOnlyList<GameObject> VfxPrefabs => _vfxPrefabs;
 
-#if UNITY_EDITOR
         private const string UnitFolder = "Assets/Res/Prefab/Unit";
         private const string ProjectileFolder = "Assets/Res/Prefab/Projectile";
         private const string DropFolder = "Assets/Res/Prefab/Drop";
         private const string EnvironmentFolder = "Assets/Res/Prefab/Environment";
         private const string VfxFolder = "Assets/Res/Prefab/VFX";
 
+#if UNITY_EDITOR
         private void Reset() => SyncPrefabLists();
 
         private void OnValidate() => SyncPrefabLists();

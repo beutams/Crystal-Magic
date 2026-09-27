@@ -1,10 +1,30 @@
 using CrystalMagic.Game.Data.Effects;
 using CrystalMagic.Game.Skill;
+using CrystalMagic.Core;
 using System.Collections.Generic;
 using Unity.Entities;
 
 public static class EffectDataBridgeUtility
 {
+    private static readonly IObjectPool<EffectDataList> EffectDataLists =
+        new ObjectPool<EffectDataList>(
+            static () => new EffectDataList(),
+            initialSize: 32,
+            maxSize: 4096);
+
+    private static readonly IObjectPool<EffectManagedContextState> ManagedContexts =
+        new ObjectPool<EffectManagedContextState>(
+            static () => new EffectManagedContextState(),
+            initialSize: 16,
+            maxSize: 4096);
+
+    private static readonly IObjectPool<List<ConditionConfig>> ConditionLists =
+        new ObjectPool<List<ConditionConfig>>(
+            static () => new List<ConditionConfig>(),
+            initialSize: 16,
+            maxSize: 4096,
+            onReturn: static conditions => conditions.Clear());
+
     public static EffectDataBridgeComponent GetOrCreate(EntityManager entityManager)
     {
         EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<EffectDataBridgeComponent>());
@@ -24,7 +44,9 @@ public static class EffectDataBridgeUtility
 
         EffectDataListId id = EffectDataListIdAllocator.Allocate();
         EffectDataBridgeComponent bridge = GetOrCreate(entityManager);
-        bridge.Values.Add(id.Value, new EffectDataList(effects));
+        EffectDataList effectDataList = EffectDataLists.Get();
+        effectDataList.Initialize(effects);
+        bridge.Values.Add(id.Value, effectDataList);
         if (registry)
             bridge.RegistryIds.Add(id.Value);
         return id;
@@ -44,7 +66,12 @@ public static class EffectDataBridgeUtility
         if (id.IsValid)
         {
             EffectDataBridgeComponent bridge = GetOrCreate(entityManager);
-            bridge.Values.Remove(id.Value);
+            if (bridge.Values.TryGetValue(id.Value, out EffectDataList effectDataList))
+            {
+                bridge.Values.Remove(id.Value);
+                if (effectDataList.IsPoolOwned)
+                    EffectDataLists.Return(effectDataList);
+            }
             bridge.RegistryIds.Remove(id.Value);
         }
     }
@@ -63,13 +90,12 @@ public static class EffectDataBridgeUtility
         }
 
         EffectManagedContextId id = EffectManagedContextIdAllocator.Allocate();
-        GetOrCreate(entityManager).ManagedContexts.Add(id.Value, new EffectManagedContextState
-        {
-            HasTarget = context.HasTarget,
-            Target = context.Target,
-            Origin = context.Origin,
-            PersistentEffectAppliedBuffTargets = context.PersistentEffectAppliedBuffTargets,
-        });
+        EffectManagedContextState state = ManagedContexts.Get();
+        state.HasTarget = context.HasTarget;
+        state.Target = context.Target;
+        state.Origin = context.Origin;
+        state.PersistentEffectAppliedBuffTargets = context.PersistentEffectAppliedBuffTargets;
+        GetOrCreate(entityManager).ManagedContexts.Add(id.Value, state);
         return id;
     }
 
@@ -84,8 +110,15 @@ public static class EffectDataBridgeUtility
 
     public static void UnregisterManagedContext(EntityManager entityManager, EffectManagedContextId id)
     {
-        if (id.IsValid)
-            GetOrCreate(entityManager).ManagedContexts.Remove(id.Value);
+        if (!id.IsValid)
+            return;
+
+        EffectDataBridgeComponent bridge = GetOrCreate(entityManager);
+        if (!bridge.ManagedContexts.TryGetValue(id.Value, out EffectManagedContextState state))
+            return;
+
+        bridge.ManagedContexts.Remove(id.Value);
+        ManagedContexts.Return(state);
     }
 
     public static ConditionDataListId RegisterConditions(
@@ -96,7 +129,9 @@ public static class EffectDataBridgeUtility
             return default;
 
         ConditionDataListId id = ConditionDataListIdAllocator.Allocate();
-        List<ConditionConfig> copy = new(conditions.Count);
+        List<ConditionConfig> copy = ConditionLists.Get();
+        if (copy.Capacity < conditions.Count)
+            copy.Capacity = conditions.Count;
         for (int i = 0; i < conditions.Count; i++)
             copy.Add(conditions[i]);
         GetOrCreate(entityManager).ConditionLists.Add(id.Value, copy);
@@ -114,7 +149,36 @@ public static class EffectDataBridgeUtility
 
     public static void UnregisterConditions(EntityManager entityManager, ConditionDataListId id)
     {
-        if (id.IsValid)
-            GetOrCreate(entityManager).ConditionLists.Remove(id.Value);
+        if (!id.IsValid)
+            return;
+
+        EffectDataBridgeComponent bridge = GetOrCreate(entityManager);
+        if (!bridge.ConditionLists.TryGetValue(id.Value, out List<ConditionConfig> conditions))
+            return;
+
+        bridge.ConditionLists.Remove(id.Value);
+        ConditionLists.Return(conditions);
+    }
+
+    public static void ClearTransient(EntityManager entityManager)
+    {
+        EffectDataBridgeComponent bridge = GetOrCreate(entityManager);
+        List<int> transientEffectIds = new(bridge.Values.Count);
+        foreach (int id in bridge.Values.Keys)
+        {
+            if (!bridge.RegistryIds.Contains(id))
+                transientEffectIds.Add(id);
+        }
+
+        for (int index = 0; index < transientEffectIds.Count; index++)
+            Unregister(entityManager, new EffectDataListId(transientEffectIds[index]));
+
+        foreach (EffectManagedContextState state in bridge.ManagedContexts.Values)
+            ManagedContexts.Return(state);
+        bridge.ManagedContexts.Clear();
+
+        foreach (List<ConditionConfig> conditions in bridge.ConditionLists.Values)
+            ConditionLists.Return(conditions);
+        bridge.ConditionLists.Clear();
     }
 }

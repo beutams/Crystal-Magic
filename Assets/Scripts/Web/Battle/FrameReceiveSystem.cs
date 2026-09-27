@@ -20,7 +20,10 @@ public partial class FrameReceiveSystem : SystemBase
         _bufferQuery = GetEntityQuery(ComponentType.ReadWrite<FrameReceiveBufferComponent>());
         _localPlayerQuery = GetEntityQuery(ComponentType.ReadOnly<NetworkPlayerComponent>());
         if (_bufferQuery.IsEmptyIgnoreFilter)
-            EntityManager.CreateEntity(typeof(FrameReceiveBufferComponent));
+        {
+            Entity bufferEntity = EntityManager.CreateEntity();
+            EntityManager.AddComponentObject(bufferEntity, new FrameReceiveBufferComponent());
+        }
 
     }
 

@@ -65,8 +65,15 @@ partial class EffectExecutionSystem : SystemBase
         for (int requestIndex = 0; requestIndex < _pendingEntries.Count; requestIndex++)
         {
             EffectEntry request = _pendingEntries[requestIndex];
-            SkillContent context = EffectUtility.CreateContext(EntityManager, in request.Context);
-            Execute(request.EffectListId, context, request.RepeatCount, request.Completion);
+            SkillContent context = EffectUtility.GetContext(EntityManager, in request.Context);
+            try
+            {
+                Execute(request.EffectListId, context, request.RepeatCount, request.Completion);
+            }
+            finally
+            {
+                EffectUtility.ReturnContext(context);
+            }
 
             if (request.ReleaseEffectListAfterExecution != 0)
                 EffectDataBridgeUtility.Unregister(EntityManager, request.EffectListId);

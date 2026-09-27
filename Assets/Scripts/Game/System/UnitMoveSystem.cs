@@ -1,5 +1,6 @@
 using Unity.Burst;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
@@ -29,6 +30,7 @@ partial struct UnitMoveSystem : ISystem
             Deaths = SystemAPI.GetComponentLookup<UnitDeathComponent>(true),
             PlayerInputs = SystemAPI.GetComponentLookup<PlayerInputComponent>(true),
             BattlePlayerStatuses = SystemAPI.GetComponentLookup<BattlePlayerStatusComponent>(true),
+            Facings = SystemAPI.GetComponentLookup<UnitFacingComponent>(),
         };
         state.Dependency = job.ScheduleParallel(state.Dependency);
     }
@@ -54,6 +56,9 @@ partial struct UnitMoveSystem : ISystem
         [ReadOnly]
         public ComponentLookup<BattlePlayerStatusComponent> BattlePlayerStatuses;
 
+        [NativeDisableParallelForRestriction]
+        public ComponentLookup<UnitFacingComponent> Facings;
+
         private void Execute(
             Entity entity,
             ref UnitMoveComponent move,
@@ -64,6 +69,7 @@ partial struct UnitMoveSystem : ISystem
             float requestedMoveSpeed = move.CommandMoveSpeed;
             bool hasFrameVelocity = move.HasFrameVelocity != 0;
             float2 frameVelocity = move.FrameVelocity;
+            float2 desiredFacingDirection = float2.zero;
             UnitMoveComponent oldMove = move;
             bool isDead = Deaths.HasComponent(entity) && Deaths.IsComponentEnabled(entity);
             bool isBattleSpectator = BattlePlayerStatuses.TryGetComponent(
@@ -84,6 +90,7 @@ partial struct UnitMoveSystem : ISystem
                 UnitModifierComponent identity = UnitModifierComponent.CreateIdentity();
                 move.Velocity = math.normalizesafe(requestedDirection) *
                                 UnitModifierResolver.GetMoveSpeed(in move, in identity);
+                desiredFacingDirection = requestedDirection;
                 // 观战不参与物理碰撞，也不受死亡时遗留的控制/施法移动倍率影响。
                 transform.Position += new float3(move.Velocity, 0f) * DeltaTime;
                 physicsVelocity = default;
@@ -101,6 +108,7 @@ partial struct UnitMoveSystem : ISystem
                      avoidance.HasResolvedVelocity != 0)
             {
                 move.Velocity = avoidance.ResolvedVelocity;
+                desiredFacingDirection = move.Velocity;
             }
             else
             {
@@ -111,8 +119,11 @@ partial struct UnitMoveSystem : ISystem
                     : UnitModifierComponent.CreateIdentity();
                 move.Direction = requestedDirection;
                 move.CommandMoveSpeed = requestedMoveSpeed;
+                desiredFacingDirection = requestedDirection;
                 UnitMoveSimulationUtility.ResolveDesiredVelocity(ref move, in modifier, DeltaTime);
             }
+
+            UpdateFacing(entity, desiredFacingDirection);
 
             if (!isBattleSpectator && !isWaitingForTransition)
                 ApplyPlanarTransform(ref physicsVelocity, ref transform, move.Velocity);
@@ -127,6 +138,23 @@ partial struct UnitMoveSystem : ISystem
             move.LastObservedPosition = transform.Position;
 
             UnitMoveSimulationUtility.ClearFrameCommands(ref move);
+        }
+
+        private void UpdateFacing(Entity entity, float2 desiredDirection)
+        {
+            if (math.lengthsq(desiredDirection) <= 0.0001f ||
+                !Facings.TryGetComponent(entity, out UnitFacingComponent facing))
+            {
+                return;
+            }
+
+            float2 direction = math.normalize(desiredDirection);
+            if (math.all(facing.Direction == direction))
+                return;
+
+            facing.Direction = direction;
+            facing.NetworkDirty = 1;
+            Facings[entity] = facing;
         }
 
         private static void ApplyPlanarTransform(

@@ -52,20 +52,24 @@ public static class ClientSkillVisualPredictionUtility
     {
         if (player == Entity.Null ||
             !entityManager.Exists(player) ||
-            !entityManager.HasComponent<UnitSkillReleaseComponent>(player) ||
-            !entityManager.HasBuffer<StateScriptManagedCommandElement>(player))
+            !entityManager.HasComponent<UnitSkillReleaseComponent>(player))
         {
             return;
         }
 
+        Entity commandQueueEntity = StateScriptManagedCommandQueueUtility.GetOrCreateEntity(entityManager);
         Entity runtimeEntity = GetOrCreateRuntimeEntity(entityManager);
         DynamicBuffer<ClientSkillVisualRequestElement> requests =
             entityManager.GetBuffer<ClientSkillVisualRequestElement>(runtimeEntity);
         DynamicBuffer<StateScriptManagedCommandElement> commands =
-            entityManager.GetBuffer<StateScriptManagedCommandElement>(player, true);
+            entityManager.GetBuffer<StateScriptManagedCommandElement>(commandQueueEntity, true);
+        int requestOrdinal = 0;
         for (int commandIndex = 0; commandIndex < commands.Length; commandIndex++)
         {
             StateScriptManagedCommandElement command = commands[commandIndex];
+            if (command.SourceEntity != player)
+                continue;
+
             bool withAddition = command.Type == StateScriptManagedCommandType.RequestSkillWithAddition;
             if (!withAddition && command.Type != StateScriptManagedCommandType.RequestSkill)
                 continue;
@@ -90,7 +94,7 @@ public static class ClientSkillVisualPredictionUtility
             requests.Add(new ClientSkillVisualRequestElement
             {
                 Frame = frame,
-                RequestOrdinal = commandIndex,
+                RequestOrdinal = requestOrdinal++,
                 Request = request,
             });
         }

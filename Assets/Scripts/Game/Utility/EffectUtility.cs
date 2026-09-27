@@ -148,4 +148,46 @@ public static class EffectUtility
 
         return context;
     }
+
+    public static SkillContent GetContext(EntityManager entityManager, in EffectRequestContext source)
+    {
+        SkillContent context = SkillContentReferencePool.Get();
+        context.EntityManager = entityManager;
+        context.TriggerSource = source.TriggerSource;
+        context.HookType = source.HookType;
+        context.HasOriginEntity = source.HasOriginEntity != 0;
+        context.OriginEntity = source.OriginEntity;
+        context.HasTargetEntity = source.HasTargetEntity != 0;
+        context.TargetEntity = source.TargetEntity;
+        context.HasOtherEntity = source.HasOtherEntity != 0;
+        context.OtherEntity = source.OtherEntity;
+        context.SourceSkillId = source.SourceSkillId;
+        context.HasPosition = source.HasPosition != 0;
+        context.Position = new Vector3(source.Position.x, source.Position.y, source.Position.z);
+        context.HasOriginPositionSnapshot = source.HasOriginPositionSnapshot != 0;
+        context.OriginPositionSnapshot = new Vector3(
+            source.OriginPositionSnapshot.x,
+            source.OriginPositionSnapshot.y,
+            source.OriginPositionSnapshot.z);
+        context.TriggerValue = source.TriggerValue;
+        context.RuntimeModifiers = source.RuntimeModifiers;
+
+        if (EffectDataBridgeUtility.TryGetManagedContext(
+                entityManager,
+                source.ManagedContextId,
+                out EffectManagedContextState managedState))
+        {
+            context.HasTarget = managedState.HasTarget;
+            context.Target = managedState.Target;
+            context.Origin = managedState.Origin;
+            context.PersistentEffectAppliedBuffTargets = managedState.PersistentEffectAppliedBuffTargets;
+        }
+
+        return context;
+    }
+
+    public static void ReturnContext(SkillContent context)
+    {
+        SkillContentReferencePool.Return(context);
+    }
 }

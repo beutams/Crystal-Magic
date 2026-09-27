@@ -2,12 +2,19 @@ using CrystalMagic.Game;
 using CrystalMagic.UI;
 using Unity.Entities;
 using UnityEngine;
+using Unity.Profiling;
 
 namespace CrystalMagic.Core
 {
     public abstract class BattleStateBase : GameState
     {
         private const string UIPlayerInputLockReason = "BattleStateBase.UIOpen";
+        private static readonly ProfilerMarker BattleUpdateMarker = new("BattleState.Update");
+        private static readonly ProfilerMarker HealthBarUpdateMarker = new("BattleState.UnitHealthBars");
+        private static readonly ProfilerMarker DamageNumberUpdateMarker = new("BattleState.DamageNumbers");
+        private static readonly ProfilerMarker PickupTipUpdateMarker = new("BattleState.PickupTips");
+        private static readonly ProfilerMarker InteractionPromptUpdateMarker = new("BattleState.InteractionPrompt");
+        private static readonly ProfilerMarker UiInputLockUpdateMarker = new("BattleState.UIInputLock");
         private UIBase _battleUI;
         private CharacterUI _characterUI;
         private GameMenuUI _gameMenuUI;
@@ -39,16 +46,22 @@ namespace CrystalMagic.Core
 
         public sealed override void OnUpdate()
         {
-            OnUpdateBattle();
+            using (BattleUpdateMarker.Auto())
+                OnUpdateBattle();
             if (_characterUI != null && _characterUI.gameObject.activeSelf &&
                 GameRuntimeStateUtility.TryGetPlayerEntity(out EntityManager entityManager, out Entity player) &&
                 BattlePlayerStatusUtility.IsInputLocked(entityManager, player))
                 _characterUI.Close();
-            _unitHealthBarManager?.Tick();
-            _damageNumberManager?.Tick();
-            _pickupTipManager?.Tick();
-            _interactionPromptManager?.Tick();
-            RefreshUIInputLock();
+            using (HealthBarUpdateMarker.Auto())
+                _unitHealthBarManager?.Tick();
+            using (DamageNumberUpdateMarker.Auto())
+                _damageNumberManager?.Tick();
+            using (PickupTipUpdateMarker.Auto())
+                _pickupTipManager?.Tick();
+            using (InteractionPromptUpdateMarker.Auto())
+                _interactionPromptManager?.Tick();
+            using (UiInputLockUpdateMarker.Auto())
+                RefreshUIInputLock();
         }
 
         public sealed override void OnExit()
@@ -157,7 +170,10 @@ namespace CrystalMagic.Core
         private void RefreshUIInputLock()
         {
             bool shouldLock = UIComponent.Instance != null
-                && UIComponent.Instance.HasActiveSceneScopedPanel(BattleSceneName, BattleUIName, "MinimapUI");
+                && UIComponent.Instance.HasActiveSceneScopedPanelExcept(
+                    BattleSceneName,
+                    BattleUIName,
+                    "MinimapUI");
             if (shouldLock == _playerInputLockedByUI)
                 return;
 

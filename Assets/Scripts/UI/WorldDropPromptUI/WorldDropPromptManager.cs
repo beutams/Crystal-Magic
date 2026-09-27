@@ -23,6 +23,11 @@ namespace CrystalMagic.UI
         private TextMeshProUGUI _label;
         private World _runtimeQueryWorld;
         private EntityQuery _runtimeQuery;
+        private Entity _cachedTarget;
+        private UnitInteractionData _cachedInteraction;
+        private string _cachedDisplayName;
+        private float _cachedWorldYOffset;
+        private bool _hasCachedDisplay;
         private bool _initialized;
 
         public void Initialize()
@@ -33,6 +38,7 @@ namespace CrystalMagic.UI
             ResolveFloatingRoot();
             EnsurePromptView();
             SetVisible(false);
+            LocalizationComponent.LanguageChanged += HandleLanguageChanged;
             _initialized = true;
         }
 
@@ -41,7 +47,8 @@ namespace CrystalMagic.UI
             if (!_initialized)
                 return;
 
-            if (!ResolveFloatingRoot() || !EnsurePromptView())
+            if (((_rootRect == null || _currentCamera == null) && !ResolveFloatingRoot())
+                || !EnsurePromptView())
             {
                 SetVisible(false);
                 return;
@@ -66,13 +73,15 @@ namespace CrystalMagic.UI
                 return;
             }
 
-            _label.text = displayName;
+            if (!string.Equals(_label.text, displayName, System.StringComparison.Ordinal))
+                _label.text = displayName;
             _labelRect.anchoredPosition = localPoint;
             SetVisible(true);
         }
 
         public void Dispose()
         {
+            LocalizationComponent.LanguageChanged -= HandleLanguageChanged;
             ReleaseRuntimeQuery();
 
             if (_promptRoot != null)
@@ -83,6 +92,7 @@ namespace CrystalMagic.UI
             _label = null;
             _rootRect = null;
             _currentCamera = null;
+            InvalidateCachedDisplay();
             _initialized = false;
         }
 
@@ -187,7 +197,12 @@ namespace CrystalMagic.UI
             }
 
             LocalToWorld localToWorld = entityManager.GetComponentData<LocalToWorld>(target);
-            if (!TryBuildDisplayName(entityManager, target, interactable.Data, out displayName, out worldYOffset))
+            if (!TryResolveDisplayName(
+                    entityManager,
+                    target,
+                    interactable.Data,
+                    out displayName,
+                    out worldYOffset))
                 return false;
 
             if (string.IsNullOrWhiteSpace(displayName))
@@ -195,6 +210,60 @@ namespace CrystalMagic.UI
 
             worldPosition = localToWorld.Position;
             return true;
+        }
+
+        private bool TryResolveDisplayName(
+            EntityManager entityManager,
+            Entity target,
+            in UnitInteractionData interaction,
+            out string displayName,
+            out float worldYOffset)
+        {
+            if (_hasCachedDisplay
+                && target == _cachedTarget
+                && InteractionEquals(in interaction, in _cachedInteraction))
+            {
+                displayName = _cachedDisplayName;
+                worldYOffset = _cachedWorldYOffset;
+                return true;
+            }
+
+            if (!TryBuildDisplayName(entityManager, interaction, out displayName, out worldYOffset))
+            {
+                InvalidateCachedDisplay();
+                return false;
+            }
+
+            _cachedTarget = target;
+            _cachedInteraction = interaction;
+            _cachedDisplayName = displayName;
+            _cachedWorldYOffset = worldYOffset;
+            _hasCachedDisplay = true;
+            return true;
+        }
+
+        private static bool InteractionEquals(
+            in UnitInteractionData left,
+            in UnitInteractionData right)
+        {
+            return left.Kind == right.Kind
+                && left.DataId == right.DataId
+                && left.Amount == right.Amount
+                && left.Variant == right.Variant;
+        }
+
+        private void HandleLanguageChanged()
+        {
+            InvalidateCachedDisplay();
+        }
+
+        private void InvalidateCachedDisplay()
+        {
+            _cachedTarget = Entity.Null;
+            _cachedInteraction = default;
+            _cachedDisplayName = string.Empty;
+            _cachedWorldYOffset = DefaultWorldYOffset;
+            _hasCachedDisplay = false;
         }
 
         private bool EnsureRuntimeQuery(World world)
@@ -229,8 +298,7 @@ namespace CrystalMagic.UI
 
         private static bool TryBuildDisplayName(
             EntityManager entityManager,
-            Entity target,
-            UnitInteractionData interaction,
+            in UnitInteractionData interaction,
             out string displayName,
             out float worldYOffset)
         {

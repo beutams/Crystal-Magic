@@ -25,11 +25,18 @@ namespace CrystalMagic.Game.Skill.Effects
             if (stackCount <= 0)
                 return;
 
-            SkillContent childContext = context.Clone();
-            SkillModifierSet runtimeModifiers = childContext.RuntimeModifiers;
-            runtimeModifiers.Add(Data.PerStackModifiers, stackCount);
-            childContext.RuntimeModifiers = runtimeModifiers;
-            SkillExecutor.ExecuteEffects(Data.OnAfterRead, childContext);
+            SkillContent childContext = SkillContentReferencePool.Get(context);
+            try
+            {
+                SkillModifierSet runtimeModifiers = childContext.RuntimeModifiers;
+                runtimeModifiers.Add(Data.PerStackModifiers, stackCount);
+                childContext.RuntimeModifiers = runtimeModifiers;
+                SkillExecutor.ExecuteEffects(Data.OnAfterRead, childContext);
+            }
+            finally
+            {
+                SkillContentReferencePool.Return(childContext);
+            }
         }
     }
 

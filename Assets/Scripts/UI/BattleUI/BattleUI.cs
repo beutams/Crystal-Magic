@@ -7,6 +7,7 @@ using UnityEngine;
 public class BattleUI : UIBase<BattleUIData, BattleUIModel>
 {
     private readonly List<BattleUI_SkillItemView> _skillItemViews = new();
+    private readonly List<BattleUI_BuffItemView> _buffItemViews = new();
     private float _hpMaskBaseWidth = -1f;
     private float _mpMaskBaseWidth = -1f;
     private float _chantMaskBaseWidth = -1f;
@@ -17,6 +18,7 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
     public override void OnOpen()
     {
         EnsureSkillItemTemplateView();
+        EnsureBuffItemTemplateView();
         BindPropSlotHandlers();
         CacheBarWidths();
         UI.Bar.GameObject.SetActive(false);
@@ -26,6 +28,7 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
     public override void OnClose()
     {
         UISubViewBase.ReleaseAllToPool(_skillItemViews);
+        UISubViewBase.ReleaseAllToPool(_buffItemViews);
         base.OnClose();
     }
 
@@ -43,6 +46,7 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
         RenderSkillChain(Model.SkillItems);
         RenderChantProgress(Model.IsChanting, Model.ChantProgress);
         RenderVitalityAndMana(Model.HpRatio, Model.MpRatio, Model.CurrentHp, Model.CurrentMp);
+        RenderBuffs(Model.BuffItems);
         RenderPropShortcuts(Model.PropShortcutItems);
     }
 
@@ -84,6 +88,46 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
     {
         if (UI.SkillChain_Viewport_Content_SkillItem.GameObject.GetComponent<BattleUI_SkillItemView>() == null)
             UI.SkillChain_Viewport_Content_SkillItem.GameObject.AddComponent<BattleUI_SkillItemView>();
+    }
+
+    private void RenderBuffs(IReadOnlyList<UnitHealthBarBuffDisplayData> buffs)
+    {
+        int itemCount = buffs?.Count ?? 0;
+        UI.HP_BuffRoot.GameObject.SetActive(itemCount > 0);
+        UI.HP_BuffRoot_BuffIcon.GameObject.SetActive(false);
+        EnsureBuffItemViews(itemCount);
+
+        for (int i = 0; i < _buffItemViews.Count; i++)
+            _buffItemViews[i].Render(buffs[i]);
+    }
+
+    private void EnsureBuffItemViews(int itemCount)
+    {
+        while (_buffItemViews.Count > itemCount)
+        {
+            int lastIndex = _buffItemViews.Count - 1;
+            BattleUI_BuffItemView itemView = _buffItemViews[lastIndex];
+            UISubViewBase.ReleaseToPool(itemView);
+            _buffItemViews.RemoveAt(lastIndex);
+        }
+
+        BattleUI_BuffItemView templateView =
+            UI.HP_BuffRoot_BuffIcon.GameObject.GetComponent<BattleUI_BuffItemView>();
+        UISubViewBase.EnsurePoolCapacity(templateView, itemCount, itemCount);
+
+        while (_buffItemViews.Count < itemCount)
+        {
+            BattleUI_BuffItemView itemView = UISubViewBase.AcquireFromPool(
+                templateView,
+                UI.HP_BuffRoot.GameObject.transform);
+            _buffItemViews.Add(itemView);
+        }
+    }
+
+    private void EnsureBuffItemTemplateView()
+    {
+        if (UI.HP_BuffRoot_BuffIcon.GameObject.GetComponent<BattleUI_BuffItemView>() == null)
+            UI.HP_BuffRoot_BuffIcon.GameObject.AddComponent<BattleUI_BuffItemView>();
     }
 
     private void RenderChantProgress(bool isChanting, float progress)
@@ -277,5 +321,37 @@ public class BattleUI_SkillItemData : UIData
         Effect_EffectIcon = UINode.From(Find(root, "Effect/EffectIcon"));
         IndexNum = UINode.From(Find(root, "IndexNum"));
         Select = UINode.From(Find(root, "Select"));
+    }
+}
+
+public class BattleUI_BuffItemView : UISubView<BattleUI_BuffItemData>
+{
+    public void Render(UnitHealthBarBuffDisplayData data)
+    {
+        Rebind();
+        UI.Icon.Image.sprite = data != null ? LoadIcon(data.IconPath) : null;
+
+        bool showStackCount = data != null && data.StackCount > 1;
+        UI.StackCount.GameObject.SetActive(showStackCount);
+        UI.StackCount.TextMeshProUGUI.text = showStackCount
+            ? data.StackCount.ToString()
+            : string.Empty;
+    }
+
+    private Sprite LoadIcon(string iconPath)
+    {
+        return string.IsNullOrWhiteSpace(iconPath) ? null : LoadManagedSprite(iconPath);
+    }
+}
+
+public class BattleUI_BuffItemData : UIData
+{
+    public UINode Icon;
+    public UINode StackCount;
+
+    public override void Bind(Transform root)
+    {
+        Icon = UINode.From(root.gameObject);
+        StackCount = UINode.From(Find(root, "StackCount"));
     }
 }

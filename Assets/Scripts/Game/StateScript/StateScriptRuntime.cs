@@ -216,9 +216,31 @@ public struct StateScriptSourceCommandArgumentElement : IBufferElementData
     public UnitSourceValue Value;
 }
 
+public struct StateScriptManagedCommandQueueComponent : IComponentData
+{
+}
+
+public static class StateScriptManagedCommandQueueUtility
+{
+    public static Entity GetOrCreateEntity(EntityManager entityManager)
+    {
+        using EntityQuery query = entityManager.CreateEntityQuery(
+            ComponentType.ReadOnly<StateScriptManagedCommandQueueComponent>());
+        if (!query.IsEmptyIgnoreFilter)
+            return query.GetSingletonEntity();
+
+        Entity entity = entityManager.CreateEntity();
+        entityManager.SetName(entity, "StateScriptManagedCommandQueue");
+        entityManager.AddComponent<StateScriptManagedCommandQueueComponent>(entity);
+        entityManager.AddBuffer<StateScriptManagedCommandElement>(entity);
+        return entity;
+    }
+}
+
 [InternalBufferCapacity(0)]
 public struct StateScriptManagedCommandElement : IBufferElementData
 {
+    public Entity SourceEntity;
     public StateScriptManagedCommandType Type;
     public int GraphIndex;
     public int NodeIndex;
@@ -283,6 +305,7 @@ internal static class StateScriptUnmanagedContract
 {
     private static void Validate()
     {
+        RequireUnmanaged<StateScriptManagedCommandQueueComponent>();
         RequireUnmanaged<StateScriptNodeDefinition>();
         RequireUnmanaged<StateScriptGraphStateElement>();
         RequireUnmanaged<StateScriptNodeStateElement>();

@@ -1,6 +1,7 @@
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
 
@@ -29,18 +30,39 @@ public partial struct SkillProjectileSystem : ISystem
         }
 
         _sources.Update(ref state);
-        state.Dependency = new SkillProjectileSimulationJob
+        JobHandle movementHandle = new SkillProjectileMovementJob
+        {
+            DeltaTime = SystemAPI.Time.DeltaTime,
+        }.ScheduleParallel(state.Dependency);
+        state.Dependency = new SkillProjectileCollisionJob
         {
             Tree = new UnitQueryTree(treeNodes.AsNativeArray(), treeEntries.AsNativeArray()),
             Variables = SystemAPI.GetComponentLookup<UnitVariableComponent>(true),
             Sources = _sources,
-            DeltaTime = SystemAPI.Time.DeltaTime,
-        }.ScheduleParallel(state.Dependency);
+        }.ScheduleParallel(movementHandle);
     }
 }
 
 [BurstCompile]
-public partial struct SkillProjectileSimulationJob : IJobEntity
+public partial struct SkillProjectileMovementJob : IJobEntity
+{
+    public float DeltaTime;
+
+    private void Execute(
+        ref SkillProjectileComponent projectile,
+        ref LocalTransform transform)
+    {
+        float moveDistance = projectile.Speed * DeltaTime;
+        transform.Position += projectile.Direction * moveDistance;
+        float2 planar = math.normalizesafe(projectile.Direction.xy, new float2(1f, 0f));
+        transform.Rotation = quaternion.RotateZ(math.atan2(planar.y, planar.x));
+        projectile.TraveledDistance += math.abs(moveDistance);
+        projectile.NetworkDirty = 1;
+    }
+}
+
+[BurstCompile]
+public partial struct SkillProjectileCollisionJob : IJobEntity
 {
     [ReadOnly]
     public UnitQueryTree Tree;
@@ -51,12 +73,10 @@ public partial struct SkillProjectileSimulationJob : IJobEntity
     [ReadOnly]
     public UnitSourceDispatcher Sources;
 
-    public float DeltaTime;
-
     private void Execute(
         Entity entity,
-        ref SkillProjectileComponent projectile,
-        ref LocalTransform transform,
+        in SkillProjectileComponent projectile,
+        in LocalTransform transform,
         in SkillProjectilePayloadComponent payload,
         ref SkillProjectileFrameResultComponent frameResult,
         ref DynamicBuffer<SkillProjectileHitEntityElement> hitEntities,
@@ -64,13 +84,6 @@ public partial struct SkillProjectileSimulationJob : IJobEntity
         in DynamicBuffer<SkillProjectileConditionLiteralElement> conditionLiterals)
     {
         frameResult = default;
-
-        float moveDistance = projectile.Speed * DeltaTime;
-        transform.Position += projectile.Direction * moveDistance;
-        float2 planar = math.normalizesafe(projectile.Direction.xy, new float2(1f, 0f));
-        transform.Rotation = quaternion.RotateZ(math.atan2(planar.y, planar.x));
-        projectile.TraveledDistance += math.abs(moveDistance);
-        projectile.NetworkDirty = 1;
 
         if (TryFindHitEntity(
                 entity,

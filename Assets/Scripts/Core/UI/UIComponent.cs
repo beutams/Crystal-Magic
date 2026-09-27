@@ -578,19 +578,34 @@ namespace CrystalMagic.Core {
 
         public bool HasActiveSceneScopedPanel(string sceneName)
         {
-            return HasActiveSceneScopedPanel(sceneName, null);
+            return HasActiveSceneScopedPanelCore(sceneName, null, null, null);
+        }
+
+        public bool HasActiveSceneScopedPanelExcept(
+            string sceneName,
+            string firstExcludedUiName,
+            string secondExcludedUiName)
+        {
+            return HasActiveSceneScopedPanelCore(
+                sceneName,
+                firstExcludedUiName,
+                secondExcludedUiName,
+                null);
         }
 
         public bool HasActiveSceneScopedPanel(string sceneName, params string[] excludedUiNames)
         {
+            return HasActiveSceneScopedPanelCore(sceneName, null, null, excludedUiNames);
+        }
+
+        private bool HasActiveSceneScopedPanelCore(
+            string sceneName,
+            string firstExcludedUiName,
+            string secondExcludedUiName,
+            string[] excludedUiNames)
+        {
             if (string.IsNullOrEmpty(sceneName))
                 return false;
-
-            HashSet<string> excludedNames = null;
-            if (excludedUiNames != null && excludedUiNames.Length > 0)
-            {
-                excludedNames = new HashSet<string>(excludedUiNames, StringComparer.Ordinal);
-            }
 
             foreach (UIMvcContext context in _mvcContexts.Values)
             {
@@ -604,12 +619,29 @@ namespace CrystalMagic.Core {
                     continue;
                 }
 
-                if (excludedNames != null && excludedNames.Contains(context.Panel.GetType().Name))
+                string panelName = context.Panel.GetType().Name;
+                if (string.Equals(panelName, firstExcludedUiName, StringComparison.Ordinal)
+                    || string.Equals(panelName, secondExcludedUiName, StringComparison.Ordinal)
+                    || IsExcludedPanel(panelName, excludedUiNames))
                 {
                     continue;
                 }
 
                 return true;
+            }
+
+            return false;
+        }
+
+        private static bool IsExcludedPanel(string panelName, string[] excludedUiNames)
+        {
+            if (excludedUiNames == null)
+                return false;
+
+            for (int i = 0; i < excludedUiNames.Length; i++)
+            {
+                if (string.Equals(panelName, excludedUiNames[i], StringComparison.Ordinal))
+                    return true;
             }
 
             return false;

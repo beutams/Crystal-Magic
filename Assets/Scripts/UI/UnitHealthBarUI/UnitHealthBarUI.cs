@@ -45,7 +45,7 @@ namespace CrystalMagic.UI
             if (handle?.Root == null || handle.BarMask == null)
                 return null;
 
-            handle.Root.gameObject.SetActive(true);
+            ResetBarForPool(handle);
             return handle;
         }
 
@@ -54,7 +54,7 @@ namespace CrystalMagic.UI
             if (handle?.Root == null)
                 return;
 
-            handle.Root.gameObject.SetActive(false);
+            ResetBarForPool(handle);
             _pooledBars.Push(handle);
         }
 
@@ -175,8 +175,20 @@ namespace CrystalMagic.UI
             if (buffIconTemplate != null)
                 buffIconTemplate.gameObject.SetActive(false);
 
-            clone.SetActive(true);
+            clone.SetActive(false);
             return new BarHandle(root, barMask, buffRoot, buffIconTemplate, baseWidth > 0f ? baseWidth : _templateMaskBaseWidth);
+        }
+
+        private void ResetBarForPool(BarHandle handle)
+        {
+            if (handle?.Root == null)
+                return;
+
+            EnsureBuffIconCapacity(handle, 0);
+            handle.Root.anchoredPosition = Vector2.zero;
+            if (handle.BuffRoot != null)
+                handle.BuffRoot.gameObject.SetActive(false);
+            handle.Root.gameObject.SetActive(false);
         }
 
         private void EnsureBuffIconCapacity(BarHandle handle, int itemCount)

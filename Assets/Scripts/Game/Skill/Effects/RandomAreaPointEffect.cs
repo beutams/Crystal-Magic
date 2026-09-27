@@ -35,11 +35,18 @@ namespace CrystalMagic.Game.Skill.Effects
                 float radius = Mathf.Sqrt(UnityEngine.Random.Range(minRadius * minRadius, maxRadius * maxRadius));
                 Vector3 point = new(center.x + direction.x * radius, center.y + direction.y * radius, center.z);
 
-                SkillContent pointContext = context.Clone();
-                pointContext.EntityManager = entityManager;
-                pointContext.HasPosition = true;
-                pointContext.Position = point;
-                SkillExecutor.ExecuteEffects(Data.OnEachPointEffects, pointContext);
+                SkillContent pointContext = SkillContentReferencePool.Get(context);
+                try
+                {
+                    pointContext.EntityManager = entityManager;
+                    pointContext.HasPosition = true;
+                    pointContext.Position = point;
+                    SkillExecutor.ExecuteEffects(Data.OnEachPointEffects, pointContext);
+                }
+                finally
+                {
+                    SkillContentReferencePool.Return(pointContext);
+                }
             }
         }
 

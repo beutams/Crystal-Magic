@@ -947,26 +947,144 @@
             "InterestSize": 0,
             "Squads": [
               {
-               "Name": "Small Squad",
+                "Name": "Small Orc Mix",
                 "Weight": 1,
                 "MonsterLevel": 1,
                 "IsBossSquad": false,
                 "Width": 3,
                 "Height": 3,
-                "CostLimit": 1,
+                "CostLimit": 10,
                 "Members": [
-                 {
-                   "UnitName": "MonsterStraw",
-                   "MinCount": 1,
-                   "Cost": 1,
-                   "Weight": 1
+                  {
+                    "UnitName": "Orc",
+                    "MinCount": 0,
+                    "Cost": 1,
+                    "Weight": 4
+                  },
+                  {
+                    "UnitName": "Skeleton",
+                    "MinCount": 0,
+                    "Cost": 1,
+                    "Weight": 2
+                  },
+                  {
+                    "UnitName": "Armored Skeleton",
+                    "MinCount": 0,
+                    "Cost": 2,
+                    "Weight": 2
+                  },
+                  {
+                    "UnitName": "Greatsword Skeleton",
+                    "MinCount": 0,
+                    "Cost": 2,
+                    "Weight": 1
+                  },
+                  {
+                    "UnitName": "Skeleton Archer",
+                    "MinCount": 0,
+                    "Cost": 2,
+                    "Weight": 1
+                  },
+                  {
+                    "UnitName": "Armored Orc",
+                    "MinCount": 1,
+                    "Cost": 3,
+                    "Weight": 1
+                  }
+                ]
+              },
+              {
+                "Name": "Small Skeleton Mix",
+                "Weight": 1,
+                "MonsterLevel": 1,
+                "IsBossSquad": false,
+                "Width": 3,
+                "Height": 3,
+                "CostLimit": 10,
+                "Members": [
+                  {
+                    "UnitName": "Skeleton",
+                    "MinCount": 0,
+                    "Cost": 1,
+                    "Weight": 4
+                  },
+                  {
+                    "UnitName": "Greatsword Skeleton",
+                    "MinCount": 0,
+                    "Cost": 2,
+                    "Weight": 3
+                  },
+                  {
+                    "UnitName": "Armored Skeleton",
+                    "MinCount": 0,
+                    "Cost": 2,
+                    "Weight": 2
+                  },
+                  {
+                    "UnitName": "Skeleton Archer",
+                    "MinCount": 0,
+                    "Cost": 2,
+                    "Weight": 2
                   },
                   {
                     "UnitName": "Orc",
                     "MinCount": 0,
                     "Cost": 1,
                     "Weight": 1
-                 }
+                  },
+                  {
+                    "UnitName": "Armored Orc",
+                    "MinCount": 1,
+                    "Cost": 3,
+                    "Weight": 1
+                  }
+                ]
+              },
+              {
+                "Name": "Small Heavy Mix",
+                "Weight": 1,
+                "MonsterLevel": 1,
+                "IsBossSquad": false,
+                "Width": 3,
+                "Height": 3,
+                "CostLimit": 10,
+                "Members": [
+                  {
+                    "UnitName": "Armored Skeleton",
+                    "MinCount": 0,
+                    "Cost": 2,
+                    "Weight": 3
+                  },
+                  {
+                    "UnitName": "Greatsword Skeleton",
+                    "MinCount": 0,
+                    "Cost": 2,
+                    "Weight": 3
+                  },
+                  {
+                    "UnitName": "Skeleton Archer",
+                    "MinCount": 0,
+                    "Cost": 2,
+                    "Weight": 2
+                  },
+                  {
+                    "UnitName": "Orc",
+                    "MinCount": 0,
+                    "Cost": 1,
+                    "Weight": 2
+                  },
+                  {
+                    "UnitName": "Skeleton",
+                    "MinCount": 0,
+                    "Cost": 1,
+                    "Weight": 1
+                  },
+                  {
+                    "UnitName": "Armored Orc",
+                    "MinCount": 1,
+                    "Cost": 3,
+                    "Weight": 1
+                  }
                 ]
               }
             ]
@@ -976,26 +1094,97 @@
             "InterestSize": 1,
             "Squads": [
               {
-               "Name": "Medium Squad",
+                "Name": "Medium Orc Group",
                 "Weight": 1,
-                "MonsterLevel": 1,
+                "MonsterLevel": 2,
                 "IsBossSquad": false,
-                "Width": 3,
-                "Height": 3,
-                "CostLimit": 1,
+                "Width": 5,
+                "Height": 5,
+                "CostLimit": 16,
                 "Members": [
-                 {
-                   "UnitName": "MonsterStraw",
-                   "MinCount": 1,
-                   "Cost": 1,
-                   "Weight": 1
+                  {
+                    "UnitName": "Orc",
+                    "MinCount": 0,
+                    "Cost": 1,
+                    "Weight": 4
+                  },
+                  {
+                    "UnitName": "Skeleton",
+                    "MinCount": 0,
+                    "Cost": 1,
+                    "Weight": 2
+                  },
+                  {
+                    "UnitName": "Armored Skeleton",
+                    "MinCount": 0,
+                    "Cost": 2,
+                    "Weight": 2
+                  },
+                  {
+                    "UnitName": "Greatsword Skeleton",
+                    "MinCount": 0,
+                    "Cost": 2,
+                    "Weight": 1
+                  },
+                  {
+                    "UnitName": "Skeleton Archer",
+                    "MinCount": 0,
+                    "Cost": 2,
+                    "Weight": 1
+                  },
+                  {
+                    "UnitName": "Armored Orc",
+                    "MinCount": 2,
+                    "Cost": 3,
+                    "Weight": 1
+                  }
+                ]
+              },
+              {
+                "Name": "Medium Skeleton Group",
+                "Weight": 1,
+                "MonsterLevel": 2,
+                "IsBossSquad": false,
+                "Width": 5,
+                "Height": 5,
+                "CostLimit": 16,
+                "Members": [
+                  {
+                    "UnitName": "Skeleton",
+                    "MinCount": 0,
+                    "Cost": 1,
+                    "Weight": 3
+                  },
+                  {
+                    "UnitName": "Armored Skeleton",
+                    "MinCount": 0,
+                    "Cost": 2,
+                    "Weight": 3
+                  },
+                  {
+                    "UnitName": "Greatsword Skeleton",
+                    "MinCount": 0,
+                    "Cost": 2,
+                    "Weight": 3
+                  },
+                  {
+                    "UnitName": "Skeleton Archer",
+                    "MinCount": 0,
+                    "Cost": 2,
+                    "Weight": 3
                   },
                   {
                     "UnitName": "Orc",
                     "MinCount": 0,
                     "Cost": 1,
                     "Weight": 1
-                 }
+                  },
+                  {
+                    "UnitName": "Armored Orc",
+                    "MinCount": 2,
+                    "Cost": 3,
+                    "Weight": 1
+                  }
                 ]
               }
             ]
@@ -1005,26 +1194,121 @@
             "InterestSize": 2,
             "Squads": [
               {
-               "Name": "Large Squad",
+                "Name": "Large Elite Orc Group",
                 "Weight": 1,
-                "MonsterLevel": 1,
+                "MonsterLevel": 3,
                 "IsBossSquad": false,
-                "Width": 3,
-                "Height": 3,
-                "CostLimit": 1,
+                "Width": 7,
+                "Height": 7,
+                "CostLimit": 25,
                 "Members": [
-                 {
-                   "UnitName": "MonsterStraw",
-                   "MinCount": 1,
-                   "Cost": 1,
-                   "Weight": 1
-                  },
                   {
                     "UnitName": "Orc",
                     "MinCount": 0,
                     "Cost": 1,
+                    "Weight": 4
+                  },
+                  {
+                    "UnitName": "Armored Orc",
+                    "MinCount": 0,
+                    "Cost": 3,
+                    "Weight": 3
+                  },
+                  {
+                    "UnitName": "Skeleton",
+                    "MinCount": 0,
+                    "Cost": 1,
+                    "Weight": 2
+                  },
+                  {
+                    "UnitName": "Armored Skeleton",
+                    "MinCount": 0,
+                    "Cost": 2,
+                    "Weight": 2
+                  },
+                  {
+                    "UnitName": "Greatsword Skeleton",
+                    "MinCount": 0,
+                    "Cost": 2,
                     "Weight": 1
-                 }
+                  },
+                  {
+                    "UnitName": "Skeleton Archer",
+                    "MinCount": 0,
+                    "Cost": 2,
+                    "Weight": 2
+                  },
+                  {
+                    "UnitName": "Elite Orc",
+                    "MinCount": 1,
+                    "Cost": 5,
+                    "Weight": 1
+                  },
+                  {
+                    "UnitName": "Orc rider",
+                    "MinCount": 0,
+                    "Cost": 5,
+                    "Weight": 2
+                  }
+                ]
+              },
+              {
+                "Name": "Large Rider Assault",
+                "Weight": 1,
+                "MonsterLevel": 3,
+                "IsBossSquad": false,
+                "Width": 7,
+                "Height": 7,
+                "CostLimit": 25,
+                "Members": [
+                  {
+                    "UnitName": "Orc",
+                    "MinCount": 0,
+                    "Cost": 1,
+                    "Weight": 3
+                  },
+                  {
+                    "UnitName": "Skeleton",
+                    "MinCount": 0,
+                    "Cost": 1,
+                    "Weight": 2
+                  },
+                  {
+                    "UnitName": "Armored Skeleton",
+                    "MinCount": 0,
+                    "Cost": 2,
+                    "Weight": 2
+                  },
+                  {
+                    "UnitName": "Greatsword Skeleton",
+                    "MinCount": 0,
+                    "Cost": 2,
+                    "Weight": 2
+                  },
+                  {
+                    "UnitName": "Skeleton Archer",
+                    "MinCount": 0,
+                    "Cost": 2,
+                    "Weight": 2
+                  },
+                  {
+                    "UnitName": "Armored Orc",
+                    "MinCount": 0,
+                    "Cost": 3,
+                    "Weight": 3
+                  },
+                  {
+                    "UnitName": "Elite Orc",
+                    "MinCount": 0,
+                    "Cost": 5,
+                    "Weight": 2
+                  },
+                  {
+                    "UnitName": "Orc rider",
+                    "MinCount": 1,
+                    "Cost": 5,
+                    "Weight": 2
+                  }
                 ]
               }
             ]

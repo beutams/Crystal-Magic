@@ -49,14 +49,23 @@ namespace CrystalMagic.Game.Skill.Effects
                 return;
             }
 
-            SkillContent arrivalContext = context.Clone();
-            arrivalContext.EntityManager = context.EntityManager;
-            arrivalContext.HasPosition = true;
-            arrivalContext.Position = new Vector3(endPosition.x, endPosition.y, endPosition.z);
-            EffectRequestContext arrivalRequestContext = EffectUtility.CaptureContext(
-                context.EntityManager,
-                arrivalContext,
-                out bool ownsManagedContext);
+            EffectRequestContext arrivalRequestContext;
+            bool ownsManagedContext;
+            SkillContent arrivalContext = SkillContentReferencePool.Get(context);
+            try
+            {
+                arrivalContext.EntityManager = context.EntityManager;
+                arrivalContext.HasPosition = true;
+                arrivalContext.Position = new Vector3(endPosition.x, endPosition.y, endPosition.z);
+                arrivalRequestContext = EffectUtility.CaptureContext(
+                    context.EntityManager,
+                    arrivalContext,
+                    out ownsManagedContext);
+            }
+            finally
+            {
+                SkillContentReferencePool.Return(arrivalContext);
+            }
 
             float2 planarMove = moveOffset.xy;
             float moveDistance = math.length(planarMove);

@@ -24,7 +24,6 @@ public sealed class UnitStateScriptAuthoring : MonoBehaviour
             AddBuffer<StateScriptNodeStateElement>(entity);
             AddBuffer<StateScriptSourceCommandElement>(entity);
             AddBuffer<StateScriptSourceCommandArgumentElement>(entity);
-            AddBuffer<StateScriptManagedCommandElement>(entity);
             AddBuffer<StateScriptExternalResultElement>(entity);
         }
     }
@@ -37,4 +36,20 @@ public struct UnitStateScriptComponent : IComponentData
     public uint TickVersion;
     public StateScriptInitializationError InitializationError;
     public byte IsStoppedForDeath;
+}
+
+[UnitSourceProvider(typeof(UnitStateScriptComponent), typeof(UnitStateScriptAuthoring))]
+public static class UnitSelfSource
+{
+    [UnitSourceGet(0, "unit.self.entity", UnitValueCategory.Entity)]
+    public static bool TryGet(
+        int operation,
+        Entity entity,
+        in UnitSourceArguments arguments,
+        out UnitSourceValue result)
+    {
+        bool valid = operation == 0 && entity != Entity.Null;
+        result = valid ? UnitSourceValue.FromEntity(entity) : default;
+        return valid;
+    }
 }

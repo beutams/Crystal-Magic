@@ -9,18 +9,24 @@ using Unity.Entities;
 public partial class ClientSkillVisualCaptureSystem : SystemBase
 {
     private EntityQuery _localPlayerQuery;
+    private EntityQuery _commandQueueQuery;
 
     protected override void OnCreate()
     {
         ClientSkillVisualPredictionUtility.GetOrCreateRuntimeEntity(EntityManager);
+        StateScriptManagedCommandQueueUtility.GetOrCreateEntity(EntityManager);
+        _commandQueueQuery = GetEntityQuery(
+            ComponentType.ReadOnly<StateScriptManagedCommandQueueComponent>(),
+            ComponentType.ReadOnly<StateScriptManagedCommandElement>());
         _localPlayerQuery = GetEntityQuery(
             ComponentType.ReadOnly<NetworkPlayerComponent>(),
-            ComponentType.ReadOnly<StateScriptManagedCommandElement>());
+            ComponentType.ReadOnly<UnitStateScriptComponent>());
     }
 
     protected override void OnUpdate()
     {
         if (_localPlayerQuery.IsEmptyIgnoreFilter ||
+            _commandQueueQuery.IsEmptyIgnoreFilter ||
             !FrameManagerUtility.TryGet(EntityManager, out ClientFrameManager frame))
         {
             return;

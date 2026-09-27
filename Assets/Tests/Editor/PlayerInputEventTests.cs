@@ -107,6 +107,25 @@ public sealed class PlayerInputEventTests
         finally { if (registry.IsCreated) registry.Dispose(); }
     }
 
+    [Test]
+    public void UnitSelfSourceDoesNotRequireSkillReleaseComponent()
+    {
+        using World world = new("Unit self source test");
+        Entity entity = world.EntityManager.CreateEntity(typeof(UnitStateScriptComponent));
+        UnitSourceArguments arguments = default;
+
+        Assert.That(world.EntityManager.HasComponent<UnitSkillReleaseComponent>(entity), Is.False);
+        Assert.That(UnitSelfSource.TryGet(0, entity, in arguments, out UnitSourceValue value), Is.True);
+        Assert.That(value.TryGetEntity(out Entity resolved), Is.True);
+        Assert.That(resolved, Is.EqualTo(entity));
+        Assert.That(UnitComponentSourceRegistry.TryGetGet(
+            "unit.self.entity",
+            out UnitSourceId sourceId,
+            out UnitSourceGetSchemaEntry schema), Is.True);
+        Assert.That(sourceId, Is.EqualTo(UnitSourceId.UnitSelfEntity));
+        Assert.That(schema.ComponentType, Is.EqualTo(typeof(UnitStateScriptComponent)));
+    }
+
     private sealed class Table
     {
         public List<StateScriptData> Rows { get; set; }

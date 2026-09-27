@@ -72,7 +72,7 @@ Core\
     GameLanguage.cs FALSE
     LocalizationComponent.cs FALSE
     LocalizationEditorPreviewUtility.cs TRUE
-    LocalizedTextMeshProUGUI.cs FALSE
+    LocalizedTextMeshProUGUI.cs TRUE
   Pool\
     GameObjectPool.cs TRUE
     IObjectPool.cs TRUE
@@ -160,6 +160,8 @@ Core\
   PersistentEventSystem.cs TRUE DIRTY
   Singleton.cs TRUE DIRTY
 Editor\
+  Build\
+    CrystalMagicBuild.cs TRUE DIRTY
   PlayFromStartScene.cs TRUE
   UIConfigWindow.cs TRUE
 Game\
@@ -237,7 +239,7 @@ Game\
     SkillFollowupFilterData.cs FALSE
     SkillFollowupModifierRuleData.cs FALSE
     UnitAnimationClipData.cs TRUE
-    UnitAnimationFrameLibrary.cs TRUE
+    UnitAnimationFrameLibrary.cs TRUE DIRTY
     UnitData.cs TRUE DIRTY
   MapDemo\
     Editor\
@@ -271,7 +273,7 @@ Game\
     Effects\
       ApplyBuffEffect.cs FALSE
       AreaSearchEffect.cs TRUE DIRTY
-      BuffStackEffect.cs TRUE
+      BuffStackEffect.cs TRUE DIRTY
       CameraShakeEffect.cs FALSE
       ChainSearchEffect.cs TRUE DIRTY
       ConeSearchEffect.cs TRUE DIRTY
@@ -279,7 +281,7 @@ Game\
       Effect.cs FALSE
       EffectConditionUtility.cs TRUE DIRTY
       ForwardRectSearchEffect.cs TRUE DIRTY
-      PersistentEffect.cs TRUE
+      PersistentEffect.cs TRUE DIRTY
         闁归晲鑳堕悽濠氬箑瑜庨弲銉╁几濠婃劗绀夋繛锝堫嚙婵偞绋夐埀顒佺▔椤忓懎鐦紓渚囧幒閹广垽宕濋垾鍐茬厒缂侇垵宕电划?
       RandomAreaPointEffect.cs FALSE
       RectSearchEffect.cs TRUE DIRTY
@@ -421,6 +423,8 @@ Game\
       SkillProjectileRuntime.cs TRUE DIRTY
       SpriteEffectAnimationAuthoring.cs TRUE
       UnitAnimationAuthoring.cs TRUE DIRTY
+      UnitAnimationRuntimeComponent.cs TRUE DIRTY
+      UnitAoiRuntimeComponent.cs TRUE DIRTY
       UnitAttackAuthoring.cs TRUE DIRTY
         闁瑰灈鍋撻柤瀹犲Г閺侀箖宕欓懡銈嗙ゲ闁稿繗娅曢弳鐔煎箲?
       PlayerInteractionRuntimeComponent.cs TRUE
@@ -531,8 +535,8 @@ Game\
       ClientPredictedProjectileSystem.cs TRUE
       ClientPlayerMovePresentationSystem.cs TRUE
       ClientPresentationEventSystem.cs TRUE DIRTY
-      ClientSkillVisualCaptureSystem.cs TRUE
-      ClientSkillVisualExecutionSystem.cs TRUE
+      ClientSkillVisualCaptureSystem.cs TRUE DIRTY
+      ClientSkillVisualExecutionSystem.cs TRUE DIRTY
       ClientTransformInterpolationSystem.cs TRUE DIRTY
       BuffEffectRegistryInitializationSystem.cs TRUE DIRTY
         闁活潿鍔嶉弳鐔煎箲椤旂晫鈧垰顕欓崫鍕瘔閻炴稑濂旂拹鐔煎冀閹达絽螡闁绘劗鎳撻顔炬寬?
@@ -565,6 +569,7 @@ Game\
         缂備胶鍠曢绐ff闁告劖鐟ラ崣鍡欎沪閻愮补鍋撹閹蜂即骞庨埀顒勬嚄閹存帗鍙忔慨婵撶秶缁辨繃娼娆惧殑闁瑰灈鍋撻柤瀹犲Г濡炲倿姊?
       UnitModifierSystem.cs TRUE DIRTY
       UnitAnimationSystem.cs TRUE DIRTY
+      UnitAoiBuildSystem.cs TRUE DIRTY
       UnitSpriteRendererSortingSystem.cs TRUE DIRTY
       UnitControlSystem.cs TRUE DIRTY
         闁告帡鏀遍弻濠囧矗濡や礁浠橀柡浣哄瀹?
@@ -604,7 +609,7 @@ Game\
       UnitDebugInspectorUtility.cs TRUE DIRTY
     Utility\
       BuffEffectRegistryUtility.cs TRUE DIRTY
-      ClientSkillVisualPredictionUtility.cs TRUE
+      ClientSkillVisualPredictionUtility.cs TRUE DIRTY
       EffectDataBridgeUtility.cs TRUE DIRTY
       EntitySpawnRegistryUtility.cs TRUE DIRTY
       NPCAuthoringUtility.cs FALSE
@@ -720,6 +725,19 @@ UI\
     LoadUIController.cs TRUE
     LoadUIData.cs FALSE
     LoadUIModel.cs TRUE
+  LobbyUI\
+    Sub\
+      LobbyUI_RoomItemData.cs TRUE
+      LobbyUI_RoomItemView.cs TRUE DIRTY
+    LobbyUI.cs TRUE DIRTY
+    LobbyUIController.cs TRUE
+    LobbyUIData.cs TRUE
+    LobbyUIModel.cs TRUE
+  LobbyRoomUI\
+    LobbyRoomUI.cs TRUE
+    LobbyRoomUIController.cs TRUE
+    LobbyRoomUIData.cs TRUE
+    LobbyRoomUIModel.cs TRUE
   MinimapUI\
     MinimapUI.cs TRUE DIRTY
     MinimapUIController.cs TRUE
@@ -808,7 +826,7 @@ UI\
     TransitionUIModel.cs FALSE
   UnitHealthBarUI\
     UnitHealthBarManager.cs TRUE DIRTY
-    UnitHealthBarUI.cs TRUE
+    UnitHealthBarUI.cs TRUE DIRTY
     UnitHealthBarUIController.cs FALSE
     UnitHealthBarUIData.cs FALSE
     UnitHealthBarUIModel.cs FALSE

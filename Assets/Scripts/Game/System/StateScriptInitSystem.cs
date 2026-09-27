@@ -76,7 +76,6 @@ public partial class StateScriptInitSystem : SystemBase
 
             EntityManager.GetBuffer<StateScriptSourceCommandElement>(entity).Clear();
             EntityManager.GetBuffer<StateScriptSourceCommandArgumentElement>(entity).Clear();
-            EntityManager.GetBuffer<StateScriptManagedCommandElement>(entity).Clear();
             EntityManager.GetBuffer<StateScriptExternalResultElement>(entity).Clear();
             EntityManager.SetComponentData(entity, component);
         }

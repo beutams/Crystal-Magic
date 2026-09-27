@@ -65,9 +65,19 @@ namespace CrystalMagic.Game.Skill.Effects
         private void ExecuteTargetEffects(EntityManager entityManager, SkillContent context, UnitQueryHit hit)
         {
             Vector3 targetPosition = new(hit.Position.x, hit.Position.y, hit.Position.z);
-            SkillContent targetContext = context.CloneForTarget(hit.Entity, targetPosition);
-            targetContext.EntityManager = entityManager;
-            SkillExecutor.ExecuteEffects(Data.OnAfterSearch, targetContext);
+            SkillContent targetContext = SkillContentReferencePool.GetForTarget(
+                context,
+                hit.Entity,
+                targetPosition);
+            try
+            {
+                targetContext.EntityManager = entityManager;
+                SkillExecutor.ExecuteEffects(Data.OnAfterSearch, targetContext);
+            }
+            finally
+            {
+                SkillContentReferencePool.Return(targetContext);
+            }
         }
 
         private static bool TryGetSearchCenter(SkillContent context, EntityManager entityManager, out float3 center)

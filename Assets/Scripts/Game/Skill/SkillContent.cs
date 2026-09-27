@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using Unity.Entities;
 using UnityEngine;
@@ -31,7 +32,7 @@ namespace CrystalMagic.Game.Skill
     /// <summary>
     /// Unified skill execution context shared by active casts, passive hooks, and script-driven triggers.
     /// </summary>
-    public class SkillContent
+    public class SkillContent : IPoolable
     {
         public SkillTriggerSource TriggerSource { get; set; }
 
@@ -75,6 +76,64 @@ namespace CrystalMagic.Game.Skill
         /// <summary>由持续效果实例共享，用于记录已施加过的 Buff 目标。</summary>
         public Dictionary<int, HashSet<Entity>> PersistentEffectAppliedBuffTargets { get; set; }
 
+        public void CopyFrom(SkillContent source)
+        {
+            TriggerSource = source.TriggerSource;
+            HookType = source.HookType;
+            HasOtherEntity = source.HasOtherEntity;
+            OtherEntity = source.OtherEntity;
+            TriggerValue = source.TriggerValue;
+            HasPosition = source.HasPosition;
+            Position = source.Position;
+            EntityManager = source.EntityManager;
+            HasOriginEntity = source.HasOriginEntity;
+            OriginEntity = source.OriginEntity;
+            HasOriginPositionSnapshot = source.HasOriginPositionSnapshot;
+            OriginPositionSnapshot = source.OriginPositionSnapshot;
+            SourceSkillId = source.SourceSkillId;
+            HasTargetEntity = source.HasTargetEntity;
+            TargetEntity = source.TargetEntity;
+            HasTarget = source.HasTarget;
+            Target = source.Target;
+            Origin = source.Origin;
+            RuntimeModifiers = source.RuntimeModifiers;
+            PersistentEffectAppliedBuffTargets = source.PersistentEffectAppliedBuffTargets;
+        }
+
+        public void OnGetFromPool()
+        {
+            Reset();
+        }
+
+        public void OnReturnToPool()
+        {
+            Reset();
+        }
+
+        private void Reset()
+        {
+            TriggerSource = SkillTriggerSource.None;
+            HookType = SkillHookType.None;
+            HasOtherEntity = false;
+            OtherEntity = Entity.Null;
+            TriggerValue = 0f;
+            HasPosition = false;
+            Position = Vector3.zero;
+            EntityManager = default;
+            HasOriginEntity = false;
+            OriginEntity = Entity.Null;
+            HasOriginPositionSnapshot = false;
+            OriginPositionSnapshot = Vector3.zero;
+            SourceSkillId = -1;
+            HasTargetEntity = false;
+            TargetEntity = Entity.Null;
+            HasTarget = false;
+            Target = null;
+            Origin = null;
+            RuntimeModifiers = default;
+            PersistentEffectAppliedBuffTargets = null;
+        }
+
         public SkillContent Clone()
         {
             SkillContent copy = (SkillContent)MemberwiseClone();
@@ -90,6 +149,44 @@ namespace CrystalMagic.Game.Skill
             copy.HasPosition = true;
             copy.Position = targetPosition;
             return copy;
+        }
+    }
+
+    public static class SkillContentReferencePool
+    {
+        private static readonly IObjectPool<SkillContent> Pool = new ObjectPool<SkillContent>(
+            static () => new SkillContent(),
+            initialSize: 32,
+            maxSize: 4096);
+
+        public static SkillContent Get()
+        {
+            return Pool.Get();
+        }
+
+        public static SkillContent Get(SkillContent source)
+        {
+            SkillContent content = Pool.Get();
+            content.CopyFrom(source);
+            return content;
+        }
+
+        public static SkillContent GetForTarget(
+            SkillContent source,
+            Entity targetEntity,
+            Vector3 targetPosition)
+        {
+            SkillContent content = Get(source);
+            content.HasTargetEntity = true;
+            content.TargetEntity = targetEntity;
+            content.HasPosition = true;
+            content.Position = targetPosition;
+            return content;
+        }
+
+        public static void Return(SkillContent content)
+        {
+            Pool.Return(content);
         }
     }
 }

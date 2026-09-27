@@ -12,12 +12,14 @@ public class LobbyUI : UIBase<LobbyUIData, CrystalMagic.UI.LobbyUIModel>
     public override void OnOpen()
     {
         UI.Back.ButtonPlus.onClick.AddListener(OnBackButtonClicked);
+        UI.ScrollView_Viewport_Content_CreateRoom.ButtonPlus.onClick.AddListener(OnCreateRoomButtonClicked);
         base.OnOpen();
     }
 
     public override void OnClose()
     {
         UI.Back.ButtonPlus.onClick.RemoveListener(OnBackButtonClicked);
+        UI.ScrollView_Viewport_Content_CreateRoom.ButtonPlus.onClick.RemoveListener(OnCreateRoomButtonClicked);
 
         for (int i = 0; i < roomItemViews.Count; i++)
             roomItemViews[i].ClearListeners();
@@ -34,6 +36,7 @@ public class LobbyUI : UIBase<LobbyUIData, CrystalMagic.UI.LobbyUIModel>
     public void SetRoomInteraction(bool canEnterRoom)
     {
         this.canEnterRoom = canEnterRoom;
+        UI.ScrollView_Viewport_Content_CreateRoom.ButtonPlus.enabled = canEnterRoom;
         for (int i = 0; i < roomItemViews.Count; i++)
             roomItemViews[i].SetInteractable(canEnterRoom);
     }
@@ -41,7 +44,7 @@ public class LobbyUI : UIBase<LobbyUIData, CrystalMagic.UI.LobbyUIModel>
     private void RenderRooms(System.Collections.Generic.IReadOnlyList<Server.SimpleRoomData> rooms)
     {
         int roomCount = rooms?.Count ?? 0;
-        int viewCount = roomCount + 1;
+        int viewCount = roomCount;
         LobbyUI_RoomItemView templateView = UI.ScrollView_Viewport_Content_RoomItem.GameObject.GetComponent<LobbyUI_RoomItemView>();
         UI.ScrollView_Viewport_Content_RoomItem.GameObject.SetActive(false);
         UISubViewBase.EnsurePoolCapacity(templateView, viewCount, viewCount);
@@ -62,9 +65,8 @@ public class LobbyUI : UIBase<LobbyUIData, CrystalMagic.UI.LobbyUIModel>
             roomItemViews.Add(roomItemView);
         }
 
-        roomItemViews[0].RenderCreateRoom();
         for (int i = 0; i < roomCount; i++)
-            roomItemViews[i + 1].Render(rooms[i]);
+            roomItemViews[i].Render(rooms[i]);
 
         for (int i = 0; i < roomItemViews.Count; i++)
             roomItemViews[i].SetInteractable(canEnterRoom);
@@ -72,13 +74,12 @@ public class LobbyUI : UIBase<LobbyUIData, CrystalMagic.UI.LobbyUIModel>
 
     private void OnRoomItemClicked(ulong roomId)
     {
-        if (roomId == 0UL)
-        {
-            CreateRoomClicked?.Invoke();
-            return;
-        }
-
         RoomClicked?.Invoke(roomId);
+    }
+
+    private void OnCreateRoomButtonClicked()
+    {
+        CreateRoomClicked?.Invoke();
     }
 
     private void OnBackButtonClicked()

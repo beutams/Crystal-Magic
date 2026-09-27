@@ -73,7 +73,9 @@ namespace Server
             byte[] data = TCPPacketCode.Pack(opcode, TCPPacketCode.ToJson(message));
             sendSteam.Position = sendSteam.Length;
             sendSteam.Write(data, 0, data.Length);
+#if UNITY_EDITOR && NETWORK_TRACE
             Debug.Log($"[TCP][Queue] opcode={opcode}, {data.Length} bytes queued for {IPEndPoint}");
+#endif
         }
 
         public uint RecordBattleFrameSend(long sendTime)

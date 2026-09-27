@@ -19,23 +19,6 @@ public struct UnitSkillReleaseComponent : IComponentData
 {
 }
 
-[UnitSourceProvider(typeof(UnitSkillReleaseComponent), typeof(UnitSkillReleaseAuthoring))]
-public static class UnitSkillReleaseSource
-{
-    [UnitSourceGet(0, "unit.self.entity", UnitValueCategory.Entity)]
-    public static bool TryGet(
-        int operation,
-        Entity entity,
-        in ComponentLookup<UnitSkillReleaseComponent> releases,
-        in UnitSourceArguments arguments,
-        out UnitSourceValue result)
-    {
-        bool valid = operation == 0 && releases.HasComponent(entity);
-        result = valid ? UnitSourceValue.FromEntity(entity) : default;
-        return valid;
-    }
-}
-
 // Synchronous input used while resolving a state-script skill command.
 public struct SkillReleaseRequest
 {

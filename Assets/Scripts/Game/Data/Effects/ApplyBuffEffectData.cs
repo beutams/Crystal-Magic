@@ -29,7 +29,9 @@ namespace CrystalMagic.Game.Data.Effects
         public override EffectData CreateRuntimeCopy(SkillModifierSet modifiers, UnitElementComponent? elementComponent = null)
         {
             ApplyBuffEffectData copy = (ApplyBuffEffectData)base.CreateRuntimeCopy(modifiers, elementComponent);
-            copy.DurationSeconds = ApplyModifierNonNegative(modifiers, SkillModifierChannel.BuffDuration, DurationSeconds);
+            copy.DurationSeconds = DurationSeconds < 0f
+                ? -1f
+                : ApplyModifierNonNegative(modifiers, SkillModifierChannel.BuffDuration, DurationSeconds);
             return copy;
         }
     }

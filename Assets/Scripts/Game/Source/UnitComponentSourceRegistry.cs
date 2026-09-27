@@ -685,7 +685,7 @@ public static class UnitComponentSourceRegistry
                 return true;
             case "unit.self.entity":
                 sourceId = UnitSourceId.UnitSelfEntity;
-                schema = new UnitSourceGetSchemaEntry("unit.self.entity", typeof(UnitSkillReleaseComponent), UnitValueCategory.Entity, Array.Empty<ComparatorParameterDefinition>());
+                schema = new UnitSourceGetSchemaEntry("unit.self.entity", typeof(UnitStateScriptComponent), UnitValueCategory.Entity, Array.Empty<ComparatorParameterDefinition>());
                 return true;
             case "unit.transform.directionTo":
                 sourceId = UnitSourceId.UnitTransformDirectionTo;
@@ -1172,9 +1172,9 @@ public static class UnitComponentSourceRegistry
             builder.AddGet("unit.perception.unitByNameAt", typeof(UnitPerceptionComponent), UnitValueCategory.Entity, new[] { new ComparatorParameterDefinition("Unit Name", UnitValueCategory.String), new ComparatorParameterDefinition("Index", UnitValueCategory.Number) });
             builder.AddGet("unit.perception.nearestUnitByName", typeof(UnitPerceptionComponent), UnitValueCategory.Entity, new[] { new ComparatorParameterDefinition("Unit Name", UnitValueCategory.String) });
         }
-        if (includeAll || prefab != null && prefab.GetComponentInChildren(typeof(UnitSkillReleaseAuthoring), true) != null)
+        if (includeAll || prefab != null && prefab.GetComponentInChildren(typeof(UnitStateScriptAuthoring), true) != null)
         {
-            builder.AddGet("unit.self.entity", typeof(UnitSkillReleaseComponent), UnitValueCategory.Entity, Array.Empty<ComparatorParameterDefinition>());
+            builder.AddGet("unit.self.entity", typeof(UnitStateScriptComponent), UnitValueCategory.Entity, Array.Empty<ComparatorParameterDefinition>());
         }
         if (includeAll || prefab != null && prefab.GetComponentInChildren(typeof(UnitVariableAuthoring), true) != null)
         {
@@ -1282,8 +1282,6 @@ public struct UnitSourceDispatcher
     private ComponentLookup<UnitNavigationComponent> _UnitNavigationComponentLookup;
     [ReadOnly]
     private ComponentLookup<UnitPerceptionComponent> _UnitPerceptionComponentLookup;
-    [ReadOnly]
-    private ComponentLookup<UnitSkillReleaseComponent> _UnitSkillReleaseComponentLookup;
     private ComponentLookup<UnitVariableComponent> _UnitVariableComponentLookup;
     [ReadOnly]
     private ComponentLookup<UnitVitalityComponent> _UnitVitalityComponentLookup;
@@ -1326,7 +1324,6 @@ public struct UnitSourceDispatcher
         _UnitModifierComponentLookup = system.GetComponentLookup<UnitModifierComponent>(true);
         _UnitNavigationComponentLookup = system.GetComponentLookup<UnitNavigationComponent>(false);
         _UnitPerceptionComponentLookup = system.GetComponentLookup<UnitPerceptionComponent>(true);
-        _UnitSkillReleaseComponentLookup = system.GetComponentLookup<UnitSkillReleaseComponent>(true);
         _UnitVariableComponentLookup = system.GetComponentLookup<UnitVariableComponent>(false);
         _UnitVitalityComponentLookup = system.GetComponentLookup<UnitVitalityComponent>(true);
         _WorldVariableComponentLookup = system.GetComponentLookup<WorldVariableComponent>(true);
@@ -1367,7 +1364,6 @@ public struct UnitSourceDispatcher
         _UnitModifierComponentLookup = system.GetComponentLookup<UnitModifierComponent>(true);
         _UnitNavigationComponentLookup = system.GetComponentLookup<UnitNavigationComponent>(true);
         _UnitPerceptionComponentLookup = system.GetComponentLookup<UnitPerceptionComponent>(true);
-        _UnitSkillReleaseComponentLookup = system.GetComponentLookup<UnitSkillReleaseComponent>(true);
         _UnitVariableComponentLookup = system.GetComponentLookup<UnitVariableComponent>(true);
         _UnitVitalityComponentLookup = system.GetComponentLookup<UnitVitalityComponent>(true);
         _WorldVariableComponentLookup = system.GetComponentLookup<WorldVariableComponent>(true);
@@ -1408,7 +1404,6 @@ public struct UnitSourceDispatcher
         _UnitModifierComponentLookup.Update(system);
         _UnitNavigationComponentLookup.Update(system);
         _UnitPerceptionComponentLookup.Update(system);
-        _UnitSkillReleaseComponentLookup.Update(system);
         _UnitVariableComponentLookup.Update(system);
         _UnitVitalityComponentLookup.Update(system);
         _WorldVariableComponentLookup.Update(system);
@@ -1446,7 +1441,6 @@ public struct UnitSourceDispatcher
         _UnitModifierComponentLookup = state.GetComponentLookup<UnitModifierComponent>(true);
         _UnitNavigationComponentLookup = state.GetComponentLookup<UnitNavigationComponent>(false);
         _UnitPerceptionComponentLookup = state.GetComponentLookup<UnitPerceptionComponent>(true);
-        _UnitSkillReleaseComponentLookup = state.GetComponentLookup<UnitSkillReleaseComponent>(true);
         _UnitVariableComponentLookup = state.GetComponentLookup<UnitVariableComponent>(false);
         _UnitVitalityComponentLookup = state.GetComponentLookup<UnitVitalityComponent>(true);
         _WorldVariableComponentLookup = state.GetComponentLookup<WorldVariableComponent>(true);
@@ -1487,7 +1481,6 @@ public struct UnitSourceDispatcher
         _UnitModifierComponentLookup = state.GetComponentLookup<UnitModifierComponent>(true);
         _UnitNavigationComponentLookup = state.GetComponentLookup<UnitNavigationComponent>(true);
         _UnitPerceptionComponentLookup = state.GetComponentLookup<UnitPerceptionComponent>(true);
-        _UnitSkillReleaseComponentLookup = state.GetComponentLookup<UnitSkillReleaseComponent>(true);
         _UnitVariableComponentLookup = state.GetComponentLookup<UnitVariableComponent>(true);
         _UnitVitalityComponentLookup = state.GetComponentLookup<UnitVitalityComponent>(true);
         _WorldVariableComponentLookup = state.GetComponentLookup<WorldVariableComponent>(true);
@@ -1528,7 +1521,6 @@ public struct UnitSourceDispatcher
         _UnitModifierComponentLookup.Update(ref state);
         _UnitNavigationComponentLookup.Update(ref state);
         _UnitPerceptionComponentLookup.Update(ref state);
-        _UnitSkillReleaseComponentLookup.Update(ref state);
         _UnitVariableComponentLookup.Update(ref state);
         _UnitVitalityComponentLookup.Update(ref state);
         _WorldVariableComponentLookup.Update(ref state);
@@ -1930,7 +1922,7 @@ public struct UnitSourceDispatcher
             case UnitSourceId.UnitMoveRealMoveSpeed:
                 return UnitMoveSource.TryGetResolved(5, entity, in _UnitMoveComponentLookup, in _UnitModifierComponentLookup, in arguments, out value);
             case UnitSourceId.UnitSelfEntity:
-                return UnitSkillReleaseSource.TryGet(0, entity, in _UnitSkillReleaseComponentLookup, in arguments, out value);
+                return UnitSelfSource.TryGet(0, entity, in arguments, out value);
             case UnitSourceId.UnitVitalityCurrentHealthPercentage:
                 return UnitVitalitySource.TryGetResolved(5, entity, in _UnitVitalityComponentLookup, in _UnitModifierComponentLookup, in arguments, out value);
             case UnitSourceId.UnitVitalityRealDefense:

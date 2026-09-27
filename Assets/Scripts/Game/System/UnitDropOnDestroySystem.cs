@@ -1,6 +1,7 @@
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Unit;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -17,25 +18,45 @@ partial class UnitDropOnDestroySystem : SystemBase
     private const float MinArcHeight = 0.4f;
     private const float MaxArcHeight = 0.85f;
 
+    private EntityQuery _dropQuery;
+
+    protected override void OnCreate()
+    {
+        _dropQuery = GetEntityQuery(new EntityQueryDesc
+        {
+            All = new[]
+            {
+                ComponentType.ReadOnly<DestroyEntityFlag>(),
+                ComponentType.ReadOnly<UnitDropComponent>(),
+                ComponentType.ReadOnly<LocalTransform>(),
+            },
+            Options = EntityQueryOptions.IgnoreComponentEnabledState,
+        });
+    }
+
     protected override void OnUpdate()
     {
-        foreach ((EnabledRefRO<DestroyEntityFlag> destroyFlag,
-                  RefRO<UnitDropComponent> unitDrop,
-                  RefRO<LocalTransform> transform,
-                  Entity entity) in
-                 SystemAPI.Query<EnabledRefRO<DestroyEntityFlag>, RefRO<UnitDropComponent>, RefRO<LocalTransform>>()
-                     .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)
-                     .WithEntityAccess())
+        // Spawning a drop can instantiate an entity and add missing components. Snapshot the
+        // source entities first so those structural changes do not happen inside an ECS iterator.
+        using NativeArray<Entity> entities = _dropQuery.ToEntityArray(Allocator.Temp);
+        for (int entityIndex = 0; entityIndex < entities.Length; entityIndex++)
         {
-            if (!destroyFlag.ValueRO || unitDrop.ValueRO.DropDataId < 0)
+            Entity entity = entities[entityIndex];
+            if (!EntityManager.Exists(entity) ||
+                !EntityManager.IsComponentEnabled<DestroyEntityFlag>(entity))
                 continue;
 
-            DropData dropData = DataComponent.Instance.Get<DropData>(unitDrop.ValueRO.DropDataId);
+            UnitDropComponent unitDrop = EntityManager.GetComponentData<UnitDropComponent>(entity);
+            if (unitDrop.DropDataId < 0)
+                continue;
+
+            LocalTransform transform = EntityManager.GetComponentData<LocalTransform>(entity);
+            DropData dropData = DataComponent.Instance.Get<DropData>(unitDrop.DropDataId);
             if (dropData == null)
                 continue;
 
             dropData.EnsureValid();
-            Unity.Mathematics.Random random = CreateRandom(entity, transform.ValueRO.Position);
+            Unity.Mathematics.Random random = CreateRandom(entity, transform.Position);
             for (int i = 0; i < dropData.Entries.Count; i++)
             {
                 DropEntryData entry = dropData.Entries[i];
@@ -52,7 +73,7 @@ partial class UnitDropOnDestroySystem : SystemBase
                 if (quantity <= 0)
                     continue;
 
-                float3 startPosition = transform.ValueRO.Position;
+                float3 startPosition = transform.Position;
                 float angle = random.NextFloat(0f, math.PI * 2f);
                 math.sincos(angle, out float sin, out float cos);
                 float radius = math.lerp(MinScatterRadius, MaxScatterRadius, math.sqrt(random.NextFloat()));

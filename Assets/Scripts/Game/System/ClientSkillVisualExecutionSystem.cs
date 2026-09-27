@@ -69,33 +69,38 @@ public partial class ClientSkillVisualExecutionSystem : SystemBase
             return;
         }
 
-        SkillContent context = new()
+        SkillContent context = SkillContentReferencePool.Get();
+        try
         {
-            EntityManager = EntityManager,
-            TriggerSource = SkillTriggerSource.ActiveCast,
-            HookType = SkillHookType.None,
-            HasOriginEntity = request.OriginEntity != Entity.Null,
-            OriginEntity = request.OriginEntity,
-            HasOriginPositionSnapshot = true,
-            OriginPositionSnapshot = new Vector3(
+            context.EntityManager = EntityManager;
+            context.TriggerSource = SkillTriggerSource.ActiveCast;
+            context.HookType = SkillHookType.None;
+            context.HasOriginEntity = request.OriginEntity != Entity.Null;
+            context.OriginEntity = request.OriginEntity;
+            context.HasOriginPositionSnapshot = true;
+            context.OriginPositionSnapshot = new Vector3(
                 request.OriginPosition.x,
                 request.OriginPosition.y,
-                request.OriginPosition.z),
-            SourceSkillId = request.SkillId,
-            HasTargetEntity = request.HasTargetEntity,
-            TargetEntity = request.TargetEntity,
-            HasPosition = request.HasTargetPosition,
-            Position = new Vector3(
+                request.OriginPosition.z);
+            context.SourceSkillId = request.SkillId;
+            context.HasTargetEntity = request.HasTargetEntity;
+            context.TargetEntity = request.TargetEntity;
+            context.HasPosition = request.HasTargetPosition;
+            context.Position = new Vector3(
                 request.TargetPosition.x,
                 request.TargetPosition.y,
-                request.TargetPosition.z),
-        };
-        ExecuteVisualEffects(
-            resolvedSkill.EffectChain,
-            context,
-            visualRequest,
-            journal,
-            0);
+                request.TargetPosition.z);
+            ExecuteVisualEffects(
+                resolvedSkill.EffectChain,
+                context,
+                visualRequest,
+                journal,
+                0);
+        }
+        finally
+        {
+            SkillContentReferencePool.Return(context);
+        }
     }
 
     private void ExecuteVisualEffects(
@@ -138,20 +143,27 @@ public partial class ClientSkillVisualExecutionSystem : SystemBase
                 case PersistentEffectData persistent:
                     if (TryGetPersistentReleasePosition(context, out float3 persistentPosition))
                     {
-                        SkillContent persistentContext = context.Clone();
-                        persistentContext.HasPosition = true;
-                        persistentContext.Position = new Vector3(
-                            persistentPosition.x,
-                            persistentPosition.y,
-                            persistentPosition.z);
-                        persistentContext.HasTargetEntity = false;
-                        persistentContext.TargetEntity = Entity.Null;
-                        ExecuteVisualEffects(
-                            persistent.OnStartEffects,
-                            persistentContext,
-                            request,
-                            journal,
-                            effectOrdinal);
+                        SkillContent persistentContext = SkillContentReferencePool.Get(context);
+                        try
+                        {
+                            persistentContext.HasPosition = true;
+                            persistentContext.Position = new Vector3(
+                                persistentPosition.x,
+                                persistentPosition.y,
+                                persistentPosition.z);
+                            persistentContext.HasTargetEntity = false;
+                            persistentContext.TargetEntity = Entity.Null;
+                            ExecuteVisualEffects(
+                                persistent.OnStartEffects,
+                                persistentContext,
+                                request,
+                                journal,
+                                effectOrdinal);
+                        }
+                        finally
+                        {
+                            SkillContentReferencePool.Return(persistentContext);
+                        }
                     }
                     break;
             }

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CrystalMagic.Core;
 using Unity.Collections;
 using Unity.Entities;
@@ -33,14 +32,7 @@ namespace Server
             using (EntityQuery query = manager.CreateEntityQuery(ComponentType.ReadOnly<EffectDataBridgeComponent>()))
             {
                 if (!query.IsEmptyIgnoreFilter)
-                {
-                    EffectDataBridgeComponent bridge = manager.GetComponentObject<EffectDataBridgeComponent>(query.GetSingletonEntity());
-                    foreach (int id in new List<int>(bridge.Values.Keys))
-                        if (!bridge.RegistryIds.Contains(id))
-                            bridge.Values.Remove(id);
-                    bridge.ManagedContexts.Clear();
-                    bridge.ConditionLists.Clear();
-                }
+                    EffectDataBridgeUtility.ClearTransient(manager);
             }
 
             using (EntityQuery query = manager.CreateEntityQuery(ComponentType.ReadOnly<FrameReceiveBufferComponent>()))

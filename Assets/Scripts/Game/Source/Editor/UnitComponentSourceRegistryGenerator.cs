@@ -17,6 +17,7 @@ public static class UnitComponentSourceRegistryGenerator
     {
         ComponentGet,
         ComponentSet,
+        EntityGet,
         LookupGet,
         LookupSet,
         Unsupported,
@@ -156,6 +157,12 @@ public static class UnitComponentSourceRegistryGenerator
         if (lookupParameters.Count > 0)
             return isGet ? AccessMode.LookupGet : AccessMode.LookupSet;
 
+        if (isGet && method.GetParameters().Length > 1 &&
+            method.GetParameters()[1].ParameterType == typeof(Entity))
+        {
+            return AccessMode.EntityGet;
+        }
+
         // ComponentLookup<T> only accepts unmanaged component data. Managed component
         // providers remain in the generated schema, but have no runtime fallback.
         if (!provider.Attribute.ComponentType.IsValueType)
@@ -236,6 +243,11 @@ public static class UnitComponentSourceRegistryGenerator
                                        parameters[0].ParameterType == typeof(int) &&
                                        IsWritableByRef(parameters[1], entry.Provider.Attribute.ComponentType) &&
                                        IsReadOnlyByRef(parameters[2], typeof(UnitSourceArguments)),
+            AccessMode.EntityGet => parameters.Length == 4 &&
+                                    parameters[0].ParameterType == typeof(int) &&
+                                    parameters[1].ParameterType == typeof(Entity) &&
+                                    IsReadOnlyByRef(parameters[2], typeof(UnitSourceArguments)) &&
+                                    IsOut(parameters[3], typeof(UnitSourceValue)),
             AccessMode.LookupGet => ValidateLookupSignature(entry, parameters, true),
             AccessMode.LookupSet => ValidateLookupSignature(entry, parameters, false),
             _ => false,
@@ -594,6 +606,11 @@ public static class UnitComponentSourceRegistryGenerator
             builder.AppendLine("                    return false;");
             builder.AppendLine($"                return {TypeName(entry.Provider.Type)}.{entry.Method.Name}({entry.Operation}, in component, in arguments, out value);");
             builder.AppendLine("            }");
+        }
+        foreach (EntryInfo entry in entries.Where(entry => entry.IsGet && entry.Mode == AccessMode.EntityGet))
+        {
+            builder.AppendLine($"            case UnitSourceId.{entry.EnumName}:");
+            builder.AppendLine($"                return {TypeName(entry.Provider.Type)}.{entry.Method.Name}({entry.Operation}, entity, in arguments, out value);");
         }
         foreach (EntryInfo entry in entries.Where(entry => entry.IsGet && entry.Mode == AccessMode.LookupGet))
         {

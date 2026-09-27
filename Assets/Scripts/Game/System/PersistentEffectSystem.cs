@@ -43,10 +43,17 @@ partial class PersistentEffectSystem : SystemBase
             while (instance.NextTickTime <= instance.Elapsed &&
                    instance.NextTickTime <= instance.TotalDuration)
             {
-                SkillContent tickContext = instance.Context.Clone();
-                tickContext.EntityManager = EntityManager;
-                tickContext.PersistentEffectAppliedBuffTargets = instance.AppliedBuffTargets;
-                EffectUtility.Enqueue(EntityManager, instance.OnTickEffectListId, tickContext);
+                SkillContent tickContext = SkillContentReferencePool.Get(instance.Context);
+                try
+                {
+                    tickContext.EntityManager = EntityManager;
+                    tickContext.PersistentEffectAppliedBuffTargets = instance.AppliedBuffTargets;
+                    EffectUtility.Enqueue(EntityManager, instance.OnTickEffectListId, tickContext);
+                }
+                finally
+                {
+                    SkillContentReferencePool.Return(tickContext);
+                }
                 instance.NextTickTime += instance.TickIntervalSeconds;
             }
 
@@ -54,9 +61,16 @@ partial class PersistentEffectSystem : SystemBase
             {
                 if (instance.OnEndEffectListId.IsValid)
                 {
-                    SkillContent endContext = instance.Context.Clone();
-                    endContext.EntityManager = EntityManager;
-                    EffectUtility.Enqueue(EntityManager, instance.OnEndEffectListId, endContext);
+                    SkillContent endContext = SkillContentReferencePool.Get(instance.Context);
+                    try
+                    {
+                        endContext.EntityManager = EntityManager;
+                        EffectUtility.Enqueue(EntityManager, instance.OnEndEffectListId, endContext);
+                    }
+                    finally
+                    {
+                        SkillContentReferencePool.Return(endContext);
+                    }
                 }
 
                 EffectUtility.ReleaseAfterExecution(EntityManager, instance.OnTickEffectListId);
@@ -87,16 +101,23 @@ partial class PersistentEffectSystem : SystemBase
                 dataList.Effects.Length > 0 &&
                 dataList.Effects[0] is PersistentEffectData data)
             {
-                SkillContent sourceContext = EffectUtility.CreateContext(
+                SkillContent sourceContext = EffectUtility.GetContext(
                     EntityManager,
                     in request.SourceContext);
-                AddEffectInternal(
-                    data,
-                    sourceContext,
-                    new Vector3(
-                        request.ReleasePosition.x,
-                        request.ReleasePosition.y,
-                        request.ReleasePosition.z));
+                try
+                {
+                    AddEffectInternal(
+                        data,
+                        sourceContext,
+                        new Vector3(
+                            request.ReleasePosition.x,
+                            request.ReleasePosition.y,
+                            request.ReleasePosition.z));
+                }
+                finally
+                {
+                    EffectUtility.ReturnContext(sourceContext);
+                }
             }
 
             EffectDataBridgeUtility.Unregister(EntityManager, request.PersistentDataId);

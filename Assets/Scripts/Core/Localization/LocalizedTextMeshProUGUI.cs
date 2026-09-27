@@ -48,11 +48,13 @@ namespace CrystalMagic.Core
             base.OnDisable();
         }
 
+#if UNITY_EDITOR
         protected override void OnValidate()
         {
             base.OnValidate();
             ApplyLocalizationKey();
         }
+#endif
 
         public void ApplyLocalizationKey()
         {

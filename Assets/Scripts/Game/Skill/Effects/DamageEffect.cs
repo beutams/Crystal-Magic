@@ -64,11 +64,13 @@ namespace CrystalMagic.Game.Skill.Effects
                     triggerValue: damage);
             }
 
+#if UNITY_EDITOR && DAMAGE_EFFECT_TRACE
             Debug.Log(
                 $"[DamageEffect] Damage={damage:0.##} | Formula=max(0, BaseValue*Coeff+Flat-Defense) | " +
                 $"BaseValue={breakdown.BaseValue:0.##} Coeff={Data.DamageCoefficient:0.##} Flat={Data.FlatDamageBonus:0.##} " +
                 $"Raw={breakdown.RawDamage:0.##} Defense={breakdown.Defense:0.##} Final={breakdown.FinalDamage:0.##} " +
                 $"Target={target.Index}:{target.Version} HP={previousHealth:0.##}->{vitality.CurrentHealth:0.##}");
+#endif
 
             float3 targetPosition = entityManager.HasComponent<LocalTransform>(target)
                 ? entityManager.GetComponentData<LocalTransform>(target).Position

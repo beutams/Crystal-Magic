@@ -46,7 +46,9 @@ public static class CrystalMagicBuild
             locationPathName = Path.Combine(outputFolder, fileName + ".exe"),
             target = BuildTarget.StandaloneWindows64,
             targetGroup = BuildTargetGroup.Standalone,
-            subtarget = dedicatedServer ? (int)StandaloneBuildSubtarget.Server : 0,
+            subtarget = dedicatedServer
+                ? (int)StandaloneBuildSubtarget.Server
+                : (int)StandaloneBuildSubtarget.Player,
             extraScriptingDefines = string.IsNullOrEmpty(define) ? Array.Empty<string>() : new[] { define },
         };
 
