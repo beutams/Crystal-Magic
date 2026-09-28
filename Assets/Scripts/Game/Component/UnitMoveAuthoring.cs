@@ -36,6 +36,8 @@ public class UnitMoveAuthoring : MonoBehaviour
                 FrameVelocity = float2.zero,
                 HasFrameVelocity = 0,
                 CommandMoveSpeed = -1f,
+                TeleportDestination = float3.zero,
+                HasTeleportRequest = 0,
             });
         }
     }
@@ -59,6 +61,9 @@ public struct UnitMoveComponent : IComponentData
     // A non-negative value is an externally commanded speed. -1 means use
     // the normal modifier-resolved unit speed.
     public float CommandMoveSpeed;
+    // A one-frame state-script position command consumed atomically by UnitMoveSystem.
+    public float3 TeleportDestination;
+    public byte HasTeleportRequest;
     public byte NetworkDirty;
 
     public float BaseMoveSpeedValue => BaseMoveSpeed + BaseMoveSpeedOffset;
@@ -125,6 +130,7 @@ public static class UnitMoveSource
     [UnitSourceSet(2, "unit.move.setFrameVelocity", UnitValueCategory.Float2, ParameterNames = new[] { "Velocity" })]
     [UnitSourceSet(3, "unit.move.setStateMoveMultiplier", UnitValueCategory.Number, ParameterNames = new[] { "Multiplier" })]
     [UnitSourceSet(4, "unit.move.setCommandSpeed", UnitValueCategory.Number, ParameterNames = new[] { "Speed" })]
+    [UnitSourceSet(5, "unit.move.teleportTo", UnitValueCategory.Float3, ParameterNames = new[] { "Destination" })]
     public static bool TrySet(int operation, ref UnitMoveComponent value, in UnitSourceArguments arguments)
     {
         switch (operation)
@@ -144,6 +150,11 @@ public static class UnitMoveSource
                 break;
             case 4 when arguments.TryGetNumber(0, out float speed):
                 value.CommandMoveSpeed = speed < 0f ? -1f : math.max(0f, speed);
+                break;
+            case 5 when arguments.TryGetFloat3(0, out float3 destination):
+                value.TeleportDestination = new float3(destination.xy, 0f);
+                value.HasTeleportRequest = 1;
+                value.NetworkDirty = 1;
                 break;
             default:
                 return false;

@@ -254,6 +254,7 @@
       "Id": 11
     },
 {"NameKey":"Shield Guard","IconPath":"Assets/Res/Sprites/UISprites/Icons/Sprites.png|op","CanStack":false,"MaxStacks":1,"PropertyModifiers":[{"Channel":14,"Factor":-0.5,"Bonus":0}],"SkillModifiers":[],"TriggerEntries":[{"TriggerType":1,"TickIntervalSeconds":0,"HookType":5,"ConsumeStackOnTrigger":false,"Effects":[{"$type":"CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp","BuffId":13,"TargetSource":0,"DurationSeconds":0.75,"StackCount":1,"OnlyOncePerPersistentEffect":false,"Conditions":[]}]}],"Id":12},
-    {"NameKey":"Block Reaction","IconPath":"Assets/Res/Sprites/UISprites/Icons/Sprites.png|op","CanStack":false,"MaxStacks":1,"PropertyModifiers":[],"SkillModifiers":[],"TriggerEntries":[],"Id":13}
+    {"NameKey":"Block Reaction","IconPath":"Assets/Res/Sprites/UISprites/Icons/Sprites.png|op","CanStack":false,"MaxStacks":1,"PropertyModifiers":[],"SkillModifiers":[],"TriggerEntries":[],"Id":13},
+    {"NameKey":"Werewolf Attack 02 Exposed","IconPath":"","CanStack":false,"MaxStacks":1,"PropertyModifiers":[],"SkillModifiers":[],"TriggerEntries":[{"TriggerType":1,"TickIntervalSeconds":0,"HookType":5,"ConsumeStackOnTrigger":false,"Effects":[{"$type":"CrystalMagic.Game.Data.Effects.StunEffectData, Assembly-CSharp","DurationSeconds":1,"Conditions":[]}]}],"Id":14}
   ]
 }

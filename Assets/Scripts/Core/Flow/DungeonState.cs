@@ -12,7 +12,6 @@ namespace CrystalMagic.Core
         private static readonly ProfilerMarker BattleUpdateMarker = new("BattleState.Update");
         private static readonly ProfilerMarker HealthBarUpdateMarker = new("BattleState.UnitHealthBars");
         private static readonly ProfilerMarker DamageNumberUpdateMarker = new("BattleState.DamageNumbers");
-        private static readonly ProfilerMarker PickupTipUpdateMarker = new("BattleState.PickupTips");
         private static readonly ProfilerMarker InteractionPromptUpdateMarker = new("BattleState.InteractionPrompt");
         private static readonly ProfilerMarker UiInputLockUpdateMarker = new("BattleState.UIInputLock");
         private UIBase _battleUI;
@@ -20,7 +19,7 @@ namespace CrystalMagic.Core
         private GameMenuUI _gameMenuUI;
         private UnitHealthBarManager _unitHealthBarManager;
         private DamageNumberManager _damageNumberManager;
-        private PickupTipManager _pickupTipManager;
+        private NotificationUI _notificationUI;
         private InteractionPromptManager _interactionPromptManager;
         private bool _inputBound;
         private bool _playerInputLockedByUI;
@@ -36,8 +35,7 @@ namespace CrystalMagic.Core
             _unitHealthBarManager.Initialize();
             _damageNumberManager ??= new DamageNumberManager();
             _damageNumberManager.Initialize();
-            _pickupTipManager ??= new PickupTipManager();
-            _pickupTipManager.Initialize();
+            _notificationUI = UIComponent.Instance.Open<NotificationUI>();
             _interactionPromptManager ??= new InteractionPromptManager();
             _interactionPromptManager.Initialize();
             OpenBattleUI();
@@ -56,8 +54,6 @@ namespace CrystalMagic.Core
                 _unitHealthBarManager?.Tick();
             using (DamageNumberUpdateMarker.Auto())
                 _damageNumberManager?.Tick();
-            using (PickupTipUpdateMarker.Auto())
-                _pickupTipManager?.Tick();
             using (InteractionPromptUpdateMarker.Auto())
                 _interactionPromptManager?.Tick();
             using (UiInputLockUpdateMarker.Auto())
@@ -70,8 +66,8 @@ namespace CrystalMagic.Core
             _unitHealthBarManager = null;
             _damageNumberManager?.Dispose();
             _damageNumberManager = null;
-            _pickupTipManager?.Dispose();
-            _pickupTipManager = null;
+            ReleaseManagedUI(_notificationUI);
+            _notificationUI = null;
             _interactionPromptManager?.Dispose();
             _interactionPromptManager = null;
             InputComponent.Instance?.SetBattleInputEnabled(false);
@@ -170,10 +166,10 @@ namespace CrystalMagic.Core
         private void RefreshUIInputLock()
         {
             bool shouldLock = UIComponent.Instance != null
-                && UIComponent.Instance.HasActiveSceneScopedPanelExcept(
+                && UIComponent.Instance.HasActiveSceneScopedPanel(
                     BattleSceneName,
                     BattleUIName,
-                    "MinimapUI");
+                    "MinimapUI", nameof(NotificationUI));
             if (shouldLock == _playerInputLockedByUI)
                 return;
 

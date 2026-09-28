@@ -207,8 +207,8 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 120000.0,
-          "BaseHealthRegenPerSecond": 50.0,
+          "BaseMaxHealth": 200.0,
+          "BaseHealthRegenPerSecond": 0.0,
           "BaseDefense": 0.0
         },
         {
@@ -232,7 +232,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 0
+          "DropDataId": 1
         }
       ],
       "Id": 9
@@ -249,9 +249,9 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 120000.0,
-          "BaseHealthRegenPerSecond": 50.0,
-          "BaseDefense": 0.0
+          "BaseMaxHealth": 300.0,
+          "BaseHealthRegenPerSecond": 0.0,
+          "BaseDefense": 2.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
@@ -274,7 +274,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": -1
+          "DropDataId": 1
         }
       ],
       "Id": 10
@@ -358,7 +358,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 0
+          "DropDataId": 2
         }
       ],
       "Id": 12
@@ -400,7 +400,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 0
+          "DropDataId": 2
         }
       ],
       "Id": 13
@@ -442,7 +442,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 9
+          "DropDataId": 2
         }
       ],
       "Id": 14
@@ -484,7 +484,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 8
+          "DropDataId": 1
         }
       ],
       "Id": 15
@@ -501,8 +501,8 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 120000.0,
-          "BaseHealthRegenPerSecond": 50.0,
+          "BaseMaxHealth": 50.0,
+          "BaseHealthRegenPerSecond": 0.0,
           "BaseDefense": 0.0
         },
         {
@@ -568,7 +568,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 11
+          "DropDataId": 4
         }
       ],
       "Id": 17
@@ -610,7 +610,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 8
+          "DropDataId": 1
         }
       ],
       "Id": 18
@@ -652,7 +652,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 0
+          "DropDataId": 2
         }
       ],
       "Id": 19
@@ -694,7 +694,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 0
+          "DropDataId": 2
         }
       ],
       "Id": 20
@@ -736,7 +736,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 0
+          "DropDataId": 2
         }
       ],
       "Id": 21
@@ -778,7 +778,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 0
+          "DropDataId": 2
         }
       ],
       "Id": 22
@@ -820,7 +820,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 7
+          "DropDataId": 0
         }
       ],
       "Id": 23
@@ -862,7 +862,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 11
+          "DropDataId": 4
         }
       ],
       "Id": 24
@@ -904,7 +904,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 0
+          "DropDataId": 2
         }
       ],
       "Id": 25
@@ -946,7 +946,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 7
+          "DropDataId": 0
         }
       ],
       "Id": 26
@@ -988,7 +988,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 8
+          "DropDataId": 1
         }
       ],
       "Id": 27
@@ -1005,7 +1005,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 100.0,
+          "BaseMaxHealth": 50.0,
           "BaseHealthRegenPerSecond": 0.0,
           "BaseDefense": 0.0
         },
@@ -1072,7 +1072,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
-          "DropDataId": 0
+          "DropDataId": 2
         }
       ],
       "Id": 29

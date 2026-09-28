@@ -40,6 +40,8 @@ public enum StateScriptNodeRuntimeType : byte
     NumberMonitor,
     Addition,
     PlayerInputEvent,
+    BuildUnitRoster,
+    NotifyUI,
 }
 
 public enum StateScriptManagedCommandType : byte
@@ -57,6 +59,7 @@ public enum StateScriptManagedCommandType : byte
     StartNpcInteraction,
     StartAddition,
     StopAddition,
+    NotifyUI,
 #if UNITY_EDITOR
     TraceTimerStarted,
     TraceTimerCompleted,
@@ -128,6 +131,7 @@ public struct StateScriptNodeDefinition
     public UnitSourceTarget SetSourceTarget;
     public FixedString128Bytes Key;
     public FixedString128Bytes Text;
+    public FixedString128Bytes NotificationKey;
     public UnitInteractionData InteractionData;
     public float4 FloatParameters0;
     public float4 FloatParameters1;

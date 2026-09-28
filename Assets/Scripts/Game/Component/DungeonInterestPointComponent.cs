@@ -20,6 +20,15 @@ public struct DungeonRuntimeOwnedEntity : IComponentData
 {
 }
 
+public struct DungeonFloorControllerComponent : IComponentData
+{
+}
+
+public struct DungeonWildSquadComponent : IComponentData
+{
+    public int SquadId;
+}
+
 [UnitSourceProvider(typeof(DungeonInterestPointComponent), typeof(DungeonInterestPointAuthoring))]
 public static class DungeonInterestPointSource
 {
@@ -107,6 +116,12 @@ public static class DungeonInterestPointUtility
         if (!UnitVariableSource.SetOther(entityManager, member, interestPoint))
             return false;
 
+        UnitOwnerComponent owner = new() { Owner = interestPoint };
+        if (entityManager.HasComponent<UnitOwnerComponent>(member))
+            entityManager.SetComponentData(member, owner);
+        else
+            entityManager.AddComponentData(member, owner);
+
         if (!hasMonsterData)
             return true;
 
@@ -124,6 +139,12 @@ public static class DungeonInterestPointUtility
 
         entityManager.SetComponentData(member, monster);
         entityManager.SetComponentData(interestPoint, point);
+        UnitVariableSource.TrySetValue(entityManager, member, DungeonPatrolRuntimeUtility.GuardMemberKey,
+            UnitValue.FromBool(monster.CountsAsGuard != 0));
+        UnitVariableSource.TrySetValue(entityManager, member, DungeonPatrolRuntimeUtility.PatrolMemberKey,
+            UnitValue.FromBool(monster.CountsAsPatrol != 0));
+        if (monster.CountsAsGuard != 0)
+            UnitVariableSource.TrySetValue(entityManager, interestPoint, "dungeon.encounter.populated", UnitValue.FromBool(true));
         return true;
     }
 
@@ -170,12 +191,19 @@ public static class DungeonInterestPointUtility
         if (removePatrol)
             point.PatrolUnitCount = math.max(0, point.PatrolUnitCount - 1);
         entityManager.SetComponentData(interestPoint, point);
+
+        // The parent state script handles the transition to cleared and threat settlement.
     }
 }
 
 public static class DungeonPatrolRuntimeUtility
 {
     public const int InterestPointUnitDataId = 30;
+    public const int FloorControllerUnitDataId = 35;
+    public const int WildSquadUnitDataId = 36;
+    public const string GuardMemberKey = "dungeon.encounter.guard";
+    public const string PatrolMemberKey = "dungeon.patrol.member";
+    public const string EncounterDeadKey = "dungeon.encounter.dead";
     public const string PatrolActiveKey = "dungeon.patrol.active";
     public const string PatrolSpeedKey = "dungeon.patrol.speed";
     public const string PatrolArrivalDistanceKey = "dungeon.patrol.arrivalDistance";
@@ -185,6 +213,21 @@ public static class DungeonPatrolRuntimeUtility
     public static readonly FixedString128Bytes PatrolActiveFixedKey = PatrolActiveKey;
     public static readonly FixedString128Bytes PatrolSpeedFixedKey = PatrolSpeedKey;
     public static readonly FixedString128Bytes PatrolArrivalDistanceFixedKey = PatrolArrivalDistanceKey;
+
+    public static bool IsEncounterDead(EntityManager entityManager, Entity entity)
+    {
+        return UnitVariableSource.TryGetValue(entityManager, entity, EncounterDeadKey, out UnitSourceValue value) &&
+               value.TryGetBool(out bool dead) && dead;
+    }
+
+    public static void InitializeEncounterVariables(EntityManager entityManager, Entity entity, float clearThreat)
+    {
+        UnitVariableSource.TrySetValue(entityManager, entity, EncounterDeadKey, UnitValue.FromBool(false));
+        UnitVariableSource.TrySetValue(entityManager, entity, "dungeon.encounter.populated", UnitValue.FromBool(false));
+        UnitVariableSource.TrySetValue(entityManager, entity, "dungeon.encounter.ready", UnitValue.FromBool(false));
+        UnitVariableSource.TrySetValue(entityManager, entity, "dungeon.threat.clearSettled", UnitValue.FromBool(false));
+        UnitVariableSource.TrySetValue(entityManager, entity, "dungeon.threat.onClear", UnitValue.FromFloat(clearThreat));
+    }
 
     public static void SetSharedPatrolValues(
         EntityManager entityManager,

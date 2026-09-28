@@ -100,13 +100,15 @@ namespace CrystalMagic.Core
             yield return null;
 
             reportProgress?.Invoke(0.9975f, "Building dungeon scene", "Spawning interest point units");
+            Entity floorController = SpawnFloorController(entityManager, sceneData, spawnedEntities);
             Dictionary<int, Entity> interestPoints = new();
-            SpawnInterestPoints(entityManager, sceneData, spawnedEntities, interestPoints);
+            SpawnInterestPoints(entityManager, sceneData, spawnedEntities, interestPoints, floorController);
+            Dictionary<int, Entity> wildSquads = SpawnWildSquads(entityManager, sceneData, spawnedEntities, floorController);
             LinkSceneObjectsToInterestPoints(entityManager, controlledSceneObjects, interestPoints);
             yield return null;
 
             reportProgress?.Invoke(0.998f, "Building dungeon scene", "Spawning monsters");
-            SpawnMonsters(entityManager, sceneData, spawnedEntities, interestPoints);
+            SpawnMonsters(entityManager, sceneData, spawnedEntities, interestPoints, wildSquads);
             SetInterestPointsReady(entityManager, interestPoints);
 
             runtimeRoot.Initialize(resourceOwnerKey, spawnedEntities);
@@ -164,10 +166,12 @@ namespace CrystalMagic.Core
             }
 
             // 兴趣点是服务器 AI 的控制实体，不向客户端同步；它们后续生成的巡逻单位会走动态 Spawn 包。
+            Entity floorController = SpawnFloorController(entityManager, sceneData, spawnedEntities);
             Dictionary<int, Entity> interestPoints = new();
-            SpawnInterestPoints(entityManager, sceneData, spawnedEntities, interestPoints);
+            SpawnInterestPoints(entityManager, sceneData, spawnedEntities, interestPoints, floorController);
+            Dictionary<int, Entity> wildSquads = SpawnWildSquads(entityManager, sceneData, spawnedEntities, floorController);
             LinkSceneObjectsToInterestPoints(entityManager, controlledSceneObjects, interestPoints);
-            SpawnMonsters(entityManager, sceneData, spawnedEntities, interestPoints);
+            SpawnMonsters(entityManager, sceneData, spawnedEntities, interestPoints, wildSquads);
             SetInterestPointsReady(entityManager, interestPoints);
 
             for (int index = 0; index < spawnedEntities.Count; index++)
@@ -443,7 +447,8 @@ namespace CrystalMagic.Core
             EntityManager entityManager,
             RuntimeDungeonSceneData sceneData,
             List<Entity> spawnedEntities,
-            IReadOnlyDictionary<int, Entity> interestPoints)
+            IReadOnlyDictionary<int, Entity> interestPoints,
+            IReadOnlyDictionary<int, Entity> wildSquads)
         {
             List<RuntimeDungeonMonsterSpawnData> monsterSpawns = sceneData.MonsterSpawns;
             for (int i = 0; i < monsterSpawns.Count; i++)
@@ -451,7 +456,7 @@ namespace CrystalMagic.Core
                 RuntimeDungeonMonsterSpawnData spawn = monsterSpawns[i];
                 if (spawn != null)
                     spawn.SaveId = i + 1;
-                SpawnMonster(entityManager, spawn, spawnedEntities, interestPoints, false);
+                SpawnMonster(entityManager, spawn, spawnedEntities, interestPoints, false, sceneData.Difficulty);
             }
 
             if (sceneData.InterestPointSpawns == null)
@@ -470,20 +475,48 @@ namespace CrystalMagic.Core
                         pointSpawn.MemberSpawns[memberIndex],
                         spawnedEntities,
                         interestPoints,
-                        true);
+                        false,
+                        sceneData.Difficulty);
                 }
+            }
+
+            if (sceneData.WildSquadSpawns == null)
+                return;
+
+            for (int squadIndex = 0; squadIndex < sceneData.WildSquadSpawns.Count; squadIndex++)
+            {
+                RuntimeDungeonWildSquadSpawnData squadSpawn = sceneData.WildSquadSpawns[squadIndex];
+                if (squadSpawn?.MemberSpawns == null || !wildSquads.TryGetValue(squadSpawn.SquadId, out Entity squadOwner))
+                    continue;
+
+                for (int memberIndex = 0; memberIndex < squadSpawn.MemberSpawns.Count; memberIndex++)
+                {
+                    RuntimeDungeonMonsterSpawnData memberSpawn = squadSpawn.MemberSpawns[memberIndex];
+                    if (memberSpawn != null)
+                        memberSpawn.SaveId = 2000000 + squadIndex * 10000 + memberIndex;
+                    Entity member = SpawnMonster(
+                        entityManager,
+                        memberSpawn,
+                        spawnedEntities,
+                        interestPoints,
+                        false,
+                        sceneData.Difficulty);
+                    AttachWildSquadMember(entityManager, member, squadOwner);
+                }
+                UnitVariableSource.TrySetValue(entityManager, squadOwner, "dungeon.encounter.ready", UnitValue.FromBool(true));
             }
         }
 
-        private static void SpawnMonster(
+        private static Entity SpawnMonster(
             EntityManager entityManager,
             RuntimeDungeonMonsterSpawnData spawn,
             List<Entity> spawnedEntities,
             IReadOnlyDictionary<int, Entity> interestPoints,
-            bool countsAsPatrol)
+            bool countsAsPatrol,
+            DungeonDifficultyComponent difficulty)
         {
             if (spawn == null || string.IsNullOrWhiteSpace(spawn.PrefabName))
-                return;
+                return Entity.Null;
 
             NetworkEntitySpawnInfo entityInfo = NetworkEntitySpawnUtility.CreateInfo(
                 NetworkEntityPrefabType.Unit,
@@ -495,7 +528,12 @@ namespace CrystalMagic.Core
             entityInfo.monsterSquadId = spawn.SquadId;
             entityInfo.monsterIsBoss = spawn.IsBoss;
             if (!NetworkEntitySpawnUtility.TrySpawn(entityManager, entityInfo, out Entity monster))
-                return;
+                return Entity.Null;
+
+            difficulty.HealthApplied = 0;
+            entityManager.AddComponentData(monster, difficulty);
+            if (!entityManager.HasComponent<UnitSpawnInitializationComponent>(monster))
+                entityManager.AddComponentData(monster, new UnitSpawnInitializationComponent { RestoreRuntimeState = 1 });
 
             if (interestPoints.TryGetValue(spawn.RegionId, out Entity interestPoint))
             {
@@ -507,13 +545,15 @@ namespace CrystalMagic.Core
                     countsAsPatrol);
             }
             spawnedEntities.Add(monster);
+            return monster;
         }
 
         private static void SpawnInterestPoints(
             EntityManager entityManager,
             RuntimeDungeonSceneData sceneData,
             List<Entity> spawnedEntities,
-            IDictionary<int, Entity> interestPoints)
+            IDictionary<int, Entity> interestPoints,
+            Entity floorController)
         {
             if (sceneData.InterestPointSpawns == null || sceneData.InterestPointSpawns.Count == 0)
                 return;
@@ -548,12 +588,22 @@ namespace CrystalMagic.Core
                 });
                 entityManager.AddBuffer<UnitVariableElement>(pointEntity);
                 entityManager.AddBuffer<UnitVariableConsumerElement>(pointEntity);
-                PopulatePatrolSpawnVariables(entityManager, pointEntity, spawn.MemberSpawns);
+                DungeonPatrolRuntimeUtility.InitializeEncounterVariables(entityManager, pointEntity, spawn.ClearThreat);
+                UnitVariableSource.TrySetValue(entityManager, pointEntity, "dungeon.threat.onPatrolReturn", UnitValue.FromFloat(spawn.PatrolReturnThreat));
+                UnitVariableSource.TrySetValue(entityManager, pointEntity, "dungeon.patrol.hadCombat", UnitValue.FromBool(false));
+                UnitVariableSource.TrySetValue(entityManager, pointEntity, "dungeon.patrol.returningHome", UnitValue.FromBool(false));
+                if (floorController != Entity.Null)
+                    UnitVariableSource.SetOther(entityManager, pointEntity, floorController);
+                DungeonDifficultyUtility.Inherit(entityManager, floorController, pointEntity);
+                UnitVariableSource.TrySetValue(entityManager, pointEntity, "dungeon.encounter.size", UnitValue.FromInt(spawn.InterestSize));
+                UnitRosterUtility.WriteTemplate(entityManager, pointEntity, "dungeon.patrol.template", spawn.PatrolTemplate);
+                UnitRosterUtility.WriteTemplate(entityManager, pointEntity, "dungeon.revenge.template", spawn.RevengeTemplate);
                 entityManager.AddComponentData(pointEntity, new UnitStateScriptComponent
                 {
                     UnitDataId = DungeonPatrolRuntimeUtility.InterestPointUnitDataId,
                     DefinitionIndex = -1,
                 });
+                entityManager.AddComponent<UnitInitializationPendingTag>(pointEntity);
                 entityManager.AddBuffer<StateScriptGraphStateElement>(pointEntity);
                 entityManager.AddBuffer<StateScriptNodeStateElement>(pointEntity);
                 entityManager.AddBuffer<StateScriptSourceCommandElement>(pointEntity);
@@ -578,6 +628,114 @@ namespace CrystalMagic.Core
             }
         }
 
+        private static Entity SpawnFloorController(
+            EntityManager entityManager,
+            RuntimeDungeonSceneData sceneData,
+            List<Entity> spawnedEntities)
+        {
+            Entity controller = entityManager.CreateEntity();
+            entityManager.AddComponentData(controller, LocalTransform.FromPositionRotationScale(
+                new float3(sceneData.PlayerSpawnWorldPosition.x, sceneData.PlayerSpawnWorldPosition.y, sceneData.PlayerSpawnWorldPosition.z),
+                quaternion.identity,
+                1f));
+            entityManager.AddComponentData(controller, new UnitFactionComponent { Value = UnitFactionType.Interactable });
+            entityManager.AddComponentData(controller, new UnitVariableComponent { Other = Entity.Null });
+            entityManager.AddBuffer<UnitVariableElement>(controller);
+            entityManager.AddBuffer<UnitVariableConsumerElement>(controller);
+            entityManager.AddComponentData(controller, sceneData.Difficulty);
+            UnitVariableSource.TrySetValue(entityManager, controller, "dungeon.floor.number", UnitValue.FromInt(sceneData.Difficulty.Floor));
+            UnitVariableSource.TrySetValue(entityManager, controller, "dungeon.floor.healthMultiplier", UnitValue.FromFloat(sceneData.Difficulty.HealthMultiplier));
+            UnitVariableSource.TrySetValue(entityManager, controller, "dungeon.floor.budgetMultiplier", UnitValue.FromFloat(sceneData.Difficulty.BudgetMultiplier));
+            UnitVariableSource.TrySetValue(entityManager, controller, "dungeon.floor.threat", UnitValue.FromFloat(0f));
+            UnitVariableSource.TrySetValue(entityManager, controller, "dungeon.revenge.wave", UnitValue.FromInt(0));
+            entityManager.AddComponentData(controller, new UnitStateScriptComponent
+            {
+                UnitDataId = DungeonPatrolRuntimeUtility.FloorControllerUnitDataId,
+                DefinitionIndex = -1,
+            });
+            entityManager.AddComponent<UnitInitializationPendingTag>(controller);
+            entityManager.AddBuffer<StateScriptGraphStateElement>(controller);
+            entityManager.AddBuffer<StateScriptNodeStateElement>(controller);
+            entityManager.AddBuffer<StateScriptSourceCommandElement>(controller);
+            entityManager.AddBuffer<StateScriptSourceCommandArgumentElement>(controller);
+            entityManager.AddBuffer<StateScriptExternalResultElement>(controller);
+            entityManager.AddComponent<DungeonFloorControllerComponent>(controller);
+            entityManager.AddComponent<DungeonRuntimeOwnedEntity>(controller);
+            spawnedEntities.Add(controller);
+            return controller;
+        }
+
+        private static Dictionary<int, Entity> SpawnWildSquads(
+            EntityManager entityManager,
+            RuntimeDungeonSceneData sceneData,
+            List<Entity> spawnedEntities,
+            Entity floorController)
+        {
+            Dictionary<int, Entity> squads = new();
+            if (sceneData.WildSquadSpawns == null)
+                return squads;
+
+            for (int index = 0; index < sceneData.WildSquadSpawns.Count; index++)
+            {
+                RuntimeDungeonWildSquadSpawnData spawn = sceneData.WildSquadSpawns[index];
+                if (spawn == null || squads.ContainsKey(spawn.SquadId))
+                    continue;
+
+                Entity squad = entityManager.CreateEntity();
+                entityManager.AddComponentData(squad, LocalTransform.FromPositionRotationScale(
+                    new float3(spawn.WorldPosition.x, spawn.WorldPosition.y, spawn.WorldPosition.z),
+                    quaternion.identity,
+                    1f));
+                entityManager.AddComponentData(squad, new UnitFactionComponent { Value = UnitFactionType.Interactable });
+                entityManager.AddComponentData(squad, new UnitVariableComponent { Other = Entity.Null });
+                entityManager.AddBuffer<UnitVariableElement>(squad);
+                entityManager.AddBuffer<UnitVariableConsumerElement>(squad);
+                DungeonPatrolRuntimeUtility.InitializeEncounterVariables(entityManager, squad, spawn.ClearThreat);
+                entityManager.AddComponentData(squad, new UnitStateScriptComponent
+                {
+                    UnitDataId = DungeonPatrolRuntimeUtility.WildSquadUnitDataId,
+                    DefinitionIndex = -1,
+                });
+                entityManager.AddComponent<UnitInitializationPendingTag>(squad);
+                entityManager.AddBuffer<StateScriptGraphStateElement>(squad);
+                entityManager.AddBuffer<StateScriptNodeStateElement>(squad);
+                entityManager.AddBuffer<StateScriptSourceCommandElement>(squad);
+                entityManager.AddBuffer<StateScriptSourceCommandArgumentElement>(squad);
+                entityManager.AddBuffer<StateScriptExternalResultElement>(squad);
+                if (floorController != Entity.Null)
+                    UnitVariableSource.SetOther(entityManager, squad, floorController);
+                DungeonDifficultyUtility.Inherit(entityManager, floorController, squad);
+                entityManager.AddComponentData(squad, new DungeonWildSquadComponent { SquadId = spawn.SquadId });
+                entityManager.AddComponent<DungeonRuntimeOwnedEntity>(squad);
+                spawnedEntities.Add(squad);
+                squads.Add(spawn.SquadId, squad);
+            }
+
+            return squads;
+        }
+
+        private static void AttachWildSquadMember(EntityManager entityManager, Entity member, Entity squadOwner)
+        {
+            if (member == Entity.Null || squadOwner == Entity.Null || !entityManager.Exists(member) || !entityManager.Exists(squadOwner))
+                return;
+
+            if (!entityManager.HasComponent<UnitVariableComponent>(member))
+                entityManager.AddComponentData(member, new UnitVariableComponent { Other = Entity.Null });
+            if (!entityManager.HasBuffer<UnitVariableElement>(member))
+                entityManager.AddBuffer<UnitVariableElement>(member);
+            if (!entityManager.HasBuffer<UnitVariableConsumerElement>(member))
+                entityManager.AddBuffer<UnitVariableConsumerElement>(member);
+            UnitVariableSource.SetOther(entityManager, member, squadOwner);
+            UnitVariableSource.TrySetValue(entityManager, member, DungeonPatrolRuntimeUtility.GuardMemberKey, UnitValue.FromBool(true));
+            UnitVariableSource.TrySetValue(entityManager, squadOwner, "dungeon.encounter.populated", UnitValue.FromBool(true));
+
+            UnitOwnerComponent owner = new() { Owner = squadOwner };
+            if (entityManager.HasComponent<UnitOwnerComponent>(member))
+                entityManager.SetComponentData(member, owner);
+            else
+                entityManager.AddComponentData(member, owner);
+        }
+
         private static void LinkSceneObjectsToInterestPoints(
             EntityManager entityManager,
             IReadOnlyDictionary<Entity, int> controlledSceneObjects,
@@ -600,6 +758,7 @@ namespace CrystalMagic.Core
                     entityManager.GetComponentData<DungeonInterestPointComponent>(pair.Value);
                 point.EncounterReady = 1;
                 entityManager.SetComponentData(pair.Value, point);
+                UnitVariableSource.TrySetValue(entityManager, pair.Value, "dungeon.encounter.ready", UnitValue.FromBool(true));
             }
         }
 
@@ -661,33 +820,6 @@ namespace CrystalMagic.Core
             return !query.IsEmptyIgnoreFilter;
         }
 
-        private static void PopulatePatrolSpawnVariables(
-            EntityManager entityManager,
-            Entity entity,
-            List<RuntimeDungeonMonsterSpawnData> memberSpawns)
-        {
-            string listKey = DungeonPatrolRuntimeUtility.PatrolSpawnListKey;
-            int count = memberSpawns?.Count ?? 0;
-            UnitVariableSource.TrySetValue(entityManager, entity, $"{listKey}.count", UnitValue.FromInt(count));
-            for (int index = 0; index < count; index++)
-            {
-                RuntimeDungeonMonsterSpawnData spawn = memberSpawns[index];
-                if (spawn == null)
-                    continue;
-
-                string entryKey = $"{listKey}.{index}";
-                UnitVariableSource.TrySetValue(entityManager, entity, $"{entryKey}.unit", UnitValue.FromString(spawn.PrefabName));
-                UnitVariableSource.TrySetValue(entityManager, entity, $"{entryKey}.position", UnitValue.FromFloat3(new float3(
-                    spawn.WorldPosition.x,
-                    spawn.WorldPosition.y,
-                    spawn.WorldPosition.z)));
-                UnitVariableSource.TrySetValue(entityManager, entity, $"{entryKey}.hasMonsterData", UnitValue.FromBool(true));
-                UnitVariableSource.TrySetValue(entityManager, entity, $"{entryKey}.monsterSaveId", UnitValue.FromInt(spawn.SaveId));
-                UnitVariableSource.TrySetValue(entityManager, entity, $"{entryKey}.monsterRegionId", UnitValue.FromInt(spawn.RegionId));
-                UnitVariableSource.TrySetValue(entityManager, entity, $"{entryKey}.monsterSquadId", UnitValue.FromInt(spawn.SquadId));
-                UnitVariableSource.TrySetValue(entityManager, entity, $"{entryKey}.monsterIsBoss", UnitValue.FromBool(spawn.IsBoss));
-            }
-        }
 
         private static void DestroyRuntimeOwnedEntities(EntityManager entityManager)
         {

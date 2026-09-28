@@ -5,6 +5,7 @@ using System.IO;
 using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.OpenField;
+using Unity.Collections;
 using UnityEngine;
 
 namespace CrystalMagic.Core
@@ -23,6 +24,7 @@ namespace CrystalMagic.Core
             theme.EnsureValid();
             RuntimeDungeonSceneData scene = new()
             {
+                Difficulty = theme.OpenField.Difficulty.Resolve(floor),
                 CellWorldSize = CellWorldSize,
                 PlayerSpawnWorldPosition = ToWorld(layout, layout.Entrance),
             };
@@ -313,22 +315,41 @@ namespace CrystalMagic.Core
                     ? OpenFieldInterestSizeData.Small
                     : (OpenFieldInterestSizeData)point.Size;
                 bool requireBoss = point != null && point.IsExitInterestPoint && isBossFloor;
-                OpenFieldDungeonSquadData squad = SelectSquad(theme.OpenField, size, requireBoss, layout.Seed, placement.SquadId);
+                OpenFieldDungeonSquadData squad = placement.Type == OpenFieldContentType.WildSquad
+                    ? SelectWildSquad(theme.OpenField, layout.Seed, placement.SquadId)
+                    : SelectSquad(theme.OpenField, size, requireBoss, layout.Seed, placement.SquadId);
                 if (squad == null)
                     continue;
 
                 RuntimeDungeonInterestPointSpawnData interestPointSpawn = placement.Type == OpenFieldContentType.InterestSquad
                     ? FindInterestPointSpawn(scene, placement.EncounterId)
                     : null;
+                RuntimeDungeonWildSquadSpawnData wildSquadSpawn = placement.Type == OpenFieldContentType.WildSquad
+                    ? new RuntimeDungeonWildSquadSpawnData
+                    {
+                        SquadId = placement.SquadId,
+                        WorldPosition = ToWorld(layout, placement.Cell),
+                        ClearThreat = theme.OpenField.Content.WildSquadClearThreat,
+                    }
+                    : null;
                 if (placement.Type == OpenFieldContentType.InterestSquad && interestPointSpawn == null)
                     continue;
 
                 if (interestPointSpawn != null)
+                {
                     interestPointSpawn.SquadId = placement.SquadId;
+                    interestPointSpawn.ClearThreat = theme.OpenField.Content.GetClearThreat(point.Size);
+                    interestPointSpawn.PatrolReturnThreat = theme.OpenField.Content.PatrolReturnThreat;
+                    interestPointSpawn.InterestSize = (int)point.Size;
+                    interestPointSpawn.PatrolTemplate = squad.Patrol;
+                    interestPointSpawn.RevengeTemplate = squad.Revenge;
+                }
+                if (wildSquadSpawn != null)
+                    scene.WildSquadSpawns.Add(wildSquadSpawn);
 
                 System.Random random = new(layout.Seed ^ (placement.SquadId * 486187739));
                 int localIndex = 0;
-                foreach (UnitData unit in BuildSquadRoster(squad, random))
+                foreach (UnitData unit in BuildSquadRoster(squad, random, scene.Difficulty.BudgetMultiplier))
                 {
                     UnitDungeonFootprintModuleData footprint = unit.GetModule<UnitDungeonFootprintModuleData>();
                     int footprintWidth = Mathf.Max(1, footprint?.Width ?? 1);
@@ -365,76 +386,46 @@ namespace CrystalMagic.Core
                     };
                     if (interestPointSpawn != null)
                         interestPointSpawn.MemberSpawns.Add(memberSpawn);
+                    else if (wildSquadSpawn != null)
+                        wildSquadSpawn.MemberSpawns.Add(memberSpawn);
                     else
                         scene.MonsterSpawns.Add(memberSpawn);
                 }
             }
         }
 
-        private static List<UnitData> BuildSquadRoster(OpenFieldDungeonSquadData squad, System.Random random)
+        private static List<UnitData> BuildSquadRoster(OpenFieldDungeonSquadData squad, System.Random random, float budgetMultiplier)
         {
-            List<ResolvedSquadMember> choices = new();
+            List<UnitData> units = new();
+            NativeList<UnitRosterUtility.Choice> choices = new(Allocator.Temp);
+            NativeList<int> selected = new(Allocator.Temp);
             List<UnitData> roster = new();
-            int totalCost = 0;
-            foreach (OpenFieldDungeonSquadMemberData member in squad.Members)
+            try
             {
-                if (member == null || string.IsNullOrWhiteSpace(member.UnitName))
-                    continue;
-
-                UnitData unit = DataComponent.Instance?.Find<UnitData>(row => row.Name == member.UnitName);
-                if (unit == null || string.IsNullOrWhiteSpace(unit.PrefabPath))
-                    continue;
-
-                ResolvedSquadMember choice = new(unit, Mathf.Max(1, member.Cost), Mathf.Max(1, member.Weight));
-                choices.Add(choice);
-                int minimum = Mathf.Max(0, member.MinCount);
-                for (int index = 0; index < minimum; index++)
+                foreach (OpenFieldDungeonSquadMemberData member in squad.Members)
                 {
-                    roster.Add(unit);
-                    totalCost += choice.Cost;
+                    if (member == null || string.IsNullOrWhiteSpace(member.UnitName))
+                        continue;
+
+                    UnitData unit = DataComponent.Instance?.Find<UnitData>(row => row.Name == member.UnitName);
+                    if (unit == null || string.IsNullOrWhiteSpace(unit.PrefabPath))
+                        continue;
+
+                    units.Add(unit);
+                    choices.Add(new UnitRosterUtility.Choice
+                    {
+                        Unit = new FixedString128Bytes(Path.GetFileNameWithoutExtension(unit.PrefabPath)),
+                        Cost = Mathf.Max(1, member.Cost), Weight = Mathf.Max(1, member.Weight),
+                        MinCount = Mathf.Max(0, member.MinCount),
+                    });
                 }
+
+                var rosterRandom = Unity.Mathematics.Random.CreateFromIndex((uint)random.Next());
+                if (UnitRosterUtility.Build(choices.AsArray(), Mathf.Max(1, squad.CostLimit), budgetMultiplier, ref rosterRandom, ref selected))
+                    foreach (int index in selected) roster.Add(units[index]);
+                return roster;
             }
-
-            int costLimit = Mathf.Max(1, squad.CostLimit);
-            while (totalCost < costLimit && choices.Count > 0)
-            {
-                ResolvedSquadMember choice = SelectWeightedMember(choices, random);
-                roster.Add(choice.Unit);
-                totalCost += choice.Cost;
-            }
-
-            return roster;
-        }
-
-        private static ResolvedSquadMember SelectWeightedMember(List<ResolvedSquadMember> choices, System.Random random)
-        {
-            int totalWeight = 0;
-            foreach (ResolvedSquadMember choice in choices)
-                totalWeight += choice.Weight;
-
-            int roll = random.Next(totalWeight);
-            foreach (ResolvedSquadMember choice in choices)
-            {
-                roll -= choice.Weight;
-                if (roll < 0)
-                    return choice;
-            }
-
-            return choices[0];
-        }
-
-        private readonly struct ResolvedSquadMember
-        {
-            public ResolvedSquadMember(UnitData unit, int cost, int weight)
-            {
-                Unit = unit;
-                Cost = cost;
-                Weight = weight;
-            }
-
-            public UnitData Unit { get; }
-            public int Cost { get; }
-            public int Weight { get; }
+            finally { choices.Dispose(); selected.Dispose(); }
         }
 
         private static void AddLandmarks(
@@ -674,6 +665,39 @@ namespace CrystalMagic.Core
                 return null;
 
             int roll = new System.Random(seed ^ squadId).Next(totalWeight);
+            foreach (OpenFieldDungeonSquadData squad in choices)
+            {
+                roll -= Mathf.Max(1, squad.Weight);
+                if (roll < 0)
+                    return squad;
+            }
+
+            return choices[0];
+        }
+
+        private static OpenFieldDungeonSquadData SelectWildSquad(
+            OpenFieldDungeonThemeData data,
+            int seed,
+            int squadId)
+        {
+            if (data?.WildSquads == null || data.WildSquads.Count == 0)
+                return null;
+
+            List<OpenFieldDungeonSquadData> choices = new();
+            int totalWeight = 0;
+            foreach (OpenFieldDungeonSquadData squad in data.WildSquads)
+            {
+                if (squad == null || squad.IsBossSquad)
+                    continue;
+
+                choices.Add(squad);
+                totalWeight += Mathf.Max(1, squad.Weight);
+            }
+
+            if (choices.Count == 0)
+                return null;
+
+            int roll = new System.Random(seed ^ squadId ^ unchecked((int)0x5F3759DF)).Next(totalWeight);
             foreach (OpenFieldDungeonSquadData squad in choices)
             {
                 roll -= Mathf.Max(1, squad.Weight);

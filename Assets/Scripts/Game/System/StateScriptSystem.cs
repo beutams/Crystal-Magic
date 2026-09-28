@@ -153,6 +153,7 @@ public partial class StateScriptSystem : SystemBase
         {
             Registry = registry,
             Sources = _sources,
+            Difficulties = GetComponentLookup<DungeonDifficultyComponent>(true),
             InputEvents = GetBufferLookup<PlayerInputEventElement>(true),
             PlayerInputs = GetComponentLookup<PlayerInputComponent>(),
             QueryTree = queryTree,
@@ -324,6 +325,7 @@ public partial class StateScriptSystem : SystemBase
 [WithNone(typeof(BattleSpectatorComponent))]
 public partial struct StateScriptEvaluationJob : IJobEntity
 {
+    [ReadOnly] public ComponentLookup<DungeonDifficultyComponent> Difficulties;
     private const int MaxPulseDepth = 128;
     private const byte FlagPrimary = 1 << 0;
     private const byte FlagSecondary = 1 << 1;
@@ -785,6 +787,19 @@ public partial struct StateScriptEvaluationJob : IJobEntity
 #endif
                 return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.Out, ref pulses);
 
+            case StateScriptNodeRuntimeType.NotifyUI:
+                if (pulse.InputPortId != StateScriptPortId.In || node.ExpressionCount != 3 ||
+                    !TryEvaluateNumber(ref graph, node.ExpressionStart, in context, out float noticeFrom) ||
+                    !TryEvaluateNumber(ref graph, node.ExpressionStart + 1, in context, out float noticeTo) ||
+                    !TryEvaluateNumber(ref graph, node.ExpressionStart + 2, in context, out float noticeGroup))
+                    return true;
+                AddManagedCommand(entity, ref managedCommands, new StateScriptManagedCommandElement
+                {
+                    Type = StateScriptManagedCommandType.NotifyUI, GraphIndex = graphIndex, NodeIndex = pulse.NodeIndex,
+                    Position = new float3(noticeFrom, noticeTo, noticeGroup),
+                });
+                return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.Out, ref pulses);
+
             case StateScriptNodeRuntimeType.PublishGameEvent:
                 if (pulse.InputPortId != StateScriptPortId.In || node.ExpressionCount != 1 ||
                     !TryEvaluateValue(ref graph, node.ExpressionStart, in context, out UnitSourceValue reference))
@@ -858,10 +873,16 @@ public partial struct StateScriptEvaluationJob : IJobEntity
 
             case StateScriptNodeRuntimeType.QueryUnits:
                 if (pulse.InputPortId != StateScriptPortId.In ||
-                    !TryQueryUnits(entity, in node, in context, ref graph))
+                    !TryQueryUnits(entity, in node, in context, ref graph, component.TickVersion))
                 {
                     return true;
                 }
+                return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.Out, ref pulses);
+
+            case StateScriptNodeRuntimeType.BuildUnitRoster:
+                if (pulse.InputPortId != StateScriptPortId.In ||
+                    !TryBuildUnitRoster(entity, in node, in context, ref graph, component.TickVersion))
+                    return true;
                 return Emit(ref graph, pulse.NodeIndex, StateScriptPortId.Out, ref pulses);
 
             case StateScriptNodeRuntimeType.ExecuteEffect:
@@ -1074,6 +1095,9 @@ public partial struct StateScriptEvaluationJob : IJobEntity
                     uint requiredKeepTick = math.max(state.TimingStartTick, component.TickVersion - 1);
                     if (state.LastKeepTick < requiredKeepTick)
                     {
+                        if (node.FloatParameters0.y > 0.5f)
+                            break;
+
                         state.Flags = (byte)(state.Flags & ~FlagPrimary);
                         states[stateIndex] = state;
                         if (!EmitAndDrain(
@@ -1527,9 +1551,10 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         Entity entity,
         in StateScriptNodeDefinition node,
         in UnitSourceContext context,
-        ref StateScriptGraphDefinitionBlob graph)
+        ref StateScriptGraphDefinitionBlob graph,
+        uint tickVersion)
     {
-        if (node.ExpressionCount != 5 ||
+        if ((node.ExpressionCount != 5 && node.ExpressionCount != 7) ||
             !TryEvaluateValue(ref graph, node.ExpressionStart, in context, out UnitSourceValue centerValue) ||
             !centerValue.TryGetFloat3(out float3 center) ||
             !TryEvaluateValue(ref graph, node.ExpressionStart + 1, in context, out UnitSourceValue directionValue) ||
@@ -1573,7 +1598,43 @@ public partial struct StateScriptEvaluationJob : IJobEntity
             ref visitor,
             includeDead: node.FloatParameters0.z <= 0.5f);
 
-        SortQueryResults(
+        bool selectHighest = (StateScriptUnitQuerySortMode)(int)node.FloatParameters0.x ==
+                             StateScriptUnitQuerySortMode.HighestPriorityRandomTie;
+        if (node.ExpressionCount == 7)
+        {
+            var random = Unity.Mathematics.Random.CreateFromIndex(math.hash(new uint3(
+                (uint)entity.Index, tickVersion, (uint)node.ExpressionStart)));
+            float bestPriority = float.NegativeInfinity;
+            int ties = 0;
+            UnitQueryHit selected = default;
+            for (int i = QueryResults.Length - 1; i >= 0; i--)
+            {
+                UnitQueryHit hit = QueryResults[i];
+                UnitSourceContext candidateContext = new(hit.Entity, entity);
+                if (!TryEvaluateCondition(ref graph, node.ExpressionStart + 5, in candidateContext) ||
+                    !TryEvaluateNumber(ref graph, node.ExpressionStart + 6, in candidateContext, out float priority) ||
+                    !math.isfinite(priority))
+                {
+                    QueryResults.RemoveAtSwapBack(i);
+                    continue;
+                }
+                if (!selectHighest) continue;
+                if (priority > bestPriority)
+                {
+                    bestPriority = priority;
+                    ties = 1;
+                    selected = hit;
+                }
+                else if (priority == bestPriority && random.NextInt(++ties) == 0)
+                    selected = hit;
+            }
+            if (selectHighest && ties > 0)
+            {
+                QueryResults.Clear();
+                QueryResults.Add(selected);
+            }
+        }
+        if (!selectHighest) SortQueryResults(
             (StateScriptUnitQuerySortMode)(int)node.FloatParameters0.x,
             center,
             ref QueryResults);
@@ -1584,6 +1645,93 @@ public partial struct StateScriptEvaluationJob : IJobEntity
             return false;
         return node.FloatParameters0.w <= 0.5f ||
                AppendQueryResultsToExclusions(entity, node.Key, excludedEntityCount, resultCount);
+    }
+
+    private bool TryBuildUnitRoster(Entity entity, in StateScriptNodeDefinition node,
+        in UnitSourceContext context, ref StateScriptGraphDefinitionBlob graph, uint tickVersion)
+    {
+        TryBuildResultKey(node.Text, "count", out FixedString128Bytes countKey);
+        int oldCount = ReadRosterInt(entity, countKey);
+        // Invalid/empty templates must never leave an old roster available to spawn.
+        SetVariable(entity, countKey, UnitSourceValue.FromInt(0));
+        TryBuildResultKey(node.Text, "budget", out FixedString128Bytes effectiveBudgetKey);
+        SetVariable(entity, effectiveBudgetKey, UnitSourceValue.FromFloat(0f));
+        if (node.ExpressionCount != 3 ||
+            !TryEvaluateValue(ref graph, node.ExpressionStart, in context, out UnitSourceValue templateValue) ||
+            !templateValue.TryGetEntity(out Entity templateEntity) || templateEntity == Entity.Null ||
+            !TryEvaluateNumber(ref graph, node.ExpressionStart + 1, in context, out float budget) ||
+            !TryEvaluateValue(ref graph, node.ExpressionStart + 2, in context, out UnitSourceValue centerValue) ||
+            !centerValue.TryGetFloat3(out float3 center) || !math.all(math.isfinite(center)))
+            return false;
+        TryBuildResultKey(node.Key, "count", out FixedString128Bytes templateCountKey);
+        int choiceCount = ReadRosterInt(templateEntity, templateCountKey);
+        if (choiceCount <= 0) return false;
+        using NativeList<UnitRosterUtility.Choice> choices = new(choiceCount, Allocator.Temp);
+        NativeList<int> roster = new(Allocator.Temp);
+        try
+        {
+            for (int i = 0; i < choiceCount; i++)
+            {
+                FixedString128Bytes unitKey = RosterEntryKey(node.Key, i, "unit");
+                UnitSourceArguments args = default;
+                args.Values.Add(UnitSourceValue.FromString(in unitKey));
+                if (!Sources.TryGet(templateEntity, UnitSourceId.UnitVariablesGetString, in args, out UnitSourceValue unitValue) ||
+                    !unitValue.TryGetString(out FixedString128Bytes unit))
+                    return false;
+                choices.Add(new UnitRosterUtility.Choice
+                {
+                    Unit = unit,
+                    MinCount = ReadRosterInt(templateEntity, RosterEntryKey(node.Key, i, "minCount")),
+                    Cost = ReadRosterInt(templateEntity, RosterEntryKey(node.Key, i, "cost")),
+                    Weight = ReadRosterInt(templateEntity, RosterEntryKey(node.Key, i, "weight")),
+                });
+            }
+            var random = Unity.Mathematics.Random.CreateFromIndex(math.hash(new uint4(
+                (uint)entity.Index, (uint)entity.Version, tickVersion, (uint)node.ExpressionStart)));
+            float budgetMultiplier = Difficulties.TryGetComponent(entity, out DungeonDifficultyComponent difficulty)
+                ? difficulty.BudgetMultiplier : 1f;
+            if (!UnitRosterUtility.Build(choices.AsArray(), budget, budgetMultiplier, ref random, ref roster))
+                return false;
+            SetVariable(entity, effectiveBudgetKey, UnitSourceValue.FromFloat(budget * budgetMultiplier));
+            for (int i = 0; i < roster.Length; i++)
+            {
+                float2 offset = random.NextFloat2Direction() * math.sqrt(random.NextFloat()) * node.FloatParameters0.x;
+                if (!SetVariable(entity, RosterEntryKey(node.Text, i, "unit"), UnitSourceValue.FromString(choices[roster[i]].Unit)) ||
+                    !SetVariable(entity, RosterEntryKey(node.Text, i, "position"), UnitSourceValue.FromFloat3(center + new float3(offset, 0))))
+                    return false;
+                SetVariable(entity, RosterEntryKey(node.Text, i, "hasMonsterData"), UnitSourceValue.FromBool(false));
+            }
+            for (int i = roster.Length; i < oldCount; i++)
+            {
+                RemoveRosterVariable(entity, RosterEntryKey(node.Text, i, "unit"));
+                RemoveRosterVariable(entity, RosterEntryKey(node.Text, i, "position"));
+                RemoveRosterVariable(entity, RosterEntryKey(node.Text, i, "hasMonsterData"));
+            }
+            return SetVariable(entity, countKey, UnitSourceValue.FromInt(roster.Length));
+        }
+        finally { roster.Dispose(); }
+    }
+
+    private int ReadRosterInt(Entity entity, in FixedString128Bytes key)
+    {
+        UnitSourceArguments args = default;
+        args.Values.Add(UnitSourceValue.FromString(in key));
+        return Sources.TryGet(entity, UnitSourceId.UnitVariablesGetNumber, in args, out UnitSourceValue value) &&
+               value.TryGetInt(out int number) ? number : 0;
+    }
+
+    private void RemoveRosterVariable(Entity entity, in FixedString128Bytes key)
+    {
+        UnitSourceArguments args = default;
+        args.Values.Add(UnitSourceValue.FromString(in key));
+        Sources.TrySet(entity, UnitSourceId.UnitVariablesRemove, in args);
+    }
+
+    private static FixedString128Bytes RosterEntryKey(in FixedString128Bytes prefix, int index, in FixedString32Bytes suffix)
+    {
+        TryBuildResultKey(prefix, index, out FixedString128Bytes entry);
+        TryBuildResultKey(entry, suffix, out FixedString128Bytes key);
+        return key;
     }
 
     private bool TryReadQueryExclusions(

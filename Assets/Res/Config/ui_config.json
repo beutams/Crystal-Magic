@@ -25,7 +25,8 @@
             "order": 80,
             "uiNames": [
                 "UnitHealthBarUI",
-                "MinimapUI"
+                "MinimapUI",
+                "NotificationUI"
             ]
         },
         {

@@ -90,6 +90,9 @@ namespace CrystalMagic.Game.Data
                     case QueryUnitsActionNodeData queryUnits:
                         queryUnits.EnsureValid();
                         break;
+                    case BuildUnitRosterActionNodeData roster:
+                        roster.EnsureValid();
+                        break;
                     case ExecuteEffectActionNodeData executeEffect:
                         executeEffect.EnsureValid();
                         break;
@@ -339,6 +342,7 @@ namespace CrystalMagic.Game.Data
     [FactoryKey("SpawnUnit", 15, "Spawn Unit")]
     public sealed class SpawnUnitActionNodeData : ActionStateScriptNodeData
     {
+        public string SpawnedNotificationKey = string.Empty;
         // When set, entries are read from UnitVariableComponent using:
         // <key>.count and <key>.<index>.(unit|position|monster...).
         public string VariableListKey = string.Empty;
@@ -352,10 +356,35 @@ namespace CrystalMagic.Game.Data
         // Keeps spawned variables local and exposes the spawner through UnitSourceTarget.Other.
         public bool ShareVariablesWithSpawner;
         public bool RestoreRuntimeState;
+        public string MemberBoolKey = string.Empty;
 
         public SpawnUnitActionNodeData()
         {
             Type = "SpawnUnit";
+        }
+    }
+
+    [Serializable]
+    [FactoryKey("BuildUnitRoster", 29, "Build Unit Roster")]
+    public sealed class BuildUnitRosterActionNodeData : ActionStateScriptNodeData
+    {
+        public string TemplateKey = string.Empty;
+        public string ResultKey = string.Empty;
+        public ValueExpression TemplateEntity = new() { Kind = ValueExpressionKind.Getter, GetterKey = "unit.self.entity" };
+        public ValueExpression CostLimit = new() { Literal = UnitValue.FromInt(1) };
+        public ValueExpression Center = QueryUnitsActionNodeData.CreateDefaultCenterExpression();
+        public float SpawnRadius = 2f;
+
+        public BuildUnitRosterActionNodeData() { Type = "BuildUnitRoster"; }
+
+        public void EnsureValid()
+        {
+            TemplateKey ??= string.Empty;
+            ResultKey ??= string.Empty;
+            TemplateEntity ??= new ValueExpression { Kind = ValueExpressionKind.Getter, GetterKey = "unit.self.entity" };
+            CostLimit ??= new ValueExpression { Literal = UnitValue.FromInt(1) };
+            Center ??= QueryUnitsActionNodeData.CreateDefaultCenterExpression();
+            SpawnRadius = math.max(0f, SpawnRadius);
         }
     }
 
@@ -365,6 +394,7 @@ namespace CrystalMagic.Game.Data
         None,
         DistanceAscending,
         DistanceDescending,
+        HighestPriorityRandomTie,
     }
 
     [Serializable]
@@ -388,6 +418,9 @@ namespace CrystalMagic.Game.Data
         public int MaxCount;
         public StateScriptUnitQuerySortMode SortMode;
         public string ResultKey = string.Empty;
+        // Evaluated with Self = candidate, Other = querying entity.
+        public List<ConditionConfig> CandidateConditions = new();
+        public ValueExpression Priority = new() { Literal = UnitValue.FromInt(0) };
 
         public QueryUnitsActionNodeData()
         {
@@ -404,6 +437,8 @@ namespace CrystalMagic.Game.Data
             MaxCount = math.max(0, MaxCount);
             ResultKey ??= string.Empty;
             ExcludedEntitiesKey ??= string.Empty;
+            CandidateConditions ??= new List<ConditionConfig>();
+            Priority ??= new ValueExpression { Literal = UnitValue.FromInt(0) };
         }
 
         public static ValueExpression CreateDefaultCenterExpression()
@@ -501,6 +536,17 @@ namespace CrystalMagic.Game.Data
     }
 
     [Serializable]
+    [FactoryKey("NotifyUI", 30, "Notify UI")]
+    public sealed class NotifyUIActionNodeData : ActionStateScriptNodeData
+    {
+        public string NotificationKey = string.Empty;
+        public ValueExpression From = new() { Literal = UnitValue.FromFloat(0) };
+        public ValueExpression To = new() { Literal = UnitValue.FromFloat(0) };
+        public ValueExpression Group = new() { Literal = UnitValue.FromFloat(0) };
+        public NotifyUIActionNodeData() { Type = "NotifyUI"; }
+    }
+
+    [Serializable]
     [FactoryKey("PublishGameEvent", 12, "Publish Game Event")]
     public sealed class PublishGameEventStateScriptNodeData : ActionStateScriptNodeData
     {
@@ -546,6 +592,10 @@ namespace CrystalMagic.Game.Data
     public sealed class KeepStateScriptNodeData : StateStateScriptNodeData
     {
         public float DurationSeconds = 1f;
+        // A normal Keep stops when no Keep pulse arrives this frame.  Pausable
+        // timers retain their elapsed time instead, so a graph can gate the
+        // pulse with a condition such as "no player nearby".
+        public bool PauseWhenNotKept;
 
         public KeepStateScriptNodeData()
         {

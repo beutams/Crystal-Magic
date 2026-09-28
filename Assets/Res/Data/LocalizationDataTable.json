@@ -911,6 +911,18 @@
             "Key": "npc.network_lobby.name",
             "ChineseSimplified": "联机大厅",
             "English": "Online Lobby"
+        },
+        {
+            "Id": 152,
+            "Key": "ui.notification.threat",
+            "ChineseSimplified": "威胁度",
+            "English": "Threat"
+        },
+        {
+            "Id": 153,
+            "Key": "ui.notification.revenge",
+            "ChineseSimplified": "复仇小队已出动",
+            "English": "Revenge squad dispatched"
         }
     ]
 }

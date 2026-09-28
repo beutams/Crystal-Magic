@@ -11,6 +11,114 @@ This document records the approved direction for replacing the room-and-corridor
 
 This is a design document only. It does not itself change the runtime generator.
 
+### Floor threat settlement
+
+Threat values use percentage points (100 = one full meter). The current 200 × 200
+configuration contains 22 wild squads, 12 small, 6 medium and 3 large interest
+points, including the exit point. Clear rewards are respectively 3, 8, 13 and 20:
+`22 × 3 + 12 × 8 + 6 × 13 + 3 × 20 = 300`.
+
+These values are editable in `DungeonThemeData.OpenField.Content` through
+`WildSquadClearThreat`, `InterestClearThreat` (S/M/L), and `PatrolReturnThreat` (40).
+The builder copies rewards to each invisible encounter parent's local variables.
+Both wild-squad and interest-point parents run the same `Encounter Clear Threat`
+state graph. It waits for initialization and at least one spawned guard, then
+awards the clear reward to the floor owner's `dungeon.floor.threat` once the last
+guard dies. Living patrols do not prevent their home from being cleared.
+
+Patrol members record contact with players in `Patrol Combat Contact`; a contact
+remains active until no living player is within twice that member's perception
+radius. The home point records `dungeon.patrol.hadCombat`, sends survivors home
+after the last contact ends, and adds 40 after everyone arrives and completes the
+arrival wait. It then clears that flag. Patrol wipes discard it; a cleared home
+cannot settle a patrol return. Ordinary A–B–A travel never awards combat threat.
+No patrol discovery/reporting of cleared points is used.
+
+The generic `unit.variables.livingConsumerBoolCount(key)` getter counts living
+direct consumers whose local boolean is true, excluding enabled death/destruction
+markers. State graphs use this to distinguish guards, patrols and combat contacts;
+reward amounts and settlement transitions remain in configuration/state graphs.
+
+### Runtime rosters and escalating revenge squad budgets (复仇小队)
+
+Each encounter squad now contains separate `Patrol` and `Revenge` templates, editable
+in the dungeon editor. Each template has `CostLimit` and member `MinCount`, `Cost`,
+and random `Weight`. Current patrol budgets are 4/6/8 for S/M/L points; revenge base
+budgets are 10/16/24. Templates use members from the associated garrison roster.
+
+The builder publishes immutable templates to the point's variables under
+`dungeon.patrol.template` and `dungeon.revenge.template`:
+`<key>.costLimit`, `<key>.count`, and `<key>.<index>.unit/minCount/cost/weight`.
+It no longer copies the initial garrison roster into the patrol spawn list.
+
+The generic `BuildUnitRoster` state-script action accepts a template entity,
+template prefix, numeric Cost Limit expression, center, radius, and result prefix.
+It executes synchronously in the state-script job, using the same selection
+algorithm as initial map generation. Minimums consume budget; remaining budget is
+randomly filled until cost reaches/exceeds the limit. It writes the existing
+`<result>.count` / `<result>.<index>.unit/position` spawn-list format, so an `Out`
+edge can directly feed `SpawnUnit`. Empty/invalid templates do not emit `Out` and
+clear the result count. `SpawnUnit.MemberBoolKey` optionally marks generated units.
+
+The floor's state graph queries a living player and chooses a ready interest point
+with surviving guards and the largest `dungeon.encounter.size`; equal maxima are
+randomized. This uses generic QueryUnits candidate conditions and the
+`HighestPriorityRandomTie` selection mode (candidate Self, requester Other).
+`unit.variables.getNumberOf(entity, key)` reads the selected template's base budget.
+
+For zero-based completed wave count `dungeon.revenge.wave`, the graph computes
+`dungeon.revenge.budget = selected base budget * (1 + wave * 0.5)`.
+Across waves only the budget grows; minimum counts, costs, and weights remain unchanged.
+It builds a fresh roster, queues spawning, increments the wave, and clears threat
+to zero, including overflow, as configured. No player/source means no wave or
+threat consumption. The wave resets only on a new floor, not when the origin
+changes. Existing revenge squad members belong to the floor, not the origin, and are not retired
+when that interest point dies. Their behavior trees use normal combat in detection
+range and otherwise navigate at native speed toward the floor's updated player
+target, including after disengaging. All spawned units inherit floor cleanup.
+
+Budget settlement currently follows SpawnUnit's existing queued-command semantics;
+runtime prefab-spawn failures do not roll back a queued wave. EditMode tests cover
+selection, arithmetic, roster output, and the command queue; actual spawning and
+movement require a scene playtest.
+
+### Floor difficulty: health and squad budgets only
+
+`OpenField.Difficulty` exposes `HealthGrowthPerFloor` (default 0.10) and
+`BudgetGrowthPerFloor` (default 0.05); the dungeon editor displays both as percentages.
+Growth is linear from the theme's first floor: `1 + (floor - 1) * growth`.
+The floor number currently resets when moving to the next theme; this does not add
+a cross-theme depth counter. Setting a growth value to zero disables that channel.
+
+Map generation resolves one immutable `DungeonDifficultyComponent` snapshot into
+scene data. The floor controller, encounter parents and spawned units receive that
+context. Floor variables `dungeon.floor.number`, `.healthMultiplier` and
+`.budgetMultiplier` mirror the snapshot for inspection; changing those variables
+alone does not recompute difficulty for an already generated floor.
+
+All roster selection goes through `UnitRosterUtility.Build` with an explicit budget
+multiplier: initial garrisons/wild squads pass the scene snapshot; runtime
+`BuildUnitRoster` nodes use the requesting unit's context (or 1 outside a dungeon).
+The node's Cost Limit expression is the **unscaled** budget. Do not multiply floor
+growth again in the graph. `<result>.budget` records the effective budget, while
+templates and their minimums/costs/weights remain unchanged. Revenge squad budgets
+are `base * (1 + wave * 0.5) * floorBudgetMultiplier`.
+
+`DungeonSpawnInitializationSystem` applies health only to Enemy/Boss units with a
+difficulty context. It multiplies the instance's base maximum health, fills new
+units to their resolved maximum, then restores saved current health if requested.
+A per-instance marker prevents repeated initialization from scaling or healing
+again. Dynamic state-script and skill-effect spawns inherit the context even without
+shared blackboard ownership. Initial garrisons retain their guard role during initialization.
+Players, friendly NPCs and encounter controllers are excluded. Attack, defense,
+speed, cooldowns, threat rewards and thresholds do not change. Server health changes
+use the existing authoritative vitality replication; clients do not apply growth again.
+
+Regression tests cover first-floor identity, linear growth, unchanged minima and
+costs, patrol/revenge budget composition, non-monster exclusion, repeat initialization
+and saved-health restoration. Scene spawning, network presentation and movement still
+require Unity playtesting.
+
 ## 1. Map Model
 
 ### 1.1 Cell types

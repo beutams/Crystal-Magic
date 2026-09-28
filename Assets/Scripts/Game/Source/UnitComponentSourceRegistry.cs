@@ -195,6 +195,17 @@ public enum UnitSourceId : ushort
     UnitInteractableRangeSq = 193,
     UnitTreasureOpened = 194,
     UnitTreasureSetOpened = 195,
+    UnitRandomNumber = 196,
+    UnitRandomInteger = 197,
+    UnitRandomBool = 198,
+    UnitRandomFloat2 = 199,
+    UnitRandomFloat3 = 200,
+    UnitRandomDirection2 = 201,
+    UnitRandomDirection3 = 202,
+    UnitMoveTeleportTo = 203,
+    UnitTransformPositionNear = 204,
+    UnitVariablesLivingConsumerBoolCount = 205,
+    UnitVariablesGetNumberOf = 206,
 }
 
 public static class UnitComponentSourceRegistry
@@ -683,6 +694,34 @@ public static class UnitComponentSourceRegistry
                 sourceId = UnitSourceId.UnitPerceptionUnitsByNameCount;
                 schema = new UnitSourceGetSchemaEntry("unit.perception.unitsByNameCount", typeof(UnitPerceptionComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Unit Name", UnitValueCategory.String) });
                 return true;
+            case "unit.random.number":
+                sourceId = UnitSourceId.UnitRandomNumber;
+                schema = new UnitSourceGetSchemaEntry("unit.random.number", typeof(UnitVariableComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Sequence", UnitValueCategory.Number), new ComparatorParameterDefinition("Minimum", UnitValueCategory.Number), new ComparatorParameterDefinition("Maximum", UnitValueCategory.Number) });
+                return true;
+            case "unit.random.integer":
+                sourceId = UnitSourceId.UnitRandomInteger;
+                schema = new UnitSourceGetSchemaEntry("unit.random.integer", typeof(UnitVariableComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Sequence", UnitValueCategory.Number), new ComparatorParameterDefinition("Minimum", UnitValueCategory.Number), new ComparatorParameterDefinition("Maximum", UnitValueCategory.Number) });
+                return true;
+            case "unit.random.bool":
+                sourceId = UnitSourceId.UnitRandomBool;
+                schema = new UnitSourceGetSchemaEntry("unit.random.bool", typeof(UnitVariableComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Sequence", UnitValueCategory.Number), new ComparatorParameterDefinition("True Chance", UnitValueCategory.Number) });
+                return true;
+            case "unit.random.float2":
+                sourceId = UnitSourceId.UnitRandomFloat2;
+                schema = new UnitSourceGetSchemaEntry("unit.random.float2", typeof(UnitVariableComponent), UnitValueCategory.Float2, new[] { new ComparatorParameterDefinition("Sequence", UnitValueCategory.Number), new ComparatorParameterDefinition("Minimum", UnitValueCategory.Float2), new ComparatorParameterDefinition("Maximum", UnitValueCategory.Float2) });
+                return true;
+            case "unit.random.float3":
+                sourceId = UnitSourceId.UnitRandomFloat3;
+                schema = new UnitSourceGetSchemaEntry("unit.random.float3", typeof(UnitVariableComponent), UnitValueCategory.Float3, new[] { new ComparatorParameterDefinition("Sequence", UnitValueCategory.Number), new ComparatorParameterDefinition("Minimum", UnitValueCategory.Float3), new ComparatorParameterDefinition("Maximum", UnitValueCategory.Float3) });
+                return true;
+            case "unit.random.direction2":
+                sourceId = UnitSourceId.UnitRandomDirection2;
+                schema = new UnitSourceGetSchemaEntry("unit.random.direction2", typeof(UnitVariableComponent), UnitValueCategory.Float2, new[] { new ComparatorParameterDefinition("Sequence", UnitValueCategory.Number) });
+                return true;
+            case "unit.random.direction3":
+                sourceId = UnitSourceId.UnitRandomDirection3;
+                schema = new UnitSourceGetSchemaEntry("unit.random.direction3", typeof(UnitVariableComponent), UnitValueCategory.Float3, new[] { new ComparatorParameterDefinition("Sequence", UnitValueCategory.Number) });
+                return true;
             case "unit.self.entity":
                 sourceId = UnitSourceId.UnitSelfEntity;
                 schema = new UnitSourceGetSchemaEntry("unit.self.entity", typeof(UnitStateScriptComponent), UnitValueCategory.Entity, Array.Empty<ComparatorParameterDefinition>());
@@ -703,6 +742,10 @@ public static class UnitComponentSourceRegistry
                 sourceId = UnitSourceId.UnitTransformPositionOf;
                 schema = new UnitSourceGetSchemaEntry("unit.transform.positionOf", typeof(LocalTransform), UnitValueCategory.Float3, new[] { new ComparatorParameterDefinition("Target Unit", UnitValueCategory.Entity) });
                 return true;
+            case "unit.transform.positionNear":
+                sourceId = UnitSourceId.UnitTransformPositionNear;
+                schema = new UnitSourceGetSchemaEntry("unit.transform.positionNear", typeof(LocalTransform), UnitValueCategory.Float3, new[] { new ComparatorParameterDefinition("Target Unit", UnitValueCategory.Entity), new ComparatorParameterDefinition("Distance", UnitValueCategory.Number) });
+                return true;
             case "unit.transform.scale":
                 sourceId = UnitSourceId.UnitTransformScale;
                 schema = new UnitSourceGetSchemaEntry("unit.transform.scale", typeof(LocalTransform), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
@@ -710,6 +753,14 @@ public static class UnitComponentSourceRegistry
             case "unit.variables.consumerCount":
                 sourceId = UnitSourceId.UnitVariablesConsumerCount;
                 schema = new UnitSourceGetSchemaEntry("unit.variables.consumerCount", typeof(UnitVariableComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
+                return true;
+            case "unit.variables.getNumberOf":
+                sourceId = UnitSourceId.UnitVariablesGetNumberOf;
+                schema = new UnitSourceGetSchemaEntry("unit.variables.getNumberOf", typeof(UnitVariableComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Entity", UnitValueCategory.Entity), new ComparatorParameterDefinition("Key", UnitValueCategory.String) });
+                return true;
+            case "unit.variables.livingConsumerBoolCount":
+                sourceId = UnitSourceId.UnitVariablesLivingConsumerBoolCount;
+                schema = new UnitSourceGetSchemaEntry("unit.variables.livingConsumerBoolCount", typeof(UnitVariableComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Key", UnitValueCategory.String) });
                 return true;
             case "unit.variables.count":
                 sourceId = UnitSourceId.UnitVariablesCount;
@@ -922,6 +973,10 @@ public static class UnitComponentSourceRegistry
                 sourceId = UnitSourceId.UnitMoveSetVelocity;
                 schema = new UnitSourceSetSchemaEntry("unit.move.setVelocity", typeof(UnitMoveComponent), new[] { new ComparatorParameterDefinition("Velocity", UnitValueCategory.Float2) }, false);
                 return true;
+            case "unit.move.teleportTo":
+                sourceId = UnitSourceId.UnitMoveTeleportTo;
+                schema = new UnitSourceSetSchemaEntry("unit.move.teleportTo", typeof(UnitMoveComponent), new[] { new ComparatorParameterDefinition("Destination", UnitValueCategory.Float3) }, false);
+                return true;
             case "unit.navigation.setDestination":
                 sourceId = UnitSourceId.UnitNavigationSetDestination;
                 schema = new UnitSourceSetSchemaEntry("unit.navigation.setDestination", typeof(UnitNavigationComponent), new[] { new ComparatorParameterDefinition("Destination", UnitValueCategory.Float3) }, false);
@@ -1005,6 +1060,7 @@ public static class UnitComponentSourceRegistry
             builder.AddGet("unit.transform.scale", typeof(LocalTransform), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
             builder.AddGet("unit.transform.positionOf", typeof(LocalTransform), UnitValueCategory.Float3, new[] { new ComparatorParameterDefinition("Target Unit", UnitValueCategory.Entity) });
             builder.AddGet("unit.transform.directionTo", typeof(LocalTransform), UnitValueCategory.Float2, new[] { new ComparatorParameterDefinition("Target Unit", UnitValueCategory.Entity) });
+            builder.AddGet("unit.transform.positionNear", typeof(LocalTransform), UnitValueCategory.Float3, new[] { new ComparatorParameterDefinition("Target Unit", UnitValueCategory.Entity), new ComparatorParameterDefinition("Distance", UnitValueCategory.Number) });
         }
         if (includeAll || prefab != null && prefab.GetComponentInChildren(typeof(PlayerCurrentSkillAuthoring), true) != null)
         {
@@ -1153,6 +1209,7 @@ public static class UnitComponentSourceRegistry
             builder.AddSet("unit.move.setFrameVelocity", typeof(UnitMoveComponent), new[] { new ComparatorParameterDefinition("Velocity", UnitValueCategory.Float2) }, false);
             builder.AddSet("unit.move.setStateMoveMultiplier", typeof(UnitMoveComponent), new[] { new ComparatorParameterDefinition("Multiplier", UnitValueCategory.Number) }, false);
             builder.AddSet("unit.move.setCommandSpeed", typeof(UnitMoveComponent), new[] { new ComparatorParameterDefinition("Speed", UnitValueCategory.Number) }, false);
+            builder.AddSet("unit.move.teleportTo", typeof(UnitMoveComponent), new[] { new ComparatorParameterDefinition("Destination", UnitValueCategory.Float3) }, false);
         }
         if (includeAll || prefab != null && prefab.GetComponentInChildren(typeof(UnitNavigationAuthoring), true) != null)
         {
@@ -1180,6 +1237,8 @@ public static class UnitComponentSourceRegistry
         {
             builder.AddGet("unit.variables.count", typeof(UnitVariableComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
             builder.AddGet("unit.variables.consumerCount", typeof(UnitVariableComponent), UnitValueCategory.Number, Array.Empty<ComparatorParameterDefinition>());
+            builder.AddGet("unit.variables.livingConsumerBoolCount", typeof(UnitVariableComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Key", UnitValueCategory.String) });
+            builder.AddGet("unit.variables.getNumberOf", typeof(UnitVariableComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Entity", UnitValueCategory.Entity), new ComparatorParameterDefinition("Key", UnitValueCategory.String) });
             builder.AddGet("unit.variables.other", typeof(UnitVariableComponent), UnitValueCategory.Entity, Array.Empty<ComparatorParameterDefinition>());
             builder.AddGet("unit.variables.has", typeof(UnitVariableComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Key", UnitValueCategory.String) });
             builder.AddGet("unit.variables.get", typeof(UnitVariableComponent), UnitValueCategory.Any, new[] { new ComparatorParameterDefinition("Key", UnitValueCategory.String) });
@@ -1191,6 +1250,13 @@ public static class UnitComponentSourceRegistry
             builder.AddGet("unit.variables.getEntity", typeof(UnitVariableComponent), UnitValueCategory.Entity, new[] { new ComparatorParameterDefinition("Key", UnitValueCategory.String) });
             builder.AddGet("unit.variables.getString", typeof(UnitVariableComponent), UnitValueCategory.String, new[] { new ComparatorParameterDefinition("Key", UnitValueCategory.String) });
             builder.AddGet("unit.variables.listEntity", typeof(UnitVariableComponent), UnitValueCategory.Entity, new[] { new ComparatorParameterDefinition("Key", UnitValueCategory.String), new ComparatorParameterDefinition("Index", UnitValueCategory.Number) });
+            builder.AddGet("unit.random.number", typeof(UnitVariableComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Sequence", UnitValueCategory.Number), new ComparatorParameterDefinition("Minimum", UnitValueCategory.Number), new ComparatorParameterDefinition("Maximum", UnitValueCategory.Number) });
+            builder.AddGet("unit.random.integer", typeof(UnitVariableComponent), UnitValueCategory.Number, new[] { new ComparatorParameterDefinition("Sequence", UnitValueCategory.Number), new ComparatorParameterDefinition("Minimum", UnitValueCategory.Number), new ComparatorParameterDefinition("Maximum", UnitValueCategory.Number) });
+            builder.AddGet("unit.random.bool", typeof(UnitVariableComponent), UnitValueCategory.Bool, new[] { new ComparatorParameterDefinition("Sequence", UnitValueCategory.Number), new ComparatorParameterDefinition("True Chance", UnitValueCategory.Number) });
+            builder.AddGet("unit.random.float2", typeof(UnitVariableComponent), UnitValueCategory.Float2, new[] { new ComparatorParameterDefinition("Sequence", UnitValueCategory.Number), new ComparatorParameterDefinition("Minimum", UnitValueCategory.Float2), new ComparatorParameterDefinition("Maximum", UnitValueCategory.Float2) });
+            builder.AddGet("unit.random.float3", typeof(UnitVariableComponent), UnitValueCategory.Float3, new[] { new ComparatorParameterDefinition("Sequence", UnitValueCategory.Number), new ComparatorParameterDefinition("Minimum", UnitValueCategory.Float3), new ComparatorParameterDefinition("Maximum", UnitValueCategory.Float3) });
+            builder.AddGet("unit.random.direction2", typeof(UnitVariableComponent), UnitValueCategory.Float2, new[] { new ComparatorParameterDefinition("Sequence", UnitValueCategory.Number) });
+            builder.AddGet("unit.random.direction3", typeof(UnitVariableComponent), UnitValueCategory.Float3, new[] { new ComparatorParameterDefinition("Sequence", UnitValueCategory.Number) });
             builder.AddSet("unit.variables.addNumber", typeof(UnitVariableComponent), new[] { new ComparatorParameterDefinition("Delta", UnitValueCategory.Number) }, true);
             builder.AddSet("unit.variables.set", typeof(UnitVariableComponent), new[] { new ComparatorParameterDefinition("Value", UnitValueCategory.Any) }, true);
             builder.AddSet("unit.variables.remove", typeof(UnitVariableComponent), new[] { new ComparatorParameterDefinition("Key", UnitValueCategory.String) }, false);
@@ -1921,6 +1987,20 @@ public struct UnitSourceDispatcher
                 return UnitMoveSource.TryGetResolved(6, entity, in _UnitMoveComponentLookup, in _UnitModifierComponentLookup, in arguments, out value);
             case UnitSourceId.UnitMoveRealMoveSpeed:
                 return UnitMoveSource.TryGetResolved(5, entity, in _UnitMoveComponentLookup, in _UnitModifierComponentLookup, in arguments, out value);
+            case UnitSourceId.UnitRandomNumber:
+                return UnitRandomSource.TryGet(0, entity, in arguments, out value);
+            case UnitSourceId.UnitRandomInteger:
+                return UnitRandomSource.TryGet(1, entity, in arguments, out value);
+            case UnitSourceId.UnitRandomBool:
+                return UnitRandomSource.TryGet(2, entity, in arguments, out value);
+            case UnitSourceId.UnitRandomFloat2:
+                return UnitRandomSource.TryGet(3, entity, in arguments, out value);
+            case UnitSourceId.UnitRandomFloat3:
+                return UnitRandomSource.TryGet(4, entity, in arguments, out value);
+            case UnitSourceId.UnitRandomDirection2:
+                return UnitRandomSource.TryGet(5, entity, in arguments, out value);
+            case UnitSourceId.UnitRandomDirection3:
+                return UnitRandomSource.TryGet(6, entity, in arguments, out value);
             case UnitSourceId.UnitSelfEntity:
                 return UnitSelfSource.TryGet(0, entity, in arguments, out value);
             case UnitSourceId.UnitVitalityCurrentHealthPercentage:
@@ -1939,6 +2019,8 @@ public struct UnitSourceDispatcher
                 return UnitTransformSource.TryGetRelation(4, entity, in _LocalTransformLookup, in arguments, out value);
             case UnitSourceId.UnitTransformPositionOf:
                 return UnitTransformSource.TryGetRelation(3, entity, in _LocalTransformLookup, in arguments, out value);
+            case UnitSourceId.UnitTransformPositionNear:
+                return UnitTransformSource.TryGetRelation(5, entity, in _LocalTransformLookup, in arguments, out value);
             case UnitSourceId.UnitPerceptionNearestUnitByFaction:
                 return UnitPerceptionSource.TryGet(6, entity, in _UnitPerceptionComponentLookup, in _UnitPerceptionUnitElementBufferLookup, in _UnitFactionComponentLookup, in _UnitDeathComponentLookup, in _DestroyEntityFlagLookup, in arguments, out value);
             case UnitSourceId.UnitPerceptionNearestUnitByName:
@@ -1960,31 +2042,34 @@ public struct UnitSourceDispatcher
             case UnitSourceId.UnitPerceptionUnitsByNameCount:
                 return UnitPerceptionSource.TryGet(7, entity, in _UnitPerceptionComponentLookup, in _UnitPerceptionUnitElementBufferLookup, in _UnitFactionComponentLookup, in _UnitDeathComponentLookup, in _DestroyEntityFlagLookup, in arguments, out value);
             case UnitSourceId.UnitVariablesConsumerCount:
-                return UnitVariableSource.TryGet(1, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in arguments, out value);
+            case UnitSourceId.UnitVariablesLivingConsumerBoolCount:
+                return UnitVariableSource.TryGet(sourceId == UnitSourceId.UnitVariablesConsumerCount ? 1 : 13, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in _UnitDeathComponentLookup, in arguments, out value);
             case UnitSourceId.UnitVariablesCount:
-                return UnitVariableSource.TryGet(0, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in arguments, out value);
+                return UnitVariableSource.TryGet(0, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in _UnitDeathComponentLookup, in arguments, out value);
             case UnitSourceId.UnitVariablesGet:
-                return UnitVariableSource.TryGet(4, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in arguments, out value);
+                return UnitVariableSource.TryGet(4, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in _UnitDeathComponentLookup, in arguments, out value);
             case UnitSourceId.UnitVariablesGetBool:
-                return UnitVariableSource.TryGet(6, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in arguments, out value);
+                return UnitVariableSource.TryGet(6, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in _UnitDeathComponentLookup, in arguments, out value);
             case UnitSourceId.UnitVariablesGetEntity:
-                return UnitVariableSource.TryGet(9, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in arguments, out value);
+                return UnitVariableSource.TryGet(9, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in _UnitDeathComponentLookup, in arguments, out value);
             case UnitSourceId.UnitVariablesGetFloat2:
-                return UnitVariableSource.TryGet(7, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in arguments, out value);
+                return UnitVariableSource.TryGet(7, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in _UnitDeathComponentLookup, in arguments, out value);
             case UnitSourceId.UnitVariablesGetFloat3:
-                return UnitVariableSource.TryGet(8, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in arguments, out value);
+                return UnitVariableSource.TryGet(8, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in _UnitDeathComponentLookup, in arguments, out value);
             case UnitSourceId.UnitVariablesGetNumber:
-                return UnitVariableSource.TryGet(5, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in arguments, out value);
+                return UnitVariableSource.TryGet(5, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in _UnitDeathComponentLookup, in arguments, out value);
             case UnitSourceId.UnitVariablesGetNumberOrDefault:
-                return UnitVariableSource.TryGet(12, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in arguments, out value);
+                return UnitVariableSource.TryGet(12, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in _UnitDeathComponentLookup, in arguments, out value);
+            case UnitSourceId.UnitVariablesGetNumberOf:
+                return UnitVariableSource.TryGet(14, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in _UnitDeathComponentLookup, in arguments, out value);
             case UnitSourceId.UnitVariablesGetString:
-                return UnitVariableSource.TryGet(10, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in arguments, out value);
+                return UnitVariableSource.TryGet(10, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in _UnitDeathComponentLookup, in arguments, out value);
             case UnitSourceId.UnitVariablesHas:
-                return UnitVariableSource.TryGet(3, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in arguments, out value);
+                return UnitVariableSource.TryGet(3, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in _UnitDeathComponentLookup, in arguments, out value);
             case UnitSourceId.UnitVariablesListEntity:
-                return UnitVariableSource.TryGet(11, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in arguments, out value);
+                return UnitVariableSource.TryGet(11, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in _UnitDeathComponentLookup, in arguments, out value);
             case UnitSourceId.UnitVariablesOther:
-                return UnitVariableSource.TryGet(2, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in arguments, out value);
+                return UnitVariableSource.TryGet(2, entity, in _UnitVariableComponentLookup, in _UnitVariableElementBufferLookup, in _UnitVariableConsumerElementBufferLookup, in _DestroyEntityFlagLookup, in _UnitDeathComponentLookup, in arguments, out value);
             case UnitSourceId.WorldVariablesCount:
                 return WorldVariableSource.TryGet(0, _WorldVariableComponentEntity, in _WorldVariableComponentLookup, in _WorldVariableElementBufferLookup, in arguments, out value);
             case UnitSourceId.WorldVariablesGet:
@@ -2193,6 +2278,13 @@ public struct UnitSourceDispatcher
                     return false;
                 RefRW<UnitMoveComponent> component = _UnitMoveComponentLookup.GetRefRW(entity);
                 return UnitMoveSource.TrySet(1, ref component.ValueRW, in arguments);
+            }
+            case UnitSourceId.UnitMoveTeleportTo:
+            {
+                if (!_UnitMoveComponentLookup.HasComponent(entity))
+                    return false;
+                RefRW<UnitMoveComponent> component = _UnitMoveComponentLookup.GetRefRW(entity);
+                return UnitMoveSource.TrySet(5, ref component.ValueRW, in arguments);
             }
             case UnitSourceId.UnitNavigationSetDestination:
             {

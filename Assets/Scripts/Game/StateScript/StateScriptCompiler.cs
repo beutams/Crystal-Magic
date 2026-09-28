@@ -362,6 +362,34 @@ public static class StateScriptCompiler
                 if (!TryCompileQueryUnits(query, schemaResolver, expressionFactory, graph, ref definition, out error))
                     return false;
                 break;
+            case NotifyUIActionNodeData notification:
+                if (string.IsNullOrWhiteSpace(notification.NotificationKey) ||
+                    !TryCopyFixedString(notification.NotificationKey.Trim(), out definition.NotificationKey))
+                {
+                    error = "NotifyUI requires a notification key of at most 128 bytes.";
+                    return false;
+                }
+                if (!TryAddValueExpression(notification.From, UnitValueCategory.Number, schemaResolver, expressionFactory, graph, out error) ||
+                    !TryAddValueExpression(notification.To, UnitValueCategory.Number, schemaResolver, expressionFactory, graph, out error) ||
+                    !TryAddValueExpression(notification.Group, UnitValueCategory.Number, schemaResolver, expressionFactory, graph, out error))
+                    return false;
+                break;
+            case BuildUnitRosterActionNodeData roster:
+                roster.EnsureValid();
+                if (string.IsNullOrWhiteSpace(roster.TemplateKey) || string.IsNullOrWhiteSpace(roster.ResultKey) ||
+                    !TryCopyFixedString(roster.TemplateKey.Trim(), out definition.Key) || definition.Key.Length > 90 ||
+                    !TryCopyFixedString(roster.ResultKey.Trim(), out definition.Text) || definition.Text.Length > 90 ||
+                    definition.Key.Equals(definition.Text))
+                {
+                    error = "BuildUnitRoster requires distinct template/result prefixes, each at most 90 UTF-8 bytes.";
+                    return false;
+                }
+                definition.FloatParameters0.x = roster.SpawnRadius;
+                if (!TryAddValueExpression(roster.TemplateEntity, UnitValueCategory.Entity, schemaResolver, expressionFactory, graph, out error) ||
+                    !TryAddValueExpression(roster.CostLimit, UnitValueCategory.Number, schemaResolver, expressionFactory, graph, out error) ||
+                    !TryAddValueExpression(roster.Center, UnitValueCategory.Float3, schemaResolver, expressionFactory, graph, out error))
+                    return false;
+                break;
             case ExecuteEffectActionNodeData executeEffect:
                 if (!TryCompileExecuteEffect(
                         executeEffect,
@@ -382,6 +410,7 @@ public static class StateScriptCompiler
                 break;
             case KeepStateScriptNodeData keep:
                 definition.FloatParameters0.x = math.max(0f, keep.DurationSeconds);
+                definition.FloatParameters0.y = keep.PauseWhenNotKept ? 1f : 0f;
                 break;
             case PlayerInputEventStateScriptNodeData inputEvent:
                 definition.IntParameters.x = (int)inputEvent.EventType;
@@ -480,6 +509,18 @@ public static class StateScriptCompiler
             source.CopyFactionFromSpawner ? 1 : 0,
             source.ShareVariablesWithSpawner ? 1 : 0,
             source.RestoreRuntimeState ? 1 : 0);
+        if (!string.IsNullOrWhiteSpace(source.SpawnedNotificationKey) &&
+            !TryCopyFixedString(source.SpawnedNotificationKey.Trim(), out definition.NotificationKey))
+        {
+            error = "SpawnedNotificationKey is too long.";
+            return false;
+        }
+        if (!string.IsNullOrWhiteSpace(source.MemberBoolKey) &&
+            !TryCopyFixedString(source.MemberBoolKey.Trim(), out definition.Key))
+        {
+            error = "MemberBoolKey is too long.";
+            return false;
+        }
         definition.FloatParameters0 = new float4(
             math.max(0f, source.SpawnRadius),
             math.clamp(source.MinSpawnRadius, 0f, math.max(0f, source.SpawnRadius)),
@@ -585,11 +626,18 @@ public static class StateScriptCompiler
             error = "RememberResultsInExcludedEntities requires ExcludedEntitiesKey.";
             return false;
         }
-        return TryAddValueExpression(source.Center, UnitValueCategory.Float3, schemaResolver, expressionFactory, graph, out error) &&
+        bool valid = TryAddValueExpression(source.Center, UnitValueCategory.Float3, schemaResolver, expressionFactory, graph, out error) &&
                TryAddValueExpression(source.Direction, UnitValueCategory.Float2, schemaResolver, expressionFactory, graph, out error) &&
                TryAddValueExpression(source.Size, UnitValueCategory.Float2, schemaResolver, expressionFactory, graph, out error) &&
                TryAddValueExpression(source.Radius, UnitValueCategory.Number, schemaResolver, expressionFactory, graph, out error) &&
                TryAddValueExpression(source.Angle, UnitValueCategory.Number, schemaResolver, expressionFactory, graph, out error);
+        if (!valid) return false;
+        if (source.CandidateConditions.Count > 0 || source.SortMode == StateScriptUnitQuerySortMode.HighestPriorityRandomTie)
+        {
+            return TryAddConditions(source.CandidateConditions, schemaResolver, expressionFactory, graph, out error) &&
+                   TryAddValueExpression(source.Priority, UnitValueCategory.Number, schemaResolver, expressionFactory, graph, out error);
+        }
+        return true;
     }
 
     private static bool TryCompileExecuteEffect(
@@ -728,6 +776,8 @@ public static class StateScriptCompiler
             RequestSkillWithAdditionActionNodeData => StateScriptNodeRuntimeType.RequestSkillWithAddition,
             RequestInteractionActionNodeData => StateScriptNodeRuntimeType.RequestInteraction,
             SpawnUnitActionNodeData => StateScriptNodeRuntimeType.SpawnUnit,
+            BuildUnitRosterActionNodeData => StateScriptNodeRuntimeType.BuildUnitRoster,
+            NotifyUIActionNodeData => StateScriptNodeRuntimeType.NotifyUI,
             QueryUnitsActionNodeData => StateScriptNodeRuntimeType.QueryUnits,
             ExecuteEffectActionNodeData => StateScriptNodeRuntimeType.ExecuteEffect,
             DestroySelfActionNodeData => StateScriptNodeRuntimeType.DestroySelf,
@@ -746,7 +796,7 @@ public static class StateScriptCompiler
         return source is StateScriptEntryNodeData or CompareStateScriptNodeData or SetValueStateScriptNodeData or
             RequestSkillActionNodeData or PublishGameEventStateScriptNodeData or
             RequestSkillWithAdditionActionNodeData or RequestInteractionActionNodeData or SpawnUnitActionNodeData or
-            QueryUnitsActionNodeData or ExecuteEffectActionNodeData or DestroySelfActionNodeData or
+            NotifyUIActionNodeData or BuildUnitRosterActionNodeData or QueryUnitsActionNodeData or ExecuteEffectActionNodeData or DestroySelfActionNodeData or
             CompleteInteractionActionNodeData or AcknowledgeInteractionActionNodeData or
             CollectInteractionActionNodeData or StartNpcInteractionActionNodeData or
             TimerStateScriptNodeData or KeepStateScriptNodeData or MonitorStateScriptNodeData or

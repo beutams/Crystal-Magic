@@ -56,8 +56,12 @@ namespace CrystalMagic.Game.Skill.Effects
                     entityInfo.faction = entityManager.GetComponentData<UnitFactionComponent>(context.OriginEntity).Value;
                 }
 
-                if (!NetworkEntitySpawnUtility.TrySpawn(entityManager, entityInfo, out _))
+                if (!NetworkEntitySpawnUtility.TrySpawn(entityManager, entityInfo, out Entity spawned))
                     continue;
+                DungeonDifficultyUtility.Inherit(entityManager, context.OriginEntity, spawned);
+                if (entityManager.HasComponent<DungeonDifficultyComponent>(spawned) &&
+                    !entityManager.HasComponent<UnitSpawnInitializationComponent>(spawned))
+                    entityManager.AddComponent<UnitSpawnInitializationComponent>(spawned);
             }
         }
 

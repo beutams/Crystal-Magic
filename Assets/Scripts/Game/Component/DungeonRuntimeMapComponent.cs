@@ -144,6 +144,7 @@ namespace CrystalMagic.Core
 
     public sealed class RuntimeDungeonSceneData
     {
+        public DungeonDifficultyComponent Difficulty = DungeonDifficultyComponent.Identity;
         public float CellWorldSize;
         public Vector3 PlayerSpawnWorldPosition;
         public Rect CameraWorldBounds;
@@ -152,6 +153,7 @@ namespace CrystalMagic.Core
         public List<RuntimeDungeonEnvironmentSpawnData> EnvironmentSpawns = new();
         public List<RuntimeDungeonSceneObjectSpawnData> SceneObjects = new();
         public List<RuntimeDungeonInterestPointSpawnData> InterestPointSpawns = new();
+        public List<RuntimeDungeonWildSquadSpawnData> WildSquadSpawns = new();
         public List<RuntimeDungeonMonsterSpawnData> MonsterSpawns = new();
     }
 
@@ -254,6 +256,19 @@ namespace CrystalMagic.Core
         public float SpawnDistance = 18f;
         public float PatrolSpeed = 3f;
         public float ArrivalDistance = 0.75f;
+        public float ClearThreat;
+        public float PatrolReturnThreat;
+        public int InterestSize;
+        public CrystalMagic.Game.Data.UnitRosterTemplateData PatrolTemplate;
+        public CrystalMagic.Game.Data.UnitRosterTemplateData RevengeTemplate;
+        public List<RuntimeDungeonMonsterSpawnData> MemberSpawns = new();
+    }
+
+    public sealed class RuntimeDungeonWildSquadSpawnData
+    {
+        public int SquadId;
+        public Vector3 WorldPosition;
+        public float ClearThreat;
         public List<RuntimeDungeonMonsterSpawnData> MemberSpawns = new();
     }
 }

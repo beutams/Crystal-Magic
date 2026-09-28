@@ -13,6 +13,7 @@ public enum ClientPresentationEventType : byte
     Sound = 6,
     CameraShake = 7,
     PickupFeedback = 8,
+    Notification = 9,
 }
 
 public struct ClientPresentationEventElement : IBufferElementData

@@ -17,6 +17,8 @@ public static class StateScriptRegistry
         { "RequestSkillWithAddition", typeof(RequestSkillWithAdditionActionNodeData) },
         { "RequestInteraction", typeof(RequestInteractionActionNodeData) },
         { "SpawnUnit", typeof(SpawnUnitActionNodeData) },
+        { "BuildUnitRoster", typeof(BuildUnitRosterActionNodeData) },
+        { "NotifyUI", typeof(NotifyUIActionNodeData) },
         { "QueryUnits", typeof(QueryUnitsActionNodeData) },
         { "ExecuteEffect", typeof(ExecuteEffectActionNodeData) },
         { "DestroySelf", typeof(DestroySelfActionNodeData) },
@@ -42,6 +44,8 @@ public static class StateScriptRegistry
         { typeof(RequestSkillWithAdditionActionNodeData), "RequestSkillWithAddition" },
         { typeof(RequestInteractionActionNodeData), "RequestInteraction" },
         { typeof(SpawnUnitActionNodeData), "SpawnUnit" },
+        { typeof(BuildUnitRosterActionNodeData), "BuildUnitRoster" },
+        { typeof(NotifyUIActionNodeData), "NotifyUI" },
         { typeof(QueryUnitsActionNodeData), "QueryUnits" },
         { typeof(ExecuteEffectActionNodeData), "ExecuteEffect" },
         { typeof(DestroySelfActionNodeData), "DestroySelf" },
@@ -67,6 +71,8 @@ public static class StateScriptRegistry
         { "RequestSkillWithAddition", "Request Skill With Addition" },
         { "RequestInteraction", "Request Interaction" },
         { "SpawnUnit", "Spawn Unit" },
+        { "BuildUnitRoster", "Build Unit Roster" },
+        { "NotifyUI", "Notify UI" },
         { "QueryUnits", "Query Units" },
         { "ExecuteEffect", "Execute Effect" },
         { "DestroySelf", "Destroy Self" },
@@ -105,6 +111,8 @@ public static class StateScriptRegistry
         new("CollectInteraction", "Collect Interaction", typeof(CollectInteractionActionNodeData), 26),
         new("StartNpcInteraction", "Start NPC Interaction", typeof(StartNpcInteractionActionNodeData), 27),
         new("PlayerInputEvent", "Player Input Event", typeof(PlayerInputEventStateScriptNodeData), 28),
+        new("BuildUnitRoster", "Build Unit Roster", typeof(BuildUnitRosterActionNodeData), 29),
+        new("NotifyUI", "Notify UI", typeof(NotifyUIActionNodeData), 30),
     };
 
     public static string DefaultNodeDataKey => "Entry";
@@ -128,6 +136,8 @@ public static class StateScriptRegistry
         factory.Register("RequestSkillWithAddition", static () => new RequestSkillWithAdditionActionNodeData());
         factory.Register("RequestInteraction", static () => new RequestInteractionActionNodeData());
         factory.Register("SpawnUnit", static () => new SpawnUnitActionNodeData());
+        factory.Register("BuildUnitRoster", static () => new BuildUnitRosterActionNodeData());
+        factory.Register("NotifyUI", static () => new NotifyUIActionNodeData());
         factory.Register("QueryUnits", static () => new QueryUnitsActionNodeData());
         factory.Register("ExecuteEffect", static () => new ExecuteEffectActionNodeData());
         factory.Register("DestroySelf", static () => new DestroySelfActionNodeData());

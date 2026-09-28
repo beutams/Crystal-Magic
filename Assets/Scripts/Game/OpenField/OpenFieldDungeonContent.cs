@@ -21,8 +21,26 @@ namespace CrystalMagic.Game.OpenField
     {
         public Vector3Int ChestCounts = new(1, 2, 3);
         public int WildSquadCount = 22;
+        // Percentage points; 100 fills the floor's threat meter once.
+        public Vector3 InterestClearThreat = new(8f, 13f, 20f);
+        public float WildSquadClearThreat = 3f;
+        public float PatrolReturnThreat = 40f;
         public int PlacementAttempts = 512;
-        internal void EnsureValid() { ChestCounts = Vector3Int.Max(Vector3Int.zero, ChestCounts); WildSquadCount = Mathf.Max(0, WildSquadCount); PlacementAttempts = Mathf.Max(1, PlacementAttempts); }
+        internal void EnsureValid()
+        {
+            ChestCounts = Vector3Int.Max(Vector3Int.zero, ChestCounts);
+            WildSquadCount = Mathf.Max(0, WildSquadCount);
+            InterestClearThreat = Vector3.Max(Vector3.zero, InterestClearThreat);
+            WildSquadClearThreat = Mathf.Max(0f, WildSquadClearThreat);
+            PatrolReturnThreat = Mathf.Max(0f, PatrolReturnThreat);
+            PlacementAttempts = Mathf.Max(1, PlacementAttempts);
+        }
+        internal float GetClearThreat(OpenFieldInterestSize size) => size switch
+        {
+            OpenFieldInterestSize.Small => InterestClearThreat.x,
+            OpenFieldInterestSize.Medium => InterestClearThreat.y,
+            _ => InterestClearThreat.z,
+        };
         internal int GetChestCount(OpenFieldInterestSize size) => size switch { OpenFieldInterestSize.Small => ChestCounts.x, OpenFieldInterestSize.Medium => ChestCounts.y, _ => ChestCounts.z };
     }
 

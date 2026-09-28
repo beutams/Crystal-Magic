@@ -210,6 +210,15 @@ public static class NetworkPresentationEventUtility
         });
     }
 
+    public static bool TryEnqueueNotification(EntityManager entityManager, string key, float3 values, int scope)
+    {
+        return TryEnqueue(entityManager, new NetworkPresentationEventStateData
+        {
+            eventType = ClientPresentationEventType.Notification,
+            assetName = key, valueA = values.x, valueB = values.y, valueC = values.z, intValue = scope,
+        });
+    }
+
     private static NetworkPresentationEventStateData CreateVfxEvent(
         EntityManager entityManager,
         ClientPresentationEventType type,

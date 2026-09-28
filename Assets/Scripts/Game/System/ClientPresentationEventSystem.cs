@@ -81,6 +81,12 @@ public partial class ClientPresentationEventSystem : SystemBase
             case ClientPresentationEventType.PickupFeedback:
                 PlayPickupFeedback(presentationEvent);
                 break;
+            case ClientPresentationEventType.Notification:
+                EventComponent.Instance.Publish(new NotificationSignalEvent(
+                    presentationEvent.AssetName.ToString(),
+                    new float3(presentationEvent.ValueA, presentationEvent.ValueB, presentationEvent.ValueC),
+                    presentationEvent.IntValue));
+                break;
         }
     }
 

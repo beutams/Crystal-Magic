@@ -27,21 +27,35 @@ public partial class DungeonSpawnInitializationSystem : SystemBase
             if (EntityManager.HasComponent<UnitOwnerComponent>(entity))
             {
                 Entity owner = EntityManager.GetComponentData<UnitOwnerComponent>(entity).Owner;
+                DungeonDifficultyUtility.Inherit(EntityManager, owner, entity);
                 bool isInterestPoint = owner != Entity.Null &&
                                        EntityManager.Exists(owner) &&
                                        EntityManager.HasComponent<DungeonInterestPointComponent>(owner);
                 bool isMonster = EntityManager.HasComponent<DungeonMonsterSpawnComponent>(entity);
-                if (isInterestPoint && isMonster)
+                bool isGuard = isMonster && EntityManager.GetComponentData<DungeonMonsterSpawnComponent>(entity).CountsAsGuard != 0;
+                bool isPatrol = UnitVariableSource.TryGetValue(EntityManager, entity,
+                    DungeonPatrolRuntimeUtility.PatrolMemberKey, out UnitSourceValue patrolValue) &&
+                    patrolValue.TryGetBool(out bool patrol) && patrol;
+                if (isInterestPoint && !isGuard && (isMonster || isPatrol))
                 {
+                    if (!isMonster)
+                    {
+                        DungeonInterestPointComponent point = EntityManager.GetComponentData<DungeonInterestPointComponent>(owner);
+                        EntityManager.AddComponentData(entity, new DungeonMonsterSpawnComponent
+                        {
+                            SaveId = -1, RegionId = point.EncounterId, SquadId = point.SquadId,
+                        });
+                    }
                     DungeonInterestPointUtility.AttachMember(
                         EntityManager,
                         entity,
                         owner,
-                        true,
+                        false,
                         true);
                 }
             }
 
+            DungeonDifficultyUtility.ApplyHealth(EntityManager, entity);
             if (initialization.RestoreRuntimeState != 0)
                 GameRuntimeStateUtility.TryRestoreDungeonUnit(EntityManager, entity);
         }

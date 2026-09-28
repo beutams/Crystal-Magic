@@ -309,6 +309,9 @@ public partial class StateScriptManagedCommandSystem : SystemBase
                 if (_worldRole != GameWorldRole.Client)
                     EnqueueSkillEffects(entity, command, true);
                 break;
+            case StateScriptManagedCommandType.NotifyUI:
+                NotificationSignalUtility.Publish(EntityManager, entity, node.NotificationKey.ToString(), command.Position);
+                break;
             case StateScriptManagedCommandType.PublishGameEvent:
                 if (EventComponent.TryGetInstance(out EventComponent eventComponent))
                 {
@@ -887,9 +890,16 @@ public partial class StateScriptManagedCommandSystem : SystemBase
         ref StateScriptGraphDefinitionBlob graph,
         in StateScriptNodeDefinition node)
     {
+        if (EntityManager.HasComponent<DungeonInterestPointComponent>(spawner) &&
+            DungeonPatrolRuntimeUtility.IsEncounterDead(EntityManager, spawner))
+        {
+            return;
+        }
+
         if (node.Text.Length > 0)
         {
-            SpawnVariableList(spawner, node.Text.ToString(), in node);
+            int spawnedCount = SpawnVariableList(spawner, node.Text.ToString(), in node);
+            NotificationSignalUtility.PublishSpawned(EntityManager, spawner, node.NotificationKey.ToString(), spawnedCount);
             return;
         }
         if (node.StringCount == 0 || !EntityManager.HasComponent<LocalTransform>(spawner))
@@ -904,20 +914,24 @@ public partial class StateScriptManagedCommandSystem : SystemBase
         Unity.Mathematics.Random random = Unity.Mathematics.Random.CreateFromIndex(math.max(1u, seed));
         float maxRadius = node.FloatParameters0.x;
         float minRadius = node.FloatParameters0.y;
+        int spawnedTotal = 0;
         for (int index = 0; index < math.max(1, node.IntParameters.x); index++)
         {
             int candidateOffset = node.StringCount == 1 ? 0 : random.NextInt(0, node.StringCount);
             string unitName = graph.Strings[node.StringStart + candidateOffset].ToString();
             float2 direction = math.normalizesafe(random.NextFloat2Direction(), new float2(1f, 0f));
             float radius = math.sqrt(random.NextFloat(minRadius * minRadius, maxRadius * maxRadius));
-            TrySpawn(spawner, unitName, center + new float3(direction * radius, 0f), in node, default, false);
+            if (TrySpawn(spawner, unitName, center + new float3(direction * radius, 0f), in node, default, false))
+                spawnedTotal++;
         }
+        NotificationSignalUtility.PublishSpawned(EntityManager, spawner, node.NotificationKey.ToString(), spawnedTotal);
     }
 
-    private void SpawnVariableList(Entity spawner, string listKey, in StateScriptNodeDefinition node)
+    private int SpawnVariableList(Entity spawner, string listKey, in StateScriptNodeDefinition node)
     {
         if (!TryGetInt(spawner, $"{listKey}.count", out int count) || count <= 0)
-            return;
+            return 0;
+        int spawnedCount = 0;
         for (int index = 0; index < count; index++)
         {
             string entryKey = $"{listKey}.{index}";
@@ -928,17 +942,19 @@ public partial class StateScriptManagedCommandSystem : SystemBase
             bool hasInfo = TryGetBool(spawner, $"{entryKey}.hasMonsterData", out bool hasMonsterData) && hasMonsterData;
             if (hasInfo)
             {
+                info = new NetworkEntitySpawnInfo();
                 info.hasMonsterSpawnData = true;
                 TryGetInt(spawner, $"{entryKey}.monsterSaveId", out info.monsterSaveId);
                 TryGetInt(spawner, $"{entryKey}.monsterRegionId", out info.monsterRegionId);
                 TryGetInt(spawner, $"{entryKey}.monsterSquadId", out info.monsterSquadId);
                 TryGetBool(spawner, $"{entryKey}.monsterIsBoss", out info.monsterIsBoss);
             }
-            TrySpawn(spawner, unitName, position, in node, info, hasInfo);
+            if (TrySpawn(spawner, unitName, position, in node, info, hasInfo)) spawnedCount++;
         }
+        return spawnedCount;
     }
 
-    private void TrySpawn(
+    private bool TrySpawn(
         Entity spawner,
         string unitName,
         float3 position,
@@ -964,7 +980,19 @@ public partial class StateScriptManagedCommandSystem : SystemBase
             info.faction = EntityManager.GetComponentData<UnitFactionComponent>(spawner).Value;
         }
         if (!NetworkEntitySpawnUtility.TrySpawn(EntityManager, info, out Entity spawned))
-            return;
+            return false;
+        DungeonDifficultyUtility.Inherit(EntityManager, spawner, spawned);
+        if (EntityManager.HasComponent<DungeonRuntimeOwnedEntity>(spawner) &&
+            !EntityManager.HasComponent<DungeonRuntimeOwnedEntity>(spawned))
+            EntityManager.AddComponent<DungeonRuntimeOwnedEntity>(spawned);
+        if (node.Key.Length > 0)
+        {
+            if (!EntityManager.HasComponent<UnitVariableComponent>(spawned))
+                EntityManager.AddComponent<UnitVariableComponent>(spawned);
+            if (!EntityManager.HasBuffer<UnitVariableElement>(spawned))
+                EntityManager.AddBuffer<UnitVariableElement>(spawned);
+            UnitVariableSource.TrySetValue(EntityManager, spawned, node.Key.ToString(), UnitValue.FromBool(true));
+        }
         if (node.IntParameters.z != 0)
         {
             if (!EntityManager.HasComponent<UnitVariableComponent>(spawned))
@@ -982,8 +1010,9 @@ public partial class StateScriptManagedCommandSystem : SystemBase
                 EntityManager.AddComponentData(spawned, owner);
         }
 
-        if (node.IntParameters.z == 0 && node.IntParameters.w == 0)
-            return;
+        if (node.IntParameters.z == 0 && node.IntParameters.w == 0 &&
+            !EntityManager.HasComponent<DungeonDifficultyComponent>(spawned))
+            return true;
 
         UnitSpawnInitializationComponent initialization = new()
         {
@@ -993,6 +1022,7 @@ public partial class StateScriptManagedCommandSystem : SystemBase
             EntityManager.SetComponentData(spawned, initialization);
         else
             EntityManager.AddComponentData(spawned, initialization);
+        return true;
     }
 
     private bool TryGetValue(Entity entity, string key, out UnitSourceValue value)

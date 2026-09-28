@@ -61,6 +61,15 @@ namespace CrystalMagic.Core {
         public Entity Entity { get; }
     }
 
+    public readonly struct NotificationSignalEvent : IGameEvent
+    {
+        public readonly string Key;
+        public readonly Unity.Mathematics.float3 Values;
+        public readonly int Scope;
+        public NotificationSignalEvent(string key, Unity.Mathematics.float3 values, int scope)
+        { Key = key; Values = values; Scope = scope; }
+    }
+
     public enum PickupFeedbackType : byte
     {
         Item = 0,

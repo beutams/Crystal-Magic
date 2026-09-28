@@ -45,6 +45,10 @@ public static class UnitVariableSource
     [UnitSourceGet(12, "unit.variables.getNumberOrDefault", UnitValueCategory.Number,
         UnitValueCategory.String, UnitValueCategory.Number,
         ParameterNames = new[] { "Key", "Default" })]
+    [UnitSourceGet(13, "unit.variables.livingConsumerBoolCount", UnitValueCategory.Number,
+        UnitValueCategory.String, ParameterNames = new[] { "Key" })]
+    [UnitSourceGet(14, "unit.variables.getNumberOf", UnitValueCategory.Number,
+        UnitValueCategory.Entity, UnitValueCategory.String, ParameterNames = new[] { "Entity", "Key" })]
     public static bool TryGet(
         int operation,
         Entity entity,
@@ -52,10 +56,19 @@ public static class UnitVariableSource
         in BufferLookup<UnitVariableElement> variableLookup,
         in BufferLookup<UnitVariableConsumerElement> consumerLookup,
         in ComponentLookup<DestroyEntityFlag> destroyLookup,
+        in ComponentLookup<UnitDeathComponent> deathLookup,
         in UnitSourceArguments arguments,
         out UnitSourceValue result)
     {
         result = default;
+        if (operation == 14)
+        {
+            if (!arguments.TryGetEntity(0, out Entity target) || !arguments.TryGetString(1, out FixedString128Bytes targetKey) ||
+                !variableLookup.TryGetBuffer(target, out DynamicBuffer<UnitVariableElement> targetVariables))
+                return false;
+            result = GetCategory(targetVariables, targetKey, UnitValueCategory.Number);
+            return result.Type != UnitValueType.None;
+        }
         if (!componentLookup.HasComponent(entity))
             return false;
 
@@ -90,6 +103,29 @@ public static class UnitVariableSource
 
         if (!arguments.TryGetString(0, out FixedString128Bytes key))
             return false;
+
+        if (operation == 13)
+        {
+            int count = 0;
+            if (consumerLookup.TryGetBuffer(entity, out DynamicBuffer<UnitVariableConsumerElement> consumers))
+            {
+                for (int index = 0; index < consumers.Length; index++)
+                {
+                    Entity consumer = consumers[index].Value;
+                    if (!componentLookup.HasComponent(consumer) || componentLookup[consumer].Other != entity ||
+                        (deathLookup.HasComponent(consumer) && deathLookup.IsComponentEnabled(consumer)) ||
+                        (destroyLookup.HasComponent(consumer) && destroyLookup.IsComponentEnabled(consumer)) ||
+                        !variableLookup.TryGetBuffer(consumer, out DynamicBuffer<UnitVariableElement> memberVariables))
+                        continue;
+
+                    if (TryGetValue(memberVariables, key, out UnitSourceValue flag) &&
+                        flag.TryGetBool(out bool enabled) && enabled)
+                        count++;
+                }
+            }
+            result = UnitSourceValue.FromInt(count);
+            return true;
+        }
 
         if (operation == 11)
         {

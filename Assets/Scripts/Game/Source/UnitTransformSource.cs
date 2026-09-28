@@ -28,6 +28,9 @@ public static class UnitTransformSource
         ParameterNames = new[] { "Target Unit" })]
     [UnitSourceGet(4, "unit.transform.directionTo", UnitValueCategory.Float2, UnitValueCategory.Entity,
         ParameterNames = new[] { "Target Unit" })]
+    [UnitSourceGet(5, "unit.transform.positionNear", UnitValueCategory.Float3,
+        UnitValueCategory.Entity, UnitValueCategory.Number,
+        ParameterNames = new[] { "Target Unit", "Distance" })]
     public static bool TryGetRelation(
         int operation,
         Entity entity,
@@ -51,6 +54,17 @@ public static class UnitTransformSource
             case 4:
                 result = UnitSourceValue.FromFloat2(
                     math.normalizesafe(target.Position.xy - component.Position.xy, float2.zero));
+                return true;
+            case 5:
+                if (!arguments.TryGetNumber(1, out float distance))
+                    return false;
+
+                float2 fromTarget = math.normalizesafe(
+                    component.Position.xy - target.Position.xy,
+                    new float2(1f, 0f));
+                result = UnitSourceValue.FromFloat3(new float3(
+                    target.Position.xy + fromTarget * math.max(0.1f, distance),
+                    0f));
                 return true;
             default:
                 return false;

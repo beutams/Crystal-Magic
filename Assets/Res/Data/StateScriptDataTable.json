@@ -808,6 +808,546 @@
             "y": 103.333336
           },
           "ViewScale": 1.0
+        },
+        {
+          "Guid": "patrol_combat_contact",
+          "Name": "Patrol Combat Contact",
+          "ExecutionConditions": [{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.dead"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}],
+          "EntryNodeGuid": "patrol_combat_contact_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"patrol_combat_contact_entry","EditorPosition":{"x":40,"y":100}},
+            {"Type":"SetValue","Guid":"patrol_contact_init","EditorPosition":{"x":530,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_contact_monitor","EditorPosition":{"x":780,"y":100},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.perception.unitsByFactionCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":0},
+            {"Type":"SetValue","Guid":"patrol_contact_enter","EditorPosition":{"x":1030,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_release_monitor","EditorPosition":{"x":1280,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.engaged"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"TickOrder":1},
+            {"Type":"QueryUnits","Guid":"patrol_query_release","EditorPosition":{"x":280,"y":250},"Shape":1,"Center":{"Kind":1,"GetterKey":"unit.transform.position","SourceTarget":0,"Inputs":[]},"Radius":{"Kind":2,"OperationType":"Multiply","Inputs":[{"Kind":1,"GetterKey":"unit.perception.searchRadius","SourceTarget":0,"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":2},"Inputs":[]}]},"FactionMask":1,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":1,"ResultKey":"dungeon.patrol.releasePlayers"},
+            {"Type":"Compare","Guid":"patrol_release_clear","EditorPosition":{"x":530,"y":250},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.releasePlayers.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_contact_leave","EditorPosition":{"x":780,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"patrol_combat_contact_entry","OutputPortName":"Out","InputNodeGuid":"patrol_contact_init","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_contact_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_release_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_monitor","OutputPortName":"True","InputNodeGuid":"patrol_contact_enter","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_release_monitor","OutputPortName":"True","InputNodeGuid":"patrol_query_release","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_query_release","OutputPortName":"Out","InputNodeGuid":"patrol_release_clear","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_release_clear","OutputPortName":"True","InputNodeGuid":"patrol_contact_leave","InputPortName":"In"}
+          ],
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
+        },
+        {
+          "Guid": "patrol_combat_contact",
+          "Name": "Patrol Combat Contact",
+          "ExecutionConditions": [{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.dead"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}],
+          "EntryNodeGuid": "patrol_combat_contact_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"patrol_combat_contact_entry","EditorPosition":{"x":40,"y":100}},
+            {"Type":"SetValue","Guid":"patrol_contact_init","EditorPosition":{"x":530,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_contact_monitor","EditorPosition":{"x":780,"y":100},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.perception.unitsByFactionCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":0},
+            {"Type":"SetValue","Guid":"patrol_contact_enter","EditorPosition":{"x":1030,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_release_monitor","EditorPosition":{"x":1280,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.engaged"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"TickOrder":1},
+            {"Type":"QueryUnits","Guid":"patrol_query_release","EditorPosition":{"x":280,"y":250},"Shape":1,"Center":{"Kind":1,"GetterKey":"unit.transform.position","SourceTarget":0,"Inputs":[]},"Radius":{"Kind":2,"OperationType":"Multiply","Inputs":[{"Kind":1,"GetterKey":"unit.perception.searchRadius","SourceTarget":0,"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":2},"Inputs":[]}]},"FactionMask":1,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":1,"ResultKey":"dungeon.patrol.releasePlayers"},
+            {"Type":"Compare","Guid":"patrol_release_clear","EditorPosition":{"x":530,"y":250},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.releasePlayers.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_contact_leave","EditorPosition":{"x":780,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"patrol_combat_contact_entry","OutputPortName":"Out","InputNodeGuid":"patrol_contact_init","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_contact_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_release_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_monitor","OutputPortName":"True","InputNodeGuid":"patrol_contact_enter","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_release_monitor","OutputPortName":"True","InputNodeGuid":"patrol_query_release","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_query_release","OutputPortName":"Out","InputNodeGuid":"patrol_release_clear","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_release_clear","OutputPortName":"True","InputNodeGuid":"patrol_contact_leave","InputPortName":"In"}
+          ],
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
+        },
+        {
+          "Guid": "patrol_combat_contact",
+          "Name": "Patrol Combat Contact",
+          "ExecutionConditions": [{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.dead"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}],
+          "EntryNodeGuid": "patrol_combat_contact_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"patrol_combat_contact_entry","EditorPosition":{"x":40,"y":100}},
+            {"Type":"SetValue","Guid":"patrol_contact_init","EditorPosition":{"x":530,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_contact_monitor","EditorPosition":{"x":780,"y":100},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.perception.unitsByFactionCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":0},
+            {"Type":"SetValue","Guid":"patrol_contact_enter","EditorPosition":{"x":1030,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_release_monitor","EditorPosition":{"x":1280,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.engaged"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"TickOrder":1},
+            {"Type":"QueryUnits","Guid":"patrol_query_release","EditorPosition":{"x":280,"y":250},"Shape":1,"Center":{"Kind":1,"GetterKey":"unit.transform.position","SourceTarget":0,"Inputs":[]},"Radius":{"Kind":2,"OperationType":"Multiply","Inputs":[{"Kind":1,"GetterKey":"unit.perception.searchRadius","SourceTarget":0,"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":2},"Inputs":[]}]},"FactionMask":1,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":1,"ResultKey":"dungeon.patrol.releasePlayers"},
+            {"Type":"Compare","Guid":"patrol_release_clear","EditorPosition":{"x":530,"y":250},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.releasePlayers.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_contact_leave","EditorPosition":{"x":780,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"patrol_combat_contact_entry","OutputPortName":"Out","InputNodeGuid":"patrol_contact_init","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_contact_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_release_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_monitor","OutputPortName":"True","InputNodeGuid":"patrol_contact_enter","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_release_monitor","OutputPortName":"True","InputNodeGuid":"patrol_query_release","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_query_release","OutputPortName":"Out","InputNodeGuid":"patrol_release_clear","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_release_clear","OutputPortName":"True","InputNodeGuid":"patrol_contact_leave","InputPortName":"In"}
+          ],
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
+        },
+        {
+          "Guid": "patrol_combat_contact",
+          "Name": "Patrol Combat Contact",
+          "ExecutionConditions": [{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.dead"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}],
+          "EntryNodeGuid": "patrol_combat_contact_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"patrol_combat_contact_entry","EditorPosition":{"x":40,"y":100}},
+            {"Type":"SetValue","Guid":"patrol_contact_init","EditorPosition":{"x":530,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_contact_monitor","EditorPosition":{"x":780,"y":100},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.perception.unitsByFactionCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":0},
+            {"Type":"SetValue","Guid":"patrol_contact_enter","EditorPosition":{"x":1030,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_release_monitor","EditorPosition":{"x":1280,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.engaged"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"TickOrder":1},
+            {"Type":"QueryUnits","Guid":"patrol_query_release","EditorPosition":{"x":280,"y":250},"Shape":1,"Center":{"Kind":1,"GetterKey":"unit.transform.position","SourceTarget":0,"Inputs":[]},"Radius":{"Kind":2,"OperationType":"Multiply","Inputs":[{"Kind":1,"GetterKey":"unit.perception.searchRadius","SourceTarget":0,"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":2},"Inputs":[]}]},"FactionMask":1,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":1,"ResultKey":"dungeon.patrol.releasePlayers"},
+            {"Type":"Compare","Guid":"patrol_release_clear","EditorPosition":{"x":530,"y":250},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.releasePlayers.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_contact_leave","EditorPosition":{"x":780,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"patrol_combat_contact_entry","OutputPortName":"Out","InputNodeGuid":"patrol_contact_init","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_contact_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_release_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_monitor","OutputPortName":"True","InputNodeGuid":"patrol_contact_enter","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_release_monitor","OutputPortName":"True","InputNodeGuid":"patrol_query_release","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_query_release","OutputPortName":"Out","InputNodeGuid":"patrol_release_clear","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_release_clear","OutputPortName":"True","InputNodeGuid":"patrol_contact_leave","InputPortName":"In"}
+          ],
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
+        },
+        {
+          "Guid": "patrol_combat_contact",
+          "Name": "Patrol Combat Contact",
+          "ExecutionConditions": [{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.dead"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}],
+          "EntryNodeGuid": "patrol_combat_contact_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"patrol_combat_contact_entry","EditorPosition":{"x":40,"y":100}},
+            {"Type":"SetValue","Guid":"patrol_contact_init","EditorPosition":{"x":530,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_contact_monitor","EditorPosition":{"x":780,"y":100},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.perception.unitsByFactionCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":0},
+            {"Type":"SetValue","Guid":"patrol_contact_enter","EditorPosition":{"x":1030,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_release_monitor","EditorPosition":{"x":1280,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.engaged"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"TickOrder":1},
+            {"Type":"QueryUnits","Guid":"patrol_query_release","EditorPosition":{"x":280,"y":250},"Shape":1,"Center":{"Kind":1,"GetterKey":"unit.transform.position","SourceTarget":0,"Inputs":[]},"Radius":{"Kind":2,"OperationType":"Multiply","Inputs":[{"Kind":1,"GetterKey":"unit.perception.searchRadius","SourceTarget":0,"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":2},"Inputs":[]}]},"FactionMask":1,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":1,"ResultKey":"dungeon.patrol.releasePlayers"},
+            {"Type":"Compare","Guid":"patrol_release_clear","EditorPosition":{"x":530,"y":250},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.releasePlayers.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_contact_leave","EditorPosition":{"x":780,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"patrol_combat_contact_entry","OutputPortName":"Out","InputNodeGuid":"patrol_contact_init","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_contact_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_release_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_monitor","OutputPortName":"True","InputNodeGuid":"patrol_contact_enter","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_release_monitor","OutputPortName":"True","InputNodeGuid":"patrol_query_release","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_query_release","OutputPortName":"Out","InputNodeGuid":"patrol_release_clear","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_release_clear","OutputPortName":"True","InputNodeGuid":"patrol_contact_leave","InputPortName":"In"}
+          ],
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
+        },
+        {
+          "Guid": "patrol_combat_contact",
+          "Name": "Patrol Combat Contact",
+          "ExecutionConditions": [{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.dead"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}],
+          "EntryNodeGuid": "patrol_combat_contact_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"patrol_combat_contact_entry","EditorPosition":{"x":40,"y":100}},
+            {"Type":"SetValue","Guid":"patrol_contact_init","EditorPosition":{"x":530,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_contact_monitor","EditorPosition":{"x":780,"y":100},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.perception.unitsByFactionCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":0},
+            {"Type":"SetValue","Guid":"patrol_contact_enter","EditorPosition":{"x":1030,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_release_monitor","EditorPosition":{"x":1280,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.engaged"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"TickOrder":1},
+            {"Type":"QueryUnits","Guid":"patrol_query_release","EditorPosition":{"x":280,"y":250},"Shape":1,"Center":{"Kind":1,"GetterKey":"unit.transform.position","SourceTarget":0,"Inputs":[]},"Radius":{"Kind":2,"OperationType":"Multiply","Inputs":[{"Kind":1,"GetterKey":"unit.perception.searchRadius","SourceTarget":0,"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":2},"Inputs":[]}]},"FactionMask":1,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":1,"ResultKey":"dungeon.patrol.releasePlayers"},
+            {"Type":"Compare","Guid":"patrol_release_clear","EditorPosition":{"x":530,"y":250},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.releasePlayers.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_contact_leave","EditorPosition":{"x":780,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"patrol_combat_contact_entry","OutputPortName":"Out","InputNodeGuid":"patrol_contact_init","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_contact_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_release_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_monitor","OutputPortName":"True","InputNodeGuid":"patrol_contact_enter","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_release_monitor","OutputPortName":"True","InputNodeGuid":"patrol_query_release","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_query_release","OutputPortName":"Out","InputNodeGuid":"patrol_release_clear","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_release_clear","OutputPortName":"True","InputNodeGuid":"patrol_contact_leave","InputPortName":"In"}
+          ],
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
+        },
+        {
+          "Guid": "patrol_combat_contact",
+          "Name": "Patrol Combat Contact",
+          "ExecutionConditions": [{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.dead"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}],
+          "EntryNodeGuid": "patrol_combat_contact_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"patrol_combat_contact_entry","EditorPosition":{"x":40,"y":100}},
+            {"Type":"SetValue","Guid":"patrol_contact_init","EditorPosition":{"x":530,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_contact_monitor","EditorPosition":{"x":780,"y":100},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.perception.unitsByFactionCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":0},
+            {"Type":"SetValue","Guid":"patrol_contact_enter","EditorPosition":{"x":1030,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_release_monitor","EditorPosition":{"x":1280,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.engaged"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"TickOrder":1},
+            {"Type":"QueryUnits","Guid":"patrol_query_release","EditorPosition":{"x":280,"y":250},"Shape":1,"Center":{"Kind":1,"GetterKey":"unit.transform.position","SourceTarget":0,"Inputs":[]},"Radius":{"Kind":2,"OperationType":"Multiply","Inputs":[{"Kind":1,"GetterKey":"unit.perception.searchRadius","SourceTarget":0,"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":2},"Inputs":[]}]},"FactionMask":1,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":1,"ResultKey":"dungeon.patrol.releasePlayers"},
+            {"Type":"Compare","Guid":"patrol_release_clear","EditorPosition":{"x":530,"y":250},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.releasePlayers.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_contact_leave","EditorPosition":{"x":780,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"patrol_combat_contact_entry","OutputPortName":"Out","InputNodeGuid":"patrol_contact_init","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_contact_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_release_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_monitor","OutputPortName":"True","InputNodeGuid":"patrol_contact_enter","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_release_monitor","OutputPortName":"True","InputNodeGuid":"patrol_query_release","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_query_release","OutputPortName":"Out","InputNodeGuid":"patrol_release_clear","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_release_clear","OutputPortName":"True","InputNodeGuid":"patrol_contact_leave","InputPortName":"In"}
+          ],
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
+        },
+        {
+          "Guid": "patrol_combat_contact",
+          "Name": "Patrol Combat Contact",
+          "ExecutionConditions": [{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.dead"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}],
+          "EntryNodeGuid": "patrol_combat_contact_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"patrol_combat_contact_entry","EditorPosition":{"x":40,"y":100}},
+            {"Type":"SetValue","Guid":"patrol_contact_init","EditorPosition":{"x":530,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_contact_monitor","EditorPosition":{"x":780,"y":100},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.perception.unitsByFactionCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":0},
+            {"Type":"SetValue","Guid":"patrol_contact_enter","EditorPosition":{"x":1030,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_release_monitor","EditorPosition":{"x":1280,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.engaged"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"TickOrder":1},
+            {"Type":"QueryUnits","Guid":"patrol_query_release","EditorPosition":{"x":280,"y":250},"Shape":1,"Center":{"Kind":1,"GetterKey":"unit.transform.position","SourceTarget":0,"Inputs":[]},"Radius":{"Kind":2,"OperationType":"Multiply","Inputs":[{"Kind":1,"GetterKey":"unit.perception.searchRadius","SourceTarget":0,"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":2},"Inputs":[]}]},"FactionMask":1,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":1,"ResultKey":"dungeon.patrol.releasePlayers"},
+            {"Type":"Compare","Guid":"patrol_release_clear","EditorPosition":{"x":530,"y":250},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.releasePlayers.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_contact_leave","EditorPosition":{"x":780,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"patrol_combat_contact_entry","OutputPortName":"Out","InputNodeGuid":"patrol_contact_init","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_contact_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_release_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_monitor","OutputPortName":"True","InputNodeGuid":"patrol_contact_enter","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_release_monitor","OutputPortName":"True","InputNodeGuid":"patrol_query_release","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_query_release","OutputPortName":"Out","InputNodeGuid":"patrol_release_clear","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_release_clear","OutputPortName":"True","InputNodeGuid":"patrol_contact_leave","InputPortName":"In"}
+          ],
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
+        },
+        {
+          "Guid": "patrol_combat_contact",
+          "Name": "Patrol Combat Contact",
+          "ExecutionConditions": [{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.dead"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}],
+          "EntryNodeGuid": "patrol_combat_contact_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"patrol_combat_contact_entry","EditorPosition":{"x":40,"y":100}},
+            {"Type":"SetValue","Guid":"patrol_contact_init","EditorPosition":{"x":530,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_contact_monitor","EditorPosition":{"x":780,"y":100},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.perception.unitsByFactionCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":0},
+            {"Type":"SetValue","Guid":"patrol_contact_enter","EditorPosition":{"x":1030,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_release_monitor","EditorPosition":{"x":1280,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.engaged"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"TickOrder":1},
+            {"Type":"QueryUnits","Guid":"patrol_query_release","EditorPosition":{"x":280,"y":250},"Shape":1,"Center":{"Kind":1,"GetterKey":"unit.transform.position","SourceTarget":0,"Inputs":[]},"Radius":{"Kind":2,"OperationType":"Multiply","Inputs":[{"Kind":1,"GetterKey":"unit.perception.searchRadius","SourceTarget":0,"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":2},"Inputs":[]}]},"FactionMask":1,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":1,"ResultKey":"dungeon.patrol.releasePlayers"},
+            {"Type":"Compare","Guid":"patrol_release_clear","EditorPosition":{"x":530,"y":250},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.releasePlayers.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_contact_leave","EditorPosition":{"x":780,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"patrol_combat_contact_entry","OutputPortName":"Out","InputNodeGuid":"patrol_contact_init","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_contact_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_release_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_monitor","OutputPortName":"True","InputNodeGuid":"patrol_contact_enter","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_release_monitor","OutputPortName":"True","InputNodeGuid":"patrol_query_release","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_query_release","OutputPortName":"Out","InputNodeGuid":"patrol_release_clear","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_release_clear","OutputPortName":"True","InputNodeGuid":"patrol_contact_leave","InputPortName":"In"}
+          ],
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
+        },
+        {
+          "Guid": "patrol_combat_contact",
+          "Name": "Patrol Combat Contact",
+          "ExecutionConditions": [{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.dead"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}],
+          "EntryNodeGuid": "patrol_combat_contact_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"patrol_combat_contact_entry","EditorPosition":{"x":40,"y":100}},
+            {"Type":"SetValue","Guid":"patrol_contact_init","EditorPosition":{"x":530,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_contact_monitor","EditorPosition":{"x":780,"y":100},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.perception.unitsByFactionCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":0},
+            {"Type":"SetValue","Guid":"patrol_contact_enter","EditorPosition":{"x":1030,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_release_monitor","EditorPosition":{"x":1280,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.engaged"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"TickOrder":1},
+            {"Type":"QueryUnits","Guid":"patrol_query_release","EditorPosition":{"x":280,"y":250},"Shape":1,"Center":{"Kind":1,"GetterKey":"unit.transform.position","SourceTarget":0,"Inputs":[]},"Radius":{"Kind":2,"OperationType":"Multiply","Inputs":[{"Kind":1,"GetterKey":"unit.perception.searchRadius","SourceTarget":0,"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":2},"Inputs":[]}]},"FactionMask":1,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":1,"ResultKey":"dungeon.patrol.releasePlayers"},
+            {"Type":"Compare","Guid":"patrol_release_clear","EditorPosition":{"x":530,"y":250},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.releasePlayers.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_contact_leave","EditorPosition":{"x":780,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"patrol_combat_contact_entry","OutputPortName":"Out","InputNodeGuid":"patrol_contact_init","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_contact_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_release_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_monitor","OutputPortName":"True","InputNodeGuid":"patrol_contact_enter","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_release_monitor","OutputPortName":"True","InputNodeGuid":"patrol_query_release","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_query_release","OutputPortName":"Out","InputNodeGuid":"patrol_release_clear","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_release_clear","OutputPortName":"True","InputNodeGuid":"patrol_contact_leave","InputPortName":"In"}
+          ],
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
+        },
+        {
+          "Guid": "patrol_combat_contact",
+          "Name": "Patrol Combat Contact",
+          "ExecutionConditions": [{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.dead"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}],
+          "EntryNodeGuid": "patrol_combat_contact_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"patrol_combat_contact_entry","EditorPosition":{"x":40,"y":100}},
+            {"Type":"SetValue","Guid":"patrol_contact_init","EditorPosition":{"x":530,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_contact_monitor","EditorPosition":{"x":780,"y":100},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.perception.unitsByFactionCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":0},
+            {"Type":"SetValue","Guid":"patrol_contact_enter","EditorPosition":{"x":1030,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_release_monitor","EditorPosition":{"x":1280,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.engaged"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"TickOrder":1},
+            {"Type":"QueryUnits","Guid":"patrol_query_release","EditorPosition":{"x":280,"y":250},"Shape":1,"Center":{"Kind":1,"GetterKey":"unit.transform.position","SourceTarget":0,"Inputs":[]},"Radius":{"Kind":2,"OperationType":"Multiply","Inputs":[{"Kind":1,"GetterKey":"unit.perception.searchRadius","SourceTarget":0,"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":2},"Inputs":[]}]},"FactionMask":1,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":1,"ResultKey":"dungeon.patrol.releasePlayers"},
+            {"Type":"Compare","Guid":"patrol_release_clear","EditorPosition":{"x":530,"y":250},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.releasePlayers.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_contact_leave","EditorPosition":{"x":780,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"patrol_combat_contact_entry","OutputPortName":"Out","InputNodeGuid":"patrol_contact_init","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_contact_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_release_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_monitor","OutputPortName":"True","InputNodeGuid":"patrol_contact_enter","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_release_monitor","OutputPortName":"True","InputNodeGuid":"patrol_query_release","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_query_release","OutputPortName":"Out","InputNodeGuid":"patrol_release_clear","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_release_clear","OutputPortName":"True","InputNodeGuid":"patrol_contact_leave","InputPortName":"In"}
+          ],
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
+        },
+        {
+          "Guid": "patrol_combat_contact",
+          "Name": "Patrol Combat Contact",
+          "ExecutionConditions": [{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.dead"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}],
+          "EntryNodeGuid": "patrol_combat_contact_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"patrol_combat_contact_entry","EditorPosition":{"x":40,"y":100}},
+            {"Type":"SetValue","Guid":"patrol_contact_init","EditorPosition":{"x":530,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_contact_monitor","EditorPosition":{"x":780,"y":100},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.perception.unitsByFactionCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":0},
+            {"Type":"SetValue","Guid":"patrol_contact_enter","EditorPosition":{"x":1030,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_release_monitor","EditorPosition":{"x":1280,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.engaged"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"TickOrder":1},
+            {"Type":"QueryUnits","Guid":"patrol_query_release","EditorPosition":{"x":280,"y":250},"Shape":1,"Center":{"Kind":1,"GetterKey":"unit.transform.position","SourceTarget":0,"Inputs":[]},"Radius":{"Kind":2,"OperationType":"Multiply","Inputs":[{"Kind":1,"GetterKey":"unit.perception.searchRadius","SourceTarget":0,"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":2},"Inputs":[]}]},"FactionMask":1,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":1,"ResultKey":"dungeon.patrol.releasePlayers"},
+            {"Type":"Compare","Guid":"patrol_release_clear","EditorPosition":{"x":530,"y":250},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.releasePlayers.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_contact_leave","EditorPosition":{"x":780,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"patrol_combat_contact_entry","OutputPortName":"Out","InputNodeGuid":"patrol_contact_init","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_contact_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_release_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_monitor","OutputPortName":"True","InputNodeGuid":"patrol_contact_enter","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_release_monitor","OutputPortName":"True","InputNodeGuid":"patrol_query_release","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_query_release","OutputPortName":"Out","InputNodeGuid":"patrol_release_clear","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_release_clear","OutputPortName":"True","InputNodeGuid":"patrol_contact_leave","InputPortName":"In"}
+          ],
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
+        },
+        {
+          "Guid": "patrol_combat_contact",
+          "Name": "Patrol Combat Contact",
+          "ExecutionConditions": [{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.dead"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}],
+          "EntryNodeGuid": "patrol_combat_contact_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"patrol_combat_contact_entry","EditorPosition":{"x":40,"y":100}},
+            {"Type":"SetValue","Guid":"patrol_contact_init","EditorPosition":{"x":530,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_contact_monitor","EditorPosition":{"x":780,"y":100},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.perception.unitsByFactionCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":0},
+            {"Type":"SetValue","Guid":"patrol_contact_enter","EditorPosition":{"x":1030,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_release_monitor","EditorPosition":{"x":1280,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.engaged"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"TickOrder":1},
+            {"Type":"QueryUnits","Guid":"patrol_query_release","EditorPosition":{"x":280,"y":250},"Shape":1,"Center":{"Kind":1,"GetterKey":"unit.transform.position","SourceTarget":0,"Inputs":[]},"Radius":{"Kind":2,"OperationType":"Multiply","Inputs":[{"Kind":1,"GetterKey":"unit.perception.searchRadius","SourceTarget":0,"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":2},"Inputs":[]}]},"FactionMask":1,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":1,"ResultKey":"dungeon.patrol.releasePlayers"},
+            {"Type":"Compare","Guid":"patrol_release_clear","EditorPosition":{"x":530,"y":250},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.releasePlayers.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_contact_leave","EditorPosition":{"x":780,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"patrol_combat_contact_entry","OutputPortName":"Out","InputNodeGuid":"patrol_contact_init","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_contact_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_release_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_monitor","OutputPortName":"True","InputNodeGuid":"patrol_contact_enter","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_release_monitor","OutputPortName":"True","InputNodeGuid":"patrol_query_release","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_query_release","OutputPortName":"Out","InputNodeGuid":"patrol_release_clear","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_release_clear","OutputPortName":"True","InputNodeGuid":"patrol_contact_leave","InputPortName":"In"}
+          ],
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
+        },
+        {
+          "Guid": "patrol_combat_contact",
+          "Name": "Patrol Combat Contact",
+          "ExecutionConditions": [{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.dead"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}],
+          "EntryNodeGuid": "patrol_combat_contact_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"patrol_combat_contact_entry","EditorPosition":{"x":40,"y":100}},
+            {"Type":"SetValue","Guid":"patrol_contact_init","EditorPosition":{"x":530,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_contact_monitor","EditorPosition":{"x":780,"y":100},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.perception.unitsByFactionCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":0},
+            {"Type":"SetValue","Guid":"patrol_contact_enter","EditorPosition":{"x":1030,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_release_monitor","EditorPosition":{"x":1280,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.engaged"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"TickOrder":1},
+            {"Type":"QueryUnits","Guid":"patrol_query_release","EditorPosition":{"x":280,"y":250},"Shape":1,"Center":{"Kind":1,"GetterKey":"unit.transform.position","SourceTarget":0,"Inputs":[]},"Radius":{"Kind":2,"OperationType":"Multiply","Inputs":[{"Kind":1,"GetterKey":"unit.perception.searchRadius","SourceTarget":0,"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":2},"Inputs":[]}]},"FactionMask":1,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":1,"ResultKey":"dungeon.patrol.releasePlayers"},
+            {"Type":"Compare","Guid":"patrol_release_clear","EditorPosition":{"x":530,"y":250},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.releasePlayers.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_contact_leave","EditorPosition":{"x":780,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"patrol_combat_contact_entry","OutputPortName":"Out","InputNodeGuid":"patrol_contact_init","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_contact_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_release_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_monitor","OutputPortName":"True","InputNodeGuid":"patrol_contact_enter","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_release_monitor","OutputPortName":"True","InputNodeGuid":"patrol_query_release","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_query_release","OutputPortName":"Out","InputNodeGuid":"patrol_release_clear","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_release_clear","OutputPortName":"True","InputNodeGuid":"patrol_contact_leave","InputPortName":"In"}
+          ],
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
+        },
+        {
+          "Guid": "patrol_combat_contact",
+          "Name": "Patrol Combat Contact",
+          "ExecutionConditions": [{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.dead"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}],
+          "EntryNodeGuid": "patrol_combat_contact_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"patrol_combat_contact_entry","EditorPosition":{"x":40,"y":100}},
+            {"Type":"SetValue","Guid":"patrol_contact_init","EditorPosition":{"x":530,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_contact_monitor","EditorPosition":{"x":780,"y":100},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.perception.unitsByFactionCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":0},
+            {"Type":"SetValue","Guid":"patrol_contact_enter","EditorPosition":{"x":1030,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_release_monitor","EditorPosition":{"x":1280,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.engaged"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"TickOrder":1},
+            {"Type":"QueryUnits","Guid":"patrol_query_release","EditorPosition":{"x":280,"y":250},"Shape":1,"Center":{"Kind":1,"GetterKey":"unit.transform.position","SourceTarget":0,"Inputs":[]},"Radius":{"Kind":2,"OperationType":"Multiply","Inputs":[{"Kind":1,"GetterKey":"unit.perception.searchRadius","SourceTarget":0,"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":2},"Inputs":[]}]},"FactionMask":1,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":1,"ResultKey":"dungeon.patrol.releasePlayers"},
+            {"Type":"Compare","Guid":"patrol_release_clear","EditorPosition":{"x":530,"y":250},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.releasePlayers.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_contact_leave","EditorPosition":{"x":780,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"patrol_combat_contact_entry","OutputPortName":"Out","InputNodeGuid":"patrol_contact_init","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_contact_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_release_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_monitor","OutputPortName":"True","InputNodeGuid":"patrol_contact_enter","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_release_monitor","OutputPortName":"True","InputNodeGuid":"patrol_query_release","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_query_release","OutputPortName":"Out","InputNodeGuid":"patrol_release_clear","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_release_clear","OutputPortName":"True","InputNodeGuid":"patrol_contact_leave","InputPortName":"In"}
+          ],
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
+        },
+        {
+          "Guid": "patrol_combat_contact",
+          "Name": "Patrol Combat Contact",
+          "ExecutionConditions": [{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.dead"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}],
+          "EntryNodeGuid": "patrol_combat_contact_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"patrol_combat_contact_entry","EditorPosition":{"x":40,"y":100}},
+            {"Type":"SetValue","Guid":"patrol_contact_init","EditorPosition":{"x":530,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_contact_monitor","EditorPosition":{"x":780,"y":100},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.perception.unitsByFactionCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":0},
+            {"Type":"SetValue","Guid":"patrol_contact_enter","EditorPosition":{"x":1030,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_release_monitor","EditorPosition":{"x":1280,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.engaged"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"TickOrder":1},
+            {"Type":"QueryUnits","Guid":"patrol_query_release","EditorPosition":{"x":280,"y":250},"Shape":1,"Center":{"Kind":1,"GetterKey":"unit.transform.position","SourceTarget":0,"Inputs":[]},"Radius":{"Kind":2,"OperationType":"Multiply","Inputs":[{"Kind":1,"GetterKey":"unit.perception.searchRadius","SourceTarget":0,"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":2},"Inputs":[]}]},"FactionMask":1,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":1,"ResultKey":"dungeon.patrol.releasePlayers"},
+            {"Type":"Compare","Guid":"patrol_release_clear","EditorPosition":{"x":530,"y":250},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.releasePlayers.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_contact_leave","EditorPosition":{"x":780,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"patrol_combat_contact_entry","OutputPortName":"Out","InputNodeGuid":"patrol_contact_init","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_contact_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_release_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_monitor","OutputPortName":"True","InputNodeGuid":"patrol_contact_enter","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_release_monitor","OutputPortName":"True","InputNodeGuid":"patrol_query_release","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_query_release","OutputPortName":"Out","InputNodeGuid":"patrol_release_clear","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_release_clear","OutputPortName":"True","InputNodeGuid":"patrol_contact_leave","InputPortName":"In"}
+          ],
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
+        },
+        {
+          "Guid": "patrol_combat_contact",
+          "Name": "Patrol Combat Contact",
+          "ExecutionConditions": [{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.dead"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}],
+          "EntryNodeGuid": "patrol_combat_contact_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"patrol_combat_contact_entry","EditorPosition":{"x":40,"y":100}},
+            {"Type":"SetValue","Guid":"patrol_contact_init","EditorPosition":{"x":530,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_contact_monitor","EditorPosition":{"x":780,"y":100},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.perception.unitsByFactionCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":0},
+            {"Type":"SetValue","Guid":"patrol_contact_enter","EditorPosition":{"x":1030,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_release_monitor","EditorPosition":{"x":1280,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.engaged"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"TickOrder":1},
+            {"Type":"QueryUnits","Guid":"patrol_query_release","EditorPosition":{"x":280,"y":250},"Shape":1,"Center":{"Kind":1,"GetterKey":"unit.transform.position","SourceTarget":0,"Inputs":[]},"Radius":{"Kind":2,"OperationType":"Multiply","Inputs":[{"Kind":1,"GetterKey":"unit.perception.searchRadius","SourceTarget":0,"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":2},"Inputs":[]}]},"FactionMask":1,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":1,"ResultKey":"dungeon.patrol.releasePlayers"},
+            {"Type":"Compare","Guid":"patrol_release_clear","EditorPosition":{"x":530,"y":250},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.releasePlayers.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_contact_leave","EditorPosition":{"x":780,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"patrol_combat_contact_entry","OutputPortName":"Out","InputNodeGuid":"patrol_contact_init","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_contact_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_release_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_monitor","OutputPortName":"True","InputNodeGuid":"patrol_contact_enter","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_release_monitor","OutputPortName":"True","InputNodeGuid":"patrol_query_release","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_query_release","OutputPortName":"Out","InputNodeGuid":"patrol_release_clear","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_release_clear","OutputPortName":"True","InputNodeGuid":"patrol_contact_leave","InputPortName":"In"}
+          ],
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
+        },
+        {
+          "Guid": "patrol_combat_contact",
+          "Name": "Patrol Combat Contact",
+          "ExecutionConditions": [{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.dead"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}],
+          "EntryNodeGuid": "patrol_combat_contact_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"patrol_combat_contact_entry","EditorPosition":{"x":40,"y":100}},
+            {"Type":"SetValue","Guid":"patrol_contact_init","EditorPosition":{"x":530,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_contact_monitor","EditorPosition":{"x":780,"y":100},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.perception.unitsByFactionCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":0},
+            {"Type":"SetValue","Guid":"patrol_contact_enter","EditorPosition":{"x":1030,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_release_monitor","EditorPosition":{"x":1280,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.engaged"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"TickOrder":1},
+            {"Type":"QueryUnits","Guid":"patrol_query_release","EditorPosition":{"x":280,"y":250},"Shape":1,"Center":{"Kind":1,"GetterKey":"unit.transform.position","SourceTarget":0,"Inputs":[]},"Radius":{"Kind":2,"OperationType":"Multiply","Inputs":[{"Kind":1,"GetterKey":"unit.perception.searchRadius","SourceTarget":0,"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":2},"Inputs":[]}]},"FactionMask":1,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":1,"ResultKey":"dungeon.patrol.releasePlayers"},
+            {"Type":"Compare","Guid":"patrol_release_clear","EditorPosition":{"x":530,"y":250},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.releasePlayers.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_contact_leave","EditorPosition":{"x":780,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"patrol_combat_contact_entry","OutputPortName":"Out","InputNodeGuid":"patrol_contact_init","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_contact_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_release_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_monitor","OutputPortName":"True","InputNodeGuid":"patrol_contact_enter","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_release_monitor","OutputPortName":"True","InputNodeGuid":"patrol_query_release","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_query_release","OutputPortName":"Out","InputNodeGuid":"patrol_release_clear","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_release_clear","OutputPortName":"True","InputNodeGuid":"patrol_contact_leave","InputPortName":"In"}
+          ],
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
+        },
+        {
+          "Guid": "patrol_combat_contact",
+          "Name": "Patrol Combat Contact",
+          "ExecutionConditions": [{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.dead"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}],
+          "EntryNodeGuid": "patrol_combat_contact_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"patrol_combat_contact_entry","EditorPosition":{"x":40,"y":100}},
+            {"Type":"SetValue","Guid":"patrol_contact_init","EditorPosition":{"x":530,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_contact_monitor","EditorPosition":{"x":780,"y":100},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.perception.unitsByFactionCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":0},
+            {"Type":"SetValue","Guid":"patrol_contact_enter","EditorPosition":{"x":1030,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_release_monitor","EditorPosition":{"x":1280,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.engaged"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"TickOrder":1},
+            {"Type":"QueryUnits","Guid":"patrol_query_release","EditorPosition":{"x":280,"y":250},"Shape":1,"Center":{"Kind":1,"GetterKey":"unit.transform.position","SourceTarget":0,"Inputs":[]},"Radius":{"Kind":2,"OperationType":"Multiply","Inputs":[{"Kind":1,"GetterKey":"unit.perception.searchRadius","SourceTarget":0,"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":2},"Inputs":[]}]},"FactionMask":1,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":1,"ResultKey":"dungeon.patrol.releasePlayers"},
+            {"Type":"Compare","Guid":"patrol_release_clear","EditorPosition":{"x":530,"y":250},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.releasePlayers.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_contact_leave","EditorPosition":{"x":780,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"patrol_combat_contact_entry","OutputPortName":"Out","InputNodeGuid":"patrol_contact_init","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_contact_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_release_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_monitor","OutputPortName":"True","InputNodeGuid":"patrol_contact_enter","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_release_monitor","OutputPortName":"True","InputNodeGuid":"patrol_query_release","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_query_release","OutputPortName":"Out","InputNodeGuid":"patrol_release_clear","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_release_clear","OutputPortName":"True","InputNodeGuid":"patrol_contact_leave","InputPortName":"In"}
+          ],
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
+        },
+        {
+          "Guid": "patrol_combat_contact",
+          "Name": "Patrol Combat Contact",
+          "ExecutionConditions": [{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.dead"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}],
+          "EntryNodeGuid": "patrol_combat_contact_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"patrol_combat_contact_entry","EditorPosition":{"x":40,"y":100}},
+            {"Type":"SetValue","Guid":"patrol_contact_init","EditorPosition":{"x":530,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_contact_monitor","EditorPosition":{"x":780,"y":100},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.perception.unitsByFactionCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":0},
+            {"Type":"SetValue","Guid":"patrol_contact_enter","EditorPosition":{"x":1030,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_release_monitor","EditorPosition":{"x":1280,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.engaged"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"TickOrder":1},
+            {"Type":"QueryUnits","Guid":"patrol_query_release","EditorPosition":{"x":280,"y":250},"Shape":1,"Center":{"Kind":1,"GetterKey":"unit.transform.position","SourceTarget":0,"Inputs":[]},"Radius":{"Kind":2,"OperationType":"Multiply","Inputs":[{"Kind":1,"GetterKey":"unit.perception.searchRadius","SourceTarget":0,"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":2},"Inputs":[]}]},"FactionMask":1,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":1,"ResultKey":"dungeon.patrol.releasePlayers"},
+            {"Type":"Compare","Guid":"patrol_release_clear","EditorPosition":{"x":530,"y":250},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.releasePlayers.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_contact_leave","EditorPosition":{"x":780,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"patrol_combat_contact_entry","OutputPortName":"Out","InputNodeGuid":"patrol_contact_init","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_contact_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_release_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_monitor","OutputPortName":"True","InputNodeGuid":"patrol_contact_enter","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_release_monitor","OutputPortName":"True","InputNodeGuid":"patrol_query_release","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_query_release","OutputPortName":"Out","InputNodeGuid":"patrol_release_clear","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_release_clear","OutputPortName":"True","InputNodeGuid":"patrol_contact_leave","InputPortName":"In"}
+          ],
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
         }
       ],
       "Id": 1
@@ -7738,7 +8278,7 @@
                   "Type": 3,
                   "Bool": false,
                   "Int": 0,
-                  "Float": 0.25,
+                  "Float": 0.5,
                   "Float2": {
                     "x": 0.0,
                     "y": 0.0
@@ -7773,7 +8313,7 @@
                 "Literal": {
                   "Type": 2,
                   "Bool": false,
-                  "Int": 19,
+                  "Int": 46,
                   "Float": 0.0,
                   "Float2": {
                     "x": 0.0,
@@ -7988,7 +8528,7 @@
                   "Type": 3,
                   "Bool": false,
                   "Int": 0,
-                  "Float": 0.25,
+                  "Float": 0.5,
                   "Float2": {
                     "x": 0.0,
                     "y": 0.0
@@ -9017,7 +9557,7 @@
                   "Type": 3,
                   "Bool": false,
                   "Int": 0,
-                  "Float": 0.25,
+                  "Float": 0.5,
                   "Float2": {
                     "x": 0.0,
                     "y": 0.0
@@ -9052,7 +9592,7 @@
                 "Literal": {
                   "Type": 2,
                   "Bool": false,
-                  "Int": 20,
+                  "Int": 47,
                   "Float": 0.0,
                   "Float2": {
                     "x": 0.0,
@@ -9267,7 +9807,7 @@
                   "Type": 3,
                   "Bool": false,
                   "Int": 0,
-                  "Float": 0.3333333,
+                  "Float": 0.4166667,
                   "Float2": {
                     "x": 0.0,
                     "y": 0.0
@@ -9699,7 +10239,22 @@
                 "x": 2440.0,
                 "y": -140.0
               }
-            }
+            },
+            {"SkillId":{"Kind":0,"Literal":{"Type":2,"Int":48},"Inputs":[]},"Input":{"Position":{"Kind":1,"GetterKey":"unit.transform.position","Inputs":[]},"TargetEntity":{"Kind":1,"GetterKey":"unit.self.entity","Inputs":[]}},"Type":"RequestSkill","Guid":"werewolf_attack02_apply_exposed","EditorPosition":{"x":840.0,"y":-40.0}},
+            {"SetterKey":"unit.move.teleportTo","Key":"","Value":{"Kind":1,"GetterKey":"unit.transform.positionNear","Inputs":[{"Kind":1,"GetterKey":"unit.perception.nearestUnitByFaction","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":3,"Float":0.8},"Inputs":[]}]},"Values":[],"Type":"SetValue","Guid":"werewolf_attack02_teleport","EditorPosition":{"x":1720.0,"y":-40.0}},
+            {"Duration":{"Kind":0,"Literal":{"Type":3,"Float":0.0833333},"Inputs":[]},"TickOrder":1,"Type":"Timer","Guid":"werewolf_attack02_first_hit_delay","EditorPosition":{"x":1960.0,"y":-40.0}},
+            {"Duration":{"Kind":0,"Literal":{"Type":3,"Float":0.0833333},"Inputs":[]},"TickOrder":1,"Type":"Timer","Guid":"werewolf_attack02_second_hit_delay","EditorPosition":{"x":1960.0,"y":260.0}},
+            {"SkillId":{"Kind":0,"Literal":{"Type":2,"Int":47},"Inputs":[]},"Input":{"Position":{"Kind":1,"GetterKey":"unit.transform.positionOf","Inputs":[{"Kind":1,"GetterKey":"unit.perception.nearestUnitByFaction","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}]},"TargetEntity":{"Kind":1,"GetterKey":"unit.perception.nearestUnitByFaction","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},"Type":"RequestSkill","Guid":"werewolf_attack02_second_skill","EditorPosition":{"x":2200.0,"y":260.0}},
+            {"Duration":{"Kind":0,"Literal":{"Type":3,"Float":0.0833333},"Inputs":[]},"TickOrder":1,"Type":"Timer","Guid":"werewolf_attack02_third_hit_delay","EditorPosition":{"x":2440.0,"y":260.0}},
+            {"SkillId":{"Kind":0,"Literal":{"Type":2,"Int":47},"Inputs":[]},"Input":{"Position":{"Kind":1,"GetterKey":"unit.transform.positionOf","Inputs":[{"Kind":1,"GetterKey":"unit.perception.nearestUnitByFaction","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}]},"TargetEntity":{"Kind":1,"GetterKey":"unit.perception.nearestUnitByFaction","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},"Type":"RequestSkill","Guid":"werewolf_attack02_third_skill","EditorPosition":{"x":2680.0,"y":260.0}},
+            {"Duration":{"Kind":0,"Literal":{"Type":3,"Float":0.0833333},"Inputs":[]},"TickOrder":1,"Type":"Timer","Guid":"werewolf_attack02_fourth_hit_delay","EditorPosition":{"x":2920.0,"y":260.0}},
+            {"SkillId":{"Kind":0,"Literal":{"Type":2,"Int":47},"Inputs":[]},"Input":{"Position":{"Kind":1,"GetterKey":"unit.transform.positionOf","Inputs":[{"Kind":1,"GetterKey":"unit.perception.nearestUnitByFaction","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}]},"TargetEntity":{"Kind":1,"GetterKey":"unit.perception.nearestUnitByFaction","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},"Type":"RequestSkill","Guid":"werewolf_attack02_fourth_skill","EditorPosition":{"x":3160.0,"y":260.0}},
+            {"SetterKey":"unit.buffs.remove","Key":"","Value":{"Kind":0,"Literal":{"Type":2,"Int":14},"Inputs":[]},"Values":[],"Type":"SetValue","Guid":"werewolf_attack02_remove_exposed","EditorPosition":{"x":3400.0,"y":260.0}},
+            {"Condition":{"ConditionType":0,"CompareType":"IsFalse","Inputs":[{"Kind":1,"SourceTarget":0,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.control.lockCast","OperationType":"","Inputs":[]}]},"Type":"Compare","Guid":"werewolf_attack02_control_before_teleport","ExecutionTargets":7,"EditorPosition":{"x":1600.0,"y":-40.0}},
+            {"Condition":{"ConditionType":0,"CompareType":"IsFalse","Inputs":[{"Kind":1,"SourceTarget":0,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.control.lockCast","OperationType":"","Inputs":[]}]},"Type":"Compare","Guid":"werewolf_attack02_control_before_first_hit","ExecutionTargets":7,"EditorPosition":{"x":2080.0,"y":-40.0}},
+            {"Condition":{"ConditionType":0,"CompareType":"IsFalse","Inputs":[{"Kind":1,"SourceTarget":0,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.control.lockCast","OperationType":"","Inputs":[]}]},"Type":"Compare","Guid":"werewolf_attack02_control_before_second_hit","ExecutionTargets":7,"EditorPosition":{"x":2080.0,"y":260.0}},
+            {"Condition":{"ConditionType":0,"CompareType":"IsFalse","Inputs":[{"Kind":1,"SourceTarget":0,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.control.lockCast","OperationType":"","Inputs":[]}]},"Type":"Compare","Guid":"werewolf_attack02_control_before_third_hit","ExecutionTargets":7,"EditorPosition":{"x":2560.0,"y":260.0}},
+            {"Condition":{"ConditionType":0,"CompareType":"IsFalse","Inputs":[{"Kind":1,"SourceTarget":0,"Literal":{"Type":1,"Bool":false},"GetterKey":"unit.control.lockCast","OperationType":"","Inputs":[]}]},"Type":"Compare","Guid":"werewolf_attack02_control_before_fourth_hit","ExecutionTargets":7,"EditorPosition":{"x":3040.0,"y":260.0}}
           ],
           "Edges": [
             {
@@ -9723,9 +10278,10 @@
             {
               "OutputNodeGuid": "werewolf_attack02_active_true",
               "OutputPortName": "Out",
-              "InputNodeGuid": "werewolf_attack02_lock_motion",
+              "InputNodeGuid": "werewolf_attack02_apply_exposed",
               "InputPortName": "In"
             },
+            {"OutputNodeGuid":"werewolf_attack02_apply_exposed","OutputPortName":"Out","InputNodeGuid":"werewolf_attack02_lock_motion","InputPortName":"In"},
             {
               "OutputNodeGuid": "werewolf_attack02_lock_motion",
               "OutputPortName": "Out",
@@ -9744,18 +10300,32 @@
               "InputNodeGuid": "werewolf_attack02_windup",
               "InputPortName": "Start"
             },
-            {
-              "OutputNodeGuid": "werewolf_attack02_windup",
-              "OutputPortName": "OnComplete",
-              "InputNodeGuid": "werewolf_attack02_skill",
-              "InputPortName": "In"
-            },
+            {"OutputNodeGuid":"werewolf_attack02_windup","OutputPortName":"OnComplete","InputNodeGuid":"werewolf_attack02_control_before_teleport","InputPortName":"Check"},
+            {"OutputNodeGuid":"werewolf_attack02_control_before_teleport","OutputPortName":"True","InputNodeGuid":"werewolf_attack02_teleport","InputPortName":"In"},
+            {"OutputNodeGuid":"werewolf_attack02_control_before_teleport","OutputPortName":"False","InputNodeGuid":"werewolf_attack02_remove_exposed","InputPortName":"In"},
+            {"OutputNodeGuid":"werewolf_attack02_teleport","OutputPortName":"Out","InputNodeGuid":"werewolf_attack02_first_hit_delay","InputPortName":"Start"},
+            {"OutputNodeGuid":"werewolf_attack02_first_hit_delay","OutputPortName":"OnComplete","InputNodeGuid":"werewolf_attack02_control_before_first_hit","InputPortName":"Check"},
+            {"OutputNodeGuid":"werewolf_attack02_control_before_first_hit","OutputPortName":"True","InputNodeGuid":"werewolf_attack02_skill","InputPortName":"In"},
+            {"OutputNodeGuid":"werewolf_attack02_control_before_first_hit","OutputPortName":"False","InputNodeGuid":"werewolf_attack02_remove_exposed","InputPortName":"In"},
             {
               "OutputNodeGuid": "werewolf_attack02_skill",
               "OutputPortName": "Out",
-              "InputNodeGuid": "werewolf_attack02_recovery",
+              "InputNodeGuid": "werewolf_attack02_second_hit_delay",
               "InputPortName": "Start"
             },
+            {"OutputNodeGuid":"werewolf_attack02_second_hit_delay","OutputPortName":"OnComplete","InputNodeGuid":"werewolf_attack02_control_before_second_hit","InputPortName":"Check"},
+            {"OutputNodeGuid":"werewolf_attack02_control_before_second_hit","OutputPortName":"True","InputNodeGuid":"werewolf_attack02_second_skill","InputPortName":"In"},
+            {"OutputNodeGuid":"werewolf_attack02_control_before_second_hit","OutputPortName":"False","InputNodeGuid":"werewolf_attack02_remove_exposed","InputPortName":"In"},
+            {"OutputNodeGuid":"werewolf_attack02_second_skill","OutputPortName":"Out","InputNodeGuid":"werewolf_attack02_third_hit_delay","InputPortName":"Start"},
+            {"OutputNodeGuid":"werewolf_attack02_third_hit_delay","OutputPortName":"OnComplete","InputNodeGuid":"werewolf_attack02_control_before_third_hit","InputPortName":"Check"},
+            {"OutputNodeGuid":"werewolf_attack02_control_before_third_hit","OutputPortName":"True","InputNodeGuid":"werewolf_attack02_third_skill","InputPortName":"In"},
+            {"OutputNodeGuid":"werewolf_attack02_control_before_third_hit","OutputPortName":"False","InputNodeGuid":"werewolf_attack02_remove_exposed","InputPortName":"In"},
+            {"OutputNodeGuid":"werewolf_attack02_third_skill","OutputPortName":"Out","InputNodeGuid":"werewolf_attack02_fourth_hit_delay","InputPortName":"Start"},
+            {"OutputNodeGuid":"werewolf_attack02_fourth_hit_delay","OutputPortName":"OnComplete","InputNodeGuid":"werewolf_attack02_control_before_fourth_hit","InputPortName":"Check"},
+            {"OutputNodeGuid":"werewolf_attack02_control_before_fourth_hit","OutputPortName":"True","InputNodeGuid":"werewolf_attack02_fourth_skill","InputPortName":"In"},
+            {"OutputNodeGuid":"werewolf_attack02_control_before_fourth_hit","OutputPortName":"False","InputNodeGuid":"werewolf_attack02_remove_exposed","InputPortName":"In"},
+            {"OutputNodeGuid":"werewolf_attack02_fourth_skill","OutputPortName":"Out","InputNodeGuid":"werewolf_attack02_remove_exposed","InputPortName":"In"},
+            {"OutputNodeGuid":"werewolf_attack02_remove_exposed","OutputPortName":"Out","InputNodeGuid":"werewolf_attack02_recovery","InputPortName":"Start"},
             {
               "OutputNodeGuid": "werewolf_attack02_recovery",
               "OutputPortName": "OnComplete",
@@ -11380,7 +11950,7 @@
                   "Type": 3,
                   "Bool": false,
                   "Int": 0,
-                  "Float": 0.3333333,
+                  "Float": 0.4166667,
                   "Float2": {
                     "x": 0.0,
                     "y": 0.0
@@ -11415,7 +11985,7 @@
                 "Literal": {
                   "Type": 2,
                   "Bool": false,
-                  "Int": 19,
+                  "Int": 43,
                   "Float": 0.0,
                   "Float2": {
                     "x": 0.0,
@@ -12659,7 +13229,7 @@
                   "Type": 3,
                   "Bool": false,
                   "Int": 0,
-                  "Float": 0.6666667,
+                  "Float": 0.5,
                   "Float2": {
                     "x": 0.0,
                     "y": 0.0
@@ -12694,7 +13264,7 @@
                 "Literal": {
                   "Type": 2,
                   "Bool": false,
-                  "Int": 20,
+                  "Int": 44,
                   "Float": 0.0,
                   "Float2": {
                     "x": 0.0,
@@ -13341,7 +13911,9 @@
                 "x": 2440.0,
                 "y": -140.0
               }
-            }
+            },
+            {"Duration":{"Kind":0,"Literal":{"Type":3,"Float":0.25},"Inputs":[]},"TickOrder":1,"Type":"Timer","Guid":"werebear_attack02_second_hit_delay","EditorPosition":{"x":1960.0,"y":260.0}},
+            {"SkillId":{"Kind":0,"Literal":{"Type":2,"Int":44},"Inputs":[]},"Input":{"Position":{"Kind":1,"GetterKey":"unit.transform.positionOf","Inputs":[{"Kind":1,"GetterKey":"unit.perception.nearestUnitByFaction","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}]},"TargetEntity":{"Kind":1,"GetterKey":"unit.perception.nearestUnitByFaction","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},"Type":"RequestSkill","Guid":"werebear_attack02_second_skill","EditorPosition":{"x":2200.0,"y":260.0}}
           ],
           "Edges": [
             {
@@ -13395,9 +13967,11 @@
             {
               "OutputNodeGuid": "werebear_attack02_skill",
               "OutputPortName": "Out",
-              "InputNodeGuid": "werebear_attack02_recovery",
+              "InputNodeGuid": "werebear_attack02_second_hit_delay",
               "InputPortName": "Start"
             },
+            {"OutputNodeGuid":"werebear_attack02_second_hit_delay","OutputPortName":"OnComplete","InputNodeGuid":"werebear_attack02_second_skill","InputPortName":"In"},
+            {"OutputNodeGuid":"werebear_attack02_second_skill","OutputPortName":"Out","InputNodeGuid":"werebear_attack02_recovery","InputPortName":"Start"},
             {
               "OutputNodeGuid": "werebear_attack02_recovery",
               "OutputPortName": "OnComplete",
@@ -13938,7 +14512,7 @@
                   "Type": 3,
                   "Bool": false,
                   "Int": 0,
-                  "Float": 0.6666667,
+                  "Float": 0.5,
                   "Float2": {
                     "x": 0.0,
                     "y": 0.0
@@ -13973,7 +14547,7 @@
                 "Literal": {
                   "Type": 2,
                   "Bool": false,
-                  "Int": 20,
+                  "Int": 45,
                   "Float": 0.0,
                   "Float2": {
                     "x": 0.0,
@@ -40485,295 +41059,6 @@
               }
             },
             {
-              "SkillId": {
-                "Kind": 0,
-                "SourceTarget": 0,
-                "Literal": {
-                  "Type": 2,
-                  "Bool": false,
-                  "Int": 19,
-                  "Float": 0.0,
-                  "Float2": {
-                    "x": 0.0,
-                    "y": 0.0
-                  },
-                  "Float3": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
-                  },
-                  "Entity": {
-                    "Index": 0,
-                    "Version": 0
-                  },
-                  "String": ""
-                },
-                "GetterKey": "",
-                "OperationType": "",
-                "Inputs": []
-              },
-              "Input": {
-                "Position": {
-                  "Kind": 1,
-                  "SourceTarget": 0,
-                  "Literal": {
-                    "Type": 5,
-                    "Bool": false,
-                    "Int": 0,
-                    "Float": 0.0,
-                    "Float2": {
-                      "x": 0.0,
-                      "y": 0.0
-                    },
-                    "Float3": {
-                      "x": 0.0,
-                      "y": 0.0,
-                      "z": 0.0
-                    },
-                    "Entity": {
-                      "Index": 0,
-                      "Version": 0
-                    },
-                    "String": ""
-                  },
-                  "GetterKey": "unit.transform.positionOf",
-                  "OperationType": "",
-                  "Inputs": [
-                    {
-                      "Kind": 1,
-                      "SourceTarget": 0,
-                      "Literal": {
-                        "Type": 3,
-                        "Bool": false,
-                        "Int": 0,
-                        "Float": 0.0,
-                        "Float2": {
-                          "x": 0.0,
-                          "y": 0.0
-                        },
-                        "Float3": {
-                          "x": 0.0,
-                          "y": 0.0,
-                          "z": 0.0
-                        },
-                        "Entity": {
-                          "Index": 0,
-                          "Version": 0
-                        },
-                        "String": ""
-                      },
-                      "GetterKey": "unit.perception.nearestUnitByFaction",
-                      "OperationType": "",
-                      "Inputs": [
-                        {
-                          "Kind": 0,
-                          "SourceTarget": 0,
-                          "Literal": {
-                            "Type": 2,
-                            "Bool": false,
-                            "Int": 0,
-                            "Float": 0.0,
-                            "Float2": {
-                              "x": 0.0,
-                              "y": 0.0
-                            },
-                            "Float3": {
-                              "x": 0.0,
-                              "y": 0.0,
-                              "z": 0.0
-                            },
-                            "Entity": {
-                              "Index": 0,
-                              "Version": 0
-                            },
-                            "String": ""
-                          },
-                          "GetterKey": "",
-                          "OperationType": "",
-                          "Inputs": []
-                        }
-                      ]
-                    }
-                  ]
-                },
-                "TargetEntity": {
-                  "Kind": 1,
-                  "SourceTarget": 0,
-                  "Literal": {
-                    "Type": 6,
-                    "Bool": false,
-                    "Int": 0,
-                    "Float": 0.0,
-                    "Float2": {
-                      "x": 0.0,
-                      "y": 0.0
-                    },
-                    "Float3": {
-                      "x": 0.0,
-                      "y": 0.0,
-                      "z": 0.0
-                    },
-                    "Entity": {
-                      "Index": 0,
-                      "Version": 0
-                    },
-                    "String": ""
-                  },
-                  "GetterKey": "unit.perception.nearestUnitByFaction",
-                  "OperationType": "",
-                  "Inputs": [
-                    {
-                      "Kind": 0,
-                      "SourceTarget": 0,
-                      "Literal": {
-                        "Type": 2,
-                        "Bool": false,
-                        "Int": 0,
-                        "Float": 0.0,
-                        "Float2": {
-                          "x": 0.0,
-                          "y": 0.0
-                        },
-                        "Float3": {
-                          "x": 0.0,
-                          "y": 0.0,
-                          "z": 0.0
-                        },
-                        "Entity": {
-                          "Index": 0,
-                          "Version": 0
-                        },
-                        "String": ""
-                      },
-                      "GetterKey": "",
-                      "OperationType": "",
-                      "Inputs": []
-                    }
-                  ]
-                }
-              },
-              "Type": "RequestSkill",
-              "Guid": "bat_attack01_skill",
-              "EditorPosition": {
-                "x": 1720.0,
-                "y": 100.0
-              }
-            },
-            {
-              "SetterKey": "unit.variables.set",
-              "SourceTarget": 0,
-              "Key": "ai.skill.cooldownTrigger",
-              "Value": {
-                "Kind": 0,
-                "SourceTarget": 0,
-                "Literal": {
-                  "Type": 1,
-                  "Bool": true,
-                  "Int": 0,
-                  "Float": 0.0,
-                  "Float2": {
-                    "x": 0.0,
-                    "y": 0.0
-                  },
-                  "Float3": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
-                  },
-                  "Entity": {
-                    "Index": 0,
-                    "Version": 0
-                  },
-                  "String": ""
-                },
-                "GetterKey": "",
-                "OperationType": "",
-                "Inputs": []
-              },
-              "Values": [],
-              "Type": "SetValue",
-              "Guid": "bat_attack01_trigger_cooldown",
-              "EditorPosition": {
-                "x": 1960.0,
-                "y": 100.0
-              }
-            },
-            {
-              "Duration": {
-                "Kind": 0,
-                "SourceTarget": 0,
-                "Literal": {
-                  "Type": 3,
-                  "Bool": false,
-                  "Int": 0,
-                  "Float": 0.25,
-                  "Float2": {
-                    "x": 0.0,
-                    "y": 0.0
-                  },
-                  "Float3": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
-                  },
-                  "Entity": {
-                    "Index": 0,
-                    "Version": 0
-                  },
-                  "String": ""
-                },
-                "GetterKey": "",
-                "OperationType": "",
-                "Inputs": []
-              },
-              "TickOrder": 1,
-              "Type": "Timer",
-              "Guid": "bat_attack01_recovery",
-              "EditorPosition": {
-                "x": 2200.0,
-                "y": 100.0
-              }
-            },
-            {
-              "SetterKey": "unit.variables.set",
-              "SourceTarget": 0,
-              "Key": "ai.skill.coolingDown",
-              "Value": {
-                "Kind": 0,
-                "SourceTarget": 0,
-                "Literal": {
-                  "Type": 1,
-                  "Bool": true,
-                  "Int": 0,
-                  "Float": 0.0,
-                  "Float2": {
-                    "x": 0.0,
-                    "y": 0.0
-                  },
-                  "Float3": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
-                  },
-                  "Entity": {
-                    "Index": 0,
-                    "Version": 0
-                  },
-                  "String": ""
-                },
-                "GetterKey": "",
-                "OperationType": "",
-                "Inputs": []
-              },
-              "Values": [],
-              "Type": "SetValue",
-              "Guid": "bat_attack01_begin_cooldown",
-              "EditorPosition": {
-                "x": 2440.0,
-                "y": 100.0
-              }
-            },
-            {
               "SetterKey": "unit.move.setStateMoveMultiplier",
               "SourceTarget": 0,
               "Key": "",
@@ -41025,120 +41310,13 @@
                 "y": 100.0
               }
             },
-            {
-              "SetterKey": "unit.variables.set",
-              "SourceTarget": 0,
-              "Key": "ai.attack01.coolingDown",
-              "Value": {
-                "Kind": 0,
-                "SourceTarget": 0,
-                "Literal": {
-                  "Type": 1,
-                  "Bool": true,
-                  "Int": 0,
-                  "Float": 0.0,
-                  "Float2": {
-                    "x": 0.0,
-                    "y": 0.0
-                  },
-                  "Float3": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
-                  },
-                  "Entity": {
-                    "Index": 0,
-                    "Version": 0
-                  },
-                  "String": ""
-                },
-                "GetterKey": "",
-                "OperationType": "",
-                "Inputs": []
-              },
-              "Values": [],
-              "Type": "SetValue",
-              "Guid": "bat_attack01_begin_internal_cooldown",
-              "EditorPosition": {
-                "x": 1960.0,
-                "y": -140.0
-              }
-            },
-            {
-              "Duration": {
-                "Kind": 0,
-                "SourceTarget": 0,
-                "Literal": {
-                  "Type": 3,
-                  "Bool": false,
-                  "Int": 0,
-                  "Float": 1.5,
-                  "Float2": {
-                    "x": 0.0,
-                    "y": 0.0
-                  },
-                  "Float3": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
-                  },
-                  "Entity": {
-                    "Index": 0,
-                    "Version": 0
-                  },
-                  "String": ""
-                },
-                "GetterKey": "",
-                "OperationType": "",
-                "Inputs": []
-              },
-              "TickOrder": 1,
-              "Type": "Timer",
-              "Guid": "bat_attack01_internal_cooldown_timer",
-              "EditorPosition": {
-                "x": 2200.0,
-                "y": -140.0
-              }
-            },
-            {
-              "SetterKey": "unit.variables.set",
-              "SourceTarget": 0,
-              "Key": "ai.attack01.coolingDown",
-              "Value": {
-                "Kind": 0,
-                "SourceTarget": 0,
-                "Literal": {
-                  "Type": 1,
-                  "Bool": false,
-                  "Int": 0,
-                  "Float": 0.0,
-                  "Float2": {
-                    "x": 0.0,
-                    "y": 0.0
-                  },
-                  "Float3": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
-                  },
-                  "Entity": {
-                    "Index": 0,
-                    "Version": 0
-                  },
-                  "String": ""
-                },
-                "GetterKey": "",
-                "OperationType": "",
-                "Inputs": []
-              },
-              "Values": [],
-              "Type": "SetValue",
-              "Guid": "bat_attack01_finish_internal_cooldown",
-              "EditorPosition": {
-                "x": 2440.0,
-                "y": -140.0
-              }
-            }
+            {"SetterKey":"unit.variables.set","Key":"ai.bat.dashing","Value":{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]},"Values":[],"Type":"SetValue","Guid":"bat_attack01_dash_off","EditorPosition":{"x":1700.0,"y":260.0}},
+            {"SkillId":{"Kind":0,"Literal":{"Type":2,"Int":40},"Inputs":[]},"Input":{"Position":{"Kind":1,"GetterKey":"unit.transform.position","Inputs":[]},"TargetEntity":{"Kind":1,"GetterKey":"unit.perception.nearestUnitByFaction","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},"Type":"RequestSkill","Guid":"bat_attack01_bat_skill","EditorPosition":{"x":1940.0,"y":260.0}},
+            {"SetterKey":"unit.variables.set","Key":"ai.bat.comboReady","Value":{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]},"Values":[],"Type":"SetValue","Guid":"bat_attack01_combo_ready","EditorPosition":{"x":3160.0,"y":180.0}},
+            {"SetterKey":"unit.variables.set","Key":"ai.bat.randomFlying","Value":{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]},"Values":[],"Type":"SetValue","Guid":"bat_attack01_random_flight","EditorPosition":{"x":3400.0,"y":180.0}},
+            {"SetterKey":"unit.variables.set","Key":"ai.bat.dashCoolingDown","Value":{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]},"Values":[],"Type":"SetValue","Guid":"bat_attack01_begin_dash_cooldown","EditorPosition":{"x":2180.0,"y":260.0}},
+            {"Duration":{"Kind":0,"Literal":{"Type":3,"Float":6.0},"Inputs":[]},"TickOrder":1,"Type":"Timer","Guid":"bat_attack01_dash_cooldown_timer","EditorPosition":{"x":2420.0,"y":260.0}},
+            {"SetterKey":"unit.variables.set","Key":"ai.bat.dashCoolingDown","Value":{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]},"Values":[],"Type":"SetValue","Guid":"bat_attack01_finish_dash_cooldown","EditorPosition":{"x":2660.0,"y":260.0}}
           ],
           "Edges": [
             {
@@ -41186,25 +41364,7 @@
             {
               "OutputNodeGuid": "bat_attack01_windup",
               "OutputPortName": "OnComplete",
-              "InputNodeGuid": "bat_attack01_skill",
-              "InputPortName": "In"
-            },
-            {
-              "OutputNodeGuid": "bat_attack01_skill",
-              "OutputPortName": "Out",
-              "InputNodeGuid": "bat_attack01_recovery",
-              "InputPortName": "Start"
-            },
-            {
-              "OutputNodeGuid": "bat_attack01_recovery",
-              "OutputPortName": "OnComplete",
-              "InputNodeGuid": "bat_attack01_unlock_motion",
-              "InputPortName": "In"
-            },
-            {
-              "OutputNodeGuid": "bat_attack01_begin_cooldown",
-              "OutputPortName": "Out",
-              "InputNodeGuid": "bat_attack01_trigger_cooldown",
+              "InputNodeGuid": "bat_attack01_dash_off",
               "InputPortName": "In"
             },
             {
@@ -41216,7 +41376,7 @@
             {
               "OutputNodeGuid": "bat_attack01_active_false",
               "OutputPortName": "Out",
-              "InputNodeGuid": "bat_attack01_idle_state",
+              "InputNodeGuid": "bat_attack01_combo_ready",
               "InputPortName": "In"
             },
             {
@@ -41237,30 +41397,13 @@
               "InputNodeGuid": "bat_attack01_active_true",
               "InputPortName": "In"
             },
-            {
-              "OutputNodeGuid": "bat_attack01_skill",
-              "OutputPortName": "Out",
-              "InputNodeGuid": "bat_attack01_begin_cooldown",
-              "InputPortName": "In"
-            },
-            {
-              "OutputNodeGuid": "bat_attack01_skill",
-              "OutputPortName": "Out",
-              "InputNodeGuid": "bat_attack01_begin_internal_cooldown",
-              "InputPortName": "In"
-            },
-            {
-              "OutputNodeGuid": "bat_attack01_begin_internal_cooldown",
-              "OutputPortName": "Out",
-              "InputNodeGuid": "bat_attack01_internal_cooldown_timer",
-              "InputPortName": "Start"
-            },
-            {
-              "OutputNodeGuid": "bat_attack01_internal_cooldown_timer",
-              "OutputPortName": "OnComplete",
-              "InputNodeGuid": "bat_attack01_finish_internal_cooldown",
-              "InputPortName": "In"
-            }
+            {"OutputNodeGuid":"bat_attack01_dash_off","OutputPortName":"Out","InputNodeGuid":"bat_attack01_bat_skill","InputPortName":"In"},
+            {"OutputNodeGuid":"bat_attack01_bat_skill","OutputPortName":"Out","InputNodeGuid":"bat_attack01_unlock_motion","InputPortName":"In"},
+            {"OutputNodeGuid":"bat_attack01_bat_skill","OutputPortName":"Out","InputNodeGuid":"bat_attack01_begin_dash_cooldown","InputPortName":"In"},
+            {"OutputNodeGuid":"bat_attack01_begin_dash_cooldown","OutputPortName":"Out","InputNodeGuid":"bat_attack01_dash_cooldown_timer","InputPortName":"Start"},
+            {"OutputNodeGuid":"bat_attack01_dash_cooldown_timer","OutputPortName":"OnComplete","InputNodeGuid":"bat_attack01_finish_dash_cooldown","InputPortName":"In"},
+            {"OutputNodeGuid":"bat_attack01_combo_ready","OutputPortName":"Out","InputNodeGuid":"bat_attack01_random_flight","InputPortName":"In"},
+            {"OutputNodeGuid":"bat_attack01_random_flight","OutputPortName":"Out","InputNodeGuid":"bat_attack01_idle_state","InputPortName":"In"}
           ],
           "ViewPosition": {
             "x": 0.0,
@@ -41728,331 +41871,6 @@
               }
             },
             {
-              "Duration": {
-                "Kind": 0,
-                "SourceTarget": 0,
-                "Literal": {
-                  "Type": 3,
-                  "Bool": false,
-                  "Int": 0,
-                  "Float": 0.6666667,
-                  "Float2": {
-                    "x": 0.0,
-                    "y": 0.0
-                  },
-                  "Float3": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
-                  },
-                  "Entity": {
-                    "Index": 0,
-                    "Version": 0
-                  },
-                  "String": ""
-                },
-                "GetterKey": "",
-                "OperationType": "",
-                "Inputs": []
-              },
-              "TickOrder": 1,
-              "Type": "Timer",
-              "Guid": "bat_attack02_windup",
-              "EditorPosition": {
-                "x": 1480.0,
-                "y": 100.0
-              }
-            },
-            {
-              "SkillId": {
-                "Kind": 0,
-                "SourceTarget": 0,
-                "Literal": {
-                  "Type": 2,
-                  "Bool": false,
-                  "Int": 20,
-                  "Float": 0.0,
-                  "Float2": {
-                    "x": 0.0,
-                    "y": 0.0
-                  },
-                  "Float3": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
-                  },
-                  "Entity": {
-                    "Index": 0,
-                    "Version": 0
-                  },
-                  "String": ""
-                },
-                "GetterKey": "",
-                "OperationType": "",
-                "Inputs": []
-              },
-              "Input": {
-                "Position": {
-                  "Kind": 1,
-                  "SourceTarget": 0,
-                  "Literal": {
-                    "Type": 5,
-                    "Bool": false,
-                    "Int": 0,
-                    "Float": 0.0,
-                    "Float2": {
-                      "x": 0.0,
-                      "y": 0.0
-                    },
-                    "Float3": {
-                      "x": 0.0,
-                      "y": 0.0,
-                      "z": 0.0
-                    },
-                    "Entity": {
-                      "Index": 0,
-                      "Version": 0
-                    },
-                    "String": ""
-                  },
-                  "GetterKey": "unit.transform.positionOf",
-                  "OperationType": "",
-                  "Inputs": [
-                    {
-                      "Kind": 1,
-                      "SourceTarget": 0,
-                      "Literal": {
-                        "Type": 3,
-                        "Bool": false,
-                        "Int": 0,
-                        "Float": 0.0,
-                        "Float2": {
-                          "x": 0.0,
-                          "y": 0.0
-                        },
-                        "Float3": {
-                          "x": 0.0,
-                          "y": 0.0,
-                          "z": 0.0
-                        },
-                        "Entity": {
-                          "Index": 0,
-                          "Version": 0
-                        },
-                        "String": ""
-                      },
-                      "GetterKey": "unit.perception.nearestUnitByFaction",
-                      "OperationType": "",
-                      "Inputs": [
-                        {
-                          "Kind": 0,
-                          "SourceTarget": 0,
-                          "Literal": {
-                            "Type": 2,
-                            "Bool": false,
-                            "Int": 0,
-                            "Float": 0.0,
-                            "Float2": {
-                              "x": 0.0,
-                              "y": 0.0
-                            },
-                            "Float3": {
-                              "x": 0.0,
-                              "y": 0.0,
-                              "z": 0.0
-                            },
-                            "Entity": {
-                              "Index": 0,
-                              "Version": 0
-                            },
-                            "String": ""
-                          },
-                          "GetterKey": "",
-                          "OperationType": "",
-                          "Inputs": []
-                        }
-                      ]
-                    }
-                  ]
-                },
-                "TargetEntity": {
-                  "Kind": 1,
-                  "SourceTarget": 0,
-                  "Literal": {
-                    "Type": 6,
-                    "Bool": false,
-                    "Int": 0,
-                    "Float": 0.0,
-                    "Float2": {
-                      "x": 0.0,
-                      "y": 0.0
-                    },
-                    "Float3": {
-                      "x": 0.0,
-                      "y": 0.0,
-                      "z": 0.0
-                    },
-                    "Entity": {
-                      "Index": 0,
-                      "Version": 0
-                    },
-                    "String": ""
-                  },
-                  "GetterKey": "unit.perception.nearestUnitByFaction",
-                  "OperationType": "",
-                  "Inputs": [
-                    {
-                      "Kind": 0,
-                      "SourceTarget": 0,
-                      "Literal": {
-                        "Type": 2,
-                        "Bool": false,
-                        "Int": 0,
-                        "Float": 0.0,
-                        "Float2": {
-                          "x": 0.0,
-                          "y": 0.0
-                        },
-                        "Float3": {
-                          "x": 0.0,
-                          "y": 0.0,
-                          "z": 0.0
-                        },
-                        "Entity": {
-                          "Index": 0,
-                          "Version": 0
-                        },
-                        "String": ""
-                      },
-                      "GetterKey": "",
-                      "OperationType": "",
-                      "Inputs": []
-                    }
-                  ]
-                }
-              },
-              "Type": "RequestSkill",
-              "Guid": "bat_attack02_skill",
-              "EditorPosition": {
-                "x": 1720.0,
-                "y": 100.0
-              }
-            },
-            {
-              "SetterKey": "unit.variables.set",
-              "SourceTarget": 0,
-              "Key": "ai.skill.cooldownTrigger",
-              "Value": {
-                "Kind": 0,
-                "SourceTarget": 0,
-                "Literal": {
-                  "Type": 1,
-                  "Bool": true,
-                  "Int": 0,
-                  "Float": 0.0,
-                  "Float2": {
-                    "x": 0.0,
-                    "y": 0.0
-                  },
-                  "Float3": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
-                  },
-                  "Entity": {
-                    "Index": 0,
-                    "Version": 0
-                  },
-                  "String": ""
-                },
-                "GetterKey": "",
-                "OperationType": "",
-                "Inputs": []
-              },
-              "Values": [],
-              "Type": "SetValue",
-              "Guid": "bat_attack02_trigger_cooldown",
-              "EditorPosition": {
-                "x": 1960.0,
-                "y": 100.0
-              }
-            },
-            {
-              "Duration": {
-                "Kind": 0,
-                "SourceTarget": 0,
-                "Literal": {
-                  "Type": 3,
-                  "Bool": false,
-                  "Int": 0,
-                  "Float": 0.3333333,
-                  "Float2": {
-                    "x": 0.0,
-                    "y": 0.0
-                  },
-                  "Float3": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
-                  },
-                  "Entity": {
-                    "Index": 0,
-                    "Version": 0
-                  },
-                  "String": ""
-                },
-                "GetterKey": "",
-                "OperationType": "",
-                "Inputs": []
-              },
-              "TickOrder": 1,
-              "Type": "Timer",
-              "Guid": "bat_attack02_recovery",
-              "EditorPosition": {
-                "x": 2200.0,
-                "y": 100.0
-              }
-            },
-            {
-              "SetterKey": "unit.variables.set",
-              "SourceTarget": 0,
-              "Key": "ai.skill.coolingDown",
-              "Value": {
-                "Kind": 0,
-                "SourceTarget": 0,
-                "Literal": {
-                  "Type": 1,
-                  "Bool": true,
-                  "Int": 0,
-                  "Float": 0.0,
-                  "Float2": {
-                    "x": 0.0,
-                    "y": 0.0
-                  },
-                  "Float3": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
-                  },
-                  "Entity": {
-                    "Index": 0,
-                    "Version": 0
-                  },
-                  "String": ""
-                },
-                "GetterKey": "",
-                "OperationType": "",
-                "Inputs": []
-              },
-              "Values": [],
-              "Type": "SetValue",
-              "Guid": "bat_attack02_begin_cooldown",
-              "EditorPosition": {
-                "x": 2440.0,
-                "y": 100.0
-              }
-            },
-            {
               "SetterKey": "unit.move.setStateMoveMultiplier",
               "SourceTarget": 0,
               "Key": "",
@@ -42417,7 +42235,11 @@
                 "x": 2440.0,
                 "y": -140.0
               }
-            }
+            },
+            {"Duration":{"Kind":0,"Literal":{"Type":3,"Float":0.25},"Inputs":[]},"TickOrder":1,"Type":"Timer","Guid":"bat_attack02_three_frames","EditorPosition":{"x":1500.0,"y":260.0}},
+            {"SkillId":{"Kind":0,"Literal":{"Type":2,"Int":41},"Inputs":[]},"Input":{"Position":{"Kind":1,"GetterKey":"unit.transform.position","Inputs":[]},"TargetEntity":{"Kind":1,"GetterKey":"unit.perception.nearestUnitByFaction","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},"Type":"RequestSkill","Guid":"bat_attack02_bat_skill","EditorPosition":{"x":1740.0,"y":260.0}},
+            {"SetterKey":"unit.variables.set","Key":"ai.bat.comboReady","Value":{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]},"Values":[],"Type":"SetValue","Guid":"bat_attack02_clear_combo","EditorPosition":{"x":3160.0,"y":180.0}},
+            {"SetterKey":"unit.variables.set","Key":"ai.bat.randomFlying","Value":{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]},"Values":[],"Type":"SetValue","Guid":"bat_attack02_random_flight","EditorPosition":{"x":3400.0,"y":180.0}}
           ],
           "Edges": [
             {
@@ -42459,32 +42281,8 @@
             {
               "OutputNodeGuid": "bat_attack02_animation",
               "OutputPortName": "Out",
-              "InputNodeGuid": "bat_attack02_windup",
+              "InputNodeGuid": "bat_attack02_three_frames",
               "InputPortName": "Start"
-            },
-            {
-              "OutputNodeGuid": "bat_attack02_windup",
-              "OutputPortName": "OnComplete",
-              "InputNodeGuid": "bat_attack02_skill",
-              "InputPortName": "In"
-            },
-            {
-              "OutputNodeGuid": "bat_attack02_skill",
-              "OutputPortName": "Out",
-              "InputNodeGuid": "bat_attack02_recovery",
-              "InputPortName": "Start"
-            },
-            {
-              "OutputNodeGuid": "bat_attack02_recovery",
-              "OutputPortName": "OnComplete",
-              "InputNodeGuid": "bat_attack02_unlock_motion",
-              "InputPortName": "In"
-            },
-            {
-              "OutputNodeGuid": "bat_attack02_begin_cooldown",
-              "OutputPortName": "Out",
-              "InputNodeGuid": "bat_attack02_trigger_cooldown",
-              "InputPortName": "In"
             },
             {
               "OutputNodeGuid": "bat_attack02_unlock_motion",
@@ -42495,7 +42293,7 @@
             {
               "OutputNodeGuid": "bat_attack02_active_false",
               "OutputPortName": "Out",
-              "InputNodeGuid": "bat_attack02_idle_state",
+              "InputNodeGuid": "bat_attack02_clear_combo",
               "InputPortName": "In"
             },
             {
@@ -42517,18 +42315,6 @@
               "InputPortName": "In"
             },
             {
-              "OutputNodeGuid": "bat_attack02_skill",
-              "OutputPortName": "Out",
-              "InputNodeGuid": "bat_attack02_begin_cooldown",
-              "InputPortName": "In"
-            },
-            {
-              "OutputNodeGuid": "bat_attack02_skill",
-              "OutputPortName": "Out",
-              "InputNodeGuid": "bat_attack02_begin_internal_cooldown",
-              "InputPortName": "In"
-            },
-            {
               "OutputNodeGuid": "bat_attack02_begin_internal_cooldown",
               "OutputPortName": "Out",
               "InputNodeGuid": "bat_attack02_internal_cooldown_timer",
@@ -42539,7 +42325,12 @@
               "OutputPortName": "OnComplete",
               "InputNodeGuid": "bat_attack02_finish_internal_cooldown",
               "InputPortName": "In"
-            }
+            },
+            {"OutputNodeGuid":"bat_attack02_three_frames","OutputPortName":"OnComplete","InputNodeGuid":"bat_attack02_bat_skill","InputPortName":"In"},
+            {"OutputNodeGuid":"bat_attack02_bat_skill","OutputPortName":"Out","InputNodeGuid":"bat_attack02_unlock_motion","InputPortName":"In"},
+            {"OutputNodeGuid":"bat_attack02_bat_skill","OutputPortName":"Out","InputNodeGuid":"bat_attack02_begin_internal_cooldown","InputPortName":"In"},
+            {"OutputNodeGuid":"bat_attack02_clear_combo","OutputPortName":"Out","InputNodeGuid":"bat_attack02_random_flight","InputPortName":"In"},
+            {"OutputNodeGuid":"bat_attack02_random_flight","OutputPortName":"Out","InputNodeGuid":"bat_attack02_idle_state","InputPortName":"In"}
           ],
           "ViewPosition": {
             "x": 0.0,
@@ -42832,6 +42623,36 @@
             "y": 100.8
           },
           "ViewScale": 1.0
+        },
+        {"Guid":"bat_dash_motion_graph","Name":"Dash Motion","ExecutionConditions":[],"EntryNodeGuid":"bat_dash_motion_entry","Nodes":[{"Type":"Entry","Guid":"bat_dash_motion_entry","EditorPosition":{"x":80.0,"y":120.0}},{"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"ai.bat.dashing"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"TickOrder":0,"Type":"Monitor","Guid":"bat_dash_motion_active","EditorPosition":{"x":300.0,"y":120.0}},{"SetterKey":"unit.facing.setDirection","Key":"","Value":{"Kind":1,"GetterKey":"unit.variables.getFloat2","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"ai.bat.dash.direction"},"Inputs":[]}]},"Values":[],"Type":"SetValue","Guid":"bat_dash_motion_facing","EditorPosition":{"x":540.0,"y":120.0}},{"SetterKey":"unit.move.setDirection","Key":"","Value":{"Kind":1,"GetterKey":"unit.variables.getFloat2","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"ai.bat.dash.direction"},"Inputs":[]}]},"Values":[],"Type":"SetValue","Guid":"bat_dash_motion_direction","EditorPosition":{"x":760.0,"y":120.0}},{"SetterKey":"unit.move.setCommandSpeed","Key":"","Value":{"Kind":1,"GetterKey":"unit.variables.getNumber","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"ai.bat.dash.speed"},"Inputs":[]}]},"Values":[],"Type":"SetValue","Guid":"bat_dash_motion_speed","EditorPosition":{"x":980.0,"y":120.0}},{"SetterKey":"unit.move.setStateMoveMultiplier","Key":"","Value":{"Kind":0,"Literal":{"Type":3,"Float":1.0},"Inputs":[]},"Values":[],"Type":"SetValue","Guid":"bat_dash_motion_enable_move","EditorPosition":{"x":1200.0,"y":120.0}}],"Edges":[{"OutputNodeGuid":"bat_dash_motion_entry","OutputPortName":"Out","InputNodeGuid":"bat_dash_motion_active","InputPortName":"Start"},{"OutputNodeGuid":"bat_dash_motion_active","OutputPortName":"True","InputNodeGuid":"bat_dash_motion_facing","InputPortName":"In"},{"OutputNodeGuid":"bat_dash_motion_facing","OutputPortName":"Out","InputNodeGuid":"bat_dash_motion_direction","InputPortName":"In"},{"OutputNodeGuid":"bat_dash_motion_direction","OutputPortName":"Out","InputNodeGuid":"bat_dash_motion_speed","InputPortName":"In"},{"OutputNodeGuid":"bat_dash_motion_speed","OutputPortName":"Out","InputNodeGuid":"bat_dash_motion_enable_move","InputPortName":"In"}],"ViewPosition":{"x":0.0,"y":0.0},"ViewScale":1.0},
+        {"Guid":"bat_random_flight_graph","Name":"Random Flight","ExecutionConditions":[],"EntryNodeGuid":"bat_random_flight_entry","Nodes":[{"Type":"Entry","Guid":"bat_random_flight_entry","EditorPosition":{"x":80.0,"y":260.0}},{"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"ai.bat.randomFlying"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"TickOrder":0,"Type":"Monitor","Guid":"bat_random_flight_active","EditorPosition":{"x":300.0,"y":260.0}},{"DurationSeconds":0.5,"TickOrder":1,"Type":"Keep","Guid":"bat_random_flight_interval","EditorPosition":{"x":520.0,"y":260.0}},{"SetterKey":"unit.variables.set","Key":"ai.bat.wander.direction","Value":{"Kind":1,"GetterKey":"unit.random.direction2","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumberOrDefault","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"ai.bat.wander.roll"},"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}]},"Values":[],"Type":"SetValue","Guid":"bat_random_flight_pick_direction","EditorPosition":{"x":760.0,"y":260.0}},{"SetterKey":"unit.variables.addNumber","Key":"ai.bat.wander.roll","Value":{"Kind":0,"Literal":{"Type":2,"Int":1},"Inputs":[]},"Values":[],"Type":"SetValue","Guid":"bat_random_flight_next_roll","EditorPosition":{"x":980.0,"y":260.0}}],"Edges":[{"OutputNodeGuid":"bat_random_flight_entry","OutputPortName":"Out","InputNodeGuid":"bat_random_flight_active","InputPortName":"Start"},{"OutputNodeGuid":"bat_random_flight_active","OutputPortName":"True","InputNodeGuid":"bat_random_flight_interval","InputPortName":"Keep"},{"OutputNodeGuid":"bat_random_flight_interval","OutputPortName":"OnTimeStart","InputNodeGuid":"bat_random_flight_pick_direction","InputPortName":"In"},{"OutputNodeGuid":"bat_random_flight_pick_direction","OutputPortName":"Out","InputNodeGuid":"bat_random_flight_next_roll","InputPortName":"In"}],"ViewPosition":{"x":0.0,"y":140.0},"ViewScale":1.0},
+        {"Guid":"bat_flying_graph","Name":"Flying","ExecutionConditions":[],"EntryNodeGuid":"bat_flying_entry","Nodes":[{"Type":"Entry","Guid":"bat_flying_entry","EditorPosition":{"x":80.0,"y":420.0}},{"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getString","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"ai.intent"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":7,"String":"Flying"},"Inputs":[]}]},"TickOrder":0,"Type":"Monitor","Guid":"bat_flying_monitor","EditorPosition":{"x":300.0,"y":420.0}},{"SetterKey":"unit.variables.set","Key":"ai.state","Value":{"Kind":0,"Literal":{"Type":7,"String":"Flying"},"Inputs":[]},"Values":[],"Type":"SetValue","Guid":"bat_flying_state","EditorPosition":{"x":520.0,"y":420.0}},{"SetterKey":"unit.animation.setName","Key":"","Value":{"Kind":0,"Literal":{"Type":7,"String":"Flying"},"Inputs":[]},"Values":[],"Type":"SetValue","Guid":"bat_flying_animation","EditorPosition":{"x":740.0,"y":420.0}}],"Edges":[{"OutputNodeGuid":"bat_flying_entry","OutputPortName":"Out","InputNodeGuid":"bat_flying_monitor","InputPortName":"Start"},{"OutputNodeGuid":"bat_flying_monitor","OutputPortName":"True","InputNodeGuid":"bat_flying_state","InputPortName":"In"},{"OutputNodeGuid":"bat_flying_state","OutputPortName":"Out","InputNodeGuid":"bat_flying_animation","InputPortName":"In"}],"ViewPosition":{"x":0.0,"y":280.0},"ViewScale":1.0},
+        {
+          "Guid": "patrol_combat_contact",
+          "Name": "Patrol Combat Contact",
+          "ExecutionConditions": [{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.dead"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}],
+          "EntryNodeGuid": "patrol_combat_contact_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"patrol_combat_contact_entry","EditorPosition":{"x":40,"y":100}},
+            {"Type":"SetValue","Guid":"patrol_contact_init","EditorPosition":{"x":530,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_contact_monitor","EditorPosition":{"x":780,"y":100},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.perception.unitsByFactionCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":0},
+            {"Type":"SetValue","Guid":"patrol_contact_enter","EditorPosition":{"x":1030,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_release_monitor","EditorPosition":{"x":1280,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.engaged"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"TickOrder":1},
+            {"Type":"QueryUnits","Guid":"patrol_query_release","EditorPosition":{"x":280,"y":250},"Shape":1,"Center":{"Kind":1,"GetterKey":"unit.transform.position","SourceTarget":0,"Inputs":[]},"Radius":{"Kind":2,"OperationType":"Multiply","Inputs":[{"Kind":1,"GetterKey":"unit.perception.searchRadius","SourceTarget":0,"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":2},"Inputs":[]}]},"FactionMask":1,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":1,"ResultKey":"dungeon.patrol.releasePlayers"},
+            {"Type":"Compare","Guid":"patrol_release_clear","EditorPosition":{"x":530,"y":250},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.releasePlayers.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_contact_leave","EditorPosition":{"x":780,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.engaged","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"patrol_combat_contact_entry","OutputPortName":"Out","InputNodeGuid":"patrol_contact_init","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_contact_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_init","OutputPortName":"Out","InputNodeGuid":"patrol_release_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_contact_monitor","OutputPortName":"True","InputNodeGuid":"patrol_contact_enter","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_release_monitor","OutputPortName":"True","InputNodeGuid":"patrol_query_release","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_query_release","OutputPortName":"Out","InputNodeGuid":"patrol_release_clear","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_release_clear","OutputPortName":"True","InputNodeGuid":"patrol_contact_leave","InputPortName":"In"}
+          ],
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
         }
       ],
       "Id": 16
@@ -95810,7 +95631,7 @@
                 "Literal": {
                   "Type": 2,
                   "Bool": false,
-                  "Int": 20,
+                  "Int": 42,
                   "Float": 0.0,
                   "Float2": {
                     "x": 0.0,
@@ -101800,30 +101621,86 @@
     {
       "Graphs": [
         {
+          "Guid": "encounter_clear_threat",
+          "Name": "Encounter Clear Threat",
+          "ExecutionConditions": [{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.ready"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.populated"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]}],
+          "EntryNodeGuid": "encounter_clear_threat_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"encounter_clear_threat_entry","EditorPosition":{"x":40,"y":100}},
+            {"Type":"Monitor","Guid":"clear_guard_monitor","EditorPosition":{"x":530,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.livingConsumerBoolCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.guard"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":0},
+            {"Type":"Compare","Guid":"clear_unsettled","EditorPosition":{"x":780,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.threat.clearSettled"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"clear_mark_dead","EditorPosition":{"x":1030,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.encounter.dead","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"SetValue","Guid":"clear_stop_patrol","EditorPosition":{"x":1280,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.active","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"SetValue","Guid":"clear_discard_return","EditorPosition":{"x":280,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.hadCombat","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+{"Type":"SetValue","Guid":"clear_add_threat_snapshot","EditorPosition":{"x":530,"y":430},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"ui.threat.before","Values":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.floor.threat"},"Inputs":[]}]}]},
+{"Type":"SetValue","Guid":"clear_add_threat","EditorPosition":{"x":530,"y":250},"SetterKey":"unit.variables.addNumber","SourceTarget":1,"Key":"dungeon.floor.threat","Values":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.threat.onClear"},"Inputs":[]}]}]},
+{"Type":"NotifyUI","Guid":"clear_add_threat_ui","EditorPosition":{"x":780,"y":430},"NotificationKey":"threat","From":{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"ui.threat.before"},"Inputs":[]}]},"To":{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.floor.threat"},"Inputs":[]}]},"Group":{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.revenge.wave"},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"clear_settled","EditorPosition":{"x":780,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.threat.clearSettled","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"encounter_clear_threat_entry","OutputPortName":"Out","InputNodeGuid":"clear_guard_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"clear_guard_monitor","OutputPortName":"True","InputNodeGuid":"clear_unsettled","InputPortName":"Check"},
+            {"OutputNodeGuid":"clear_unsettled","OutputPortName":"True","InputNodeGuid":"clear_mark_dead","InputPortName":"In"},
+            {"OutputNodeGuid":"clear_mark_dead","OutputPortName":"Out","InputNodeGuid":"clear_stop_patrol","InputPortName":"In"},
+            {"OutputNodeGuid":"clear_stop_patrol","OutputPortName":"Out","InputNodeGuid":"clear_discard_return","InputPortName":"In"},
+            {"OutputNodeGuid":"clear_discard_return","OutputPortName":"Out","InputNodeGuid":"clear_add_threat_snapshot","InputPortName":"In"},
+            {"OutputNodeGuid":"clear_add_threat_snapshot","OutputPortName":"Out","InputNodeGuid":"clear_add_threat","InputPortName":"In"},
+            {"OutputNodeGuid":"clear_add_threat","OutputPortName":"Out","InputNodeGuid":"clear_add_threat_ui","InputPortName":"In"},
+            {"OutputNodeGuid":"clear_add_threat_ui","OutputPortName":"Out","InputNodeGuid":"clear_settled","InputPortName":"In"}
+          ],
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
+        },
+        {
           "Guid": "interest_point_state_graph",
           "Name": "Patrol",
-          "ExecutionConditions": [
-            {"ConditionType":0,"CompareType":"IsTrue","Inputs":[{"Kind":1,"GetterKey":"unit.interestPoint.encounterReady","Inputs":[]}]}
-          ],
+          "ExecutionConditions": [{"ConditionType":0,"CompareType":"IsTrue","Inputs":[{"Kind":1,"GetterKey":"unit.interestPoint.encounterReady","Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.dead"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}],
           "EntryNodeGuid": "interest_point_state_entry",
           "Nodes": [
-            {"Type":"Entry","Guid":"interest_point_state_entry","EditorPosition":{"x":40.0,"y":220.0}},
-            {"Shape":0,"Center":{"Kind":1,"GetterKey":"unit.transform.position","Inputs":[]},"Direction":{"Kind":0,"Literal":{"Type":4,"Float2":{"x":1.0,"y":0.0}},"Inputs":[]},"Size":{"Kind":0,"Literal":{"Type":4,"Float2":{"x":1.0,"y":1.0}},"Inputs":[]},"Radius":{"Kind":0,"Literal":{"Type":3,"Float":1.0},"Inputs":[]},"Angle":{"Kind":0,"Literal":{"Type":3,"Float":90.0},"Inputs":[]},"FactionMask":16,"UnitDataId":30,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":0,"SortMode":1,"ResultKey":"dungeon.patrol.targets","Type":"QueryUnits","Guid":"interest_point_query_targets","EditorPosition":{"x":260.0,"y":220.0}},
-            {"SetterKey":"unit.variables.set","Key":"dungeon.interestPoint.state","Values":[{"Kind":0,"Literal":{"Type":7,"String":"Patrol"},"Inputs":[]}],"Type":"SetValue","Guid":"interest_point_state_set","EditorPosition":{"x":480.0,"y":220.0}},
-            {"SetterKey":"unit.variables.set","Key":"dungeon.patrol.targetIndex","Values":[{"Kind":0,"Literal":{"Type":2,"Int":-1},"Inputs":[]}],"Type":"SetValue","Guid":"interest_point_index_init","EditorPosition":{"x":700.0,"y":220.0}},
-            {"SetterKey":"unit.variables.set","Key":"dungeon.patrol.targetVersion","Values":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}],"Type":"SetValue","Guid":"interest_point_version_init","EditorPosition":{"x":920.0,"y":220.0}},
-            {"SetterKey":"unit.variables.set","Key":"dungeon.patrol.reachedCount","Values":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}],"Type":"SetValue","Guid":"interest_point_reached_init","EditorPosition":{"x":1140.0,"y":220.0}},
-            {"Condition":{"ConditionType":0,"CompareType":"LessThan","Inputs":[{"Kind":1,"GetterKey":"unit.interestPoint.patrolUnitCount","Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":1},"Inputs":[]}]},"TickOrder":0,"Type":"Monitor","Guid":"interest_point_patrol_missing_monitor","EditorPosition":{"x":1380.0,"y":20.0}},
-            {"DurationSeconds":180.0,"TickOrder":1,"Type":"Keep","Guid":"interest_point_patrol_respawn_timer","EditorPosition":{"x":1600.0,"y":20.0}},
-            {"VariableListKey":"dungeon.patrol.spawn","UnitName":"","CandidateUnitNames":[],"Count":1,"SpawnRadius":1.0,"MinSpawnRadius":0.0,"CenterOffset":{"x":0.0,"y":0.0,"z":0.0},"CopyFactionFromSpawner":false,"ShareVariablesWithSpawner":true,"RestoreRuntimeState":true,"Type":"SpawnUnit","Guid":"interest_point_spawn_patrol","EditorPosition":{"x":1820.0,"y":20.0}},
-            {"Condition":{"ConditionType":0,"CompareType":"GreaterOrEqual","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.reachedCount"},"Inputs":[]}]},{"Kind":2,"OperationType":"Max","Inputs":[{"Kind":1,"GetterKey":"unit.interestPoint.patrolUnitCount","Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":1},"Inputs":[]}]}]},"TickOrder":3,"Type":"Monitor","Guid":"interest_point_target_reached_monitor","EditorPosition":{"x":1380.0,"y":360.0}},
-            {"Value":{"Kind":1,"GetterKey":"unit.interestPoint.patrolUnitCount","Inputs":[]},"TickOrder":2,"Type":"NumberMonitor","Guid":"interest_point_member_count_monitor","EditorPosition":{"x":1380.0,"y":560.0}},
-            {"SetterKey":"unit.variables.set","Key":"dungeon.patrol.targetIndex","Values":[{"Kind":2,"OperationType":"Add","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.targetIndex"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":1},"Inputs":[]}]}],"Type":"SetValue","Guid":"interest_point_advance_index","EditorPosition":{"x":1600.0,"y":300.0}},
-            {"Condition":{"ConditionType":0,"CompareType":"GreaterOrEqual","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.targetIndex"},"Inputs":[]}]},{"Kind":1,"GetterKey":"unit.variables.getNumber","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.targets.count"},"Inputs":[]}]}]},"Type":"Compare","Guid":"interest_point_wrap_index_check","EditorPosition":{"x":1820.0,"y":300.0}},
-            {"SetterKey":"unit.variables.set","Key":"dungeon.patrol.targetIndex","Values":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}],"Type":"SetValue","Guid":"interest_point_wrap_index","EditorPosition":{"x":2040.0,"y":220.0}},
-            {"SetterKey":"unit.interestPoint.setPatrolTarget","Values":[{"Kind":1,"GetterKey":"unit.variables.listEntity","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.targets"},"Inputs":[]},{"Kind":1,"GetterKey":"unit.variables.getNumber","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.targetIndex"},"Inputs":[]}]}]}],"Type":"SetValue","Guid":"interest_point_set_target","EditorPosition":{"x":2260.0,"y":300.0}},
-            {"SetterKey":"unit.variables.set","Key":"dungeon.patrol.reachedCount","Values":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}],"Type":"SetValue","Guid":"interest_point_reset_reached","EditorPosition":{"x":2480.0,"y":300.0}},
-            {"SetterKey":"unit.variables.addNumber","Key":"dungeon.patrol.targetVersion","Values":[{"Kind":0,"Literal":{"Type":2,"Int":1},"Inputs":[]}],"Type":"SetValue","Guid":"interest_point_bump_version","EditorPosition":{"x":2700.0,"y":300.0}}
+            {"Type":"Entry","Guid":"interest_point_state_entry","EditorPosition":{"x":40,"y":220}},
+            {"Shape":0,"Center":{"Kind":1,"GetterKey":"unit.transform.position","Inputs":[]},"Direction":{"Kind":0,"Literal":{"Type":4,"Float2":{"x":1,"y":0}},"Inputs":[]},"Size":{"Kind":0,"Literal":{"Type":4,"Float2":{"x":1,"y":1}},"Inputs":[]},"Radius":{"Kind":0,"Literal":{"Type":3,"Float":1},"Inputs":[]},"Angle":{"Kind":0,"Literal":{"Type":3,"Float":90},"Inputs":[]},"FactionMask":16,"UnitDataId":30,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":0,"SortMode":1,"ResultKey":"dungeon.patrol.targets","Type":"QueryUnits","Guid":"interest_point_query_targets","EditorPosition":{"x":260,"y":220}},
+            {"SetterKey":"unit.variables.set","Key":"dungeon.interestPoint.state","Values":[{"Kind":0,"Literal":{"Type":7,"String":"Patrol"},"Inputs":[]}],"Type":"SetValue","Guid":"interest_point_state_set","EditorPosition":{"x":480,"y":220}},
+            {"SetterKey":"unit.variables.set","Key":"dungeon.patrol.targetIndex","Values":[{"Kind":0,"Literal":{"Type":2,"Int":-1},"Inputs":[]}],"Type":"SetValue","Guid":"interest_point_index_init","EditorPosition":{"x":700,"y":220}},
+            {"SetterKey":"unit.variables.set","Key":"dungeon.patrol.targetVersion","Values":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}],"Type":"SetValue","Guid":"interest_point_version_init","EditorPosition":{"x":920,"y":220}},
+            {"SetterKey":"unit.variables.set","Key":"dungeon.patrol.reachedCount","Values":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}],"Type":"SetValue","Guid":"interest_point_reached_init","EditorPosition":{"x":1140,"y":220}},
+            {"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.livingConsumerBoolCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":0,"Type":"Monitor","Guid":"interest_point_patrol_missing_monitor","EditorPosition":{"x":1380,"y":20}},
+            {"Shape":1,"Center":{"Kind":1,"GetterKey":"unit.transform.position","Inputs":[]},"Direction":{"Kind":0,"Literal":{"Type":4,"Float2":{"x":1,"y":0}},"Inputs":[]},"Size":{"Kind":0,"Literal":{"Type":4,"Float2":{"x":1,"y":1}},"Inputs":[]},"Radius":{"Kind":0,"Literal":{"Type":3,"Float":18},"Inputs":[]},"Angle":{"Kind":0,"Literal":{"Type":3,"Float":90},"Inputs":[]},"FactionMask":1,"UnitDataId":-1,"ExcludeSelf":true,"ExcludeDead":true,"MaxCount":1,"SortMode":0,"ResultKey":"dungeon.patrol.nearbyPlayers","Type":"QueryUnits","Guid":"interest_point_query_nearby_player","EditorPosition":{"x":1600,"y":20}},
+            {"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.nearbyPlayers.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"Type":"Compare","Guid":"interest_point_player_far_check","EditorPosition":{"x":1820,"y":20}},
+            {"DurationSeconds":180,"PauseWhenNotKept":true,"TickOrder":1,"Type":"Keep","Guid":"interest_point_patrol_respawn_timer","EditorPosition":{"x":2040,"y":20}},
+            {"VariableListKey":"dungeon.patrol.spawn","UnitName":"","CandidateUnitNames":[],"Count":1,"SpawnRadius":1,"MinSpawnRadius":0,"CenterOffset":{"x":0,"y":0,"z":0},"CopyFactionFromSpawner":false,"ShareVariablesWithSpawner":true,"RestoreRuntimeState":false,"Type":"SpawnUnit","Guid":"interest_point_spawn_patrol","EditorPosition":{"x":1820,"y":20},"MemberBoolKey":"dungeon.patrol.member"},
+            {"Type":"BuildUnitRoster","Guid":"interest_point_build_patrol","EditorPosition":{"x":1820,"y":-150},"TemplateKey":"dungeon.patrol.template","TemplateEntity":{"Kind":1,"GetterKey":"unit.self.entity","SourceTarget":0,"Inputs":[]},"CostLimit":{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.template.costLimit"},"Inputs":[]}]},"Center":{"Kind":1,"GetterKey":"unit.transform.position","SourceTarget":0,"Inputs":[]},"SpawnRadius":2,"ResultKey":"dungeon.patrol.spawn"},
+            {"Condition":{"ConditionType":0,"CompareType":"GreaterOrEqual","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.reachedCount"},"Inputs":[]}]},{"Kind":2,"OperationType":"Max","Inputs":[{"Kind":1,"GetterKey":"unit.variables.livingConsumerBoolCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":1},"Inputs":[]}]}]},"TickOrder":3,"Type":"Monitor","Guid":"interest_point_target_reached_monitor","EditorPosition":{"x":1380,"y":360}},
+            {"DurationSeconds":6,"TickOrder":4,"Type":"Keep","Guid":"interest_point_target_wait","EditorPosition":{"x":1600,"y":360}},
+            {"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.returningHome"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"Type":"Compare","Guid":"interest_point_returning_home_check","EditorPosition":{"x":1820,"y":360}},
+            {"SetterKey":"unit.interestPoint.setPatrolTarget","Values":[{"Kind":1,"GetterKey":"unit.self.entity","Inputs":[]}],"Type":"SetValue","Guid":"interest_point_set_home_target","EditorPosition":{"x":2040,"y":460}},
+            {"SetterKey":"unit.variables.set","Key":"dungeon.patrol.returningHome","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}],"Type":"SetValue","Guid":"interest_point_mark_returning_home","EditorPosition":{"x":2260,"y":460}},
+            {"SetterKey":"unit.variables.set","Key":"dungeon.patrol.returningHome","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}],"Type":"SetValue","Guid":"interest_point_clear_returning_home","EditorPosition":{"x":2040,"y":260}},
+            {"Value":{"Kind":1,"GetterKey":"unit.variables.livingConsumerBoolCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},"TickOrder":2,"Type":"NumberMonitor","Guid":"interest_point_member_count_monitor","EditorPosition":{"x":1380,"y":560}},
+            {"SetterKey":"unit.variables.set","Key":"dungeon.patrol.targetIndex","Values":[{"Kind":2,"OperationType":"Add","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.targetIndex"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":1},"Inputs":[]}]}],"Type":"SetValue","Guid":"interest_point_advance_index","EditorPosition":{"x":1600,"y":300}},
+            {"Condition":{"ConditionType":0,"CompareType":"GreaterOrEqual","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.targetIndex"},"Inputs":[]}]},{"Kind":1,"GetterKey":"unit.variables.getNumber","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.targets.count"},"Inputs":[]}]}]},"Type":"Compare","Guid":"interest_point_wrap_index_check","EditorPosition":{"x":1820,"y":300}},
+            {"SetterKey":"unit.variables.set","Key":"dungeon.patrol.targetIndex","Values":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}],"Type":"SetValue","Guid":"interest_point_wrap_index","EditorPosition":{"x":2040,"y":220}},
+            {"SetterKey":"unit.interestPoint.setPatrolTarget","Values":[{"Kind":1,"GetterKey":"unit.variables.listEntity","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.targets"},"Inputs":[]},{"Kind":1,"GetterKey":"unit.variables.getNumber","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.targetIndex"},"Inputs":[]}]}]}],"Type":"SetValue","Guid":"interest_point_set_target","EditorPosition":{"x":2260,"y":300}},
+            {"SetterKey":"unit.variables.set","Key":"dungeon.patrol.reachedCount","Values":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}],"Type":"SetValue","Guid":"interest_point_reset_reached","EditorPosition":{"x":2480,"y":300}},
+            {"SetterKey":"unit.variables.addNumber","Key":"dungeon.patrol.targetVersion","Values":[{"Kind":0,"Literal":{"Type":2,"Int":1},"Inputs":[]}],"Type":"SetValue","Guid":"interest_point_bump_version","EditorPosition":{"x":2700,"y":300}},
+            {"Type":"SetValue","Guid":"patrol_combat_init","EditorPosition":{"x":1280,"y":700},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.inCombat","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"Monitor","Guid":"patrol_combat_monitor","EditorPosition":{"x":280,"y":850},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.variables.livingConsumerBoolCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.engaged"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":-1},
+            {"Type":"Compare","Guid":"patrol_combat_begin_check","EditorPosition":{"x":530,"y":850},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.inCombat"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_combat_begin","EditorPosition":{"x":780,"y":850},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.inCombat","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"SetValue","Guid":"patrol_record_combat","EditorPosition":{"x":1030,"y":850},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.hadCombat","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"SetValue","Guid":"patrol_pause_travel","EditorPosition":{"x":1280,"y":850},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.active","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"Compare","Guid":"patrol_combat_end_check","EditorPosition":{"x":280,"y":1000},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.inCombat"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_combat_end","EditorPosition":{"x":530,"y":1000},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.inCombat","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"Compare","Guid":"patrol_survivor_check","EditorPosition":{"x":780,"y":1000},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.variables.livingConsumerBoolCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.member"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_resume_travel","EditorPosition":{"x":1030,"y":1000},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.active","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"SetValue","Guid":"patrol_wipe_discard","EditorPosition":{"x":1280,"y":1000},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.hadCombat","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"SetValue","Guid":"patrol_wipe_home_reset","EditorPosition":{"x":280,"y":1150},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.returningHome","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"SetValue","Guid":"patrol_wipe_resume","EditorPosition":{"x":530,"y":1150},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.active","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"Compare","Guid":"patrol_arrival_combat_check","EditorPosition":{"x":780,"y":1150},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.livingConsumerBoolCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.engaged"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"Compare","Guid":"patrol_return_combat_check","EditorPosition":{"x":1030,"y":1150},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.patrol.hadCombat"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_return_threat_snapshot","EditorPosition":{"x":1280,"y":1330},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"ui.threat.before","Values":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.floor.threat"},"Inputs":[]}]}]},
+            {"Type":"SetValue","Guid":"patrol_return_threat","EditorPosition":{"x":1280,"y":1150},"SetterKey":"unit.variables.addNumber","SourceTarget":1,"Key":"dungeon.floor.threat","Values":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.threat.onPatrolReturn"},"Inputs":[]}]}]},
+            {"Type":"NotifyUI","Guid":"patrol_return_threat_ui","EditorPosition":{"x":1530,"y":1330},"NotificationKey":"threat","From":{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"ui.threat.before"},"Inputs":[]}]},"To":{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.floor.threat"},"Inputs":[]}]},"Group":{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.revenge.wave"},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"patrol_return_settled","EditorPosition":{"x":280,"y":1300},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.hadCombat","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}
           ],
           "Edges": [
             {"OutputNodeGuid":"interest_point_state_entry","OutputPortName":"Out","InputNodeGuid":"interest_point_query_targets","InputPortName":"In"},
@@ -101837,19 +101714,52 @@
             {"OutputNodeGuid":"interest_point_reached_init","OutputPortName":"Out","InputNodeGuid":"interest_point_advance_index","InputPortName":"In"},
             {"OutputNodeGuid":"interest_point_patrol_missing_monitor","OutputPortName":"OnStart","InputNodeGuid":"interest_point_patrol_respawn_timer","InputPortName":"Start"},
             {"OutputNodeGuid":"interest_point_patrol_missing_monitor","OutputPortName":"OnChangeTrue","InputNodeGuid":"interest_point_patrol_respawn_timer","InputPortName":"Start"},
-            {"OutputNodeGuid":"interest_point_patrol_missing_monitor","OutputPortName":"True","InputNodeGuid":"interest_point_patrol_respawn_timer","InputPortName":"Keep"},
-            {"OutputNodeGuid":"interest_point_patrol_respawn_timer","OutputPortName":"OnTimeComplete","InputNodeGuid":"interest_point_spawn_patrol","InputPortName":"In"},
-            {"OutputNodeGuid":"interest_point_target_reached_monitor","OutputPortName":"True","InputNodeGuid":"interest_point_advance_index","InputPortName":"In"},
+            {"OutputNodeGuid":"interest_point_patrol_missing_monitor","OutputPortName":"True","InputNodeGuid":"interest_point_query_nearby_player","InputPortName":"In"},
+            {"OutputNodeGuid":"interest_point_query_nearby_player","OutputPortName":"Out","InputNodeGuid":"interest_point_player_far_check","InputPortName":"Check"},
+            {"OutputNodeGuid":"interest_point_player_far_check","OutputPortName":"True","InputNodeGuid":"interest_point_patrol_respawn_timer","InputPortName":"Keep"},
+            {"OutputNodeGuid":"interest_point_patrol_respawn_timer","OutputPortName":"OnTimeComplete","InputNodeGuid":"interest_point_build_patrol","InputPortName":"In"},
+            {"OutputNodeGuid":"interest_point_build_patrol","OutputPortName":"Out","InputNodeGuid":"interest_point_spawn_patrol","InputPortName":"In"},
+            {"OutputNodeGuid":"interest_point_target_reached_monitor","OutputPortName":"OnChangeTrue","InputNodeGuid":"interest_point_target_wait","InputPortName":"Start"},
+            {"OutputNodeGuid":"interest_point_target_reached_monitor","OutputPortName":"True","InputNodeGuid":"interest_point_target_wait","InputPortName":"Keep"},
+            {"OutputNodeGuid":"interest_point_target_wait","OutputPortName":"OnTimeComplete","InputNodeGuid":"patrol_arrival_combat_check","InputPortName":"Check"},
+            {"OutputNodeGuid":"interest_point_returning_home_check","OutputPortName":"True","InputNodeGuid":"patrol_return_combat_check","InputPortName":"Check"},
+            {"OutputNodeGuid":"interest_point_clear_returning_home","OutputPortName":"Out","InputNodeGuid":"interest_point_advance_index","InputPortName":"In"},
+            {"OutputNodeGuid":"interest_point_returning_home_check","OutputPortName":"False","InputNodeGuid":"interest_point_set_home_target","InputPortName":"In"},
+            {"OutputNodeGuid":"interest_point_set_home_target","OutputPortName":"Out","InputNodeGuid":"interest_point_mark_returning_home","InputPortName":"In"},
+            {"OutputNodeGuid":"interest_point_mark_returning_home","OutputPortName":"Out","InputNodeGuid":"interest_point_reset_reached","InputPortName":"In"},
             {"OutputNodeGuid":"interest_point_member_count_monitor","OutputPortName":"OnValueChange","InputNodeGuid":"interest_point_reset_reached","InputPortName":"In"},
             {"OutputNodeGuid":"interest_point_advance_index","OutputPortName":"Out","InputNodeGuid":"interest_point_wrap_index_check","InputPortName":"Check"},
             {"OutputNodeGuid":"interest_point_wrap_index_check","OutputPortName":"True","InputNodeGuid":"interest_point_wrap_index","InputPortName":"In"},
             {"OutputNodeGuid":"interest_point_wrap_index_check","OutputPortName":"False","InputNodeGuid":"interest_point_set_target","InputPortName":"In"},
             {"OutputNodeGuid":"interest_point_wrap_index","OutputPortName":"Out","InputNodeGuid":"interest_point_set_target","InputPortName":"In"},
             {"OutputNodeGuid":"interest_point_set_target","OutputPortName":"Out","InputNodeGuid":"interest_point_reset_reached","InputPortName":"In"},
-            {"OutputNodeGuid":"interest_point_reset_reached","OutputPortName":"Out","InputNodeGuid":"interest_point_bump_version","InputPortName":"In"}
+            {"OutputNodeGuid":"interest_point_reset_reached","OutputPortName":"Out","InputNodeGuid":"interest_point_bump_version","InputPortName":"In"},
+            {"OutputNodeGuid":"interest_point_spawn_patrol","OutputPortName":"Out","InputNodeGuid":"interest_point_reset_reached","InputPortName":"In"},
+            {"OutputNodeGuid":"interest_point_reached_init","OutputPortName":"Out","InputNodeGuid":"patrol_combat_init","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_combat_init","OutputPortName":"Out","InputNodeGuid":"patrol_combat_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"patrol_combat_monitor","OutputPortName":"True","InputNodeGuid":"patrol_combat_begin_check","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_combat_begin_check","OutputPortName":"True","InputNodeGuid":"patrol_combat_begin","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_combat_begin","OutputPortName":"Out","InputNodeGuid":"patrol_record_combat","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_record_combat","OutputPortName":"Out","InputNodeGuid":"patrol_pause_travel","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_pause_travel","OutputPortName":"Out","InputNodeGuid":"interest_point_reset_reached","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_combat_monitor","OutputPortName":"False","InputNodeGuid":"patrol_combat_end_check","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_combat_end_check","OutputPortName":"True","InputNodeGuid":"patrol_combat_end","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_combat_end","OutputPortName":"Out","InputNodeGuid":"patrol_survivor_check","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_survivor_check","OutputPortName":"True","InputNodeGuid":"patrol_resume_travel","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_resume_travel","OutputPortName":"Out","InputNodeGuid":"interest_point_set_home_target","InputPortName":"In"},
+            {"OutputNodeGuid":"interest_point_patrol_missing_monitor","OutputPortName":"True","InputNodeGuid":"patrol_wipe_discard","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_wipe_discard","OutputPortName":"Out","InputNodeGuid":"patrol_wipe_home_reset","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_wipe_home_reset","OutputPortName":"Out","InputNodeGuid":"patrol_wipe_resume","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_arrival_combat_check","OutputPortName":"True","InputNodeGuid":"interest_point_returning_home_check","InputPortName":"Check"},
+            {"OutputNodeGuid":"patrol_return_combat_check","OutputPortName":"True","InputNodeGuid":"patrol_return_threat_snapshot","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_return_threat_snapshot","OutputPortName":"Out","InputNodeGuid":"patrol_return_threat","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_return_threat","OutputPortName":"Out","InputNodeGuid":"patrol_return_threat_ui","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_return_threat_ui","OutputPortName":"Out","InputNodeGuid":"patrol_return_settled","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_return_settled","OutputPortName":"Out","InputNodeGuid":"interest_point_clear_returning_home","InputPortName":"In"},
+            {"OutputNodeGuid":"patrol_return_combat_check","OutputPortName":"False","InputNodeGuid":"interest_point_clear_returning_home","InputPortName":"In"}
           ],
-          "ViewPosition":{"x":0.0,"y":0.0},
-          "ViewScale":1.0
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
         }
       ],
       "Id": 30
@@ -101925,8 +101835,83 @@
       "Id":33
     },
     {
+      "Graphs": [
+        {
+          "Guid": "dungeon_floor_controller_graph",
+          "Name": "Floor Controller / 复仇小队",
+          "EntryNodeGuid": "dungeon_floor_controller_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"dungeon_floor_controller_entry","EditorPosition":{"x":40,"y":160}},
+            {"Type":"Monitor","Guid":"floor_players_monitor","EditorPosition":{"x":300,"y":160},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},"TickOrder":-1},
+            {"Type":"QueryUnits","Guid":"floor_query_players","EditorPosition":{"x":560,"y":160},"Shape":0,"FactionMask":1,"MaxCount":1,"SortMode":1,"ResultKey":"dungeon.revenge.players"},
+            {"Type":"Monitor","Guid":"floor_threat_monitor","EditorPosition":{"x":820,"y":160},"Condition":{"ConditionType":0,"CompareType":"GreaterOrEqual","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.floor.threat"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":100},"Inputs":[]}]},"TickOrder":0},
+            {"Type":"Compare","Guid":"floor_player_check","EditorPosition":{"x":1080,"y":160},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.revenge.players.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"QueryUnits","Guid":"floor_revenge_origin","EditorPosition":{"x":40,"y":340},"Shape":0,"FactionMask":16,"UnitDataId":30,"MaxCount":1,"SortMode":3,"ResultKey":"dungeon.revenge.origin","CandidateConditions":[{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.dead"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.ready"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.variables.livingConsumerBoolCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.guard"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.revenge.template.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}],"Priority":{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.size"},"Inputs":[]}]}},
+            {"Type":"Compare","Guid":"floor_origin_check","EditorPosition":{"x":300,"y":340},"Condition":{"ConditionType":0,"CompareType":"GreaterThan","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.revenge.origin.count"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"floor_revenge_budget","EditorPosition":{"x":560,"y":340},"SetterKey":"unit.variables.set","Key":"dungeon.revenge.budget","Values":[{"Kind":2,"OperationType":"Multiply","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumberOf","SourceTarget":0,"Inputs":[{"Kind":1,"GetterKey":"unit.variables.listEntity","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.revenge.origin"},"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":7,"String":"dungeon.revenge.template.costLimit"},"Inputs":[]}]},{"Kind":2,"OperationType":"Add","Inputs":[{"Kind":0,"Literal":{"Type":2,"Int":1},"Inputs":[]},{"Kind":2,"OperationType":"Multiply","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.revenge.wave"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":3,"Float":0.5},"Inputs":[]}]}]}]}]},
+            {"Type":"BuildUnitRoster","Guid":"floor_revenge_roster","EditorPosition":{"x":820,"y":340},"TemplateKey":"dungeon.revenge.template","TemplateEntity":{"Kind":1,"GetterKey":"unit.variables.listEntity","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.revenge.origin"},"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"CostLimit":{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.revenge.budget"},"Inputs":[]}]},"Center":{"Kind":1,"GetterKey":"unit.transform.positionOf","SourceTarget":0,"Inputs":[{"Kind":1,"GetterKey":"unit.variables.listEntity","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.revenge.origin"},"Inputs":[]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}]},"SpawnRadius":2,"ResultKey":"dungeon.revenge.spawn"},
+            {"Type":"SpawnUnit","Guid":"floor_revenge_spawn","EditorPosition":{"x":1080,"y":340},"VariableListKey":"dungeon.revenge.spawn","CopyFactionFromSpawner":false,"ShareVariablesWithSpawner":true,"RestoreRuntimeState":false,"MemberBoolKey":"dungeon.revenge.member","SpawnedNotificationKey":"revenge"},
+            {"Type":"SetValue","Guid":"floor_revenge_wave","EditorPosition":{"x":40,"y":520},"SetterKey":"unit.variables.addNumber","Key":"dungeon.revenge.wave","Values":[{"Kind":0,"Literal":{"Type":2,"Int":1},"Inputs":[]}]},
+            {"Type":"SetValue","Guid":"floor_threat_reset","EditorPosition":{"x":300,"y":520},"SetterKey":"unit.variables.set","Key":"dungeon.floor.threat","Values":[{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"dungeon_floor_controller_entry","OutputPortName":"Out","InputNodeGuid":"floor_players_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"dungeon_floor_controller_entry","OutputPortName":"Out","InputNodeGuid":"floor_threat_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"floor_players_monitor","OutputPortName":"True","InputNodeGuid":"floor_query_players","InputPortName":"In"},
+            {"OutputNodeGuid":"floor_threat_monitor","OutputPortName":"True","InputNodeGuid":"floor_player_check","InputPortName":"Check"},
+            {"OutputNodeGuid":"floor_player_check","OutputPortName":"True","InputNodeGuid":"floor_revenge_origin","InputPortName":"In"},
+            {"OutputNodeGuid":"floor_revenge_origin","OutputPortName":"Out","InputNodeGuid":"floor_origin_check","InputPortName":"Check"},
+            {"OutputNodeGuid":"floor_origin_check","OutputPortName":"True","InputNodeGuid":"floor_revenge_budget","InputPortName":"In"},
+            {"OutputNodeGuid":"floor_revenge_budget","OutputPortName":"Out","InputNodeGuid":"floor_revenge_roster","InputPortName":"In"},
+            {"OutputNodeGuid":"floor_revenge_roster","OutputPortName":"Out","InputNodeGuid":"floor_revenge_spawn","InputPortName":"In"},
+            {"OutputNodeGuid":"floor_revenge_spawn","OutputPortName":"Out","InputNodeGuid":"floor_revenge_wave","InputPortName":"In"},
+            {"OutputNodeGuid":"floor_revenge_wave","OutputPortName":"Out","InputNodeGuid":"floor_threat_reset","InputPortName":"In"}
+          ],
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
+        }
+      ],
+      "Id":35
+    },
+    {
       "Graphs":[{"Guid":"drop_interaction_graph","Name":"Interaction","EntryNodeGuid":"drop_interaction_entry","Nodes":[{"Type":"Entry","Guid":"drop_interaction_entry","EditorPosition":{"x":40.0,"y":160.0}},{"Condition":{"ConditionType":0,"CompareType":"IsTrue","Inputs":[{"Kind":1,"GetterKey":"world.interaction.hasPending","Inputs":[{"Kind":1,"GetterKey":"unit.self.entity","Inputs":[]}]}]},"TickOrder":0,"Type":"Monitor","Guid":"drop_interaction_monitor","EditorPosition":{"x":280.0,"y":160.0}},{"Type":"CollectInteraction","Guid":"drop_interaction_collect","EditorPosition":{"x":540.0,"y":160.0}}],"Edges":[{"OutputNodeGuid":"drop_interaction_entry","OutputPortName":"Out","InputNodeGuid":"drop_interaction_monitor","InputPortName":"Start"},{"OutputNodeGuid":"drop_interaction_monitor","OutputPortName":"True","InputNodeGuid":"drop_interaction_collect","InputPortName":"In"}],"ViewPosition":{"x":0.0,"y":0.0},"ViewScale":1.0}],
       "Id":34
+    },
+    {
+      "Graphs": [
+        {
+          "Guid": "encounter_clear_threat",
+          "Name": "Encounter Clear Threat",
+          "ExecutionConditions": [{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.ready"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.populated"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]}],
+          "EntryNodeGuid": "encounter_clear_threat_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"encounter_clear_threat_entry","EditorPosition":{"x":40,"y":100}},
+            {"Type":"Monitor","Guid":"clear_guard_monitor","EditorPosition":{"x":530,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.livingConsumerBoolCount","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.encounter.guard"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":2,"Int":0},"Inputs":[]}]},"TickOrder":0},
+            {"Type":"Compare","Guid":"clear_unsettled","EditorPosition":{"x":780,"y":100},"Condition":{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.getBool","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.threat.clearSettled"},"Inputs":[]}]},{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"clear_mark_dead","EditorPosition":{"x":1030,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.encounter.dead","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]},
+            {"Type":"SetValue","Guid":"clear_stop_patrol","EditorPosition":{"x":1280,"y":100},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.active","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"SetValue","Guid":"clear_discard_return","EditorPosition":{"x":280,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.patrol.hadCombat","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":false},"Inputs":[]}]},
+            {"Type":"SetValue","Guid":"clear_add_threat_snapshot","EditorPosition":{"x":530,"y":430},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"ui.threat.before","Values":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.floor.threat"},"Inputs":[]}]}]},
+            {"Type":"SetValue","Guid":"clear_add_threat","EditorPosition":{"x":530,"y":250},"SetterKey":"unit.variables.addNumber","SourceTarget":1,"Key":"dungeon.floor.threat","Values":[{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.threat.onClear"},"Inputs":[]}]}]},
+            {"Type":"NotifyUI","Guid":"clear_add_threat_ui","EditorPosition":{"x":780,"y":430},"NotificationKey":"threat","From":{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":0,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"ui.threat.before"},"Inputs":[]}]},"To":{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.floor.threat"},"Inputs":[]}]},"Group":{"Kind":1,"GetterKey":"unit.variables.getNumber","SourceTarget":1,"Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"dungeon.revenge.wave"},"Inputs":[]}]}},
+            {"Type":"SetValue","Guid":"clear_settled","EditorPosition":{"x":780,"y":250},"SetterKey":"unit.variables.set","SourceTarget":0,"Key":"dungeon.threat.clearSettled","Values":[{"Kind":0,"Literal":{"Type":1,"Bool":true},"Inputs":[]}]}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"encounter_clear_threat_entry","OutputPortName":"Out","InputNodeGuid":"clear_guard_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"clear_guard_monitor","OutputPortName":"True","InputNodeGuid":"clear_unsettled","InputPortName":"Check"},
+            {"OutputNodeGuid":"clear_unsettled","OutputPortName":"True","InputNodeGuid":"clear_mark_dead","InputPortName":"In"},
+            {"OutputNodeGuid":"clear_mark_dead","OutputPortName":"Out","InputNodeGuid":"clear_stop_patrol","InputPortName":"In"},
+            {"OutputNodeGuid":"clear_stop_patrol","OutputPortName":"Out","InputNodeGuid":"clear_discard_return","InputPortName":"In"},
+            {"OutputNodeGuid":"clear_discard_return","OutputPortName":"Out","InputNodeGuid":"clear_add_threat_snapshot","InputPortName":"In"},
+            {"OutputNodeGuid":"clear_add_threat_snapshot","OutputPortName":"Out","InputNodeGuid":"clear_add_threat","InputPortName":"In"},
+            {"OutputNodeGuid":"clear_add_threat","OutputPortName":"Out","InputNodeGuid":"clear_add_threat_ui","InputPortName":"In"},
+            {"OutputNodeGuid":"clear_add_threat_ui","OutputPortName":"Out","InputNodeGuid":"clear_settled","InputPortName":"In"}
+          ],
+          "ViewPosition": {"x":0,"y":0},
+          "ViewScale": 1
+        }
+      ],
+      "Id": 36
     }
   ]
 }

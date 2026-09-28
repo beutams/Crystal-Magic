@@ -28,6 +28,7 @@ partial struct UnitMoveSystem : ISystem
             Avoidances = SystemAPI.GetComponentLookup<UnitAvoidanceComponent>(true),
             Modifiers = SystemAPI.GetComponentLookup<UnitModifierComponent>(true),
             Deaths = SystemAPI.GetComponentLookup<UnitDeathComponent>(true),
+            Controls = SystemAPI.GetComponentLookup<UnitControlRuntimeComponent>(true),
             PlayerInputs = SystemAPI.GetComponentLookup<PlayerInputComponent>(true),
             BattlePlayerStatuses = SystemAPI.GetComponentLookup<BattlePlayerStatusComponent>(true),
             Facings = SystemAPI.GetComponentLookup<UnitFacingComponent>(),
@@ -49,6 +50,9 @@ partial struct UnitMoveSystem : ISystem
 
         [ReadOnly]
         public ComponentLookup<UnitDeathComponent> Deaths;
+
+        [ReadOnly]
+        public ComponentLookup<UnitControlRuntimeComponent> Controls;
 
         [ReadOnly]
         public ComponentLookup<PlayerInputComponent> PlayerInputs;
@@ -75,6 +79,8 @@ partial struct UnitMoveSystem : ISystem
             bool isBattleSpectator = BattlePlayerStatuses.TryGetComponent(
                 entity, out BattlePlayerStatusComponent status) && status.IsSpectator;
             bool isWaitingForTransition = status.IsWaitingForTransition;
+            bool hasTeleportRequest = move.HasTeleportRequest != 0;
+            bool teleportApplied = false;
 
             if (isWaitingForTransition)
             {
@@ -99,6 +105,34 @@ partial struct UnitMoveSystem : ISystem
             else if (isDead)
             {
                 move.Velocity = float2.zero;
+            }
+            else if (Controls.TryGetComponent(entity, out UnitControlRuntimeComponent control) &&
+                     control.LockMove != 0)
+            {
+                // A movement lock owns the final velocity. Stun supplies zero
+                // velocity while knockback supplies its decaying control velocity.
+                move.Velocity = control.ActiveMotionVelocity;
+                desiredFacingDirection = move.Velocity;
+                move.Direction = float2.zero;
+                move.FrameVelocity = float2.zero;
+                move.HasFrameVelocity = 0;
+                move.CommandMoveSpeed = -1f;
+            }
+            else if (hasTeleportRequest)
+            {
+                teleportApplied = true;
+                float2 previousPosition = transform.Position.xy;
+                transform.Position = move.TeleportDestination;
+                transform.Position.z = 0f;
+                desiredFacingDirection = math.normalizesafe(transform.Position.xy - previousPosition, float2.zero);
+                move.PredictedPosition = transform.Position;
+                move.HasPredictedPosition = 1;
+                move.Velocity = float2.zero;
+                move.Direction = float2.zero;
+                move.FrameVelocity = float2.zero;
+                move.HasFrameVelocity = 0;
+                move.CommandMoveSpeed = -1f;
+                physicsVelocity = default;
             }
             else if (hasFrameVelocity)
             {
@@ -125,7 +159,7 @@ partial struct UnitMoveSystem : ISystem
 
             UpdateFacing(entity, desiredFacingDirection);
 
-            if (!isBattleSpectator && !isWaitingForTransition)
+            if (!isBattleSpectator && !isWaitingForTransition && !teleportApplied)
                 ApplyPlanarTransform(ref physicsVelocity, ref transform, move.Velocity);
 
             if (!move.Velocity.Equals(oldMove.Velocity) ||
@@ -136,6 +170,7 @@ partial struct UnitMoveSystem : ISystem
             }
 
             move.LastObservedPosition = transform.Position;
+            move.HasTeleportRequest = 0;
 
             UnitMoveSimulationUtility.ClearFrameCommands(ref move);
         }

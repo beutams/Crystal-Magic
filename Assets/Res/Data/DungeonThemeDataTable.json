@@ -5,6 +5,10 @@
       "ThemeKey": "Prairie",
       "NextThemeId": -1,
       "OpenField": {
+        "Difficulty": {
+          "HealthGrowthPerFloor": 0.10,
+          "BudgetGrowthPerFloor": 0.05
+        },
         "Terrain": {
           "Width": 200,
           "Height": 200,
@@ -38,6 +42,9 @@
             "sqrMagnitude": 14
           },
           "WildSquadCount": 22,
+          "InterestClearThreat": { "x": 8.0, "y": 13.0, "z": 20.0 },
+          "WildSquadClearThreat": 3.0,
+          "PatrolReturnThreat": 40.0,
           "PlacementAttempts": 512
         },
         "Visual": {
@@ -975,6 +982,8 @@
             "Squads": [
               {
                 "Name": "Small Orc Mix",
+                "Patrol": {"CostLimit":4,"Members":[{"UnitName":"Orc","MinCount":1,"Cost":1,"Weight":4},{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":2},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2}]},
+                "Revenge": {"CostLimit":10,"Members":[{"UnitName":"Orc","MinCount":0,"Cost":1,"Weight":4},{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":2},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":1},{"UnitName":"Skeleton Archer","MinCount":0,"Cost":2,"Weight":1},{"UnitName":"Armored Orc","MinCount":1,"Cost":3,"Weight":1}]},
                 "Weight": 1,
                 "MonsterLevel": 1,
                 "IsBossSquad": false,
@@ -1022,6 +1031,8 @@
               },
               {
                 "Name": "Small Skeleton Mix",
+                "Patrol": {"CostLimit":4,"Members":[{"UnitName":"Skeleton","MinCount":1,"Cost":1,"Weight":4},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":3},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2}]},
+                "Revenge": {"CostLimit":10,"Members":[{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":4},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":3},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Skeleton Archer","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Orc","MinCount":0,"Cost":1,"Weight":1},{"UnitName":"Armored Orc","MinCount":1,"Cost":3,"Weight":1}]},
                 "Weight": 1,
                 "MonsterLevel": 1,
                 "IsBossSquad": false,
@@ -1069,6 +1080,8 @@
               },
               {
                 "Name": "Small Heavy Mix",
+                "Patrol": {"CostLimit":4,"Members":[{"UnitName":"Armored Skeleton","MinCount":1,"Cost":2,"Weight":3},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":3},{"UnitName":"Skeleton Archer","MinCount":0,"Cost":2,"Weight":2}]},
+                "Revenge": {"CostLimit":10,"Members":[{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":3},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":3},{"UnitName":"Skeleton Archer","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Orc","MinCount":0,"Cost":1,"Weight":2},{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":1},{"UnitName":"Armored Orc","MinCount":1,"Cost":3,"Weight":1}]},
                 "Weight": 1,
                 "MonsterLevel": 1,
                 "IsBossSquad": false,
@@ -1113,6 +1126,43 @@
                     "Weight": 1
                   }
                 ]
+              },
+              {
+                "Name": "Small Slime Werebeast Bat Pack",
+                "Patrol": {"CostLimit":4,"Members":[{"UnitName":"Slime","MinCount":1,"Cost":1,"Weight":1},{"UnitName":"Bat","MinCount":0,"Cost":1,"Weight":1}]},
+                "Revenge": {"CostLimit":10,"Members":[{"UnitName":"Slime","MinCount":1,"Cost":1,"Weight":1},{"UnitName":"Bat","MinCount":1,"Cost":1,"Weight":1},{"UnitName":"Werebear","MinCount":1,"Cost":4,"Weight":1},{"UnitName":"Werewolf","MinCount":1,"Cost":3,"Weight":1}]},
+                "Weight": 1,
+                "MonsterLevel": 1,
+                "IsBossSquad": false,
+                "Width": 3,
+                "Height": 3,
+                "CostLimit": 10,
+                "Members": [
+                  {
+                    "UnitName": "Slime",
+                    "MinCount": 1,
+                    "Cost": 1,
+                    "Weight": 1
+                  },
+                  {
+                    "UnitName": "Bat",
+                    "MinCount": 1,
+                    "Cost": 1,
+                    "Weight": 1
+                  },
+                  {
+                    "UnitName": "Werebear",
+                    "MinCount": 1,
+                    "Cost": 4,
+                    "Weight": 1
+                  },
+                  {
+                    "UnitName": "Werewolf",
+                    "MinCount": 1,
+                    "Cost": 3,
+                    "Weight": 1
+                  }
+                ]
               }
             ]
           },
@@ -1122,6 +1172,8 @@
             "Squads": [
               {
                 "Name": "Medium Orc Group",
+                "Patrol": {"CostLimit":6,"Members":[{"UnitName":"Orc","MinCount":1,"Cost":1,"Weight":4},{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":2},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2}]},
+                "Revenge": {"CostLimit":16,"Members":[{"UnitName":"Orc","MinCount":0,"Cost":1,"Weight":4},{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":2},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":1},{"UnitName":"Skeleton Archer","MinCount":0,"Cost":2,"Weight":1},{"UnitName":"Armored Orc","MinCount":2,"Cost":3,"Weight":1}]},
                 "Weight": 1,
                 "MonsterLevel": 2,
                 "IsBossSquad": false,
@@ -1169,6 +1221,8 @@
               },
               {
                 "Name": "Medium Skeleton Group",
+                "Patrol": {"CostLimit":6,"Members":[{"UnitName":"Skeleton","MinCount":1,"Cost":1,"Weight":3},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":3},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":3}]},
+                "Revenge": {"CostLimit":16,"Members":[{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":3},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":3},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":3},{"UnitName":"Skeleton Archer","MinCount":0,"Cost":2,"Weight":3},{"UnitName":"Orc","MinCount":0,"Cost":1,"Weight":1},{"UnitName":"Armored Orc","MinCount":2,"Cost":3,"Weight":1}]},
                 "Weight": 1,
                 "MonsterLevel": 2,
                 "IsBossSquad": false,
@@ -1213,6 +1267,43 @@
                     "Weight": 1
                   }
                 ]
+              },
+              {
+                "Name": "Medium Slime Werebeast Bat Pack",
+                "Patrol": {"CostLimit":6,"Members":[{"UnitName":"Slime","MinCount":1,"Cost":1,"Weight":1},{"UnitName":"Bat","MinCount":0,"Cost":1,"Weight":1}]},
+                "Revenge": {"CostLimit":16,"Members":[{"UnitName":"Slime","MinCount":1,"Cost":1,"Weight":1},{"UnitName":"Bat","MinCount":1,"Cost":1,"Weight":1},{"UnitName":"Werebear","MinCount":1,"Cost":4,"Weight":1},{"UnitName":"Werewolf","MinCount":1,"Cost":3,"Weight":1}]},
+                "Weight": 1,
+                "MonsterLevel": 2,
+                "IsBossSquad": false,
+                "Width": 5,
+                "Height": 5,
+                "CostLimit": 16,
+                "Members": [
+                  {
+                    "UnitName": "Slime",
+                    "MinCount": 1,
+                    "Cost": 1,
+                    "Weight": 1
+                  },
+                  {
+                    "UnitName": "Bat",
+                    "MinCount": 1,
+                    "Cost": 1,
+                    "Weight": 1
+                  },
+                  {
+                    "UnitName": "Werebear",
+                    "MinCount": 1,
+                    "Cost": 4,
+                    "Weight": 1
+                  },
+                  {
+                    "UnitName": "Werewolf",
+                    "MinCount": 1,
+                    "Cost": 3,
+                    "Weight": 1
+                  }
+                ]
               }
             ]
           },
@@ -1222,6 +1313,8 @@
             "Squads": [
               {
                 "Name": "Large Elite Orc Group",
+                "Patrol": {"CostLimit":8,"Members":[{"UnitName":"Orc","MinCount":1,"Cost":1,"Weight":4},{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":2},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2}]},
+                "Revenge": {"CostLimit":24,"Members":[{"UnitName":"Orc","MinCount":0,"Cost":1,"Weight":4},{"UnitName":"Armored Orc","MinCount":0,"Cost":3,"Weight":3},{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":2},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":1},{"UnitName":"Skeleton Archer","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Elite Orc","MinCount":1,"Cost":5,"Weight":1},{"UnitName":"Orc rider","MinCount":0,"Cost":5,"Weight":2}]},
                 "Weight": 1,
                 "MonsterLevel": 3,
                 "IsBossSquad": false,
@@ -1281,6 +1374,8 @@
               },
               {
                 "Name": "Large Rider Assault",
+                "Patrol": {"CostLimit":8,"Members":[{"UnitName":"Orc","MinCount":1,"Cost":1,"Weight":3},{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":2},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2}]},
+                "Revenge": {"CostLimit":24,"Members":[{"UnitName":"Orc","MinCount":0,"Cost":1,"Weight":3},{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":2},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Skeleton Archer","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Armored Orc","MinCount":0,"Cost":3,"Weight":3},{"UnitName":"Elite Orc","MinCount":0,"Cost":5,"Weight":2},{"UnitName":"Orc rider","MinCount":1,"Cost":5,"Weight":2}]},
                 "Weight": 1,
                 "MonsterLevel": 3,
                 "IsBossSquad": false,
@@ -1337,6 +1432,89 @@
                     "Weight": 2
                   }
                 ]
+              }
+            ]
+          }
+        ],
+        "WildSquads": [
+          {
+            "Name": "Wild Light Scout",
+            "Weight": 3,
+            "MonsterLevel": 1,
+            "IsBossSquad": false,
+            "Width": 3,
+            "Height": 3,
+            "CostLimit": 3,
+            "Members": [
+              {
+                "UnitName": "Orc",
+                "MinCount": 1,
+                "Cost": 1,
+                "Weight": 3
+              },
+              {
+                "UnitName": "Skeleton",
+                "MinCount": 0,
+                "Cost": 1,
+                "Weight": 2
+              },
+              {
+                "UnitName": "Armored Skeleton",
+                "MinCount": 0,
+                "Cost": 2,
+                "Weight": 1
+              }
+            ]
+          },
+          {
+            "Name": "Wild Bone Pair",
+            "Weight": 2,
+            "MonsterLevel": 1,
+            "IsBossSquad": false,
+            "Width": 3,
+            "Height": 3,
+            "CostLimit": 4,
+            "Members": [
+              {
+                "UnitName": "Skeleton",
+                "MinCount": 1,
+                "Cost": 1,
+                "Weight": 3
+              },
+              {
+                "UnitName": "Greatsword Skeleton",
+                "MinCount": 0,
+                "Cost": 2,
+                "Weight": 1
+              },
+              {
+                "UnitName": "Skeleton Archer",
+                "MinCount": 0,
+                "Cost": 2,
+                "Weight": 1
+              }
+            ]
+          },
+          {
+            "Name": "Wild Slime Bat Pair",
+            "Weight": 1,
+            "MonsterLevel": 1,
+            "IsBossSquad": false,
+            "Width": 3,
+            "Height": 3,
+            "CostLimit": 2,
+            "Members": [
+              {
+                "UnitName": "Slime",
+                "MinCount": 1,
+                "Cost": 1,
+                "Weight": 1
+              },
+              {
+                "UnitName": "Bat",
+                "MinCount": 1,
+                "Cost": 1,
+                "Weight": 1
               }
             ]
           }

@@ -28,16 +28,23 @@ namespace CrystalMagic.Game.Data
     [Serializable]
     public sealed class OpenFieldDungeonThemeData
     {
+        public DungeonDifficultyData Difficulty = new();
         public OpenFieldDungeonTerrainConfig Terrain = new();
         public OpenFieldDungeonAnchorConfig Anchors = new();
         public OpenFieldDungeonContentConfig Content = new();
         public OpenFieldDungeonVisualData Visual = new();
         public List<OpenFieldDungeonLandmarkEntryData> Landmarks = new();
         public List<OpenFieldDungeonEncounterPoolData> EncounterPools = new();
+        // Wild squads deliberately do not inherit the Small interest-point pool.
+        // They use the same weighted MinCount + CostLimit roster rule, but can be
+        // configured as a much smaller, dedicated roaming population.
+        public List<OpenFieldDungeonSquadData> WildSquads = new();
         public List<int> TreasureItemIds = new();
 
         public void EnsureValid()
         {
+            Difficulty ??= new DungeonDifficultyData();
+            Difficulty.EnsureValid();
             Terrain ??= new OpenFieldDungeonTerrainConfig();
             Terrain.EnsureValid();
             Anchors ??= new OpenFieldDungeonAnchorConfig();
@@ -48,14 +55,44 @@ namespace CrystalMagic.Game.Data
             Visual.EnsureValid();
             Landmarks ??= new List<OpenFieldDungeonLandmarkEntryData>();
             EncounterPools ??= new List<OpenFieldDungeonEncounterPoolData>();
+            WildSquads ??= new List<OpenFieldDungeonSquadData>();
             TreasureItemIds ??= new List<int>();
 
             foreach (OpenFieldDungeonLandmarkEntryData entry in Landmarks)
                 entry?.EnsureValid();
             foreach (OpenFieldDungeonEncounterPoolData pool in EncounterPools)
                 pool?.EnsureValid();
+            foreach (OpenFieldDungeonSquadData squad in WildSquads)
+                squad?.EnsureValid();
         }
     }
+    [Serializable]
+    public sealed class DungeonDifficultyData
+    {
+        public float HealthGrowthPerFloor = 0.10f;
+        public float BudgetGrowthPerFloor = 0.05f;
+
+        public void EnsureValid()
+        {
+            HealthGrowthPerFloor = ValidGrowth(HealthGrowthPerFloor);
+            BudgetGrowthPerFloor = ValidGrowth(BudgetGrowthPerFloor);
+        }
+
+        public DungeonDifficultyComponent Resolve(int floor)
+        {
+            int resolvedFloor = Mathf.Max(1, floor);
+            return new DungeonDifficultyComponent
+            {
+                Floor = resolvedFloor,
+                HealthMultiplier = 1f + (resolvedFloor - 1) * ValidGrowth(HealthGrowthPerFloor),
+                BudgetMultiplier = 1f + (resolvedFloor - 1) * ValidGrowth(BudgetGrowthPerFloor),
+            };
+        }
+
+        private static float ValidGrowth(float value) =>
+            float.IsNaN(value) || float.IsInfinity(value) ? 0f : Mathf.Max(0f, value);
+    }
+
     [Serializable]
     public sealed class OpenFieldDungeonVisualData
     {
@@ -393,7 +430,7 @@ namespace CrystalMagic.Game.Data
     }
 
     [Serializable]
-    public sealed class OpenFieldDungeonSquadData
+    public sealed class OpenFieldDungeonSquadData : UnitRosterTemplateData
     {
         public string Name;
         public int Weight = 1;
@@ -401,16 +438,32 @@ namespace CrystalMagic.Game.Data
         public bool IsBossSquad;
         public int Width = 3;
         public int Height = 3;
-        public int CostLimit = 1;
-        public List<OpenFieldDungeonSquadMemberData> Members = new();
+        public UnitRosterTemplateData Patrol = new();
+        public UnitRosterTemplateData Revenge = new();
 
-        public void EnsureValid()
+        public override void EnsureValid()
         {
             Name ??= string.Empty;
             Weight = Mathf.Max(1, Weight);
             MonsterLevel = Mathf.Clamp(MonsterLevel, 1, 3);
             Width = Mathf.Max(1, Width);
             Height = Mathf.Max(1, Height);
+            base.EnsureValid();
+            Patrol ??= new UnitRosterTemplateData();
+            Revenge ??= new UnitRosterTemplateData();
+            Patrol.EnsureValid();
+            Revenge.EnsureValid();
+        }
+    }
+
+    [Serializable]
+    public class UnitRosterTemplateData
+    {
+        public int CostLimit = 1;
+        public List<OpenFieldDungeonSquadMemberData> Members = new();
+
+        public virtual void EnsureValid()
+        {
             CostLimit = Mathf.Max(1, CostLimit);
             Members ??= new List<OpenFieldDungeonSquadMemberData>();
             foreach (OpenFieldDungeonSquadMemberData member in Members)

@@ -24,6 +24,12 @@ namespace CrystalMagic.Editor.Data
             GUILayout.Space(8f);
             DrawVisualSettings(data.Visual, theme);
             DrawGenerationSettings(data);
+            EditorGUILayout.BeginVertical("box");
+            EditorGUILayout.LabelField("Floor Difficulty / 楼层成长", EditorStyles.boldLabel);
+            data.Difficulty.HealthGrowthPerFloor = EditorGUILayout.FloatField("Monster Health / Floor (%)", data.Difficulty.HealthGrowthPerFloor * 100f) / 100f;
+            data.Difficulty.BudgetGrowthPerFloor = EditorGUILayout.FloatField("Squad Budget / Floor (%)", data.Difficulty.BudgetGrowthPerFloor * 100f) / 100f;
+            EditorGUILayout.LabelField("Linear growth from floor 1 within this theme. Minimum counts, member costs and other stats stay unchanged.", EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.EndVertical();
 
             DrawLandmarks(data, theme);
             DrawEncounterPools(data, theme);
@@ -491,6 +497,12 @@ namespace CrystalMagic.Editor.Data
             EditorGUILayout.LabelField("Content", EditorStyles.miniBoldLabel);
             data.Content.ChestCounts = EditorGUILayout.Vector3IntField("Chest Counts S/M/L", data.Content.ChestCounts);
             data.Content.WildSquadCount = Mathf.Max(0, EditorGUILayout.IntField("Wild Squad Count", data.Content.WildSquadCount));
+            data.Content.InterestClearThreat = Vector3.Max(Vector3.zero,
+                EditorGUILayout.Vector3Field("Clear Threat % S/M/L", data.Content.InterestClearThreat));
+            data.Content.WildSquadClearThreat = Mathf.Max(0f,
+                EditorGUILayout.FloatField("Wild Clear Threat %", data.Content.WildSquadClearThreat));
+            data.Content.PatrolReturnThreat = Mathf.Max(0f,
+                EditorGUILayout.FloatField("Combat Return Threat %", data.Content.PatrolReturnThreat));
             EditorGUILayout.EndVertical();
         }
         private void DrawLandmarks(OpenFieldDungeonThemeData data, DungeonThemeData theme)
@@ -588,7 +600,25 @@ namespace CrystalMagic.Editor.Data
             EditorGUILayout.EndHorizontal();
             squad.CostLimit = Mathf.Max(1, EditorGUILayout.IntField("Cost Limit", squad.CostLimit));
             squad.IsBossSquad = canBeBoss && EditorGUILayout.Toggle("Boss Squad", squad.IsBossSquad);
+            DrawRosterMembers(squad);
+            squad.Patrol ??= new UnitRosterTemplateData();
+            squad.Revenge ??= new UnitRosterTemplateData();
+            DrawRosterTemplate("Patrol Template", squad.Patrol);
+            DrawRosterTemplate("复仇小队 / Revenge Squad (base budget)", squad.Revenge);
+            EditorGUILayout.EndVertical();
+        }
 
+        private void DrawRosterTemplate(string label, UnitRosterTemplateData template)
+        {
+            EditorGUILayout.BeginVertical("box");
+            EditorGUILayout.LabelField(label, EditorStyles.miniBoldLabel);
+            template.CostLimit = Mathf.Max(1, EditorGUILayout.IntField("Cost Limit", template.CostLimit));
+            DrawRosterMembers(template);
+            EditorGUILayout.EndVertical();
+        }
+
+        private void DrawRosterMembers(UnitRosterTemplateData squad)
+        {
             squad.Members ??= new List<OpenFieldDungeonSquadMemberData>();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Members (minimum / cost / random weight)", EditorStyles.miniBoldLabel);
@@ -616,7 +646,6 @@ namespace CrystalMagic.Editor.Data
                 }
                 EditorGUILayout.EndHorizontal();
             }
-            EditorGUILayout.EndVertical();
         }
 
         private void DrawTreasureItems(OpenFieldDungeonThemeData data)

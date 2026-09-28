@@ -178,9 +178,52 @@ namespace CrystalMagic.Editor.Unit
             {
                 EditorGUI.BeginChangeCheck();
                 keep.DurationSeconds = Mathf.Max(0f, EditorGUILayout.FloatField("Duration Seconds", keep.DurationSeconds));
+                keep.PauseWhenNotKept = EditorGUILayout.Toggle(
+                    new GUIContent("Pause When Not Kept", "Retain elapsed time when this graph does not send a Keep pulse this frame."),
+                    keep.PauseWhenNotKept);
                 if (EditorGUI.EndChangeCheck())
                     onChanged?.Invoke();
-                EditorGUILayout.HelpBox("Keep requires a Start pulse every frame until its duration completes. Missing Start stops the State.", MessageType.Info);
+                EditorGUILayout.HelpBox(
+                    keep.PauseWhenNotKept
+                        ? "Keep requires a pulse every frame while counting. Missing pulses pause the timer."
+                        : "Keep requires a pulse every frame until its duration completes. Missing pulses stops the State.",
+                    MessageType.Info);
+                return;
+            }
+
+            if (node is NotifyUIActionNodeData notification)
+            {
+                notification.From ??= new ValueExpression { Literal = UnitValue.FromFloat(0f) };
+                notification.To ??= new ValueExpression { Literal = UnitValue.FromFloat(0f) };
+                notification.Group ??= new ValueExpression { Literal = UnitValue.FromFloat(0f) };
+                EditorGUI.BeginChangeCheck();
+                notification.NotificationKey = EditorGUILayout.TextField("Notification Key", notification.NotificationKey);
+                EditorGUILayout.LabelField("From");
+                StateScriptValueExpressionDrawer.Draw(notification.From, UnitValueCategory.Number, sourceSchema, onChanged);
+                EditorGUILayout.LabelField("To");
+                StateScriptValueExpressionDrawer.Draw(notification.To, UnitValueCategory.Number, sourceSchema, onChanged);
+                EditorGUILayout.LabelField("Group / Cycle");
+                StateScriptValueExpressionDrawer.Draw(notification.Group, UnitValueCategory.Number, sourceSchema, onChanged);
+                EditorGUILayout.HelpBox("Values are captured immediately. Use different cycle values to keep progress animations separate after a reset.", MessageType.Info);
+                if (EditorGUI.EndChangeCheck()) onChanged?.Invoke();
+                return;
+            }
+
+            if (node is BuildUnitRosterActionNodeData roster)
+            {
+                roster.EnsureValid();
+                EditorGUI.BeginChangeCheck();
+                roster.TemplateKey = EditorGUILayout.TextField("Template Key", roster.TemplateKey);
+                roster.ResultKey = EditorGUILayout.TextField("Result List Key", roster.ResultKey);
+                EditorGUILayout.LabelField("Template Entity");
+                StateScriptValueExpressionDrawer.Draw(roster.TemplateEntity, UnitValueCategory.Entity, sourceSchema, onChanged);
+                EditorGUILayout.LabelField("Cost Limit");
+                StateScriptValueExpressionDrawer.Draw(roster.CostLimit, UnitValueCategory.Number, sourceSchema, onChanged);
+                EditorGUILayout.LabelField("Spawn Center");
+                StateScriptValueExpressionDrawer.Draw(roster.Center, UnitValueCategory.Float3, sourceSchema, onChanged);
+                roster.SpawnRadius = Mathf.Max(0f, EditorGUILayout.FloatField("Spawn Radius", roster.SpawnRadius));
+                EditorGUILayout.HelpBox("Minimum members count toward Cost Limit. Only the remaining budget is randomly filled; the final member can exceed the limit.", MessageType.Info);
+                if (EditorGUI.EndChangeCheck()) onChanged?.Invoke();
                 return;
             }
 
@@ -369,6 +412,10 @@ namespace CrystalMagic.Editor.Unit
             spawnUnit.CopyFactionFromSpawner = EditorGUILayout.Toggle("Copy Faction", spawnUnit.CopyFactionFromSpawner);
             spawnUnit.ShareVariablesWithSpawner = EditorGUILayout.Toggle("Share Variables", spawnUnit.ShareVariablesWithSpawner);
             spawnUnit.RestoreRuntimeState = EditorGUILayout.Toggle("Restore Runtime State", spawnUnit.RestoreRuntimeState);
+            spawnUnit.MemberBoolKey = EditorGUILayout.TextField("Member Bool Key", spawnUnit.MemberBoolKey ?? string.Empty);
+            spawnUnit.SpawnedNotificationKey = EditorGUILayout.TextField(
+                new GUIContent("Spawned Notification Key", "Optional UI notification, sent once only if at least one unit was actually created."),
+                spawnUnit.SpawnedNotificationKey ?? string.Empty);
         }
 
         private static void DrawQueryUnits(
@@ -428,6 +475,18 @@ namespace CrystalMagic.Editor.Unit
                 query.RememberResultsInExcludedEntities = false;
             query.MaxCount = Mathf.Max(0, EditorGUILayout.IntField("Max Count", query.MaxCount));
             query.SortMode = (StateScriptUnitQuerySortMode)EditorGUILayout.EnumPopup("Sort", query.SortMode);
+            EditorGUILayout.LabelField("Candidate Conditions (Self = candidate, Other = requester)", EditorStyles.wordWrappedMiniLabel);
+            for (int i = 0; i < query.CandidateConditions.Count; i++)
+            {
+                StateScriptValueExpressionDrawer.DrawCondition(query.CandidateConditions[i], sourceSchema, onChanged);
+                if (GUILayout.Button("Remove Condition")) { query.CandidateConditions.RemoveAt(i); break; }
+            }
+            if (GUILayout.Button("Add Candidate Condition")) query.CandidateConditions.Add(new ConditionConfig());
+            if (query.SortMode == StateScriptUnitQuerySortMode.HighestPriorityRandomTie)
+            {
+                EditorGUILayout.LabelField("Priority (selects one; equal maxima are randomized)");
+                StateScriptValueExpressionDrawer.Draw(query.Priority, UnitValueCategory.Number, sourceSchema, onChanged);
+            }
             query.ResultKey = EditorGUILayout.TextField("Result Key", query.ResultKey ?? string.Empty);
         }
 
