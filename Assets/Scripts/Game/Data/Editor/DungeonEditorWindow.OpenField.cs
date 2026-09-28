@@ -99,6 +99,9 @@ namespace CrystalMagic.Editor.Data
                 {
                     style.Name = EditorGUILayout.TextField("Name", style.Name ?? string.Empty);
                     style.BaseRuleTile.AssetPath = DrawRuleTilePath("Base Rule Tile", style.BaseRuleTile.AssetPath);
+                    style.MountainTransitionRuleTile.AssetPath = DrawRuleTilePath("Mountain Foot", style.MountainTransitionRuleTile.AssetPath);
+                    style.MountainWallRuleTile.AssetPath = DrawRuleTilePath("Mountain Wall / Sides", style.MountainWallRuleTile.AssetPath);
+                    style.MountainTopRuleTile.AssetPath = DrawRuleTilePath("Mountain Summit", style.MountainTopRuleTile.AssetPath);
                     DrawDecorations(style, theme, styleIndex);
                     DrawObstacles(style, theme, styleIndex);
                 }

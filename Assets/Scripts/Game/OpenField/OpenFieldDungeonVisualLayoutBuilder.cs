@@ -465,6 +465,8 @@ namespace CrystalMagic.Game.OpenField
             int[] groundStyleIndices)
         {
             List<OpenFieldRuleTilePlacement> placements = new();
+            List<OpenFieldRuleTilePlacement> mountainPlacements = new();
+            int[] mountainGroundStyles = ExtendGroundStylesIntoMountains(layout, groundStyleIndices);
             for (int y = 0; y < layout.Height; y++)
             {
                 for (int x = 0; x < layout.Width; x++)
@@ -510,21 +512,37 @@ namespace CrystalMagic.Game.OpenField
                         case OpenFieldTerrainCell.Obstacle:
                         {
                             int height = layout.GetHeightSteps(x, y);
+                            int footStyleIndex = hasFrontCell && frontTerrain == OpenFieldTerrainCell.Ground
+                                ? groundStyleIndices[layout.GetIndex(frontCell.x, frontCell.y)]
+                                : mountainGroundStyles[layout.GetIndex(x, y)];
+                            OpenFieldRuleTileReferenceData footTile = visual.ObstacleVisual.TransitionRuleTile;
+                            OpenFieldRuleTileReferenceData wallTile = visual.ObstacleVisual.WallRuleTile;
+                            OpenFieldRuleTileReferenceData topTile = visual.ObstacleVisual.TopRuleTile;
+                            if (footStyleIndex >= 0)
+                            {
+                                OpenFieldGroundStyleData style = visual.GroundStyles[footStyleIndex];
+                                if (!string.IsNullOrWhiteSpace(style.MountainTransitionRuleTile.AssetPath))
+                                    footTile = style.MountainTransitionRuleTile;
+                                if (!string.IsNullOrWhiteSpace(style.MountainWallRuleTile.AssetPath))
+                                    wallTile = style.MountainWallRuleTile;
+                                if (!string.IsNullOrWhiteSpace(style.MountainTopRuleTile.AssetPath))
+                                    topTile = style.MountainTopRuleTile;
+                            }
                             Vector2Int topCell = cell + Vector2Int.up * height;
                             bool exposedFront = !hasFrontCell ||
                                                 frontTerrain != OpenFieldTerrainCell.Obstacle ||
                                                 layout.GetHeightSteps(frontCell.x, frontCell.y) < height;
-                            placements.Add(new OpenFieldRuleTilePlacement(
+                            mountainPlacements.Add(new OpenFieldRuleTilePlacement(
                                 OpenFieldRuleTileLayer.Obstacle,
-                                exposedFront ? visual.ObstacleVisual.WallRuleTile : visual.ObstacleVisual.TopRuleTile,
+                                exposedFront ? wallTile : topTile,
                                 topCell));
                             if (exposedFront)
                             {
                                 for (int step = 0; step < height; step++)
                                 {
-                                    placements.Add(new OpenFieldRuleTilePlacement(
+                                    mountainPlacements.Add(new OpenFieldRuleTilePlacement(
                                         OpenFieldRuleTileLayer.Obstacle,
-                                        visual.ObstacleVisual.TransitionRuleTile,
+                                        step == 0 ? footTile : wallTile,
                                         cell + Vector2Int.up * step));
                                 }
                             }
@@ -538,8 +556,48 @@ namespace CrystalMagic.Game.OpenField
                 }
             }
 
+            // Projection overlaps are resolved last-wins by the renderer. Draw
+            // rear terrain first: a low summit behind a tall cliff must not
+            // overwrite that cliff's visible wall or foot.
+            mountainPlacements.Reverse();
+            placements.AddRange(mountainPlacements);
             AddBoundaryPlacements(layout, visual.BoundaryRuleTile, placements);
             return placements;
+        }
+
+        private static int[] ExtendGroundStylesIntoMountains(OpenFieldDungeonLayout layout, int[] groundStyles)
+        {
+            // Multi-source BFS: match the closest surrounding ground without crossing void.
+            // Preserve ground assignments; this field selects the matching mountain-part palette.
+            int[] extended = (int[])groundStyles.Clone();
+            Queue<Vector2Int> queue = new();
+            for (int y = 0; y < layout.Height; y++)
+            {
+                for (int x = 0; x < layout.Width; x++)
+                {
+                    if (groundStyles[layout.GetIndex(x, y)] >= 0)
+                        queue.Enqueue(new Vector2Int(x, y));
+                }
+            }
+
+            while (queue.Count > 0)
+            {
+                Vector2Int cell = queue.Dequeue();
+                foreach (Vector2Int direction in CardinalDirections)
+                {
+                    Vector2Int next = cell + direction;
+                    if (!layout.IsInside(next.x, next.y) ||
+                        layout.GetTerrainCell(next.x, next.y) != OpenFieldTerrainCell.Obstacle)
+                        continue;
+
+                    int index = layout.GetIndex(next.x, next.y);
+                    if (extended[index] >= 0)
+                        continue;
+                    extended[index] = extended[layout.GetIndex(cell.x, cell.y)];
+                    queue.Enqueue(next);
+                }
+            }
+            return extended;
         }
 
         private static void AddBoundaryPlacements(

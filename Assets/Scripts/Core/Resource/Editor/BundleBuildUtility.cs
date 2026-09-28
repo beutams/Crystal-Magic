@@ -105,9 +105,13 @@ namespace CrystalMagic.Editor.Resource
             {
                 Rules = new List<BundleBuildRuleData>
                 {
-                    new() { FolderPath = "Assets/Res/UI", BundleName = "ui", PackingMode = BundlePackingMode.OneAssetOneBundle },
-                    new() { FolderPath = "Assets/Res/Data", BundleName = "data", PackingMode = BundlePackingMode.SingleBundle },
-                    new() { FolderPath = "Assets/Res/Config", BundleName = "config", PackingMode = BundlePackingMode.SingleBundle },
+                    new()
+                    {
+                        FolderPath = "Assets/Res",
+                        BundleName = "res",
+                        PackingMode = BundlePackingMode.SingleBundle,
+                        IncludeSubfolders = true,
+                    },
                 }
             };
         }
@@ -148,7 +152,68 @@ namespace CrystalMagic.Editor.Resource
                 }
             }
 
+            CollectProjectDependencies(assetToBundle);
+
             return assetToBundle;
+        }
+
+        private static void CollectProjectDependencies(Dictionary<string, string> assetToBundle)
+        {
+            List<KeyValuePair<string, string>> rootAssets = new(assetToBundle);
+            int dependencyCount = 0;
+
+            for (int i = 0; i < rootAssets.Count; i++)
+            {
+                KeyValuePair<string, string> rootAsset = rootAssets[i];
+                string[] dependencies = AssetDatabase.GetDependencies(rootAsset.Key, true);
+                for (int j = 0; j < dependencies.Length; j++)
+                {
+                    string dependencyPath = AssetBundlePlatformUtility.NormalizeAssetPath(dependencies[j]);
+                    if (assetToBundle.ContainsKey(dependencyPath)
+                        || !ShouldIncludeDependencyAsset(dependencyPath))
+                    {
+                        continue;
+                    }
+
+                    // Keep the dependency in the same bundle as the asset that
+                    // references it. This makes prefab references self-contained
+                    // and avoids requiring a manually maintained dependency bundle.
+                    assetToBundle[dependencyPath] = rootAsset.Value;
+                    dependencyCount++;
+                }
+            }
+
+            if (dependencyCount > 0)
+            {
+                Debug.Log($"[BundleBuildUtility] Added {dependencyCount} project dependencies to runtime bundles.");
+            }
+        }
+
+        private static bool ShouldIncludeDependencyAsset(string assetPath)
+        {
+            if (string.IsNullOrWhiteSpace(assetPath)
+                || !assetPath.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase)
+                || Directory.Exists(assetPath))
+            {
+                return false;
+            }
+
+            if (assetPath.IndexOf("/Editor/", StringComparison.OrdinalIgnoreCase) >= 0)
+                return false;
+
+            string extension = Path.GetExtension(assetPath);
+            if (string.Equals(extension, ".cs", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(extension, ".asmdef", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(extension, ".asmref", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(extension, ".meta", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            Type assetType = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
+            return assetType != null
+                && !typeof(MonoScript).IsAssignableFrom(assetType)
+                && AssetDatabase.LoadMainAssetAtPath(assetPath) != null;
         }
 
         private static bool ShouldIncludeAsset(string assetPath, string folderPath, bool includeSubfolders)

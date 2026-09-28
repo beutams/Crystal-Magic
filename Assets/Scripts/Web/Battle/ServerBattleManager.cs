@@ -43,6 +43,12 @@ namespace Server
                 return;
             }
 
+            Debug.LogWarning(
+                $"[BattleTrace][Server] Socket disconnected: connect={connect?.IPEndPoint}, " +
+                $"reason={connect?.LastDisconnectInfo?.Reason}, phase={connect?.LastDisconnectInfo?.Phase}, " +
+                $"detail={connect?.LastDisconnectInfo?.Detail}, roomPhase={player.room?.phase}, " +
+                $"player={DescribePlayer(player)}");
+
             connectDic.Remove(connect);
             player.room.frame.RemoveConnect(connect);
             if (player.connect != connect)
@@ -68,6 +74,7 @@ namespace Server
 
         private void OnAccept(Connect connect)
         {
+            Debug.Log($"[BattleTrace][Server] Battle socket accepted: connect={connect?.IPEndPoint}");
             connect.RegisterCallback(TCPPacketCode.GetOpcode<C2B_EnterBattle>(), OnEnterBattle);
             connect.RegisterCallback(TCPPacketCode.GetOpcode<C2B_ReloadBattle>(), OnReloadBattle);
             connect.RegisterCallback(TCPPacketCode.GetOpcode<C2B_BattleSceneReady>(), OnBattleSceneReady);
@@ -199,7 +206,7 @@ namespace Server
 
                 if (player.connect != null)
                 {
-                    SetPlayerOffline(player);
+                    SetPlayerOffline(player, "ReloadRoomReplacedConnection");
                 }
 
                 connect.Send(new B2L_ReloadRoomResult
@@ -255,17 +262,27 @@ namespace Server
         private void OnEnterBattle(IMessage message, Connect connect)
         {
             C2B_EnterBattle realMessage = message as C2B_EnterBattle;
-            if (realMessage == null ||
-                string.IsNullOrEmpty(realMessage.ticket) ||
-                !TryGetTicketPlayer(realMessage.ticket, out BattleRoom room, out BattlePlayer player) ||
-                !Guid.TryParse(realMessage.saveGuid, out Guid enterSaveGuid) ||
-                !string.Equals(player.saveGuid, enterSaveGuid.ToString("N"), StringComparison.Ordinal) ||
-                room.phase != BattlePhase.WaitingForEnter ||
-                player.entered ||
-                player.offline ||
-                player.connect != null ||
-                realMessage.data == null)
+            BattleRoom room = null;
+            BattlePlayer player = null;
+            Guid enterSaveGuid = Guid.Empty;
+            bool ticketValid = realMessage != null &&
+                !string.IsNullOrEmpty(realMessage.ticket) &&
+                TryGetTicketPlayer(realMessage.ticket, out room, out player);
+            bool saveGuidValid = realMessage != null &&
+                Guid.TryParse(realMessage.saveGuid, out enterSaveGuid);
+            bool saveMatches = ticketValid && saveGuidValid &&
+                string.Equals(player.saveGuid, enterSaveGuid.ToString("N"), StringComparison.Ordinal);
+            bool phaseValid = ticketValid && room.phase == BattlePhase.WaitingForEnter;
+            bool playerStateValid = ticketValid &&
+                !player.entered && !player.offline && player.connect == null;
+            bool characterDataValid = realMessage?.data != null;
+            if (!ticketValid || !saveMatches || !phaseValid || !playerStateValid || !characterDataValid)
             {
+                Debug.LogWarning(
+                    $"[BattleTrace][Server] C2B_EnterBattle rejected: connect={connect?.IPEndPoint}, " +
+                    $"message={realMessage != null}, ticketValid={ticketValid}, saveGuidValid={saveGuidValid}, " +
+                    $"saveMatches={saveMatches}, phase={room?.phase.ToString() ?? "<none>"}, " +
+                    $"playerStateValid={playerStateValid}, characterDataValid={characterDataValid}");
                 connect.Send(new B2C_EnterBattleResult { type = BattleRequestType.EnterBattleFail });
                 battleService.DisconnectAfterSend(connect);
                 return;
@@ -286,6 +303,9 @@ namespace Server
             player.characterData = realMessage.data;
             player.entered = true;
             connectDic[connect] = player;
+            Debug.Log(
+                $"[BattleTrace][Server] C2B_EnterBattle accepted: room={room.battleId}, " +
+                $"account={player.accountId}, connect={connect.IPEndPoint}, player={DescribePlayer(player)}");
             connect.UnRegisterCallback(TCPPacketCode.GetOpcode<C2B_EnterBattle>(), OnEnterBattle);
             connect.Send(new B2C_EnterBattleResult
             {
@@ -370,42 +390,66 @@ namespace Server
         private void OnBattleReady(IMessage message, Connect connect)
         {
             C2B_BattleReady realMessage = message as C2B_BattleReady;
-            if (realMessage == null ||
-                !connectDic.TryGetValue(connect, out BattlePlayer player) ||
-                player.connect != connect ||
-                player.offline ||
-                player.room.phase != BattlePhase.WaitingForClientReady ||
-                player.room.battleId != realMessage.battleId ||
-                player.connectVersion != realMessage.connectVersion ||
-                player.room.sceneVersion != realMessage.sceneVersion ||
-                !player.sceneReady ||
-                !player.entitiesSent ||
-                player.runningReload ||
-                player.ready)
+            bool playerKnown = connectDic.TryGetValue(connect, out BattlePlayer player);
+            bool valid = realMessage != null &&
+                playerKnown &&
+                player.connect == connect &&
+                !player.offline &&
+                player.room != null &&
+                player.room.phase == BattlePhase.WaitingForClientReady &&
+                player.room.battleId == realMessage.battleId &&
+                player.connectVersion == realMessage.connectVersion &&
+                player.room.sceneVersion == realMessage.sceneVersion &&
+                player.sceneReady &&
+                player.entitiesSent &&
+                !player.runningReload &&
+                !player.ready;
+            if (!valid)
             {
+                Debug.LogWarning(
+                    $"[BattleTrace][Server] C2B_BattleReady rejected: connect={connect?.IPEndPoint}, " +
+                    $"message={realMessage != null}, playerKnown={playerKnown}, " +
+                    $"messageBattleId={realMessage?.battleId}, messageConnectVersion={realMessage?.connectVersion}, " +
+                    $"messageSceneVersion={realMessage?.sceneVersion}, room={player?.room?.battleId}, " +
+                    $"roomPhase={player?.room?.phase.ToString() ?? "<none>"}, player={DescribePlayer(player)}");
                 return;
             }
 
             player.ready = true;
+            Debug.Log(
+                $"[BattleTrace][Server] C2B_BattleReady accepted: room={player.room.battleId}, " +
+                $"account={player.accountId}, connect={connect.IPEndPoint}, player={DescribePlayer(player)}");
             TryAdvancePhase(player.room);
         }
 
         private void OnBattleSceneReady(IMessage message, Connect connect)
         {
             C2B_BattleSceneReady realMessage = message as C2B_BattleSceneReady;
-            if (realMessage == null ||
-                !connectDic.TryGetValue(connect, out BattlePlayer player) ||
-                player.connect != connect ||
-                player.offline ||
-                player.room.battleId != realMessage.battleId ||
-                player.connectVersion != realMessage.connectVersion ||
-                player.room.sceneVersion != realMessage.sceneVersion ||
-                player.sceneReady)
+            bool playerKnown = connectDic.TryGetValue(connect, out BattlePlayer player);
+            bool valid = realMessage != null &&
+                playerKnown &&
+                player.connect == connect &&
+                !player.offline &&
+                player.room != null &&
+                player.room.battleId == realMessage.battleId &&
+                player.connectVersion == realMessage.connectVersion &&
+                player.room.sceneVersion == realMessage.sceneVersion &&
+                !player.sceneReady;
+            if (!valid)
             {
+                Debug.LogWarning(
+                    $"[BattleTrace][Server] C2B_BattleSceneReady rejected: connect={connect?.IPEndPoint}, " +
+                    $"message={realMessage != null}, playerKnown={playerKnown}, " +
+                    $"messageBattleId={realMessage?.battleId}, messageConnectVersion={realMessage?.connectVersion}, " +
+                    $"messageSceneVersion={realMessage?.sceneVersion}, room={player?.room?.battleId}, " +
+                    $"roomPhase={player?.room?.phase.ToString() ?? "<none>"}, player={DescribePlayer(player)}");
                 return;
             }
 
             player.sceneReady = true;
+            Debug.Log(
+                $"[BattleTrace][Server] C2B_BattleSceneReady accepted: room={player.room.battleId}, " +
+                $"account={player.accountId}, connect={connect.IPEndPoint}, player={DescribePlayer(player)}");
             if (player.runningReload)
             {
                 SendReloadSnapshot(player.room, player);
@@ -642,7 +686,7 @@ namespace Server
             if (stateCollectSystem == null)
             {
                 Debug.LogError("[Battle] Server network state system is unavailable for reload snapshot.");
-                SetPlayerOffline(player);
+                SetPlayerOffline(player, "ReloadSnapshotSystemUnavailable");
                 return;
             }
 
@@ -717,6 +761,7 @@ namespace Server
 
         private void SetPhase(BattleRoom room, BattlePhase phase)
         {
+            BattlePhase previousPhase = room.phase;
             if (room.phaseTimerId != 0)
             {
                 NetworkTimer.Instance.Remove(room.phaseTimerId);
@@ -734,8 +779,17 @@ namespace Server
             };
             if (timeout <= 0)
             {
+                Debug.Log(
+                    $"[BattleTrace][Server] Phase changed: room={room.battleId}, " +
+                    $"from={previousPhase}, to={phase}, version={room.phaseVersion}, timeout=none, " +
+                    $"players={DescribePlayers(room)}");
                 return;
             }
+
+            Debug.Log(
+                $"[BattleTrace][Server] Phase changed: room={room.battleId}, " +
+                $"from={previousPhase}, to={phase}, version={room.phaseVersion}, timeout={timeout}ms, " +
+                $"players={DescribePlayers(room)}");
 
             uint phaseVersion = room.phaseVersion;
             room.phaseTimerId = NetworkTimer.Instance.AddOnce(timeout, () =>
@@ -755,6 +809,9 @@ namespace Server
             }
 
             room.phaseTimerId = 0;
+            Debug.LogWarning(
+                $"[BattleTrace][Server] Phase timeout: room={room.battleId}, phase={expectedPhase}, " +
+                $"version={expectedPhaseVersion}, players={DescribePlayers(room)}");
             switch (expectedPhase)
             {
                 case BattlePhase.WaitingForEnter:
@@ -762,7 +819,7 @@ namespace Server
                     {
                         if (!player.offline && (!player.entered || player.connect == null))
                         {
-                            SetPlayerOffline(player);
+                            SetPlayerOffline(player, $"PhaseTimeout:{expectedPhase}");
                         }
                     }
                     TryAdvancePhase(room);
@@ -776,7 +833,7 @@ namespace Server
                     {
                         if (!player.offline && (!player.entered || player.connect == null || !player.ready))
                         {
-                            SetPlayerOffline(player);
+                            SetPlayerOffline(player, $"PhaseTimeout:{expectedPhase}");
                         }
                     }
                     TryAdvancePhase(room);
@@ -792,6 +849,10 @@ namespace Server
                 return;
             }
 
+            Debug.Log(
+                $"[BattleTrace][Server] Reload timeout started: room={player.room?.battleId}, " +
+                $"account={player.accountId}, timeout={timeout}ms, player={DescribePlayer(player)}");
+
             uint reloadVersion = player.reloadVersion;
             Connect expectedConnect = player.connect;
             long timerId = 0;
@@ -806,7 +867,10 @@ namespace Server
                 }
 
                 player.reloadTimerId = 0;
-                SetPlayerOffline(player);
+                Debug.LogWarning(
+                    $"[BattleTrace][Server] Reload timeout fired: room={player.room?.battleId}, " +
+                    $"account={player.accountId}, player={DescribePlayer(player)}");
+                SetPlayerOffline(player, "ReloadTimeout");
             });
             player.reloadTimerId = timerId;
         }
@@ -827,12 +891,16 @@ namespace Server
             player.reloadVersion++;
         }
 
-        private void SetPlayerOffline(BattlePlayer player)
+        private void SetPlayerOffline(BattlePlayer player, string reason = null)
         {
             if (player == null)
             {
                 return;
             }
+
+            Debug.LogWarning(
+                $"[BattleTrace][Server] SetPlayerOffline: reason={reason ?? "Unspecified"}, " +
+                $"room={player.room?.battleId}, account={player.accountId}, player={DescribePlayer(player)}");
 
             player.exitReady = false;
             SetBattlePlayerConnectionState(player, BattlePlayerConnectionState.Offline);
@@ -857,6 +925,36 @@ namespace Server
             player.room.frame.RemoveConnect(connect);
             battleService.Disconnect(connect);
             TryCompleteBattleExitSelection(player.room);
+        }
+
+        private static string DescribePlayer(BattlePlayer player)
+        {
+            if (player == null)
+            {
+                return "<null>";
+            }
+
+            return
+                $"entered={player.entered}, offline={player.offline}, connected={player.connect != null}, " +
+                $"sceneReady={player.sceneReady}, entitiesSent={player.entitiesSent}, ready={player.ready}, " +
+                $"active={player.active}, reload={player.runningReload}, " +
+                $"connectVersion={player.connectVersion}";
+        }
+
+        private static string DescribePlayers(BattleRoom room)
+        {
+            if (room?.players == null || room.players.Count == 0)
+            {
+                return "<none>";
+            }
+
+            List<string> descriptions = new List<string>();
+            foreach (BattlePlayer player in room.players.Values)
+            {
+                descriptions.Add($"account={player.accountId}[{DescribePlayer(player)}]");
+            }
+
+            return string.Join("; ", descriptions);
         }
 
         private void SetBattlePlayerConnectionState(
@@ -985,11 +1083,15 @@ namespace Server
                 room.phaseTimerId = 0;
             }
 
+            BattlePhase previousPhase = room.phase;
             room.phase = BattlePhase.Finished;
+            Debug.LogWarning(
+                $"[BattleTrace][Server] FinishRoom: room={room.battleId}, previousPhase={previousPhase}, " +
+                $"players={DescribePlayers(room)}");
             room.frame.Stop();
             foreach (BattlePlayer player in room.players.Values)
             {
-                SetPlayerOffline(player);
+                SetPlayerOffline(player, "FinishRoom");
             }
 
             room.world?.Dispose();

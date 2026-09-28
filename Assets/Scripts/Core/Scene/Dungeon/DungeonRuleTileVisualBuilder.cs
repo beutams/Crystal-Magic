@@ -120,10 +120,10 @@ namespace CrystalMagic.Core
                 ObstacleRenderGroup group = groups[groupIndex];
                 float anchorWorldY = gridParent.TransformPoint(
                     new Vector3(0f, group.LowestCellY * cellWorldSize, 0f)).y;
-                int sortingOrder = Mathf.RoundToInt(-anchorWorldY * WorldSortingPrecision);
+                int sortingOrder = GetObstacleSortingOrder(anchorWorldY);
                 Tilemap tilemap = CreateRuntimeTilemap(
                     gridParent,
-                    $"ObstacleMountain_{group.MountainIndex}",
+                    $"ObstacleMountain_{group.MountainIndex}_Foot_{group.LowestCellY}",
                     sortingOrder);
 
                 for (int placementIndex = 0; placementIndex < group.Placements.Count; placementIndex++)
@@ -163,22 +163,46 @@ namespace CrystalMagic.Core
             }
 
             Dictionary<Vector2Int, int> mountainByCell = GetObstacleMountainIndices(finalTiles);
-            Dictionary<int, ObstacleRenderGroup> groupsByMountain = new();
-            foreach (RuntimeDungeonRuleTilePlacement placement in finalTiles.Values)
+            // A connected mountain can have a stepped or concave front. Its distant
+            // lowest point must not determine occlusion at every other column.
+            List<Vector2Int> cells = new(finalTiles.Keys);
+            cells.Sort((left, right) =>
             {
-                int mountainIndex = mountainByCell[placement.Cell];
-                if (!groupsByMountain.TryGetValue(mountainIndex, out ObstacleRenderGroup group))
+                int yComparison = left.y.CompareTo(right.y);
+                return yComparison != 0 ? yComparison : left.x.CompareTo(right.x);
+            });
+            Dictionary<Vector2Int, int> footByCell = new();
+            Dictionary<(int Mountain, int FootY), ObstacleRenderGroup> groupsByFront = new();
+            foreach (Vector2Int cell in cells)
+            {
+                RuntimeDungeonRuleTilePlacement placement = finalTiles[cell];
+                int mountainIndex = mountainByCell[cell];
+                int footY = footByCell.TryGetValue(cell + Vector2Int.down, out int lowerFoot) ? lowerFoot : cell.y;
+                footByCell.Add(cell, footY);
+                var key = (mountainIndex, footY);
+                if (!groupsByFront.TryGetValue(key, out ObstacleRenderGroup group))
                 {
-                    group = new ObstacleRenderGroup(mountainIndex);
-                    groupsByMountain.Add(mountainIndex, group);
+                    group = new ObstacleRenderGroup(mountainIndex, footY);
+                    groupsByFront.Add(key, group);
                 }
 
                 group.Add(placement);
             }
 
-            List<ObstacleRenderGroup> groups = new(groupsByMountain.Values);
-            groups.Sort((left, right) => left.MountainIndex.CompareTo(right.MountainIndex));
+            List<ObstacleRenderGroup> groups = new(groupsByFront.Values);
+            groups.Sort((left, right) =>
+            {
+                int mountainComparison = left.MountainIndex.CompareTo(right.MountainIndex);
+                return mountainComparison != 0 ? mountainComparison : left.LowestCellY.CompareTo(right.LowestCellY);
+            });
             return groups;
+        }
+
+        private static int GetObstacleSortingOrder(float anchorWorldY)
+        {
+            // Units use the same 100 orders/unit. At the exact foot line, keep
+            // the character in front instead of relying on a renderer tie-break.
+            return Mathf.RoundToInt(-anchorWorldY * WorldSortingPrecision) - 1;
         }
 
         private static Dictionary<Vector2Int, int> GetObstacleMountainIndices(
@@ -252,20 +276,19 @@ namespace CrystalMagic.Core
 
         private sealed class ObstacleRenderGroup
         {
-            public ObstacleRenderGroup(int mountainIndex)
+            public ObstacleRenderGroup(int mountainIndex, int footY)
             {
                 MountainIndex = mountainIndex;
-                LowestCellY = int.MaxValue;
+                LowestCellY = footY;
             }
 
             public int MountainIndex { get; }
-            public int LowestCellY { get; private set; }
+            public int LowestCellY { get; }
             public List<RuntimeDungeonRuleTilePlacement> Placements { get; } = new();
 
             public void Add(RuntimeDungeonRuleTilePlacement placement)
             {
                 Placements.Add(placement);
-                LowestCellY = Mathf.Min(LowestCellY, placement.Cell.y);
             }
         }
 

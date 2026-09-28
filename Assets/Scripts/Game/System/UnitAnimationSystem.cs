@@ -10,7 +10,6 @@ using UnityEngine;
 
 [WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation)]
 [UpdateInGroup(typeof(GamePresentationSystemGroup))]
-[UpdateAfter(typeof(StateScriptSystem))]
 partial class UnitAnimationSystem : SystemBase
 {
     private const string FrameLibraryPath = "Assets/Res/Data/UnitAnimationFrameLibrary.asset";

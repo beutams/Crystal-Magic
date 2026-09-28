@@ -1,0 +1,17 @@
+{
+    "OutputRootFolder": "Assets/StreamingAssets/AssetBundles",
+    "BuildTarget": 19,
+    "BuildOptions": 256,
+    "CatalogBundleName": "catalog",
+    "CatalogAssetName": "BundleCatalogAsset",
+    "TempCatalogAssetPath": "Assets/__BundleBuildTemp/BundleCatalogAsset.asset",
+    "Rules": [
+        {
+            "Enabled": true,
+            "FolderPath": "Assets/Res",
+            "BundleName": "res",
+            "PackingMode": 0,
+            "IncludeSubfolders": true
+        }
+    ]
+}

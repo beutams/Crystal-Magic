@@ -81,3 +81,10 @@ crashlytics-build.properties
 /Assets/Res/Videos/*
 !/Assets/Res/Videos/default.mp4
 /Tmp/BaiduFanyi
+
+# Regenerable Unity bundle output and temporary scene/build caches.
+/Assets/StreamingAssets/AssetBundles/
+/Assets/StreamingAssets/AssetBundles.meta
+/Assets/__BundleBuildTemp/
+/Assets/__BundleBuildTemp.meta
+/Assets/SceneDependencyCache/

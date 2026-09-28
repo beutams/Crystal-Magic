@@ -95,11 +95,11 @@ namespace CrystalMagic.Core
 
             try
             {
-                _logDirectoryPath = Path.Combine(Application.persistentDataPath, LogFolderName);
+                _logDirectoryPath = ResolveLogDirectoryPath();
                 Directory.CreateDirectory(_logDirectoryPath);
 
                 string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss_fff", CultureInfo.InvariantCulture);
-                _logFilePath = Path.Combine(_logDirectoryPath, $"GameLog_{timestamp}.log");
+                _logFilePath = Path.Combine(_logDirectoryPath, $"{GetLogRoleName()}_{timestamp}.log");
                 FileStream fileStream = new(_logFilePath, FileMode.CreateNew, FileAccess.Write, FileShare.ReadWrite);
                 _writer = new StreamWriter(fileStream, new UTF8Encoding(false), 4096, false)
                 {
@@ -117,6 +117,32 @@ namespace CrystalMagic.Core
                 StopLogging();
                 ReportFailure($"Failed to start local logging: {ex.Message}");
             }
+        }
+
+        private static string ResolveLogDirectoryPath()
+        {
+#if UNITY_EDITOR
+            return Path.Combine(Application.persistentDataPath, LogFolderName);
+#else
+            DirectoryInfo dataDirectory = Directory.GetParent(Application.dataPath);
+            if (dataDirectory != null)
+                return Path.Combine(dataDirectory.FullName, LogFolderName);
+
+            return Path.Combine(Application.persistentDataPath, LogFolderName);
+#endif
+        }
+
+        private static string GetLogRoleName()
+        {
+#if CRYSTAL_MAGIC_LOBBY_SERVER
+            return "LobbyServer";
+#elif CRYSTAL_MAGIC_BATTLE_SERVER
+            return "BattleServer";
+#elif CRYSTAL_MAGIC_CLIENT
+            return "Client";
+#else
+            return "Editor";
+#endif
         }
 
         private void StopLogging()

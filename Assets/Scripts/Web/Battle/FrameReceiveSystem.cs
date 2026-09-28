@@ -48,8 +48,9 @@ public partial class FrameReceiveSystem : SystemBase
         }
 
         _frameInterval = frameManager.frameInterval;
-        Entity bufferEntity = _bufferQuery.GetSingletonEntity();
-        FrameReceiveBufferComponent buffer = EntityManager.GetComponentObject<FrameReceiveBufferComponent>(bufferEntity);
+        if (!TryGetBuffer(out FrameReceiveBufferComponent buffer))
+            return;
+
         if (_frameManager.running)
             _frameManager.HandleReceive();
         while (buffer.frames.Count > 0)
@@ -114,8 +115,9 @@ public partial class FrameReceiveSystem : SystemBase
             return;
         }
 
-        Entity bufferEntity = _bufferQuery.GetSingletonEntity();
-        FrameReceiveBufferComponent buffer = EntityManager.GetComponentObject<FrameReceiveBufferComponent>(bufferEntity);
+        if (!TryGetBuffer(out FrameReceiveBufferComponent buffer))
+            return;
+
         buffer.frameInterval = _frameInterval;
         if (!buffer.frames.TryGetValue(frame, out Queue<NetworkState> targetStates))
         {
@@ -127,5 +129,20 @@ public partial class FrameReceiveSystem : SystemBase
         {
             targetStates.Enqueue(states.Dequeue());
         }
+    }
+
+    private bool TryGetBuffer(out FrameReceiveBufferComponent buffer)
+    {
+        buffer = null;
+        if (_bufferQuery.IsEmptyIgnoreFilter || _bufferQuery.CalculateEntityCount() != 1)
+            return false;
+
+        Entity bufferEntity = _bufferQuery.GetSingletonEntity();
+        buffer = EntityManager.GetComponentObject<FrameReceiveBufferComponent>(bufferEntity);
+        if (buffer == null)
+            return false;
+
+        buffer.frames ??= new SortedDictionary<uint, Queue<NetworkState>>();
+        return true;
     }
 }

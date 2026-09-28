@@ -238,6 +238,10 @@ namespace CrystalMagic.Game.Data
     {
         public string Name;
         public OpenFieldRuleTileReferenceData BaseRuleTile = new();
+        // Optional grass-colour variant; an empty path uses ObstacleVisual.TransitionRuleTile.
+        public OpenFieldRuleTileReferenceData MountainTransitionRuleTile = new();
+        public OpenFieldRuleTileReferenceData MountainWallRuleTile = new();
+        public OpenFieldRuleTileReferenceData MountainTopRuleTile = new();
         public List<OpenFieldDecorationData> Decorations = new();
         public List<OpenFieldObstacleData> Obstacles = new();
 
@@ -246,6 +250,12 @@ namespace CrystalMagic.Game.Data
             Name ??= string.Empty;
             BaseRuleTile ??= new OpenFieldRuleTileReferenceData();
             BaseRuleTile.EnsureValid();
+            MountainTransitionRuleTile ??= new OpenFieldRuleTileReferenceData();
+            MountainTransitionRuleTile.EnsureValid();
+            MountainWallRuleTile ??= new OpenFieldRuleTileReferenceData();
+            MountainWallRuleTile.EnsureValid();
+            MountainTopRuleTile ??= new OpenFieldRuleTileReferenceData();
+            MountainTopRuleTile.EnsureValid();
             Decorations ??= new List<OpenFieldDecorationData>();
             for (int i = 0; i < Decorations.Count; i++)
             {

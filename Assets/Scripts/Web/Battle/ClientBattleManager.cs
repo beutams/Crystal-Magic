@@ -253,6 +253,9 @@ namespace Server
             preparationFailed = false;
             preparationError = null;
             restoreStandaloneRequested = false;
+            Debug.Log(
+                $"[BattleTrace][Client] ConnectWithTicket: account={accountId}, reload={reload}, " +
+                $"ticketPresent={!string.IsNullOrEmpty(ticket)}, saveGuid={preBattleSaveGuid}");
             battleServic.Connect(ServerUtility.GetBattleIPEndPoint(), out battleConnect);
             battleConnect.OnConnected += OnBattleConnected;
             battleConnect.OnDisconnected += OnBattleDisconnected;
@@ -275,6 +278,8 @@ namespace Server
                 return;
             }
 
+            Debug.Log($"[BattleTrace][Client] Battle socket connected: remote={connect.IPEndPoint}, reload={reload}");
+
             CharacterData characterData = preBattleCharacterData;
             if (characterData == null)
             {
@@ -286,6 +291,7 @@ namespace Server
             if (reload)
             {
                 StartPreparationTimeout(BattlePreparationStage.WaitingForReloadResult);
+                Debug.Log("[BattleTrace][Client] Sending C2B_ReloadBattle.");
                 connect.Send(new C2B_ReloadBattle
                 {
                     ticket = ticket,
@@ -296,6 +302,7 @@ namespace Server
             }
 
             StartPreparationTimeout(BattlePreparationStage.WaitingForEnterResult);
+            Debug.Log("[BattleTrace][Client] Sending C2B_EnterBattle.");
             connect.Send(new C2B_EnterBattle
             {
                 ticket = ticket,
@@ -314,6 +321,9 @@ namespace Server
 
             if (realMessage.type != BattleRequestType.EnterBattleSuccess || realMessage.connectVersion == 0U)
             {
+                Debug.LogWarning(
+                    $"[BattleTrace][Client] B2C_EnterBattleResult rejected: type={realMessage.type}, " +
+                    $"connectVersion={realMessage.connectVersion}");
                 FailPreparation("进入战斗服务器失败。");
                 battleServic.Disconnect(connect);
                 return;
@@ -321,6 +331,8 @@ namespace Server
 
             ticket = null;
             connectVersion = realMessage.connectVersion;
+            Debug.Log(
+                $"[BattleTrace][Client] B2C_EnterBattleResult accepted: connectVersion={connectVersion}");
             runningReload = false;
             frame.ClearOrders();
             frame.AddConnect(connect);
@@ -337,6 +349,9 @@ namespace Server
 
             if (realMessage.type != BattleRequestType.ReloadBattleSuccess || realMessage.connectVersion == 0U)
             {
+                Debug.LogWarning(
+                    $"[BattleTrace][Client] B2C_ReloadBattleResult rejected: type={realMessage.type}, " +
+                    $"connectVersion={realMessage.connectVersion}");
                 FailPreparation("重连战斗服务器失败。");
                 battleServic.Disconnect(connect);
                 return;
@@ -345,6 +360,9 @@ namespace Server
             ticket = null;
             connectVersion = realMessage.connectVersion;
             runningReload = realMessage.isRunningReload;
+            Debug.Log(
+                $"[BattleTrace][Client] B2C_ReloadBattleResult accepted: connectVersion={connectVersion}, " +
+                $"runningReload={runningReload}");
             frame.ClearOrders();
             frame.AddConnect(connect);
             StartPreparationTimeout(BattlePreparationStage.WaitingForScene);
@@ -356,6 +374,11 @@ namespace Server
             {
                 return;
             }
+
+            Debug.LogWarning(
+                $"[BattleTrace][Client] Battle socket disconnected: reason={connect.LastDisconnectInfo?.Reason}, " +
+                $"phase={connect.LastDisconnectInfo?.Phase}, detail={connect.LastDisconnectInfo?.Detail}, " +
+                $"preparationStage={preparationStage}, battleStarted={battleStarted}");
 
             bool shouldRestore = !cleaningUp && HasPreBattleSnapshot;
             bool transitionInProgress = shouldRestore &&
@@ -398,6 +421,7 @@ namespace Server
 
             if (!GameWorldManager.AppendGameWorldToPlayerLoop())
             {
+                Debug.LogError("[BattleTrace][Client] Failed to append battle world to PlayerLoop.");
                 FailPreparation("客户端战斗世界未能加入 PlayerLoop。");
                 battleServic.Disconnect(connect);
                 return;
@@ -405,6 +429,9 @@ namespace Server
 
             StopPreparationTimeout();
             battleStarted = true;
+            Debug.Log(
+                $"[BattleTrace][Client] Battle started: battleId={realMessage.battleId}, " +
+                $"startFrame={realMessage.startFrame}, sceneVersion={realMessage.sceneVersion}");
             frame.sceneVersion = battleData.sceneVersion;
             frame.AddConnect(connect);
             frame.Start(realMessage.startFrame, realMessage.frameInterval, realMessage.frameElapsedMs);
@@ -529,6 +556,10 @@ namespace Server
             }
 
             battleData = realMessage.battleData;
+            Debug.Log(
+                $"[BattleTrace][Client] B2C_EnterBattleScene received: battleId={battleData.battleId}, " +
+                $"sceneVersion={battleData.sceneVersion}, connectVersion={realMessage.connectVersion}, " +
+                $"runningReload={runningReload}");
             frame.sceneVersion = battleData.sceneVersion;
             sceneInitialized = false;
             entitiesInitialized = false;
@@ -570,6 +601,10 @@ namespace Server
                 return;
             }
 
+            Debug.Log(
+                $"[BattleTrace][Client] Battle scene initialized: battleId={battleData.battleId}, " +
+                $"sceneVersion={battleData.sceneVersion}, runningReload={runningReload}");
+
             GameWorldManager.UpdateGameWorld();
 
             sceneInitialized = true;
@@ -581,6 +616,9 @@ namespace Server
             StartPreparationTimeout(runningReload
                 ? BattlePreparationStage.WaitingForReloadSnapshot
                 : BattlePreparationStage.WaitingForEntities);
+            Debug.Log(
+                $"[BattleTrace][Client] Sending C2B_BattleSceneReady: battleId={battleData.battleId}, " +
+                $"sceneVersion={battleData.sceneVersion}, runningReload={runningReload}");
             battleConnect.Send(new C2B_BattleSceneReady
             {
                 battleId = battleData.battleId,
@@ -607,6 +645,9 @@ namespace Server
             }
 
             pendingEntityInfos = realMessage.entityInfos ?? Array.Empty<NetworkEntitySpawnInfo>();
+            Debug.Log(
+                $"[BattleTrace][Client] B2C_CreateNetworkEntities received: battleId={realMessage.battleId}, " +
+                $"count={pendingEntityInfos.Length}");
             TryInitializeNetworkEntities();
         }
 
@@ -631,6 +672,9 @@ namespace Server
             if (battleConnect != null)
             {
                 StartPreparationTimeout(BattlePreparationStage.WaitingForStartFrame);
+                Debug.Log(
+                    $"[BattleTrace][Client] Sending C2B_BattleReady: battleId={battleData.battleId}, " +
+                    $"sceneVersion={battleData.sceneVersion}, entityCount={networkEntities.Count}");
                 battleConnect.Send(new C2B_BattleReady
                 {
                     battleId = battleData.battleId,
@@ -755,9 +799,11 @@ namespace Server
         {
             StopPreparationTimeout();
             preparationStage = stage;
+            long timeout = GetPreparationTimeout(stage);
+            Debug.Log($"[BattleTrace][Client] Preparation stage={stage}, timeout={timeout}ms");
             Connect expectedConnect = battleConnect;
             long timerId = 0;
-            timerId = NetworkTimer.Instance.AddOnce(GetPreparationTimeout(stage), () =>
+            timerId = NetworkTimer.Instance.AddOnce(timeout, () =>
             {
                 if (preparationTimerId != timerId ||
                     preparationStage != stage ||
@@ -769,6 +815,9 @@ namespace Server
 
                 preparationTimerId = 0;
                 preparationStage = BattlePreparationStage.None;
+                Debug.LogWarning(
+                    $"[BattleTrace][Client] Preparation timeout fired: stage={stage}, " +
+                    $"connect={expectedConnect?.IPEndPoint}, battleStarted={battleStarted}");
                 FailPreparation($"战斗准备阶段超时：{stage}。");
                 if (expectedConnect != null)
                 {
@@ -813,6 +862,8 @@ namespace Server
 
             preparationFailed = true;
             preparationError = error;
+            Debug.LogError(
+                $"[BattleTrace][Client] Preparation failed: stage={preparationStage}, error={error}");
             onPreparationFailed?.Invoke(error);
         }
 

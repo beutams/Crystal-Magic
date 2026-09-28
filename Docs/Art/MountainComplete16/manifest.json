@@ -1,0 +1,884 @@
+[
+  {
+    "name": "MountainFoot_Grass1",
+    "role": 0,
+    "style": 1,
+    "texture": "Assets/Res/Sprites/Dungeon/MountainFoot16/MountainFoot_Grass1.png",
+    "rule": "Assets/Res/Tile/Mountain/MountainFoot_Grass1.asset",
+    "guid": "6f4275e888c509b4d01b5b867721141e",
+    "width": 128,
+    "height": 96,
+    "slices": [
+      {
+        "mask": 0,
+        "cap": false,
+        "id": 21300000,
+        "name": "MountainFoot_Grass1_00"
+      },
+      {
+        "mask": 1,
+        "cap": false,
+        "id": 21300002,
+        "name": "MountainFoot_Grass1_01"
+      },
+      {
+        "mask": 4,
+        "cap": false,
+        "id": 21300004,
+        "name": "MountainFoot_Grass1_04"
+      },
+      {
+        "mask": 5,
+        "cap": false,
+        "id": 21300006,
+        "name": "MountainFoot_Grass1_05"
+      },
+      {
+        "mask": 7,
+        "cap": false,
+        "id": 21300008,
+        "name": "MountainFoot_Grass1_07"
+      },
+      {
+        "mask": 16,
+        "cap": false,
+        "id": 21300010,
+        "name": "MountainFoot_Grass1_10"
+      },
+      {
+        "mask": 17,
+        "cap": false,
+        "id": 21300012,
+        "name": "MountainFoot_Grass1_11"
+      },
+      {
+        "mask": 20,
+        "cap": false,
+        "id": 21300014,
+        "name": "MountainFoot_Grass1_14"
+      },
+      {
+        "mask": 21,
+        "cap": false,
+        "id": 21300016,
+        "name": "MountainFoot_Grass1_15"
+      },
+      {
+        "mask": 23,
+        "cap": false,
+        "id": 21300018,
+        "name": "MountainFoot_Grass1_17"
+      },
+      {
+        "mask": 28,
+        "cap": false,
+        "id": 21300020,
+        "name": "MountainFoot_Grass1_1C"
+      },
+      {
+        "mask": 29,
+        "cap": false,
+        "id": 21300022,
+        "name": "MountainFoot_Grass1_1D"
+      },
+      {
+        "mask": 31,
+        "cap": false,
+        "id": 21300024,
+        "name": "MountainFoot_Grass1_1F"
+      },
+      {
+        "mask": 64,
+        "cap": false,
+        "id": 21300026,
+        "name": "MountainFoot_Grass1_40"
+      },
+      {
+        "mask": 65,
+        "cap": false,
+        "id": 21300028,
+        "name": "MountainFoot_Grass1_41"
+      },
+      {
+        "mask": 68,
+        "cap": false,
+        "id": 21300030,
+        "name": "MountainFoot_Grass1_44"
+      },
+      {
+        "mask": 69,
+        "cap": false,
+        "id": 21300032,
+        "name": "MountainFoot_Grass1_45"
+      },
+      {
+        "mask": 71,
+        "cap": false,
+        "id": 21300034,
+        "name": "MountainFoot_Grass1_47"
+      },
+      {
+        "mask": 80,
+        "cap": false,
+        "id": 21300036,
+        "name": "MountainFoot_Grass1_50"
+      },
+      {
+        "mask": 81,
+        "cap": false,
+        "id": 21300038,
+        "name": "MountainFoot_Grass1_51"
+      },
+      {
+        "mask": 84,
+        "cap": false,
+        "id": 21300040,
+        "name": "MountainFoot_Grass1_54"
+      },
+      {
+        "mask": 85,
+        "cap": false,
+        "id": 21300042,
+        "name": "MountainFoot_Grass1_55"
+      },
+      {
+        "mask": 87,
+        "cap": false,
+        "id": 21300044,
+        "name": "MountainFoot_Grass1_57"
+      },
+      {
+        "mask": 92,
+        "cap": false,
+        "id": 21300046,
+        "name": "MountainFoot_Grass1_5C"
+      },
+      {
+        "mask": 93,
+        "cap": false,
+        "id": 21300048,
+        "name": "MountainFoot_Grass1_5D"
+      },
+      {
+        "mask": 95,
+        "cap": false,
+        "id": 21300050,
+        "name": "MountainFoot_Grass1_5F"
+      },
+      {
+        "mask": 112,
+        "cap": false,
+        "id": 21300052,
+        "name": "MountainFoot_Grass1_70"
+      },
+      {
+        "mask": 113,
+        "cap": false,
+        "id": 21300054,
+        "name": "MountainFoot_Grass1_71"
+      },
+      {
+        "mask": 116,
+        "cap": false,
+        "id": 21300056,
+        "name": "MountainFoot_Grass1_74"
+      },
+      {
+        "mask": 117,
+        "cap": false,
+        "id": 21300058,
+        "name": "MountainFoot_Grass1_75"
+      },
+      {
+        "mask": 119,
+        "cap": false,
+        "id": 21300060,
+        "name": "MountainFoot_Grass1_77"
+      },
+      {
+        "mask": 124,
+        "cap": false,
+        "id": 21300062,
+        "name": "MountainFoot_Grass1_7C"
+      },
+      {
+        "mask": 125,
+        "cap": false,
+        "id": 21300064,
+        "name": "MountainFoot_Grass1_7D"
+      },
+      {
+        "mask": 127,
+        "cap": false,
+        "id": 21300066,
+        "name": "MountainFoot_Grass1_7F"
+      },
+      {
+        "mask": 193,
+        "cap": false,
+        "id": 21300068,
+        "name": "MountainFoot_Grass1_C1"
+      },
+      {
+        "mask": 197,
+        "cap": false,
+        "id": 21300070,
+        "name": "MountainFoot_Grass1_C5"
+      },
+      {
+        "mask": 199,
+        "cap": false,
+        "id": 21300072,
+        "name": "MountainFoot_Grass1_C7"
+      },
+      {
+        "mask": 209,
+        "cap": false,
+        "id": 21300074,
+        "name": "MountainFoot_Grass1_D1"
+      },
+      {
+        "mask": 213,
+        "cap": false,
+        "id": 21300076,
+        "name": "MountainFoot_Grass1_D5"
+      },
+      {
+        "mask": 215,
+        "cap": false,
+        "id": 21300078,
+        "name": "MountainFoot_Grass1_D7"
+      },
+      {
+        "mask": 221,
+        "cap": false,
+        "id": 21300080,
+        "name": "MountainFoot_Grass1_DD"
+      },
+      {
+        "mask": 223,
+        "cap": false,
+        "id": 21300082,
+        "name": "MountainFoot_Grass1_DF"
+      },
+      {
+        "mask": 241,
+        "cap": false,
+        "id": 21300084,
+        "name": "MountainFoot_Grass1_F1"
+      },
+      {
+        "mask": 245,
+        "cap": false,
+        "id": 21300086,
+        "name": "MountainFoot_Grass1_F5"
+      },
+      {
+        "mask": 247,
+        "cap": false,
+        "id": 21300088,
+        "name": "MountainFoot_Grass1_F7"
+      },
+      {
+        "mask": 253,
+        "cap": false,
+        "id": 21300090,
+        "name": "MountainFoot_Grass1_FD"
+      },
+      {
+        "mask": 255,
+        "cap": false,
+        "id": 21300092,
+        "name": "MountainFoot_Grass1_FF"
+      }
+    ]
+  },
+  {
+    "name": "MountainWall_Grass1",
+    "role": 1,
+    "style": 1,
+    "texture": "Assets/Res/Sprites/Dungeon/MountainUpper16/MountainWall_Grass1.png",
+    "rule": "Assets/Res/Tile/Mountain/MountainWall_Grass1.asset",
+    "guid": "edce511778ed5f6da870420c96d0defa",
+    "width": 128,
+    "height": 96,
+    "slices": [
+      {
+        "mask": 0,
+        "cap": false,
+        "id": 21300000,
+        "name": "MountainWall_Grass1_00"
+      },
+      {
+        "mask": 1,
+        "cap": false,
+        "id": 21300002,
+        "name": "MountainWall_Grass1_01"
+      },
+      {
+        "mask": 4,
+        "cap": false,
+        "id": 21300004,
+        "name": "MountainWall_Grass1_04"
+      },
+      {
+        "mask": 5,
+        "cap": false,
+        "id": 21300006,
+        "name": "MountainWall_Grass1_05"
+      },
+      {
+        "mask": 7,
+        "cap": false,
+        "id": 21300008,
+        "name": "MountainWall_Grass1_07"
+      },
+      {
+        "mask": 16,
+        "cap": false,
+        "id": 21300010,
+        "name": "MountainWall_Grass1_10"
+      },
+      {
+        "mask": 17,
+        "cap": false,
+        "id": 21300012,
+        "name": "MountainWall_Grass1_11"
+      },
+      {
+        "mask": 20,
+        "cap": false,
+        "id": 21300014,
+        "name": "MountainWall_Grass1_14"
+      },
+      {
+        "mask": 21,
+        "cap": false,
+        "id": 21300016,
+        "name": "MountainWall_Grass1_15"
+      },
+      {
+        "mask": 23,
+        "cap": false,
+        "id": 21300018,
+        "name": "MountainWall_Grass1_17"
+      },
+      {
+        "mask": 28,
+        "cap": false,
+        "id": 21300020,
+        "name": "MountainWall_Grass1_1C"
+      },
+      {
+        "mask": 29,
+        "cap": false,
+        "id": 21300022,
+        "name": "MountainWall_Grass1_1D"
+      },
+      {
+        "mask": 31,
+        "cap": false,
+        "id": 21300024,
+        "name": "MountainWall_Grass1_1F"
+      },
+      {
+        "mask": 64,
+        "cap": false,
+        "id": 21300026,
+        "name": "MountainWall_Grass1_40"
+      },
+      {
+        "mask": 65,
+        "cap": false,
+        "id": 21300028,
+        "name": "MountainWall_Grass1_41"
+      },
+      {
+        "mask": 68,
+        "cap": false,
+        "id": 21300030,
+        "name": "MountainWall_Grass1_44"
+      },
+      {
+        "mask": 69,
+        "cap": false,
+        "id": 21300032,
+        "name": "MountainWall_Grass1_45"
+      },
+      {
+        "mask": 71,
+        "cap": false,
+        "id": 21300034,
+        "name": "MountainWall_Grass1_47"
+      },
+      {
+        "mask": 80,
+        "cap": false,
+        "id": 21300036,
+        "name": "MountainWall_Grass1_50"
+      },
+      {
+        "mask": 81,
+        "cap": false,
+        "id": 21300038,
+        "name": "MountainWall_Grass1_51"
+      },
+      {
+        "mask": 84,
+        "cap": false,
+        "id": 21300040,
+        "name": "MountainWall_Grass1_54"
+      },
+      {
+        "mask": 85,
+        "cap": false,
+        "id": 21300042,
+        "name": "MountainWall_Grass1_55"
+      },
+      {
+        "mask": 87,
+        "cap": false,
+        "id": 21300044,
+        "name": "MountainWall_Grass1_57"
+      },
+      {
+        "mask": 92,
+        "cap": false,
+        "id": 21300046,
+        "name": "MountainWall_Grass1_5C"
+      },
+      {
+        "mask": 93,
+        "cap": false,
+        "id": 21300048,
+        "name": "MountainWall_Grass1_5D"
+      },
+      {
+        "mask": 95,
+        "cap": false,
+        "id": 21300050,
+        "name": "MountainWall_Grass1_5F"
+      },
+      {
+        "mask": 112,
+        "cap": false,
+        "id": 21300052,
+        "name": "MountainWall_Grass1_70"
+      },
+      {
+        "mask": 113,
+        "cap": false,
+        "id": 21300054,
+        "name": "MountainWall_Grass1_71"
+      },
+      {
+        "mask": 116,
+        "cap": false,
+        "id": 21300056,
+        "name": "MountainWall_Grass1_74"
+      },
+      {
+        "mask": 117,
+        "cap": false,
+        "id": 21300058,
+        "name": "MountainWall_Grass1_75"
+      },
+      {
+        "mask": 119,
+        "cap": false,
+        "id": 21300060,
+        "name": "MountainWall_Grass1_77"
+      },
+      {
+        "mask": 124,
+        "cap": false,
+        "id": 21300062,
+        "name": "MountainWall_Grass1_7C"
+      },
+      {
+        "mask": 125,
+        "cap": false,
+        "id": 21300064,
+        "name": "MountainWall_Grass1_7D"
+      },
+      {
+        "mask": 127,
+        "cap": false,
+        "id": 21300066,
+        "name": "MountainWall_Grass1_7F"
+      },
+      {
+        "mask": 193,
+        "cap": false,
+        "id": 21300068,
+        "name": "MountainWall_Grass1_C1"
+      },
+      {
+        "mask": 197,
+        "cap": false,
+        "id": 21300070,
+        "name": "MountainWall_Grass1_C5"
+      },
+      {
+        "mask": 199,
+        "cap": false,
+        "id": 21300072,
+        "name": "MountainWall_Grass1_C7"
+      },
+      {
+        "mask": 209,
+        "cap": false,
+        "id": 21300074,
+        "name": "MountainWall_Grass1_D1"
+      },
+      {
+        "mask": 213,
+        "cap": false,
+        "id": 21300076,
+        "name": "MountainWall_Grass1_D5"
+      },
+      {
+        "mask": 215,
+        "cap": false,
+        "id": 21300078,
+        "name": "MountainWall_Grass1_D7"
+      },
+      {
+        "mask": 221,
+        "cap": false,
+        "id": 21300080,
+        "name": "MountainWall_Grass1_DD"
+      },
+      {
+        "mask": 223,
+        "cap": false,
+        "id": 21300082,
+        "name": "MountainWall_Grass1_DF"
+      },
+      {
+        "mask": 241,
+        "cap": false,
+        "id": 21300084,
+        "name": "MountainWall_Grass1_F1"
+      },
+      {
+        "mask": 245,
+        "cap": false,
+        "id": 21300086,
+        "name": "MountainWall_Grass1_F5"
+      },
+      {
+        "mask": 247,
+        "cap": false,
+        "id": 21300088,
+        "name": "MountainWall_Grass1_F7"
+      },
+      {
+        "mask": 253,
+        "cap": false,
+        "id": 21300090,
+        "name": "MountainWall_Grass1_FD"
+      },
+      {
+        "mask": 255,
+        "cap": false,
+        "id": 21300092,
+        "name": "MountainWall_Grass1_FF"
+      }
+    ]
+  },
+  {
+    "name": "MountainTop_Grass1",
+    "role": 2,
+    "style": 1,
+    "texture": "Assets/Res/Sprites/Dungeon/MountainUpper16/MountainTop_Grass1.png",
+    "rule": "Assets/Res/Tile/Mountain/MountainTop_Grass1.asset",
+    "guid": "78e522109db403696b930fb744e6deea",
+    "width": 128,
+    "height": 96,
+    "slices": [
+      {
+        "mask": 0,
+        "cap": false,
+        "id": 21300000,
+        "name": "MountainTop_Grass1_00"
+      },
+      {
+        "mask": 1,
+        "cap": false,
+        "id": 21300002,
+        "name": "MountainTop_Grass1_01"
+      },
+      {
+        "mask": 4,
+        "cap": false,
+        "id": 21300004,
+        "name": "MountainTop_Grass1_04"
+      },
+      {
+        "mask": 5,
+        "cap": false,
+        "id": 21300006,
+        "name": "MountainTop_Grass1_05"
+      },
+      {
+        "mask": 7,
+        "cap": false,
+        "id": 21300008,
+        "name": "MountainTop_Grass1_07"
+      },
+      {
+        "mask": 16,
+        "cap": false,
+        "id": 21300010,
+        "name": "MountainTop_Grass1_10"
+      },
+      {
+        "mask": 17,
+        "cap": false,
+        "id": 21300012,
+        "name": "MountainTop_Grass1_11"
+      },
+      {
+        "mask": 20,
+        "cap": false,
+        "id": 21300014,
+        "name": "MountainTop_Grass1_14"
+      },
+      {
+        "mask": 21,
+        "cap": false,
+        "id": 21300016,
+        "name": "MountainTop_Grass1_15"
+      },
+      {
+        "mask": 23,
+        "cap": false,
+        "id": 21300018,
+        "name": "MountainTop_Grass1_17"
+      },
+      {
+        "mask": 28,
+        "cap": false,
+        "id": 21300020,
+        "name": "MountainTop_Grass1_1C"
+      },
+      {
+        "mask": 29,
+        "cap": false,
+        "id": 21300022,
+        "name": "MountainTop_Grass1_1D"
+      },
+      {
+        "mask": 31,
+        "cap": false,
+        "id": 21300024,
+        "name": "MountainTop_Grass1_1F"
+      },
+      {
+        "mask": 64,
+        "cap": false,
+        "id": 21300026,
+        "name": "MountainTop_Grass1_40"
+      },
+      {
+        "mask": 65,
+        "cap": false,
+        "id": 21300028,
+        "name": "MountainTop_Grass1_41"
+      },
+      {
+        "mask": 68,
+        "cap": false,
+        "id": 21300030,
+        "name": "MountainTop_Grass1_44"
+      },
+      {
+        "mask": 69,
+        "cap": false,
+        "id": 21300032,
+        "name": "MountainTop_Grass1_45"
+      },
+      {
+        "mask": 71,
+        "cap": false,
+        "id": 21300034,
+        "name": "MountainTop_Grass1_47"
+      },
+      {
+        "mask": 80,
+        "cap": false,
+        "id": 21300036,
+        "name": "MountainTop_Grass1_50"
+      },
+      {
+        "mask": 81,
+        "cap": false,
+        "id": 21300038,
+        "name": "MountainTop_Grass1_51"
+      },
+      {
+        "mask": 84,
+        "cap": false,
+        "id": 21300040,
+        "name": "MountainTop_Grass1_54"
+      },
+      {
+        "mask": 85,
+        "cap": false,
+        "id": 21300042,
+        "name": "MountainTop_Grass1_55"
+      },
+      {
+        "mask": 87,
+        "cap": false,
+        "id": 21300044,
+        "name": "MountainTop_Grass1_57"
+      },
+      {
+        "mask": 92,
+        "cap": false,
+        "id": 21300046,
+        "name": "MountainTop_Grass1_5C"
+      },
+      {
+        "mask": 93,
+        "cap": false,
+        "id": 21300048,
+        "name": "MountainTop_Grass1_5D"
+      },
+      {
+        "mask": 95,
+        "cap": false,
+        "id": 21300050,
+        "name": "MountainTop_Grass1_5F"
+      },
+      {
+        "mask": 112,
+        "cap": false,
+        "id": 21300052,
+        "name": "MountainTop_Grass1_70"
+      },
+      {
+        "mask": 113,
+        "cap": false,
+        "id": 21300054,
+        "name": "MountainTop_Grass1_71"
+      },
+      {
+        "mask": 116,
+        "cap": false,
+        "id": 21300056,
+        "name": "MountainTop_Grass1_74"
+      },
+      {
+        "mask": 117,
+        "cap": false,
+        "id": 21300058,
+        "name": "MountainTop_Grass1_75"
+      },
+      {
+        "mask": 119,
+        "cap": false,
+        "id": 21300060,
+        "name": "MountainTop_Grass1_77"
+      },
+      {
+        "mask": 124,
+        "cap": false,
+        "id": 21300062,
+        "name": "MountainTop_Grass1_7C"
+      },
+      {
+        "mask": 125,
+        "cap": false,
+        "id": 21300064,
+        "name": "MountainTop_Grass1_7D"
+      },
+      {
+        "mask": 127,
+        "cap": false,
+        "id": 21300066,
+        "name": "MountainTop_Grass1_7F"
+      },
+      {
+        "mask": 193,
+        "cap": false,
+        "id": 21300068,
+        "name": "MountainTop_Grass1_C1"
+      },
+      {
+        "mask": 197,
+        "cap": false,
+        "id": 21300070,
+        "name": "MountainTop_Grass1_C5"
+      },
+      {
+        "mask": 199,
+        "cap": false,
+        "id": 21300072,
+        "name": "MountainTop_Grass1_C7"
+      },
+      {
+        "mask": 209,
+        "cap": false,
+        "id": 21300074,
+        "name": "MountainTop_Grass1_D1"
+      },
+      {
+        "mask": 213,
+        "cap": false,
+        "id": 21300076,
+        "name": "MountainTop_Grass1_D5"
+      },
+      {
+        "mask": 215,
+        "cap": false,
+        "id": 21300078,
+        "name": "MountainTop_Grass1_D7"
+      },
+      {
+        "mask": 221,
+        "cap": false,
+        "id": 21300080,
+        "name": "MountainTop_Grass1_DD"
+      },
+      {
+        "mask": 223,
+        "cap": false,
+        "id": 21300082,
+        "name": "MountainTop_Grass1_DF"
+      },
+      {
+        "mask": 241,
+        "cap": false,
+        "id": 21300084,
+        "name": "MountainTop_Grass1_F1"
+      },
+      {
+        "mask": 245,
+        "cap": false,
+        "id": 21300086,
+        "name": "MountainTop_Grass1_F5"
+      },
+      {
+        "mask": 247,
+        "cap": false,
+        "id": 21300088,
+        "name": "MountainTop_Grass1_F7"
+      },
+      {
+        "mask": 253,
+        "cap": false,
+        "id": 21300090,
+        "name": "MountainTop_Grass1_FD"
+      },
+      {
+        "mask": 255,
+        "cap": false,
+        "id": 21300092,
+        "name": "MountainTop_Grass1_FF"
+      }
+    ]
+  }
+]

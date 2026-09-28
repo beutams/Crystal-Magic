@@ -20,13 +20,13 @@ public partial class UnitExecutionSystemGroup : ComponentSystemGroup
 {
 }
 
-[UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
+[UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateAfter(typeof(UnitExecutionSystemGroup))]
 public partial class UnitPostProcessSystemGroup : ComponentSystemGroup
 {
 }
 
-[UpdateInGroup(typeof(SimulationSystemGroup), OrderFirst = true)]
+[UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateAfter(typeof(FrameReceiveSystem))]
 public partial class ClientInputSystemGroup : ComponentSystemGroup
 {
@@ -39,16 +39,13 @@ public partial class ClientPlayerPredictionSystemGroup : ComponentSystemGroup
 {
 }
 
-[UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
-[UpdateAfter(typeof(FrameReceiveSystem))]
-[UpdateAfter(typeof(ClientPlayerPredictionSystemGroup))]
+[UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateBefore(typeof(GamePresentationSystemGroup))]
 public partial class ClientNetworkPresentationSystemGroup : ComponentSystemGroup
 {
 }
 
-[UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
-[UpdateAfter(typeof(UnitPostProcessSystemGroup))]
+[UpdateInGroup(typeof(SimulationSystemGroup))]
 public partial class GamePresentationSystemGroup : ComponentSystemGroup
 {
 }

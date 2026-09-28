@@ -54,13 +54,13 @@
           },
           "ObstacleVisual": {
             "TopRuleTile": {
-              "AssetPath": "Assets/Res/Tile/Obstacle.asset"
+              "AssetPath": "Assets/Res/Tile/Mountain/MountainTop_Grass1.asset"
             },
             "WallRuleTile": {
-              "AssetPath": "Assets/Res/Tile/Obstacle.asset"
+              "AssetPath": "Assets/Res/Tile/Mountain/MountainWall_Grass1.asset"
             },
             "TransitionRuleTile": {
-              "AssetPath": "Assets/Res/Tile/Obstacle.asset"
+              "AssetPath": "Assets/Res/Tile/Mountain/MountainFoot_Grass1.asset"
             }
           },
           "BoundaryRuleTile": {
@@ -72,6 +72,15 @@
               "Name": "Grass1",
               "BaseRuleTile": {
                 "AssetPath": "Assets/Res/Tile/Grass1.asset"
+              },
+              "MountainTransitionRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Mountain/MountainFoot_Grass1.asset"
+              },
+              "MountainWallRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Mountain/MountainWall_Grass1.asset"
+              },
+              "MountainTopRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Mountain/MountainTop_Grass1.asset"
               },
               "Decorations": [
                 {
@@ -363,6 +372,15 @@
               "BaseRuleTile": {
                 "AssetPath": "Assets/Res/Tile/Grass2.asset"
               },
+              "MountainTransitionRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Mountain/MountainFoot_Grass1.asset"
+              },
+              "MountainWallRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Mountain/MountainWall_Grass1.asset"
+              },
+              "MountainTopRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Mountain/MountainTop_Grass1.asset"
+              },
               "Decorations": [
                 {
                   "Name": "DG",
@@ -652,6 +670,15 @@
               "Name": "Grass3",
               "BaseRuleTile": {
                 "AssetPath": "Assets/Res/Tile/Grass3.asset"
+              },
+              "MountainTransitionRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Mountain/MountainFoot_Grass1.asset"
+              },
+              "MountainWallRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Mountain/MountainWall_Grass1.asset"
+              },
+              "MountainTopRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Mountain/MountainTop_Grass1.asset"
               },
               "Decorations": [
                 {

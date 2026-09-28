@@ -16,6 +16,7 @@ namespace CrystalMagic.Core
             {
                 RuntimePlatform.WindowsEditor => "Windows",
                 RuntimePlatform.WindowsPlayer => "Windows",
+                RuntimePlatform.WindowsServer => "Windows",
                 RuntimePlatform.Android => "Android",
                 RuntimePlatform.IPhonePlayer => "iOS",
                 RuntimePlatform.OSXEditor => "OSX",

@@ -1,60 +1,53 @@
-﻿using CrystalMagic.Core;
+using CrystalMagic.Core;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
 public class LobbyRoomUI : UIBase<LobbyRoomUIData, CrystalMagic.UI.LobbyRoomUIModel>
 {
-    public event System.Action LeaveClicked;
-    public event System.Action ReadyClicked;
-    public event System.Action StartClicked;
+    private readonly List<PlayerRow> playerRows = new();
+
+    public event Action LeaveClicked;
+    public event Action ConfirmClicked;
 
     public override void OnOpen()
     {
-        UI.Back.ButtonPlus.onClick.AddListener(OnLeaveButtonClicked);
-        UI.RoomItem.ButtonPlus.onClick.AddListener(OnStartButtonClicked);
-        UI.RoomItem_Player_Ready.ButtonPlus.onClick.AddListener(OnReadyButtonClicked);
+        UI.Cancel.ButtonPlus.onClick.AddListener(OnLeaveButtonClicked);
+        UI.Confirm.ButtonPlus.onClick.AddListener(OnConfirmButtonClicked);
+        UI.Content_Player.GameObject.SetActive(false);
         base.OnOpen();
     }
 
     public override void OnClose()
     {
-        UI.Back.ButtonPlus.onClick.RemoveListener(OnLeaveButtonClicked);
-        UI.RoomItem.ButtonPlus.onClick.RemoveListener(OnStartButtonClicked);
-        UI.RoomItem_Player_Ready.ButtonPlus.onClick.RemoveListener(OnReadyButtonClicked);
+        UI.Cancel.ButtonPlus.onClick.RemoveListener(OnLeaveButtonClicked);
+        UI.Confirm.ButtonPlus.onClick.RemoveListener(OnConfirmButtonClicked);
+        ReleasePlayerRows();
         base.OnClose();
     }
 
-    public void SetInteraction(bool canStart, bool canReady, bool canLeave)
+    public void SetInteraction(bool isHost, bool canConfirm, bool canLeave)
     {
-        UI.RoomItem.ButtonPlus.enabled = canStart;
-        UI.RoomItem_Player_Ready.ButtonPlus.enabled = canReady;
-        UI.Back.ButtonPlus.enabled = canLeave;
+        string confirmText = isHost ? "开始" : "准备";
+        UI.Confirm_Default_Text.TextMeshProUGUI.text = confirmText;
+        UI.Confirm_Click_Text.TextMeshProUGUI.text = confirmText;
+        UI.Confirm.ButtonPlus.enabled = canConfirm;
+        UI.Cancel.ButtonPlus.enabled = canLeave;
     }
 
     protected override void RefreshView()
     {
         Server.RoomData room = Model.Room;
         if (room == null)
-            return;
-
-        UI.RoomItem_RoomName.TextMeshProUGUI.text = $"{room.roomName}  Theme {room.themeKey}\nHost: click this card to start";
-
-        System.Text.StringBuilder playerNames = new();
-        System.Text.StringBuilder readyStates = new();
-        foreach (var player in room.players)
         {
-            if (playerNames.Length > 0)
-            {
-                playerNames.Append('\n');
-                readyStates.Append('\n');
-            }
-
-            playerNames.Append(player.Value);
-            bool ready = room.playerready.TryGetValue(player.Key, out bool isReady) && isReady;
-            readyStates.Append(ready ? "READY" : "WAITING");
+            ReleasePlayerRows();
+            UI.Content_Player.GameObject.SetActive(false);
+            return;
         }
 
-        UI.RoomItem_Player_PlayerName.TextMeshProUGUI.text = playerNames.ToString();
-        UI.RoomItem_Player_Ready.TextMeshProUGUI.text = readyStates.ToString();
-        UI.RoomItem_Player_KickOut.GameObject.SetActive(false);
+        UI.RoomName.TextMeshProUGUI.text = room.roomName;
+        RenderPlayers(room);
     }
 
     private void OnLeaveButtonClicked()
@@ -62,13 +55,68 @@ public class LobbyRoomUI : UIBase<LobbyRoomUIData, CrystalMagic.UI.LobbyRoomUIMo
         LeaveClicked?.Invoke();
     }
 
-    private void OnReadyButtonClicked()
+    private void OnConfirmButtonClicked()
     {
-        ReadyClicked?.Invoke();
+        ConfirmClicked?.Invoke();
     }
 
-    private void OnStartButtonClicked()
+    private void RenderPlayers(Server.RoomData room)
     {
-        StartClicked?.Invoke();
+        ReleasePlayerRows();
+        UI.Content_Player.GameObject.SetActive(false);
+        PoolComponent.Instance.EnsurePool(UI.Content_Player.GameObject, room.players.Count, room.players.Count);
+
+        foreach (KeyValuePair<ulong, string> player in room.players
+                     .OrderByDescending(player => player.Key == room.ownerAccountId)
+                     .ThenBy(player => player.Key))
+        {
+            GameObject playerObject = PoolComponent.Instance.Get(UI.Content_Player.GameObject);
+            if (playerObject == null)
+                continue;
+
+            playerObject.transform.SetParent(UI.Content.GameObject.transform, false);
+            playerObject.transform.SetAsLastSibling();
+
+            PlayerRow playerRow = new(playerObject);
+            bool isReady = room.playerready.TryGetValue(player.Key, out bool ready) && ready;
+            bool canKickOut = room.ownerAccountId == GetLocalAccountId()
+                && player.Key != room.ownerAccountId;
+            playerRow.Render(player.Value, isReady, canKickOut);
+            playerRows.Add(playerRow);
+        }
+    }
+
+    private void ReleasePlayerRows()
+    {
+        for (int i = playerRows.Count - 1; i >= 0; i--)
+            PoolComponent.Instance.Release(playerRows[i].GameObject);
+
+        playerRows.Clear();
+    }
+
+    private ulong GetLocalAccountId()
+    {
+        return Server.NetworkComponent.Instance.clientLobbyManager.accountId;
+    }
+
+    private sealed class PlayerRow
+    {
+        public PlayerRow(GameObject gameObject)
+        {
+            GameObject = gameObject;
+            UI = new LobbyRoomUI_PlayerData();
+            UI.Bind(gameObject.transform);
+        }
+
+        public GameObject GameObject { get; }
+        private LobbyRoomUI_PlayerData UI { get; }
+
+        public void Render(string playerName, bool isReady, bool canKickOut)
+        {
+            UI.PlayerName.TextMeshProUGUI.text = playerName;
+            UI.Ready_Ready.GameObject.SetActive(isReady);
+            UI.Ready_Not.GameObject.SetActive(!isReady);
+            UI.KickOut.GameObject.SetActive(canKickOut);
+        }
     }
 }

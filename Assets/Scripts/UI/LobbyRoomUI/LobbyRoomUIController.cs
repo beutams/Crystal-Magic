@@ -1,4 +1,4 @@
-﻿namespace CrystalMagic.UI
+namespace CrystalMagic.UI
 {
     public sealed class LobbyRoomUIController : UIControllerBase<LobbyRoomUI, LobbyRoomUIModel>
     {
@@ -11,8 +11,7 @@
         {
             View.BindModel(Model);
             Bindings.Bind(() => View.LeaveClicked += OnLeaveClicked, () => View.LeaveClicked -= OnLeaveClicked);
-            Bindings.Bind(() => View.ReadyClicked += OnReadyClicked, () => View.ReadyClicked -= OnReadyClicked);
-            Bindings.Bind(() => View.StartClicked += OnStartClicked, () => View.StartClicked -= OnStartClicked);
+            Bindings.Bind(() => View.ConfirmClicked += OnConfirmClicked, () => View.ConfirmClicked -= OnConfirmClicked);
             Bindings.Bind(() => Lobby.onRoomInfoRefresh += OnRoomInfoRefresh, () => Lobby.onRoomInfoRefresh -= OnRoomInfoRefresh);
 
             Model.SetRoom(Lobby.room);
@@ -33,6 +32,21 @@
             Lobby.LeaveRoom();
         }
 
+        private void OnConfirmClicked()
+        {
+            Server.RoomData room = Model.Room;
+            if (room == null || room.start || !room.players.ContainsKey(Lobby.accountId))
+                return;
+
+            if (room.ownerAccountId == Lobby.accountId)
+            {
+                OnStartClicked();
+                return;
+            }
+
+            OnReadyClicked();
+        }
+
         private void OnReadyClicked()
         {
             Server.RoomData room = Model.Room;
@@ -50,9 +64,12 @@
             if (room == null || room.start || room.ownerAccountId != Lobby.accountId)
                 return;
 
-            foreach (var player in room.playerready)
+            foreach (var player in room.players)
             {
-                if (player.Key != room.ownerAccountId && !player.Value)
+                if (player.Key == room.ownerAccountId)
+                    continue;
+
+                if (!room.playerready.TryGetValue(player.Key, out bool isReady) || !isReady)
                     return;
             }
 
@@ -68,11 +85,11 @@
         private void RefreshInteraction(Server.RoomData room)
         {
             bool isCurrentPlayer = room != null && room.players.ContainsKey(Lobby.accountId);
-            bool canStart = isCurrentPlayer && !room.start && room.ownerAccountId == Lobby.accountId;
-            bool canReady = isCurrentPlayer && !room.start && room.ownerAccountId != Lobby.accountId;
+            bool isHost = isCurrentPlayer && room.ownerAccountId == Lobby.accountId;
+            bool canConfirm = isCurrentPlayer && !room.start;
             bool isReady = room != null && room.playerready.TryGetValue(Lobby.accountId, out bool ready) && ready;
             bool canLeave = isCurrentPlayer && !room.start && !isReady;
-            View.SetInteraction(canStart, canReady, canLeave);
+            View.SetInteraction(isHost, canConfirm, canLeave);
         }
     }
 }

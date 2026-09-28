@@ -65,7 +65,7 @@ Core\
   Input\
     InputComponent.cs TRUE DIRTY
   Logging\
-    LocalLogComponent.cs TRUE
+    LocalLogComponent.cs TRUE DIRTY
   Localization\
     Editor\
       LocalizedTextMeshProUGUIEditor.cs FALSE
@@ -83,9 +83,9 @@ Core\
   Resource\
     Editor\
       BundleBuildConfigData.cs FALSE
-      BundleBuildUtility.cs FALSE
+      BundleBuildUtility.cs TRUE DIRTY
       BundleBuildWindow.cs TRUE
-    AssetBundlePlatformUtility.cs FALSE
+    AssetBundlePlatformUtility.cs TRUE DIRTY
     AssetBundleResourceLoader.cs FALSE
     AssetPathHelper.cs TRUE
     BundleCatalog.cs FALSE
@@ -93,7 +93,7 @@ Core\
     BundleCatalogData.cs FALSE
     EditorResourceLoader.cs TRUE
     IResourceLoader.cs FALSE
-    ResourceComponent.cs FALSE
+    ResourceComponent.cs TRUE
     ResourceLoadMode.cs FALSE
   Runtime\
     DungeonFogOfWarSystem.cs TRUE DIRTY
@@ -113,6 +113,9 @@ Core\
     SaveDataComponent.cs TRUE DIRTY
     SaveVariableData.cs TRUE
   Scene\
+    Dungeon\
+      DungeonRuleTileVisualBuilder.cs FALSE
+      MountainRuleTile.cs TRUE DIRTY
     Editor\
       SubSceneAutoOpenOnPlay.cs TRUE
     AutoOpen.cs FALSE
@@ -162,6 +165,7 @@ Core\
 Editor\
   Build\
     CrystalMagicBuild.cs TRUE DIRTY
+    CrystalMagicEntitySceneBuildAdditions.cs TRUE
   PlayFromStartScene.cs TRUE
   UIConfigWindow.cs TRUE
 Game\
@@ -250,6 +254,7 @@ Game\
     OpenFieldMapTestDemo.cs TRUE DIRTY
     TunnelingMapDemo.cs TRUE
   OpenField\
+    OpenFieldDungeonVisualLayoutBuilder.cs FALSE
     OpenFieldDungeonAnchors.cs TRUE
     OpenFieldDungeonContent.cs TRUE
     OpenFieldDungeonLayout.cs TRUE
@@ -574,7 +579,7 @@ Game\
       UnitControlSystem.cs TRUE DIRTY
         闁告帡鏀遍弻濠囧矗濡や礁浠橀柡浣哄瀹?
       DungeonInterestPointMemberDeathSystem.cs TRUE DIRTY
-      EffectVisualFollowSystem.cs TRUE
+      EffectVisualFollowSystem.cs TRUE DIRTY
       DungeonSpawnInitializationSystem.cs TRUE
       ClientDropScatterPresentationSystem.cs TRUE DIRTY
       DropScatterSystem.cs TRUE DIRTY
@@ -734,10 +739,11 @@ UI\
     LobbyUIData.cs TRUE
     LobbyUIModel.cs TRUE
   LobbyRoomUI\
-    LobbyRoomUI.cs TRUE
-    LobbyRoomUIController.cs TRUE
+    LobbyRoomUI.cs TRUE DIRTY
+    LobbyRoomUIController.cs TRUE DIRTY
     LobbyRoomUIData.cs TRUE
     LobbyRoomUIModel.cs TRUE
+    LobbyRoomUI_PlayerData.cs TRUE
   MinimapUI\
     MinimapUI.cs TRUE DIRTY
     MinimapUIController.cs TRUE
@@ -922,6 +928,7 @@ Core\
     OnlineBattlePreparationState.cs TRUE DIRTY
 Tests\
   Editor\
+    MountainFootRuleTileTests.cs TRUE DIRTY
     BattleFrameClockTests.cs TRUE
     NetworkInputAndProtocolTests.cs TRUE DIRTY
     PlayerInputEventTests.cs TRUE DIRTY

@@ -1,3 +1,7 @@
 Assets/Font/*.asset filter=lfs diff=lfs merge=lfs -text
 Assets/Fonts/*.asset filter=lfs diff=lfs merge=lfs -text
 Assets/Fonts/FusionPixelFont/fusion-pixel-12px-proportional-zh_hant[[:space:]]SDF.asset filter=lfs diff=lfs merge=lfs -text
+
+# High-resolution art source images; keep small runtime tiles in regular Git.
+Docs/Art/**/Sources/*.png filter=lfs diff=lfs merge=lfs -text
+Docs/Art/MountainCliff-v2/*.png filter=lfs diff=lfs merge=lfs -text

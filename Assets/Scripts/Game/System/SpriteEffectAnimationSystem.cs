@@ -8,8 +8,6 @@ using UnityEngine;
 
 [WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation)]
 [UpdateInGroup(typeof(GamePresentationSystemGroup))]
-[UpdateAfter(typeof(SkillProjectileSystem))]
-[UpdateBefore(typeof(DestroyEntitySystem))]
 public partial class SpriteEffectAnimationSystem : SystemBase
 {
     private const string FrameLibraryPath = "Assets/Res/Data/UnitAnimationFrameLibrary.asset";

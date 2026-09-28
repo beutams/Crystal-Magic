@@ -7,7 +7,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 
 [WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
-[UpdateInGroup(typeof(UnitInitializationSystemGroup), OrderFirst = true)]
+[UpdateInGroup(typeof(UnitInitializationSystemGroup))]
 [UpdateBefore(typeof(UnitBuffSystem))]
 public partial class BuffEffectRegistryInitializationSystem : SystemBase
 {

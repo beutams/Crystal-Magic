@@ -1,0 +1,6 @@
+Use case: precise-object-edit.
+Image 1 is the existing cliff-wall tile to EDIT. Keep its interior rock shapes, colors, framing and dimensions unchanged. It will be reduced to 16x16, so we need exact matching edge rows.
+Change ONLY these two horizontal edge strips:
+- Top 1/16 of the complete image (from y=0% through y=6.25%): fill completely, edge to edge, with one uniform opaque color #A08043.
+- Bottom 1/16 (from y=93.75% through y=100%): fill completely, edge to edge, with the SAME uniform opaque #A08043.
+Erase every brown crack, dark pixel and lighter plane inside these two strips. Absolutely all 16 logical pixels of the first and last row must be #A08043. No gradient, texture, shadow or highlight in the strips. Preserve the entire middle 87.5% exactly. These matching edge rows connect to the next tile; they are not dark borders. Do not change or redesign the cliff and do not add grass, summit, text, margins or grid lines. Output only the edited full-bleed square tile.

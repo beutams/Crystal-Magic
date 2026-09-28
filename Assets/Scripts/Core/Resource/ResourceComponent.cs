@@ -31,6 +31,7 @@ namespace CrystalMagic.Core
 
         private void InitializeLoader()
         {
+#if UNITY_EDITOR
             switch (_loadMode)
             {
                 case ResourceLoadMode.Editor:
@@ -48,6 +49,14 @@ namespace CrystalMagic.Core
                     Debug.LogWarning("[ResourceComponent] Unknown load mode, fallback to EditorResourceLoader");
                     break;
             }
+#else
+            // Player and dedicated-server builds cannot access AssetDatabase.
+            // The build pipeline packages Assets/Res into AssetBundles before
+            // building the player, so the serialized editor setting is ignored
+            // outside the Unity Editor.
+            _loader = new AssetBundleResourceLoader(_assetBundleRootFolderName, _catalogBundleName, _catalogAssetName);
+            Debug.Log("[ResourceComponent] Using AssetBundleResourceLoader in player build");
+#endif
 
             _loader.Initialize();
         }

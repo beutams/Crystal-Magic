@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "source": "MountainStyleStrip-v1",
+  "activeSprites": 1311,
+  "neighbourCases": 19683,
+  "savedPixels": 335616,
+  "seamPixelPairs": 7558272,
+  "themeReferences": 12,
+  "nativeUnityValidation": "Run Tools/Crystal Magic/Validate Mountain RuleTiles after Unity imports."
+}

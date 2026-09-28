@@ -9,7 +9,6 @@ using Unity.Mathematics;
 [WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitInitializationSystemGroup))]
 [UpdateAfter(typeof(BuffEffectRegistryInitializationSystem))]
-[UpdateBefore(typeof(UnitRecoverySystem))]
 public partial struct UnitBuffSystem : ISystem
 {
     public void OnCreate(ref SystemState state)
