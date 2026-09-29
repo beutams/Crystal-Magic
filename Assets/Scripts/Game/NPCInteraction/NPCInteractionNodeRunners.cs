@@ -299,12 +299,15 @@ public sealed class NPCSelectInteractionNodeRunner : NPCInteractionNodeRunner
     public override void Enter(NPCInteractionSession session)
     {
         List<NPCSelectOptionData> enabledOptions = new List<NPCSelectOptionData>();
+        World world = World.DefaultGameObjectInjectionWorld;
         if (_node.Options != null)
         {
             for (int i = 0; i < _node.Options.Count; i++)
             {
                 NPCSelectOptionData option = _node.Options[i];
-                if (option != null && option.IsEnabled())
+                if (option != null && option.IsEnabled() &&
+                    (world == null || !world.IsCreated ||
+                     DungeonExitRuntimeUtility.IsOptionAvailable(world.EntityManager, session.Target, session.Interaction, option)))
                 {
                     enabledOptions.Add(option);
                 }

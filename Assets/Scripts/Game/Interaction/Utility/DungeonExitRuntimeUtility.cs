@@ -1,3 +1,5 @@
+using CrystalMagic.Game.Data;
+using Server;
 using Unity.Entities;
 using Unity.Mathematics;
 
@@ -5,6 +7,25 @@ public static class DungeonExitRuntimeUtility
 {
     private const string TargetThemeIdKey = "dungeon.exit.targetThemeId";
     private const string TargetFloorKey = "dungeon.exit.targetFloor";
+
+    public static bool IsOptionAvailable(
+        EntityManager entityManager,
+        Entity target,
+        NPCInteractionData interaction,
+        NPCSelectOptionData option)
+    {
+        if (option == null) return false;
+        // Only an explicit terminal exit restricts options. Town/training NPCs have no destination.
+        if (!TryGetDestination(entityManager, target, out int themeId, out _) || themeId >= 0)
+            return true;
+
+        return interaction?.GetNode(option.NextNodeGuid) switch
+        {
+            NPCEnterDungeonInteractionNodeData => false,
+            NPCRequestBattleExitInteractionNodeData { RequestType: BattleExitRequestType.NextTheme } => false,
+            _ => true,
+        };
+    }
 
     public static void SetDestination(
         EntityManager entityManager,

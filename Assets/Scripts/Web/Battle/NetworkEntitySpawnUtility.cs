@@ -201,6 +201,13 @@ namespace Server
                     entityInfo.interactionEnabled = interactable.IsEnabled != 0;
                 }
 
+                if (DungeonExitRuntimeUtility.TryGetDestination(entityManager, entity, out int exitThemeId, out int exitFloor))
+                {
+                    entityInfo.hasDungeonExitDestination = true;
+                    entityInfo.dungeonExitTargetThemeId = exitThemeId;
+                    entityInfo.dungeonExitTargetFloor = exitFloor;
+                }
+
                 if (entityManager.HasComponent<DropScatterComponent>(entity))
                 {
                     DropScatterComponent scatter = entityManager.GetComponentData<DropScatterComponent>(entity);
@@ -268,6 +275,10 @@ namespace Server
 
         private static void ApplyInitialState(EntityManager entityManager, Entity entity, NetworkEntitySpawnInfo entityInfo)
         {
+            if (entityInfo.hasDungeonExitDestination)
+                DungeonExitRuntimeUtility.SetDestination(entityManager, entity,
+                    entityInfo.dungeonExitTargetThemeId, entityInfo.dungeonExitTargetFloor);
+
             if (entityInfo.characterData != null)
             {
                 CharacterData characterData = PlayerCharacterUtility.Clone(entityInfo.characterData);
@@ -470,6 +481,9 @@ namespace Server
                 interactionVariant = source.interactionVariant,
                 interactionRangeSq = source.interactionRangeSq,
                 interactionEnabled = source.interactionEnabled,
+                hasDungeonExitDestination = source.hasDungeonExitDestination,
+                dungeonExitTargetThemeId = source.dungeonExitTargetThemeId,
+                dungeonExitTargetFloor = source.dungeonExitTargetFloor,
                 hasDropScatter = source.hasDropScatter,
                 dropScatterStartX = source.dropScatterStartX,
                 dropScatterStartY = source.dropScatterStartY,

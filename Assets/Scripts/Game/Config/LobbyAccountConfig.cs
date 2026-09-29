@@ -13,5 +13,8 @@ namespace CrystalMagic.Game.Config
 
         [EditorLabel("Username")]
         public string username = "TestPlayer";
+
+        [EditorLabel("Allow Development Fallback")]
+        public bool allowDevelopmentFallback = true;
     }
 }

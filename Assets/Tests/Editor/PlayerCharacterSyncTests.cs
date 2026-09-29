@@ -11,7 +11,7 @@ public sealed class PlayerCharacterSyncTests
     [Test]
     public void DraftAndSnapshotDoNotShareMutableData()
     {
-        CharacterData original = new() { Money = 10 };
+        CharacterData original = new() { Money = 10, SteamAccountId = 76561198000000001UL, Name = "Crystal Mage" };
         original.Backpack.Items.Add(new InventoryItemData { ItemId = 2, Quantity = 3 });
         original.Skills.Chains[0].Slots.Add(new SkillChainSlotData { SkillStoneItemId = 4 });
         original.Props.Slots.Add(new CharacterPropSlotData { ItemId = 5, Quantity = 6 });
@@ -22,6 +22,8 @@ public sealed class PlayerCharacterSyncTests
         draft.Equipment.SpiritSlots[0] = 60;
         draft.Props.Slots[0].Quantity = 0;
         Assert.That(original.Money, Is.EqualTo(10));
+        Assert.That(draft.SteamAccountId, Is.EqualTo(original.SteamAccountId));
+        Assert.That(draft.Name, Is.EqualTo(original.Name));
         Assert.That(original.Backpack.Items[0].Quantity, Is.EqualTo(3));
         Assert.That(original.Skills.Chains[0].Slots[0].SkillStoneItemId, Is.EqualTo(4));
         Assert.That(original.Equipment.SpiritSlots[0], Is.EqualTo(-1));
@@ -153,7 +155,16 @@ public sealed class PlayerCharacterSyncTests
             {
                 datas = new List<NetworkStateData>
                 {
-                    new NetworkCharacterEditData { revision = 6, characterData = new CharacterData { Money = 55 } },
+                    new NetworkCharacterEditData
+                    {
+                        revision = 6,
+                        characterData = new CharacterData
+                        {
+                            Money = 55,
+                            SteamAccountId = 76561198000000001UL,
+                            Name = "Crystal Mage",
+                        },
+                    },
                     new NetworkCharacterStateData { revision = 7, accepted = true, characterData = new CharacterData() },
                     new NetworkPropUseData { slotIndex = 2, itemId = 3 },
                 },
@@ -164,6 +175,8 @@ public sealed class PlayerCharacterSyncTests
             System.Text.Encoding.UTF8.GetString(bytes), new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto });
         Assert.That(decoded.data.datas[0], Is.TypeOf<NetworkCharacterEditData>());
         Assert.That(((NetworkCharacterEditData)decoded.data.datas[0]).characterData.Money, Is.EqualTo(55));
+        Assert.That(((NetworkCharacterEditData)decoded.data.datas[0]).characterData.SteamAccountId, Is.EqualTo(76561198000000001UL));
+        Assert.That(((NetworkCharacterEditData)decoded.data.datas[0]).characterData.Name, Is.EqualTo("Crystal Mage"));
         Assert.That(((NetworkCharacterStateData)decoded.data.datas[1]).revision, Is.EqualTo(7));
         Assert.That(decoded.data.datas[2], Is.TypeOf<NetworkPropUseData>());
     }

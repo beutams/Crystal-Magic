@@ -49,6 +49,9 @@ namespace Server
         public int interactionVariant;
         public float interactionRangeSq;
         public bool interactionEnabled;
+        public bool hasDungeonExitDestination;
+        public int dungeonExitTargetThemeId = -1;
+        public int dungeonExitTargetFloor = 1;
         public bool hasDropScatter;
         public float dropScatterStartX;
         public float dropScatterStartY;

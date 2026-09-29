@@ -44,6 +44,16 @@ namespace CrystalMagic.Core {
     [System.Serializable]
     public class CharacterData
     {
+        /// <summary>
+        /// 创建或载入存档时绑定的 Steam 账号 ID。
+        /// </summary>
+        public ulong SteamAccountId;
+
+        /// <summary>
+        /// 创建或载入存档时绑定的 Steam 玩家昵称。
+        /// </summary>
+        public string Name = string.Empty;
+
         public long Money;
         [SerializeField]
         /// <summary>

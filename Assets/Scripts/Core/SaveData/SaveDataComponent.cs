@@ -5,6 +5,7 @@ using Unity.Entities;
 using UnityEngine;
 using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data;
+using Server;
 
 namespace CrystalMagic.Core {
     /// <summary>
@@ -112,6 +113,7 @@ namespace CrystalMagic.Core {
                     ? currentSaveGuid.ToString("N")
                     : Guid.NewGuid().ToString("N");
                 EnsureSaveDataValid(data);
+                ApplySteamIdentity(data.Character);
 
                 string json = JsonUtility.ToJson(data, true);
                 string filePath = GetSavePath(index);
@@ -195,7 +197,8 @@ namespace CrystalMagic.Core {
 
                 string storedSaveGuid = data.SaveGuid;
                 EnsureSaveDataValid(data);
-                if (!string.Equals(storedSaveGuid, data.SaveGuid, StringComparison.Ordinal))
+                bool steamIdentityChanged = ApplySteamIdentity(data.Character);
+                if (!string.Equals(storedSaveGuid, data.SaveGuid, StringComparison.Ordinal) || steamIdentityChanged)
                 {
                     System.IO.File.WriteAllText(filePath, JsonUtility.ToJson(data, true));
                     CreateBackup(filePath);
@@ -639,7 +642,29 @@ namespace CrystalMagic.Core {
         {
             SaveData data = new SaveData();
             EnsureSaveDataValid(data, false);
+            ApplySteamIdentity(data.Character);
             return data;
+        }
+
+        /// <summary>
+        /// 客户端存档统一使用启动阶段缓存的 Steam 身份；服务端存档不写入本地玩家身份。
+        /// </summary>
+        private static bool ApplySteamIdentity(CharacterData characterData)
+        {
+            if (characterData == null || NetworkComponent.Instance.Role != NetworkRole.Client)
+                return false;
+
+            if (!SteamComponent.Instance.TryGetLocalUser(out ulong steamAccountId, out string playerName))
+                return false;
+
+            bool changed = characterData.SteamAccountId != steamAccountId ||
+                           !string.Equals(characterData.Name, playerName, StringComparison.Ordinal);
+            if (!changed)
+                return false;
+
+            characterData.SteamAccountId = steamAccountId;
+            characterData.Name = playerName;
+            return true;
         }
 
         public bool CreateNewGameToSlot(int index)

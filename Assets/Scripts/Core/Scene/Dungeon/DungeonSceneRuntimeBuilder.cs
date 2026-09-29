@@ -364,6 +364,12 @@ namespace CrystalMagic.Core
                 entityInfo.colliderSizeX = sceneObject.Size.x;
                 entityInfo.colliderSizeY = sceneObject.Size.y;
                 entityInfo.colliderSizeZ = sceneObject.Size.z;
+                if (sceneObject.ObjectType == RuntimeDungeonSceneObjectType.Exit)
+                {
+                    entityInfo.hasDungeonExitDestination = true;
+                    entityInfo.dungeonExitTargetThemeId = sceneObject.TargetThemeId;
+                    entityInfo.dungeonExitTargetFloor = sceneObject.TargetFloor;
+                }
                 if (sceneObject.ObjectType == RuntimeDungeonSceneObjectType.Treasure)
                 {
                     entityInfo.hasTreasureData = true;
@@ -378,11 +384,6 @@ namespace CrystalMagic.Core
 
                 if (sceneObject.ObjectType == RuntimeDungeonSceneObjectType.Exit)
                 {
-                    DungeonExitRuntimeUtility.SetDestination(
-                        entityManager,
-                        entity,
-                        sceneObject.TargetThemeId,
-                        sceneObject.TargetFloor);
                     if (entityManager.HasComponent<UnitInteractableComponent>(entity))
                     {
                         UnitInteractableComponent interactable =

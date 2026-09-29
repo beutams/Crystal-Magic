@@ -105,7 +105,27 @@ namespace Server
             disconnecting = false;
             DisconnectRequested = false;
             LobbyAccountConfig config = ConfigComponent.Instance.Get<LobbyAccountConfig>();
-            accountId = config.accountId;
+            string username;
+            if (SteamComponent.Instance.TryGetLocalUser(out ulong steamAccountId, out string steamPersonaName))
+            {
+                accountId = steamAccountId;
+                username = steamPersonaName;
+                Debug.Log($"[Lobby] Using Steam account {accountId} ({username}).");
+            }
+            else if (CanUseDevelopmentFallback(config))
+            {
+                accountId = config.accountId;
+                username = config.username;
+                Debug.LogWarning($"[Lobby] Steam is unavailable. Using the configured development account: {accountId} ({username}).");
+            }
+            else
+            {
+                LoginFailure = LobbyRequestType.LoginFail;
+                Debug.LogError($"[Lobby] Steam account is required: {SteamComponent.Instance.FailureReason}");
+                clientServic.Disconnect(lobbyConnect);
+                return;
+            }
+
             if (accountId == 0UL)
             {
                 Debug.LogError("[Lobby] Lobby account ID must not be zero.");
@@ -125,10 +145,20 @@ namespace Server
             lobbyConnect.Send(new C2L_LoginLobby
             {
                 accountId = accountId,
-                username = config.username,
+                username = username,
                 saveGuid = parsedSaveGuid.ToString("N"),
             });
         }
+
+        private static bool CanUseDevelopmentFallback(LobbyAccountConfig config)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            return config.allowDevelopmentFallback;
+#else
+            return false;
+#endif
+        }
+
         private void OnLoginResult(IMessage message, Connect connect)
         {
             L2C_LoginLobbyResult result = message as L2C_LoginLobbyResult;

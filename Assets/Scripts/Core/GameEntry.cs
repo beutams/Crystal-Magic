@@ -14,6 +14,7 @@ namespace CrystalMagic.Core
 
         public EventComponent EventComponent { get; private set; }
         public LocalLogComponent LocalLogComponent { get; private set; }
+        public SteamComponent SteamComponent { get; private set; }
         public ResourceComponent ResourceComponent { get; private set; }
         public PoolComponent PoolComponent { get; private set; }
         public SceneComponent SceneComponent { get; private set; }
@@ -82,6 +83,12 @@ namespace CrystalMagic.Core
 
             NetworkComponent = Server.NetworkComponent.Instance;
             _components.Add(NetworkComponent);
+
+            if (NetworkComponent.Role == NetworkRole.Client)
+            {
+                SteamComponent = SteamComponent.Instance;
+                _components.Add(SteamComponent);
+            }
 
             // Lobby 不会创建游戏世界，只保留网络与日志即可。Battle Server 仍需初始化
             // Config、Data、Scene 等完整组件，才能和客户端走同一套地图/实体生成流程。
