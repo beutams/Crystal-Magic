@@ -90,7 +90,7 @@ public sealed class BattleLifecycleTests
     [Test]
     public void RemovedConnectionCannotLeaveCommandsForReloadedPlayer()
     {
-        TCPPacketCode.Init();
+        MessageCodec.Init();
         ServerFrameManager frame = new() { sceneVersion = 1, currentFrame = 10 };
         Connect oldConnect = new();
         Connect newConnect = new();

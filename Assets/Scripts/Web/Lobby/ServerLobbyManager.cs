@@ -5,30 +5,34 @@ using System.Linq;
 
 namespace Server
 {
-    public class ServerLobbyManager
+    public partial class ServerLobbyManager
     {
-        public ServerService lobbyService;
+        public IServerTransport lobbyService;
         public Dictionary<ulong, Room> roomList = new Dictionary<ulong, Room>();
         public Dictionary<ulong, Player> playerList = new Dictionary<ulong, Player>();
         public Dictionary<Connect, ulong> connectAccountDic = new Dictionary<Connect, ulong>();
         private readonly Dictionary<ulong, Player> pendingPlayerList = new Dictionary<ulong, Player>();
         private readonly Dictionary<Connect, ulong> pendingConnectAccountDic = new Dictionary<Connect, ulong>();
-        public ClientService clientService;
+        public IClientTransport clientService;
         public Connect battleConnect;
         private long battleReconnectTimerId;
 
-        public void Initialize()
+        public void Initialize(IServerTransport lobbyTransport, IClientTransport battleLobbyTransport, bool useSteamHosting = false)
         {
-            TCPPacketCode.Init();
-            lobbyService = new ServerService(ServerUtility.GetLobbyIPEndPoint());
+            MessageCodec.Init();
+            lobbyService = lobbyTransport ?? throw new ArgumentNullException(nameof(lobbyTransport));
+            UseSteamHosting = useSteamHosting;
+            clientService = useSteamHosting ? null : battleLobbyTransport ?? throw new ArgumentNullException(nameof(battleLobbyTransport));
             lobbyService.OnAccept += OnAccept;
             lobbyService.OnDisconnected += OnDisconnected;
 
             lobbyService.Init();
 
-            clientService = new ClientService();
-            clientService.Init();
-            ConnectBattle();
+            if (!useSteamHosting)
+            {
+                clientService.Init();
+                ConnectBattle();
+            }
         }
 
         private void ConnectBattle()
@@ -38,11 +42,11 @@ namespace Server
                 return;
             }
 
-            clientService.Connect(ServerUtility.GetBattleLobbyIPEndPoint(), out battleConnect);
+            clientService.Connect(ServerUtility.GetBattleLobbyEndpoint(), out battleConnect);
             battleConnect.OnConnected += OnBattleConnected;
             battleConnect.OnDisconnected += OnBattleDisconnected;
-            battleConnect.RegisterCallback(TCPPacketCode.GetOpcode<B2L_StartRoomResult>(), OnBattleStart);
-            battleConnect.RegisterCallback(TCPPacketCode.GetOpcode<B2L_ReloadRoomResult>(), OnBattleReload);
+            battleConnect.RegisterCallback(MessageCodec.GetOpcode<B2L_StartRoomResult>(), OnBattleStart);
+            battleConnect.RegisterCallback(MessageCodec.GetOpcode<B2L_ReloadRoomResult>(), OnBattleReload);
         }
 
         private void OnBattleConnected(Connect connect)
@@ -103,17 +107,18 @@ namespace Server
         #region Server
         private void OnDisconnected(Connect connect)
         {
+            OnHostedLobbyDisconnected(connect);
             if (pendingConnectAccountDic.TryGetValue(connect, out ulong pendingAccountId))
             {
                 pendingConnectAccountDic.Remove(connect);
                 pendingPlayerList.Remove(pendingAccountId);
-                connect.UnRegisterCallback(TCPPacketCode.GetOpcode<C2L_LoginLobby>(), OnClientLogin);
+                connect.UnRegisterCallback(MessageCodec.GetOpcode<C2L_LoginLobby>(), OnClientLogin);
                 return;
             }
 
             if (!connectAccountDic.TryGetValue(connect, out ulong accountId))
             {
-                connect.UnRegisterCallback(TCPPacketCode.GetOpcode<C2L_LoginLobby>(), OnClientLogin);
+                connect.UnRegisterCallback(MessageCodec.GetOpcode<C2L_LoginLobby>(), OnClientLogin);
                 return;
             }
 
@@ -149,16 +154,17 @@ namespace Server
             playerList.Remove(accountId);
             BroadcastRoomListChanged();
 
-            connect.UnRegisterCallback(TCPPacketCode.GetOpcode<C2L_CreateRoom>(), OnClientCreateRoom);
-            connect.UnRegisterCallback(TCPPacketCode.GetOpcode<C2L_JoinRoom>(), OnClientJoinRoom);
-            connect.UnRegisterCallback(TCPPacketCode.GetOpcode<C2L_LeaveRoom>(), OnClientLeaveRoom);
-            connect.UnRegisterCallback(TCPPacketCode.GetOpcode<C2L_Ready>(), OnClientReady);
-            connect.UnRegisterCallback(TCPPacketCode.GetOpcode<C2L_SetDungeonTheme>(), OnClientSetDungeonTheme);
-            connect.UnRegisterCallback(TCPPacketCode.GetOpcode<C2L_Start>(), OnClientStart);
+            connect.UnRegisterCallback(MessageCodec.GetOpcode<C2L_CreateRoom>(), OnClientCreateRoom);
+            connect.UnRegisterCallback(MessageCodec.GetOpcode<C2L_JoinRoom>(), OnClientJoinRoom);
+            connect.UnRegisterCallback(MessageCodec.GetOpcode<C2L_LeaveRoom>(), OnClientLeaveRoom);
+            connect.UnRegisterCallback(MessageCodec.GetOpcode<C2L_Ready>(), OnClientReady);
+            connect.UnRegisterCallback(MessageCodec.GetOpcode<C2L_SetDungeonTheme>(), OnClientSetDungeonTheme);
+            connect.UnRegisterCallback(MessageCodec.GetOpcode<C2L_Start>(), OnClientStart);
         }
         private void OnAccept(Connect connect)
         {
-            connect.RegisterCallback(TCPPacketCode.GetOpcode<C2L_LoginLobby>(), OnClientLogin);
+            connect.RegisterCallback(MessageCodec.GetOpcode<C2L_LoginLobby>(), OnClientLogin);
+            loginTimeouts[connect] = NetworkTimer.Instance.TimeNow + ServerUtility.Timeout;
         }
         private void OnClientLogin(IMessage message, Connect connect)
         {
@@ -187,10 +193,18 @@ namespace Server
                 saveGuid = saveGuid.ToString("N"),
                 roomId = 0UL,
                 connect = connect,
+                steamP2PAvailable = loginMessage.steamP2PAvailable &&
+                    loginMessage.protocolVersion == BattleConnectionInfo.CurrentProtocolVersion,
             };
             pendingConnectAccountDic.Add(connect, player.accountId);
             pendingPlayerList.Add(player.accountId, player);
-            connect.UnRegisterCallback(TCPPacketCode.GetOpcode<C2L_LoginLobby>(), OnClientLogin);
+            connect.UnRegisterCallback(MessageCodec.GetOpcode<C2L_LoginLobby>(), OnClientLogin);
+
+            if (UseSteamHosting)
+            {
+                BeginHostedLogin(player, loginMessage);
+                return;
+            }
 
             if (battleConnect != null && battleConnect.State == ConnectState.Connected)
             {
@@ -212,17 +226,19 @@ namespace Server
             }
 
             player.saveGuid = saveGuid.ToString("N");
+            loginTimeouts.Remove(player.connect);
             pendingConnectAccountDic.Remove(player.connect);
             pendingPlayerList.Remove(player.accountId);
             connectAccountDic.Add(player.connect, player.accountId);
             playerList.Add(player.accountId, player);
 
-            player.connect.RegisterCallback(TCPPacketCode.GetOpcode<C2L_CreateRoom>(), OnClientCreateRoom);
-            player.connect.RegisterCallback(TCPPacketCode.GetOpcode<C2L_JoinRoom>(), OnClientJoinRoom);
-            player.connect.RegisterCallback(TCPPacketCode.GetOpcode<C2L_LeaveRoom>(), OnClientLeaveRoom);
-            player.connect.RegisterCallback(TCPPacketCode.GetOpcode<C2L_Ready>(), OnClientReady);
-            player.connect.RegisterCallback(TCPPacketCode.GetOpcode<C2L_SetDungeonTheme>(), OnClientSetDungeonTheme);
-            player.connect.RegisterCallback(TCPPacketCode.GetOpcode<C2L_Start>(), OnClientStart);
+            player.connect.RegisterCallback(MessageCodec.GetOpcode<C2L_CreateRoom>(), OnClientCreateRoom);
+            player.connect.RegisterCallback(MessageCodec.GetOpcode<C2L_JoinRoom>(), OnClientJoinRoom);
+            player.connect.RegisterCallback(MessageCodec.GetOpcode<C2L_LeaveRoom>(), OnClientLeaveRoom);
+            player.connect.RegisterCallback(MessageCodec.GetOpcode<C2L_Ready>(), OnClientReady);
+            player.connect.RegisterCallback(MessageCodec.GetOpcode<C2L_SetDungeonTheme>(), OnClientSetDungeonTheme);
+            player.connect.RegisterCallback(MessageCodec.GetOpcode<C2L_Start>(), OnClientStart);
+            if (UseSteamHosting) RegisterHostControl(player.connect);
 
             player.connect.Send(new L2C_RefreshRoomList
             {
@@ -235,8 +251,7 @@ namespace Server
             if (!connectAccountDic.TryGetValue(connect, out var accountId)
                 || !playerList.TryGetValue(accountId, out Player player)
                 || !roomList.TryGetValue(player.roomId, out var room)
-                || battleConnect == null
-                || battleConnect.State != ConnectState.Connected)
+                || (!UseSteamHosting && (battleConnect == null || battleConnect.State != ConnectState.Connected)))
             {
                 connect.Send(new L2C_StartReturn { type = LobbyRequestType.StartFail });
                 return;
@@ -260,7 +275,14 @@ namespace Server
                 return;
             }
 
+            if (UseSteamHosting)
+            {
+                StartHostedRoom(room, connect);
+                return;
+            }
             room.start = true;
+            room.startSessionId = Guid.NewGuid().ToString("N");
+            room.startDeadline = NetworkTimer.Instance.TimeNow + ServerUtility.HostStartTimeout;
             RoomData roomData = RoomData.CreateRoomData(room);
             foreach (Player member in room.players.Values)
             {
@@ -270,6 +292,7 @@ namespace Server
             battleConnect.Send(new L2B_StartRoom()
             {
                 roomId = room.roomId,
+                sessionId = room.startSessionId,
                 ownerAccountId = room.ownerAccountId,
                 themeKey = room.themeKey,
                 players = room.players.Keys.ToArray(),
@@ -440,7 +463,8 @@ namespace Server
         public void Update()
         {
             lobbyService.Update();
-            clientService.Update();
+            clientService?.Update();
+            UpdateHostedSessions();
         }
 
         public void Cleanup()
@@ -453,14 +477,17 @@ namespace Server
 
             if (battleConnect != null)
             {
-                battleConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<B2L_StartRoomResult>(), OnBattleStart);
-                battleConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<B2L_ReloadRoomResult>(), OnBattleReload);
+                battleConnect.UnRegisterCallback(MessageCodec.GetOpcode<B2L_StartRoomResult>(), OnBattleStart);
+                battleConnect.UnRegisterCallback(MessageCodec.GetOpcode<B2L_ReloadRoomResult>(), OnBattleReload);
                 battleConnect.OnConnected -= OnBattleConnected;
                 battleConnect.OnDisconnected -= OnBattleDisconnected;
             }
 
             lobbyService?.Shutdown();
             clientService?.Shutdown();
+            hostedSessions.Clear();
+            hostedReloads.Clear();
+            loginTimeouts.Clear();
 
             roomList.Clear();
             playerList.Clear();
@@ -477,8 +504,15 @@ namespace Server
         {
             B2L_StartRoomResult realMessage = message as B2L_StartRoomResult;
             if (realMessage == null || connect != battleConnect
-                || !roomList.TryGetValue(realMessage.roomId, out Room room))
+                || !roomList.TryGetValue(realMessage.roomId, out Room room) || !room.start ||
+                (realMessage.connection != null && room.startSessionId != realMessage.connection.sessionId))
             {
+                return;
+            }
+
+            if (realMessage.error != null || realMessage.connection == null || !realMessage.connection.IsValid)
+            {
+                ResetStartingRoom(room);
                 return;
             }
 
@@ -494,7 +528,7 @@ namespace Server
                     if (secretKeys.TryGetValue(player.accountId, out string ticket)
                         && !string.IsNullOrEmpty(ticket))
                     {
-                        player.connect.Send(new L2C_StartTicket { ticket = ticket, reload = false });
+                        player.connect.Send(new L2C_StartTicket { ticket = ticket, reload = false, connection = realMessage.connection });
                     }
 
                     lobbyService.DisconnectAfterSend(player.connect);
@@ -546,6 +580,7 @@ namespace Server
                     {
                         ticket = realMessage.ticket,
                         reload = true,
+                        connection = realMessage.connection,
                     });
                 }
                 else
@@ -573,7 +608,7 @@ namespace Server
             if (realMessage.type == BattleReloadRoomResultType.ReloadAvailable &&
                 !string.IsNullOrEmpty(realMessage.ticket))
             {
-                player.connect.Send(new L2C_StartTicket { ticket = realMessage.ticket, reload = true });
+                player.connect.Send(new L2C_StartTicket { ticket = realMessage.ticket, reload = true, connection = realMessage.connection });
                 lobbyService.DisconnectAfterSend(player.connect);
                 playerList.Remove(realMessage.accountId);
                 connectAccountDic.Remove(player.connect);

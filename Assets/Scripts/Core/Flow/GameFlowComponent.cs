@@ -67,6 +67,8 @@ namespace CrystalMagic.Core
 
             _activeTransitionData = transitionData;
             _isTransitioning = true;
+            try
+            {
             DungeonFlowTiming.BeginStage(2, "打开转场 UI 并接受转场请求", transitionData.TargetSceneName);
             OpenTransitionUI(transitionData);
             DungeonFlowTiming.EndStage(2, "转场 UI 已打开");
@@ -78,11 +80,36 @@ namespace CrystalMagic.Core
                 _activeTransitionData = null;
                 _isTransitioning = false;
             }
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                transitionData.LoadError = "无法启动场景切换。";
+                transitionData.OnComplete = null;
+                try { transitionData.OnLoadFailed?.Invoke(transitionData.LoadError); }
+                catch (Exception failure) { Debug.LogException(failure); }
+                RecoverFailedTransition(transitionData);
+            }
         }
 
         public bool IsInState<T>() where T : GameState
         {
             return _currentState is T;
+        }
+
+        public void RecoverFailedTransition(TransitionData data)
+        {
+            _activeTransitionData = null;
+            _isTransitioning = false;
+            try { ReleaseTransitionUI(); }
+            catch (Exception exception) { Debug.LogException(exception); }
+            try { SetState(data.TargetStateType ?? typeof(MainMenuState), data.TargetStateData); }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                _currentState = null;
+                SetState<MainMenuState>();
+            }
         }
 
         public GameState GetCurrentState()
@@ -258,13 +285,13 @@ namespace CrystalMagic.Core
 
         private void ReleaseTransitionUI()
         {
-            if (_activeTransitionPanel != null && UIComponent.Instance != null)
-            {
-                UIComponent.Instance.ReleaseUI(_activeTransitionPanel);
-            }
-
+            UIBase previous = _activeTransitionPanel;
             _activeTransitionPanel = null;
             _activeTransitionUI = null;
+            if (previous != null && UIComponent.Instance != null)
+            {
+                UIComponent.Instance.ReleaseUI(previous);
+            }
         }
         #endregion
     }

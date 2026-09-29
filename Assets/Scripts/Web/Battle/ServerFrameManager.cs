@@ -30,7 +30,7 @@ namespace Server
             }
 
             connects.Add(connect);
-            connect.RegisterCallback(TCPPacketCode.GetOpcode<General_FrameStateData>(), OnReceiveMessage);
+            connect.RegisterCallback(MessageCodec.GetOpcode<General_FrameStateData>(), OnReceiveMessage);
         }
 
         public void AddSyncingConnect(Connect connect, Guid playerUnitId)
@@ -74,7 +74,7 @@ namespace Server
             lastReceivedInputFrames.Remove(connect);
             if (connects.Remove(connect))
             {
-                connect.UnRegisterCallback(TCPPacketCode.GetOpcode<General_FrameStateData>(), OnReceiveMessage);
+                connect.UnRegisterCallback(MessageCodec.GetOpcode<General_FrameStateData>(), OnReceiveMessage);
             }
         }
 
@@ -145,7 +145,7 @@ namespace Server
                     data.unitId != playerUnitId)
                 {
                     Debug.LogWarning(
-                        $"[Battle][Input] Rejected state from {connect?.IPEndPoint}: unit={data?.unitId}.");
+                        $"[Battle][Input] Rejected state from {connect?.RemoteEndpoint}: unit={data?.unitId}.");
                     continue;
                 }
 

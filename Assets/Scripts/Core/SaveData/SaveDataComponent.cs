@@ -37,6 +37,7 @@ namespace CrystalMagic.Core {
         #region Fields
         private int _currentSaveIndex;
         private string _currentSaveGuid;
+        private string _lastBattleSettlementId;
         private GlobalData _globalData;
         private SaveVariableData _variables;
 
@@ -58,6 +59,7 @@ namespace CrystalMagic.Core {
             EnsureSaveFolderExists();
             _currentSaveIndex = -1;
             _currentSaveGuid = null;
+            _lastBattleSettlementId = null;
             _globalData = new GlobalData();
             _variables = new SaveVariableData();
             Debug.Log("[SaveDataComponent] Initialized");
@@ -109,6 +111,7 @@ namespace CrystalMagic.Core {
             try
             {
                 data.SaveIndex = index;
+                data.LastBattleSettlementId = index == _currentSaveIndex ? _lastBattleSettlementId : null;
                 data.SaveGuid = index == _currentSaveIndex && Guid.TryParse(_currentSaveGuid, out Guid currentSaveGuid)
                     ? currentSaveGuid.ToString("N")
                     : Guid.NewGuid().ToString("N");
@@ -119,11 +122,11 @@ namespace CrystalMagic.Core {
                 string filePath = GetSavePath(index);
 
                 EnsureSaveFolderExists();
-                System.IO.File.WriteAllText(filePath, json);
-                CreateBackup(filePath);
+                AtomicSaveFile.Write(filePath, json);
 
                 _currentSaveIndex = index;
                 _currentSaveGuid = data.SaveGuid;
+                _lastBattleSettlementId = data.LastBattleSettlementId;
 
                 OnSaveSuccess?.Invoke(data);
                 Debug.Log($"[SaveDataComponent] Game saved to slot index: {index}");
@@ -197,13 +200,6 @@ namespace CrystalMagic.Core {
 
                 string storedSaveGuid = data.SaveGuid;
                 EnsureSaveDataValid(data);
-                bool steamIdentityChanged = ApplySteamIdentity(data.Character);
-                if (!string.Equals(storedSaveGuid, data.SaveGuid, StringComparison.Ordinal) || steamIdentityChanged)
-                {
-                    System.IO.File.WriteAllText(filePath, JsonUtility.ToJson(data, true));
-                    CreateBackup(filePath);
-                }
-
                 if (!string.IsNullOrWhiteSpace(expectedSaveGuid) &&
                     (!Guid.TryParse(expectedSaveGuid, out Guid expectedGuid) ||
                      !string.Equals(data.SaveGuid, expectedGuid.ToString("N"), StringComparison.Ordinal)))
@@ -213,8 +209,13 @@ namespace CrystalMagic.Core {
                     return false;
                 }
 
+                bool steamIdentityChanged = ApplySteamIdentity(data.Character);
+                if (!string.Equals(storedSaveGuid, data.SaveGuid, StringComparison.Ordinal) || steamIdentityChanged)
+                    AtomicSaveFile.Write(filePath, JsonUtility.ToJson(data, true));
+
                 _currentSaveIndex = data.SaveIndex;
                 _currentSaveGuid = data.SaveGuid;
+                _lastBattleSettlementId = data.LastBattleSettlementId;
                 _globalData = data.Global;
                 _variables = data.Variables;
                 GameRuntimeStateUtility.ImportPersistentData(data);
@@ -681,10 +682,10 @@ namespace CrystalMagic.Core {
             {
                 EnsureSaveFolderExists();
                 string filePath = GetSavePath(index);
-                System.IO.File.WriteAllText(filePath, JsonUtility.ToJson(data, true));
-                CreateBackup(filePath);
+                AtomicSaveFile.Write(filePath, JsonUtility.ToJson(data, true));
                 _currentSaveIndex = index;
                 _currentSaveGuid = data.SaveGuid;
+                _lastBattleSettlementId = null;
                 OnSaveSuccess?.Invoke(data);
                 return true;
             }
@@ -699,6 +700,40 @@ namespace CrystalMagic.Core {
         #endregion
 
         #region Paths And Files
+        // 收到权威结算后先写回同一份战前存档，再确认接收；此方法不依赖正在卸载的战斗 World。
+        public bool TryApplyBattleSettlement(int index, string saveGuid, string sessionId, CharacterData character, out string error)
+        {
+            error = null;
+            try
+            {
+                if (index < 0 || !Guid.TryParse(saveGuid, out Guid expected) ||
+                    !Guid.TryParse(sessionId, out Guid session) || character == null)
+                    throw new InvalidOperationException("Invalid settlement identity.");
+                string path = GetSavePath(index);
+                SaveData data = JsonUtility.FromJson<SaveData>(System.IO.File.ReadAllText(path));
+                if (data == null || data.SaveIndex != index || !Guid.TryParse(data.SaveGuid, out Guid stored) || stored != expected)
+                    throw new InvalidOperationException("Settlement save identity does not match.");
+                if (data.LastBattleSettlementId == session.ToString("N")) return true;
+                data.Character = PlayerCharacterUtility.Clone(character);
+                data.Player = null;
+                data.DungeonRun = null;
+                data.Location = new SaveLocationData { AreaType = SaveAreaType.Town };
+                data.LastBattleSettlementId = session.ToString("N");
+                EnsureSaveDataValid(data);
+                ApplySteamIdentity(data.Character);
+                AtomicSaveFile.Write(path, JsonUtility.ToJson(data, true));
+                if (index == _currentSaveIndex && _currentSaveGuid == expected.ToString("N"))
+                    _lastBattleSettlementId = data.LastBattleSettlementId;
+                return true;
+            }
+            catch (Exception exception)
+            {
+                error = "结算暂时无法写入存档，已保留结果，请重试：" + exception.Message;
+                Debug.LogError(error);
+                return false;
+            }
+        }
+
         private string GetSaveFolderPath()
         {
             return System.IO.Path.Combine(Application.persistentDataPath, SAVE_FOLDER);
@@ -1023,25 +1058,6 @@ namespace CrystalMagic.Core {
             EventComponent.Instance.Publish(new CommonGameEvent(EquipmentDataChangedEventName, GetEquipmentData()));
             EventComponent.Instance.Publish(new CommonGameEvent(SkillDataChangedEventName, GetSkillData()));
             EventComponent.Instance.Publish(new CommonGameEvent(SaveDataChangedEventName, GetCurrentSaveData()));
-        }
-
-        #endregion
-
-        #region Logging
-        private void CreateBackup(string savePath)
-        {
-            try
-            {
-                string backupPath = savePath.Replace(".json", ".backup.json");
-                if (System.IO.File.Exists(savePath))
-                {
-                    System.IO.File.Copy(savePath, backupPath, true);
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogWarning($"[SaveDataComponent] Failed to create backup: {ex.Message}");
-            }
         }
 
         #endregion

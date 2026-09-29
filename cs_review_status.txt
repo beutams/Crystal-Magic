@@ -53,10 +53,10 @@ Core\
     DungeonGenerationService.cs TRUE DIRTY
     DungeonSettlementState.cs TRUE DIRTY
     DungeonState.cs TRUE DIRTY
-    GameFlowComponent.cs TRUE
+    GameFlowComponent.cs TRUE DIRTY
     GameState.cs TRUE
     LoadGameState.cs TRUE DIRTY
-    MainMenuState.cs TRUE
+    MainMenuState.cs TRUE DIRTY
     TownState.cs TRUE DIRTY
     TrainingState.cs TRUE DIRTY
     TransitionState.cs TRUE DIRTY
@@ -128,7 +128,7 @@ Core\
   Timer\
     TimerComponent.cs TRUE
   Transition\
-    TransitionComponent.cs TRUE
+    TransitionComponent.cs TRUE DIRTY
   UI\
     Editor\
       UIClassGenerator.cs FALSE
@@ -735,7 +735,7 @@ UI\
       LobbyUI_RoomItemData.cs TRUE
       LobbyUI_RoomItemView.cs TRUE DIRTY
     LobbyUI.cs TRUE DIRTY
-    LobbyUIController.cs TRUE
+    LobbyUIController.cs TRUE DIRTY
     LobbyUIData.cs TRUE
     LobbyUIModel.cs TRUE
   LobbyRoomUI\
@@ -880,10 +880,14 @@ Web\
   Core\
     ClientNetworkManager.cs TRUE DIRTY
     Connect.cs TRUE DIRTY
+    NetworkTransport.cs TRUE DIRTY
+    TcpEndpoint.cs TRUE DIRTY
+    TCPPair.cs TRUE DIRTY
     NetworkComponent.cs TRUE DIRTY
     NetworkTimer.cs TRUE DIRTY
-    ServerUtility.cs TRUE
+    ServerUtility.cs TRUE DIRTY
     Protocol\
+      MessageCodec.cs TRUE DIRTY
       TCPPacketCode.cs TRUE DIRTY
     Service\
       ClientService.cs TRUE DIRTY
@@ -891,7 +895,7 @@ Web\
     Service.cs TRUE DIRTY
   Lobby\
     ClientLobbyManager.cs TRUE DIRTY
-    Room.cs TRUE
+    Room.cs TRUE DIRTY
     RoomData.cs TRUE
     ServerLobbyManager.cs TRUE DIRTY
     Protocol\
@@ -931,6 +935,7 @@ Tests\
     MountainFootRuleTileTests.cs TRUE DIRTY
     BattleFrameClockTests.cs TRUE
     NetworkInputAndProtocolTests.cs TRUE DIRTY
+    NetworkTransportTests.cs TRUE DIRTY
     PlayerInputEventTests.cs TRUE DIRTY
     PlayerCharacterSyncTests.cs TRUE DIRTY
     BattleLifecycleTests.cs TRUE DIRTY
@@ -939,3 +944,36 @@ Tests\
 ThirdParty\
   RVO2\
     OrcaAgent.cs TRUE DIRTY
+Core\
+  SaveData\
+    AtomicSaveFile.cs TRUE
+  Steam\
+    SteamComponent.cs TRUE
+Tests\
+  Editor\
+    HostedLobbyLifecycleTests.cs TRUE
+Web\
+  Battle\
+    BattleHostManager.cs TRUE
+    Protocol\
+      B2L_ReloadRoomResult.cs TRUE
+      B2L_StartRoomResult.cs TRUE
+      C2B_EnterBattle.cs TRUE
+      C2B_ReloadBattle.cs TRUE
+  Core\
+    BattleConnectionInfo.cs TRUE
+    Player.cs TRUE
+    Protocol\
+      ReliableMessageFragments.cs TRUE
+    Service\
+      CompositeServerTransport.cs TRUE
+      LoopbackTransport.cs TRUE
+      MessageTransport.cs TRUE
+      SteamP2PTransport.cs TRUE
+  Lobby\
+    ClientLobbyHostSession.cs TRUE
+    Protocol\
+      C2L_LoginLobby.cs TRUE
+      HostedBattleMessages.cs TRUE
+      L2C_StartTicket.cs TRUE
+    ServerLobbyHostSessions.cs TRUE

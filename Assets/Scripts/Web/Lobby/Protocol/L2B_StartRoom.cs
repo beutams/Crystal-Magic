@@ -8,6 +8,7 @@ namespace Server
     public class L2B_StartRoom : IMessage
     {
         public ulong roomId;
+        public string sessionId;
         public ulong ownerAccountId;
         public int themeKey;
         public ulong[] players;

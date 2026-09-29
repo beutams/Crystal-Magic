@@ -69,7 +69,7 @@ namespace CrystalMagic.Core
                 DungeonFlowTiming.EndStage(14, "ECS Spawn Registry 不可用");
                 DungeonFlowTiming.Fail("Entity spawn registry is unavailable in DungeonScene");
                 Debug.LogError("[DungeonSceneRuntimeBuilder] Entity spawn registry is unavailable in DungeonScene.");
-                runtimeRoot.Initialize(resourceOwnerKey, spawnedEntities);
+                runtimeRoot.Initialize(resourceOwnerKey, spawnedEntities, null);
                 yield break;
             }
             DungeonFlowTiming.EndStage(14, "ECS Spawn Registry 已就绪");
@@ -111,7 +111,7 @@ namespace CrystalMagic.Core
             SpawnMonsters(entityManager, sceneData, spawnedEntities, interestPoints, wildSquads);
             SetInterestPointsReady(entityManager, interestPoints);
 
-            runtimeRoot.Initialize(resourceOwnerKey, spawnedEntities);
+            runtimeRoot.Initialize(resourceOwnerKey, spawnedEntities, entityManager.World);
             DungeonFlowTiming.EndStage(16, $"SpawnedEntities={spawnedEntities.Count}");
         }
 
@@ -215,7 +215,7 @@ namespace CrystalMagic.Core
             runtimeRoot.SetCameraWorldBounds(sceneData.CameraWorldBounds);
             SpawnObstacles(entityManager, runtimeRoot, sceneData, resourceOwnerKey, spawnedEntities);
             SpawnEnvironment(entityManager, sceneData, resourceOwnerKey, spawnedEntities, true);
-            runtimeRoot.Initialize(resourceOwnerKey, spawnedEntities);
+            runtimeRoot.Initialize(resourceOwnerKey, spawnedEntities, entityManager.World);
             return true;
         }
 

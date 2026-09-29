@@ -1,11 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading.Tasks;
-using Unity.VisualScripting;
-using UnityEngine;
 
 namespace Server
 {
@@ -43,39 +37,90 @@ namespace Server
 
         protected Dictionary<int,Action<IMessage,Connect>> callback = new Dictionary<int, Action<IMessage,Connect>>();
         private readonly Dictionary<uint, long> pendingBattleFrameSendTimes = new Dictionary<uint, long>();
+        private readonly Queue<uint> battleFrameSendWindow = new();
         private readonly List<uint> acknowledgedBattleFrameSequences = new List<uint>();
         private uint nextBattleFrameSequence;
         private uint lastAcknowledgedBattleFrameSequence;
+        private IConnectionTransport transport;
         public ConnectState State;
-        public IPEndPoint IPEndPoint;
+        public NetworkEndpoint RemoteEndpoint { get; private set; }
         public Action<Connect> OnConnected;
         public Action<Connect> OnDisconnected;
 
-        public MemoryStream readSteam;
-        public MemoryStream sendSteam;
-        public void Init(IPEndPoint IPEndPoint)
+        public void Init(IConnectionTransport transport)
         {
+            if (this.transport != null)
+                throw new InvalidOperationException("Connection is already initialized.");
+            this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
+            RemoteEndpoint = transport.RemoteEndpoint;
             State = ConnectState.Pending;
-            this.IPEndPoint = IPEndPoint;
-            readSteam = new MemoryStream();
-            sendSteam = new MemoryStream();
         }
-        public void OnRead(ushort opcode, IMessage message, Connect connect)
+
+        /// <summary>传输端交入一条完整消息；失败由所属服务负责断开连接，原因在此统一生成。</summary>
+        public bool TryReceive(byte[] packet, out DisconnectInfo failure)
         {
-            if (callback.TryGetValue(opcode, out Action<IMessage,Connect> action))
+            failure = null;
+            MessageDecodeResult result = MessageCodec.TryDecode(packet, out ushort opcode, out IMessage message, out Exception exception);
+            if (result != MessageDecodeResult.Success)
             {
-                action?.Invoke(message, connect);
+                failure = new DisconnectInfo
+                {
+                    Reason = result == MessageDecodeResult.UnknownOpcode ? DisconnectReason.UnknownOpcode : DisconnectReason.DeserializeError,
+                    Phase = result == MessageDecodeResult.UnknownOpcode ? "Opcode" : "Deserialize",
+                    Detail = $"opcode={opcode}",
+                    Exception = exception,
+                };
+                return false;
+            }
+
+            LastReceiveTime = NetworkTimer.Instance.TimeNow;
+            try
+            {
+                if (callback.TryGetValue(opcode, out Action<IMessage, Connect> action) && action != null)
+                    foreach (Action<IMessage, Connect> handler in action.GetInvocationList())
+                    {
+                        if (State == ConnectState.Close) break;
+                        handler(message, this);
+                    }
+                return true;
+            }
+            catch (Exception handlerException)
+            {
+                failure = new DisconnectInfo
+                {
+                    Reason = DisconnectReason.HandlerError,
+                    Phase = "Dispatch",
+                    Detail = $"opcode={opcode}",
+                    Exception = handlerException,
+                };
+                return false;
             }
         }
+
         public void Send(IMessage message)
         {
-            ushort opcode = TCPPacketCode.GetOpcode(message);
-            byte[] data = TCPPacketCode.Pack(opcode, TCPPacketCode.ToJson(message));
-            sendSteam.Position = sendSteam.Length;
-            sendSteam.Write(data, 0, data.Length);
-#if UNITY_EDITOR && NETWORK_TRACE
-            Debug.Log($"[TCP][Queue] opcode={opcode}, {data.Length} bytes queued for {IPEndPoint}");
-#endif
+            TrySend(message);
+        }
+
+        // 断线和帧发送可以发生在同一帧；失效连接不应再抛异常打断退出流程。
+        public bool TrySend(IMessage message)
+        {
+            if (State == ConnectState.Close || transport == null)
+                return false;
+            try
+            {
+                transport.Send(MessageCodec.Encode(message));
+                return State != ConnectState.Close;
+            }
+            catch (Exception exception)
+            {
+                LastDisconnectInfo = new DisconnectInfo
+                {
+                    Reason = DisconnectReason.SendError, Phase = "Enqueue", Exception = exception,
+                };
+                State = ConnectState.Close;
+                return false;
+            }
         }
 
         public uint RecordBattleFrameSend(long sendTime)
@@ -85,6 +130,9 @@ namespace Server
                 nextBattleFrameSequence++;
 
             pendingBattleFrameSendTimes[nextBattleFrameSequence] = sendTime;
+            battleFrameSendWindow.Enqueue(nextBattleFrameSequence);
+            while (battleFrameSendWindow.Count > 1024)
+                pendingBattleFrameSendTimes.Remove(battleFrameSendWindow.Dequeue());
             return nextBattleFrameSequence;
         }
 
@@ -133,8 +181,11 @@ namespace Server
         }
         public void Dispose()
         {
+            State = ConnectState.Close;
+            transport = null;
             callback.Clear();
             pendingBattleFrameSendTimes.Clear();
+            battleFrameSendWindow.Clear();
             acknowledgedBattleFrameSequences.Clear();
             OnConnected = null;
             OnDisconnected = null;

@@ -14,12 +14,16 @@ namespace Server
     {
         [SerializeField] private NetworkRole debugRole = NetworkRole.Client;
         [SerializeField] private bool debugFrameSpeedAdjustment = true;
+        [Tooltip("大厅使用 Steam 房主战斗或独立 TCP 战斗服。Steam 双机断线验收前保留 TCP 默认值。")]
+        [SerializeField] private BattleTransportKind battleHosting = BattleTransportKind.Tcp;
 
-        public ClientService clientServic;
+        public IClientTransport lobbyTransport;
+        public IClientTransport battleTransport;
         public ClientLobbyManager clientLobbyManager;
         public ClientBattleManager clientBattleManager;
         public ServerLobbyManager serverLobbyManager;
         public ServerBattleManager serverBattleManager;
+        public BattleHostManager battleHostManager;
 
         public NetworkRole Role
         {
@@ -44,35 +48,46 @@ namespace Server
             base.Initialize();
 
             Application.runInBackground = true;
-            TCPPacketCode.Init();
+            MessageCodec.Init();
 
             switch (Role)
             {
                 case NetworkRole.Client:
-                    clientServic = new ClientService();
-                    clientServic.Init();
+                    lobbyTransport = new ClientService();
+                    lobbyTransport.Init();
                     clientBattleManager = new ClientBattleManager();
                     clientBattleManager.frame.SetFrameSpeedAdjustmentEnabled(debugFrameSpeedAdjustment);
                     clientLobbyManager = new ClientLobbyManager();
+                    battleHostManager = new BattleHostManager();
+                    battleHostManager.SessionEnded += clientLobbyManager.NotifyHostSessionEnded;
                     break;
                 case NetworkRole.LobbyServer:
                     serverLobbyManager = new ServerLobbyManager();
-                    serverLobbyManager.Initialize();
+                    serverLobbyManager.Initialize(new ServerService(ServerUtility.GetLobbyEndpoint()),
+                        battleHosting == BattleTransportKind.Tcp ? new ClientService() : null,
+                        battleHosting == BattleTransportKind.Steam);
                     break;
                 case NetworkRole.BattleServer:
                     serverBattleManager = new ServerBattleManager();
-                    serverBattleManager.Initialize();
+                    serverBattleManager.Initialize(
+                        new ServerService(ServerUtility.GetBattleEndpoint()),
+                        new ServerService(ServerUtility.GetBattleLobbyEndpoint()));
                     break;
             }
         }
 
         private void LateUpdate()
         {
-            switch (Role)
+            try
             {
+                switch (Role)
+                {
                 case NetworkRole.Client:
-                    clientServic.Update();
-                    clientBattleManager.Update();
+                    lobbyTransport?.Update();
+                    battleHostManager?.Update();
+                    battleTransport?.Update();
+                    clientBattleManager?.Update();
+                    clientLobbyManager?.Update();
                     break;
                 case NetworkRole.LobbyServer:
                     serverLobbyManager.Update();
@@ -80,15 +95,42 @@ namespace Server
                 case NetworkRole.BattleServer:
                     serverBattleManager.Update();
                     break;
+                }
             }
-
-            NetworkTimer.Instance.Update();
+            catch (System.Exception exception)
+            {
+                Debug.LogException(exception);
+                if (Role == NetworkRole.Client)
+                    clientBattleManager?.AbortBattle("网络处理异常，正在安全退出战斗。");
+            }
+            finally { NetworkTimer.Instance.Update(); }
         }
 
         public void SetFrameSpeedAdjustmentEnabled(bool enabled)
         {
             debugFrameSpeedAdjustment = enabled;
             clientBattleManager?.frame.SetFrameSpeedAdjustmentEnabled(enabled);
+        }
+
+        public void OpenBattleTransport(BattleConnectionInfo connection)
+        {
+            CloseBattleTransport();
+            if (connection == null || !connection.IsValid)
+                throw new System.ArgumentException("Invalid battle connection descriptor.");
+            if (connection.kind == BattleTransportKind.Tcp)
+                battleTransport = new ClientService();
+            else if (battleHostManager.IsHosting && battleHostManager.Connection.sessionId == connection.sessionId)
+                battleTransport = battleHostManager.LocalClient;
+            else
+                battleTransport = new SteamP2PTransport();
+            battleTransport.Init();
+        }
+
+        public void CloseBattleTransport()
+        {
+            IClientTransport previous = battleTransport;
+            battleTransport = null;
+            previous?.Shutdown();
         }
 
         private void OnValidate()
@@ -115,20 +157,29 @@ namespace Server
 
         public override void Cleanup()
         {
-            clientLobbyManager?.Cleanup();
-            clientBattleManager?.Cleanup();
-            clientServic?.Shutdown();
-            serverLobbyManager?.Cleanup();
-            serverBattleManager?.Cleanup();
+            SafeCleanup(() => clientLobbyManager?.Cleanup());
+            SafeCleanup(() => clientBattleManager?.Cleanup());
+            SafeCleanup(() => lobbyTransport?.Shutdown());
+            SafeCleanup(CloseBattleTransport);
+            SafeCleanup(() => battleHostManager?.Shutdown());
+            SafeCleanup(() => serverLobbyManager?.Cleanup());
+            SafeCleanup(() => serverBattleManager?.Cleanup());
             NetworkTimer.Instance.Clear();
 
             clientLobbyManager = null;
             clientBattleManager = null;
-            clientServic = null;
+            lobbyTransport = null;
             serverLobbyManager = null;
             serverBattleManager = null;
+            battleHostManager = null;
 
             base.Cleanup();
+        }
+
+        private static void SafeCleanup(System.Action action)
+        {
+            try { action(); }
+            catch (System.Exception exception) { Debug.LogException(exception); }
         }
     }
 }

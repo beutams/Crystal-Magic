@@ -292,8 +292,8 @@ namespace Server
             this.connect = connect;
             if (this.connect != null)
             {
-                this.connect.RegisterCallback(TCPPacketCode.GetOpcode<General_FrameStateData>(), OnReceiveMessage);
-                this.connect.RegisterCallback(TCPPacketCode.GetOpcode<B2C_FramePong>(), OnFramePong);
+                this.connect.RegisterCallback(MessageCodec.GetOpcode<General_FrameStateData>(), OnReceiveMessage);
+                this.connect.RegisterCallback(MessageCodec.GetOpcode<B2C_FramePong>(), OnFramePong);
                 pingTimerId = NetworkTimer.Instance.AddRepeated(500, SendFramePing);
                 SendFramePing();
             }
@@ -306,8 +306,8 @@ namespace Server
                 return;
             }
 
-            connect.UnRegisterCallback(TCPPacketCode.GetOpcode<General_FrameStateData>(), OnReceiveMessage);
-            connect.UnRegisterCallback(TCPPacketCode.GetOpcode<B2C_FramePong>(), OnFramePong);
+            connect.UnRegisterCallback(MessageCodec.GetOpcode<General_FrameStateData>(), OnReceiveMessage);
+            connect.UnRegisterCallback(MessageCodec.GetOpcode<B2C_FramePong>(), OnFramePong);
             NetworkTimer.Instance.Remove(pingTimerId);
             pingTimerId = 0;
             this.connect = null;

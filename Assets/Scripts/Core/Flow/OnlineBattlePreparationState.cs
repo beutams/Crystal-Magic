@@ -14,7 +14,7 @@ namespace CrystalMagic.Core
         private ClientBattleManager battleManager;
         private bool restoreRequested;
 
-        public static TransitionData CreateEnterTransitionData(ClientBattleManager battleManager, string ticket, ulong accountId, bool reload)
+        public static TransitionData CreateEnterTransitionData(ClientBattleManager battleManager, string ticket, ulong accountId, bool reload, BattleConnectionInfo connection)
         {
             TransitionData transitionData = null;
             transitionData = new TransitionData
@@ -27,12 +27,14 @@ namespace CrystalMagic.Core
                 ActiveSubSceneNames = new[] { DungeonState.RegistrySubSceneName },
                 PreLoadCoroutineFactory = () => PrepareBattleWorld(battleManager, transitionData),
                 OnLoadFailed = error => battleManager.FailPreparation(error),
+                CancellationError = () => battleManager.PreparationFailed ? battleManager.PreparationError : null,
                 PostLoadCoroutineFactory = () => InitializeBattleScene(
                     transitionData,
                     battleManager,
                     ticket,
                     accountId,
-                    reload),
+                    reload,
+                    connection),
             };
             return transitionData;
         }
@@ -55,7 +57,8 @@ namespace CrystalMagic.Core
                 },
                 OnComplete = () =>
                 {
-                    if (battleManager.HasPendingSettlement && !SaveDataComponent.Instance.Save())
+                    if (battleManager.HasPendingSettlement &&
+                        (!battleManager.PersistPendingSettlement(out _) || !SaveDataComponent.Instance.Save()))
                     {
                         GameFlowComponent.Instance.SetState<OnlineBattleRecoveryState>(new BattleRecoveryContext
                         {
@@ -85,6 +88,7 @@ namespace CrystalMagic.Core
                 PreLoadCoroutineFactory = () => PrepareBattleWorld(battleManager, transitionData),
                 OnLoadFailed = error => battleManager.FailPreparation(error),
                 PostLoadCoroutineFactory = () => InitializePreparedBattleScene(transitionData, battleManager),
+                CancellationError = () => battleManager.PreparationFailed ? battleManager.PreparationError : null,
             };
             return transitionData;
         }
@@ -181,13 +185,14 @@ namespace CrystalMagic.Core
             ClientBattleManager battleManager,
             string ticket,
             ulong accountId,
-            bool reload)
+            bool reload,
+            BattleConnectionInfo connection)
         {
             if (battleManager == null || string.IsNullOrEmpty(ticket) || accountId == 0UL ||
                 battleManager.PreparationFailed)
                 yield break;
 
-            battleManager.ConnectWithTicket(ticket, accountId, reload);
+            battleManager.ConnectWithTicket(ticket, accountId, reload, connection);
             yield return InitializePreparedBattleScene(transitionData, battleManager);
         }
 
@@ -268,7 +273,7 @@ namespace CrystalMagic.Core
     public sealed class OnlineBattleRecoveryState : GameState
     {
         private BattleRecoveryContext context;
-        private ConfirmSingleUI prompt;
+        private ConfirmUI prompt;
 
         public override void OnEnter()
         {
@@ -283,7 +288,8 @@ namespace CrystalMagic.Core
             if (TransitionComponent.Instance.IsTransitioning ||
                 (prompt != null && UIComponent.Instance.IsManaged(prompt) && prompt.gameObject.activeSelf))
                 return;
-            prompt = UIComponent.Instance.Open<ConfirmSingleUI>(new ConfirmUIOpenData("恢复失败", context.Error, () =>
+            prompt = UIComponent.Instance.Open<ConfirmUI>(new ConfirmUIOpenData("恢复失败", context.Error +
+                "\n可以重试，或取消返回主菜单。未写入的结算仍保留在本次进程中，退出游戏会丢失未保存的结果。", () =>
             {
                 if (context.SaveContext == null)
                 {
@@ -292,12 +298,16 @@ namespace CrystalMagic.Core
                 }
 
                 // 保存失败时直接重试写入当前 Town，不重新读取可能尚未写完整的存档文件。
-                if (!SaveDataComponent.Instance.Save())
+                if (!context.Manager.PersistPendingSettlement(out _) || !SaveDataComponent.Instance.Save())
                     return;
                 context.Manager.ClearPreBattleSnapshot();
                 GameWorldManager.AppendGameWorldToPlayerLoop();
                 GameFlowComponent.Instance.SetState<TownState>(context.SaveContext);
-            }, confirmLabel: "重试", showCancelButton: false));
+            }, () =>
+            {
+                context.Manager.StopBattle();
+                GameFlowComponent.Instance.SetState<MainMenuState>();
+            }, confirmLabel: "重试", showCancelButton: true));
         }
     }
 

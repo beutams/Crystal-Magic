@@ -17,5 +17,6 @@ namespace Server
         public string saveGuid { get; set; }
         public BattleReloadRoomResultType type { get; set; }
         public string ticket { get; set; }
+        public BattleConnectionInfo connection { get; set; }
     }
 }

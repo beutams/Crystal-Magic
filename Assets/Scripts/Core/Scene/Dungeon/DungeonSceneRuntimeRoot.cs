@@ -10,9 +10,11 @@ namespace CrystalMagic.Core
         private readonly List<Object> _runtimeAssets = new();
         private string _resourceOwnerKey;
         private bool _hasCameraWorldBounds;
+        private World _owningWorld;
 
-        public void Initialize(string resourceOwnerKey, IReadOnlyList<Entity> spawnedEntities)
+        public void Initialize(string resourceOwnerKey, IReadOnlyList<Entity> spawnedEntities, World owningWorld)
         {
+            _owningWorld = owningWorld;
             _resourceOwnerKey = resourceOwnerKey;
             _spawnedEntities.Clear();
 
@@ -70,7 +72,7 @@ namespace CrystalMagic.Core
 
         private void DestroyTrackedEntities()
         {
-            World world = World.DefaultGameObjectInjectionWorld;
+            World world = _owningWorld;
             if (world == null || !world.IsCreated)
                 return;
 

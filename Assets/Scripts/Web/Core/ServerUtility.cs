@@ -14,20 +14,20 @@ namespace Server
 
         public static string lobbyIP = "127.0.0.1";
         public static int lobbyPort = 10002;
-        public static IPEndPoint GetLobbyIPEndPoint()
+        public static NetworkEndpoint GetLobbyEndpoint()
         {
-            return new IPEndPoint(IPAddress.Parse(lobbyIP), lobbyPort);
+            return new TcpEndpoint(new IPEndPoint(IPAddress.Parse(lobbyIP), lobbyPort));
         }
         public static string battleIP = "127.0.0.1";
         public static int battlePort = 10003;
-        public static IPEndPoint GetBattleIPEndPoint()
+        public static NetworkEndpoint GetBattleEndpoint()
         {
-            return new IPEndPoint(IPAddress.Parse(battleIP), battlePort);
+            return new TcpEndpoint(new IPEndPoint(IPAddress.Parse(battleIP), battlePort));
         }
         public static int battleLobbyPort = 10004;
-        public static IPEndPoint GetBattleLobbyIPEndPoint()
+        public static NetworkEndpoint GetBattleLobbyEndpoint()
         {
-            return new IPEndPoint(IPAddress.Parse(battleIP), battleLobbyPort);
+            return new TcpEndpoint(new IPEndPoint(IPAddress.Parse(battleIP), battleLobbyPort));
         }
 
         public static ulong CreateRoomId()
@@ -70,9 +70,15 @@ namespace Server
 
         public const long PingInterval = 3_000;
         public const long Timeout = 10_000;
+        public const long ConnectTimeout = 10_000;
+        public const long DrainTimeout = 2_000;
+        public const long HostStartTimeout = 15_000;
+        public const long SettlementTimeout = 5_000;
+        public const long ReconnectGrace = 60_000;
+        public const int MaxQueuedBytes = 4 * MessageCodec.MaxMessageLength;
         public const long BattleLobbyReconnectInterval = 1_000;
-        public const long BattleEnterTimeout = 10_000;
-        public const long BattleInitializeTimeout = 10_000;
-        public const long BattleReadyTimeout = 10_000;
+        public const long BattleEnterTimeout = 45_000;
+        public const long BattleInitializeTimeout = 45_000;
+        public const long BattleReadyTimeout = 30_000;
     }
 }

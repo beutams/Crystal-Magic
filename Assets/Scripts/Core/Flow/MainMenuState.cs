@@ -11,6 +11,7 @@ namespace CrystalMagic.Core {
 
         public override void OnEnter()
         {
+            Server.NetworkComponent.Instance.clientBattleManager?.StopBattle();
             GameWorldManager.ShutdownGameWorld();
             Debug.Log("[MainMenuState] Entered MainMenu");
             // 从对象池加载并显示 MainMenu UI
@@ -29,7 +30,16 @@ namespace CrystalMagic.Core {
         /// </summary>
         public void StartLoadGame(int saveIndex)
         {
+            if (TryResumeBattleRecovery()) return;
             GameFlowComponent.Instance.SetState<LoadGameState>(saveIndex);
+        }
+
+        private static bool TryResumeBattleRecovery()
+        {
+            Server.ClientBattleManager manager = Server.NetworkComponent.Instance.clientBattleManager;
+            if (manager == null || !manager.HasPreBattleSnapshot) return false;
+            GameFlowComponent.Instance.BeginTransition(OnlineBattlePreparationState.CreateReturnToTownTransitionData(manager));
+            return true;
         }
 
         private void BindEvents()
@@ -56,6 +66,7 @@ namespace CrystalMagic.Core {
 
         private void HandleStartGameRequested(MainMenuStartRequestedEvent gameEvent)
         {
+            if (TryResumeBattleRecovery()) return;
             if (SaveDataComponent.Instance.CreateNewGameToSlot(gameEvent.Index))
             {
                 StartLoadGame(gameEvent.Index);

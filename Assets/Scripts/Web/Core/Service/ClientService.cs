@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -8,20 +7,31 @@ using UnityEngine;
 
 namespace Server
 {
-    public class ClientService : Service
+    public class ClientService : Service, IClientTransport
     {
-        public Action<Connect> OnConnecting;
+        public event Action<Connect> OnConnecting;
         private Action<Connect> OnConnectedSuccess;
-        public Action<Connect> OnConnectedFail;
+        public event Action<Connect> OnConnectedFail;
 
         protected Dictionary<Guid, Task> connectingTask;
         protected Dictionary<Connect, long> timerIds;
         protected Dictionary<Guid, TCPPair> pendingConnects = new Dictionary<Guid, TCPPair>();
-        public void Connect(IPEndPoint iPEndPoint,out Connect connect)
+        private bool initialized;
+        public void Connect(NetworkEndpoint endpoint, out Connect connect)
         {
-            Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            if (!initialized)
+                throw new InvalidOperationException("Client transport is not initialized.");
+            if (endpoint is not TcpEndpoint tcpEndpoint)
+                throw new ArgumentException("ClientService requires a TCP endpoint.", nameof(endpoint));
+
+            IPEndPoint iPEndPoint = tcpEndpoint.Address;
+            Socket socket = new Socket(iPEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            try
+            {
             socket.NoDelay = true;
-            socket.Bind(new IPEndPoint(IPAddress.Any, 0));
+            socket.Bind(new IPEndPoint(iPEndPoint.AddressFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Any : IPAddress.Any, 0));
+            }
+            catch { socket.Dispose(); throw; }
 
             TCPPair pair = TCPPair.CreateTCPPair(socket, iPEndPoint, out Guid id);
             connect = pair.connect;
@@ -58,6 +68,9 @@ namespace Server
         }
         public override void Init()
         {
+            if (initialized)
+                return;
+            initialized = true;
             connectingTask = new Dictionary<Guid, Task>();
             timerIds = new Dictionary<Connect, long>();
             startTime = NetworkTimer.Instance.TimeNow;
@@ -65,12 +78,11 @@ namespace Server
             {
                 long timerid = NetworkTimer.Instance.AddRepeated(ServerUtility.PingInterval, () =>
                 {
-                    Debug.Log($"[TCP][Client] Heartbeat triggered, Connect={connect.IPEndPoint}");
-                    connect.Send(new C2S_Ping() { Time = NetworkTimer.Instance.TimeNow });
+                    if (connect.State == ConnectState.Connected)
+                        connect.Send(new C2S_Ping() { Time = NetworkTimer.Instance.TimeNow });
                 });
-                //connect.RegisterCallback(TCPPacketCode.GetOpcode<S2C_Pong>(null), OnPong);
                 timerIds.Add(connect, timerid);
-                Debug.Log($"[TCP][Client] Connected {connect.IPEndPoint}; heartbeat timer={timerid}, interval={ServerUtility.PingInterval}ms");
+                Debug.Log($"[TCP][Client] Connected {connect.RemoteEndpoint}; heartbeat timer={timerid}, interval={ServerUtility.PingInterval}ms");
             };
             OnDisconnected += (connect) =>
             {
@@ -84,14 +96,17 @@ namespace Server
         }
         public override void Update()
         {
+            if (!initialized)
+                return;
             HandleConnect();
             HandleRecv();
             HandleSend();
             HandleTimeout();
             HandleDisconnect();
         }
-        public void Shutdown()
+        public override void Shutdown()
         {
+            initialized = false;
             if (timerIds != null)
             {
                 foreach (long timerId in timerIds.Values)
@@ -107,12 +122,11 @@ namespace Server
             connectingTask?.Clear();
             pendingDisconnects.Clear();
             closeAfterSendList.Clear();
+            drainDeadlines.Clear();
             OnConnecting = null;
             OnConnectedSuccess = null;
             OnConnectedFail = null;
-            OnSend = null;
-            OnRecv = null;
-            OnDisconnected = null;
+            ClearCallbacks();
         }
         private void HandleConnect()
         {
@@ -122,7 +136,7 @@ namespace Server
             }
             pendingConnects.Clear();
 
-            foreach (var pair in connects)
+            foreach (var pair in new List<KeyValuePair<Guid, TCPPair>>(connects))
             {
                 Guid id = pair.Key;
                 Connect connect = pair.Value.connect;
@@ -133,10 +147,17 @@ namespace Server
                     try
                     {
                         connect.State = ConnectState.Connecting;
+                        connect.startTime = NetworkTimer.Instance.TimeNow;
                         Debug.Log($"[TCP][Client] Connecting to {pair.Value.IPEndPoint}, Connect={id}");
-                        OnConnecting?.Invoke(connect);
+                        InvokeConnectionEventSafely(OnConnecting, connect, nameof(OnConnecting));
+                        if (!initialized || connect.State != ConnectState.Connecting)
+                            continue;
                         //开始连接
-                        connectingTask.Add(id, socket.ConnectAsync(pair.Value.IPEndPoint));
+                        Task task = socket.ConnectAsync(pair.Value.IPEndPoint);
+                        // Dispose 会取消连接；仍观察延迟完成的异常，不把 Task 留给终结器。
+                        _ = task.ContinueWith(failed => { _ = failed.Exception; },
+                            TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously);
+                        connectingTask.Add(id, task);
                     }
                     catch (SocketException e)
                     {
@@ -154,10 +175,12 @@ namespace Server
             }
 
             List<Guid> completeList = new List<Guid>();
-            foreach(var connecting in connectingTask)
+            foreach(var connecting in new List<KeyValuePair<Guid, Task>>(connectingTask))
             {
                 Guid id = connecting.Key;
-                Connect connect = connects[id].connect;
+                if (!connects.TryGetValue(id, out TCPPair pair))
+                    continue;
+                Connect connect = pair.connect;
                 Task task = connecting.Value;
                 if (connect.State == ConnectState.Close)
                 {
@@ -165,17 +188,25 @@ namespace Server
                     continue;
                 }
 
+                if (NetworkTimer.Instance.TimeNow - connect.startTime >= ServerUtility.ConnectTimeout)
+                {
+                    MarkDisconnected(id, DisconnectReason.Timeout, "ConnectTimeout");
+                    InvokeConnectionEventSafely(OnConnectedFail, connect, nameof(OnConnectedFail));
+                    completeList.Add(id);
+                    continue;
+                }
                 if (!task.IsCompleted)
                     continue;
                 try
                 {
                     //成功连接
                     task.GetAwaiter().GetResult();
+                    pair.socket.Blocking = false;
                     connect.State = ConnectState.Connected;
                     connect.startTime = NetworkTimer.Instance.TimeNow;
                     connect.LastReceiveTime = NetworkTimer.Instance.TimeNow;
 
-                    Debug.Log($"[TCP][Client] Connect succeeded: {connect.IPEndPoint}, Connect={id}");
+                    Debug.Log($"[TCP][Client] Connect succeeded: {connect.RemoteEndpoint}, Connect={id}");
                     InvokeConnectionEventSafely(OnConnectedSuccess, connect, nameof(OnConnectedSuccess));
                     InvokeConnectionEventSafely(connect.OnConnected, connect, "Connect.OnConnected");
                     completeList.Add(id);
@@ -203,21 +234,7 @@ namespace Server
         {
             foreach (TCPPair pair in pairs.Values)
             {
-                try
-                {
-                    pair.socket.Shutdown(SocketShutdown.Both);
-                }
-                catch (SocketException)
-                {
-                }
-                finally
-                {
-                    pair.socket.Close();
-                    pair.socket.Dispose();
-                    pair.connect.readSteam.Dispose();
-                    pair.connect.sendSteam.Dispose();
-                    pair.connect.Dispose();
-                }
+                pair.Dispose();
             }
 
             pairs.Clear();

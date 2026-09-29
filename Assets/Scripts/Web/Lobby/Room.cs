@@ -12,5 +12,7 @@ public class Room
     public Dictionary<ulong, Player> players = new Dictionary<ulong, Player>();
 
     public bool start;
+    public string startSessionId;
+    public long startDeadline;
 
 }

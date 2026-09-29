@@ -69,13 +69,16 @@ namespace Server
                 return;
             }
 
-            if (appendedToPlayerLoop)
-                ScriptBehaviourUpdateOrder.RemoveWorldFromCurrentPlayerLoop(world);
-
-            world.Dispose();
+            World previous = world;
+            bool wasAppended = appendedToPlayerLoop;
             world = null;
             appendedToPlayerLoop = false;
             RegistrySceneEntity = Entity.Null;
+            try
+            {
+                if (wasAppended) ScriptBehaviourUpdateOrder.RemoveWorldFromCurrentPlayerLoop(previous);
+            }
+            finally { previous.Dispose(); }
         }
     }
 }

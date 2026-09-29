@@ -56,7 +56,7 @@ public sealed class NetworkInputAndProtocolTests
     [Test]
     public void ServerDropsLateFramesAndProcessesEveryEventOnlyInItsOwnFrame()
     {
-        TCPPacketCode.Init();
+        MessageCodec.Init();
         Guid unitId = Guid.NewGuid();
         Connect connect = new();
         ServerFrameManager server = new() { currentFrame = 10, sceneVersion = 4 };
@@ -97,13 +97,13 @@ public sealed class NetworkInputAndProtocolTests
         partial.WriteByte(0);
         partial.WriteByte(0);
         Assert.That(
-            TCPPacketCode.TryUnPack(partial, out _, out _, out _),
+            TCPPacketCode.TryUnPack(partial, out _, out _),
             Is.EqualTo(PacketReadResult.NeedMoreData));
 
         using MemoryStream invalid = new();
         invalid.Write(new byte[] { 0x00, 0x10, 0x00, 0x01 }, 0, 4);
         Assert.That(
-            TCPPacketCode.TryUnPack(invalid, out _, out _, out string error),
+            TCPPacketCode.TryUnPack(invalid, out _, out string error),
             Is.EqualTo(PacketReadResult.Invalid));
         Assert.That(error, Does.Contain("包长不合法"));
     }
@@ -111,10 +111,10 @@ public sealed class NetworkInputAndProtocolTests
     [Test]
     public void UnknownOpcodeIsReportedWithoutIndexingException()
     {
-        TCPPacketCode.Init();
-        MessageDecodeResult result = TCPPacketCode.TryToMessage(
-            Array.Empty<byte>(),
-            ushort.MaxValue,
+        MessageCodec.Init();
+        MessageDecodeResult result = MessageCodec.TryDecode(
+            MessageCodec.Encode(ushort.MaxValue, Array.Empty<byte>()),
+            out _,
             out IMessage message,
             out Exception exception);
         Assert.That(result, Is.EqualTo(MessageDecodeResult.UnknownOpcode));
@@ -175,7 +175,7 @@ public sealed class NetworkInputAndProtocolTests
     [TestCase(DisconnectReason.ReceiveError)]
     public void FaultyConnectionDoesNotPreventAnotherConnectionReceiving(DisconnectReason reason)
     {
-        TCPPacketCode.Init();
+        MessageCodec.Init();
         using TestService service = new();
         Connect bad = service.AddLoopbackConnection(out Socket badPeer, out Socket badSocket);
         using (badPeer)
@@ -183,8 +183,8 @@ public sealed class NetworkInputAndProtocolTests
             Connect good = service.AddLoopbackConnection(out Socket goodPeer, out Socket goodSocket);
             using (goodPeer)
             {
-                ushort opcode = TCPPacketCode.GetOpcode<C2S_Ping>();
-                byte[] valid = TCPPacketCode.Pack(opcode, TCPPacketCode.ToJson(new C2S_Ping()));
+                ushort opcode = MessageCodec.GetOpcode<C2S_Ping>();
+                byte[] valid = TCPPacketCode.Pack(MessageCodec.Encode(new C2S_Ping()));
                 int received = 0;
                 int disconnected = 0;
                 good.RegisterCallback(opcode, (_, _) => received++);
@@ -196,8 +196,8 @@ public sealed class NetworkInputAndProtocolTests
                     byte[] invalid = reason switch
                     {
                         DisconnectReason.InvalidPacket => new byte[] { 0, 0, 0, 1 },
-                        DisconnectReason.UnknownOpcode => TCPPacketCode.Pack(ushort.MaxValue, Array.Empty<byte>()),
-                        DisconnectReason.DeserializeError => TCPPacketCode.Pack(opcode, new byte[] { (byte)'{' }),
+                        DisconnectReason.UnknownOpcode => TCPPacketCode.Pack(MessageCodec.Encode(ushort.MaxValue, Array.Empty<byte>())),
+                        DisconnectReason.DeserializeError => TCPPacketCode.Pack(MessageCodec.Encode(opcode, new byte[] { (byte)'{' })),
                         _ => valid,
                     };
                     if (reason == DisconnectReason.HandlerError)
@@ -223,19 +223,36 @@ public sealed class NetworkInputAndProtocolTests
     [Test]
     public void SendCallbackCanQueueAnotherPacketWithoutLosingIt()
     {
-        TCPPacketCode.Init();
+        MessageCodec.Init();
         using TestService service = new();
         Connect connect = service.AddLoopbackConnection(out Socket peer, out _);
         using (peer)
         {
             connect.Send(new C2S_Ping { Time = 1 });
-            service.OnSend += sent => sent.Send(new C2S_Ping { Time = 2 });
+            Action<Connect> queueNext = sent => sent.Send(new C2S_Ping { Time = 2 });
+            service.OnSend += queueNext;
             service.Send();
-            Assert.That(TCPPacketCode.TryUnPack(connect.sendSteam, out byte[] body, out ushort opcode, out _),
-                Is.EqualTo(PacketReadResult.Success));
-            Assert.That(TCPPacketCode.TryToMessage(body, opcode, out IMessage message, out _),
-                Is.EqualTo(MessageDecodeResult.Success));
-            Assert.That(((C2S_Ping)message).Time, Is.EqualTo(2));
+            service.OnSend -= queueNext;
+            service.Send();
+
+            List<long> received = new();
+            using MemoryStream stream = new();
+            byte[] buffer = new byte[8192];
+            while (received.Count < 2)
+            {
+                Assert.That(peer.Poll(1000000, SelectMode.SelectRead), Is.True);
+                int count = peer.Receive(buffer);
+                Assert.That(count, Is.GreaterThan(0));
+                stream.Position = stream.Length;
+                stream.Write(buffer, 0, count);
+                while (TCPPacketCode.TryUnPack(stream, out byte[] packet, out _) == PacketReadResult.Success)
+                {
+                    Assert.That(MessageCodec.TryDecode(packet, out _, out IMessage message, out _),
+                        Is.EqualTo(MessageDecodeResult.Success));
+                    received.Add(((C2S_Ping)message).Time);
+                }
+            }
+            CollectionAssert.AreEqual(new long[] { 1, 2 }, received);
         }
     }
 
@@ -245,6 +262,7 @@ public sealed class NetworkInputAndProtocolTests
 
         public override void Init() { }
         public override void Update() { }
+        public override void Shutdown() => Dispose();
 
         public Connect AddLoopbackConnection(out Socket peer, out Socket accepted)
         {
@@ -267,10 +285,7 @@ public sealed class NetworkInputAndProtocolTests
         {
             foreach (TCPPair pair in connects.Values)
             {
-                pair.socket.Dispose();
-                pair.connect.readSteam.Dispose();
-                pair.connect.sendSteam.Dispose();
-                pair.connect.Dispose();
+                pair.Dispose();
             }
             connects.Clear();
         }

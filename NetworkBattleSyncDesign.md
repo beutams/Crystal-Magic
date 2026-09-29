@@ -410,3 +410,64 @@ Battle 创建实际 Battle World 和 PlayerDungeon 实体
 4. **双客户端：** A 的本地 Player 预测移动，B 只通过状态快照插值看到 A；B 的世界中 A 不命中任何战斗模拟 Query。
 5. **事件去重：** 重发同一服务器 EventFrame 或在重连后补发，音效、VFX、伤害数字、死亡和掉落各只消费一次。
 6. **起帧安全：** 任意一个客户端未 `BattleReady` 时，服务器不得启动逻辑帧；地图/碰撞构建失败时必须拒绝 Ready，而不是开始后校正。
+
+## 10. 传输接口（房主制迁移第一步）
+
+`NetworkComponent` 负责选择具体传输。Lobby、Battle 和帧同步使用 `IClientTransport` / `IServerTransport` 以及 `Connect`，服务端 Manager 的 `Initialize` 接收传输实例。TCP 与 Steam 房主模式共用协议及权威战斗逻辑，接入方式与验收状态见第 11 节。
+
+消息路径：
+
+```text
+业务 IMessage → Connect.Send → MessageCodec → IConnectionTransport.Send
+TCP：完整消息 → TCPPacketCode 长度头 → TCPPair.SendStream → Socket
+接收：TCP 拆出完整消息 → Connect.TryReceive → MessageCodec → 已注册的业务回调
+```
+
+- `MessageCodec` 共用格式为 `[2 字节大端 opcode][UTF-8 JSON]`，长度上限 1 MB，包含 opcode。
+- `TCPPacketCode` 仅处理 `[4 字节大端消息长度]` 和半包/粘包；与改造前的 TCP 线上字节格式兼容。
+- `Connect` 不持有 Socket、IP 地址或字节流；`RemoteEndpoint` 使用 `NetworkEndpoint`，TCP 地址由 `TcpEndpoint` 表示。
+- 目前接口约定可靠、有序交付完整消息。`IClientTransport.Connect` 先返回 Pending 连接，连接事件在 `Update` 中派发，确保上层有时间注册回调。
+- `Update`、消息收发和回调均在主线程执行。`TryReceive` 将未知 opcode、反序列化失败和业务回调异常转换为统一的断线原因，由传输服务执行断线和通知。
+- 传输服务拥有原生连接资源；`DisconnectAfterSend` 排空发送队列再关闭，`Shutdown` 释放全部连接、定时器和回调，重复调用安全。发送完成不等于对端业务已处理，结算确认仍由业务协议负责。
+
+Steam 使用 `SteamEndpoint` 和 `SteamP2PTransport`，共用 `MessageTransport` 的有界队列和生命周期。消息型传输不添加 TCP 长度头；`ReliableMessageFragments` 把完整消息分成不超过 64 KiB 的可靠有序消息，在上层重组成不超过 1 MiB 的协议消息。房主使用 `LoopbackTransport`，同样序列化并在后续 Update 派发。
+
+验证：`NetworkTransportTests` 覆盖非 TCP 消息连接、旧协议字节兼容、半包/粘包、本机 TCP 收发与发送后断开、连接前取消以及重复清理；现有网络协议与战斗测试改用共用编解码器。
+
+## 11. Steam 房主模式与断线保护（2026-09-29）
+
+### 接入与当前状态
+
+代码已接入，双账号、跨网络及 Unity 场景内断线验收仍未完成。因此不自动替换现有默认玩法：大厅 `NetworkComponent.battleHosting` 默认 `Tcp`，测试时在大厅场景 Inspector 将 `Battle Hosting` 设为 `Steam` 并重新启动大厅。客户端根据大厅下发的描述自动选传输，不需要手工改客户端角色，也不需要给客户端增加 GameComponent。TCP 模式需同时更新大厅、战斗服与客户端，不能混用旧协议版本。
+
+Steam 模式仍保留自己的 TCP 大厅，但不再启动独立 BattleServer。双方 Steam 客户端必须在线，使用同一游戏/AppID 的不同账号，Steamworks.NET 与原生库必须随客户端正确打包。大厅 TCP 地址仍须配置为客户端可访问的地址（原来的 `127.0.0.1` 只适用于本机测试）。Steam P2P 地址是房主 SteamID + 虚拟端口，不是房主公网 IP。
+
+流程：房间准备 → 大厅冻结成员、创建唯一 sessionId → 房主建立 Steam 监听和入场房间 → HostReady → 大厅分别发票 → 房主本机队列/客人 Steam P2P 入场 → 上传角色 → 创建独立权威 World → 全员准备 → 起帧。
+
+HostReady 不等待权威 World 初始化，因为 World 必须等入场角色数据齐备后才能创建。房主保持 Client 身份；权威 `BattleWorldContext` 和客户端 `GameWorldManager` 分开管理。场景根节点保存自己的 World，延迟销毁不会操作新建的 World。联机帧时钟采用现实时间，不受客户端转场的 `Time.timeScale = 0` 影响。
+
+### 失败处理约定
+
+| 阶段 | 保护与退出行为 |
+| --- | --- |
+| 连接/入场 | 底层连接最多 10 秒；无心跳 10 秒关闭；入场和地图准备分别最多 45 秒，Ready 最多 30 秒 |
+| 房主创建 | 15 秒内未就绪、成员离开或房主拒绝时，解除房间 start 并清除准备状态；迟到/重复/非房主 Ready 不生效 |
+| 收发 | 主线程回调，遍历快照防重入；单消息 1 MiB，发送/接收队列分别最多 4 MiB；分片重组超时；原生消息在 finally 中 Release |
+| 场景切换 | 嵌套协程异常统一捕获；网络准备失败可取消；整个转场最多 120 秒，释放模拟和输入锁，进入恢复状态 |
+| 战斗/转层断线 | 停止帧同步、清理战斗连接、返回战前同 GUID 存档；已收到的有效结算优先；失败恢复可重试或返回主菜单 |
+| 大厅中断 | 与战斗连接分离；正在运行的 P2P 战斗不被大厅中断连带关闭，后台重连控制通道 |
+| 客人重连 | 服务端保留 60 秒重连窗口，校验账号、存档 GUID、会话、单次票与 Steam 连接身份，换新连接后走完整快照/Ready |
+| 结算 | 校验会话、场景与连接版本，按完整角色结果覆盖而非累加；先原子落盘再发业务 ACK，同 sessionId 不重复写入奖励；服务端最多等待 5 秒 |
+| 清理 | DisconnectAfterSend 最多排空 2 秒，不无限等待对端；Shutdown 重复调用无业务回调；房主结束后给结算短暂发送窗口，再关闭监听和 World |
+
+存档替换失败时保留旧存档，成功替换保留上一版 `.backup.json`。写盘失败的结算保留在当前进程中，主菜单再次读档会先恢复原角色，不能把待恢复数据写到另一个槽位。若磁盘持续不可写又强制关闭进程，未成功写盘的结果仍会丢失；不能把这种情况描述成保证保存成功。
+
+网络 JSON 仅接受从已注册协议可达的类型；拒绝任意 CLR `$type`，限制 JSON 深度。未引入 Steam Web 身份票验证/反作弊，保持此前约定的身份信任范围。无房主迁移；房主进程消失时其他客户端安全返回。大厅进程重启会丢失内存中的会话索引：已有 P2P 连接可继续，但不能保证原战斗的再次入场发现。
+
+### 验证结果及待验收项
+
+- 完整解决方案及 Steamworks.NET API 编译已通过；包依赖原有警告单独保留。
+- 22 项独立源码测试通过（真实 TCP/本机消息队列、房主大厅流程、取消/重入/超时、分片、缺失帧 ACK 的有界历史、JSON 类型限制、原子写盘及写盘失败不截断旧文件）。它们不替代 Unity/Steam 运行时测试。
+- Unity EditMode 中运行 `NetworkTransportTests`、`HostedLobbyLifecycleTests` 及现有 `BattleLifecycleTests`、`PlayerCharacterSyncTests`、`NetworkInputAndProtocolTests`。
+- 双机分别在“连接、房主 Ready 前、上传角色、加载地图、等待 Ready、战斗、转层、结算发送、结算落盘”阶段退出客人/关闭房主/断网，确认有界返回、可再次进入、存档 GUID 不变、无重复结算、World/监听/计时器无残留。
+- 关闭独立 BattleServer 后测试 Steam 双账号不同网络、重复开始、大厅断线恢复，以及技能、掉落、死亡、观战、出口和转层。通过后再决定是否把默认模式切到 Steam。

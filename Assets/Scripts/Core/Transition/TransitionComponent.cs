@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 namespace CrystalMagic.Core {
@@ -11,6 +12,8 @@ namespace CrystalMagic.Core {
         private ITransitionUI _activeTransitionUI;
         private bool _isTransitioning;
         private bool _loadSequenceStarted;
+        private double _deadline;
+        private string _pendingFailure;
 
         public override int Priority => 25;
         public bool IsTransitioning => _isTransitioning;
@@ -33,13 +36,15 @@ namespace CrystalMagic.Core {
             _activeTransitionUI = transitionUI;
             _loadSequenceStarted = false;
             _isTransitioning = true;
+            _deadline = Time.realtimeSinceStartupAsDouble + 120;
+            _pendingFailure = null;
 
             GameGateComponent gate = GameGateComponent.Instance;
             gate.Lock(GameGateType.Simulation, TransitionLockReason);
             gate.Lock(GameGateType.PlayerInput, TransitionLockReason);
             gate.Lock(GameGateType.UIInput, TransitionLockReason);
 
-            StartCoroutine(FadeInAsync(_activeTransitionUI, transitionData.TargetSceneName));
+            StartCoroutine(RunGuarded(FadeInAsync(_activeTransitionUI, transitionData.TargetSceneName)));
             return true;
         }
 
@@ -64,7 +69,7 @@ namespace CrystalMagic.Core {
             }
 
             _loadSequenceStarted = true;
-            StartCoroutine(LoadAndFadeOutAsync(_activeTransitionData, _activeTransitionUI));
+            StartCoroutine(RunGuarded(LoadAndFadeOutAsync(_activeTransitionData, _activeTransitionUI)));
             return true;
         }
 
@@ -74,7 +79,7 @@ namespace CrystalMagic.Core {
             EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.FadeInStarted, targetSceneName));
             if (transitionUI != null)
             {
-                yield return StartCoroutine(transitionUI.Show());
+                yield return transitionUI.Show();
             }
 
             DungeonFlowTiming.EndStage(3, "FadeIn 已完成");
@@ -91,16 +96,16 @@ namespace CrystalMagic.Core {
             {
                 IEnumerator preLoadCoroutine = transitionData.PreLoadCoroutineFactory();
                 if (preLoadCoroutine != null)
-                    yield return StartCoroutine(preLoadCoroutine);
+                    yield return preLoadCoroutine;
             }
 
             if (transitionData.LoadError == null)
-                yield return StartCoroutine(LoadSceneAsync(transitionData));
+                yield return LoadSceneAsync(transitionData);
             if (transitionData.LoadError == null && transitionData.PostLoadCoroutineFactory != null)
             {
                 IEnumerator postLoadCoroutine = transitionData.PostLoadCoroutineFactory();
                 if (postLoadCoroutine != null)
-                    yield return StartCoroutine(postLoadCoroutine);
+                    yield return postLoadCoroutine;
             }
 
             if (transitionData.LoadError != null)
@@ -125,7 +130,7 @@ namespace CrystalMagic.Core {
             }
             else
                 PublishLoadProgress(transitionData.TargetSceneName, 1f, "Load failed", transitionData.LoadError);
-            yield return StartCoroutine(FadeOutAsync(transitionUI, transitionData.TargetSceneName));
+            yield return FadeOutAsync(transitionUI, transitionData.TargetSceneName);
 
             GameGateComponent gate = GameGateComponent.Instance;
             gate?.Unlock(GameGateType.UIInput, TransitionLockReason);
@@ -150,16 +155,14 @@ namespace CrystalMagic.Core {
             }
             else
             {
-                yield return StartCoroutine(
-                    SceneComponent.Instance.LoadSceneAsyncCoroutine(
+                yield return SceneComponent.Instance.LoadSceneAsyncCoroutine(
                         transitionData.TargetSceneName,
                         forceReload: transitionData.ForceReloadTargetScene,
                         onProgress: progress => PublishLoadProgress(
                             transitionData.TargetSceneName,
                             Mathf.Lerp(0.05f, 0.25f, progress),
                             "Loading scene",
-                            transitionData.TargetSceneName))
-                );
+                            transitionData.TargetSceneName));
             }
             DungeonFlowTiming.EndStage(5, "目标场景已就绪");
 
@@ -175,7 +178,7 @@ namespace CrystalMagic.Core {
             foreach (string subSceneName in activeSubSceneNames)
             {
                 PublishLoadProgress(transitionData.TargetSceneName, 0.27f, "Loading sub-scene", subSceneName);
-                yield return StartCoroutine(SceneComponent.Instance.WaitForSubSceneLoadedCoroutine(subSceneName));
+                yield return SceneComponent.Instance.WaitForSubSceneLoadedCoroutine(subSceneName);
                 if (!SceneComponent.Instance.IsSubSceneLoaded(subSceneName))
                 {
                     transitionData.LoadError = $"加载子场景超时：{subSceneName}。";
@@ -190,7 +193,7 @@ namespace CrystalMagic.Core {
             EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.FadeOutStarted, targetSceneName));
             if (transitionUI != null)
             {
-                yield return StartCoroutine(transitionUI.Hide());
+                yield return transitionUI.Hide();
             }
 
             EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.FadeOutCompleted, targetSceneName, 1f));
@@ -203,6 +206,96 @@ namespace CrystalMagic.Core {
                 Mathf.Clamp01(progress),
                 title ?? string.Empty,
                 detail ?? string.Empty));
+        }
+
+        // Unity 不会把子协程 MoveNext 的异常抛回父协程。显式推进嵌套枚举器才能统一释放转场锁。
+        private IEnumerator RunGuarded(IEnumerator routine)
+        {
+            Stack<IEnumerator> stack = new();
+            stack.Push(routine);
+            try
+            {
+                while (stack.Count > 0 && _isTransitioning)
+                {
+                    bool moved = false;
+                    object current = null;
+                    Exception failure = null;
+                    try
+                    {
+                        moved = stack.Peek().MoveNext();
+                        if (moved) current = stack.Peek().Current;
+                    }
+                    catch (Exception exception) { failure = exception; }
+                    if (failure != null)
+                    {
+                        Debug.LogException(failure);
+                        _pendingFailure = "场景切换失败，已停止本次加载。";
+                        yield break;
+                    }
+                    if (!moved) { (stack.Pop() as IDisposable)?.Dispose(); continue; }
+                    if (current is IEnumerator nested) { stack.Push(nested); continue; }
+                    yield return current;
+                }
+            }
+            finally
+            {
+                while (stack.Count > 0)
+                {
+                    try { (stack.Pop() as IDisposable)?.Dispose(); }
+                    catch (Exception exception) { Debug.LogException(exception); }
+                }
+            }
+        }
+
+        private void Update()
+        {
+            if (!_isTransitioning) return;
+            string cancellation = _pendingFailure;
+            try { cancellation ??= _activeTransitionData?.CancellationError?.Invoke(); }
+            catch (Exception exception) { Debug.LogException(exception); cancellation = "场景状态异常。"; }
+            if (cancellation != null || Time.realtimeSinceStartupAsDouble >= _deadline)
+                AbortActiveTransition(cancellation ?? "场景切换超时，已停止等待。" );
+        }
+
+        private void AbortActiveTransition(string error)
+        {
+            TransitionData data = _activeTransitionData;
+            if (data == null) return;
+            StopAllCoroutines();
+            data.LoadError = error;
+            data.OnComplete = null;
+            try
+            {
+                if (data.OnLoadFailed != null) data.OnLoadFailed(error);
+                else { data.TargetStateType = typeof(MainMenuState); data.TargetStateData = null; }
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                data.TargetStateType = typeof(MainMenuState);
+                data.TargetStateData = null;
+            }
+            finally { ReleaseTransitionLocks(); }
+            GameFlowComponent.Instance.RecoverFailedTransition(data);
+        }
+
+        private void ReleaseTransitionLocks()
+        {
+            _isTransitioning = false;
+            _loadSequenceStarted = false;
+            _activeTransitionData = null;
+            _activeTransitionUI = null;
+            _pendingFailure = null;
+            GameGateComponent.Instance.Unlock(GameGateType.UIInput, TransitionLockReason);
+            GameGateComponent.Instance.Unlock(GameGateType.PlayerInput, TransitionLockReason);
+            GameGateComponent.Instance.Unlock(GameGateType.Simulation, TransitionLockReason);
+        }
+
+        public override void Cleanup()
+        {
+            StopAllCoroutines();
+            ReleaseTransitionLocks();
+            base.Cleanup();
         }
     }
 }

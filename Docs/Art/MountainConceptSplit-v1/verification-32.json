@@ -1,0 +1,12 @@
+{
+  "tileSize": 32,
+  "tiles": 48,
+  "paletteColors": 14,
+  "binaryAlpha": true,
+  "transparentPixels": 3151,
+  "reconstructionMismatches": 0,
+  "outerRepeatEdgeMismatches": 77,
+  "freeRandomMixingValidated": false,
+  "cornersIncluded": false,
+  "installedInUnity": false
+}

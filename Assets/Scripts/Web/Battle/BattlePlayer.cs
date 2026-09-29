@@ -18,6 +18,7 @@ namespace Server
         public bool entitiesSent;
         public bool ready;
         public bool offline;
+        public long reconnectUntil;
         public bool active;
         public bool runningReload;
         public bool reloadSnapshotRequested;

@@ -9,5 +9,6 @@ namespace Server
     {
         public string ticket;
         public bool reload;
+        public BattleConnectionInfo connection;
     }
 }

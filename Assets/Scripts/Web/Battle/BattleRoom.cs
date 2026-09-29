@@ -6,6 +6,8 @@ namespace Server
     public class BattleRoom
     {
         public ulong battleId;
+        public string sessionId = Guid.NewGuid().ToString("N");
+        public BattleConnectionInfo connection;
         public ulong lobbyRoomId;
         public ulong ownerAccountId;
         public int themeKey;
@@ -30,7 +32,8 @@ namespace Server
             ulong[] playerlist,
             Dictionary<ulong, string> saveGuids)
         {
-            if (playerlist == null || saveGuids == null)
+            if (playerlist == null || saveGuids == null || playerlist.Length == 0 || playerlist.Length > 8 ||
+                ownerAccountId == 0 || Array.IndexOf(playerlist, ownerAccountId) < 0)
                 return null;
 
             BattleRoom room = new BattleRoom();
@@ -46,7 +49,7 @@ namespace Server
             room.frame = new ServerFrameManager();
             foreach(var accountId in playerlist)
             {
-                if (!saveGuids.TryGetValue(accountId, out string saveGuid) ||
+                if (accountId == 0 || room.players.ContainsKey(accountId) || !saveGuids.TryGetValue(accountId, out string saveGuid) ||
                     !Guid.TryParse(saveGuid, out Guid parsedSaveGuid))
                 {
                     return null;

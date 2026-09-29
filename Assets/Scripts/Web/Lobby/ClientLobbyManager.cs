@@ -6,9 +6,9 @@ using UnityEngine;
 
 namespace Server
 {
-    public class ClientLobbyManager
+    public partial class ClientLobbyManager
     {
-        public ClientService clientServic => NetworkComponent.Instance.clientServic;
+        public IClientTransport clientServic => NetworkComponent.Instance.lobbyTransport;
         public ulong accountId;
         public RoomListData roomList;
         public RoomData room;
@@ -37,22 +37,25 @@ namespace Server
             }
 
             LoginFailure = LobbyRequestType.Unknown;
-            clientServic.Connect(ServerUtility.GetLobbyIPEndPoint(), out lobbyConnect);
+            clientServic.Connect(ServerUtility.GetLobbyEndpoint(), out lobbyConnect);
+            loginDeadline = NetworkTimer.Instance.TimeNow + ServerUtility.ConnectTimeout + ServerUtility.Timeout;
 
             lobbyConnect.OnConnected += OnLobbyConnected;
             lobbyConnect.OnDisconnected += OnDisconnected;
 
-            lobbyConnect.RegisterCallback(TCPPacketCode.GetOpcode<L2C_LoginLobbyResult>(), OnLoginResult);
-            lobbyConnect.RegisterCallback(TCPPacketCode.GetOpcode<L2C_RefreshRoomList>(), OnRefreshRoomList);
-            lobbyConnect.RegisterCallback(TCPPacketCode.GetOpcode<L2C_RefreshRoomInfo>(), OnRefreshRoomInfo);
-            lobbyConnect.RegisterCallback(TCPPacketCode.GetOpcode<L2C_JoinReturn>(), OnJoinRoom);
-            lobbyConnect.RegisterCallback(TCPPacketCode.GetOpcode<L2C_CreateReturn>(), OnCreateRoom);
-            lobbyConnect.RegisterCallback(TCPPacketCode.GetOpcode<L2C_LeaveReturn>(), OnLeaveRoom);
-            lobbyConnect.RegisterCallback(TCPPacketCode.GetOpcode<L2C_StartReturn>(), OnStartResult);
-            lobbyConnect.RegisterCallback(TCPPacketCode.GetOpcode<L2C_StartTicket>(), OnStartTicket);
+            lobbyConnect.RegisterCallback(MessageCodec.GetOpcode<L2C_LoginLobbyResult>(), OnLoginResult);
+            lobbyConnect.RegisterCallback(MessageCodec.GetOpcode<L2C_RefreshRoomList>(), OnRefreshRoomList);
+            lobbyConnect.RegisterCallback(MessageCodec.GetOpcode<L2C_RefreshRoomInfo>(), OnRefreshRoomInfo);
+            lobbyConnect.RegisterCallback(MessageCodec.GetOpcode<L2C_JoinReturn>(), OnJoinRoom);
+            lobbyConnect.RegisterCallback(MessageCodec.GetOpcode<L2C_CreateReturn>(), OnCreateRoom);
+            lobbyConnect.RegisterCallback(MessageCodec.GetOpcode<L2C_LeaveReturn>(), OnLeaveRoom);
+            lobbyConnect.RegisterCallback(MessageCodec.GetOpcode<L2C_StartReturn>(), OnStartResult);
+            lobbyConnect.RegisterCallback(MessageCodec.GetOpcode<L2C_StartTicket>(), OnStartTicket);
+            RegisterHostCallbacks(lobbyConnect);
         }
         public void Cleanup()
         {
+            CancelPendingHost();
             if (request != null)
             {
                 NetworkTimer.Instance.Remove(request.waitTimerId);
@@ -62,14 +65,15 @@ namespace Server
 
             if (lobbyConnect != null)
             {
-                lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_LoginLobbyResult>(), OnLoginResult);
-                lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_RefreshRoomList>(), OnRefreshRoomList);
-                lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_RefreshRoomInfo>(), OnRefreshRoomInfo);
-                lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_JoinReturn>(), OnJoinRoom);
-                lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_CreateReturn>(), OnCreateRoom);
-                lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_LeaveReturn>(), OnLeaveRoom);
-                lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_StartReturn>(), OnStartResult);
-                lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_StartTicket>(), OnStartTicket);
+                UnregisterHostCallbacks(lobbyConnect);
+                lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_LoginLobbyResult>(), OnLoginResult);
+                lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_RefreshRoomList>(), OnRefreshRoomList);
+                lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_RefreshRoomInfo>(), OnRefreshRoomInfo);
+                lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_JoinReturn>(), OnJoinRoom);
+                lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_CreateReturn>(), OnCreateRoom);
+                lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_LeaveReturn>(), OnLeaveRoom);
+                lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_StartReturn>(), OnStartResult);
+                lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_StartTicket>(), OnStartTicket);
                 lobbyConnect.OnConnected -= OnLobbyConnected;
                 lobbyConnect.OnDisconnected -= OnDisconnected;
                 clientServic.Disconnect(lobbyConnect);
@@ -77,6 +81,7 @@ namespace Server
             }
 
             loggedIn = false;
+            loginDeadline = 0;
             disconnecting = false;
             DisconnectRequested = false;
             LoginFailure = LobbyRequestType.Unknown;
@@ -147,6 +152,9 @@ namespace Server
                 accountId = accountId,
                 username = username,
                 saveGuid = parsedSaveGuid.ToString("N"),
+                steamP2PAvailable = SteamComponent.Instance.IsInitialized,
+                protocolVersion = BattleConnectionInfo.CurrentProtocolVersion,
+                activeSessionId = BattleControlActive ? activeSessionId : null,
             });
         }
 
@@ -177,17 +185,21 @@ namespace Server
             }
 
             bool disconnectRequested = DisconnectRequested;
+            CancelPendingHost();
+            loginDeadline = 0;
+            reconnectAt = NetworkTimer.Instance.TimeNow + ServerUtility.BattleLobbyReconnectInterval;
+            UnregisterHostCallbacks(connect);
             disconnecting = true;
             loggedIn = false;
             accountId = 0UL;
-            lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_LoginLobbyResult>(), OnLoginResult);
-            lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_RefreshRoomList>(), OnRefreshRoomList);
-            lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_RefreshRoomInfo>(), OnRefreshRoomInfo);
-            lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_JoinReturn>(), OnJoinRoom);
-            lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_CreateReturn>(), OnCreateRoom);
-            lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_LeaveReturn>(), OnLeaveRoom);
-            lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_StartReturn>(), OnStartResult);
-            lobbyConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<L2C_StartTicket>(), OnStartTicket);
+            lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_LoginLobbyResult>(), OnLoginResult);
+            lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_RefreshRoomList>(), OnRefreshRoomList);
+            lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_RefreshRoomInfo>(), OnRefreshRoomInfo);
+            lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_JoinReturn>(), OnJoinRoom);
+            lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_CreateReturn>(), OnCreateRoom);
+            lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_LeaveReturn>(), OnLeaveRoom);
+            lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_StartReturn>(), OnStartResult);
+            lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_StartTicket>(), OnStartTicket);
             lobbyConnect.OnConnected -= OnLobbyConnected;
             lobbyConnect.OnDisconnected -= OnDisconnected;
             lobbyConnect = null;
@@ -206,7 +218,7 @@ namespace Server
             DisconnectRequested = disconnectRequested;
             onRoomRefresh?.Invoke(roomList);
             onRoomInfoRefresh?.Invoke(null);
-            onDisconnected?.Invoke();
+            if (!BattleControlActive) onDisconnected?.Invoke();
         }
         private void OnRefreshRoomInfo(IMessage message, Connect connect)
         {
@@ -222,6 +234,16 @@ namespace Server
             L2C_StartTicket startTicket = message as L2C_StartTicket;
             if (connect != lobbyConnect || startTicket == null || string.IsNullOrEmpty(startTicket.ticket))
             {
+                return;
+            }
+
+            ClientBattleManager existingBattle = NetworkComponent.Instance.clientBattleManager;
+            if (existingBattle.battleConnect != null || TransitionComponent.Instance.IsTransitioning)
+                return;
+            if (startTicket.connection == null || !startTicket.connection.IsValid)
+            {
+                onRequestFail?.Invoke(LobbyRequestType.StartFail);
+                Disconnect();
                 return;
             }
 
@@ -249,12 +271,15 @@ namespace Server
                 return;
             }
 
+            BattleControlActive = startTicket.connection.kind == BattleTransportKind.Steam;
+            activeSessionId = startTicket.connection.sessionId;
             GameFlowComponent.Instance.BeginTransition(OnlineBattlePreparationState.CreateEnterTransitionData(
                 battleManager,
                 startTicket.ticket,
                 localAccountId,
-                startTicket.reload));
-            Disconnect();
+                startTicket.reload,
+                startTicket.connection));
+            if (!BattleControlActive) Disconnect();
         }
         public void OnRefreshRoomList(IMessage message,Connect connect)
         {
@@ -264,6 +289,7 @@ namespace Server
                 if (!loggedIn)
                 {
                     loggedIn = true;
+                    loginDeadline = 0;
                 }
                 roomList = roomListData.roomListData;
                 onRoomRefresh?.Invoke(roomList);
@@ -425,7 +451,8 @@ namespace Server
                     onRequestWaiting?.Invoke(request.type);
                 }
             });
-            request.timeoutTimerId = NetworkTimer.Instance.AddOnce(5000, () =>
+            request.timeoutTimerId = NetworkTimer.Instance.AddOnce(type == LobbyRequestType.StartRequest
+                ? ServerUtility.HostStartTimeout + 5_000 : 5_000, () =>
             {
                 OnRequestTimeout(currentRequest);
             });

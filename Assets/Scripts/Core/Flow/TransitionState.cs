@@ -43,5 +43,6 @@ namespace CrystalMagic.Core {
         public System.Action OnComplete { get; set; }
         public string LoadError { get; set; }
         public System.Action<string> OnLoadFailed { get; set; }
+        public System.Func<string> CancellationError { get; set; }
     }
 }

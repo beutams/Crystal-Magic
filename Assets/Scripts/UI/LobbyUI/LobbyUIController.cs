@@ -28,7 +28,7 @@
 
         protected override void OnClose()
         {
-            Lobby.Cleanup();
+            if (!Lobby.BattleControlActive) Lobby.Cleanup();
         }
 
         private Server.ClientLobbyManager Lobby => Server.NetworkComponent.Instance.clientLobbyManager;

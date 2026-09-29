@@ -1,60 +1,68 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using UnityEngine;
 
 namespace Server
 {
-    public class ServerService : Service
+    public class ServerService : Service, IServerTransport
     {
         protected Socket socket;
         protected IPEndPoint iPEndPoint;
 
-        public Action OnListening;
-        public Action OnListeningFail;
-        public Action<Connect> OnAccept;
+        public event Action OnListening;
+        public event Action OnListeningFail;
+        public event Action<Connect> OnAccept;
+        public NetworkEndpoint LocalEndpoint { get; private set; }
 
-        public ServerService(IPEndPoint iPEndPoint)
+        public ServerService(NetworkEndpoint endpoint)
         {
-            this.iPEndPoint = iPEndPoint;
+            if (endpoint is not TcpEndpoint tcpEndpoint)
+                throw new ArgumentException("ServerService requires a TCP endpoint.", nameof(endpoint));
+
+            iPEndPoint = tcpEndpoint.Address;
+            LocalEndpoint = endpoint;
         }
 
         protected ServerState state;
         public override void Init()
         {
+            if (state == ServerState.LISTENING)
+                return;
             try
             {
                 startTime = NetworkTimer.Instance.TimeNow;
 
                 state = ServerState.CLOSED;
-                socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                socket = new Socket(iPEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 socket.NoDelay = true;
                 socket.Bind(iPEndPoint);
 
                 socket.Listen(128);
-                OnListening?.Invoke();
+                socket.Blocking = false;
+                LocalEndpoint = new TcpEndpoint((IPEndPoint)socket.LocalEndPoint);
                 state = ServerState.LISTENING;
                 Debug.Log($"[TCP][Server] Listening at {socket.LocalEndPoint}");
 
-                OnAccept += OnAcceptEvent;
                 OnDisconnected += OnDisconnectEvent;
+                OnListening?.Invoke();
             }
             catch (SocketException e)
             {
                 Debug.LogError($"[TCP][Server] Listen failed at {iPEndPoint}: {e.SocketErrorCode} - {e.Message}");
-                OnListeningFail?.Invoke();
                 state = ServerState.CLOSED;
+                socket?.Dispose();
+                socket = null;
+                OnListeningFail?.Invoke();
             }
         }
         private void OnAcceptEvent(Connect connect)
         {
-            connect.RegisterCallback(TCPPacketCode.messages[typeof(C2S_Ping)], OnClientConnect);
+            connect.RegisterCallback(MessageCodec.GetOpcode<C2S_Ping>(), OnClientConnect);
         }
         private void OnDisconnectEvent(Connect connect)
         {
-            connect.UnRegisterCallback(TCPPacketCode.messages[typeof(C2S_Ping)], OnClientConnect);
+            connect.UnRegisterCallback(MessageCodec.GetOpcode<C2S_Ping>(), OnClientConnect);
         }
         private void OnClientConnect(IMessage message, Connect connect)
         {
@@ -69,45 +77,24 @@ namespace Server
             HandleDisconnect();
         }
 
-        public void Shutdown()
+        public override void Shutdown()
         {
             foreach (TCPPair pair in connects.Values)
             {
-                try
-                {
-                    pair.socket.Shutdown(SocketShutdown.Both);
-                }
-                catch (SocketException)
-                {
-                }
-                finally
-                {
-                    pair.socket.Close();
-                    pair.socket.Dispose();
-                    pair.connect.readSteam.Dispose();
-                    pair.connect.sendSteam.Dispose();
-                    pair.connect.Dispose();
-                }
+                pair.Dispose();
             }
 
             connects.Clear();
             pendingDisconnects.Clear();
             closeAfterSendList.Clear();
+            drainDeadlines.Clear();
 
-            if (socket == null)
-            {
-                return;
-            }
-
-            socket.Close();
-            socket.Dispose();
+            socket?.Dispose();
             socket = null;
             OnListening = null;
             OnListeningFail = null;
             OnAccept = null;
-            OnSend = null;
-            OnRecv = null;
-            OnDisconnected = null;
+            ClearCallbacks();
             state = ServerState.CLOSED;
         }
         protected void HandleAccept()
@@ -124,6 +111,7 @@ namespace Server
 
                 Socket clientSocket = socket.Accept();
                 clientSocket.NoDelay = true;
+                clientSocket.Blocking = false;
 
                 TCPPair pair = TCPPair.CreateTCPPair(clientSocket, (IPEndPoint)clientSocket.RemoteEndPoint, out Guid id);
                 connects.Add(id, pair);
@@ -135,6 +123,7 @@ namespace Server
                 Debug.Log($"[TCP][Server] Accepted {clientSocket.RemoteEndPoint}, Connect={id}");
                 try
                 {
+                    OnAcceptEvent(connect);
                     OnAccept?.Invoke(connect);
                 }
                 catch (Exception exception)

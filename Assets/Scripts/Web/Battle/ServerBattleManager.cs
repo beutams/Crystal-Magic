@@ -9,29 +9,39 @@ namespace Server
 {
     public class ServerBattleManager
     {
-        public ServerService battleService;
-        public ServerService lobbyService;
+        public IServerTransport battleService;
+        public IServerTransport lobbyService;
         public Dictionary<ulong, BattleRoom> battleRooms = new Dictionary<ulong, BattleRoom>();
         public Dictionary<Connect, BattlePlayer> connectDic = new Dictionary<Connect, BattlePlayer>();
 
         public Connect lobbyConnect;
+        private readonly Dictionary<Connect, B2C_BattleSettlement> pendingSettlements = new();
+        private readonly Dictionary<Connect, long> settlementDeadlines = new();
+        private readonly Dictionary<Connect, long> enterDeadlines = new();
 
-        public void Initialize()
+        public event Action<string> SessionEnded;
+        public void Initialize(IServerTransport battleTransport, IServerTransport lobbyTransport = null)
         {
-            TCPPacketCode.Init();
-            battleService = new ServerService(ServerUtility.GetBattleIPEndPoint());
+            MessageCodec.Init();
+            battleService = battleTransport ?? throw new ArgumentNullException(nameof(battleTransport));
+            lobbyService = lobbyTransport;
             battleService.OnAccept += OnAccept;
             battleService.OnDisconnected += OnDisconnected;
             battleService.Init();
 
-            lobbyService = new ServerService(ServerUtility.GetBattleLobbyIPEndPoint());
-            lobbyService.OnAccept += OnLobbyAccept;
-            lobbyService.OnDisconnected += OnDisconnected;
-            lobbyService.Init();
+            if (lobbyService != null)
+            {
+                lobbyService.OnAccept += OnLobbyAccept;
+                lobbyService.OnDisconnected += OnDisconnected;
+                lobbyService.Init();
+            }
         }
 
         private void OnDisconnected(Connect connect)
         {
+            pendingSettlements.Remove(connect);
+            settlementDeadlines.Remove(connect);
+            enterDeadlines.Remove(connect);
             if (connect == lobbyConnect)
             {
                 lobbyConnect = null;
@@ -44,7 +54,7 @@ namespace Server
             }
 
             Debug.LogWarning(
-                $"[BattleTrace][Server] Socket disconnected: connect={connect?.IPEndPoint}, " +
+                $"[BattleTrace][Server] Socket disconnected: connect={connect?.RemoteEndpoint}, " +
                 $"reason={connect?.LastDisconnectInfo?.Reason}, phase={connect?.LastDisconnectInfo?.Phase}, " +
                 $"detail={connect?.LastDisconnectInfo?.Detail}, roomPhase={player.room?.phase}, " +
                 $"player={DescribePlayer(player)}");
@@ -61,6 +71,7 @@ namespace Server
             StopReloadTimeout(player);
             player.connect = null;
             player.offline = true;
+            player.reconnectUntil = NetworkTimer.Instance.TimeNow + ServerUtility.ReconnectGrace;
             player.active = false;
             player.sceneReady = false;
             player.entitiesSent = false;
@@ -74,14 +85,16 @@ namespace Server
 
         private void OnAccept(Connect connect)
         {
-            Debug.Log($"[BattleTrace][Server] Battle socket accepted: connect={connect?.IPEndPoint}");
-            connect.RegisterCallback(TCPPacketCode.GetOpcode<C2B_EnterBattle>(), OnEnterBattle);
-            connect.RegisterCallback(TCPPacketCode.GetOpcode<C2B_ReloadBattle>(), OnReloadBattle);
-            connect.RegisterCallback(TCPPacketCode.GetOpcode<C2B_BattleSceneReady>(), OnBattleSceneReady);
-            connect.RegisterCallback(TCPPacketCode.GetOpcode<C2B_BattleReady>(), OnBattleReady);
-            connect.RegisterCallback(TCPPacketCode.GetOpcode<C2B_ReloadBattleReady>(), OnReloadBattleReady);
-            connect.RegisterCallback(TCPPacketCode.GetOpcode<C2B_FramePing>(), OnFramePing);
-            connect.RegisterCallback(TCPPacketCode.GetOpcode<C2B_BattleExitRequest>(), OnBattleExitRequest);
+            enterDeadlines[connect] = NetworkTimer.Instance.TimeNow + ServerUtility.BattleEnterTimeout;
+            connect.RegisterCallback(MessageCodec.GetOpcode<C2B_BattleSettlementAck>(), OnSettlementAck);
+            Debug.Log($"[BattleTrace][Server] Battle socket accepted: connect={connect?.RemoteEndpoint}");
+            connect.RegisterCallback(MessageCodec.GetOpcode<C2B_EnterBattle>(), OnEnterBattle);
+            connect.RegisterCallback(MessageCodec.GetOpcode<C2B_ReloadBattle>(), OnReloadBattle);
+            connect.RegisterCallback(MessageCodec.GetOpcode<C2B_BattleSceneReady>(), OnBattleSceneReady);
+            connect.RegisterCallback(MessageCodec.GetOpcode<C2B_BattleReady>(), OnBattleReady);
+            connect.RegisterCallback(MessageCodec.GetOpcode<C2B_ReloadBattleReady>(), OnReloadBattleReady);
+            connect.RegisterCallback(MessageCodec.GetOpcode<C2B_FramePing>(), OnFramePing);
+            connect.RegisterCallback(MessageCodec.GetOpcode<C2B_BattleExitRequest>(), OnBattleExitRequest);
         }
 
         private void OnBattleExitRequest(IMessage message, Connect connect)
@@ -168,19 +181,30 @@ namespace Server
 
         private void OnLobbyAccept(Connect connect)
         {
+            if (lobbyConnect != null && lobbyConnect.State != ConnectState.Close)
+            {
+                lobbyService.Disconnect(connect);
+                return;
+            }
             lobbyConnect = connect;
-            connect.RegisterCallback(TCPPacketCode.GetOpcode<L2B_StartRoom>(), OnStartRoom);
-            connect.RegisterCallback(TCPPacketCode.GetOpcode<L2B_TryReloadRoom>(), OnReloadRoom);
+            connect.RegisterCallback(MessageCodec.GetOpcode<L2B_StartRoom>(), OnStartRoom);
+            connect.RegisterCallback(MessageCodec.GetOpcode<L2B_TryReloadRoom>(), OnReloadRoom);
         }
 
         // Lobby 只在这里换发 ticket。客户端拿到 ticket 后，会用 C2B_ReloadBattle 重新接入 Battle。
         private void OnReloadRoom(IMessage message, Connect connect)
         {
-            L2B_TryReloadRoom realMessage = message as L2B_TryReloadRoom;
+            if (connect != lobbyConnect || message is not L2B_TryReloadRoom request) return;
+            B2L_ReloadRoomResult result = QueryReload(request);
+            if (result != null) connect.Send(result);
+        }
+
+        public B2L_ReloadRoomResult QueryReload(L2B_TryReloadRoom realMessage)
+        {
             if (realMessage == null || realMessage.accountId == 0UL ||
                 !Guid.TryParse(realMessage.saveGuid, out Guid requestedSaveGuid))
             {
-                return;
+                return null;
             }
 
             string normalizedSaveGuid = requestedSaveGuid.ToString("N");
@@ -188,20 +212,20 @@ namespace Server
             foreach (BattleRoom room in battleRooms.Values)
             {
                 if (room.phase == BattlePhase.Finished ||
-                    !room.players.TryGetValue(realMessage.accountId, out BattlePlayer player))
+                    !room.players.TryGetValue(realMessage.accountId, out BattlePlayer player) ||
+                    (player.offline && player.reconnectUntil != 0 && NetworkTimer.Instance.TimeNow >= player.reconnectUntil))
                 {
                     continue;
                 }
 
                 if (!string.Equals(player.saveGuid, normalizedSaveGuid, StringComparison.Ordinal))
                 {
-                    connect.Send(new B2L_ReloadRoomResult
+                    return new B2L_ReloadRoomResult
                     {
                         accountId = realMessage.accountId,
                         saveGuid = normalizedSaveGuid,
                         type = BattleReloadRoomResultType.SaveMismatch,
-                    });
-                    return;
+                    };
                 }
 
                 if (player.connect != null)
@@ -209,31 +233,36 @@ namespace Server
                     SetPlayerOffline(player, "ReloadRoomReplacedConnection");
                 }
 
-                connect.Send(new B2L_ReloadRoomResult
+                return new B2L_ReloadRoomResult
                 {
                     accountId = realMessage.accountId,
                     saveGuid = normalizedSaveGuid,
                     type = BattleReloadRoomResultType.ReloadAvailable,
                     ticket = CreateTicket(room, player),
-                });
-                return;
+                    connection = room.connection,
+                };
             }
 
-            connect.Send(new B2L_ReloadRoomResult
+            return new B2L_ReloadRoomResult
             {
                 accountId = realMessage.accountId,
                 saveGuid = normalizedSaveGuid,
                 type = BattleReloadRoomResultType.NoBattle,
-            });
+            };
         }
 
         private void OnStartRoom(IMessage message, Connect connect)
         {
-            L2B_StartRoom realMessage = message as L2B_StartRoom;
+            if (connect != lobbyConnect || message is not L2B_StartRoom request) return;
+            connect.Send(CreateSession(request) ?? new B2L_StartRoomResult { roomId = request.roomId, error = "Invalid battle roster." });
+        }
+
+        public B2L_StartRoomResult CreateSession(L2B_StartRoom realMessage, BattleConnectionInfo connection = null)
+        {
             if (realMessage == null || realMessage.players == null || realMessage.players.Length == 0 ||
                 realMessage.saveGuids == null)
             {
-                return;
+                return null;
             }
 
             BattleRoom room = BattleRoom.CreateRoom(
@@ -244,8 +273,12 @@ namespace Server
                 realMessage.saveGuids);
             if (room == null)
             {
-                return;
+                return null;
             }
+            if (connection != null && !connection.IsValid) return null;
+            room.connection = connection ?? BattleConnectionInfo.Dedicated(
+                Guid.TryParse(realMessage.sessionId, out _) ? realMessage.sessionId : room.sessionId);
+            room.sessionId = room.connection.sessionId;
             battleRooms.Add(room.battleId, room);
 
             Dictionary<ulong, string> keys = new Dictionary<ulong, string>();
@@ -255,7 +288,14 @@ namespace Server
             }
 
             SetPhase(room, BattlePhase.WaitingForEnter);
-            connect.Send(new B2L_StartRoomResult { secretKeys = keys, roomId = realMessage.roomId });
+            return new B2L_StartRoomResult { secretKeys = keys, roomId = realMessage.roomId,
+                connection = room.connection };
+        }
+
+        public void EndSession(string sessionId)
+        {
+            foreach (BattleRoom room in new List<BattleRoom>(battleRooms.Values))
+                if (room.sessionId == sessionId) FinishRoom(room);
         }
 
         // 首次入场只允许发生在 WaitingForEnter。重连必须经由 OnReloadBattle 进入。
@@ -268,6 +308,7 @@ namespace Server
             bool ticketValid = realMessage != null &&
                 !string.IsNullOrEmpty(realMessage.ticket) &&
                 TryGetTicketPlayer(realMessage.ticket, out room, out player);
+            ticketValid = ticketValid && MatchesSessionPeer(room, player, connect, realMessage.sessionId);
             bool saveGuidValid = realMessage != null &&
                 Guid.TryParse(realMessage.saveGuid, out enterSaveGuid);
             bool saveMatches = ticketValid && saveGuidValid &&
@@ -279,7 +320,7 @@ namespace Server
             if (!ticketValid || !saveMatches || !phaseValid || !playerStateValid || !characterDataValid)
             {
                 Debug.LogWarning(
-                    $"[BattleTrace][Server] C2B_EnterBattle rejected: connect={connect?.IPEndPoint}, " +
+                    $"[BattleTrace][Server] C2B_EnterBattle rejected: connect={connect?.RemoteEndpoint}, " +
                     $"message={realMessage != null}, ticketValid={ticketValid}, saveGuidValid={saveGuidValid}, " +
                     $"saveMatches={saveMatches}, phase={room?.phase.ToString() ?? "<none>"}, " +
                     $"playerStateValid={playerStateValid}, characterDataValid={characterDataValid}");
@@ -289,6 +330,7 @@ namespace Server
             }
 
             room.secretKeys.Remove(realMessage.ticket);
+            enterDeadlines.Remove(connect);
             player.connect = connect;
             player.connectVersion++;
             player.offline = false;
@@ -305,8 +347,8 @@ namespace Server
             connectDic[connect] = player;
             Debug.Log(
                 $"[BattleTrace][Server] C2B_EnterBattle accepted: room={room.battleId}, " +
-                $"account={player.accountId}, connect={connect.IPEndPoint}, player={DescribePlayer(player)}");
-            connect.UnRegisterCallback(TCPPacketCode.GetOpcode<C2B_EnterBattle>(), OnEnterBattle);
+                $"account={player.accountId}, connect={connect.RemoteEndpoint}, player={DescribePlayer(player)}");
+            connect.UnRegisterCallback(MessageCodec.GetOpcode<C2B_EnterBattle>(), OnEnterBattle);
             connect.Send(new B2C_EnterBattleResult
             {
                 type = BattleRequestType.EnterBattleSuccess,
@@ -323,6 +365,7 @@ namespace Server
             if (realMessage == null ||
                 string.IsNullOrEmpty(realMessage.ticket) ||
                 !TryGetTicketPlayer(realMessage.ticket, out BattleRoom room, out BattlePlayer player) ||
+                !MatchesSessionPeer(room, player, connect, realMessage.sessionId) ||
                 !Guid.TryParse(realMessage.saveGuid, out Guid reloadSaveGuid) ||
                 !string.Equals(player.saveGuid, reloadSaveGuid.ToString("N"), StringComparison.Ordinal) ||
                 room.phase == BattlePhase.Finished ||
@@ -335,6 +378,7 @@ namespace Server
             }
 
             bool runningReload = room.phase == BattlePhase.Running;
+            enterDeadlines.Remove(connect);
             room.secretKeys.Remove(realMessage.ticket);
             StopReloadTimeout(player);
             player.connect = connect;
@@ -371,7 +415,7 @@ namespace Server
                 reloadManager.SetComponentData(player.entity, input);
             }
 
-            connect.UnRegisterCallback(TCPPacketCode.GetOpcode<C2B_ReloadBattle>(), OnReloadBattle);
+            connect.UnRegisterCallback(MessageCodec.GetOpcode<C2B_ReloadBattle>(), OnReloadBattle);
             connect.Send(new B2C_ReloadBattleResult
             {
                 type = BattleRequestType.ReloadBattleSuccess,
@@ -407,7 +451,7 @@ namespace Server
             if (!valid)
             {
                 Debug.LogWarning(
-                    $"[BattleTrace][Server] C2B_BattleReady rejected: connect={connect?.IPEndPoint}, " +
+                    $"[BattleTrace][Server] C2B_BattleReady rejected: connect={connect?.RemoteEndpoint}, " +
                     $"message={realMessage != null}, playerKnown={playerKnown}, " +
                     $"messageBattleId={realMessage?.battleId}, messageConnectVersion={realMessage?.connectVersion}, " +
                     $"messageSceneVersion={realMessage?.sceneVersion}, room={player?.room?.battleId}, " +
@@ -418,7 +462,7 @@ namespace Server
             player.ready = true;
             Debug.Log(
                 $"[BattleTrace][Server] C2B_BattleReady accepted: room={player.room.battleId}, " +
-                $"account={player.accountId}, connect={connect.IPEndPoint}, player={DescribePlayer(player)}");
+                $"account={player.accountId}, connect={connect.RemoteEndpoint}, player={DescribePlayer(player)}");
             TryAdvancePhase(player.room);
         }
 
@@ -438,7 +482,7 @@ namespace Server
             if (!valid)
             {
                 Debug.LogWarning(
-                    $"[BattleTrace][Server] C2B_BattleSceneReady rejected: connect={connect?.IPEndPoint}, " +
+                    $"[BattleTrace][Server] C2B_BattleSceneReady rejected: connect={connect?.RemoteEndpoint}, " +
                     $"message={realMessage != null}, playerKnown={playerKnown}, " +
                     $"messageBattleId={realMessage?.battleId}, messageConnectVersion={realMessage?.connectVersion}, " +
                     $"messageSceneVersion={realMessage?.sceneVersion}, room={player?.room?.battleId}, " +
@@ -449,7 +493,7 @@ namespace Server
             player.sceneReady = true;
             Debug.Log(
                 $"[BattleTrace][Server] C2B_BattleSceneReady accepted: room={player.room.battleId}, " +
-                $"account={player.accountId}, connect={connect.IPEndPoint}, player={DescribePlayer(player)}");
+                $"account={player.accountId}, connect={connect.RemoteEndpoint}, player={DescribePlayer(player)}");
             if (player.runningReload)
             {
                 SendReloadSnapshot(player.room, player);
@@ -906,6 +950,7 @@ namespace Server
             SetBattlePlayerConnectionState(player, BattlePlayerConnectionState.Offline);
             StopReloadTimeout(player);
             player.offline = true;
+            player.reconnectUntil = NetworkTimer.Instance.TimeNow + ServerUtility.ReconnectGrace;
             player.active = false;
             player.sceneReady = false;
             player.entitiesSent = false;
@@ -1094,10 +1139,10 @@ namespace Server
                 SetPlayerOffline(player, "FinishRoom");
             }
 
-            room.world?.Dispose();
-            room.world = null;
             room.secretKeys.Clear();
             battleRooms.Remove(room.battleId);
+            try { room.world?.Dispose(); }
+            finally { room.world = null; SessionEnded?.Invoke(room.sessionId); }
         }
 
         private void BeginNextTheme(BattleRoom room, int targetThemeKey)
@@ -1228,21 +1273,26 @@ namespace Server
                 Connect connect = player.connect;
                 player.connect = null;
                 connectDic.Remove(connect);
-                connect.Send(new B2C_BattleSettlement
+                B2C_BattleSettlement settlement = new()
                 {
                     battleId = room.battleId,
+                    sessionId = room.sessionId,
+                    connectVersion = player.connectVersion,
+                    sceneVersion = room.sceneVersion,
                     outcome = outcome,
                     characterData = outcome == BattleSettlementOutcome.Escaped
                         ? PlayerCharacterUtility.Clone(player.characterData)
                         : null,
-                });
-                battleService.DisconnectAfterSend(connect);
+                };
+                pendingSettlements[connect] = settlement;
+                settlementDeadlines[connect] = NetworkTimer.Instance.TimeNow + ServerUtility.SettlementTimeout;
+                connect.Send(settlement);
             }
 
-            room.world?.Dispose();
-            room.world = null;
             room.secretKeys.Clear();
             battleRooms.Remove(room.battleId);
+            try { room.world?.Dispose(); }
+            finally { room.world = null; SessionEnded?.Invoke(room.sessionId); }
         }
 
         private bool TryGetTicketPlayer(string ticket, out BattleRoom room, out BattlePlayer player)
@@ -1285,7 +1335,17 @@ namespace Server
         public void Update()
         {
             battleService.Update();
-            lobbyService.Update();
+            lobbyService?.Update();
+            long now = NetworkTimer.Instance.TimeNow;
+            foreach (var pair in new List<KeyValuePair<Connect, long>>(settlementDeadlines))
+                if (now >= pair.Value)
+                {
+                    settlementDeadlines.Remove(pair.Key);
+                    pendingSettlements.Remove(pair.Key);
+                    battleService.Disconnect(pair.Key);
+                }
+            foreach (var pair in new List<KeyValuePair<Connect, long>>(enterDeadlines))
+                if (now >= pair.Value) { enterDeadlines.Remove(pair.Key); battleService.Disconnect(pair.Key); }
 
             if (battleRooms.Count == 0)
             {
@@ -1300,6 +1360,11 @@ namespace Server
                 {
                     continue;
                 }
+
+                bool allExpired = true;
+                foreach (BattlePlayer player in room.players.Values)
+                    if (!player.offline || now < player.reconnectUntil) { allExpired = false; break; }
+                if (allExpired) { FinishRoom(room); continue; }
 
                 if (room.phase == BattlePhase.Initializing)
                     TryBuildBattleWorld(room);
@@ -1538,9 +1603,11 @@ namespace Server
 
             foreach (BattleRoom room in battleRooms.Values)
             {
-                room.frame?.Stop();
-                room.world?.Dispose();
-                room.world = null;
+                try { room.frame?.Stop(); }
+                catch (Exception exception) { Debug.LogException(exception); }
+                try { room.world?.Dispose(); }
+                catch (Exception exception) { Debug.LogException(exception); }
+                finally { room.world = null; }
                 if (room.phaseTimerId != 0)
                 {
                     NetworkTimer.Instance.Remove(room.phaseTimerId);
@@ -1553,10 +1620,27 @@ namespace Server
             }
 
             battleRooms.Clear();
+            pendingSettlements.Clear();
+            settlementDeadlines.Clear();
+            enterDeadlines.Clear();
             connectDic.Clear();
             lobbyConnect = null;
             battleService = null;
             lobbyService = null;
+            SessionEnded = null;
+        }
+
+        private static bool MatchesSessionPeer(BattleRoom room, BattlePlayer player, Connect connect, string sessionId) =>
+            room != null && room.sessionId == sessionId &&
+            (connect.RemoteEndpoint is not SteamEndpoint steam || steam.SteamId == player.accountId);
+
+        private void OnSettlementAck(IMessage message, Connect connect)
+        {
+            if (message is not C2B_BattleSettlementAck ack || !pendingSettlements.TryGetValue(connect, out B2C_BattleSettlement result) ||
+                ack.sessionId != result.sessionId || ack.battleId != result.battleId || ack.connectVersion != result.connectVersion) return;
+            pendingSettlements.Remove(connect);
+            settlementDeadlines.Remove(connect);
+            battleService.DisconnectAfterSend(connect);
         }
     }
 }

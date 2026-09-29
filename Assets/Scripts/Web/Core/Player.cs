@@ -9,6 +9,7 @@ namespace Server
         public ulong roomId;
         public bool ready;
         public bool start;
+        public bool steamP2PAvailable;
 
         public Connect connect;
     }

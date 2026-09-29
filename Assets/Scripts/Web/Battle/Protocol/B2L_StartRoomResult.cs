@@ -8,6 +8,8 @@ namespace Server
     public class B2L_StartRoomResult : IMessage
     {
         public ulong roomId;
+        public BattleConnectionInfo connection;
+        public string error;
         public Dictionary<ulong, string> secretKeys;
     }
 }

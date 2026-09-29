@@ -51,7 +51,7 @@ public sealed class PlayerCharacterSyncTests
     [Test]
     public void LateEditsAreRejectedAndFutureEditsWaitForTheirFrame()
     {
-        TCPPacketCode.Init();
+        MessageCodec.Init();
         Guid unitId = Guid.NewGuid();
         Connect connect = new();
         ServerFrameManager server = new() { currentFrame = 101 };
@@ -170,7 +170,7 @@ public sealed class PlayerCharacterSyncTests
                 },
             },
         };
-        byte[] bytes = TCPPacketCode.ToJson(message);
+        byte[] bytes = MessageCodec.ToJson(message);
         General_FrameStateData decoded = JsonConvert.DeserializeObject<General_FrameStateData>(
             System.Text.Encoding.UTF8.GetString(bytes), new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto });
         Assert.That(decoded.data.datas[0], Is.TypeOf<NetworkCharacterEditData>());

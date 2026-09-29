@@ -20,7 +20,8 @@ namespace Server
             WaitingForStartFrame,
         }
 
-        public ClientService battleServic => NetworkComponent.Instance.clientServic;
+        public IClientTransport battleServic => NetworkComponent.Instance.battleTransport;
+        public BattleConnectionInfo ConnectionInfo { get; private set; }
         public readonly ClientFrameManager frame = new ClientFrameManager();
         public Connect battleConnect;
         public string ticket;
@@ -60,6 +61,7 @@ namespace Server
         private C2B_BattleExitRequest deferredExitRequest;
         private BattleSettlementOutcome settlementOutcome;
         private CharacterData settlementCharacterData;
+        private string settlementSessionId;
         private string preparationError;
         private CharacterData preBattleCharacterData;
         private int preBattleSaveIndex = -1;
@@ -85,6 +87,15 @@ namespace Server
 
             if (HasPreBattleSnapshot)
             {
+                if (preBattleSaveIndex != SaveDataComponent.Instance.CurrentSaveIndex ||
+                    !Guid.TryParse(SaveDataComponent.Instance.CurrentSaveGuid, out Guid currentGuid) ||
+                    currentGuid != Guid.Parse(preBattleSaveGuid) || pendingSettlement)
+                {
+                    error = "还有一场战斗的存档恢复尚未完成，请先恢复原存档。";
+                    return false;
+                }
+                preparationFailed = false;
+                preparationError = null;
                 return true;
             }
 
@@ -124,6 +135,8 @@ namespace Server
             preBattleCharacterData = snapshot;
             preBattleSaveIndex = saveData.CurrentSaveIndex;
             preBattleSaveGuid = saveGuid.ToString("N");
+            preparationFailed = false;
+            preparationError = null;
             return true;
         }
 
@@ -138,9 +151,7 @@ namespace Server
 
             if (pendingSettlement)
             {
-                context.Character = settlementOutcome == BattleSettlementOutcome.Defeated
-                    ? new CharacterData()
-                    : PlayerCharacterUtility.Clone(settlementCharacterData) ?? new CharacterData();
+                context.Character = PlayerCharacterUtility.Clone(settlementCharacterData);
                 context.Player = null;
             }
             return true;
@@ -154,6 +165,7 @@ namespace Server
             restoreStandaloneRequested = false;
             themeTransitionRequested = false;
             pendingSettlement = false;
+            settlementSessionId = null;
             settlementCharacterData = null;
         }
 
@@ -165,22 +177,24 @@ namespace Server
             frame?.Stop();
             if (battleConnect != null)
             {
-                battleConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<B2C_EnterBattleResult>(), OnEnterBattleResult);
-                battleConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<B2C_ReloadBattleResult>(), OnReloadBattleResult);
-                battleConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<B2C_EnterBattleScene>(), OnEnterBattleScene);
-                battleConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<B2C_CreateNetworkEntities>(), OnCreateNetworkEntities);
-                battleConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<B2C_ReloadBattleSnapshot>(), OnReloadBattleSnapshot);
-                battleConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<B2C_StartFrame>(), OnStartFrame);
-                battleConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<B2C_BattleSettlement>(), OnBattleSettlement);
-                battleConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<B2C_BeginBattleTheme>(), OnBeginBattleTheme);
-                battleConnect.UnRegisterCallback(TCPPacketCode.GetOpcode<B2C_BattleExitResult>(), OnBattleExitResult);
+                battleConnect.UnRegisterCallback(MessageCodec.GetOpcode<B2C_EnterBattleResult>(), OnEnterBattleResult);
+                battleConnect.UnRegisterCallback(MessageCodec.GetOpcode<B2C_ReloadBattleResult>(), OnReloadBattleResult);
+                battleConnect.UnRegisterCallback(MessageCodec.GetOpcode<B2C_EnterBattleScene>(), OnEnterBattleScene);
+                battleConnect.UnRegisterCallback(MessageCodec.GetOpcode<B2C_CreateNetworkEntities>(), OnCreateNetworkEntities);
+                battleConnect.UnRegisterCallback(MessageCodec.GetOpcode<B2C_ReloadBattleSnapshot>(), OnReloadBattleSnapshot);
+                battleConnect.UnRegisterCallback(MessageCodec.GetOpcode<B2C_StartFrame>(), OnStartFrame);
+                battleConnect.UnRegisterCallback(MessageCodec.GetOpcode<B2C_BattleSettlement>(), OnBattleSettlement);
+                battleConnect.UnRegisterCallback(MessageCodec.GetOpcode<B2C_BeginBattleTheme>(), OnBeginBattleTheme);
+                battleConnect.UnRegisterCallback(MessageCodec.GetOpcode<B2C_BattleExitResult>(), OnBattleExitResult);
                 battleConnect.OnConnected -= OnBattleConnected;
                 battleConnect.OnDisconnected -= OnBattleDisconnected;
-                battleServic.Disconnect(battleConnect);
+                battleServic?.Disconnect(battleConnect);
                 battleConnect = null;
             }
 
             ClearBattleData();
+            NetworkComponent.Instance.CloseBattleTransport();
+            NetworkComponent.Instance.clientLobbyManager?.CompleteBattleControl();
             cleaningUp = wasCleaningUp;
         }
 
@@ -224,14 +238,15 @@ namespace Server
 
         public void Update()
         {
-            if (deferredExitRequest == null || frame.HasPendingCharacterEdit)
+            if (deferredExitRequest == null || frame.HasPendingCharacterEdit || battleConnect == null ||
+                battleConnect.State != ConnectState.Connected)
                 return;
 
             battleConnect.Send(deferredExitRequest);
             deferredExitRequest = null;
         }
 
-        public void ConnectWithTicket(string ticket, ulong accountId, bool reload)
+        public void ConnectWithTicket(string ticket, ulong accountId, bool reload, BattleConnectionInfo connection)
         {
             if (battleConnect != null || string.IsNullOrEmpty(ticket) || accountId == 0UL)
             {
@@ -256,18 +271,30 @@ namespace Server
             Debug.Log(
                 $"[BattleTrace][Client] ConnectWithTicket: account={accountId}, reload={reload}, " +
                 $"ticketPresent={!string.IsNullOrEmpty(ticket)}, saveGuid={preBattleSaveGuid}");
-            battleServic.Connect(ServerUtility.GetBattleIPEndPoint(), out battleConnect);
+            try
+            {
+                NetworkComponent.Instance.OpenBattleTransport(connection);
+                ConnectionInfo = connection;
+                battleServic.Connect(connection.ToEndpoint(), out battleConnect);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                NetworkComponent.Instance.CloseBattleTransport();
+                FailPreparation("无法建立战斗连接，请检查网络、Steam 状态及游戏版本。");
+                return;
+            }
             battleConnect.OnConnected += OnBattleConnected;
             battleConnect.OnDisconnected += OnBattleDisconnected;
-            battleConnect.RegisterCallback(TCPPacketCode.GetOpcode<B2C_EnterBattleResult>(), OnEnterBattleResult);
-            battleConnect.RegisterCallback(TCPPacketCode.GetOpcode<B2C_ReloadBattleResult>(), OnReloadBattleResult);
-            battleConnect.RegisterCallback(TCPPacketCode.GetOpcode<B2C_EnterBattleScene>(), OnEnterBattleScene);
-            battleConnect.RegisterCallback(TCPPacketCode.GetOpcode<B2C_CreateNetworkEntities>(), OnCreateNetworkEntities);
-            battleConnect.RegisterCallback(TCPPacketCode.GetOpcode<B2C_ReloadBattleSnapshot>(), OnReloadBattleSnapshot);
-            battleConnect.RegisterCallback(TCPPacketCode.GetOpcode<B2C_StartFrame>(), OnStartFrame);
-            battleConnect.RegisterCallback(TCPPacketCode.GetOpcode<B2C_BattleSettlement>(), OnBattleSettlement);
-            battleConnect.RegisterCallback(TCPPacketCode.GetOpcode<B2C_BeginBattleTheme>(), OnBeginBattleTheme);
-            battleConnect.RegisterCallback(TCPPacketCode.GetOpcode<B2C_BattleExitResult>(), OnBattleExitResult);
+            battleConnect.RegisterCallback(MessageCodec.GetOpcode<B2C_EnterBattleResult>(), OnEnterBattleResult);
+            battleConnect.RegisterCallback(MessageCodec.GetOpcode<B2C_ReloadBattleResult>(), OnReloadBattleResult);
+            battleConnect.RegisterCallback(MessageCodec.GetOpcode<B2C_EnterBattleScene>(), OnEnterBattleScene);
+            battleConnect.RegisterCallback(MessageCodec.GetOpcode<B2C_CreateNetworkEntities>(), OnCreateNetworkEntities);
+            battleConnect.RegisterCallback(MessageCodec.GetOpcode<B2C_ReloadBattleSnapshot>(), OnReloadBattleSnapshot);
+            battleConnect.RegisterCallback(MessageCodec.GetOpcode<B2C_StartFrame>(), OnStartFrame);
+            battleConnect.RegisterCallback(MessageCodec.GetOpcode<B2C_BattleSettlement>(), OnBattleSettlement);
+            battleConnect.RegisterCallback(MessageCodec.GetOpcode<B2C_BeginBattleTheme>(), OnBeginBattleTheme);
+            battleConnect.RegisterCallback(MessageCodec.GetOpcode<B2C_BattleExitResult>(), OnBattleExitResult);
             StartPreparationTimeout(BattlePreparationStage.Connecting);
         }
 
@@ -278,7 +305,7 @@ namespace Server
                 return;
             }
 
-            Debug.Log($"[BattleTrace][Client] Battle socket connected: remote={connect.IPEndPoint}, reload={reload}");
+            Debug.Log($"[BattleTrace][Client] Battle socket connected: remote={connect.RemoteEndpoint}, reload={reload}");
 
             CharacterData characterData = preBattleCharacterData;
             if (characterData == null)
@@ -295,6 +322,7 @@ namespace Server
                 connect.Send(new C2B_ReloadBattle
                 {
                     ticket = ticket,
+                    sessionId = ConnectionInfo.sessionId,
                     saveGuid = preBattleSaveGuid,
                     data = characterData,
                 });
@@ -306,6 +334,7 @@ namespace Server
             connect.Send(new C2B_EnterBattle
             {
                 ticket = ticket,
+                sessionId = ConnectionInfo.sessionId,
                 saveGuid = preBattleSaveGuid,
                 data = characterData,
             });
@@ -497,7 +526,10 @@ namespace Server
         {
             if (message is not B2C_BattleSettlement settlement ||
                 connect != battleConnect || battleData == null ||
-                settlement.battleId != battleData.battleId)
+                settlement.battleId != battleData.battleId || settlement.sessionId != ConnectionInfo?.sessionId ||
+                settlement.connectVersion != connectVersion || settlement.sceneVersion != battleData.sceneVersion ||
+                (settlement.outcome != BattleSettlementOutcome.Defeated && settlement.outcome != BattleSettlementOutcome.Escaped) ||
+                (settlement.outcome == BattleSettlementOutcome.Escaped && settlement.characterData == null))
             {
                 return;
             }
@@ -508,8 +540,22 @@ namespace Server
             exitRequestPending = false;
             deferredExitRequest = null;
             settlementOutcome = settlement.outcome;
-            settlementCharacterData = PlayerCharacterUtility.Clone(settlement.characterData);
+            settlementSessionId = settlement.sessionId;
+            if (settlementCharacterData == null)
+                settlementCharacterData = settlement.outcome == BattleSettlementOutcome.Defeated
+                    ? new CharacterData { SteamAccountId = preBattleCharacterData.SteamAccountId, Name = preBattleCharacterData.Name }
+                    : PlayerCharacterUtility.Clone(settlement.characterData);
+            if (PersistPendingSettlement(out _))
+                connect.Send(new C2B_BattleSettlementAck { battleId = settlement.battleId,
+                    sessionId = settlement.sessionId, connectVersion = connectVersion });
             restoreStandaloneRequested = true;
+        }
+
+        public bool PersistPendingSettlement(out string error)
+        {
+            error = null;
+            return !pendingSettlement || SaveDataComponent.Instance.TryApplyBattleSettlement(
+                preBattleSaveIndex, preBattleSaveGuid, settlementSessionId, settlementCharacterData, out error);
         }
 
         private void OnEnterBattleScene(IMessage message, Connect connect)
@@ -817,7 +863,7 @@ namespace Server
                 preparationStage = BattlePreparationStage.None;
                 Debug.LogWarning(
                     $"[BattleTrace][Client] Preparation timeout fired: stage={stage}, " +
-                    $"connect={expectedConnect?.IPEndPoint}, battleStarted={battleStarted}");
+                    $"connect={expectedConnect?.RemoteEndpoint}, battleStarted={battleStarted}");
                 FailPreparation($"战斗准备阶段超时：{stage}。");
                 if (expectedConnect != null)
                 {
@@ -865,6 +911,15 @@ namespace Server
             Debug.LogError(
                 $"[BattleTrace][Client] Preparation failed: stage={preparationStage}, error={error}");
             onPreparationFailed?.Invoke(error);
+        }
+
+        public void AbortBattle(string error)
+        {
+            frame.Stop();
+            StopPreparationTimeout();
+            FailPreparation(error);
+            restoreStandaloneRequested = HasPreBattleSnapshot;
+            if (battleConnect != null) battleServic?.Disconnect(battleConnect);
         }
 
         private void ClearBattleData()

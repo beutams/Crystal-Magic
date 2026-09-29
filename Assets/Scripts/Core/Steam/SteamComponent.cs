@@ -56,6 +56,7 @@ namespace CrystalMagic.Core
                 }
 
                 initialized = true;
+                SteamNetworkingUtils.InitRelayNetworkAccess();
                 if (!CacheLocalUser())
                 {
                     ShutdownSteamworks();
@@ -71,6 +72,7 @@ namespace CrystalMagic.Core
             }
             catch (Exception exception)
             {
+                ShutdownSteamworks();
                 SetFailure($"Steamworks initialization failed: {exception.Message}");
             }
 #endif
@@ -96,7 +98,12 @@ namespace CrystalMagic.Core
 #if !CRYSTAL_MAGIC_DISABLE_STEAMWORKS
             if (initialized)
             {
-                SteamAPI.RunCallbacks();
+                try { SteamAPI.RunCallbacks(); }
+                catch (Exception exception)
+                {
+                    ShutdownSteamworks();
+                    SetFailure("Steam callback processing failed: " + exception.Message);
+                }
             }
 #endif
         }
@@ -139,8 +146,8 @@ namespace CrystalMagic.Core
 #if !CRYSTAL_MAGIC_DISABLE_STEAMWORKS
             if (initialized)
             {
-                SteamAPI.Shutdown();
                 initialized = false;
+                SteamAPI.Shutdown();
                 Debug.Log("[Steam] Steamworks shut down.");
             }
 #endif
