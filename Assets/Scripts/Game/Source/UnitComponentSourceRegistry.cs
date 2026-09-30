@@ -206,6 +206,7 @@ public enum UnitSourceId : ushort
     UnitTransformPositionNear = 204,
     UnitVariablesLivingConsumerBoolCount = 205,
     UnitVariablesGetNumberOf = 206,
+    UnitMoveTeleportToValid = 207,
 }
 
 public static class UnitComponentSourceRegistry
@@ -977,6 +978,10 @@ public static class UnitComponentSourceRegistry
                 sourceId = UnitSourceId.UnitMoveTeleportTo;
                 schema = new UnitSourceSetSchemaEntry("unit.move.teleportTo", typeof(UnitMoveComponent), new[] { new ComparatorParameterDefinition("Destination", UnitValueCategory.Float3) }, false);
                 return true;
+            case "unit.move.teleportToValid":
+                sourceId = UnitSourceId.UnitMoveTeleportToValid;
+                schema = new UnitSourceSetSchemaEntry("unit.move.teleportToValid", typeof(UnitMoveComponent), new[] { new ComparatorParameterDefinition("Destination", UnitValueCategory.Float3), new ComparatorParameterDefinition("Clearance Radius", UnitValueCategory.Number), new ComparatorParameterDefinition("Search Radius", UnitValueCategory.Number) }, false);
+                return true;
             case "unit.navigation.setDestination":
                 sourceId = UnitSourceId.UnitNavigationSetDestination;
                 schema = new UnitSourceSetSchemaEntry("unit.navigation.setDestination", typeof(UnitNavigationComponent), new[] { new ComparatorParameterDefinition("Destination", UnitValueCategory.Float3) }, false);
@@ -1210,6 +1215,7 @@ public static class UnitComponentSourceRegistry
             builder.AddSet("unit.move.setStateMoveMultiplier", typeof(UnitMoveComponent), new[] { new ComparatorParameterDefinition("Multiplier", UnitValueCategory.Number) }, false);
             builder.AddSet("unit.move.setCommandSpeed", typeof(UnitMoveComponent), new[] { new ComparatorParameterDefinition("Speed", UnitValueCategory.Number) }, false);
             builder.AddSet("unit.move.teleportTo", typeof(UnitMoveComponent), new[] { new ComparatorParameterDefinition("Destination", UnitValueCategory.Float3) }, false);
+            builder.AddSet("unit.move.teleportToValid", typeof(UnitMoveComponent), new[] { new ComparatorParameterDefinition("Destination", UnitValueCategory.Float3), new ComparatorParameterDefinition("Clearance Radius", UnitValueCategory.Number), new ComparatorParameterDefinition("Search Radius", UnitValueCategory.Number) }, false);
         }
         if (includeAll || prefab != null && prefab.GetComponentInChildren(typeof(UnitNavigationAuthoring), true) != null)
         {
@@ -2285,6 +2291,13 @@ public struct UnitSourceDispatcher
                     return false;
                 RefRW<UnitMoveComponent> component = _UnitMoveComponentLookup.GetRefRW(entity);
                 return UnitMoveSource.TrySet(5, ref component.ValueRW, in arguments);
+            }
+            case UnitSourceId.UnitMoveTeleportToValid:
+            {
+                if (!_UnitMoveComponentLookup.HasComponent(entity))
+                    return false;
+                RefRW<UnitMoveComponent> component = _UnitMoveComponentLookup.GetRefRW(entity);
+                return UnitMoveSource.TrySet(6, ref component.ValueRW, in arguments);
             }
             case UnitSourceId.UnitNavigationSetDestination:
             {

@@ -346,6 +346,9 @@ namespace CrystalMagic.Game.Data
         // When set, entries are read from UnitVariableComponent using:
         // <key>.count and <key>.<index>.(unit|position|monster...).
         public string VariableListKey = string.Empty;
+        // Zero spawns the list immediately; positive values emit one entry per interval.
+        // <VariableListKey>.pendingCount includes all entries not yet attempted.
+        public float SpawnIntervalSeconds;
         public string UnitName = string.Empty;
         public string[] CandidateUnitNames = Array.Empty<string>();
         public int Count = 1;
@@ -357,6 +360,9 @@ namespace CrystalMagic.Game.Data
         public bool ShareVariablesWithSpawner;
         public bool RestoreRuntimeState;
         public string MemberBoolKey = string.Empty;
+        public bool ValidateSpawnPosition;
+        public float SpawnClearanceRadius = 0.5f;
+        public int SpawnValidationAttempts = 32;
 
         public SpawnUnitActionNodeData()
         {

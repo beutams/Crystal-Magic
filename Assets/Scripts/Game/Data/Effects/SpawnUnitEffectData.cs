@@ -27,6 +27,13 @@ namespace CrystalMagic.Game.Data.Effects
         [EditorLabel("Copy Faction From Caster")]
         public bool CopyFactionFromCaster = true;
 
+        [EditorLabel("Validate Spawn Position")]
+        public bool ValidateSpawnPosition;
+        [EditorLabel("Spawn Clearance Radius")]
+        public float SpawnClearanceRadius = 0.5f;
+        [EditorLabel("Position Attempts")]
+        public int SpawnValidationAttempts = 32;
+
         public override EffectData CreateRuntimeCopy(
             SkillModifierSet modifiers,
             UnitElementComponent? elementComponent = null)

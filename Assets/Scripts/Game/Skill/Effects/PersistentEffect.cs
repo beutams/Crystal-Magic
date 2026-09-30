@@ -23,7 +23,16 @@ namespace CrystalMagic.Game.Skill.Effects
             try
             {
                 CaptureOriginPositionSnapshot(persistentContext, context.EntityManager);
-                PersistentEffectUtility.AddEffect(Data, persistentContext, position);
+                uint seed = Data.PlacementRadius > 0f ? (uint)UnityEngine.Random.Range(1, int.MaxValue) : 1u;
+                var random = Unity.Mathematics.Random.CreateFromIndex(seed);
+                var center = new Unity.Mathematics.float3(position.x, position.y, position.z);
+                for (int i = 0; i < Unity.Mathematics.math.max(1, Data.PlacementCount); i++)
+                {
+                    if (!SpawnPositionUtility.TrySample(context.EntityManager, center, 0f, Data.PlacementRadius,
+                            Data.ValidatePlacementPosition, Data.PlacementClearanceRadius, Data.PlacementValidationAttempts,
+                            ref random, out var point)) continue;
+                    PersistentEffectUtility.AddEffect(Data, persistentContext, new Vector3(point.x, point.y, point.z));
+                }
             }
             finally
             {

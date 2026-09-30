@@ -34,7 +34,7 @@ public static class UnitRosterUtility
         for (int i = 0; i < choices.Length; i++)
         {
             Choice choice = choices[i];
-            if (choice.Unit.Length == 0 || choice.Cost < 1 || choice.Weight < 1 || choice.MinCount < 0)
+            if (choice.Unit.Length == 0 || choice.Cost < 1 || choice.Weight < 0 || choice.MinCount < 0)
                 return false;
             totalWeight += choice.Weight;
             minimumCount += choice.MinCount;
@@ -48,7 +48,8 @@ public static class UnitRosterUtility
                 result.Add(i);
             totalCost += (long)choices[i].MinCount * choices[i].Cost;
         }
-        while (totalCost < budget)
+        // Weight zero means guaranteed MinCount only (for example, exactly one boss).
+        while (totalCost < budget && totalWeight > 0)
         {
             int roll = random.NextInt((int)totalWeight);
             for (int i = 0; i < choices.Length; i++)
@@ -79,7 +80,7 @@ public static class UnitRosterUtility
                 UnitVariableSource.TrySetValue(manager, entity, entry + ".unit", UnitValue.FromString(Path.GetFileNameWithoutExtension(unit.PrefabPath)));
                 UnitVariableSource.TrySetValue(manager, entity, entry + ".minCount", UnitValue.FromInt(math.max(0, member.MinCount)));
                 UnitVariableSource.TrySetValue(manager, entity, entry + ".cost", UnitValue.FromInt(math.max(1, member.Cost)));
-                UnitVariableSource.TrySetValue(manager, entity, entry + ".weight", UnitValue.FromInt(math.max(1, member.Weight)));
+                UnitVariableSource.TrySetValue(manager, entity, entry + ".weight", UnitValue.FromInt(math.max(0, member.Weight)));
             }
         }
         UnitVariableSource.TrySetValue(manager, entity, key + ".count", UnitValue.FromInt(count));

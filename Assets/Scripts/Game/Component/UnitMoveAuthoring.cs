@@ -64,6 +64,9 @@ public struct UnitMoveComponent : IComponentData
     // A one-frame state-script position command consumed atomically by UnitMoveSystem.
     public float3 TeleportDestination;
     public byte HasTeleportRequest;
+    public byte ValidateTeleportPosition;
+    public float TeleportClearanceRadius;
+    public float TeleportSearchRadius;
     public byte NetworkDirty;
 
     public float BaseMoveSpeedValue => BaseMoveSpeed + BaseMoveSpeedOffset;
@@ -131,6 +134,8 @@ public static class UnitMoveSource
     [UnitSourceSet(3, "unit.move.setStateMoveMultiplier", UnitValueCategory.Number, ParameterNames = new[] { "Multiplier" })]
     [UnitSourceSet(4, "unit.move.setCommandSpeed", UnitValueCategory.Number, ParameterNames = new[] { "Speed" })]
     [UnitSourceSet(5, "unit.move.teleportTo", UnitValueCategory.Float3, ParameterNames = new[] { "Destination" })]
+    [UnitSourceSet(6, "unit.move.teleportToValid", UnitValueCategory.Float3, UnitValueCategory.Number, UnitValueCategory.Number,
+        ParameterNames = new[] { "Destination", "Clearance Radius", "Search Radius" })]
     public static bool TrySet(int operation, ref UnitMoveComponent value, in UnitSourceArguments arguments)
     {
         switch (operation)
@@ -154,6 +159,19 @@ public static class UnitMoveSource
             case 5 when arguments.TryGetFloat3(0, out float3 destination):
                 value.TeleportDestination = new float3(destination.xy, 0f);
                 value.HasTeleportRequest = 1;
+                value.ValidateTeleportPosition = 0;
+                value.NetworkDirty = 1;
+                break;
+            case 6 when arguments.TryGetFloat3(0, out float3 validDestination) &&
+                        arguments.TryGetNumber(1, out float clearance) &&
+                        arguments.TryGetNumber(2, out float searchRadius):
+                if (!math.all(math.isfinite(validDestination)) || !math.isfinite(clearance) || !math.isfinite(searchRadius))
+                    return false;
+                value.TeleportDestination = new float3(validDestination.xy, 0f);
+                value.HasTeleportRequest = 1;
+                value.ValidateTeleportPosition = 1;
+                value.TeleportClearanceRadius = math.max(0f, clearance);
+                value.TeleportSearchRadius = math.max(0f, searchRadius);
                 value.NetworkDirty = 1;
                 break;
             default:

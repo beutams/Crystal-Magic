@@ -637,7 +637,7 @@ namespace CrystalMagic.Editor.Data
                 GUILayout.Label("Cost", GUILayout.Width(30f));
                 member.Cost = Mathf.Max(1, EditorGUILayout.IntField(member.Cost, GUILayout.Width(38f)));
                 GUILayout.Label("Weight", GUILayout.Width(42f));
-                member.Weight = Mathf.Max(1, EditorGUILayout.IntField(member.Weight, GUILayout.Width(38f)));
+                member.Weight = Mathf.Max(0, EditorGUILayout.IntField(new GUIContent("", "0 = MinCount only; excluded from random budget fills."), member.Weight, GUILayout.Width(38f)));
                 if (GUILayout.Button("-", GUILayout.Width(24f)))
                 {
                     squad.Members.RemoveAt(i);

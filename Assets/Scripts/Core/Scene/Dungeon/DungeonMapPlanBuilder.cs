@@ -128,7 +128,9 @@ namespace CrystalMagic.Core
 
                     foreach (OpenFieldDungeonSquadMemberData member in squad.Members)
                     {
-                        if (member != null && !string.IsNullOrWhiteSpace(member.UnitName) && member.Cost > 0 && member.Weight > 0)
+                        // Guaranteed members are valid even when excluded from random budget fills.
+                        if (member != null && !string.IsNullOrWhiteSpace(member.UnitName) && member.Cost > 0 &&
+                            (member.MinCount > 0 || member.Weight > 0))
                             return true;
                     }
                 }

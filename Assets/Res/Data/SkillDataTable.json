@@ -1664,5 +1664,1197 @@
     ,{"NameKey":"Werewolf Attack 01","IsMonsterSkill":true,"DescriptionKey":"Werewolf heavy melee attack.","RuntimeType":"CommonSkill","InputType":1,"MpCost":0,"ChantDuration":0,"CastingMoveMultiplier":0,"IconPath":"","Conditions":[],"EffectChain":[{"$type":"CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp","Radius":1.4,"CenterOffset":{"x":0,"y":0,"z":0},"TargetConditions":[{"ConditionType":0,"CompareType":"IsTrue","Inputs":[{"Kind":1,"Literal":{"Type":1},"GetterKey":"unit.faction.isEnemyTo","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":6},"GetterKey":"effect.context.originEntity","OperationType":"","Inputs":[]}]}]}],"OnlyNearestTarget":false,"OnAfterSearch":[{"$type":"CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp","TargetSource":0,"ValueSource":0,"DamageCoefficient":5,"FlatDamageBonus":0,"Element":0,"Conditions":[]}],"Conditions":[]}],"Id":46,"EffectiveRuntimeType":"CommonSkill"}
     ,{"NameKey":"Werewolf Attack 02 Hit","IsMonsterSkill":true,"DescriptionKey":"Werewolf blink flurry hit.","RuntimeType":"CommonSkill","InputType":1,"MpCost":0,"ChantDuration":0,"CastingMoveMultiplier":0,"IconPath":"","Conditions":[],"EffectChain":[{"$type":"CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp","Radius":1.4,"CenterOffset":{"x":0,"y":0,"z":0},"TargetConditions":[{"ConditionType":0,"CompareType":"IsTrue","Inputs":[{"Kind":1,"Literal":{"Type":1},"GetterKey":"unit.faction.isEnemyTo","OperationType":"","Inputs":[{"Kind":1,"Literal":{"Type":6},"GetterKey":"effect.context.originEntity","OperationType":"","Inputs":[]}]}]}],"OnlyNearestTarget":false,"OnAfterSearch":[{"$type":"CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp","TargetSource":0,"ValueSource":0,"DamageCoefficient":1,"FlatDamageBonus":0,"Element":0,"Conditions":[]}],"Conditions":[]}],"Id":47,"EffectiveRuntimeType":"CommonSkill"}
     ,{"NameKey":"Werewolf Attack 02 Exposed","IsMonsterSkill":true,"DescriptionKey":"Makes the Werewolf vulnerable to stun while attacking.","RuntimeType":"CommonSkill","InputType":1,"MpCost":0,"ChantDuration":0,"CastingMoveMultiplier":0,"IconPath":"","Conditions":[],"EffectChain":[{"$type":"CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp","BuffId":14,"TargetSource":0,"DurationSeconds":1,"StackCount":1,"OnlyOncePerPersistentEffect":false,"Conditions":[]}],"Id":48,"EffectiveRuntimeType":"CommonSkill"}
+    ,{"NameKey":"Skeleton Archer Shot","IsMonsterSkill":true,"DescriptionKey":"Fires a straight, non-piercing arrow at the target position.","RuntimeType":"CommonSkill","InputType":2,"MpCost":0,"ChantDuration":0,"CastingMoveMultiplier":0,"IconPath":"Assets/Res/Sprites/Units/Arrow(Projectile)/Arrow01(32x32).png","Conditions":[],"EffectChain":[{"$type":"CrystalMagic.Game.Data.Effects.SpawnProjectileEffectData, Assembly-CSharp","ProjectilePrefabName":"Projectile","VisualPrefabName":"Arrow01","VisualScale":1,"VisualOffset":{"x":0,"y":0,"z":0},"Speed":14,"MaxRange":12,"SpawnOffsetDistance":0.5,"HitRadius":0.35,"CanPierce":false,"CollisionTargetConditions":[{"ConditionType":0,"CompareType":"IsTrue","Inputs":[{"Kind":1,"GetterKey":"unit.faction.isEnemyTo","Inputs":[{"Kind":1,"GetterKey":"effect.context.originEntity","Inputs":[]}]}]}],"TriggerDestroyEffectsOnMaxRange":false,"OnCollisionEffects":[{"$type":"CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp","TargetSource":0,"ValueSource":0,"DamageCoefficient":1,"FlatDamageBonus":0,"Element":0,"Conditions":[]}],"OnDestoryEffects":[],"Conditions":[]}],"Id":49,"EffectiveRuntimeType":"CommonSkill"},
+    {
+      "NameKey": "Swordsman Attack 01",
+      "IsMonsterSkill": true,
+      "DescriptionKey": "Preparation: Swordsman action 1. Tune Atk1 on the prefab and sync combat ranges.",
+      "RuntimeType": "CommonSkill",
+      "InputType": 1,
+      "MpCost": 0,
+      "ChantDuration": 0,
+      "CastingMoveMultiplier": 0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.RectSearchEffectData, Assembly-CSharp",
+          "CenterOffset": {
+            "x": 0.8,
+            "y": 0,
+            "z": 0
+          },
+          "Size": {
+            "x": 2.6,
+            "y": 2.4
+          },
+          "UseHorizontalFacing": true,
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
+              "DamageCoefficient": 1.2,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "Id": 50
+    },
+    {
+      "NameKey": "Swordsman Attack 02",
+      "IsMonsterSkill": true,
+      "DescriptionKey": "Preparation: Swordsman action 2. Tune Atk2 on the prefab and sync combat ranges.",
+      "RuntimeType": "CommonSkill",
+      "InputType": 1,
+      "MpCost": 0,
+      "ChantDuration": 0,
+      "CastingMoveMultiplier": 0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.RectSearchEffectData, Assembly-CSharp",
+          "CenterOffset": {
+            "x": 0.9,
+            "y": 0,
+            "z": 0
+          },
+          "Size": {
+            "x": 2.8,
+            "y": 2.6
+          },
+          "UseHorizontalFacing": true,
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
+              "DamageCoefficient": 1.5,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "Id": 51
+    },
+    {
+      "NameKey": "Swordsman Attack 03",
+      "IsMonsterSkill": true,
+      "DescriptionKey": "Preparation: Swordsman action 3. Tune Atk3 on the prefab and sync combat ranges.",
+      "RuntimeType": "CommonSkill",
+      "InputType": 1,
+      "MpCost": 0,
+      "ChantDuration": 0,
+      "CastingMoveMultiplier": 0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.RectSearchEffectData, Assembly-CSharp",
+          "CenterOffset": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "Size": {
+            "x": 3,
+            "y": 2.4
+          },
+          "UseHorizontalFacing": true,
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
+              "DamageCoefficient": 1.8,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "Id": 52
+    },
+    {
+      "NameKey": "Soldier Attack 01",
+      "IsMonsterSkill": true,
+      "DescriptionKey": "Preparation: Soldier action 1. Tune Atk1 on the prefab and sync combat ranges.",
+      "RuntimeType": "CommonSkill",
+      "InputType": 1,
+      "MpCost": 0,
+      "ChantDuration": 0,
+      "CastingMoveMultiplier": 0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.RectSearchEffectData, Assembly-CSharp",
+          "CenterOffset": {
+            "x": 0.7,
+            "y": 0,
+            "z": 0
+          },
+          "Size": {
+            "x": 2.4,
+            "y": 2.4
+          },
+          "UseHorizontalFacing": true,
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
+              "DamageCoefficient": 1.2,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "Id": 53
+    },
+    {
+      "NameKey": "Soldier Attack 02",
+      "IsMonsterSkill": true,
+      "DescriptionKey": "Preparation: Soldier action 2. Tune Atk2 on the prefab and sync combat ranges.",
+      "RuntimeType": "CommonSkill",
+      "InputType": 1,
+      "MpCost": 0,
+      "ChantDuration": 0,
+      "CastingMoveMultiplier": 0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.RectSearchEffectData, Assembly-CSharp",
+          "CenterOffset": {
+            "x": 0.8,
+            "y": 0,
+            "z": 0
+          },
+          "Size": {
+            "x": 2.6,
+            "y": 2.4
+          },
+          "UseHorizontalFacing": true,
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
+              "DamageCoefficient": 1.5,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "Id": 54
+    },
+    {
+      "NameKey": "Soldier Shot 03",
+      "IsMonsterSkill": true,
+      "DescriptionKey": "Preparation: Soldier action 3. Tune Atk3 on the prefab and sync combat ranges.",
+      "RuntimeType": "CommonSkill",
+      "InputType": 2,
+      "MpCost": 0,
+      "ChantDuration": 0,
+      "CastingMoveMultiplier": 0,
+      "IconPath": "Assets/Res/Sprites/Units/Arrow(Projectile)/Arrow01(32x32).png",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnProjectileEffectData, Assembly-CSharp",
+          "ProjectilePrefabName": "Projectile",
+          "VisualPrefabName": "Arrow01",
+          "VisualScale": 1,
+          "VisualOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "Speed": 14,
+          "MaxRange": 12,
+          "SpawnOffsetDistance": 0.5,
+          "HitRadius": 0.35,
+          "CanPierce": false,
+          "CollisionTargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "TriggerDestroyEffectsOnMaxRange": false,
+          "OnCollisionEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
+              "DamageCoefficient": 1.1,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            }
+          ],
+          "OnDestoryEffects": [],
+          "Conditions": []
+        }
+      ],
+      "Id": 55
+    },
+    {
+      "NameKey": "Priest Holy Strike",
+      "IsMonsterSkill": true,
+      "DescriptionKey": "Preparation: Priest action 1. Tune Atk1 on the prefab and sync combat ranges.",
+      "RuntimeType": "CommonSkill",
+      "InputType": 2,
+      "MpCost": 0,
+      "ChantDuration": 0,
+      "CastingMoveMultiplier": 0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+          "Radius": 0.65,
+          "CenterOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "OnlyNearestTarget": true,
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
+              "VfxPrefabName": "PriestAttack",
+              "Duration": 0,
+              "Scale": 6,
+              "SpawnOffset": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "AlignToCasterForward": false,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
+              "DamageCoefficient": 1.5,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "Id": 56
+    },
+    {
+      "NameKey": "Priest Heal",
+      "IsMonsterSkill": true,
+      "DescriptionKey": "Every 6 seconds, heal living injured allies (including self) within Heal1. No resurrection or enemy healing.",
+      "RuntimeType": "CommonSkill",
+      "InputType": 1,
+      "MpCost": 0,
+      "ChantDuration": 0,
+      "CastingMoveMultiplier": 0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+          "Radius": 4,
+          "CenterOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "OnlyNearestTarget": false,
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsFalse",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "ConditionType": 0,
+              "CompareType": "GreaterThan",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "GetterKey": "unit.vitality.currentHealth",
+                  "Inputs": []
+                },
+                {
+                  "Kind": 0,
+                  "Literal": {
+                    "Type": 3,
+                    "Float": 0
+                  }
+                }
+              ]
+            },
+            {
+              "ConditionType": 0,
+              "CompareType": "LessThan",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "GetterKey": "unit.vitality.currentHealthPercentage",
+                  "Inputs": []
+                },
+                {
+                  "Kind": 0,
+                  "Literal": {
+                    "Type": 3,
+                    "Float": 1
+                  }
+                }
+              ]
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.HealEffectData, Assembly-CSharp",
+              "HealCoefficient": 2,
+              "FlatHealBonus": 10,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
+              "VfxPrefabName": "PriestHeal",
+              "Duration": 0,
+              "Scale": 6,
+              "SpawnOffset": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "AlignToCasterForward": false,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "Id": 57
+    },
+    {
+      "NameKey": "Lancer Attack 01",
+      "IsMonsterSkill": true,
+      "DescriptionKey": "Preparation: Lancer action 1. Tune Atk1 on the prefab and sync combat ranges.",
+      "RuntimeType": "CommonSkill",
+      "InputType": 1,
+      "MpCost": 0,
+      "ChantDuration": 0,
+      "CastingMoveMultiplier": 0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.RectSearchEffectData, Assembly-CSharp",
+          "CenterOffset": {
+            "x": 1.1,
+            "y": 0,
+            "z": 0
+          },
+          "Size": {
+            "x": 3.4,
+            "y": 2.4
+          },
+          "UseHorizontalFacing": true,
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
+              "DamageCoefficient": 1.2,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "Id": 58
+    },
+    {
+      "NameKey": "Lancer Attack 02",
+      "IsMonsterSkill": true,
+      "DescriptionKey": "Preparation: Lancer action 2. Tune Atk2 on the prefab and sync combat ranges.",
+      "RuntimeType": "CommonSkill",
+      "InputType": 1,
+      "MpCost": 0,
+      "ChantDuration": 0,
+      "CastingMoveMultiplier": 0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.RectSearchEffectData, Assembly-CSharp",
+          "CenterOffset": {
+            "x": 1.2,
+            "y": 0,
+            "z": 0
+          },
+          "Size": {
+            "x": 3.6,
+            "y": 2.4
+          },
+          "UseHorizontalFacing": true,
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
+              "DamageCoefficient": 1.5,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "Id": 59
+    },
+    {
+      "NameKey": "Lancer Attack 03",
+      "IsMonsterSkill": true,
+      "DescriptionKey": "Preparation: Lancer action 3. Tune Atk3 on the prefab and sync combat ranges.",
+      "RuntimeType": "CommonSkill",
+      "InputType": 1,
+      "MpCost": 0,
+      "ChantDuration": 0,
+      "CastingMoveMultiplier": 0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.RectSearchEffectData, Assembly-CSharp",
+          "CenterOffset": {
+            "x": 1.3,
+            "y": 0,
+            "z": 0
+          },
+          "Size": {
+            "x": 3.8,
+            "y": 2.6
+          },
+          "UseHorizontalFacing": true,
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
+              "DamageCoefficient": 1.8,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "Id": 60
+    },
+    {
+      "NameKey": "Knight Attack 01",
+      "IsMonsterSkill": true,
+      "DescriptionKey": "Preparation: Knight action 1. Tune Atk1 on the prefab and sync combat ranges.",
+      "RuntimeType": "CommonSkill",
+      "InputType": 1,
+      "MpCost": 0,
+      "ChantDuration": 0,
+      "CastingMoveMultiplier": 0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.RectSearchEffectData, Assembly-CSharp",
+          "CenterOffset": {
+            "x": 0.8,
+            "y": 0,
+            "z": 0
+          },
+          "Size": {
+            "x": 2.6,
+            "y": 2.4
+          },
+          "UseHorizontalFacing": true,
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
+              "DamageCoefficient": 1.2,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "Id": 61
+    },
+    {
+      "NameKey": "Knight Attack 02",
+      "IsMonsterSkill": true,
+      "DescriptionKey": "Preparation: Knight action 2. Tune Atk2 on the prefab and sync combat ranges.",
+      "RuntimeType": "CommonSkill",
+      "InputType": 1,
+      "MpCost": 0,
+      "ChantDuration": 0,
+      "CastingMoveMultiplier": 0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.RectSearchEffectData, Assembly-CSharp",
+          "CenterOffset": {
+            "x": 0.9,
+            "y": 0,
+            "z": 0
+          },
+          "Size": {
+            "x": 2.8,
+            "y": 2.6
+          },
+          "UseHorizontalFacing": true,
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
+              "DamageCoefficient": 1.5,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "Id": 62
+    },
+    {
+      "NameKey": "Knight Attack 03",
+      "IsMonsterSkill": true,
+      "DescriptionKey": "Preparation: Knight action 3. Tune Atk3 on the prefab and sync combat ranges.",
+      "RuntimeType": "CommonSkill",
+      "InputType": 1,
+      "MpCost": 0,
+      "ChantDuration": 0,
+      "CastingMoveMultiplier": 0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.RectSearchEffectData, Assembly-CSharp",
+          "CenterOffset": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "Size": {
+            "x": 3,
+            "y": 2.6
+          },
+          "UseHorizontalFacing": true,
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
+              "DamageCoefficient": 1.8,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "Id": 63
+    },
+    {
+      "NameKey": "Armored Axeman Attack 01",
+      "IsMonsterSkill": true,
+      "DescriptionKey": "Preparation: Armored Axeman action 1. Tune Atk1 on the prefab and sync combat ranges.",
+      "RuntimeType": "CommonSkill",
+      "InputType": 1,
+      "MpCost": 0,
+      "ChantDuration": 0,
+      "CastingMoveMultiplier": 0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.RectSearchEffectData, Assembly-CSharp",
+          "CenterOffset": {
+            "x": 0.8,
+            "y": 0,
+            "z": 0
+          },
+          "Size": {
+            "x": 2.8,
+            "y": 2.6
+          },
+          "UseHorizontalFacing": true,
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
+              "DamageCoefficient": 1.3,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "Id": 64
+    },
+    {
+      "NameKey": "Armored Axeman Attack 02",
+      "IsMonsterSkill": true,
+      "DescriptionKey": "Preparation: Armored Axeman action 2. Tune Atk2 on the prefab and sync combat ranges.",
+      "RuntimeType": "CommonSkill",
+      "InputType": 1,
+      "MpCost": 0,
+      "ChantDuration": 0,
+      "CastingMoveMultiplier": 0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.RectSearchEffectData, Assembly-CSharp",
+          "CenterOffset": {
+            "x": 0.9,
+            "y": 0,
+            "z": 0
+          },
+          "Size": {
+            "x": 3,
+            "y": 2.8
+          },
+          "UseHorizontalFacing": true,
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
+              "DamageCoefficient": 1.6,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "Id": 65
+    },
+    {
+      "NameKey": "Armored Axeman Attack 03",
+      "IsMonsterSkill": true,
+      "DescriptionKey": "Preparation: Armored Axeman action 3. Tune Atk3 on the prefab and sync combat ranges.",
+      "RuntimeType": "CommonSkill",
+      "InputType": 1,
+      "MpCost": 0,
+      "ChantDuration": 0,
+      "CastingMoveMultiplier": 0,
+      "IconPath": "",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.RectSearchEffectData, Assembly-CSharp",
+          "CenterOffset": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "Size": {
+            "x": 3.2,
+            "y": 2.8
+          },
+          "UseHorizontalFacing": true,
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
+              "DamageCoefficient": 2,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        }
+      ],
+      "Id": 66
+    },
+    {
+      "NameKey": "Archer Shot 01",
+      "IsMonsterSkill": true,
+      "DescriptionKey": "Preparation: Archer action 1. Tune Atk1 on the prefab and sync combat ranges.",
+      "RuntimeType": "CommonSkill",
+      "InputType": 2,
+      "MpCost": 0,
+      "ChantDuration": 0,
+      "CastingMoveMultiplier": 0,
+      "IconPath": "Assets/Res/Sprites/Units/Arrow(Projectile)/Arrow01(32x32).png",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnProjectileEffectData, Assembly-CSharp",
+          "ProjectilePrefabName": "Projectile",
+          "VisualPrefabName": "Arrow01",
+          "VisualScale": 1,
+          "VisualOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "Speed": 14,
+          "MaxRange": 12,
+          "SpawnOffsetDistance": 0.5,
+          "HitRadius": 0.35,
+          "CanPierce": false,
+          "CollisionTargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "TriggerDestroyEffectsOnMaxRange": false,
+          "OnCollisionEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
+              "DamageCoefficient": 1.2,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            }
+          ],
+          "OnDestoryEffects": [],
+          "Conditions": []
+        }
+      ],
+      "Id": 67
+    },
+    {
+      "NameKey": "Archer Shot 02",
+      "IsMonsterSkill": true,
+      "DescriptionKey": "Preparation: Archer action 2. Tune Atk2 on the prefab and sync combat ranges.",
+      "RuntimeType": "CommonSkill",
+      "InputType": 2,
+      "MpCost": 0,
+      "ChantDuration": 0,
+      "CastingMoveMultiplier": 0,
+      "IconPath": "Assets/Res/Sprites/Units/Arrow(Projectile)/Arrow02(32x32).png",
+      "Conditions": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnProjectileEffectData, Assembly-CSharp",
+          "ProjectilePrefabName": "Projectile",
+          "VisualPrefabName": "Arrow02",
+          "VisualScale": 1,
+          "VisualOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "Speed": 18,
+          "MaxRange": 14,
+          "SpawnOffsetDistance": 0.5,
+          "HitRadius": 0.35,
+          "CanPierce": false,
+          "CollisionTargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "TriggerDestroyEffectsOnMaxRange": false,
+          "OnCollisionEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
+              "DamageCoefficient": 1.8,
+              "FlatDamageBonus": 0,
+              "Element": 0,
+              "Conditions": []
+            }
+          ],
+          "OnDestoryEffects": [],
+          "Conditions": []
+        }
+      ],
+      "Id": 68
+    }
+    ,{"Id":69,"NameKey":"Necromancer Attack 01","DescriptionKey":"Necromancer Attack 01","IsMonsterSkill":true,"RuntimeType":"CommonSkill","InputType":2,"MpCost":0,"ChantDuration":0,"CastingMoveMultiplier":0,"IconPath":"","Conditions":[],"EffectChain":[{"$type":"CrystalMagic.Game.Data.Effects.RectSearchEffectData, Assembly-CSharp","Size":{"x":2,"y":1.6},"TargetConditions":[{"ConditionType":0,"CompareType":"IsTrue","Inputs":[{"Kind":1,"GetterKey":"unit.faction.isEnemyTo","Inputs":[{"Kind":1,"GetterKey":"effect.context.originEntity","Inputs":[]}]}]}],"OnAfterSearch":[{"$type":"CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp","TargetSource":0,"ValueSource":0,"DamageCoefficient":4,"FlatDamageBonus":0,"Element":0,"Conditions":[]}],"Conditions":[],"CenterOffset":{"x":1,"y":0,"z":0},"UseHorizontalFacing":true}],"EffectiveRuntimeType":"CommonSkill"}
+    ,{"Id":70,"NameKey":"Necromancer Attack 02","DescriptionKey":"Necromancer Attack 02","IsMonsterSkill":true,"RuntimeType":"CommonSkill","InputType":2,"MpCost":0,"ChantDuration":0,"CastingMoveMultiplier":0,"IconPath":"","Conditions":[],"EffectChain":[{"$type":"CrystalMagic.Game.Data.Effects.PersistentEffectData, Assembly-CSharp","Element":0,"TotalDuration":0.25,"TickIntervalSeconds":0,"PlacementCount":6,"PlacementRadius":4,"ValidatePlacementPosition":true,"PlacementClearanceRadius":0,"PlacementValidationAttempts":64,"OnStartEffects":[{"$type":"CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp","VfxPrefabName":"Necromancer_Attack02_Effect","Duration":0.5,"Scale":6,"SpawnOffset":{"x":0,"y":0,"z":0},"AlignToCasterForward":false,"Conditions":[]}],"OnTickEffects":[],"OnEndEffects":[{"$type":"CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp","Radius":1.2,"CenterOffset":{"x":0,"y":0,"z":0},"TargetConditions":[{"ConditionType":0,"CompareType":"IsTrue","Inputs":[{"Kind":1,"GetterKey":"unit.faction.isEnemyTo","Inputs":[{"Kind":1,"GetterKey":"effect.context.originEntity","Inputs":[]}]}]}],"OnlyNearestTarget":false,"OnAfterSearch":[{"$type":"CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp","TargetSource":0,"ValueSource":0,"DamageCoefficient":2.5,"FlatDamageBonus":0,"Element":0,"Conditions":[]}],"Conditions":[]}],"Conditions":[]}],"EffectiveRuntimeType":"CommonSkill"}
   ]
 }

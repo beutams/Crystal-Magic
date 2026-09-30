@@ -415,7 +415,7 @@ namespace CrystalMagic.Core
                     choices.Add(new UnitRosterUtility.Choice
                     {
                         Unit = new FixedString128Bytes(Path.GetFileNameWithoutExtension(unit.PrefabPath)),
-                        Cost = Mathf.Max(1, member.Cost), Weight = Mathf.Max(1, member.Weight),
+                        Cost = Mathf.Max(1, member.Cost), Weight = Mathf.Max(0, member.Weight),
                         MinCount = Mathf.Max(0, member.MinCount),
                     });
                 }

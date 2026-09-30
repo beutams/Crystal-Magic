@@ -114,6 +114,7 @@ Core\
     SaveVariableData.cs TRUE
   Scene\
     Dungeon\
+      DungeonMapPlanBuilder.cs TRUE DIRTY
       DungeonRuleTileVisualBuilder.cs FALSE
       MountainRuleTile.cs TRUE DIRTY
     Editor\
@@ -192,6 +193,7 @@ Game\
       NPCInteractionGraphWindow.cs TRUE DIRTY
     NPCEditorWindow.cs TRUE DIRTY
       PropEditorWindow.cs TRUE DIRTY
+      PreparedUnitCombatRangeSync.cs FALSE
       ShopDataEditorWindow.cs TRUE DIRTY
       SkillAdditionEditorWindow.cs TRUE DIRTY
       SpriteEffectAnimationAssetGenerator.cs TRUE
@@ -461,6 +463,7 @@ Game\
         濮掑嫭姊圭涵鍫曞极閻楀牆绁?
       UnitModifierComponent.cs TRUE
       UnitAvoidanceAuthoring.cs TRUE
+      UnitAvoidanceDebugData.cs FALSE
       UnitMoveAuthoring.cs TRUE DIRTY
         缂佸顕ф慨鈺呭极閻楀牆绁?
       UnitNavigationAuthoring.cs TRUE DIRTY
@@ -580,7 +583,7 @@ Game\
         闁告帡鏀遍弻濠囧矗濡や礁浠橀柡浣哄瀹?
       DungeonInterestPointMemberDeathSystem.cs TRUE DIRTY
       EffectVisualFollowSystem.cs TRUE DIRTY
-      DungeonSpawnInitializationSystem.cs TRUE
+      DungeonSpawnInitializationSystem.cs TRUE DIRTY
       ClientDropScatterPresentationSystem.cs TRUE DIRTY
       DropScatterSystem.cs TRUE DIRTY
       DropSpritePresentationSystem.cs TRUE DIRTY
@@ -939,6 +942,7 @@ Tests\
     PlayerInputEventTests.cs TRUE DIRTY
     PlayerCharacterSyncTests.cs TRUE DIRTY
     BattleLifecycleTests.cs TRUE DIRTY
+    NecromancerBossTests.cs TRUE DIRTY
     Comparator\
       ConditionExpressionMigrationTests.cs FALSE
 ThirdParty\
@@ -977,3 +981,19 @@ Web\
       HostedBattleMessages.cs TRUE
       L2C_StartTicket.cs TRUE
     ServerLobbyHostSessions.cs TRUE
+Game\
+  Testing\
+    NavigationTestScenario.cs FALSE
+    NavigationTestSimulation.cs FALSE
+    Editor\
+      NavigationTestWindow.cs FALSE
+      NavigationTestWindow.Debug.cs FALSE
+Tests\
+  Editor\
+    NavigationTestSimulationTests.cs FALSE
+    DungeonPatrolMovementTests.cs FALSE
+Game\
+  StateScript\
+    StateScriptSpawnBatch.cs FALSE
+  System\
+    DungeonPatrolArrivalSystem.cs FALSE

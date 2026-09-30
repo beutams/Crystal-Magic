@@ -390,6 +390,14 @@ namespace CrystalMagic.Editor.Unit
             spawnUnit.VariableListKey = EditorGUILayout.TextField(
                 new GUIContent("Variable List Key", "Optional prefix containing count and indexed spawn entries."),
                 spawnUnit.VariableListKey ?? string.Empty);
+            if (!string.IsNullOrWhiteSpace(spawnUnit.VariableListKey))
+            {
+                spawnUnit.SpawnIntervalSeconds = Mathf.Max(0f, EditorGUILayout.FloatField(
+                    new GUIContent("Spawn Interval (s)", "0: immediate. Otherwise spawn the first entry now, then one per interval. Remaining entries are exposed as <list>.pendingCount."),
+                    spawnUnit.SpawnIntervalSeconds));
+            }
+            else
+                spawnUnit.SpawnIntervalSeconds = 0f;
             if (string.IsNullOrWhiteSpace(spawnUnit.VariableListKey))
             {
                 spawnUnit.UnitName = EditorGUILayout.TextField("Unit Name", spawnUnit.UnitName ?? string.Empty);
@@ -410,6 +418,13 @@ namespace CrystalMagic.Editor.Unit
             }
 
             spawnUnit.CopyFactionFromSpawner = EditorGUILayout.Toggle("Copy Faction", spawnUnit.CopyFactionFromSpawner);
+            spawnUnit.ValidateSpawnPosition = EditorGUILayout.Toggle("Validate Spawn Position", spawnUnit.ValidateSpawnPosition);
+            if (spawnUnit.ValidateSpawnPosition)
+            {
+                spawnUnit.SpawnClearanceRadius = Mathf.Max(0f, EditorGUILayout.FloatField("Spawn Clearance Radius", spawnUnit.SpawnClearanceRadius));
+                spawnUnit.SpawnValidationAttempts = Mathf.Clamp(EditorGUILayout.IntField("Position Attempts", spawnUnit.SpawnValidationAttempts), 1, 128);
+                EditorGUILayout.HelpBox("Requires a navigation map. Random spawns retry within their radius; fixed list entries are skipped if blocked.", MessageType.Info);
+            }
             spawnUnit.ShareVariablesWithSpawner = EditorGUILayout.Toggle("Share Variables", spawnUnit.ShareVariablesWithSpawner);
             spawnUnit.RestoreRuntimeState = EditorGUILayout.Toggle("Restore Runtime State", spawnUnit.RestoreRuntimeState);
             spawnUnit.MemberBoolKey = EditorGUILayout.TextField("Member Bool Key", spawnUnit.MemberBoolKey ?? string.Empty);

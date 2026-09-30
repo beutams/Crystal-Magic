@@ -286,18 +286,18 @@
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 6.0,
+          "BaseMoveSpeed": 5.5,
           "BaseMaxAcceleration": 10000.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 120000.0,
-          "BaseHealthRegenPerSecond": 50.0,
-          "BaseDefense": 0.0
+          "BaseMaxHealth": 150,
+          "BaseHealthRegenPerSecond": 0,
+          "BaseDefense": 2
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-          "BaseAttackPower": 10.0,
+          "BaseAttackPower": 16,
           "BaseSkillRange": 0.0,
           "BaseChantSpeedBonus": 0.0
         },
@@ -312,7 +312,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 16.0
+          "SearchRadius": 12
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
@@ -328,18 +328,18 @@
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 6.0,
+          "BaseMoveSpeed": 4.5,
           "BaseMaxAcceleration": 10000.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 120000.0,
-          "BaseHealthRegenPerSecond": 50.0,
-          "BaseDefense": 0.0
+          "BaseMaxHealth": 100,
+          "BaseHealthRegenPerSecond": 0,
+          "BaseDefense": 1
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-          "BaseAttackPower": 10.0,
+          "BaseAttackPower": 14,
           "BaseSkillRange": 0.0,
           "BaseChantSpeedBonus": 0.0
         },
@@ -354,7 +354,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 16.0
+          "SearchRadius": 12
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
@@ -370,18 +370,18 @@
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 6.0,
+          "BaseMoveSpeed": 4,
           "BaseMaxAcceleration": 10000.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 120000.0,
-          "BaseHealthRegenPerSecond": 50.0,
-          "BaseDefense": 0.0
+          "BaseMaxHealth": 240,
+          "BaseHealthRegenPerSecond": 0,
+          "BaseDefense": 5
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-          "BaseAttackPower": 10.0,
+          "BaseAttackPower": 22,
           "BaseSkillRange": 0.0,
           "BaseChantSpeedBonus": 0.0
         },
@@ -396,7 +396,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 16.0
+          "SearchRadius": 12
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
@@ -622,18 +622,18 @@
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 6.0,
+          "BaseMoveSpeed": 3.5,
           "BaseMaxAcceleration": 10000.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 120000.0,
-          "BaseHealthRegenPerSecond": 50.0,
-          "BaseDefense": 0.0
+          "BaseMaxHealth": 260,
+          "BaseHealthRegenPerSecond": 0,
+          "BaseDefense": 6
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-          "BaseAttackPower": 10.0,
+          "BaseAttackPower": 18,
           "BaseSkillRange": 0.0,
           "BaseChantSpeedBonus": 0.0
         },
@@ -648,7 +648,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 16.0
+          "SearchRadius": 12
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
@@ -706,18 +706,18 @@
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 6.0,
+          "BaseMoveSpeed": 4.5,
           "BaseMaxAcceleration": 10000.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 120000.0,
-          "BaseHealthRegenPerSecond": 50.0,
-          "BaseDefense": 0.0
+          "BaseMaxHealth": 180,
+          "BaseHealthRegenPerSecond": 0,
+          "BaseDefense": 2
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-          "BaseAttackPower": 10.0,
+          "BaseAttackPower": 18,
           "BaseSkillRange": 0.0,
           "BaseChantSpeedBonus": 0.0
         },
@@ -732,7 +732,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 16.0
+          "SearchRadius": 12
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
@@ -748,14 +748,14 @@
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 6.0,
+          "BaseMoveSpeed": 3.5,
           "BaseMaxAcceleration": 10000.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 120000.0,
-          "BaseHealthRegenPerSecond": 50.0,
-          "BaseDefense": 0.0
+          "BaseMaxHealth": 2000.0,
+          "BaseHealthRegenPerSecond": 0.0,
+          "BaseDefense": 2.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
@@ -874,18 +874,18 @@
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 6.0,
+          "BaseMoveSpeed": 4,
           "BaseMaxAcceleration": 10000.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 120000.0,
-          "BaseHealthRegenPerSecond": 50.0,
-          "BaseDefense": 0.0
+          "BaseMaxHealth": 120,
+          "BaseHealthRegenPerSecond": 0,
+          "BaseDefense": 1
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-          "BaseAttackPower": 10.0,
+          "BaseAttackPower": 12,
           "BaseSkillRange": 0.0,
           "BaseChantSpeedBonus": 0.0
         },
@@ -900,7 +900,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 16.0
+          "SearchRadius": 12
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",
@@ -963,7 +963,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 100.0,
+          "BaseMaxHealth": 50,
           "BaseHealthRegenPerSecond": 0.0,
           "BaseDefense": 1.0
         },
@@ -1042,18 +1042,18 @@
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitMoveModuleData, Assembly-CSharp",
-          "BaseMoveSpeed": 6.0,
+          "BaseMoveSpeed": 4.5,
           "BaseMaxAcceleration": 10000.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 120000.0,
-          "BaseHealthRegenPerSecond": 50.0,
-          "BaseDefense": 0.0
+          "BaseMaxHealth": 180,
+          "BaseHealthRegenPerSecond": 0,
+          "BaseDefense": 3
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
-          "BaseAttackPower": 10.0,
+          "BaseAttackPower": 16,
           "BaseSkillRange": 0.0,
           "BaseChantSpeedBonus": 0.0
         },
@@ -1068,7 +1068,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitPerceptionModuleData, Assembly-CSharp",
-          "SearchRadius": 16.0
+          "SearchRadius": 12
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitDropModuleData, Assembly-CSharp",

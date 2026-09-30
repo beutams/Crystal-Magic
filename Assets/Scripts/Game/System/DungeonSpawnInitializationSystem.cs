@@ -58,6 +58,7 @@ public partial class DungeonSpawnInitializationSystem : SystemBase
             DungeonDifficultyUtility.ApplyHealth(EntityManager, entity);
             if (initialization.RestoreRuntimeState != 0)
                 GameRuntimeStateUtility.TryRestoreDungeonUnit(EntityManager, entity);
+            DungeonPatrolRuntimeUtility.CaptureGuardHome(EntityManager, entity);
         }
 
         EntityManager.RemoveComponent<UnitSpawnInitializationComponent>(_query);

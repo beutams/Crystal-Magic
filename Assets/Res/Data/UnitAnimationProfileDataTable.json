@@ -1003,6 +1003,22 @@
           "BackClipPath": "",
           "LeftClipPath": "Assets/Res/Animation/Necromancer/DeathLeft.anim",
           "RightClipPath": "Assets/Res/Animation/Necromancer/DeathRight.anim"
+        },
+        {
+          "Name": "TeleportOut",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Necromancer/DeathLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Necromancer/DeathRight.anim"
+        },
+        {
+          "Name": "TeleportIn",
+          "DirectionMode": 1,
+          "FrontClipPath": "",
+          "BackClipPath": "",
+          "LeftClipPath": "Assets/Res/Animation/Necromancer/TeleportInLeft.anim",
+          "RightClipPath": "Assets/Res/Animation/Necromancer/TeleportInRight.anim"
         }
       ],
       "Id": 16

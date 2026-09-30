@@ -504,6 +504,13 @@ public static class StateScriptCompiler
         out string error)
     {
         error = string.Empty;
+        if (!math.isfinite(source.SpawnIntervalSeconds) || source.SpawnIntervalSeconds < 0f ||
+            (source.SpawnIntervalSeconds > 0f && string.IsNullOrWhiteSpace(source.VariableListKey)))
+        {
+            error = "SpawnIntervalSeconds must be finite and non-negative; timed spawns require VariableListKey.";
+            return false;
+        }
+        definition.SpawnIntervalSeconds = source.SpawnIntervalSeconds;
         definition.IntParameters = new int4(
             math.max(1, source.Count),
             source.CopyFactionFromSpawner ? 1 : 0,
@@ -524,18 +531,24 @@ public static class StateScriptCompiler
         definition.FloatParameters0 = new float4(
             math.max(0f, source.SpawnRadius),
             math.clamp(source.MinSpawnRadius, 0f, math.max(0f, source.SpawnRadius)),
-            0f,
-            0f);
+            source.ValidateSpawnPosition ? 1f : 0f,
+            math.max(0f, source.SpawnClearanceRadius));
         definition.FloatParameters1 = new float4(
             source.CenterOffset.x,
             source.CenterOffset.y,
             source.CenterOffset.z,
-            0f);
+            math.clamp(source.SpawnValidationAttempts, 1, 128));
         if (!string.IsNullOrWhiteSpace(source.VariableListKey))
         {
             if (!TryCopyFixedString(source.VariableListKey.Trim(), out definition.Text))
             {
                 error = "VariableListKey is too long.";
+                return false;
+            }
+            FixedString128Bytes pendingKey = definition.Text;
+            if (source.SpawnIntervalSeconds > 0f && pendingKey.Append(".pendingCount") != FormatError.None)
+            {
+                error = "VariableListKey is too long for its timed-spawn pendingCount key.";
                 return false;
             }
             return true;

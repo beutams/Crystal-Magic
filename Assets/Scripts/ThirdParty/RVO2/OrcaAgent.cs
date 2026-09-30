@@ -92,7 +92,19 @@ namespace CrystalMagic.ThirdParty.RVO2
             in FixedList4096Bytes<AgentNeighbor> neighbors,
             float timeStep)
         {
-            FixedList4096Bytes<OrcaLine> lines = default;
+            return ComputeNewVelocity(in self, in neighbors, timeStep, out _, out _);
+        }
+
+        // Expose the exact constraints used by this solve, rather than reconstructing
+        // them from positions after physics has already advanced the agents.
+        internal static float2 ComputeNewVelocity(
+            in AgentData self,
+            in FixedList4096Bytes<AgentNeighbor> neighbors,
+            float timeStep,
+            out FixedList4096Bytes<OrcaLine> lines,
+            out int firstFailedLine)
+        {
+            lines = default;
             float inverseTimeHorizon = 1f / math.max(Epsilon, self.TimeHorizon);
             float inverseTimeStep = 1f / math.max(Epsilon, timeStep);
 
@@ -161,14 +173,14 @@ namespace CrystalMagic.ThirdParty.RVO2
                 lines.Add(line);
             }
 
-            int failedLine = LinearProgram2(
+            firstFailedLine = LinearProgram2(
                 in lines,
                 self.MaxSpeed,
                 self.PreferredVelocity,
                 false,
                 out float2 result);
-            if (failedLine < lines.Length)
-                LinearProgram3(in lines, failedLine, self.MaxSpeed, ref result);
+            if (firstFailedLine < lines.Length)
+                LinearProgram3(in lines, firstFailedLine, self.MaxSpeed, ref result);
             return result;
         }
 

@@ -1,3 +1,4 @@
+using CrystalMagic.Core;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -13,10 +14,14 @@ using Unity.Transforms;
 [UpdateBefore(typeof(VfxArrivalSystem))]
 partial struct UnitMoveSystem : ISystem
 {
+    private EntityQuery _navigationMapQuery;
+
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<UnitMoveComponent>();
+        _navigationMapQuery = SystemAPI.QueryBuilder()
+            .WithAll<DungeonNavigationMapComponent, DungeonNavigationCollisionWord>().Build();
     }
 
     [BurstCompile]
@@ -32,7 +37,12 @@ partial struct UnitMoveSystem : ISystem
             PlayerInputs = SystemAPI.GetComponentLookup<PlayerInputComponent>(true),
             BattlePlayerStatuses = SystemAPI.GetComponentLookup<BattlePlayerStatusComponent>(true),
             Facings = SystemAPI.GetComponentLookup<UnitFacingComponent>(),
+            NavigationMapEntity = _navigationMapQuery.CalculateEntityCount() == 1
+                ? _navigationMapQuery.GetSingletonEntity() : Entity.Null,
+            CollisionWords = SystemAPI.GetBufferLookup<DungeonNavigationCollisionWord>(true),
         };
+        if (job.NavigationMapEntity != Entity.Null)
+            job.NavigationMap = _navigationMapQuery.GetSingleton<DungeonNavigationMapComponent>();
         state.Dependency = job.ScheduleParallel(state.Dependency);
     }
 
@@ -41,6 +51,11 @@ partial struct UnitMoveSystem : ISystem
     private partial struct UnitMoveJob : IJobEntity
     {
         public float DeltaTime;
+        public Entity NavigationMapEntity;
+        public DungeonNavigationMapComponent NavigationMap;
+
+        [ReadOnly]
+        public BufferLookup<DungeonNavigationCollisionWord> CollisionWords;
 
         [ReadOnly]
         public ComponentLookup<UnitAvoidanceComponent> Avoidances;
@@ -120,13 +135,21 @@ partial struct UnitMoveSystem : ISystem
             }
             else if (hasTeleportRequest)
             {
-                teleportApplied = true;
-                float2 previousPosition = transform.Position.xy;
-                transform.Position = move.TeleportDestination;
-                transform.Position.z = 0f;
-                desiredFacingDirection = math.normalizesafe(transform.Position.xy - previousPosition, float2.zero);
-                move.PredictedPosition = transform.Position;
-                move.HasPredictedPosition = 1;
+                float3 destination = move.TeleportDestination;
+                bool valid = move.ValidateTeleportPosition == 0 ||
+                    (NavigationMapEntity != Entity.Null &&
+                     SpawnPositionUtility.TryFindNearby(in NavigationMap, CollisionWords[NavigationMapEntity].AsNativeArray(),
+                         destination, move.TeleportClearanceRadius, move.TeleportSearchRadius, out destination));
+                if (valid)
+                {
+                    teleportApplied = true;
+                    float2 previousPosition = transform.Position.xy;
+                    transform.Position = new float3(destination.xy, 0f);
+                    if (move.ValidateTeleportPosition == 0)
+                        desiredFacingDirection = math.normalizesafe(transform.Position.xy - previousPosition, float2.zero);
+                    move.PredictedPosition = transform.Position;
+                    move.HasPredictedPosition = 1;
+                }
                 move.Velocity = float2.zero;
                 move.Direction = float2.zero;
                 move.FrameVelocity = float2.zero;
@@ -171,6 +194,7 @@ partial struct UnitMoveSystem : ISystem
 
             move.LastObservedPosition = transform.Position;
             move.HasTeleportRequest = 0;
+            move.ValidateTeleportPosition = 0;
 
             UnitMoveSimulationUtility.ClearFrameCommands(ref move);
         }

@@ -135,6 +135,7 @@ public struct StateScriptNodeDefinition
     public UnitInteractionData InteractionData;
     public float4 FloatParameters0;
     public float4 FloatParameters1;
+    public float SpawnIntervalSeconds;
     public int4 IntParameters;
     public FixedString128Bytes Guid;
 }

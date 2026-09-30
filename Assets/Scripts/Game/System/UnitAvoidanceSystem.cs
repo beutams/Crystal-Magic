@@ -1,6 +1,7 @@
 using CrystalMagic.ThirdParty.RVO2;
 using Unity.Burst;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -12,6 +13,7 @@ using Unity.Transforms;
 partial struct UnitAvoidanceSystem : ISystem
 {
     private EntityQuery _agentQuery;
+    private EntityQuery _debugQuery;
     private NativeParallelHashMap<Entity, AgentData> _agents;
 
     public void OnCreate(ref SystemState state)
@@ -31,6 +33,8 @@ partial struct UnitAvoidanceSystem : ISystem
             },
         });
         _agents = new NativeParallelHashMap<Entity, AgentData>(16, Allocator.Persistent);
+        _debugQuery = state.GetEntityQuery(ComponentType.ReadWrite<UnitAvoidanceDebugData>(),
+            ComponentType.ReadWrite<UnitAvoidanceDebugConstraint>());
         state.RequireForUpdate<UnitQuerySingleton>();
         state.RequireForUpdate<UnitAvoidanceComponent>();
     }
@@ -68,6 +72,9 @@ partial struct UnitAvoidanceSystem : ISystem
             Agents = _agents,
             Tree = new UnitQueryTree(treeNodes.AsNativeArray(), treeEntries.AsNativeArray()),
             DeltaTime = math.max(0.00001f, SystemAPI.Time.DeltaTime),
+            CaptureDebug = !_debugQuery.IsEmptyIgnoreFilter,
+            DebugData = SystemAPI.GetComponentLookup<UnitAvoidanceDebugData>(),
+            DebugConstraints = SystemAPI.GetBufferLookup<UnitAvoidanceDebugConstraint>(),
         }.ScheduleParallel(prepareHandle);
     }
 
@@ -170,9 +177,23 @@ public partial struct UnitAvoidanceSolveJob : IJobEntity
     public UnitQueryTree Tree;
 
     public float DeltaTime;
+    public bool CaptureDebug;
+
+    // Each invocation writes only its own entity, never a neighbor's diagnostics.
+    [NativeDisableParallelForRestriction]
+    public ComponentLookup<UnitAvoidanceDebugData> DebugData;
+
+    [NativeDisableParallelForRestriction]
+    public BufferLookup<UnitAvoidanceDebugConstraint> DebugConstraints;
 
     private void Execute(Entity entity, ref UnitAvoidanceComponent avoidance)
     {
+        bool capture = CaptureDebug && DebugData.HasComponent(entity) && DebugConstraints.HasBuffer(entity);
+        if (capture)
+        {
+            DebugData[entity] = default;
+            DebugConstraints[entity].Clear();
+        }
         if (!Agents.TryGetValue(entity, out AgentData self))
         {
             avoidance.ResolvedVelocity = float2.zero;
@@ -194,7 +215,33 @@ public partial struct UnitAvoidanceSolveJob : IJobEntity
             Tree.Query(in shape, UnitFactionMask.Combatants, ref visitor);
         }
 
-        avoidance.ResolvedVelocity = OrcaSolver.ComputeNewVelocity(in self, in visitor.Neighbors, DeltaTime);
+        if (capture)
+        {
+            avoidance.ResolvedVelocity = OrcaSolver.ComputeNewVelocity(in self, in visitor.Neighbors, DeltaTime,
+                out FixedList4096Bytes<OrcaLine> lines, out int firstFailedLine);
+            DebugData[entity] = new UnitAvoidanceDebugData
+            {
+                Position = self.Position, InputVelocity = self.Velocity,
+                PreferredVelocity = self.PreferredVelocity, ResolvedVelocity = avoidance.ResolvedVelocity,
+                MaxSpeed = self.MaxSpeed, Radius = self.Radius, NeighborDistance = self.NeighborDistance,
+                TimeHorizon = self.TimeHorizon, ConstraintCount = lines.Length,
+                FirstFailedLine = firstFailedLine, HasSample = 1,
+            };
+            DynamicBuffer<UnitAvoidanceDebugConstraint> constraints = DebugConstraints[entity];
+            for (int i = 0; i < lines.Length; i++)
+            {
+                AgentNeighbor neighbor = visitor.Neighbors[i];
+                OrcaLine line = lines[i];
+                constraints.Add(new UnitAvoidanceDebugConstraint
+                {
+                    Neighbor = neighbor.Entity, NeighborPosition = neighbor.Position,
+                    NeighborVelocity = neighbor.Velocity, NeighborRadius = neighbor.Radius,
+                    Distance = math.sqrt(neighbor.DistanceSq), Point = line.Point, Direction = line.Direction,
+                });
+            }
+        }
+        else
+            avoidance.ResolvedVelocity = OrcaSolver.ComputeNewVelocity(in self, in visitor.Neighbors, DeltaTime);
         avoidance.HasResolvedVelocity = self.HasFrameVelocity == 0 ? (byte)1 : (byte)0;
     }
 

@@ -983,7 +983,7 @@
               {
                 "Name": "Small Orc Mix",
                 "Patrol": {"CostLimit":4,"Members":[{"UnitName":"Orc","MinCount":1,"Cost":1,"Weight":4},{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":2},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2}]},
-                "Revenge": {"CostLimit":10,"Members":[{"UnitName":"Orc","MinCount":0,"Cost":1,"Weight":4},{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":2},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":1},{"UnitName":"Skeleton Archer","MinCount":0,"Cost":2,"Weight":1},{"UnitName":"Armored Orc","MinCount":1,"Cost":3,"Weight":1}]},
+                "Revenge": {"CostLimit":10,"Members":[{"UnitName":"Orc","MinCount":0,"Cost":1,"Weight":4},{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":2},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":1},{"UnitName":"Skeleton Archer","MinCount":3,"Cost":1,"Weight":1},{"UnitName":"Armored Orc","MinCount":1,"Cost":3,"Weight":1}]},
                 "Weight": 1,
                 "MonsterLevel": 1,
                 "IsBossSquad": false,
@@ -1017,8 +1017,8 @@
                   },
                   {
                     "UnitName": "Skeleton Archer",
-                    "MinCount": 0,
-                    "Cost": 2,
+                    "MinCount": 3,
+                    "Cost": 1,
                     "Weight": 1
                   },
                   {
@@ -1032,7 +1032,7 @@
               {
                 "Name": "Small Skeleton Mix",
                 "Patrol": {"CostLimit":4,"Members":[{"UnitName":"Skeleton","MinCount":1,"Cost":1,"Weight":4},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":3},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2}]},
-                "Revenge": {"CostLimit":10,"Members":[{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":4},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":3},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Skeleton Archer","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Orc","MinCount":0,"Cost":1,"Weight":1},{"UnitName":"Armored Orc","MinCount":1,"Cost":3,"Weight":1}]},
+                "Revenge": {"CostLimit":10,"Members":[{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":4},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":3},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Skeleton Archer","MinCount":4,"Cost":1,"Weight":2},{"UnitName":"Orc","MinCount":0,"Cost":1,"Weight":1},{"UnitName":"Armored Orc","MinCount":1,"Cost":3,"Weight":1}]},
                 "Weight": 1,
                 "MonsterLevel": 1,
                 "IsBossSquad": false,
@@ -1060,8 +1060,8 @@
                   },
                   {
                     "UnitName": "Skeleton Archer",
-                    "MinCount": 0,
-                    "Cost": 2,
+                    "MinCount": 4,
+                    "Cost": 1,
                     "Weight": 2
                   },
                   {
@@ -1080,8 +1080,8 @@
               },
               {
                 "Name": "Small Heavy Mix",
-                "Patrol": {"CostLimit":4,"Members":[{"UnitName":"Armored Skeleton","MinCount":1,"Cost":2,"Weight":3},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":3},{"UnitName":"Skeleton Archer","MinCount":0,"Cost":2,"Weight":2}]},
-                "Revenge": {"CostLimit":10,"Members":[{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":3},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":3},{"UnitName":"Skeleton Archer","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Orc","MinCount":0,"Cost":1,"Weight":2},{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":1},{"UnitName":"Armored Orc","MinCount":1,"Cost":3,"Weight":1}]},
+                "Patrol": {"CostLimit":4,"Members":[{"UnitName":"Armored Skeleton","MinCount":1,"Cost":2,"Weight":3},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":3},{"UnitName":"Skeleton Archer","MinCount":0,"Cost":1,"Weight":2}]},
+                "Revenge": {"CostLimit":10,"Members":[{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":3},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":3},{"UnitName":"Skeleton Archer","MinCount":2,"Cost":1,"Weight":2},{"UnitName":"Orc","MinCount":0,"Cost":1,"Weight":2},{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":1},{"UnitName":"Armored Orc","MinCount":1,"Cost":3,"Weight":1}]},
                 "Weight": 1,
                 "MonsterLevel": 1,
                 "IsBossSquad": false,
@@ -1103,8 +1103,8 @@
                   },
                   {
                     "UnitName": "Skeleton Archer",
-                    "MinCount": 0,
-                    "Cost": 2,
+                    "MinCount": 2,
+                    "Cost": 1,
                     "Weight": 2
                   },
                   {
@@ -1173,7 +1173,7 @@
               {
                 "Name": "Medium Orc Group",
                 "Patrol": {"CostLimit":6,"Members":[{"UnitName":"Orc","MinCount":1,"Cost":1,"Weight":4},{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":2},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2}]},
-                "Revenge": {"CostLimit":16,"Members":[{"UnitName":"Orc","MinCount":0,"Cost":1,"Weight":4},{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":2},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":1},{"UnitName":"Skeleton Archer","MinCount":0,"Cost":2,"Weight":1},{"UnitName":"Armored Orc","MinCount":2,"Cost":3,"Weight":1}]},
+                "Revenge": {"CostLimit":16,"Members":[{"UnitName":"Orc","MinCount":0,"Cost":1,"Weight":4},{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":2},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":1},{"UnitName":"Skeleton Archer","MinCount":3,"Cost":1,"Weight":1},{"UnitName":"Armored Orc","MinCount":2,"Cost":3,"Weight":1}]},
                 "Weight": 1,
                 "MonsterLevel": 2,
                 "IsBossSquad": false,
@@ -1207,8 +1207,8 @@
                   },
                   {
                     "UnitName": "Skeleton Archer",
-                    "MinCount": 0,
-                    "Cost": 2,
+                    "MinCount": 3,
+                    "Cost": 1,
                     "Weight": 1
                   },
                   {
@@ -1222,7 +1222,7 @@
               {
                 "Name": "Medium Skeleton Group",
                 "Patrol": {"CostLimit":6,"Members":[{"UnitName":"Skeleton","MinCount":1,"Cost":1,"Weight":3},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":3},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":3}]},
-                "Revenge": {"CostLimit":16,"Members":[{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":3},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":3},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":3},{"UnitName":"Skeleton Archer","MinCount":0,"Cost":2,"Weight":3},{"UnitName":"Orc","MinCount":0,"Cost":1,"Weight":1},{"UnitName":"Armored Orc","MinCount":2,"Cost":3,"Weight":1}]},
+                "Revenge": {"CostLimit":16,"Members":[{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":3},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":3},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":3},{"UnitName":"Skeleton Archer","MinCount":4,"Cost":1,"Weight":3},{"UnitName":"Orc","MinCount":0,"Cost":1,"Weight":1},{"UnitName":"Armored Orc","MinCount":2,"Cost":3,"Weight":1}]},
                 "Weight": 1,
                 "MonsterLevel": 2,
                 "IsBossSquad": false,
@@ -1250,8 +1250,8 @@
                   },
                   {
                     "UnitName": "Skeleton Archer",
-                    "MinCount": 0,
-                    "Cost": 2,
+                    "MinCount": 4,
+                    "Cost": 1,
                     "Weight": 3
                   },
                   {
@@ -1314,7 +1314,7 @@
               {
                 "Name": "Large Elite Orc Group",
                 "Patrol": {"CostLimit":8,"Members":[{"UnitName":"Orc","MinCount":1,"Cost":1,"Weight":4},{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":2},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2}]},
-                "Revenge": {"CostLimit":24,"Members":[{"UnitName":"Orc","MinCount":0,"Cost":1,"Weight":4},{"UnitName":"Armored Orc","MinCount":0,"Cost":3,"Weight":3},{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":2},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":1},{"UnitName":"Skeleton Archer","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Elite Orc","MinCount":1,"Cost":5,"Weight":1},{"UnitName":"Orc rider","MinCount":0,"Cost":5,"Weight":2}]},
+                "Revenge": {"CostLimit":24,"Members":[{"UnitName":"Orc","MinCount":0,"Cost":1,"Weight":4},{"UnitName":"Armored Orc","MinCount":0,"Cost":3,"Weight":3},{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":2},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":1},{"UnitName":"Skeleton Archer","MinCount":5,"Cost":1,"Weight":2},{"UnitName":"Elite Orc","MinCount":1,"Cost":5,"Weight":1},{"UnitName":"Orc rider","MinCount":0,"Cost":5,"Weight":2}]},
                 "Weight": 1,
                 "MonsterLevel": 3,
                 "IsBossSquad": false,
@@ -1354,8 +1354,8 @@
                   },
                   {
                     "UnitName": "Skeleton Archer",
-                    "MinCount": 0,
-                    "Cost": 2,
+                    "MinCount": 5,
+                    "Cost": 1,
                     "Weight": 2
                   },
                   {
@@ -1375,7 +1375,7 @@
               {
                 "Name": "Large Rider Assault",
                 "Patrol": {"CostLimit":8,"Members":[{"UnitName":"Orc","MinCount":1,"Cost":1,"Weight":3},{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":2},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2}]},
-                "Revenge": {"CostLimit":24,"Members":[{"UnitName":"Orc","MinCount":0,"Cost":1,"Weight":3},{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":2},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Skeleton Archer","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Armored Orc","MinCount":0,"Cost":3,"Weight":3},{"UnitName":"Elite Orc","MinCount":0,"Cost":5,"Weight":2},{"UnitName":"Orc rider","MinCount":1,"Cost":5,"Weight":2}]},
+                "Revenge": {"CostLimit":24,"Members":[{"UnitName":"Orc","MinCount":0,"Cost":1,"Weight":3},{"UnitName":"Skeleton","MinCount":0,"Cost":1,"Weight":2},{"UnitName":"Armored Skeleton","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Greatsword Skeleton","MinCount":0,"Cost":2,"Weight":2},{"UnitName":"Skeleton Archer","MinCount":2,"Cost":1,"Weight":2},{"UnitName":"Armored Orc","MinCount":0,"Cost":3,"Weight":3},{"UnitName":"Elite Orc","MinCount":0,"Cost":5,"Weight":2},{"UnitName":"Orc rider","MinCount":1,"Cost":5,"Weight":2}]},
                 "Weight": 1,
                 "MonsterLevel": 3,
                 "IsBossSquad": false,
@@ -1409,8 +1409,8 @@
                   },
                   {
                     "UnitName": "Skeleton Archer",
-                    "MinCount": 0,
-                    "Cost": 2,
+                    "MinCount": 2,
+                    "Cost": 1,
                     "Weight": 2
                   },
                   {
@@ -1432,6 +1432,99 @@
                     "Weight": 2
                   }
                 ]
+              },
+              {
+                "Name": "Necromancer Boss",
+                "Weight": 1,
+                "MonsterLevel": 3,
+                "IsBossSquad": true,
+                "Width": 13,
+                "Height": 13,
+                "CostLimit": 25,
+                "Members": [
+                  {
+                    "UnitName": "Necromancer",
+                    "MinCount": 1,
+                    "Cost": 10,
+                    "Weight": 0
+                  },
+                  {
+                    "UnitName": "Skeleton",
+                    "MinCount": 1,
+                    "Cost": 1,
+                    "Weight": 2
+                  },
+                  {
+                    "UnitName": "Armored Skeleton",
+                    "MinCount": 1,
+                    "Cost": 2,
+                    "Weight": 2
+                  },
+                  {
+                    "UnitName": "Greatsword Skeleton",
+                    "MinCount": 1,
+                    "Cost": 2,
+                    "Weight": 2
+                  },
+                  {
+                    "UnitName": "Skeleton Archer",
+                    "MinCount": 3,
+                    "Cost": 1,
+                    "Weight": 2
+                  }
+                ],
+                "Patrol": {
+                  "CostLimit": 8,
+                  "Members": [
+                    {
+                      "UnitName": "Skeleton",
+                      "MinCount": 1,
+                      "Cost": 1,
+                      "Weight": 3
+                    },
+                    {
+                      "UnitName": "Armored Skeleton",
+                      "MinCount": 0,
+                      "Cost": 2,
+                      "Weight": 2
+                    },
+                    {
+                      "UnitName": "Skeleton Archer",
+                      "MinCount": 0,
+                      "Cost": 1,
+                      "Weight": 1
+                    }
+                  ]
+                },
+                "Revenge": {
+                  "CostLimit": 24,
+                  "Members": [
+                    {
+                      "UnitName": "Skeleton",
+                      "MinCount": 1,
+                      "Cost": 1,
+                      "Weight": 2
+                    },
+                    {
+                      "UnitName": "Armored Skeleton",
+                      "MinCount": 1,
+                      "Cost": 2,
+                      "Weight": 2
+                    },
+                    {
+                      "UnitName": "Greatsword Skeleton",
+                      "MinCount": 1,
+                      "Cost": 2,
+                      "Weight": 2
+                    },
+                    {
+                      "UnitName": "Skeleton Archer",
+                      "MinCount": 3,
+                      "Cost": 1,
+                      "Weight": 2
+                    }
+                  ]
+                }
               }
             ]
           }
@@ -1489,8 +1582,8 @@
               },
               {
                 "UnitName": "Skeleton Archer",
-                "MinCount": 0,
-                "Cost": 2,
+                "MinCount": 1,
+                "Cost": 1,
                 "Weight": 1
               }
             ]

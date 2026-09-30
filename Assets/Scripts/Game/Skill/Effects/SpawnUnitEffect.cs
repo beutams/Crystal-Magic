@@ -32,17 +32,15 @@ namespace CrystalMagic.Game.Skill.Effects
 
             float maxRadius = math.max(0f, Data.SpawnRadius);
             float minRadius = math.clamp(Data.MinSpawnRadius, 0f, maxRadius);
+            var random = Unity.Mathematics.Random.CreateFromIndex((uint)UnityEngine.Random.Range(1, int.MaxValue));
             for (int i = 0; i < math.max(1, Data.Count); i++)
             {
                 string selectedUnitName = candidates.Length == 1
                     ? candidates[0]
                     : candidates[UnityEngine.Random.Range(0, candidates.Length)];
-                Vector2 direction = UnityEngine.Random.insideUnitCircle;
-                if (direction.sqrMagnitude <= 0.0001f)
-                    direction = Vector2.right;
-
-                float radius = Mathf.Sqrt(UnityEngine.Random.Range(minRadius * minRadius, maxRadius * maxRadius));
-                float3 spawnPosition = new(center.x + direction.x * radius, center.y + direction.y * radius, center.z);
+                if (!SpawnPositionUtility.TrySample(entityManager, center, minRadius, maxRadius,
+                        Data.ValidateSpawnPosition, Data.SpawnClearanceRadius, Data.SpawnValidationAttempts,
+                        ref random, out float3 spawnPosition)) continue;
                 NetworkEntitySpawnInfo entityInfo = NetworkEntitySpawnUtility.CreateInfo(
                     NetworkEntityPrefabType.Unit,
                     selectedUnitName,

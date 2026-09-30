@@ -484,7 +484,7 @@ namespace CrystalMagic.Game.Data
             UnitName ??= string.Empty;
             MinCount = Mathf.Max(0, MinCount);
             Cost = Mathf.Max(1, Cost);
-            Weight = Mathf.Max(1, Weight);
+            Weight = Mathf.Max(0, Weight);
         }
     }
 }

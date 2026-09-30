@@ -1,6 +1,7 @@
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Transforms;
 
 public struct DungeonInterestPointComponent : IComponentData
 {
@@ -202,17 +203,38 @@ public static class DungeonPatrolRuntimeUtility
     public const int FloorControllerUnitDataId = 35;
     public const int WildSquadUnitDataId = 36;
     public const string GuardMemberKey = "dungeon.encounter.guard";
+    public const string GuardHomePositionKey = "dungeon.guard.homePosition";
     public const string PatrolMemberKey = "dungeon.patrol.member";
     public const string EncounterDeadKey = "dungeon.encounter.dead";
     public const string PatrolActiveKey = "dungeon.patrol.active";
     public const string PatrolSpeedKey = "dungeon.patrol.speed";
     public const string PatrolArrivalDistanceKey = "dungeon.patrol.arrivalDistance";
     public const string PatrolSpawnListKey = "dungeon.patrol.spawn";
+    public const string PatrolDestinationKey = "dungeon.patrol.destination";
+    public const string PatrolHasDestinationKey = "dungeon.patrol.hasDestination";
+    public const string PatrolTargetVersionKey = "dungeon.patrol.targetVersion";
+    public const string PatrolReportedVersionKey = "dungeon.patrol.reportedVersion";
+    public const string PatrolReachedCountKey = "dungeon.patrol.reachedCount";
     public const string InterestPointStateKey = "dungeon.interestPoint.state";
 
     public static readonly FixedString128Bytes PatrolActiveFixedKey = PatrolActiveKey;
     public static readonly FixedString128Bytes PatrolSpeedFixedKey = PatrolSpeedKey;
     public static readonly FixedString128Bytes PatrolArrivalDistanceFixedKey = PatrolArrivalDistanceKey;
+
+    public static void CaptureGuardHome(EntityManager entityManager, Entity entity)
+    {
+        if (!entityManager.HasComponent<LocalTransform>(entity) ||
+            !UnitVariableSource.TryGetValue(entityManager, entity, GuardMemberKey, out UnitSourceValue guard) ||
+            !guard.TryGetBool(out bool isGuard) || !isGuard ||
+            (UnitVariableSource.TryGetValue(entityManager, entity, PatrolMemberKey, out UnitSourceValue patrol) &&
+             patrol.TryGetBool(out bool isPatrol) && isPatrol) ||
+            UnitVariableSource.TryGetValue(entityManager, entity, GuardHomePositionKey, out _))
+            return;
+
+        // Capture once. Reinitialization or displacement must not move the guard's post.
+        UnitVariableSource.TrySetValue(entityManager, entity, GuardHomePositionKey,
+            UnitValue.FromFloat3(entityManager.GetComponentData<LocalTransform>(entity).Position));
+    }
 
     public static bool IsEncounterDead(EntityManager entityManager, Entity entity)
     {

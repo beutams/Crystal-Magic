@@ -19,6 +19,17 @@ namespace CrystalMagic.Game.Data.Effects
         [EditorLabel("Tick Interval")]
         public float TickIntervalSeconds;
 
+        [EditorLabel("Placement Count")]
+        public int PlacementCount = 1;
+        [EditorLabel("Placement Radius")]
+        public float PlacementRadius;
+        [EditorLabel("Validate Placement Position")]
+        public bool ValidatePlacementPosition;
+        [EditorLabel("Placement Clearance Radius")]
+        public float PlacementClearanceRadius;
+        [EditorLabel("Position Attempts")]
+        public int PlacementValidationAttempts = 32;
+
         [EditorLabel("On Start Effects")]
         [UnityEngine.SerializeReference]
         public EffectData[] OnStartEffects = System.Array.Empty<EffectData>();
@@ -47,6 +58,8 @@ namespace CrystalMagic.Game.Data.Effects
             }
 
             PersistentEffectData copy = (PersistentEffectData)base.CreateRuntimeCopy(runtimeModifiers, elementComponent);
+            copy.PlacementCount = Unity.Mathematics.math.max(1, PlacementCount);
+            copy.PlacementRadius = ApplyModifierNonNegative(modifiers, SkillModifierChannel.AreaRadius, PlacementRadius);
             copy.TotalDuration = ApplyModifierNonNegative(runtimeModifiers, SkillModifierChannel.EffectDuration, TotalDuration);
             copy.TotalDuration = ApplyModifierNonNegative(runtimeModifiers, SkillModifierChannel.BuffDuration, copy.TotalDuration);
             copy.TickIntervalSeconds = ApplyModifierNonNegative(runtimeModifiers, SkillModifierChannel.TickInterval, TickIntervalSeconds);

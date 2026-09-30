@@ -163,6 +163,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9dde44a8c1f3f1a4ea6123e2c5a519c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _vfxPrefabs:
+  - {fileID: 5113658404753888381, guid: c72ddab2be5048dc965447c1d370f9a1, type: 3}
+  - {fileID: 5113658404753888381, guid: ad2e9bc3373f4baea320f0b6f2ac67e6, type: 3}
+  - {fileID: 5113658404753888381, guid: f169c6261f34ea7ad13ac20b2000a34e, type: 3}
+  - {fileID: 5113658404753888381, guid: bb214bb567dde8633b17fe942783032b, type: 3}
+  - {fileID: 5113658404753888381, guid: 3dd5f92a58fec29c8024c5b9153d308b, type: 3}
+  - {fileID: 5113658404753888381, guid: 2372b25a2c9c453497b2789ddab16fa5, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

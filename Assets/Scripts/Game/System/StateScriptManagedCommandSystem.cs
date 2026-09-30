@@ -47,6 +47,8 @@ public partial class StateScriptManagedCommandSystem : SystemBase
     }
 
     private readonly Dictionary<StateScriptActionKey, RunningAddition> _runningActions = new();
+    private readonly Dictionary<StateScriptActionKey, StateScriptSpawnBatch> _spawnBatches = new();
+    private readonly List<StateScriptActionKey> _completedSpawnBatches = new();
     private readonly List<StateScriptActionKey> _completedKeys = new();
     private readonly Dictionary<StateScriptEffectKey, EffectDataListId> _effectLists = new();
     private readonly List<Entity> _missingDestroyFlags = new();
@@ -87,6 +89,8 @@ public partial class StateScriptManagedCommandSystem : SystemBase
         if (!registry.IsCreated)
             return;
 
+        // Spawning makes structural changes; refresh source lookups afterwards.
+        TickSpawnBatches(SystemAPI.Time.DeltaTime);
         using (UpdateSourceDispatcherMarker.Auto())
             _sourceDispatcher.Update(this);
         using (TickRunningActionsMarker.Auto())
@@ -163,6 +167,10 @@ public partial class StateScriptManagedCommandSystem : SystemBase
         foreach (KeyValuePair<StateScriptActionKey, RunningAddition> pair in _runningActions)
             StopActions(pair.Value.Actions);
         _runningActions.Clear();
+        foreach (KeyValuePair<StateScriptActionKey, StateScriptSpawnBatch> pair in _spawnBatches)
+            SetPendingSpawnCount(pair.Key.Entity, pair.Value.Node.Text.ToString(), 0);
+        _spawnBatches.Clear();
+        _completedSpawnBatches.Clear();
         foreach (NPCInteractionSession session in _npcSessions.Values)
             session.Cancel();
         _npcSessions.Clear();
@@ -898,6 +906,11 @@ public partial class StateScriptManagedCommandSystem : SystemBase
 
         if (node.Text.Length > 0)
         {
+            if (node.SpawnIntervalSeconds > 0f)
+            {
+                StartSpawnBatch(spawner, graphIndex, nodeIndex, in node);
+                return;
+            }
             int spawnedCount = SpawnVariableList(spawner, node.Text.ToString(), in node);
             NotificationSignalUtility.PublishSpawned(EntityManager, spawner, node.NotificationKey.ToString(), spawnedCount);
             return;
@@ -919,9 +932,10 @@ public partial class StateScriptManagedCommandSystem : SystemBase
         {
             int candidateOffset = node.StringCount == 1 ? 0 : random.NextInt(0, node.StringCount);
             string unitName = graph.Strings[node.StringStart + candidateOffset].ToString();
-            float2 direction = math.normalizesafe(random.NextFloat2Direction(), new float2(1f, 0f));
-            float radius = math.sqrt(random.NextFloat(minRadius * minRadius, maxRadius * maxRadius));
-            if (TrySpawn(spawner, unitName, center + new float3(direction * radius, 0f), in node, default, false))
+            if (!SpawnPositionUtility.TrySample(EntityManager, center, minRadius, maxRadius,
+                    node.FloatParameters0.z != 0f, node.FloatParameters0.w, (int)node.FloatParameters1.w,
+                    ref random, out float3 position)) continue;
+            if (TrySpawn(spawner, unitName, position, in node, default, false))
                 spawnedTotal++;
         }
         NotificationSignalUtility.PublishSpawned(EntityManager, spawner, node.NotificationKey.ToString(), spawnedTotal);
@@ -934,24 +948,98 @@ public partial class StateScriptManagedCommandSystem : SystemBase
         int spawnedCount = 0;
         for (int index = 0; index < count; index++)
         {
-            string entryKey = $"{listKey}.{index}";
-            if (!TryGetString(spawner, $"{entryKey}.unit", out string unitName) ||
-                !TryGetFloat3(spawner, $"{entryKey}.position", out float3 position))
+            if (!TryReadSpawnEntry(spawner, listKey, index, out StateScriptSpawnBatch.Entry entry))
                 continue;
-            NetworkEntitySpawnInfo info = default;
-            bool hasInfo = TryGetBool(spawner, $"{entryKey}.hasMonsterData", out bool hasMonsterData) && hasMonsterData;
-            if (hasInfo)
-            {
-                info = new NetworkEntitySpawnInfo();
-                info.hasMonsterSpawnData = true;
-                TryGetInt(spawner, $"{entryKey}.monsterSaveId", out info.monsterSaveId);
-                TryGetInt(spawner, $"{entryKey}.monsterRegionId", out info.monsterRegionId);
-                TryGetInt(spawner, $"{entryKey}.monsterSquadId", out info.monsterSquadId);
-                TryGetBool(spawner, $"{entryKey}.monsterIsBoss", out info.monsterIsBoss);
-            }
-            if (TrySpawn(spawner, unitName, position, in node, info, hasInfo)) spawnedCount++;
+            if (TrySpawn(spawner, entry.UnitName, entry.Position, in node, entry.Info, entry.HasInfo)) spawnedCount++;
         }
         return spawnedCount;
+    }
+
+    private bool TryReadSpawnEntry(Entity spawner, string listKey, int index, out StateScriptSpawnBatch.Entry entry)
+    {
+        entry = default;
+        string entryKey = $"{listKey}.{index}";
+        if (!TryGetString(spawner, $"{entryKey}.unit", out entry.UnitName) ||
+            !TryGetFloat3(spawner, $"{entryKey}.position", out entry.Position) ||
+            !math.all(math.isfinite(entry.Position)))
+            return false;
+
+        entry.HasInfo = TryGetBool(spawner, $"{entryKey}.hasMonsterData", out bool hasMonsterData) && hasMonsterData;
+        if (entry.HasInfo)
+        {
+            entry.Info = new NetworkEntitySpawnInfo { hasMonsterSpawnData = true };
+            TryGetInt(spawner, $"{entryKey}.monsterSaveId", out entry.Info.monsterSaveId);
+            TryGetInt(spawner, $"{entryKey}.monsterRegionId", out entry.Info.monsterRegionId);
+            TryGetInt(spawner, $"{entryKey}.monsterSquadId", out entry.Info.monsterSquadId);
+            TryGetBool(spawner, $"{entryKey}.monsterIsBoss", out entry.Info.monsterIsBoss);
+        }
+        return true;
+    }
+
+    private void StartSpawnBatch(Entity spawner, int graphIndex, int nodeIndex, in StateScriptNodeDefinition node)
+    {
+        StateScriptActionKey key = new(spawner, graphIndex, nodeIndex);
+        // Repeated pulses must not restart or duplicate an in-flight wave.
+        if (_spawnBatches.ContainsKey(key))
+            return;
+        if (!StateScriptSpawnBatch.CanContinue(EntityManager, spawner, graphIndex))
+        {
+            SetPendingSpawnCount(spawner, node.Text.ToString(), 0);
+            return;
+        }
+        List<StateScriptSpawnBatch.Entry> entries = new();
+        string listKey = node.Text.ToString();
+        if (TryGetInt(spawner, listKey + ".count", out int count))
+            for (int i = 0; i < count; i++)
+                if (TryReadSpawnEntry(spawner, listKey, i, out StateScriptSpawnBatch.Entry entry))
+                    entries.Add(entry);
+
+        StateScriptSpawnBatch batch = new(entries, in node);
+        _spawnBatches.Add(key, batch);
+        AdvanceSpawnBatch(spawner, batch, 0f);
+        if (batch.RemainingCount == 0)
+        {
+            NotificationSignalUtility.PublishSpawned(EntityManager, spawner, node.NotificationKey.ToString(), batch.SpawnedCount);
+            _spawnBatches.Remove(key);
+        }
+    }
+
+    private void TickSpawnBatches(float deltaTime)
+    {
+        _completedSpawnBatches.Clear();
+        foreach (KeyValuePair<StateScriptActionKey, StateScriptSpawnBatch> pair in _spawnBatches)
+        {
+            Entity spawner = pair.Key.Entity;
+            StateScriptSpawnBatch batch = pair.Value;
+            if (!StateScriptSpawnBatch.CanContinue(EntityManager, spawner, pair.Key.GraphIndex))
+            {
+                SetPendingSpawnCount(spawner, batch.Node.Text.ToString(), 0);
+                _completedSpawnBatches.Add(pair.Key);
+                continue;
+            }
+            AdvanceSpawnBatch(spawner, batch, deltaTime);
+            if (batch.RemainingCount != 0)
+                continue;
+            NotificationSignalUtility.PublishSpawned(EntityManager, spawner, batch.Node.NotificationKey.ToString(), batch.SpawnedCount);
+            _completedSpawnBatches.Add(pair.Key);
+        }
+        foreach (StateScriptActionKey key in _completedSpawnBatches)
+            _spawnBatches.Remove(key);
+    }
+
+    private void AdvanceSpawnBatch(Entity spawner, StateScriptSpawnBatch batch, float deltaTime)
+    {
+        if (batch.TryTakeNext(deltaTime, out StateScriptSpawnBatch.Entry entry) &&
+            TrySpawn(spawner, entry.UnitName, entry.Position, in batch.Node, entry.Info, entry.HasInfo))
+            batch.SpawnedCount++;
+        // Failed entries are consumed as well: missing prefabs must not block a wave forever.
+        SetPendingSpawnCount(spawner, batch.Node.Text.ToString(), batch.RemainingCount);
+    }
+
+    private void SetPendingSpawnCount(Entity spawner, string listKey, int count)
+    {
+        if (EntityManager.Exists(spawner))
+            UnitVariableSource.TrySetValue(EntityManager, spawner, listKey + ".pendingCount", UnitValue.FromInt(count));
     }
 
     private bool TrySpawn(
@@ -962,6 +1050,8 @@ public partial class StateScriptManagedCommandSystem : SystemBase
         NetworkEntitySpawnInfo additionalInfo,
         bool hasAdditionalInfo)
     {
+        if (node.FloatParameters0.z != 0f && !SpawnPositionUtility.IsValid(EntityManager, position, node.FloatParameters0.w))
+            return false;
         NetworkEntitySpawnInfo info = NetworkEntitySpawnUtility.CreateInfo(
             NetworkEntityPrefabType.Unit,
             unitName,
