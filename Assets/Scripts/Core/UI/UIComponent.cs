@@ -45,9 +45,6 @@ namespace CrystalMagic.Core {
             // 确保存在默认分组
             EnsureDefaultGroupExists();
 
-            // 通过 CameraComponent 获取相机，它比 UIComponent(15) 优先级更高(13)，确保已初始化
-            RefreshUICamera(CameraComponent.Instance.Current);
-
             if (InputComponent.Instance != null)
             {
                 InputComponent.Instance.OnEscape += HandleEscape;
@@ -120,11 +117,6 @@ namespace CrystalMagic.Core {
             return _config != null ? _config.screenMatchMode : CanvasScaler.ScreenMatchMode.Expand;
         }
 
-        private float GetGroupPlaneDistance()
-        {
-            return _config != null ? Mathf.Max(0.01f, _config.planeDistance) : 1f;
-        }
-
         public float GetHoverInfoDelaySeconds()
         {
             return _config != null ? Mathf.Max(0f, _config.hoverInfoDelaySeconds) : 2f;
@@ -143,23 +135,6 @@ namespace CrystalMagic.Core {
         public CanvasScaler.ScreenMatchMode GetScreenMatchMode()
         {
             return GetGroupScreenMatchMode();
-        }
-
-        public float GetPlaneDistance()
-        {
-            return GetGroupPlaneDistance();
-        }
-
-        public void RefreshUICamera(Camera camera)
-        {
-            foreach (var group in _groups.Values)
-            {
-                Canvas[] canvases = group.GetComponentsInChildren<Canvas>(true);
-                for (int i = 0; i < canvases.Length; i++)
-                {
-                    canvases[i].worldCamera = camera;
-                }
-            }
         }
 
         private void Update()
@@ -206,7 +181,7 @@ namespace CrystalMagic.Core {
             if (group != null)
             {
                 group.ConfigureGroup(entry.groupName, entry.order);
-                group.ConfigureCanvasSettings(GetGroupReferenceResolution(), GetGroupScreenMatchMode(), GetGroupPlaneDistance());
+                group.ConfigureCanvasSettings(GetGroupReferenceResolution(), GetGroupScreenMatchMode());
                 RegisterGroup(entry.groupName, group, entry.uiNames);
             }
         }
@@ -223,7 +198,7 @@ namespace CrystalMagic.Core {
 
             StackUIGroup group = groupObj.AddComponent<StackUIGroup>();
             group.ConfigureGroup(DefaultGroupName, 0);
-            group.ConfigureCanvasSettings(GetGroupReferenceResolution(), GetGroupScreenMatchMode(), GetGroupPlaneDistance());
+            group.ConfigureCanvasSettings(GetGroupReferenceResolution(), GetGroupScreenMatchMode());
             RegisterGroup(DefaultGroupName, group);
         }
 

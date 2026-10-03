@@ -107,6 +107,7 @@ namespace CrystalMagic.ThirdParty.RVO2
             lines = default;
             float inverseTimeHorizon = 1f / math.max(Epsilon, self.TimeHorizon);
             float inverseTimeStep = 1f / math.max(Epsilon, timeStep);
+            float2 overlapSeparationVelocity = float2.zero;
 
             for (int index = 0; index < neighbors.Length && lines.Length < lines.Capacity; index++)
             {
@@ -165,6 +166,18 @@ namespace CrystalMagic.ThirdParty.RVO2
                             ? new float2(1f, 0f)
                             : new float2(-1f, 0f);
 
+                    // ORCA's half correction is sufficient while agents are merely
+                    // approaching each other. Once agents are already overlapping,
+                    // the regular linear program can have no feasible velocity when
+                    // the required correction exceeds MaxSpeed. Keep a separate
+                    // deterministic half-penetration correction so both agents can
+                    // actively escape an overlap even when their preferred velocity
+                    // is zero.
+                    float distance = math.sqrt(math.max(0f, distanceSq));
+                    float penetration = combinedRadius - distance;
+                    if (penetration > 0f)
+                        overlapSeparationVelocity += unitW * (0.5f * penetration * inverseTimeStep);
+
                     line.Direction = new float2(unitW.y, -unitW.x);
                     correction = (combinedRadius * inverseTimeStep - wLength) * unitW;
                 }
@@ -181,6 +194,31 @@ namespace CrystalMagic.ThirdParty.RVO2
                 out float2 result);
             if (firstFailedLine < lines.Length)
                 LinearProgram3(in lines, firstFailedLine, self.MaxSpeed, ref result);
+
+            if (math.lengthsq(overlapSeparationVelocity) > Epsilon * Epsilon &&
+                self.MaxSpeed > Epsilon)
+            {
+                float2 separationDirection = math.normalizesafe(overlapSeparationVelocity);
+                float requiredSeparationSpeed = math.min(
+                    self.MaxSpeed,
+                    math.length(overlapSeparationVelocity));
+                float currentSeparationSpeed = math.dot(result, separationDirection);
+
+                if (currentSeparationSpeed < requiredSeparationSpeed)
+                {
+                    float2 tangent = result - separationDirection * currentSeparationSpeed;
+                    float tangentLimit = math.sqrt(math.max(
+                        0f,
+                        self.MaxSpeed * self.MaxSpeed -
+                        requiredSeparationSpeed * requiredSeparationSpeed));
+                    float tangentLength = math.length(tangent);
+                    if (tangentLength > tangentLimit && tangentLength > Epsilon)
+                        tangent *= tangentLimit / tangentLength;
+
+                    result = separationDirection * requiredSeparationSpeed + tangent;
+                }
+            }
+
             return result;
         }
 

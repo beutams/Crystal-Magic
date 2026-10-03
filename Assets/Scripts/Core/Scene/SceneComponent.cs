@@ -3,12 +3,14 @@ using UnityEngine.SceneManagement;
 using Unity.Entities;
 using Unity.Scenes;
 using System.Collections.Generic;
+using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace CrystalMagic.Core {
 
     public class SceneComponent : GameComponent<SceneComponent>
     {
         private string _currentSceneName;
+        private readonly HashSet<Unity.Entities.Hash128> _explicitlyLoadedSubScenes = new();
 
         public override int Priority => 20;
 
@@ -32,6 +34,7 @@ namespace CrystalMagic.Core {
             bool forceReload = false,
             System.Action<float> onProgress = null)
         {
+            using var timing = SceneLoadTiming.Measure($"Unity main scene load: {sceneName}");
             if (!forceReload && _currentSceneName == sceneName)
             {
                 Debug.LogWarning($"Scene '{sceneName}' is already loaded");
@@ -41,9 +44,12 @@ namespace CrystalMagic.Core {
             }
 
             Debug.Log($"[SceneComponent] Loading scene async: {sceneName}");
-            GameWorldManager.PrepareForSceneLoad(sceneName);
+            using (SceneLoadTiming.Measure($"Prepare World for {sceneName}"))
+                GameWorldManager.PrepareForSceneLoad(sceneName);
 
-            AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
+            AsyncOperation asyncLoad;
+            using (SceneLoadTiming.Measure($"Request Unity scene load: {sceneName}"))
+                asyncLoad = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
 
             while (!asyncLoad.isDone)
             {
@@ -62,6 +68,7 @@ namespace CrystalMagic.Core {
 
         public System.Collections.IEnumerator LoadAdditiveSceneAsyncCoroutine(string sceneName, System.Action onComplete = null)
         {
+            using var timing = SceneLoadTiming.Measure($"Unity additive scene load: {sceneName}");
             if (string.IsNullOrWhiteSpace(sceneName))
             {
                 onComplete?.Invoke();
@@ -94,13 +101,20 @@ namespace CrystalMagic.Core {
 
             float startTime = Time.realtimeSinceStartup;
             bool hasLoggedWaiting = false;
+            using var timing = SceneLoadTiming.Measure($"Wait SubScene load: {subSceneName} Timeout={timeoutSeconds}s");
+            SubSceneLoadTiming diagnostics = new(subSceneName);
+            diagnostics.Observe(FindSubScene(subSceneName));
 
             while (true)
             {
+                long updateStarted = Stopwatch.GetTimestamp();
                 GameWorldManager.UpdateGameWorld();
+                double updateMilliseconds = (Stopwatch.GetTimestamp() - updateStarted) * 1000d / Stopwatch.Frequency;
                 SubScene targetSubScene = FindSubScene(subSceneName);
+                diagnostics.Observe(targetSubScene, updateMilliseconds);
                 if (IsSubSceneContentLoaded(targetSubScene))
                 {
+                    diagnostics.Complete("Loaded");
                     Debug.Log($"[SceneComponent] SubScene loaded: {subSceneName}");
                     yield break;
                 }
@@ -113,6 +127,7 @@ namespace CrystalMagic.Core {
 
                 if (timeoutSeconds > 0f && Time.realtimeSinceStartup - startTime >= timeoutSeconds)
                 {
+                    diagnostics.Complete("Timeout");
                     Debug.LogWarning($"[SceneComponent] Wait SubScene timeout: {subSceneName}");
                     yield break;
                 }
@@ -128,6 +143,7 @@ namespace CrystalMagic.Core {
 
             float startTime = Time.realtimeSinceStartup;
             bool hasLoggedWaiting = false;
+            using var timing = SceneLoadTiming.Measure($"Wait SubScene unload: {subSceneName} Timeout={timeoutSeconds}s");
 
             while (true)
             {
@@ -147,6 +163,7 @@ namespace CrystalMagic.Core {
 
                 if (timeoutSeconds > 0f && Time.realtimeSinceStartup - startTime >= timeoutSeconds)
                 {
+                    SceneLoadTiming.Mark("SUBSCENE UNLOAD TIMEOUT", subSceneName);
                     Debug.LogWarning($"[SceneComponent] Wait SubScene unload timeout: {subSceneName}");
                     yield break;
                 }
@@ -198,7 +215,19 @@ namespace CrystalMagic.Core {
                 bool shouldBeActive = activeNames.Contains(subScene.name) || activeNames.Contains(subScene.gameObject.name);
                 if (subScene.gameObject.activeSelf != shouldBeActive)
                 {
-                    subScene.gameObject.SetActive(shouldBeActive);
+                    using (SceneLoadTiming.Measure($"SubScene.SetActive {subScene.name} Active={shouldBeActive}"))
+                        subScene.gameObject.SetActive(shouldBeActive);
+                }
+
+                if (shouldBeActive)
+                {
+                    using (SceneLoadTiming.Measure($"Register / request SubScene: {subScene.name}"))
+                        EnsureSubSceneRegistered(subScene);
+                }
+                else
+                {
+                    using (SceneLoadTiming.Measure($"Unload explicit SubScene: {subScene.name}"))
+                        UnloadExplicitSubScene(subScene);
                 }
             }
         }
@@ -208,8 +237,51 @@ namespace CrystalMagic.Core {
         public override void Cleanup()
         {
             _currentSceneName = null;
+            _explicitlyLoadedSubScenes.Clear();
             GameWorldManager.Shutdown();
             base.Cleanup();
+        }
+
+        private void EnsureSubSceneRegistered(SubScene subScene)
+        {
+            World world = GameWorldManager.GameWorld;
+            if (subScene == null || !subScene.SceneGUID.IsValid || world == null || !world.IsCreated)
+                return;
+
+            EntityManager entityManager = world.EntityManager;
+            Entity sceneEntity = SceneSystem.GetSceneEntity(world.Unmanaged, subScene.SceneGUID);
+            if (sceneEntity == Entity.Null)
+            {
+                sceneEntity = SceneSystem.LoadSceneAsync(world.Unmanaged, subScene.SceneGUID);
+                if (sceneEntity == Entity.Null)
+                    return;
+
+                if (!entityManager.HasComponent<SubScene>(sceneEntity))
+                    entityManager.AddComponentObject(sceneEntity, subScene);
+                _explicitlyLoadedSubScenes.Add(subScene.SceneGUID);
+                Debug.Log($"[SceneComponent] Registered SubScene in current World: {subScene.name}");
+                return;
+            }
+
+            if (!SceneSystem.IsSceneLoaded(world.Unmanaged, sceneEntity))
+            {
+                SceneSystem.LoadSceneAsync(world.Unmanaged, sceneEntity);
+            }
+        }
+
+        private void UnloadExplicitSubScene(SubScene subScene)
+        {
+            if (subScene == null || !_explicitlyLoadedSubScenes.Remove(subScene.SceneGUID))
+                return;
+
+            World world = GameWorldManager.GameWorld;
+            if (world != null && world.IsCreated)
+            {
+                SceneSystem.UnloadScene(
+                    world.Unmanaged,
+                    subScene.SceneGUID,
+                    SceneSystem.UnloadParameters.DestroyMetaEntities);
+            }
         }
 
         private SubScene FindSubScene(string subSceneName)

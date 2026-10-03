@@ -57,6 +57,7 @@ Core\
     GameState.cs TRUE
     LoadGameState.cs TRUE DIRTY
     MainMenuState.cs TRUE DIRTY
+    SceneLoadTiming.cs TRUE
     TownState.cs TRUE DIRTY
     TrainingState.cs TRUE DIRTY
     TransitionState.cs TRUE DIRTY
@@ -97,7 +98,7 @@ Core\
     ResourceLoadMode.cs FALSE
   Runtime\
     DungeonFogOfWarSystem.cs TRUE DIRTY
-    DungeonFogOfWarVisualBuilder.cs TRUE
+    DungeonFogOfWarVisualBuilder.cs TRUE DIRTY
     DungeonSceneRuntimeBuilder.cs TRUE DIRTY
     OpenFieldDungeonSceneDataBuilder.cs TRUE DIRTY
     DungeonSceneRuntimeRoot.cs TRUE DIRTY
@@ -121,6 +122,7 @@ Core\
       SubSceneAutoOpenOnPlay.cs TRUE
     AutoOpen.cs FALSE
     SceneComponent.cs TRUE DIRTY
+    SubSceneLoadTiming.cs TRUE
   World\
     GameWorldBootstrap.cs TRUE DIRTY
   Settings\
@@ -168,7 +170,7 @@ Editor\
     CrystalMagicBuild.cs TRUE DIRTY
     CrystalMagicEntitySceneBuildAdditions.cs TRUE
   PlayFromStartScene.cs TRUE
-  UIConfigWindow.cs TRUE
+  UIConfigWindow.cs TRUE DIRTY
 Game\
   Comparator\
     Editor\
@@ -191,6 +193,7 @@ Game\
       ItemDataEditorWindow.cs TRUE
       LocalizationEditorWindow.cs TRUE
       NPCInteractionGraphWindow.cs TRUE DIRTY
+      NPCInteractionGraphLayoutStore.cs TRUE DIRTY
     NPCEditorWindow.cs TRUE DIRTY
       PropEditorWindow.cs TRUE DIRTY
       PreparedUnitCombatRangeSync.cs FALSE
@@ -204,9 +207,9 @@ Game\
       UnitEditorDrawerContext.cs FALSE
       UnitEditorWindow.cs TRUE
     Effects\
-      ApplyBuffEffectData.cs FALSE
+      ApplyBuffEffectData.cs TRUE
       AreaSearchEffectData.cs FALSE
-      BuffStackEffectData.cs FALSE
+      BuffStackEffectData.cs TRUE
       CameraShakeEffectData.cs FALSE
       ChainSearchEffectData.cs FALSE
       ConeSearchEffectData.cs FALSE
@@ -258,20 +261,21 @@ Game\
   OpenField\
     OpenFieldDungeonVisualLayoutBuilder.cs FALSE
     OpenFieldDungeonAnchors.cs TRUE
-    OpenFieldDungeonContent.cs TRUE
-    OpenFieldDungeonLayout.cs TRUE
+    OpenFieldDungeonContent.cs TRUE DIRTY
+    OpenFieldDungeonLayout.cs TRUE DIRTY
     OpenFieldDungeonTerrainConfig.cs TRUE
     OpenFieldDungeonTerrainGenerator.cs TRUE
   Skill\
     Editor\
       EffectGraph\
+        EffectGraphAutoLayout.cs TRUE
         EffectGraphBinding.cs TRUE
         EffectGraphInspector.cs TRUE DIRTY
-        EffectGraphLayoutStore.cs TRUE
+        EffectGraphLayoutStore.cs TRUE DIRTY
         EffectGraphModel.cs TRUE
         EffectGraphTypeRegistry.cs TRUE DIRTY
-        EffectGraphView.cs TRUE
-        EffectGraphWindow.cs TRUE
+        EffectGraphView.cs TRUE DIRTY
+        EffectGraphWindow.cs TRUE DIRTY
       SkillEditorWindow.cs TRUE DIRTY
       SkillFollowupConsumeRuleRegistryGenerator.cs FALSE
       SkillFollowupFilterRegistryGenerator.cs FALSE
@@ -280,6 +284,7 @@ Game\
     Effects\
       ApplyBuffEffect.cs FALSE
       AreaSearchEffect.cs TRUE DIRTY
+      BuffDamageEffect.cs TRUE DIRTY
       BuffStackEffect.cs TRUE DIRTY
       CameraShakeEffect.cs FALSE
       ChainSearchEffect.cs TRUE DIRTY
@@ -370,6 +375,7 @@ Game\
       StateScriptCompiler.cs TRUE DIRTY
       StateScriptInitSystem.cs TRUE DIRTY
       StateScriptManagedCommandSystem.cs TRUE DIRTY
+      AutoPickupSystem.cs TRUE
       StateScriptNodeFactory.cs TRUE DIRTY
       StateScriptRegistry.cs TRUE DIRTY
       StateScriptRuntime.cs TRUE DIRTY
@@ -499,6 +505,8 @@ Game\
       UnitVisualFeatureAuthoring.cs FALSE
     Editor\
       BehaviorTreeGraphWindow.cs TRUE DIRTY
+      OrderedGraphLayout.cs TRUE
+      UnitGraphAutoLayout.cs TRUE
       GameWorldExecutionTargetEditorUtility.cs TRUE
       StateScriptEditorWindow.cs TRUE DIRTY
       StateScriptGraphView.cs TRUE DIRTY
@@ -577,6 +585,7 @@ Game\
         缂備胶鍠曢绐ff闁告劖鐟ラ崣鍡欎沪閻愮补鍋撹閹蜂即骞庨埀顒勬嚄閹存帗鍙忔慨婵撶秶缁辨繃娼娆惧殑闁瑰灈鍋撻柤瀹犲Г濡炲倿姊?
       UnitModifierSystem.cs TRUE DIRTY
       UnitAnimationSystem.cs TRUE DIRTY
+      SelfUnitAnimationSystem.cs TRUE DIRTY
       UnitAoiBuildSystem.cs TRUE DIRTY
       UnitSpriteRendererSortingSystem.cs TRUE DIRTY
       UnitControlSystem.cs TRUE DIRTY
@@ -589,6 +598,7 @@ Game\
       DropSpritePresentationSystem.cs TRUE DIRTY
       UnitDeathFinalizeSystem.cs TRUE DIRTY
       BattlePlayerStatusPresentationSystem.cs TRUE DIRTY
+      DungeonTreasureRewardSystem.cs TRUE DIRTY
       UnitDropOnDestroySystem.cs TRUE DIRTY
         闁诡剦浜炴晶鍨潰鐠佹娊顎楅柟鍝勵槼閹倝鎮?
       UnitAvoidanceSystem.cs TRUE DIRTY
@@ -659,7 +669,7 @@ UI\
     Sub\
     BattleUI.cs TRUE DIRTY
     BattleUIController.cs TRUE DIRTY
-    BattleUIData.cs TRUE
+    BattleUIData.cs TRUE DIRTY
     BattleUIModel.cs TRUE DIRTY
   CharacterUI\
     Sub\
@@ -671,15 +681,20 @@ UI\
     CharacterUIController.cs TRUE DIRTY
     CharacterUIData.cs TRUE
     CharacterUIModel.cs TRUE DIRTY
+  ConfirmSingleUI\
+    ConfirmSingleUI.cs TRUE
+    ConfirmSingleUIController.cs TRUE
+    ConfirmSingleUIData.cs TRUE
+    ConfirmSingleUIModel.cs FALSE
   ConfirmUI\
     ConfirmUI.cs TRUE
     ConfirmUIController.cs TRUE
-    ConfirmUIData.cs FALSE
+    ConfirmUIData.cs TRUE
     ConfirmUIModel.cs TRUE
     ConfirmUIOpenData.cs FALSE
   DamageNumberUI\
     DamageNumberItem.cs TRUE
-    DamageNumberManager.cs TRUE
+    DamageNumberManager.cs TRUE DIRTY
   DungeonSettlementUI\
     DungeonSettlementUI.cs TRUE
     DungeonSettlementUIController.cs TRUE
@@ -757,7 +772,7 @@ UI\
   MainMenuUI\
     MainMenuUI.cs TRUE
     MainMenuUIController.cs TRUE DIRTY
-    MainMenuUIData.cs FALSE
+    MainMenuUIData.cs TRUE
     MainMenuUIModel.cs FALSE
   DebugUI\
     Sub\
@@ -935,6 +950,9 @@ Core\
     OnlineBattlePreparationState.cs TRUE DIRTY
 Tests\
   Editor\
+    MainMenuLayoutTests.cs TRUE
+    BattleUIChantTests.cs TRUE
+    UICanvasStabilityTests.cs TRUE
     MountainFootRuleTileTests.cs TRUE DIRTY
     BattleFrameClockTests.cs TRUE
     NetworkInputAndProtocolTests.cs TRUE DIRTY
@@ -956,6 +974,8 @@ Core\
 Tests\
   Editor\
     HostedLobbyLifecycleTests.cs TRUE
+    SceneLoadTimingTests.cs TRUE
+    OrderedGraphLayoutTests.cs TRUE
 Web\
   Battle\
     BattleHostManager.cs TRUE
@@ -990,6 +1010,7 @@ Game\
       NavigationTestWindow.Debug.cs FALSE
 Tests\
   Editor\
+    DungeonThreatTests.cs TRUE
     NavigationTestSimulationTests.cs FALSE
     DungeonPatrolMovementTests.cs FALSE
 Game\

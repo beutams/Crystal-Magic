@@ -6,7 +6,6 @@ using CrystalMagic.Game.Unit;
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace CrystalMagic.UI
 {
@@ -295,7 +294,7 @@ namespace CrystalMagic.UI
 
         public void HandleUnitDamaged(UnitDamagedEvent gameEvent)
         {
-            if (!IsTrainingGroundSceneActive() ||
+            if (!IsTrainingGroundStateActive() ||
                 !TryGetDummyEntity(out EntityManager entityManager, out Entity dummyEntity) ||
                 gameEvent.TargetEntity != dummyEntity)
                 return;
@@ -397,7 +396,7 @@ namespace CrystalMagic.UI
 
         private TrainingDummySnapshot ReadTrainingDummy()
         {
-            if (!IsTrainingGroundSceneActive())
+            if (!IsTrainingGroundStateActive())
             {
                 ResetTrainingSession();
                 return default;
@@ -428,14 +427,14 @@ namespace CrystalMagic.UI
             return snapshot;
         }
 
-        private bool IsTrainingGroundSceneActive()
+        private bool IsTrainingGroundStateActive()
         {
-            return SceneManager.GetActiveScene().name == TrainingState.SceneName;
+            return GameFlowComponent.Instance.IsInState<TrainingState>();
         }
 
         private bool RefreshPageDefinitions()
         {
-            bool isTrainingGroundActive = IsTrainingGroundSceneActive();
+            bool isTrainingGroundActive = IsTrainingGroundStateActive();
             if (_isTrainingGroundActive == isTrainingGroundActive)
                 return false;
 

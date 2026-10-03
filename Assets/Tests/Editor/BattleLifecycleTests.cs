@@ -366,4 +366,21 @@ public sealed class BattleLifecycleTests
         Assert.That(copy.lifeState, Is.EqualTo(BattlePlayerLifeState.Dead));
         Assert.That(copy.transitionReady, Is.EqualTo(1));
     }
+
+    [Test]
+    public void ApplyBuffRuntimeCopyUsesReadBuffStackModifier()
+    {
+        SkillModifierSet modifiers = default;
+        SkillModifierEntry perStackModifier = new()
+        {
+            Channel = SkillModifierChannel.BuffStackCount,
+            Bonus = 1f,
+        };
+        modifiers.Add(in perStackModifier, 4, 0f);
+
+        ApplyBuffEffectData data = new() { StackCount = 0 };
+        ApplyBuffEffectData copy = (ApplyBuffEffectData)data.CreateRuntimeCopy(modifiers);
+
+        Assert.That(copy.StackCount, Is.EqualTo(4));
+    }
 }

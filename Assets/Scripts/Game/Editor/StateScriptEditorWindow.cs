@@ -222,6 +222,8 @@ namespace CrystalMagic.Editor.Unit
         {
             Toolbar toolbar = new();
             toolbar.Add(CreateToolbarButton(_isDirty ? "Save *" : "Save", 58f, SaveData));
+            toolbar.Add(CreateToolbarButton("Auto Layout", 90f, () => _graphView?.AutoArrange(SelectedGraph)));
+            toolbar.Add(CreateToolbarButton("Frame All", 76f, () => _graphView?.FrameAll()));
             toolbar.Add(new VisualElement { style = { flexGrow = 1f } });
 
             _statusLabel = new Label(_statusText)

@@ -86,8 +86,7 @@ namespace CrystalMagic.UI
                 return false;
 
             _rootRect = group.transform as RectTransform;
-            Canvas canvas = group.GetComponent<Canvas>();
-            _currentCamera = canvas != null ? canvas.worldCamera : CameraComponent.Instance.Current;
+            _currentCamera = CameraComponent.Instance.Current;
             return _rootRect != null && _currentCamera != null;
         }
 
@@ -191,7 +190,8 @@ namespace CrystalMagic.UI
                     continue;
                 }
 
-                if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_rootRect, screenPosition, _currentCamera, out Vector2 localPoint))
+                // Overlay coordinates use no event camera; only the world projection uses the scene camera.
+                if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_rootRect, screenPosition, null, out Vector2 localPoint))
                 {
                     _rootView?.UpdateBar(bar.Handle, vitality.CurrentHealth, UnitModifierResolver.GetMaxHealth(entityManager, entity), localPoint, true);
                 }

@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CrystalMagic.Core;
+using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data;
+using CrystalMagic.Game.OpenField;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using Unity.Collections;
@@ -15,6 +17,27 @@ using UnityEngine;
 
 public sealed class DungeonThreatTests
 {
+    [Test]
+    public void ChestQualityCountsAndLuckRangesComeFromDungeonConfig()
+    {
+        DungeonConfig config = new();
+        config.EnsureValid();
+
+        Assert.That(config.GetChestCount(OpenFieldInterestSize.Small, DungeonTreasureQuality.Copper), Is.EqualTo(1));
+        Assert.That(config.GetChestCount(OpenFieldInterestSize.Small, DungeonTreasureQuality.Silver), Is.Zero);
+        Assert.That(config.GetChestCount(OpenFieldInterestSize.Small, DungeonTreasureQuality.Gold), Is.Zero);
+        Assert.That(config.GetChestCount(OpenFieldInterestSize.Medium, DungeonTreasureQuality.Copper), Is.EqualTo(1));
+        Assert.That(config.GetChestCount(OpenFieldInterestSize.Medium, DungeonTreasureQuality.Silver), Is.EqualTo(1));
+        Assert.That(config.GetChestCount(OpenFieldInterestSize.Medium, DungeonTreasureQuality.Gold), Is.Zero);
+        Assert.That(config.GetChestCount(OpenFieldInterestSize.Large, DungeonTreasureQuality.Copper), Is.EqualTo(1));
+        Assert.That(config.GetChestCount(OpenFieldInterestSize.Large, DungeonTreasureQuality.Silver), Is.EqualTo(1));
+        Assert.That(config.GetChestCount(OpenFieldInterestSize.Large, DungeonTreasureQuality.Gold), Is.EqualTo(1));
+
+        Assert.That(config.GetChestLuckRange(DungeonTreasureQuality.Copper), Is.EqualTo(new Vector2(0f, 0.4f)));
+        Assert.That(config.GetChestLuckRange(DungeonTreasureQuality.Silver), Is.EqualTo(new Vector2(0.4f, 0.7f)));
+        Assert.That(config.GetChestLuckRange(DungeonTreasureQuality.Gold), Is.EqualTo(new Vector2(0.7f, 1f)));
+    }
+
     [Test]
     public void AuthoredGraphsCompileAndFixedMapThreatTotals300()
     {

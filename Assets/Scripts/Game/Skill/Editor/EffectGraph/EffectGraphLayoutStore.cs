@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using CrystalMagic.Core;
 using UnityEditor;
 using UnityEngine;
 
@@ -122,7 +123,7 @@ namespace CrystalMagic.Editor.EffectGraph
                 if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
                     Directory.CreateDirectory(directory);
 
-                File.WriteAllText(_path, JsonUtility.ToJson(document, true));
+                DataFileUtility.WriteJsonText(_path, JsonUtility.ToJson(document, true));
                 AssetDatabase.Refresh();
             }
             catch (Exception exception)

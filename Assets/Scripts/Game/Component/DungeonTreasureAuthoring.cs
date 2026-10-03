@@ -1,3 +1,4 @@
+using CrystalMagic.Game.Data;
 using Unity.Entities;
 using UnityEngine;
 
@@ -13,7 +14,9 @@ public sealed class DungeonTreasureAuthoring : MonoBehaviour
                 RegionId = -1,
                 RandomSeed = 1u,
                 InterestSize = 0,
+                Quality = DungeonTreasureQuality.Copper,
                 IsOpened = 0,
+                RewardsSpawned = 0,
             });
             AddComponent(entity, new UnitInteractableComponent
             {
@@ -35,7 +38,9 @@ public struct TreasureComponent : IComponentData
     public int RegionId;
     public uint RandomSeed;
     public byte InterestSize;
+    public DungeonTreasureQuality Quality;
     public byte IsOpened;
+    public byte RewardsSpawned;
     public byte NetworkDirty;
 }
 

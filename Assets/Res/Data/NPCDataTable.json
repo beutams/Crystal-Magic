@@ -112,7 +112,7 @@
                                                                 "Options":  [
                                                                                 {
                                                                                     "EnableExpression":  "",
-                                                                                    "NextNodeGuid":  "6d0a28f1c4c14e89a514e6de07be4b91",
+                                                                                    "NextNodeGuid":  "c1a95e3707ff40248bb5153c55295ff8",
                                                                                     "DisplayNameKey":  "npc.option.enter_dungeon"
                                                                                 },
                                                                                 {
@@ -122,20 +122,6 @@
                                                                                 }
                                                                             ],
                                                                 "Guid":  "9fa755485fd94a18b7e4b386a3b5307a",
-                                                                "Branches":  [
-
-                                                                             ],
-                                                                "Type":  "Select"
-                                                            },
-                                                            {
-                                                                "Options":  [
-                                                                                {
-                                                                                    "EnableExpression":  "",
-                                                                                    "NextNodeGuid":  "c1a95e3707ff40248bb5153c55295ff8",
-                                                                                    "DisplayNameKey":  "npc.option.floor_1"
-                                                                                }
-                                                                            ],
-                                                                "Guid":  "6d0a28f1c4c14e89a514e6de07be4b91",
                                                                 "Branches":  [
 
                                                                              ],
@@ -177,7 +163,7 @@
                                                                                 {
                                                                                     "EnableExpression":  "",
                                                                                     "NextNodeGuid":  "exit_next_floor",
-                                                                                    "DisplayNameKey":  "npc.option.continue_next_floor"
+                                                                                    "DisplayNameKey":  "npc.option.continue_dungeon"
                                                                                 },
                                                                                 {
                                                                                     "EnableExpression":  "",
@@ -227,8 +213,8 @@
                      "DisplayNameKey":  "npc.dungeon_exit.name"
                  },
                  {
-                     "NPC":  "NetworkNPC",
-                     "PrefabPath":  "Assets/Res/Prefab/Unit/NPCNetwork.prefab",
+                     "NPC":  "BulletinBoard",
+                     "PrefabPath":  "Assets/Res/Prefab/Unit/BulletinBoard.prefab",
                      "Interactions":  [
                                           {
                                               "Key":  "OpenLobby",
@@ -246,11 +232,11 @@
                                                                 "Type":  "OpenUI"
                                                             }
                                                         ],
-                                              "DisplayNameKey":  "npc.network_lobby.name"
+                                              "DisplayNameKey":  "npc.bulletin_board.name"
                                           }
                                       ],
                      "Id":  6,
-                     "DisplayNameKey":  "npc.network_lobby.name"
+                     "DisplayNameKey":  "npc.bulletin_board.name"
                  }
              ]
 }

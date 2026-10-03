@@ -189,6 +189,8 @@ namespace CrystalMagic.Editor.Unit
         {
             var toolbar = new Toolbar();
             toolbar.Add(MakeToolbarButton(_isDirty ? "Save *" : "Save", 58f, SaveData));
+            toolbar.Add(MakeToolbarButton("Auto Layout", 90f, () => _graphView?.AutoArrange(SelectedTree)));
+            toolbar.Add(MakeToolbarButton("Frame All", 76f, () => _graphView?.FrameAll()));
             toolbar.Add(new VisualElement { style = { flexGrow = 1f } });
 
             _statusLabel = new Label(_statusText)
@@ -1572,6 +1574,9 @@ namespace CrystalMagic.Editor.Unit
             if (tree == null || tree.Nodes == null)
                 return;
 
+            if (tree.Nodes.Count > 1 && tree.Nodes.Any(node => node != null && node.EditorPosition == Vector2.zero))
+                UnitGraphAutoLayout.ArrangeBehaviorTree(tree);
+
             for (int i = 0; i < tree.Nodes.Count; i++)
             {
                 BehaviorNodeData node = tree.Nodes[i];
@@ -1580,8 +1585,6 @@ namespace CrystalMagic.Editor.Unit
 
                 BehaviorTreeNodeView view = new BehaviorTreeNodeView(node);
                 Rect rect = new Rect(node.EditorPosition, Vector2.zero);
-                if (rect.position == Vector2.zero && i > 0)
-                    rect.position = new Vector2(300f + i * 40f, 150f + i * 30f);
                 view.SetPosition(rect);
                 AddElement(view);
                 _nodeViews[node.Guid] = view;
@@ -1610,6 +1613,19 @@ namespace CrystalMagic.Editor.Unit
             }
 
             CleanupInvalidEdgesAndLinks(tree);
+            if (tree.GetRootNode() is BehaviorNodeData root)
+                UpdateViewTransform(new Vector3(80f - root.EditorPosition.x, 0f, 0f), Vector3.one);
+        }
+
+        public void AutoArrange(BehaviorTreeData tree)
+        {
+            if (tree == null) return;
+            UnitGraphAutoLayout.ArrangeBehaviorTree(tree, id =>
+                _nodeViews.TryGetValue(id, out var view) ? view.GetPosition().size : Vector2.zero);
+            foreach (var view in _nodeViews.Values)
+                view.SetPosition(new Rect(view.NodeData.EditorPosition, view.GetPosition().size));
+            _window.MarkDirty();
+            FrameAll();
         }
 
         public void RefreshNode(BehaviorTreeNodeView nodeView)
@@ -1861,6 +1877,7 @@ namespace CrystalMagic.Editor.Unit
         {
             NodeData = nodeData;
             title = BehaviorNodeDataRegistry.GetDisplayName(nodeData.Type);
+            style.width = UnitGraphAutoLayout.BehaviorWidth;
             viewDataKey = nodeData.Guid;
 
             if (SupportsInput(nodeData))

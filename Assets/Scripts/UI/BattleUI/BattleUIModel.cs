@@ -46,18 +46,6 @@ namespace CrystalMagic.UI
             RebuildState(publishIfChanged: true);
         }
 
-        // Skill-cast code can use this until the real chant state is connected to the BattleUI controller.
-        public void SetChantProgress(bool isChanting, float progress)
-        {
-            float nextProgress = isChanting ? Mathf.Clamp01(progress) : 0f;
-            if (_isChanting == isChanting && Mathf.Approximately(_chantProgress, nextProgress))
-                return;
-
-            _isChanting = isChanting;
-            _chantProgress = nextProgress;
-            PublishChanged();
-        }
-
         private void RebuildState(bool publishIfChanged)
         {
             SkillCData skillConfig = SaveDataComponent.Instance.GetSkillData();
@@ -81,7 +69,9 @@ namespace CrystalMagic.UI
                 || !Mathf.Approximately(_hpRatio, nextHpRatio)
                 || !Mathf.Approximately(_mpRatio, nextMpRatio)
                 || !Mathf.Approximately(_currentHp, nextCurrentHp)
-                || !Mathf.Approximately(_currentMp, nextCurrentMp);
+                || !Mathf.Approximately(_currentMp, nextCurrentMp)
+                || _isChanting != snapshot.IsChanting
+                || !Mathf.Approximately(_chantProgress, snapshot.ChantProgress);
 
             if (!changed)
                 return;
@@ -96,6 +86,8 @@ namespace CrystalMagic.UI
             _mpRatio = nextMpRatio;
             _currentHp = nextCurrentHp;
             _currentMp = nextCurrentMp;
+            _isChanting = snapshot.IsChanting;
+            _chantProgress = snapshot.ChantProgress;
 
             if (publishIfChanged)
                 PublishChanged();
@@ -123,9 +115,6 @@ namespace CrystalMagic.UI
                 SkillChainSlotData slot = chain.Slots[i];
                 int skillStoneItemId = slot?.SkillStoneItemId ?? -1;
                 SkillData skillData = SkillChainResolver.GetSkillDataBySkillStoneItemId(skillStoneItemId);
-                SkillAdditionData skillAdditionData = slot != null && slot.SkillAdditionId >= 0
-                    ? DataComponent.Instance.Get<SkillAdditionData>(slot.SkillAdditionId)
-                    : null;
 
                 items.Add(new BattleSkillDisplayData
                 {
@@ -133,8 +122,6 @@ namespace CrystalMagic.UI
                     SkillIndex = i,
                     SkillId = skillData != null ? skillData.Id : -1,
                     SkillIconPath = skillData != null ? skillData.IconPath : string.Empty,
-                    AdditionIconPath = skillAdditionData != null ? skillAdditionData.IconPath : string.Empty,
-                    CanShowAddition = i > 0,
                     IsSelected = selectedChainIndex == currentSkillChainIndex &&
                                  i == currentSkillSlotIndex,
                 });
@@ -193,6 +180,8 @@ namespace CrystalMagic.UI
             if (!TryGetPlayerEntity(out EntityManager entityManager, out Entity player))
                 return snapshot;
 
+            snapshot.IsChanting = TryGetChantProgress(entityManager, player, out snapshot.ChantProgress);
+
             UnitHealthBarManager.BuildVisibleBuffs(
                 entityManager,
                 player,
@@ -244,6 +233,69 @@ namespace CrystalMagic.UI
             }
 
             return snapshot;
+        }
+
+        private static bool TryGetChantProgress(EntityManager entityManager, Entity player, out float progress)
+        {
+            progress = 0f;
+            if (!entityManager.HasComponent<UnitStateScriptComponent>(player) ||
+                !entityManager.HasBuffer<StateScriptGraphStateElement>(player) ||
+                !entityManager.HasBuffer<StateScriptNodeStateElement>(player) ||
+                !PlayerCurrentSkillUtility.IsCasting(entityManager, player))
+                return false;
+
+            UnitStateScriptComponent component = entityManager.GetComponentData<UnitStateScriptComponent>(player);
+            if (component.IsStoppedForDeath != 0 || component.DefinitionIndex < 0)
+                return false;
+
+            using EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<StateScriptRuntimeRegistryComponent>());
+            if (!query.TryGetSingleton(out StateScriptRuntimeRegistryComponent registry) ||
+                !registry.Value.IsCreated || component.DefinitionIndex >= registry.Value.Value.Units.Length)
+                return false;
+
+            ref StateScriptUnitDefinitionBlob definition = ref registry.Value.Value.Units[component.DefinitionIndex];
+            DynamicBuffer<StateScriptGraphStateElement> graphs = entityManager.GetBuffer<StateScriptGraphStateElement>(player, true);
+            DynamicBuffer<StateScriptNodeStateElement> states = entityManager.GetBuffer<StateScriptNodeStateElement>(player, true);
+            for (int graphIndex = 0; graphIndex < definition.Graphs.Length && graphIndex < graphs.Length; graphIndex++)
+            {
+                StateScriptGraphStateElement graphState = graphs[graphIndex];
+                if (graphState.IsActive == 0)
+                    continue;
+
+                ref StateScriptGraphDefinitionBlob graph = ref definition.Graphs[graphIndex];
+                for (int i = 0; i < graph.StateNodeIndices.Length; i++)
+                {
+                    int nodeIndex = graph.StateNodeIndices[i];
+                    ref StateScriptNodeDefinition node = ref graph.Nodes[nodeIndex];
+                    if (node.Type != StateScriptNodeRuntimeType.Timer)
+                        continue;
+
+                    int stateIndex = graphState.NodeStateStart + nodeIndex;
+                    if (stateIndex < 0 || stateIndex >= states.Length)
+                        continue;
+
+                    StateScriptNodeStateElement state = states[stateIndex];
+                    if (state.Status == StateScriptStateStatus.Stop || state.Auxiliary <= 0f)
+                        continue;
+
+                    // Identify the chant timer by its duration source, independent of graph/node names.
+                    ref BehaviorExpressionBlob duration = ref graph.Expressions[node.ExpressionStart];
+                    for (int instructionIndex = 0; instructionIndex < duration.Instructions.Length; instructionIndex++)
+                    {
+                        ExpressionInstruction instruction = duration.Instructions[instructionIndex];
+                        if (instruction.Kind == ExpressionInstructionKind.Source &&
+                            (instruction.SourceId == UnitSourceId.PlayerSkillGetSkillChantDuration ||
+                             instruction.SourceId == UnitSourceId.PlayerSkillGetCurrentSkillChantDuration))
+                        {
+                            // Auxiliary is the evaluated duration, including speed and addition modifiers.
+                            progress = Mathf.Clamp01(state.Time / state.Auxiliary);
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
         }
 
         private bool TryGetPlayerEntity(out EntityManager entityManager, out Entity player)
@@ -308,10 +360,8 @@ namespace CrystalMagic.UI
                 if (a.DisplayIndex != b.DisplayIndex ||
                     a.SkillIndex != b.SkillIndex ||
                     a.SkillId != b.SkillId ||
-                    a.CanShowAddition != b.CanShowAddition ||
                     a.IsSelected != b.IsSelected ||
-                    !string.Equals(a.SkillIconPath, b.SkillIconPath, System.StringComparison.Ordinal) ||
-                    !string.Equals(a.AdditionIconPath, b.AdditionIconPath, System.StringComparison.Ordinal))
+                    !string.Equals(a.SkillIconPath, b.SkillIconPath, System.StringComparison.Ordinal))
                 {
                     return false;
                 }
@@ -396,8 +446,6 @@ namespace CrystalMagic.UI
         public int SkillIndex;
         public int SkillId;
         public string SkillIconPath;
-        public string AdditionIconPath;
-        public bool CanShowAddition;
         public bool IsSelected;
     }
 
@@ -429,5 +477,7 @@ namespace CrystalMagic.UI
         public int CurrentSkillSlotIndex;
         public int SelectedSkillChainIndex;
         public float PropCooldownRemaining;
+        public bool IsChanting;
+        public float ChantProgress;
     }
 }

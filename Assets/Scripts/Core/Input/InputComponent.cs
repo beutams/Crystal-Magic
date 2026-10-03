@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 
 namespace CrystalMagic.Core {
     public enum PlayerInputOperationType : byte
@@ -57,6 +59,7 @@ namespace CrystalMagic.Core {
         private bool _playerInputLocked;
         private bool _uiInputLocked;
         private bool _battleInputEnabled;
+        private InputSystemUIInputModule _uiPointerModuleDisabledByInvalidPointer;
         private InputState _currentState;
         private readonly Queue<PlayerInputOperation> _pendingBattleOperations = new();
 
@@ -287,19 +290,62 @@ namespace CrystalMagic.Core {
 
         private void Update()
         {
+            bool pointerValid = TryGetMouseScreenPosition(out _);
+            UpdateUIInputModuleState(pointerValid);
+
             if (!_playerInputLocked)
             {
+                if (!pointerValid)
+                    return;
+
                 UpdateWorldPosition();
                 UpdateMousePress();
             }
         }
+
+        private static bool TryGetMouseScreenPosition(out Vector2 screenPosition)
+        {
+            screenPosition = default;
+            if (Mouse.current == null)
+                return false;
+
+            screenPosition = Mouse.current.position.ReadValue();
+            return !float.IsNaN(screenPosition.x) && !float.IsInfinity(screenPosition.x) &&
+                   !float.IsNaN(screenPosition.y) && !float.IsInfinity(screenPosition.y);
+        }
+
+        private void UpdateUIInputModuleState(bool pointerValid)
+        {
+            InputSystemUIInputModule inputModule = EventSystem.current?.currentInputModule as InputSystemUIInputModule;
+            if (inputModule == null)
+                return;
+
+            if (!pointerValid)
+            {
+                if (inputModule.enabled)
+                {
+                    inputModule.enabled = false;
+                    _uiPointerModuleDisabledByInvalidPointer = inputModule;
+                }
+
+                return;
+            }
+
+            if (_uiPointerModuleDisabledByInvalidPointer != null)
+            {
+                _uiPointerModuleDisabledByInvalidPointer.enabled = true;
+                _uiPointerModuleDisabledByInvalidPointer = null;
+            }
+        }
+
         private void UpdateWorldPosition()
         {
-            if (Mouse.current == null) return;
             Camera cam = Camera.main;
             if (cam == null) return;
 
-            Vector2 screen = Mouse.current.position.ReadValue();
+            if (!TryGetMouseScreenPosition(out Vector2 screen))
+                return;
+
             Ray ray = cam.ScreenPointToRay(screen);
 
             var plane = new Plane(Vector3.forward, Vector3.zero);

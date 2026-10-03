@@ -52,6 +52,9 @@ namespace CrystalMagic.Editor.Unit
             if (graph?.Nodes == null)
                 return;
 
+            if (graph.Nodes.Count > 1 && graph.Nodes.Any(node => node != null && node.EditorPosition == Vector2.zero))
+                UnitGraphAutoLayout.ArrangeStateScript(graph);
+
             for (int i = 0; i < graph.Nodes.Count; i++)
             {
                 StateScriptNodeData nodeData = graph.Nodes[i];
@@ -60,8 +63,6 @@ namespace CrystalMagic.Editor.Unit
                     continue;
 
                 Rect position = new(nodeData.EditorPosition, Vector2.zero);
-                if (position.position == Vector2.zero && i > 0)
-                    position.position = new Vector2(260f + i * 40f, 150f + i * 30f);
 
                 AddNodeView(nodeData, schema, position);
             }
@@ -85,6 +86,18 @@ namespace CrystalMagic.Editor.Unit
 
             graphViewChanged = savedCallback;
             UpdateViewTransform(graph.ViewPosition, Vector3.one * graph.ViewScale);
+        }
+
+        public void AutoArrange(StateScriptInstanceData graph)
+        {
+            if (graph == null) return;
+            UnitGraphAutoLayout.ArrangeStateScript(graph, id =>
+                _nodeViews.TryGetValue(id, out var view) ? view.GetPosition().size : Vector2.zero);
+            foreach (var view in _nodeViews.Values)
+                view.SetPosition(new Rect(view.NodeData.EditorPosition, view.GetPosition().size));
+            _window.MarkDirty();
+            FrameAll();
+            SaveViewTransform(graph);
         }
 
         public StateScriptNodeData GetSelectedNodeData()
@@ -376,6 +389,7 @@ namespace CrystalMagic.Editor.Unit
         {
             NodeData = nodeData;
             title = StateScriptNodeDataRegistry.GetDisplayName(nodeData.Type);
+            style.width = UnitGraphAutoLayout.StateWidth;
             viewDataKey = nodeData.Guid;
             titleContainer.style.paddingRight = 52f;
             _executionTargetBadges = GameWorldExecutionTargetEditorUtility.CreateBadges(

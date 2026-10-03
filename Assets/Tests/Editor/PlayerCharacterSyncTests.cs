@@ -9,6 +9,47 @@ using Unity.Entities;
 public sealed class PlayerCharacterSyncTests
 {
     [Test]
+    public void CastingVariableLocksCharacterEditing()
+    {
+        using World world = new("Casting character edit lock test");
+        EntityManager manager = world.EntityManager;
+        Entity player = manager.CreateEntity(typeof(UnitVariableComponent));
+        manager.AddBuffer<UnitVariableElement>(player);
+        PlayerCharacterComponent character = new();
+        manager.AddComponentObject(player, character);
+        PlayerCharacterEdit edit = new()
+        {
+            World = world,
+            EntityManager = manager,
+            Player = player,
+            Revision = character.Revision,
+            Data = PlayerCharacterUtility.Clone(character.Data),
+        };
+        edit.Data.Money = 10;
+
+        Assert.That(PlayerCurrentSkillUtility.IsCasting(manager, player), Is.False);
+        Assert.That(PlayerCharacterUtility.IsEditLocked(manager, player), Is.False);
+
+        Assert.That(UnitVariableSource.TrySetValue(
+            manager,
+            player,
+            PlayerCurrentSkillUtility.CastingVariableKey,
+            UnitSourceValue.FromBool(true)), Is.True);
+        Assert.That(PlayerCurrentSkillUtility.IsCasting(manager, player), Is.True);
+        Assert.That(PlayerCharacterUtility.IsEditLocked(manager, player), Is.True);
+        Assert.That(PlayerCharacterUtility.CommitEdit(edit), Is.False);
+        Assert.That(character.Data.Money, Is.Zero);
+
+        Assert.That(UnitVariableSource.TrySetValue(
+            manager,
+            player,
+            PlayerCurrentSkillUtility.CastingVariableKey,
+            UnitSourceValue.FromBool(false)), Is.True);
+        Assert.That(PlayerCurrentSkillUtility.IsCasting(manager, player), Is.False);
+        Assert.That(PlayerCharacterUtility.IsEditLocked(manager, player), Is.False);
+    }
+
+    [Test]
     public void DraftAndSnapshotDoNotShareMutableData()
     {
         CharacterData original = new() { Money = 10, SteamAccountId = 76561198000000001UL, Name = "Crystal Mage" };

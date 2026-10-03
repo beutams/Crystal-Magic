@@ -247,12 +247,20 @@ namespace CrystalMagic.Core
             RuntimeDungeonSceneData sceneData,
             int floor,
             int seed,
-            int attemptCount)
+            int attemptCount,
+            bool enableFogOfWar = true)
         {
             if (!GameWorldManager.TryGetEntityManager(out EntityManager entityManager))
                 return;
 
-            SetDungeonRuntimeMap(entityManager, layout, sceneData, floor, seed, attemptCount);
+            SetDungeonRuntimeMap(
+                entityManager,
+                layout,
+                sceneData,
+                floor,
+                seed,
+                attemptCount,
+                enableFogOfWar);
         }
 
         public static void SetDungeonRuntimeMap(
@@ -261,7 +269,8 @@ namespace CrystalMagic.Core
             RuntimeDungeonSceneData sceneData,
             int floor,
             int seed,
-            int attemptCount)
+            int attemptCount,
+            bool enableFogOfWar = true)
         {
 
             EntityQuery runQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<DungeonRunComponent>());
@@ -287,7 +296,7 @@ namespace CrystalMagic.Core
                 entityManager.AddComponentObject(dungeonRunEntity, map);
             }
 
-            map.Set(layout, sceneData, floor, seed, attemptCount);
+            map.Set(layout, sceneData, floor, seed, attemptCount, enableFogOfWar);
             SetDungeonNavigationMap(entityManager, dungeonRunEntity, layout, sceneData);
         }
 

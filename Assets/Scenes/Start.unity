@@ -1382,7 +1382,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e5b5f89c0a9149338c2c6c9cde257261, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _isEnabled: 0
+  _isEnabled: 1
   _circleSegmentCount: 32
   _coneArcSegmentCount: 24
   _maxShapesPerFrame: 64

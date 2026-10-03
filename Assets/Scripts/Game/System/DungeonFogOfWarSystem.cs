@@ -9,6 +9,7 @@ namespace CrystalMagic.Core
     public partial class DungeonFogOfWarSystem : SystemBase
     {
         private EntityQuery _runtimeMapQuery;
+        private bool _debugFogCleanupComplete;
 
         protected override void OnCreate()
         {
@@ -17,6 +18,21 @@ namespace CrystalMagic.Core
 
         protected override void OnUpdate()
         {
+            if (!DungeonFogOfWarDebugSettings.Enabled)
+            {
+                if (!_debugFogCleanupComplete)
+                {
+                    GameObject fogObject = GameObject.Find("FogOfWar");
+                    if (fogObject != null)
+                        Object.Destroy(fogObject);
+
+                    ShowAllHostileVisuals();
+                    _debugFogCleanupComplete = true;
+                }
+
+                return;
+            }
+
             if (_runtimeMapQuery.IsEmptyIgnoreFilter)
                 return;
 
@@ -74,6 +90,24 @@ namespace CrystalMagic.Core
                                   fogData.IsVisible(cell.x, cell.y);
                 if (spriteRenderer.enabled != shouldShow)
                     spriteRenderer.enabled = shouldShow;
+            }
+        }
+
+        private void ShowAllHostileVisuals()
+        {
+            foreach ((RefRO<UnitAnimationComponent> _, RefRO<UnitFactionComponent> faction, Entity entity) in
+                     SystemAPI.Query<RefRO<UnitAnimationComponent>, RefRO<UnitFactionComponent>>()
+                         .WithEntityAccess())
+            {
+                if (!UnitFactionUtility.IsHostile(faction.ValueRO.Value) ||
+                    !EntityManager.HasComponent<SpriteRenderer>(entity))
+                {
+                    continue;
+                }
+
+                SpriteRenderer spriteRenderer = EntityManager.GetComponentObject<SpriteRenderer>(entity);
+                if (spriteRenderer != null)
+                    spriteRenderer.enabled = true;
             }
         }
     }

@@ -22,11 +22,19 @@ namespace CrystalMagic.Core
 
         public bool HasLayout => OpenFieldLayout != null;
 
-        public void Set(OpenFieldDungeonLayout layout, RuntimeDungeonSceneData sceneData, int floor, int seed, int attemptCount)
+        public void Set(
+            OpenFieldDungeonLayout layout,
+            RuntimeDungeonSceneData sceneData,
+            int floor,
+            int seed,
+            int attemptCount,
+            bool enableFogOfWar = true)
         {
             OpenFieldLayout = layout;
             SceneData = sceneData;
-            FogData = layout != null ? new RuntimeDungeonFogData(layout, sceneData) : null;
+            FogData = enableFogOfWar && layout != null
+                ? new RuntimeDungeonFogData(layout, sceneData)
+                : null;
             Floor = Mathf.Max(1, floor);
             Seed = seed;
             AttemptCount = Mathf.Max(1, attemptCount);
@@ -230,6 +238,7 @@ namespace CrystalMagic.Core
         public int TargetThemeId = -1;
         public int TargetFloor;
         public byte InterestSize;
+        public CrystalMagic.Game.Data.DungeonTreasureQuality TreasureQuality;
         public uint RandomSeed;
         public List<int> TreasureCandidateItemIds = new();
     }

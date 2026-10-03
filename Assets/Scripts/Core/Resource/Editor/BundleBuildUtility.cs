@@ -34,7 +34,7 @@ namespace CrystalMagic.Editor.Resource
                 Directory.CreateDirectory(directory);
             }
 
-            File.WriteAllText(ConfigPath, JsonUtility.ToJson(config, true));
+            DataFileUtility.WriteJsonText(ConfigPath, JsonUtility.ToJson(config, true));
             AssetDatabase.Refresh();
         }
 

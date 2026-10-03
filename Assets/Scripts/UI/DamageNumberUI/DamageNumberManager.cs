@@ -71,7 +71,7 @@ namespace CrystalMagic.UI
 
             Vector3 screenPosition = _currentCamera.WorldToScreenPoint((Vector3)gameEvent.WorldPosition + Vector3.up * WorldYOffset);
             if (screenPosition.z <= 0f ||
-                !RectTransformUtility.ScreenPointToLocalPointInRectangle(_rootRect, screenPosition, _currentCamera, out Vector2 localPoint))
+                !RectTransformUtility.ScreenPointToLocalPointInRectangle(_rootRect, screenPosition, null, out Vector2 localPoint))
             {
                 return;
             }
@@ -110,8 +110,7 @@ namespace CrystalMagic.UI
                 return false;
 
             _rootRect = group.transform as RectTransform;
-            Canvas canvas = group.GetComponent<Canvas>();
-            _currentCamera = canvas != null ? canvas.worldCamera : CameraComponent.Instance.Current;
+            _currentCamera = CameraComponent.Instance.Current;
             return _rootRect != null && _currentCamera != null;
         }
 

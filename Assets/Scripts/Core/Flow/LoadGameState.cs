@@ -9,14 +9,20 @@ namespace CrystalMagic.Core {
             int saveIndex = StateData is int index ? index : 0;
             Debug.Log($"[LoadGameState] Loading slot index: {saveIndex}");
 
-            GameWorldManager.ShutdownGameWorld();
-            GameWorldManager.CreateGameWorld();
-            bool success = SaveDataComponent.Instance.LoadFromSlot(saveIndex, out LoadGameContext context);
+            using (SceneLoadTiming.Measure("Destroy previous GameWorld"))
+                GameWorldManager.ShutdownGameWorld();
+            using (SceneLoadTiming.Measure("Create GameWorld and initialize ECS systems"))
+                GameWorldManager.CreateGameWorld();
+            bool success;
+            LoadGameContext context;
+            using (SceneLoadTiming.Measure($"Read save slot {saveIndex}"))
+                success = SaveDataComponent.Instance.LoadFromSlot(saveIndex, out context);
 
             if (!success)
             {
                 Debug.LogError("[LoadGameState] Failed to load game!");
                 GameWorldManager.ShutdownGameWorld();
+                SceneLoadTiming.Finish("Failed to read save slot.");
                 return;
             }
 
@@ -34,11 +40,13 @@ namespace CrystalMagic.Core {
                 Debug.Log("[LoadGameState] 进入 Town");
             }
 
-            TransitionData transitionData = context.ShouldEnterDungeon()
-                ? DungeonState.CreateEnterTransitionData(context)
-                : context.ShouldEnterTraining()
-                    ? TrainingState.CreateEnterTransitionData(context)
-                    : TownState.CreateEnterTransitionData(context);
+            TransitionData transitionData;
+            using (SceneLoadTiming.Measure("Build target transition data"))
+                transitionData = context.ShouldEnterDungeon()
+                    ? DungeonState.CreateEnterTransitionData(context)
+                    : context.ShouldEnterTraining()
+                        ? TrainingState.CreateEnterTransitionData(context)
+                        : TownState.CreateEnterTransitionData(context);
 
             GameFlowComponent.Instance.BeginTransition(transitionData);
         }

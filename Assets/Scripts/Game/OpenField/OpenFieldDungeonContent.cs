@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using CrystalMagic.Game.Config;
+using CrystalMagic.Game.Data;
 using UnityEngine;
 
 namespace CrystalMagic.Game.OpenField
@@ -8,18 +10,29 @@ namespace CrystalMagic.Game.OpenField
 
     public sealed class OpenFieldContentPlacement
     {
-        internal OpenFieldContentPlacement(OpenFieldContentType type, OpenFieldGridPosition cell, int encounterId, int squadId)
-        { Type = type; Cell = cell; EncounterId = encounterId; SquadId = squadId; }
+        internal OpenFieldContentPlacement(
+            OpenFieldContentType type,
+            OpenFieldGridPosition cell,
+            int encounterId,
+            int squadId,
+            DungeonTreasureQuality treasureQuality)
+        {
+            Type = type;
+            Cell = cell;
+            EncounterId = encounterId;
+            SquadId = squadId;
+            TreasureQuality = treasureQuality;
+        }
         public OpenFieldContentType Type { get; }
         public OpenFieldGridPosition Cell { get; }
         public int EncounterId { get; }
         public int SquadId { get; }
+        public DungeonTreasureQuality TreasureQuality { get; }
     }
 
     [Serializable]
     public sealed class OpenFieldDungeonContentConfig
     {
-        public Vector3Int ChestCounts = new(1, 2, 3);
         public int WildSquadCount = 22;
         // Percentage points; 100 fills the floor's threat meter once.
         public Vector3 InterestClearThreat = new(8f, 13f, 20f);
@@ -28,7 +41,6 @@ namespace CrystalMagic.Game.OpenField
         public int PlacementAttempts = 512;
         internal void EnsureValid()
         {
-            ChestCounts = Vector3Int.Max(Vector3Int.zero, ChestCounts);
             WildSquadCount = Mathf.Max(0, WildSquadCount);
             InterestClearThreat = Vector3.Max(Vector3.zero, InterestClearThreat);
             WildSquadClearThreat = Mathf.Max(0f, WildSquadClearThreat);
@@ -41,36 +53,98 @@ namespace CrystalMagic.Game.OpenField
             OpenFieldInterestSize.Medium => InterestClearThreat.y,
             _ => InterestClearThreat.z,
         };
-        internal int GetChestCount(OpenFieldInterestSize size) => size switch { OpenFieldInterestSize.Small => ChestCounts.x, OpenFieldInterestSize.Medium => ChestCounts.y, _ => ChestCounts.z };
     }
 
     public static class OpenFieldDungeonContentGenerator
     {
-        public static bool TryPlace(OpenFieldDungeonLayout layout, int seed, OpenFieldDungeonContentConfig config)
+        public static bool TryPlace(
+            OpenFieldDungeonLayout layout,
+            int seed,
+            OpenFieldDungeonContentConfig config,
+            DungeonConfig dungeonConfig)
         {
             if (layout == null) throw new ArgumentNullException(nameof(layout));
             if (config == null) throw new ArgumentNullException(nameof(config));
-            config.EnsureValid(); layout.ClearContent(); System.Random random = new(seed ^ 0x2D9973A1); int squadId = 1;
+            dungeonConfig ??= new DungeonConfig();
+            config.EnsureValid();
+            dungeonConfig.EnsureValid();
+            layout.ClearContent();
+            System.Random random = new(seed ^ 0x2D9973A1);
+            int squadId = 1;
             foreach (OpenFieldInterestPoint point in layout.InterestPoints)
             {
-                if (!TryPlaceInsidePoint(layout, random, point, OpenFieldContentType.InterestSquad, point.EncounterId, squadId++, config.PlacementAttempts)) { layout.ClearContent(); return false; }
-                for (int i = 0; i < config.GetChestCount(point.Size); i++)
-                    if (!TryPlaceInsidePoint(layout, random, point, OpenFieldContentType.Chest, point.EncounterId, 0, config.PlacementAttempts)) { layout.ClearContent(); return false; }
+                if (!TryPlaceInsidePoint(
+                        layout,
+                        random,
+                        point,
+                        OpenFieldContentType.InterestSquad,
+                        point.EncounterId,
+                        squadId++,
+                        config.PlacementAttempts))
+                {
+                    layout.ClearContent();
+                    return false;
+                }
+
+                for (int qualityIndex = (int)DungeonTreasureQuality.Copper;
+                     qualityIndex <= (int)DungeonTreasureQuality.Gold;
+                     qualityIndex++)
+                {
+                    DungeonTreasureQuality quality = (DungeonTreasureQuality)qualityIndex;
+                    int chestCount = dungeonConfig.GetChestCount(point.Size, quality);
+                    for (int i = 0; i < chestCount; i++)
+                    {
+                        if (!TryPlaceInsidePoint(
+                                layout,
+                                random,
+                                point,
+                                OpenFieldContentType.Chest,
+                                point.EncounterId,
+                                0,
+                                config.PlacementAttempts,
+                                quality))
+                        {
+                            layout.ClearContent();
+                            return false;
+                        }
+                    }
+                }
             }
+
             for (int i = 0; i < config.WildSquadCount; i++)
-                if (!TryPlaceWild(layout, random, squadId++, config.PlacementAttempts)) { layout.ClearContent(); return false; }
+            {
+                if (TryPlaceWild(layout, random, squadId++, config.PlacementAttempts))
+                    continue;
+
+                layout.ClearContent();
+                return false;
+            }
+
             return true;
         }
 
-        private static bool TryPlaceInsidePoint(OpenFieldDungeonLayout l, System.Random r, OpenFieldInterestPoint p, OpenFieldContentType type, int encounterId, int squadId, int attempts)
+        private static bool TryPlaceInsidePoint(
+            OpenFieldDungeonLayout l,
+            System.Random r,
+            OpenFieldInterestPoint p,
+            OpenFieldContentType type,
+            int encounterId,
+            int squadId,
+            int attempts,
+            DungeonTreasureQuality treasureQuality = DungeonTreasureQuality.Copper)
         {
             int radius = Mathf.Max(1, p.Radius - 1), squared = radius * radius;
             for (int i = 0; i < attempts; i++)
             {
                 OpenFieldGridPosition cell = new(r.Next(p.Center.X - radius, p.Center.X + radius + 1), r.Next(p.Center.Y - radius, p.Center.Y + radius + 1));
                 int x = cell.X - p.Center.X, y = cell.Y - p.Center.Y;
-                if (x * x + y * y <= squared && IsAvailable(l, cell)) { l.AddContent(type, cell, encounterId, squadId); return true; }
+                if (x * x + y * y > squared || !IsAvailable(l, cell))
+                    continue;
+
+                l.AddContent(type, cell, encounterId, squadId, treasureQuality);
+                return true;
             }
+
             return false;
         }
 
@@ -79,9 +153,13 @@ namespace CrystalMagic.Game.OpenField
             for (int i = 0; i < attempts; i++)
             {
                 OpenFieldGridPosition cell = new(r.Next(0, l.Width), r.Next(0, l.Height));
-                if (!l.IsReachable(cell.X, cell.Y) || IsInsideInterestPoint(l, cell) || !IsAvailable(l, cell)) continue;
-                l.AddContent(OpenFieldContentType.WildSquad, cell, 0, squadId); return true;
+                if (!l.IsReachable(cell.X, cell.Y) || IsInsideInterestPoint(l, cell) || !IsAvailable(l, cell))
+                    continue;
+
+                l.AddContent(OpenFieldContentType.WildSquad, cell, 0, squadId, DungeonTreasureQuality.Copper);
+                return true;
             }
+
             return false;
         }
 

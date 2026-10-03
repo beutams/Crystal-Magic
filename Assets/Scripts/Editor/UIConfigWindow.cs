@@ -89,16 +89,6 @@ namespace CrystalMagic.Editor
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Plane Distance", GUILayout.Width(120));
-            float newPlaneDistance = EditorGUILayout.FloatField(_config.planeDistance);
-            if (!Mathf.Approximately(newPlaneDistance, _config.planeDistance))
-            {
-                _config.planeDistance = Mathf.Max(0.01f, newPlaneDistance);
-                _isDirty = true;
-            }
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Hover Info Delay", GUILayout.Width(120));
             float newHoverInfoDelaySeconds = EditorGUILayout.FloatField(_config.hoverInfoDelaySeconds);
             if (!Mathf.Approximately(newHoverInfoDelaySeconds, _config.hoverInfoDelaySeconds))
@@ -247,7 +237,6 @@ namespace CrystalMagic.Editor
             _config.referenceResolutionWidth = 2560;
             _config.referenceResolutionHeight = 1440;
             _config.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
-            _config.planeDistance = 0.31f;
             _config.hoverInfoDelaySeconds = 2f;
             _config.unitHealthBarShowSeconds = 3f;
             _config.groups.Add(new UIGroupEntry
@@ -313,7 +302,7 @@ namespace CrystalMagic.Editor
                 Directory.CreateDirectory(directory);
 
             string json = UIConfigLoader.SaveToJson(_config);
-            File.WriteAllText(ConfigPath, json);
+            DataFileUtility.WriteJsonText(ConfigPath, json);
 
             AssetDatabase.Refresh();
             _isDirty = false;

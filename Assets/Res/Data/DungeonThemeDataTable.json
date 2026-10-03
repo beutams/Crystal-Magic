@@ -34,13 +34,6 @@
           "PlacementAttempts": 512
         },
         "Content": {
-          "ChestCounts": {
-            "x": 1,
-            "y": 2,
-            "z": 3,
-            "magnitude": 3.7416575,
-            "sqrMagnitude": 14
-          },
           "WildSquadCount": 22,
           "InterestClearThreat": { "x": 8.0, "y": 13.0, "z": 20.0 },
           "WildSquadClearThreat": 3.0,

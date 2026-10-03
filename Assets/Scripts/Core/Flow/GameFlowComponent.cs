@@ -67,10 +67,13 @@ namespace CrystalMagic.Core
 
             _activeTransitionData = transitionData;
             _isTransitioning = true;
+            SceneLoadTiming.EnsureStarted($"Transition to {transitionData.TargetSceneName}");
+            SceneLoadTiming.Mark("TARGET", $"From={_currentState?.GetType().Name} Scene={transitionData.TargetSceneName} KeepMainScene={transitionData.KeepCurrentMainScene}");
             try
             {
             DungeonFlowTiming.BeginStage(2, "打开转场 UI 并接受转场请求", transitionData.TargetSceneName);
-            OpenTransitionUI(transitionData);
+            using (SceneLoadTiming.Measure("Open transition UI"))
+                OpenTransitionUI(transitionData);
             DungeonFlowTiming.EndStage(2, "转场 UI 已打开");
 
             if (!TransitionComponent.Instance.BeginFadeIn(transitionData, _activeTransitionUI))
@@ -79,6 +82,7 @@ namespace CrystalMagic.Core
                 ReleaseTransitionUI();
                 _activeTransitionData = null;
                 _isTransitioning = false;
+                SceneLoadTiming.Finish("Failed to start transition fade-in.");
             }
             }
             catch (Exception exception)
@@ -99,6 +103,7 @@ namespace CrystalMagic.Core
 
         public void RecoverFailedTransition(TransitionData data)
         {
+            SceneLoadTiming.Finish(data.LoadError ?? "Recovering failed transition.");
             _activeTransitionData = null;
             _isTransitioning = false;
             try { ReleaseTransitionUI(); }
@@ -126,6 +131,7 @@ namespace CrystalMagic.Core
 
         public override void Cleanup()
         {
+            SceneLoadTiming.Finish("Game flow cleanup / play session stopped.");
             UnbindEvents();
             ReleaseTransitionUI();
 
@@ -150,11 +156,15 @@ namespace CrystalMagic.Core
                 return;
 
             GameState oldState = _currentState;
-            _currentState?.OnExit();
+            if (newState is LoadGameState)
+                SceneLoadTiming.Begin($"LoadGame slot={data ?? 0}");
+            using (SceneLoadTiming.Measure($"State.Exit {oldState?.GetType().Name ?? "None"}"))
+                _currentState?.OnExit();
 
             _currentState = newState;
             _currentState.SetData(data);
-            _currentState.OnEnter();
+            using (SceneLoadTiming.Measure($"State.Enter {newState.GetType().Name} (includes synchronous nested loading)"))
+                _currentState.OnEnter();
 
             OnStateChanged(oldState, newState);
         }
@@ -253,10 +263,12 @@ namespace CrystalMagic.Core
         private void CompleteTransition()
         {
             System.Action onComplete = _activeTransitionData?.OnComplete;
-            ReleaseTransitionUI();
+            using (SceneLoadTiming.Measure("Release transition UI"))
+                ReleaseTransitionUI();
             _activeTransitionData = null;
             _isTransitioning = false;
-            onComplete?.Invoke();
+            using (SceneLoadTiming.Measure("Transition completion callback"))
+                onComplete?.Invoke();
         }
 
         private void OpenTransitionUI(TransitionData transitionData)

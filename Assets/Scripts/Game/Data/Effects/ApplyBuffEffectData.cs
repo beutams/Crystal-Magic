@@ -1,3 +1,5 @@
+using Unity.Mathematics;
+
 namespace CrystalMagic.Game.Data.Effects
 {
     public enum BuffTargetSource
@@ -32,6 +34,9 @@ namespace CrystalMagic.Game.Data.Effects
             copy.DurationSeconds = DurationSeconds < 0f
                 ? -1f
                 : ApplyModifierNonNegative(modifiers, SkillModifierChannel.BuffDuration, DurationSeconds);
+            copy.StackCount = math.max(
+                0,
+                (int)math.round(ApplyModifierNonNegative(modifiers, SkillModifierChannel.BuffStackCount, StackCount)));
             return copy;
         }
     }

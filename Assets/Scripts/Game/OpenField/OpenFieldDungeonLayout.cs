@@ -138,15 +138,22 @@ namespace CrystalMagic.Game.OpenField
         {
             _reachableCells[GetIndex(x, y)] = true;
         }
-        internal void AddContent(OpenFieldContentType type, OpenFieldGridPosition cell, int encounterId, int squadId)
+
+        internal void AddContent(
+            OpenFieldContentType type,
+            OpenFieldGridPosition cell,
+            int encounterId,
+            int squadId,
+            CrystalMagic.Game.Data.DungeonTreasureQuality treasureQuality)
         {
-            _contentPlacements.Add(new OpenFieldContentPlacement(type, cell, encounterId, squadId));
+            _contentPlacements.Add(new OpenFieldContentPlacement(type, cell, encounterId, squadId, treasureQuality));
         }
 
         internal void ClearContent()
         {
             _contentPlacements.Clear();
         }
+
         internal void SetTerrain(int x, int y, float terrainValue, OpenFieldTerrainCell terrainCell, int heightSteps)
         {
             int index = GetIndex(x, y);

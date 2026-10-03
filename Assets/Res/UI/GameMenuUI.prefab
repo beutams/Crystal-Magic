@@ -202,7 +202,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u52A0\u8F7D"
+  m_text: "\u5B58\u6863"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 99e11e9bbeda0844eb35c72e21403b1c, type: 2}
   m_sharedMaterial: {fileID: 1575911332751086639, guid: 99e11e9bbeda0844eb35c72e21403b1c, type: 2}
@@ -1233,7 +1233,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u52A0\u8F7D"
+  m_text: "\u5B58\u6863"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 99e11e9bbeda0844eb35c72e21403b1c, type: 2}
   m_sharedMaterial: {fileID: 1575911332751086639, guid: 99e11e9bbeda0844eb35c72e21403b1c, type: 2}
@@ -1473,7 +1473,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe5c86b1ceaf0ea45bafe57e0c2519e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _canCloseByEscape: 0
+  _canCloseByEscape: 1
 --- !u!114 &639147834831908543
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -13,11 +13,10 @@ namespace CrystalMagic.Editor.EffectGraph
 {
     internal sealed class EffectGraphView : GraphView
     {
-        private const float ContainerWidth = 220f;
+        private const float ContainerWidth = EffectGraphAutoLayout.ContainerWidth;
         private const float ContainerHeight = 86f;
-        private const float EffectWidth = 180f;
+        private const float EffectWidth = EffectGraphAutoLayout.EffectWidth;
         private const float EffectHeight = 92f;
-        private const float ChildStackOffset = 240f;
 
         private readonly EffectGraphWindow _window;
         private readonly Dictionary<EffectGraphContainerModel, EffectArrayStackView> _containerViews = new();
@@ -26,6 +25,7 @@ namespace CrystalMagic.Editor.EffectGraph
         private EffectGraphModel _model;
         private EffectGraphLayoutData _layout;
         private bool _isBuilding;
+        private EffectGraphEntryView _entry;
 
         public EffectGraphView(EffectGraphWindow window)
         {
@@ -53,19 +53,24 @@ namespace CrystalMagic.Editor.EffectGraph
             _effectViews.Clear();
             _stackViews.Clear();
 
-            EffectGraphEntryView entry = new();
-            entry.SetPosition(new Rect(80f, 64f, 130f, 58f));
+            bool needsLayout = _model.Containers.Any(container => ShouldShowContainer(container) &&
+                !_layout.Containers.Any(saved => saved != null && saved.Path == container.Path));
+            if (needsLayout)
+                EffectGraphAutoLayout.Arrange(_model, _layout);
+
+            EffectGraphEntryView entry = _entry = new();
+            PositionEntry();
             AddElement(entry);
 
-            int fallbackIndex = 0;
             foreach (EffectGraphContainerModel container in _model.Containers)
             {
                 if (!ShouldShowContainer(container))
                     continue;
 
-                Vector2 position = GetContainerPosition(container, fallbackIndex++);
+                Vector2 position = _layout.Containers.First(saved => saved.Path == container.Path).Position;
                 EffectArrayStackView containerView = new(container);
-                containerView.SetPosition(new Rect(position, new Vector2(ContainerWidth, ContainerHeight)));
+                containerView.SetPosition(new Rect(position, new Vector2(
+                    EffectGraphAutoLayout.GetWidth(container.Effects.Length), EffectGraphAutoLayout.GetHeight(container.Effects.Length))));
                 AddElement(containerView);
                 _containerViews.Add(container, containerView);
                 _stackViews.Add(containerView);
@@ -82,6 +87,13 @@ namespace CrystalMagic.Editor.EffectGraph
                     effectView.SetPosition(new Rect(Vector2.zero, new Vector2(EffectWidth, EffectHeight)));
                     AddElement(effectView);
                     containerView.AddElement(effectView);
+                    // StackNode clears explicit position/size when accepting a child.
+                    effectView.style.width = EffectWidth;
+                    effectView.style.minWidth = EffectWidth;
+                    effectView.style.marginLeft = 0f;
+                    effectView.style.marginTop = 0f;
+                    effectView.style.marginBottom = 0f;
+                    effectView.style.marginRight = ReferenceEquals(effect, container.Effects.LastOrDefault()) ? 0f : EffectGraphAutoLayout.EffectGap;
                     _effectViews.Add(effect, effectView);
                 }
             }
@@ -103,6 +115,34 @@ namespace CrystalMagic.Editor.EffectGraph
 
             UpdateViewTransform(_layout.ViewPosition, Vector3.one * Mathf.Max(0.1f, _layout.ViewScale));
             _isBuilding = false;
+            if (needsLayout)
+                schedule.Execute(AutoArrange).ExecuteLater(0);
+        }
+
+        public void AutoArrange()
+        {
+            if (_model == null) return;
+            _isBuilding = true;
+            EffectGraphAutoLayout.Arrange(_model, _layout, container =>
+                _containerViews.TryGetValue(container, out var view) ? view.GetPosition().size : Vector2.zero);
+            foreach (var saved in _layout.Containers)
+            {
+                EffectGraphContainerModel container = _model.FindContainer(saved.Path);
+                if (container != null && _containerViews.TryGetValue(container, out var view))
+                    view.SetPosition(new Rect(saved.Position, view.GetPosition().size));
+            }
+            PositionEntry();
+            UpdateViewTransform(_layout.ViewPosition, Vector3.one);
+            _isBuilding = false;
+            CaptureLayout();
+            _window.MarkLayoutDirty();
+        }
+
+        private void PositionEntry()
+        {
+            Vector2 root = _layout.Containers.First(saved => saved.Path == "root").Position;
+            float width = EffectGraphAutoLayout.GetWidth(_model.Root.Effects.Length);
+            _entry.SetPosition(new Rect(root.x + (width - 130f) * 0.5f, 60f, 130f, 58f));
         }
 
         public void SelectEffect(EffectData effect)
@@ -339,10 +379,10 @@ namespace CrystalMagic.Editor.EffectGraph
         private int GetDropIndex(EffectGraphContainerModel target, EffectNodeView movingEffect)
         {
             List<EffectData> siblings = new(target.Effects.Where(effect => !ReferenceEquals(effect, movingEffect.Effect)));
-            float y = movingEffect.worldBound.center.y;
+            float x = movingEffect.worldBound.center.x;
             for (int index = 0; index < siblings.Count; index++)
             {
-                if (_effectViews.TryGetValue(siblings[index], out EffectNodeView sibling) && y < sibling.worldBound.center.y)
+                if (_effectViews.TryGetValue(siblings[index], out EffectNodeView sibling) && x < sibling.worldBound.center.x)
                     return index;
             }
 
@@ -366,38 +406,6 @@ namespace CrystalMagic.Editor.EffectGraph
                 _layout.Containers[index].Position = view.GetPosition().position;
                 return;
             }
-        }
-
-        private Vector2 GetContainerPosition(EffectGraphContainerModel container, int fallbackIndex)
-        {
-            EffectGraphContainerLayout saved = _layout.Containers.FirstOrDefault(item =>
-                item != null && string.Equals(item.Path, container.Path, StringComparison.Ordinal));
-            if (saved != null)
-                return saved.Position;
-
-            if (!container.IsRoot && container.Parent != null && _containerViews.TryGetValue(container.Parent, out EffectArrayStackView parent))
-            {
-                return parent.GetPosition().position + new Vector2(
-                    ChildStackOffset + GetFieldOffset(container),
-                    80f + fallbackIndex * 30f);
-            }
-
-            return container.IsRoot
-                ? new Vector2(280f, 60f)
-                : new Vector2(280f + (fallbackIndex % 3) * 350f, 300f + fallbackIndex * 220f);
-        }
-
-        private static float GetFieldOffset(EffectGraphContainerModel container)
-        {
-            if (container.OwnerEffect == null || container.OwnerField == null)
-                return 0f;
-
-            FieldInfo[] fields = container.OwnerEffect.GetType()
-                .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)
-                .Where(field => field.FieldType.IsArray && typeof(EffectData).IsAssignableFrom(field.FieldType.GetElementType()))
-                .ToArray();
-            int index = Array.IndexOf(fields, container.OwnerField);
-            return Math.Max(0, index) * 180f;
         }
 
         private static bool IsSourceOutput(Port port)
@@ -427,6 +435,17 @@ namespace CrystalMagic.Editor.EffectGraph
         {
             Container = container;
             title = container == null ? "Effects" : $"{container.DisplayName} ({container.Effects.Length})";
+            style.width = EffectGraphAutoLayout.GetWidth(container?.Effects.Length ?? 0);
+            // Effects in the same array are ordered siblings: read left-to-right, never wrap.
+            contentContainer.style.flexDirection = FlexDirection.Row;
+            contentContainer.style.flexWrap = Wrap.NoWrap;
+            contentContainer.style.alignItems = Align.FlexStart;
+            contentContainer.style.paddingLeft = EffectGraphAutoLayout.ContainerPadding * 0.5f;
+            contentContainer.style.paddingRight = EffectGraphAutoLayout.ContainerPadding * 0.5f;
+            // Built-in separators and insertion slots are vertical; use our horizontal slots.
+            VisualElement separators = this.Q("stackSeparatorContainer");
+            if (separators != null)
+                separators.style.display = DisplayStyle.None;
 
             inputContainer.RemoveFromHierarchy();
             outputContainer.RemoveFromHierarchy();
@@ -460,6 +479,18 @@ namespace CrystalMagic.Editor.EffectGraph
             Container = container;
             title = $"{container.DisplayName} ({container.Effects.Length})";
         }
+
+        public override int GetInsertionIndex(Vector2 worldPosition)
+        {
+            if (!worldBound.Contains(worldPosition)) return -1;
+            int index = 0;
+            foreach (EffectNodeView effect in Children().OfType<EffectNodeView>())
+            {
+                if (worldPosition.x < effect.worldBound.center.x) return index;
+                index++;
+            }
+            return index;
+        }
     }
 
     internal sealed class EffectNodeView : TopBottomPortNode
@@ -471,7 +502,11 @@ namespace CrystalMagic.Editor.EffectGraph
         {
             Effect = effect;
             Container = container;
-            title = EffectGraphTypeRegistry.GetDisplayName(effect);
+            int sequence = container == null ? -1 : Array.IndexOf(container.Effects, effect);
+            title = (sequence >= 0 ? $"{sequence + 1}. " : string.Empty) + EffectGraphTypeRegistry.GetDisplayName(effect);
+            style.width = EffectGraphAutoLayout.EffectWidth;
+            style.flexShrink = 0f;
+            style.minHeight = 100f;
             titleContainer.style.backgroundColor = EffectGraphTypeRegistry.GetColor(effect);
 
             foreach (FieldInfo field in model.GetNestedEffectArrayFields(effect))

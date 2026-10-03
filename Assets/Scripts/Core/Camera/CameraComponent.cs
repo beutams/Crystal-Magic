@@ -29,7 +29,6 @@ namespace CrystalMagic.Core {
         public void Register(SceneCamera cam)
         {
             _current = cam;
-            UIComponent.Instance.RefreshUICamera(Current);
             Debug.Log($"[CameraComponent] Registered: {cam.gameObject.name}");
         }
 
@@ -38,7 +37,6 @@ namespace CrystalMagic.Core {
             if (_current == cam)
             {
                 _current = null;
-                UIComponent.Instance.RefreshUICamera(Current);
                 Debug.Log($"[CameraComponent] Unregistered: {cam.gameObject.name}");
             }
         }

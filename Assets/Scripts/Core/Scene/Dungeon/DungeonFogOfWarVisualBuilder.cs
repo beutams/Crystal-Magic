@@ -2,13 +2,19 @@ using UnityEngine;
 
 namespace CrystalMagic.Core
 {
+    internal static class DungeonFogOfWarDebugSettings
+    {
+        // 调试期间关闭所有战斗场景迷雾；恢复正式逻辑时改为 true。
+        public static bool Enabled = false;
+    }
+
     internal static class DungeonFogOfWarVisualBuilder
     {
         private const int FogSortingOrder = 32000;
 
         public static void Build(DungeonSceneRuntimeRoot runtimeRoot, RuntimeDungeonFogData fogData)
         {
-            if (runtimeRoot == null || fogData == null)
+            if (!DungeonFogOfWarDebugSettings.Enabled || runtimeRoot == null || fogData == null)
                 return;
 
             fogData.CreateVisualAssets();

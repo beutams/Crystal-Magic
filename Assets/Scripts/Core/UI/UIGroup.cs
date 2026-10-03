@@ -17,7 +17,6 @@ namespace CrystalMagic.Core {
         [SerializeField] protected int _baseSortingOrder = 0;
         [SerializeField] protected Vector2 _referenceResolution = new(2560, 1440);
         [SerializeField] protected CanvasScaler.ScreenMatchMode _screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
-        [SerializeField] protected float _planeDistance = 1f;
 
         protected Canvas _canvas;
         protected CanvasScaler _canvasScaler;
@@ -39,11 +38,10 @@ namespace CrystalMagic.Core {
             }
         }
 
-        public void ConfigureCanvasSettings(Vector2 referenceResolution, CanvasScaler.ScreenMatchMode screenMatchMode, float planeDistance)
+        public void ConfigureCanvasSettings(Vector2 referenceResolution, CanvasScaler.ScreenMatchMode screenMatchMode)
         {
             _referenceResolution = referenceResolution;
             _screenMatchMode = screenMatchMode;
-            _planeDistance = planeDistance;
             ApplyCanvasSettings();
         }
 
@@ -56,14 +54,14 @@ namespace CrystalMagic.Core {
                 _canvas = gameObject.AddComponent<Canvas>();
             }
 
-            ApplyCanvasSettings();
-
             // 设置 CanvasScaler
             _canvasScaler = GetComponent<CanvasScaler>();
             if (_canvasScaler == null)
             {
                 _canvasScaler = gameObject.AddComponent<CanvasScaler>();
             }
+            ApplyCanvasSettings();
+
             // 设置 GraphicRaycaster
             _graphicRaycaster = GetComponent<GraphicRaycaster>();
             if (_graphicRaycaster == null)
@@ -114,10 +112,9 @@ namespace CrystalMagic.Core {
             {
                 panelCanvas = panel.gameObject.AddComponent<Canvas>();
             }
-            panelCanvas.renderMode = RenderMode.ScreenSpaceCamera;
+            panelCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
             panelCanvas.overrideSorting = true;
-            panelCanvas.worldCamera = CameraComponent.Instance.Current;
-            panelCanvas.planeDistance = _planeDistance;
+            panelCanvas.worldCamera = null;
             panelCanvas.sortingLayerName = UISortingLayerName;
 
             // 添加 CanvasScaler
@@ -207,11 +204,11 @@ namespace CrystalMagic.Core {
             if (_canvas == null || _canvasScaler == null)
                 return;
 
-            _canvas.renderMode = RenderMode.ScreenSpaceCamera;
-            _canvas.worldCamera = CameraComponent.Instance != null ? CameraComponent.Instance.Current : null;
+            // Keep HUD geometry independent of scene-camera movement and projection precision.
+            _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            _canvas.worldCamera = null;
             _canvas.sortingLayerName = UISortingLayerName;
             _canvas.sortingOrder = _baseSortingOrder;
-            _canvas.planeDistance = _planeDistance;
 
             _canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             _canvasScaler.referenceResolution = _referenceResolution;

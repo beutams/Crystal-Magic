@@ -1090,9 +1090,9 @@
       "Id": 30
     },
     {
-      "Name": "NetworkNPC",
-      "Description": "联机大厅NPC",
-      "PrefabPath": "Assets/Res/Prefab/Unit/NPCNetwork.prefab",
+      "Name": "BulletinBoard",
+      "Description": "联机告示牌",
+      "PrefabPath": "Assets/Res/Prefab/Unit/BulletinBoard.prefab",
       "Modules": [
         {
           "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",

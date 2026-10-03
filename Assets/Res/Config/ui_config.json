@@ -1,8 +1,7 @@
-{
+﻿{
     "referenceResolutionWidth": 2560,
     "referenceResolutionHeight": 1440,
     "screenMatchMode": 1,
-    "planeDistance": 0.3100000023841858,
     "hoverInfoDelaySeconds": 2.0,
     "unitHealthBarShowSeconds": 3.0,
     "groups": [

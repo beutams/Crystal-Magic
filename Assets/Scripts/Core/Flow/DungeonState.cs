@@ -48,7 +48,7 @@ namespace CrystalMagic.Core
                 OnUpdateBattle();
             if (_characterUI != null && _characterUI.gameObject.activeSelf &&
                 GameRuntimeStateUtility.TryGetPlayerEntity(out EntityManager entityManager, out Entity player) &&
-                BattlePlayerStatusUtility.IsInputLocked(entityManager, player))
+                PlayerCharacterUtility.IsEditLocked(entityManager, player))
                 _characterUI.Close();
             using (HealthBarUpdateMarker.Auto())
                 _unitHealthBarManager?.Tick();
@@ -132,7 +132,7 @@ namespace CrystalMagic.Core
         private void HandleInventory()
         {
             if (GameRuntimeStateUtility.TryGetPlayerEntity(out EntityManager entityManager, out Entity player) &&
-                BattlePlayerStatusUtility.IsInputLocked(entityManager, player))
+                PlayerCharacterUtility.IsEditLocked(entityManager, player))
                 return;
             if (_characterUI == null || !UIComponent.Instance.IsManaged(_characterUI))
             {
@@ -279,6 +279,7 @@ namespace CrystalMagic.Core
 
         protected override void OnExitBattle()
         {
+            DungeonSceneRuntimeBuilder.DestroyCurrentDungeonScene();
             if (_minimapUI != null && UIComponent.Instance.IsManaged(_minimapUI))
                 UIComponent.Instance.CloseUI(_minimapUI);
             _minimapUI = null;

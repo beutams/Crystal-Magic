@@ -28,18 +28,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &910000000000000601
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 36189917606584973}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5aa0c57b6dc648bc9be25e46a501e001, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
 --- !u!4 &3493800349904888240
 Transform:
   m_ObjectHideFlags: 0
@@ -49,7 +37,7 @@ Transform:
   m_GameObject: {fileID: 36189917606584973}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 7.33, y: -3.18, z: 0.15}
+  m_LocalPosition: {x: 0, y: 0, z: 0.15}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -74,10 +62,10 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.5
-  m_Height: 1
+  m_Radius: 0.3
+  m_Height: 0.5
   m_Direction: 2
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Center: {x: 0.15, y: -0.03, z: 0}
 --- !u!54 &448358576084545736
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -115,8 +103,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7158f745a79344da8b819f7efbe30340, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   Tier: 3
 --- !u!114 &900000000000010000
 MonoBehaviour:
@@ -128,8 +116,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b8b289c26a6e4df4bb3f56ebf0ca9fd2, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &900000000000010001
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -140,8 +128,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: aa5ca84ea7f028d43a6d6222c42b43f6, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &900000000000010004
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -152,8 +140,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d0031e4d5f1c4ce58d052629484d85f8, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &900000000000010005
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -164,8 +152,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a420f5d8af94c9b8765fbaaa496b1d2, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &900000000000010007
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -176,8 +164,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 23d3f8ac46844100ad9b7a6dcfdb2292, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &900000000000010009
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -188,8 +176,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c6be4fd50f6c7864dbc94999bc333811, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   _interactRange: 3.5
 --- !u!114 &4504933827059228694
 MonoBehaviour:
@@ -201,8 +189,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b03dc893cbd11f04f9479512c190b4d0, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!212 &5364389055027150466
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -247,14 +235,26 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: -1841716678, guid: 5e467af660166244fbe5b0913bb2df81, type: 3}
+  m_Sprite: {fileID: 150001, guid: 863519607ea17bc46950818558edfb89, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 1
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 4.25, y: 4.5}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &910000000000000601
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 36189917606584973}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5aa0c57b6dc648bc9be25e46a501e001, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

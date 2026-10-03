@@ -823,46 +823,10 @@
             "English": "Enter Training Ground"
         },
         {
-            "Id": 137,
-            "Key": "npc.option.floor_1",
-            "ChineseSimplified": "第1层",
-            "English": "Floor 1"
-        },
-        {
-            "Id": 138,
-            "Key": "npc.option.floor_21",
-            "ChineseSimplified": "第21层",
-            "English": "Floor 21"
-        },
-        {
-            "Id": 139,
-            "Key": "npc.option.floor_41",
-            "ChineseSimplified": "第41层",
-            "English": "Floor 41"
-        },
-        {
-            "Id": 140,
-            "Key": "npc.option.floor_61",
-            "ChineseSimplified": "第61层",
-            "English": "Floor 61"
-        },
-        {
-            "Id": 141,
-            "Key": "npc.option.floor_81",
-            "ChineseSimplified": "第81层",
-            "English": "Floor 81"
-        },
-        {
-            "Id": 142,
-            "Key": "npc.option.floor_101",
-            "ChineseSimplified": "第101层",
-            "English": "Floor 101"
-        },
-        {
             "Id": 143,
-            "Key": "npc.option.continue_next_floor",
-            "ChineseSimplified": "继续下一层",
-            "English": "Continue to Next Floor"
+            "Key": "npc.option.continue_dungeon",
+            "ChineseSimplified": "继续探索",
+            "English": "Continue Exploring"
         },
         {
             "Id": 144,
@@ -908,9 +872,9 @@
         },
         {
             "Id": 151,
-            "Key": "npc.network_lobby.name",
-            "ChineseSimplified": "联机大厅",
-            "English": "Online Lobby"
+            "Key": "npc.bulletin_board.name",
+            "ChineseSimplified": "告示牌",
+            "English": "Bulletin Board"
         },
         {
             "Id": 152,
@@ -923,6 +887,36 @@
             "Key": "ui.notification.revenge",
             "ChineseSimplified": "复仇小队已出动",
             "English": "Revenge squad dispatched"
+        },
+        {
+            "Id": 154,
+            "Key": "ui.main_menu.game_title",
+            "ChineseSimplified": "水晶魔法",
+            "English": "Crystal Magic"
+        },
+        {
+            "Id": 155,
+            "Key": "ui.main_menu.start_game",
+            "ChineseSimplified": "开始游戏",
+            "English": "Start Game"
+        },
+        {
+            "Id": 156,
+            "Key": "ui.main_menu.load_game",
+            "ChineseSimplified": "读取存档",
+            "English": "Load Game"
+        },
+        {
+            "Id": 157,
+            "Key": "ui.main_menu.game_settings",
+            "ChineseSimplified": "游戏设置",
+            "English": "Settings"
+        },
+        {
+            "Id": 158,
+            "Key": "ui.main_menu.exit_game",
+            "ChineseSimplified": "退出游戏",
+            "English": "Exit Game"
         }
     ]
 }

@@ -1447,6 +1447,183 @@
         }
       ],
       "Id": 23
+    },
+    {
+      "UnitDataId": 6,
+      "UnitName": "NPCSkillShop",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 0,
+          "FrontClipPath": "Assets/Res/Animation/SpellMerchant/Idle.anim",
+          "BackClipPath": "Assets/Res/Animation/SpellMerchant/Idle.anim",
+          "LeftClipPath": "Assets/Res/Animation/SpellMerchant/Idle.anim",
+          "RightClipPath": "Assets/Res/Animation/SpellMerchant/Idle.anim"
+        }
+      ],
+      "Id": 24
+    },
+    {
+      "UnitDataId": 4,
+      "UnitName": "NPCEquipShop",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 0,
+          "FrontClipPath": "Assets/Res/Animation/EquipmentMerchant/Idle.anim",
+          "BackClipPath": "Assets/Res/Animation/EquipmentMerchant/Idle.anim",
+          "LeftClipPath": "Assets/Res/Animation/EquipmentMerchant/Idle.anim",
+          "RightClipPath": "Assets/Res/Animation/EquipmentMerchant/Idle.anim"
+        }
+      ],
+      "Id": 28
+    },
+    {
+      "UnitDataId": 5,
+      "UnitName": "NPCPropShop",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 0,
+          "FrontClipPath": "Assets/Res/Animation/ItemMerchant/Idle.anim",
+          "BackClipPath": "Assets/Res/Animation/ItemMerchant/Idle.anim",
+          "LeftClipPath": "Assets/Res/Animation/ItemMerchant/Idle.anim",
+          "RightClipPath": "Assets/Res/Animation/ItemMerchant/Idle.anim"
+        }
+      ],
+      "Id": 29
+    },
+    {
+      "UnitDataId": 7,
+      "UnitName": "NPCStash",
+      "Animations": [
+        {
+          "Name": "CopperClosed",
+          "DirectionMode": 0,
+          "FrontClipPath": "Assets/Res/Animation/TreasureChest/CopperClosed.anim",
+          "BackClipPath": "Assets/Res/Animation/TreasureChest/CopperClosed.anim",
+          "LeftClipPath": "Assets/Res/Animation/TreasureChest/CopperClosed.anim",
+          "RightClipPath": "Assets/Res/Animation/TreasureChest/CopperClosed.anim"
+        },
+        {
+          "Name": "CopperOpen",
+          "DirectionMode": 0,
+          "FrontClipPath": "Assets/Res/Animation/TreasureChest/CopperOpen.anim",
+          "BackClipPath": "Assets/Res/Animation/TreasureChest/CopperOpen.anim",
+          "LeftClipPath": "Assets/Res/Animation/TreasureChest/CopperOpen.anim",
+          "RightClipPath": "Assets/Res/Animation/TreasureChest/CopperOpen.anim"
+        },
+        {
+          "Name": "CopperClose",
+          "DirectionMode": 0,
+          "FrontClipPath": "Assets/Res/Animation/TreasureChest/CopperClose.anim",
+          "BackClipPath": "Assets/Res/Animation/TreasureChest/CopperClose.anim",
+          "LeftClipPath": "Assets/Res/Animation/TreasureChest/CopperClose.anim",
+          "RightClipPath": "Assets/Res/Animation/TreasureChest/CopperClose.anim"
+        }
+      ],
+      "Id": 30
+    },
+    {
+      "UnitDataId": 8,
+      "UnitName": "NPCTraining",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 0,
+          "FrontClipPath": "Assets/Res/Animation/TeleportStone/Idle.anim",
+          "BackClipPath": "Assets/Res/Animation/TeleportStone/Idle.anim",
+          "LeftClipPath": "Assets/Res/Animation/TeleportStone/Idle.anim",
+          "RightClipPath": "Assets/Res/Animation/TeleportStone/Idle.anim"
+        }
+      ],
+      "Id": 25
+    },
+    {
+      "UnitDataId": 32,
+      "UnitName": "DungeonExit",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 0,
+          "FrontClipPath": "Assets/Res/Animation/TeleportStone/Idle.anim",
+          "BackClipPath": "Assets/Res/Animation/TeleportStone/Idle.anim",
+          "LeftClipPath": "Assets/Res/Animation/TeleportStone/Idle.anim",
+          "RightClipPath": "Assets/Res/Animation/TeleportStone/Idle.anim"
+        },
+        {
+          "Name": "Locked",
+          "DirectionMode": 0,
+          "FrontClipPath": "Assets/Res/Animation/TeleportStone/Locked.anim",
+          "BackClipPath": "Assets/Res/Animation/TeleportStone/Locked.anim",
+          "LeftClipPath": "Assets/Res/Animation/TeleportStone/Locked.anim",
+          "RightClipPath": "Assets/Res/Animation/TeleportStone/Locked.anim"
+        },
+        {
+          "Name": "Unlock",
+          "DirectionMode": 0,
+          "FrontClipPath": "Assets/Res/Animation/TeleportStone/Unlock.anim",
+          "BackClipPath": "Assets/Res/Animation/TeleportStone/Unlock.anim",
+          "LeftClipPath": "Assets/Res/Animation/TeleportStone/Unlock.anim",
+          "RightClipPath": "Assets/Res/Animation/TeleportStone/Unlock.anim"
+        }
+      ],
+      "Id": 26
+    },
+    {
+      "UnitDataId": 33,
+      "UnitName": "Treasure",
+      "Animations": [
+        {
+          "Name": "CopperClosed",
+          "DirectionMode": 0,
+          "FrontClipPath": "Assets/Res/Animation/TreasureChest/CopperClosed.anim",
+          "BackClipPath": "Assets/Res/Animation/TreasureChest/CopperClosed.anim",
+          "LeftClipPath": "Assets/Res/Animation/TreasureChest/CopperClosed.anim",
+          "RightClipPath": "Assets/Res/Animation/TreasureChest/CopperClosed.anim"
+        },
+        {
+          "Name": "CopperOpen",
+          "DirectionMode": 0,
+          "FrontClipPath": "Assets/Res/Animation/TreasureChest/CopperOpen.anim",
+          "BackClipPath": "Assets/Res/Animation/TreasureChest/CopperOpen.anim",
+          "LeftClipPath": "Assets/Res/Animation/TreasureChest/CopperOpen.anim",
+          "RightClipPath": "Assets/Res/Animation/TreasureChest/CopperOpen.anim"
+        },
+        {
+          "Name": "SilverClosed",
+          "DirectionMode": 0,
+          "FrontClipPath": "Assets/Res/Animation/TreasureChest/SilverClosed.anim",
+          "BackClipPath": "Assets/Res/Animation/TreasureChest/SilverClosed.anim",
+          "LeftClipPath": "Assets/Res/Animation/TreasureChest/SilverClosed.anim",
+          "RightClipPath": "Assets/Res/Animation/TreasureChest/SilverClosed.anim"
+        },
+        {
+          "Name": "SilverOpen",
+          "DirectionMode": 0,
+          "FrontClipPath": "Assets/Res/Animation/TreasureChest/SilverOpen.anim",
+          "BackClipPath": "Assets/Res/Animation/TreasureChest/SilverOpen.anim",
+          "LeftClipPath": "Assets/Res/Animation/TreasureChest/SilverOpen.anim",
+          "RightClipPath": "Assets/Res/Animation/TreasureChest/SilverOpen.anim"
+        },
+        {
+          "Name": "GoldClosed",
+          "DirectionMode": 0,
+          "FrontClipPath": "Assets/Res/Animation/TreasureChest/GoldClosed.anim",
+          "BackClipPath": "Assets/Res/Animation/TreasureChest/GoldClosed.anim",
+          "LeftClipPath": "Assets/Res/Animation/TreasureChest/GoldClosed.anim",
+          "RightClipPath": "Assets/Res/Animation/TreasureChest/GoldClosed.anim"
+        },
+        {
+          "Name": "GoldOpen",
+          "DirectionMode": 0,
+          "FrontClipPath": "Assets/Res/Animation/TreasureChest/GoldOpen.anim",
+          "BackClipPath": "Assets/Res/Animation/TreasureChest/GoldOpen.anim",
+          "LeftClipPath": "Assets/Res/Animation/TreasureChest/GoldOpen.anim",
+          "RightClipPath": "Assets/Res/Animation/TreasureChest/GoldOpen.anim"
+        }
+      ],
+      "Id": 27
     }
   ]
 }

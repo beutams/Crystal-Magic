@@ -16,6 +16,14 @@ public sealed class PlayerCharacterEdit
 
 public static class PlayerCharacterUtility
 {
+    public static bool IsEditLocked(EntityManager entityManager, Entity player)
+    {
+        return player == Entity.Null ||
+               !entityManager.Exists(player) ||
+               BattlePlayerStatusUtility.IsInputLocked(entityManager, player) ||
+               PlayerCurrentSkillUtility.IsCasting(entityManager, player);
+    }
+
     public static CharacterData Clone(CharacterData data)
     {
         return data == null ? null : JsonConvert.DeserializeObject<CharacterData>(JsonConvert.SerializeObject(data));
@@ -26,7 +34,7 @@ public static class PlayerCharacterUtility
         edit = null;
         if (!GameRuntimeStateUtility.TryGetPlayerEntity(out EntityManager entityManager, out Entity player) ||
             !entityManager.HasComponent<PlayerCharacterComponent>(player) ||
-            BattlePlayerStatusUtility.IsInputLocked(entityManager, player))
+            IsEditLocked(entityManager, player))
             return false;
 
         if (GameWorldContextUtility.Get(entityManager).Role == GameWorldRole.Client &&
@@ -50,7 +58,7 @@ public static class PlayerCharacterUtility
     {
         if (edit?.World == null || !edit.World.IsCreated ||
             !edit.EntityManager.Exists(edit.Player) ||
-            BattlePlayerStatusUtility.IsInputLocked(edit.EntityManager, edit.Player))
+            IsEditLocked(edit.EntityManager, edit.Player))
             return false;
 
         EntityManager entityManager = edit.EntityManager;

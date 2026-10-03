@@ -495,7 +495,6 @@ namespace CrystalMagic.Editor.Data
 
             GUILayout.Space(4f);
             EditorGUILayout.LabelField("Content", EditorStyles.miniBoldLabel);
-            data.Content.ChestCounts = EditorGUILayout.Vector3IntField("Chest Counts S/M/L", data.Content.ChestCounts);
             data.Content.WildSquadCount = Mathf.Max(0, EditorGUILayout.IntField("Wild Squad Count", data.Content.WildSquadCount));
             data.Content.InterestClearThreat = Vector3.Max(Vector3.zero,
                 EditorGUILayout.Vector3Field("Clear Threat % S/M/L", data.Content.InterestClearThreat));

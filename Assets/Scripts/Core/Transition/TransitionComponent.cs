@@ -76,10 +76,11 @@ namespace CrystalMagic.Core {
         private IEnumerator FadeInAsync(ITransitionUI transitionUI, string targetSceneName)
         {
             DungeonFlowTiming.BeginStage(3, "Transition UI 淡入", targetSceneName);
-            EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.FadeInStarted, targetSceneName));
-            if (transitionUI != null)
+            using (SceneLoadTiming.Measure("Transition UI fade-in"))
             {
-                yield return transitionUI.Show();
+                EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.FadeInStarted, targetSceneName));
+                if (transitionUI != null)
+                    yield return transitionUI.Show();
             }
 
             DungeonFlowTiming.EndStage(3, "FadeIn 已完成");
@@ -88,28 +89,38 @@ namespace CrystalMagic.Core {
 
         private IEnumerator LoadAndFadeOutAsync(TransitionData transitionData, ITransitionUI transitionUI)
         {
-            EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.LoadStarted, transitionData.TargetSceneName));
-            EventComponent.Instance?.Publish(new UISceneScopeChangedEvent(transitionData.TargetSceneName));
-            PublishLoadProgress(transitionData.TargetSceneName, 0.05f, "Loading scene", transitionData.TargetSceneName);
+            using (SceneLoadTiming.Measure("Notify load started and release old scene-scoped UI"))
+            {
+                EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.LoadStarted, transitionData.TargetSceneName));
+                EventComponent.Instance?.Publish(new UISceneScopeChangedEvent(transitionData.TargetSceneName));
+                PublishLoadProgress(transitionData.TargetSceneName, 0.05f, "Loading scene", transitionData.TargetSceneName);
+            }
 
             if (transitionData.PreLoadCoroutineFactory != null)
             {
-                IEnumerator preLoadCoroutine = transitionData.PreLoadCoroutineFactory();
-                if (preLoadCoroutine != null)
-                    yield return preLoadCoroutine;
+                using (SceneLoadTiming.Measure("Pre-load preparation / old scene cleanup"))
+                {
+                    IEnumerator preLoadCoroutine = transitionData.PreLoadCoroutineFactory();
+                    if (preLoadCoroutine != null)
+                        yield return preLoadCoroutine;
+                }
             }
 
             if (transitionData.LoadError == null)
                 yield return LoadSceneAsync(transitionData);
             if (transitionData.LoadError == null && transitionData.PostLoadCoroutineFactory != null)
             {
-                IEnumerator postLoadCoroutine = transitionData.PostLoadCoroutineFactory();
-                if (postLoadCoroutine != null)
-                    yield return postLoadCoroutine;
+                using (SceneLoadTiming.Measure("Post-load initialization"))
+                {
+                    IEnumerator postLoadCoroutine = transitionData.PostLoadCoroutineFactory();
+                    if (postLoadCoroutine != null)
+                        yield return postLoadCoroutine;
+                }
             }
 
             if (transitionData.LoadError != null)
             {
+                SceneLoadTiming.Mark("LOAD FAILED", transitionData.LoadError);
                 Debug.LogError(transitionData.LoadError);
                 // 失败不能进入原来的目标状态，更不能执行成功后的保存/清理回调。
                 transitionData.OnComplete = null;
@@ -132,10 +143,13 @@ namespace CrystalMagic.Core {
                 PublishLoadProgress(transitionData.TargetSceneName, 1f, "Load failed", transitionData.LoadError);
             yield return FadeOutAsync(transitionUI, transitionData.TargetSceneName);
 
-            GameGateComponent gate = GameGateComponent.Instance;
-            gate?.Unlock(GameGateType.UIInput, TransitionLockReason);
-            gate?.Unlock(GameGateType.PlayerInput, TransitionLockReason);
-            gate?.Unlock(GameGateType.Simulation, TransitionLockReason);
+            using (SceneLoadTiming.Measure("Unlock input and simulation"))
+            {
+                GameGateComponent gate = GameGateComponent.Instance;
+                gate?.Unlock(GameGateType.UIInput, TransitionLockReason);
+                gate?.Unlock(GameGateType.PlayerInput, TransitionLockReason);
+                gate?.Unlock(GameGateType.Simulation, TransitionLockReason);
+            }
 
             _activeTransitionData = null;
             _activeTransitionUI = null;
@@ -143,19 +157,22 @@ namespace CrystalMagic.Core {
             _isTransitioning = false;
             DungeonFlowTiming.EndStage(17, "DungeonState 已进入，输入与模拟已解锁");
             DungeonFlowTiming.Complete("角色现在可以接收移动输入");
+            SceneLoadTiming.Finish(transitionData.LoadError);
         }
 
         private IEnumerator LoadSceneAsync(TransitionData transitionData)
         {
             DungeonFlowTiming.BeginStage(5, "加载目标场景", transitionData.TargetSceneName);
-            if (transitionData.KeepCurrentMainScene)
+            using (SceneLoadTiming.Measure($"Main scene: {transitionData.TargetSceneName} KeepCurrent={transitionData.KeepCurrentMainScene}"))
             {
-                GameWorldManager.PrepareForSceneLoad(transitionData.TargetSceneName);
-                PublishLoadProgress(transitionData.TargetSceneName, 0.25f, "Keeping main scene", transitionData.TargetSceneName);
-            }
-            else
-            {
-                yield return SceneComponent.Instance.LoadSceneAsyncCoroutine(
+                if (transitionData.KeepCurrentMainScene)
+                {
+                    GameWorldManager.PrepareForSceneLoad(transitionData.TargetSceneName);
+                    PublishLoadProgress(transitionData.TargetSceneName, 0.25f, "Keeping main scene", transitionData.TargetSceneName);
+                }
+                else
+                {
+                    yield return SceneComponent.Instance.LoadSceneAsyncCoroutine(
                         transitionData.TargetSceneName,
                         forceReload: transitionData.ForceReloadTargetScene,
                         onProgress: progress => PublishLoadProgress(
@@ -163,6 +180,7 @@ namespace CrystalMagic.Core {
                             Mathf.Lerp(0.05f, 0.25f, progress),
                             "Loading scene",
                             transitionData.TargetSceneName));
+                }
             }
             DungeonFlowTiming.EndStage(5, "目标场景已就绪");
 
@@ -174,7 +192,8 @@ namespace CrystalMagic.Core {
                 yield break;
             }
 
-            SceneComponent.Instance.SetSubScenesActive(activeSubSceneNames);
+            using (SceneLoadTiming.Measure("Activate target / deactivate previous SubScenes"))
+                SceneComponent.Instance.SetSubScenesActive(activeSubSceneNames);
             foreach (string subSceneName in activeSubSceneNames)
             {
                 PublishLoadProgress(transitionData.TargetSceneName, 0.27f, "Loading sub-scene", subSceneName);
@@ -190,13 +209,16 @@ namespace CrystalMagic.Core {
 
         private IEnumerator FadeOutAsync(ITransitionUI transitionUI, string targetSceneName)
         {
-            EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.FadeOutStarted, targetSceneName));
-            if (transitionUI != null)
+            using (SceneLoadTiming.Measure("Enter target state (FadeOutStarted handlers)"))
+                EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.FadeOutStarted, targetSceneName));
+            using (SceneLoadTiming.Measure("Transition UI fade-out"))
             {
-                yield return transitionUI.Hide();
+                if (transitionUI != null)
+                    yield return transitionUI.Hide();
             }
 
-            EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.FadeOutCompleted, targetSceneName, 1f));
+            using (SceneLoadTiming.Measure("Finish transition callbacks"))
+                EventComponent.Instance?.Publish(new TransitionPhaseChangedEvent(TransitionPhase.FadeOutCompleted, targetSceneName, 1f));
         }
 
         private static void PublishLoadProgress(string targetSceneName, float progress, string title, string detail)
@@ -228,6 +250,7 @@ namespace CrystalMagic.Core {
                     catch (Exception exception) { failure = exception; }
                     if (failure != null)
                     {
+                        SceneLoadTiming.Mark("EXCEPTION", failure.ToString());
                         Debug.LogException(failure);
                         _pendingFailure = "场景切换失败，已停止本次加载。";
                         yield break;
@@ -261,6 +284,7 @@ namespace CrystalMagic.Core {
         {
             TransitionData data = _activeTransitionData;
             if (data == null) return;
+            SceneLoadTiming.Finish(error);
             StopAllCoroutines();
             data.LoadError = error;
             data.OnComplete = null;
@@ -293,6 +317,8 @@ namespace CrystalMagic.Core {
 
         public override void Cleanup()
         {
+            if (_isTransitioning)
+                SceneLoadTiming.Finish("Transition cleanup / play session stopped.");
             StopAllCoroutines();
             ReleaseTransitionLocks();
             base.Cleanup();

@@ -7,6 +7,13 @@ using UnityEngine;
 
 namespace CrystalMagic.Game.Data
 {
+    public enum DungeonTreasureQuality : byte
+    {
+        Copper = 0,
+        Silver = 1,
+        Gold = 2,
+    }
+
     [Serializable]
     public sealed class DungeonThemeData : DataRow
     {

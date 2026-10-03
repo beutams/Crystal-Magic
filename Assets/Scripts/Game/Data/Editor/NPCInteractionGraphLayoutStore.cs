@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using CrystalMagic.Core;
 using UnityEditor;
 using UnityEngine;
 
@@ -109,7 +110,7 @@ namespace CrystalMagic.Editor.Data
                 if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
                     Directory.CreateDirectory(directory);
 
-                File.WriteAllText(DefaultPath, JsonUtility.ToJson(document, true));
+                DataFileUtility.WriteJsonText(DefaultPath, JsonUtility.ToJson(document, true));
                 AssetDatabase.Refresh();
             }
             catch (Exception exception)

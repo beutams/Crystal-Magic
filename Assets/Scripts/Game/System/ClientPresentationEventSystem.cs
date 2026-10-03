@@ -96,11 +96,14 @@ public partial class ClientPresentationEventSystem : SystemBase
         if (target == Entity.Null || !EntityManager.Exists(target))
             return;
 
-        EventComponent.Instance?.Publish(new DamageAppliedEvent(
-            target,
-            presentationEvent.Position,
-            presentationEvent.ValueA,
-            presentationEvent.FlagA != 0));
+        if (presentationEvent.FlagB == 0)
+        {
+            EventComponent.Instance?.Publish(new DamageAppliedEvent(
+                target,
+                presentationEvent.Position,
+                presentationEvent.ValueA,
+                presentationEvent.FlagA != 0));
+        }
         if (!EntityManager.HasComponent<UnitVitalityComponent>(target))
             return;
 

@@ -67,7 +67,7 @@ namespace CrystalMagic.UI
                 return;
             }
 
-            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(_rootRect, screenPosition, _currentCamera, out Vector2 localPoint))
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(_rootRect, screenPosition, null, out Vector2 localPoint))
             {
                 SetVisible(false);
                 return;
@@ -103,8 +103,7 @@ namespace CrystalMagic.UI
                 return false;
 
             _rootRect = group.transform as RectTransform;
-            Canvas canvas = group.GetComponent<Canvas>();
-            _currentCamera = canvas != null ? canvas.worldCamera : CameraComponent.Instance.Current;
+            _currentCamera = CameraComponent.Instance.Current;
             return _rootRect != null && _currentCamera != null;
         }
 

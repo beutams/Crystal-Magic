@@ -47,6 +47,33 @@ public sealed class PreparedUnitCombatTests
     }
 
     [Test]
+    public void ArcherInitializesEachAttackCooldownBeforeCombatMonitorsStart()
+    {
+        JToken locomotion = Row("StateScript", 12)["Graphs"].Single(g => (string)g["Name"] == "Locomotion");
+        string previousGuid = "archer_init_cooling_down";
+        for (int i = 1; i <= 2; i++)
+        {
+            string guid = $"archer_init_attack{i:00}_cooling_down";
+            JToken node = locomotion["Nodes"].Single(n => (string)n["Guid"] == guid);
+            Assert.That((string)node["SetterKey"], Is.EqualTo("unit.variables.set"));
+            Assert.That((string)node["Key"], Is.EqualTo($"ai.attack{i:00}.coolingDown"));
+            Assert.That((bool)node["Value"]["Literal"]["Bool"], Is.False);
+            Assert.That(locomotion["Edges"].Any(e =>
+                    (string)e["OutputNodeGuid"] == previousGuid &&
+                    (string)e["OutputPortName"] == "Out" &&
+                    (string)e["InputNodeGuid"] == guid &&
+                    (string)e["InputPortName"] == "In"),
+                Is.True, $"{guid} must be part of the entry initialization chain.");
+            previousGuid = guid;
+        }
+
+        Assert.That(locomotion["Edges"].Any(e =>
+                (string)e["OutputNodeGuid"] == previousGuid &&
+                (string)e["InputNodeGuid"] == "archer_init_attack_active"),
+            Is.True, "Combat monitors must start only after both attack cooldowns are initialized.");
+    }
+
+    [Test]
     public void AllMarkersAreDisabledAndMatchSavedCombatRanges()
     {
         JObject skills = Table("Skill");

@@ -65,7 +65,7 @@ namespace CrystalMagic.Core
                     return false;
                 }
 
-                if (!OpenFieldDungeonContentGenerator.TryPlace(layout, seed, theme.OpenField.Content))
+                if (!OpenFieldDungeonContentGenerator.TryPlace(layout, seed, theme.OpenField.Content, dungeonConfig))
                 {
                     error = $"主题 '{theme.Name}' 的内容放置失败。";
                     return false;

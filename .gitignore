@@ -88,3 +88,6 @@ crashlytics-build.properties
 /Assets/__BundleBuildTemp/
 /Assets/__BundleBuildTemp.meta
 /Assets/SceneDependencyCache/
+
+# Local documentation and art drafts.
+/Docs/

@@ -151,6 +151,7 @@ namespace CrystalMagic.Editor.Skill
             {
                 new StateScriptUnitValueConverter(),
                 new LayerMaskConverter(),
+                new StateScriptVector2Converter(),
                 new Vector3Converter(),
                 new UnityObjectConverter(),
             },

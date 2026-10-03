@@ -50,8 +50,8 @@ namespace CrystalMagic.Game.Data
     {
         [EditorLabel("MP Cost")]
         MpCost = 0,
-        [EditorLabel("Reserved")]
-        Reserved = 3,
+        [EditorLabel("Buff Stack Count")]
+        BuffStackCount = 3,
 
         [EditorLabel("Damage Multiplier")]
         Damage = 100,

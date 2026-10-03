@@ -3,17 +3,36 @@ using System;
 using CrystalMagic.Core;
 using CrystalMagic.UI;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class BattleUI : UIBase<BattleUIData, BattleUIModel>
 {
+    [SerializeField, Min(0f)] private float _chantFadeDuration = 0.2f;
+
     private readonly List<BattleUI_SkillItemView> _skillItemViews = new();
     private readonly List<BattleUI_BuffItemView> _buffItemViews = new();
     private float _hpMaskBaseWidth = -1f;
     private float _mpMaskBaseWidth = -1f;
     private float _chantMaskBaseWidth = -1f;
+    private float _chantBarHorizontalPadding;
+    private float _displayedChantProgress;
+    private float _skillChainVisibleAlpha;
+    private float _chantBarVisibleAlpha;
+    private float _chantVisibility;
+    private bool _showChantUI;
     private readonly BattleUI_PropSlotClickHandler[] _propSlotHandlers = new BattleUI_PropSlotClickHandler[3];
 
     public event Action<int> PropShortcutUseRequested;
+
+    protected override void OnInit()
+    {
+        base.OnInit();
+        _skillChainVisibleAlpha = UI.SkillChain.CanvasGroup.alpha;
+        _chantBarVisibleAlpha = UI.Bar.CanvasGroup.alpha;
+        _chantBarHorizontalPadding = Mathf.Max(0f,
+            UI.Bar_Border.RectTransform.rect.width - UI.Bar_BarMask_Bar.RectTransform.rect.width);
+        ResetChantVisibility();
+    }
 
     public override void OnOpen()
     {
@@ -21,12 +40,16 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
         EnsureBuffItemTemplateView();
         BindPropSlotHandlers();
         CacheBarWidths();
-        UI.Bar.GameObject.SetActive(false);
+        // Keep layout active so ContentSizeFitter can size the fixed skill chain while hidden.
+        UI.SkillChain.GameObject.SetActive(true);
+        UI.Bar.GameObject.SetActive(true);
+        ResetChantVisibility();
         base.OnOpen();
     }
 
     public override void OnClose()
     {
+        ResetChantVisibility();
         UISubViewBase.ReleaseAllToPool(_skillItemViews);
         UISubViewBase.ReleaseAllToPool(_buffItemViews);
         base.OnClose();
@@ -36,6 +59,8 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
     {
         base.OnUpdate();
         Model?.RefreshRuntime();
+        SyncChantBarWidth();
+        UpdateChantVisibility(Time.unscaledDeltaTime);
     }
 
     protected override void RefreshView()
@@ -53,6 +78,7 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
     private void RenderSkillChain(IReadOnlyList<BattleSkillDisplayData> skillItems)
     {
         int skillItemCount = skillItems != null ? skillItems.Count : 0;
+        bool layoutChanged = _skillItemViews.Count != skillItemCount;
         EnsureSkillItemViews(skillItemCount);
 
         for (int i = 0; i < _skillItemViews.Count; i++)
@@ -60,11 +86,17 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
             BattleSkillDisplayData data = skillItems != null && i < skillItems.Count ? skillItems[i] : null;
             _skillItemViews[i].Render(data);
         }
+
+        if (layoutChanged)
+        {
+            LayoutRebuilder.ForceRebuildLayoutImmediate(UI.SkillChain.RectTransform);
+            SyncChantBarWidth();
+        }
     }
 
     private void EnsureSkillItemViews(int itemCount)
     {
-        UI.SkillChain_Viewport_Content_SkillItem.GameObject.SetActive(false);
+        UI.SkillChain_SkillItem.GameObject.SetActive(false);
 
         while (_skillItemViews.Count > itemCount)
         {
@@ -74,20 +106,20 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
             _skillItemViews.RemoveAt(lastIndex);
         }
 
-        BattleUI_SkillItemView templateView = UI.SkillChain_Viewport_Content_SkillItem.GameObject.GetComponent<BattleUI_SkillItemView>();
+        BattleUI_SkillItemView templateView = UI.SkillChain_SkillItem.GameObject.GetComponent<BattleUI_SkillItemView>();
         UISubViewBase.EnsurePoolCapacity(templateView, itemCount, itemCount);
 
         while (_skillItemViews.Count < itemCount)
         {
-            BattleUI_SkillItemView itemView = UISubViewBase.AcquireFromPool(templateView, UI.SkillChain_Viewport_Content.GameObject.transform);
+            BattleUI_SkillItemView itemView = UISubViewBase.AcquireFromPool(templateView, UI.SkillChain.GameObject.transform);
             _skillItemViews.Add(itemView);
         }
     }
 
     private void EnsureSkillItemTemplateView()
     {
-        if (UI.SkillChain_Viewport_Content_SkillItem.GameObject.GetComponent<BattleUI_SkillItemView>() == null)
-            UI.SkillChain_Viewport_Content_SkillItem.GameObject.AddComponent<BattleUI_SkillItemView>();
+        if (UI.SkillChain_SkillItem.GameObject.GetComponent<BattleUI_SkillItemView>() == null)
+            UI.SkillChain_SkillItem.GameObject.AddComponent<BattleUI_SkillItemView>();
     }
 
     private void RenderBuffs(IReadOnlyList<UnitHealthBarBuffDisplayData> buffs)
@@ -132,8 +164,58 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
 
     private void RenderChantProgress(bool isChanting, float progress)
     {
-        UI.Bar.GameObject.SetActive(isChanting);
-        SetMaskWidth(UI.Bar_BarMask.RectTransform, progress, _chantMaskBaseWidth);
+        _showChantUI = isChanting;
+        // Retain the last progress during fade-out instead of snapping the bar empty.
+        if (isChanting)
+        {
+            _displayedChantProgress = Mathf.Clamp01(progress);
+            SetMaskWidth(UI.Bar_BarMask.RectTransform, _displayedChantProgress, _chantMaskBaseWidth);
+        }
+    }
+
+    private void SyncChantBarWidth()
+    {
+        RectTransform background = UI.SkillChain_BG.RectTransform;
+        RectTransform bar = UI.Bar.RectTransform;
+        // Convert between the two local spaces to include SkillChain's authored scale.
+        Vector3 widthVector = background.TransformVector(new Vector3(background.rect.width, 0f, 0f));
+        float outerWidth = bar.InverseTransformVector(widthVector).magnitude;
+        float innerWidth = Mathf.Max(0f, outerWidth - _chantBarHorizontalPadding);
+        if (outerWidth <= 0f || Mathf.Approximately(_chantMaskBaseWidth, innerWidth))
+            return;
+
+        _chantMaskBaseWidth = innerWidth;
+        bar.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, innerWidth);
+        UI.Bar_Border.RectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, outerWidth);
+        UI.Bar_BarMask_Bar.RectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, innerWidth);
+        SetMaskWidth(UI.Bar_BarMask.RectTransform, _displayedChantProgress, innerWidth);
+    }
+
+    private void UpdateChantVisibility(float deltaTime)
+    {
+        float target = _showChantUI ? 1f : 0f;
+        _chantVisibility = _chantFadeDuration > 0f
+            ? Mathf.MoveTowards(_chantVisibility, target, Mathf.Max(0f, deltaTime) / _chantFadeDuration)
+            : target;
+        ApplyChantVisibility();
+    }
+
+    private void ResetChantVisibility()
+    {
+        _showChantUI = false;
+        _chantVisibility = 0f;
+        ApplyChantVisibility();
+    }
+
+    private void ApplyChantVisibility()
+    {
+        float alpha = Mathf.SmoothStep(0f, 1f, _chantVisibility);
+        UI.SkillChain.CanvasGroup.alpha = _skillChainVisibleAlpha * alpha;
+        UI.Bar.CanvasGroup.alpha = _chantBarVisibleAlpha * alpha;
+        UI.SkillChain.CanvasGroup.interactable = false;
+        UI.SkillChain.CanvasGroup.blocksRaycasts = false;
+        UI.Bar.CanvasGroup.interactable = false;
+        UI.Bar.CanvasGroup.blocksRaycasts = false;
     }
 
     private void RenderVitalityAndMana(float hpRatio, float mpRatio, float currentHp, float currentMp)
@@ -148,24 +230,24 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
     private void RenderPropShortcuts(IReadOnlyList<BattlePropShortcutDisplayData> items)
     {
         RenderPropShortcut(
-            UI.PropShortcuts_PropSlot1_Icon,
+            UI.PropShortcuts_PropSlot1_IconMask_Icon,
             UI.PropShortcuts_PropSlot1_Count,
             UI.PropShortcuts_PropSlot1_Key,
-            UI.PropShortcuts_PropSlot1_Cooldown,
+            UI.PropShortcuts_PropSlot1_IconMask_Cooldown,
             items != null && items.Count > 0 ? items[0] : null,
             "Z");
         RenderPropShortcut(
-            UI.PropShortcuts_PropSlot2_Icon,
+            UI.PropShortcuts_PropSlot2_IconMask_Icon,
             UI.PropShortcuts_PropSlot2_Count,
             UI.PropShortcuts_PropSlot2_Key,
-            UI.PropShortcuts_PropSlot2_Cooldown,
+            UI.PropShortcuts_PropSlot2_IconMask_Cooldown,
             items != null && items.Count > 1 ? items[1] : null,
             "X");
         RenderPropShortcut(
-            UI.PropShortcuts_PropSlot3_Icon,
+            UI.PropShortcuts_PropSlot3_IconMask_Icon,
             UI.PropShortcuts_PropSlot3_Count,
             UI.PropShortcuts_PropSlot3_Key,
-            UI.PropShortcuts_PropSlot3_Cooldown,
+            UI.PropShortcuts_PropSlot3_IconMask_Cooldown,
             items != null && items.Count > 2 ? items[2] : null,
             "C");
     }
@@ -275,20 +357,12 @@ public class BattleUI_SkillItemView : UISubView<BattleUI_SkillItemData>
         if (data == null)
         {
             UI.SkillMask_Skill.Image.sprite = null;
-            UI.Effect_EffectIcon.Image.sprite = null;
-            UI.Effect.GameObject.SetActive(false);
-            UI.Effect_EffectIcon.GameObject.SetActive(false);
             UI.IndexNum.TextMeshProUGUI.text = string.Empty;
             UI.Select.GameObject.SetActive(false);
             return;
         }
 
         UI.SkillMask_Skill.Image.sprite = LoadIcon(data.SkillIconPath);
-        UI.Effect.GameObject.SetActive(data.CanShowAddition);
-
-        Sprite additionIcon = LoadIcon(data.AdditionIconPath);
-        UI.Effect_EffectIcon.Image.sprite = additionIcon;
-        UI.Effect_EffectIcon.GameObject.SetActive(data.CanShowAddition && additionIcon != null);
         UI.IndexNum.TextMeshProUGUI.text = data.DisplayIndex.ToString();
         UI.Select.GameObject.SetActive(data.IsSelected);
     }
@@ -307,8 +381,6 @@ public class BattleUI_SkillItemData : UIData
     public UINode Background;
     public UINode SkillMask;
     public UINode SkillMask_Skill;
-    public UINode Effect;
-    public UINode Effect_EffectIcon;
     public UINode IndexNum;
     public UINode Select;
 
@@ -317,8 +389,6 @@ public class BattleUI_SkillItemData : UIData
         Background = UINode.From(Find(root, "Background"));
         SkillMask = UINode.From(Find(root, "SkillMask"));
         SkillMask_Skill = UINode.From(Find(root, "SkillMask/Skill"));
-        Effect = UINode.From(Find(root, "Effect"));
-        Effect_EffectIcon = UINode.From(Find(root, "Effect/EffectIcon"));
         IndexNum = UINode.From(Find(root, "IndexNum"));
         Select = UINode.From(Find(root, "Select"));
     }

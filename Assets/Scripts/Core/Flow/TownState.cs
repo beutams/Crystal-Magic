@@ -22,12 +22,20 @@ namespace CrystalMagic.Core {
             Debug.Log("[TownState] Entered Town");
             InputComponent.Instance?.SetBattleInputEnabled(false);
             LoadGameContext context = StateData as LoadGameContext;
-            GameRuntimeStateUtility.BindPlayerCharacterData(context?.Character ?? new CharacterData());
-            GameRuntimeStateUtility.ApplyPlayerRuntimeState(context?.Player);
-            _interactionPromptManager ??= new InteractionPromptManager();
-            _interactionPromptManager.Initialize();
-            _notificationUI = UIComponent.Instance.Open<NotificationUI>();
-            BindInput();
+            using (SceneLoadTiming.Measure("Town: bind character and restore player state"))
+            {
+                GameRuntimeStateUtility.BindPlayerCharacterData(context?.Character ?? new CharacterData());
+                GameRuntimeStateUtility.ApplyPlayerRuntimeState(context?.Player);
+            }
+            using (SceneLoadTiming.Measure("Town: initialize interaction prompts"))
+            {
+                _interactionPromptManager ??= new InteractionPromptManager();
+                _interactionPromptManager.Initialize();
+            }
+            using (SceneLoadTiming.Measure("Town: open NotificationUI"))
+                _notificationUI = UIComponent.Instance.Open<NotificationUI>();
+            using (SceneLoadTiming.Measure("Town: bind input"))
+                BindInput();
             
             // 可以在这里访问 StateData（如果是从读档进入）
             if (context != null)

@@ -3,6 +3,19 @@ using Unity.Entities;
 
 public static class PlayerCurrentSkillUtility
 {
+    public const string CastingVariableKey = "casting";
+
+    public static bool IsCasting(EntityManager entityManager, Entity entity)
+    {
+        return UnitVariableSource.TryGetValue(
+                   entityManager,
+                   entity,
+                   CastingVariableKey,
+                   out UnitSourceValue value) &&
+               value.TryGetBool(out bool isCasting) &&
+               isCasting;
+    }
+
     public static bool TrySetCurrentChainSlot(
         EntityManager entityManager,
         Entity entity,

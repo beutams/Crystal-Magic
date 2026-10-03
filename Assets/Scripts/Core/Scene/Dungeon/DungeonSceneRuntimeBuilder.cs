@@ -90,7 +90,7 @@ namespace CrystalMagic.Core
             yield return null;
 
             reportProgress?.Invoke(0.996f, "Building dungeon scene", "Spawning scene objects");
-            SpawnSceneObjects(entityManager, sceneData, resourceOwnerKey, spawnedEntities, controlledSceneObjects);
+            SpawnSceneObjects(entityManager, sceneData, spawnedEntities, controlledSceneObjects);
             yield return null;
             DungeonFlowTiming.EndStage(15, "视觉、碰撞和场景对象已完成");
 
@@ -146,7 +146,7 @@ namespace CrystalMagic.Core
 
             SpawnObstacles(entityManager, null, sceneData, null, spawnedEntities);
             SpawnEnvironment(entityManager, sceneData, null, spawnedEntities, false);
-            SpawnSceneObjects(entityManager, sceneData, null, spawnedEntities, controlledSceneObjects, false);
+            SpawnSceneObjects(entityManager, sceneData, spawnedEntities, controlledSceneObjects, false);
 
             if (playerInfos != null)
             {
@@ -204,14 +204,14 @@ namespace CrystalMagic.Core
                 sceneData,
                 mapPlan.dungeonFloor,
                 mapPlan.seed,
-                mapPlan.attemptCount);
+                mapPlan.attemptCount,
+                enableFogOfWar: false);
             GameObject rootObject = new(RuntimeRootName);
             DungeonSceneRuntimeRoot runtimeRoot = rootObject.AddComponent<DungeonSceneRuntimeRoot>();
             List<Entity> spawnedEntities = new();
             string resourceOwnerKey = $"{RuntimeRootName}_{Guid.NewGuid():N}";
 
             DungeonRuleTileVisualBuilder.Build(runtimeRoot, sceneData.TerrainVisual, resourceOwnerKey);
-            DungeonFogOfWarVisualBuilder.Build(runtimeRoot, mapPlan.fogData);
             runtimeRoot.SetCameraWorldBounds(sceneData.CameraWorldBounds);
             SpawnObstacles(entityManager, runtimeRoot, sceneData, resourceOwnerKey, spawnedEntities);
             SpawnEnvironment(entityManager, sceneData, resourceOwnerKey, spawnedEntities, true);
@@ -339,7 +339,6 @@ namespace CrystalMagic.Core
         private static void SpawnSceneObjects(
             EntityManager entityManager,
             RuntimeDungeonSceneData sceneData,
-            string resourceOwnerKey,
             List<Entity> spawnedEntities,
             IDictionary<Entity, int> controlledSceneObjects,
             bool createVisual = true)
@@ -355,10 +354,6 @@ namespace CrystalMagic.Core
                     NetworkEntityPrefabType.Environment,
                     sceneObject.PrefabName,
                     sceneObject.WorldPosition);
-                entityInfo.hasScale = true;
-                entityInfo.scaleX = sceneObject.Size.x;
-                entityInfo.scaleY = sceneObject.Size.y;
-                entityInfo.scaleZ = sceneObject.Size.z;
                 entityInfo.hasCollider = true;
                 entityInfo.colliderEnabled = sceneObject.ApplyCollider;
                 entityInfo.colliderSizeX = sceneObject.Size.x;
@@ -404,27 +399,19 @@ namespace CrystalMagic.Core
                 }
                 else if (sceneObject.ObjectType == RuntimeDungeonSceneObjectType.Treasure)
                 {
+                    if (entityManager.HasComponent<TreasureComponent>(entity))
+                    {
+                        TreasureComponent treasure = entityManager.GetComponentData<TreasureComponent>(entity);
+                        treasure.Quality = sceneObject.TreasureQuality;
+                        treasure.RewardsSpawned = 0;
+                        entityManager.SetComponentData(entity, treasure);
+                    }
+
                     controlledSceneObjects[entity] = sceneObject.RegionId;
                 }
 
-                if (createVisual)
-                {
-                    DungeonSceneVisualUtility.ApplyEnvironmentVisual(
-                        entityManager,
-                        entity,
-                        sceneObject.PrefabName,
-                        string.Empty,
-                        resourceOwnerKey,
-                        new float3(sceneObject.Size.x, sceneObject.Size.y, sceneObject.Size.z));
-                }
-                else
-                {
-                    DungeonSceneVisualUtility.ApplyNonUniformScale(
-                        entityManager,
-                        entity,
-                        new float3(sceneObject.Size.x, sceneObject.Size.y, sceneObject.Size.z));
+                if (!createVisual)
                     DungeonSceneVisualUtility.HideVisual(entityManager, entity);
-                }
                 spawnedEntities.Add(entity);
             }
         }
@@ -833,9 +820,18 @@ namespace CrystalMagic.Core
 
         public static void DestroyCurrentDungeonScene()
         {
-            GameObject existing = GameObject.Find(RuntimeRootName);
-            if (existing != null)
-                UnityEngine.Object.Destroy(existing);
+            DungeonSceneRuntimeRoot[] runtimeRoots = UnityEngine.Object.FindObjectsByType<DungeonSceneRuntimeRoot>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            for (int index = 0; index < runtimeRoots.Length; index++)
+            {
+                DungeonSceneRuntimeRoot runtimeRoot = runtimeRoots[index];
+                if (runtimeRoot == null)
+                    continue;
+
+                runtimeRoot.gameObject.SetActive(false);
+                UnityEngine.Object.Destroy(runtimeRoot.gameObject);
+            }
         }
     }
 }

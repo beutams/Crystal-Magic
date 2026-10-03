@@ -109,6 +109,12 @@ namespace CrystalMagic.Editor.EffectGraph
             titleContent.text = "Effect Graph *";
         }
 
+        internal void MarkLayoutDirty()
+        {
+            // Layout-only changes must not copy or commit any effect/gameplay data.
+            titleContent.text = "Effect Graph *";
+        }
+
         private void SaveGraph()
         {
             if (_binding == null || _layoutStore == null)
@@ -136,6 +142,8 @@ namespace CrystalMagic.Editor.EffectGraph
             toolbar.Add(new Label(_binding.DisplayName) { style = { flexGrow = 1f } });
             Button save = new(SaveGraph) { text = "Save" };
             toolbar.Add(save);
+            toolbar.Add(new Button(() => _graphView?.AutoArrange()) { text = "Auto Layout" });
+            toolbar.Add(new Button(() => _graphView?.FrameAll()) { text = "Frame All" });
             rootVisualElement.Add(toolbar);
 
             VisualElement content = new() { style = { flexGrow = 1f, flexDirection = FlexDirection.Row } };

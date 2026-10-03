@@ -7317,6 +7317,246 @@ MonoBehaviour:
     - 0
     Length: 0.33333334
     IsLooping: 0
+  - ClipPath: Assets/Res/Animation/SpellMerchant/Idle.anim
+    SourceClip: {fileID: 7400000, guid: ac2305c8ca8c48799104f49d51e2e52f, type: 2}
+    Sprites:
+    - {fileID: 150001, guid: 863519607ea17bc46950818558edfb89, type: 3}
+    - {fileID: 150002, guid: 863519607ea17bc46950818558edfb89, type: 3}
+    - {fileID: 150003, guid: 863519607ea17bc46950818558edfb89, type: 3}
+    - {fileID: 150004, guid: 863519607ea17bc46950818558edfb89, type: 3}
+    - {fileID: 150005, guid: 863519607ea17bc46950818558edfb89, type: 3}
+    - {fileID: 150006, guid: 863519607ea17bc46950818558edfb89, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.5
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/EquipmentMerchant/Idle.anim
+    SourceClip: {fileID: 7400000, guid: 2a88df4de178438bb7b8f24e78bcb2a4, type: 2}
+    Sprites:
+    - {fileID: 160001, guid: 5e8374990453b104a9ddfabec171626e, type: 3}
+    - {fileID: 160002, guid: 5e8374990453b104a9ddfabec171626e, type: 3}
+    - {fileID: 160003, guid: 5e8374990453b104a9ddfabec171626e, type: 3}
+    - {fileID: 160004, guid: 5e8374990453b104a9ddfabec171626e, type: 3}
+    - {fileID: 160005, guid: 5e8374990453b104a9ddfabec171626e, type: 3}
+    - {fileID: 160006, guid: 5e8374990453b104a9ddfabec171626e, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.5
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/ItemMerchant/Idle.anim
+    SourceClip: {fileID: 7400000, guid: 3c7ae733802644d59d858d29f2cf4fbc, type: 2}
+    Sprites:
+    - {fileID: 170001, guid: 7f67149a1d86c474ba11034303c327f9, type: 3}
+    - {fileID: 170002, guid: 7f67149a1d86c474ba11034303c327f9, type: 3}
+    - {fileID: 170003, guid: 7f67149a1d86c474ba11034303c327f9, type: 3}
+    - {fileID: 170004, guid: 7f67149a1d86c474ba11034303c327f9, type: 3}
+    - {fileID: 170005, guid: 7f67149a1d86c474ba11034303c327f9, type: 3}
+    - {fileID: 170006, guid: 7f67149a1d86c474ba11034303c327f9, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.5
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/TreasureChest/CopperClosed.anim
+    SourceClip: {fileID: 7400000, guid: 1d3e6be00e12453ea3b323ff0b45a7bf, type: 2}
+    Sprites:
+    - {fileID: 120001, guid: 2c6fb54186c3e3944879a8f7bed08b07, type: 3}
+    SpriteTimes:
+    - 0
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.083333336
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/TreasureChest/CopperOpen.anim
+    SourceClip: {fileID: 7400000, guid: c701f97a278d49b5a859a32dc1a96734, type: 2}
+    Sprites:
+    - {fileID: 120001, guid: 2c6fb54186c3e3944879a8f7bed08b07, type: 3}
+    - {fileID: 120002, guid: 2c6fb54186c3e3944879a8f7bed08b07, type: 3}
+    - {fileID: 120003, guid: 2c6fb54186c3e3944879a8f7bed08b07, type: 3}
+    - {fileID: 120004, guid: 2c6fb54186c3e3944879a8f7bed08b07, type: 3}
+    - {fileID: 120005, guid: 2c6fb54186c3e3944879a8f7bed08b07, type: 3}
+    - {fileID: 120006, guid: 2c6fb54186c3e3944879a8f7bed08b07, type: 3}
+    - {fileID: 120007, guid: 2c6fb54186c3e3944879a8f7bed08b07, type: 3}
+    - {fileID: 120008, guid: 2c6fb54186c3e3944879a8f7bed08b07, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    - 0.5
+    - 0.5833333
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.6666667
+    IsLooping: 0
+  - ClipPath: Assets/Res/Animation/TreasureChest/CopperClose.anim
+    SourceClip: {fileID: 7400000, guid: 65e5e79703e8488ca4c881268e9fa283, type: 2}
+    Sprites:
+    - {fileID: 120008, guid: 2c6fb54186c3e3944879a8f7bed08b07, type: 3}
+    - {fileID: 120007, guid: 2c6fb54186c3e3944879a8f7bed08b07, type: 3}
+    - {fileID: 120006, guid: 2c6fb54186c3e3944879a8f7bed08b07, type: 3}
+    - {fileID: 120005, guid: 2c6fb54186c3e3944879a8f7bed08b07, type: 3}
+    - {fileID: 120004, guid: 2c6fb54186c3e3944879a8f7bed08b07, type: 3}
+    - {fileID: 120003, guid: 2c6fb54186c3e3944879a8f7bed08b07, type: 3}
+    - {fileID: 120002, guid: 2c6fb54186c3e3944879a8f7bed08b07, type: 3}
+    - {fileID: 120001, guid: 2c6fb54186c3e3944879a8f7bed08b07, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    - 0.5
+    - 0.5833333
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.6666667
+    IsLooping: 0
+  - ClipPath: Assets/Res/Animation/TeleportStone/Idle.anim
+    SourceClip: {fileID: 7400000, guid: e19c5186f91149008bcf9da595c43741, type: 2}
+    Sprites:
+    - {fileID: 100001, guid: fecae678adbdb054284917aec3c9eaeb, type: 3}
+    - {fileID: 100002, guid: fecae678adbdb054284917aec3c9eaeb, type: 3}
+    - {fileID: 100003, guid: fecae678adbdb054284917aec3c9eaeb, type: 3}
+    - {fileID: 100004, guid: fecae678adbdb054284917aec3c9eaeb, type: 3}
+    - {fileID: 100005, guid: fecae678adbdb054284917aec3c9eaeb, type: 3}
+    - {fileID: 100006, guid: fecae678adbdb054284917aec3c9eaeb, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.1666667
+    - 0.3333333
+    - 0.5
+    - 0.6666667
+    - 0.8333333
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 1
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/TeleportStone/Locked.anim
+    SourceClip: {fileID: 7400000, guid: 12d1d411149e4796a2b2f5929a110458, type: 2}
+    Sprites:
+    - {fileID: 110001, guid: ff4a1ca7d02577b49bde8e64dd5ad89e, type: 3}
+    SpriteTimes:
+    - 0
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.083333336
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/TeleportStone/Unlock.anim
+    SourceClip: {fileID: 7400000, guid: ebb07eff3e0645b8a3924ab841ff4f0f, type: 2}
+    Sprites:
+    - {fileID: 110001, guid: ff4a1ca7d02577b49bde8e64dd5ad89e, type: 3}
+    - {fileID: 110002, guid: ff4a1ca7d02577b49bde8e64dd5ad89e, type: 3}
+    - {fileID: 110003, guid: ff4a1ca7d02577b49bde8e64dd5ad89e, type: 3}
+    - {fileID: 110004, guid: ff4a1ca7d02577b49bde8e64dd5ad89e, type: 3}
+    - {fileID: 110005, guid: ff4a1ca7d02577b49bde8e64dd5ad89e, type: 3}
+    - {fileID: 110006, guid: ff4a1ca7d02577b49bde8e64dd5ad89e, type: 3}
+    - {fileID: 110007, guid: ff4a1ca7d02577b49bde8e64dd5ad89e, type: 3}
+    - {fileID: 110008, guid: ff4a1ca7d02577b49bde8e64dd5ad89e, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    - 0.5
+    - 0.5833333
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.6666667
+    IsLooping: 0
+  - ClipPath: Assets/Res/Animation/TreasureChest/SilverClosed.anim
+    SourceClip: {fileID: 7400000, guid: 2b41b2417b6c4fdfa850764dc6b4f7ca, type: 2}
+    Sprites:
+    - {fileID: 130001, guid: cc1c1a122bafd784b85fed7033d1ed2c, type: 3}
+    SpriteTimes:
+    - 0
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.083333336
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/TreasureChest/SilverOpen.anim
+    SourceClip: {fileID: 7400000, guid: 88de4219cba64efc9cb9925fa5434dd8, type: 2}
+    Sprites:
+    - {fileID: 130001, guid: cc1c1a122bafd784b85fed7033d1ed2c, type: 3}
+    - {fileID: 130002, guid: cc1c1a122bafd784b85fed7033d1ed2c, type: 3}
+    - {fileID: 130003, guid: cc1c1a122bafd784b85fed7033d1ed2c, type: 3}
+    - {fileID: 130004, guid: cc1c1a122bafd784b85fed7033d1ed2c, type: 3}
+    - {fileID: 130005, guid: cc1c1a122bafd784b85fed7033d1ed2c, type: 3}
+    - {fileID: 130006, guid: cc1c1a122bafd784b85fed7033d1ed2c, type: 3}
+    - {fileID: 130007, guid: cc1c1a122bafd784b85fed7033d1ed2c, type: 3}
+    - {fileID: 130008, guid: cc1c1a122bafd784b85fed7033d1ed2c, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    - 0.5
+    - 0.5833333
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.6666667
+    IsLooping: 0
+  - ClipPath: Assets/Res/Animation/TreasureChest/GoldClosed.anim
+    SourceClip: {fileID: 7400000, guid: c3590afcbb9d4867b1927983e2e65212, type: 2}
+    Sprites:
+    - {fileID: 140001, guid: ddba35a80b46ca044a1ca63520e0257b, type: 3}
+    SpriteTimes:
+    - 0
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.083333336
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/TreasureChest/GoldOpen.anim
+    SourceClip: {fileID: 7400000, guid: eeb4d1b6c52e44eaa279f7f4bc5a877d, type: 2}
+    Sprites:
+    - {fileID: 140001, guid: ddba35a80b46ca044a1ca63520e0257b, type: 3}
+    - {fileID: 140002, guid: ddba35a80b46ca044a1ca63520e0257b, type: 3}
+    - {fileID: 140003, guid: ddba35a80b46ca044a1ca63520e0257b, type: 3}
+    - {fileID: 140004, guid: ddba35a80b46ca044a1ca63520e0257b, type: 3}
+    - {fileID: 140005, guid: ddba35a80b46ca044a1ca63520e0257b, type: 3}
+    - {fileID: 140006, guid: ddba35a80b46ca044a1ca63520e0257b, type: 3}
+    - {fileID: 140007, guid: ddba35a80b46ca044a1ca63520e0257b, type: 3}
+    - {fileID: 140008, guid: ddba35a80b46ca044a1ca63520e0257b, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    - 0.5
+    - 0.5833333
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.6666667
+    IsLooping: 0
   - ClipPath: Assets/Res/Animation/Effects/Fire_Flurry/Fire_Flurry.anim
     SourceClip: {fileID: 7400000, guid: 63189906f0b9c9a42a25c5fd5e35fe7d, type: 2}
     Sprites:

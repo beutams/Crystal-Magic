@@ -10,7 +10,8 @@ public static class NetworkPresentationEventUtility
         Entity target,
         float3 position,
         float amount,
-        bool isLethal)
+        bool isLethal,
+        bool suppressDamageNumber)
     {
         return TryEnqueue(entityManager, new NetworkPresentationEventStateData
         {
@@ -21,6 +22,7 @@ public static class NetworkPresentationEventUtility
             positionZ = position.z,
             valueA = amount,
             flagA = isLethal ? (byte)1 : (byte)0,
+            flagB = suppressDamageNumber ? (byte)1 : (byte)0,
         });
     }
 

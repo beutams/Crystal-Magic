@@ -25,7 +25,7 @@ public sealed class NetworkCharacterEditData : NetworkStateData
             context.EntityManager.HasComponent<PlayerCharacterComponent>(player))
         {
             PlayerCharacterComponent character = context.EntityManager.GetComponentObject<PlayerCharacterComponent>(player);
-            result.accepted = !BattlePlayerStatusUtility.IsInputLocked(context.EntityManager, player) &&
+            result.accepted = !PlayerCharacterUtility.IsEditLocked(context.EntityManager, player) &&
                               character.TryEdit(revision, characterData);
             if (result.accepted)
                 PlayerCharacterUtility.Rebuild(context.EntityManager, player);

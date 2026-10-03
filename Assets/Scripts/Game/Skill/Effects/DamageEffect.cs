@@ -15,6 +15,7 @@ namespace CrystalMagic.Game.Skill.Effects
         public new DamageEffectData Data { get; }
 
         protected virtual bool SendsOnDamagedHook => true;
+        protected virtual bool SuppressesDamageNumber => false;
 
         public DamageEffect(DamageEffectData data) : base(data) => Data = data;
 
@@ -80,10 +81,12 @@ namespace CrystalMagic.Game.Skill.Effects
                 target,
                 targetPosition,
                 damage,
-                died);
+                died,
+                SuppressesDamageNumber);
             if (!queuedNetworkPresentation)
             {
-                EventComponent.Instance.Publish(new DamageAppliedEvent(target, targetPosition, damage, died));
+                if (!SuppressesDamageNumber)
+                    EventComponent.Instance.Publish(new DamageAppliedEvent(target, targetPosition, damage, died));
                 EventComponent.Instance.Publish(new UnitDamagedEvent(
                     target,
                     vitality.CurrentHealth,

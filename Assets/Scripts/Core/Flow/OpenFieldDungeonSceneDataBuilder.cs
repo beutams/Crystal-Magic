@@ -78,6 +78,7 @@ namespace CrystalMagic.Core
                     PrefabName = "Treasure",
                     RegionId = placement.EncounterId,
                     InterestSize = ResolveInterestSize(layout, placement.EncounterId),
+                    TreasureQuality = placement.TreasureQuality,
                     RandomSeed = DeriveChestSeed(layout.Seed, placement.Cell),
                     SourceCoordinate = ToVector2Int(placement.Cell),
                     DisplayCoordinate = ToVector2Int(placement.Cell),

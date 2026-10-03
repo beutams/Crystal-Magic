@@ -1,5 +1,7 @@
 ﻿using System;
 using CrystalMagic.Core;
+using CrystalMagic.Game.Data;
+using CrystalMagic.Game.OpenField;
 using UnityEngine;
 
 namespace CrystalMagic.Game.Config
@@ -23,14 +25,23 @@ namespace CrystalMagic.Game.Config
         [EditorLabel("Chest Reward Count Range (Min / Max)")]
         public Vector2Int ChestRewardCountRange = new(3, 4);
 
-        [EditorLabel("Small Interest Chest Luck Range")]
-        public Vector2 SmallChestLuckRange = new(0f, 0.35f);
+        [EditorLabel("Copper Chest Counts (Small / Medium / Large Interest)")]
+        public Vector3Int CopperChestCounts = new(1, 1, 1);
 
-        [EditorLabel("Medium Interest Chest Luck Range")]
-        public Vector2 MediumChestLuckRange = new(0.25f, 0.7f);
+        [EditorLabel("Silver Chest Counts (Small / Medium / Large Interest)")]
+        public Vector3Int SilverChestCounts = new(0, 1, 1);
 
-        [EditorLabel("Large Interest Chest Luck Range")]
-        public Vector2 LargeChestLuckRange = new(0.55f, 1f);
+        [EditorLabel("Gold Chest Counts (Small / Medium / Large Interest)")]
+        public Vector3Int GoldChestCounts = new(0, 0, 1);
+
+        [EditorLabel("Copper Chest Luck Range")]
+        public Vector2 CopperChestLuckRange = new(0f, 0.4f);
+
+        [EditorLabel("Silver Chest Luck Range")]
+        public Vector2 SilverChestLuckRange = new(0.4f, 0.7f);
+
+        [EditorLabel("Gold Chest Luck Range")]
+        public Vector2 GoldChestLuckRange = new(0.7f, 1f);
 
         [EditorLabel("Rarity 0 Weight (Luck 0 / 1)")]
         public Vector2 ChestRarity0Weight = new(10f, 0f);
@@ -57,9 +68,12 @@ namespace CrystalMagic.Game.Config
             InitialThemeId = Mathf.Max(0, InitialThemeId);
             ChestRewardCountRange.x = Mathf.Max(1, ChestRewardCountRange.x);
             ChestRewardCountRange.y = Mathf.Max(ChestRewardCountRange.x, ChestRewardCountRange.y);
-            SmallChestLuckRange = ClampLuckRange(SmallChestLuckRange);
-            MediumChestLuckRange = ClampLuckRange(MediumChestLuckRange);
-            LargeChestLuckRange = ClampLuckRange(LargeChestLuckRange);
+            CopperChestCounts = Vector3Int.Max(Vector3Int.zero, CopperChestCounts);
+            SilverChestCounts = Vector3Int.Max(Vector3Int.zero, SilverChestCounts);
+            GoldChestCounts = Vector3Int.Max(Vector3Int.zero, GoldChestCounts);
+            CopperChestLuckRange = ClampLuckRange(CopperChestLuckRange);
+            SilverChestLuckRange = ClampLuckRange(SilverChestLuckRange);
+            GoldChestLuckRange = ClampLuckRange(GoldChestLuckRange);
             ChestRarity0Weight = ClampWeights(ChestRarity0Weight);
             ChestRarity1Weight = ClampWeights(ChestRarity1Weight);
             ChestRarity2Weight = ClampWeights(ChestRarity2Weight);
@@ -68,13 +82,31 @@ namespace CrystalMagic.Game.Config
             ChestRarity5Weight = ClampWeights(ChestRarity5Weight);
         }
 
-        public Vector2 GetChestLuckRange(byte interestSize)
+        public int GetChestCount(OpenFieldInterestSize interestSize, DungeonTreasureQuality quality)
         {
+            Vector3Int counts = quality switch
+            {
+                DungeonTreasureQuality.Copper => CopperChestCounts,
+                DungeonTreasureQuality.Silver => SilverChestCounts,
+                DungeonTreasureQuality.Gold => GoldChestCounts,
+                _ => Vector3Int.zero,
+            };
+
             return interestSize switch
             {
-                0 => SmallChestLuckRange,
-                1 => MediumChestLuckRange,
-                _ => LargeChestLuckRange,
+                OpenFieldInterestSize.Small => counts.x,
+                OpenFieldInterestSize.Medium => counts.y,
+                _ => counts.z,
+            };
+        }
+
+        public Vector2 GetChestLuckRange(DungeonTreasureQuality quality)
+        {
+            return quality switch
+            {
+                DungeonTreasureQuality.Copper => CopperChestLuckRange,
+                DungeonTreasureQuality.Silver => SilverChestLuckRange,
+                _ => GoldChestLuckRange,
             };
         }
 
