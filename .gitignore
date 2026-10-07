@@ -88,6 +88,11 @@ crashlytics-build.properties
 /Assets/__BundleBuildTemp/
 /Assets/__BundleBuildTemp.meta
 /Assets/SceneDependencyCache/
+/Assets/SceneDependencyCache.meta
+
+# Local generated artifacts, isolated validation projects, and Python bytecode.
+/output/
+__pycache__/
 
 # Local documentation and art drafts.
 /Docs/
